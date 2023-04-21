@@ -102,4 +102,5 @@ urlpatterns = [
         views.UserSubsetManagerViewSet.as_view({"get": "list"}),
         name="role.user_subset_manager",
     ),
+    path("subject_scope_check/", views.RoleSubjectScopCheckView.as_view(), name="role.subject_scope_check"),
 ]

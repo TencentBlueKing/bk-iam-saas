@@ -28,6 +28,7 @@ class NewbieSceneEnum(ChoicesEnum, LowerStrEnum):
     ADD_GROUP_MEMBER = auto()
     ADD_GROUP_PERM_TEMPLATE = auto()
     SET_GROUP_APPROVAL_PROCESS = auto()
+    GRADE_MANAGER_UPGRADE = auto()
 
     _choices_labels = skip(
         (
@@ -40,6 +41,7 @@ class NewbieSceneEnum(ChoicesEnum, LowerStrEnum):
             (ADD_GROUP_MEMBER, "添加用户组成员"),
             (ADD_GROUP_PERM_TEMPLATE, "添加用户组权限"),
             (SET_GROUP_APPROVAL_PROCESS, "配置用户组审批流程"),
+            (GRADE_MANAGER_UPGRADE, "一级管理员升级"),
         )
     )
 

@@ -1,0 +1,30 @@
+### Register common actions
+
+
+{% include '__api_v1_model_config_common_actions.md.j2' %}
+
+#### Request
+
+```json
+[
+    {
+        "name": "test",
+        "name_en": "test",
+        "actions": [
+            {
+                "id": "biz_delete"
+            }
+        ]
+    }
+]
+```
+
+#### Response
+
+```json
+{
+    "code": 0,
+    "message": "",
+    "data": {}
+}
+```

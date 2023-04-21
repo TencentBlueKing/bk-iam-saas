@@ -9,16 +9,34 @@
                         v-model="systemValue"
                         style="width: 480px;"
                         :popover-min-width="480"
+                        :empty-text="$t(`m.common['暂无数据']`)"
+                        :search-placeholder="$t(`m.info['搜索关键字']`)"
                         :searchable="true"
                         :search-with-pinyin="true"
                         :clearable="false"
-                        @selected="handleSysSelected">
-                        <bk-option v-for="option in systemList"
+                        @selected="handleSysSelected"
+                        @toggle="handleToggle">
+                        <bk-option
+                            v-for="option in systemList"
+                            v-bind="option"
                             :key="option.id"
                             :id="option.id"
                             :name="option.displayName">
-                            <span>{{ option.name }}</span>
-                            <span style="color: #c4c6cc;">({{ option.id }})</span>
+                            <div class="select-collection"
+                                @mouseenter="handleSystemEnter(option.id)"
+                                @mouseleave="handleSystemLeave(option.id)"
+                            >
+                                <div>
+                                    <span>{{ option.name }}</span>
+                                    <span style="color: #c4c6cc;">({{ option.id }})</span>
+                                </div>
+                                <bk-star
+                                    v-if="(hoverId === option.id || option.collection)"
+                                    :rate="option.collection"
+                                    :max-stars="1"
+                                    @click.native.stop="handleCollection(option)">
+                                </bk-star>
+                            </div>
                         </bk-option>
                     </bk-select>
                     <div slot="right">
@@ -33,7 +51,13 @@
                 </render-search>
                 <form class="bk-form bk-form-vertical inner-content">
                     <div class="bk-form-item">
-                        <div :class="['custom-tmpl-list-content-wrapper', { 'is-loading': customLoading }]" v-bkloading="{ isLoading: customLoading, opacity: 1 }">
+                        <div
+                            v-bkloading="{ isLoading: customLoading, opacity: 1 }"
+                            :class="[
+                                'custom-tmpl-list-content-wrapper',
+                                { 'is-loading': customLoading }
+                            ]"
+                        >
                             <render-action-tag
                                 ref="commonActionRef"
                                 :system-id="systemValue"
@@ -310,13 +334,16 @@
                                                 <span :title="row.description !== '' ? row.description : ''">{{ row.description || '--' }}</span>
                                             </template>
                                         </bk-table-column>
-                                        <bk-table-column :label="$t(`m.userGroup['所属一级管理空间']`)">
+                                        <bk-table-column :label="$t(`m.userGroup['所属管理空间']`)">
                                             <template slot-scope="{ row }">
                                                 <span :class="row.role && row.role.name ? 'can-view' : ''"
                                                     :title="row.role && row.role.name ? row.role.name : ''"
                                                     @click.stop="handleViewDetail(row)">{{ row.role ? row.role.name : '--' }}</span>
                                             </template>
                                         </bk-table-column>
+                                        <template slot="empty">
+                                            <ExceptionEmpty />
+                                        </template>
                                     </bk-table>
                                     <p class="user-group-error" v-if="isShowGroupError">{{ $t(`m.permApply['请选择用户组']`) }}</p>
                                 </div>
@@ -549,7 +576,7 @@
                             {{ item }}
                         </span>
                     </div>
-                    <p class="info">{{ $t(`m.info['一级管理空间成员提示']`) }}</p>
+                    <p class="info">{{ $t(`m.info['管理空间成员提示']`) }}</p>
                 </template>
             </div>
         </bk-sideslider>
@@ -640,6 +667,7 @@
                     { title: this.$t(`m.permApply['细粒度权限']`), desc: this.$t(`m.permApply['只包含当前需要的最小范围权限']`), key: 'independent' }
                 ],
                 tabIndex: 0,
+                hoverId: -1,
                 hoverActionData: {
                     actions: []
                 },
@@ -655,7 +683,7 @@
             };
         },
         computed: {
-            ...mapGetters(['user']),
+            ...mapGetters(['user', 'externalSystemId']),
             // 是否无权限申请
             isNoPermApplay () {
                 return this.routerQuery.system_id;
@@ -776,7 +804,7 @@
             handleViewDetail (payload) {
                 if (payload.role && payload.role.name) {
                     this.isShowGradeSlider = true;
-                    this.gradeSliderTitle = `【${payload.role.name}】${this.$t(`m.grading['一级管理空间']`)} ${this.$t(`m.common['成员']`)}`;
+                    this.gradeSliderTitle = `【${payload.role.name}】${this.$t(`m.grading['管理空间']`)} ${this.$t(`m.common['成员']`)}`;
                     this.fetchRoles(payload.role.id);
                 }
             },
@@ -2053,9 +2081,14 @@
                     this.systemValue = this.routerQuery.system_id;
                 }
                 try {
-                    const res = await this.$store.dispatch('system/getSystems');
+                    const params = {};
+                    if (this.externalSystemId) {
+                        params.hidden = false;
+                    }
+                    const res = await this.$store.dispatch('system/getSystems', params);
                     (res.data || []).forEach(item => {
                         item.displayName = `${item.name}(${item.id})`;
+                        item.collection = item.collection ? 1 : 0;
                     });
                     this.systemList = res.data || [];
                     if (!this.systemValue) {
@@ -2104,9 +2137,15 @@
                 try {
                     const res = await this.$store.dispatch('permApply/getPolicies', params);
                     const data = res.data.map(item => {
-                        const relatedActions = this.linearActionList.find(sub => sub.id === item.id).related_actions;
-                        // eslint-disable-next-line max-len
-                        item.related_environments = this.linearActionList.find(sub => sub.id === item.id).related_environments;
+                        let relatedActions = [];
+                        const findLinerActions = this.linearActionList.find(sub => sub.id === item.id);
+                        if (findLinerActions) {
+                            const { related_actions, related_environments } = findLinerActions;
+                            // eslint-disable-next-line camelcase
+                            relatedActions = [...related_actions];
+                            // eslint-disable-next-line camelcase
+                            item.related_environments = related_environments;
+                        }
                         // 此处处理related_resource_types中value的赋值
                         return new Policy({
                             ...item,
@@ -2311,6 +2350,26 @@
                     this.buttonLoading = false;
                 }
             },
+
+            handleSystemEnter (id) {
+                this.hoverId = id;
+            },
+
+            handleSystemLeave () {
+                this.hoverId = -1;
+            },
+
+            handleCollection (option) {
+                option.collection = option.collection > 0 ? 0 : 1;
+            },
+
+            // 收藏置顶
+            handleToggle () {
+                this.systemList = this.systemList.sort((pre, next) => {
+                    return next.collection - pre.collection;
+                });
+            },
+            
             // 申请期限逻辑
             handleDeadlineChange (payload) {
                 if (payload) {
@@ -2399,7 +2458,7 @@
                 this.$router.push({
                     name: 'permRenewal',
                     query: {
-                        tab: 'custom'
+                        tab: 'group'
                     }
                 });
             },
@@ -2455,6 +2514,22 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+    }
+}
+
+.select-collection {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/deep/ .bk-table-header-wrapper {
+    .has-gutter {
+        .is-first {
+            .bk-form-checkbox  {
+                display: none;
+            }
+        }
     }
 }
 </style>

@@ -34,9 +34,9 @@
                 <template slot-scope="{ row }">
                     <section class="audit-detail-wrapper" v-bkloading="{ isLoading: row.loading, opacity: 1 }">
                         <template v-if="noDetailType.includes(row.type) || row.type === 'role.group.renew'">
-                            <div class="empty-wrapper">
-                                <ExceptionEmpty />
-                            </div>
+                            <!-- <div class="empty-wrapper"> -->
+                            <ExceptionEmpty />
+                            <!-- </div> -->
                         </template>
                         <template v-if="onlyDescriptionType.includes(row.detail.type)">
                             <section v-if="!row.loading">
@@ -53,7 +53,7 @@
                                 :outer-border="false"
                                 :header-border="false"
                                 :header-cell-style="{ background: '#f5f6fa', borderRight: 'none' }">
-                                <bk-table-column label="类型">
+                                <bk-table-column :label="$t(`m.common['类型']`)">
                                     <template slot-scope="props">
                                         <span>{{ objectMap[props.row.type] || props.row.type }}</span>
                                     </template>
@@ -82,7 +82,7 @@
                                 :outer-border="false"
                                 :header-border="false"
                                 :header-cell-style="{ background: '#f5f6fa', borderRight: 'none' }">
-                                <bk-table-column prop="name" label="对象实例">
+                                <bk-table-column prop="name" :label="$t(`m.audit['对象实例']`)">
                                     <template slot-scope="props">
                                         <span :title="objectMap[props.row.type] || props.row.type">
                                             {{ objectMap[props.row.type] || props.row.type }}
@@ -112,7 +112,7 @@
                                 :outer-border="false"
                                 :header-border="false"
                                 :header-cell-style="{ background: '#f5f6fa', borderRight: 'none' }">
-                                <bk-table-column prop="name" label="类型">
+                                <bk-table-column prop="name" :label="$t(`m.common['类型']`)">>
                                     <template slot-scope="props">
                                         <span>{{ objectMap[props.row.type] || props.row.type }}</span>
                                     </template>
@@ -142,7 +142,7 @@
                             </template>
                         </template>
                         <template v-if="onlyRoleType.includes(row.detail.type)">
-                            <p>{{ $t(`m.audit['一级管理空间']`) }}：{{ row.detail.role_name }}</p>
+                            <p>{{ $t(`m.audit['管理空间']`) }}：{{ row.detail.role_name }}</p>
                         </template>
                     </section>
                 </template>

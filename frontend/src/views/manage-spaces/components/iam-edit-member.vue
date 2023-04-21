@@ -10,12 +10,12 @@
                             class="member-item"
                             :class="item.readonly ? 'member-readonly' : ''">
                             {{ item.username }}
-                            <Icon v-if="!item.readonly" type="close-small"
+                            <Icon v-if="!item.readonly && isEditMode" type="close-small"
                                 @click.stop="handleDelete(index)" />
                         </span>
                     </slot>
                 </div>
-                <div class="edit-action-box">
+                <div class="edit-action-box" v-if="isEditMode">
                     <Icon
                         type="edit-fill"
                         class="edit-action"
@@ -31,7 +31,9 @@
         <template v-else>
             <bk-user-selector
                 v-model="editValue"
-                class="edit-input"
+                :ext-cls="[
+                    'user-selector'
+                ]"
                 ref="input"
                 :api="userApi"
                 :placeholder="$t(`m.verify['请输入']`)"
@@ -68,6 +70,13 @@
             rules: {
                 type: Array,
                 default: () => []
+            },
+            mode: {
+                type: String,
+                default: 'edit',
+                validator: function (value) {
+                    return ['detail', 'edit'].includes(value);
+                }
             }
         },
         data () {
@@ -86,13 +95,17 @@
                 return {
                     width: this.width
                 };
+            },
+            isEditMode () {
+                return this.mode === 'edit';
             }
         },
         watch: {
             value (newVal) {
                 this.disabledValue = [...newVal].filter(e => e.readonly);
                 this.displayValue = [...newVal];
-                this.editValue = [...newVal].filter(e => !e.readonly).map(e => e.username);
+                // this.editValue = [...newVal].filter(e => !e.readonly).map(e => e.username);
+                this.editValue = [...newVal].map(e => e.username);
             }
         },
         mounted () {
@@ -125,6 +138,15 @@
                 this.isEditable = true;
                 this.$nextTick(() => {
                     this.$refs.input.focus();
+                    const disabledValue = [...this.disabledValue].map(item => item.username);
+                    const selectedTag = this.$refs.input.$refs.selected;
+                    if (selectedTag && selectedTag.length) {
+                        selectedTag.forEach(item => {
+                            if (disabledValue.includes(item.innerText)) {
+                                item.className = 'user-selector-selected user-selector-selected-readonly';
+                            }
+                        });
+                    }
                 });
             },
 
@@ -185,9 +207,11 @@
             },
 
             handleRtxBlur () {
-                this.$emit('on-change', {
-                    [this.field]: this.displayValue
-                });
+                if (JSON.stringify(this.displayValue) !== JSON.stringify(this.value)) {
+                    this.$emit('on-change', {
+                        [this.field]: this.displayValue
+                    });
+                }
             }
         }
     };
@@ -215,7 +239,7 @@
 
         .edit-content {
             flex: 0 0 auto;
-            max-width: calc(100% - 25px);
+            max-width: calc(100vh - 25px);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -262,8 +286,17 @@
                 animation: 'textarea-edit-loading' 1s linear infinite;
             }
         }
-        .edit-input {
+        .user-selector {
             width: 100%;
+        }
+        /deep/ .user-selector-selected-readonly {
+            background: #FFF1DB;
+            .user-selector-selected-value {
+                color: #FE9C00;
+            }
+            .user-selector-selected-clear {
+                display: none;
+            }
         }
     }
 </style>

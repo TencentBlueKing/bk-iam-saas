@@ -16,7 +16,7 @@
                     <section class="action-wrapper" @click.stop="handleAddPerm"
                         data-test-id="grading_btn_showAddAction">
                         <Icon bk type="plus-circle-shape" />
-                        <span>{{ $t(`m.levelSpace['选择操作和资源边界范围']`) }}</span>
+                        <span>{{ $t(`m.levelSpace['选择操作和资源边界']`) }}</span>
                     </section>
                     <Icon
                         type="info-fill"
@@ -63,6 +63,7 @@
                         :original-list="tableListBackup"
                         :is-all-expanded="isAllExpanded"
                         :backup-list="aggregationsTableData"
+                        :group-id="$route.params.id"
                         @on-delete="handleDelete"
                         @on-aggregate-delete="handleAggregateDelete"
                         @handleAggregateAction="handleAggregateAction"
@@ -71,7 +72,7 @@
                 </section>
             </div>
         </render-horizontal-block>
-        <p class="action-empty-error" v-if="isShowActionEmptyError">{{ $t(`m.verify['操作和资源边界范围不可为空']`) }}</p>
+        <p class="action-empty-error" v-if="isShowActionEmptyError">{{ $t(`m.verify['操作和资源边界不可为空']`) }}</p>
         <section v-if="isShowMemberAdd" ref="memberRef">
             <render-action
                 ref="memberRef"
@@ -88,7 +89,7 @@
         </section>
         <section v-else ref="memberRef">
             <render-member
-                :tip="$t(`m.levelSpace['一级管理空间只能给该范围内的人员授权']`)"
+                :tip="$t(`m.levelSpace['管理空间只能给该范围内的人员授权']`)"
                 :users="users"
                 :departments="departments"
                 :expired-at-error="isShowExpiredError"
@@ -97,6 +98,25 @@
                 @on-delete="handleMemberDelete"
                 @on-change="handleChange" />
         </section>
+        <template v-if="isStaff">
+            <render-horizontal-block
+                ext-cls="reason-wrapper"
+                :label="$t(`m.common['理由']`)"
+                :required="true">
+                <section class="content-wrapper" ref="reasonRef">
+                    <bk-input
+                        type="textarea"
+                        :rows="5"
+                        :ext-cls="isShowReasonError ? 'join-reason-error' : ''"
+                        v-model="reason"
+                        @input="handleReasonInput"
+                        @blur="handleReasonBlur"
+                        style="margin-bottom: 15px;">
+                    </bk-input>
+                </section>
+            </render-horizontal-block>
+            <p class="action-empty-error" v-if="isShowReasonError">{{ $t(`m.verify['理由不可为空']`) }}</p>
+        </template>
         <div slot="action">
             <bk-button theme="primary" type="button" :loading="submitLoading"
                 data-test-id="group_btn_createSubmit"
@@ -186,7 +206,7 @@
                     name: '',
                     description: '',
                     members: [],
-                    syncPerm: false
+                    sync_perm: false
                 },
                 isShowAddMemberDialog: false,
                 isShowMemberAdd: false,
@@ -221,7 +241,7 @@
                 curMap: null,
                 tips: this.$t(`m.grading['添加操作提示']`),
                 infoText: this.$t(`m.grading['选择提示']`),
-                addMemberTips: this.$t(`m.levelSpace['一级管理空间可以编辑、管理二级管理空间的权限']`),
+                addMemberTips: this.$t(`m.levelSpace['管理空间可以编辑、管理二级管理空间的权限']`),
                 addMemberTitle: this.$t(`m.levelSpace['最大可授权人员边界']`),
                 inheritSubjectScope: true,
                 curSystemId: []
@@ -297,7 +317,7 @@
                 return this.policyList.length > 0;
             },
             isRatingManager () {
-                return this.user.role.type === 'rating_manager';
+                return ['rating_manager', 'subset_manager'].includes(this.user.role.type);
             },
             isSuperManager () {
                 return this.user.role.type === 'super_manager';
@@ -331,12 +351,15 @@
         methods: {
             async fetchPageData () {
                 const propsId = Number(this.id);
-                const headerTitle = propsId ? '二级管理空间克隆' : '新建二级管理空间';
+                const headerTitle = this.$t(propsId ? `m.nav['克隆二级管理空间']` : `m.nav['新建二级管理空间']`);
                 this.$store.commit('setHeaderTitle', headerTitle);
                 if (propsId) {
                     await this.fetchDetail();
                 } else {
-                    this.formData.members = [{ username: this.user.username, readonly: true }];
+                    const { username } = this.user;
+                    this.formData.members = [
+                        { username, readonly: true }
+                    ];
                 }
             },
 
@@ -370,10 +393,10 @@
                 } = payload;
                 this.inheritSubjectScope = inheritSubjectScope;
                 this.formData = Object.assign({}, {
-                    name: `${name}_克隆`,
+                    name: `${name}_${this.$t(`m.grading['克隆']`)}`,
                     members,
                     description,
-                    syncPerm: sync_perm
+                    sync_perm: sync_perm
                 });
                 this.isAll = subject_scopes.some(item => item.type === '*' && item.id === '*');
                 this.users = subject_scopes.filter(item => item.type === 'user').map(item => {
@@ -1059,14 +1082,14 @@
                         });
                     });
                 }
-                const { name, description, members, syncPerm } = this.formData;
+                const { name, description, members, sync_perm } = this.formData;
                 const params = {
                     name,
                     description,
                     members,
                     subject_scopes: subjects,
                     authorization_scopes: data,
-                    sync_perm: syncPerm,
+                    sync_perm: sync_perm,
                     inherit_subject_scope: this.inheritSubjectScope
                 };
                 // 如果是动态继承上级空间 组织架构可为空
@@ -1080,7 +1103,7 @@
                 try {
                     await this.$store.dispatch('spaceManage/addSecondManager', params);
                     await this.$store.dispatch('roleList');
-                    this.messageSuccess(this.$t(`m.info['新建二级管理空间成功']`), 1000);
+                    this.messageSuccess(this.$t(+this.id > 0 ? `m.info['克隆二级管理空间成功']` : `m.info['新建二级管理空间成功']`), 1000);
                     this.$router.go(-1);
                 } catch (e) {
                     console.error(e);
@@ -1269,8 +1292,8 @@
         }
         .action-empty-error {
             position: relative;
-            top: -45px;
-            left: 150px;
+            top: -40px;
+            left: 160px;
             font-size: 12px;
             color: #ff4d4d;
         }

@@ -1,0 +1,43 @@
+### Query the list of user groups that a user has joined under a hierarchical administrator
+
+
+#### Parameters
+
+| field | type | required | location | description |
+|--------|--------|--------|--------|--------|--------|
+| grade_manager_id | int | yes | path | grade_manager_id |
+| uesr_id | string | yes | body | User ID, i.e. username |
+
+#### Request
+
+#### Response
+
+| field | type | description |
+| -----------|-----------|-----------|
+| id | int | User group ID |
+| name | string | User group name |
+| description | string | User group description |
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": [
+     {
+       "id": 1,
+       "name": "test1",
+       "description": "test1",
+     },
+     {
+       "id": 2,
+       "name": "test2",
+       "description": "test2",
+     },
+     {
+       "id": 2,
+       "name": "test2",
+       "description": "test",
+     }
+  ]
+}
+```

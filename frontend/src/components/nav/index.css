@@ -45,7 +45,7 @@ $duration: 0.3s;
                 display: none;
                 height: 5px;
                 border-radius: 2px;
-                background-color: #e6e9ea;
+                background-color: #3a4156;
             }
         }
         .nav-stick-wrapper {
@@ -97,7 +97,8 @@ $duration: 0.3s;
 
         .iam-nav-select-cls {
             /* background: #374357; */
-            background-color: #182132;
+            /* background-color: #182132; */
+            background-color: #40495E;
             width: 240px;
             margin: 10px auto;
             color: #fff;
@@ -106,7 +107,7 @@ $duration: 0.3s;
                 color: #63656E;
             }
             &.is-focus {
-                background: #182132;
+                background: #40495E ;
                 border: 1px solid #3A84FF;
                 border-radius: 2px;
             }
@@ -142,6 +143,22 @@ $duration: 0.3s;
             /* background: #182233 !important; */
             background: #3D465C;
             color: #c4c6cc !important;
+
+            &::-webkit-input-placeholder {
+                color: #979ba5;
+            }
+
+            &::-moz-placeholder {
+                color: #979ba5;
+            }
+
+            &:-ms-input-placeholder {
+                color: #979ba5;
+            }
+
+            &::-ms-input-placeholder {
+                color: #979ba5;
+            }
 
             &::placeholder {
                 color: #979ba5;

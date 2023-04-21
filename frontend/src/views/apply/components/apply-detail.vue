@@ -29,6 +29,7 @@
     import PermPolicy from '@/model/my-perm-policy';
     import RenderProcess from '../common/render-process';
     import { formatCodeData } from '@/common/util';
+    import { mapGetters } from 'vuex';
     export default {
         name: '',
         components: {
@@ -65,6 +66,7 @@
             };
         },
         computed: {
+            ...mapGetters(['externalSystemId']),
             isLoading () {
                 return this.initRequestQueue.length > 0;
             },
@@ -108,7 +110,13 @@
         methods: {
             async fetchData (id) {
                 try {
-                    const res = await this.$store.dispatch('myApply/getApplyDetail', { id });
+                    const params = {
+                        id
+                    };
+                    if (this.externalSystemId) {
+                        params.hidden = false;
+                    }
+                    const res = await this.$store.dispatch('myApply/getApplyDetail', params);
                     const {
                         sn, type, applicant, organizations, reason, data,
                         status, created_time, ticket_url

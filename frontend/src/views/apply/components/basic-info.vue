@@ -19,13 +19,14 @@
             <label class="label">{{ $t(`m.myApply['申请人']`) }}：</label>
             <div class="content">{{ data.applicant }}</div>
         </div>
-        <div class="item">
+        <div class="item" v-if="!['create_rating_manager', 'update_rating_manager'].includes(data.type)">
             <label class="label">{{ $t(`m.myApply['权限获得者']`) }}：</label>
             <div class="content">
                 {{
                     data.applicants && data.applicants.length > 0
-                        ? data.applicants.map((item) => item.display_name).join(';')
-                        : ''
+                        ? data.applicants.map((item) => ['user'].includes(item.type) ?
+                            `${item.display_name}(${item.id})`
+                            : item.display_name).join(';') : ''
                 }}
             </div>
         </div>
@@ -100,19 +101,19 @@
                         str = this.$t(`m.myApply['自定义临时权限申请']`);
                         break;
                     case 'renew_action':
-                        str = this.$t(`m.myApply['自定义权限申请']`);
+                        str = this.$t(`m.renewal['权限续期']`);
                         break;
                     case 'join_group':
                         str = this.$t(`m.myApply['加入用户组']`);
                         break;
                     case 'renew_group':
-                        str = this.$t(`m.myApply['加入用户组']`);
+                        str = this.$t(`m.myApply['用户组续期']`);
                         break;
                     case 'create_rating_manager':
-                        str = this.$t(source && source === 'externalApp' ? `m.myApply['申请创建项目']` : `m.myApply['创建一级管理空间']`);
+                        str = this.$t(source && source === 'externalApp' ? `m.myApply['创建项目']` : `m.myApply['创建管理空间']`);
                         break;
                     case 'update_rating_manager':
-                        str = this.$t(`m.myApply['编辑一级管理空间']`);
+                        str = this.$t(source && source === 'externalApp' ? `m.myApply['编辑项目']` : `m.myApply['编辑管理空间']`);
                         break;
                     default:
                         str = '';

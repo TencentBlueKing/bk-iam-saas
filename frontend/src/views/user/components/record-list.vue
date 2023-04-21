@@ -83,15 +83,16 @@
                     <div class="link-btn">
                         <bk-link class="link" theme="primary" href="https://bk.tencent.com/docs/document/6.0/160/8402" target="_blank">{{$t(`m.user['同步失败排查指引']`)}}</bk-link>
                     </div>
-                    <div class="msg-content">
-                        <div v-if="exceptionMsg || tracebackMsg">
+                    <div v-if="exceptionMsg || tracebackMsg"
+                        class="msg-content">
+                        <div>
                             <div v-html="exceptionMsg"></div>
                             <div v-html="tracebackMsg"></div>
                         </div>
                         <!-- <div v-else>{{ $t(`m.user['暂无日志详情']`) }}</div> -->
-                        <div v-else>
-                            <ExceptionEmpty />
-                        </div>
+                    </div>
+                    <div v-else>
+                        <ExceptionEmpty style="background: #ffffff" />
                     </div>
                 </section>
             </div>
@@ -143,7 +144,7 @@
                 triggerType: { 'periodic_task': this.$t(`m.user['定时同步']`), 'manual_sync': this.$t(`m.user['手动同步']`) },
                 shortcuts: [
                     {
-                        text: '今天',
+                        text: this.$t(`m.user['今天']`),
                         value () {
                             const end = new Date();
                             const start = new Date();
@@ -151,7 +152,7 @@
                         }
                     },
                     {
-                        text: '最近7天',
+                        text: this.$t(`m.user['最近7天']`),
                         value () {
                             const end = new Date();
                             const start = new Date();
@@ -160,7 +161,7 @@
                         }
                     },
                     {
-                        text: '最近30天',
+                        text: this.$t(`m.user['最近30天']`),
                         value () {
                             const end = new Date();
                             const start = new Date();

@@ -51,7 +51,7 @@
                             </span>
                         </template>
                     </bk-table-column>
-                    <bk-table-column :label="$t(`m.common['所属一级管理空间']`)">
+                    <bk-table-column :label="$t(`m.common['所属管理空间']`)">
                         <template slot-scope="{ row }">
                             <span
                                 :class="row.role && row.role.name ? 'can-view' : ''"
@@ -103,7 +103,7 @@
             />
             <!-- </template> -->
         </section>
-        <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员范围不可为空']`) }}</p>
+        <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员边界不可为空']`) }}</p>
         <render-horizontal-block ext-cls="expired-at-wrapper" :label="$t(`m.common['申请期限']`)" :required="true">
             <section ref="expiredAtRef">
                 <iam-deadline :value="expiredAt" @on-change="handleDeadlineChange" :cur-role="curRole" />
@@ -155,6 +155,27 @@
             @on-cancel="handleCancelAdd"
             @on-sumbit="handleSubmitAdd" />
 
+        <bk-sideslider
+            :is-show.sync="isShowGradeSlider"
+            :width="640"
+            :title="gradeSliderTitle"
+            :quick-close="true"
+            @animation-end="gradeSliderTitle === ''">
+            <div class="grade-memebers-content"
+                slot="content"
+                v-bkloading="{ isLoading: sliderLoading, opacity: 1 }">
+                <template v-if="!sliderLoading">
+                    <div v-for="(item, index) in gradeMembers"
+                        :key="index"
+                        class="member-item">
+                        <span class="member-name">
+                            {{ item }}
+                        </span>
+                    </div>
+                    <p class="info">{{ $t(`m.info['管理空间成员提示']`) }}</p>
+                </template>
+            </div>
+        </bk-sideslider>
     </smart-action>
 </template>
 <script>
@@ -206,6 +227,7 @@
                 addMemberTitle: this.$t(`m.myApply['权限获得者']`),
                 addMemberText: this.$t(`m.permApply['选择权限获得者']`),
                 addMemberTips: this.$t(`m.permApply['可代他人申请加入用户组获取权限']`),
+                queryParams: {},
                 emptyData: {
                     type: '',
                     text: '',
@@ -215,7 +237,7 @@
             };
         },
         computed: {
-            ...mapGetters(['user'])
+            ...mapGetters(['user', 'externalSystemId'])
         },
         watch: {
             reason () {
@@ -225,11 +247,19 @@
                 this.currentBackup = value;
             }
         },
-        created () {
+        async created () {
             this.searchParams = this.$route.query;
-            delete this.searchParams.limit;
-            delete this.searchParams.current;
+            // delete this.searchParams.limit;
+            // delete this.searchParams.current;
             this.curRole = this.user.role.type;
+            this.users = [
+                {
+                    'username': this.user.username,
+                    'name': this.user.username,
+                    'showRadio': true,
+                    'type': 'user',
+                    'is_selected': true
+                }];
             this.searchData = [
                 {
                     id: 'id',
@@ -255,10 +285,10 @@
                     name: this.$t(`m.common['系统包含']`),
                     remoteMethod: this.handleRemoteSystem
                 },
-                // 一级管理空间
+                // 管理空间
                 {
                     id: 'role_id',
-                    name: this.$t(`m.grading['一级管理空间']`),
+                    name: this.$t(`m.grading['管理空间']`),
                     remoteMethod: this.handleGradeAdmin
                 }
             ];
@@ -266,11 +296,13 @@
             const isObject = (payload) => {
                 return Object.prototype.toString.call(payload) === '[object Object]';
             };
-            const currentQueryCache = this.getCurrentQueryCache();
+            const currentQueryCache = await this.getCurrentQueryCache();
             if (currentQueryCache && Object.keys(currentQueryCache).length) {
                 if (currentQueryCache.limit) {
-                    const { current, limit } = currentQueryCache;
-                    this.pagination = Object.assign(this.pagination, { current, limit });
+                    this.pagination = Object.assign(
+                        this.pagination,
+                        { current: Number(currentQueryCache.current), limit: Number(currentQueryCache.limit) }
+                    );
                 }
                 for (const key in currentQueryCache) {
                     if (key !== 'limit' && key !== 'current') {
@@ -335,14 +367,15 @@
             },
 
             refreshCurrentQuery () {
-                const { limit, current } = this.pagination;
                 const params = {};
                 const queryParams = {
-                    limit,
-                    current,
-                    ...this.searchParams
+                    ...this.searchParams,
+                    ...this.$route.query,
+                    ...this.queryParams
                 };
-                window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
+                if (Object.keys(queryParams).length) {
+                    window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
+                }
                 for (const key in this.searchParams) {
                     const tempObj = this.searchData.find((item) => key === item.id);
                     if (tempObj && tempObj.remoteMethod && typeof tempObj.remoteMethod === 'function') {
@@ -358,9 +391,7 @@
                 }
                 this.emptyData = Object.assign(this.emptyData, { tipType: Object.keys(this.searchParams).length > 0 ? 'search' : '' });
                 return {
-                    ...params,
-                    limit,
-                    current
+                    ...queryParams
                 };
             },
 
@@ -489,12 +520,16 @@
 
             // 系统包含数据
             handleRemoteSystem (value) {
-                return this.$store.dispatch('system/getSystems').then(({ data }) => {
+                const params = {};
+                if (this.externalSystemId) {
+                    params.hidden = false;
+                }
+                return this.$store.dispatch('system/getSystems', params).then(({ data }) => {
                     return data.map(({ id, name }) => ({ id, name })).filter((item) => item.name.indexOf(value) > -1);
                 });
             },
 
-            // 一级管理空间数据
+            // 管理空间数据
             handleGradeAdmin (value) {
                 return this.$store.dispatch('role/getScopeHasUser').then(({ data }) => {
                     const val = value.toLowerCase();
@@ -523,7 +558,7 @@
             handleViewDetail (payload) {
                 if (payload.role && payload.role.name) {
                     this.isShowGradeSlider = true;
-                    this.gradeSliderTitle = `【${payload.role.name}】${this.$t(`m.grading['一级管理空间']`)} ${this.$t(`m.common['成员']`)}`;
+                    this.gradeSliderTitle = `【${payload.role.name}】${this.$t(`m.grading['管理空间']`)} ${this.$t(`m.common['成员']`)}`;
                     this.fetchRoles(payload.role.id);
                 }
             },
@@ -539,12 +574,14 @@
                     return;
                 }
                 this.pagination.current = page;
+                this.queryParams = Object.assign(this.queryParams, { current: page });
                 this.currentSelectList = [];
                 this.fetchUserGroupList(true);
             },
 
             limitChange (currentLimit, prevLimit) {
                 this.pagination = Object.assign(this.pagination, { current: 1, limit: currentLimit });
+                this.queryParams = Object.assign(this.queryParams, { current: 1, limit: currentLimit });
                 this.fetchUserGroupList(true);
             },
 

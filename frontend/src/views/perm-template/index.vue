@@ -51,22 +51,19 @@
                     <span :title="row.system.name">{{ row.system.name }}</span>
                 </template>
             </bk-table-column>
-            <template v-if="['rating_manager'].includes(curRole)">
+            <!-- <template v-if="['rating_manager'].includes(curRole)">
                 <bk-table-column
                     :label="$t(`m.nav['管理空间']`)"
-                    :filters="spaceFiltersList"
-                    :filter-method="handleSpaceFilter"
-                    :filter-multiple="true"
                 >
-                    <!-- <template slot-scope="{ row }">
+                    <template slot-scope="{ row }">
                         <span class="user-group-name" :title="row.role.name" @click="handleView(row)">
                             {{ row.role.name || '--' }}
                         </span>
                         <span>{{ user.role && user.role.name === row.role.name
                             ? `(${il8n('levelSpace', '当前空间')})` : '' }}</span>
-                    </template> -->
+                    </template>
                 </bk-table-column>
-            </template>
+            </template> -->
             <bk-table-column :label="$t(`m.permTemplate['关联的组']`)">
                 <template slot-scope="{ row }">
                     <template v-if="!!row.subject_count">
@@ -177,7 +174,7 @@
             };
         },
         computed: {
-            ...mapGetters(['user']),
+            ...mapGetters(['user', 'externalSystemId']),
             isCanBatchDelete () {
                 return this.currentSelectList.length > 0;
             },
@@ -427,13 +424,13 @@
                 const hasSelectedLen = this.currentSelectList.length;
                 let deleteTitle = '';
                 if (hasSelectedLen === 1) {
-                    deleteTitle = `确认删除？`;
+                    deleteTitle = `${this.$t(`m.dialog['确认删除']`)}`;
                 } else {
-                    deleteTitle = `确认删除${hasSelectedLen}个模板？`;
+                    deleteTitle = `${this.$t(`m.common['确认删除']`)}${hasSelectedLen}${this.$t(`m.permTemplate['个模板']`)}？`;
                 }
                 this.$bkInfo({
                     title: deleteTitle,
-                    subTitle: '删除权限模版不会影响已授权用户，可以放心删除。',
+                    subTitle: this.$t(`m.permTemplate['删除权限模版不会影响已授权用户，可以放心删除。']`),
                     maskClose: true,
                     confirmFn: async () => {
                         console.warn('');
@@ -449,7 +446,11 @@
             },
 
             handleRemoteSystem (value) {
-                return this.$store.dispatch('system/getSystems')
+                const params = {};
+                if (this.externalSystemId) {
+                    params.hidden = false;
+                }
+                return this.$store.dispatch('system/getSystems', params)
                     .then(({ data }) => {
                         return data.map(({ id, name }) => ({ id, name })).filter(item => item.name.indexOf(value) > -1);
                     });

@@ -40,7 +40,7 @@
                                     <span>{{ row.name }}({{ row.id }})</span>
                                 </template>
                             </bk-table-column>
-                            <bk-table-column :label="$t(`m.common['到期时间']`)">
+                            <bk-table-column :label="$t(`m.common['有效期']`)">
                                 <template slot-scope="{ row }">
                                     <render-expire-display
                                         :selected="currentSelectList.map((v) => v.$id).includes(row.$id)"
@@ -168,6 +168,26 @@
         methods: {
             async fetchPageData () {
                 await this.fetchData();
+                await this.fetchDefaultCheck();
+            },
+
+            async fetchDefaultCheck () {
+                if (this.pagination.current === 1) {
+                    for (let i = 0; i < this.tableList.length; i++) {
+                        const item = this.tableList[i];
+                        this.$set(item, 'expanded', true);
+                        this.$set(item, 'checkList', []);
+                        await this.fetchMembers(item, i);
+                        if (item.children && item.children.length) {
+                            item.children.forEach(subItem => {
+                                this.currentSelectList.push(subItem);
+                                item.checkList.push(subItem);
+                                this.$refs.permTableRef
+                                    && this.$refs.permTableRef[i].toggleRowSelection(subItem, true);
+                            });
+                        }
+                    }
+                }
             },
 
             getIsSelect (item, index) {
@@ -262,13 +282,6 @@
                 }
             },
 
-            async handleExpanded (payload, item) {
-                item.pagination.current = 1;
-                item.pagination.limit = 10;
-                item.pagination.count = 0;
-                await this.fetchMembers(item);
-            },
-
             async fetchData (isLoading = false) {
                 this.tableLoading = isLoading;
                 try {
@@ -300,6 +313,13 @@
                 } finally {
                     this.tableLoading = false;
                 }
+            },
+
+            async handleExpanded (payload, item) {
+                item.pagination.current = 1;
+                item.pagination.limit = 10;
+                item.pagination.count = 0;
+                await this.fetchMembers(item);
             },
 
             handlePageChange (page) {
@@ -349,7 +369,6 @@
                 this.currentSelectList = _.cloneDeep(selection);
                 this.tableList[index].checkList = _.cloneDeep(selection);
                 this.setExpiredAt();
-                console.log(this.tableList[index].checkList);
             },
 
             handlerChange (selection, row, index) {

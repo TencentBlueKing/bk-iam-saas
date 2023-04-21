@@ -55,7 +55,7 @@
                                     </span>
                                 </template>
                             </bk-table-column>
-                            <bk-table-column :label="$t(`m.common['到期时间']`)" width="220">
+                            <bk-table-column :label="$t(`m.common['有效期']`)" width="220">
                                 <template slot-scope="{ row }">
                                     <span>{{row.expired_at_display}}</span>
                                 </template>
@@ -70,7 +70,7 @@
                 </div>
             </div>
         </template>
-        <template v-if="!isLoading && isEmpty">
+        <div v-if="!isLoading && isEmpty" style="height: 60px;">
             <div class="empty-wrapper">
                 <!-- <iam-svg />
                 <p class="text">{{ $t(`m.common['暂无数据']`) }}</p> -->
@@ -82,7 +82,7 @@
                     @on-refresh="handleEmptyRefresh"
                 />
             </div>
-        </template>
+        </div>
     </div>
 </template>
 <script>
@@ -138,7 +138,6 @@
                             item.canNotTransfer = true;
                         }
                     });
-
                     this.groupList.splice(0, this.groupList.length, ...groupList);
                     this.isEmpty = groupList.length < 1;
                     this.emptyData = formatCodeData(code, this.emptyData, this.isEmpty);

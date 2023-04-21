@@ -1069,6 +1069,7 @@
                     reverse: true,
                     groupId: this.groupId,
                     policy_id: this.tableList[this.curIndex].policy_id,
+                    resource_group_id: this.tableList[this.curIndex].resource_groups[this.curGroupIndex].id,
                     isTemplate: this.tableList[this.curIndex].isTemplate,
                     isNotLimit: conditionData.length === 0
                 };
@@ -1112,6 +1113,7 @@
                     reverse: true,
                     groupId: this.groupId,
                     policy_id: payload.policy_id,
+                    resource_group_id: payload.resource_groups[this.curGroupIndex].id,
                     isTemplate: payload.isTemplate
                 };
                 this.previewDialogTitle = `${this.$t(`m.common['操作']`)}【${payload.name}】${this.$t(`m.common['的资源实例']`)} ${this.$t(`m.common['差异对比']`)}`;
@@ -1119,7 +1121,7 @@
                     this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: '无资源ID，无法预览'
+                        message: this.$t(`m.info['无资源ID，无法预览']`)
                     });
                     return;
                 }
@@ -1907,7 +1909,8 @@
                 }
                 td:first-child .cell,
                 th:first-child .cell {
-                    padding-left: 15px;
+                    /* padding-left: 15px; */
+                    padding-left: 10px;
                 }
                 .iam-new-action {
                     display: inline-block;

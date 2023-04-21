@@ -16,7 +16,7 @@
                     </template>
                 </bk-table-column>
                 <bk-table-column :label="$t(`m.common['所属系统']`)" prop="system.name"></bk-table-column>
-                <bk-table-column :label="$t(`m.common['到期时间']`)" prop="expired_at_display"></bk-table-column>
+                <bk-table-column :label="$t(`m.common['有效期']`)" prop="expired_at_display"></bk-table-column>
                 <bk-table-column :label="$t(`m.perm['最近一次更新时间']`)">
                     <template slot-scope="{ row }">
                         <span :title="row.updated_time">{{ row.updated_time }}</span>

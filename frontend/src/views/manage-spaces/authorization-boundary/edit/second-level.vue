@@ -11,7 +11,7 @@
             :tips="addActionTips"
             v-if="!isSelectSystem"
             @on-click="handleAddAction" />
-        <render-horizontal-block :label="$t(`m.grading['最大可授权资源范围']`)" v-if="isSelectSystem">
+        <render-horizontal-block :label="$t(`m.levelSpace['最大可授权操作和资源边界']`)" v-if="isSelectSystem">
             <div class="grade-admin-select-wrapper">
                 <div class="showTableClick" @click.stop="isShowTableClick">
                     <div class="action">
@@ -52,6 +52,7 @@
                             ref="resourceInstanceRef"
                             :data="policyList"
                             :list="policyList"
+                            :group-id="$route.params.id"
                             :backup-list="aggregationsTableData"
                             @on-delete="handleDelete"
                             @on-aggregate-delete="handleAggregateDelete"
@@ -60,10 +61,10 @@
                 </div>
             </div>
         </render-horizontal-block>
-        <p class="action-empty-error" v-if="isShowActionEmptyError">{{ $t(`m.verify['操作和资源实例范围不可为空']`) }}</p>
+        <p class="action-empty-error" v-if="isShowActionEmptyError">{{ $t(`m.verify['操作和资源边界不可为空']`) }}</p>
         <section v-if="isShowMemberAdd" ref="memberRef">
             <render-action
-                :title="$t(`m.grading['选择可授权人员范围']`)"
+                :title="$t(`m.grading['选择操作和资源边界']`)"
                 :tips="addMemberTips"
                 style="margin-bottom: 16px;"
                 @on-click="handleAddMember" />
@@ -76,7 +77,7 @@
             @on-add="handleAddMember"
             @on-delete="handleMemberDelete"
             @on-delete-all="handleDeleteAll" />
-        <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员范围不可为空']`) }}</p>
+        <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员边界不可为空']`) }}</p>
         <div slot="action">
             <bk-button theme="primary" type="button" @click="handleSubmit" :loading="submitLoading">
                 {{ $t(`m.levelSpace['提交审批']`) }}
@@ -140,7 +141,7 @@
                 },
                 submitLoading: false,
                 addActionTips: this.$t(`m.grading['添加操作提示']`),
-                addMemberTips: this.$t(`m.levelSpace['二级管理空间扩大自己的授权边界，需要走一级管理空间管理员审批']`),
+                addMemberTips: this.$t(`m.levelSpace['二级管理空间扩大自己的授权边界，需要走一级管理员审批']`),
                 isShowAddMemberDialog: false,
                 users: [],
                 departments: [],
@@ -150,7 +151,7 @@
                 isExpanded: false,
                 curSystem: '',
                 curActionValue: [],
-                addMemberTitle: this.$t(`m.grading['选择可授权人员范围']`),
+                addMemberTitle: this.$t(`m.levelSpace['选择可授权人员边界']`),
                 originalList: [],
                 isShowMemberEmptyError: false,
                 infoText: this.$t(`m.grading['选择提示']`),
@@ -726,6 +727,7 @@
             },
 
             async handleSubmitWithReason () {
+                window.changeDialog = false;
                 this.dialogLoading = true;
                 const data = this.$refs.resourceInstanceRef.handleGetValue().actions;
                 const subjects = [];
@@ -896,8 +898,8 @@
         }
         .action-empty-error {
             position: relative;
-            top: -50px;
-            left: 150px;
+            top: -55px;
+            left: 230px;
             font-size: 12px;
             color: #ff4d4d;
         }

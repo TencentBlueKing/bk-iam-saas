@@ -143,7 +143,7 @@
                             {{ item }}
                         </span>
                     </div>
-                    <p class="info">{{ $t(`m.info['一级管理空间成员提示']`) }}</p>
+                    <p class="info">{{ $t(`m.info['管理空间成员提示']`) }}</p>
                 </template>
             </div>
         </bk-sideslider>
@@ -229,7 +229,7 @@
             };
         },
         computed: {
-            ...mapGetters(['user'])
+            ...mapGetters(['user', 'externalSystemId'])
         },
         watch: {
             reason (value) {
@@ -572,7 +572,11 @@
 
             // 系统包含数据
             async handleRemoteSystem (value) {
-                const { code, data } = await this.$store.dispatch('system/getSystems');
+                const params = {};
+                if (this.externalSystemId) {
+                    params.hidden = false;
+                }
+                const { code, data } = await this.$store.dispatch('system/getSystems', params);
                 if (code === 0) {
                     return data.map(({ id, name }) => ({ id, name })).filter(item => item.name.indexOf(value) > -1);
                 }

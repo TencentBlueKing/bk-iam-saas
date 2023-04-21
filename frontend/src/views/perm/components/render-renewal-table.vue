@@ -8,6 +8,7 @@
             ext-cls="perm-renewal-table"
             :outer-border="false"
             :header-border="false"
+            :max-height="500"
             :pagination="pagination"
             @page-change="pageChange"
             @page-limit-change="limitChange"
@@ -66,10 +67,11 @@
     </div>
 </template>
 <script>
+    import _ from 'lodash';
     import { mapGetters } from 'vuex';
+    import renderExpireDisplay from '@/components/render-renewal-dialog/display';
     import { PERMANENT_TIMESTAMP } from '@/common/constants';
     import { formatCodeData } from '@/common/util';
-    import renderExpireDisplay from '@/components/render-renewal-dialog/display';
 
     // 过期时间的天数区间
     const EXPIRED_DISTRICT = 15;
@@ -142,8 +144,14 @@
                 this.currentBackup = value;
             },
             type: {
-                handler (value) {
-                    this.tableProps = this.getTableProps(value);
+                handler (newValue, oldValue) {
+                    this.tableProps = this.getTableProps(newValue);
+                    if (oldValue && oldValue !== newValue) {
+                        this.pagination = Object.assign(this.pagination, {
+                            current: 1,
+                            limit: 10
+                        });
+                    }
                 },
                 immediate: true
             },
@@ -189,36 +197,55 @@
             },
             data: {
                 handler (value) {
-                    this.allData = value;
+                    this.allData = _.cloneDeep(value);
                     this.pagination = Object.assign(this.pagination, { count: value.length });
                     const data = this.getCurPageData();
                     this.tableList.splice(0, this.tableList.length, ...data);
-                    const getDays = payload => {
-                        const dif = payload - this.user.timestamp;
-                        if (dif < 1) {
-                            return 0;
-                        }
-                        return Math.ceil(dif / (24 * 3600));
-                    };
-                    this.currentSelectList = this.tableList.filter(item => getDays(item.expired_at) < EXPIRED_DISTRICT);
-                    if (this.type === 'custom') {
-                        this.tableList.forEach(item => {
-                            if (!this.systemFilter.find(subItem => subItem.value === item.system.id)) {
-                                this.systemFilter.push({
-                                    text: item.system.name,
-                                    value: item.system.id
+                    // this.currentSelectList = this.tableList.filter(item =>
+                    //     this.getDays(item.expired_at) < EXPIRED_DISTRICT);
+                    // if (this.type === 'custom') {
+                    //     this.tableList.forEach(item => {
+                    //         if (!this.systemFilter.find(subItem => subItem.value === item.system.id)) {
+                    //             this.systemFilter.push({
+                    //                 text: item.system.name,
+                    //                 value: item.system.id
+                    //             });
+                    //         }
+                    //     });
+                    // }
+                    this.$nextTick(() => {
+                        const tableItem = {
+                            group: () => {
+                                this.currentSelectList = this.tableList.filter(item =>
+                                    this.getDays(item.expired_at) < EXPIRED_DISTRICT);
+                                this.tableList.forEach(item => {
+                                    if (this.currentSelectList.map(_ => _.id).includes(item.id)) {
+                                        this.$refs.permTableRef
+                                            && this.$refs.permTableRef.toggleRowSelection(item, true);
+                                    }
+                                });
+                            },
+                            custom: () => {
+                                this.currentSelectList = this.allData.filter(item =>
+                                    this.getDays(item.expired_at) < EXPIRED_DISTRICT);
+                                this.allData.forEach(item => {
+                                    if (!this.systemFilter.find(subItem => subItem.value === item.system.id)) {
+                                        this.systemFilter.push({
+                                            text: item.system.name,
+                                            value: item.system.id
+                                        });
+                                    }
+                                    if (this.currentSelectList.map(_ => _.id).includes(item.id)) {
+                                        this.$refs.permTableRef
+                                            && this.$refs.permTableRef.toggleRowSelection(item, true);
+                                    }
                                 });
                             }
-                        });
-                    }
-                    this.$nextTick(() => {
-                        this.tableList.forEach(item => {
-                            if (this.currentSelectList.map(_ => _.id).includes(item.id)) {
-                                this.$refs.permTableRef && this.$refs.permTableRef.toggleRowSelection(item, true);
-                            }
-                        });
+                        };
+                        return tableItem[this.type] ? tableItem[this.type]() : tableItem['group']();
                     });
-                }
+                },
+                immediate: true
             },
             count: {
                 handler (value) {
@@ -234,6 +261,14 @@
             }
         },
         methods: {
+            getDays (payload) {
+                const dif = payload - this.user.timestamp;
+                if (dif < 1) {
+                    return 0;
+                }
+                return Math.ceil(dif / (24 * 3600));
+            },
+
             getIsSelect () {
                 return this.tableList.length > 0;
             },
@@ -242,13 +277,13 @@
                 if (payload === 'group') {
                     return [
                         { label: this.$t(`m.userGroup['用户组名']`), prop: 'name' },
-                        { label: this.$t(`m.common['到期时间']`), prop: 'expired_at' }
+                        { label: this.$t(`m.common['有效期']`), prop: 'expired_at' }
                     ];
                 }
                 return [
                     { label: this.$t(`m.common['操作']`), prop: 'action' },
                     { label: this.$t(`m.common['所属系统']`), prop: 'system' },
-                    { label: this.$t(`m.common['到期时间']`), prop: 'expired_at' }
+                    { label: this.$t(`m.common['有效期']`), prop: 'expired_at' }
                 ];
             },
 
@@ -263,13 +298,36 @@
             },
 
             limitChange (currentLimit, prevLimit) {
-                this.pagination.limit = currentLimit;
-                this.pagination.current = 1;
+                this.pagination = Object.assign(
+                    this.pagination,
+                    {
+                        current: 1,
+                        limit: currentLimit
+                    }
+                );
                 this.pageChange();
             },
 
             handlerAllChange (selection) {
-                this.currentSelectList = [...selection];
+                const tabItem = {
+                    group: () => {
+                        this.currentSelectList = [...selection];
+                    },
+                    custom: () => {
+                        // 直接点全选按钮切换数量为当前页条数，处理点击其他页面数据再点全选数量不对等问题
+                        if (selection.length === this.tableList.length || selection.length === this.allData.length) {
+                            this.currentSelectList = [...this.allData];
+                            this.currentSelectList.forEach(item => {
+                                this.$refs.permTableRef
+                                    && this.$refs.permTableRef.toggleRowSelection(item, true);
+                            });
+                        } else {
+                            this.currentSelectList = [];
+                            this.$refs.permTableRef.clearSelection();
+                        }
+                    }
+                };
+                return tabItem[this.type] ? tabItem[this.type]() : tabItem['group']();
             },
 
             handlerChange (selection, row) {
@@ -292,13 +350,30 @@
                 this.isLoading = true;
                 try {
                     const { current, limit } = this.pagination;
-                    const { code, data } = await this.$store.dispatch('renewal/getExpireSoonGroupWithUser', {
-                        page_size: limit,
-                        page: current
-                    });
-                    this.tableList = data.results || [];
-                    this.pagination.count = data.count;
-                    this.emptyRenewalData = formatCodeData(code, this.emptyRenewalData, this.tableList.length === 0);
+                    const tabItem = {
+                        group: async () => {
+                            const { code, data } = await this.$store.dispatch('renewal/getExpireSoonGroupWithUser', {
+                                page_size: limit,
+                                page: current
+                            });
+                            this.tableList = data.results || [];
+                            this.pagination.count = data.count;
+                            this.emptyRenewalData
+                                = formatCodeData(code, this.emptyRenewalData, this.tableList.length === 0);
+                        },
+                        custom: () => {
+                            this.tableList = this.getCurPageData(current);
+                            this.$nextTick(() => {
+                                this.allData.forEach(item => {
+                                    if (this.currentSelectList.map(_ => _.id).includes(item.id)) {
+                                        this.$refs.permTableRef
+                                            && this.$refs.permTableRef.toggleRowSelection(item, true);
+                                    }
+                                });
+                            });
+                        }
+                    };
+                    return tabItem[this.type]();
                 } catch (e) {
                     console.error(e);
                     const { code, data, message, statusText } = e;
@@ -319,10 +394,10 @@
                 this.pagination = Object.assign(this.pagination, { current: 1, limit: 10 });
                 this.fetchTableData();
             }
-
         }
     };
 </script>
+
 <style lang="postcss">
     .iam-perm-renewal-table-wrapper {
         min-height: 200px;

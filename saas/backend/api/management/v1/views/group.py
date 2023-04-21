@@ -43,12 +43,13 @@ from backend.apps.group.models import Group
 from backend.apps.group.serializers import GroupAddMemberSLZ
 from backend.apps.role.models import Role
 from backend.audit.audit import add_audit, audit_context_setter, view_audit_decorator
+from backend.audit.constants import AuditSourceType
 from backend.biz.group import GroupBiz, GroupCheckBiz, GroupCreationBean, GroupTemplateGrantBean
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleBiz, RoleListQuery
 from backend.common.lock import gen_group_upsert_lock
 from backend.common.pagination import CompatiblePagination
-from backend.service.constants import RoleType
+from backend.service.constants import GroupSaaSAttributeEnum, RoleType
 from backend.service.models import Subject
 from backend.trans.open_management import ManagementCommonTrans
 
@@ -98,7 +99,14 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
             group_names = [g["name"] for g in groups_data]
             self.group_check_biz.batch_check_role_group_names_unique(role.id, group_names)
 
-            groups = self.group_biz.batch_create(role.id, infos, request.user.username)
+            groups = self.group_biz.batch_create(
+                role.id,
+                infos,
+                request.user.username,
+                attrs={
+                    GroupSaaSAttributeEnum.SOURCE_TYPE.value: AuditSourceType.OPENAPI.value,
+                },
+            )
 
         # 添加审计信息
         # TODO: 后续其他地方也需要批量添加审计时再抽象出一个batch_add_audit方法，将for循环逻辑放到方法里

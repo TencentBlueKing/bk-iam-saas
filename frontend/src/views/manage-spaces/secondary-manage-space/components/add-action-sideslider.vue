@@ -49,10 +49,10 @@
                                 <!-- <div
                                     v-if="user.role.type === 'rating_manager'"
                                     :class="['skip-link', curSystemList.length > 20 ? 'skip-link-fixed' : '']"
-                                    :title="$t(`m.grading['修改一级管理空间授权范围']`)"
+                                    :title="$t(`m.grading['修改管理空间授权范围']`)"
                                     @click="handleSkip">
                                     <i class="iam-icon iamcenter-edit-fill"></i>
-                                    {{ $t(`m.grading['修改一级管理空间授权范围']`) }}
+                                    {{ $t(`m.grading['修改管理空间授权范围']`) }}
                                 </div> -->
                             </div>
                         </template>
@@ -70,7 +70,7 @@
                             <div class="empty-wrapper empty-wrapper2">
                                 <template v-if="user.role.type === 'rating_manager'">
                                     <bk-exception class="exception-wrap-item exception-part" type="search-empty" scene="part"></bk-exception>
-                                    <p class="tips-link" @click="handleSkip">{{ $t(`m.grading['修改一级管理空间授权范围']`) }}</p>
+                                    <p class="tips-link" @click="handleSkip">{{ $t(`m.grading['修改管理空间授权范围']`) }}</p>
                                 </template>
                                 <iam-svg v-else />
                             </div>
@@ -252,7 +252,7 @@
             };
         },
         computed: {
-            ...mapGetters(['user']),
+            ...mapGetters(['user', 'externalSystemId']),
             isLoading () {
                 return this.initRequestQueue.length > 0;
             },
@@ -495,7 +495,11 @@
             async fetchSystems () {
                 this.systemListIsLoading = true;
                 try {
-                    const { code, data } = await this.$store.dispatch('system/getSystems');
+                    const params = {};
+                    if (this.externalSystemId) {
+                        params.hidden = false;
+                    }
+                    const { code, data } = await this.$store.dispatch('system/getSystems', params);
                     this.systemList = _.cloneDeep(data);
                     this.curSystemList = _.cloneDeep(data);
                     this.curSystem = this.defaultSystem;
@@ -603,6 +607,7 @@
             },
 
             handleDefaultData (payload, data) {
+                this.systemData[payload].count = 0;
                 this.systemData[payload].list = _.cloneDeep(data);
                 this.systemData[payload].list.forEach(item => {
                     if (!item.actions) {

@@ -184,6 +184,7 @@
     import IamSearchSelect from '@/components/iam-search-select';
     import { fuzzyRtxSearch } from '@/common/rtx';
     import { formatCodeData } from '@/common/util';
+    import { mapGetters } from 'vuex';
 
     export default {
         name: '',
@@ -253,6 +254,7 @@
             };
         },
         computed: {
+            ...mapGetters(['externalSystemId']),
             isLoading () {
                 return this.requestQueue.length > 0 && this.isShowDialog;
             },
@@ -439,7 +441,11 @@
             },
 
             handleRemoteSystem (value) {
-                return this.$store.dispatch('system/getSystems')
+                const params = {};
+                if (this.externalSystemId) {
+                    params.hidden = false;
+                }
+                return this.$store.dispatch('system/getSystems', params)
                     .then(({ data }) => {
                         return data.map(({ id, name }) => ({ id, name })).filter(item => item.name.indexOf(value) > -1);
                     });

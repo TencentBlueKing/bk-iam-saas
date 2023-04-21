@@ -112,7 +112,7 @@
             };
         },
         computed: {
-            ...mapGetters(['externalSystemsLayout']),
+            ...mapGetters(['externalSystemsLayout', 'externalSystemId']),
             isEmpty () {
                 return this.groupSystemList.length < 1;
             }
@@ -136,7 +136,13 @@
             async handleInit () {
                 this.isLoading = true;
                 try {
-                    const { code, data } = await this.$store.dispatch('userGroup/getGroupSystems', { id: this.groupId });
+                    const params = {
+                        id: this.groupId
+                    };
+                    if (this.externalSystemId) {
+                        params.hidden = false;
+                    }
+                    const { code, data } = await this.$store.dispatch('userGroup/getGroupSystems', params);
                     (data || []).forEach(item => {
                         item.expanded = false;
                         item.loading = false;
@@ -244,7 +250,7 @@
                     //         related_resource_types: element.related_resource_types
                     //     }]
                     // })
-                    const tableData = res.data.actions.map(item => new Policy({ ...item, policy_id: 1 }, 'detail'));
+                    const tableData = res.data.actions.map(item => new Policy({ ...item, policy_id: 1, mode: 'template' }, 'detail'));
                     this.$set(item, 'tableData', tableData);
                 } catch (e) {
                     console.error(e);
@@ -274,7 +280,7 @@
                     //         related_resource_types: element.related_resource_types
                     //     }]
                     // })
-                    const tableData = res.data.map(item => new Policy(item, 'detail'));
+                    const tableData = res.data.map(item => new Policy({ ...item, mode: 'custom' }, 'detail'));
                     this.$set(item, 'tableData', tableData);
                 } catch (e) {
                     console.error(e);

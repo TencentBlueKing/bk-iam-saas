@@ -34,6 +34,23 @@
         <render-horizontal-block :label="$t(`m.renewal['续期时长']`)">
             <iam-deadline :value="expiredAt" @on-change="handleDeadlineChange" />
         </render-horizontal-block>
+        <render-horizontal-block
+            ext-cls="reason-wrapper"
+            :label="$t(`m.common['理由']`)"
+            :required="true">
+            <section ref="reasonRef">
+                <bk-input
+                    type="textarea"
+                    v-model="reason"
+                    :maxlength="255"
+                    :placeholder="$t(`m.verify['请输入']`)"
+                    :ext-cls="isShowReasonError ? 'renewal-reason-error' : ''"
+                    @input="handleReasonInput"
+                    @blur="handleReasonBlur">
+                </bk-input>
+                <p class="error-tips reason-error-tips" v-if="isShowReasonError">{{ $t(`m.verify['请输入理由']`) }}</p>
+            </section>
+        </render-horizontal-block>
         <div slot="action">
             <bk-button theme="primary" disabled v-if="isEmpty">
                 <span v-bk-tooltips="{ content: $t(`m.renewal['暂无将过期的权限']`), extCls: 'iam-tooltips-cls' }">
@@ -94,18 +111,20 @@
                 ],
                 active: 'group',
                 expiredAt: SIX_MONTH_TIMESTAMP,
-                submitLoading: false,
                 tableList: [],
+                tabKey: 'tab-key',
+                reason: '权限续期',
+                submitLoading: false,
                 tableLoading: false,
                 isShowErrorTips: false,
-                tabKey: 'tab-key',
                 isEmpty: false,
                 curEmptyData: {
                     type: '',
                     text: '',
                     tip: '',
                     tipType: ''
-                }
+                },
+                isShowReasonError: false
             };
         },
         computed: {
@@ -140,6 +159,9 @@
                 },
                 immediate: true,
                 deep: true
+            },
+            active () {
+                this.fetchActiveTabData(this.panels);
             }
         },
         async created () {
@@ -167,15 +189,15 @@
                         this.tableLoading = false;
                     });
                     const { code, data } = resultList[0];
-                    const { code: code2, data: data2 } = resultList[1];
+                    const { code: customCode, data: customList } = resultList[1];
                     this.panels[0].emptyData
                         = formatCodeData(code, this.panels[0].emptyData, data.results.length === 0);
                     this.panels[0] = Object.assign(this.panels[0], { data: data.results, total: data.count });
                     if (this.panels[1]) {
                         this.panels[1] = Object.assign(this.panels[1], {
-                            data: data2,
-                            total: data2.length,
-                            emptyData: formatCodeData(code2, this.panels[1].emptyData, data2.length === 0)
+                            data: customList,
+                            total: customList.length,
+                            emptyData: formatCodeData(customCode, this.panels[1].emptyData, customList.length === 0)
                         });
                     }
                     this.tabKey = +new Date();
@@ -192,16 +214,17 @@
                 }
             },
 
-            fetchActiveTabData (payload) {
+            async fetchActiveTabData (payload) {
                 const activeItem = {
                     group: () => {
-                        this.isEmpty = payload[0].total === 0;
+                        return !(payload[0].total > 0);
                     },
                     custom: () => {
-                        this.isEmpty = payload[1] && payload[1].total === 0;
+                        return !(payload[1] && payload[1].total > 0);
                     }
                 };
-                return activeItem[this.active];
+                this.isEmpty = activeItem[this.active]();
+                this.tabKey = +new Date();
             },
             // async fetchPageData () {
             //     await this.fetchData()
@@ -234,6 +257,16 @@
                 window.history.replaceState({}, '', `?${buildURLParams({ tab: payload })}`);
             },
 
+            handleReasonInput () {
+                this.isShowReasonError = false;
+            },
+
+            handleReasonBlur (payload) {
+                if (!payload) {
+                    this.isShowReasonError = true;
+                }
+            },
+
             handleDeadlineChange (payload) {
                 this.expiredAt = payload || ONE_DAY_TIMESTAMP;
             },
@@ -261,12 +294,20 @@
                     this.isShowErrorTips = true;
                     return;
                 }
+                if (!this.reason) {
+                    this.isShowReasonError = true;
+                    this.scrollToLocation(this.$refs.reasonRef);
+                    return;
+                }
                 this.submitLoading = true;
                 const isGroup = this.active === 'group';
                 const params = {
-                    reason: '续期'
+                    reason: this.reason
                 };
                 if (isGroup) {
+                    if (this.externalSystemId) {
+                        params.source_system_id = this.externalSystemId;
+                    }
                     params.groups = this.curSelectedList.map(
                         ({ id, name, description, expired_at }) => ({ id, name, description, expired_at })
                     );
@@ -309,6 +350,9 @@
                 padding: 0;
             }
         }
+        .iam-renewal-tab-cls {
+            margin-top: -15px;
+        }
         .panel-name {
             margin: 0 3px;
             display: inline-block;
@@ -319,6 +363,18 @@
             top: -10px;
             font-size: 12px;
             color: #ea3636;
+        }
+        
+        .reason-error-tips {
+            top: 0;
+        }
+
+        .reason-wrapper {
+            .renewal-reason-error {
+                .bk-textarea-wrapper {
+                    border-color: #ea3636;
+                }
+            }
         }
     }
 </style>

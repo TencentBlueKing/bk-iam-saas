@@ -5,14 +5,15 @@
             <component
                 :is="componentName"
                 :id="id"
-                @on-init="handleComInit">
-            </component>
+                @on-init="handleComInit"
+            />
         </div>
     </div>
 </template>
 <script>
     import store from '@/store';
     import { bus } from '@/common/bus';
+    import { mapGetters } from 'vuex';
 
     const GroupDetail = () => import(
         /* webpackChunkName: 'user-group' */'./group-detail'
@@ -36,6 +37,9 @@
                 id: '',
                 comIsLoading: true
             };
+        },
+        computed: {
+            ...mapGetters(['externalSystemId'])
         },
         beforeRouteEnter (to, from, next) {
             store.commit('setHeaderTitle', '');
@@ -65,6 +69,16 @@
              */
             handleComInit (isLoading) {
                 this.comIsLoading = isLoading;
+            },
+
+            fetchDetail (id) {
+                const params = {
+                    id
+                };
+                if (this.externalSystemId) {
+                    params.hidden = false;
+                }
+                return this.$store.dispatch('userGroup/getUserGroupDetail', params);
             }
         }
     };

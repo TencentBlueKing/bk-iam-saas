@@ -3,7 +3,7 @@
         <div class="header">
             <template v-if="isDepart">
                 <span class="display-name">{{ curData.name }}</span>
-                <span class="count">({{ curData.count }})</span>
+                <!-- <span class="count">({{ curData.count }})</span> -->
             </template>
             <template v-else>
                 <span class="display-name">{{ curData.username }}</span>

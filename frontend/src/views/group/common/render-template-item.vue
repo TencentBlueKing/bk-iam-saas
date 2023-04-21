@@ -1,9 +1,17 @@
 <template>
-    <div :class="['iam-template-item', extCls, { 'is-not-expanded': !isExpanded }]">
+    <div :class="
+        [
+            'iam-template-item',
+            extCls,
+            { 'is-not-expanded': !isExpanded },
+            { 'external-iam-template-item': externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle }
+        ]"
+    >
         <div
             :class="[
                 'header',
-                { 'external-header': externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle }
+                { 'external-header-lang': externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle
+                    && !['zh-cn'].includes(language) }
             ]"
             @click="handleExpanded"
             @mousemove="isShowEditFill"
@@ -20,8 +28,13 @@
                         ({{ count }})
                     </template>
                 </span>
-                <template v-if="(isExpanded || ShowEditFill) && !isUser && !externalEdit">
-                    <section class="edit-action" @click.stop="handleEdit">
+                <template v-if="(isExpanded || ShowEditFill) && !isUser">
+                    <section
+                        class="edit-action"
+                        @click.stop="handleEdit"
+                        v-if="
+                            (externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle && !externalEdit) ||
+                                !externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle">
                         <Icon type="edit-fill" v-if="isStaff || isPermTemplateDetail || isDetail ? false : true" />
                     </section>
                 </template>
@@ -31,9 +44,19 @@
                     @confirm="handleDelete"
                     v-if="isStaff || isPermTemplateDetail || isUser || isDetail ? false : true">
                     <template v-if="isExpanded || ShowEditFill && !isUser">
-                        <section class="delete-action" @click.stop="toDeletePolicyCount" v-if="!externalDelete">
+                        <template
+                            v-if="
+                                (externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle &&
+                                    !externalDelete) ||
+                                    !externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle"
+                        >
+                            <section class="delete-action" @click.stop="toDeletePolicyCount">
+                                <Icon type="delete-line" v-if="isStaff || isPermTemplateDetail ? false : true" />
+                            </section>
+                        </template>
+                        <!-- <section class="delete-action" @click.stop="toDeletePolicyCount">
                             <Icon type="delete-line" v-if="isStaff || isPermTemplateDetail ? false : true" />
-                        </section>
+                        </section> -->
                     </template>
                 </bk-popconfirm>
             </section>
@@ -113,7 +136,9 @@
                 role: '',
                 isShowDeleteDialog: false,
                 showIcon: false,
-                footerPosition: 'center'
+                footerPosition: 'center',
+                language: window.CUR_LANGUAGE,
+                initDistance: 40
             };
         },
         computed: {
@@ -142,7 +167,19 @@
                 immediate: true
             }
         },
+        mounted () {
+            this.fetchDynamicStyle();
+        },
         methods: {
+            fetchDynamicStyle () {
+                if (this.externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle) {
+                    const len = String(this.count).length;
+                    const langLen = !['zh-cn'].includes(this.language) ? 80 : this.initDistance;
+                    const distance = len > 2 ? (len - 1) * this.initDistance : langLen;
+                    const root = document.querySelector(':root');
+                    root.style.setProperty('--translate-icon', `translate(${distance}px, -40px)`);
+                }
+            },
             handleExpanded () {
                 this.isExpanded = !this.isExpanded;
                 this.$emit('update:expanded', true);
@@ -165,13 +202,15 @@
                 this.isEditMode = false;
                 this.$emit('on-cancel');
             },
+
             toDeletePolicyCount () {
                 this.isExpanded = true;
                 this.isShowDeleteDialog = true;
                 this.$emit('on-expanded', this.isExpanded);
             },
-            async handleDelete () {
-                await this.$emit('on-delete');
+
+            handleDelete () {
+                this.$emit('on-delete');
             },
 
             isShowEditFill () {
@@ -185,6 +224,9 @@
     };
 </script>
 <style lang="postcss" scoped>
+    :root {
+        --translate-icon: translate(40px, -40px);
+    }
     .iam-template-item {
         &.is-not-expanded:hover {
             background: #f0f1f5;
@@ -208,11 +250,8 @@
                 font-size: 14px;
             }
         }
-        .external-header {
-            height: 0;
-        }
         .edit-action,
-        .delete-action{
+        .delete-action {
             display: inline-block;
             width: 40px;
             text-align: center;
@@ -226,6 +265,33 @@
             position: relative;
             .slot-content {
                 padding: 0 30px 0 30px;
+            }
+        }
+
+        &.external-iam-template-item {
+            .header {
+                height: 0;
+                .edit-action,
+                .delete-action {
+                    display: inline-block;
+                    width: 40px;
+                    text-align: center;
+                    transform: var(--translate-icon);
+                    &:hover {
+                        i {
+                            color: #3a84ff;
+                        }
+                    }
+                }
+                &.external-header-lang {
+                    .edit-action,
+                    .delete-action {
+                        transform: var(--translate-icon);
+                    }
+                }
+            }
+            .slot-content {
+                padding: 0;
             }
         }
     }

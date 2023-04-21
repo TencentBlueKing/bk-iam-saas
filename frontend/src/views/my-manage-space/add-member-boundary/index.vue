@@ -42,7 +42,7 @@
                                 :class="[
                                     'search-input',
                                     { 'active': isSearchFocus },
-                                    { 'disabled': (isRatingManager || isAll) && !isAllFlag }
+                                    { 'disabled': isAll && !isAllFlag }
                                 ]"
                             >
                                 <bk-dropdown-menu align="left" ref="dropdown" trigger="click">
@@ -65,7 +65,7 @@
                                     </ul>
                                 </bk-dropdown-menu>
                                 <bk-input v-model="keyword" :placeholder="$t(`m.common['搜索提示1']`)" maxlength="64"
-                                    clearable :disabled="(isRatingManager || isAll) && !isAllFlag"
+                                    clearable :disabled="isAll && !isAllFlag"
                                     ext-cls="iam-add-member-search-input-cls" @focus="handleSearchInput"
                                     @blur="handleSearchBlur" @keyup.enter.native="handleSearch"
                                     @keyup.up.native="handleKeyup" @keyup.down.native="handleKeydown">
@@ -180,8 +180,13 @@
                                         {{ $t(`m.common['已选择']`) }}
                                     </template>
                                 </div>
-                                <bk-button theme="primary" text :disabled="!isShowSelectedText || isAll"
-                                    @click="handleDeleteAll">{{ $t(`m.common['清空']`) }}</bk-button>
+                                <bk-button
+                                    theme="primary" text
+                                    :disabled="!isShowSelectedText || isAll"
+                                    @click="handleDeleteAll"
+                                    style="padding-right: 40px;">
+                                    {{ $t(`m.common['清空']`) }}
+                                </bk-button>
                             </div>
                             <div class="content" :style="{ height: `${contentHeight}px` }">
                                 <div class="organization-content" v-if="isDepartSelectedEmpty">
@@ -189,8 +194,9 @@
                                         :key="item.id">
                                         <div class="organization-info">
                                             <Icon type="file-close" class="folder-icon" />
-                                            <span class="organization-name"
-                                                :title="item.full_name || item.name"
+                                            <span
+                                                class="organization-name"
+                                                :title="item.full_name"
                                             >
                                                 {{ item.name }}
                                             </span>
@@ -601,6 +607,13 @@
                 if (subjectScopes && subjectScopes.length) {
                     this.users = subjectScopes.filter(item => item.type === 'user');
                     this.departments = subjectScopes.filter(item => item.type === 'depart');
+                    if (this.departments.length) {
+                        this.departments.forEach((item) => {
+                            item.id = isNaN(Number(item.id)) ? item.id : Number(item.id);
+                        });
+                    }
+                    this.hasSelectedUsers.splice(0, this.hasSelectedUsers.length, ...this.users);
+                    this.hasSelectedDepartments.splice(0, this.hasSelectedDepartments.length, ...this.departments);
                 }
                 this.isAll = isAll || false;
                 this.showLimit = showLimit || false;
@@ -656,12 +669,12 @@
                             return getUsername(item);
                         })
                     });
-                    const temps = res.data.filter(
-                        item => !this.hasSelectedUsers.map(subItem => subItem.username).includes(item.username)
-                    );
-                    this.hasSelectedUsers.push(...temps);
                     if (res.data.length > 0) {
                         const usernameList = res.data.map(item => item.username);
+                        const temps = res.data.filter(
+                            item => !this.hasSelectedUsers.map(subItem => subItem.username).includes(item.username)
+                        );
+                        this.hasSelectedUsers.push(...temps);
                         // 分号拼接
                         // const templateArr = [];
                         // this.manualValueBackup = this.manualValueActual.split(';').filter(item => item !== '');
@@ -690,7 +703,7 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: '用户名输入格式错误'
+                        message: this.$t(`m.verify['用户名输入格式错误]`)
                     });
                 } finally {
                     this.manualAddLoading = false;
@@ -808,30 +821,30 @@
                         child.parentNodeId = '';
                         if (child.type === 'user') {
                             child.username = child.id;
-                        }
+                            if (this.hasSelectedUsers.length > 0) {
+                                child.is_selected = this.hasSelectedUsers.map(item => item.id).includes(child.id);
+                            } else {
+                                child.is_selected = false;
+                            }
 
-                        if (this.hasSelectedDepartments.length > 0) {
-                            child.is_selected = this.hasSelectedDepartments.map(item => item.id).includes(child.id);
-                        } else {
-                            child.is_selected = false;
+                            if (this.defaultUsers.length && this.defaultUsers.map(item => item.id).includes(child.id)) {
+                                child.is_selected = true;
+                                child.disabled = true;
+                            }
                         }
-
-                        if (this.hasSelectedUsers.length > 0) {
-                            child.is_selected = this.hasSelectedUsers.map(item => item.id).includes(child.id);
-                        } else {
-                            child.is_selected = false;
-                        }
-
-                        if (this.defaultDepartments.length > 0
-                            && this.defaultDepartments.map(item => item.id).includes(child.id.toString())
-                        ) {
-                            child.is_selected = true;
-                            child.disabled = true;
-                        }
-
-                        if (this.defaultUsers.length && this.defaultUsers.map(item => item.id).includes(child.id)) {
-                            child.is_selected = true;
-                            child.disabled = true;
+                        if (child.type === 'depart') {
+                            if (this.hasSelectedDepartments.length > 0) {
+                                child.is_selected = this.hasSelectedDepartments.map(item => item.id).includes(child.id);
+                            } else {
+                                child.is_selected = false;
+                            }
+    
+                            if (this.defaultDepartments.length > 0
+                                && this.defaultDepartments.map(item => item.id).includes(child.id.toString())
+                            ) {
+                                child.is_selected = true;
+                                child.disabled = true;
+                            }
                         }
                     });
                     this.treeList = _.cloneDeep(departments);
@@ -890,6 +903,7 @@
                                 child.async = child.child_count > 0 || child.member_count > 0;
                                 child.isNewMember = false;
                                 child.parentNodeId = item.id;
+                                child.full_name = `${item.name}：${child.name}`;
 
                                 if (this.hasSelectedDepartments.length > 0) {
                                     child.is_selected = this.hasSelectedDepartments.map(
@@ -1007,7 +1021,8 @@
                         departments.forEach(depart => {
                             depart.showRadio = true;
                             depart.type = 'depart';
-                            if (departIds.length && departIds.includes(depart.id)) {
+                            if ((departIds.length && departIds.includes(depart.id))
+                                || departIds.includes(String(depart.id))) {
                                 this.$set(depart, 'is_selected', true);
                             } else {
                                 this.$set(depart, 'is_selected', false);
@@ -1126,6 +1141,7 @@
                             child.async = child.child_count > 0 || child.member_count > 0;
                             child.isNewMember = false;
                             child.parentNodeId = payload.id;
+                            child.full_name = `${payload.full_name}/${child.name}`;
 
                             if (this.hasSelectedDepartments.length > 0) {
                                 child.is_selected = this.hasSelectedDepartments.map(item => item.id).includes(child.id);
@@ -1161,8 +1177,11 @@
                             // parentNodeId + username 组合成id
                             child.id = `${child.parentNodeId}${child.username}`;
 
-                            if (this.hasSelectedUsers.length > 0) {
-                                child.is_selected = this.hasSelectedUsers.map(item => item.id).includes(child.id);
+                            if (this.hasSelectedUsers.length > 0 && (
+                                this.hasSelectedUsers.map(item => item.id).includes(child.id)
+                                || this.hasSelectedUsers.map(item => item.username).includes(child.username))
+                            ) {
+                                child.is_selected = true;
                             } else {
                                 child.is_selected = false;
                             }
@@ -1294,29 +1313,55 @@
             },
 
             handleSave () {
-                const list = [...this.hasSelectedUsers, ...this.hasSelectedDepartments];
-                // eslint-disable-next-line camelcase
-                const subject_scopes = list.map(item => {
-                    if (item.type === 'depart') {
+                let users = [];
+                let departments = [];
+                if (this.hasSelectedUsers.length) {
+                    users = this.hasSelectedUsers.map(item => {
                         return {
-                            id: Number(item.id),
-                            type: 'depart',
-                            name: item.name,
-                            full_name: item.full_name,
-                            count: item.count
-                        };
-                    }
-                    if (item.type === 'user') {
-                        return {
-                            id: item.id,
+                            id: item.id || '',
                             type: 'user',
                             name: item.name,
                             username: item.username || item.id,
-                            full_name: item.username,
-                            count: item.count
+                            full_name: item.username
+                            // count: item.count
                         };
-                    }
-                });
+                    });
+                }
+                if (this.hasSelectedDepartments.length) {
+                    departments = this.hasSelectedDepartments.map(item => {
+                        return {
+                            id: item.id,
+                            type: 'depart',
+                            name: item.name,
+                            full_name: item.full_name,
+                            username: item.name
+                        };
+                    });
+                }
+                // eslint-disable-next-line camelcase
+                const subject_scopes = [...users, ...departments];
+                // const subject_scopes = list.map(item => {
+                //     if (item.type === 'depart') {
+                //         return {
+                //             id: item.id,
+                //             type: 'depart',
+                //             name: item.name,
+                //             full_name: item.full_name,
+                //             username: item.name
+                //             // count: item.count
+                //         };
+                //     }
+                //     if (item.type === 'user') {
+                //         return {
+                //             id: item.id,
+                //             type: 'user',
+                //             name: item.name,
+                //             username: item.username || item.id,
+                //             full_name: item.username
+                //             // count: item.count
+                //         };
+                //     }
+                // });
                 const params = {
                     subject_scopes
                     // expiredAt: this.expiredAt,
@@ -1580,7 +1625,7 @@
 
         .right {
             width: calc(100% - 400px);
-            margin-left: 20px;
+            margin: 0 20px;
 
             .header {
                 display: flex;
@@ -1603,6 +1648,7 @@
                 position: relative;
                 margin-top: 15px;
                 overflow: auto;
+                padding-right: 40px;
 
                 &::-webkit-scrollbar {
                     width: 4px;

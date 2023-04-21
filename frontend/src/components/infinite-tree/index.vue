@@ -30,7 +30,7 @@
                 <span
                     :style="nameStyle(item)"
                     :class="['node-title', { 'node-selected': item.selected }]"
-                    :title="item.type === 'user' ? item.name !== '' ? `${item.username}(${item.name})` : item.username : item.name">
+                    :title="nameType(item)">
                     {{ item.type === 'user' ? item.username : item.name }}
                     <template v-if="item.type === 'user' && item.name !== ''">({{ item.name }})</template>
                 </span>
@@ -42,7 +42,7 @@
                 <div class="node-radio" v-if="item.showRadio">
                     <span class="node-checkbox"
                         :class="{
-                            'is-disabled': item.disabled || isDisabled,
+                            'is-disabled': disabledNode(item),
                             'is-checked': item.is_selected,
                             'is-indeterminate': item.indeterminate
                         }"
@@ -68,6 +68,7 @@
 
     export default {
         name: 'infinite-tree',
+        inject: ['getGroupAttributes'],
         props: {
             // 所有数据
             allData: {
@@ -169,6 +170,27 @@
                         'maxWidth': `calc(100% - ${otherOffset}px)`
                     };
                 };
+            },
+            nameType () {
+                return (payload) => {
+                    const { name, type, username, full_name } = payload;
+                    const typeMap = {
+                        user: () => {
+                           return name ? `${username}(${name})` : username;
+                        },
+                        depart: () => {
+                            // eslint-disable-next-line camelcase
+                            return full_name || name;
+                        }
+                    };
+                    return typeMap[type]();
+                };
+            },
+            disabledNode () {
+                return (payload) => {
+                    const isDisabled = payload.disabled || this.isDisabled;
+                    return this.getGroupAttributes ? isDisabled || (this.getGroupAttributes().source_from_role && payload.type === 'depart') : isDisabled;
+                };
             }
         },
         watch: {
@@ -178,8 +200,6 @@
                 }
                 this.clickTriggerTypeBat = val;
             }
-        },
-        created () {
         },
         mounted () {
             const height = this.$el.clientHeight === 0
@@ -231,8 +251,8 @@
              *
              * @param {Object} node 当前节点
              */
-            nodeClick (node) {
-                if (this.isDisabled) {
+            async nodeClick (node) {
+                if (this.isDisabled || (this.getGroupAttributes && this.getGroupAttributes().source_from_role && node.type === 'depart')) {
                     return;
                 }
                 if ((node.level === 0 || (node.async && node.disabled)) && !this.isRatingManager) {
@@ -323,21 +343,21 @@
                 });
             },
 
-            handleNodeClick (node) {
-                if (node.disabled || this.isDisabled) {
-                    return;
+            async handleNodeClick (node) {
+                const isDisabled = node.disabled || this.isDisabled || (this.getGroupAttributes && this.getGroupAttributes().source_from_role && node.type === 'depart');
+                if (!isDisabled) {
+                    node.is_selected = !node.is_selected;
+                    if (node.type === 'user') {
+                        this.handleBanUser(node, node.is_selected);
+                    }
+                    this.$emit('on-select', node.is_selected, node);
                 }
-                node.is_selected = !node.is_selected;
-                if (node.type === 'user') {
-                    this.handleBanUser(node, node.is_selected);
-                }
-                this.$emit('on-select', node.is_selected, node);
             },
 
             /**
              * radio 选择回调
              */
-            nodeChange (newVal, oldVal, localVal, node) {
+            async nodeChange (newVal, oldVal, localVal, node) {
                 this.$emit('on-select', newVal, node);
             },
 

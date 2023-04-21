@@ -16,7 +16,7 @@
         </div>
         <div class="content">
             <div class="nav">
-                权限管理
+                {{ $t(`m.nav['权限管理']`) }}
             </div>
             <div class="select">
                 <div>{{ managerName }}</div>
@@ -51,7 +51,7 @@
             return {
                 hasAnimation: true,
                 isSelectManager: true,
-                managerName: '超级管理员'
+                managerName: this.$t(`m.myApproval['超级管理员']`)
             };
         },
         computed: {
@@ -73,7 +73,7 @@
                 handler (value) {
                     this.managerName = (this.roleList.length
                         && this.roleList.find(e => e.id === this.navCurRoleId)
-                        && this.roleList.find(e => e.id === this.navCurRoleId).name) || '超级管理员';
+                        && this.roleList.find(e => e.id === this.navCurRoleId).name) || this.$t(`m.myApproval['超级管理员']`);
                     this.isSelectManager = value;
                 },
                 immediate: true,

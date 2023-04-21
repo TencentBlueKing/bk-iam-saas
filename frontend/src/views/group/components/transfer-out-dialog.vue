@@ -8,12 +8,14 @@
         ext-cls="iam-group-transfer-dialog"
         @after-leave="handleAfterLeave">
         <div>
-            <div class="title">{{ $t(`m.grading['一级管理空间列表']`) }}</div>
+            <div class="title">{{ $t(`m.grading['管理空间列表']`) }}</div>
             <bk-select
                 v-model="curGradeManager"
                 ref="gradeManagerSelectRef"
                 style="width: 430px;"
                 :popover-min-width="430"
+                :placeholder="$t(`m.verify['请选择管理空间']`)"
+                :search-placeholder="$t(`m.info['搜索关键字']`)"
                 :multiple="false"
                 :loading="selectLoading"
                 searchable

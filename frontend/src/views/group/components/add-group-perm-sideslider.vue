@@ -16,7 +16,7 @@
                             {{ $t(`m.common['条']`) }}
                         </div>
                         <div slot="right">
-                            <div class="add-button" v-if="!externalTemplate">
+                            <div class="add-button" v-if="!externalTemplate && !isSubset">
                                 <bk-button
                                     size="small"
                                     text
@@ -62,7 +62,7 @@
                                         <Icon v-if="row.need_to_update" type="error-fill" class="error-icon" />
                                     </template>
                                     <div slot="content" class="iam-perm-apply-action-popover-content">
-                                        {{ $t(`m.permTemplate['该模板无法选择的原因是：一级管理空间缩小了授权范围，但是没有同步删除模板里的操作，如需选择请重新编辑模板或者创建新的模板。']`) }}
+                                        {{ $t(`m.permTemplate['该模板无法选择的原因是：管理空间缩小了授权范围，但是没有同步删除模板里的操作，如需选择请重新编辑模板或者创建新的模板。']`) }}
                                         <bk-button
                                             text
                                             :loading="editLoading"
@@ -134,6 +134,7 @@
     import { leaveConfirm } from '@/common/leave-confirm';
     import { fuzzyRtxSearch } from '@/common/rtx';
     import { formatCodeData } from '@/common/util';
+    import { mapGetters } from 'vuex';
 
     export default {
         name: '',
@@ -209,6 +210,10 @@
             };
         },
         computed: {
+            ...mapGetters(['user', 'externalSystemId']),
+            isSubset () {
+                return this.user.role.type === 'subset_manager';
+            },
             isDisabled () {
                 return this.requestQueueBySys.length > 0 || this.requestQueueByTemplate.length > 0;
             }
@@ -421,7 +426,11 @@
             },
 
             handleRemoteSystem (value) {
-                return this.$store.dispatch('system/getSystems')
+                const params = {};
+                if (this.externalSystemId) {
+                    params.hidden = false;
+                }
+                return this.$store.dispatch('system/getSystems', params)
                     .then(({ data }) => {
                         return data.map(({ id, name }) => ({ id, name })).filter(item => item.name.indexOf(value) > -1);
                     });

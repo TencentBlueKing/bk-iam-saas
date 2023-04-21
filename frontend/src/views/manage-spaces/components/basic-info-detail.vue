@@ -2,15 +2,16 @@
     <div class="iam-grading-admin-basic-info-wrapper">
         <detail-layout mode="see">
             <render-layout>
-                <detail-item :label="`${$t(`m.levelSpace['空间名称']`)}：`">
+                <detail-item :label="`${$t(`m.levelSpace['名称']`)}：`">
                     <iam-edit-input
                         field="name"
-                        :placeholder="$t(`m.verify['请输入']`)"
+                        :mode="mode"
+                        :placeholder="$t(`m.verify['请填写名称']`)"
                         :rules="rules"
                         :value="formData.name"
                         :remote-hander="handleUpdateRatingManager" />
                 </detail-item>
-                <detail-item :label="`${$t(`m.levelSpace['空间管理员']`)}：`">
+                <detail-item :label="`${$t(`m.levelSpace['管理员']`)}：`">
                     <iam-edit-member
                         field="members"
                         :value="formData.members"
@@ -20,6 +21,7 @@
                 <detail-item :label="`${$t(`m.common['描述']`)}：`">
                     <iam-edit-textarea
                         field="description"
+                        :mode="mode"
                         width="600px"
                         :max-length="100"
                         :value="formData.description"
@@ -57,6 +59,10 @@
             id: {
                 type: [String, Number],
                 default: ''
+            },
+            mode: {
+                type: String,
+                default: 'detail'
             }
         },
         data () {
@@ -64,7 +70,8 @@
                 formData: {
                     name: '',
                     description: '',
-                    members: []
+                    members: [],
+                    sync_perm: false
                 }
             };
         },
@@ -73,6 +80,7 @@
                 handler (value) {
                     if (Object.keys(value).length) {
                         this.formData = Object.assign({}, value);
+                        this.$store.commit('setHeaderTitle', this.formData.name);
                     }
                 },
                 immediate: true
@@ -82,41 +90,49 @@
             this.rules = [
                 {
                     required: true,
-                    message: this.$t(`m.verify['空间名称必填']`),
+                    message: this.$t(`m.verify['请填写名称']`),
                     trigger: 'blur'
                 },
                 {
                     validator: (value) => {
                         return value.length <= 32;
                     },
-                    message: this.$t(`m.verify['空间名称最长不超过32个字符']`),
+                    message: this.$t(`m.verify['名称最长不超过32个字符']`),
                     trigger: 'blur'
                 },
                 {
                     validator: (value) => {
                         return /^[^\s]*$/g.test(value);
                     },
-                    message: this.$t(`m.verify['空间名称不允许空格']`),
+                    message: this.$t(`m.verify['名称不允许空格']`),
                     trigger: 'blur'
                 }
             ];
         },
         methods: {
             handleUpdateRatingManager (payload) {
-                const { name, members, description } = this.formData;
+                const { name, members, description, sync_perm } = this.formData;
                 const params = {
                     name,
                     description,
                     members,
+                    sync_perm,
                     ...payload,
                     id: this.id
                 };
                 return this.$store.dispatch('spaceManage/updateSecondManagerManager', params)
                     .then(async () => {
                         this.messageSuccess(this.$t(`m.info['编辑成功']`), 2000);
-                        this.formData.name = params.name;
-                        this.formData.description = params.description;
-                        this.formData.members = [...params.members];
+                        const { name, description, members } = params;
+                        // this.formData.name = params.name;
+                        // this.formData.description = params.description;
+                        // this.formData.members = [...params.members];
+                        this.formData = Object.assign(this.formData, {
+                            name,
+                            description,
+                            members,
+                            sync_perm
+                        });
                         const headerTitle = params.name;
                         this.$store.commit('setHeaderTitle', headerTitle);
                         await this.$store.dispatch('roleList');

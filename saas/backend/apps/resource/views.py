@@ -37,6 +37,8 @@ class ResourceViewSet(ViewSet):
         resource_type_id = slz.validated_data["type"]
         ancestors = slz.validated_data["ancestors"]
         keyword = slz.validated_data.get("keyword") or ""
+        action_system_id = slz.validated_data.get("action_system_id") or ""
+        action_id = slz.validated_data.get("action_id") or ""
         # 分页
         limit = slz.validated_data["limit"]
         offset = slz.validated_data["offset"]
@@ -49,10 +51,20 @@ class ResourceViewSet(ViewSet):
                 parent_type, parent_id = ancestors[-1]["type"], ancestors[-1]["id"]
 
             count, results = self.biz.search_instance_for_topology(
-                system_id, resource_type_id, keyword, parent_type, parent_id, limit, offset
+                system_id,
+                resource_type_id,
+                keyword,
+                parent_type,
+                parent_id,
+                limit,
+                offset,
+                action_system_id,
+                action_id,
             )
         else:
-            count, results = self.biz.list_instance_for_topology(system_id, resource_type_id, ancestors, limit, offset)
+            count, results = self.biz.list_instance_for_topology(
+                system_id, resource_type_id, ancestors, limit, offset, action_system_id, action_id
+            )
 
         return Response({"count": count, "results": [i.dict() for i in results]})
 

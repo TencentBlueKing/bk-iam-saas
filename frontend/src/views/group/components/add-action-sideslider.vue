@@ -17,13 +17,13 @@
                         <bk-input
                             clearable
                             right-icon="bk-icon icon-search"
-                            style="width: 190px;"
+                            style="max-width: calc(100% - 48px)"
                             v-model="keyword"
                             @input="handleInput"
                             @enter="handleSearch">
                         </bk-input>
                         <div
-                            v-if="user.role.type === 'rating_manager'"
+                            v-if="['rating_manager', 'subset_manager'].includes(user.role.type)"
                             class="icon-iamcenter-wrapper"
                             @click.stop="refreshList">
                             <i class="iam-icon iamcenter-refresh"></i>
@@ -49,10 +49,10 @@
                                 <!-- <div
                                     v-if="user.role.type === 'rating_manager'"
                                     :class="['skip-link', curSystemList.length > 20 ? 'skip-link-fixed' : '']"
-                                    :title="$t(`m.grading['修改一级管理空间授权范围']`)"
+                                    :title="$t(`m.grading['修改管理空间授权范围']`)"
                                     @click="handleSkip">
                                     <i class="iam-icon iamcenter-edit-fill"></i>
-                                    {{ $t(`m.grading['修改一级管理空间授权范围']`) }}
+                                    {{ $t(`m.grading['修改管理空间授权范围']`) }}
                                 </div> -->
                             </div>
                         </template>
@@ -70,7 +70,7 @@
                             <div class="empty-wrapper empty-wrapper2">
                                 <template v-if="user.role.type === 'rating_manager'">
                                     <bk-exception class="exception-wrap-item exception-part" type="search-empty" scene="part"></bk-exception>
-                                    <p class="tips-link" @click="handleSkip">{{ $t(`m.grading['修改一级管理空间授权范围']`) }}</p>
+                                    <p class="tips-link" @click="handleSkip">{{ $t(`m.grading['修改管理空间授权范围']`) }}</p>
                                 </template>
                                 <iam-svg v-else />
                             </div>
@@ -78,7 +78,7 @@
                     </div>
                 </div>
                 <div class="right-wrapper" v-bkloading="{ isLoading: isRightLoading, opacity: 1, color: '#f5f6fa' }">
-                    <template v-if="systemData[curSystem].list.length > 0 && !isRightLoading">
+                    <template v-if="systemData[curSystem] && systemData[curSystem].list.length > 0 && !isRightLoading">
                         <render-action-tag
                             style="margin: 0;"
                             :system-id="curSystem"
@@ -155,7 +155,7 @@
                             </section>
                         </div>
                     </template>
-                    <template v-if="systemData[curSystem].list.length < 1 && !isRightLoading">
+                    <template v-if="systemData[curSystem] && !systemData[curSystem].list.length && !isRightLoading">
                         <div class="empty-wrapper">
                             <ExceptionEmpty
                                 :type="emptyData.type"
@@ -253,7 +253,7 @@
             };
         },
         computed: {
-            ...mapGetters(['user']),
+            ...mapGetters(['user', 'externalSystemId']),
             isLoading () {
                 return this.initRequestQueue.length > 0;
             },
@@ -293,10 +293,11 @@
                     this.curSystemList.splice(0, this.curSystemList.length, ...this.systemList);
                 }
             },
-            defaultValue (value) {
-                if (value.length > 0) {
+            defaultValue: {
+                handler (value) {
                     this.curSelectValue = [...value];
-                }
+                },
+                immediate: true
             }
         },
         created () {
@@ -496,10 +497,15 @@
             async fetchSystems () {
                 this.systemListIsLoading = true;
                 try {
-                    const { code, data } = await this.$store.dispatch('system/getSystems');
+                    this.curSystem = this.defaultSystem;
+                    const params = {};
+                    if (this.externalSystemId) {
+                        params.hidden = false;
+                        this.curSystem = this.externalSystemId;
+                    }
+                    const { code, data } = await this.$store.dispatch('system/getSystems', params);
                     this.systemList = _.cloneDeep(data);
                     this.curSystemList = _.cloneDeep(data);
-                    this.curSystem = this.defaultSystem;
                     this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
                     if (this.systemList.length) {
                         if (!this.curSystem) {
@@ -604,56 +610,59 @@
             },
 
             handleDefaultData (payload, data) {
-                this.systemData[payload].list = _.cloneDeep(data);
-                this.systemData[payload].list.forEach(item => {
-                    if (!item.actions) {
-                        item.actions = [];
-                    }
-                    if (!item.sub_groups) {
-                        item.sub_groups = [];
-                    }
-                    let allChecked = true;
-                    let allDisabled = true;
-                    item.actions.forEach(act => {
-                        act.$id = `${payload}&${act.id}`;
-                        act.related_resource_types.forEach(v => {
-                            v.type = v.id;
-                        });
-                        this.$set(act, 'checked', this.defaultValue.includes(act.$id) || this.curSelectValue.includes(act.$id) || (act.tag === 'readonly' && !!this.groupId));
-                        if (!act.checked) {
-                            allChecked = false;
+                if (this.systemData[payload]) {
+                    this.systemData[payload].count = 0;
+                    this.systemData[payload].list = _.cloneDeep(data);
+                    this.systemData[payload].list.forEach(item => {
+                        if (!item.actions) {
+                            item.actions = [];
                         }
-                        if (act.tag === 'readonly' && !!this.groupId) {
-                            this.$set(act, 'disabled', true);
-                            ++this.systemData[payload].count;
-                        } else {
-                            allDisabled = false;
+                        if (!item.sub_groups) {
+                            item.sub_groups = [];
                         }
-                        this.linearAction.push(act);
-                    });
-                    item.sub_groups.forEach(act => {
-                        (act.actions || []).forEach(v => {
-                            v.$id = `${payload}&${v.id}`;
-                            v.related_resource_types.forEach(subItem => {
-                                subItem.type = subItem.id;
+                        let allChecked = true;
+                        let allDisabled = true;
+                        item.actions.forEach(act => {
+                            act.$id = `${payload}&${act.id}`;
+                            act.related_resource_types.forEach(v => {
+                                v.type = v.id;
                             });
-                            this.$set(v, 'checked', this.defaultValue.includes(v.$id) || this.curSelectValue.includes(v.$id) || (v.tag === 'readonly' && !!this.groupId));
-                            if (!v.checked) {
+                            this.$set(act, 'checked', this.defaultValue.includes(act.$id) || this.curSelectValue.includes(act.$id) || (act.tag === 'readonly' && !!this.groupId));
+                            if (!act.checked) {
                                 allChecked = false;
                             }
-                            if (v.tag === 'readonly' && !!this.groupId) {
-                                this.$set(v, 'disabled', true);
+                            if (act.tag === 'readonly' && !!this.groupId) {
+                                this.$set(act, 'disabled', true);
                                 ++this.systemData[payload].count;
                             } else {
                                 allDisabled = false;
                             }
-                            this.linearAction.push(v);
+                            this.linearAction.push(act);
                         });
+                        item.sub_groups.forEach(act => {
+                            (act.actions || []).forEach(v => {
+                                v.$id = `${payload}&${v.id}`;
+                                v.related_resource_types.forEach(subItem => {
+                                    subItem.type = subItem.id;
+                                });
+                                this.$set(v, 'checked', this.defaultValue.includes(v.$id) || this.curSelectValue.includes(v.$id) || (v.tag === 'readonly' && !!this.groupId));
+                                if (!v.checked) {
+                                    allChecked = false;
+                                }
+                                if (v.tag === 'readonly' && !!this.groupId) {
+                                    this.$set(v, 'disabled', true);
+                                    ++this.systemData[payload].count;
+                                } else {
+                                    allDisabled = false;
+                                }
+                                this.linearAction.push(v);
+                            });
+                        });
+                        this.$set(item, 'text', allChecked ? this.$t(`m.common['取消全选']`) : this.$t(`m.common['全选']`));
+                        this.$set(item, 'allDisabled', allDisabled);
                     });
-                    this.$set(item, 'text', allChecked ? this.$t(`m.common['取消全选']`) : this.$t(`m.common['全选']`));
-                    this.$set(item, 'allDisabled', allDisabled);
-                });
-                this.systemData[payload].system_name = this.systemList.find(item => item.id === payload).name;
+                    this.systemData[payload].system_name = this.systemList.find(item => item.id === payload).name;
+                }
 
                 if (this.defaultValue.length > 0) {
                     const curAllActionIds = [];

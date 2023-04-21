@@ -110,6 +110,7 @@
     import editProcessDialog from './edit-process-dialog';
     import { buildURLParams } from '@/common/url';
     import { formatCodeData } from '@/common/util';
+    import { mapGetters } from 'vuex';
     export default {
         name: '',
         components: {
@@ -155,6 +156,7 @@
             };
         },
         computed: {
+            ...mapGetters(['externalSystemId']),
             isCanBatchDelete () {
                 return this.currentSelectList.length > 0 && this.tableList.length > 0;
             },
@@ -168,7 +170,7 @@
                             return this.list.find(item => item.id === payload.process_id).name;
                         }
                     }
-                    return '默认审批流程';
+                    return this.$t(`m.approvalProcess['默认审批流程']`);
                 };
             },
             curTitle () {
@@ -222,7 +224,11 @@
         methods: {
             async fetchSystemList () {
                 try {
-                    const res = await this.$store.dispatch('system/getSystems');
+                    const params = {};
+                    if (this.externalSystemId) {
+                        params.hidden = false;
+                    }
+                    const res = await this.$store.dispatch('system/getSystems', params);
                     this.systemList = res.data;
                     setTimeout(() => {
                         if (this.cacheSystemId) {

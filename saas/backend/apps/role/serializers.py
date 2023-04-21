@@ -444,3 +444,7 @@ class SubsetMangerDetailSLZ(GradeMangerDetailSLZ):
             "subject_scopes",
             "sync_perm",
         )
+
+
+class RoleSubjectCheckSLZ(serializers.Serializer):
+    subjects = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"))

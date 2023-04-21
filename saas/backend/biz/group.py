@@ -20,7 +20,7 @@ from pydantic import BaseModel, parse_obj_as
 
 from backend.apps.group.models import Group, GroupAuthorizeLock
 from backend.apps.policy.models import Policy as PolicyModel
-from backend.apps.role.models import Role, RoleRelatedObject
+from backend.apps.role.models import Role, RoleRelatedObject, RoleUser
 from backend.apps.template.models import PermTemplatePolicyAuthorized, PermTemplatePreUpdateLock
 from backend.biz.policy import PolicyBean, PolicyBeanList, PolicyOperationBiz
 from backend.biz.resource import ResourceBiz
@@ -134,8 +134,6 @@ class GroupBiz:
     template_check_biz = TemplateCheckBiz()
 
     # 直通的方法
-    add_members = GroupService.__dict__["add_members"]
-    remove_members = GroupService.__dict__["remove_members"]
     check_subject_groups_belong = GroupService.__dict__["check_subject_groups_belong"]
     check_subject_groups_quota = GroupService.__dict__["check_subject_groups_quota"]
     update = GroupService.__dict__["update"]
@@ -143,43 +141,82 @@ class GroupBiz:
     list_exist_groups_before_expired_at = GroupService.__dict__["list_exist_groups_before_expired_at"]
     list_group_subject_before_expired_at = GroupService.__dict__["list_group_subject_before_expired_at"]
     batch_get_attributes = GroupAttributeService.__dict__["batch_get_attributes"]
+    convert_attr_value = GroupAttributeService.__dict__["convert_attr_value"]
     list_all_group_member = GroupService.__dict__["list_all_group_member"]
     list_rbac_group_by_resource = GroupService.__dict__["list_rbac_group_by_resource"]
 
     def create_and_add_members(
-        self, role_id: int, name: str, description: str, creator: str, subjects: List[Subject], expired_at: int
+        self, role: Role, name: str, description: str, creator: str, subjects: List[Subject], expired_at: int
     ) -> Group:
         """
         创建用户组
         """
         with transaction.atomic():
-            group = self.group_svc.create(GroupCreation(name=name, description=description), creator)
-            RoleRelatedObject.objects.create_group_relation(role_id, group.id)
+            group = self.group_svc.create(
+                GroupCreation(
+                    name=name, description=description, source_system_id=role.source_system_id, hidden=role.hidden
+                ),
+                creator,
+            )
+            RoleRelatedObject.objects.create_group_relation(role.id, group.id)
             if subjects:
                 self.group_svc.add_members(group.id, subjects, expired_at)
 
         return group
 
-    def batch_create(self, role_id: int, infos: List[GroupCreationBean], creator: str) -> List[Group]:
+    def batch_create(
+        self, role_id: int, infos: List[GroupCreationBean], creator: str, attrs: Optional[Dict] = None
+    ) -> List[Group]:
         """
         批量创建用户组
         用于管理api
         """
         with transaction.atomic():
             groups = self.group_svc.batch_create(parse_obj_as(List[GroupCreation], infos), creator)
-            # group_attrs = {group.id: {"readonly": info.readonly} for group, info in zip(groups, infos)}
-            # self.group_attribute_svc.batch_set_attributes(group_attrs)
+            if attrs:
+                group_attrs = {group.id: attrs for group in groups}
+                self.group_attribute_svc.batch_set_attributes(group_attrs)
             RoleRelatedObject.objects.batch_create_group_relation(role_id, [group.id for group in groups])
 
         return groups
 
-    def list_system_counter(self, group_id: int) -> List[GroupSystemCounterBean]:
+    def add_members(self, group_id: int, members: List[Subject], expired_at: int):
+        """
+        添加用户组成员
+        """
+        self.group_svc.add_members(group_id, members, expired_at)
+
+        relation = RoleRelatedObject.objects.filter(
+            object_type=RoleRelatedObjectType.GROUP.value, object_id=group_id, sync_perm=True
+        ).first()
+        if relation:
+            # 如果用户组是role的同步用户组, 需要同步添加成员到role
+            usernames = [m.id for m in members if m.type == SubjectType.USER.value]
+            if usernames:
+                self.role_svc.add_grade_manager_members(relation.role_id, usernames)
+
+    def remove_members(self, group_id: str, subjects: List[Subject]):
+        """
+        移除用户组成员
+        """
+        self.group_svc.remove_members(group_id, subjects)
+
+        relation = RoleRelatedObject.objects.filter(
+            object_type=RoleRelatedObjectType.GROUP.value, object_id=group_id, sync_perm=True
+        ).first()
+        if relation:
+            # 如果用户组是role的同步用户组, 需要同步删除成员到role
+            usernames = [m.id for m in subjects if m.type == SubjectType.USER.value]
+            if usernames:
+                RoleUser.objects.delete_grade_manager_member(relation.role_id, usernames)
+
+    def list_system_counter(self, group_id: int, hidden: bool = True) -> List[GroupSystemCounterBean]:
         """
         查询用户组授权的系统信息, 返回自定义权限/模板的数量
         """
         subject = Subject.from_group_id(group_id)
-        policy_systems_count = self.policy_query_svc.list_system_counter_by_subject(subject)
-        template_system_count = self.template_svc.list_system_counter_by_subject(subject)
+        policy_systems_count = self.policy_query_svc.list_system_counter_by_subject(subject, hidden=hidden)
+        template_system_count = self.template_svc.list_system_counter_by_subject(subject, hidden=hidden)
         policy_system_count_dict = {system.id: system.count for system in policy_systems_count}
         template_system_count_dict = {system.id: system.count for system in template_system_count}
 
@@ -468,7 +505,7 @@ class GroupBiz:
             raise error_codes.VALIDATE_ERROR.format(_("部分权限模板正在更新, 不能授权!"))
         # 判断该用户组在长时任务里是否正在添加涉及到的权限模板和自定义权限
         if GroupAuthorizeLock.objects.is_authorizing(group.id, template_ids, custom_action_system_ids):
-            raise error_codes.VALIDATE_ERROR.format(_("部分权限模板或自定义权限已经在授权中, 不能重复授权!"))
+            raise error_codes.VALIDATE_ERROR.format(_("正在授权中, 请稍后!"))
 
     def check_before_grant(
         self,
@@ -547,6 +584,11 @@ class GroupBiz:
         uuid = gen_uuid()
         subject = Subject.from_group_id(group.id)
 
+        if len(templates) == 1:
+            # 如果授权只有一个模版, 直接同步授权
+            self._grant_one_template(group, templates[0])
+            return
+
         for template in templates:
             # 生成授权数据锁
             lock = self._gen_grant_lock(subject, template, uuid)
@@ -558,6 +600,16 @@ class GroupBiz:
 
         # 执行授权流程
         TaskFactory().run(task.id)
+
+    def _grant_one_template(self, group: Group, template: GroupTemplateGrantBean):
+        """
+        用户组授权一个模版
+        """
+        subject = Subject.from_group_id(group.id)
+        if template.template_id != 0:
+            self.template_biz.grant_subject(template.system_id, template.template_id, subject, template.policies)
+        else:
+            self.policy_operation_biz.alter(template.system_id, subject, template.policies)
 
     def get_group_role_dict_by_ids(self, group_ids: List[int]) -> GroupRoleDict:
         """
@@ -590,7 +642,9 @@ class GroupBiz:
 
         return hit_members
 
-    def create_sync_perm_group_by_role(self, role: Role, creator: str, group_name: str = ""):
+    def create_sync_perm_group_by_role(
+        self, role: Role, creator: str, group_name: str = "", attrs: Optional[Dict] = None
+    ):
         """
         创建与分级管理员授权范围同步的用户组
 
@@ -605,12 +659,15 @@ class GroupBiz:
                 GroupCreation(
                     name=group_name or role.name,
                     description=role.description,
-                    readonly=True,
                     source_system_id=role.source_system_id,
                     hidden=role.hidden,
                 ),
                 creator,
             )
+
+            if attrs is not None:
+                self.group_attribute_svc.batch_set_attributes({group.id: attrs})
+
             RoleRelatedObject.objects.create(
                 role_id=role.id, object_type=RoleRelatedObjectType.GROUP.value, object_id=group.id, sync_perm=True
             )
@@ -776,9 +833,7 @@ class GroupCheckBiz:
         member_limit = settings.SUBJECT_AUTHORIZATION_LIMIT.get("group_member_limit", 1000)
         if exists_count + new_member_count > member_limit:
             raise error_codes.VALIDATE_ERROR.format(
-                _("用户组({})已有{}个成员，不可再添加{}个成员，否则超出用户组最大成员数量{}的限制").format(
-                    group.name, exists_count, new_member_count, member_limit
-                ),
+                _("超过用户组最大可添加成员数{}").format(member_limit),
                 True,
             )
 
@@ -790,7 +845,7 @@ class GroupCheckBiz:
         if group_id in role_group_ids:
             role_group_ids.remove(group_id)
         if Group.objects.filter(name=name, id__in=role_group_ids).exists():
-            raise error_codes.CONFLICT_ERROR.format(_("用户组名称已存在"))
+            raise error_codes.CONFLICT_ERROR.format(_("存在同名用户组"))
 
     def check_role_group_limit(self, role: Role, new_group_count: int):
         """
@@ -804,9 +859,7 @@ class GroupCheckBiz:
         role_group_ids = RoleRelatedObject.objects.list_role_object_ids(role.id, RoleRelatedObjectType.GROUP.value)
         if len(role_group_ids) + new_group_count > limit:
             raise error_codes.VALIDATE_ERROR.format(
-                _("分级管理员({})已有{}个用户组，不可再添加{}个用户组，否则超出分级管理员最大用户组数量{}的限制").format(
-                    role.id, len(role_group_ids), new_group_count, limit
-                ),
+                _("超过分级管理员最大可创建用户组数{}").format(limit),
                 True,
             )
 
@@ -818,7 +871,7 @@ class GroupCheckBiz:
         #  性能问题如何解决？？
         role_group_ids = RoleRelatedObject.objects.list_role_object_ids(role_id, RoleRelatedObjectType.GROUP.value)
         if Group.objects.filter(name__in=names, id__in=role_group_ids).exists():
-            raise error_codes.CONFLICT_ERROR.format(_("用户组名称已存在"))
+            raise error_codes.CONFLICT_ERROR.format(_("存在同名用户组"))
 
     def check_role_subject_scope(self, role, subjects: List[Subject]):
         """

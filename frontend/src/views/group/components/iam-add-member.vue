@@ -45,11 +45,20 @@
                                 <span class="active-line" v-if="tabActive === item.name"></span>
                             </section>
                         </div>
-                        <div
+                        <!-- <div
                             :class="[
                                 'search-input',
                                 { 'active': isSearchFocus },
                                 { 'disabled': externalSource ? false : (isRatingManager || isAll) && !isAllFlag }
+                            ]"
+                            v-if="isOrganization"
+                        > -->
+                        <!-- 所有平台都开放搜索，通过选中做校验 -->
+                        <div
+                            :class="[
+                                'search-input',
+                                { 'active': isSearchFocus },
+                                { 'disabled': isAll && !isAllFlag }
                             ]"
                             v-if="isOrganization"
                         >
@@ -77,7 +86,7 @@
                                 :placeholder="$t(`m.common['搜索提示1']`)"
                                 maxlength="64"
                                 clearable
-                                :disabled="externalSource ? false : (isRatingManager || isAll) && !isAllFlag"
+                                :disabled="isAll && !isAllFlag"
                                 ext-cls="iam-add-member-search-input-cls"
                                 @focus="handleSearchInput"
                                 @blur="handleSearchBlur"
@@ -178,7 +187,8 @@
                                 <template v-if="curLanguageIsCn">
                                     {{ $t(`m.common['已选择']`) }}
                                     <template v-if="isShowSelectedText">
-                                        <span class="organization-count">{{ hasSelectedDepartments.length }}</span>{{ $t(`m.common['个']`) }} {{ $t(`m.common['组织']`) }}，
+                                        <span class="organization-count">{{ hasSelectedDepartments.length }}</span>
+                                        {{ $t(`m.common['个']`) }} {{ $t(`m.common['组织']`) }}，
                                         <span class="user-count">{{ hasSelectedUsers.length }}</span>{{ $t(`m.common['个']`) }} {{ $t(`m.common['用户']`) }}
                                     </template>
                                     <template v-else>
@@ -202,7 +212,8 @@
                             <div class="organization-content" v-if="isDepartSelectedEmpty">
                                 <div class="organization-item" v-for="item in hasSelectedDepartments" :key="item.id">
                                     <Icon type="file-close" class="folder-icon" />
-                                    <span class="organization-name" :title="item.fullName">{{ item.name }}</span><span class="user-count" v-if="item.showCount">{{ '(' + item.count + `)` }}</span>
+                                    <span class="organization-name" :title="item.full_name || item.fullName">{{ item.name }}</span>
+                                    <span class="user-count" v-if="item.showCount">{{ '(' + item.count + `)` }}</span>
                                     <Icon bk type="close-circle-shape" class="delete-depart-icon" @click="handleDelete(item, 'organization')" />
                                 </div>
                             </div>
@@ -617,7 +628,7 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: '用户名输入格式错误'
+                        message: this.$t(`m.verify['用户名输入格式错误]`)
                     });
                 } finally {
                     this.manualAddLoading = false;
@@ -733,32 +744,61 @@
                         child.async = child.child_count > 0 || child.member_count > 0;
                         child.isNewMember = false;
                         child.parentNodeId = '';
+                        // if (child.type === 'user') {
+                        //     child.username = child.id;
+                        // }
+
+                        // if (this.hasSelectedDepartments.length > 0) {
+                        //     child.is_selected = this.hasSelectedDepartments.map(item => item.id).includes(child.id);
+                        // } else {
+                        //     child.is_selected = false;
+                        // }
+
+                        // if (this.hasSelectedUsers.length > 0) {
+                        //     child.is_selected = this.hasSelectedUsers.map(item => item.id).includes(child.id);
+                        // } else {
+                        //     child.is_selected = false;
+                        // }
+
+                        // if (this.defaultDepartments.length > 0
+                        //     && this.defaultDepartments.map(item => item.id).includes(child.id.toString())
+                        // ) {
+                        //     child.is_selected = true;
+                        //     child.disabled = true;
+                        // }
+
+                        // if (this.defaultUsers.length && this.defaultUsers.map(item => item.id).includes(child.id)) {
+                        //     child.is_selected = true;
+                        //     child.disabled = true;
+                        // }
+
                         if (child.type === 'user') {
                             child.username = child.id;
-                        }
+                            if (this.hasSelectedUsers.length > 0) {
+                                child.is_selected = this.hasSelectedUsers.map(item => item.id).includes(child.id);
+                            } else {
+                                child.is_selected = false;
+                            }
 
-                        if (this.hasSelectedDepartments.length > 0) {
-                            child.is_selected = this.hasSelectedDepartments.map(item => item.id).includes(child.id);
-                        } else {
-                            child.is_selected = false;
+                            if (this.defaultUsers.length && this.defaultUsers.map(item => item.id).includes(child.id)) {
+                                child.is_selected = true;
+                                child.disabled = true;
+                            }
                         }
-
-                        if (this.hasSelectedUsers.length > 0) {
-                            child.is_selected = this.hasSelectedUsers.map(item => item.id).includes(child.id);
-                        } else {
-                            child.is_selected = false;
-                        }
-
-                        if (this.defaultDepartments.length > 0
-                            && this.defaultDepartments.map(item => item.id).includes(child.id.toString())
-                        ) {
-                            child.is_selected = true;
-                            child.disabled = true;
-                        }
-
-                        if (this.defaultUsers.length && this.defaultUsers.map(item => item.id).includes(child.id)) {
-                            child.is_selected = true;
-                            child.disabled = true;
+                        
+                        if (child.type === 'depart') {
+                            if (this.hasSelectedDepartments.length > 0) {
+                                child.is_selected = this.hasSelectedDepartments.map(item => item.id).includes(child.id);
+                            } else {
+                                child.is_selected = false;
+                            }
+    
+                            if (this.defaultDepartments.length > 0
+                                && this.defaultDepartments.map(item => item.id).includes(child.id.toString())
+                            ) {
+                                child.is_selected = true;
+                                child.disabled = true;
+                            }
                         }
                     });
                     this.treeList = _.cloneDeep(departments);
@@ -818,6 +858,7 @@
                                 child.async = child.child_count > 0 || child.member_count > 0;
                                 child.isNewMember = false;
                                 child.parentNodeId = item.id;
+                                child.full_name = `${item.name}：${child.name}`;
 
                                 if (this.hasSelectedDepartments.length > 0) {
                                     child.is_selected = this.hasSelectedDepartments.map(
@@ -1054,6 +1095,7 @@
                             child.async = child.child_count > 0 || child.member_count > 0;
                             child.isNewMember = false;
                             child.parentNodeId = payload.id;
+                            child.full_name = `${payload.full_name}/${child.name}`;
 
                             if (this.hasSelectedDepartments.length > 0) {
                                 child.is_selected = this.hasSelectedDepartments.map(item => item.id).includes(child.id);
@@ -1235,7 +1277,6 @@
                         params.policy_expired_at = this.expiredAt;
                     }
                 }
-                window.parent.postMessage({ type: 'IAM', data: params, code: 'success' }, '*');
                 this.$emit('on-sumbit', params);
             },
 

@@ -21,8 +21,8 @@
                     </span>
                 </template>
             </bk-table-column>
-            <!-- 所属一级管理空间 -->
-            <bk-table-column :label="$t(`m.audit['所属一级管理空间']`)">
+            <!-- 所属管理空间 -->
+            <bk-table-column :label="$t(`m.audit['所属管理空间']`)">
                 <template slot-scope="{ row }">
                     <span :class="row.role && row.role.name ? 'can-view' : ''"
                         :title="row.role && row.role.name ? row.role.name : ''"
@@ -44,8 +44,8 @@
                     </span>
                 </template>
             </bk-table-column>
-            <!-- 到期时间 -->
-            <bk-table-column :label="$t(`m.common['到期时间']`)" prop="expired_at_display"></bk-table-column>
+            <!-- 有效期 -->
+            <bk-table-column :label="$t(`m.common['有效期']`)" prop="expired_at_display"></bk-table-column>
             <!-- 操作 -->
             <bk-table-column :label="$t(`m.common['操作']`)" width="200">
                 <template slot-scope="props">
@@ -83,13 +83,13 @@
             :group-id="curGroupId"
             @animation-end="handleAnimationEnd" />
 
-        <!-- 一级管理空间 成员 侧边弹出框 -->
+        <!-- 管理空间 成员 侧边弹出框 -->
         <bk-sideslider
             :is-show.sync="isShowGradeSlider"
             :width="640"
-            :title="gradeSliderTitle"
             :quick-close="true"
             @animation-end="gradeSliderTitle === ''">
+            <div slot="header" class="single-hide" :title="gradeSliderTitle">{{ gradeSliderTitle }}</div>
             <div slot="content" class="grade-memebers-content" v-bkloading="{ isLoading: sliderLoading, opacity: 1 }"
                 data-test-id="myPerm_sideslider_gradeMemebersContent">
                 <template v-if="!sliderLoading">
@@ -98,7 +98,7 @@
                             {{ item }}
                         </span>
                     </div>
-                    <p class="info">{{ $t(`m.info['一级管理空间成员提示']`) }}</p>
+                    <p class="info">{{ $t(`m.info['管理空间成员提示']`) }}</p>
                 </template>
             </div>
         </bk-sideslider>
@@ -370,7 +370,7 @@
             },
 
             /**
-             * 调用接口获取一级管理空间各项数据
+             * 调用接口获取管理空间各项数据
              */
             async fetchRoles (id) {
                 this.sliderLoading = true;
@@ -391,12 +391,12 @@
                 }
             },
             /**
-            * 点击一级管理空间中的项弹出侧边框且显示数据
+            * 点击管理空间中的项弹出侧边框且显示数据
             */
             handleViewDetail (payload) {
                 if (payload.role && payload.role.name) {
                     this.isShowGradeSlider = true;
-                    this.gradeSliderTitle = `【${payload.role.name}】${this.$t(`m.grading['一级管理空间']`)} ${this.$t(`m.common['成员']`)}`;
+                    this.gradeSliderTitle = `【${payload.role.name}】${this.$t(`m.grading['管理空间']`)} ${this.$t(`m.common['成员']`)}`;
                     this.fetchRoles(payload.role.id);
                 }
             }

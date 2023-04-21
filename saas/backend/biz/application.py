@@ -27,13 +27,20 @@ from backend.apps.policy.models import Policy
 from backend.apps.role.models import Role, RoleSource
 from backend.apps.template.models import PermTemplatePolicyAuthorized
 from backend.audit.audit import log_group_event, log_role_event, log_user_event
-from backend.audit.constants import AuditType
+from backend.audit.constants import AuditSourceType, AuditType
 from backend.common.cache import cachedmethod
 from backend.common.error_codes import error_codes
 from backend.common.time import expired_at_display
 from backend.service.application import ApplicationService
 from backend.service.approval import ApprovalProcessService
-from backend.service.constants import ApplicationStatus, ApplicationType, RoleSourceType, RoleType, SubjectType
+from backend.service.constants import (
+    ApplicationStatus,
+    ApplicationType,
+    GroupSaaSAttributeEnum,
+    RoleSourceType,
+    RoleType,
+    SubjectType,
+)
 from backend.service.models import (
     Applicant,
     ApplicantDepartment,
@@ -304,8 +311,15 @@ class ApprovedPassApplicationBiz:
 
             # 创建同步权限用户组
             if info.sync_perm:
+                attrs = None
+                if application.source_system_id:
+                    attrs = {
+                        GroupSaaSAttributeEnum.SOURCE_TYPE.value: AuditSourceType.OPENAPI.value,
+                        GroupSaaSAttributeEnum.SOURCE_FROM_ROLE.value: True,
+                    }
+
                 self.group_biz.create_sync_perm_group_by_role(
-                    role, application.applicant, group_name=application.data.get("group_name", "")
+                    role, application.applicant, group_name=application.data.get("group_name", ""), attrs=attrs
                 )
 
             if application.source_system_id:

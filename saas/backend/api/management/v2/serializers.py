@@ -132,6 +132,7 @@ class ManagementGroupBasicCreateSLZ(ManagementGroupBasicInfoSLZ):
 
 class ManagementGradeManagerGroupCreateSLZ(serializers.Serializer):
     groups = serializers.ListField(child=ManagementGroupBasicCreateSLZ(label="用户组"), max_length=10)
+    create_attributes = serializers.BooleanField(label="是否创建属性", default=True, required=False)
 
     def validate(self, data):
         """

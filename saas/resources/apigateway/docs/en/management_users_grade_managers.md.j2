@@ -1,0 +1,36 @@
+### Query the user's hierarchical administrator list
+
+
+#### Parameters
+
+| Field | Type | Required | Location | Description |
+| --------|--------|--------|--------|--------|--------|--------|
+| system | string| yes | body | System ID, i.e. query the list of hierarchical administrators created by a system |
+| uesr_id | string | yes | body | User ID, i.e. username |
+
+#### Request
+
+#### Response
+
+| field | type | description |
+| -----------|-----------|-----------|
+| id | int | Grader ID |
+
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": [
+    {
+      "id": 1,
+    },
+    {
+      "id": 2,
+    },
+    {
+      "id": 3,
+    }
+  ]
+}
+```

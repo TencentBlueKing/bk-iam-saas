@@ -371,7 +371,13 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .iamcenter-operate-audit:before {
 	content: "\e208";
 }
-.iamcenter-resource-admin:before {
+.iamcenter-icon-zh-cn:before {
+	content: "\e21c";
+}
+.iamcenter-icon-en:before {
+	content: "\e21d";
+}
+.iamcenter-resource-perm-manage:before {
 	content: "\e210";
 }
 .iamcenter-system-api:before {
@@ -380,7 +386,7 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .iamcenter-auth-api:before {
 	content: "\e212";
 }
-.iamcenter-linshishenqingquanxian:before {
+.iamcenter-tempora-perm-apply:before {
 	content: "\e214";
 }
 .iamcenter-admin-api:before {
@@ -392,9 +398,15 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .iamcenter-refresh-2:before {
 	content: "\e216";
 }
-.iamcenter-level-two:before {
+.iamcenter-level-two-manage-space:before {
 	content: "\e217";
 }
-.iamcenter-level-one:before {
+.iamcenter-level-one-manage-space:before {
 	content: "\e218";
+}
+.iamcenter-my-manage-space:before {
+	content: "\e219";
+}
+.iamcenter-auth-scope:before {
+	content: "\e21a";
 }

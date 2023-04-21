@@ -28,14 +28,13 @@
         <the-header @reload-page="handleRefreshPage"
             :route-name="routeName"
             :user-group-id="userGroupId"
-            v-if="isRouterAlive">
-        </the-header>
+        />
         <the-nav class="nav-layout"
             @reload-page="reloadCurPage"
-            v-if="!externalSystemsLayout.hideIamSlider">
-        </the-nav>
-        <main class="main-layout"
+            v-if="!externalSystemsLayout.hideIamSlider" />
+        <main
             :class="[
+                'main-layout',
                 layoutCls,
                 { 'external-main-layout': externalSystemsLayout.userGroup.groupDetail.setMainLayoutHeight }
             ]"
@@ -53,14 +52,17 @@
     </div>
 </template>
 <script>
+    import Cookie from 'js-cookie';
     import HeaderNav from '@/components/header-nav/index.vue';
     import theHeader from '@/components/header/index.vue';
     import theNav from '@/components/nav/index.vue';
     import IamGuide from '@/components/iam-guide/index.vue';
+    import { existValue } from '@/common/util';
     import { bus } from '@/common/bus';
     import { mapGetters } from 'vuex';
     import { afterEach } from '@/router';
     import { kebabCase } from 'lodash';
+    
     export default {
         name: 'app',
         provide () {
@@ -121,11 +123,15 @@
         },
         created () {
             const platform = window.navigator.platform.toLowerCase();
+            window.CUR_LANGUAGE = Cookie.get('blueking_language') || 'zh-cn';
+            this.$i18n.locale = window.CUR_LANGUAGE;
             if (platform.indexOf('win') === 0) {
                 this.systemCls = 'win';
             }
-            this.fetchVersionLog();
-            this.fetchNoviceGuide();
+            if (!existValue('externalApp')) {
+                this.fetchVersionLog();
+                this.fetchNoviceGuide();
+            }
 
             const isPoll = window.localStorage.getItem('isPoll');
             if (isPoll) {

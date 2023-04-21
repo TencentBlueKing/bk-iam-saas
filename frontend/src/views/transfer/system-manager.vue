@@ -69,7 +69,7 @@
                 isEmpty: false,
                 isLoading: false,
                 systemListRender: [],
-                systemListAll: [], // 一级管理空间权限交接
+                systemListAll: [], // 管理空间权限交接
                 systemExpanded: true,
                 isSelectAllChecked: false,
                 systemSelectData: [],

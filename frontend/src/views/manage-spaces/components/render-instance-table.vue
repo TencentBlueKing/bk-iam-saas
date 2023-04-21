@@ -325,7 +325,7 @@
             }
         },
         created () {
-            console.log('1.我的一级管理空间-最大可授权资源范围');
+            console.log('1.我的管理空间-最大可授权资源范围');
             // 判断数组是否被另外一个数组包含
             this.isArrayInclude = (target, origin) => {
                 const itemAry = [];
@@ -567,6 +567,7 @@
                     });
                 });
                 this.previewResourceParams = {
+                    id: this.templateId,
                     policy_id: this.tableList[this.curIndex].policy_id,
                     resource_group_id: id,
                     related_resource_type: {
@@ -574,7 +575,12 @@
                         type,
                         name,
                         condition: condition.filter(item => item.attributes.length > 0 || item.instances.length > 0)
-                    }
+                    },
+                    action_id: this.tableList[this.curIndex].id,
+                    reverse: true,
+                    groupId: this.groupId,
+                    isTemplate: this.tableList[this.curIndex].isTemplate,
+                    isNotLimit: conditionData.length === 0
                 };
                 this.previewDialogTitle = `${this.$t(`m.common['操作']`)}【${this.tableList[this.curIndex].name}】${this.$t(`m.common['的资源实例']`)} ${this.$t(`m.common['差异对比']`)}`;
                 this.isShowPreviewDialog = true;
@@ -1321,7 +1327,8 @@
                 }
                 td:first-child .cell,
                 th:first-child .cell {
-                    padding-left: 15px;
+                    /* padding-left: 15px; */
+                    padding-left: 10px;
                 }
             }
             .relation-content-wrapper,

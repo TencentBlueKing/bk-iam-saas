@@ -49,10 +49,10 @@
                                 <!-- <div
                                     v-if="isHierarchicalAdmin.type === 'rating_manager'"
                                     :class="['skip-link', curSystemList.length > 20 ? 'skip-link-fixed' : '']"
-                                    :title="$t(`m.grading['修改一级管理空间授权范围']`)"
+                                    :title="$t(`m.grading['修改管理空间授权范围']`)"
                                     @click="handleSkip">
                                     <i class="iam-icon iamcenter-edit-fill"></i>
-                                    {{ $t(`m.grading['修改一级管理空间授权范围']`) }}
+                                    {{ $t(`m.grading['修改管理空间授权范围']`) }}
                                 </div> -->
                             </div>
                         </template>
@@ -72,7 +72,7 @@
                                         class="exception-wrap-item exception-part"
                                         type="search-empty"
                                         scene="part"></bk-exception>
-                                    <p class="tips-link" @click="handleSkip">{{ $t(`m.grading['修改一级管理空间授权范围']`) }}</p>
+                                    <p class="tips-link" @click="handleSkip">{{ $t(`m.grading['修改管理空间授权范围']`) }}</p>
                                 </template>
                                 <iam-svg v-else />
                             </div>
@@ -186,6 +186,7 @@
     import { leaveConfirm } from '@/common/leave-confirm';
     import { guid, formatCodeData } from '@/common/util';
     import RenderActionTag from '@/components/common-action';
+    import { mapGetters } from 'vuex';
 
     export default {
         name: '',
@@ -242,6 +243,7 @@
             };
         },
         computed: {
+            ...mapGetters(['externalSystemId']),
             isLoading () {
                 return this.initRequestQueue.length > 0;
             },
@@ -502,7 +504,13 @@
             async fetchSystems () {
                 this.systemListIsLoading = true;
                 try {
-                    const { code, data } = await this.$store.dispatch('system/getSystems', { all: this.all });
+                    const params = {
+                        all: this.all
+                    };
+                    if (this.externalSystemId) {
+                        params.hidden = false;
+                    }
+                    const { code, data } = await this.$store.dispatch('system/getSystems', params);
                     this.systemList = _.cloneDeep(data);
                     this.curSystemList = _.cloneDeep(data);
                     this.curSystem = this.defaultSystem;
@@ -1008,7 +1016,7 @@
             }
             .right-wrapper {
                 position: relative;
-                flex: 0 0 calc(100% - 220px);
+                flex: 0 0 calc(100% - 240px);
                 padding: 12px 20px;
                 background: #f5f6fa;
                 .custom-tmpl-wrapper {

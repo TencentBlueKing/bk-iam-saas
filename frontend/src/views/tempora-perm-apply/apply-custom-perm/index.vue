@@ -8,7 +8,9 @@
                         v-model="systemValue"
                         style="width: 480px;"
                         :popover-min-width="480"
-                        searchable
+                        :empty-text="$t(`m.common['暂无数据']`)"
+                        :search-placeholder="$t(`m.info['搜索关键字']`)"
+                        :searchable="true"
                         :clearable="false"
                         @selected="handleSysSelected">
                         <bk-option v-for="option in systemList"
@@ -252,7 +254,7 @@
                             {{ item }}
                         </span>
                     </div>
-                    <p class="info">{{ $t(`m.info['一级管理空间成员提示']`) }}</p>
+                    <p class="info">{{ $t(`m.info['管理空间成员提示']`) }}</p>
                 </template>
             </div>
         </bk-sideslider>
@@ -341,7 +343,7 @@
             };
         },
         computed: {
-            ...mapGetters(['user']),
+            ...mapGetters(['user', 'externalSystemId']),
             // 是否无权限申请
             isNoPermApplay () {
                 return this.routerQuery.system_id;
@@ -505,7 +507,7 @@
             handleViewDetail (payload) {
                 if (payload.role && payload.role.name) {
                     this.isShowGradeSlider = true;
-                    this.gradeSliderTitle = `【${payload.role.name}】${this.$t(`m.grading['一级管理空间']`)} ${this.$t(`m.common['成员']`)}`;
+                    this.gradeSliderTitle = `【${payload.role.name}】${this.$t(`m.grading['管理空间']`)} ${this.$t(`m.common['成员']`)}`;
                     this.fetchRoles(payload.role.id);
                 }
             },
@@ -726,6 +728,11 @@
                 tempList = tempList.filter(item => item.actions.length > 0 || item.sub_groups.length > 0);
                 this.originalCustomTmplList = _.cloneDeep(tempList);
                 this.handleActionLinearData(true);
+            },
+
+            handleEmptyClear () {
+                this.actionSearchValue = '';
+                this.emptyData.tipType = '';
             },
 
             /**
@@ -1669,7 +1676,11 @@
                     this.systemValue = this.routerQuery.system_id;
                 }
                 try {
-                    const res = await this.$store.dispatch('system/getSystems');
+                    const params = {};
+                    if (this.externalSystemId) {
+                        params.hidden = false;
+                    }
+                    const res = await this.$store.dispatch('system/getSystems', params);
                     (res.data || []).forEach(item => {
                         item.displayName = `${item.name}(${item.id})`;
                     });

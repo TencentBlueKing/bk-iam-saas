@@ -71,7 +71,7 @@
                         type: 'join_group'
                     },
                     {
-                        title: this.$t(`m.approvalProcess['创建一级管理空间']`),
+                        title: this.$t(`m.approvalProcess['创建管理空间']`),
                         isOpen: false,
                         value: '3',
                         type: 'create_rating_manager'
@@ -128,21 +128,31 @@
              * 111
              */
             async fetchPageData () {
-                if (this.curRole === 'system_manager') {
-                    await Promise.all([
-                        this.fetchProcesses('grant_action'),
-                        this.fetchProcesses('join_group')
-                    ]);
-                } else if (this.curRole === 'rating_manager') {
-                    await this.fetchProcesses('join_group');
-                } else {
-                    await Promise.all([
-                        this.fetchProcesses('grant_action'),
-                        this.fetchProcesses('join_group'),
-                        this.fetchProcesses('create_rating_manager'),
-                        this.fetchDefaultProcesses()
-                    ]);
-                }
+                const roleItem = {
+                    system_manager: async () => {
+                        await Promise.all([
+                            this.fetchProcesses('grant_action'),
+                            this.fetchProcesses('join_group')
+                        ]);
+                    },
+                    rating_manager: async () => {
+                        await this.fetchProcesses('join_group');
+                    },
+                    subset_manager: async () => {
+                        await this.fetchProcesses('join_group');
+                    }
+                };
+                return roleItem[this.curRole] ? roleItem[this.curRole]() : this.fetchAllRequest();
+            },
+
+            async fetchAllRequest () {
+                const allReq = [
+                    this.fetchProcesses('grant_action'),
+                    this.fetchProcesses('join_group'),
+                    this.fetchProcesses('create_rating_manager'),
+                    this.fetchDefaultProcesses()
+                ];
+                await Promise.all(allReq);
             },
 
             /**
@@ -205,18 +215,21 @@
              * getFilterPanels
              */
             getFilterPanels () {
-                switch (this.curRole) {
-                    case 'system_manager':
+                const roleItem = {
+                    system_manager: () => {
                         this.panels = this.panels.filter(item => ['CustomPermProcess', 'JoinGroupProcess'].includes(item.name));
                         this.active = 'CustomPermProcess';
-                        break;
-                    case 'rating_manager':
+                    },
+                    rating_manager: () => {
                         this.panels = this.panels.filter(item => ['JoinRateManagerProcess', 'JoinGroupProcess'].includes(item.name));
                         this.active = 'JoinGroupProcess';
-                        break;
-                    default:
-                        this.active = 'CustomPermProcess';
-                }
+                    },
+                    subset_manager: () => {
+                        this.panels = this.panels.filter(item => ['JoinRateManagerProcess', 'JoinGroupProcess'].includes(item.name));
+                        this.active = 'JoinGroupProcess';
+                    }
+                };
+                return roleItem[this.curRole] ? roleItem[this.curRole]() : 'CustomPermProcess';
             },
 
             /**
