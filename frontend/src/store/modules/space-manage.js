@@ -113,6 +113,23 @@ export default {
             const id = requestParams.id;
             delete requestParams.id;
             return http.get(`${AJAX_URL_PREFIX}/roles/grade_managers/${id}/subset_managers/?${json2Query(requestParams)}`, config);
+        },
+
+        /**
+         * 管理员/一级/二级管理空间搜索
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object} params 请求参数
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+
+        getSearchManagerList ({ commit, state, dispatch }, params, config) {
+            const requestParams = Object.assign({}, params);
+            return http.get(`${AJAX_URL_PREFIX}/roles/search/?${json2Query(requestParams)}`, config);
         }
     }
 };
