@@ -2522,4 +2522,14 @@
   align-items: center;
   justify-content: space-between;
 }
+
+/deep/ .bk-table-header-wrapper {
+    .has-gutter {
+        .is-first {
+            .bk-form-checkbox  {
+                display: none;
+            }
+        }
+    }
+}
 </style>

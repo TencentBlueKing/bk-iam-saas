@@ -338,7 +338,8 @@
                     display: inline-block;
                     font-size: 12px;
                     color: #3A84FF;
-                    width: 44px;
+                    /* width: 44px; */
+                    padding: 0 5px;
                     height: 22px;
                     line-height: 22px;
                     background: #EDF4FF;
