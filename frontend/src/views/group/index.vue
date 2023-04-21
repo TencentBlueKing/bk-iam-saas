@@ -223,7 +223,7 @@
             @on-success="handleDistributeSuccess"
         />
 
-        <novice-guide :flag="showNoviceGuide" :content="content" />
+        <!-- <novice-guide :flag="showNoviceGuide" :content="content" /> -->
     </div>
 </template>
 <script>
@@ -239,7 +239,7 @@
     import EditProcessDialog from './components/edit-process-dialog';
     import TransferOutDialog from './components/transfer-out-dialog';
     import DistributeToDialog from './components/distribute-to-dialog';
-    import NoviceGuide from '@/components/iam-novice-guide';
+    // import NoviceGuide from '@/components/iam-novice-guide';
     import IamEditInput from '@/components/iam-edit/input';
 
     export default {
@@ -251,7 +251,7 @@
             TransferOutDialog,
             DistributeToDialog,
             IamSearchSelect,
-            NoviceGuide,
+            // NoviceGuide,
             IamEditInput
         },
         data () {

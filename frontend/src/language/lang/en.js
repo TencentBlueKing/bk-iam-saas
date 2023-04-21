@@ -246,7 +246,8 @@ export const m = {
         '您没有该角色权限，无法切换到该角色': 'You do not have permission to switch to this role',
         '确认删除': 'Confirm delete',
         '只允许输入英文': 'Only English is allowed',
-        '生效时间': 'Effective time'
+        '生效时间': 'Effective time',
+        '无匹配人员': 'No matching personnel'
     },
     // 校验
     verify: {
@@ -321,6 +322,9 @@ export const m = {
         '用户名输入格式错误': 'User name input format error',
         '当前选择项不在授权范围内': 'The current selection is not within the scope of authorization',
         '请选择管理空间': 'Please select management space',
+        '请选择日期': 'Please select date',
+        '请选择时区': 'Please select time zone',
+        '请选择时间范围': 'Please select time range',
     },
     info: {
         '加入用户组申请成功': 'Apply to join the group successfully',
@@ -426,7 +430,33 @@ export const m = {
         '知道了': 'Got it',
         '搜索关键字': 'Search Keywords',
         '无资源ID，无法预览': 'No resource ID, unable to preview',
-        '暂无可批量复制包含有属性条件的资源实例': 'There are currently no resource instances that can be batch copied with attribute conditions'
+        '暂无可批量复制包含有属性条件的资源实例': 'There are currently no resource instances that can be batch copied with attribute conditions',
+        '(GMT-12:00) 国际换线时间': '(GMT-12:00) International Line Change Time',
+        '(GMT-11:00) 中途岛时间': '(GMT-11:00) Midway Island Time',
+        '(GMT-10:00) 夏威夷时间': '(GMT-10:00) Hawaii Time',
+        '(GMT-09:00) 阿拉斯加州时间': '(GMT-09:00) Arras Time',
+        '(GMT-08:00) 太平洋时间（美国和加拿大）': '(GMT-08:00) Pacific Time (US and Canada)',
+        '(GMT-07:00) 亚利桑那时间': '(GMT-07:00) Arizona Time',
+        '(GMT-06:00) 萨斯喀彻温省时间': '(GMT-06:00) Saskatchewan Time',
+        '(GMT-05:00) 印第安纳州（东部）时间': '(GMT-05:00) Indiana Eastern Time',
+        '(GMT-04:00) 圣地亚哥时间': '(GMT-04:00) San Diego Time',
+        '(GMT-03:00) 蒙得维的亚时间': '(GMT-03:00) Montevideo Time',
+        '(GMT-02:00) 中大西洋时间': '(GMT-02:00) 中大西洋时间',
+        '(GMT-01:00) 亚速尔群岛时间': '(GMT-02:00) Mid Atlantic Time',
+        '(GMT+00:00) 伦敦时间': '(GMT+00:00) London Time',
+        '(GMT+01:00) 中西部非洲时间': '(GMT+01:00) Central West African Time',
+        '(GMT+02:00) 温得和克时间': '(GMT+02:00) Windhoek Time',
+        '(GMT+03:00) 德黑兰时间': '(GMT+03:00) Tehran Time',
+        '(GMT+04:00) 喀布尔时间': '(GMT+04:00) Kabul Time ',
+        '(GMT+05:00) 叶卡捷琳堡时间': '(GMT+05:00) Yekaterinburg Time',
+         '(GMT+06:00) 加德满都时间': '(GMT+06:00) Kathmandu Time',
+         '(GMT+07:00) 曼谷时间':  '(GMT+07:00) Bangkok Time',
+         '(GMT+08:00) 中国标准时间 - 北京': '(GMT+08:00) China Standard Time - Beijing',
+         '(GMT+09:00) 东京时间': '(GMT+09:00) Tokyo Time',
+         '(GMT+10:00) 布里斯班时间': '(GMT+10:00) Brisbane Time',
+         '(GMT+11:00) 马加丹': '(GMT+11:00) Magadan',
+         '(GMT+12:00) 堪察加半岛时间':  '(GMT+12:00) Kamchatka Peninsula Time',
+         '(GMT+13:00) 努库阿洛法时间': '(GMT+13:00) Nukualofa Time'
     },
     // 二次确认弹窗相关
     dialog: {
@@ -461,6 +491,8 @@ export const m = {
         '返回': 'Back to',
         '切换身份': 'Switch Identity',
         '系统管理员': 'System Administrator',
+        '一级空间管理员': 'First Level Space Administrator',
+        '二级空间管理员': 'Secondary Space Administrator',
         '普通用户': 'General User',
         '系统接入': 'System Access',
         '组织权限续期': 'Organization permission renewal',
@@ -488,6 +520,7 @@ export const m = {
         '管理空间': 'Manage Spaces',
         '我的管理空间': "My Management Space",
         '管理空间': 'Management space',
+        '一级管理空间': 'First level management space',
         '二级管理空间': 'Secondary management space',
         '新建管理空间': 'Create management space',
         '新建二级管理空间': 'New secondary management space',
@@ -551,8 +584,8 @@ export const m = {
         '清空选择': 'Clear Selection',
         '选择系统': 'Select System',
         '选择操作': 'Select Action',
-        '选择权限获得者': 'Select a permission recipient',
-        '请选择权限获得者': 'Please select a permission recipient',
+        '选择权限获得者': 'Select permission recipient',
+        '请选择权限获得者': 'Please select permission recipient',
         '请输入权限获得者': 'Please enter the authority recipient',
         '可代他人申请加入用户组获取权限': 'You can apply to join the user group for permission on behalf of others'
     },
@@ -786,6 +819,7 @@ export const m = {
    levelSpace : {
         '请输入名称': 'Please enter name',
         '名称': 'Name',
+        '空间名称': 'Space Name',
         '创建人': 'Creator',
         '创建时间': 'Created Time',
         '更新人': 'Updater',
@@ -819,7 +853,8 @@ export const m = {
         '管理空间缩小/修改授权边界时，同步修改相关的二级管理空间的授权边界': 'When the management space shrinks/modifies the authorization boundary, synchronously modify the authorization boundary of the related secondary management space',
         '二级管理空间扩大自己的授权边界，需要走一级管理员审批': 'The secondary management space expands its own authorization boundary, which needs to be approved by the first level administrator',
         '二级管理空间，授权边界（授权操作范围、授权人员范围）小于等于一级管理员空间': 'Secondary management space, authorization boundary (authorized operation range, authorized personnel range) is less than or equal to the first level management space',
-        '管理员': 'Administrator'
+        '管理员': 'Administrator',
+        '输入空间名称、管理员名称进行搜索': 'Enter space name and administrator name for search'
     },
     gradingDetail: {
         '管理空间名称': 'Grading  Manager Name：',
@@ -977,7 +1012,8 @@ export const m = {
         '错误': 'Error',
         '任务': 'task',
         '审计事件': 'event',
-        '对象实例': 'Object instance'
+        '对象实例': 'Object instance',
+        '用户组权限交接': 'User group permission handover'
     },
     access: {
         '接入系统': 'Access System',

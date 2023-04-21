@@ -924,6 +924,7 @@
             position: relative;
             font-size: 12px;
             color: #ff4d4d;
+            top: 0;
             &.mt {
                 margin-top: 10px;
             }

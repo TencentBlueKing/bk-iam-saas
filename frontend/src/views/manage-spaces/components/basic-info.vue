@@ -25,6 +25,7 @@
                     <bk-checkbox
                         :true-value="true"
                         :false-value="false"
+                        :empty-text="$t(`m.common['无匹配人员']`)"
                         class="select-wrap-checkbox"
                         v-model="formData.sync_perm"
                         @change="handleCheckboxChange">

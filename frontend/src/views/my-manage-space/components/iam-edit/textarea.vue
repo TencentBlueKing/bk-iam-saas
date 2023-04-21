@@ -73,8 +73,7 @@
                 default: 255
             },
             index: {
-                type: Number,
-                default: 0
+                type: Number
             }
         },
         data () {

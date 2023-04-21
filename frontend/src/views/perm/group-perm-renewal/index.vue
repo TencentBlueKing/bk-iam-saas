@@ -187,6 +187,7 @@
                             });
                         }
                     }
+                    this.setExpiredAt();
                 }
             },
 

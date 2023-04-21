@@ -301,10 +301,8 @@
                 immediate: true
             },
             curRole: {
-                handler (value) {
-                    if (['staff'].includes(value) && this.index === 0) {
-                        this.fetchSpaceUpdateGuide();
-                    }
+                handler () {
+                    this.fetchSpaceUpdateGuide();
                 },
                 immediate: true
             }
@@ -332,11 +330,13 @@
         },
         methods: {
             fetchSpaceUpdateGuide () {
-                this.$nextTick(() => {
-                    this.$refs.popconfirm
-                        && this.$refs.popconfirm[0].$refs.popconfirmCom
-                        && this.$refs.popconfirm[0].$refs.popconfirmCom.$refs.popover.showHandler();
-                });
+                if (['staff'].includes(this.curRole) && this.index === 0) {
+                    this.$nextTick(() => {
+                        this.$refs.popconfirm
+                            && this.$refs.popconfirm[0].$refs.popconfirmCom
+                            && this.$refs.popconfirm[0].$refs.popconfirmCom.$refs.popover.showHandler();
+                    });
+                }
             },
             initTree (parentId, list) {
                 if (!parentId) {
@@ -363,6 +363,7 @@
                 const { params, name } = to;
                 const pathName = name;
                 this.handleSwitchPerm(params);
+                this.fetchSpaceUpdateGuide();
                 for (const [key, value] of this.routerMap.entries()) {
                     if (key.includes(pathName)) {
                         this.openedItem = value;
@@ -425,7 +426,6 @@
             },
 
             handleRemoteTree  (value) {
-                this.isEmpty = this.$refs.selectTree.filter(value).length === 0;
                 this.$refs.selectTree && this.$refs.selectTree.filter(value);
             },
 

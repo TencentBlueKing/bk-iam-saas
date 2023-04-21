@@ -176,7 +176,7 @@
                     </span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.audit['操作状态']`)" width="100">
+            <bk-table-column :label="$t(`m.audit['操作状态']`)" width="150">
                 <template slot-scope="{ row }">
                     <render-status :status="row.status" />
                 </template>
@@ -310,7 +310,11 @@
                     department: this.$t(`m.common['组织']`),
                     role: this.$t(`m.audit['角色']`),
                     template: this.$t(`m.myApply['权限模板']`),
-                    commonaction: this.$t(`m.audit['常用操作']`)
+                    commonaction: this.$t(`m.audit['常用操作']`),
+                    super_manager: this.$t(`m.myApproval['超级管理员']`),
+                    system_manager: this.$t(`m.nav['系统管理员']`),
+                    rating_manager: this.$t(`m.nav['一级空间管理员']`),
+                    subset_manager: this.$t(`m.nav['二级空间管理员']`)
                 },
                 sourceMap: {
                     web: this.$t(`m.audit['页面']`),
@@ -366,7 +370,8 @@
                     'authorization.api.allow.list.config.create': this.$t(`m.audit['授权类API白名单创建']`),
                     'authorization.api.allow.list.config.delete': this.$t(`m.audit['授权类API白名单删除']`),
                     'management.api.allow.list.config.create': this.$t(`m.audit['管理类API白名单创建']`),
-                    'management.api.allow.list.config.delete': this.$t(`m.audit['管理类API白名单删除']`)
+                    'management.api.allow.list.config.delete': this.$t(`m.audit['管理类API白名单删除']`),
+                    'group.transfer': this.$t(`m.audit['用户组权限交接']`)
                 },
                 currentMonth: '',
                 noDetailType: NO_DETAIL_TYPE,
@@ -663,7 +668,8 @@
                     { id: 'authorization.api.allow.list.config.create', name: this.$t(`m.audit['授权类API白名单创建']`) },
                     { id: 'authorization.api.allow.list.config.delete', name: this.$t(`m.audit['授权类API白名单删除']`) },
                     { id: 'management.api.allow.list.config.create', name: this.$t(`m.audit['管理类API白名单创建']`) },
-                    { id: 'management.api.allow.list.config.delete', name: this.$t(`m.audit['管理类API白名单删除']`) }
+                    { id: 'management.api.allow.list.config.delete', name: this.$t(`m.audit['管理类API白名单删除']`) },
+                    { id: 'group.transfer', name: this.$t(`m.audit['用户组权限交接']`) }
                 ];
                 if (value === '') {
                     return Promise.resolve(list);

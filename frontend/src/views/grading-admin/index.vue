@@ -14,20 +14,31 @@
                 <span class="linkText">{{ $t('m.common["什么是管理空间"]') }}</span>
             </bk-link>
             <div slot="right">
-                <bk-input
+                <!-- <bk-input
                     :placeholder="$t(`m.levelSpace['请输入名称']`)"
                     clearable
                     style="width: 420px;"
                     right-icon="bk-icon icon-search"
                     v-model="searchValue"
                     @enter="handleSearch">
-                </bk-input>
+                </bk-input> -->
+                <iam-search-select
+                    @on-change="handleSelectSearch"
+                    :data="searchData"
+                    :value="searchList"
+                    :placeholder="$t(`m.levelSpace['输入空间名称、管理员名称进行搜索']`)"
+                    style="width: 500px"
+                    :quick-search-method="quickSearchMethod"
+                />
             </div>
         </render-search>
         <bk-table
             ref="spaceTable"
             size="small"
-            ext-cls="grading-admin-table"
+            :ext-cls="[
+                'grading-admin-table',
+                { 'search-manage-table': isFilter }
+            ]"
             :data="tableList"
             :max-height="tableHeight"
             :class="{ 'set-border': tableLoading }"
@@ -146,7 +157,11 @@
             <bk-table-column :label="$t(`m.levelSpace['名称']`)" width="240">
                 <template slot-scope="{ row }">
                     <div class="flex_space_name">
-                        <Icon type="level-one-manage-space" :style="{ color: iconColor[0] }" />
+                        <Icon
+                            :type="isFilter && ['subset_manager'].includes(row.type) ?
+                                'level-two-manage-space' : 'level-one-manage-space'"
+                            :style="{ color: isFilter && ['subset_manager'].includes(row.type) ?
+                                iconColor[1] : iconColor[0] }" />
                         <span
                             class="grading-admin-name single-hide"
                             :title="row.name" @click="handleView(row, 'detail')">
@@ -156,7 +171,7 @@
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.levelSpace['管理员']`)" prop="members" width="300">
-                <template slot-scope="{ row }">
+                <template slot-scope="{ row , $index }">
                     <!-- <span
                         :title="row.members && row.members.length ? row.members.map(tag => tag.username) : ''">
                         <bk-tag v-for="(tag, index) of row.members" :key="index">
@@ -173,7 +188,7 @@
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.common['描述']`)" width="200">
-                <template slot-scope="{ row }">
+                <template slot-scope="{ row, $index }">
                     <iam-edit-textarea
                         field="description"
                         width="200"
@@ -234,7 +249,7 @@
             :sub-title="confirmDialogSubTitle"
             @on-after-leave="handleAfterLeave"
             @on-cancel="handleCancel"
-            @on-sumbit="handleSumbit" />
+            @on-sumbit="handleSubmit" />
         <apply-dialog
             :show.sync="isShowApplyDialog"
             :loading="applyLoading"
@@ -251,21 +266,22 @@
             <h2>{{ $t('m.common["一"]') }}、{{ $t('m.common["什么是管理空间"]') }}</h2>
             <p>{{ $t('m.common["管理空间概念"]') }}</p>
             <!-- <img src="@/images/boot-page/space@2x.png" alt="" style="width:765px; height: 263px"> -->
-            <img src="@/images/boot-page/space@2x.png" alt="" style="width:765px;">
+            <img src="@/images/boot-page/manageSpace@2x.png" alt="" style="width:765px;">
             <h2>{{ $t('m.common["二"]') }}、{{ $t('m.common["如何使用管理空间"]') }}</h2>
             <p>1. {{ $t('m.common["我的管理空间 > 申请新建（已有管理空间忽略）"]') }}</p>
             <!-- <img src="@/images/boot-page/space2@2x.png" alt="" style="width:765px; height:300px"> -->
-            <img src="@/images/boot-page/space2@2x.png" alt="" style="width:765px;">
+            <img src="@/images/boot-page/manageSpace2@2x.png" alt="" style="width:765px;">
             <p>2. {{ $t('m.common["切换顶部导航至“权限管理” ，在左上角切换“管理空间”"]') }}</p>
             <!-- <img src="@/images/boot-page/three2x2.png" alt="" style="width:765px; height:235px"> -->
-            <img src="@/images/boot-page/space3@2x.png" alt="" style="width:765px;">
+            <img src="@/images/boot-page/manageSpace3@2x.png" alt="" style="width:765px;">
             <p>3. {{ $t('m.common["在左侧导航，点击 用户组 > 新建，创建用户组，设置权限和成员"]') }}</p>
             <!-- <img src="@/images/boot-page/four2x2.png" alt="" style="width:765px;height:220px"> -->
-            <img src="@/images/boot-page/space4@2x.png" alt="" style="width:765px;">
+            <img src="@/images/boot-page/manageSpace4@2x.png" alt="" style="width:765px;">
         </bk-dialog>
     </div>
 </template>
 <script>
+    import _ from 'lodash';
     import { mapGetters } from 'vuex';
     import { buildURLParams } from '@/common/url';
     import { getWindowHeight, formatCodeData } from '@/common/util';
@@ -274,6 +290,7 @@
     import IamEditInput from '@/views/my-manage-space/components/iam-edit/input';
     import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
     import IamEditTextarea from '@/views/my-manage-space/components/iam-edit/textarea';
+    import IamSearchSelect from '@/components/iam-search-select';
 
     export default {
         name: '',
@@ -282,7 +299,8 @@
             ApplyDialog,
             IamEditInput,
             IamEditMemberSelector,
-            IamEditTextarea
+            IamEditTextarea,
+            IamSearchSelect
         },
         data () {
             return {
@@ -327,7 +345,21 @@
                     text: '',
                     tip: '',
                     tipType: ''
-                }
+                },
+                searchDefaultData: [
+                    {
+                        id: 'name',
+                        name: this.$t(`m.levelSpace['空间名称']`),
+                        default: true
+                    },
+                    {
+                        id: 'member',
+                        name: this.$t(`m.common['管理员']`),
+                        default: true
+                    }
+                ],
+                searchData: [],
+                searchList: []
             };
         },
         computed: {
@@ -358,6 +390,7 @@
             }
         },
         created () {
+            this.searchData = _.cloneDeep(this.searchDefaultData);
             const currentQueryCache = this.getCurrentQueryCache();
             if (currentQueryCache && Object.keys(currentQueryCache).length) {
                 if (currentQueryCache.limit) {
@@ -367,7 +400,7 @@
                 if (currentQueryCache.name) {
                     this.searchValue = currentQueryCache.name;
                 }
-                if (this.searchValue !== '') {
+                if (this.searchValue) {
                     this.isFilter = true;
                 }
             }
@@ -524,8 +557,46 @@
                     this.subLoading = false;
                 }
             },
+
+            async fetchSearchManageList (isTableLoading = false) {
+                this.tableLoading = isTableLoading;
+                const { current, limit } = this.pagination;
+                const params = {
+                    page_size: limit,
+                    page: current,
+                    name: this.searchValue || '',
+                    member: this.searchMember || ''
+                };
+                if (this.externalSystemId) {
+                    params.hidden = false;
+                }
+                try {
+                    const { code, data } = await this.$store.dispatch('spaceManage/getSearchManagerList', params);
+                    this.pagination.count = data.count || 0;
+                    this.tableList.splice(0, this.tableList.length, ...(data.results || []));
+                    this.emptyData = formatCodeData(
+                        code,
+                        this.emptyData,
+                        this.tableList.length === 0
+                    );
+                } catch (e) {
+                    console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
+                    this.tableList = [];
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: message || data.msg || statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                } finally {
+                    this.tableLoading = false;
+                }
+            },
             
-            async fetchManageTable (payload, url) {
+            async fetchManageTable (payload, url, type) {
                 const { name, description, members } = payload;
                 const params = {
                     name: name || this.formData.name,
@@ -537,9 +608,20 @@
                     await this.$store.dispatch(url, params);
                     this.messageSuccess(this.$t(`m.info['编辑成功']`), 2000);
                     if (name || members) {
-                        this.formData.children = [];
-                        this.resetSubPagination();
-                        await this.fetchSubManagerList(this.formData);
+                        const typeMap = {
+                            'rating_manager': async () => {
+                                this.resetPagination();
+                                this.isFilter ? await this.fetchSearchManageList()
+                                : await this.fetchGradingAdmin(this.formData);
+                            },
+                            'subset_manager': async () => {
+                                this.formData.children = [];
+                                this.resetSubPagination();
+                                this.isFilter ? await this.fetchSearchManageList()
+                                : await this.fetchSubManagerList(this.formData);
+                            }
+                        };
+                        typeMap[type]();
                     }
                     this.formData = Object.assign(this.formData, {
                         name: params.name,
@@ -564,15 +646,28 @@
             handleUpdateSubMembers (payload, index) {
                 this.handleUpdateSubManageSpace(payload, index);
             },
-
+     
+            // 一二级存在平铺展示数据
             async handleUpdateManageSpace (payload, index) {
                 this.formData = this.tableList.find((e, i) => i === index);
-                await this.fetchManageTable(payload, 'role/updateRatingManager');
+                if (this.isFilter) {
+                    const typeMap = {
+                        rating_manager: async () => {
+                            await this.fetchManageTable(payload, 'role/updateRatingManager', 'rating_manager');
+                        },
+                        subset_manager: async () => {
+                            await this.fetchManageTable(payload, 'spaceManage/updateSecondManagerManager', 'subset_manager');
+                        }
+                    };
+                    return typeMap[this.formData.type] ? typeMap[this.formData.type]() : '';
+                } else {
+                    await this.fetchManageTable(payload, 'role/updateRatingManager', 'rating_manager');
+                }
             },
 
             async handleUpdateSubManageSpace (payload, index) {
                 this.formData = this.subTableList.find((e, i) => i === index);
-                await this.fetchManageTable(payload, 'spaceManage/updateSecondManagerManager');
+                await this.fetchManageTable(payload, 'spaceManage/updateSecondManagerManager', 'subset_manager');
             },
 
             async handleLoadMore (payload) {
@@ -611,15 +706,33 @@
                 });
             },
 
-            handleSearch () {
-                if (!this.searchValue) {
+            // handleSearch () {
+            //     if (!this.searchValue) {
+            //         return;
+            //     }
+            //     this.isFilter = true;
+            //     this.emptyData.tipType = 'search';
+            //     this.resetPagination();
+            //     this.resetSubPagination();
+            //     this.fetchGradingAdmin(true);
+            // },
+
+            async handleSelectSearch (payload, result) {
+                const {
+                    name,
+                    member
+                } = payload;
+                if (!Object.keys(payload).length) {
+                    this.resetSearchData();
                     return;
                 }
                 this.isFilter = true;
                 this.emptyData.tipType = 'search';
+                this.searchMember = member || '';
+                this.searchValue = name;
                 this.resetPagination();
                 this.resetSubPagination();
-                this.fetchGradingAdmin(true);
+                await this.fetchSearchManageList();
             },
             
             handleEmptyRefresh () {
@@ -629,8 +742,15 @@
             },
 
             handleEmptyClear () {
-                this.emptyData.tipType = '';
+                this.resetSearchData();
+            },
+
+            resetSearchData () {
+                this.isFilter = false;
                 this.searchValue = '';
+                this.emptyData.tipType = '';
+                this.searchList = [];
+                this.searchData = _.cloneDeep(this.searchDefaultData);
                 this.resetPagination();
                 this.resetSubPagination();
                 this.fetchGradingAdmin(true);
@@ -667,7 +787,7 @@
                 this.isShowApplyDialog = true;
             },
 
-            async handleSumbit () {
+            async handleSubmit () {
                 this.confirmLoading = true;
                 try {
                     await this.$store.dispatch('role/deleteRatingManager', { id: this.curId });
@@ -779,14 +899,19 @@
                     return;
                 }
                 this.pagination.current = page;
-                this.fetchGradingAdmin(true);
+                this.handleFilterData();
             },
 
             handleLimitChange (currentLimit, prevLimit) {
                 this.pagination.limit = currentLimit;
                 this.pagination.current = 1;
-                this.fetchGradingAdmin(true);
+                this.handleFilterData();
+            },
+
+            handleFilterData () {
+                this.isFilter ? this.fetchSearchManageList(true) : this.fetchGradingAdmin(true);
             }
+
         }
     };
 </script>
@@ -923,6 +1048,12 @@
     /deep/ .bk-table-header-wrapper {
         .cell {
             padding-left: 2px;
+        }
+    }
+
+    /deep/ .search-manage-table {
+        .bk-table-expand-icon  {
+            display: none;
         }
     }
 </style>>
