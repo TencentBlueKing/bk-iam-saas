@@ -1,6 +1,7 @@
 <template>
     <render-horizontal-block
-        :label="$t(`m.levelSpace['最大可授权人员边界']`)">
+        :label="$t(`m.levelSpace['最大可授权人员边界']`)"
+        :label-width="labelWidth">
         <bk-radio-group v-model="radioValue" @change="handleChange" class="pl10 pb10">
             <bk-radio :value="true">
                 {{ $t(`m.levelSpace['动态继承上级空间']`) }}
@@ -60,6 +61,9 @@
             inheritSubjectScope: {
                 type: Boolean,
                 default: true
+            },
+            labelWidth: {
+                type: Number
             }
         },
         data () {

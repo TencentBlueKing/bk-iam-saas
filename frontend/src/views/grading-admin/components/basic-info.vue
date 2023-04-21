@@ -26,6 +26,7 @@
                         :title="displayMembers.length ? displayMembers.join() : ''"
                         :style="{ width: language === 'zh-cn' ? '75%' : '60%' }"
                         :class="isShowMemberError ? 'is-member-empty-cls' : ''"
+                        :empty-text="$t(`m.common['无匹配人员']`)"
                         data-test-id="grading_userSelector_member"
                         @focus="handleRtxFocus"
                         @blur="handleRtxBlur"

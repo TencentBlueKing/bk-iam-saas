@@ -29,7 +29,8 @@
             </render-perm>
 
             <render-horizontal-block
-                :label="$t(`m.levelSpace['最大可授权人员边界']`)">
+                :label="$t(`m.levelSpace['最大可授权人员边界']`)"
+                :label-width="renderLabelWidth('resource')">
                 <template v-if="isAll">
                     <span class="all-item">{{ $t(`m.common['全员']`) }}(All)</span>
                 </template>
@@ -58,6 +59,7 @@
     import basicInfo from '@/views/manage-spaces/components/basic-info-detail';
     import RenderMemberItem from '@/views/group/common/render-member-display';
     import renderDetailTable from '@/views/manage-spaces/components/render-instance-detail-table';
+    import { renderLabelWidth } from '@/common/util';
     export default {
         name: '',
         components: {
@@ -68,6 +70,7 @@
         },
         data () {
             return {
+                renderLabelWidth,
                 formData: {
                     name: '',
                     description: '',

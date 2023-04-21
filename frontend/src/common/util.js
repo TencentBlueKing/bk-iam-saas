@@ -567,3 +567,17 @@ export function getTreeNode (id, list) {
         }
     }
 }
+
+// 处理中英文国际化
+export function renderLabelWidth (payload) {
+    const isCN = ['zh-cn'].includes(window.CUR_LANGUAGE);
+    const typeMap = {
+        resource: () => {
+            return isCN ? 180 : 450;
+        },
+        member: () => {
+            return isCN ? 140 : 350;
+        }
+    };
+    return typeMap[payload]();
+}

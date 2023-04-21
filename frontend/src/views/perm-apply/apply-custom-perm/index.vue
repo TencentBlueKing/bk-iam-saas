@@ -230,6 +230,7 @@
                         :placeholder="$t(`m.permApply['请输入权限获得者']`)"
                         :style="{ width: '60%' }"
                         :class="isShowMemberError ? 'is-member-empty-cls' : ''"
+                        :empty-text="$t(`m.common['无匹配人员']`)"
                         data-test-id="grading_userSelector_member"
                         @focus="handleRtxFocus"
                         @blur="handleRtxBlur"

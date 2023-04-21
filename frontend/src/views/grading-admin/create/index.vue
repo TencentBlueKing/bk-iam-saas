@@ -19,6 +19,7 @@
         </render-action> -->
         <render-horizontal-block
             :label="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
+            :label-width="renderLabelWidth('resource')"
             v-if="isSelectSystem || isSelectSystemShow">
             <div class="grade-admin-select-wrapper">
                 <div class="action">
@@ -94,6 +95,7 @@
             :departments="departments"
             :is-all="isAll"
             :tips="addMemberTips"
+            :label-width="renderLabelWidth('member')"
             @on-add="handleAddMember"
             @on-delete="handleMemberDelete"
             @on-delete-all="handleDeleteAll" />
@@ -182,7 +184,7 @@
     import _ from 'lodash';
     import store from '@/store';
     import { mapGetters } from 'vuex';
-    import { guid } from '@/common/util';
+    import { guid, renderLabelWidth } from '@/common/util';
     import IamGuide from '@/components/iam-guide/index.vue';
     import { leavePageConfirm } from '@/common/leave-page-confirm';
     import basicInfo from '../components/basic-info';
@@ -194,6 +196,7 @@
     import GradeAggregationPolicy from '@/model/grade-aggregation-policy';
     import GradePolicy from '@/model/grade-policy';
     import Condition from '@/model/condition';
+    
     export default {
         name: '',
         components: {
@@ -213,6 +216,7 @@
         },
         data () {
             return {
+                renderLabelWidth,
                 formData: {
                     name: '',
                     description: '',

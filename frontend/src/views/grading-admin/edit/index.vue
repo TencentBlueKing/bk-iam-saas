@@ -11,7 +11,10 @@
             :tips="addActionTips"
             v-if="!isSelectSystem"
             @on-click="handleAddAction" />
-        <render-horizontal-block :label="$t(`m.levelSpace['最大可授权操作和资源边界']`)" v-if="isSelectSystem">
+        <render-horizontal-block
+            :label="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
+            :label-width="renderLabelWidth('resource')"
+            v-if="isSelectSystem">
             <div class="grade-admin-select-wrapper">
                 <div class="showTableClick" @click.stop="isShowTableClick">
                     <div class="action">
@@ -72,6 +75,7 @@
             :users="users"
             :departments="departments"
             :is-all="isAll"
+            :label-width="renderLabelWidth('member')"
             v-else
             @on-add="handleAddMember"
             @on-delete="handleMemberDelete"
@@ -171,7 +175,7 @@
     import GradePolicy from '@/model/grade-policy';
     import Condition from '@/model/condition';
     import RenderInstanceTable from '../components/render-instance-table';
-    import { guid } from '@/common/util';
+    import { guid, renderLabelWidth } from '@/common/util';
     export default {
         name: '',
         components: {
@@ -184,6 +188,7 @@
         },
         data () {
             return {
+                renderLabelWidth,
                 formData: {
                     name: '',
                     description: '',

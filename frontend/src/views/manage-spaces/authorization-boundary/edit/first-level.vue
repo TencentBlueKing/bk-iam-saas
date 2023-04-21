@@ -14,6 +14,7 @@
         <render-horizontal-block
             v-if="isSelectSystem"
             :label="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
+            :label-width="renderLabelWidth('resource')"
             :required="true">
             <div class="grade-admin-select-wrapper">
                 <div class="showTableClick" @click.stop="isShowTableClick">
@@ -78,6 +79,7 @@
             :departments="departments"
             :is-all="isAll"
             :tip="addMemberTips"
+            :label-width="renderLabelWidth('member')"
             @on-add="handleAddMember"
             @on-delete="handleMemberDelete"
             @on-delete-all="handleDeleteAll" />
@@ -177,7 +179,7 @@
     import GradePolicy from '@/model/grade-policy';
     import Condition from '@/model/condition';
     import RenderInstanceTable from '@/views/manage-spaces/components/render-instance-table';
-    import { guid } from '@/common/util';
+    import { guid, renderLabelWidth } from '@/common/util';
     export default {
         name: '',
         components: {
@@ -190,6 +192,7 @@
         },
         data () {
             return {
+                renderLabelWidth,
                 formData: {
                     name: '',
                     description: '',

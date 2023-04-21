@@ -113,7 +113,7 @@
                 expiredAt: SIX_MONTH_TIMESTAMP,
                 tableList: [],
                 tabKey: 'tab-key',
-                reason: '权限续期',
+                reason: this.$t(`m.renewal['权限续期']`),
                 submitLoading: false,
                 tableLoading: false,
                 isShowErrorTips: false,

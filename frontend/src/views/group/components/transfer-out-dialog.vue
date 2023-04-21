@@ -17,6 +17,7 @@
                 :placeholder="$t(`m.verify['请选择管理空间']`)"
                 :search-placeholder="$t(`m.info['搜索关键字']`)"
                 :multiple="false"
+                :allow-enter="false"
                 :loading="selectLoading"
                 searchable
                 :remote-method="handleRemoteValue"
