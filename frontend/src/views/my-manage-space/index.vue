@@ -138,6 +138,7 @@
                                         theme="primary"
                                         text
                                         :disabled="disabledPerm(child.row)"
+                                        :title="disabledPerm(row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
                                         @click.stop="handleSubView(child.row, 'detail')"
                                     >
                                         {{ $t(`m.levelSpace['进入']`) }}
@@ -247,6 +248,7 @@
                             theme="primary"
                             text
                             :disabled="disabledPerm(row)"
+                            :title="disabledPerm(row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
                             @click="handleView(row, 'detail')"
                         >
                             {{ $t(`m.levelSpace['进入']`) }}
@@ -259,7 +261,12 @@
                         >
                             {{ $t(`m.nav['授权边界']`) }}
                         </bk-button>
-                        <bk-button theme="primary" text @click="handleView(row, 'clone')">
+                        <bk-button
+                            theme="primary"
+                            text
+                            @click="handleView(row, 'clone')"
+                            :disabled="disabledPerm(row)"
+                        >
                             {{ $t(`m.levelSpace['克隆']`) }}
                         </bk-button>
                     </div>

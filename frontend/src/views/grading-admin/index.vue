@@ -110,13 +110,16 @@
                         <bk-table-column width="300">
                             <template slot-scope="child">
                                 <div class="operate_btn">
-                                    <bk-button
-                                        theme="primary"
-                                        text
-                                        @click.stop="handleSubView(child.row, 'detail')"
-                                        :disabled="disabledPerm(child.row)">
-                                        {{ $t(`m.levelSpace['进入']`) }}
-                                    </bk-button>
+                                    <span>
+                                        <bk-button
+                                            theme="primary"
+                                            text
+                                            @click.stop="handleSubView(child.row, 'detail')"
+                                            :title="disabledPerm(child.row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
+                                            :disabled="disabledPerm(child.row)">
+                                            {{ $t(`m.levelSpace['进入']`) }}
+                                        </bk-button>
+                                    </span>
                                     <bk-button
                                         theme="primary"
                                         text
@@ -215,8 +218,11 @@
                         </bk-button>
                     </section> -->
                     <div class="operate_btn">
-                        <bk-button theme="primary"
-                            text @click="handleView(row, 'role')"
+                        <bk-button
+                            theme="primary"
+                            text
+                            @click="handleView(row, 'role')"
+                            :title="disabledPerm(row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
                             :disabled="disabledPerm(row)">
                             {{ $t(`m.levelSpace['进入']`) }}
                         </bk-button>
