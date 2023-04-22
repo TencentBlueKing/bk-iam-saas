@@ -325,7 +325,8 @@ export const m = {
         '请选择日期': 'Please select date',
         '请选择时区': 'Please select time zone',
         '请选择时间范围': 'Please select time range',
-        '需添加当前用户为管理员': 'Need to add the current user as an administrator'
+        '需添加当前用户为管理员': 'Need to add the current user as an administrator',
+        '管理员不能为空': 'Administrator cannot be empty',
     },
     info: {
         '加入用户组申请成功': 'Apply to join the group successfully',

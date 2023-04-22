@@ -229,7 +229,6 @@
                         <bk-button
                             theme="primary"
                             text
-                            :disabled="disabledPerm(row)"
                             @click="handleCopy(row)">
                             {{ $t(`m.grading['克隆']`) }}
                         </bk-button>

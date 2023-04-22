@@ -406,7 +406,6 @@
             // 从其他菜单进入权限管理选择角色
             handleSwitchPerm ({ id, entry }) {
                 if (entry && this.$refs.selectTree) {
-                    console.log(entry, id, 555);
                     this.$refs.selectTree.selected = Number(id);
                 }
             },
