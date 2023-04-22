@@ -56,20 +56,6 @@
         >
             <bk-table-column type="expand" width="30">
                 <template slot-scope="{ row }">
-                    <!-- <bk-table
-                        size="small"
-                        ext-cls="children-expand-cls"
-                        :data="row.children"
-                        :row-key="row.id"
-                        :show-header="false"
-                        :border="false"
-                        :cell-class-name="getSubCellClass"
-                        v-bkloading="{ isLoading: subLoading, opacity: 1 }"
-                        :pagination="subPagination"
-                        @page-change="handleSubPageChange"
-                        @page-limit-change="handleSubLimitChange"
-                        @row-click="handleRowClick"
-                    > -->
                     <bk-table
                         size="small"
                         ext-cls="children-expand-cls"
@@ -138,7 +124,7 @@
                                         theme="primary"
                                         text
                                         :disabled="disabledPerm(child.row)"
-                                        :title="disabledPerm(row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
+                                        :title="disabledPerm(child.row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
                                         @click.stop="handleSubView(child.row, 'detail')"
                                     >
                                         {{ $t(`m.levelSpace['进入']`) }}
@@ -147,6 +133,7 @@
                                         theme="primary"
                                         text
                                         :disabled="disabledPerm(child.row)"
+                                        :title="disabledPerm(child.row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
                                         @click.stop="handleSubView(child.row, 'auth')"
                                     >
                                         {{ $t(`m.nav['授权边界']`) }}
@@ -260,6 +247,7 @@
                             theme="primary"
                             text
                             :disabled="disabledPerm(row)"
+                            :title="disabledPerm(row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
                             @click.stop="handleView(row, 'auth')"
                         >
                             {{ $t(`m.nav['授权边界']`) }}
@@ -268,6 +256,7 @@
                             theme="primary"
                             text
                             @click="handleView(row, 'clone')"
+                            :title="disabledPerm(row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
                             :disabled="disabledPerm(row)"
                         >
                             {{ $t(`m.levelSpace['克隆']`) }}
@@ -561,7 +550,7 @@
                 };
                 typeMap[payload]();
             },
-            
+
             handleRowClick (row, column, cell, event, rowIndex, columnIndex) {
                 const allNodeId = this.findParentNode(row.id, this.expandRowList);
                 if (allNodeId.length) {

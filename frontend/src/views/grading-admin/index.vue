@@ -61,7 +61,6 @@
                         :cell-class-name="getSubCellClass"
                         :max-height="500"
                         v-bkloading="{ isLoading: subLoading, opacity: 1 }"
-                        @row-click="handleRowClick"
                     >
                         <bk-table-column width="30" />
                         <bk-table-column prop="name" width="240">
@@ -113,7 +112,7 @@
                                         <bk-button
                                             theme="primary"
                                             text
-                                            @click.stop="handleSubView(child.row, 'detail')"
+                                            @click.stop="handleSubView(child.row, 'role')"
                                             :title="disabledPerm(child.row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
                                             :disabled="disabledPerm(child.row)">
                                             {{ $t(`m.levelSpace['进入']`) }}
@@ -123,6 +122,7 @@
                                         theme="primary"
                                         text
                                         @click.stop="handleSubView(child.row, 'auth')"
+                                        :title="disabledPerm(child.row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
                                         :disabled="disabledPerm(child.row)">
                                         {{ $t(`m.nav['授权边界']`) }}
                                     </bk-button>
@@ -235,6 +235,15 @@
                             :title="disabledPerm(row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
                             :disabled="disabledPerm(row)">
                             {{ $t(`m.levelSpace['进入']`) }}
+                        </bk-button>
+                        <bk-button
+                            theme="primary"
+                            text
+                            :title="disabledPerm(row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
+                            :disabled="disabledPerm(row)"
+                            @click.stop="handleView(row, 'auth')"
+                        >
+                            {{ $t(`m.nav['授权边界']`) }}
                         </bk-button>
                         <bk-button
                             theme="primary"
@@ -387,7 +396,7 @@
             },
             disabledPerm () {
                 return (payload) => {
-                    const result = payload.members.map(item => item.username).includes(this.user.username) || ['super_manager'].includes(this.user.role.type);
+                    const result = payload.members.map(item => item.username).includes(this.user.username);
                     return !result;
                 };
             }
@@ -443,14 +452,6 @@
 
             showImgDialog () {
                 this.showImageDialog = true;
-            },
-            
-            handleRowClick (row, column, cell, event, rowIndex, columnIndex) {
-                const allNodeId = this.findParentNode(row.id, this.expandRowList);
-                if (allNodeId.length) {
-                    const rowData = this.expandRowList.find(item => item.id === allNodeId[0]);
-                    this.$refs.spaceTable.toggleRowExpansion(rowData, false);
-                }
             },
 
             handleExpandChange (row, expandedRows) {
@@ -684,7 +685,6 @@
 
             async handleUpdateSubManageSpace (payload, index) {
                 this.formData = this.subTableList.find((e, i) => i === index);
-                console.log(this.subTableList, 4555);
                 await this.fetchManageTable(payload, 'spaceManage/updateSecondManagerManager', 'subset_manager');
             },
 
@@ -841,36 +841,43 @@
 
             async handleView ({ id, name }, type) {
                 window.localStorage.setItem('iam-header-name-cache', name);
+                let routerName = 'gradingAdminDetail';
                 const navRoute = {
                     detail: () => {
                         this.$router.push({
-                            name: 'gradingAdminDetail',
+                            name: routerName,
                             params: {
                                 id
                             }
                         });
                     },
-                    role: async () => {
-                        await this.$store.dispatch('role/updateCurrentRole', { id });
-                        await this.$store.dispatch('userInfo');
-                        const { role } = this.user;
-                        if (role) {
-                            this.$store.commit('updateCurRoleId', id);
-                            this.$store.commit('updateIdentity', { id, type: role.type, name });
-                            this.$store.commit('updateNavId', id);
-                            this.$store.commit('updateIndex', 1);
-                            window.localStorage.setItem('index', 1);
-                            this.$router.push({
-                                name: 'userGroup',
-                                params: {
-                                    id,
-                                    entry: 'super_manager'
-                                }
-                            });
-                        }
+                    role: () => {
+                        routerName = 'userGroup';
+                    },
+                    auth: () => {
+                        routerName = 'authorBoundary';
                     }
                 };
                 navRoute[type]();
+                if (!['detail'].includes(type)) {
+                    await this.$store.dispatch('role/updateCurrentRole', { id });
+                    await this.$store.dispatch('userInfo');
+                    const { role } = this.user;
+                    if (role) {
+                        this.$store.commit('updateCurRoleId', id);
+                        this.$store.commit('updateIdentity', { id, type: role.type, name });
+                        this.$store.commit('updateNavId', id);
+                        this.$store.commit('updateIndex', 1);
+                        window.localStorage.setItem('index', 1);
+                        this.$router.push({
+                            name: routerName,
+                            params: {
+                                id,
+                                entry: 'super_manager'
+                            }
+                        });
+                    }
+                }
             },
 
             // 二级管理空间
@@ -878,7 +885,7 @@
                 window.localStorage.setItem('iam-header-name-cache', name);
                 let routerName = 'userGroup';
                 const routerNav = {
-                    detail: () => {
+                    role: () => {
                         routerName = 'userGroup';
                         this.$store.commit('updateIndex', 1);
                         window.localStorage.setItem('index', 1);
