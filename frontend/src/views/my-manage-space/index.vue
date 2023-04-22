@@ -195,6 +195,7 @@
                             field="name"
                             :placeholder="$t(`m.verify['请输入']`)"
                             :value="row.name"
+                            :mode="formatMode(row)"
                             style="width: 100%; margin-left: 5px"
                             :index="$index"
                             :remote-hander="handleUpdateManageSpace"
@@ -212,6 +213,7 @@
                         width="200"
                         :placeholder="$t(`m.verify['请输入']`)"
                         :value="row.members"
+                        :mode="formatMode(row)"
                         :index="$index"
                         @on-change="handleUpdateMembers"
                     />
@@ -227,6 +229,7 @@
                         width="200"
                         :placeholder="$t(`m.verify['用户组描述提示']`)"
                         :value="row.description"
+                        :mode="formatMode(row)"
                         :index="$index"
                         :remote-hander="handleUpdateManageSpace"
                     />
@@ -374,6 +377,11 @@
             },
             isStaff () {
                 return this.user.role.type === 'staff';
+            },
+            formatMode () {
+                return (payload) => {
+                    return payload.is_member || this.isFilter ? 'edit' : 'detail';
+                };
             }
         },
         watch: {
@@ -524,21 +532,10 @@
                         members: [...params.members]
                     });
                     if (name || members) {
-                        const typeMap = {
-                            rating_manager: async () => {
-                                this.resetPagination();
-                                this.isFilter ? await this.fetchSearchManageList() : await this.fetchGradingAdmin();
-                            },
-                            subset_manager: async () => {
-                                this.formData.children = [];
-                                this.resetSubPagination();
-                                this.isFilter ? await this.fetchSearchManageList()
-                                : await this.fetchSubManagerList(this.formData);
-                            }
-                        };
-                        typeMap[type]();
+                        this.fetchResetInstanceData(type);
                     }
                 } catch (e) {
+                    this.fetchResetInstanceData(type);
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
@@ -549,6 +546,22 @@
                 }
             },
 
+            async fetchResetInstanceData (payload) {
+                const typeMap = {
+                    rating_manager: async () => {
+                        this.resetPagination();
+                        this.isFilter ? await this.fetchSearchManageList() : await this.fetchGradingAdmin();
+                    },
+                    subset_manager: async () => {
+                        this.formData.children = [];
+                        this.resetSubPagination();
+                        this.isFilter ? await this.fetchSearchManageList()
+                        : await this.fetchSubManagerList(this.curData);
+                    }
+                };
+                typeMap[payload]();
+            },
+            
             handleRowClick (row, column, cell, event, rowIndex, columnIndex) {
                 const allNodeId = this.findParentNode(row.id, this.expandRowList);
                 if (allNodeId.length) {
@@ -629,6 +642,7 @@
                     this.subPagination.count = data.count || 0;
                     // this.subTableList.splice(0, this.subTableList.length, ...(data.results || []));
                     row.children = [...row.children, ...data.results];
+                    this.subTableList = [...row.children];
                     this.emptyData = formatCodeData(
                         code,
                         this.emptyData,
@@ -638,6 +652,7 @@
                     console.error(e);
                     const { code, data, message, statusText } = e;
                     row.children = [];
+                    this.subTableList = [];
                     this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
@@ -800,16 +815,6 @@
                     this.subPagination = Object.assign(this.subPagination, params);
                     this.fetchSubManagerList(this.curData);
                 }
-            },
-
-            handleSubPageChange (page) {
-                this.subPagination.current = page;
-                this.fetchSubManagerList(this.curData);
-            },
-
-            handleSubLimitChange (limit) {
-                this.subPagination = Object.assign(this.subPagination, { limit, current: 1 });
-                this.fetchSubManagerList(this.curData);
             },
 
             handlePageChange (page) {
@@ -984,32 +989,39 @@
     }
   }
 
-  /deep/ .iam-table-cell-1-cls,
-  .iam-tag-table-cell-subset-cls {
-    .cell {
-      padding-left: 2px;
+  /deep/ .iam-table-cell-1-cls, .iam-tag-table-cell-subset-cls  {
+        .cell {
+            padding-left: 2px;
+        }
     }
-  }
 
-  /deep/ .iam-tag-table-cell-subset-cls {
-    .cell {
-      padding-left: 2px;
+    /deep/ .iam-tag-table-cell-subset-cls {
+        .cell {
+            padding-left: 2px;
+            .bk-table-expand-icon  {
+                display: none;
+            }
+        }
     }
-  }
 
-  /deep/ .bk-table-header-wrapper {
-    .cell {
-      padding-left: 2px;
+    /deep/ .bk-table-header-wrapper {
+        .cell {
+            padding-left: 2px;
+        }
     }
-  }
 
-  /deep/ .search-manage-table {
-    .bk-table-expand-icon  {
-        display: none;
+    /deep/ .search-manage-table {
+        .bk-table-expand-icon  {
+            display: none;
+        }
+        .iam-tag-table-cell-cls {
+            .cell {
+                padding-left: 0;
+            }
+        }
+        .bk-table .cell {
+            padding-left: 2px;
+        }
     }
-    .bk-table .cell {
-        padding-left: 0;
-    }
-  }
 }
 </style>

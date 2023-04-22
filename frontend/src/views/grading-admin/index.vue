@@ -635,7 +635,7 @@
                                 this.formData.children = [];
                                 this.resetSubPagination();
                                 this.isFilter ? await this.fetchSearchManageList()
-                                : await this.fetchSubManagerList(this.formData);
+                                : await this.fetchSubManagerList(this.curData);
                             }
                         };
                         typeMap[type]();

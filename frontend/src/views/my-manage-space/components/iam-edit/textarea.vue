@@ -10,7 +10,7 @@
                         </template>
                     </slot>
                 </div>
-                <div class="edit-action-box">
+                <div class="edit-action-box" v-if="isEditMode">
                     <Icon
                         type="edit-fill"
                         class="edit-action"
@@ -74,6 +74,13 @@
             },
             index: {
                 type: Number
+            },
+            mode: {
+                type: String,
+                default: 'edit',
+                validator: function (value) {
+                    return ['detail', 'edit'].includes(value);
+                }
             }
         },
         data () {
@@ -90,6 +97,9 @@
                 return {
                     width: this.width
                 };
+            },
+            isEditMode () {
+                return this.mode === 'edit';
             }
         },
         watch: {
