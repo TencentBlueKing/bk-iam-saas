@@ -728,7 +728,7 @@
                 } catch (e) {
                     console.error(e);
                     if (['admin'].includes(this.user.username)) {
-                        this.messageError(this.$t(`m.info['admin无需申请权限']`), 2000);
+                        this.messageError(this.$t(`m.verify['admin无需申请权限']`), 2000);
                     } else {
                         this.bkMessageInstance = this.$bkMessage({
                             limit: 1,

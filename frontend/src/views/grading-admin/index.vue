@@ -68,7 +68,6 @@
                             <template slot-scope="child">
                                 <div class="flex_space_name">
                                     <Icon type="level-two-manage-space" :style="{ color: iconColor[1] }" />
-                                    <!-- {{ child.row }} -->
                                     <iam-edit-input
                                         field="name"
                                         style="width: 100%;margin-left: 5px;"
@@ -158,18 +157,29 @@
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.levelSpace['名称']`)" width="240">
-                <template slot-scope="{ row }">
+                <template slot-scope="{ row, $index }">
                     <div class="flex_space_name">
-                        <Icon
-                            :type="isFilter && ['subset_manager'].includes(row.type) ?
-                                'level-two-manage-space' : 'level-one-manage-space'"
-                            :style="{ color: isFilter && ['subset_manager'].includes(row.type) ?
-                                iconColor[1] : iconColor[0] }" />
-                        <span
-                            class="grading-admin-name single-hide"
-                            :title="row.name" @click="handleView(row, 'detail')">
-                            {{ row.name }}
-                        </span>
+                        <template v-if="isFilter && ['subset_manager'].includes(row.type)">
+                            <Icon type="level-two-manage-space" :style="{ color: iconColor[1] }" />
+                            <iam-edit-input
+                                field="name"
+                                style="width: 100%;margin-left: 5px;"
+                                :placeholder="$t(`m.verify['请输入']`)"
+                                :value="row.name"
+                                :index="$index"
+                                :remote-hander="handleUpdateManageSpace" />
+                        </template>
+                        <template v-else>
+                            <Icon
+                                type="level-one-manage-space"
+                                :style="{ 'color': iconColor[0] }" />
+                            <span
+                                class="grading-admin-name single-hide"
+                                :title="row.name"
+                                @click="handleView(row, 'detail')">
+                                {{ row.name }}
+                            </span>
+                        </template>
                     </div>
                 </template>
             </bk-table-column>
@@ -544,11 +554,13 @@
                     this.subPagination.count = data.count;
                     // this.subTableList.splice(0, this.subTableList.length, ...(data.results || []));
                     row.children = [...row.children, ...data.results];
+                    this.subTableList = [...row.children];
                     this.emptyData = formatCodeData(code, this.emptyData, this.subTableList.length === 0);
                 } catch (e) {
                     console.error(e);
                     const { code, data, message, statusText } = e;
                     row.children = [];
+                    this.subTableList = [];
                     this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
@@ -672,6 +684,7 @@
 
             async handleUpdateSubManageSpace (payload, index) {
                 this.formData = this.subTableList.find((e, i) => i === index);
+                console.log(this.subTableList, 4555);
                 await this.fetchManageTable(payload, 'spaceManage/updateSecondManagerManager', 'subset_manager');
             },
 
@@ -1059,6 +1072,9 @@
     /deep/ .search-manage-table {
         .bk-table-expand-icon  {
             display: none;
+        }
+        .bk-table .cell {
+            padding-left: 2px;
         }
     }
 </style>>
