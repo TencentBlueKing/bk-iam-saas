@@ -377,7 +377,7 @@
             },
             disabledPerm () {
                 return (payload) => {
-                    const result = payload.members.map(item => item.username).includes(this.user.username);
+                    const result = payload.members.map(item => item.username).includes(this.user.username) || ['super_manager'].includes(this.user.role.type);
                     return !result;
                 };
             }
