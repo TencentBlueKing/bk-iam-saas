@@ -33,6 +33,7 @@
                 :placeholder="$t(`m.common['选择管理空间']`)"
                 :search-placeholder="$t(`m.common['搜索管理空间']`)"
                 :searchable="true"
+                :allow-enter="false"
                 :prefix-icon="user.role && ['subset_manager'].includes(user.role.type) ?
                     'icon iam-icon iamcenter-level-two-manage-space' : 'icon iam-icon iamcenter-level-one-manage-space'"
                 :remote-method="handleRemoteTree"
