@@ -5,12 +5,12 @@
                 <basic-info :data="formData" @on-change="handleBasicInfoChange" ref="basicInfoRef" />
             </section>
         </render-horizontal-block>
-        <render-action
+        <!-- <render-action
             style="margin-bottom: 16px;"
             :title="$t(`m.levelSpace['选择操作和资源实例']`)"
             :tips="addActionTips"
-            v-if="!isSelectSystem"
-            @on-click="handleAddAction" />
+            v-if="isSelectSystem"
+            @on-click="handleAddAction" /> -->
         <render-horizontal-block
             v-if="isSelectSystem"
             :label="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
@@ -66,22 +66,23 @@
             </div>
         </render-horizontal-block>
         <p class="action-empty-error" v-if="isShowActionEmptyError">{{ $t(`m.verify['操作和资源边界不可为空']`) }}</p>
-        <section v-if="isShowMemberAdd" ref="memberRef">
+        <!-- <section v-if="isShowMemberAdd" ref="memberRef">
             <render-action
                 :title="$t(`m.levelSpace['选择可授权人员边界']`)"
                 :tips="addMemberTips"
                 style="margin-bottom: 16px;"
                 @on-click="handleAddMember" />
+        </section> -->
+        <section ref="memberRef">
+            <render-member
+                :users="users"
+                :departments="departments"
+                :is-all="isAll"
+                :label-width="renderLabelWidth('member')"
+                @on-add="handleAddMember"
+                @on-delete="handleMemberDelete"
+                @on-delete-all="handleDeleteAll" />
         </section>
-        <render-member
-            :users="users"
-            :departments="departments"
-            :is-all="isAll"
-            :label-width="renderLabelWidth('member')"
-            v-else
-            @on-add="handleAddMember"
-            @on-delete="handleMemberDelete"
-            @on-delete-all="handleDeleteAll" />
         <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员边界不可为空']`) }}</p>
         <template v-if="isStaff">
             <render-horizontal-block
@@ -169,7 +170,7 @@
     import { mapGetters } from 'vuex';
     import { leavePageConfirm } from '@/common/leave-page-confirm';
     import basicInfo from '../components/basic-info';
-    import renderAction from '../common/render-action';
+    // import renderAction from '../common/render-action';
     import AddMemberDialog from '../../group/components/iam-add-member';
     import RenderMember from '../components/render-member';
     import AddActionSideslider from '../components/add-action-sideslider';
@@ -182,7 +183,7 @@
         name: '',
         components: {
             basicInfo,
-            renderAction,
+            // renderAction,
             AddMemberDialog,
             RenderMember,
             AddActionSideslider,
