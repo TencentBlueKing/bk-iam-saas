@@ -44,7 +44,7 @@
                             type="rating_manager_merge_action"
                             direction="right"
                             :loading="isLoading"
-                            :style="{ top: '-15px', right: '120px' }"
+                            :style="renderLabelWidth('rating_manager_merge_action_guide')"
                             :content="$t(`m.guide['聚合操作']`)" />
                         <bk-switcher
                             v-model="isAllExpanded"
@@ -210,7 +210,7 @@
                     name: '',
                     description: '',
                     members: [],
-                    sync_perm: false
+                    sync_perm: true
                 },
                 isShowAddMemberDialog: false,
                 isShowMemberAdd: false,

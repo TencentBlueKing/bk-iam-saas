@@ -1,12 +1,12 @@
 <template>
     <div class="iam-perm-template-wrapper">
         <render-search>
-            <iam-guide
+            <!-- <iam-guide
                 type="create_perm_template"
                 direction="left"
                 :style="{ top: '-15px', left: '80px' }"
                 :content="$t(`m.guide['创建模板']`)"
-            />
+            /> -->
             <bk-button theme="primary" @click="handleCreate" data-test-id="permTemplate_btn_create">
                 {{ $t(`m.common['新建']`) }}
             </bk-button>
@@ -132,7 +132,7 @@
     import { mapGetters } from 'vuex';
     import UserGroupDialog from '@/components/render-user-group-dialog';
     import IamSearchSelect from '@/components/iam-search-select';
-    import IamGuide from '@/components/iam-guide/index.vue';
+    // import IamGuide from '@/components/iam-guide/index.vue';
     import { fuzzyRtxSearch } from '@/common/rtx';
     import { buildURLParams } from '@/common/url';
     import { formatCodeData, getWindowHeight } from '@/common/util';
@@ -140,8 +140,8 @@
         name: '',
         components: {
             UserGroupDialog,
-            IamSearchSelect,
-            IamGuide
+            IamSearchSelect
+            // IamGuide
         },
         data () {
             return {
