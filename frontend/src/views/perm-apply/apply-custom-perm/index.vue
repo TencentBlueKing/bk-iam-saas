@@ -2431,13 +2431,17 @@
                     });
                 } catch (e) {
                     console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
+                    if (['admin'].includes(this.user.username)) {
+                        this.messageError(this.$t(`m.verify['admin无需申请权限']`), 2000);
+                    } else {
+                        this.bkMessageInstance = this.$bkMessage({
+                            limit: 1,
+                            theme: 'error',
+                            message: e.message || e.data.msg || e.statusText,
+                            ellipsisLine: 2,
+                            ellipsisCopy: true
+                        });
+                    }
                 } finally {
                     this.buttonLoading = false;
                 }

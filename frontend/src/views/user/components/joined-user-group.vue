@@ -496,7 +496,6 @@
                     this.pagination.count = data.count || 0;
                     this.tableList.splice(0, this.tableList.length, ...(data.results || []));
                     this.emptyDialogData = formatCodeData(code, this.emptyDialogData, this.tableList.length === 0);
-                    console.log(this.emptyDialogData);
                 } catch (e) {
                     console.error(e);
                     const { code, data, message, statusText } = e;

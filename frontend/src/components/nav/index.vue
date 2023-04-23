@@ -33,6 +33,7 @@
                 :placeholder="$t(`m.common['选择管理空间']`)"
                 :search-placeholder="$t(`m.common['搜索管理空间']`)"
                 :searchable="true"
+                :allow-enter="false"
                 :prefix-icon="user.role && ['subset_manager'].includes(user.role.type) ?
                     'icon iam-icon iamcenter-level-two-manage-space' : 'icon iam-icon iamcenter-level-one-manage-space'"
                 :remote-method="handleRemoteTree"
@@ -91,7 +92,7 @@
                                     <span>{{$t(`m.common['系统']`)}}{{child.name}}</span>
                                 </span>
                                 <span v-else class="iam-menu-text single-hide" :title="child.name">{{ child.name }}</span>
-                                <span v-if="['myManageSpace'].includes(child.rkey)" @click.stop>
+                                <span v-if="['myManageSpace'].includes(child.rkey) && index === 0" @click.stop>
                                     <iam-guide
                                         ref="popconfirm"
                                         type="grade_manager_upgrade"
@@ -286,17 +287,19 @@
             },
             roleList: {
                 handler (value) {
-                    value = value.map((e) => {
-                        e.level = 0;
-                        if (e.sub_roles.length) {
-                            e.sub_roles.forEach(sub => {
-                                sub.level = 1;
-                            });
-                            e.children = e.sub_roles;
-                        }
-                        return e;
-                    });
-                    this.curRoleList.splice(0, this.curRoleList.length, ...value);
+                    if (value.length) {
+                        value = value.map((e) => {
+                            e.level = 0;
+                            if (e.sub_roles.length) {
+                                e.sub_roles.forEach(sub => {
+                                    sub.level = 1;
+                                });
+                                e.children = e.sub_roles;
+                            }
+                            return e;
+                        });
+                        this.curRoleList.splice(0, this.curRoleList.length, ...value);
+                    }
                 },
                 immediate: true
             },
@@ -308,9 +311,7 @@
             }
         },
         created () {
-            this.curRole = this.user.role.type;
-            this.curRoleId = this.navCurRoleId || this.user.role.id;
-            this.$store.commit('updateCurRoleId', this.curRoleId);
+            this.fetchRoleUpdate(this.user);
             this.isUnfold = this.navStick || !this.navFold;
             this.$once('hook:beforeDestroy', () => {
                 bus.$off('theme-change');
@@ -329,10 +330,21 @@
             });
         },
         methods: {
+            // 监听当前已选中的角色是否有变更
+            fetchRoleUpdate ({ role }) {
+                const { id, type } = role;
+                console.log(role, '变更');
+                this.curRole = type;
+                this.curRoleId = this.navCurRoleId || id;
+                this.$store.commit('updateCurRoleId', this.curRoleId);
+                if (this.index === 1 && this.$refs.selectTree) {
+                    this.$refs.selectTree.selected = this.curRoleId;
+                }
+            },
             fetchSpaceUpdateGuide () {
                 if (['staff'].includes(this.curRole) && this.index === 0) {
                     this.$nextTick(() => {
-                        this.$refs.popconfirm
+                        this.$refs.popconfirm && this.$refs.popconfirm.length
                             && this.$refs.popconfirm[0].$refs.popconfirmCom
                             && this.$refs.popconfirm[0].$refs.popconfirmCom.$refs.popover.showHandler();
                     });
@@ -394,8 +406,8 @@
 
             // 从其他菜单进入权限管理选择角色
             handleSwitchPerm ({ id, entry }) {
-                if (entry) {
-                    this.$refs.selectTree.selected = id;
+                if (entry && this.$refs.selectTree) {
+                    this.$refs.selectTree.selected = Number(id);
                 }
             },
 

@@ -18,7 +18,7 @@
                         </span>
                     </slot>
                 </div>
-                <div class="edit-action-box">
+                <div class="edit-action-box" v-if="isEditMode">
                     <Icon
                         type="edit-fill"
                         class="edit-action"
@@ -77,6 +77,13 @@
             index: {
                 type: Number,
                 default: 0
+            },
+            mode: {
+                type: String,
+                default: 'edit',
+                validator: function (value) {
+                    return ['detail', 'edit'].includes(value);
+                }
             }
         },
         data () {
@@ -95,14 +102,15 @@
                 return {
                     width: this.width
                 };
+            },
+            isEditMode () {
+                return this.mode === 'edit';
             }
         },
         watch: {
             value: {
                 handler (newVal) {
-                    this.disabledValue = [...newVal].filter(e => e.readonly);
-                    this.displayValue = [...newVal];
-                    this.editValue = [...newVal].filter(e => !e.readonly).map(e => e.username);
+                    this.handleDefaultData(newVal);
                 },
                 immediate: true
             },
@@ -136,11 +144,19 @@
                 });
             },
 
+            // 设置默认值
+            handleDefaultData (payload) {
+                this.disabledValue = [...payload].filter(e => e.readonly);
+                this.displayValue = [...payload];
+                this.editValue = [...payload].filter(e => !e.readonly).map(e => e.username);
+            },
+
             handleEdit () {
                 document.body.click();
                 this.isEditable = true;
                 this.$nextTick(() => {
                     this.$refs.selector && this.$refs.selector.focus();
+                    this.handleDefaultData(this.value);
                     this.handleReadOnly();
                 });
             },
@@ -202,6 +218,8 @@
                 if (JSON.stringify(this.displayValue) !== JSON.stringify(this.value)) {
                     this.isEditable = false;
                     if (this.displayValue.length < 1) {
+                        this.displayValue = [...this.value];
+                        this.messageError(this.$t(`m.verify['管理员不能为空']`), 2000);
                         return;
                     }
                     this.triggerChange();
@@ -294,10 +312,10 @@
     }
     }
 
-    /deep/ .user-selector-selected-readonly {
+    /* /deep/ .user-selector-selected-readonly {
         cursor: not-allowed;
         .bk-biz-icon-close {
             display: none;
         }
-    }
+    } */
 </style>
