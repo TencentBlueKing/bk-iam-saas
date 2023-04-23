@@ -333,7 +333,7 @@
             // 监听当前已选中的角色是否有变更
             fetchRoleUpdate ({ role }) {
                 const { id, type } = role;
-                console.log(role, '变更');
+                // console.log(role, '变更');
                 this.curRole = type;
                 this.curRoleId = this.navCurRoleId || id;
                 this.$store.commit('updateCurRoleId', this.curRoleId);

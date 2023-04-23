@@ -594,7 +594,7 @@
             handleChangeLocale (payload) {
                 this.setCookie('blueking_language', payload);
                 Cookie.set('blueking_language', payload, {
-                    domain: window.location.hostname.split('.').slice(-3).join('.')
+                    domain: window.location.hostname.split('.').slice(1).join('.')
                 });
                 this.setMagicBoxLocale(payload);
             },
