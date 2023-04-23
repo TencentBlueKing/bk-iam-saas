@@ -429,7 +429,7 @@ export const m = {
         '分级管理员': 'rating manager',
         '升级为': 'upgrade to',
         '管理空间': 'manage space',
-        '支持一级、两级管理空间，更加精细化管理。': 'Supports one-level and secondary management of space, with more refined management.',
+        '支持一级、二级管理空间，更加精细化管理。': 'Supports one-level and secondary management of space, with more refined management.',
         '知道了': 'Got it',
         '搜索关键字': 'Search Keywords',
         '无资源ID，无法预览': 'No resource ID, unable to preview',
