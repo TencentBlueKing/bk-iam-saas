@@ -91,7 +91,7 @@
                     top: '342px',
                     left: '270px'
                 },
-                processGuideShow: false,
+                processGuideShow: true,
                 groupGuideShow: false,
                 routeName: '',
                 userGroupId: '',
@@ -110,12 +110,21 @@
             },
             user: {
                 handler (value) {
-                    if (['rating_manager', 'system_manager'].includes(value.role.type)) {
-                        this.processGuideStyle.top = '305px';
-                    }
-                    if (value.role.type === 'super_manager') {
-                        this.processGuideStyle.top = '255px';
-                    }
+                    const roleMap = {
+                        super_manager: () => {
+                            this.processGuideStyle.top = '255px';
+                        },
+                        system_manager: () => {
+                            this.processGuideStyle.top = '305px';
+                        },
+                        rating_manager: () => {
+                            this.processGuideStyle.top = '385px';
+                        },
+                        subset_manager: () => {
+                            this.processGuideStyle.top = '305px';
+                        }
+                    };
+                    return roleMap[value.role.type] ? roleMap[value.role.type]() : '';
                 },
                 immediate: true,
                 deep: true

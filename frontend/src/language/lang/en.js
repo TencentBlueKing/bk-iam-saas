@@ -701,7 +701,8 @@ export const m = {
         '操作详情': 'Operation details',
         '权限对比差异': 'Permission comparison difference',
         '关联的用户组': 'The associated group',
-        '批量引用已有的操作实例': 'Batch reference existing instances'
+        '批量引用已有的操作实例': 'Batch reference existing instances',
+        '如需编辑权限模板的内容请点击': 'To edit the content of the permission template, please click'
     },
     userGroup: {
         '用户组': 'Group',

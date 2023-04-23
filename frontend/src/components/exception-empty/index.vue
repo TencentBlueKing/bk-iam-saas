@@ -100,7 +100,6 @@
     background-color: #f5f6fa;
   }
   .tip-click {
-    text-overflow: ellipsis;
     color: #3a84ff;
     cursor: pointer;
   }
