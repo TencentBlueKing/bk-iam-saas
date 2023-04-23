@@ -18,9 +18,11 @@
                 :content="$t(`m.guide['操作和资源实例']`)" />
         </render-action> -->
         <render-horizontal-block
+            v-if="isSelectSystem || isSelectSystemShow"
             :label="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
             :label-width="renderLabelWidth('resource')"
-            v-if="isSelectSystem || isSelectSystemShow">
+            :required="true"
+        >
             <div class="grade-admin-select-wrapper">
                 <div class="action">
                     <section class="action-wrapper" @click.stop="handleAddAction"
@@ -75,7 +77,7 @@
             </div>
         </render-horizontal-block>
         <p class="action-empty-error" v-if="isShowActionEmptyError">{{ $t(`m.verify['操作和资源边界不可为空']`) }}</p>
-        <section v-if="isShowMemberAdd" ref="memberRef">
+        <!-- <section v-if="isShowMemberAdd" ref="memberRef">
             <render-action
                 ref="memberRef"
                 :title="addMemberTitle"
@@ -88,17 +90,18 @@
                     :style="{ top: '-25px', left: '440px' }"
                     :content="$t(`m.guide['授权人员范围']`)" />
             </render-action>
+        </section> -->
+        <section ref="memberRef">
+            <render-member
+                :users="users"
+                :departments="departments"
+                :is-all="isAll"
+                :tips="addMemberTips"
+                :label-width="renderLabelWidth('member')"
+                @on-add="handleAddMember"
+                @on-delete="handleMemberDelete"
+                @on-delete-all="handleDeleteAll" />
         </section>
-        <render-member
-            v-else
-            :users="users"
-            :departments="departments"
-            :is-all="isAll"
-            :tips="addMemberTips"
-            :label-width="renderLabelWidth('member')"
-            @on-add="handleAddMember"
-            @on-delete="handleMemberDelete"
-            @on-delete-all="handleDeleteAll" />
         <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员边界不可为空']`) }}</p>
         <template v-if="isStaff">
             <render-horizontal-block
@@ -188,7 +191,7 @@
     import IamGuide from '@/components/iam-guide/index.vue';
     import { leavePageConfirm } from '@/common/leave-page-confirm';
     import basicInfo from '../components/basic-info';
-    import renderAction from '../common/render-action';
+    // import renderAction from '../common/render-action';
     import AddMemberDialog from '../../group/components/iam-add-member';
     import RenderMember from '../components/render-member';
     import RenderInstanceTable from '../components/render-instance-table';
@@ -202,7 +205,7 @@
         components: {
             IamGuide,
             basicInfo,
-            renderAction,
+            // renderAction,
             AddMemberDialog,
             RenderMember,
             AddActionSideslider,
@@ -241,18 +244,16 @@
                 isShowReasonDialog: false,
                 reason: '',
                 dialogLoading: false,
-
                 infoText: this.$t(`m.grading['选择提示']`),
                 tips: this.$t(`m.grading['添加操作提示']`),
                 policyList: [],
                 isLoading: false,
-
                 isAllExpanded: false,
                 aggregations: [],
                 aggregationsBackup: [],
                 aggregationsTableData: [],
                 curSystemId: [],
-                isAll: true,
+                isAll: false,
                 operate: ''
             };
         },

@@ -12,9 +12,11 @@
             v-if="!isSelectSystem"
             @on-click="handleAddAction" />
         <render-horizontal-block
+            v-if="isSelectSystem"
             :label="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
             :label-width="renderLabelWidth('resource')"
-            v-if="isSelectSystem">
+            :required="true"
+        >
             <div class="grade-admin-select-wrapper">
                 <div class="showTableClick" @click.stop="isShowTableClick">
                     <div class="action">

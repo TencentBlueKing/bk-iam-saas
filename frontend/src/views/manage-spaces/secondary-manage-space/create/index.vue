@@ -9,9 +9,11 @@
             </section>
         </render-horizontal-block>
         <render-horizontal-block
+            v-if="!isHasPermTemplate"
             :label="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
             :label-width="renderLabelWidth('resource')"
-            v-if="!isHasPermTemplate">
+            :required="true"
+        >
             <div class="grade-admin-select-wrapper">
                 <div class="action">
                     <section class="action-wrapper" @click.stop="handleAddPerm"
@@ -75,7 +77,7 @@
             </div>
         </render-horizontal-block>
         <p class="action-empty-error" v-if="isShowActionEmptyError">{{ $t(`m.verify['操作和资源边界不可为空']`) }}</p>
-        <section v-if="isShowMemberAdd" ref="memberRef">
+        <!-- <section v-if="isShowMemberAdd" ref="memberRef">
             <render-action
                 ref="memberRef"
                 :title="$t(`m.levelSpace['最大可授权人员边界']`)"
@@ -89,8 +91,8 @@
                     :style="{ top: '-25px', left: '440px' }"
                     :content="$t(`m.guide['授权人员范围']`)" />
             </render-action>
-        </section>
-        <section v-else ref="memberRef">
+        </section> -->
+        <section ref="memberRef">
             <render-member
                 :tip="$t(`m.levelSpace['管理空间只能给该范围内的人员授权']`)"
                 :users="users"
@@ -102,6 +104,7 @@
                 @on-delete="handleMemberDelete"
                 @on-change="handleChange" />
         </section>
+        <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员边界不可为空']`) }}</p>
         <template v-if="isStaff">
             <render-horizontal-block
                 ext-cls="reason-wrapper"
@@ -175,7 +178,7 @@
     import AddMemberDialog from '../components/iam-add-member';
     import RenderMember from '@/views/manage-spaces/components/render-member';
     import basicInfo from '@/views/manage-spaces/components/basic-info';
-    import renderAction from '@/views/manage-spaces/common/render-action';
+    // import renderAction from '@/views/manage-spaces/common/render-action';
     import AddPermSideslider from '../components/add-group-perm-sideslider';
     import AddActionSideslider from '../components/add-action-sideslider';
     import RenderInstanceTable from '../components/render-instance-table';
@@ -190,7 +193,7 @@
         components: {
             AddMemberDialog,
             basicInfo,
-            renderAction,
+            // renderAction,
             RenderMember,
             IamGuide,
             AddPermSideslider,
@@ -236,6 +239,7 @@
                 authorizationDataByCustom: {},
                 allAggregationData: {},
                 isAllExpanded: false,
+                isShowMemberEmptyError: false,
                 hasDeleteCustomList: [],
                 hasAddCustomList: [],
                 templateDetailSideslider: {
@@ -1099,6 +1103,7 @@
                 };
                 // 如果是动态继承上级空间 组织架构可为空
                 if (this.inheritSubjectScope) {
+                    this.isShowMemberEmptyError = false;
                     params.subject_scopes = [];
                 }
                 window.changeDialog = false;
