@@ -33,7 +33,7 @@
                 mode="member"
                 :title="$t(`m.levelSpace['最大可授权人员边界']`)"
                 :user-length="users.length"
-                :departments="departments.length"
+                :depart-length="departments.length"
             >
                 <template v-if="isAll">
                     <span class="all-item">{{ $t(`m.common['全员']`) }}(All)</span>

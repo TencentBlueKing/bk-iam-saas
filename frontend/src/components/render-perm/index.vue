@@ -8,26 +8,21 @@
                     <span class="number">{{ permLength }}</span>
                     {{ $t(`m.common['个']`) }}{{ $t(`m.perm['操作权限']`) }}
                 </div>
-                <div class="sub-title" v-if="permLength > 0">
-                    {{ $t(`m.common['共']`) }}
-                    <span class="number">{{ permLength }}</span>
-                    {{ $t(`m.common['个']`) }}{{ $t(`m.perm['操作权限']`) }}
-                </div>
             </template>
             <template v-if="['member'].includes(mode)">
-                <template v-if="userLength > 0 || departmentsLength > 0">
+                <template v-if="userLength > 0 || departLength > 0">
                     <div class="sub-title" v-if="userLength > 0">
                         {{ $t(`m.common['共']`) }}
                         <span class="number">{{ userLength }}</span>
-                        {{ $t(`m.common['个用户']`) }}
+                        {{ $t(`m.common['个用户']`) }}，
                     </div>
-                    <div class="sub-title" v-if="departmentsLength > 0">
+                    <div class="sub-title" v-if="departLength > 0">
                         {{ $t(`m.common['共']`) }}
-                        <span class="number">{{ departmentsLength }}</span>
+                        <span class="number">{{ departLength }}</span>
                         {{ $t(`m.common['个组织']`) }}
                     </div>
                 </template>
-                <div class="sub-title">{{ $t(`m.common['全员']`) }}(All)</div>
+                <div class="sub-title" v-else>{{ $t(`m.common['全员']`) }}(All)</div>
             </template>
         </div>
         <div class="content" v-if="isExpanded">
@@ -66,7 +61,7 @@
                 type: Number,
                 default: 0
             },
-            departmentsLength: {
+            departLength: {
                 type: Number,
                 default: 0
             },
