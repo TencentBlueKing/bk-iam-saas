@@ -1,5 +1,5 @@
 <template>
-    <smart-action class="iam-template-detail-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
+    <div class="iam-template-detail-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
         <template v-if="!isLoading">
             <p class="edit-action">
                 {{ $t(`m.permTemplateDetail['如需编辑权限模板的内容请点击']`) }}
@@ -52,8 +52,8 @@
             <render-horizontal-block :label="$t(`m.permTemplateDetail['操作详情']`)">
                 <render-action :actions="basicInfo.actions" mode="detail" />
             </render-horizontal-block>
-            <!-- <div slot="action">
-                <bk-button
+            <div slot="action" style="display: none">
+                <!-- <bk-button
                     theme="primary"
                     :loading="editLoading"
                     @click="handleEdit">
@@ -63,10 +63,10 @@
                     style="margin-left: 10px;"
                     @click="handleCancel">
                     {{ $t(`m.common['返回']`) }}
-                </bk-button>
-            </div> -->
+                </bk-button> -->
+            </div>
         </template>
-    </smart-action>
+    </div>
 </template>
 <script>
     import _ from 'lodash';
@@ -435,6 +435,6 @@
 
 <style lang="postcss" scoped>
 .edit-action {
-    margin: 13px 0;
+    margin-bottom: 13px;
 }
 </style>

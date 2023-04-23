@@ -2,11 +2,33 @@
     <div :class="['iam-render-perm', extCls]">
         <div class="header" @click="handleExpanded">
             <label class="title">{{ title }}</label>
-            <div class="sub-title" v-if="permLength > 0">
-                {{ $t(`m.common['共']`) }}
-                <span class="number">{{ permLength }}</span>
-                {{ $t(`m.common['个']`) }}{{ $t(`m.perm['操作权限']`) }}
-            </div>
+            <template v-if="['action'].includes(mode)">
+                <div class="sub-title" v-if="permLength > 0">
+                    {{ $t(`m.common['共']`) }}
+                    <span class="number">{{ permLength }}</span>
+                    {{ $t(`m.common['个']`) }}{{ $t(`m.perm['操作权限']`) }}
+                </div>
+                <div class="sub-title" v-if="permLength > 0">
+                    {{ $t(`m.common['共']`) }}
+                    <span class="number">{{ permLength }}</span>
+                    {{ $t(`m.common['个']`) }}{{ $t(`m.perm['操作权限']`) }}
+                </div>
+            </template>
+            <template v-if="['member'].includes(mode)">
+                <template v-if="userLength > 0 || departmentsLength > 0">
+                    <div class="sub-title" v-if="userLength > 0">
+                        {{ $t(`m.common['共']`) }}
+                        <span class="number">{{ userLength }}</span>
+                        {{ $t(`m.common['个用户']`) }}
+                    </div>
+                    <div class="sub-title" v-if="departmentsLength > 0">
+                        {{ $t(`m.common['共']`) }}
+                        <span class="number">{{ departmentsLength }}</span>
+                        {{ $t(`m.common['个组织']`) }}
+                    </div>
+                </template>
+                <div class="sub-title">{{ $t(`m.common['全员']`) }}(All)</div>
+            </template>
         </div>
         <div class="content" v-if="isExpanded">
             <div class="slot-content">
@@ -24,6 +46,10 @@
     export default {
         name: '',
         props: {
+            mode: {
+                type: String,
+                default: 'action'
+            },
             expanded: {
                 type: Boolean,
                 default: false
@@ -33,6 +59,14 @@
                 default: ''
             },
             permLength: {
+                type: Number,
+                default: 0
+            },
+            userLength: {
+                type: Number,
+                default: 0
+            },
+            departmentsLength: {
                 type: Number,
                 default: 0
             },
