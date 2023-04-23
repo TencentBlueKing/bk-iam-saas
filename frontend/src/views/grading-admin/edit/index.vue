@@ -12,7 +12,6 @@
             v-if="isSelectSystem"
             @on-click="handleAddAction" /> -->
         <render-horizontal-block
-            v-if="isSelectSystem"
             :label="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
             :label-width="renderLabelWidth('resource')"
             :required="true"
@@ -983,7 +982,7 @@
         }
         .action-empty-error {
             position: relative;
-            top: -50px;
+            top: -40px;
             left: 150px;
             font-size: 12px;
             color: #ff4d4d;
