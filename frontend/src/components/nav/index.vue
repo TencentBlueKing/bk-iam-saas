@@ -117,7 +117,7 @@
                                                 <strong>{{ $t(`m.info['管理空间']`) }},</strong>
                                             </div>
                                             <div class="content-desc">
-                                                {{ $t(`m.info['支持一级、两级管理空间，更加精细化管理。']`) }}
+                                                {{ $t(`m.info['支持一级、二级管理空间，更加精细化管理。']`) }}
                                             </div>
                                         </div>
                                         <div slot="popconfirm-show">
