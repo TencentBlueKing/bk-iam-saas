@@ -61,8 +61,8 @@
                             </template>
                             <div slot="content" class="iam-perm-apply-action-popover-content">
                                 <div>
-                                    由于管理空间的授权范围没有包含此操作，<br>
-                                    如需使用该模板进行新的授权必须先删除该操作。
+                                    {{$t(`m.common['由于管理空间的授权范围没有包含此操作，']`)}}<br>
+                                    {{$t(`m.common[' 如需使用该模板进行新的授权必须先删除该操作。']`)}}
                                 </div>
                             </div>
                         </bk-popover>
@@ -127,9 +127,8 @@
                                         </template>
                                         <div slot="content" class="iam-perm-apply-action-popover-content">
                                             <div>
-
-                                                由于管理空间的授权范围没有包含此操作，<br>
-                                                如需使用该模板进行新的授权必须先删除该操作。
+                                                {{$t(`m.common['由于管理空间的授权范围没有包含此操作，']`)}}<br>
+                                                {{$t(`m.common[' 如需使用该模板进行新的授权必须先删除该操作。']`)}}
                                             </div>
                                         </div>
                                     </bk-popover>
@@ -251,6 +250,7 @@
                             ++item.count;
                         }
                         if (act.related_actions.includes(payload.id) && !flag && act.checked) {
+                            console.log(act, 4444);
                             act.checked = false;
                             act.flag = payload.flag;
                             --item.count;

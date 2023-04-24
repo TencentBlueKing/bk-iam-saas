@@ -983,7 +983,7 @@
         }
         .action-empty-error {
             position: relative;
-            top: -50px;
+            top: -40px;
             left: 150px;
             font-size: 12px;
             color: #ff4d4d;

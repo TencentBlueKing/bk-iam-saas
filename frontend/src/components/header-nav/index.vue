@@ -506,7 +506,7 @@
                         window.localStorage.removeItem('iam-header-name-cache');
                         this.$router.push({
                             name: this.isRatingChange ? 'myManageSpace' : this.defaultRouteList[navIndex],
-                            params: navIndex === 1 ? { id: this.navCurRoleId, entry: 'updateRole' } : {}
+                            params: navIndex === 1 ? { id: this.user.role.id, entry: 'updateRole' } : {}
                         });
                     } else {
                         // if (navIndex === 0 && ['gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'].includes(curRouterName)) {
