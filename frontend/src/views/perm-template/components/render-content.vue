@@ -392,17 +392,26 @@
                     let count = 0;
                     let delCount = 0;
                     let deleteCount = 0;
-                    item.actions.forEach(item => {
-                        if (!item.disabled) {
-                            if (payload.includes(item.id)) {
-                                if (!item.checked && flag) {
+                    this.$set(item, 'expanded', false);
+                    const haveActions = item.actions.map(v => v.id);
+                    if (!flag && haveActions) {
+                        console.log(haveActions, payload, item, 555555);
+                        const aa = new Set([...haveActions].filter(v => payload.has(v)));
+                        console.log(aa, 4544);
+                        this.$set(item, 'expanded', !aa);
+                    }
+                    item.actions.forEach(subItem => {
+                        if (!subItem.disabled) {
+                            if (payload.includes(subItem.id)) {
+                                if (!subItem.checked && flag) {
                                     ++count;
                                 }
-                                if (item.checked && !flag) {
+                                if (subItem.checked && !flag) {
                                     ++delCount;
                                 }
-                                item.checked = flag;
-                                this.$refs.actionsRef.handleRelatedActions(item, flag);
+                                subItem.checked = flag;
+                                this.$set(item, 'expanded', flag);
+                                this.$refs.actionsRef.handleRelatedActions(subItem, flag);
                             }
                         }
                         if (item.tag === 'delete') {
@@ -426,6 +435,7 @@
                                         ++delCount;
                                     }
                                     act.checked = flag;
+                                    this.$set(item, 'expanded', flag);
                                     this.$refs.actionsRef.handleRelatedActions(act, flag);
                                 }
                             }

@@ -117,7 +117,7 @@
                                 <span :title="child.row.updated_time">{{ child.row.updated_time }}</span>
                             </template>
                         </bk-table-column>
-                        <bk-table-column width="300">
+                        <bk-table-column :width="curLanguageIsCn ? 200 : 300">
                             <template slot-scope="child">
                                 <div class="operate_btn">
                                     <bk-button
@@ -231,7 +231,7 @@
                     <span :title="row.updated_time">{{ row.updated_time }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.common['操作']`)" width="300">
+            <bk-table-column :label="$t(`m.common['操作']`)" :width="curLanguageIsCn ? 200 : 300">
                 <template slot-scope="{ row }">
                     <div class="operate_btn">
                         <bk-button
@@ -253,6 +253,7 @@
                             {{ $t(`m.nav['授权边界']`) }}
                         </bk-button>
                         <bk-button
+                            v-if="!['subset_manager'].includes(row.type)"
                             theme="primary"
                             text
                             @click="handleView(row, 'clone')"

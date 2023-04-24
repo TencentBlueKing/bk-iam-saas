@@ -459,7 +459,9 @@ export const m = {
          '(GMT+10:00) 布里斯班时间': '(GMT+10:00) Brisbane Time',
          '(GMT+11:00) 马加丹': '(GMT+11:00) Magadan',
          '(GMT+12:00) 堪察加半岛时间':  '(GMT+12:00) Kamchatka Peninsula Time',
-         '(GMT+13:00) 努库阿洛法时间': '(GMT+13:00) Nukualofa Time'
+         '(GMT+13:00) 努库阿洛法时间': '(GMT+13:00) Nukualofa Time',
+         '由于管理空间的授权范围没有包含此操作，': 'Due to the fact that the authorization scope of the management space does not include this operation,',
+         '如需使用该模板进行新的授权必须先删除该操作。': 'To use this template for new authorization, you must first delete the operation.'
     },
     // 二次确认弹窗相关
     dialog: {

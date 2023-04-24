@@ -103,10 +103,11 @@
         },
         watch: {
             value (newVal) {
-                this.disabledValue = [...newVal].filter(e => e.readonly);
-                this.displayValue = [...newVal];
+                // this.disabledValue = [...newVal].filter(e => e.readonly);
+                // this.displayValue = [...newVal];
                 // this.editValue = [...newVal].filter(e => !e.readonly).map(e => e.username);
-                this.editValue = [...newVal].map(e => e.username);
+                // this.editValue = [...newVal].map(e => e.username);
+                this.handleDefaultData(newVal);
             }
         },
         mounted () {
@@ -134,19 +135,31 @@
                 }
             },
 
+            // 设置默认值
+            handleDefaultData (payload) {
+                this.disabledValue = [...payload].filter(e => e.readonly);
+                this.displayValue = [...payload];
+                this.editValue = [...payload].map(e => e.username);
+            },
+
             handleEdit () {
                 document.body.click();
                 this.isEditable = true;
                 this.$nextTick(() => {
-                    this.$refs.input.focus();
-                    const disabledValue = [...this.disabledValue].map(item => item.username);
-                    const selectedTag = this.$refs.input.$refs.selected;
-                    if (selectedTag && selectedTag.length) {
-                        selectedTag.forEach(item => {
-                            if (disabledValue.includes(item.innerText)) {
-                                item.className = 'user-selector-selected user-selector-selected-readonly';
-                            }
-                        });
+                    if (this.isEditable) {
+                        this.$refs.input && this.$refs.input.focus();
+                        this.handleDefaultData(this.value);
+                        const disabledValue = [...this.disabledValue].map(item => item.username);
+                        // const intersectionSet = new Set([...disabledValue].filter(item => this.editValue.has(item)));
+                        console.log(this.disabledValue, this.value, this.editValue, 44);
+                        const selectedTag = this.$refs.input.$refs.selected;
+                        if (selectedTag && selectedTag.length) {
+                            selectedTag.forEach(item => {
+                                if (disabledValue.includes(item.innerText)) {
+                                    item.className = 'user-selector-selected user-selector-selected-readonly';
+                                }
+                            });
+                        }
                     }
                 });
             },
@@ -166,6 +179,7 @@
             },
 
             hideEdit (event) {
+                this.isEditable = false;
                 if (this.displayValue.length < 1) {
                     return;
                 }
@@ -177,7 +191,6 @@
                         }
                     }
                 }
-                this.isEditable = false;
             },
 
             triggerChange () {
@@ -200,18 +213,26 @@
                 const editValue = this.editValue.reduce((p, v) => {
                     p.push({
                         username: v,
-                        readonly: false
+                        readonly: !!(this.disabledValue.length && this.disabledValue.map(e => e.username).includes(v))
                     });
                     return p;
                 }, []);
+                console.log(this.disabledValue, editValue, 5454);
                 this.displayValue = [...this.disabledValue, ...editValue];
             },
 
             handleRtxBlur () {
+                console.log(this.displayValue, this.value,
+                            JSON.stringify(this.displayValue) !== JSON.stringify(this.value));
                 if (JSON.stringify(this.displayValue) !== JSON.stringify(this.value)) {
-                    this.$emit('on-change', {
-                        [this.field]: this.displayValue
-                    });
+                    this.isEditable = false;
+                    if (this.displayValue.length < 1) {
+                        this.handleDefaultData(this.value);
+                        this.messageError(this.$t(`m.verify['管理员不能为空']`), 2000);
+                    }
+                //     this.$emit('on-change', {
+                //         [this.field]: this.displayValue
+                //     });
                 }
             }
         }

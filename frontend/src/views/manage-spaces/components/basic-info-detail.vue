@@ -38,6 +38,7 @@
     import IamEditTextarea from '@/components/iam-edit/textarea';
     import RenderLayout from '@/views/group/common/render-layout';
     import IamEditMember from './iam-edit-member';
+    import { mapGetters } from 'vuex';
 
     export default {
         name: '',
@@ -74,6 +75,9 @@
                     sync_perm: false
                 }
             };
+        },
+        computed: {
+            ...mapGetters(['user'])
         },
         watch: {
             data: {
@@ -120,7 +124,8 @@
                     ...payload,
                     id: this.id
                 };
-                return this.$store.dispatch('spaceManage/updateSecondManagerManager', params)
+                const url = ['subset_manager'].includes(this.user.role.type) ? 'spaceManage/updateSecondManagerManager' : 'role/updateRatingManager';
+                return this.$store.dispatch(url, params)
                     .then(async () => {
                         this.messageSuccess(this.$t(`m.info['编辑成功']`), 2000);
                         const { name, description, members } = params;
