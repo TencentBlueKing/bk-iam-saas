@@ -392,14 +392,7 @@
                     let count = 0;
                     let delCount = 0;
                     let deleteCount = 0;
-                    this.$set(item, 'expanded', false);
-                    const haveActions = item.actions.map(v => v.id);
-                    if (!flag && haveActions) {
-                        console.log(haveActions, payload, item, 555555);
-                        const aa = new Set([...haveActions].filter(v => payload.has(v)));
-                        console.log(aa, 4544);
-                        this.$set(item, 'expanded', !aa);
-                    }
+                    console.log(item, 2222);
                     item.actions.forEach(subItem => {
                         if (!subItem.disabled) {
                             if (payload.includes(subItem.id)) {
@@ -421,11 +414,19 @@
                             allCheckedLen++;
                         }
                     });
-                    item.allChecked = allCheckedLen === item.actions.length
-
-                    ;(item.sub_groups || []).forEach(subItem => {
-                        let allSubCheckedLen = 0
-                        ;(subItem.actions || []).forEach(act => {
+                    const haveActions = item.actions.filter(v => v.id);
+                    const haveActionsChecked = !!item.actions.find(v => v.checked === true);
+                    this.$set(item, 'expanded', haveActionsChecked);
+                    if (!flag && haveActions) {
+                        // const isExpand = [...haveActions].filter(v => payload.includes(v));
+                        this.$set(item, 'expanded', haveActionsChecked);
+                    }
+                    item.allChecked = allCheckedLen === item.actions.length;
+                    (item.sub_groups || []).forEach(subItem => {
+                        let allSubCheckedLen = 0;
+                        const haveGroupActions = item.actions.filter(v => v.id);
+                        const haveGroupActionsChecked = !!subItem.actions.find(v => v.checked === true);
+                        (subItem.actions || []).forEach(act => {
                             if (!act.disabled) {
                                 if (payload.includes(act.id)) {
                                     if (!act.checked && flag) {
@@ -448,8 +449,11 @@
                             }
                         });
                         subItem.allChecked = allSubCheckedLen === subItem.actions.length;
+                        this.$set(item, 'expanded', haveGroupActionsChecked);
+                        if (!flag && haveGroupActions) {
+                            this.$set(item, 'expanded', haveGroupActionsChecked);
+                        }
                     });
-
                     item.actionsAllChecked = item.actions.every(act => act.checked) && (item.sub_groups || []).every(
                         v => {
                             return v.actions.every(act => act.checked);
