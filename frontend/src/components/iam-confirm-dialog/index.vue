@@ -1,7 +1,7 @@
 <template>
     <bk-dialog
         v-model="isShowDialog"
-        width="400"
+        :width="width"
         :title="title"
         :mask-close="false"
         :close-icon="false"
@@ -29,6 +29,10 @@
             show: {
                 type: Boolean,
                 default: false
+            },
+            width: {
+                type: Number,
+                default: 400
             },
             title: {
                 type: String,

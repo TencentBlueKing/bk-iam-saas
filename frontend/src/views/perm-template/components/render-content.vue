@@ -392,7 +392,6 @@
                     let count = 0;
                     let delCount = 0;
                     let deleteCount = 0;
-                    console.log(item, 2222);
                     item.actions.forEach(subItem => {
                         if (!subItem.disabled) {
                             if (payload.includes(subItem.id)) {
