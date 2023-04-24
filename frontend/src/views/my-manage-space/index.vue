@@ -56,20 +56,6 @@
         >
             <bk-table-column type="expand" width="30">
                 <template slot-scope="{ row }">
-                    <!-- <bk-table
-                        size="small"
-                        ext-cls="children-expand-cls"
-                        :data="row.children"
-                        :row-key="row.id"
-                        :show-header="false"
-                        :border="false"
-                        :cell-class-name="getSubCellClass"
-                        v-bkloading="{ isLoading: subLoading, opacity: 1 }"
-                        :pagination="subPagination"
-                        @page-change="handleSubPageChange"
-                        @page-limit-change="handleSubLimitChange"
-                        @row-click="handleRowClick"
-                    > -->
                     <bk-table
                         size="small"
                         ext-cls="children-expand-cls"
@@ -138,6 +124,7 @@
                                         theme="primary"
                                         text
                                         :disabled="disabledPerm(child.row)"
+                                        :title="disabledPerm(child.row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
                                         @click.stop="handleSubView(child.row, 'detail')"
                                     >
                                         {{ $t(`m.levelSpace['进入']`) }}
@@ -146,6 +133,7 @@
                                         theme="primary"
                                         text
                                         :disabled="disabledPerm(child.row)"
+                                        :title="disabledPerm(child.row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
                                         @click.stop="handleSubView(child.row, 'auth')"
                                     >
                                         {{ $t(`m.nav['授权边界']`) }}
@@ -194,6 +182,7 @@
                             field="name"
                             :placeholder="$t(`m.verify['请输入']`)"
                             :value="row.name"
+                            :mode="formatMode(row)"
                             style="width: 100%; margin-left: 5px"
                             :index="$index"
                             :remote-hander="handleUpdateManageSpace"
@@ -211,6 +200,7 @@
                         width="200"
                         :placeholder="$t(`m.verify['请输入']`)"
                         :value="row.members"
+                        :mode="formatMode(row)"
                         :index="$index"
                         @on-change="handleUpdateMembers"
                     />
@@ -226,6 +216,7 @@
                         width="200"
                         :placeholder="$t(`m.verify['用户组描述提示']`)"
                         :value="row.description"
+                        :mode="formatMode(row)"
                         :index="$index"
                         :remote-hander="handleUpdateManageSpace"
                     />
@@ -247,6 +238,7 @@
                             theme="primary"
                             text
                             :disabled="disabledPerm(row)"
+                            :title="disabledPerm(row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
                             @click="handleView(row, 'detail')"
                         >
                             {{ $t(`m.levelSpace['进入']`) }}
@@ -255,11 +247,18 @@
                             theme="primary"
                             text
                             :disabled="disabledPerm(row)"
+                            :title="disabledPerm(row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
                             @click.stop="handleView(row, 'auth')"
                         >
                             {{ $t(`m.nav['授权边界']`) }}
                         </bk-button>
-                        <bk-button theme="primary" text @click="handleView(row, 'clone')">
+                        <bk-button
+                            theme="primary"
+                            text
+                            @click="handleView(row, 'clone')"
+                            :title="disabledPerm(row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
+                            :disabled="disabledPerm(row)"
+                        >
                             {{ $t(`m.levelSpace['克隆']`) }}
                         </bk-button>
                     </div>
@@ -367,6 +366,11 @@
             },
             isStaff () {
                 return this.user.role.type === 'staff';
+            },
+            formatMode () {
+                return (payload) => {
+                    return payload.is_member || this.isFilter ? 'edit' : 'detail';
+                };
             }
         },
         watch: {
@@ -517,21 +521,10 @@
                         members: [...params.members]
                     });
                     if (name || members) {
-                        const typeMap = {
-                            rating_manager: async () => {
-                                this.resetPagination();
-                                this.isFilter ? await this.fetchSearchManageList() : await this.fetchGradingAdmin();
-                            },
-                            subset_manager: async () => {
-                                this.formData.children = [];
-                                this.resetSubPagination();
-                                this.isFilter ? await this.fetchSearchManageList()
-                                : await this.fetchSubManagerList(this.formData);
-                            }
-                        };
-                        typeMap[type]();
+                        this.fetchResetInstanceData(type);
                     }
                 } catch (e) {
+                    this.fetchResetInstanceData(type);
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
@@ -540,6 +533,22 @@
                         ellipsisCopy: true
                     });
                 }
+            },
+
+            async fetchResetInstanceData (payload) {
+                const typeMap = {
+                    rating_manager: async () => {
+                        this.resetPagination();
+                        this.isFilter ? await this.fetchSearchManageList() : await this.fetchGradingAdmin();
+                    },
+                    subset_manager: async () => {
+                        this.formData.children = [];
+                        this.resetSubPagination();
+                        this.isFilter ? await this.fetchSearchManageList()
+                        : await this.fetchSubManagerList(this.curData);
+                    }
+                };
+                typeMap[payload]();
             },
 
             handleRowClick (row, column, cell, event, rowIndex, columnIndex) {
@@ -622,6 +631,7 @@
                     this.subPagination.count = data.count || 0;
                     // this.subTableList.splice(0, this.subTableList.length, ...(data.results || []));
                     row.children = [...row.children, ...data.results];
+                    this.subTableList = [...row.children];
                     this.emptyData = formatCodeData(
                         code,
                         this.emptyData,
@@ -631,6 +641,7 @@
                     console.error(e);
                     const { code, data, message, statusText } = e;
                     row.children = [];
+                    this.subTableList = [];
                     this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
@@ -793,16 +804,6 @@
                     this.subPagination = Object.assign(this.subPagination, params);
                     this.fetchSubManagerList(this.curData);
                 }
-            },
-
-            handleSubPageChange (page) {
-                this.subPagination.current = page;
-                this.fetchSubManagerList(this.curData);
-            },
-
-            handleSubLimitChange (limit) {
-                this.subPagination = Object.assign(this.subPagination, { limit, current: 1 });
-                this.fetchSubManagerList(this.curData);
             },
 
             handlePageChange (page) {
@@ -977,32 +978,39 @@
     }
   }
 
-  /deep/ .iam-table-cell-1-cls,
-  .iam-tag-table-cell-subset-cls {
-    .cell {
-      padding-left: 2px;
+  /deep/ .iam-table-cell-1-cls, .iam-tag-table-cell-subset-cls  {
+        .cell {
+            padding-left: 2px;
+        }
     }
-  }
 
-  /deep/ .iam-tag-table-cell-subset-cls {
-    .cell {
-      padding-left: 2px;
+    /deep/ .iam-tag-table-cell-subset-cls {
+        .cell {
+            padding-left: 2px;
+            .bk-table-expand-icon  {
+                display: none;
+            }
+        }
     }
-  }
 
-  /deep/ .bk-table-header-wrapper {
-    .cell {
-      padding-left: 2px;
+    /deep/ .bk-table-header-wrapper {
+        .cell {
+            padding-left: 2px;
+        }
     }
-  }
 
-  /deep/ .search-manage-table {
-    .bk-table-expand-icon  {
-        display: none;
+    /deep/ .search-manage-table {
+        .bk-table-expand-icon  {
+            display: none;
+        }
+        .iam-tag-table-cell-cls {
+            .cell {
+                padding-left: 0;
+            }
+        }
+        .bk-table .cell {
+            padding-left: 2px;
+        }
     }
-    .bk-table .cell {
-        padding-left: 0;
-    }
-  }
 }
 </style>

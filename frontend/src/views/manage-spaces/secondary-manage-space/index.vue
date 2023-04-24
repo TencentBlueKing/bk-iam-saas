@@ -35,7 +35,7 @@
                         :placeholder="$t(`m.verify['请输入']`)"
                         :value="row.members"
                         :index="$index"
-                        @on-change="handleUpdateMembers" />
+                        @on-change="handleUpdateMembers(...arguments, row)" />
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.common['描述']`)">
@@ -204,6 +204,20 @@
 
             async fetchPageData () {
                 await this.fetchGradingAdmin();
+            },
+
+            async handleUpdateMembers (payload, index, role) {
+                const { name, description, members } = payload;
+                const params = {
+                    name: name || role.name,
+                    description: description || role.description,
+                    members: members || role.members,
+                    id: role.id
+                };
+                await this.$store.dispatch('spaceManage/updateSecondManagerManager', params);
+                this.resetPagination();
+                this.messageSuccess(this.$t(`m.info['编辑成功']`), 2000);
+                await this.fetchGradingAdmin(true);
             },
 
             handleNavAuthBoundary (payload) {

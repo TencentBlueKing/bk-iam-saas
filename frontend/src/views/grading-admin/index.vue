@@ -61,14 +61,12 @@
                         :cell-class-name="getSubCellClass"
                         :max-height="500"
                         v-bkloading="{ isLoading: subLoading, opacity: 1 }"
-                        @row-click="handleRowClick"
                     >
                         <bk-table-column width="30" />
                         <bk-table-column prop="name" width="240">
                             <template slot-scope="child">
                                 <div class="flex_space_name">
                                     <Icon type="level-two-manage-space" :style="{ color: iconColor[1] }" />
-                                    <!-- {{ child.row }} -->
                                     <iam-edit-input
                                         field="name"
                                         style="width: 100%;margin-left: 5px;"
@@ -110,17 +108,21 @@
                         <bk-table-column width="300">
                             <template slot-scope="child">
                                 <div class="operate_btn">
-                                    <bk-button
-                                        theme="primary"
-                                        text
-                                        @click.stop="handleSubView(child.row, 'detail')"
-                                        :disabled="disabledPerm(child.row)">
-                                        {{ $t(`m.levelSpace['进入']`) }}
-                                    </bk-button>
+                                    <span>
+                                        <bk-button
+                                            theme="primary"
+                                            text
+                                            @click.stop="handleSubView(child.row, 'role')"
+                                            :title="disabledPerm(child.row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
+                                            :disabled="disabledPerm(child.row)">
+                                            {{ $t(`m.levelSpace['进入']`) }}
+                                        </bk-button>
+                                    </span>
                                     <bk-button
                                         theme="primary"
                                         text
                                         @click.stop="handleSubView(child.row, 'auth')"
+                                        :title="disabledPerm(child.row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
                                         :disabled="disabledPerm(child.row)">
                                         {{ $t(`m.nav['授权边界']`) }}
                                     </bk-button>
@@ -155,18 +157,29 @@
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.levelSpace['名称']`)" width="240">
-                <template slot-scope="{ row }">
+                <template slot-scope="{ row, $index }">
                     <div class="flex_space_name">
-                        <Icon
-                            :type="isFilter && ['subset_manager'].includes(row.type) ?
-                                'level-two-manage-space' : 'level-one-manage-space'"
-                            :style="{ color: isFilter && ['subset_manager'].includes(row.type) ?
-                                iconColor[1] : iconColor[0] }" />
-                        <span
-                            class="grading-admin-name single-hide"
-                            :title="row.name" @click="handleView(row, 'detail')">
-                            {{ row.name }}
-                        </span>
+                        <template v-if="isFilter && ['subset_manager'].includes(row.type)">
+                            <Icon type="level-two-manage-space" :style="{ color: iconColor[1] }" />
+                            <iam-edit-input
+                                field="name"
+                                style="width: 100%;margin-left: 5px;"
+                                :placeholder="$t(`m.verify['请输入']`)"
+                                :value="row.name"
+                                :index="$index"
+                                :remote-hander="handleUpdateManageSpace" />
+                        </template>
+                        <template v-else>
+                            <Icon
+                                type="level-one-manage-space"
+                                :style="{ 'color': iconColor[0] }" />
+                            <span
+                                class="grading-admin-name single-hide"
+                                :title="row.name"
+                                @click="handleView(row, 'detail')">
+                                {{ row.name }}
+                            </span>
+                        </template>
                     </div>
                 </template>
             </bk-table-column>
@@ -215,15 +228,26 @@
                         </bk-button>
                     </section> -->
                     <div class="operate_btn">
-                        <bk-button theme="primary"
-                            text @click="handleView(row, 'role')"
+                        <bk-button
+                            theme="primary"
+                            text
+                            @click="handleView(row, 'role')"
+                            :title="disabledPerm(row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
                             :disabled="disabledPerm(row)">
                             {{ $t(`m.levelSpace['进入']`) }}
                         </bk-button>
                         <bk-button
                             theme="primary"
                             text
+                            :title="disabledPerm(row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
                             :disabled="disabledPerm(row)"
+                            @click.stop="handleView(row, 'auth')"
+                        >
+                            {{ $t(`m.nav['授权边界']`) }}
+                        </bk-button>
+                        <bk-button
+                            theme="primary"
+                            text
                             @click="handleCopy(row)">
                             {{ $t(`m.grading['克隆']`) }}
                         </bk-button>
@@ -429,14 +453,6 @@
             showImgDialog () {
                 this.showImageDialog = true;
             },
-            
-            handleRowClick (row, column, cell, event, rowIndex, columnIndex) {
-                const allNodeId = this.findParentNode(row.id, this.expandRowList);
-                if (allNodeId.length) {
-                    const rowData = this.expandRowList.find(item => item.id === allNodeId[0]);
-                    this.$refs.spaceTable.toggleRowExpansion(rowData, false);
-                }
-            },
 
             handleExpandChange (row, expandedRows) {
                 // if (row.id !== this.gradingAdminId) return;
@@ -539,11 +555,13 @@
                     this.subPagination.count = data.count;
                     // this.subTableList.splice(0, this.subTableList.length, ...(data.results || []));
                     row.children = [...row.children, ...data.results];
+                    this.subTableList = [...row.children];
                     this.emptyData = formatCodeData(code, this.emptyData, this.subTableList.length === 0);
                 } catch (e) {
                     console.error(e);
                     const { code, data, message, statusText } = e;
                     row.children = [];
+                    this.subTableList = [];
                     this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
@@ -618,7 +636,7 @@
                                 this.formData.children = [];
                                 this.resetSubPagination();
                                 this.isFilter ? await this.fetchSearchManageList()
-                                : await this.fetchSubManagerList(this.formData);
+                                : await this.fetchSubManagerList(this.curData);
                             }
                         };
                         typeMap[type]();
@@ -823,36 +841,43 @@
 
             async handleView ({ id, name }, type) {
                 window.localStorage.setItem('iam-header-name-cache', name);
+                let routerName = 'gradingAdminDetail';
                 const navRoute = {
                     detail: () => {
                         this.$router.push({
-                            name: 'gradingAdminDetail',
+                            name: routerName,
                             params: {
                                 id
                             }
                         });
                     },
-                    role: async () => {
-                        await this.$store.dispatch('role/updateCurrentRole', { id });
-                        await this.$store.dispatch('userInfo');
-                        const { role } = this.user;
-                        if (role) {
-                            this.$store.commit('updateCurRoleId', id);
-                            this.$store.commit('updateIdentity', { id, type: role.type, name });
-                            this.$store.commit('updateNavId', id);
-                            this.$store.commit('updateIndex', 1);
-                            window.localStorage.setItem('index', 1);
-                            this.$router.push({
-                                name: 'userGroup',
-                                params: {
-                                    id,
-                                    entry: 'super_manager'
-                                }
-                            });
-                        }
+                    role: () => {
+                        routerName = 'userGroup';
+                    },
+                    auth: () => {
+                        routerName = 'authorBoundary';
                     }
                 };
                 navRoute[type]();
+                if (!['detail'].includes(type)) {
+                    await this.$store.dispatch('role/updateCurrentRole', { id });
+                    await this.$store.dispatch('userInfo');
+                    const { role } = this.user;
+                    if (role) {
+                        this.$store.commit('updateCurRoleId', id);
+                        this.$store.commit('updateIdentity', { id, type: role.type, name });
+                        this.$store.commit('updateNavId', id);
+                        this.$store.commit('updateIndex', 1);
+                        window.localStorage.setItem('index', 1);
+                        this.$router.push({
+                            name: routerName,
+                            params: {
+                                id,
+                                entry: 'super_manager'
+                            }
+                        });
+                    }
+                }
             },
 
             // 二级管理空间
@@ -860,7 +885,7 @@
                 window.localStorage.setItem('iam-header-name-cache', name);
                 let routerName = 'userGroup';
                 const routerNav = {
-                    detail: () => {
+                    role: () => {
                         routerName = 'userGroup';
                         this.$store.commit('updateIndex', 1);
                         window.localStorage.setItem('index', 1);
@@ -1054,6 +1079,9 @@
     /deep/ .search-manage-table {
         .bk-table-expand-icon  {
             display: none;
+        }
+        .bk-table .cell {
+            padding-left: 2px;
         }
     }
 </style>>
