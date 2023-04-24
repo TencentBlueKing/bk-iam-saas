@@ -2,7 +2,7 @@
     <render-horizontal-block
         :label="renderTitle"
         :label-width="labelWidth"
-        :required="true">
+        :required="required">
         <section class="action-wrapper" @click.stop="handleAddMember" data-test-id="grading_btn_showAddMember">
             <Icon bk type="plus-circle-shape" />
             <span>{{ renderText }}</span>
@@ -72,6 +72,10 @@
             },
             labelWidth: {
                 type: Number
+            },
+            required: {
+                type: Boolean,
+                default: true
             }
         },
         data () {

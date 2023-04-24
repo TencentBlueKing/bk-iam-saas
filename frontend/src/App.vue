@@ -359,4 +359,8 @@
         max-width: 900px !important;
     }
 
+    .user-selector .user-selector-selected .user-selector-selected-clear {
+        line-height: 20px !important;
+    }
+
 </style>
