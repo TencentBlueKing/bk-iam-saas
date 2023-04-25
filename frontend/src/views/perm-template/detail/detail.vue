@@ -5,6 +5,7 @@
                 {{ $t(`m.permTemplateDetail['如需编辑权限模板的内容请点击']`) }}
                 <bk-button
                     theme="primary"
+                    size="small"
                     text
                     @click="handleEdit">
                     {{ $t(`m.common['编辑']`) }}
