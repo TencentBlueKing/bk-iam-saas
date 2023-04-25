@@ -144,7 +144,7 @@
                 });
                 this.formData = Object.assign({}, {
                     name,
-                    description: description || '--',
+                    description,
                     members
                 });
                 // this.$store.commit('setHeaderTitle', name);
