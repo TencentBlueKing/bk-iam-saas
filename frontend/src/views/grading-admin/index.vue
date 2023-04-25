@@ -62,8 +62,8 @@
                         :max-height="500"
                         v-bkloading="{ isLoading: subLoading, opacity: 1 }"
                     >
-                        <bk-table-column width="30" />
-                        <bk-table-column prop="name" width="240">
+                        <bk-table-column width="45" />
+                        <bk-table-column prop="name" width="225">
                             <template slot-scope="child">
                                 <div class="flex_space_name">
                                     <Icon type="level-two-manage-space" :style="{ color: iconColor[1] }" />
@@ -105,7 +105,7 @@
                                 <span :title="child.row.updated_time">{{ child.row.updated_time }}</span>
                             </template>
                         </bk-table-column>
-                        <bk-table-column width="300">
+                        <bk-table-column :width="curLanguageIsCn ? 200 : 300">
                             <template slot-scope="child">
                                 <div class="operate_btn">
                                     <span>
@@ -115,7 +115,7 @@
                                             @click.stop="handleSubView(child.row, 'role')"
                                             :title="disabledPerm(child.row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
                                             :disabled="disabledPerm(child.row)">
-                                            {{ $t(`m.levelSpace['进入']`) }}
+                                            {{ $t(`m.levelSpace['进入空间']`) }}
                                         </bk-button>
                                     </span>
                                     <bk-button
@@ -217,7 +217,7 @@
                     <span :title="row.updated_time">{{ row.updated_time }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.common['操作']`)" width="300">
+            <bk-table-column :label="$t(`m.common['操作']`)" :width="curLanguageIsCn ? 200 : 300">
                 <template slot-scope="{ row }">
                     <!-- <section>
                         <bk-button theme="primary" text @click="handleDropOut(row)">
@@ -234,7 +234,7 @@
                             @click="handleView(row, 'role')"
                             :title="disabledPerm(row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
                             :disabled="disabledPerm(row)">
-                            {{ $t(`m.levelSpace['进入']`) }}
+                            {{ $t(`m.levelSpace['进入空间']`) }}
                         </bk-button>
                         <bk-button
                             theme="primary"
@@ -246,6 +246,7 @@
                             {{ $t(`m.nav['授权边界']`) }}
                         </bk-button>
                         <bk-button
+                            v-if="!['subset_manager'].includes(row.type)"
                             theme="primary"
                             text
                             @click="handleCopy(row)">
@@ -383,7 +384,8 @@
                     }
                 ],
                 searchData: [],
-                searchList: []
+                searchList: [],
+                language: window.CUR_LANGUAGE
             };
         },
         computed: {

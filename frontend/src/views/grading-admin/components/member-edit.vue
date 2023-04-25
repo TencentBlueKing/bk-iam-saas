@@ -37,7 +37,7 @@
             </bk-user-selector>
         </template>
         <bk-dialog
-            ext-cls="comfirmDialog"
+            ext-cls="confirmDialog"
             v-model="isShowDialog"
             :close-icon="showIcon"
             :title="$t(`m.common['确定退出管理空间']`)"
@@ -312,6 +312,7 @@
                 i {
                     font-size: 18px;
                     color: #979ba5;
+                    vertical-align: middle;
                     cursor: pointer;
                     &.disabled {
                         color: #c4c6cc;
@@ -356,7 +357,7 @@
             width: 100%;
         }
     }
-    .comfirmDialog {
+    .confirmDialog {
         h2,
         p{
             text-align: center;

@@ -77,21 +77,22 @@
         </render-horizontal-block>
         <section>
             <!-- <template v-if="isShowMemberAdd">
-                <render-action
-                    ref="memberRef"
-                    :title="addMemberText"
-                    :tips="addMemberTips"
-                    @on-click="handleAddMember"
-                    style="margin-bottom: 16px;">
-                    <iam-guide
-                        type="rating_manager_authorization_scope"
-                        direction="left"
-                        :style="{ top: '-25px', left: '440px' }"
-                        :content="$t(`m.guide['授权人员范围']`)" />
-                </render-action>
-            </template> -->
+                    <render-action
+                        ref="memberRef"
+                        :title="addMemberText"
+                        :tips="addMemberTips"
+                        @on-click="handleAddMember"
+                        style="margin-bottom: 16px;">
+                        <iam-guide
+                            type="rating_manager_authorization_scope"
+                            direction="left"
+                            :style="{ top: '-25px', left: '440px' }"
+                            :content="$t(`m.guide['授权人员范围']`)" />
+                    </render-action>
+                </template> -->
             <!-- <template v-else> -->
             <render-member
+                :required="false"
                 :users="users"
                 :departments="departments"
                 :is-all="isAll"
@@ -176,6 +177,14 @@
                 </template>
             </div>
         </bk-sideslider>
+            
+        <confirmDialog
+            :width="600"
+            :show.sync="isShowConfirmDialog"
+            :title="confirmDialogTitle"
+            @on-cancel="isShowConfirmDialog = false"
+            @on-sumbit="isShowConfirmDialog = false"
+        />
     </smart-action>
 </template>
 <script>
@@ -191,6 +200,7 @@
     // import RenderAction from '@/views/grading-admin/common/render-action';
     import RenderMember from '@/views/grading-admin/components/render-member';
     import AddMemberDialog from '@/views/group/components/iam-add-member';
+    import ConfirmDialog from '@/components/iam-confirm-dialog/index';
     // import BkUserSelector from '@blueking/user-selector';
 
     export default {
@@ -202,7 +212,8 @@
             RenderPermSideSlider,
             // RenderAction,
             RenderMember,
-            AddMemberDialog
+            AddMemberDialog,
+            ConfirmDialog
             // BkUserSelector
         },
         data () {
@@ -251,7 +262,9 @@
                     text: '',
                     tip: '',
                     tipType: ''
-                }
+                },
+                isShowConfirmDialog: false,
+                confirmDialogTitle: this.$t(`m.verify['admin无需申请权限']`)
             };
         },
         computed: {
@@ -728,7 +741,7 @@
                 } catch (e) {
                     console.error(e);
                     if (['admin'].includes(this.user.username)) {
-                        this.messageError(this.$t(`m.verify['admin无需申请权限']`), 2000);
+                        this.isShowConfirmDialog = true;
                     } else {
                         this.bkMessageInstance = this.$bkMessage({
                             limit: 1,

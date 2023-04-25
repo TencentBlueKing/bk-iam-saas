@@ -36,7 +36,7 @@
                                 type="rating_manager_merge_action"
                                 direction="right"
                                 :loading="isLoading"
-                                :style="{ top: '-15px', right: '120px' }"
+                                :style="renderLabelWidth('rating_manager_merge_action_guide')"
                                 :content="$t(`m.guide['聚合操作']`)" />
                             <bk-switcher
                                 v-model="isAllExpanded"
@@ -64,7 +64,7 @@
             </div>
         </render-horizontal-block>
         <p class="action-empty-error" v-if="isShowActionEmptyError">{{ $t(`m.verify['操作和资源边界不可为空']`) }}</p>
-        <section v-if="isShowMemberAdd" ref="memberRef">
+        <!-- <section v-if="isShowMemberAdd" ref="memberRef">
             <render-action
                 ref="memberRef"
                 :title="$t(`m.levelSpace['最大可授权人员边界']`)"
@@ -77,17 +77,18 @@
                     :style="{ top: '-25px', left: '440px' }"
                     :content="$t(`m.guide['授权人员范围']`)" />
             </render-action>
+        </section> -->
+        <section ref="memberRef">
+            <render-member
+                :tip="addMemberTips"
+                :is-all="isAll"
+                :label-width="renderLabelWidth('member')"
+                :users="users"
+                :departments="departments"
+                @on-add="handleAddMember"
+                @on-delete="handleMemberDelete"
+                @on-delete-all="handleDeleteAll" />
         </section>
-        <render-member
-            v-else
-            :tip="addMemberTips"
-            :is-all="isAll"
-            :label-width="renderLabelWidth('member')"
-            :users="users"
-            :departments="departments"
-            @on-add="handleAddMember"
-            @on-delete="handleMemberDelete"
-            @on-delete-all="handleDeleteAll" />
         <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员边界不可为空']`) }}</p>
         <render-horizontal-block
             v-if="isStaff"
@@ -141,7 +142,7 @@
     import { leavePageConfirm } from '@/common/leave-page-confirm';
     import IamGuide from '@/components/iam-guide/index';
     import basicInfo from '@/views/manage-spaces/components/basic-info';
-    import renderAction from '@/views/manage-spaces/common/render-action';
+    // import renderAction from '@/views/manage-spaces/common/render-action';
     import AddMemberDialog from '@/views/group/components/iam-add-member';
     import RenderMember from '@/views/grading-admin/components/render-member';
     import RenderInstanceTable from '@/views/manage-spaces/components/render-instance-table';
@@ -154,7 +155,7 @@
         components: {
             IamGuide,
             basicInfo,
-            renderAction,
+            // renderAction,
             AddMemberDialog,
             RenderMember,
             AddActionSideSlider,
@@ -202,7 +203,7 @@
                 dialogLoading: false,
                 isLoading: false,
                 isAllExpanded: false,
-                isAll: true
+                isAll: false
             };
         },
         computed: {

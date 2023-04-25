@@ -135,10 +135,10 @@
                         },
                         component: () => {
                             this.handleHideGuide();
-                            this.showTimer = setTimeout(() => {
-                                this.$store.commit('updateNoviceGuide', this.type);
-                                clearTimeout(this.showTimer);
-                            }, 5 * 1000);
+                            // this.showTimer = setTimeout(() => {
+                            this.$store.commit('updateNoviceGuide', this.type);
+                            //     clearTimeout(this.showTimer);
+                            // }, 5 * 1000);
                         }
                     };
                     popoverItem[this.popoverType]();

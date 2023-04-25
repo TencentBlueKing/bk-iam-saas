@@ -577,6 +577,9 @@ export function renderLabelWidth (payload) {
         },
         member: () => {
             return isCN ? 140 : 350;
+        },
+        rating_manager_merge_action_guide: () => {
+            return isCN ? { top: '-25px', right: '260px' } : { top: '-30px', right: '260px' };
         }
     };
     return typeMap[payload]();

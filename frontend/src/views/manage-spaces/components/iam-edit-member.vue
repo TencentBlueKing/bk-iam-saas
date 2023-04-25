@@ -42,6 +42,17 @@
                 @change="handleChange">
             </bk-user-selector>
         </template>
+        <bk-dialog
+            ext-cls="confirmDialog"
+            v-model="isShowDialog"
+            :close-icon="false"
+            :title="$t(`m.common['确定退出授权边界']`)"
+            :width="language === 'zh-cn' ? 400 : 600"
+            :footer-position="footerPosition"
+            @cancel="handleCancel"
+            @confirm="handleDeleteRole">
+            <p>{{ $t(`m.common['退出将不在具备相应的管理权限']`) }}</p>
+        </bk-dialog>
     </div>
 </template>
 <script>
@@ -85,10 +96,13 @@
                 displayValue: this.value,
                 isEditable: false,
                 isLoading: false,
+                isShowDialog: false,
                 userApi: window.BK_USER_API,
                 newPayload: '',
                 disabledValue: [],
-                editValue: []
+                editValue: [],
+                footerPosition: 'center',
+                roleIndex: -1
             };
         },
         computed: {
@@ -102,11 +116,11 @@
             }
         },
         watch: {
-            value (newVal) {
-                this.disabledValue = [...newVal].filter(e => e.readonly);
-                this.displayValue = [...newVal];
-                // this.editValue = [...newVal].filter(e => !e.readonly).map(e => e.username);
-                this.editValue = [...newVal].map(e => e.username);
+            value: {
+                handler (newVal) {
+                    this.handleDefaultData(newVal);
+                },
+                immediate: true
             }
         },
         mounted () {
@@ -134,25 +148,48 @@
                 }
             },
 
+            // 设置默认值
+            handleDefaultData (payload) {
+                this.disabledValue = [...payload].filter(e => e.readonly);
+                this.displayValue = [...payload];
+                this.editValue = [...payload].filter(e => !e.readonly).map(e => e.username);
+                // this.editValue = [...payload].map(e => e.username);
+            },
+
             handleEdit () {
                 document.body.click();
                 this.isEditable = true;
                 this.$nextTick(() => {
-                    this.$refs.input.focus();
-                    const disabledValue = [...this.disabledValue].map(item => item.username);
-                    const selectedTag = this.$refs.input.$refs.selected;
-                    if (selectedTag && selectedTag.length) {
-                        selectedTag.forEach(item => {
-                            if (disabledValue.includes(item.innerText)) {
-                                item.className = 'user-selector-selected user-selector-selected-readonly';
+                    if (this.isEditable) {
+                        this.$refs.input && this.$refs.input.focus();
+                        const disabledValue = [...this.disabledValue].map(item => item.username);
+                        const selectedTag = this.$refs.input.$refs.selected;
+                        if (selectedTag && selectedTag.length) {
+                            if (disabledValue.length) {
+                                selectedTag.forEach(item => {
+                                    if (disabledValue.includes(item.innerText)) {
+                                        item.className = 'user-selector-selected user-selector-selected-readonly';
+                                    }
+                                });
                             }
-                        });
+                        }
                     }
                 });
             },
 
             handleDelete (index) {
-                this.displayValue.splice(index, 1);
+                if (this.displayValue.length === 1) {
+                    this.messageError(this.$t(`m.verify['管理员不能为空']`), 2000);
+                    return;
+                }
+                this.roleIndex = index;
+                this.isShowDialog = true;
+            },
+
+            async handleDeleteRole () {
+                if (!this.roleIndex) {
+                    this.displayValue.splice(this.roleIndex, 1);
+                }
                 this.$emit('on-change', {
                     [this.field]: this.displayValue
                 });
@@ -166,6 +203,7 @@
             },
 
             hideEdit (event) {
+                this.isEditable = false;
                 if (this.displayValue.length < 1) {
                     return;
                 }
@@ -177,7 +215,6 @@
                         }
                     }
                 }
-                this.isEditable = false;
             },
 
             triggerChange () {
@@ -200,7 +237,7 @@
                 const editValue = this.editValue.reduce((p, v) => {
                     p.push({
                         username: v,
-                        readonly: false
+                        readonly: !!(this.disabledValue.length && this.disabledValue.map(e => e.username).includes(v))
                     });
                     return p;
                 }, []);
@@ -209,10 +246,19 @@
 
             handleRtxBlur () {
                 if (JSON.stringify(this.displayValue) !== JSON.stringify(this.value)) {
-                    this.$emit('on-change', {
-                        [this.field]: this.displayValue
-                    });
+                    this.isEditable = false;
+                    if (this.displayValue.length < 1) {
+                        this.handleDefaultData(this.value);
+                        this.messageError(this.$t(`m.verify['管理员不能为空']`), 2000);
+                        return;
+                    }
+                    this.roleIndex = -1;
+                    this.isShowDialog = true;
                 }
+            },
+
+            handleCancel () {
+                this.handleDefaultData(this.value);
             }
         }
     };
@@ -255,6 +301,7 @@
                 i {
                     font-size: 18px;
                     color: #979ba5;
+                    vertical-align: middle;
                     cursor: pointer;
                     &.disabled {
                         color: #c4c6cc;

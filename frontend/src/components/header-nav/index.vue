@@ -506,7 +506,7 @@
                         window.localStorage.removeItem('iam-header-name-cache');
                         this.$router.push({
                             name: this.isRatingChange ? 'myManageSpace' : this.defaultRouteList[navIndex],
-                            params: navIndex === 1 ? { id: this.navCurRoleId, entry: 'updateRole' } : {}
+                            params: navIndex === 1 ? { id: this.user.role.id, entry: 'updateRole' } : {}
                         });
                     } else {
                         // if (navIndex === 0 && ['gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'].includes(curRouterName)) {
@@ -594,7 +594,7 @@
             handleChangeLocale (payload) {
                 this.setCookie('blueking_language', payload);
                 Cookie.set('blueking_language', payload, {
-                    domain: window.location.hostname.split('.').slice(-3).join('.')
+                    domain: window.location.hostname.split('.').slice(1).join('.')
                 });
                 this.setMagicBoxLocale(payload);
             },
