@@ -585,7 +585,8 @@
     justify-content: space-between;
 }
 
-.iam-nav-select-dropdown-content .bk-big-tree {
+.iam-nav-select-dropdown-content
+ .bk-big-tree {
     &-node {
         padding: 0 16px;
         .node-options {
@@ -594,7 +595,9 @@
                 margin: 0 0 0 -20px;
             }
         }
-        
+        .iamcenter-level-two-manage-space {
+            margin-left: 15px;
+        }
     }
     &-empty {
         color: #fff !important;

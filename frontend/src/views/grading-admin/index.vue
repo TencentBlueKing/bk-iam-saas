@@ -62,8 +62,8 @@
                         :max-height="500"
                         v-bkloading="{ isLoading: subLoading, opacity: 1 }"
                     >
-                        <bk-table-column width="30" />
-                        <bk-table-column prop="name" width="240">
+                        <bk-table-column width="45" />
+                        <bk-table-column prop="name" width="225">
                             <template slot-scope="child">
                                 <div class="flex_space_name">
                                     <Icon type="level-two-manage-space" :style="{ color: iconColor[1] }" />
