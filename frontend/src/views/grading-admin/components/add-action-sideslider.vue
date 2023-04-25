@@ -1004,7 +1004,7 @@
             }
             .right-wrapper {
                 position: relative;
-                flex: 0 0 calc(100% - 220px);
+                flex: 0 0 calc(100% - 240px);
                 padding: 12px 20px;
                 background: #f5f6fa;
                 .custom-tmpl-wrapper {

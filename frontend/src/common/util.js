@@ -573,7 +573,7 @@ export function renderLabelWidth (payload) {
     const isCN = ['zh-cn'].includes(window.CUR_LANGUAGE);
     const typeMap = {
         resource: () => {
-            return isCN ? 180 : 450;
+            return isCN ? 120 : 120;
         },
         member: () => {
             return isCN ? 140 : 350;

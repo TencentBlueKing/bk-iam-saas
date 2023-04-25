@@ -7,61 +7,87 @@
         </render-horizontal-block>
         <render-horizontal-block
             v-if="isSelectSystem || isSelectSystemShow"
-            :label="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
+            :label="$t(`m.nav['授权边界']`)"
             :label-width="renderLabelWidth('resource')"
             :required="true">
-            <div class="grade-admin-select-wrapper">
-                <div class="action">
-                    <section class="action-wrapper" @click.stop="handleAddAction"
-                        data-test-id="grading_btn_showAddAction">
-                        <Icon bk type="plus-circle-shape" />
-                        <span>{{ $t(`m.levelSpace['选择操作和资源边界']`) }}</span>
-                    </section>
-                    <Icon
-                        type="info-fill"
-                        class="info-icon"
-                        v-bk-tooltips.top="{ content: tips, width: 236, extCls: 'iam-tooltips-cls' }" />
-                </div>
-                <div class="sub-title" v-if="isSelectSystem">
-                    {{ $t(`m.common['共']`) }}
-                    <span class="number">0</span>
-                    {{ $t(`m.common['个']`) }}
-                    {{ $t(`m.perm['操作权限']`) }}
-                </div>
-                <div v-if="isSelectSystemShow">
-                    <div class="info-wrapper">
-                        <p class="tips">{{ infoText }}</p>
-                        <section style="min-width: 108px; position: relative;">
-                            <iam-guide
-                                type="rating_manager_merge_action"
-                                direction="right"
-                                :loading="isLoading"
-                                :style="renderLabelWidth('rating_manager_merge_action_guide')"
-                                :content="$t(`m.guide['聚合操作']`)" />
-                            <bk-switcher
-                                v-model="isAllExpanded"
-                                :disabled="isAggregateDisabled"
-                                size="small"
-                                theme="primary"
-                                @change="handleAggregateAction" />
-                            <span class="text">{{ expandedText }}</span>
+            <div>
+                <div class="grade-admin-select-wrapper">
+                    <p class="resource_boundary_title">{{ $t(`m.levelSpace['最大可授权操作和资源边界']`) }}</p>
+                    <div class="action">
+                        <!-- <section class="action-wrapper" @click.stop="handleAddAction"
+                            data-test-id="grading_btn_showAddAction">
+                            <Icon bk type="plus-circle-shape" />
+                            <span>{{ $t(`m.levelSpace['选择操作和资源边界']`) }}</span>
                         </section>
+                        <Icon
+                            type="info-fill"
+                            class="info-icon"
+                            v-bk-tooltips.top="{ content: tips, width: 236, extCls: 'iam-tooltips-cls' }" /> -->
+                        <bk-button
+                            theme="default"
+                            size="small"
+                            icon="plus-circle-shape"
+                            class="perm-resource-add mt10"
+                            @click.stop="handleAddAction">
+                            {{ $t(`m.common['添加']`) }}
+                        </bk-button>
                     </div>
-                    <div class="resource-instance-wrapper"
-                        ref="instanceTableContentRef"
-                        v-bkloading="{ isLoading, opacity: 1, zIndex: 1000, extCls: 'loading-resource-instance-cls' }">
-                        <render-instance-table
-                            ref="resourceInstanceRef"
-                            :is-all-expanded="isAllExpanded"
-                            :data="policyList"
-                            :list="policyList"
-                            :backup-list="aggregationsTableData"
-                            @on-delete="handleDelete"
-                            @on-aggregate-delete="handleAggregateDelete"
-                            @on-select="handleAttrValueSelected" />
+                    <div class="sub-title" v-if="isSelectSystem">
+                        {{ $t(`m.common['共']`) }}
+                        <span class="number">0</span>
+                        {{ $t(`m.common['个']`) }}
+                        {{ $t(`m.perm['操作权限']`) }}
+                    </div>
+                    <div v-if="isSelectSystemShow">
+                        <div class="info-wrapper">
+                            <p class="tips">{{ infoText }}</p>
+                            <section style="min-width: 108px; position: relative;">
+                                <iam-guide
+                                    type="rating_manager_merge_action"
+                                    direction="right"
+                                    :loading="isLoading"
+                                    :style="renderLabelWidth('rating_manager_merge_action_guide')"
+                                    :content="$t(`m.guide['聚合操作']`)" />
+                                <bk-switcher
+                                    v-model="isAllExpanded"
+                                    :disabled="isAggregateDisabled"
+                                    size="small"
+                                    theme="primary"
+                                    @change="handleAggregateAction" />
+                                <span class="text">{{ expandedText }}</span>
+                            </section>
+                        </div>
+                        <div class="resource-instance-wrapper"
+                            ref="instanceTableContentRef"
+                            v-bkloading="{
+                                isLoading,
+                                opacity: 1,
+                                zIndex: 1000,
+                                extCls: 'loading-resource-instance-cls' }">
+                            <render-instance-table
+                                ref="resourceInstanceRef"
+                                :is-all-expanded="isAllExpanded"
+                                :data="policyList"
+                                :list="policyList"
+                                :backup-list="aggregationsTableData"
+                                @on-delete="handleDelete"
+                                @on-aggregate-delete="handleAggregateDelete"
+                                @on-select="handleAttrValueSelected" />
+                        </div>
                     </div>
                 </div>
             </div>
+            <section ref="memberRef">
+                <render-member
+                    :tip="addMemberTips"
+                    :is-all="isAll"
+                    :label-width="renderLabelWidth('member')"
+                    :users="users"
+                    :departments="departments"
+                    @on-add="handleAddMember"
+                    @on-delete="handleMemberDelete"
+                    @on-delete-all="handleDeleteAll" />
+            </section>
         </render-horizontal-block>
         <p class="action-empty-error" v-if="isShowActionEmptyError">{{ $t(`m.verify['操作和资源边界不可为空']`) }}</p>
         <!-- <section v-if="isShowMemberAdd" ref="memberRef">
@@ -78,17 +104,6 @@
                     :content="$t(`m.guide['授权人员范围']`)" />
             </render-action>
         </section> -->
-        <section ref="memberRef">
-            <render-member
-                :tip="addMemberTips"
-                :is-all="isAll"
-                :label-width="renderLabelWidth('member')"
-                :users="users"
-                :departments="departments"
-                @on-add="handleAddMember"
-                @on-delete="handleMemberDelete"
-                @on-delete-all="handleDeleteAll" />
-        </section>
         <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员边界不可为空']`) }}</p>
         <render-horizontal-block
             v-if="isStaff"
@@ -926,6 +941,9 @@
         }
 
         .grade-admin-select-wrapper {
+            .resource_boundary_title {
+                font-size: 12px;
+            }
             .action {
                 position: relative;
                 display: flex;
@@ -1003,4 +1021,16 @@
             }
         }
     }
+</style>
+
+<style lang="postcss" scoped>
+
+.iam-grading-admin-create-wrapper {
+
+    .perm-resource-add {
+        .icon-plus-circle-shape {
+            color: red;
+        }
+    }
+}
 </style>

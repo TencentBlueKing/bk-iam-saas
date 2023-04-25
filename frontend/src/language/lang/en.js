@@ -524,7 +524,7 @@ export const m = {
         '权限管理': 'Permission management',
         '统计分析': 'Statistical analysis',
         '平台管理': 'Platform management',
-        '授权边界': 'Authorization boundary',
+        '授权边界': 'Authorize boundary',
         '管理空间': 'Manage Spaces',
         '我的管理空间': "My Management Space",
         '管理空间': 'Management space',
