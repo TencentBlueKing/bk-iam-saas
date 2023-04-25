@@ -2,6 +2,7 @@
     <render-horizontal-block
         :label="renderTitle"
         :label-width="labelWidth"
+        :ext-cls="extClsRouteList.includes($route.name) ? 'ext-cls-member-boundary' : ''"
         :required="required">
         <section class="action-wrapper" @click.stop="handleAddMember" data-test-id="grading_btn_showAddMember">
             <Icon bk type="plus-circle-shape" />
@@ -80,7 +81,14 @@
         },
         data () {
             return {
-               
+                extClsRouteList: [
+                    'myManageSpaceCreate',
+                    'ratingManagerCreate',
+                    'secondaryManageSpaceCreate',
+                    'authorBoundary',
+                    'authorBoundaryEditFirstLevel',
+                    'authorBoundaryEditSecondLevel'
+                ]
             };
         },
         computed: {
@@ -170,5 +178,9 @@
             right: -6px;
             cursor: pointer;
         }
+    }
+
+    .ext-cls-member-boundary {
+        box-shadow: none;
     }
 </style>

@@ -32,12 +32,12 @@
                             {{ $t(`m.common['添加']`) }}
                         </bk-button>
                     </div>
-                    <div class="sub-title" v-if="isSelectSystem">
+                    <!-- <div class="sub-title" v-if="isSelectSystem">
                         {{ $t(`m.common['共']`) }}
                         <span class="number">0</span>
                         {{ $t(`m.common['个']`) }}
                         {{ $t(`m.perm['操作权限']`) }}
-                    </div>
+                    </div> -->
                     <div v-if="isSelectSystemShow">
                         <div class="info-wrapper">
                             <p class="tips">{{ infoText }}</p>
@@ -48,13 +48,26 @@
                                     :loading="isLoading"
                                     :style="renderLabelWidth('rating_manager_merge_action_guide')"
                                     :content="$t(`m.guide['聚合操作']`)" />
-                                <bk-switcher
+                                <!-- <bk-switcher
                                     v-model="isAllExpanded"
                                     :disabled="isAggregateDisabled"
                                     size="small"
                                     theme="primary"
                                     @change="handleAggregateAction" />
-                                <span class="text">{{ expandedText }}</span>
+                                <span class="text">{{ expandedText }}</span> -->
+                                <bk-radio-group
+                                    v-model="isAllExpanded"
+                                    class="aggregate-action-btn"
+                                    size="small"
+                                    :disabled="isAggregateDisabled"
+                                    @change="handleAggregateAction">
+                                    <bk-radio-button :value="true">
+                                        {{ $t(`m.grading['逐项编辑']`)}}
+                                    </bk-radio-button>
+                                    <bk-radio-button :value="false">
+                                        {{ $t(`m.grading['批量编辑']`)}}
+                                    </bk-radio-button>
+                                </bk-radio-group>
                             </section>
                         </div>
                         <div class="resource-instance-wrapper"
@@ -941,9 +954,6 @@
         }
 
         .grade-admin-select-wrapper {
-            .resource_boundary_title {
-                font-size: 12px;
-            }
             .action {
                 position: relative;
                 display: flex;
@@ -1024,13 +1034,30 @@
 </style>
 
 <style lang="postcss" scoped>
-
-.iam-grading-admin-create-wrapper {
-
+/deep/ .grade-admin-select-wrapper {
+    .resource_boundary_title {
+        font-size: 12px;
+    }
     .perm-resource-add {
+        width: 88px;
+        height: 32px;
+        background: #F0F5FF;
+        color: v#3A84FF;
+        border-radius: 2px;
+        border: none;
+        vertical-align: middle;
         .icon-plus-circle-shape {
-            color: red;
+            color: #3A84FF !important;
+            font-size: 14px;
+        }
+        span {
+             vertical-align: middle;
         }
     }
+
+    .aggregate-action-btn {
+        background-color: #F0F1F5;
+    }
+    
 }
 </style>
