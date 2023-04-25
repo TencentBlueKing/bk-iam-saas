@@ -247,7 +247,9 @@ export const m = {
         '确认删除': 'Confirm delete',
         '只允许输入英文': 'Only English is allowed',
         '生效时间': 'Effective time',
-        '无匹配人员': 'No matching personnel'
+        '无匹配人员': 'No matching personnel',
+        '添加': 'Add',
+        '系统出现异常': 'System error'
     },
     // 校验
     verify: {

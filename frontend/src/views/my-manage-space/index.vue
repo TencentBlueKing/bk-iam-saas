@@ -8,6 +8,9 @@
             >
                 {{ $t(`m.common['申请新建']`) }}
             </bk-button>
+            <bk-link class="AdminLink" theme="primary" @click="showImageDialog = true">
+                <span class="linkText">{{ $t('m.common["什么是管理空间"]') }}</span>
+            </bk-link>
             <div slot="right">
                 <div class="right-form">
                     <!-- <bk-radio-group v-model="radioValue" @change="handlerChange" style="width: 200px">
@@ -38,6 +41,7 @@
                 </div>
             </div>
         </render-search>
+
         <bk-table
             ref="spaceTable"
             size="small"
@@ -117,7 +121,7 @@
                                 <span :title="child.row.updated_time">{{ child.row.updated_time }}</span>
                             </template>
                         </bk-table-column>
-                        <bk-table-column :width="curLanguageIsCn ? 200 : 300">
+                        <bk-table-column :width="curLanguageIsCn ? 200 : 320">
                             <template slot-scope="child">
                                 <div class="operate_btn">
                                     <bk-button
@@ -231,7 +235,7 @@
                     <span :title="row.updated_time">{{ row.updated_time }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.common['操作']`)" :width="curLanguageIsCn ? 200 : 300">
+            <bk-table-column :label="$t(`m.common['操作']`)" :width="curLanguageIsCn ? 200 : 320">
                 <template slot-scope="{ row }">
                     <div class="operate_btn">
                         <bk-button
@@ -276,6 +280,11 @@
                 />
             </template>
         </bk-table>
+        
+        <ManageInterviewDialog
+            :show.sync="showImageDialog"
+            :show-footer="false"
+        />
     </div>
 </template>
 
@@ -288,6 +297,7 @@
     import IamEditTextarea from './components/iam-edit/textarea';
     import IamSearchSelect from '@/components/iam-search-select';
     import { buildURLParams } from '@/common/url';
+    import ManageInterviewDialog from '@/components/manage-interview-dialog';
     // import { bus } from '@/common/bus';
     // import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
 
@@ -297,7 +307,8 @@
             IamEditInput,
             IamEditMemberSelector,
             IamEditTextarea,
-            IamSearchSelect
+            IamSearchSelect,
+            ManageInterviewDialog
         },
         data () {
             return {
@@ -349,7 +360,8 @@
                     }
                 ],
                 searchData: [],
-                searchList: []
+                searchList: [],
+                showImageDialog: false
             };
         },
         computed: {
@@ -910,6 +922,13 @@
 
   .right-form {
     display: flex;
+  }
+
+  .AdminLink {
+        margin-left: 10px;
+        .linkText {
+            font-size: 12px
+        }
   }
 
   /deep/ .flex_space_name {

@@ -10,7 +10,7 @@
             <bk-button theme="primary" @click="handleCreate" data-test-id="grading_btn_create">
                 {{ isStaff ? $t(`m.common['申请新建']`) : $t(`m.common['新建']`) }}
             </bk-button>
-            <bk-link class="AdminLink" theme="primary" @click="showImgDialog">
+            <bk-link class="AdminLink" theme="primary" @click="showImageDialog = true">
                 <span class="linkText">{{ $t('m.common["什么是管理空间"]') }}</span>
             </bk-link>
             <div slot="right">
@@ -105,7 +105,7 @@
                                 <span :title="child.row.updated_time">{{ child.row.updated_time }}</span>
                             </template>
                         </bk-table-column>
-                        <bk-table-column :width="curLanguageIsCn ? 200 : 300">
+                        <bk-table-column :width="curLanguageIsCn ? 200 : 320">
                             <template slot-scope="child">
                                 <div class="operate_btn">
                                     <span>
@@ -217,7 +217,7 @@
                     <span :title="row.updated_time">{{ row.updated_time }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.common['操作']`)" :width="curLanguageIsCn ? 200 : 300">
+            <bk-table-column :label="$t(`m.common['操作']`)" :width="curLanguageIsCn ? 200 : 320">
                 <template slot-scope="{ row }">
                     <!-- <section>
                         <bk-button theme="primary" text @click="handleDropOut(row)">
@@ -275,6 +275,7 @@
             @on-after-leave="handleAfterLeave"
             @on-cancel="handleCancel"
             @on-sumbit="handleSubmit" />
+
         <apply-dialog
             :show.sync="isShowApplyDialog"
             :loading="applyLoading"
@@ -282,27 +283,11 @@
             @on-after-leave="handleAfterApplyLeave"
             @on-cancel="handleApplyCancel"
             @on-sumbit="handleApplySumbit" />
-        <bk-dialog
-            v-model="showImageDialog"
-            :show-footer="noFooter"
-            width="820"
-            :position="{ top: 50 }"
-            ext-cls="showImage">
-            <h2>{{ $t('m.common["一"]') }}、{{ $t('m.common["什么是管理空间"]') }}</h2>
-            <p>{{ $t('m.common["管理空间概念"]') }}</p>
-            <!-- <img src="@/images/boot-page/space@2x.png" alt="" style="width:765px; height: 263px"> -->
-            <img src="@/images/boot-page/manageSpace@2x.png" alt="" style="width:765px;">
-            <h2>{{ $t('m.common["二"]') }}、{{ $t('m.common["如何使用管理空间"]') }}</h2>
-            <p>1. {{ $t('m.common["我的管理空间 > 申请新建（已有管理空间忽略）"]') }}</p>
-            <!-- <img src="@/images/boot-page/space2@2x.png" alt="" style="width:765px; height:300px"> -->
-            <img src="@/images/boot-page/manageSpace2@2x.png" alt="" style="width:765px;">
-            <p>2. {{ $t('m.common["切换顶部导航至“权限管理” ，在左上角切换“管理空间”"]') }}</p>
-            <!-- <img src="@/images/boot-page/three2x2.png" alt="" style="width:765px; height:235px"> -->
-            <img src="@/images/boot-page/manageSpace3@2x.png" alt="" style="width:765px;">
-            <p>3. {{ $t('m.common["在左侧导航，点击 用户组 > 新建，创建用户组，设置权限和成员"]') }}</p>
-            <!-- <img src="@/images/boot-page/four2x2.png" alt="" style="width:765px;height:220px"> -->
-            <img src="@/images/boot-page/manageSpace4@2x.png" alt="" style="width:765px;">
-        </bk-dialog>
+
+        <ManageInterviewDialog
+            :show.sync="showImageDialog"
+            :show-footer="false"
+        />
     </div>
 </template>
 <script>
@@ -316,6 +301,7 @@
     import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
     import IamEditTextarea from '@/views/my-manage-space/components/iam-edit/textarea';
     import IamSearchSelect from '@/components/iam-search-select';
+    import ManageInterviewDialog from '@/components/manage-interview-dialog';
 
     export default {
         name: '',
@@ -325,7 +311,8 @@
             IamEditInput,
             IamEditMemberSelector,
             IamEditTextarea,
-            IamSearchSelect
+            IamSearchSelect,
+            ManageInterviewDialog
         },
         data () {
             return {
@@ -359,7 +346,6 @@
                 applyLoading: false,
                 curName: '',
                 showImageDialog: false,
-                noFooter: false,
                 subLoading: false,
                 gradingAdminId: 0,
                 iconColor: ['#FF9C01', '#9B80FE'],
@@ -450,10 +436,6 @@
 
             getSubCellClass ({ row, column, rowIndex, columnIndex }) {
                 return 'iam-table-cell-1-cls';
-            },
-
-            showImgDialog () {
-                this.showImageDialog = true;
             },
 
             handleExpandChange (row, expandedRows) {
@@ -972,25 +954,11 @@
             }
         }
     }
-    .showImage {
-            h2 {
-                font-size: 16px;
-                font-family: PingFangSC, PingFangSC-Medium;
-                font-weight: 500;
-                color: #63656e;
-            }
-            p {
-                font-size: 14px;
-                font-family: PingFangSC, PingFangSC-Regular;
-                color: #63656e;
-                margin-bottom: 15px;
-            }
-        }
     .AdminLink {
         margin-left: 10px;
-    .linkText {
-        font-size: 12px
-         }
+        .linkText {
+            font-size: 12px
+        }
     }
 
     .iam-tag-table-cell-cls {
