@@ -127,7 +127,7 @@
                                         :title="disabledPerm(child.row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
                                         @click.stop="handleSubView(child.row, 'detail')"
                                     >
-                                        {{ $t(`m.levelSpace['进入']`) }}
+                                        {{ $t(`m.levelSpace['进入空间']`) }}
                                     </bk-button>
                                     <bk-button
                                         theme="primary"
@@ -241,7 +241,7 @@
                             :title="disabledPerm(row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
                             @click="handleView(row, 'detail')"
                         >
-                            {{ $t(`m.levelSpace['进入']`) }}
+                            {{ $t(`m.levelSpace['进入空间']`) }}
                         </bk-button>
                         <bk-button
                             theme="primary"

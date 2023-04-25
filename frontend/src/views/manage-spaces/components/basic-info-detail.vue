@@ -77,7 +77,7 @@
             };
         },
         computed: {
-            ...mapGetters(['user'])
+            ...mapGetters(['user', 'roleList'])
         },
         watch: {
             data: {
@@ -116,6 +116,7 @@
         methods: {
             handleUpdateRatingManager (payload) {
                 const { name, members, description, sync_perm } = this.formData;
+                const { type, id } = this.user.role;
                 const params = {
                     name,
                     description,
@@ -124,7 +125,7 @@
                     ...payload,
                     id: this.id
                 };
-                const url = ['subset_manager'].includes(this.user.role.type) ? 'spaceManage/updateSecondManagerManager' : 'role/updateRatingManager';
+                const url = ['subset_manager'].includes(type) ? 'spaceManage/updateSecondManagerManager' : 'role/updateRatingManager';
                 return this.$store.dispatch(url, params)
                     .then(async () => {
                         this.messageSuccess(this.$t(`m.info['编辑成功']`), 2000);
@@ -141,18 +142,40 @@
                         const headerTitle = params.name;
                         this.$store.commit('setHeaderTitle', headerTitle);
                         await this.$store.dispatch('roleList');
-                    }, (e) => {
+                        const ExitManager = this.roleList.find(item => !item.is_member && item.id === id);
+                        if (ExitManager) {
+                            this.handleExitPermManage();
+                        }
+                    }, async (e) => {
                         console.warn('error');
-                        this.bkMessageInstance = this.$bkMessage({
-                            limit: 1,
-                            theme: 'error',
-                            message: e.message || e.data.msg || e.statusText
-                        });
+                        const { status } = e.response;
+                        console.log([401, 404].includes(status));
+                        if ([401, 404].includes(status)) {
+                            this.handleExitPermManage();
+                        } else {
+                            this.bkMessageInstance = this.$bkMessage({
+                                limit: 1,
+                                theme: 'error',
+                                message: e.message || e.data.msg || e.statusText
+                            });
+                        }
                     });
             },
 
             handleUpdateMembers (payload) {
                 this.handleUpdateRatingManager(payload);
+            },
+            
+            // 退出已有二级成员的一级管理空间
+            async handleExitPermManage () {
+                await this.$store.dispatch('role/updateCurrentRole', { id: 0 });
+                await this.$store.dispatch('userInfo');
+                this.$store.commit('updateIndex', 0);
+                window.localStorage.setItem('index', 0);
+                this.messageSuccess(this.$t(`m.info['您已退出当前管理员授权范围']`), 2000);
+                this.$router.push({
+                    name: 'myManageSpace'
+                });
             }
         }
     };

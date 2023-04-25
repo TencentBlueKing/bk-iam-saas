@@ -250,7 +250,6 @@
                             ++item.count;
                         }
                         if (act.related_actions.includes(payload.id) && !flag && act.checked) {
-                            console.log(act, 4444);
                             act.checked = false;
                             act.flag = payload.flag;
                             --item.count;
