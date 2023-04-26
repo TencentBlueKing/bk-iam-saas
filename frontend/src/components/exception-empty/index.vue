@@ -21,12 +21,30 @@
                 default: ''
             }
         },
+        data () {
+            return {
+                searchTipWidth: 200
+            };
+        },
         methods: {
+            searchTipStyles () {
+                this.$nextTick(() => {
+                    if (this.$parent.tableId) {
+                        this.searchTipWidth = !['zh-cn'].includes(window.CUR_LANGUAGE) ? 400 : 230;
+                    }
+                });
+                return {
+                    'width': `${this.searchTipWidth}px`
+                };
+            },
             fetchDefaultOperation (type) {
                 const defaultOperation = {
                     search: () => {
                         return (
-                            <div class="tip-wrap exception-search-tip">
+                            <div
+                                class="tip-wrap exception-search-tip"
+                                style={ this.searchTipStyles() }
+                            >
                                 <span class="text-btn">{this.$t(`m.common['可以尝试']`)}</span>
                                 <span> {this.$t(`m.common['调整关键词']`)}</span>
                                 <span> {this.$t(`m.common['或']`)} </span>

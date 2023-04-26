@@ -429,7 +429,7 @@ export const m = {
         '分级管理员': 'rating manager',
         '升级为': 'upgrade to',
         '管理空间': 'manage space',
-        '支持一级、两级管理空间，更加精细化管理。': 'Supports one-level and secondary management of space, with more refined management.',
+        '支持一级、二级管理空间，更加精细化管理。': 'Supports one-level and secondary management of space, with more refined management.',
         '知道了': 'Got it',
         '搜索关键字': 'Search Keywords',
         '无资源ID，无法预览': 'No resource ID, unable to preview',
@@ -459,7 +459,10 @@ export const m = {
          '(GMT+10:00) 布里斯班时间': '(GMT+10:00) Brisbane Time',
          '(GMT+11:00) 马加丹': '(GMT+11:00) Magadan',
          '(GMT+12:00) 堪察加半岛时间':  '(GMT+12:00) Kamchatka Peninsula Time',
-         '(GMT+13:00) 努库阿洛法时间': '(GMT+13:00) Nukualofa Time'
+         '(GMT+13:00) 努库阿洛法时间': '(GMT+13:00) Nukualofa Time',
+         '由于管理空间的授权范围没有包含此操作，': 'Due to the fact that the authorization scope of the management space does not include this operation,',
+         '如需使用该模板进行新的授权必须先删除该操作。': 'To use this template for new authorization, you must first delete the operation.',
+         '您已退出当前管理员授权范围': 'You have exited the current administrator authorization scope'
     },
     // 二次确认弹窗相关
     dialog: {
@@ -701,7 +704,8 @@ export const m = {
         '操作详情': 'Operation details',
         '权限对比差异': 'Permission comparison difference',
         '关联的用户组': 'The associated group',
-        '批量引用已有的操作实例': 'Batch reference existing instances'
+        '批量引用已有的操作实例': 'Batch reference existing instances',
+        '如需编辑权限模板的内容请点击': 'To edit the content of the permission template, please click'
     },
     userGroup: {
         '用户组': 'Group',
@@ -827,7 +831,7 @@ export const m = {
         '创建时间': 'Created Time',
         '更新人': 'Updater',
         '更新时间': 'Update',
-        "进入": "Get into",
+        "进入空间": "Get into space",
         "克隆": "Clone",
         '请输入空间名': 'Please enter the space name',
         '管理员': 'Administrators',

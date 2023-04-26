@@ -135,7 +135,7 @@
         methods: {
             handleSelectTag ({ $id, allCheck, active }, index) { // allCheck
                 let flag = !allCheck;
-                this.active.push(...active);
+                this.active.push(active);
                 if (this.active.includes($id)) {
                     this.active = [...this.active.filter(_ => _ !== $id)];
                 } else {

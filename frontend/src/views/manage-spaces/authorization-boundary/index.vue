@@ -21,6 +21,7 @@
             </render-horizontal-block>
 
             <render-perm
+                mode="action"
                 :title="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
                 :perm-length="policyList.length"
                 :expanded.sync="curExpanded"
@@ -29,7 +30,11 @@
             </render-perm>
 
             <render-perm
-                :title="$t(`m.levelSpace['最大可授权人员边界']`)">
+                mode="member"
+                :title="$t(`m.levelSpace['最大可授权人员边界']`)"
+                :user-length="users.length"
+                :depart-length="departments.length"
+            >
                 <template v-if="isAll">
                     <span class="all-item">{{ $t(`m.common['全员']`) }}(All)</span>
                 </template>
@@ -139,7 +144,7 @@
                 });
                 this.formData = Object.assign({}, {
                     name,
-                    description: description || '--',
+                    description,
                     members
                 });
                 // this.$store.commit('setHeaderTitle', name);

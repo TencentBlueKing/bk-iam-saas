@@ -117,7 +117,7 @@
                                                 <strong>{{ $t(`m.info['管理空间']`) }},</strong>
                                             </div>
                                             <div class="content-desc">
-                                                {{ $t(`m.info['支持一级、两级管理空间，更加精细化管理。']`) }}
+                                                {{ $t(`m.info['支持一级、二级管理空间，更加精细化管理。']`) }}
                                             </div>
                                         </div>
                                         <div slot="popconfirm-show">
@@ -333,7 +333,7 @@
             // 监听当前已选中的角色是否有变更
             fetchRoleUpdate ({ role }) {
                 const { id, type } = role;
-                console.log(role, '变更');
+                // console.log(role, '变更');
                 this.curRole = type;
                 this.curRoleId = this.navCurRoleId || id;
                 this.$store.commit('updateCurRoleId', this.curRoleId);
@@ -585,7 +585,8 @@
     justify-content: space-between;
 }
 
-.iam-nav-select-dropdown-content .bk-big-tree {
+.iam-nav-select-dropdown-content
+ .bk-big-tree {
     &-node {
         padding: 0 16px;
         .node-options {
@@ -594,7 +595,9 @@
                 margin: 0 0 0 -20px;
             }
         }
-        
+        .iamcenter-level-two-manage-space {
+            margin-left: 15px;
+        }
     }
     &-empty {
         color: #fff !important;
@@ -618,6 +621,9 @@
     }
     .tippy-tooltip.light-border-theme {
         box-shadow: 0 0 2px 0 #dcdee5;
+    }
+    .tippy-arrow {
+        top: 120px !important;
     }
  }
 </style>

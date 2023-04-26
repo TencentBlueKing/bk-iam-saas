@@ -5,14 +5,13 @@
                 <basic-info :data="formData" @on-change="handleBasicInfoChange" ref="basicInfoRef" />
             </section>
         </render-horizontal-block>
-        <render-action
+        <!-- <render-action
             style="margin-bottom: 16px;"
             :title="$t(`m.levelSpace['选择操作和资源边界']`)"
             :tips="addActionTips"
             v-if="!isSelectSystem"
-            @on-click="handleAddAction" />
+            @on-click="handleAddAction" /> -->
         <render-horizontal-block
-            v-if="isSelectSystem"
             :label="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
             :label-width="renderLabelWidth('resource')"
             :required="true">
@@ -66,23 +65,24 @@
             </div>
         </render-horizontal-block>
         <p class="action-empty-error" v-if="isShowActionEmptyError">{{ $t(`m.verify['操作和资源边界不可为空']`) }}</p>
-        <section v-if="isShowMemberAdd" ref="memberRef">
+        <!-- <section v-if="isShowMemberAdd" ref="memberRef">
             <render-action
                 :title="$t(`m.levelSpace['选择可授权人员边界']`)"
                 :tips="addMemberTips"
                 style="margin-bottom: 16px;"
                 @on-click="handleAddMember" />
+        </section> -->
+        <section ref="memberRef">
+            <render-member
+                :users="users"
+                :departments="departments"
+                :is-all="isAll"
+                :tip="addMemberTips"
+                :label-width="renderLabelWidth('member')"
+                @on-add="handleAddMember"
+                @on-delete="handleMemberDelete"
+                @on-delete-all="handleDeleteAll" />
         </section>
-        <render-member
-            v-else
-            :users="users"
-            :departments="departments"
-            :is-all="isAll"
-            :tip="addMemberTips"
-            :label-width="renderLabelWidth('member')"
-            @on-add="handleAddMember"
-            @on-delete="handleMemberDelete"
-            @on-delete-all="handleDeleteAll" />
         <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员边界不可为空']`) }}</p>
         <render-horizontal-block
             v-if="isRatingManager"
@@ -171,7 +171,7 @@
     import { mapGetters } from 'vuex';
     import { leavePageConfirm } from '@/common/leave-page-confirm';
     import basicInfo from '@/views/manage-spaces/components/basic-info';
-    import renderAction from '@/views/manage-spaces/common/render-action';
+    // import renderAction from '@/views/manage-spaces/common/render-action';
     import AddMemberDialog from '@/views/group/components/iam-add-member';
     import RenderMember from '@/views/grading-admin/components/render-member';
     import AddActionSideslider from '@/views/manage-spaces/components/add-action-side-slider';
@@ -184,7 +184,7 @@
         name: '',
         components: {
             basicInfo,
-            renderAction,
+            // renderAction,
             AddMemberDialog,
             RenderMember,
             AddActionSideslider,
@@ -984,7 +984,7 @@
         }
         .action-empty-error {
             position: relative;
-            top: -55px;
+            top: -40px;
             left: 230px;
             font-size: 12px;
             color: #ff4d4d;

@@ -41,12 +41,13 @@
             })()
 
             function getLanguage () {
-                const cookieList = document.cookie.split(';')
-                const CUR_LANGUAGE_DATA = cookieList.find(item => item.includes('blueking_language'))
-                let CUR_LANGUAGE = 'zh-cn'
-                if (CUR_LANGUAGE_DATA) {
-                    CUR_LANGUAGE = CUR_LANGUAGE_DATA.split('=')[1] || 'zh-cn'
-                }
+                // const cookieList = document.cookie.split(';')
+                // const CUR_LANGUAGE_DATA = cookieList.find(item => item.includes('blueking_language'))
+                // let CUR_LANGUAGE = 'zh-cn'
+                // if (CUR_LANGUAGE_DATA) {
+                //     CUR_LANGUAGE = CUR_LANGUAGE_DATA.split('=')[1] || 'zh-cn'
+                // }
+                let CUR_LANGUAGE = getCookie('blueking_language') ||'zh-cn'
                 // 英文 兼容处理
                 if (['en', 'en-US', 'en-us'].includes(CUR_LANGUAGE)) {
                     CUR_LANGUAGE = 'en'
@@ -64,13 +65,22 @@
                 return CUR_LANGUAGE
             }
 
-            window.onload = function () {
-                let ta = document.createElement('script')
-                ta.src = '//tajs.qq.com/stats?sId=64878578'
-                ta.defer = 'defer'
-                let s = document.getElementsByTagName('script')[0]
-                s.parentNode.insertBefore(ta, s)
+             function getCookie (name) {
+                const data = document.cookie.split(';');
+                const params = {};
+                for (let i = 0; i < data.length; i++) {
+                    params[data[i].split('=')[0].replace(/\s/, '')] = data[i].split('=')[1];
+                }
+                return params[name];
             }
+
+            // window.onload = function () {
+            //     let ta = document.createElement('script')
+            //     ta.src = '//tajs.qq.com/stats?sId=64878578'
+            //     ta.defer = 'defer'
+            //     let s = document.getElementsByTagName('script')[0]
+            //     s.parentNode.insertBefore(ta, s)
+            // }
         </script>
         <script src="{{ STATIC_URL }}/lib.bundle.js"></script>
     </body>

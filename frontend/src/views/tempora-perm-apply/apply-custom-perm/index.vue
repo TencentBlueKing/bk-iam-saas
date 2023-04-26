@@ -258,6 +258,14 @@
                 </template>
             </div>
         </bk-sideslider>
+
+        <confirmDialog
+            :width="600"
+            :show.sync="isShowConfirmDialog"
+            :title="confirmDialogTitle"
+            @on-cancel="isShowConfirmDialog = false"
+            @on-sumbit="isShowConfirmDialog = false"
+        />
     </div>
 </template>
 
@@ -272,12 +280,15 @@
     import Condition from '@/model/condition';
     import { PERMANENT_TIMESTAMP } from '@/common/constants';
     import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider';
+    import ConfirmDialog from '@/components/iam-confirm-dialog/index';
+
     export default {
         name: '',
         components: {
             RenderActionTag,
             ResourceInstanceTable,
-            RenderPermSideslider
+            RenderPermSideslider,
+            ConfirmDialog
         },
         data () {
             return {
@@ -339,7 +350,9 @@
                     text: '',
                     tip: '',
                     tipType: 'search'
-                }
+                },
+                isShowConfirmDialog: false,
+                confirmDialogTitle: this.$t(`m.verify['admin无需申请权限']`)
             };
         },
         computed: {
@@ -1862,13 +1875,17 @@
                     });
                 } catch (e) {
                     console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
+                    if (['admin'].includes(this.user.username)) {
+                        this.isShowConfirmDialog = true;
+                    } else {
+                        this.bkMessageInstance = this.$bkMessage({
+                            limit: 1,
+                            theme: 'error',
+                            message: e.message || e.data.msg || e.statusText,
+                            ellipsisLine: 2,
+                            ellipsisCopy: true
+                        });
+                    }
                 } finally {
                     this.buttonLoading = false;
                 }
@@ -1934,7 +1951,7 @@
                 } catch (e) {
                     console.error(e);
                     if (['admin'].includes(this.user.username)) {
-                        this.messageError(this.$t(`m.verify['admin无需申请权限']`), 2000);
+                        this.isShowConfirmDialog = true;
                     } else {
                         this.bkMessageInstance = this.$bkMessage({
                             limit: 1,

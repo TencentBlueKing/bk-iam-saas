@@ -281,6 +281,7 @@
                 i {
                     font-size: 18px;
                     color: #979ba5;
+                    vertical-align: middle;
                     cursor: pointer;
                     &.disabled {
                         color: #c4c6cc;
