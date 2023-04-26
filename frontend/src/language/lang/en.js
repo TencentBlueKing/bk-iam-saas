@@ -464,7 +464,9 @@ export const m = {
          '(GMT+13:00) 努库阿洛法时间': '(GMT+13:00) Nukualofa Time',
          '由于管理空间的授权范围没有包含此操作，': 'Due to the fact that the authorization scope of the management space does not include this operation,',
          '如需使用该模板进行新的授权必须先删除该操作。': 'To use this template for new authorization, you must first delete the operation.',
-         '您已退出当前管理员授权范围': 'You have exited the current administrator authorization scope'
+         '您已退出当前管理员授权范围': 'You have exited the current administrator authorization scope',
+         'Added': 'Added',
+         'Operation permissions':' Operation permissions'
     },
     // 二次确认弹窗相关
     dialog: {
