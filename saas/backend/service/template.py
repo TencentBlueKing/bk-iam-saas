@@ -159,7 +159,7 @@ class TemplateService:
         action_auth_types = authorized_template.auth_types
         # 3.1 移除被删除的策略的AuthType
         for action_id in delete_action_ids:
-            action_auth_types.pop(action_id)
+            action_auth_types.pop(action_id, None)
         # 3.2 添加新增的策略的AuthType
         action_auth_types.update(
             {

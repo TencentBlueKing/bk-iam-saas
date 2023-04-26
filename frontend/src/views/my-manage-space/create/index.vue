@@ -73,24 +73,6 @@
                         {{ $t(`m.perm['操作权限']`) }}
                     </div> -->
                     <div v-if="isSelectSystemShow">
-                        <!-- <div class="info-wrapper">
-                            <p class="tips">{{ infoText }}</p>
-                            <section style="min-width: 108px; position: relative;">
-                                <iam-guide
-                                    type="rating_manager_merge_action"
-                                    direction="right"
-                                    :loading="isLoading"
-                                    :style="renderLabelWidth('rating_manager_merge_action_guide')"
-                                    :content="$t(`m.guide['聚合操作']`)" />
-                                <bk-switcher
-                                    v-model="isAllExpanded"
-                                    :disabled="isAggregateDisabled"
-                                    size="small"
-                                    theme="primary"
-                                    @change="handleAggregateAction" />
-                                <span class="text">{{ expandedText }}</span>
-                            </section>
-                        </div> -->
                         <div
                             class="resource-instance-wrapper"
                             ref="instanceTableContentRef"
@@ -1167,4 +1149,33 @@
 
 <style lang="postcss" scoped>
 @import '@/css/mixins/authorize-boundary.css';
+</style>
+
+<style lang="postcss" scoped>
+/deep/ .grade-admin-select-wrapper {
+    .resource_boundary_title {
+        font-size: 12px;
+    }
+    .perm-resource-add {
+        width: 88px;
+        height: 32px;
+        background: #F0F5FF;
+        color: v#3A84FF;
+        border-radius: 2px;
+        border: none;
+        vertical-align: middle;
+        .icon-plus-circle-shape {
+            color: #3A84FF !important;
+            font-size: 14px;
+        }
+        span {
+             vertical-align: middle;
+        }
+    }
+
+    .aggregate-action-btn {
+        background-color: #F0F1F5;
+    }
+    
+}
 </style>
