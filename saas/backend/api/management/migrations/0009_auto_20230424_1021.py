@@ -16,6 +16,7 @@ def init_allow_list(apps, schema_editor):
     # 白名单列表
     system_id_allow_apis = {
         "bk_bcs_app": [ALLOW_ANY],
+        "bk_lesscode": [ALLOW_ANY],
     }
 
     # 组装成Model对象
