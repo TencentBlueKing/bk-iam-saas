@@ -657,7 +657,7 @@ class GroupBiz:
         with transaction.atomic():
             group = self.group_svc.create(
                 GroupCreation(
-                    name=group_name or role.name,
+                    name=group_name or role.name + "-管理员",
                     description=role.description,
                     source_system_id=role.source_system_id,
                     hidden=role.hidden,
