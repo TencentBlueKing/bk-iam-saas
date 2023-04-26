@@ -20,39 +20,49 @@
                     @on-change="handleBasicInfoChange" />
             </render-horizontal-block>
 
-            <render-perm
-                mode="action"
-                :title="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
-                :perm-length="policyList.length"
-                :expanded.sync="curExpanded"
-                ext-cls="iam-grade-detail-panel-cls">
-                <render-detail-table :actions="policyList" />
-            </render-perm>
+            <div>
+                <render-perm
+                    mode="action"
+                    :title="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
+                    :perm-length="policyList.length"
+                    :expanded.sync="curExpanded"
+                    ext-cls="iam-grade-detail-panel-cls">
+                    <render-detail-table :actions="policyList" />
+                </render-perm>
 
-            <render-perm
-                mode="member"
-                :title="$t(`m.levelSpace['最大可授权人员边界']`)"
+                <render-perm
+                    mode="member"
+                    :title="$t(`m.levelSpace['最大可授权人员边界']`)"
+                    :user-length="users.length"
+                    :depart-length="departments.length"
+                >
+                    <template v-if="isAll">
+                        <span class="all-item">{{ $t(`m.common['全员']`) }}(All)</span>
+                    </template>
+                    <template v-else>
+                        <p class="member-info">
+                            <!-- eslint-disable max-len -->
+                            <template v-if="users.length > 0">
+                                {{ $t(`m.common['共']`) }} <span class="count">{{ users.length }}</span> {{ $t(`m.common['个用户']`) }}
+                            </template>
+                            <template v-if="departments.length > 0">
+                                <template v-if="users.length > 0">，</template>
+                                <span class="count">{{ departments.length }}</span> {{ $t(`m.common['个组织']`) }}
+                            </template>
+                        </p>
+                        <render-member-item :data="users" v-if="isHasUser" mode="view" />
+                        <render-member-item :data="departments" type="department" mode="view" v-if="isHasDepartment" />
+                    </template>
+                </render-perm>
+            </div>
+
+            <RenderPermBoundary
+                :title="$t(`m.nav['授权边界']`)"
+                :expanded.sync="curExpanded"
                 :user-length="users.length"
                 :depart-length="departments.length"
-            >
-                <template v-if="isAll">
-                    <span class="all-item">{{ $t(`m.common['全员']`) }}(All)</span>
-                </template>
-                <template v-else>
-                    <p class="member-info">
-                        <!-- eslint-disable max-len -->
-                        <template v-if="users.length > 0">
-                            {{ $t(`m.common['共']`) }} <span class="count">{{ users.length }}</span> {{ $t(`m.common['个用户']`) }}
-                        </template>
-                        <template v-if="departments.length > 0">
-                            <template v-if="users.length > 0">，</template>
-                            <span class="count">{{ departments.length }}</span> {{ $t(`m.common['个组织']`) }}
-                        </template>
-                    </p>
-                    <render-member-item :data="users" v-if="isHasUser" mode="view" />
-                    <render-member-item :data="departments" type="department" mode="view" v-if="isHasDepartment" />
-                </template>
-            </render-perm>
+
+            />
         </div>
     </div>
 </template>
@@ -63,13 +73,15 @@
     import BasicInfo from '../components/basic-info-detail';
     import RenderDetailTable from '@/views/manage-spaces/components/render-instance-detail-table';
     import RenderPerm from '@/components/render-perm';
+    import RenderPermBoundary from '@/components/render-perm-boundary';
     import RenderMemberItem from '@/views/group/common/render-member-display';
     export default {
         components: {
             BasicInfo,
             RenderPerm,
             RenderMemberItem,
-            RenderDetailTable
+            RenderDetailTable,
+            RenderPermBoundary
         },
         data () {
             return {

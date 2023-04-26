@@ -8,7 +8,7 @@
                     @on-change="handleBasicInfoChange" />
             </section>
         </render-horizontal-block>
-        <render-horizontal-block
+        <!-- <render-horizontal-block
             v-if="!isHasPermTemplate"
             :label="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
             :label-width="renderLabelWidth('resource')"
@@ -77,7 +77,7 @@
             </div>
         </render-horizontal-block>
         <p class="action-empty-error" v-if="isShowActionEmptyError">{{ $t(`m.verify['操作和资源边界不可为空']`) }}</p>
-        <!-- <section v-if="isShowMemberAdd" ref="memberRef">
+        <section v-if="isShowMemberAdd" ref="memberRef">
             <render-action
                 ref="memberRef"
                 :title="$t(`m.levelSpace['最大可授权人员边界']`)"
@@ -91,7 +91,7 @@
                     :style="{ top: '-25px', left: '440px' }"
                     :content="$t(`m.guide['授权人员范围']`)" />
             </render-action>
-        </section> -->
+        </section>
         <section ref="memberRef">
             <render-member
                 :tip="$t(`m.levelSpace['管理空间只能给该范围内的人员授权']`)"
@@ -104,7 +104,104 @@
                 @on-delete="handleMemberDelete"
                 @on-change="handleChange" />
         </section>
-        <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员边界不可为空']`) }}</p>
+        <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员边界不可为空']`) }}</p> -->
+        <render-horizontal-block
+            :label="$t(`m.nav['授权边界']`)"
+            :label-width="renderLabelWidth('resource')"
+            :required="false"
+        >
+            <div class="authorize-boundary-form">
+                <div class="authorize-resource-boundary">
+                    <div class="resource-boundary-title is-required">
+                        {{ $t(`m.levelSpace['最大可授权操作和资源边界']`) }}
+                    </div>
+                    <div class="resource-boundary-header flex-between">
+                        <section>
+                            <bk-button
+                                theme="default"
+                                size="small"
+                                icon="plus-circle-shape"
+                                class="perm-resource-add"
+                                @click.stop="handleAddPerm"
+                            >
+                                {{ $t(`m.common['添加']`) }}
+                            </bk-button>
+                        </section>
+                        <div
+                            v-if="isHasPermTemplate"
+                            class="aggregate-action-group"
+                            style="min-width: 108px; position: relative;">
+                            <iam-guide
+                                type="rating_manager_authorization_scope"
+                                direction="right"
+                                :loading="isLoading"
+                                :style="renderLabelWidth('rating_manager_merge_action_guide')"
+                                :content="$t(`m.guide['聚合操作']`)" />
+                            <div
+                                v-for="item in AGGREGATION_EDIT_ENUM"
+                                :key="item.value"
+                                :class="[
+                                    'aggregate-action-btn',
+                                    { 'is-active': isAllExpanded === item.value },
+                                    { 'is-disabled': isAggregateDisabled }
+                                ]"
+                                @click.stop="handleAggregateAction(item.value)"
+                            >
+                                <span>{{ $t(`m.grading['${item.name}']`)}}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-if="isHasPermTemplate">
+                        <div
+                            class="resource-instance-wrapper"
+                            ref="instanceTableContentRef"
+                            v-bkloading="{
+                                isLoading,
+                                opacity: 1,
+                                zIndex: 1000,
+                                extCls: 'loading-resource-instance-cls'
+                            }"
+                        >
+                            <render-instance-table
+                                is-edit
+                                mode="create"
+                                ref="resourceInstanceRef"
+                                :list="policyList"
+                                :authorization="curAuthorizationData"
+                                :original-list="tableListBackup"
+                                :is-all-expanded="isAllExpanded"
+                                :backup-list="aggregationsTableData"
+                                :group-id="$route.params.id"
+                                @on-delete="handleDelete"
+                                @on-aggregate-delete="handleAggregateDelete"
+                                @handleAggregateAction="handleAggregateAction"
+                                @on-select="handleAttrValueSelected"
+                                @on-resource-select="handleResSelect"
+                                @on-clear-all="handleDeleteResourceAll" />
+                        </div>
+                    </div>
+                </div>
+                <p class="action-empty-error" v-if="isShowActionEmptyError">
+                    {{ $t(`m.verify['操作和资源边界不可为空']`) }}
+                </p>
+                <div ref="memberRef" class="authorize-members-boundary">
+                    <render-member
+                        :tip="addMemberTips"
+                        :users="users"
+                        :departments="departments"
+                        :expired-at-error="isShowExpiredError"
+                        :inherit-subject-scope="inheritSubjectScope"
+                        :label-width="renderLabelWidth('member')"
+                        @on-add="handleAddMember"
+                        @on-delete="handleMemberDelete"
+                        @on-change="handleChange"
+                        @on-delete-all="handleDeleteAll" />
+                </div>
+                <p class="action-empty-error" v-if="isShowMemberEmptyError">
+                    {{ $t(`m.verify['可授权人员边界不可为空']`) }}
+                </p>
+            </div>
+        </render-horizontal-block>
         <template v-if="isStaff">
             <render-horizontal-block
                 ext-cls="reason-wrapper"
@@ -172,7 +269,7 @@
     import _ from 'lodash';
     import { mapGetters } from 'vuex';
     import { guid, renderLabelWidth } from '@/common/util';
-    import { CUSTOM_PERM_TEMPLATE_ID, PERMANENT_TIMESTAMP, SIX_MONTH_TIMESTAMP } from '@/common/constants';
+    import { CUSTOM_PERM_TEMPLATE_ID, PERMANENT_TIMESTAMP, SIX_MONTH_TIMESTAMP, AGGREGATION_EDIT_ENUM } from '@/common/constants';
     import { leavePageConfirm } from '@/common/leave-page-confirm';
     import IamGuide from '@/components/iam-guide/index.vue';
     import AddMemberDialog from '../components/iam-add-member';
@@ -238,6 +335,7 @@
                 aggregationDataByCustom: {},
                 authorizationDataByCustom: {},
                 allAggregationData: {},
+                isLoading: false,
                 isAllExpanded: false,
                 isShowMemberEmptyError: false,
                 hasDeleteCustomList: [],
@@ -253,7 +351,8 @@
                 addMemberTitle: this.$t(`m.levelSpace['最大可授权人员边界']`),
                 inheritSubjectScope: true,
                 curSystemId: [],
-                renderLabelWidth
+                renderLabelWidth,
+                AGGREGATION_EDIT_ENUM
             };
         },
         computed: {
@@ -897,6 +996,10 @@
              */
 
             handleAggregateAction (payload) {
+                if (this.isAggregateDisabled) {
+                    return;
+                }
+                this.isAllExpanded = payload;
                 const tempData = [];
                 let templateIds = [];
                 let instancesDisplayData = {};
@@ -1218,6 +1321,11 @@
                 this.setAggregateExpanded();
             },
 
+            handleDeleteResourceAll () {
+                this.originalList = [];
+                this.policyList = [];
+            },
+
             handleAggregateDelete (systemId, actions, index) {
                 window.changeDialog = true;
                 this.policyList.splice(index, 1);
@@ -1378,4 +1486,8 @@
             }
         }
     }
+</style>
+
+<style lang="postcss" scoped>
+@import '@/css/mixins/authorize-boundary.css';
 </style>
