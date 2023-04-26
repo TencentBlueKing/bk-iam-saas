@@ -187,7 +187,7 @@
             },
 
             async handleDeleteRole () {
-                if (!this.roleIndex) {
+                if (this.roleIndex > -1) {
                     this.displayValue.splice(this.roleIndex, 1);
                 }
                 this.$emit('on-change', {

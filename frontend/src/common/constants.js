@@ -98,3 +98,9 @@ export const GLOBAL_TIME_ZONE_ENUM = {
     'Pacific/Fiji': '(GMT+12:00)',
     'Pacific/Tongatapu': '(GMT+13:00)'
 };
+
+// 逐项/批量编辑
+export const AGGREGATION_EDIT_ENUM = [
+    { name: '逐项编辑', value: false },
+    { name: '批量编辑', value: true }
+];
