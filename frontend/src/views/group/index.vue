@@ -483,6 +483,10 @@
                     }
                 }
                 this.emptyData = Object.assign(this.emptyData, { tipType: Object.keys(this.searchParams).length > 0 ? 'search' : '' });
+                this.pagination = Object.assign(
+                    this.pagination,
+                    { current: queryParams.current || 1, limit: queryParams.limit || 10 }
+                );
                 return {
                     ...queryParams
                 };
