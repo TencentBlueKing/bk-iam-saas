@@ -5,13 +5,13 @@
             { 'external-system-layout': externalSystemsLayout.userGroup.groupDetail.setMainLayoutHeight },
             { 'external-app-layout': $route.name === 'addMemberBoundary' }
         ]">
-        <iam-guide
+        <!-- <iam-guide
             v-if="groupGuideShow"
             type="create_group"
             direction="left"
             :style="groupGuideStyle"
             :flag="groupGuideShow"
-            :content="$t(`m.guide['创建用户组']`)" />
+            :content="$t(`m.guide['创建用户组']`)" /> -->
         <iam-guide
             v-if="processGuideShow"
             type="set_group_approval_process"
@@ -88,6 +88,7 @@
                     left: '270px'
                 },
                 processGuideStyle: {
+                    position: 'absolute',
                     top: '342px',
                     left: '270px'
                 },
@@ -180,12 +181,23 @@
                 this.processGuideStyle.left = flag ? '270px' : '90px';
             });
             bus.$on('show-guide', payload => {
-                if (payload === 'group') {
-                    this.groupGuideShow = true;
+                const guideMap = {
+                    group: () => {
+                        this.groupGuideShow = true;
+                    },
+                    process: () => {
+                        this.processGuideShow = true;
+                    }
+                };
+                if (guideMap[payload]) {
+                    guideMap[payload]();
                 }
-                if (payload === 'process') {
-                    this.processGuideShow = true;
-                }
+                // if (payload === 'group') {
+                //     this.groupGuideShow = true;
+                // }
+                // if (payload === 'process') {
+                //     this.processGuideShow = true;
+                // }
             });
         },
         methods: {
