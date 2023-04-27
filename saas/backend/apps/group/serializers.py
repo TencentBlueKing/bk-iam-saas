@@ -303,6 +303,7 @@ class GroupCreateSLZ(serializers.Serializer):
     members = serializers.ListField(label="成员列表", child=GroupMemberSLZ(label="成员"))
     expired_at = serializers.IntegerField(label="过期时间", max_value=PERMANENT_SECONDS)
     templates = serializers.ListField(label="授权信息", child=TemplateAuthorizationSLZ(label="模板授权"), allow_empty=True)
+    apply_able = serializers.BooleanField(label="是否可申请", default=True)
 
     def validate(self, data):
         """

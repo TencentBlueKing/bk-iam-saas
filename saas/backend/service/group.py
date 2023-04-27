@@ -55,6 +55,7 @@ class GroupCreation(BaseModel):
     # NOTE: 只在group创建时有用
     source_system_id: str = ""
     hidden: bool = False
+    apply_able: bool = True
 
 
 class GroupMemberExpiredAt(Subject):
@@ -73,6 +74,7 @@ class GroupService:
             creator=creator,
             source_system_id=info.source_system_id,
             hidden=info.hidden,
+            apply_able=info.apply_able,
         )
         group.save(force_insert=True)
 
