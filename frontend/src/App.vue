@@ -363,4 +363,11 @@
         line-height: 20px !important;
     }
 
+    .flex-between {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+    }
+
 </style>
