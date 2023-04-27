@@ -34,7 +34,7 @@ class ActionService:
     """Action相关查询与操作"""
 
     full_fields = (
-        "id,name,name_en,related_resource_types,version,type,description,description_en,"
+        "id,name,name_en,related_resource_types,version,type,hidden,description,description_en,"
         "related_actions,related_environments"
     )
 
