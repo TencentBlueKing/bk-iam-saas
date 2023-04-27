@@ -197,7 +197,7 @@
                         @on-change="handleChange"
                         @on-delete-all="handleDeleteAll" />
                 </div>
-                <p class="action-empty-error" v-if="isShowMemberEmptyError">
+                <p class="action-empty-error" v-if="isShowMemberEmptyError && !inheritSubjectScope">
                     {{ $t(`m.verify['可授权人员边界不可为空']`) }}
                 </p>
             </div>
@@ -362,7 +362,7 @@
              */
             isAggregateDisabled () {
                 const aggregationIds = this.policyList.reduce((counter, item) => {
-                    return item.aggregationId !== '' ? counter.concat(item.aggregationId) : counter;
+                    return item.aggregationId ? counter.concat(item.aggregationId) : counter;
                 }, []);
                 const temps = [];
                 aggregationIds.forEach(item => {
@@ -718,7 +718,8 @@
                     this.policyList.push(..._.cloneDeep(tempList));
                 }
                 this.tableListBackup = _.cloneDeep(this.policyList);
-
+                // 处理聚合的数据，将表格数据按照相同的聚合id分配好
+                this.handleAggregateData();
                 this.$nextTick(() => {
                     if (hasDeleteTemplateList.length > 0 || this.hasDeleteCustomList.length > 0) {
                         this.setCurMapData(hasDeleteTemplateList);
@@ -732,7 +733,7 @@
             handleResSelect (index, resIndex, condition, groupIndex, resItem) {
                 // debugger
                 if (this.curMap && this.curMap.size > 0) {
-                    const item = this.tableList[index];
+                    const item = this.policyList[index];
                     const actions = this.curMap.get(item.aggregationId) || [];
                     const len = actions.length;
                     if (len > 0) {
