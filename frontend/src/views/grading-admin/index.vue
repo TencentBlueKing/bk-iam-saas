@@ -617,7 +617,7 @@
                                 : await this.fetchGradingAdmin(this.formData);
                             },
                             'subset_manager': async () => {
-                                this.formData.children = [];
+                                this.curData.children = [];
                                 this.resetSubPagination();
                                 this.isFilter ? await this.fetchSearchManageList()
                                 : await this.fetchSubManagerList(this.curData);

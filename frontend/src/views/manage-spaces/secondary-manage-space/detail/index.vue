@@ -155,9 +155,7 @@
                 } catch (e) {
                     console.error(e);
                     const { status } = e.response;
-                    console.log(status);
-                    if ([404].includes(status)) {
-                        this.messageError(this.$t(`m.info['当前管理员不存在此条数据']`), 2000);
+                    if ([401, 403, 404].includes(status)) {
                         this.$router.replace({ name: 'secondaryManageSpace' });
                     } else {
                         this.bkMessageInstance = this.$bkMessage({

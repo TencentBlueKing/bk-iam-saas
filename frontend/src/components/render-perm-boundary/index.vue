@@ -161,7 +161,7 @@
   }
 
   .render-form-item {
-    margin-bottom: 40px;
+    margin-bottom: 24px;
   }
 
   .perm-boundary-title {

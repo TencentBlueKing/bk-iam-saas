@@ -149,7 +149,6 @@
                     }, async (e) => {
                         console.warn('error');
                         const { status } = e.response;
-                        console.log([401, 404].includes(status));
                         if ([401, 404].includes(status)) {
                             this.handleExitPermManage();
                         } else {
