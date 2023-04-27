@@ -1347,6 +1347,7 @@
                 this.users = _.cloneDeep(users);
                 this.departments = _.cloneDeep(departments);
                 this.isShowMemberAdd = false;
+                this.isShowMemberEmptyError = false;
                 this.isShowAddMemberDialog = false;
             },
 
