@@ -104,3 +104,13 @@ export const AGGREGATION_EDIT_ENUM = [
     { name: '逐项编辑', value: false },
     { name: '批量编辑', value: true }
 ];
+
+// 批量展开
+export const BOUNDARY_KEYS_ENUM = {
+    resourcePerm: {
+        isExpanded: false
+    },
+    membersPerm: {
+        isExpanded: false
+    }
+};

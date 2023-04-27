@@ -96,13 +96,13 @@
                 <div
                     slot="resourcePerm"
                     class="resources-boundary-detail"
-                    v-if="boundaryItemMap['resourcePerm'].isExpanded">
+                >
                     <render-detail-table :actions="policyList" />
                 </div>
                 <div
                     slot="membersPerm"
                     class="members-boundary-detail"
-                    v-if="boundaryItemMap['membersPerm'].isExpanded">
+                >
                     <!-- <template v-if="isAll">
                         <span class="all-item">{{ $t(`m.common['全员']`) }}(All)</span>
                     </template> -->
@@ -148,15 +148,7 @@
                 infoText: this.$t(`m.grading['选择提示']`),
                 curExpanded: false,
                 isAll: false,
-                loading: false,
-                boundaryItemMap: {
-                    resourcePerm: {
-                        isExpanded: false
-                    },
-                    membersPerm: {
-                        isExpanded: false
-                    }
-                }
+                loading: false
             };
         },
         computed: {
@@ -185,9 +177,6 @@
             }
         },
         methods: {
-            handleExpanded (type, payload) {
-                this.boundaryItemMap[type].isExpanded = payload;
-            },
             async fetchRatingManagerDetail () {
                 if (this.curRoleId) {
                     try {
@@ -323,11 +312,5 @@
        /* .horizontal-item .content .member-item {
             margin-left: -42px;
         } */
-    }
-
-    .members-boundary-detail {
-        border: 1px solid #DCDEE5;
-        border-top: 0;
-        padding: 15px;
     }
 </style>

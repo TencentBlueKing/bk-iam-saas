@@ -20,7 +20,7 @@
             </render-horizontal-block>
 
             <!-- <p class="tips">{{ infoText }}</p> -->
-            <render-perm
+            <!-- <render-perm
                 :title="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
                 :perm-length="policyList.length"
                 :expanded.sync="curExpanded"
@@ -36,9 +36,9 @@
                 </template>
                 <template v-else>
                     <p class="member-info">
-                        <!-- eslint-disable max-len -->
                         <template v-if="users.length > 0">
-                            {{ $t(`m.common['共']`) }} <span class="count">{{ users.length }}</span> {{ $t(`m.common['个用户']`) }}
+                            {{ $t(`m.common['共']`) }} <span class="count">
+                                {{ users.length }}</span>{{ $t(`m.common['个用户']`) }}
                         </template>
                         <template v-if="departments.length > 0">
                             <template v-if="users.length > 0">，</template>
@@ -48,22 +48,62 @@
                     <render-member-item :data="users" v-if="isHasUser" mode="view" />
                     <render-member-item :data="departments" type="department" mode="view" v-if="isHasDepartment" />
                 </template>
-            </render-horizontal-block>
+            </render-horizontal-block> -->
+            <RenderPermBoundary
+                :title="$t(`m.nav['授权边界']`)"
+                :modules="['resourcePerm', 'membersPerm']"
+                :resource-title="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
+                :members-title="$t(`m.levelSpace['最大可授权人员边界']`)"
+                :perm-length="policyList.length"
+                :user-length="users.length"
+                :depart-length="departments.length"
+                @on-expanded="handleExpanded"
+                ext-cls="iam-grade-detail-panel-cls"
+            >
+                <div
+                    slot="resourcePerm"
+                    class="resources-boundary-detail"
+                >
+                    <render-detail-table :actions="policyList" />
+                </div>
+                <div
+                    slot="membersPerm"
+                    class="members-boundary-detail"
+                >
+                    <template>
+                        <render-member-item
+                            :data="users"
+                            mode="view"
+                            v-if="isHasUser"
+                        />
+                        <render-member-item
+                            mode="view"
+                            type="department"
+                            :data="departments"
+                            v-if="isHasDepartment" />
+                    </template>
+                </div>
+            </RenderPermBoundary>
         </div>
     </div>
 </template>
 <script>
     import _ from 'lodash';
     import store from '@/store';
-    import RenderPerm from '@/components/render-perm';
     import basicInfo from '@/views/manage-spaces/components/basic-info-detail';
+    // import RenderPerm from '@/components/render-perm';
+    import RenderPermBoundary from '@/components/render-perm-boundary';
     import RenderMemberItem from '@/views/group/common/render-member-display';
     import renderDetailTable from '@/views/manage-spaces/components/render-instance-detail-table';
     import { renderLabelWidth } from '@/common/util';
+    import { BOUNDARY_KEYS_ENUM } from '@/common/constants';
+    import { mapGetters } from 'vuex';
+
     export default {
         name: '',
         components: {
-            RenderPerm,
+            // RenderPerm,
+            RenderPermBoundary,
             basicInfo,
             RenderMemberItem,
             renderDetailTable
@@ -81,7 +121,8 @@
                 infoText: this.$t(`m.grading['选择提示']`),
                 policyList: [],
                 curExpanded: false,
-                isAll: false
+                isAll: false,
+                BOUNDARY_KEYS_ENUM
             };
         },
         beforeRouteEnter (to, from, next) {
@@ -89,6 +130,7 @@
             next();
         },
         computed: {
+            ...mapGetters(['user']),
             isHasUser () {
                 return this.users.length > 0;
             },
@@ -112,13 +154,20 @@
                     this.getDetailData(res.data);
                 } catch (e) {
                     console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
+                    const { status } = e.response;
+                    console.log(status);
+                    if ([404].includes(status)) {
+                        this.messageError(this.$t(`m.info['当前管理员不存在此条数据']`), 2000);
+                        this.$router.replace({ name: 'secondaryManageSpace' });
+                    } else {
+                        this.bkMessageInstance = this.$bkMessage({
+                            limit: 1,
+                            theme: 'error',
+                            message: e.message || e.data.msg || e.statusText,
+                            ellipsisLine: 2,
+                            ellipsisCopy: true
+                        });
+                    }
                 }
             },
 
@@ -151,6 +200,12 @@
                         users.push({
                             name: item.name,
                             username: item.id
+                        });
+                    }
+                    if (item.id === '*' && item.type === '*') {
+                        departments.push({
+                            name: this.$t(`m.common['全员']`),
+                            count: 'All'
                         });
                     }
                 });

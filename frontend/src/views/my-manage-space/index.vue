@@ -100,11 +100,11 @@
                                 />
                             </template>
                         </bk-table-column>
-                        <bk-table-column prop="description" width="200">
+                        <bk-table-column prop="description" width="300">
                             <template slot-scope="child">
                                 <iam-edit-textarea
                                     field="description"
-                                    width="200"
+                                    width="300"
                                     :placeholder="$t(`m.verify['用户组描述提示']`)"
                                     :value="child.row.description"
                                     :index="child.$index"
@@ -210,14 +210,14 @@
                     />
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.common['描述']`)" prop="description" width="200">
+            <bk-table-column :label="$t(`m.common['描述']`)" prop="description" width="300">
                 <template slot-scope="{ row, $index }">
                     <!-- <span
                         v-bk-tooltips.top="{ content: row.description, extCls: 'iam-tooltips-cls' }"
                         :title="row.description">{{ row.description || '--' }}</span> -->
                     <iam-edit-textarea
                         field="description"
-                        width="200"
+                        width="300"
                         :placeholder="$t(`m.verify['用户组描述提示']`)"
                         :value="row.description"
                         :mode="formatMode(row)"
