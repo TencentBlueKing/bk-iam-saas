@@ -272,9 +272,9 @@
             margin-left: 10px;
             color: #979ba5;
         }
-        .horizontal-item .label {
+        /* .horizontal-item .label {
             width: 126px;
-        }
+        } */
         /* .horizontal-item .content {
             margin-left: 42px;
         } */

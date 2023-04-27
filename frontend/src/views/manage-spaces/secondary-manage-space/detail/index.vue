@@ -154,8 +154,8 @@
                     this.getDetailData(res.data);
                 } catch (e) {
                     console.error(e);
-                    const { status } = e.response;
-                    if ([401, 403, 404].includes(status)) {
+                    const { response } = e;
+                    if (response && response.status && [401, 403, 404].includes(response.status)) {
                         this.$router.replace({ name: 'secondaryManageSpace' });
                     } else {
                         this.bkMessageInstance = this.$bkMessage({
@@ -275,9 +275,9 @@
             margin-left: 10px;
             color: #979ba5;
         }
-        .horizontal-item .label {
+        /* .horizontal-item .label {
             width: 126px;
-        }
+        } */
         /* .horizontal-item .content {
             margin-left: 42px;
         } */

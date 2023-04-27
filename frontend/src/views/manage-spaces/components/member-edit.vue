@@ -37,10 +37,10 @@
             </bk-user-selector>
         </template>
         <bk-dialog
-            ext-cls="comfirmDialog"
+            ext-cls="confirm-space-dialog"
             v-model="isShowDialog"
             :close-icon="showIcon"
-            :title="$t(`m.common['确定退出管理空间']`)"
+            :title="`${$t(`m.common['确定退出管理空间']`)}?`"
             :width="language === 'zh-cn' ? 400 : 600"
             :footer-position="footerPosition"
             @confirm="dropOut">
@@ -326,7 +326,7 @@
             width: 100%;
         }
     }
-    .comfirmDialog {
+    .confirm-space-dialog {
         h2,
         p{
             text-align: center;
@@ -336,7 +336,7 @@
     /deep/.bk-dialog-wrapper .bk-dialog-footer {
         background-color:#ffffff;
         border-top:none
-        }
+    }
     /* /deep/.bk-button.bk-primary {
         background-color: #479ad0;
         border-color:#479ad0;
