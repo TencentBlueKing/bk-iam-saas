@@ -45,14 +45,15 @@ class ActionViewSet(GenericViewSet):
         group_id = slz.validated_data["group_id"]
         user_id = slz.validated_data["user_id"]
         all = slz.validated_data["all"]
+        hidden = slz.validated_data["hidden"]
 
         # 1. 获取用户的权限列表
         if user_id != "" and user_id == request.user.username:
-            actions = self.biz.list_by_subject(system_id, request.role, Subject.from_username(user_id))
+            actions = self.biz.list_by_subject(system_id, request.role, Subject.from_username(user_id), hidden=hidden)
         elif user_id != "" and user_id != request.user.username:
             raise exceptions.PermissionDenied
         elif group_id != -1:
-            actions = self.biz.list_by_subject(system_id, request.role, Subject.from_group_id(group_id))
+            actions = self.biz.list_by_subject(system_id, request.role, Subject.from_group_id(group_id), hidden=hidden)
         # 3. 获取的预申请的权限列表
         elif cache_id != "":
             # 从缓存里获取预申请的操作ID列表
@@ -65,7 +66,7 @@ class ActionViewSet(GenericViewSet):
         elif all:
             actions = self.biz.list(system_id).actions
         else:
-            actions = self.biz.list_by_role(system_id, request.role)
+            actions = self.biz.list_by_role(system_id, request.role, hidden=hidden)
 
         # 对操作分组, 填入到分组的数据中
         action_groups = self.action_group_biz.list_by_actions(system_id, actions)
