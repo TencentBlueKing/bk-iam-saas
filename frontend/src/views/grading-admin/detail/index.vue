@@ -20,7 +20,7 @@
             </render-horizontal-block>
 
             <!-- <p class="tips">{{ infoText }}</p> -->
-            <render-perm
+            <!-- <render-perm
                 :title="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
                 :perm-length="policyList.length"
                 :expanded.sync="curExpanded"
@@ -37,9 +37,10 @@
                 </template>
                 <template v-else>
                     <p class="member-info">
-                        <!-- eslint-disable max-len -->
                         <template v-if="users.length > 0">
-                            {{ $t(`m.common['共']`) }} <span class="count">{{ users.length }}</span> {{ $t(`m.common['个用户']`) }}
+                            {{ $t(`m.common['共']`) }} <span class="count">
+                                {{ users.length }}</span>
+                                 {{ $t(`m.common['个用户']`) }}
                         </template>
                         <template v-if="departments.length > 0">
                             <template v-if="users.length > 0">，</template>
@@ -49,7 +50,42 @@
                     <render-member-item :data="users" v-if="isHasUser" mode="view" />
                     <render-member-item :data="departments" type="department" mode="view" v-if="isHasDepartment" />
                 </template>
-            </render-horizontal-block>
+            </render-horizontal-block> -->
+            <RenderPermBoundary
+                :title="$t(`m.nav['授权边界']`)"
+                :modules="['resourcePerm', 'membersPerm']"
+                :resource-title="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
+                :members-title="$t(`m.levelSpace['最大可授权人员边界']`)"
+                :perm-length="policyList.length"
+                :user-length="users.length"
+                :depart-length="departments.length"
+                @on-expanded="handleExpanded"
+                ext-cls="iam-grade-detail-panel-cls"
+            >
+                <div
+                    slot="resourcePerm"
+                    class="resources-boundary-detail"
+                >
+                    <render-detail-table :actions="policyList" />
+                </div>
+                <div
+                    slot="membersPerm"
+                    class="members-boundary-detail"
+                >
+                    <template>
+                        <render-member-item
+                            :data="users"
+                            mode="view"
+                            v-if="isHasUser"
+                        />
+                        <render-member-item
+                            mode="view"
+                            type="department"
+                            :data="departments"
+                            v-if="isHasDepartment" />
+                    </template>
+                </div>
+            </RenderPermBoundary>
         </div>
     </div>
 </template>
@@ -57,7 +93,8 @@
     import _ from 'lodash';
     import { mapGetters } from 'vuex';
     import store from '@/store';
-    import RenderPerm from '@/components/render-perm';
+    // import RenderPerm from '@/components/render-perm';
+    import RenderPermBoundary from '@/components/render-perm-boundary';
     import basicInfo from '../components/basic-info-detail';
     import RenderMemberItem from '../../group/common/render-member-display';
     import renderDetailTable from '../components/render-instance-detail-table';
@@ -65,7 +102,8 @@
     export default {
         name: '',
         components: {
-            RenderPerm,
+            // RenderPerm,
+            RenderPermBoundary,
             basicInfo,
             RenderMemberItem,
             renderDetailTable
@@ -159,6 +197,12 @@
                             username: item.id
                         });
                     }
+                    if (item.id === '*' && item.type === '*') {
+                        departments.push({
+                            name: this.$t(`m.common['全员']`),
+                            count: 'All'
+                        });
+                    }
                 });
 
                 this.isAll = payload.subject_scopes.some(item => item.id === '*' && item.type === '*');
@@ -228,9 +272,9 @@
             margin-left: 10px;
             color: #979ba5;
         }
-        .horizontal-item .label {
+        /* .horizontal-item .label {
             width: 126px;
-        }
+        } */
         /* .horizontal-item .content {
             margin-left: 42px;
         } */

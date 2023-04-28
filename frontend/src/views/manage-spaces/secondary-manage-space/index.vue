@@ -57,7 +57,7 @@
                             text
                             @click="handleView(row, 'role')"
                             :disabled="disabledPerm(row)">
-                            {{ $t(`m.levelSpace['进入']`) }}
+                            {{ $t(`m.levelSpace['进入空间']`) }}
                         </bk-button>
                         <bk-button
                             theme="primary"

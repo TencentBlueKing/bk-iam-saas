@@ -192,7 +192,7 @@
         created () {
             this.PERMANENT_TIMESTAMP = PERMANENT_TIMESTAMP;
             this.fetchMemberList();
-            window.addEventListener('message', this.fetchReceiveData);
+            // window.addEventListener('message', this.fetchReceiveData);
         },
         methods: {
             

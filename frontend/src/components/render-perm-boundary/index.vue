@@ -16,7 +16,7 @@
                         <div class="iam-resource-header flex-between">
                             <div class="iam-resource-header-left">
                                 <Icon bk
-                                    :type="boundaryItemMap['resourcePerm'].isExpanded ? 'down-shape' : 'right-shape'"
+                                    :type="BOUNDARY_KEYS_ENUM['resourcePerm'].isExpanded ? 'down-shape' : 'right-shape'"
                                 />
                                 <div class="iam-resource-header-left-title">
                                     <span>{{ $t(`m.common['共']`) }}</span>
@@ -26,7 +26,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="content" v-if="boundaryItemMap['resourcePerm'].isExpanded">
+                    <div class="content" v-if="BOUNDARY_KEYS_ENUM['resourcePerm'].isExpanded">
                         <div class="slot-content">
                             <slot name="resourcePerm" />
                         </div>
@@ -42,7 +42,7 @@
                         <div class="iam-resource-header">
                             <div class="iam-resource-header-left">
                                 <Icon bk
-                                    :type="boundaryItemMap['membersPerm'].isExpanded ? 'down-shape' : 'right-shape'"
+                                    :type="BOUNDARY_KEYS_ENUM['membersPerm'].isExpanded ? 'down-shape' : 'right-shape'"
                                 />
                                 <div class="iam-resource-header-left-title"
                                     v-if="userLength > 0 || departLength > 0">
@@ -60,27 +60,20 @@
                             </div>
                         </div>
                     </div>
-                    <div class="content" v-if="boundaryItemMap['membersPerm'].isExpanded">
+                    <div class="content" v-if="BOUNDARY_KEYS_ENUM['membersPerm'].isExpanded">
                         <div class="slot-content">
                             <slot name="membersPerm" />
                         </div>
                     </div>
                 </div>
             </div>
-            <!-- <div class="content" v-if="boundaryItemMap[expandItem].isExpanded">
-                <div class="slot-content">
-                    <slot />
-                </div>
-                <p class="expand-action" @click="handlePackup">
-                    <Icon :type="isExpanded ? 'up-angle' : 'down-angle'" />
-                    {{ $t(`m.common['点击收起']`) }}
-                </p>
-            </div> -->
         </render-horizontal-block>
     </div>
 </template>
 
 <script>
+    import _ from 'lodash';
+    import { BOUNDARY_KEYS_ENUM } from '@/common/constants';
     export default {
         name: '',
         props: {
@@ -126,15 +119,7 @@
         data () {
             return {
                 isExpanded: this.expanded,
-                boundaryItemMap: {
-                    resourcePerm: {
-                        isExpanded: false
-                    },
-                    membersPerm: {
-                        isExpanded: false
-                    }
-                },
-                expandItem: 'resourcePerm'
+                BOUNDARY_KEYS_ENUM: _.cloneDeep(BOUNDARY_KEYS_ENUM)
             };
         },
         computed: {
@@ -148,24 +133,24 @@
             }
         },
         methods: {
-            handlePackup () {
-                this.isExpanded = false;
-                this.$emit('update:expanded', false);
-                this.$emit('on-expanded', false);
-            },
-
-            handleDelete () {
-                this.$emit('on-delete');
-            },
-
             handleExpanded (payload) {
-                this.expandItem = payload;
-                this.boundaryItemMap[payload].isExpanded = !this.boundaryItemMap[payload].isExpanded;
-                this.$emit('on-expanded', payload, this.boundaryItemMap[payload].isExpanded);
+                this.BOUNDARY_KEYS_ENUM[payload].isExpanded = !this.BOUNDARY_KEYS_ENUM[payload].isExpanded;
+                this.$emit('on-expanded', payload, this.BOUNDARY_KEYS_ENUM[payload].isExpanded);
             }
         }
     };
 </script>
+
+<style lang="postcss">
+.render-perm-boundary {
+    .members-boundary-detail {
+        border: 1px solid #DCDEE5;
+        border-top: 0;
+        padding: 15px;
+    }
+}
+
+</style>
 
 <style lang="postcss" scoped>
 @import '@/css/mixins/space-resource-instance-table.css';
@@ -176,7 +161,7 @@
   }
 
   .render-form-item {
-    margin-bottom: 40px;
+    margin-bottom: 24px;
   }
 
   .perm-boundary-title {
