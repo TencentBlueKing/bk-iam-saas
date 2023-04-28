@@ -88,6 +88,9 @@ class ActionBeanList:
             action.expired_at = action_expired_at[action.id]
             action.tag = ActionTag.READONLY.value
 
+    def list_not_hidden(self) -> List[ActionBean]:
+        return [a for a in self.actions if not a.hidden]
+
 
 class ActionBiz:
     action_svc = ActionService()
@@ -102,8 +105,13 @@ class ActionBiz:
 
         return action_list
 
-    def list_by_role(self, system_id: str, role) -> List[ActionBean]:
+    def list_by_role(self, system_id: str, role, hidden: bool = False) -> List[ActionBean]:
         action_list = self.list(system_id)
+
+        # 隐藏的操作不显示
+        if hidden:
+            action_list = ActionList(action_list.list_not_hidden())
+
         scope_action_ids = RoleListQuery(role).list_scope_action_id(system_id)
 
         actions = action_list.filter_by_scope_action_ids(scope_action_ids)
@@ -142,12 +150,15 @@ class ActionBiz:
                 action.tag = ActionTag.UNCHECKED.value
         return filter_actions
 
-    def list_by_subject(self, system_id: str, role, subject: Subject) -> List[ActionBean]:
+    def list_by_subject(self, system_id: str, role, subject: Subject, hidden: bool = False) -> List[ActionBean]:
         """
         获取用户的操作列表
         """
         actions = self.list_by_role(system_id, role)
         action_list = ActionBeanList(actions)
+
+        if hidden:
+            action_list = ActionList(action_list.list_not_hidden())
 
         policies = self.policy_svc.list_by_subject(system_id, subject)
         action_expired_at = {policy.action_id: policy.expired_at for policy in policies}
