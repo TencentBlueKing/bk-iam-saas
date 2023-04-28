@@ -44,7 +44,7 @@
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.grading['更新人']`)" prop="updater"></bk-table-column>
-            <bk-table-column :label="$t(`m.grading['更新时间']`)">
+            <bk-table-column :label="$t(`m.grading['更新时间']`)" width="240">
                 <template slot-scope="{ row }">
                     <span :title="row.updated_time">{{ row.updated_time }}</span>
                 </template>
@@ -57,7 +57,7 @@
                             text
                             @click="handleView(row, 'role')"
                             :disabled="disabledPerm(row)">
-                            {{ $t(`m.levelSpace['进入']`) }}
+                            {{ $t(`m.levelSpace['进入空间']`) }}
                         </bk-button>
                         <bk-button
                             theme="primary"

@@ -20,39 +20,106 @@
                     @on-change="handleBasicInfoChange" />
             </render-horizontal-block>
 
-            <render-perm
-                mode="action"
-                :title="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
-                :perm-length="policyList.length"
-                :expanded.sync="curExpanded"
-                ext-cls="iam-grade-detail-panel-cls">
-                <render-detail-table :actions="policyList" />
-            </render-perm>
+            <!-- <div>
+                <render-perm
+                    mode="action"
+                    :title="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
+                    :expanded.sync="curExpanded"
+                    :perm-length="policyList.length"
+                    :user-length="users.length"
+                    :depart-length="departments.length"
+                    ext-cls="iam-grade-detail-panel-cls">
+                    <render-detail-table :actions="policyList" />
+                    <div class="members-boundary">
+                        <template v-if="isAll">
+                            <span class="all-item">{{ $t(`m.common['全员']`) }}(All)</span>
+                        </template>
+                        <template v-else>
+                            <p class="member-info">
+                                <template v-if="users.length > 0">
+                                    {{ $t(`m.common['共']`) }} <span class="count">
+                                        {{ users.length }}</span> {{ $t(`m.common['个用户']`) }}
+                                </template>
+                                <template v-if="departments.length > 0">
+                                    <template v-if="users.length > 0">，</template>
+                                    <span class="count">{{ departments.length }}</span> {{ $t(`m.common['个组织']`) }}
+                                </template>
+                            </p>
+                            <render-member-item :data="users" v-if="isHasUser" mode="view" />
+                            <render-member-item
+                            :data="departments"
+                             type="department"
+                             mode="view"
+                             v-if="isHasDepartment" />
+                        </template>
+                    </div>
+                </render-perm>
 
-            <render-perm
-                mode="member"
-                :title="$t(`m.levelSpace['最大可授权人员边界']`)"
+                <render-perm
+                    mode="member"
+                    :title="$t(`m.levelSpace['最大可授权人员边界']`)"
+                    :user-length="users.length"
+                    :depart-length="departments.length"
+                >
+                    <template v-if="isAll">
+                        <span class="all-item">{{ $t(`m.common['全员']`) }}(All)</span>
+                    </template>
+                    <template v-else>
+                        <p class="member-info">
+                            <template v-if="users.length > 0">
+                                {{ $t(`m.common['共']`) }}
+                                <span class="count">{{ users.length }}</span>
+                                {{ $t(`m.common['个用户']`) }}
+                            </template>
+                            <template v-if="departments.length > 0">
+                                <template v-if="users.length > 0">，</template>
+                                <span class="count">{{ departments.length }}</span> {{ $t(`m.common['个组织']`) }}
+                            </template>
+                        </p>
+                        <render-member-item :data="users" v-if="isHasUser" mode="view" />
+                        <render-member-item :data="departments" type="department" mode="view" v-if="isHasDepartment" />
+                    </template>
+                </render-perm>
+            </div> -->
+
+            <RenderPermBoundary
+                :title="$t(`m.nav['授权边界']`)"
+                :modules="['resourcePerm', 'membersPerm']"
+                :resource-title="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
+                :members-title="$t(`m.levelSpace['最大可授权人员边界']`)"
+                :perm-length="policyList.length"
                 :user-length="users.length"
                 :depart-length="departments.length"
+                @on-expanded="handleExpanded"
+                ext-cls="iam-grade-detail-panel-cls"
             >
-                <template v-if="isAll">
-                    <span class="all-item">{{ $t(`m.common['全员']`) }}(All)</span>
-                </template>
-                <template v-else>
-                    <p class="member-info">
-                        <!-- eslint-disable max-len -->
-                        <template v-if="users.length > 0">
-                            {{ $t(`m.common['共']`) }} <span class="count">{{ users.length }}</span> {{ $t(`m.common['个用户']`) }}
-                        </template>
-                        <template v-if="departments.length > 0">
-                            <template v-if="users.length > 0">，</template>
-                            <span class="count">{{ departments.length }}</span> {{ $t(`m.common['个组织']`) }}
-                        </template>
-                    </p>
-                    <render-member-item :data="users" v-if="isHasUser" mode="view" />
-                    <render-member-item :data="departments" type="department" mode="view" v-if="isHasDepartment" />
-                </template>
-            </render-perm>
+                <div
+                    slot="resourcePerm"
+                    class="resources-boundary-detail"
+                >
+                    <render-detail-table :actions="policyList" />
+                </div>
+                <div
+                    slot="membersPerm"
+                    class="members-boundary-detail"
+                >
+                    <!-- <template v-if="isAll">
+                        <span class="all-item">{{ $t(`m.common['全员']`) }}(All)</span>
+                    </template> -->
+                    <template>
+                        <render-member-item
+                            :data="users"
+                            mode="view"
+                            v-if="isHasUser"
+                        />
+                        <render-member-item
+                            mode="view"
+                            type="department"
+                            :data="departments"
+                            v-if="isHasDepartment" />
+                    </template>
+                </div>
+            </RenderPermBoundary>
         </div>
     </div>
 </template>
@@ -62,14 +129,16 @@
     import { mapGetters } from 'vuex';
     import BasicInfo from '../components/basic-info-detail';
     import RenderDetailTable from '@/views/manage-spaces/components/render-instance-detail-table';
-    import RenderPerm from '@/components/render-perm';
+    // import RenderPerm from '@/components/render-perm';
+    import RenderPermBoundary from '@/components/render-perm-boundary';
     import RenderMemberItem from '@/views/group/common/render-member-display';
     export default {
         components: {
             BasicInfo,
-            RenderPerm,
+            // RenderPerm,
             RenderMemberItem,
-            RenderDetailTable
+            RenderDetailTable,
+            RenderPermBoundary
         },
         data () {
             return {
@@ -162,6 +231,12 @@
                             username: item.id
                         });
                     }
+                    if (item.id === '*' && item.type === '*') {
+                        departments.push({
+                            name: this.$t(`m.common['全员']`),
+                            count: 'All'
+                        });
+                    }
                 });
                 this.isAll = payload.subject_scopes.some(item => item.id === '*' && item.type === '*');
                 this.users.splice(0, this.users.length, ...users);
@@ -229,7 +304,7 @@
             color: #979ba5;
         }
         .horizontal-item .label {
-            width: 126px;
+            width: 120px;
         }
         /* .horizontal-item .content {
             margin-left: 42px;

@@ -1,16 +1,6 @@
 <template>
     <div class="iam-user-group-perm-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
-        <template v-if="
-            !groupAttributes.source_type && externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn">
-            <bk-button
-                v-if="!isLoading && isEditMode"
-                theme="primary"
-                style="margin-bottom: 16px"
-                @click="handleAddPerm">
-                {{ $t(`m.common['添加权限']`) }}
-            </bk-button>
-        </template>
-        <template v-if="!externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn">
+        <template v-if="!groupAttributes.source_type">
             <bk-button
                 v-if="!isLoading && isEditMode"
                 theme="primary"

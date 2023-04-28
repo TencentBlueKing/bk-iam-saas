@@ -1,6 +1,7 @@
 <template>
     <smart-action class="iam-add-member-wrapper">
-        <render-horizontal-block>
+        <render-horizontal-block
+            :label-width="0">
             <div slot="header" class="title">
                 <template v-if="showExpiredAt">
                     <div v-if="isBatch">{{ $t(`m.common['批量添加成员']`) }}</div>
@@ -16,7 +17,7 @@
                     </div>
                 </template>
                 <template v-else>
-                    <template v-if="title !== ''">
+                    <template v-if="title">
                         {{ title }}
                     </template>
                     <template v-else>

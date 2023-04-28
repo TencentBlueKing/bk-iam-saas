@@ -1,144 +1,185 @@
 <template>
-    <div class="template-resource-instance-table-wrapper"
-        v-bkloading="{ isLoading, opacity: 1 }">
-        <bk-table
-            v-if="!isLoading"
-            :data="tableList"
-            :ext-cls="!isEdit ? 'is-detail-view' : ''"
-            border
-            :cell-class-name="getCellClass"
-            :span-method="handleSpanMethod"
-            @row-mouse-enter="handleRowMouseEnter"
-            @row-mouse-leave="handleRowMouseLeave">
-            <!-- eslint-disable max-len -->
-            <bk-table-column :resizable="false" :label="$t(`m.common['模板名称']`)" width="180" v-if="isCreateMode">
-                <template slot-scope="{ row }">
-                    <span>{{ !!row.isAggregate ? row.actions[0].detail.name || row.actions[0].displayName : row.displayName }}</span>
-                </template>
-            </bk-table-column>
-            <bk-table-column :resizable="false" :label="$t(`m.common['操作']`)" width="180">
-                <template slot-scope="{ row }">
-                    <div v-if="!!row.isAggregate" style="padding: 10px 0;">
-                        <span class="action-name" :title="row.name">{{ row.name }}</span>
-                    </div>
-                    <div v-else>
-                        <span class="action-name" :title="row.name">{{ row.name }}</span>
-                    </div>
-                </template>
-            </bk-table-column>
-            <bk-table-column :resizable="false" :label="$t(`m.common['所属系统']`)" width="180" v-if="isCreateMode">
-                <template slot-scope="{ row }">
-                    <span>{{ !!row.isAggregate ? row.system_name : row.detail.system.name }}</span>
-                </template>
-            </bk-table-column>
-            <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)" min-width="450">
-                <template slot-scope="{ row, $index }">
-                    <template v-if="!isEdit">
-                        <template v-if="!row.isEmpty">
-                            <div v-for="_ in row.resource_groups" :key="_.id">
-                                <p class="related-resource-item"
-                                    v-for="item in _.related_resource_types"
-                                    :key="item.type">
-                                    <render-resource-popover
-                                        :key="item.type"
-                                        :data="item.condition"
-                                        :value="`${item.name}：${item.value}`"
-                                        :max-width="380"
-                                        @on-view="handleViewResource(row)" />
-                                </p>
-                            </div>
-                        </template>
-                        <template v-else>
-                            {{ $t(`m.common['无需关联实例']`) }}
-                        </template>
-                        <Icon
-                            type="detail-new"
-                            class="view-icon"
-                            :title="$t(`m.common['详情']`)"
-                            v-if="isShowView(row)"
-                            @click.stop="handleViewResource(row)" />
-                        <template v-if="!isUserGroupDetail ? false : true && row.showDelete">
-                            <Icon class="remove-icon" type="close-small" @click.stop="toHandleDelete(row)" />
-                        </template>
+    <div class="template-resource-instance-table-wrapper">
+        <div :class="[
+                 'iam-resource-expand',
+                 extCls
+             ]"
+            @click.stop="handleExpanded">
+            <div class="iam-resource-header flex-between">
+                <div class="iam-resource-header-left">
+                    <Icon
+                        bk
+                        :type="isExpandTable ? 'down-shape' : 'right-shape'" />
+                    <span>{{ $t(`m.info['已添加']`) }}</span>
+                    <span class="number">{{ tableList.length }}</span>
+                    <span>{{ $t(`m.common['个']`) }}{{ $t(`m.perm['操作权限']`) }}</span>
+                </div>
+                <div class="iam-resource-header-right">
+                    <bk-button
+                        text
+                        type="primary"
+                        size="small"
+                        @click.stop="handleClearAll"
+                    >
+                        {{ $t(`m.common['清空']`)}}
+                    </bk-button>
+                </div>
+            </div>
+        </div>
+
+        <template v-if="isExpandTable">
+            <bk-table
+                :data="tableList"
+                :ext-cls="!isEdit ? 'is-detail-view' : ''"
+                border
+                :cell-class-name="getCellClass"
+                :span-method="handleSpanMethod"
+                @row-mouse-enter="handleRowMouseEnter"
+                @row-mouse-leave="handleRowMouseLeave">
+                <!-- eslint-disable max-len -->
+                <bk-table-column :resizable="false" :label="$t(`m.common['模板名称']`)" width="180" v-if="isCreateMode">
+                    <template slot-scope="{ row }">
+                        <span>{{ !!row.isAggregate ? row.actions[0].detail.name || row.actions[0].displayName : row.displayName }}</span>
                     </template>
-                    <template v-else>
-                        <div class="relation-content-wrapper" v-if="!!row.isAggregate">
-                            <label class="resource-type-name" v-if="row.aggregateResourceType.length === 1">{{ row.aggregateResourceType[0].name }}</label>
-                            <div class="bk-button-group tab-button" v-else>
-                                <bk-button v-for="(item, index) in row.aggregateResourceType"
-                                    :key="item.id" @click="selectResourceType(row, index)"
-                                    :class="row.selectedIndex === index ? 'is-selected' : ''" size="small">{{item.name}}
-                                    <span v-if="row.instancesDisplayData[item.id] && row.instancesDisplayData[item.id].length">({{row.instancesDisplayData[item.id].length}})</span>
-                                </bk-button>
-                            </div>
-                            <div class="content">
-                                <render-condition
-                                    :ref="`condition_${$index}_aggregateRef`"
-                                    :value="row.value"
-                                    :is-empty="row.empty"
-                                    :can-view="false"
-                                    :can-paste="row.canPaste"
-                                    :is-error="row.isError"
-                                    @on-mouseover="handlerAggregateConditionMouseover(row)"
-                                    @on-mouseleave="handlerAggregateConditionMouseleave(row)"
-                                    @on-copy="handlerAggregateOnCopy(row, $index)"
-                                    @on-paste="handlerAggregateOnPaste(row)"
-                                    @on-batch-paste="handlerAggregateOnBatchPaste(row, $index)"
-                                    @on-click="showAggregateResourceInstance(row, $index)" />
-                                <p class="error-tips" v-if="isShowErrorTips">{{ $t(`m.info['请选择资源实例']`) }}</p>
-                            </div>
+                </bk-table-column>
+                <bk-table-column :resizable="false" :label="$t(`m.common['操作']`)" width="180">
+                    <template slot-scope="{ row }">
+                        <div v-if="!!row.isAggregate" style="padding: 10px 0;">
+                            <span class="action-name" :title="row.name">{{ row.name }}</span>
                         </div>
-                        <div class="relation-content-wrapper" v-else>
+                        <div v-else>
+                            <span class="action-name" :title="row.name">{{ row.name }}</span>
+                        </div>
+                    </template>
+                </bk-table-column>
+                <bk-table-column :resizable="false" :label="$t(`m.common['所属系统']`)" width="180" v-if="isCreateMode">
+                    <template slot-scope="{ row }">
+                        <span>{{ !!row.isAggregate ? row.system_name : row.detail.system.name }}</span>
+                    </template>
+                </bk-table-column>
+                <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)" min-width="450">
+                    <template slot-scope="{ row, $index }">
+                        <template v-if="!isEdit">
                             <template v-if="!row.isEmpty">
-                                <div v-for="(_, groIndex) in row.resource_groups" :key="_.id">
-                                    <div class="relation-content-item"
-                                        v-for="(content, contentIndex) in _.related_resource_types"
-                                        :key="contentIndex">
-                                        <div class="content-name">
-                                            {{ content.name }}
-                                            <template v-if="row.isShowRelatedText && _.id">
-                                                <div style="display: inline-block; color: #979ba5;">
-                                                    ({{ $t(`m.info['已帮您自动勾选依赖操作需要的实例']`) }})
-                                                </div>
-                                            </template>
-                                        </div>
-                                        <div class="content">
-                                            <render-condition
-                                                data-test-id="group_input_resourceInstanceCondition"
-                                                :ref="`condition_${$index}_${contentIndex}_ref`"
-                                                :value="content.value"
-                                                :is-empty="content.empty"
-                                                :can-view="row.canView"
-                                                :params="curCopyParams"
-                                                :can-paste="content.canPaste"
-                                                :is-error="content.isError"
-                                                @on-mouseover="handlerConditionMouseover(content)"
-                                                @on-mouseleave="handlerConditionMouseleave(content)"
-                                                @on-view="handlerOnView(row, content, contentIndex, groIndex)"
-                                                @on-restore="handlerOnRestore(content)"
-                                                @on-copy="handlerOnCopy(content, $index, contentIndex, row)"
-                                                @on-paste="handlerOnPaste(...arguments, content, $index, contentIndex)"
-                                                @on-batch-paste="handlerOnBatchPaste(...arguments, content, $index, contentIndex)"
-                                                @on-click="showResourceInstance(row, $index, content, contentIndex, groIndex)" />
-                                            <p class="error-tips" v-if="isShowErrorTips">{{ $t(`m.info['请选择资源实例']`) }}</p>
-                                        </div>
-                                    </div>
+                                <div v-for="_ in row.resource_groups" :key="_.id">
+                                    <p class="related-resource-item"
+                                        v-for="item in _.related_resource_types"
+                                        :key="item.type">
+                                        <render-resource-popover
+                                            :key="item.type"
+                                            :data="item.condition"
+                                            :value="`${item.name}：${item.value}`"
+                                            :max-width="380"
+                                            @on-view="handleViewResource(row)" />
+                                    </p>
                                 </div>
                             </template>
                             <template v-else>
                                 {{ $t(`m.common['无需关联实例']`) }}
                             </template>
-                        </div>
-                        <div class="remove-icon" @click.stop="handlerRemove(row, $index)">
-                            <Icon type="close-small" />
+                            <Icon
+                                type="detail-new"
+                                class="view-icon"
+                                :title="$t(`m.common['详情']`)"
+                                v-if="isShowView(row)"
+                                @click.stop="handleViewResource(row)" />
+                            <template v-if="!isUserGroupDetail ? false : true && row.showDelete">
+                                <Icon class="remove-icon" type="close-small" @click.stop="toHandleDelete(row)" />
+                            </template>
+                        </template>
+                        <template v-else>
+                            <div class="relation-content-wrapper" v-if="!!row.isAggregate">
+                                <label class="resource-type-name" v-if="row.aggregateResourceType.length === 1">{{ row.aggregateResourceType[0].name }}</label>
+                                <div class="bk-button-group tab-button" v-else>
+                                    <bk-button v-for="(item, index) in row.aggregateResourceType"
+                                        :key="item.id" @click="selectResourceType(row, index)"
+                                        :class="row.selectedIndex === index ? 'is-selected' : ''" size="small">{{item.name}}
+                                        <span v-if="row.instancesDisplayData[item.id] && row.instancesDisplayData[item.id].length">({{row.instancesDisplayData[item.id].length}})</span>
+                                    </bk-button>
+                                </div>
+                                <div class="content">
+                                    <render-condition
+                                        :ref="`condition_${$index}_aggregateRef`"
+                                        :value="row.value"
+                                        :is-empty="row.empty"
+                                        :can-view="false"
+                                        :can-paste="row.canPaste"
+                                        :is-error="row.isError"
+                                        @on-mouseover="handlerAggregateConditionMouseover(row)"
+                                        @on-mouseleave="handlerAggregateConditionMouseleave(row)"
+                                        @on-copy="handlerAggregateOnCopy(row, $index)"
+                                        @on-paste="handlerAggregateOnPaste(row)"
+                                        @on-batch-paste="handlerAggregateOnBatchPaste(row, $index)"
+                                        @on-click="showAggregateResourceInstance(row, $index)" />
+                                    <p class="error-tips" v-if="isShowErrorTips">{{ $t(`m.info['请选择资源实例']`) }}</p>
+                                </div>
+                            </div>
+                            <div class="relation-content-wrapper" v-else>
+                                <template v-if="!row.isEmpty">
+                                    <div v-for="(_, groIndex) in row.resource_groups" :key="_.id">
+                                        <div class="relation-content-item"
+                                            v-for="(content, contentIndex) in _.related_resource_types"
+                                            :key="contentIndex">
+                                            <div class="content-name">
+                                                {{ content.name }}
+                                                <template v-if="row.isShowRelatedText && _.id">
+                                                    <div style="display: inline-block; color: #979ba5;">
+                                                        ({{ $t(`m.info['已帮您自动勾选依赖操作需要的实例']`) }})
+                                                    </div>
+                                                </template>
+                                            </div>
+                                            <div class="content">
+                                                <render-condition
+                                                    data-test-id="group_input_resourceInstanceCondition"
+                                                    :ref="`condition_${$index}_${contentIndex}_ref`"
+                                                    :value="content.value"
+                                                    :is-empty="content.empty"
+                                                    :can-view="row.canView"
+                                                    :params="curCopyParams"
+                                                    :can-paste="content.canPaste"
+                                                    :is-error="content.isError"
+                                                    @on-mouseover="handlerConditionMouseover(content)"
+                                                    @on-mouseleave="handlerConditionMouseleave(content)"
+                                                    @on-view="handlerOnView(row, content, contentIndex, groIndex)"
+                                                    @on-restore="handlerOnRestore(content)"
+                                                    @on-copy="handlerOnCopy(content, $index, contentIndex, row)"
+                                                    @on-paste="handlerOnPaste(...arguments, content, $index, contentIndex)"
+                                                    @on-batch-paste="handlerOnBatchPaste(...arguments, content, $index, contentIndex)"
+                                                    @on-click="showResourceInstance(row, $index, content, contentIndex, groIndex)" />
+                                                <p class="error-tips" v-if="isShowErrorTips">{{ $t(`m.info['请选择资源实例']`) }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                                <template v-else>
+                                    {{ $t(`m.common['无需关联实例']`) }}
+                                </template>
+                            </div>
+                            <!-- <div class="remove-icon" @click.stop="handleRemove(row, $index)">
+                                <Icon type="close-small" />
+                            </div> -->
+                        </template>
+                    </template>
+                </bk-table-column>
+                <bk-table-column :resizable="false" width="50" align="center">
+                    <template slot-scope="{ row, $index }">
+                        <div class="relation-content-wrapper">
+                            <div class="remove-icon" @click.stop="handleRemove(row, $index)">
+                                <bk-icon
+                                    type="minus-circle-shape"
+                                    size="medium"
+                                    style="color: #C4C6CC;"
+                                />
+                            </div>
                         </div>
                     </template>
+                </bk-table-column>
+                <template slot="empty">
+                    <ExceptionEmpty />
                 </template>
-            </bk-table-column>
-            <template slot="empty">
-                <ExceptionEmpty />
-            </template>
-        </bk-table>
+            </bk-table>
+        </template>
+        
         <bk-sideslider
             :is-show="isShowResourceInstanceSideslider"
             :title="resourceInstanceSidesliderTitle"
@@ -333,7 +374,8 @@
                 selectedIndex: 0,
                 instanceKey: '',
                 curCopyDataId: '',
-                emptyResourceGroupsList: []
+                emptyResourceGroupsList: [],
+                isExpandTable: false
             };
         },
         computed: {
@@ -468,6 +510,7 @@
                     //     this.tableList.splice(0, this.tableList.length, ...value);
                     // }
                     value = _.uniqWith(value, _.isEqual); // 去重
+                    this.isExpandTable = value.length > 0;
                     if (this.isAllExpanded) {
                         this.tableList.splice(0, this.tableList.length, ...value);
                     } else {
@@ -573,13 +616,21 @@
             handleDelete () {
                 this.$emit('on-delete', this.newRow);
             },
-            handlerRemove (row, payload) {
+            handleRemove (row, payload) {
                 window.changeDialog = true;
                 if (row.isAggregate) {
                     this.$emit('on-aggregate-delete', row.system_id, row.actions, payload);
                     return;
                 }
                 this.$emit('on-delete', row.system_id, row.id, `${row.system_id}&${row.id}`, payload);
+            },
+            handleExpanded () {
+                this.isExpandTable = !this.isExpandTable;
+            },
+            handleClearAll () {
+                this.tableList = [];
+                this.isExpandTable = false;
+                this.$emit('on-clear-all');
             },
             handleViewResource (payload) {
                 this.curId = payload.id;
@@ -1935,11 +1986,11 @@
                 }
             }
             .remove-icon {
-                display: none;
+                /* display: none; */
                 position: absolute;
-                top: 50% !important;
+                /* top: 5px; */
+                top: 5px;
                 right: 0;
-                transform: translate(-50%, -50%);
                 cursor: pointer;
                 &:hover {
                     color: #3a84ff;
@@ -1994,4 +2045,8 @@
     .tab-button{
         margin: 10px 0;
     }
+</style>
+
+<style lang="postcss" scoped>
+@import '@/css/mixins/space-resource-instance-table.css';
 </style>
