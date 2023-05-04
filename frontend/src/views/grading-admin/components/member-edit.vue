@@ -328,12 +328,13 @@
                 display: inline-block;
                 padding: 0 5px;
                 margin-right: 2px;
-                line-height: 24px;
+                line-height: 22px;
                 border-radius: 2px;
                 background: #f0f1f5;
                 font-size: 12px;
                 i {
                     font-size: 18px;
+                    line-height: 22px;
                     color: #979ba5;
                     vertical-align: middle;
                     cursor: pointer;

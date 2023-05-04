@@ -310,6 +310,7 @@
                 font-size: 12px;
                 i {
                     font-size: 18px;
+                    line-height: 22px;
                     color: #979ba5;
                     vertical-align: middle;
                     cursor: pointer;
