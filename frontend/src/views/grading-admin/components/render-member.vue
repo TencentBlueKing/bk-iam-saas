@@ -201,7 +201,7 @@
     .all-item {
         position: relative;
         display: inline-block;
-        margin: 0 6px 6px 10px;
+        margin: 0 6px 6px 0px;
         padding: 0 10px;
         line-height: 22px;
         background: #f5f6fa;

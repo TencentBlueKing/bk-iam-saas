@@ -218,7 +218,7 @@ export const m = {
         '确定退出管理空间': 'Confirm to exit management space',
         '退出后': 'After exiting',
         '，': ',',
-        '将不再具备相应的管理权限': 'Will no longer have corresponding management permissions',
+        '将不再具备相应的管理权限': ' will no longer have corresponding management permissions',
         '用户组': 'user group',
         '是否删除该自定义权限': 'Whether to delete the custom permission',
         '类型': 'Type',
