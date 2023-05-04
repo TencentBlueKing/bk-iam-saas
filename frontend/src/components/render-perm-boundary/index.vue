@@ -8,7 +8,9 @@
                 <div v-if="modules.includes('resourcePerm')"
                     class="render-form-item"
                 >
-                    <div class="perm-boundary-title">{{ resourceTitle }}:</div>
+                    <div class="perm-boundary-title">
+                        {{ $t(`m.levelSpace["${BOUNDARY_KEYS_ENUM['resourcePerm'].title}"]`) }}:
+                    </div>
                     <div :class="[
                              'iam-resource-expand'
                          ]"
@@ -34,7 +36,9 @@
                 </div>
                 <div v-if="modules.includes('membersPerm')"
                     class="render-form-item">
-                    <div class="perm-boundary-title">{{ resourceTitle }}:</div>
+                    <div class="perm-boundary-title">
+                        {{ $t(`m.levelSpace["${BOUNDARY_KEYS_ENUM['membersPerm'].title}"]`) }}:
+                    </div>
                     <div :class="[
                              'iam-resource-expand'
                          ]"
