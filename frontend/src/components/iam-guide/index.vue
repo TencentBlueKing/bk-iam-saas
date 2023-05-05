@@ -1,6 +1,6 @@
 <template>
     <div :style="styles">
-        <div v-if="['custom'].includes(popoverType) && (noviceGuide[type] && !loading && flag && isShow)">
+        <div v-if="['custom'].includes(popoverType) && (!noviceGuide[type] && !loading && flag && isShow)">
             <div :class="['iam-guide-wrapper', { 'has-animation': hasAnimation }]">
                 <div class="content-wrapper">
                     <section class="content-shade">
