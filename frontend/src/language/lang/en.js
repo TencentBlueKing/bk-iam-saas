@@ -107,7 +107,7 @@ export const m = {
         '添加成员': 'Add Members',
         '添加成员至': 'Add members to',
         '已选择': 'Selected',
-        '清空': 'Reset',
+        '清空': 'Clear',
         '保存': 'Save',
         '提交': 'Submit',
         '取消': 'Cancel',
@@ -216,6 +216,9 @@ export const m = {
         '在左侧导航，点击 用户组 > 新建，创建用户组，设置权限和成员': 'In the left navigation, click User Groups >; New to create a user group, set permissions and members.',
         '退出将不在具备相应的管理权限': 'Quitting will no longer have the appropriate administrative rights',
         '确定退出管理空间': 'Confirm to exit management space',
+        '退出后': 'After exiting',
+        '，': ',',
+        '将不再具备相应的管理权限': ' will no longer have corresponding management permissions',
         '用户组': 'user group',
         '是否删除该自定义权限': 'Whether to delete the custom permission',
         '类型': 'Type',
@@ -465,8 +468,8 @@ export const m = {
          '由于管理空间的授权范围没有包含此操作，': 'Due to the fact that the authorization scope of the management space does not include this operation,',
          '如需使用该模板进行新的授权必须先删除该操作。': 'To use this template for new authorization, you must first delete the operation.',
          '您已退出当前管理员授权范围': 'You have exited the current administrator authorization scope',
-         'Added': 'Added',
-         'Operation permissions':' Operation permissions'
+         '已添加': 'Added',
+         '当前管理员不存在此条数据': 'The current administrator does not have this data'
     },
     // 二次确认弹窗相关
     dialog: {
@@ -811,7 +814,7 @@ export const m = {
         '选择提示': 'The following actions needs to select resource instances, we have combined the same selection path automatically, you can expand all to select',
         '展开选择': 'Expand selection',
         '合并选择': 'Merge selection',
-        '批量编辑': 'bulk edit',
+        '批量编辑': 'Bulk edit',
         '逐项编辑': 'Item by item to edit',
         '更新权限模板': 'Update Permission Template',
         '操作和资源实例范围发生变更': 'The operation and resource instance scope has changed',

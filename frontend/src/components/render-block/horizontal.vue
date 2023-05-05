@@ -3,10 +3,11 @@
         <div
             class="label"
             :class="props.required ? 'is-required' : ''"
-            :style="{ minWidth: `${(props.labelWidth || 120)}px` }">
+            :style="{ minWidth: `${(props.labelWidth >= 0 ? props.labelWidth : 120)}px` }">
             {{ props.label ? `${props.label}` : ''}}
         </div>
-        <div class="content" :style="{ minWidth: `calc(100% - ${(props.labelWidth || 120) + 14}px)` }">
+        <div class="content"
+            :style="{ minWidth: `calc(100% - ${(props.labelWidth >= 0 ? props.labelWidth : 120) + 14}px)` }">
             <slot />
             <slot name="append" />
         </div>

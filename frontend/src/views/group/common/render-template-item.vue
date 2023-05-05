@@ -32,9 +32,8 @@
                     <section
                         class="edit-action"
                         @click.stop="handleEdit"
-                        v-if="
-                            (externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle && !externalEdit) ||
-                                !externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle">
+                        v-if="!externalEdit"
+                    >
                         <Icon type="edit-fill" v-if="isStaff || isPermTemplateDetail || isDetail ? false : true" />
                     </section>
                 </template>
@@ -44,12 +43,7 @@
                     @confirm="handleDelete"
                     v-if="isStaff || isPermTemplateDetail || isUser || isDetail ? false : true">
                     <template v-if="isExpanded || ShowEditFill && !isUser">
-                        <template
-                            v-if="
-                                (externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle &&
-                                    !externalDelete) ||
-                                    !externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle"
-                        >
+                        <template v-if="!externalDelete">
                             <section class="delete-action" @click.stop="toDeletePolicyCount">
                                 <Icon type="delete-line" v-if="isStaff || isPermTemplateDetail ? false : true" />
                             </section>

@@ -43,20 +43,25 @@
             </bk-user-selector>
         </template>
         <bk-dialog
-            ext-cls="confirmDialog"
+            ext-cls="confirm-space-dialog"
             v-model="isShowDialog"
             :close-icon="false"
-            :title="$t(`m.common['确定退出授权边界']`)"
-            :width="language === 'zh-cn' ? 400 : 600"
+            :title="`${$t(`m.common['确定退出管理空间']`)}?`"
+            :width="600"
             :footer-position="footerPosition"
             @cancel="handleCancel"
             @confirm="handleDeleteRole">
-            <p>{{ $t(`m.common['退出将不在具备相应的管理权限']`) }}</p>
+            <p>
+                <span>{{ $t(`m.common['退出后']`) }}</span>
+                <span>{{ $t(`m.common['，']`) }}</span>
+                <span>{{ deleteList.join('、') }}{{ $t(`m.common['将不再具备相应的管理权限']`) }}</span>
+            </p>
         </bk-dialog>
     </div>
 </template>
 <script>
     import BkUserSelector from '@blueking/user-selector';
+
     export default {
         name: 'iam-edit-selector',
         components: {
@@ -102,7 +107,8 @@
                 disabledValue: [],
                 editValue: [],
                 footerPosition: 'center',
-                roleIndex: -1
+                roleIndex: -1,
+                deleteList: []
             };
         },
         computed: {
@@ -184,6 +190,7 @@
                 }
                 this.roleIndex = index;
                 this.isShowDialog = true;
+                this.deleteList = [this.displayValue[index].username];
             },
 
             async handleDeleteRole () {
@@ -219,6 +226,7 @@
 
             triggerChange () {
                 this.isEditable = false;
+                console.log(this.displayValue);
                 if (JSON.stringify(this.displayValue) !== JSON.stringify(this.value)) {
                     this.isLoading = true;
                     this.remoteHandler({
@@ -252,6 +260,8 @@
                         this.messageError(this.$t(`m.verify['管理员不能为空']`), 2000);
                         return;
                     }
+                    this.deleteList = this.value.filter(item =>
+                        !this.editValue.includes(item.username) && !item.readonly).map(v => v.username);
                     this.roleIndex = -1;
                     this.isShowDialog = true;
                 }
@@ -300,6 +310,7 @@
                 font-size: 12px;
                 i {
                     font-size: 18px;
+                    line-height: 22px;
                     color: #979ba5;
                     vertical-align: middle;
                     cursor: pointer;
@@ -347,4 +358,11 @@
             }
         }
     }
+    
+    /deep/ .confirm-space-dialog {
+            .bk-dialog-footer {
+               background-color: #ffffff;
+               border-top:none;
+            }
+        }
 </style>

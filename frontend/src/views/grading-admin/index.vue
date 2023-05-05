@@ -88,11 +88,11 @@
                                     @on-change="handleUpdateSubMembers" />
                             </template>
                         </bk-table-column>
-                        <bk-table-column prop="description" width="200">
+                        <bk-table-column prop="description" width="300">
                             <template slot-scope="child">
                                 <iam-edit-textarea
                                     field="description"
-                                    width="200"
+                                    width="300"
                                     :placeholder="$t(`m.verify['用户组描述提示']`)"
                                     :value="child.row.description"
                                     :index="child.$index"
@@ -200,11 +200,11 @@
                         @on-change="handleUpdateMembers" />
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.common['描述']`)" width="200">
+            <bk-table-column :label="$t(`m.common['描述']`)" width="300">
                 <template slot-scope="{ row, $index }">
                     <iam-edit-textarea
                         field="description"
-                        width="200"
+                        width="300"
                         :placeholder="$t(`m.verify['用户组描述提示']`)"
                         :value="row.description"
                         :index="$index"
@@ -617,7 +617,7 @@
                                 : await this.fetchGradingAdmin(this.formData);
                             },
                             'subset_manager': async () => {
-                                this.formData.children = [];
+                                this.curData.children = [];
                                 this.resetSubPagination();
                                 this.isFilter ? await this.fetchSearchManageList()
                                 : await this.fetchSubManagerList(this.curData);
