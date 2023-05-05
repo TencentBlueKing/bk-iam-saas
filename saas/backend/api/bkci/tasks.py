@@ -425,8 +425,8 @@ class BKCILegacyMigrateTask(Task):
                     user_resource_action[p.user_id][p.resource_type_id][resource_id].add(action_id)
 
         for user_id, resource_type_action in user_resource_action.items():
+            permissions = []
             for resource_type_id, resource_action in resource_type_action.items():
-                permissions = []
                 for resource_id, action_ids in resource_action.items():
                     if resource_id == "*":
                         paths = []
