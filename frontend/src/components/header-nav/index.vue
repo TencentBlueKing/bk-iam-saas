@@ -258,7 +258,7 @@
                 userGroupName: '',
                 navData: [
                     { text: this.$t(`m.nav['个人工作台']`), id: 0, show: true, type: 'staff' },
-                    { text: this.$t(`m.nav['权限管理']`), id: 1, show: true, type: 'all_manager' },
+                    { text: this.$t(`m.nav['管理空间']`), id: 1, show: true, type: 'all_manager' },
                     { text: this.$t(`m.nav['统计分析']`), id: 2, show: false, type: 'super_manager' },
                     { text: this.$t(`m.nav['平台管理']`), id: 3, show: false, type: 'super_manager' }
                 ],

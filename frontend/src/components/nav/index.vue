@@ -404,7 +404,7 @@
                 }
             },
 
-            // 从其他菜单进入权限管理选择角色
+            // 从其他菜单进入管理空间选择角色
             handleSwitchPerm ({ id, entry }) {
                 if (entry && this.$refs.selectTree) {
                     this.$refs.selectTree.selected = Number(id);
