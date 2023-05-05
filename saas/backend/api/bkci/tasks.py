@@ -444,13 +444,26 @@ class BKCILegacyMigrateTask(Task):
             permissions = []
             for resource_type_id, resource_action in resource_type_action.items():
                 for resource_id, action_ids in resource_action.items():
+                    # 对于资源类型为group的特殊处理, 需要在action_ids中添加service
+                    if (
+                        resource_type_map[resource_type_id]["id"] in ["group", "task"]
+                        and resource_type_map[resource_type_id]["service_id"] in service_map
+                    ):
+                        full_resource_type_id = (
+                            service_map[resource_type_map[resource_type_id]["service_id"]]
+                            + "_"
+                            + resource_type_map[resource_type_id]["id"]
+                        )
+                    else:
+                        full_resource_type_id = resource_type_map[resource_type_id]["id"]
+
                     if resource_id == "*":
                         paths = []
                     else:
                         paths = [
                             [
                                 {
-                                    "id": resource_map[resource_id]["id"],
+                                    "id": full_resource_type_id,
                                     "name": resource_map[resource_id]["name"],
                                     "system_id": "bk_ci",
                                     "type": resource_type_map[resource_type_id]["id"],
@@ -458,30 +471,10 @@ class BKCILegacyMigrateTask(Task):
                             ]
                         ]
 
-                    # 对于资源类型为group的特殊处理, 需要在action_ids中添加service
-                    if (
-                        resource_type_map[resource_type_id]["id"] in ["group", "task"]
-                        and resource_type_map[resource_type_id]["service_id"] in service_map
-                    ):
-                        action_ids = [
-                            {
-                                "id": service_map[resource_type_map[resource_type_id]["service_id"]]
-                                + "_"
-                                + resource_type_map[resource_type_id]["id"]
-                                + "_"
-                                + _id
-                            }
-                            for _id in list(action_ids)
-                        ]
-                    else:
-                        action_ids = [
-                            {"id": resource_type_map[resource_type_id]["id"] + "_" + _id} for _id in list(action_ids)
-                        ]
-
                     permissions.append(
                         {
-                            "actions": action_ids,
-                            "resources": [{"type": resource_type_map[resource_type_id]["id"], "paths": paths}],
+                            "actions": [{"id": full_resource_type_id + "_" + _id} for _id in list(action_ids)],
+                            "resources": [{"type": full_resource_type_id, "paths": paths}],
                         }
                     )
 
@@ -553,13 +546,26 @@ class BKCILegacyMigrateTask(Task):
             permissions = []
             for resource_type_id, resource_action in resource_type_action.items():
                 for resource_id, action_ids in resource_action.items():
+                    # 对于资源类型为group的特殊处理, 需要在action_ids中添加service
+                    if (
+                        resource_type_map[resource_type_id]["id"] in ["group", "task"]
+                        and resource_type_map[resource_type_id]["service_id"] in service_map
+                    ):
+                        full_resource_type_id = (
+                            service_map[resource_type_map[resource_type_id]["service_id"]]
+                            + "_"
+                            + resource_type_map[resource_type_id]["id"]
+                        )
+                    else:
+                        full_resource_type_id = resource_type_map[resource_type_id]["id"]
+
                     if resource_id == "*":
                         paths = []
                     else:
                         paths = [
                             [
                                 {
-                                    "id": resource_map[resource_id]["id"],
+                                    "id": full_resource_type_id,
                                     "name": resource_map[resource_id]["name"],
                                     "system_id": "bk_ci",
                                     "type": resource_type_map[resource_type_id]["id"],
@@ -567,30 +573,10 @@ class BKCILegacyMigrateTask(Task):
                             ]
                         ]
 
-                    # 对于资源类型为group的特殊处理, 需要在action_ids中添加service
-                    if (
-                        resource_type_map[resource_type_id]["id"] in ["group", "task"]
-                        and resource_type_map[resource_type_id]["service_id"] in service_map
-                    ):
-                        action_ids = [
-                            {
-                                "id": service_map[resource_type_map[resource_type_id]["service_id"]]
-                                + "_"
-                                + resource_type_map[resource_type_id]["id"]
-                                + "_"
-                                + _id
-                            }
-                            for _id in list(action_ids)
-                        ]
-                    else:
-                        action_ids = [
-                            {"id": resource_type_map[resource_type_id]["id"] + "_" + _id} for _id in list(action_ids)
-                        ]
-
                     permissions.append(
                         {
-                            "actions": action_ids,
-                            "resources": [{"type": resource_type_map[resource_type_id]["id"], "paths": paths}],
+                            "actions": [{"id": full_resource_type_id + "_" + _id} for _id in list(action_ids)],
+                            "resources": [{"type": full_resource_type_id, "paths": paths}],
                         }
                     )
 
