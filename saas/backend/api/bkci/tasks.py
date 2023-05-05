@@ -274,7 +274,8 @@ class BKCILegacyMigrateTask(Task):
         exclude_service_ids = list(
             Services.objects.using("bkci")
             .filter(
-                service_code__in=["codecc", "bcs", "gs-apk", "job", "vs", "wetest", "xinghai"], deleted_at__isnull=True
+                service_code__in=["artifactory", "bcs", "gs-apk", "job", "vs", "wetest", "xinghai"],
+                deleted_at__isnull=True,
             )
             .values_list("id", flat=True)
         )
@@ -360,7 +361,7 @@ class BKCILegacyMigrateTask(Task):
         # 9. 查询特色资源group重名的service
         service_ids = []
         for resource_type in resource_type_map.values():
-            if resource_type["id"] == "group":
+            if resource_type["id"] == "group" or resource_type["id"] == "task":
                 service_ids.append(resource_type["service_id"])
         services = Services.objects.using("bkci").filter(id__in=service_ids).only("id", "service_code")
         service_map = {one.id: one.service_code for one in services}
@@ -459,7 +460,7 @@ class BKCILegacyMigrateTask(Task):
 
                     # 对于资源类型为group的特殊处理, 需要在action_ids中添加service
                     if (
-                        resource_type_map[resource_type_id]["id"] == "group"
+                        resource_type_map[resource_type_id]["id"] in ["group", "task"]
                         and resource_type_map[resource_type_id]["service_id"] in service_map
                     ):
                         action_ids = [
@@ -568,7 +569,7 @@ class BKCILegacyMigrateTask(Task):
 
                     # 对于资源类型为group的特殊处理, 需要在action_ids中添加service
                     if (
-                        resource_type_map[resource_type_id]["id"] == "group"
+                        resource_type_map[resource_type_id]["id"] in ["group", "task"]
                         and resource_type_map[resource_type_id]["service_id"] in service_map
                     ):
                         action_ids = [
