@@ -198,7 +198,7 @@
             },
 
             handleRemove (payload) {
-                this.removeSubTitle = `${this.$t(`m.common['移除']`)}【${payload.name}】，${this.$t(`m.info['该用户组将不再继承对应模板的权限']`)}。`;
+                this.removeSubTitle = `${this.$t(`m.common['移除']`)}${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['，']`)}${this.$t(`m.info['该用户组将不再继承对应模板的权限']`)}${this.$t(`m.common['。']`)}`;
                 this.currentMember.push({
                     type: payload.type,
                     id: payload.id

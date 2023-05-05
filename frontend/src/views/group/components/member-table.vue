@@ -316,15 +316,16 @@
             handleBatchDelete () {
                 if (this.currentSelectList.length === 1) {
                     const payload = this.currentSelectList[0];
-                    this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)}【${payload.id}(${payload.name})】，${this.$t(`m.info['该成员将不再继承该组的权限']`)}。`;
+                    this.deleteDialog.subTitle
+                        = `${this.$t(`m.common['移除']`)}${this.$t(`m.common['【']`)}${payload.id}(${payload.name})${this.$t(`m.common['】']`)}${this.$t(`m.common['，']`)}${this.$t(`m.info['该成员将不再继承该组的权限']`)}}${this.$t(`m.common['。']`)}`;
                 } else {
-                    this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)} ${this.currentSelectList.length} ${this.$t(`m.common['位成员']`)}，${this.$t(`m.info['这些成员将不再继承该组的权限']`)}。`;
+                    this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)} ${this.currentSelectList.length} ${this.$t(`m.common['位成员']`)}${this.$t(`m.common['，']`)}${this.$t(`m.info['这些成员将不再继承该组的权限']`)}${this.$t(`m.common['。']`)}`;
                 }
                 this.deleteDialog.visible = true;
             },
 
             handleDelete (payload) {
-                this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)}【${payload.id}(${payload.name})】，${this.$t(`m.info['该成员将不再继承该组的权限']`)}。`;
+                this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)}${this.$t(`m.common['【']`)}${payload.id}(${payload.name})${this.$t(`m.common['】']`)}${this.$t(`m.common['，']`)}${this.$t(`m.info['该成员将不再继承该组的权限']`)}${this.$t(`m.common['。']`)}`;
                 this.deleteDialog.visible = true;
                 this.curMember = Object.assign({}, {
                     id: payload.id,

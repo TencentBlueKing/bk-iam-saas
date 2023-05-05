@@ -463,7 +463,7 @@ class BKCILegacyMigrateTask(Task):
                         paths = [
                             [
                                 {
-                                    "id": resource_map[resource_id]["id"],
+                                    "id": full_resource_type_id,
                                     "name": resource_map[resource_id]["name"],
                                     "system_id": "bk_ci",
                                     "type": full_resource_type_id,
@@ -565,7 +565,7 @@ class BKCILegacyMigrateTask(Task):
                         paths = [
                             [
                                 {
-                                    "id": resource_map[resource_id]["id"],
+                                    "id": full_resource_type_id,
                                     "name": resource_map[resource_id]["name"],
                                     "system_id": "bk_ci",
                                     "type": full_resource_type_id,
