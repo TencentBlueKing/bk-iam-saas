@@ -212,7 +212,7 @@ export const m = {
         '二': 'two',
         '如何使用管理空间': 'How to use the management space',
         '我的管理空间 > 申请新建（已有管理空间忽略）': 'My management space>Apply to create a new one (ignoring the existing management space)',
-        '切换顶部导航至“权限管理” ，在左上角切换“管理空间”': 'Switch the top to navigate to "Permission Management", and switch to "Management Space" in the upper left corner',
+        '切换顶部导航至“管理空间” ，在左上角切换“管理空间”': 'Switch the top to navigate to "Management Space", and switch to "Management Space" in the upper left corner',
         '在左侧导航，点击 用户组 > 新建，创建用户组，设置权限和成员': 'In the left navigation, click User Groups >; New to create a user group, set permissions and members.',
         '退出将不在具备相应的管理权限': 'Quitting will no longer have the appropriate administrative rights',
         '确定退出管理空间': 'Confirm to exit management space',
