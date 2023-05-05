@@ -916,7 +916,7 @@ export const m = {
         '聚合操作': 'You can select instances in batches by combining selections',
         '切换管理空间': 'Congratulations on becoming a member of the management space! You can switch identities here',
         '管理空间导航': 'The original [Management Space] function has been adjusted here!',
-        '创建模板': `Let's create a permission template first`,
+        '创建模板': `Permission templates can be authorized by being referenced by user groups.`,
         '创建用户组': `Let's create a group first`,
         '创建审批流程': 'You can also bind the required approval process to the user group',
         '添加组成员': 'You can add group members so that they have the permissions of the group, of course, you can also let them apply by themselves',

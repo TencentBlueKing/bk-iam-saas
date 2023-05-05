@@ -1,6 +1,6 @@
 <template>
     <div :style="styles">
-        <div v-if="['custom'].includes(popoverType) && (!noviceGuide[type] && !loading && flag && isShow)">
+        <div v-if="['custom'].includes(popoverType) && (noviceGuide[type] && !loading && flag && isShow)">
             <div :class="['iam-guide-wrapper', { 'has-animation': hasAnimation }]">
                 <div class="content-wrapper">
                     <section class="content-shade">
@@ -78,6 +78,7 @@
         computed: {
             ...mapGetters(['noviceGuide', 'user']),
             isShow () {
+                const index = Number(window.localStorage.getItem('index') || 0);
                 const types = [
                     'rating_manager_subject_scope',
                     'rating_manager_merge_action',
@@ -86,11 +87,18 @@
                 const staffTypes = [
                     'grade_manager_upgrade'
                 ];
+                const managerTypes = [
+                    'create_perm_template',
+                    'set_group_approval_process'
+                ];
                 if (types.includes(this.type)) {
                     return ['super_manager', 'staff'].includes(this.user.role.type);
                 }
                 if (staffTypes.includes(this.type)) {
                     return ['staff'].includes(this.user.role.type);
+                }
+                if (managerTypes.includes(this.type)) {
+                    return !['staff'].includes(this.user.role.type) && Number(index) === 1;
                 }
                 return true;
             },
