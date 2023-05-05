@@ -29,7 +29,7 @@
                                 <iam-edit-textarea
                                     field="description"
                                     width="600px"
-                                    :placeholder="$t(`m.verify['用户组描述提示']`)"
+                                    :placeholder="$t(`m.verify['请输入']`)"
                                     :rules="descRules"
                                     :value="basicInfo.description"
                                     :remote-hander="handleUpdateGroup" />
@@ -152,17 +152,17 @@
             ];
             this.descRules = [
                 {
-                    required: true,
-                    message: this.$t(`m.verify['描述必填']`),
-                    trigger: 'blur'
-                },
-                {
-                    validator: (value) => {
-                        return value.length >= 10;
-                    },
-                    message: this.$t(`m.verify['描述最短不少于10个字符']`),
+                    required: false,
+                    message: this.$t(`m.verify['请输入']`),
                     trigger: 'blur'
                 }
+                // {
+                //     validator: (value) => {
+                //         return value.length >= 10;
+                //     },
+                //     message: this.$t(`m.verify['描述最短不少于10个字符']`),
+                //     trigger: 'blur'
+                // }
             ];
         },
         methods: {

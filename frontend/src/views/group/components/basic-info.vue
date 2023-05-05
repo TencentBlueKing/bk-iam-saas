@@ -31,7 +31,7 @@
                     </bk-option>
                 </bk-select>
             </iam-form-item> -->
-            <iam-form-item :label="$t(`m.common['描述']`)" required>
+            <!-- <iam-form-item :label="$t(`m.common['描述']`)" required>
                 <bk-input
                     :value="formData.description"
                     type="textarea"
@@ -43,6 +43,17 @@
                     @blur="handleDescBlur"
                     @change="handleDescChange" />
                 <p class="desc-empty-error" v-if="isShowDescError">{{ descValidateText }}</p>
+            </iam-form-item> -->
+            <iam-form-item :label="$t(`m.common['描述']`)">
+                <bk-input
+                    :value="formData.description"
+                    type="textarea"
+                    :placeholder="$t(`m.verify['请输入']`)"
+                    maxlength="255"
+                    data-test-id="group_input_groupDesc"
+                    @input="handleDescInput"
+                    @blur="handleDescBlur"
+                    @change="handleDescChange" />
             </iam-form-item>
         </bk-form>
     </div>
@@ -113,17 +124,17 @@
             },
 
             handleDescBlur (payload) {
-                const minLength = 10;
-                if (payload === '') {
-                    this.descValidateText = this.$t(`m.verify['描述必填']`);
-                    this.isShowDescError = true;
-                }
-                if (!this.isShowDescError) {
-                    if (payload.trim().length < minLength) {
-                        this.descValidateText = this.$t(`m.verify['描述最短不少于10个字符']`);
-                        this.isShowDescError = true;
-                    }
-                }
+                // const minLength = 10;
+                // if (payload === '') {
+                //     this.descValidateText = this.$t(`m.verify['描述必填']`);
+                //     this.isShowDescError = true;
+                // }
+                // if (!this.isShowDescError) {
+                //     if (payload.trim().length < minLength) {
+                //         this.descValidateText = this.$t(`m.verify['描述最短不少于10个字符']`);
+                //         this.isShowDescError = true;
+                //     }
+                // }
             },
 
             handleNameBlur (payload) {
@@ -175,9 +186,9 @@
             handleValidator () {
                 const maxLength = 32;
                 const minLength = 5;
-                const minDescLength = 10;
+                // const minDescLength = 10;
                 const payload = this.formData.name;
-                const desc = this.formData.description;
+                // const desc = this.formData.description;
                 if (payload === '') {
                     this.nameValidateText = this.$t(`m.verify['用户组名必填']`);
                     this.isShowNameError = true;
@@ -197,17 +208,18 @@
                     // }
                 }
 
-                if (desc === '') {
-                    this.descValidateText = this.$t(`m.verify['描述必填']`);
-                    this.isShowDescError = true;
-                }
-                if (!this.isShowDescError) {
-                    if (desc.trim().length < minDescLength) {
-                        this.descValidateText = this.$t(`m.verify['描述最短不少于10个字符']`);
-                        this.isShowDescError = true;
-                    }
-                }
-                return this.isShowNameError || this.isShowDescError;
+                // if (desc === '') {
+                //     this.descValidateText = this.$t(`m.verify['描述必填']`);
+                //     this.isShowDescError = true;
+                // }
+                // if (!this.isShowDescError) {
+                //     if (desc.trim().length < minDescLength) {
+                //         this.descValidateText = this.$t(`m.verify['描述最短不少于10个字符']`);
+                //         this.isShowDescError = true;
+                //     }
+                // }
+                // return this.isShowNameError || this.isShowDescError;
+                return this.isShowNameError;
             },
 
             reset () {

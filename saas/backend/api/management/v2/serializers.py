@@ -123,7 +123,7 @@ class ManagementGradeManagerMembersDeleteSLZ(serializers.Serializer):
 
 class ManagementGroupBasicInfoSLZ(serializers.Serializer):
     name = serializers.CharField(label="用户组名称", min_length=2, max_length=512)
-    description = serializers.CharField(label="描述", min_length=10)
+    description = serializers.CharField(label="描述", allow_blank=True)
 
 
 class ManagementGroupBasicCreateSLZ(ManagementGroupBasicInfoSLZ):
@@ -153,7 +153,7 @@ class ManagementGroupBasicSLZ(ManagementGroupBasicInfoSLZ):
 
 class ManagementGroupBaseInfoUpdateSLZ(serializers.Serializer):
     name = serializers.CharField(label="用户组名称", min_length=2, max_length=128, required=False)
-    description = serializers.CharField(label="描述", min_length=10, required=False)
+    description = serializers.CharField(label="描述", allow_blank=True, required=False)
 
 
 class ManagementGroupMemberSLZ(serializers.Serializer):

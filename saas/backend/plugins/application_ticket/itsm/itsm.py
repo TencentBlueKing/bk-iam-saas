@@ -141,7 +141,7 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
         if approval_title:
             params["title"] = approval_title
         else:
-            title_prefix = "申请创建分级管理员" if data.type == ApplicationType.CREATE_GRADE_MANAGER.value else "申请编辑分级管理员"
+            title_prefix = "申请创建管理空间" if data.type == ApplicationType.CREATE_GRADE_MANAGER.value else "申请编辑管理空间"
             params["title"] = f"{title_prefix}：{data.content.name}"
 
         if approval_content:

@@ -16,7 +16,7 @@
         </div>
         <div class="content">
             <div class="nav">
-                {{ $t(`m.nav['权限管理']`) }}
+                {{ $t(`m.nav['管理空间']`) }}
             </div>
             <div class="select">
                 <div>{{ managerName }}</div>
