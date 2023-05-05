@@ -960,9 +960,15 @@
                         }, _ => _);
                     },
                     cancel: () => {
-                        this.$emit('update:isShow', false);
-                        this.aggregationData = _.cloneDeep(this.aggregation);
-                        this.resetData();
+                        let cancelHandler = Promise.resolve();
+                        if (window.changeAlert) {
+                            cancelHandler = leaveConfirm();
+                        }
+                        cancelHandler.then(() => {
+                            this.$emit('update:isShow', false);
+                            this.aggregationData = _.cloneDeep(this.aggregation);
+                            this.resetData();
+                        }, _ => _);
                     }
                 };
                 operateMap[payload]();

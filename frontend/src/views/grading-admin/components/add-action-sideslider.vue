@@ -884,8 +884,14 @@
                         }, _ => _);
                     },
                     cancel: () => {
-                        this.$emit('update:isShow', false);
-                        this.resetData();
+                        let cancelHandler = Promise.resolve();
+                        if (window.changeAlert) {
+                            cancelHandler = leaveConfirm();
+                        }
+                        cancelHandler.then(() => {
+                            this.$emit('update:isShow', false);
+                            this.resetData();
+                        }, _ => _);
                     }
                 };
                 operateMap[payload]();
