@@ -874,7 +874,8 @@ export const m = {
         '二级管理空间扩大自己的授权边界，需要走一级管理员审批': 'The secondary management space expands its own authorization boundary, which needs to be approved by the first level administrator',
         '二级管理空间，授权边界（授权操作范围、授权人员范围）小于等于一级管理员空间': 'Secondary management space, authorization boundary (authorized operation range, authorized personnel range) is less than or equal to the first level management space',
         '管理员': 'Administrator',
-        '输入空间名称、管理员名称进行搜索': 'Enter space name and administrator name for search'
+        '输入空间名称、管理员名称进行搜索': 'Enter space name and administrator name for search',
+        '管理员将同步到管理空间下自动创建的管理员组里': 'The administrator will synchronize to the automatically created administrator group in the management space'
     },
     gradingDetail: {
         '管理空间名称': 'Grading  Manager Name：',
