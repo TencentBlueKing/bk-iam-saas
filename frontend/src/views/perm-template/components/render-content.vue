@@ -413,13 +413,13 @@
                             allCheckedLen++;
                         }
                     });
-                    const haveActions = item.actions.filter(v => v.id);
-                    const haveActionsChecked = !!item.actions.find(v => v.checked === true);
-                    this.$set(item, 'expanded', haveActionsChecked);
-                    if (!flag && haveActions) {
-                        // const isExpand = [...haveActions].filter(v => payload.includes(v));
-                        this.$set(item, 'expanded', haveActionsChecked);
-                    }
+                    // const haveActions = item.actions.filter(v => v.id);
+                    // const haveActionsChecked = !!item.actions.find(v => v.checked === true);
+                    // this.$set(item, 'expanded', haveActionsChecked);
+                    // if (!flag && haveActions) {
+                    //     // const isExpand = [...haveActions].filter(v => payload.includes(v));
+                    //     this.$set(item, 'expanded', haveActionsChecked);
+                    // }
                     item.allChecked = allCheckedLen === item.actions.length;
                     (item.sub_groups || []).forEach(subItem => {
                         let allSubCheckedLen = 0;
@@ -445,13 +445,12 @@
                                 allSubCheckedLen++;
                             }
                         });
-                        const haveGroupActions = item.actions.filter(v => v.id);
-                        const haveGroupActionsChecked = !!subItem.actions.find(v => v.checked === true);
+                        // const haveGroupActions = subItem.actions.filter(v => v.id);
+                        // const haveGroupActionsChecked = !!subItem.actions.find(v => v.checked === true);
                         subItem.allChecked = allSubCheckedLen === subItem.actions.length;
-                        this.$set(item, 'expanded', haveGroupActionsChecked);
-                        if (!flag && haveGroupActions) {
-                            this.$set(item, 'expanded', haveGroupActionsChecked);
-                        }
+                        // if (!flag && haveGroupActions) {
+                        //     this.$set(item, 'expanded', haveGroupActionsChecked);
+                        // }
                     });
                     item.actionsAllChecked = item.actions.every(act => act.checked) && (item.sub_groups || []).every(
                         v => {
@@ -465,6 +464,7 @@
                         item.count = item.count - delCount;
                     }
                     this.$set(item, 'deleteCount', deleteCount);
+                    this.$set(item, 'expanded', item.count > 0);
                 });
                 this.tagActionList = [...payload];
             },
