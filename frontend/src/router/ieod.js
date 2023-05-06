@@ -360,7 +360,7 @@ export const routes = [
                 path: 'manage-spaces/authorization-boundary',
                 name: 'authorBoundary',
                 meta: {
-                    headerTitle: il8n('nav', '授权边界')
+                    // headerTitle: il8n('nav', '授权边界')
                 },
                 component: AuthorizationBoundary
             },

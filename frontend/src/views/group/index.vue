@@ -107,7 +107,7 @@
                 </template>
             </bk-table-column>
             <template v-if="['rating_manager'].includes(curRole)">
-                <bk-table-column :label="$t(`m.nav['二级管理空间']`)">
+                <bk-table-column :label="$t(`m.info['二级管理空间']`)" width="240">
                     <template slot-scope="{ row }">
                         <div class="user-group-space">
                             <Icon

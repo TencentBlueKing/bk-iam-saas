@@ -1045,6 +1045,7 @@
             let cancelHandler = Promise.resolve();
             if (window.changeDialog && this.operate !== 'cancel') {
                 cancelHandler = leavePageConfirm();
+                next(false);
                 cancelHandler.then(
                     () => {
                         next();
