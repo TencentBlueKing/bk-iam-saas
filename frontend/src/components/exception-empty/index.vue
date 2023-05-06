@@ -43,7 +43,7 @@
                         return (
                             <div
                                 class="tip-wrap exception-search-tip"
-                                style={ this.searchTipStyles() }
+                                // style={ this.searchTipStyles() }
                             >
                                 <span class="text-btn">{this.$t(`m.common['可以尝试']`)}</span>
                                 <span> {this.$t(`m.common['调整关键词']`)}</span>
@@ -94,7 +94,7 @@
 
 <style lang="postcss" scoped>
 .exception-wrap {
-  width: 200px;
+  /* width: auto !important; */
   margin-top: 0;
   &.exception-gray {
     background-color: #f5f6fa;
@@ -110,6 +110,9 @@
     font-size: 12px;
     color: #999;
   }
+}
+/deep/ .bk-exception {
+    width: 100%;
 }
 
 /deep/ .bk-exception-img {
