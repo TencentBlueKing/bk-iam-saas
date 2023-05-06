@@ -324,7 +324,7 @@ class LogSpaceAuthScopeActionHandler(DefaultAuthScopeActionHandler):
             return auth_scope_action
 
         space_instance = ResourceInstance(
-            system_id=system_id, type="space", id=instance.id, name="[业务] " + instance.name
+            system_id="bk_monitorv3", type="space", id=instance.id, name="[业务] " + instance.name
         )
         return super().handle(system_id, action, space_instance)
 
