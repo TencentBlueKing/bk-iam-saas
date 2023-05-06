@@ -164,7 +164,7 @@
 </script>
 <style lang="postcss" scoped>
     .iam-apply-detail-wrapper {
-        height: calc(100vh - 121px);
+        /* height: calc(100vh - 121px); */
         .action {
             padding-bottom: 50px;
         }
