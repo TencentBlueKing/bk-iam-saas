@@ -266,6 +266,10 @@
                     this.roleIndex = -1;
                     if (this.deleteList.length) {
                         this.isShowDialog = true;
+                    } else {
+                        this.$emit('on-change', {
+                            [this.field]: this.displayValue
+                        });
                     }
                 }
             },
