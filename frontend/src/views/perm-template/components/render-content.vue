@@ -423,8 +423,6 @@
                     item.allChecked = allCheckedLen === item.actions.length;
                     (item.sub_groups || []).forEach(subItem => {
                         let allSubCheckedLen = 0;
-                        const haveGroupActions = item.actions.filter(v => v.id);
-                        const haveGroupActionsChecked = !!subItem.actions.find(v => v.checked === true);
                         (subItem.actions || []).forEach(act => {
                             if (!act.disabled) {
                                 if (payload.includes(act.id)) {
@@ -447,6 +445,8 @@
                                 allSubCheckedLen++;
                             }
                         });
+                        const haveGroupActions = item.actions.filter(v => v.id);
+                        const haveGroupActionsChecked = !!subItem.actions.find(v => v.checked === true);
                         subItem.allChecked = allSubCheckedLen === subItem.actions.length;
                         this.$set(item, 'expanded', haveGroupActionsChecked);
                         if (!flag && haveGroupActions) {

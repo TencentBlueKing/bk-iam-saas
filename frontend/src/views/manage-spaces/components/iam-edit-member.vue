@@ -253,6 +253,7 @@
             },
 
             handleRtxBlur () {
+                this.deleteList = [];
                 if (JSON.stringify(this.displayValue) !== JSON.stringify(this.value)) {
                     this.isEditable = false;
                     if (this.displayValue.length < 1) {

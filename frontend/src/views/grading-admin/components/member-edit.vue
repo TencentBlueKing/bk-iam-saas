@@ -168,10 +168,10 @@
                     this.messageError(this.$t(`m.verify['管理员不能为空']`), 2000);
                     return;
                 }
+                this.deleteList = [];
                 const editValue = this.editNewValue();
                 if (JSON.stringify(editValue) !== JSON.stringify(this.value)) {
                     if (this.isShowRole) {
-                        this.deleteList = [];
                         // this.newVal = [...this.value].map(e => e.username);
                         this.deleteList = this.value.filter(item =>
                             !this.newVal.includes(item.username) && !item.readonly).map(v => v.username);
