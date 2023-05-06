@@ -171,12 +171,15 @@
                 const editValue = this.editNewValue();
                 if (JSON.stringify(editValue) !== JSON.stringify(this.value)) {
                     if (this.isShowRole) {
+                        this.deleteList = [];
                         // this.newVal = [...this.value].map(e => e.username);
                         this.deleteList = this.value.filter(item =>
                             !this.newVal.includes(item.username) && !item.readonly).map(v => v.username);
                         this.newPayload = -1;
                         console.log(editValue, this.value, this.deleteList);
-                        this.isShowDialog = true;
+                        if (this.deleteList.length) {
+                            this.isShowDialog = true;
+                        }
                     } else {
                         this.triggerChange();
                     }

@@ -263,7 +263,9 @@
                     this.deleteList = this.value.filter(item =>
                         !this.editValue.includes(item.username) && !item.readonly).map(v => v.username);
                     this.roleIndex = -1;
-                    this.isShowDialog = true;
+                    if (this.deleteList.length) {
+                        this.isShowDialog = true;
+                    }
                 }
             },
 
