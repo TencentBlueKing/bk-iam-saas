@@ -7,7 +7,10 @@
         :close-icon="false"
         header-position="center"
         :show-footer="false"
-        ext-cls="iam-confirm-dialog"
+        :ext-cls="[
+            'iam-confirm-dialog',
+            { 'iam-custom-confirm': isCustomStyle }
+        ]"
         @after-leave="handleAfterDeleteLeave">
         <div class="confirm-content-wrapper">
             <div style="text-align: center;">{{ subTitle }}</div>
@@ -16,7 +19,7 @@
                     {{ $t(`m.common['确定']`) }}
                 </bk-button>
                 <bk-button theme="default" style="margin-left: 10px;" @click="hideCancelDelete">
-                    {{ $t(`m.common['取消2']`) }}
+                    {{ $t(`m.common['取消-dialog']`) }}
                 </bk-button>
             </div>
         </div>
@@ -43,6 +46,10 @@
                 default: ''
             },
             loading: {
+                type: Boolean,
+                default: false
+            },
+            isCustomStyle: {
                 type: Boolean,
                 default: false
             }
@@ -83,6 +90,14 @@
             .operate-buttons {
                 margin-top: 34px;
                 text-align: center;
+            }
+        }
+        &.iam-custom-confirm {
+            .confirm-content-wrapper {
+                padding-bottom: 0;
+                .operate-buttons {
+                    margin-top: 0;
+                }
             }
         }
     }

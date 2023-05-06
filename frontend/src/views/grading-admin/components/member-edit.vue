@@ -44,7 +44,7 @@
             :width="600"
             :footer-position="footerPosition"
             @confirm="dropOut">
-            <p>
+            <p style="text-align: center">
                 <span>{{ $t(`m.common['退出后']`) }}</span>
                 <span>{{ $t(`m.common['，']`) }}</span>
                 <span>{{ deleteList.join('、') }}{{ $t(`m.common['将不再具备相应的管理权限']`) }}</span>
@@ -168,6 +168,7 @@
                     this.messageError(this.$t(`m.verify['管理员不能为空']`), 2000);
                     return;
                 }
+                this.deleteList = [];
                 const editValue = this.editNewValue();
                 if (JSON.stringify(editValue) !== JSON.stringify(this.value)) {
                     if (this.isShowRole) {
@@ -176,7 +177,9 @@
                             !this.newVal.includes(item.username) && !item.readonly).map(v => v.username);
                         this.newPayload = -1;
                         console.log(editValue, this.value, this.deleteList);
-                        this.isShowDialog = true;
+                        if (this.deleteList.length) {
+                            this.isShowDialog = true;
+                        }
                     } else {
                         this.triggerChange();
                     }

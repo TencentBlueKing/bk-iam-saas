@@ -18,7 +18,9 @@
             @click="back">
             <div v-if="!isHide">
                 <Icon type="arrows-left" class="breadcrumbs-back" v-if="backRouter" />
-                <h2 v-if="routeName === 'addGroupPerm'" class="breadcrumbs-current">{{ $t(`m.common['用户组']`) }}【{{userGroupName}}】{{ $t(`m.common['添加权限']`) }}</h2>
+                <h2 v-if="routeName === 'addGroupPerm'" class="breadcrumbs-current">
+                    {{ $t(`m.common['用户组']`) }}{{ $t(`m.common['【']`) }}{{userGroupName}}{{ $t(`m.common['】']`) }}{{ $t(`m.common['添加权限']`) }}
+                </h2>
                 <h2 v-else class="breadcrumbs-current">{{ headerTitle }}</h2>
             </div>
         </div>

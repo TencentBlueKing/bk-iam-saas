@@ -56,7 +56,7 @@
                 type="button"
                 style="margin-bottom: 16px;"
                 @click="handleGoApplyProvisionPerm">
-                {{ $t(`m.nav['临时权限申请']`) }}
+                {{ $t(`m.perm['临时权限申请']`) }}
             </bk-button>
         </div>
         <div

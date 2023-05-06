@@ -586,6 +586,7 @@
             :width="600"
             :show.sync="isShowConfirmDialog"
             :title="confirmDialogTitle"
+            :is-custom-style="true"
             @on-cancel="isShowConfirmDialog = false"
             @on-sumbit="isShowConfirmDialog = false"
         />
