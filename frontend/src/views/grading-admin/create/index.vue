@@ -1014,25 +1014,26 @@
                     authorization_scopes: data,
                     sync_perm
                 };
+                console.log(params, '参数');
                 window.changeDialog = false;
                 this.submitLoading = true;
-                try {
-                    await this.$store.dispatch('role/addRatingManager', params);
-                    await this.$store.dispatch('roleList');
-                    this.messageSuccess(this.$t(+this.id > 0 ? `m.info['克隆管理空间成功']` : `m.info['新建管理空间成功']`), 1000);
-                    this.$router.go(-1);
-                } catch (e) {
-                    console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
-                } finally {
-                    this.submitLoading = false;
-                }
+                // try {
+                //     await this.$store.dispatch('role/addRatingManager', params);
+                //     await this.$store.dispatch('roleList');
+                //     this.messageSuccess(this.$t(+this.id > 0 ? `m.info['克隆管理空间成功']` : `m.info['新建管理空间成功']`), 1000);
+                //     this.$router.go(-1);
+                // } catch (e) {
+                //     console.error(e);
+                //     this.bkMessageInstance = this.$bkMessage({
+                //         limit: 1,
+                //         theme: 'error',
+                //         message: e.message || e.data.msg || e.statusText,
+                //         ellipsisLine: 2,
+                //         ellipsisCopy: true
+                //     });
+                // } finally {
+                //     this.submitLoading = false;
+                // }
             },
 
             handleCancel () {
