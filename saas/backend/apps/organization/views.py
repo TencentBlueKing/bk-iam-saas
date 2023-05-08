@@ -123,7 +123,10 @@ class UserView(views.APIView):
 
         users = User.objects.filter(username__in=usernames)
 
-        data = [{"username": u.username, "name": u.display_name} for u in users]
+        data = [
+            {"username": u.username, "name": u.display_name, "departments": [d.full_name for d in u.departments]}
+            for u in users
+        ]
 
         return Response(data)
 

@@ -85,7 +85,7 @@ from backend.common.error_codes import error_codes
 from backend.common.lock import gen_role_upsert_lock
 from backend.common.serializers import SystemQuerySLZ
 from backend.common.time import get_soon_expire_ts
-from backend.service.constants import PermissionCodeEnum, RoleRelatedObjectType, RoleType
+from backend.service.constants import GroupSaaSAttributeEnum, PermissionCodeEnum, RoleRelatedObjectType, RoleType
 from backend.service.models import Subject
 from backend.trans.role import RoleTrans
 
@@ -144,7 +144,13 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
         # 创建同步权限用户组
         if info.sync_perm:
-            self.group_biz.create_sync_perm_group_by_role(role, user_id)
+            self.group_biz.create_sync_perm_group_by_role(
+                role,
+                user_id,
+                attrs={
+                    GroupSaaSAttributeEnum.SOURCE_FROM_ROLE.value: True,
+                },
+            )
 
         audit_context_setter(role=role)
 
@@ -596,7 +602,9 @@ class UserView(views.APIView):
         subjects = scope_checker.check([Subject.from_username(u.username) for u in users], False)
 
         data = [
-            {"username": u.username, "name": u.display_name} for u in users if u.username in {s.id for s in subjects}
+            {"username": u.username, "name": u.display_name, "departments": [d.full_name for d in u.departments]}
+            for u in users
+            if u.username in {s.id for s in subjects}
         ]
 
         return Response(data)
@@ -798,7 +806,13 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
         # 创建同步权限用户组
         if info.sync_perm:
-            self.group_biz.create_sync_perm_group_by_role(role, user_id)
+            self.group_biz.create_sync_perm_group_by_role(
+                role,
+                user_id,
+                attrs={
+                    GroupSaaSAttributeEnum.SOURCE_FROM_ROLE.value: True,
+                },
+            )
 
         audit_context_setter(role=role)
 
