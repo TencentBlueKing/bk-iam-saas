@@ -180,7 +180,10 @@ class OrganizationViewSet(GenericViewSet):
                 }
                 for r in departments
             ],
-            "users": [{"username": i.username, "name": i.display_name} for i in users],
+            "users": [
+                {"username": i.username, "name": i.display_name, "departments": [d.full_name for d in i.departments]}
+                for i in users
+            ],
         }
         return Response(data)
 
