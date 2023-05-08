@@ -41,7 +41,7 @@ from backend.apps.role.audit import (
     RolePolicyAuditProvider,
     RoleUpdateAuditProvider,
 )
-from backend.apps.role.filters import GradeMangerFilter, RoleCommonActionFilter
+from backend.apps.role.filters import GradeMangerFilter, RoleCommonActionFilter, RoleSearchFilter
 from backend.apps.role.models import Role, RoleCommonAction, RoleRelatedObject, RoleRelation, RoleUser
 from backend.apps.role.serializers import (
     BaseGradeMangerSchemaSLZ,
@@ -59,6 +59,7 @@ from backend.apps.role.serializers import (
     RoleGroupMembersRenewSLZ,
     RoleIdSLZ,
     RoleScopeSubjectSLZ,
+    RoleSearchSLZ,
     RoleSubjectCheckSLZ,
     SubsetMangerCreateSLZ,
     SubsetMangerDetailSLZ,
@@ -84,7 +85,7 @@ from backend.common.error_codes import error_codes
 from backend.common.lock import gen_role_upsert_lock
 from backend.common.serializers import SystemQuerySLZ
 from backend.common.time import get_soon_expire_ts
-from backend.service.constants import PermissionCodeEnum, RoleRelatedObjectType, RoleType
+from backend.service.constants import GroupSaaSAttributeEnum, PermissionCodeEnum, RoleRelatedObjectType, RoleType
 from backend.service.models import Subject
 from backend.trans.role import RoleTrans
 
@@ -143,7 +144,13 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
         # 创建同步权限用户组
         if info.sync_perm:
-            self.group_biz.create_sync_perm_group_by_role(role, user_id)
+            self.group_biz.create_sync_perm_group_by_role(
+                role,
+                user_id,
+                attrs={
+                    GroupSaaSAttributeEnum.SOURCE_FROM_ROLE.value: True,
+                },
+            )
 
         audit_context_setter(role=role)
 
@@ -595,7 +602,9 @@ class UserView(views.APIView):
         subjects = scope_checker.check([Subject.from_username(u.username) for u in users], False)
 
         data = [
-            {"username": u.username, "name": u.display_name} for u in users if u.username in {s.id for s in subjects}
+            {"username": u.username, "name": u.display_name, "departments": [d.full_name for d in u.departments]}
+            for u in users
+            if u.username in {s.id for s in subjects}
         ]
 
         return Response(data)
@@ -797,7 +806,13 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
         # 创建同步权限用户组
         if info.sync_perm:
-            self.group_biz.create_sync_perm_group_by_role(role, user_id)
+            self.group_biz.create_sync_perm_group_by_role(
+                role,
+                user_id,
+                attrs={
+                    GroupSaaSAttributeEnum.SOURCE_FROM_ROLE.value: True,
+                },
+            )
 
         audit_context_setter(role=role)
 
@@ -949,3 +964,32 @@ class RoleSubjectScopCheckView(views.APIView):
         )
 
         return Response([one.dict() for one in exist_subjects])
+
+
+class RoleSearchViewSet(mixins.ListModelMixin, GenericViewSet):
+    """
+    管理员搜索
+    """
+
+    queryset = Role.objects.filter(type__in=[RoleType.GRADE_MANAGER.value, RoleType.SUBSET_MANAGER.value]).order_by(
+        "-updated_time"
+    )
+    serializer_class = RoleSearchSLZ
+    filterset_class = RoleSearchFilter
+
+    def get_queryset(self):
+        # 作为超级管理员时，可以管理所有分级管理员
+        if self.request.role.type == RoleType.SUPER_MANAGER.value:
+            return self.queryset
+
+        # 普通用户只能查询到自己加入的管理员
+        role_ids = list(RoleUser.objects.filter(username=self.request.user.username).values_list("role_id", flat=True))
+        return self.queryset.filter(id__in=role_ids)
+
+    @swagger_auto_schema(
+        operation_description="管理员搜索",
+        responses={status.HTTP_200_OK: RoleSearchSLZ(label="分级管理员列表", many=True)},
+        tags=["role"],
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)

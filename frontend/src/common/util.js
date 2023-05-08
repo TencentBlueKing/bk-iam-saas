@@ -567,3 +567,30 @@ export function getTreeNode (id, list) {
         }
     }
 }
+
+// 处理中英文国际化
+export function renderLabelWidth (payload) {
+    const isCN = ['zh-cn'].includes(window.CUR_LANGUAGE);
+    const typeMap = {
+        resource: () => {
+            return isCN ? 120 : 120;
+        },
+        member: () => {
+            return isCN ? 140 : 350;
+        },
+        rating_manager_merge_action_guide: () => {
+            return isCN ? { top: '-25px', right: '260px' } : { top: '-30px', right: '260px' };
+        }
+    };
+    return typeMap[payload]();
+}
+
+// 获取cookie
+export function getCookie (name) {
+    const data = document.cookie.split(';');
+    const params = {};
+    for (let i = 0; i < data.length; i++) {
+        params[data[i].split('=')[0].replace(/\s/, '')] = data[i].split('=')[1];
+    }
+    return params[name];
+}

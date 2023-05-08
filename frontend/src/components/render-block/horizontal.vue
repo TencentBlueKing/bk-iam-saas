@@ -1,9 +1,13 @@
 <template functional>
     <div :class="['horizontal-item', props.extCls || '']" :style="props.styles">
-        <div class="label" :class="props.required ? 'is-required' : ''">
+        <div
+            class="label"
+            :class="props.required ? 'is-required' : ''"
+            :style="{ minWidth: `${(props.labelWidth >= 0 ? props.labelWidth : 120)}px` }">
             {{ props.label ? `${props.label}` : ''}}
         </div>
-        <div class="content">
+        <div class="content"
+            :style="{ minWidth: `calc(100% - ${(props.labelWidth >= 0 ? props.labelWidth : 120) + 14}px)` }">
             <slot />
             <slot name="append" />
         </div>
@@ -27,6 +31,9 @@
             label: {
                 type: String,
                 default: ''
+            },
+            labelWidth: {
+                type: Number
             }
         }
     };

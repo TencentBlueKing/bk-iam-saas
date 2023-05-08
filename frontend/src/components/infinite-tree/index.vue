@@ -173,14 +173,19 @@
             },
             nameType () {
                 return (payload) => {
-                    const { name, type, username, full_name } = payload;
+                    const { name, type, username, full_name: fullName } = payload;
                     const typeMap = {
                         user: () => {
-                           return name ? `${username}(${name})` : username;
+                           // eslint-disable-next-line camelcase
+                           if (fullName) {
+                            return fullName;
+                           } else {
+                            return name ? `${username}(${name})` : username;
+                           }
                         },
                         depart: () => {
                             // eslint-disable-next-line camelcase
-                            return full_name || name;
+                            return fullName || name;
                         }
                     };
                     return typeMap[type]();

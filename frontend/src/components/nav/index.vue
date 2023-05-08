@@ -33,6 +33,7 @@
                 :placeholder="$t(`m.common['选择管理空间']`)"
                 :search-placeholder="$t(`m.common['搜索管理空间']`)"
                 :searchable="true"
+                :allow-enter="false"
                 :prefix-icon="user.role && ['subset_manager'].includes(user.role.type) ?
                     'icon iam-icon iamcenter-level-two-manage-space' : 'icon iam-icon iamcenter-level-one-manage-space'"
                 :remote-method="handleRemoteTree"
@@ -52,7 +53,13 @@
                     @expand-on-click="handleExpandClick"
                     @select-change="handleSelectNode">
                     <div slot-scope="{ node,data }">
-                        <div :style="[{ opacity: data.is_member ? '1' : '0.4' }]">
+                        <div
+                            class="single-hide"
+                            :style="[
+                                { 'max-width': '220px' },
+                                { opacity: data.is_member ? '1' : '0.4' }
+                            ]"
+                            :title="data.name">
                             <Icon :type="node.level === 0 ? 'level-one-manage-space' : 'level-two-manage-space'" :style="{ color: formatColor(node) }" />
                             <span>{{data.name}}</span>
                         </div>
@@ -91,7 +98,7 @@
                                     <span>{{$t(`m.common['系统']`)}}{{child.name}}</span>
                                 </span>
                                 <span v-else class="iam-menu-text single-hide" :title="child.name">{{ child.name }}</span>
-                                <span v-if="['myManageSpace'].includes(child.rkey)" @click.stop>
+                                <span v-if="['myManageSpace'].includes(child.rkey) && index === 0" @click.stop>
                                     <iam-guide
                                         ref="popconfirm"
                                         type="grade_manager_upgrade"
@@ -116,7 +123,7 @@
                                                 <strong>{{ $t(`m.info['管理空间']`) }},</strong>
                                             </div>
                                             <div class="content-desc">
-                                                {{ $t(`m.info['支持一级、两级管理空间，更加精细化管理。']`) }}
+                                                {{ $t(`m.info['支持一级、二级管理空间，更加精细化管理。']`) }}
                                             </div>
                                         </div>
                                         <div slot="popconfirm-show">
@@ -286,33 +293,31 @@
             },
             roleList: {
                 handler (value) {
-                    value = value.map((e) => {
-                        e.level = 0;
-                        if (e.sub_roles.length) {
-                            e.sub_roles.forEach(sub => {
-                                sub.level = 1;
-                            });
-                            e.children = e.sub_roles;
-                        }
-                        return e;
-                    });
-                    this.curRoleList.splice(0, this.curRoleList.length, ...value);
+                    if (value.length) {
+                        value = value.map((e) => {
+                            e.level = 0;
+                            if (e.sub_roles.length) {
+                                e.sub_roles.forEach(sub => {
+                                    sub.level = 1;
+                                });
+                                e.children = e.sub_roles;
+                            }
+                            return e;
+                        });
+                        this.curRoleList.splice(0, this.curRoleList.length, ...value);
+                    }
                 },
                 immediate: true
             },
             curRole: {
-                handler (value) {
-                    if (['staff'].includes(value) && this.index === 0) {
-                        this.fetchSpaceUpdateGuide();
-                    }
+                handler () {
+                    this.fetchSpaceUpdateGuide();
                 },
                 immediate: true
             }
         },
         created () {
-            this.curRole = this.user.role.type;
-            this.curRoleId = this.navCurRoleId || this.user.role.id;
-            this.$store.commit('updateCurRoleId', this.curRoleId);
+            this.fetchRoleUpdate(this.user);
             this.isUnfold = this.navStick || !this.navFold;
             this.$once('hook:beforeDestroy', () => {
                 bus.$off('theme-change');
@@ -331,12 +336,25 @@
             });
         },
         methods: {
+            // 监听当前已选中的角色是否有变更
+            fetchRoleUpdate ({ role }) {
+                const { id, type } = role;
+                // console.log(role, '变更');
+                this.curRole = type;
+                this.curRoleId = this.navCurRoleId || id;
+                this.$store.commit('updateCurRoleId', this.curRoleId);
+                if (this.index === 1 && this.$refs.selectTree) {
+                    this.$refs.selectTree.selected = this.curRoleId;
+                }
+            },
             fetchSpaceUpdateGuide () {
-                this.$nextTick(() => {
-                    this.$refs.popconfirm
-                        && this.$refs.popconfirm[0].$refs.popconfirmCom
-                        && this.$refs.popconfirm[0].$refs.popconfirmCom.$refs.popover.showHandler();
-                });
+                if (['staff'].includes(this.curRole) && this.index === 0) {
+                    this.$nextTick(() => {
+                        this.$refs.popconfirm && this.$refs.popconfirm.length
+                            && this.$refs.popconfirm[0].$refs.popconfirmCom
+                            && this.$refs.popconfirm[0].$refs.popconfirmCom.$refs.popover.showHandler();
+                    });
+                }
             },
             initTree (parentId, list) {
                 if (!parentId) {
@@ -363,6 +381,7 @@
                 const { params, name } = to;
                 const pathName = name;
                 this.handleSwitchPerm(params);
+                this.fetchSpaceUpdateGuide();
                 for (const [key, value] of this.routerMap.entries()) {
                     if (key.includes(pathName)) {
                         this.openedItem = value;
@@ -391,10 +410,10 @@
                 }
             },
 
-            // 从其他菜单进入权限管理选择角色
+            // 从其他菜单进入管理空间选择角色
             handleSwitchPerm ({ id, entry }) {
-                if (entry) {
-                    this.$refs.selectTree.selected = id;
+                if (entry && this.$refs.selectTree) {
+                    this.$refs.selectTree.selected = Number(id);
                 }
             },
 
@@ -425,7 +444,6 @@
             },
 
             handleRemoteTree  (value) {
-                this.isEmpty = this.$refs.selectTree.filter(value).length === 0;
                 this.$refs.selectTree && this.$refs.selectTree.filter(value);
             },
 
@@ -573,7 +591,8 @@
     justify-content: space-between;
 }
 
-.iam-nav-select-dropdown-content .bk-big-tree {
+.iam-nav-select-dropdown-content
+ .bk-big-tree {
     &-node {
         padding: 0 16px;
         .node-options {
@@ -582,7 +601,9 @@
                 margin: 0 0 0 -20px;
             }
         }
-        
+        .iamcenter-level-two-manage-space {
+            margin-left: 15px;
+        }
     }
     &-empty {
         color: #fff !important;
@@ -606,6 +627,9 @@
     }
     .tippy-tooltip.light-border-theme {
         box-shadow: 0 0 2px 0 #dcdee5;
+    }
+    .tippy-arrow {
+        top: 120px !important;
     }
  }
 </style>

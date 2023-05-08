@@ -35,16 +35,17 @@ DATABASES = {
         "HOST": env.str("AUDIT_DB_HOST", default=env.str("MYSQL_HOST")),
         "PORT": env.int("AUDIT_DB_PORT", default=env.int("MYSQL_PORT")),
     },
-    # only for bkci iam v0 migration
-    "bkci": {
+}
+
+if env.str("BKCI_DB_NAME", default="") and env.str("BKCI_DB_USERNAME", default=""):
+    DATABASES["bkci"] = {
         "ENGINE": "django.db.backends.mysql",
         "NAME": env.str("BKCI_DB_NAME", default="bkci"),
         "USER": env.str("BKCI_DB_USERNAME", default="root"),
         "PASSWORD": env.str("BKCI_DB_PASSWORD", default=""),
         "HOST": env.str("BKCI_DB_HOST", default="localhost"),
         "PORT": env.int("BKCI_DB_PORT", default=3306),
-    },
-}
+    }
 
 # cache
 REDIS_HOST = env.str("REDIS_HOST")
@@ -203,7 +204,7 @@ CORS_ORIGIN_WHITELIST = (
 # 站点URL
 SITE_URL = env.str("BKPAAS_SUB_PATH", default="/")
 FORCE_SCRIPT_NAME = SITE_URL
-STATIC_URL = SITE_URL + "staticfiles/"
+STATIC_URL = env.str("BKPAAS_STATIC_URL", default=SITE_URL + "staticfiles/")
 AJAX_URL_PREFIX = SITE_URL + "api/v1"
 
 # 只对正式环境日志级别进行配置，可以在这里修改

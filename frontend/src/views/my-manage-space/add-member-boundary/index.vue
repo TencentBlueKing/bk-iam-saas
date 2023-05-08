@@ -1,6 +1,7 @@
 <template>
     <smart-action class="iam-add-member-wrapper">
-        <render-horizontal-block>
+        <render-horizontal-block
+            :label-width="0">
             <div slot="header" class="title">
                 <template v-if="showExpiredAt">
                     <div v-if="isBatch">{{ $t(`m.common['批量添加成员']`) }}</div>
@@ -16,7 +17,7 @@
                     </div>
                 </template>
                 <template v-else>
-                    <template v-if="title !== ''">
+                    <template v-if="title">
                         {{ title }}
                     </template>
                     <template v-else>
@@ -196,7 +197,7 @@
                                             <Icon type="file-close" class="folder-icon" />
                                             <span
                                                 class="organization-name"
-                                                :title="item.full_name"
+                                                :title="nameType(item)"
                                             >
                                                 {{ item.name }}
                                             </span>
@@ -218,8 +219,7 @@
                                             <Icon type="personal-user" class="user-icon" />
                                             <span
                                                 class="user-name"
-                                                :title="item.name ? `${item.username}(${item.name})`
-                                                    : item.username"
+                                                :title="nameType(item)"
                                             >
                                                 {{ item.username }}
                                                 <template v-if="item.name">
@@ -479,6 +479,24 @@
             },
             contentHeight () {
                 return getWindowHeight() - 120;
+            },
+            nameType () {
+                return (payload) => {
+                    const { name, type, username, full_name: fullName } = payload;
+                    const typeMap = {
+                        user: () => {
+                           if (fullName) {
+                            return fullName;
+                           } else {
+                            return name ? `${username}(${name})` : username;
+                           }
+                        },
+                        depart: () => {
+                            return fullName || name;
+                        }
+                    };
+                    return typeMap[type] ? typeMap[type]() : typeMap['user']();
+                };
             }
         },
         watch: {
@@ -1173,6 +1191,7 @@
                             child.async = false;
                             child.isNewMember = false;
                             child.parentNodeId = payload.id;
+                            child.full_name = `${payload.full_name}/${child.name}`;
 
                             // parentNodeId + username 组合成id
                             child.id = `${child.parentNodeId}${child.username}`;
@@ -1322,7 +1341,7 @@
                             type: 'user',
                             name: item.name,
                             username: item.username || item.id,
-                            full_name: item.username
+                            full_name: item.full_name || item.username
                             // count: item.count
                         };
                     });

@@ -38,6 +38,7 @@
     import IamEditTextarea from '@/components/iam-edit/textarea';
     import RenderLayout from '@/views/group/common/render-layout';
     import IamEditMember from './iam-edit-member';
+    import { mapGetters } from 'vuex';
 
     export default {
         name: '',
@@ -74,6 +75,9 @@
                     sync_perm: false
                 }
             };
+        },
+        computed: {
+            ...mapGetters(['user', 'roleList'])
         },
         watch: {
             data: {
@@ -112,6 +116,7 @@
         methods: {
             handleUpdateRatingManager (payload) {
                 const { name, members, description, sync_perm } = this.formData;
+                const { type, id } = this.user.role;
                 const params = {
                     name,
                     description,
@@ -120,7 +125,8 @@
                     ...payload,
                     id: this.id
                 };
-                return this.$store.dispatch('spaceManage/updateSecondManagerManager', params)
+                const url = ['subset_manager'].includes(type) ? 'spaceManage/updateSecondManagerManager' : 'role/updateRatingManager';
+                return this.$store.dispatch(url, params)
                     .then(async () => {
                         this.messageSuccess(this.$t(`m.info['编辑成功']`), 2000);
                         const { name, description, members } = params;
@@ -136,18 +142,39 @@
                         const headerTitle = params.name;
                         this.$store.commit('setHeaderTitle', headerTitle);
                         await this.$store.dispatch('roleList');
-                    }, (e) => {
+                        const ExitManager = this.roleList.find(item => !item.is_member && item.id === id);
+                        if (ExitManager) {
+                            this.handleExitPermManage();
+                        }
+                    }, async (e) => {
                         console.warn('error');
-                        this.bkMessageInstance = this.$bkMessage({
-                            limit: 1,
-                            theme: 'error',
-                            message: e.message || e.data.msg || e.statusText
-                        });
+                        const { response } = e;
+                        if (response && response.status && [401, 404].includes(response.status)) {
+                            this.handleExitPermManage();
+                        } else {
+                            this.bkMessageInstance = this.$bkMessage({
+                                limit: 1,
+                                theme: 'error',
+                                message: e.message || e.data.msg || e.statusText
+                            });
+                        }
                     });
             },
 
             handleUpdateMembers (payload) {
                 this.handleUpdateRatingManager(payload);
+            },
+            
+            // 退出已有二级成员的一级管理空间
+            async handleExitPermManage () {
+                await this.$store.dispatch('role/updateCurrentRole', { id: 0 });
+                await this.$store.dispatch('userInfo');
+                this.$store.commit('updateIndex', 0);
+                window.localStorage.setItem('index', 0);
+                this.messageSuccess(this.$t(`m.info['您已退出当前管理员授权范围']`), 2000);
+                this.$router.push({
+                    name: 'myManageSpace'
+                });
             }
         }
     };

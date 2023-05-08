@@ -28,7 +28,11 @@
                         class="select-wrap-checkbox"
                         v-model="formData.sync_perm"
                         @change="handleCheckboxChange">
-                        {{ $t(`m.grading['同时具备空间下操作和资源权限']`) }}
+                        <span
+                            class="checkbox-sync-perm"
+                            v-bk-tooltips="$t(`m.levelSpace['管理员将同步到管理空间下自动创建的管理员组里']`)">
+                            {{ $t(`m.grading['同时具备空间下操作和资源权限']`) }}
+                        </span>
                     </bk-checkbox>
                 </div>
                 <p class="name-empty-error" v-if="isShowMemberError">{{ $t(`m.verify['请填写管理员']`) }}</p>
@@ -222,7 +226,13 @@
         align-items: center;
         &-checkbox {
             display: flex;
+            align-items: center;
             margin-left: 20px;
+            .checkbox-sync-perm {
+                display: inline-block;
+                line-height: 20px;
+                border-bottom: 1px dashed #979ba5;
+            }
         }
     }
 

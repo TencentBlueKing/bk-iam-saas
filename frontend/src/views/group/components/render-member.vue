@@ -1,6 +1,6 @@
 <template>
     <render-horizontal-block
-        label="用户组成员"
+        :label="$t(`m.userGroup['用户组成员']`)"
         ext-cls="iam-user-group-member-wrapper">
         <section class="action-wrapper" @click.stop="handleAddMember">
             <Icon bk type="plus-circle-shape" />
@@ -9,9 +9,9 @@
         <render-member-item :data="users" @on-delete="handleDeleteUser" v-if="isHasUser" />
         <render-member-item :data="departments" type="department" v-if="isHasDepartment"
             @on-delete="handleDeleteDepartment" />
-        <render-vertical-block label="授权期限" ext-cls="auth-expired-at">
+        <render-vertical-block :label="$t(`m.common['授权期限']`)" ext-cls="auth-expired-at">
             <iam-deadline :value="expiredAt" @on-change="handleDeadlineChange" />
-            <p class="expired-at-error" v-if="expiredAtError">请选择授权期限</p>
+            <p class="expired-at-error" v-if="expiredAtError">{{ $t(`m.verify['请选择授权期限']`) }}</p>
         </render-vertical-block>
     </render-horizontal-block>
 </template>

@@ -64,7 +64,7 @@ class MigrateDataView(GenericViewSet, mixins.ListModelMixin):
     authentication_classes = [BKCIMigrateAutherization]
     permission_classes = [AllowAny]
 
-    queryset = MigrateData.objects.all().order_by("-id")
+    queryset = MigrateData.objects.all().order_by("id")
     serializer_class = MigrateDataSLZ
     filterset_class = MigrateDataFilter
 

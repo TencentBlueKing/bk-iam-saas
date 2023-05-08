@@ -27,13 +27,24 @@
                     </span>
                 </template>
             </bk-table-column>
+            <bk-table-column :label="$t(`m.levelSpace['管理员']`)" prop="members" width="300">
+                <template slot-scope="{ row, $index }">
+                    <iam-edit-member-selector
+                        field="members"
+                        width="200"
+                        :placeholder="$t(`m.verify['请输入']`)"
+                        :value="row.members"
+                        :index="$index"
+                        @on-change="handleUpdateMembers(...arguments, row)" />
+                </template>
+            </bk-table-column>
             <bk-table-column :label="$t(`m.common['描述']`)">
                 <template slot-scope="{ row }">
                     <span :title="row.description">{{ row.description || '--' }}</span>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.grading['更新人']`)" prop="updater"></bk-table-column>
-            <bk-table-column :label="$t(`m.grading['更新时间']`)">
+            <bk-table-column :label="$t(`m.grading['更新时间']`)" width="240">
                 <template slot-scope="{ row }">
                     <span :title="row.updated_time">{{ row.updated_time }}</span>
                 </template>
@@ -41,10 +52,19 @@
             <bk-table-column :label="$t(`m.common['操作']`)" width="300">
                 <template slot-scope="{ row }">
                     <section>
-                        <bk-button theme="primary" text @click="handleView(row, 'role')">
-                            {{ $t(`m.levelSpace['进入']`) }}
+                        <bk-button
+                            theme="primary"
+                            text
+                            @click="handleView(row, 'role')"
+                            :disabled="disabledPerm(row)">
+                            {{ $t(`m.levelSpace['进入空间']`) }}
                         </bk-button>
-                        <bk-button theme="primary" text style="margin-left: 10px;" @click="handleView(row, 'create')">
+                        <bk-button
+                            theme="primary"
+                            text
+                            style="margin-left: 10px;"
+                            @click="handleView(row, 'create')"
+                            :disabled="disabledPerm(row)">
                             {{ $t(`m.levelSpace['克隆']`) }}
                         </bk-button>
                     </section>
@@ -68,8 +88,13 @@
     import { mapGetters } from 'vuex';
     import { buildURLParams } from '@/common/url';
     import { formatCodeData, getWindowHeight } from '@/common/util';
+    import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
+
     export default {
         name: 'firstManageSpace',
+        components: {
+            IamEditMemberSelector
+        },
         data () {
             return {
                 searchValue: '',
@@ -108,6 +133,12 @@
             },
             tableHeight () {
                 return getWindowHeight() - 185;
+            },
+            disabledPerm () {
+                return (payload) => {
+                    const result = payload.members.map(item => item.username).includes(this.user.username);
+                    return !result;
+                };
             }
         },
         watch: {
@@ -173,6 +204,20 @@
 
             async fetchPageData () {
                 await this.fetchGradingAdmin();
+            },
+
+            async handleUpdateMembers (payload, index, role) {
+                const { name, description, members } = payload;
+                const params = {
+                    name: name || role.name,
+                    description: description || role.description,
+                    members: members || role.members,
+                    id: role.id
+                };
+                await this.$store.dispatch('spaceManage/updateSecondManagerManager', params);
+                this.resetPagination();
+                this.messageSuccess(this.$t(`m.info['编辑成功']`), 2000);
+                await this.fetchGradingAdmin(true);
             },
 
             handleNavAuthBoundary (payload) {

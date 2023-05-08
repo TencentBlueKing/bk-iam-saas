@@ -37,12 +37,12 @@
                     <span :title="row.owner">{{ row.owner }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.common['创建时间']`)" :sortable="true" sort-by="created_time">
+            <bk-table-column :label="$t(`m.common['创建时间']`)" width="240" :sortable="true" sort-by="created_time">
                 <template slot-scope="{ row }">
                     <span :title="row.created_time">{{ row.created_time }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.access['更新时间']`)" :sortable="true" sort-by="updated_time">
+            <bk-table-column :label="$t(`m.access['更新时间']`)" :sortable="true" sort-by="updated_time" width="240">
                 <template slot-scope="{ row }">
                     <span :title="row.updated_time">{{ row.updated_time }}</span>
                 </template>

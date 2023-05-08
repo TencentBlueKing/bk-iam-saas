@@ -116,6 +116,7 @@
     import { il8n, language } from '@/language';
     import { bus } from '@/common/bus';
     import { buildURLParams } from '@/common/url';
+    import { getCookie } from '@/common/util';
     import SystemLog from '../system-log';
     import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
     import Cookie from 'js-cookie';
@@ -257,7 +258,7 @@
                 userGroupName: '',
                 navData: [
                     { text: this.$t(`m.nav['个人工作台']`), id: 0, show: true, type: 'staff' },
-                    { text: this.$t(`m.nav['权限管理']`), id: 1, show: true, type: 'all_manager' },
+                    { text: this.$t(`m.nav['管理空间']`), id: 1, show: true, type: 'all_manager' },
                     { text: this.$t(`m.nav['统计分析']`), id: 2, show: false, type: 'super_manager' },
                     { text: this.$t(`m.nav['平台管理']`), id: 3, show: false, type: 'super_manager' }
                 ],
@@ -504,7 +505,8 @@
                         window.localStorage.removeItem('iam-header-title-cache');
                         window.localStorage.removeItem('iam-header-name-cache');
                         this.$router.push({
-                            name: this.isRatingChange ? 'myManageSpace' : this.defaultRouteList[navIndex]
+                            name: this.isRatingChange ? 'myManageSpace' : this.defaultRouteList[navIndex],
+                            params: navIndex === 1 ? { id: this.user.role.id, entry: 'updateRole' } : {}
                         });
                     } else {
                         // if (navIndex === 0 && ['gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'].includes(curRouterName)) {
@@ -538,10 +540,11 @@
             },
 
             async handleSelect (roleData, index) {
+                const currentData = { ...roleData };
                 this.navData.forEach((e) => {
                     e.active = false;
                 });
-                roleData.active = true;
+                this.$set(currentData, 'active', true);
                 this.$store.commit('updateIndex', index);
                 window.localStorage.setItem('index', index);
                 // if (this.routeName === 'addGroupPerm') {
@@ -551,9 +554,29 @@
                 // }
                 this.isShowGradingWrapper = false;
                 this.isShowUserDropdown = false;
-                await this.$store.dispatch('role/updateCurrentRole', { id: roleData.id });
-                bus.$emit('nav-change', { id: roleData.id }, index);
-                this.updateRouter(index);
+                try {
+                    await this.$store.dispatch('role/updateCurrentRole', { id: currentData.id });
+                    bus.$emit('nav-change', { id: currentData.id }, index);
+                    this.updateRouter(index);
+                } catch (err) {
+                    if (index === 1 && this.curRoleList.length) {
+                        this.resetLocalStorage();
+                        const { id, type, name } = this.curRoleList[0];
+                        console.log('进来了', type);
+                        this.$set(currentData, 'id', id);
+                        this.navCurRoleId = id;
+                        this.curRoleId = id;
+                        this.curRole = type;
+                        this.$store.commit('updateCurRoleId', id);
+                        this.$store.commit('updateIdentity', { id, type, name });
+                        this.$store.commit('updateNavId', id);
+                        this.$store.commit('updateIndex', index);
+                        window.localStorage.setItem('index', index);
+                        bus.$emit('nav-change', { id: currentData.id }, index);
+                        await this.$store.dispatch('role/updateCurrentRole', { id });
+                        this.updateRouter(index, type);
+                    }
+                }
             },
 
             setMagicBoxLocale (targetLocale) {
@@ -562,18 +585,24 @@
                     'zh-cn': lang.zhCN,
                     en: lang.enUS
                 };
-                locale.use(magicBoxLanguageMap[targetLocale]);
-                window.CUR_LANGUAGE = targetLocale;
-                this.$i18n.locale = targetLocale;
+                locale.use(magicBoxLanguageMap[getCookie('blueking_language')]);
+                window.CUR_LANGUAGE = getCookie('blueking_language');
+                this.$i18n.locale = getCookie('blueking_language');
                 window.location.reload();
             },
-
+        
             handleChangeLocale (payload) {
+                this.setCookie('blueking_language', payload);
                 Cookie.set('blueking_language', payload, {
-                    expires: 365,
-                    domain: window.location.hostname.split('.').slice(-2).join('.')
+                    domain: window.location.hostname.split('.').slice(1).join('.')
                 });
                 this.setMagicBoxLocale(payload);
+            },
+
+            setCookie (name, value) {
+                const date = new Date();
+                date.setTime(date.getTime() - 10000);
+                document.cookie = name + '=' + value + ';' + 'expire=' + date.toGMTString() + '; path=/';
             },
 
             handleSwitchIdentity () {

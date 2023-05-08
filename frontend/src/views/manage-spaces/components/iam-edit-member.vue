@@ -37,14 +37,31 @@
                 ref="input"
                 :api="userApi"
                 :placeholder="$t(`m.verify['请输入']`)"
+                :empty-text="$t(`m.common['无匹配人员']`)"
                 @blur="handleRtxBlur"
                 @change="handleChange">
             </bk-user-selector>
         </template>
+        <bk-dialog
+            ext-cls="confirm-space-dialog"
+            v-model="isShowDialog"
+            :close-icon="false"
+            :title="`${$t(`m.common['确定退出管理空间']`)}?`"
+            :width="600"
+            :footer-position="footerPosition"
+            @cancel="handleCancel"
+            @confirm="handleDeleteRole">
+            <p style="text-align: center">
+                <span>{{ $t(`m.common['退出后']`) }}</span>
+                <span>{{ $t(`m.common['，']`) }}</span>
+                <span>{{ deleteList.join('、') }}{{ $t(`m.common['将不再具备相应的管理权限']`) }}</span>
+            </p>
+        </bk-dialog>
     </div>
 </template>
 <script>
     import BkUserSelector from '@blueking/user-selector';
+
     export default {
         name: 'iam-edit-selector',
         components: {
@@ -84,10 +101,14 @@
                 displayValue: this.value,
                 isEditable: false,
                 isLoading: false,
+                isShowDialog: false,
                 userApi: window.BK_USER_API,
                 newPayload: '',
                 disabledValue: [],
-                editValue: []
+                editValue: [],
+                footerPosition: 'center',
+                roleIndex: -1,
+                deleteList: []
             };
         },
         computed: {
@@ -101,11 +122,11 @@
             }
         },
         watch: {
-            value (newVal) {
-                this.disabledValue = [...newVal].filter(e => e.readonly);
-                this.displayValue = [...newVal];
-                // this.editValue = [...newVal].filter(e => !e.readonly).map(e => e.username);
-                this.editValue = [...newVal].map(e => e.username);
+            value: {
+                handler (newVal) {
+                    this.handleDefaultData(newVal);
+                },
+                immediate: true
             }
         },
         mounted () {
@@ -133,25 +154,49 @@
                 }
             },
 
+            // 设置默认值
+            handleDefaultData (payload) {
+                this.disabledValue = [...payload].filter(e => e.readonly);
+                this.displayValue = [...payload];
+                this.editValue = [...payload].filter(e => !e.readonly).map(e => e.username);
+                // this.editValue = [...payload].map(e => e.username);
+            },
+
             handleEdit () {
                 document.body.click();
                 this.isEditable = true;
                 this.$nextTick(() => {
-                    this.$refs.input.focus();
-                    const disabledValue = [...this.disabledValue].map(item => item.username);
-                    const selectedTag = this.$refs.input.$refs.selected;
-                    if (selectedTag && selectedTag.length) {
-                        selectedTag.forEach(item => {
-                            if (disabledValue.includes(item.innerText)) {
-                                item.className = 'user-selector-selected user-selector-selected-readonly';
+                    if (this.isEditable) {
+                        this.$refs.input && this.$refs.input.focus();
+                        const disabledValue = [...this.disabledValue].map(item => item.username);
+                        const selectedTag = this.$refs.input.$refs.selected;
+                        if (selectedTag && selectedTag.length) {
+                            if (disabledValue.length) {
+                                selectedTag.forEach(item => {
+                                    if (disabledValue.includes(item.innerText)) {
+                                        item.className = 'user-selector-selected user-selector-selected-readonly';
+                                    }
+                                });
                             }
-                        });
+                        }
                     }
                 });
             },
 
             handleDelete (index) {
-                this.displayValue.splice(index, 1);
+                if (this.displayValue.length === 1) {
+                    this.messageError(this.$t(`m.verify['管理员不能为空']`), 2000);
+                    return;
+                }
+                this.roleIndex = index;
+                this.isShowDialog = true;
+                this.deleteList = [this.displayValue[index].username];
+            },
+
+            async handleDeleteRole () {
+                if (this.roleIndex > -1) {
+                    this.displayValue.splice(this.roleIndex, 1);
+                }
                 this.$emit('on-change', {
                     [this.field]: this.displayValue
                 });
@@ -165,6 +210,7 @@
             },
 
             hideEdit (event) {
+                this.isEditable = false;
                 if (this.displayValue.length < 1) {
                     return;
                 }
@@ -176,11 +222,11 @@
                         }
                     }
                 }
-                this.isEditable = false;
             },
 
             triggerChange () {
                 this.isEditable = false;
+                console.log(this.displayValue);
                 if (JSON.stringify(this.displayValue) !== JSON.stringify(this.value)) {
                     this.isLoading = true;
                     this.remoteHandler({
@@ -199,7 +245,7 @@
                 const editValue = this.editValue.reduce((p, v) => {
                     p.push({
                         username: v,
-                        readonly: false
+                        readonly: !!(this.disabledValue.length && this.disabledValue.map(e => e.username).includes(v))
                     });
                     return p;
                 }, []);
@@ -207,11 +253,29 @@
             },
 
             handleRtxBlur () {
+                this.deleteList = [];
                 if (JSON.stringify(this.displayValue) !== JSON.stringify(this.value)) {
-                    this.$emit('on-change', {
-                        [this.field]: this.displayValue
-                    });
+                    this.isEditable = false;
+                    if (this.displayValue.length < 1) {
+                        this.handleDefaultData(this.value);
+                        this.messageError(this.$t(`m.verify['管理员不能为空']`), 2000);
+                        return;
+                    }
+                    this.deleteList = this.value.filter(item =>
+                        !this.editValue.includes(item.username) && !item.readonly).map(v => v.username);
+                    this.roleIndex = -1;
+                    if (this.deleteList.length) {
+                        this.isShowDialog = true;
+                    } else {
+                        this.$emit('on-change', {
+                            [this.field]: this.displayValue
+                        });
+                    }
                 }
+            },
+
+            handleCancel () {
+                this.handleDefaultData(this.value);
             }
         }
     };
@@ -253,7 +317,9 @@
                 font-size: 12px;
                 i {
                     font-size: 18px;
+                    line-height: 22px;
                     color: #979ba5;
+                    vertical-align: middle;
                     cursor: pointer;
                     &.disabled {
                         color: #c4c6cc;
@@ -299,4 +365,11 @@
             }
         }
     }
+    
+    /deep/ .confirm-space-dialog {
+            .bk-dialog-footer {
+               background-color: #ffffff;
+               border-top:none;
+            }
+        }
 </style>

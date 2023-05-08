@@ -31,19 +31,24 @@
                 ref="input"
                 :api="userApi"
                 :placeholder="$t(`m.verify['请输入']`)"
+                :empty-text="$t(`m.common['无匹配人员']`)"
                 @blur="handleBlur"
                 @change="handleRtxChange">
             </bk-user-selector>
         </template>
         <bk-dialog
-            ext-cls="comfirmDialog"
+            ext-cls="confirm-space-dialog"
             v-model="isShowDialog"
             :close-icon="showIcon"
-            :title="$t(`m.common['确定退出管理空间']`)"
-            :width="language === 'zh-cn' ? 400 : 600"
+            :title="`${$t(`m.common['确定退出管理空间']`)}?`"
+            :width="600"
             :footer-position="footerPosition"
             @confirm="dropOut">
-            <p>{{ $t(`m.common['退出将不在具备相应的管理权限']`) }}</p>
+            <p style="text-align: center">
+                <span>{{ $t(`m.common['退出后']`) }}</span>
+                <span>{{ $t(`m.common['，']`) }}</span>
+                <span>{{ deleteList.join('、') }}{{ $t(`m.common['将不再具备相应的管理权限']`) }}</span>
+            </p>
         </bk-dialog>
     </div>
 </template>
@@ -51,7 +56,6 @@
 <script>
     import _ from 'lodash';
     import BkUserSelector from '@blueking/user-selector';
-    import { language } from '@/language';
     export default {
         name: 'iam-edit-member',
         components: {
@@ -90,8 +94,8 @@
                 isShowDialog: false,
                 showIcon: false,
                 footerPosition: 'center',
-                newPayload: '',
-                language
+                newPayload: -1,
+                deleteList: []
             };
         },
         computed: {
@@ -136,16 +140,52 @@
                     });
                 }
             },
+            // 设置只读
+            handleReadOnly () {
+                this.$nextTick(() => {
+                    if (this.isEditable) {
+                        const selectedTag = this.$refs.input.$refs.selected;
+                        if (selectedTag && selectedTag.length === 1) {
+                            selectedTag.forEach(item => {
+                                item.className = this.newVal.includes(item.innerText)
+                                    ? 'user-selector-selected user-selector-selected-readonly' : 'user-selector-selected';
+                            });
+                        }
+                    }
+                });
+            },
             handleEdit () {
                 document.body.click();
                 this.isEditable = true;
                 this.$nextTick(() => {
                     this.$refs.input.focus();
+                    this.handleReadOnly();
                 });
             },
             handleBlur () {
-                if (!this.isEditable || this.newVal.length < 1) return;
-                this.triggerChange();
+                if (!this.isEditable || this.newVal.length < 1) {
+                    this.newVal = [...this.value].map(e => e.username);
+                    this.messageError(this.$t(`m.verify['管理员不能为空']`), 2000);
+                    return;
+                }
+                this.deleteList = [];
+                const editValue = this.editNewValue();
+                if (JSON.stringify(editValue) !== JSON.stringify(this.value)) {
+                    if (this.isShowRole) {
+                        // this.newVal = [...this.value].map(e => e.username);
+                        this.deleteList = this.value.filter(item =>
+                            !this.newVal.includes(item.username) && !item.readonly).map(v => v.username);
+                        this.newPayload = -1;
+                        console.log(editValue, this.value, this.deleteList);
+                        if (this.deleteList.length) {
+                            this.isShowDialog = true;
+                        } else {
+                            this.triggerChange();
+                        }
+                    } else {
+                        this.triggerChange();
+                    }
+                }
             },
             handleEnter (value, event) {
                 if (!this.isEditable) return;
@@ -157,29 +197,37 @@
                 this.deleteRole(this.newPayload);
             },
             handleDelete (payload) {
+                if (this.newVal.length === 1) {
+                    this.messageError(this.$t(`m.verify['管理员不能为空']`), 2000);
+                    return;
+                }
+                this.newPayload = payload;
                 // 超级管理员操作
                 if (this.isShowRole) {
-                    if (this.newVal.length !== 1) {
-                        this.isShowDialog = true;
-                    }
-                    this.newPayload = payload;
-                }
-                if (!this.isShowRole) {
-                    if (this.newVal.length !== 1) {
-                        this.newVal.splice(payload, 1);
-                        this.triggerChange();
-                    }
-                    // this.newPayload = payload;
+                    this.deleteList = [this.newVal[payload]];
+                    this.isShowDialog = true;
+                } else {
+                    this.newVal.splice(payload, 1);
+                    this.triggerChange();
                 }
             },
             async deleteRole (newPayload) {
                 // 超级管理员操作
                 const newVal = this.editNewValue();
                 if (this.isShowRole) {
-                    if (newVal.length === 1) {
-                        return;
+                    // if (newVal.length === 1) {
+                    //     return;
+                    // }
+                    if (this.newPayload > -1) {
+                        if (newVal.length === 1) {
+                            return;
+                        }
+                        newVal.splice(newPayload, 1);
+                    } else {
+                        if (!newVal.length) {
+                            return;
+                        }
                     }
-                    newVal.splice(newPayload, 1);
                     this.isLoading = true;
                     this.remoteHander({
                         [this.field]: newVal
@@ -285,13 +333,15 @@
                 display: inline-block;
                 padding: 0 5px;
                 margin-right: 2px;
-                line-height: 24px;
+                line-height: 22px;
                 border-radius: 2px;
                 background: #f0f1f5;
                 font-size: 12px;
                 i {
                     font-size: 18px;
+                    line-height: 22px;
                     color: #979ba5;
+                    vertical-align: middle;
                     cursor: pointer;
                     &.disabled {
                         color: #c4c6cc;
@@ -336,19 +386,21 @@
             width: 100%;
         }
     }
-    .comfirmDialog {
-        h2,
-        p{
-            text-align: center;
-            color:#333333
-        }
-    }
-    /deep/.bk-dialog-wrapper .bk-dialog-footer {
-        background-color:#ffffff;
-        border-top:none
+    /deep/ .confirm-space-dialog {
+            .bk-dialog-footer {
+               background-color: #ffffff;
+               border-top:none;
+            }
         }
     /* /deep/.bk-button.bk-primary {
         background-color: #479ad0;
         border-color:#479ad0;
+    } */
+
+    /* /deep/ .user-selector-selected-readonly {
+        cursor: not-allowed;
+        .bk-biz-icon-close {
+            display: none;
+        }
     } */
 </style>

@@ -33,16 +33,17 @@ DATABASES = {
         "HOST": env.str("AUDIT_DB_HOST", default=env.str("DB_HOST")),
         "PORT": env.int("AUDIT_DB_PORT", default=env.int("DB_PORT")),
     },
-    # only for bkci iam v0 migration
-    "bkci": {
+}
+
+if env.str("BKCI_DB_NAME", default="") and env.str("BKCI_DB_USERNAME", default=""):
+    DATABASES["bkci"] = {
         "ENGINE": "django.db.backends.mysql",
         "NAME": env.str("BKCI_DB_NAME", default="bkci"),
         "USER": env.str("BKCI_DB_USERNAME", default="root"),
         "PASSWORD": env.str("BKCI_DB_PASSWORD", default=""),
         "HOST": env.str("BKCI_DB_HOST", default="localhost"),
         "PORT": env.int("BKCI_DB_PORT", default=3306),
-    },
-}
+    }
 
 # cache
 REDIS_HOST = env.str("BKAPP_REDIS_HOST")

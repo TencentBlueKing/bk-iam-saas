@@ -311,12 +311,11 @@ class ApprovedPassApplicationBiz:
 
             # 创建同步权限用户组
             if info.sync_perm:
-                attrs = None
+                attrs = {
+                    GroupSaaSAttributeEnum.SOURCE_FROM_ROLE.value: True,
+                }
                 if application.source_system_id:
-                    attrs = {
-                        GroupSaaSAttributeEnum.SOURCE_TYPE.value: AuditSourceType.OPENAPI.value,
-                        GroupSaaSAttributeEnum.SOURCE_FROM_ROLE.value: True,
-                    }
+                    attrs[GroupSaaSAttributeEnum.SOURCE_TYPE.value] = AuditSourceType.OPENAPI.value
 
                 self.group_biz.create_sync_perm_group_by_role(
                     role, application.applicant, group_name=application.data.get("group_name", ""), attrs=attrs

@@ -15,7 +15,7 @@
                 </bk-table-column>
                 <bk-table-column :label="$t(`m.common['所属系统']`)" prop="system.name"></bk-table-column>
                 <bk-table-column :label="$t(`m.common['有效期']`)" prop="expired_at_display"></bk-table-column>
-                <bk-table-column :label="$t(`m.perm['最近一次更新时间']`)">
+                <bk-table-column :label="$t(`m.perm['最近一次更新时间']`)" width="240">
                     <template slot-scope="{ row }">
                         <span :title="row.updated_time">{{ row.updated_time }}</span>
                     </template>
@@ -314,7 +314,7 @@
             showQuitTemplates (row) {
                 this.deleteDialogConf.visiable = true;
                 this.deleteDialogConf.row = Object.assign({}, row);
-                this.deleteDialogConf.msg = `${this.$t(`m.info['解除与权限模板']`)}【${row.name}】${this.$t(`m.common['的关联']`)}，${this.$t(`m.info['当前用户将不再继承该模板权限']`)}。`;
+                this.deleteDialogConf.msg = `${this.$t(`m.info['解除与权限模板']`)}${this.$t(`m.common['【']`)}${row.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的关联']`)}${this.$t(`m.common['，']`)}${this.$t(`m.info['当前用户将不再继承该模板权限']`)}${this.$t(`m.common['。']`)}`;
             },
 
             /**

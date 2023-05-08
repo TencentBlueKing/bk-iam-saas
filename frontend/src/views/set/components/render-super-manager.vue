@@ -21,6 +21,7 @@
                                 :api="userApi"
                                 style="width: 100%;"
                                 :placeholder="$t(`m.verify['请输入']`)"
+                                :empty-text="$t(`m.common['无匹配人员']`)"
                                 @change="handleSuperRtxChange(...arguments, row)"
                                 @keydown="handleSuperRtxEnter(...arguments, row)">
                             </bk-user-selector>

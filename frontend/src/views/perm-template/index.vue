@@ -4,7 +4,7 @@
             <iam-guide
                 type="create_perm_template"
                 direction="left"
-                :style="{ top: '-15px', left: '80px' }"
+                :style="{ top: curLanguageIsCn ? '-20px' : '-32px', left: '80px' }"
                 :content="$t(`m.guide['创建模板']`)"
             />
             <bk-button theme="primary" @click="handleCreate" data-test-id="permTemplate_btn_create">
@@ -37,7 +37,7 @@
             v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
         >
             <!-- <bk-table-column type="selection" align="center"></bk-table-column> -->
-            <bk-table-column :label="$t(`m.permTemplate['模板名']`)" :min-width="220">
+            <bk-table-column :label="$t(`m.permTemplate['模板名']`)" width="220">
                 <template slot-scope="{ row }">
                     <span class="perm-template-name" :title="row.name" @click="handleView(row, 'TemplateDetail')">
                         {{ row.name }}
@@ -75,17 +75,17 @@
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.permTemplate['创建人']`)" prop="creator"></bk-table-column>
-            <bk-table-column :label="$t(`m.common['创建时间']`)">
+            <bk-table-column :label="$t(`m.common['创建时间']`)" width="240">
                 <template slot-scope="{ row }">
                     <span :title="row.created_time">{{ row.created_time }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.common['描述']`)">
+            <bk-table-column :label="$t(`m.common['描述']`)" width="300">
                 <template slot-scope="{ row }">
                     <span :title="row.description !== '' ? row.description : ''">{{ row.description || '--' }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.common['操作']`)" width="270">
+            <bk-table-column :label="$t(`m.common['操作']`)" width="100">
                 <template slot-scope="{ row }">
                     <section>
                         <!-- <bk-button
@@ -98,7 +98,7 @@
                             {{ $t(`m.common['删除']`) }}
                         </bk-button>
                         <bk-button theme="primary" disabled text v-else>
-                            <span v-bk-tooltips.bottom="$t(`m.permTemplate['有关联的组时不能删除']`)">
+                            <span :title="$t(`m.permTemplate['有关联的组时不能删除']`)">
                                 {{ $t(`m.common['删除']`) }}
                             </span>
                         </bk-button>

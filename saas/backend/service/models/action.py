@@ -55,6 +55,7 @@ class Action(BaseModel):
     description: str
     description_en: str
     type: str = ""
+    hidden: bool = False
     related_resource_types: List[RelatedResourceType] = []
     related_actions: List[str] = []  # 依赖操作
     related_environments: List[RelatedEnvironment] = []

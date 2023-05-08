@@ -14,12 +14,13 @@
                 v-model="curGradeManager"
                 ref="gradeManagerSelectRef"
                 style="width: 430px"
-                :placeholder="$t(`m.verify['请选择管理空间']`)"
+                :placeholder="placeholder"
                 :search-placeholder="$t(`m.info['搜索关键字']`)"
                 :popover-min-width="430"
                 :multiple="false"
                 :loading="selectLoading"
                 searchable
+                :allow-enter="false"
                 :remote-method="handleRemoteValue"
                 @toggle="handleToggle(...arguments, $index, row)"
             >
@@ -92,7 +93,8 @@
                 searchValue: '',
                 isShowWarnMessage: false,
                 warnMessage: '',
-                loading: false
+                loading: false,
+                placeholder: this.$t(`m.verify['请选择管理空间']`)
             };
         },
         computed: {

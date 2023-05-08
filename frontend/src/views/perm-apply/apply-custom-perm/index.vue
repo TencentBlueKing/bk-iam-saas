@@ -230,6 +230,7 @@
                         :placeholder="$t(`m.permApply['请输入权限获得者']`)"
                         :style="{ width: '60%' }"
                         :class="isShowMemberError ? 'is-member-empty-cls' : ''"
+                        :empty-text="$t(`m.common['无匹配人员']`)"
                         data-test-id="grading_userSelector_member"
                         @focus="handleRtxFocus"
                         @blur="handleRtxBlur"
@@ -580,6 +581,15 @@
                 </template>
             </div>
         </bk-sideslider>
+
+        <confirmDialog
+            :width="600"
+            :show.sync="isShowConfirmDialog"
+            :title="confirmDialogTitle"
+            :is-custom-style="true"
+            @on-cancel="isShowConfirmDialog = false"
+            @on-sumbit="isShowConfirmDialog = false"
+        />
     </div>
 </template>
 
@@ -596,6 +606,7 @@
     import IamDeadline from '@/components/iam-deadline/horizontal';
     import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider';
     import BkUserSelector from '@blueking/user-selector';
+    import ConfirmDialog from '@/components/iam-confirm-dialog/index';
 
     export default {
         name: '',
@@ -604,7 +615,8 @@
             ResourceInstanceTable,
             IamDeadline,
             RenderPermSideslider,
-            BkUserSelector
+            BkUserSelector,
+            ConfirmDialog
         },
         data () {
             return {
@@ -679,7 +691,9 @@
                     text: '',
                     tip: '',
                     tipType: 'search'
-                }
+                },
+                isShowConfirmDialog: false,
+                confirmDialogTitle: this.$t(`m.verify['admin无需申请权限']`)
             };
         },
         computed: {
@@ -2339,13 +2353,17 @@
                     });
                 } catch (e) {
                     console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
+                    if (['admin'].includes(this.user.username)) {
+                        this.isShowConfirmDialog = true;
+                    } else {
+                        this.bkMessageInstance = this.$bkMessage({
+                            limit: 1,
+                            theme: 'error',
+                            message: e.message || e.data.msg || e.statusText,
+                            ellipsisLine: 2,
+                            ellipsisCopy: true
+                        });
+                    }
                 } finally {
                     this.buttonLoading = false;
                 }
@@ -2430,13 +2448,17 @@
                     });
                 } catch (e) {
                     console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
+                    if (['admin'].includes(this.user.username)) {
+                        this.isShowConfirmDialog = true;
+                    } else {
+                        this.bkMessageInstance = this.$bkMessage({
+                            limit: 1,
+                            theme: 'error',
+                            message: e.message || e.data.msg || e.statusText,
+                            ellipsisLine: 2,
+                            ellipsisCopy: true
+                        });
+                    }
                 } finally {
                     this.buttonLoading = false;
                 }

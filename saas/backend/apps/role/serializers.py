@@ -448,3 +448,19 @@ class SubsetMangerDetailSLZ(GradeMangerDetailSLZ):
 
 class RoleSubjectCheckSLZ(serializers.Serializer):
     subjects = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"))
+
+
+class RoleSearchSLZ(BaseGradeMangerSLZ):
+    class Meta:
+        model = Role
+        fields = (
+            "id",
+            "name",
+            "description",
+            "type",
+            "creator",
+            "created_time",
+            "updated_time",
+            "updater",
+            "members",
+        )

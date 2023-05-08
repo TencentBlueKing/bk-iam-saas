@@ -356,7 +356,7 @@
             showQuitTemplates (row) {
                 this.deleteDialogConf.visiable = true;
                 this.deleteDialogConf.row = Object.assign({}, row);
-                this.deleteDialogConf.msg = `${this.$t(`m.common['退出']`)}【${row.name}】，${this.$t(`m.info['将不再继承该组的权限']`)}。`;
+                this.deleteDialogConf.msg = `${this.$t(`m.common['退出']`)}${this.$t(`m.common['【']`)}${row.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['，']`)}${this.$t(`m.info['将不再继承该组的权限']`)}${this.$t(`m.common['。']`)}`;
             },
 
             async confirmDelete () {

@@ -10,11 +10,10 @@
         @after-leave="handleAfterEditLeave">
         <div slot="header" class="title">
             <!-- eslint-disable max-len -->
-            <template v-if="curLanguageIsCn">
-                将【<span class="group-title" :title="name">{{ name }}</span>】关联到以下用户组
-            </template>
-            <template v-else>
-                The【<span class="group-title" :title="name">{{ name }}</span>】will be associated with the following groups
+            <template>
+                <span> {{$t(`m.common['将']`)}}{{$t(`m.common['【']`)}}</span>
+                <span class="group-title" :title="name">{{ name }}</span>
+                <span>{{$t(`m.common['】']`)}}{{$t(`m.common['关联到以下用户组']`)}}</span>
             </template>
         </div>
         <div class="user-group-content-wrapper">

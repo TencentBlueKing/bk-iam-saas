@@ -5,8 +5,8 @@
         transfer
         :width="890"
         ext-cls="iam-add-action-sideslider"
-        :title="$t(`m.grading['添加系统和操作']`)"
-        @update:isShow="handleCancel">
+        :title="$t(`m.grading['添加系统和操作5']`)"
+        @update:isShow="handleCancel('leave')">
         <div slot="content"
             class="content-wrapper"
             v-bkloading="{ isLoading, opacity: 1 }">
@@ -176,7 +176,7 @@
                 data-test-id="grading_btn_addActionConfirm">
                 {{ $t(`m.common['确定']`) }}
             </bk-button>
-            <bk-button style="margin-left: 10px;" @click="handleCancel">{{ $t(`m.common['取消']`) }}</bk-button>
+            <bk-button style="margin-left: 10px;" @click="handleCancel('cancel')">{{ $t(`m.common['取消']`) }}</bk-button>
         </div>
     </bk-sideslider>
 </template>
@@ -883,15 +883,30 @@
                 });
             },
 
-            handleCancel () {
+            handleCancel (payload) {
                 let cancelHandler = Promise.resolve();
                 if (window.changeAlert) {
                     cancelHandler = leaveConfirm();
                 }
-                cancelHandler.then(() => {
-                    this.$emit('update:isShow', false);
-                    this.resetData();
-                }, _ => _);
+                const operateMap = {
+                    leave: () => {
+                        // let cancelHandler = Promise.resolve();
+                        // if (window.changeAlert) {
+                        //     cancelHandler = leaveConfirm();
+                        // }
+                        cancelHandler.then(() => {
+                            this.$emit('update:isShow', false);
+                            this.resetData();
+                        }, _ => _);
+                    },
+                    cancel: () => {
+                        cancelHandler.then(() => {
+                            this.$emit('update:isShow', false);
+                            this.resetData();
+                        }, _ => _);
+                    }
+                };
+                operateMap[payload]();
             },
 
             handleSkip () {
@@ -1016,7 +1031,7 @@
             }
             .right-wrapper {
                 position: relative;
-                flex: 0 0 calc(100% - 240px);
+                flex: 0 0 calc(100% - 260px);
                 padding: 12px 20px;
                 background: #f5f6fa;
                 .custom-tmpl-wrapper {

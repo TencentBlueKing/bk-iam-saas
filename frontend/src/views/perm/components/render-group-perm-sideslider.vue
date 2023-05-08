@@ -2,7 +2,7 @@
     <bk-sideslider
         :is-show.sync="isShowSideslider"
         :title="title"
-        :width="1250"
+        :width="width"
         ext-cls="iam-group-perm-sideslider"
         :quick-close="true"
         @animation-end="handleAnimationEnd">
@@ -57,7 +57,8 @@
             return {
                 tabActive: 'perm',
                 isShowSideslider: false,
-                isLoading: true
+                isLoading: true,
+                width: window.innerWidth - 500
             };
         },
         watch: {

@@ -44,8 +44,8 @@ export const leavePageConfirm = () => {
                     textAlign: 'center'
                 }
             }, il8n('info', '确认离开当前页')),
-            okText: il8n('common', '确定'),
-            cancelText: il8n('common', '取消'),
+            okText: il8n('common', '离开'),
+            cancelText: il8n('common', '取消-dialog'),
             confirmFn: () => {
                 window.changeDialog = false;
                 resolve();

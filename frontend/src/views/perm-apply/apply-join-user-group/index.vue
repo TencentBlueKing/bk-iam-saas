@@ -77,21 +77,22 @@
         </render-horizontal-block>
         <section>
             <!-- <template v-if="isShowMemberAdd">
-                <render-action
-                    ref="memberRef"
-                    :title="addMemberText"
-                    :tips="addMemberTips"
-                    @on-click="handleAddMember"
-                    style="margin-bottom: 16px;">
-                    <iam-guide
-                        type="rating_manager_authorization_scope"
-                        direction="left"
-                        :style="{ top: '-25px', left: '440px' }"
-                        :content="$t(`m.guide['授权人员范围']`)" />
-                </render-action>
-            </template> -->
+                    <render-action
+                        ref="memberRef"
+                        :title="addMemberText"
+                        :tips="addMemberTips"
+                        @on-click="handleAddMember"
+                        style="margin-bottom: 16px;">
+                        <iam-guide
+                            type="rating_manager_authorization_scope"
+                            direction="left"
+                            :style="{ top: '-25px', left: '440px' }"
+                            :content="$t(`m.guide['授权人员范围']`)" />
+                    </render-action>
+                </template> -->
             <!-- <template v-else> -->
             <render-member
+                :required="false"
                 :users="users"
                 :departments="departments"
                 :is-all="isAll"
@@ -176,6 +177,15 @@
                 </template>
             </div>
         </bk-sideslider>
+            
+        <confirmDialog
+            :width="600"
+            :show.sync="isShowConfirmDialog"
+            :title="confirmDialogTitle"
+            :is-custom-style="true"
+            @on-cancel="isShowConfirmDialog = false"
+            @on-sumbit="isShowConfirmDialog = false"
+        />
     </smart-action>
 </template>
 <script>
@@ -189,6 +199,7 @@
     // import RenderAction from '@/views/grading-admin/common/render-action';
     import RenderMember from '@/views/grading-admin/components/render-member';
     import AddMemberDialog from '@/views/group/components/iam-add-member';
+    import ConfirmDialog from '@/components/iam-confirm-dialog/index';
     // import BkUserSelector from '@blueking/user-selector';
 
     export default {
@@ -198,7 +209,8 @@
             RenderPermSideSlider,
             // RenderAction,
             RenderMember,
-            AddMemberDialog
+            AddMemberDialog,
+            ConfirmDialog
             // BkUserSelector
         },
         data () {
@@ -233,7 +245,9 @@
                     text: '',
                     tip: '',
                     tipType: ''
-                }
+                },
+                isShowConfirmDialog: false,
+                confirmDialogTitle: this.$t(`m.verify['admin无需申请权限']`)
             };
         },
         computed: {
@@ -262,6 +276,11 @@
                 }];
             this.searchData = [
                 {
+                    id: 'name',
+                    name: this.$t(`m.userGroup['用户组名']`),
+                    default: true
+                },
+                {
                     id: 'id',
                     name: 'ID',
                     default: true
@@ -269,11 +288,6 @@
                     //     const validate = (values || []).every(_ => /^(\d*)$/.test(_.name))
                     //     return !validate ? '' : true
                     // }
-                },
-                {
-                    id: 'name',
-                    name: this.$t(`m.userGroup['用户组名']`),
-                    default: true
                 },
                 {
                     id: 'description',
@@ -650,6 +664,79 @@
                 const nowSecond = parseInt(tempArr.splice(0, dotIndex).join(''), 10);
                 const expiredAt = this.expiredAtUse + nowSecond;
                 return expiredAt;
+            },
+
+            async handleSubmit () {
+                let validateFlag = true;
+                if (!this.reason) {
+                    this.isShowReasonError = true;
+                    validateFlag = false;
+                    this.scrollToLocation(this.$refs.reasonRef);
+                }
+                if (this.expiredAtUse === 0) {
+                    this.isShowExpiredError = true;
+                    validateFlag = false;
+                    this.scrollToLocation(this.$refs.expiredAtRef);
+                }
+                if (this.currentSelectList.length < 1) {
+                    this.isShowGroupError = true;
+                    validateFlag = false;
+                }
+                if (!validateFlag) {
+                    return;
+                }
+                this.submitLoading = true;
+                if (this.expiredAtUse === 15552000) {
+                    this.expiredAtUse = this.handleExpiredAt();
+                }
+                const subjects = [];
+                // if (this.isAll) {
+                //     subjects.push({
+                //         id: '*',
+                //         type: '*'
+                //     });
+                // } else {
+                this.users.forEach(item => {
+                    subjects.push({
+                        type: 'user',
+                        id: item.username
+                    });
+                });
+                this.departments.forEach(item => {
+                    subjects.push({
+                        type: 'department',
+                        id: item.id
+                    });
+                });
+                // }
+                const params = {
+                    expired_at: this.expiredAtUse,
+                    reason: this.reason,
+                    groups: this.currentSelectList.map(({ id, name, description }) => ({ id, name, description })),
+                    applicants: subjects
+                };
+                try {
+                    await this.$store.dispatch('permApply/applyJoinGroup', params);
+                    this.messageSuccess(this.$t(`m.info['申请已提交']`), 1000);
+                    this.$router.push({
+                        name: 'apply'
+                    });
+                } catch (e) {
+                    console.error(e);
+                    if (['admin'].includes(this.user.username)) {
+                        this.isShowConfirmDialog = true;
+                    } else {
+                        this.bkMessageInstance = this.$bkMessage({
+                            limit: 1,
+                            theme: 'error',
+                            message: e.message || e.data.msg || e.statusText,
+                            ellipsisLine: 2,
+                            ellipsisCopy: true
+                        });
+                    }
+                } finally {
+                    this.submitLoading = false;
+                }
             },
 
             handleCancel () {

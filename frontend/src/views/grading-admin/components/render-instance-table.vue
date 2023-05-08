@@ -1,108 +1,149 @@
 <template>
     <div class="iam-grade-split-wrapper">
-        <bk-table
-            :data="tableList"
-            :border="false"
-            :header-border="false"
-            :cell-class-name="getCellClass"
-            :empty-text="$t(`m.verify['请选择操作']`)"
-            @row-mouse-enter="handlerRowMouseEnter"
-            @row-mouse-leave="handlerRowMouseLeave">
-            <bk-table-column :resizable="false" :label="$t(`m.common['操作']`)" width="280">
-                <template slot-scope="{ row }">
-                    <div :class="!!row.isAggregate ? 'set-padding' : ''">
-                        <span class="action-name" :title="row.name">{{ row.name }}</span>
-                    </div>
-                </template>
-            </bk-table-column>
-            <bk-table-column
-                :resizable="false"
-                :label="$t(`m.common['所属系统']`)"
-                :filters="systemFilter"
-                :filter-method="systemFilterMethod"
-                :filter-multiple="false"
-                prop="system_id"
-                width="240">
-                <template slot-scope="{ row }">
-                    <span :title="row.system_name">{{ row.system_name }}</span>
-                </template>
-            </bk-table-column>
-            <bk-table-column :resizable="false" :label="$t(`m.grading['资源实例范围']`)" min-width="240">
-                <template slot-scope="{ row, $index }">
-                    <div class="relation-content-wrapper" v-if="!!row.isAggregate">
-                        <label class="resource-type-name" v-if="row.aggregateResourceType.length === 1">
-                            {{ row.aggregateResourceType[0].name }}</label>
-                        <div class="bk-button-group tab-button" v-else>
-                            <bk-button v-for="(item, index) in row.aggregateResourceType"
-                                :key="item.id" @click="selectResourceType(row, index)"
-                                :class="row.selectedIndex === index ? 'is-selected' : ''"
-                                size="small">{{item.name}}
-                                <span v-if="row.instancesDisplayData[item.id]
-                                    && row.instancesDisplayData[item.id].length">
-                                    ({{row.instancesDisplayData[item.id].length}})</span>
-                            </bk-button>
+        <div :class="[
+                 'iam-resource-expand',
+                 extCls
+             ]"
+            @click.stop="handleExpanded">
+            <div class="iam-resource-header flex-between">
+                <div class="iam-resource-header-left">
+                    <Icon
+                        bk
+                        :type="isExpandTable ? 'down-shape' : 'right-shape'" />
+                    <span>{{ $t(`m.info['已添加']`) }}</span>
+                    <span class="number">{{ tableList.length }}</span>
+                    <span>{{ $t(`m.common['个']`) }}{{ $t(`m.perm['操作权限']`) }}</span>
+                </div>
+                <div class="iam-resource-header-right">
+                    <bk-button
+                        text
+                        type="primary"
+                        size="small"
+                        @click.stop="handleClearAll"
+                    >
+                        {{ $t(`m.common['清空']`)}}
+                    </bk-button>
+                </div>
+            </div>
+        </div>
+        <template v-if="isExpandTable">
+            <bk-table
+                :data="tableList"
+                :border="true"
+                :header-border="false"
+                :cell-class-name="getCellClass"
+                :empty-text="$t(`m.verify['请选择操作']`)"
+                @row-mouse-enter="handlerRowMouseEnter"
+                @row-mouse-leave="handlerRowMouseLeave">
+                <bk-table-column :resizable="false" :label="$t(`m.common['操作']`)" width="280">
+                    <template slot-scope="{ row }">
+                        <div :class="!!row.isAggregate ? 'set-padding' : ''">
+                            <span class="action-name" :title="row.name">{{ row.name }}</span>
                         </div>
-                        <render-condition
-                            :ref="`condition_${$index}_aggregateRef`"
-                            :value="row.value"
-                            :is-empty="row.empty"
-                            :can-view="false"
-                            :can-paste="row.canPaste"
-                            :is-error="row.isError"
-                            @on-mouseover="handlerAggregateConditionMouseover(row)"
-                            @on-mouseleave="handlerAggregateConditionMouseleave(row)"
-                            @on-copy="handlerAggregateOnCopy(row, $index)"
-                            @on-paste="handlerAggregateOnPaste(row)"
-                            @on-batch-paste="handlerAggregateOnBatchPaste(row, $index)"
-                            @on-click="showAggregateResourceInstance(row, $index)" />
-                    </div>
-                    <div class="relation-content-wrapper" v-else>
-                        <template v-if="!row.isEmpty">
-                            <div v-for="(_, groIndex) in row.resource_groups" :key="_.id">
-                                <div class="relation-content-item"
-                                    v-for="(content, contentIndex) in _.related_resource_types" :key="contentIndex">
-                                    <div class="content-name">
-                                        {{ content.name }}
-                                        <template v-if="row.isShowRelatedText && _.id">
-                                            <div style="display: inline-block; color: #979ba5;">
-                                                ({{ $t(`m.info['已帮您自动勾选依赖操作需要的实例']`) }})
-                                            </div>
-                                        </template>
-                                    </div>
-                                    <div class="contents">
-                                        <!-- eslint-disable max-len -->
-                                        <render-condition
-                                            :ref="`condition_${$index}_${contentIndex}_ref`"
-                                            :value="content.value"
-                                            :is-empty="content.empty"
-                                            :can-view="row.canView"
-                                            :params="curCopyParams"
-                                            :can-paste="content.canPaste"
-                                            :is-error="content.isError"
-                                            @on-mouseover="handlerConditionMouseover(content)"
-                                            @on-mouseleave="handlerConditionMouseleave(content)"
-                                            @on-view="handlerOnView(row, content, contentIndex, groIndex)"
-                                            @on-copy="handlerOnCopy(content, $index, contentIndex, row)"
-                                            @on-paste="handlerOnPaste(...arguments, content)"
-                                            @on-batch-paste="handlerOnBatchPaste(...arguments, content, $index, contentIndex)"
-                                            @on-click="showResourceInstance(row, content, contentIndex, groIndex)" />
+                    </template>
+                </bk-table-column>
+                <bk-table-column
+                    :resizable="false"
+                    :label="$t(`m.common['所属系统']`)"
+                    :filters="systemFilter"
+                    :filter-method="systemFilterMethod"
+                    :filter-multiple="false"
+                    prop="system_id"
+                    width="240">
+                    <template slot-scope="{ row }">
+                        <span :title="row.system_name">{{ row.system_name }}</span>
+                    </template>
+                </bk-table-column>
+                <bk-table-column :resizable="false" :label="$t(`m.grading['资源实例范围']`)" min-width="240">
+                    <template slot-scope="{ row, $index }">
+                        <div class="relation-content-wrapper" v-if="!!row.isAggregate">
+                            <label class="resource-type-name" v-if="row.aggregateResourceType.length === 1">
+                                {{ row.aggregateResourceType[0].name }}</label>
+                            <div class="bk-button-group tab-button" v-else>
+                                <bk-button v-for="(item, index) in row.aggregateResourceType"
+                                    :key="item.id" @click="selectResourceType(row, index)"
+                                    :class="row.selectedIndex === index ? 'is-selected' : ''"
+                                    size="small">{{item.name}}
+                                    <span v-if="row.instancesDisplayData[item.id]
+                                        && row.instancesDisplayData[item.id].length">
+                                        ({{row.instancesDisplayData[item.id].length}})</span>
+                                </bk-button>
+                            </div>
+                            <render-condition
+                                :ref="`condition_${$index}_aggregateRef`"
+                                :value="row.value"
+                                :is-empty="row.empty"
+                                :can-view="false"
+                                :can-paste="row.canPaste"
+                                :is-error="row.isError"
+                                @on-mouseover="handlerAggregateConditionMouseover(row)"
+                                @on-mouseleave="handlerAggregateConditionMouseleave(row)"
+                                @on-copy="handlerAggregateOnCopy(row, $index)"
+                                @on-paste="handlerAggregateOnPaste(row)"
+                                @on-batch-paste="handlerAggregateOnBatchPaste(row, $index)"
+                                @on-click="showAggregateResourceInstance(row, $index)" />
+                        </div>
+                        <div class="relation-content-wrapper" v-else>
+                            <template v-if="!row.isEmpty">
+                                <div v-for="(_, groIndex) in row.resource_groups" :key="_.id">
+                                    <div class="relation-content-item"
+                                        v-for="(content, contentIndex) in _.related_resource_types" :key="contentIndex">
+                                        <div class="content-name">
+                                            {{ content.name }}
+                                            <template v-if="row.isShowRelatedText && _.id">
+                                                <div style="display: inline-block; color: #979ba5;">
+                                                    ({{ $t(`m.info['已帮您自动勾选依赖操作需要的实例']`) }})
+                                                </div>
+                                            </template>
+                                        </div>
+                                        <div class="contents">
+                                            <!-- eslint-disable max-len -->
+                                            <render-condition
+                                                :ref="`condition_${$index}_${contentIndex}_ref`"
+                                                :value="content.value"
+                                                :is-empty="content.empty"
+                                                :can-view="row.canView"
+                                                :params="curCopyParams"
+                                                :can-paste="content.canPaste"
+                                                :is-error="content.isError"
+                                                @on-mouseover="handlerConditionMouseover(content)"
+                                                @on-mouseleave="handlerConditionMouseleave(content)"
+                                                @on-view="handlerOnView(row, content, contentIndex, groIndex)"
+                                                @on-copy="handlerOnCopy(content, $index, contentIndex, row)"
+                                                @on-paste="handlerOnPaste(...arguments, content)"
+                                                @on-batch-paste="handlerOnBatchPaste(...arguments, content, $index, contentIndex)"
+                                                @on-click="showResourceInstance(row, content, contentIndex, groIndex)" />
+                                        </div>
                                     </div>
                                 </div>
+                            </template>
+                            <template v-else>
+                                {{ $t(`m.common['无需关联实例']`) }}
+                            </template>
+                        </div>
+                        <!-- <div class="remove-icon" @click.stop="handleRemove(row, $index)">
+                            <Icon type="close-small" />
+                        </div> -->
+                    </template>
+                </bk-table-column>
+                <bk-table-column :resizable="false" width="50" align="center">
+                    <template slot-scope="{ row, $index }">
+                        <div class="relation-content-wrapper">
+                            <div class="remove-icon" @click.stop="handleRemove(row, $index)">
+                                <bk-icon
+                                    type="minus-circle-shape"
+                                    size="medium"
+                                    style="color: #C4C6CC;"
+                                />
                             </div>
-                        </template>
-                        <template v-else>
-                            {{ $t(`m.common['无需关联实例']`) }}
-                        </template>
-                    </div>
-                    <div class="remove-icon" @click.stop="handlerRemove(row, $index)">
-                        <Icon type="close-small" />
-                    </div>
+                        </div>
+                    </template>
+                </bk-table-column>
+                <template slot="empty">
+                    <ExceptionEmpty />
                 </template>
-            </bk-table-column>
-            <template slot="empty">
-                <ExceptionEmpty />
-            </template>
-        </bk-table>
+            </bk-table>
+        </template>
 
         <bk-sideslider
             :is-show="isShowResourceInstanceSideslider"
@@ -223,7 +264,8 @@
                 instanceKey: '',
                 curCopyDataId: '',
                 emptyResourceGroupsList: [],
-                emptyResourceGroupsName: []
+                emptyResourceGroupsName: [],
+                isExpandTable: false
             };
         },
         computed: {
@@ -288,6 +330,7 @@
             list: {
                 handler (value) {
                     this.tableList = value;
+                    this.isExpandTable = value.length > 0;
                     this.tableList.forEach(item => {
                         if (!this.systemFilter.find(subItem => subItem.value === item.system_id)) {
                             this.systemFilter.push({
@@ -340,13 +383,24 @@
                 const property = column.property;
                 return row[property] === value;
             },
-            handlerRemove (row, payload) {
+
+            handleRemove (row, payload) {
                 window.changeDialog = true;
                 if (row.isAggregate) {
                     this.$emit('on-aggregate-delete', row.system_id, row.actions, payload);
                     return;
                 }
                 this.$emit('on-delete', row.system_id, row.id, `${row.system_id}&${row.id}`, payload);
+            },
+
+            handleExpanded () {
+                this.isExpandTable = !this.isExpandTable;
+            },
+
+            handleClearAll () {
+                this.tableList = [];
+                this.isExpandTable = false;
+                this.$emit('on-clear-all');
             },
 
             // handlerRowMouseEnter (index) {
@@ -1075,15 +1129,16 @@
                 const actionList = [];
 
                 // 重新赋值
-                if (this.isAllExpanded) {
-                    this.tableList = this.tableList.filter(e =>
-                        (e.resource_groups && e.resource_groups.length)
-                        || e.isAggregate);
-                    if (this.emptyResourceGroupsList.length) {
-                        this.emptyResourceGroupsList[0].name = this.emptyResourceGroupsName[0];
-                        this.tableList = [...this.tableList, ...this.emptyResourceGroupsList];
-                    }
-                }
+                // 资源授权与操作不一致的bug
+                // if (this.isAllExpanded) {
+                //     this.tableList = this.tableList.filter(e =>
+                //         (e.resource_groups && e.resource_groups.length)
+                //         || e.isAggregate);
+                //     if (this.emptyResourceGroupsList.length) {
+                //         this.emptyResourceGroupsList[0].name = this.emptyResourceGroupsName[0];
+                //         this.tableList = [...this.tableList, ...this.emptyResourceGroupsList];
+                //     }
+                // }
                 this.tableList.forEach(item => {
                     const curSystemData = actionList.find(subItem => subItem.system_id === item.system_id);
                     if (!item.isAggregate) {
@@ -1307,9 +1362,9 @@
                         background-color: transparent;
                         & > td {
                             background-color: transparent;
-                        .remove-icon {
-                            display: inline-block;
-                        }
+                            .remove-icon {
+                                display: inline-block;
+                            }
                         }
                     }
                 }
@@ -1394,4 +1449,8 @@
     .tab-button{
         margin: 10px 0;
     }
+</style>
+
+<style lang="postcss" scoped>
+@import '@/css/mixins/space-resource-instance-table.css';
 </style>

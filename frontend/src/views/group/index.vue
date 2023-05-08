@@ -107,7 +107,7 @@
                 </template>
             </bk-table-column>
             <template v-if="['rating_manager'].includes(curRole)">
-                <bk-table-column :label="$t(`m.nav['二级管理空间']`)">
+                <bk-table-column :label="$t(`m.info['二级管理空间']`)" width="240">
                     <template slot-scope="{ row }">
                         <div class="user-group-space">
                             <Icon
@@ -140,7 +140,7 @@
                     </span>
                 </template>
             </bk-table-column> -->
-            <bk-table-column :label="$t(`m.common['创建时间']`)">
+            <bk-table-column :label="$t(`m.common['创建时间']`)" width="240">>
                 <template slot-scope="{ row }">
                     <span :title="row.created_time">{{ row.created_time }}</span>
                 </template>
@@ -223,7 +223,7 @@
             @on-success="handleDistributeSuccess"
         />
 
-        <novice-guide :flag="showNoviceGuide" :content="content" />
+        <!-- <novice-guide :flag="showNoviceGuide" :content="content" /> -->
     </div>
 </template>
 <script>
@@ -239,7 +239,7 @@
     import EditProcessDialog from './components/edit-process-dialog';
     import TransferOutDialog from './components/transfer-out-dialog';
     import DistributeToDialog from './components/distribute-to-dialog';
-    import NoviceGuide from '@/components/iam-novice-guide';
+    // import NoviceGuide from '@/components/iam-novice-guide';
     import IamEditInput from '@/components/iam-edit/input';
 
     export default {
@@ -251,7 +251,7 @@
             TransferOutDialog,
             DistributeToDialog,
             IamSearchSelect,
-            NoviceGuide,
+            // NoviceGuide,
             IamEditInput
         },
         data () {
@@ -483,6 +483,10 @@
                     }
                 }
                 this.emptyData = Object.assign(this.emptyData, { tipType: Object.keys(this.searchParams).length > 0 ? 'search' : '' });
+                this.pagination = Object.assign(
+                    this.pagination,
+                    { current: queryParams.current || 1, limit: queryParams.limit || 10 }
+                );
                 return {
                     ...queryParams
                 };

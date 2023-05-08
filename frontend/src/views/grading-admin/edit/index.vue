@@ -5,13 +5,17 @@
                 <basic-info :data="formData" @on-change="handleBasicInfoChange" ref="basicInfoRef" />
             </section>
         </render-horizontal-block>
-        <render-action
+        <!-- <render-action
             style="margin-bottom: 16px;"
             :title="$t(`m.levelSpace['选择操作和资源实例']`)"
             :tips="addActionTips"
-            v-if="!isSelectSystem"
-            @on-click="handleAddAction" />
-        <render-horizontal-block :label="$t(`m.levelSpace['最大可授权操作和资源边界']`)" v-if="isSelectSystem">
+            v-if="isSelectSystem"
+            @on-click="handleAddAction" /> -->
+        <!-- <render-horizontal-block
+            :label="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
+            :label-width="renderLabelWidth('resource')"
+            :required="true"
+        >
             <div class="grade-admin-select-wrapper">
                 <div class="showTableClick" @click.stop="isShowTableClick">
                     <div class="action">
@@ -59,24 +63,117 @@
                     </div>
                 </div>
             </div>
-        </render-horizontal-block>
-        <p class="action-empty-error" v-if="isShowActionEmptyError">{{ $t(`m.verify['操作和资源边界不可为空']`) }}</p>
-        <section v-if="isShowMemberAdd" ref="memberRef">
+        </render-horizontal-block> -->
+        <!-- <p class="action-empty-error" v-if="isShowActionEmptyError">{{ $t(`m.verify['操作和资源边界不可为空']`) }}</p> -->
+        <!-- <section v-if="isShowMemberAdd" ref="memberRef">
             <render-action
                 :title="$t(`m.levelSpace['选择可授权人员边界']`)"
                 :tips="addMemberTips"
                 style="margin-bottom: 16px;"
                 @on-click="handleAddMember" />
+        </section> -->
+        <!-- <section ref="memberRef">
+            <render-member
+                :users="users"
+                :departments="departments"
+                :is-all="isAll"
+                :label-width="renderLabelWidth('member')"
+                @on-add="handleAddMember"
+                @on-delete="handleMemberDelete"
+                @on-delete-all="handleDeleteAll" />
         </section>
-        <render-member
-            :users="users"
-            :departments="departments"
-            :is-all="isAll"
-            v-else
-            @on-add="handleAddMember"
-            @on-delete="handleMemberDelete"
-            @on-delete-all="handleDeleteAll" />
-        <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员边界不可为空']`) }}</p>
+        <p class="action-empty-error" v-if="isShowMemberEmptyError">{{ $t(`m.verify['可授权人员边界不可为空']`) }}</p> -->
+        <render-horizontal-block
+            :label="$t(`m.nav['授权边界']`)"
+            :label-width="renderLabelWidth('resource')"
+            :required="false"
+        >
+            <div class="authorize-boundary-form">
+                <div class="authorize-resource-boundary">
+                    <div class="resource-boundary-title is-required">
+                        {{ $t(`m.levelSpace['最大可授权操作和资源边界']`) }}
+                    </div>
+                    <div class="resource-boundary-header flex-between">
+                        <section>
+                            <bk-button
+                                theme="default"
+                                size="small"
+                                icon="plus-circle-shape"
+                                class="perm-resource-add"
+                                @click.stop="handleAddAction"
+                            >
+                                {{ $t(`m.common['添加']`) }}
+                            </bk-button>
+                        </section>
+                        <div
+                            v-if="isSelectSystem"
+                            class="aggregate-action-group"
+                            style="min-width: 108px; position: relative;">
+                            <iam-guide
+                                type="rating_manager_merge_action"
+                                direction="right"
+                                :loading="isLoading"
+                                :style="renderLabelWidth('rating_manager_merge_action_guide')"
+                                :content="$t(`m.guide['聚合操作']`)" />
+                            <div
+                                v-for="item in AGGREGATION_EDIT_ENUM"
+                                :key="item.value"
+                                :class="[
+                                    'aggregate-action-btn',
+                                    { 'is-active': isAllExpanded === item.value },
+                                    { 'is-disabled': isAggregateDisabled }
+                                ]"
+                                @click.stop="handleAggregateAction(item.value)"
+                            >
+                                <span>{{ $t(`m.grading['${item.name}']`)}}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-show="isSelectSystem">
+                        <div
+                            class="resource-instance-wrapper"
+                            ref="instanceTableContentRef"
+                            v-bkloading="{
+                                isLoading,
+                                opacity: 1,
+                                zIndex: 1000,
+                                extCls: 'loading-resource-instance-cls'
+                            }"
+                        >
+                            <render-instance-table
+                                ref="resourceInstanceRef"
+                                :is-all-expanded="isAllExpanded"
+                                :data="policyList"
+                                :list="policyList"
+                                :backup-list="aggregationsTableData"
+                                @on-delete="handleDelete"
+                                @on-aggregate-delete="handleAggregateDelete"
+                                @on-select="handleAttrValueSelected"
+                                @on-clear-all="handleDeleteResourceAll"
+                            />
+                        </div>
+                    </div>
+                </div>
+                <p class="action-empty-error" v-if="isShowActionEmptyError">
+                    {{ $t(`m.verify['操作和资源边界不可为空']`) }}
+                </p>
+                <div ref="memberRef" class="authorize-members-boundary">
+                    <render-member
+                        :tip="addMemberTips"
+                        :is-all="isAll"
+                        :label-width="renderLabelWidth('member')"
+                        :users="users"
+                        :departments="departments"
+                        @on-add="handleAddMember"
+                        @on-delete="handleMemberDelete"
+                        @on-delete-all="handleDeleteAll"
+                    />
+                </div>
+                <p class="action-empty-error" v-if="isShowMemberEmptyError">
+                    {{ $t(`m.verify['可授权人员边界不可为空']`) }}
+                </p>
+            </div>
+        </render-horizontal-block>
         <template v-if="isStaff">
             <render-horizontal-block
                 :label="$t(`m.common['理由']`)"
@@ -163,7 +260,7 @@
     import { mapGetters } from 'vuex';
     import { leavePageConfirm } from '@/common/leave-page-confirm';
     import basicInfo from '../components/basic-info';
-    import renderAction from '../common/render-action';
+    // import renderAction from '../common/render-action';
     import AddMemberDialog from '../../group/components/iam-add-member';
     import RenderMember from '../components/render-member';
     import AddActionSideslider from '../components/add-action-sideslider';
@@ -171,12 +268,13 @@
     import GradePolicy from '@/model/grade-policy';
     import Condition from '@/model/condition';
     import RenderInstanceTable from '../components/render-instance-table';
-    import { guid } from '@/common/util';
+    import { guid, renderLabelWidth } from '@/common/util';
+    import { AGGREGATION_EDIT_ENUM } from '@/common/constants';
     export default {
         name: '',
         components: {
             basicInfo,
-            renderAction,
+            // renderAction,
             AddMemberDialog,
             RenderMember,
             AddActionSideslider,
@@ -184,6 +282,7 @@
         },
         data () {
             return {
+                renderLabelWidth,
                 formData: {
                     name: '',
                     description: '',
@@ -205,7 +304,6 @@
                 addMemberTitle: this.$t(`m.levelSpace['选择可授权人员边界']`),
                 originalList: [],
                 isShowMemberEmptyError: false,
-
                 infoText: this.$t(`m.grading['选择提示']`),
                 tips: this.$t(`m.grading['添加操作提示']`),
                 policyList: [],
@@ -215,13 +313,13 @@
                 aggregationsBackup: [],
                 aggregationsTableData: [],
                 curSystemId: [],
-
                 isShowReasonDialog: false,
                 reason: '',
                 dialogLoading: false,
                 isAll: false,
                 isShowTable: false,
-                isShowReasonError: false
+                isShowReasonError: false,
+                AGGREGATION_EDIT_ENUM
                 
             };
         },
@@ -449,7 +547,11 @@
             },
 
             handleAggregateAction (payload) {
+                if (this.isAggregateDisabled) {
+                    return;
+                }
                 window.changeDialog = true;
+                this.isAllExpanded = payload;
                 const aggregationAction = this.aggregations;
                 console.log('aggregationAction', aggregationAction);
                 const actionIds = [];
@@ -716,6 +818,12 @@
                 this.setAggregateExpanded();
             },
 
+            handleDeleteResourceAll () {
+                this.originalList = [];
+                this.policyList = [];
+                this.isAllExpanded = false;
+            },
+
             handleAggregateDelete (systemId, actions, index) {
                 window.changeDialog = true;
                 this.policyList.splice(index, 1);
@@ -968,6 +1076,7 @@
         }
     };
 </script>
+
 <style lang="postcss">
     .iam-grading-admin-create-wrapper {
         .grading-admin-render-perm-cls {
@@ -975,7 +1084,7 @@
         }
         .action-empty-error {
             position: relative;
-            top: -50px;
+            top: -40px;
             left: 150px;
             font-size: 12px;
             color: #ff4d4d;
@@ -1068,4 +1177,8 @@
             }
         }
     }
+</style>
+
+<style lang="postcss" scoped>
+@import '@/css/mixins/authorize-boundary.css';
 </style>

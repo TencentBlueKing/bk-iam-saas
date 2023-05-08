@@ -187,7 +187,7 @@ const currentNav = [
                 icon: 'auth-scope',
                 id: 'authorBoundaryNav',
                 rkey: 'authorBoundary',
-                name: il8n('nav', '授权边界'),
+                name: il8n('nav', '授权边界-nav'),
                 path: `${SITE_URL}manage-spaces/authorization-boundary`,
                 disabled: false
             },

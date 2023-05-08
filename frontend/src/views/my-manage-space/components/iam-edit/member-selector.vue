@@ -18,7 +18,7 @@
                         </span>
                     </slot>
                 </div>
-                <div class="edit-action-box">
+                <div class="edit-action-box" v-if="isEditMode">
                     <Icon
                         type="edit-fill"
                         class="edit-action"
@@ -38,6 +38,7 @@
                 ref="selector"
                 :api="userApi"
                 :placeholder="$t(`m.verify['请输入']`)"
+                :empty-text="$t(`m.common['无匹配人员']`)"
                 @keydown="handleEnter(...arguments)"
                 @blur="handleRtxBlur"
                 @change="handleChange">
@@ -76,6 +77,13 @@
             index: {
                 type: Number,
                 default: 0
+            },
+            mode: {
+                type: String,
+                default: 'edit',
+                validator: function (value) {
+                    return ['detail', 'edit'].includes(value);
+                }
             }
         },
         data () {
@@ -94,14 +102,21 @@
                 return {
                     width: this.width
                 };
+            },
+            isEditMode () {
+                return this.mode === 'edit';
             }
         },
         watch: {
             value: {
                 handler (newVal) {
-                    this.disabledValue = [...newVal].filter(e => e.readonly);
-                    this.displayValue = [...newVal];
-                    this.editValue = [...newVal].filter(e => !e.readonly).map(e => e.username);
+                    this.handleDefaultData(newVal);
+                },
+                immediate: true
+            },
+            editValue: {
+                handler () {
+                    this.handleReadOnly();
                 },
                 immediate: true
             }
@@ -113,11 +128,36 @@
             });
         },
         methods: {
+            // 设置只读
+            handleReadOnly () {
+                this.$nextTick(() => {
+                    if (this.isEditable) {
+                        const selectedTag = this.$refs.selector.$refs.selected;
+                        if (selectedTag && selectedTag.length === 1) {
+                            selectedTag.forEach(item => {
+                                item.className = this.displayValue.length === 1
+                                    && this.displayValue.map(item => item.username).includes(item.innerText)
+                                    ? 'user-selector-selected user-selector-selected-readonly' : 'user-selector-selected';
+                            });
+                        }
+                    }
+                });
+            },
+
+            // 设置默认值
+            handleDefaultData (payload) {
+                this.disabledValue = [...payload].filter(e => e.readonly);
+                this.displayValue = [...payload];
+                this.editValue = [...payload].filter(e => !e.readonly).map(e => e.username);
+            },
+
             handleEdit () {
                 document.body.click();
                 this.isEditable = true;
                 this.$nextTick(() => {
-                    this.$refs.selector.focus();
+                    this.$refs.selector && this.$refs.selector.focus();
+                    this.handleDefaultData(this.value);
+                    this.handleReadOnly();
                 });
             },
 
@@ -129,6 +169,7 @@
             },
 
             hideEdit (event) {
+                this.isEditable = false;
                 if (this.displayValue.length < 1) {
                     return;
                 }
@@ -139,8 +180,8 @@
                             return;
                         }
                     }
+                    // this.triggerChange();
                 }
-                this.triggerChange();
             },
             
             triggerChange () {
@@ -160,6 +201,9 @@
             },
 
             handleChange () {
+                if (this.displayValue.length < 1) {
+                    return;
+                }
                 const editValue = this.editValue.reduce((p, v) => {
                     p.push({
                         username: v,
@@ -172,9 +216,13 @@
 
             handleRtxBlur () {
                 if (JSON.stringify(this.displayValue) !== JSON.stringify(this.value)) {
-                    this.$emit('on-change', {
-                        [this.field]: this.displayValue
-                    }, this.index);
+                    this.isEditable = false;
+                    if (this.displayValue.length < 1) {
+                        this.displayValue = [...this.value];
+                        this.messageError(this.$t(`m.verify['管理员不能为空']`), 2000);
+                        return;
+                    }
+                    this.triggerChange();
                 }
             }
         }
@@ -221,6 +269,7 @@
                 i {
                     font-size: 18px;
                     color: #979ba5;
+                    vertical-align: middle;
                     cursor: pointer;
                     &.disabled {
                         color: #c4c6cc;
@@ -263,4 +312,11 @@
         }
     }
     }
+
+    /* /deep/ .user-selector-selected-readonly {
+        cursor: not-allowed;
+        .bk-biz-icon-close {
+            display: none;
+        }
+    } */
 </style>
