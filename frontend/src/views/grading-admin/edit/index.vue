@@ -821,6 +821,7 @@
             handleDeleteResourceAll () {
                 this.originalList = [];
                 this.policyList = [];
+                this.isAllExpanded = false;
             },
 
             handleAggregateDelete (systemId, actions, index) {
