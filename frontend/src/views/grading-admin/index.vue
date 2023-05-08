@@ -10,7 +10,7 @@
             <bk-button theme="primary" @click="handleCreate" data-test-id="grading_btn_create">
                 {{ isStaff ? $t(`m.common['申请新建']`) : $t(`m.common['新建']`) }}
             </bk-button>
-            <bk-link class="AdminLink" theme="primary" @click="showImageDialog = true">
+            <bk-link class="AdminLink" theme="primary" @click="handleOpenDocu">
                 <span class="linkText">{{ $t('m.common["什么是管理空间"]') }}</span>
             </bk-link>
             <div slot="right">
@@ -919,6 +919,11 @@
 
             handleFilterData () {
                 this.isFilter ? this.fetchSearchManageList(true) : this.fetchGradingAdmin(true);
+            },
+
+            handleOpenDocu () {
+                const GRADE_DOCU_LINK = '/权限中心/产品白皮书/场景案例/GradingManager.md';
+                window.open(`${window.PRODUCT_DOC_URL_PREFIX}${GRADE_DOCU_LINK}`);
             }
 
         }
