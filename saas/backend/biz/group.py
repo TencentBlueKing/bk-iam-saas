@@ -33,7 +33,7 @@ from backend.long_task.constants import TaskType
 from backend.long_task.models import TaskDetail
 from backend.long_task.tasks import TaskFactory
 from backend.service.action import ActionService
-from backend.service.constants import RoleRelatedObjectType, RoleType, SubjectType
+from backend.service.constants import GroupSaaSAttributeEnum, RoleRelatedObjectType, RoleType, SubjectType
 from backend.service.engine import EngineService
 from backend.service.group import GroupCreation, GroupMemberExpiredAt, GroupService, SubjectGroup
 from backend.service.group_saas_attribute import GroupAttributeService
@@ -709,7 +709,10 @@ class GroupBiz:
 
         # 2. 如果role sync_perm 被修改为True, 同时不存在同步权限用户组, 需要创建同步权限用户组
         if not relation and role.sync_perm:
-            self.create_sync_perm_group_by_role(role, user_id, group_name=group_name)
+            attrs = {
+                GroupSaaSAttributeEnum.SOURCE_FROM_ROLE.value: True,
+            }
+            self.create_sync_perm_group_by_role(role, user_id, group_name=group_name, attrs=attrs)
             return
 
         # 3. 不存在同步权限用户组, 不需要处理
