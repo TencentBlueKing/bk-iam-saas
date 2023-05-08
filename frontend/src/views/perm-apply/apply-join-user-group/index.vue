@@ -194,6 +194,8 @@
     import { buildURLParams } from '@/common/url';
     import { formatCodeData } from '@/common/util';
     import { PERMANENT_TIMESTAMP } from '@/common/constants';
+    import IamDeadline from '@/components/iam-deadline/horizontal';
+    import IamSearchSelect from '@/components/iam-search-select';
     // import IamGuide from '@/components/iam-guide/index.vue';
     import RenderPermSideSlider from '@/views/perm/components/render-group-perm-sideslider';
     // import RenderAction from '@/views/grading-admin/common/render-action';
@@ -206,6 +208,8 @@
         name: '',
         components: {
             // IamGuide,
+            IamDeadline,
+            IamSearchSelect,
             RenderPermSideSlider,
             // RenderAction,
             RenderMember,
@@ -217,6 +221,20 @@
             return {
                 userApi: window.BK_USER_API,
                 reason: '',
+                expiredAt: 15552000,
+                expiredAtUse: 15552000,
+                isShowReasonError: false,
+                submitLoading: false,
+                isShowAddMemberDialog: false,
+                isShowExpiredError: false,
+                isShowGroupError: false,
+                isShowMemberError: false,
+                isShowMemberAdd: false,
+                tableList: [],
+                currentSelectList: [],
+                curUserGroup: [],
+                searchParams: {},
+                searchList: [],
                 searchValue: [],
                 tableLoading: false,
                 pagination: {
