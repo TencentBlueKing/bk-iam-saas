@@ -1,13 +1,24 @@
 <template>
     <div class="iam-user-group-perm-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
-        <template v-if="!groupAttributes.source_type">
-            <bk-button
-                v-if="!isLoading && isEditMode"
-                theme="primary"
-                style="margin-bottom: 16px"
-                @click="handleAddPerm">
-                {{ $t(`m.common['添加权限']`) }}
-            </bk-button>
+        <template v-if="!groupAttributes.source_from_role">
+            <template v-if="externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle">
+                <bk-button
+                    v-if="!isLoading && isEditMode && !groupAttributes.source_type"
+                    theme="primary"
+                    style="margin-bottom: 16px"
+                    @click="handleAddPerm">
+                    {{ $t(`m.common['添加权限']`) }}
+                </bk-button>
+            </template>
+            <template v-if="!externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle">
+                <bk-button
+                    v-if="!isLoading && isEditMode"
+                    theme="primary"
+                    style="margin-bottom: 16px"
+                    @click="handleAddPerm">
+                    {{ $t(`m.common['添加权限']`) }}
+                </bk-button>
+            </template>
         </template>
         <template v-if="!isLoading && !isEmpty">
             <render-perm-item
@@ -31,8 +42,8 @@
                             :key="subIndex"
                             :title="subItem.name"
                             :count="subItem.count"
-                            :external-edit="!!groupAttributes.source_type"
-                            :external-delete="!!groupAttributes.source_type"
+                            :external-edit="formatOperate"
+                            :external-delete="formatOperate"
                             :is-edit="subItem.isEdit"
                             :loading="subItem.editLoading"
                             :expanded.sync="subItem.expanded"
@@ -120,7 +131,7 @@
                 isPermTemplateDetail: false,
                 role: '',
                 // source_type == openapi, 那就是接口创建的, 在蓝盾上面不能修改权限, 如果是空就可以用户编辑权限
-                // source_from_role如果是true, 添加成员只能添加用户不能添加部门
+                // 只要 source_from_role = true, 不能改权限, 不能添加部门, 不区分是iam的页面还是蓝盾的页面
                 groupAttributes: {
                     source_type: '',
                     source_from_role: false
@@ -146,6 +157,15 @@
             },
             canEditGroup () {
                 return this.$route.query.edit === 'GroupEdit';
+            },
+            formatOperate () {
+                let result = true;
+                if (this.externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle) {
+                    result = !(!this.groupAttributes.source_from_role && !this.groupAttributes.source_type);
+                } else {
+                    result = !!this.groupAttributes.source_from_role;
+                }
+                return result;
             }
         },
         watch: {

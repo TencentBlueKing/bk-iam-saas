@@ -169,6 +169,7 @@
                                 :list="policyList"
                                 :authorization="curAuthorizationData"
                                 :original-list="tableListBackup"
+                                :total-count="originalList.length"
                                 :is-all-expanded="isAllExpanded"
                                 :backup-list="aggregationsTableData"
                                 :group-id="$route.params.id"

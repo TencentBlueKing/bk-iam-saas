@@ -156,7 +156,12 @@
                         <bk-button theme="primary" text @click="handleAddMember(row)">
                             {{ $t(`m.common['添加成员']`) }}
                         </bk-button>
-                        <bk-button theme="primary" text style="margin-left: 10px" @click="handleAddPerm(row)">
+                        <bk-button
+                            text
+                            theme="primary"
+                            style="margin-left: 10px"
+                            :disabled="row.attributes && row.attributes.source_from_role"
+                            @click="handleAddPerm(row)">
                             {{ $t(`m.common['添加权限']`) }}
                         </bk-button>
                         <bk-button theme="primary" text style="margin-left: 10px" @click="handleClone(row)">

@@ -11,7 +11,7 @@
                         bk
                         :type="isExpandTable ? 'down-shape' : 'right-shape'" />
                     <span>{{ $t(`m.info['已添加']`) }}</span>
-                    <span class="number">{{ tableList.length }}</span>
+                    <span class="number">{{ totalCount }}</span>
                     <span>{{ $t(`m.common['个']`) }}{{ $t(`m.perm['操作权限']`) }}</span>
                 </div>
                 <div class="iam-resource-header-right">
@@ -240,6 +240,9 @@
             extCls: {
                 type: String,
                 default: ''
+            },
+            totalCount: {
+                type: Number
             }
         },
         data () {
