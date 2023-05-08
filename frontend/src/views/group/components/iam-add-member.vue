@@ -482,7 +482,8 @@
                     const typeMap = {
                         user: () => {
                             if (fullName) {
-                                return fullName;
+                                const result = fullName.indexOf(';') > -1 ? fullName.replace(/[,;；]/g, '\n') : fullName;
+                                return result;
                             } else {
                                 return name ? `${username}(${name})` : username;
                             }
@@ -613,7 +614,10 @@
                         })
                     });
                     const temps = res.data.filter(
-                        item => !this.hasSelectedUsers.map(subItem => subItem.username).includes(item.username)
+                        item => {
+                            this.$set(item, 'full_name', item.departments && item.departments.length ? item.departments.join(';') : '');
+                            return !this.hasSelectedUsers.map(subItem => subItem.username).includes(item.username);
+                        }
                     );
                     this.hasSelectedUsers.push(...temps);
                     if (res.data.length > 0) {
@@ -1025,6 +1029,7 @@
                             user.id = guid();
                             user.showRadio = true;
                             user.type = 'user';
+                            this.$set(user, 'full_name', user.departments && user.departments.length ? user.departments.join(';') : '');
                             if (userIds.length && userIds.includes(user.username)) {
                                 this.$set(user, 'is_selected', true);
                             } else {
