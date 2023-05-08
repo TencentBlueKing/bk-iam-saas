@@ -53,7 +53,13 @@
                     @expand-on-click="handleExpandClick"
                     @select-change="handleSelectNode">
                     <div slot-scope="{ node,data }">
-                        <div :style="[{ opacity: data.is_member ? '1' : '0.4' }]">
+                        <div
+                            class="single-hide"
+                            :style="[
+                                { 'max-width': '220px' },
+                                { opacity: data.is_member ? '1' : '0.4' }
+                            ]"
+                            :title="data.name">
                             <Icon :type="node.level === 0 ? 'level-one-manage-space' : 'level-two-manage-space'" :style="{ color: formatColor(node) }" />
                             <span>{{data.name}}</span>
                         </div>

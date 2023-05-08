@@ -193,7 +193,7 @@
 </script>
 <style lang="postcss">
     .iam-apply-create-rate-manager-detail-wrapper {
-        height: calc(100vh - 121px);
+        /* height: calc(100vh - 121px); */
         .action {
             padding-bottom: 50px;
         }

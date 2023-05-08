@@ -93,7 +93,7 @@
                                 <iam-edit-textarea
                                     field="description"
                                     width="300"
-                                    :placeholder="$t(`m.verify['用户组描述提示']`)"
+                                    :placeholder="$t(`m.verify['请输入']`)"
                                     :value="child.row.description"
                                     :index="child.$index"
                                     :remote-hander="handleUpdateSubManageSpace" />
@@ -205,7 +205,7 @@
                     <iam-edit-textarea
                         field="description"
                         width="300"
-                        :placeholder="$t(`m.verify['用户组描述提示']`)"
+                        :placeholder="$t(`m.verify['请输入']`)"
                         :value="row.description"
                         :index="$index"
                         :remote-hander="handleUpdateManageSpace" />

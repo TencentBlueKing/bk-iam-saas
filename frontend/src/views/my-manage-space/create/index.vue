@@ -807,6 +807,7 @@
             handleDeleteResourceAll () {
                 this.originalList = [];
                 this.policyList = [];
+                this.isAllExpanded = false;
             },
 
             handleAggregateDelete (systemId, actions, index) {
@@ -1045,6 +1046,7 @@
             let cancelHandler = Promise.resolve();
             if (window.changeDialog && this.operate !== 'cancel') {
                 cancelHandler = leavePageConfirm();
+                next(false);
                 cancelHandler.then(
                     () => {
                         next();

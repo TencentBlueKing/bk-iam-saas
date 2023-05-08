@@ -45,7 +45,7 @@ export const leaveConfirm = () => {
                 }
             }, il8n('info', '确认离开当前页')),
             okText: il8n('common', '离开'),
-            cancelText: il8n('common', '取消2'),
+            cancelText: il8n('common', '取消-dialog'),
             confirmFn: () => {
                 window.changeAlert = false;
                 resolve();

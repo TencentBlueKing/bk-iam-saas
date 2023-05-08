@@ -210,7 +210,7 @@
                             <div class="organization-content" v-if="isDepartSelectedEmpty">
                                 <div class="organization-item" v-for="item in hasSelectedDepartments" :key="item.id">
                                     <Icon type="file-close" class="folder-icon" />
-                                    <span class="organization-name" ::title="item.full_name || item.fullName">{{ item.name }}</span>
+                                    <span class="organization-name" :title="nameType(item)">{{ item.name }}</span>
                                     <span class="user-count" v-if="item.showCount">{{ '(' + item.count + `)` }}</span>
                                     <Icon bk type="close-circle-shape" class="delete-depart-icon" @click="handleDelete(item, 'organization')" />
                                 </div>
@@ -218,7 +218,7 @@
                             <div class="user-content" v-if="isUserSelectedEmpty">
                                 <div class="user-item" v-for="item in hasSelectedUsers" :key="item.id">
                                     <Icon type="personal-user" class="user-icon" />
-                                    <span class="user-name" :title="item.name !== '' ? `${item.username}(${item.name})` : item.username">{{ item.username }}<template v-if="item.name !== ''">({{ item.name }})</template>
+                                    <span class="user-name" :title="nameType(item)">{{ item.username }}<template v-if="item.name !== ''">({{ item.name }})</template>
                                     </span>
                                     <Icon bk type="close-circle-shape" class="delete-icon" @click="handleDelete(item, 'user')" />
                                 </div>
@@ -473,6 +473,24 @@
             },
             isHierarchicalAdmin () {
                 return this.$store.getters.roleList.find(item => item.id === this.$store.getters.navCurRoleId) || {};
+            },
+            nameType () {
+                return (payload) => {
+                    const { name, type, username, full_name: fullName } = payload;
+                    const typeMap = {
+                        user: () => {
+                            if (fullName) {
+                                return fullName;
+                            } else {
+                                return name ? `${username}(${name})` : username;
+                            }
+                        },
+                        depart: () => {
+                            return fullName || name;
+                        }
+                    };
+                    return typeMap[type] ? typeMap[type]() : typeMap['user']();
+                };
             }
         },
         watch: {
@@ -1096,6 +1114,7 @@
                             child.async = false;
                             child.isNewMember = false;
                             child.parentNodeId = payload.id;
+                            child.full_name = `${payload.full_name}/${child.name}`;
 
                             // parentNodeId + username 组合成id
                             child.id = `${child.parentNodeId}${child.username}`;

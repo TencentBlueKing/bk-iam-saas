@@ -51,7 +51,7 @@
             :footer-position="footerPosition"
             @cancel="handleCancel"
             @confirm="handleDeleteRole">
-            <p>
+            <p style="text-align: center">
                 <span>{{ $t(`m.common['退出后']`) }}</span>
                 <span>{{ $t(`m.common['，']`) }}</span>
                 <span>{{ deleteList.join('、') }}{{ $t(`m.common['将不再具备相应的管理权限']`) }}</span>
@@ -253,6 +253,7 @@
             },
 
             handleRtxBlur () {
+                this.deleteList = [];
                 if (JSON.stringify(this.displayValue) !== JSON.stringify(this.value)) {
                     this.isEditable = false;
                     if (this.displayValue.length < 1) {
@@ -263,7 +264,13 @@
                     this.deleteList = this.value.filter(item =>
                         !this.editValue.includes(item.username) && !item.readonly).map(v => v.username);
                     this.roleIndex = -1;
-                    this.isShowDialog = true;
+                    if (this.deleteList.length) {
+                        this.isShowDialog = true;
+                    } else {
+                        this.$emit('on-change', {
+                            [this.field]: this.displayValue
+                        });
+                    }
                 }
             },
 

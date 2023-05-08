@@ -1778,15 +1778,16 @@
                 const actionList = [];
 
                 // 重新赋值
-                if (this.isAllExpanded) {
-                    this.tableList = this.tableList.filter(e =>
-                        (e.resource_groups && e.resource_groups.length)
-                        || e.isAggregate);
-                    if (this.emptyResourceGroupsList.length) {
-                        this.emptyResourceGroupsList[0].name = this.emptyResourceGroupsName[0];
-                        this.tableList = [...this.tableList, ...this.emptyResourceGroupsList];
-                    }
-                }
+                // 资源授权与操作不一致的bug
+                // if (this.isAllExpanded) {
+                //     this.tableList = this.tableList.filter(e =>
+                //         (e.resource_groups && e.resource_groups.length)
+                //         || e.isAggregate);
+                //     if (this.emptyResourceGroupsList.length) {
+                //         this.emptyResourceGroupsList[0].name = this.emptyResourceGroupsName[0];
+                //         this.tableList = [...this.tableList, ...this.emptyResourceGroupsList];
+                //     }
+                // }
                 this.tableList.forEach(item => {
                     const curSystemData = actionList.find(subItem => subItem.system_id === item.detail.system.id);
                     if (!item.isAggregate) {

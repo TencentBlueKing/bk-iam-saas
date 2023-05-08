@@ -21,7 +21,7 @@
                     {{ $t(`m.common['确定']`) }}
                 </bk-button>
                 <bk-button theme="default" style="margin-left: 10px;" @click="hideCancelDelete">
-                    {{ $t(`m.common['取消']`) }}
+                    {{ $t(`m.common['取消-dialog']`) }}
                 </bk-button>
             </div>
         </div>
