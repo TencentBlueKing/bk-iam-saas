@@ -817,7 +817,7 @@ class GroupBiz:
             # 需要删除的成员
         del_subjects = list(group_subjects - role_subjects)
         if del_subjects:
-            self.group_svc.remove_members(group_id, del_subjects)
+            self.group_svc.remove_members(str(group_id), del_subjects)
 
 
 class GroupCheckBiz:
