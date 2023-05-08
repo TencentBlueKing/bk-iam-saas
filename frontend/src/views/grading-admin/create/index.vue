@@ -856,6 +856,10 @@
                 });
                 window.changeDialog = true;
                 this.originalList = _.cloneDeep(payload);
+                if (this.isAllExpanded) {
+                    this.handleAggregateAction(false);
+                    this.isAllExpanded = false;
+                }
                 this.isShowActionEmptyError = false;
             },
 

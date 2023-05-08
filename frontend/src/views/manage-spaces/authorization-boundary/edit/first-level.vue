@@ -833,6 +833,11 @@
                     }
                 });
                 this.originalList = _.cloneDeep(payload);
+                // 为了兼容那些没有资源实例的操作，所以要重新聚合一次
+                if (this.isAllExpanded) {
+                    this.handleAggregateAction(false);
+                    this.isAllExpanded = false;
+                }
                 this.isShowActionEmptyError = false;
                 this.isShowAddActionSideslider = false;
             },
