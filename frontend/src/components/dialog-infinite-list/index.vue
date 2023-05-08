@@ -14,7 +14,7 @@
                     <span
                         class="organization-name"
                         :class="item.disabled ? 'is-disabled' : ''"
-                        :title="item.full_name">
+                        :title="nameType(item)">
                         {{ item.name }}
                     </span>
                     <span class="user-count" v-if="item.showCount">
@@ -43,7 +43,7 @@
                     <span
                         class="user-name"
                         :class="item.disabled ? 'is-disabled' : ''"
-                        :title="item.name !== '' ? `${item.username}(${item.name})` : item.username">
+                        :title="nameType(item)">
                         {{ item.username }}
                         <template v-if="item.name !== ''">
                             ({{ item.name }})
@@ -132,6 +132,24 @@
             },
             isStaff () {
                 return this.user.role.type === 'staff';
+            },
+            nameType () {
+                return (payload) => {
+                    const { name, type, username, full_name: fullName } = payload;
+                    const typeMap = {
+                        user: () => {
+                            if (fullName) {
+                                return fullName;
+                            } else {
+                                return name ? `${username}(${name})` : username;
+                            }
+                        },
+                        depart: () => {
+                            return fullName || name;
+                        }
+                    };
+                    return typeMap[type] ? typeMap[type]() : typeMap['user']();
+                };
             }
         },
         watch: {

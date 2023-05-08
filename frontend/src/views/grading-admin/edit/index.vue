@@ -145,6 +145,7 @@
                                 :is-all-expanded="isAllExpanded"
                                 :data="policyList"
                                 :list="policyList"
+                                :total-count="originalList.length"
                                 :backup-list="aggregationsTableData"
                                 @on-delete="handleDelete"
                                 @on-aggregate-delete="handleAggregateDelete"

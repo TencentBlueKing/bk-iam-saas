@@ -54,6 +54,7 @@
                                 :is-all-expanded="isAllExpanded"
                                 :data="policyList"
                                 :list="policyList"
+                                :total-count="originalList.length"
                                 :group-id="$route.params.id"
                                 :backup-list="aggregationsTableData"
                                 @on-delete="handleDelete"

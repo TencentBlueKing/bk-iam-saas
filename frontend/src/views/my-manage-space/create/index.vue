@@ -89,6 +89,7 @@
                                 :data="policyList"
                                 :list="policyList"
                                 :backup-list="aggregationsTableData"
+                                :total-count="originalList.length"
                                 @on-delete="handleDelete"
                                 @on-aggregate-delete="handleAggregateDelete"
                                 @on-select="handleAttrValueSelected"
