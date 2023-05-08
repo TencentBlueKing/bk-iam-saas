@@ -179,6 +179,8 @@
                         console.log(editValue, this.value, this.deleteList);
                         if (this.deleteList.length) {
                             this.isShowDialog = true;
+                        } else {
+                            this.triggerChange();
                         }
                     } else {
                         this.triggerChange();
