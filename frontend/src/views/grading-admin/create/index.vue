@@ -910,13 +910,15 @@
                     this.users.forEach(item => {
                         subjects.push({
                             type: 'user',
-                            id: item.username
+                            id: item.username,
+                            full_name: item.full_name
                         });
                     });
                     this.departments.forEach(item => {
                         subjects.push({
                             type: 'department',
-                            id: item.id
+                            id: item.id,
+                            full_name: item.full_name
                         });
                     });
                 }
