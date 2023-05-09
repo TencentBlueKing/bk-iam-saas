@@ -515,7 +515,7 @@
              */
             handlerReduceInstance (payload, data) {
                 if (data.resource_groups.length < 2) return;
-                this.deleteDialog.subTitle = `${this.$t(`m.dialog['将删除']`)}一组实例权限`;
+                this.deleteDialog.subTitle = `${this.$t(`m.dialog['将删除']`)}${this.$t(`m.perm['一组实例权限']`)}`;
                 this.deleteDialog.visible = true;
                 this.resourceGrouParams = {
                     id: data.policy_id,

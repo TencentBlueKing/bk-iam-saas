@@ -30,7 +30,10 @@
         <div class="user fr">
             <div class="help-flag">
                 <Icon type="help-fill" style="color: #979ba5" />
-                <div class="dropdown-panel">
+                <div :class="[
+                    'dropdown-panel',
+                    { 'lang-dropdown-panel': !curLanguageIsCn }
+                ]">
                     <div class="item" @click="handleOpenDocu">{{ $t(`m.common['产品文档']`) }}</div>
                     <div class="item" @click="handleOpenVersion">
                         {{ $t(`m.common['版本日志']`) }}

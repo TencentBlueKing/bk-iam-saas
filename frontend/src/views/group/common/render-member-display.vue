@@ -62,7 +62,6 @@
             },
             nameType () {
                 return (payload) => {
-                    console.log(5555, payload);
                     const { name, type, username, full_name: fullName } = payload;
                     const typeMap = {
                         user: () => {
