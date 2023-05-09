@@ -162,7 +162,7 @@
     };
 
     const NORMAL_DOCU_LINK = '/权限中心/产品白皮书/产品简介/README.md';
-    const GRADE_DOCU_LINK = '/权限中心/产品白皮书/场景案例/GradingManager.md';
+    // const GRADE_DOCU_LINK = '/权限中心/产品白皮书/场景案例/GradingManager.md';
 
     const docuLinkMap = new Map([
         // 权限模板
@@ -185,7 +185,7 @@
         // 管理空间
         [
             ['ratingManager', 'gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'],
-            GRADE_DOCU_LINK
+            NORMAL_DOCU_LINK
         ],
         // 管理员
         [['administrator'], NORMAL_DOCU_LINK],
