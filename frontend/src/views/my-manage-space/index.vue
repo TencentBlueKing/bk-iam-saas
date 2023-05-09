@@ -539,12 +539,18 @@
                 } catch (e) {
                     this.fetchResetInstanceData(type);
                     console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisCopy: true
-                    });
+                    const { code, response } = e;
+                    if ((response && response.status && [401, 404].includes(response.status))
+                        || [1902000].includes(code)) {
+                        this.messageSuccess(this.$t(`m.info['您已退出当前管理员授权范围']`), 2000);
+                    } else {
+                        this.bkMessageInstance = this.$bkMessage({
+                            limit: 1,
+                            theme: 'error',
+                            message: e.message || e.data.msg || e.statusText,
+                            ellipsisCopy: true
+                        });
+                    }
                 }
             },
 

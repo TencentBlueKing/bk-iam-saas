@@ -154,8 +154,9 @@
                     this.getDetailData(res.data);
                 } catch (e) {
                     console.error(e);
-                    const { response } = e;
-                    if (response && response.status && [401, 403, 404].includes(response.status)) {
+                    const { code, response } = e;
+                    if ((response && response.status && [401, 403, 404].includes(response.status))
+                        || [1902000].includes(code)) {
                         this.$router.replace({ name: 'secondaryManageSpace' });
                     } else {
                         this.bkMessageInstance = this.$bkMessage({
