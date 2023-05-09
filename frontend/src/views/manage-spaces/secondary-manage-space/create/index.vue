@@ -1364,6 +1364,10 @@
 
             handleChange (payload) {
                 this.inheritSubjectScope = payload;
+                if (payload) {
+                    this.users = [];
+                    this.departments = [];
+                }
             },
 
             handleReasonInput () {
