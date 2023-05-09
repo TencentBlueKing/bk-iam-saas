@@ -531,7 +531,8 @@
                             'myManageSpaceCreate',
                             'secondaryManageSpaceCreate',
                             'secondaryManageSpaceDetail',
-                            'addGroupPerm'
+                            'addGroupPerm',
+                            'authorBoundaryEditFirstLevel'
                         ];
                         if (OtherRoute.includes(curRouterName)) {
                             this.$router.push({
