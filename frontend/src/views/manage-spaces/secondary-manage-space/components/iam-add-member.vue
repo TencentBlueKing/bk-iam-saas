@@ -1087,7 +1087,8 @@
                             child.async = child.child_count > 0 || child.member_count > 0;
                             child.isNewMember = false;
                             child.parentNodeId = payload.id;
-                            child.full_name = `${payload.full_name}/${child.name}`;
+                            // child.full_name = `${payload.full_name}/${child.name}`;
+                            child.full_name = payload.full_name;
 
                             if (this.hasSelectedDepartments.length > 0) {
                                 child.is_selected = this.hasSelectedDepartments.map(item => item.id).includes(child.id);

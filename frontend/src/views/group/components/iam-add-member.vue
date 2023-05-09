@@ -1150,7 +1150,8 @@
                             child.async = false;
                             child.isNewMember = false;
                             child.parentNodeId = payload.id;
-                            child.full_name = `${payload.full_name}/${child.name}`;
+                            // child.full_name = `${payload.full_name}/${child.name}`;
+                            child.full_name = payload.full_name;
 
                             // parentNodeId + username 组合成id
                             child.id = `${child.parentNodeId}${child.username}`;
