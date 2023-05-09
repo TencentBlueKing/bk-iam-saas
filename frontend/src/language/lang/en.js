@@ -404,7 +404,7 @@ export const m = {
         '申请编辑管理空间': 'Apply to edit rate management space',
         '申请续期': 'Apply to renewal',
         '操作搜索提示': 'Enter the operation name and press Enter to search',
-        '从权限模板选择添加': 'Select Add from the permission template',
+        '从权限模板选择添加：': 'Select Add from the permission template:',
         '没有在模板中找到': 'Not found in the template',
         '添加自定义权限': 'add custom permissions',
         '确定删除': 'Confirm delete?',
