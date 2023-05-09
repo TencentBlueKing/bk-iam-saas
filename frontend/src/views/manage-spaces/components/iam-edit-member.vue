@@ -51,7 +51,7 @@
             :footer-position="footerPosition"
             @cancel="handleCancel"
             @confirm="handleDeleteRole">
-            <p style="text-align: center">
+            <p class="iam-custom-dialog-title">
                 <span>{{ $t(`m.common['退出后']`) }}</span>
                 <span>{{ $t(`m.common['，']`) }}</span>
                 <span>{{ deleteList.join('、') }}{{ $t(`m.common['将不再具备相应的管理权限']`) }}</span>
