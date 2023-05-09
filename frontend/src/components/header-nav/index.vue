@@ -562,7 +562,6 @@
                     if (index === 1 && this.curRoleList.length) {
                         this.resetLocalStorage();
                         const { id, type, name } = this.curRoleList[0];
-                        console.log('进来了', type);
                         this.$set(currentData, 'id', id);
                         this.navCurRoleId = id;
                         this.curRoleId = id;

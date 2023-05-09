@@ -314,7 +314,6 @@
                         item.related_environments = this.linearActionList.find(sub => sub.id === item.id).related_environments;
                         return new PermPolicy(item);
                     });
-                    console.log('this.policyList', this.policyList);
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
@@ -507,7 +506,6 @@
              */
             handleEnvironmentsViewResource (payload, data) {
                 this.environmentsSidesliderData = payload.environments;
-                console.log('environmentsSidesliderData', this.environmentsSidesliderData);
                 this.isShowEnvironmentsSideslider = true;
                 this.environmentsSidesliderTitle = `$【${data.name}】${this.$t(`m.common['生效条件']`)}`;
             },
