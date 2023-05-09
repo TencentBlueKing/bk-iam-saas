@@ -488,6 +488,7 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
         color: #fff;
         border-bottom: 1px solid rgba(255, 255, 255, 0.06);
         overflow: hidden;
+        cursor: pointer;
         &.dark-theme {
             background: #1b1b1b;
         }

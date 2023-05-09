@@ -1,7 +1,7 @@
 <template>
     <!-- eslint-disable max-len -->
     <header class="header-nav-layout">
-        <div :class="['logo', 'fl']">
+        <div :class="['logo', 'fl']" @click.stop="handleBackHome">
             <iam-svg name="logo" :alt="$t(`m.nav['蓝鲸权限中心']`)" />
             <span class="text">{{ $t('m.nav["蓝鲸权限中心"]') }}</span>
         </div>
@@ -579,6 +579,14 @@
                         this.updateRouter(index, type);
                     }
                 }
+            },
+
+            async handleBackHome () {
+                await this.$store.dispatch('role/updateCurrentRole', { id: 0 });
+                await this.$store.dispatch('userInfo');
+                this.$store.commit('updateIndex', 0);
+                window.localStorage.setItem('index', 0);
+                this.$router.push({ name: 'myPerm' });
             },
 
             setMagicBoxLocale (targetLocale) {
