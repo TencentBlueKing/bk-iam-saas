@@ -653,13 +653,11 @@
                 console.log('handleSubmitPerm');
                 // debugger
                 if (this.isAllExpanded) {
-                    this.isAllExpanded = false;
                     this.handleAggregateAction(false);
+                    this.isAllExpanded = false;
                 }
-
                 this.aggregationData = aggregation;
                 this.authorizationData = authorization;
-
                 let hasDeleteTemplateList = [];
                 let hasAddTemplateList = [];
                 if (this.templateDetailList.length > 0) {
@@ -1018,10 +1016,11 @@
                             tempData.push(...value);
                         } else {
                             let curInstances = [];
-                            const conditions = value.map(subItem => subItem.resource_groups[0]
-                                .related_resource_types[0].condition);
+                            const conditions = value.map(subItem =>
+                                subItem.resource_groups && subItem.resource_groups[0]
+                                    .related_resource_types[0].condition);
                             // 是否都选择了实例
-                            const isAllHasInstance = conditions.every(subItem => subItem[0] !== 'none' && subItem.length > 0);
+                            const isAllHasInstance = conditions.every(subItem => subItem.length > 0 && subItem[0] !== 'none');
                             if (isAllHasInstance) {
                                 const instances = conditions.map(subItem => subItem.map(v => v.instance));
                                 let isAllEqual = true;

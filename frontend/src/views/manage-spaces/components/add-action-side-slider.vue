@@ -5,7 +5,7 @@
         transfer
         :width="890"
         ext-cls="iam-add-action-sideslider"
-        :title="$t(`m.grading['添加系统和操作5']`)"
+        :title="$t(`m.grading['添加系统和操作']`)"
         @update:isShow="handleCancel('leave')">
         <div slot="content"
             class="content-wrapper"
