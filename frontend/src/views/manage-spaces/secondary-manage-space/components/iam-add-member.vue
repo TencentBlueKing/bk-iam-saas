@@ -487,7 +487,7 @@
                             }
                         },
                         depart: () => {
-                            return fullName || name;
+                            return fullName || payload.fullName || name;
                         }
                     };
                     return typeMap[type] ? typeMap[type]() : typeMap['user']();

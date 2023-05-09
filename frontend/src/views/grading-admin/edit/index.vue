@@ -200,7 +200,6 @@
             </bk-button>
             <bk-button @click="handleCancel">{{ $t(`m.common['取消']`) }}</bk-button>
         </div>
-
         <add-member-dialog
             :show.sync="isShowAddMemberDialog"
             :users="users"
@@ -209,7 +208,7 @@
             :all-checked="isAll"
             show-limit
             @on-cancel="handleCancelAdd"
-            @on-sumbit="handleSumbitAdd" />
+            @on-sumbit="handleSubmitAdd" />
 
         <add-action-sideslider
             :is-show.sync="isShowAddActionSideslider"
@@ -886,12 +885,13 @@
                 this.isShowMemberAdd = true;
             },
 
-            handleSumbitAdd (payload) {
+            handleSubmitAdd (payload) {
                 window.changeDialog = true;
                 const { users, departments } = payload;
                 this.isAll = payload.isAll;
                 this.users = _.cloneDeep(users);
                 this.departments = _.cloneDeep(departments);
+                console.log(this.users, this.departments);
                 this.isShowMemberAdd = false;
                 this.isShowAddMemberDialog = false;
                 this.isShowMemberEmptyError = false;
@@ -916,13 +916,15 @@
                     this.users.forEach(item => {
                         subjects.push({
                             type: 'user',
-                            id: item.username
+                            id: item.username,
+                            full_name: item.full_name
                         });
                     });
                     this.departments.forEach(item => {
                         subjects.push({
                             type: 'department',
-                            id: item.id
+                            id: item.id,
+                            full_name: item.full_name || item.fullName
                         });
                     });
                 }
@@ -1003,13 +1005,15 @@
                     this.users.forEach(item => {
                         subjects.push({
                             type: 'user',
-                            id: item.username
+                            id: item.username,
+                            full_name: item.full_name
                         });
                     });
                     this.departments.forEach(item => {
                         subjects.push({
                             type: 'department',
-                            id: item.id
+                            id: item.id,
+                            full_name: item.full_name || item.fullName
                         });
                     });
                 }
