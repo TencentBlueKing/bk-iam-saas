@@ -53,7 +53,10 @@
                                     <template v-if="userLength > 0">
                                         {{ $t(`m.common['共']`) }}
                                         <span class="number">{{ userLength }}</span>
-                                        {{ $t(`m.common['个用户']`) }}，
+                                        {{ $t(`m.common['个用户']`) }}
+                                    </template>
+                                    <template v-if="userLength && departLength">
+                                        {{ $t(`m.common['，']`) }}
                                     </template>
                                     <template v-if="departLength > 0">
                                         {{ $t(`m.common['共']`) }}

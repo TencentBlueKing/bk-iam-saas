@@ -13,10 +13,10 @@
             <a class="target" href="" target="_blank" style="display: none;"></a>
             <template v-if="showExpiredAt">
                 <div v-if="isPrev">
-                    {{ $t(`m.common['添加权限至']`) }}【<span class="member-title" :title="name">{{ name }}</span>】
+                    {{ $t(`m.common['添加权限至']`) }}{{ $t(`m.common['【']`) }}<span class="member-title" :title="name">{{ name }}</span>{{ $t(`m.common['】']`) }}
                 </div>
-                <div v-else :title="`设置【${name}】组织继承新权限的有效期`">
-                    {{ $t(`m.common['设置']`) }}<span class="expired-at-title" :title="name">【{{ name }}</span>】{{ $t(`m.common['组织继承新权限的有效期']`) }}
+                <div v-else :title="`设置${$t(`m.common['【']`)}${name}${$t(`m.common['】']`)}${$t(`m.common['组织继承新权限的有效期']`)}`">
+                    {{ $t(`m.common['设置']`) }}<span class="expired-at-title" :title="name">{{ $t(`m.common['【']`) }}{{ name }}</span>{{ $t(`m.common['】']`) }}{{ $t(`m.common['组织继承新权限的有效期']`) }}
                 </div>
             </template>
             <template v-else>
@@ -24,7 +24,7 @@
                     {{ $t(`m.permApply['选择权限模板']`) }}
                 </template>
                 <template v-else>
-                    {{ $t(`m.common['添加权限至']`) }}【<span class="member-title" :title="name">{{ name }}</span>】
+                    {{ $t(`m.common['添加权限至']`) }}{{ $t(`m.common['【']`) }}<span class="member-title" :title="name">{{ name }}</span>{{ $t(`m.common['】']`) }}
                 </template>
             </template>
         </div>

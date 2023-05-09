@@ -171,11 +171,10 @@
                     :ext-cls="isShowReasonError ? 'join-reason-error' : ''"
                     v-model="reason"
                     @input="checkReason"
-                    style="margin-bottom: 15px;">
-                </bk-input>
+                />
             </section>
+            <p class="reason-empty-error" v-if="isShowReasonError">{{ $t(`m.verify['理由不可为空']`) }}</p>
         </render-horizontal-block>
-        <p class="reason-empty-error" v-if="isShowReasonError">{{ $t(`m.verify['理由不可为空']`) }}</p>
         <div slot="action">
             <bk-button theme="primary" type="button" @click="handleSubmit" :loading="submitLoading">
                 {{ $t(`m.common['确定']`) }}
@@ -1157,14 +1156,6 @@
                 span {
                     color: #ea3636;
                 }
-            }
-        }
-    }
-    .reason-wrapper {
-        margin-top: 16px;
-        .join-reason-error {
-            .bk-textarea-wrapper {
-                border-color: #ff5656;
             }
         }
     }

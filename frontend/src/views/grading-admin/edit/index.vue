@@ -188,8 +188,7 @@
                         v-model="reason"
                         @input="handleReasonInput"
                         @blur="handleReasonBlur"
-                        style="margin-bottom: 15px;">
-                    </bk-input>
+                    />
                 </section>
             </render-horizontal-block>
             <p class="action-empty-error" v-if="isShowReasonError">{{ $t(`m.verify['理由不可为空']`) }}</p>
@@ -1098,13 +1097,6 @@
             font-size: 12px;
             color: #ff4d4d;
         }
-        .reason-empty-error{
-            position: relative;
-            top: -45px;
-            left: 160px;
-            font-size: 12px;
-            color: #ff4d4d;
-        }
         .grade-admin-select-wrapper {
             .showTableClick {
                 cursor: pointer;
@@ -1175,14 +1167,6 @@
                 span {
                     color: #ea3636;
                 }
-            }
-        }
-    }
-    .reason-wrapper {
-        margin-top: 16px;
-        .join-reason-error {
-            .bk-textarea-wrapper {
-                border-color: #ff5656;
             }
         }
     }
