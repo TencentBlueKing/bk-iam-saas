@@ -91,7 +91,7 @@
                             <label class="bk-label" style="line-height: 20px;">
                                 <span class="name">{{ customTmpl.name }}</span>
                                 <span :class="['select-all', { 'disabled': customTmpl.allDisabled }]" data-test-id="group_btn_selectAllAction" @click.stop="handleSelectAll(customTmpl, index)">
-                                    （{{ customTmpl.text }}）
+                                    ({{ customTmpl.text }})
                                 </span>
                             </label>
                             <div
@@ -607,58 +607,60 @@
             },
 
             handleDefaultData (payload, data) {
-                this.systemData[payload].count = 0;
-                this.systemData[payload].list = _.cloneDeep(data);
-                this.systemData[payload].list.forEach(item => {
-                    if (!item.actions) {
-                        item.actions = [];
-                    }
-                    if (!item.sub_groups) {
-                        item.sub_groups = [];
-                    }
-                    let allChecked = true;
-                    let allDisabled = true;
-                    item.actions.forEach(act => {
-                        act.$id = `${payload}&${act.id}`;
-                        act.related_resource_types.forEach(v => {
-                            v.type = v.id;
-                        });
-                        this.$set(act, 'checked', this.defaultValue.includes(act.$id) || this.curSelectValue.includes(act.$id) || (act.tag === 'readonly' && !!this.groupId));
-                        if (!act.checked) {
-                            allChecked = false;
+                if (this.systemData[payload]) {
+                    this.$set(this.systemData[payload], 'count', 0);
+                    this.$set(this.systemData[payload], 'list', _.cloneDeep(data));
+                    this.systemData[payload].list.forEach(item => {
+                        if (!item.actions) {
+                            item.actions = [];
                         }
-                        if (act.tag === 'readonly' && !!this.groupId) {
-                            this.$set(act, 'disabled', true);
-                            ++this.systemData[payload].count;
-                        } else {
-                            allDisabled = false;
+                        if (!item.sub_groups) {
+                            item.sub_groups = [];
                         }
-                        this.linearAction.push(act);
-                    });
-                    item.sub_groups.forEach(act => {
-                        (act.actions || []).forEach(v => {
-                            v.$id = `${payload}&${v.id}`;
-                            v.related_resource_types.forEach(subItem => {
-                                subItem.type = subItem.id;
+                        let allChecked = true;
+                        let allDisabled = true;
+                        item.actions.forEach(act => {
+                            act.$id = `${payload}&${act.id}`;
+                            act.related_resource_types.forEach(v => {
+                                v.type = v.id;
                             });
-                            this.$set(v, 'checked', this.defaultValue.includes(v.$id) || this.curSelectValue.includes(v.$id) || (v.tag === 'readonly' && !!this.groupId));
-                            if (!v.checked) {
+                            this.$set(act, 'checked', this.defaultValue.includes(act.$id) || this.curSelectValue.includes(act.$id) || (act.tag === 'readonly' && !!this.groupId));
+                            if (!act.checked) {
                                 allChecked = false;
                             }
-                            if (v.tag === 'readonly' && !!this.groupId) {
-                                this.$set(v, 'disabled', true);
+                            if (act.tag === 'readonly' && !!this.groupId) {
+                                this.$set(act, 'disabled', true);
                                 ++this.systemData[payload].count;
                             } else {
                                 allDisabled = false;
                             }
-                            this.linearAction.push(v);
+                            this.linearAction.push(act);
                         });
+                        item.sub_groups.forEach(act => {
+                            (act.actions || []).forEach(v => {
+                                v.$id = `${payload}&${v.id}`;
+                                v.related_resource_types.forEach(subItem => {
+                                    subItem.type = subItem.id;
+                                });
+                                this.$set(v, 'checked', this.defaultValue.includes(v.$id) || this.curSelectValue.includes(v.$id) || (v.tag === 'readonly' && !!this.groupId));
+                                if (!v.checked) {
+                                    allChecked = false;
+                                }
+                                if (v.tag === 'readonly' && !!this.groupId) {
+                                    this.$set(v, 'disabled', true);
+                                    ++this.systemData[payload].count;
+                                } else {
+                                    allDisabled = false;
+                                }
+                                this.linearAction.push(v);
+                            });
+                        });
+                        this.$set(item, 'text', allChecked ? this.$t(`m.common['取消全选']`) : this.$t(`m.common['全选']`));
+                        this.$set(item, 'allDisabled', allDisabled);
                     });
-                    this.$set(item, 'text', allChecked ? this.$t(`m.common['取消全选']`) : this.$t(`m.common['全选']`));
-                    this.$set(item, 'allDisabled', allDisabled);
-                });
-                this.systemData[payload].system_name = this.systemList.find(item => item.id === payload).name;
-
+                    this.systemData[payload].system_name = this.systemList.find(item => item.id === payload).name;
+                }
+                
                 if (this.defaultValue.length > 0) {
                     const curAllActionIds = [];
                     this.systemData[payload].list.forEach(item => {

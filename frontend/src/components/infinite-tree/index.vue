@@ -50,7 +50,7 @@
                     </span>
                 </div>
             </div>
-            <template v-if="renderData.length === 0">
+            <template v-if="!renderData.length && emptyData.type">
                 <ExceptionEmpty
                     :type="emptyData.type"
                     :empty-text="emptyData.text"
