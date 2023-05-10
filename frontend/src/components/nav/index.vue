@@ -161,6 +161,8 @@
     import { bus } from '@/common/bus';
     import { getTreeNode } from '@/common/util';
     import { getRouterDiff } from '@/common/router-handle';
+    import { NEED_CONFIRM_DIALOG_ROUTER } from '@/common/constants';
+    import { leavePageConfirm } from '@/common/leave-page-confirm';
     import IamGuide from '@/components/iam-guide/index.vue';
 
     const routerMap = new Map([
@@ -458,6 +460,21 @@
             },
 
             handleSwitchNav (id, item) {
+                if (window.changeDialog && NEED_CONFIRM_DIALOG_ROUTER.includes(this.$route.name)) {
+                    const cancelHandler = leavePageConfirm();
+                    cancelHandler.then(
+                        () => {
+                            this.handleNavMenu(item);
+                        },
+                        (_) => _
+                    );
+                } else {
+                    this.handleNavMenu(item);
+                }
+            },
+
+            // 校验切换侧边栏其他菜单
+            handleNavMenu (item) {
                 this.$nextTick(() => {
                     if (item.rkey === 'approval') {
                         const url = `${window.BK_ITSM_APP_URL}/#/ticket/my/approval`;
