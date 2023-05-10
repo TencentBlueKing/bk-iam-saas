@@ -146,14 +146,13 @@
                     v-model="reason"
                     @input="handleReasonInput"
                     @blur="handleReasonBlur"
-                    style="margin-bottom: 15px"
                 >
                 </bk-input>
             </section>
+            <p class="reason-empty-error" v-if="isShowReasonError">
+                {{ $t(`m.verify['理由不可为空']`) }}
+            </p>
         </render-horizontal-block>
-        <p class="action-empty-error" v-if="isShowReasonError">
-            {{ $t(`m.verify['理由不可为空']`) }}
-        </p>
         <div slot="action">
             <bk-button
                 theme="primary"
@@ -951,6 +950,7 @@
                 let data = [];
                 let flag = false;
                 this.isShowActionEmptyError = this.originalList.length < 1;
+                this.isShowReasonError = !this.reason;
                 this.isShowMemberEmptyError
                     = this.users.length < 1 && this.departments.length < 1 && !this.isAll;
                 if (!this.isShowActionEmptyError) {
@@ -1143,14 +1143,6 @@
       span {
         color: #ea3636;
       }
-    }
-  }
-}
-.reason-wrapper {
-  margin-top: 16px;
-  .join-reason-error {
-    .bk-textarea-wrapper {
-      border-color: #ff5656;
     }
   }
 }

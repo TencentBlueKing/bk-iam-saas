@@ -50,6 +50,7 @@
             :aggregation="aggregationData"
             :authorization="authorizationData"
             :group-id="$route.params.id"
+            :perm-side-width="permSideWidth"
             @on-view="handleViewDetail"
             @on-add-custom="handleAddCustom"
             @on-edit-custom="handleEditCustom"
@@ -116,6 +117,7 @@
                     isShow: false,
                     id: ''
                 },
+                permSideWidth: 890,
                 curMap: null,
                 isShowErrorTips: false
             };
@@ -164,6 +166,13 @@
                 return data;
             }
         },
+        watch: {
+            isShowAddSideslider (value) {
+                if (!value) {
+                    this.permSideWidth = 890;
+                }
+            }
+        },
         beforeRouteEnter (to, from, next) {
             window.FROM_ROUTER_NAME = from.name;
             next();
@@ -174,6 +183,9 @@
             },
 
             handleAddCustom () {
+                if (!this.externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn) {
+                    this.permSideWidth = 1090;
+                }
                 this.isShowAddActionSideslider = true;
             },
 

@@ -101,6 +101,7 @@
             :aggregation="aggregationData"
             :authorization="authorizationData"
             :external-template="externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn"
+            :perm-side-width="permSideWidth"
             @on-view="handleViewDetail"
             @on-add-custom="handleAddCustom"
             @on-edit-custom="handleEditCustom"
@@ -188,7 +189,8 @@
                     isShow: false,
                     id: ''
                 },
-                curMap: null
+                curMap: null,
+                permSideWidth: 890
             };
         },
         computed: {
@@ -272,6 +274,13 @@
                 return data;
             }
         },
+        watch: {
+            isShowAddSideslider (value) {
+                if (!value) {
+                    this.permSideWidth = 890;
+                }
+            }
+        },
         methods: {
             /**
              * handleBasicInfoChange
@@ -286,12 +295,16 @@
              */
             handleAddCancel () {
                 this.isShowAddSideslider = false;
+                this.permSideWidth = 890;
             },
 
             /**
              * handleAddCustom
              */
             handleAddCustom () {
+                if (!this.externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn) {
+                    this.permSideWidth = 1090;
+                }
                 this.isShowAddActionSideslider = true;
             },
 
@@ -705,6 +718,9 @@
              * handleEditCustom
              */
             handleEditCustom () {
+                if (!this.externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn) {
+                    this.permSideWidth = 1090;
+                }
                 this.curActionValue = this.originalList.map(item => item.$id);
                 this.isShowAddActionSideslider = true;
             },

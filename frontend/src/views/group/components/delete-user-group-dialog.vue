@@ -76,6 +76,7 @@
             .delete-tips {
                 padding-left: 44px;
                 text-align: left;
+                word-break: break-all;
                 .warn {
                     color: #ffb848;
                 }

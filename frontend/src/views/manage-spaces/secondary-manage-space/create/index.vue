@@ -216,11 +216,10 @@
                         v-model="reason"
                         @input="handleReasonInput"
                         @blur="handleReasonBlur"
-                        style="margin-bottom: 15px;">
-                    </bk-input>
+                    />
                 </section>
+                <p class="reason-empty-error" v-if="isShowReasonError">{{ $t(`m.verify['理由不可为空']`) }}</p>
             </render-horizontal-block>
-            <p class="action-empty-error" v-if="isShowReasonError">{{ $t(`m.verify['理由不可为空']`) }}</p>
         </template>
         <div slot="action">
             <bk-button theme="primary" type="button" :loading="submitLoading"
@@ -339,6 +338,7 @@
                 isLoading: false,
                 isAllExpanded: false,
                 isShowMemberEmptyError: false,
+                isShowReasonError: false,
                 hasDeleteCustomList: [],
                 hasAddCustomList: [],
                 templateDetailSideslider: {
@@ -437,6 +437,9 @@
             }
         },
         watch: {
+            reason () {
+                this.isShowReasonError = false;
+            },
             originalList: {
                 handler (value) {
                     this.setPolicyList(value);
@@ -1152,6 +1155,7 @@
                 let data = [];
                 let flag = false;
                 this.isShowActionEmptyError = this.originalList.length < 1;
+                this.isShowReasonError = !this.reason;
                 this.isShowMemberEmptyError = this.inheritSubjectScope ? false
                     : (this.users.length < 1 && this.departments.length < 1) && !this.isAll;
                 if (!this.isShowActionEmptyError) {
@@ -1170,6 +1174,11 @@
                     return;
                 }
                 if (this.isStaff) {
+                    if (!this.reason) {
+                        this.isShowReasonError = true;
+                        this.scrollToLocation(this.$refs.reasonRef);
+                        return;
+                    }
                     this.submitLoading = true;
                     this.handleSubmitWithReason();
                     // this.isShowReasonDialog = true;
@@ -1355,6 +1364,20 @@
 
             handleChange (payload) {
                 this.inheritSubjectScope = payload;
+                if (payload) {
+                    this.users = [];
+                    this.departments = [];
+                }
+            },
+
+            handleReasonInput () {
+                this.isShowReasonError = false;
+            },
+
+            handleReasonBlur (payload) {
+                if (!payload) {
+                    this.isShowReasonError = true;
+                }
             }
         }
     };

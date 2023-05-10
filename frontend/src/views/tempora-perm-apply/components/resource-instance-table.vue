@@ -451,7 +451,6 @@
                     value.forEach(e => {
                         e.expired_at = 3600;
                     });
-                    console.log('this.isAllExpanded', this.isAllExpanded, value);
                     if (this.isAllExpanded) {
                         this.tableList = value.filter(e =>
                             (e.resource_groups && e.resource_groups.length)
