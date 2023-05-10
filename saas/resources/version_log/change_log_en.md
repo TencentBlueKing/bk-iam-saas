@@ -1,3 +1,20 @@
+<!-- 2023-05-10 -->
+# V1.10.0 ChangeLog
+
+### New Features
+* Support secondary management space feature
+
+---
+
+<!-- 2023-03-28 -->
+# V1.9.10 ChangeLog
+
+### New Features
+* Add temporary permission switch
+* Modify the maximum number of tiered administrators that can be created in the api to 500
+
+---
+
 <!-- 2023-02-20 -->
 # V1.9.9 ChangeLog
 
