@@ -136,9 +136,10 @@
                                 <p class="manual-error-text pr10" v-if="manualInputError">
                                     {{ $t(`m.common['手动输入提示2']`) }}
                                     <template v-if="isHierarchicalAdmin.type === 'rating_manager'">
-                                        ，{{ $t(`m.common['请尝试']`) }}<span class="highlight" @click="handleSkip">{{
-                                            $t(`m.common['修改授权人员范围']`)
-                                        }}</span>
+                                        {{ $t(`m.common['，']`) }}
+                                        {{ $t(`m.common['请尝试']`) }}<span class="highlight" @click="handleSkip">
+                                            {{ $t(`m.common['修改授权人员范围']`) }}
+                                        </span>
                                     </template>
                                 </p>
                                 <bk-button theme="primary"
@@ -159,7 +160,7 @@
                                             <span class="organization-count">
                                                 {{ hasSelectedDepartments.length}}
                                             </span>
-                                            {{ $t(`m.common['个']`) }} {{ $t(`m.common['组织']`) }}，
+                                            {{ $t(`m.common['个']`) }} {{ $t(`m.common['组织']`) }}{{$t(`m.common['，']`)}}
                                             <span class="user-count">
                                                 {{ hasSelectedUsers.length }}
                                             </span>
@@ -172,7 +173,7 @@
                                     <template v-else>
                                         <template v-if="isShowSelectedText">
                                             <span class="organization-count">{{ hasSelectedDepartments.length
-                                            }}</span>Org，
+                                            }}</span>Org{{ $t(`m.common['，']`) }}
                                             <span class="user-count">{{ hasSelectedUsers.length }}</span>User
                                         </template>
                                         <template v-else>

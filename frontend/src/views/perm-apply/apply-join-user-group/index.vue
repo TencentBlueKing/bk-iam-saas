@@ -10,7 +10,8 @@
                         :placeholder="$t(`m.applyEntrance['申请加入用户组搜索提示']`)"
                         :quick-search-method="quickSearchMethod" />
                     <div class="info">
-                        {{ $t(`m.info['如果以下用户组不满足您的权限需求']`) }}，
+                        {{ $t(`m.info['如果以下用户组不满足您的权限需求']`) }}
+                        {{ $t(`m.common['，']`) }}
                         {{ $t(`m.common['可以']`) }}
                         <bk-button
                             text
