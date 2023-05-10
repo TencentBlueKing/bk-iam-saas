@@ -188,19 +188,22 @@
                         departments.push({
                             name: item.name,
                             count: item.member_count,
-                            fullName: item.full_name
+                            fullName: item.full_name,
+                            full_name: item.full_name || item.fullName
                         });
                     }
                     if (item.type === 'user') {
                         users.push({
                             name: item.name,
-                            username: item.id
+                            username: item.id,
+                            full_name: item.full_name || item.fullName
                         });
                     }
                     if (item.id === '*' && item.type === '*') {
                         departments.push({
                             name: this.$t(`m.common['全员']`),
-                            count: 'All'
+                            count: 'All',
+                            full_name: `${this.$t(`m.common['全员']`)}(All)`
                         });
                     }
                 });

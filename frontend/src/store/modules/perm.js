@@ -685,7 +685,6 @@ export default {
          * @return {Promise} promise 对象
          */
         getRecommended ({ commit, state, dispatch }, params = {}, config) {
-            console.log('params', params);
             return http.get(
                 `${AJAX_URL_PREFIX}/policies/recommended/?${json2Query(params)}`,
                 {},

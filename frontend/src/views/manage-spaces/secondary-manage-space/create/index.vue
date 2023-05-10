@@ -169,6 +169,7 @@
                                 :list="policyList"
                                 :authorization="curAuthorizationData"
                                 :original-list="tableListBackup"
+                                :total-count="originalList.length"
                                 :is-all-expanded="isAllExpanded"
                                 :backup-list="aggregationsTableData"
                                 :group-id="$route.params.id"
@@ -215,11 +216,10 @@
                         v-model="reason"
                         @input="handleReasonInput"
                         @blur="handleReasonBlur"
-                        style="margin-bottom: 15px;">
-                    </bk-input>
+                    />
                 </section>
+                <p class="reason-empty-error" v-if="isShowReasonError">{{ $t(`m.verify['理由不可为空']`) }}</p>
             </render-horizontal-block>
-            <p class="action-empty-error" v-if="isShowReasonError">{{ $t(`m.verify['理由不可为空']`) }}</p>
         </template>
         <div slot="action">
             <bk-button theme="primary" type="button" :loading="submitLoading"
@@ -338,6 +338,7 @@
                 isLoading: false,
                 isAllExpanded: false,
                 isShowMemberEmptyError: false,
+                isShowReasonError: false,
                 hasDeleteCustomList: [],
                 hasAddCustomList: [],
                 templateDetailSideslider: {
@@ -436,6 +437,9 @@
             }
         },
         watch: {
+            reason () {
+                this.isShowReasonError = false;
+            },
             originalList: {
                 handler (value) {
                     this.setPolicyList(value);
@@ -652,13 +656,11 @@
                 console.log('handleSubmitPerm');
                 // debugger
                 if (this.isAllExpanded) {
-                    this.isAllExpanded = false;
                     this.handleAggregateAction(false);
+                    this.isAllExpanded = false;
                 }
-
                 this.aggregationData = aggregation;
                 this.authorizationData = authorization;
-
                 let hasDeleteTemplateList = [];
                 let hasAddTemplateList = [];
                 if (this.templateDetailList.length > 0) {
@@ -1017,10 +1019,11 @@
                             tempData.push(...value);
                         } else {
                             let curInstances = [];
-                            const conditions = value.map(subItem => subItem.resource_groups[0]
-                                .related_resource_types[0].condition);
+                            const conditions = value.map(subItem =>
+                                subItem.resource_groups && subItem.resource_groups[0]
+                                    .related_resource_types[0].condition);
                             // 是否都选择了实例
-                            const isAllHasInstance = conditions.every(subItem => subItem[0] !== 'none' && subItem.length > 0);
+                            const isAllHasInstance = conditions.every(subItem => subItem.length > 0 && subItem[0] !== 'none');
                             if (isAllHasInstance) {
                                 const instances = conditions.map(subItem => subItem.map(v => v.instance));
                                 let isAllEqual = true;
@@ -1152,6 +1155,7 @@
                 let data = [];
                 let flag = false;
                 this.isShowActionEmptyError = this.originalList.length < 1;
+                this.isShowReasonError = !this.reason;
                 this.isShowMemberEmptyError = this.inheritSubjectScope ? false
                     : (this.users.length < 1 && this.departments.length < 1) && !this.isAll;
                 if (!this.isShowActionEmptyError) {
@@ -1170,6 +1174,11 @@
                     return;
                 }
                 if (this.isStaff) {
+                    if (!this.reason) {
+                        this.isShowReasonError = true;
+                        this.scrollToLocation(this.$refs.reasonRef);
+                        return;
+                    }
                     this.submitLoading = true;
                     this.handleSubmitWithReason();
                     // this.isShowReasonDialog = true;
@@ -1355,6 +1364,20 @@
 
             handleChange (payload) {
                 this.inheritSubjectScope = payload;
+                if (payload) {
+                    this.users = [];
+                    this.departments = [];
+                }
+            },
+
+            handleReasonInput () {
+                this.isShowReasonError = false;
+            },
+
+            handleReasonBlur (payload) {
+                if (!payload) {
+                    this.isShowReasonError = true;
+                }
             }
         }
     };

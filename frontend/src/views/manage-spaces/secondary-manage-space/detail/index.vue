@@ -154,8 +154,9 @@
                     this.getDetailData(res.data);
                 } catch (e) {
                     console.error(e);
-                    const { response } = e;
-                    if (response && response.status && [401, 403, 404].includes(response.status)) {
+                    const { code, response } = e;
+                    if ((response && response.status && [401, 403, 404].includes(response.status))
+                        || [1902000].includes(code)) {
                         this.$router.replace({ name: 'secondaryManageSpace' });
                     } else {
                         this.bkMessageInstance = this.$bkMessage({
@@ -191,19 +192,22 @@
                         departments.push({
                             name: item.name,
                             count: item.member_count,
-                            fullName: item.full_name
+                            fullName: item.full_name,
+                            full_name: item.full_name || item.fullName
                         });
                     }
                     if (item.type === 'user') {
                         users.push({
                             name: item.name,
-                            username: item.id
+                            username: item.id,
+                            full_name: item.full_name || item.fullName
                         });
                     }
                     if (item.id === '*' && item.type === '*') {
                         departments.push({
                             name: this.$t(`m.common['全员']`),
-                            count: 'All'
+                            count: 'All',
+                            full_name: `${this.$t(`m.common['全员']`)}(All)`
                         });
                     }
                 });

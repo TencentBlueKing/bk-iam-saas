@@ -164,6 +164,7 @@
                                 :is-all-expanded="isAllExpanded"
                                 :data="policyList"
                                 :list="policyList"
+                                :total-count="originalList.length"
                                 :backup-list="aggregationsTableData"
                                 @on-delete="handleDelete"
                                 @on-aggregate-delete="handleAggregateDelete"
@@ -206,11 +207,10 @@
                         v-model="reason"
                         @input="handleReasonInput"
                         @blur="handleReasonBlur"
-                        style="margin-bottom: 15px;">
-                    </bk-input>
+                    />
                 </section>
+                <p class="reason-empty-error" v-if="isShowReasonError">{{ $t(`m.verify['理由不可为空']`) }}</p>
             </render-horizontal-block>
-            <p class="action-empty-error" v-if="isShowReasonError">{{ $t(`m.verify['理由不可为空']`) }}</p>
         </template>
         <div slot="action">
             <bk-button theme="primary" type="button" @click="handleSubmit"
@@ -855,6 +855,10 @@
                 });
                 window.changeDialog = true;
                 this.originalList = _.cloneDeep(payload);
+                if (this.isAllExpanded) {
+                    this.handleAggregateAction(false);
+                    this.isAllExpanded = false;
+                }
                 this.isShowActionEmptyError = false;
             },
 
@@ -905,13 +909,15 @@
                     this.users.forEach(item => {
                         subjects.push({
                             type: 'user',
-                            id: item.username
+                            id: item.username,
+                            full_name: item.full_name
                         });
                     });
                     this.departments.forEach(item => {
                         subjects.push({
                             type: 'department',
-                            id: item.id
+                            id: item.id,
+                            full_name: item.full_name
                         });
                     });
                 }
@@ -958,7 +964,7 @@
                 let data = [];
                 let flag = false;
                 this.isShowActionEmptyError = this.originalList.length < 1;
-                this.isShowReasonError = this.isStaff && this.reason === '';
+                this.isShowReasonError = !this.reason;
                 this.isShowMemberEmptyError = (this.users.length < 1 && this.departments.length < 1) && !this.isAll;
                 if (!this.isShowActionEmptyError) {
                     data = this.$refs.resourceInstanceRef.handleGetValue().actions;
@@ -1018,23 +1024,23 @@
                 console.log(params, '参数');
                 window.changeDialog = false;
                 this.submitLoading = true;
-                // try {
-                //     await this.$store.dispatch('role/addRatingManager', params);
-                //     await this.$store.dispatch('roleList');
-                //     this.messageSuccess(this.$t(+this.id > 0 ? `m.info['克隆管理空间成功']` : `m.info['新建管理空间成功']`), 1000);
-                //     this.$router.go(-1);
-                // } catch (e) {
-                //     console.error(e);
-                //     this.bkMessageInstance = this.$bkMessage({
-                //         limit: 1,
-                //         theme: 'error',
-                //         message: e.message || e.data.msg || e.statusText,
-                //         ellipsisLine: 2,
-                //         ellipsisCopy: true
-                //     });
-                // } finally {
-                //     this.submitLoading = false;
-                // }
+                try {
+                    await this.$store.dispatch('role/addRatingManager', params);
+                    await this.$store.dispatch('roleList');
+                    this.messageSuccess(this.$t(+this.id > 0 ? `m.info['克隆管理空间成功']` : `m.info['新建管理空间成功']`), 1000);
+                    this.$router.go(-1);
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                } finally {
+                    this.submitLoading = false;
+                }
             },
 
             handleCancel () {
@@ -1155,14 +1161,6 @@
                 span {
                     color: #ea3636;
                 }
-            }
-        }
-    }
-    .reason-wrapper {
-        margin-top: 16px;
-        .join-reason-error {
-            .bk-textarea-wrapper {
-                border-color: #ff5656;
             }
         }
     }

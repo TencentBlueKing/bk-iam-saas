@@ -54,6 +54,7 @@
                                 :is-all-expanded="isAllExpanded"
                                 :data="policyList"
                                 :list="policyList"
+                                :total-count="originalList.length"
                                 :group-id="$route.params.id"
                                 :backup-list="aggregationsTableData"
                                 @on-delete="handleDelete"
@@ -170,11 +171,10 @@
                     :ext-cls="isShowReasonError ? 'join-reason-error' : ''"
                     v-model="reason"
                     @input="checkReason"
-                    style="margin-bottom: 15px;">
-                </bk-input>
+                />
             </section>
+            <p class="reason-empty-error" v-if="isShowReasonError">{{ $t(`m.verify['理由不可为空']`) }}</p>
         </render-horizontal-block>
-        <p class="reason-empty-error" v-if="isShowReasonError">{{ $t(`m.verify['理由不可为空']`) }}</p>
         <div slot="action">
             <bk-button theme="primary" type="button" @click="handleSubmit" :loading="submitLoading">
                 {{ $t(`m.common['确定']`) }}
@@ -832,6 +832,11 @@
                     }
                 });
                 this.originalList = _.cloneDeep(payload);
+                // 为了兼容那些没有资源实例的操作，所以要重新聚合一次
+                if (this.isAllExpanded) {
+                    this.handleAggregateAction(false);
+                    this.isAllExpanded = false;
+                }
                 this.isShowActionEmptyError = false;
                 this.isShowAddActionSideslider = false;
             },
@@ -1151,14 +1156,6 @@
                 span {
                     color: #ea3636;
                 }
-            }
-        }
-    }
-    .reason-wrapper {
-        margin-top: 16px;
-        .join-reason-error {
-            .bk-textarea-wrapper {
-                border-color: #ff5656;
             }
         }
     }

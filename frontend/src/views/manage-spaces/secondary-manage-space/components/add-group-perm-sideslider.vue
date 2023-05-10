@@ -11,7 +11,7 @@
                 <div class="template-content-wrapper">
                     <render-search>
                         <div class="search-title">
-                            {{ $t(`m.info['从权限模板选择添加']`) }}：{{ $t(`m.common['已选择']`) }}
+                            {{ $t(`m.info['从权限模板选择添加：']`) }}{{ $t(`m.common['已选择']`) }}
                             <span style="color: #2dcb56;">{{ currentSelectList.length }}</span>
                             {{ $t(`m.common['条']`) }}
                         </div>
@@ -103,7 +103,7 @@
                             {{ $t(`m.common['已选择']`) }}
                             {{ sysCount }}
                             {{ $t(`m.common['个']`) }}
-                            {{ $t(`m.common['系统']`) }}，
+                            {{ $t(`m.common['系统']`) }}{{ $t(`m.common['，']`) }}
                             {{ actionCount }}
                             {{ $t(`m.common['个']`) }}
                             {{ $t(`m.common['操作']`) }}
@@ -113,7 +113,7 @@
                         </p>
                     </template>
                     <template v-else>
-                        {{ $t(`m.info['没有在模板中找到']`) }}，{{ $t(`m.common['也可']`) }}
+                        {{ $t(`m.info['没有在模板中找到']`) }}{{ $t(`m.common['，']`) }}{{ $t(`m.common['也可']`) }}
                         <bk-button style="margin-left: 5px;" text theme="primary" @click="hadleAddCustomPerm" data-test-id="group_btn_addCustomPerm">
                             {{ $t(`m.info['添加自定义权限']`) }}
                         </bk-button>

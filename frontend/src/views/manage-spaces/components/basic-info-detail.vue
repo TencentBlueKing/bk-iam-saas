@@ -148,8 +148,9 @@
                         }
                     }, async (e) => {
                         console.warn('error');
-                        const { response } = e;
-                        if (response && response.status && [401, 404].includes(response.status)) {
+                        const { code, response } = e;
+                        if ((response && response.status && [401, 404].includes(response.status))
+                            || [1902000].includes(code)) {
                             this.handleExitPermManage();
                         } else {
                             this.bkMessageInstance = this.$bkMessage({

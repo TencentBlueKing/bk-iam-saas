@@ -81,7 +81,7 @@
                             </template>
                             <template v-else>
                                 {{ curLanguageIsCn ? (isUnfold ? item.name : item.name.substr(0, 2)) : isUnfold ?
-                                    item.name : 'MP' }}
+                                    item.name : `${item.name.substr(0, 2)}.` }}
                             </template>
                         </div>
                         <template>

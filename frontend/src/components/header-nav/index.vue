@@ -1,7 +1,7 @@
 <template>
     <!-- eslint-disable max-len -->
     <header class="header-nav-layout">
-        <div :class="['logo', 'fl']">
+        <div :class="['logo', 'fl']" @click.stop="handleBackHome">
             <iam-svg name="logo" :alt="$t(`m.nav['蓝鲸权限中心']`)" />
             <span class="text">{{ $t('m.nav["蓝鲸权限中心"]') }}</span>
         </div>
@@ -30,7 +30,10 @@
         <div class="user fr">
             <div class="help-flag">
                 <Icon type="help-fill" style="color: #979ba5" />
-                <div class="dropdown-panel">
+                <div :class="[
+                    'dropdown-panel',
+                    { 'lang-dropdown-panel': !curLanguageIsCn }
+                ]">
                     <div class="item" @click="handleOpenDocu">{{ $t(`m.common['产品文档']`) }}</div>
                     <div class="item" @click="handleOpenVersion">
                         {{ $t(`m.common['版本日志']`) }}
@@ -162,7 +165,7 @@
     };
 
     const NORMAL_DOCU_LINK = '/权限中心/产品白皮书/产品简介/README.md';
-    const GRADE_DOCU_LINK = '/权限中心/产品白皮书/场景案例/GradingManager.md';
+    // const GRADE_DOCU_LINK = '/权限中心/产品白皮书/场景案例/GradingManager.md';
 
     const docuLinkMap = new Map([
         // 权限模板
@@ -185,7 +188,7 @@
         // 管理空间
         [
             ['ratingManager', 'gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'],
-            GRADE_DOCU_LINK
+            NORMAL_DOCU_LINK
         ],
         // 管理员
         [['administrator'], NORMAL_DOCU_LINK],
@@ -528,7 +531,8 @@
                             'myManageSpaceCreate',
                             'secondaryManageSpaceCreate',
                             'secondaryManageSpaceDetail',
-                            'addGroupPerm'
+                            'addGroupPerm',
+                            'authorBoundaryEditFirstLevel'
                         ];
                         if (OtherRoute.includes(curRouterName)) {
                             this.$router.push({
@@ -562,7 +566,6 @@
                     if (index === 1 && this.curRoleList.length) {
                         this.resetLocalStorage();
                         const { id, type, name } = this.curRoleList[0];
-                        console.log('进来了', type);
                         this.$set(currentData, 'id', id);
                         this.navCurRoleId = id;
                         this.curRoleId = id;
@@ -577,6 +580,14 @@
                         this.updateRouter(index, type);
                     }
                 }
+            },
+
+            async handleBackHome () {
+                await this.$store.dispatch('role/updateCurrentRole', { id: 0 });
+                await this.$store.dispatch('userInfo');
+                this.$store.commit('updateIndex', 0);
+                window.localStorage.setItem('index', 0);
+                this.$router.push({ name: 'myPerm' });
             },
 
             setMagicBoxLocale (targetLocale) {

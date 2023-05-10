@@ -373,7 +373,6 @@
             },
 
             handlerChange (selection, row, index) {
-                console.log(selection, index);
                 this.isShowErrorTips = false;
                 this.currentSelectList = _.cloneDeep(selection);
                 this.tableList[index].checkList = _.cloneDeep(selection);

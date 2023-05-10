@@ -2,7 +2,7 @@
     <bk-sideslider
         :is-show="isShow"
         :quick-close="true"
-        :width="890"
+        :width="permSideWidth"
         ext-cls="iam-add-group-perm-sideslider"
         :title="$t(`m.userGroup['添加组权限']`)"
         @update:isShow="handleCancel">
@@ -11,7 +11,7 @@
                 <div class="template-content-wrapper">
                     <render-search>
                         <div class="search-title">
-                            {{ $t(`m.info['从权限模板选择添加']`) }}：{{ $t(`m.common['已选择']`) }}
+                            {{ $t(`m.info['从权限模板选择添加：']`) }}{{ $t(`m.common['已选择']`) }}
                             <span style="color: #2dcb56;">{{ currentSelectList.length }}</span>
                             {{ $t(`m.common['条']`) }}
                         </div>
@@ -103,7 +103,7 @@
                             {{ $t(`m.common['已选择']`) }}
                             {{ sysCount }}
                             {{ $t(`m.common['个']`) }}
-                            {{ $t(`m.common['系统']`) }}，
+                            {{ $t(`m.common['系统']`) }},
                             {{ actionCount }}
                             {{ $t(`m.common['个']`) }}
                             {{ $t(`m.common['操作']`) }}
@@ -113,8 +113,8 @@
                         </p>
                     </template>
                     <template v-else>
-                        {{ $t(`m.info['没有在模板中找到']`) }}，{{ $t(`m.common['也可']`) }}
-                        <bk-button style="margin-left: 5px;" text theme="primary" @click="hadleAddCustomPerm" data-test-id="group_btn_addCustomPerm">
+                        {{ $t(`m.info['没有在模板中找到']`) }}, {{ $t(`m.common['也可']`) }}
+                        <bk-button style="margin-left: 5px;" text theme="primary" @click="handleAddCustomPerm" data-test-id="group_btn_addCustomPerm">
                             {{ $t(`m.info['添加自定义权限']`) }}
                         </bk-button>
                     </template>
@@ -173,6 +173,10 @@
             externalTemplate: {
                 type: Boolean,
                 default: false
+            },
+            permSideWidth: {
+                type: Number,
+                default: 890
             }
         },
         data () {
@@ -404,12 +408,12 @@
                 this.$emit('on-submit', this.tempalteDetailList, this.aggregationData, this.authorizationScope);
             },
 
-            hadleAddCustomPerm () {
+            handleAddCustomPerm () {
                 window.changeAlert = true;
-                this.$emit('on-add-custom');
+                this.$emit('on-add-custom', '');
             },
 
-            hadleEditCustomPerm () {
+            handleEditCustomPerm () {
                 window.changeAlert = true;
                 this.$emit('on-edit-custom');
             },

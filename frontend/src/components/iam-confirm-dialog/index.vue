@@ -13,7 +13,7 @@
         ]"
         @after-leave="handleAfterDeleteLeave">
         <div class="confirm-content-wrapper">
-            <div style="text-align: center;">{{ subTitle }}</div>
+            <div class="iam-custom-dialog-title">{{ subTitle }}</div>
             <div class="operate-buttons">
                 <bk-button theme="primary" :loading="loading" @click="handleSumbitDelete">
                     {{ $t(`m.common['确定']`) }}

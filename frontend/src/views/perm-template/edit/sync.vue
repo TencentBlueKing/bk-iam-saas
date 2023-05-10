@@ -640,12 +640,10 @@
                     const referList = res.data;
                     this.tableList.forEach(item => {
                         const temp = referList.find(sub => sub.group_id === item.id);
-                        console.log('temp', temp);
                         if (temp) {
                             item.add_actions.splice(index, 1, new SyncPolicy({ ...temp.policy, tag: 'add' }, 'detail'));
                         }
                     });
-                    console.log('this.tableList', this.tableList);
                     this.$refs[`popover_${index}_${$index}_ref`][0]
                         && this.$refs[`popover_${index}_${$index}_ref`][0].hideHandler();
                 } catch (e) {

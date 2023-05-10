@@ -5,11 +5,16 @@
             <span class="name">{{ title }}</span>
         </label>
         <div class="content">
+            <!-- <div v-for="(item, index) in data"
+                :key="index"
+                class="member-item"
+                :title="isDepartment ? (
+                    item.fullName ? item.fullName : `${item.name}`) :
+                    item.name !== '' ? `${item.username}(${item.name})` : item.username"> -->
             <div v-for="(item, index) in data"
                 :key="index"
                 class="member-item"
-                :title="isDepartment ? (item.fullName ? `${item.fullName}` : `${item.name}`) :
-                    item.name !== '' ? `${item.username}(${item.name})` : item.username">
+                :title="nameType(item)">
                 <span class="member-name">
                     {{ isDepartment ? item.name : item.username }}
                 </span>
@@ -54,6 +59,27 @@
             },
             isEdit () {
                 return this.mode === 'edit';
+            },
+            nameType () {
+                return (payload) => {
+                    const { name, type, username, full_name: fullName } = payload;
+                    const typeMap = {
+                        user: () => {
+                            if (fullName) {
+                                return fullName;
+                            } else {
+                                return name ? `${username}(${name})` : username;
+                            }
+                        },
+                        department: () => {
+                            return fullName || payload.fullName || `${username}(${name})`;
+                        },
+                        depart: () => {
+                            return fullName || payload.fullName || `${username}(${name})`;
+                        }
+                    };
+                    return typeMap[type] ? typeMap[type]() : typeMap['user']();
+                };
             }
         },
         methods: {

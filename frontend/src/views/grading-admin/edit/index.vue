@@ -145,6 +145,7 @@
                                 :is-all-expanded="isAllExpanded"
                                 :data="policyList"
                                 :list="policyList"
+                                :total-count="originalList.length"
                                 :backup-list="aggregationsTableData"
                                 @on-delete="handleDelete"
                                 @on-aggregate-delete="handleAggregateDelete"
@@ -187,8 +188,7 @@
                         v-model="reason"
                         @input="handleReasonInput"
                         @blur="handleReasonBlur"
-                        style="margin-bottom: 15px;">
-                    </bk-input>
+                    />
                 </section>
             </render-horizontal-block>
             <p class="action-empty-error" v-if="isShowReasonError">{{ $t(`m.verify['理由不可为空']`) }}</p>
@@ -199,7 +199,6 @@
             </bk-button>
             <bk-button @click="handleCancel">{{ $t(`m.common['取消']`) }}</bk-button>
         </div>
-
         <add-member-dialog
             :show.sync="isShowAddMemberDialog"
             :users="users"
@@ -208,7 +207,7 @@
             :all-checked="isAll"
             show-limit
             @on-cancel="handleCancelAdd"
-            @on-sumbit="handleSumbitAdd" />
+            @on-sumbit="handleSubmitAdd" />
 
         <add-action-sideslider
             :is-show.sync="isShowAddActionSideslider"
@@ -844,6 +843,10 @@
                     }
                 });
                 this.originalList = _.cloneDeep(payload);
+                if (this.isAllExpanded) {
+                    this.handleAggregateAction(false);
+                    this.isAllExpanded = false;
+                }
                 this.isShowActionEmptyError = false;
                 this.isShowAddActionSideslider = false;
             },
@@ -881,12 +884,13 @@
                 this.isShowMemberAdd = true;
             },
 
-            handleSumbitAdd (payload) {
+            handleSubmitAdd (payload) {
                 window.changeDialog = true;
                 const { users, departments } = payload;
                 this.isAll = payload.isAll;
                 this.users = _.cloneDeep(users);
                 this.departments = _.cloneDeep(departments);
+                console.log(this.users, this.departments);
                 this.isShowMemberAdd = false;
                 this.isShowAddMemberDialog = false;
                 this.isShowMemberEmptyError = false;
@@ -911,13 +915,15 @@
                     this.users.forEach(item => {
                         subjects.push({
                             type: 'user',
-                            id: item.username
+                            id: item.username,
+                            full_name: item.full_name
                         });
                     });
                     this.departments.forEach(item => {
                         subjects.push({
                             type: 'department',
-                            id: item.id
+                            id: item.id,
+                            full_name: item.full_name || item.fullName
                         });
                     });
                 }
@@ -998,13 +1004,15 @@
                     this.users.forEach(item => {
                         subjects.push({
                             type: 'user',
-                            id: item.username
+                            id: item.username,
+                            full_name: item.full_name
                         });
                     });
                     this.departments.forEach(item => {
                         subjects.push({
                             type: 'department',
-                            id: item.id
+                            id: item.id,
+                            full_name: item.full_name || item.fullName
                         });
                     });
                 }
@@ -1089,13 +1097,6 @@
             font-size: 12px;
             color: #ff4d4d;
         }
-        .reason-empty-error{
-            position: relative;
-            top: -45px;
-            left: 160px;
-            font-size: 12px;
-            color: #ff4d4d;
-        }
         .grade-admin-select-wrapper {
             .showTableClick {
                 cursor: pointer;
@@ -1166,14 +1167,6 @@
                 span {
                     color: #ea3636;
                 }
-            }
-        }
-    }
-    .reason-wrapper {
-        margin-top: 16px;
-        .join-reason-error {
-            .bk-textarea-wrapper {
-                border-color: #ff5656;
             }
         }
     }
