@@ -91,7 +91,7 @@
                             <label class="bk-label" style="line-height: 20px;">
                                 <span class="name">{{ customTmpl.name }}</span>
                                 <span :class="['select-all', { 'disabled': customTmpl.allDisabled }]" data-test-id="group_btn_selectAllAction" @click.stop="handleSelectAll(customTmpl, index)">
-                                    （{{ customTmpl.text }}）
+                                    ({{ customTmpl.text }})
                                 </span>
                             </label>
                             <div
@@ -548,7 +548,7 @@
                     this.handleCommonAction();
                     this.isRightLoading = false;
                 } catch (e) {
-                    this.fetchErrorMsg();
+                    this.fetchErrorMsg(e);
                 } finally {
                     this.initRequestQueue.shift();
                     this.systemListIsLoading = false;
@@ -611,8 +611,8 @@
 
             handleDefaultData (payload, data) {
                 if (this.systemData[payload]) {
-                    this.systemData[payload].count = 0;
-                    this.systemData[payload].list = _.cloneDeep(data);
+                    this.$set(this.systemData[payload], 'count', 0);
+                    this.$set(this.systemData[payload], 'list', _.cloneDeep(data));
                     this.systemData[payload].list.forEach(item => {
                         if (!item.actions) {
                             item.actions = [];
