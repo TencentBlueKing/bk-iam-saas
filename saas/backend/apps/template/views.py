@@ -35,10 +35,11 @@ from backend.biz.template import (
     TemplatePolicyCloneBiz,
 )
 from backend.common.error_codes import error_codes
+from backend.common.lock import gen_template_upsert_lock
 from backend.long_task.constants import TaskType
 from backend.long_task.models import TaskDetail
 from backend.long_task.tasks import TaskFactory
-from backend.service.constants import PermissionCodeEnum, SubjectType
+from backend.service.constants import PermissionCodeEnum
 from backend.service.models import Subject
 
 from .audit import (
@@ -148,7 +149,7 @@ class TemplateViewSet(TemplateQueryMixin, GenericViewSet):
         if group_id == "":
             return set()
 
-        subject = Subject(type=SubjectType.GROUP.value, id=str(group_id))
+        subject = Subject.from_group_id(group_id)
         exists_template_ids = PermTemplatePolicyAuthorized.objects.query_exists_template_auth(
             subject, [one.id for one in queryset]
         )
@@ -171,14 +172,15 @@ class TemplateViewSet(TemplateQueryMixin, GenericViewSet):
         user_id = request.user.username
         data = serializer.validated_data
 
-        # 检查权限模板是否在角色内唯一
-        self.template_check_biz.check_role_template_name_exists(request.role.id, data["name"])
-
         # 检查模板的授权是否满足管理员的授权范围
         scope_checker = RoleAuthorizationScopeChecker(request.role)
         scope_checker.check_actions(data["system_id"], data["action_ids"])
 
-        template = self.template_biz.create(request.role.id, TemplateCreateBean.parse_obj(data), user_id)
+        with gen_template_upsert_lock(request.role.id, data["name"]):
+            # 检查权限模板是否在角色内唯一
+            self.template_check_biz.check_role_template_name_exists(request.role.id, data["name"])
+
+            template = self.template_biz.create(request.role.id, TemplateCreateBean.parse_obj(data), user_id)
 
         audit_context_setter(template=template)
 
@@ -244,9 +246,12 @@ class TemplateViewSet(TemplateQueryMixin, GenericViewSet):
         user_id = request.user.username
         data = serializer.validated_data
 
-        # 检查权限模板是否在角色内唯一
-        self.template_check_biz.check_role_template_name_exists(request.role.id, data["name"], template_id=template.id)
-        PermTemplate.objects.filter(id=template.id).update(updater=user_id, **data)
+        with gen_template_upsert_lock(request.role.id, data["name"]):
+            # 检查权限模板是否在角色内唯一
+            self.template_check_biz.check_role_template_name_exists(
+                request.role.id, data["name"], template_id=template.id
+            )
+            PermTemplate.objects.filter(id=template.id).update(updater=user_id, **data)
 
         audit_context_setter(template=template)
 
@@ -530,7 +535,7 @@ class TemplateUpdateCommitViewSet(TemplatePermissionMixin, GenericViewSet):
 
         # 使用长时任务实现用户组授权更新
         task = TaskDetail.create(TaskType.TEMPLATE_UPDATE.value, [template.id])
-        TaskFactory()(task.id)
+        TaskFactory().run(task.id)
 
         audit_context_setter(template=template)
 

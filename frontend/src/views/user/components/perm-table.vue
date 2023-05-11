@@ -37,12 +37,21 @@
                         @click.stop="handleViewResource(row)" />
                 </template>
             </bk-table-column>
-            <bk-table-column prop="expired_dis" :label="$t(`m.common['到期时间']`)"></bk-table-column>
+            <bk-table-column prop="expired_dis" :label="$t(`m.common['有效期']`)"></bk-table-column>
             <bk-table-column :label="$t(`m.common['操作']`)">
                 <template slot-scope="{ row }">
                     <bk-button text @click="handleDelete(row)">{{ $t(`m.common['删除']`) }}</bk-button>
                 </template>
             </bk-table-column>
+            <template slot="empty">
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-refresh="handleEmptyRefresh"
+                />
+            </template>
         </bk-table>
 
         <delete-dialog
@@ -72,6 +81,7 @@
     import DeleteDialog from '@/components/iam-confirm-dialog/index.vue';
     import RenderDetail from '../../perm/components/render-detail';
     import PermPolicy from '@/model/my-perm-policy';
+    import { formatCodeData } from '@/common/util';
     export default {
         name: '',
         components: {
@@ -114,7 +124,13 @@
                     subTitle: '',
                     loading: false
                 },
-                sidesliderTitle: ''
+                sidesliderTitle: '',
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -157,14 +173,16 @@
              */
             async fetchData (payload) {
                 try {
-                    const res = await this.$store.dispatch('perm/getPersonalPolicy', { ...payload });
-                    this.tableList = res.data.map(item => new PermPolicy(item));
+                    const { code, data } = await this.$store.dispatch('perm/getPersonalPolicy', { ...payload });
+                    this.tableList = data.map(item => new PermPolicy(item));
+                    this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length);
                 } catch (e) {
-                    console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
@@ -181,6 +199,16 @@
                     return 'iam-perm-table-cell-cls';
                 }
                 return '';
+            },
+
+            handleEmptyRefresh () {
+                this.initRequestQueue = ['permTable'];
+                const params = {
+                    subjectType: 'user',
+                    subjectId: this.params.username,
+                    systemId: this.systemId
+                };
+                this.fetchData(params);
             },
 
             /**

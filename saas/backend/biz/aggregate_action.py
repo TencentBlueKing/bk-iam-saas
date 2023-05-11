@@ -59,7 +59,7 @@ class AggregateActionsList:
 
     def fill_resource_type_name(self):
         system_ids = self._list_resource_type_system_id()
-        name_provider = ResourceTypeService().get_resource_type_dict(system_ids)
+        name_provider = ResourceTypeService().get_system_resource_type_dict(system_ids)
 
         for aa in self.aggregate_actions:
             for art in aa.aggregate_resource_types:

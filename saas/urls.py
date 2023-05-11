@@ -59,6 +59,7 @@ urlpatterns = [
                 url(r"^handover/", include("backend.apps.handover.urls")),
                 url(r"^mgmt/", include("backend.apps.mgmt.urls")),
                 url(r"^temporary_policies/", include("backend.apps.temporary_policy.urls")),
+                url(r"^iam/", include("backend.iam.urls")),
             ]
         ),
     ),
@@ -73,7 +74,7 @@ urlpatterns = [
     # healthz
     url("", include("backend.healthz.urls")),
     # prometheus
-    url("", include("django_prometheus.urls")),
+    url("", include("backend.metrics.urls")),
 ]
 
 # add swagger api document

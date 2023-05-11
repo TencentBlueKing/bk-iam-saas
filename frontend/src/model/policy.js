@@ -31,7 +31,9 @@ export default class Policy {
     // flag = '' 为默认拉取，flag = 'add' 为新添加的，flag = 'detail' 为权限模板详情, flag = 'custom' 为自定义申请权限
     // tag: add updata unchanged create
     // instanceNotDisabled: instance 不允许 disabled
+    // mode判断当前类型是自定义权限还是权限模板
     constructor (payload, flag = '', instanceNotDisabled = false, isProv = false) {
+        this.mode = payload.mode || '';
         this.isAggregate = false;
         this.type = payload.type;
         this.id = payload.id;

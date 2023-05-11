@@ -1,0 +1,28 @@
+### Update the user group name and description
+
+#### Parameters
+
+| Field | Type | Required | Location | Description |
+| --------|--------|--------|--------|--------|--------|--------|
+| group | int | yes | path | user group ID |
+| name | string | yes | body | User group name, at least 2 characters, can also be empty, empty is not updated |
+| description | string | yes | body | User group description, at least 10 characters, may be null, null is not updated |
+
+#### Request
+
+```json
+{
+    "name": "test2",
+    "description": "test1test2"
+}
+```
+
+#### Response
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {}
+}
+```

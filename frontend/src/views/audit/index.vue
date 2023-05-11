@@ -10,15 +10,17 @@
             </bk-date-picker>
             <div class="audit-search-select">
                 <iam-search-select
+                    ref="iamSearchSelect"
+                    style="width: 380px;"
                     :data="searchData"
                     :value="searchValue"
-                    style="width: 380px;"
                     @on-change="handleSearch" />
             </div>
         </render-search>
         <bk-table
             :data="tableList"
             size="small"
+            :max-height="tableHeight"
             :class="{ 'set-border': tableLoading }"
             ext-cls="audit-table"
             :pagination="pagination"
@@ -32,13 +34,13 @@
                 <template slot-scope="{ row }">
                     <section class="audit-detail-wrapper" v-bkloading="{ isLoading: row.loading, opacity: 1 }">
                         <template v-if="noDetailType.includes(row.type) || row.type === 'role.group.renew'">
-                            <div class="empty-wrapper">
-                                <iam-svg />
-                            </div>
+                            <!-- <div class="empty-wrapper"> -->
+                            <ExceptionEmpty />
+                            <!-- </div> -->
                         </template>
                         <template v-if="onlyDescriptionType.includes(row.detail.type)">
                             <section v-if="!row.loading">
-                                <p class="description" :title="row.detail.description">
+                                <p class="description single-hide" :title="row.detail.description">
                                     {{ row.detail.description || '--' }}
                                 </p>
                             </section>
@@ -51,7 +53,7 @@
                                 :outer-border="false"
                                 :header-border="false"
                                 :header-cell-style="{ background: '#f5f6fa', borderRight: 'none' }">
-                                <bk-table-column label="类型">
+                                <bk-table-column :label="$t(`m.common['类型']`)">
                                     <template slot-scope="props">
                                         <span>{{ objectMap[props.row.type] || props.row.type }}</span>
                                     </template>
@@ -61,6 +63,9 @@
                                         <span>{{ props.row.name }}</span>
                                     </template>
                                 </bk-table-column>
+                                <template slot="empty">
+                                    <ExceptionEmpty />
+                                </template>
                             </bk-table>
                         </template>
                         <template v-if="deType.includes(row.detail.type)">
@@ -77,14 +82,16 @@
                                 :outer-border="false"
                                 :header-border="false"
                                 :header-cell-style="{ background: '#f5f6fa', borderRight: 'none' }">
-                                <bk-table-column prop="name" label="对象实例">
+                                <bk-table-column prop="name" :label="$t(`m.audit['对象实例']`)">
                                     <template slot-scope="props">
-                                        <span>{{ objectMap[props.row.type] || props.row.type }}</span>
+                                        <span :title="objectMap[props.row.type] || props.row.type">
+                                            {{ objectMap[props.row.type] || props.row.type }}
+                                        </span>
                                     </template>
                                 </bk-table-column>
                                 <bk-table-column :label="$t(`m.audit['操作对象']`)">
                                     <template slot-scope="props">
-                                        <span>{{ props.row.name }}</span>
+                                        <span :title="props.row.name">{{ props.row.name }}</span>
                                     </template>
                                 </bk-table-column>
                                 <bk-table-column :label="$t(`m.common['描述']`)">
@@ -92,6 +99,9 @@
                                         <span :title="props.row.description">{{ props.row.description || '--' }}</span>
                                     </template>
                                 </bk-table-column>
+                                <template slot="empty">
+                                    <ExceptionEmpty />
+                                </template>
                             </bk-table>
                         </template>
                         <template v-if="seType.includes(row.detail.type)">
@@ -102,14 +112,14 @@
                                 :outer-border="false"
                                 :header-border="false"
                                 :header-cell-style="{ background: '#f5f6fa', borderRight: 'none' }">
-                                <bk-table-column prop="name" label="类型">
+                                <bk-table-column prop="name" :label="$t(`m.common['类型']`)">>
                                     <template slot-scope="props">
                                         <span>{{ objectMap[props.row.type] || props.row.type }}</span>
                                     </template>
                                 </bk-table-column>
                                 <bk-table-column :label="$t(`m.audit['实例']`)">
                                     <template slot-scope="props">
-                                        <span>{{ props.row.name }}</span>
+                                        <span :title="props.row.name">{{ props.row.name }}</span>
                                     </template>
                                 </bk-table-column>
                                 <bk-table-column :label="$t(`m.audit['版本号']`)">
@@ -117,6 +127,9 @@
                                         <span>{{ props.row.version || '--' }}</span>
                                     </template>
                                 </bk-table-column>
+                                <template slot="empty">
+                                    <ExceptionEmpty />
+                                </template>
                             </bk-table>
                         </template>
                         <template v-if="onlyExtraInfoType.includes(row.detail.type)">
@@ -129,7 +142,7 @@
                             </template>
                         </template>
                         <template v-if="onlyRoleType.includes(row.detail.type)">
-                            <p>{{ $t(`m.audit['分级管理员']`) }}：{{ row.detail.role_name }}</p>
+                            <p>{{ $t(`m.audit['管理空间']`) }}：{{ row.detail.role_name }}</p>
                         </template>
                     </section>
                 </template>
@@ -141,29 +154,43 @@
             </bk-table-column>
             <bk-table-column :label="$t(`m.audit['操作类型']`)">
                 <template slot-scope="{ row }">
-                    <span>{{ typeMap[row.type] || row.type }}</span>
+                    <span :title="typeMap[row.type] || row.type">{{ typeMap[row.type] || row.type }}</span>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.audit['对象及类型']`)">
                 <template slot-scope="{ row }">
-                    <span>{{ objectMap[row.object_type] || row.object_type }}：{{ row.object_name }}</span>
+                    <span :title="`${objectMap[row.object_type] || row.object_type}：${row.object_name}`">
+                        {{ objectMap[row.object_type] || row.object_type }}：{{ row.object_name }}
+                    </span>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.audit['操作者']`)">
                 <template slot-scope="{ row }">
-                    <span>{{ row.username }}</span>
+                    <span :title="row.username">{{ row.username }}</span>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.audit['操作来源']`)">
                 <template slot-scope="{ row }">
-                    <span>{{ sourceMap[row.source_type] || row.source_type }}</span>
+                    <span :title="sourceMap[row.source_type] || row.source_type">
+                        {{ sourceMap[row.source_type] || row.source_type }}
+                    </span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.audit['操作状态']`)" width="100">
+            <bk-table-column :label="$t(`m.audit['操作状态']`)" width="150">
                 <template slot-scope="{ row }">
                     <render-status :status="row.status" />
                 </template>
             </bk-table-column>
+            <template slot="empty">
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-clear="handleEmptyClear"
+                    @on-refresh="handleEmptyRefresh"
+                />
+            </template>
         </bk-table>
     </div>
 </template>
@@ -172,6 +199,7 @@
     import IamSearchSelect from '@/components/iam-search-select';
     import { fuzzyRtxSearch } from '@/common/rtx';
     import { buildURLParams } from '@/common/url';
+    import { formatCodeData, getWindowHeight } from '@/common/util';
     import RenderStatus from './components/render-status-item';
     import renderDetailTable from './components/render-instance-detail-table';
 
@@ -282,7 +310,11 @@
                     department: this.$t(`m.common['组织']`),
                     role: this.$t(`m.audit['角色']`),
                     template: this.$t(`m.myApply['权限模板']`),
-                    commonaction: this.$t(`m.audit['常用操作']`)
+                    commonaction: this.$t(`m.audit['常用操作']`),
+                    super_manager: this.$t(`m.myApproval['超级管理员']`),
+                    system_manager: this.$t(`m.nav['系统管理员']`),
+                    rating_manager: this.$t(`m.nav['一级空间管理员']`),
+                    subset_manager: this.$t(`m.nav['二级空间管理员']`)
                 },
                 sourceMap: {
                     web: this.$t(`m.audit['页面']`),
@@ -338,7 +370,8 @@
                     'authorization.api.allow.list.config.create': this.$t(`m.audit['授权类API白名单创建']`),
                     'authorization.api.allow.list.config.delete': this.$t(`m.audit['授权类API白名单删除']`),
                     'management.api.allow.list.config.create': this.$t(`m.audit['管理类API白名单创建']`),
-                    'management.api.allow.list.config.delete': this.$t(`m.audit['管理类API白名单删除']`)
+                    'management.api.allow.list.config.delete': this.$t(`m.audit['管理类API白名单删除']`),
+                    'group.transfer': this.$t(`m.audit['用户组权限交接']`)
                 },
                 currentMonth: '',
                 noDetailType: NO_DETAIL_TYPE,
@@ -348,8 +381,19 @@
                 deType: DE_TYPR,
                 seType: SE_TYPE,
                 dsType: DS_TYPE,
-                onlyRoleType: ONLY_ROLE_TYPE
+                onlyRoleType: ONLY_ROLE_TYPE,
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
+        },
+        computed: {
+            tableHeight () {
+                return getWindowHeight() - 185;
+            }
         },
         watch: {
             'pagination.current' (value) {
@@ -484,6 +528,7 @@
                     const tempObj = this.searchData.find(item => key === item.id);
                     if (tempObj && tempObj.remoteMethod && typeof tempObj.remoteMethod === 'function') {
                         if (this.searchList.length > 0) {
+                            this.emptyData.tipType = 'search';
                             const tempData = this.searchList.find(item => item.id === key);
                             params[key] = tempData.values[0];
                         }
@@ -522,20 +567,24 @@
                     ...this.searchParams
                 };
                 try {
-                    const res = await this.$store.dispatch('audit/getAuditList', params);
-                    this.pagination.count = res.data.count || 0
-                    ;(res.data.results || []).forEach(item => {
+                    const { code, data } = await this.$store.dispatch('audit/getAuditList', params);
+                    this.pagination.count = data.count || 0;
+                    (data.results || []).forEach(item => {
                         item.loading = false;
                         item.expanded = false;
                         item.detail = {};
                     });
-                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
+                    this.tableList.splice(0, this.tableList.length, ...(data.results || []));
+                    this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
                 } catch (e) {
                     console.error(e);
+                    this.tableList = [];
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
@@ -619,7 +668,8 @@
                     { id: 'authorization.api.allow.list.config.create', name: this.$t(`m.audit['授权类API白名单创建']`) },
                     { id: 'authorization.api.allow.list.config.delete', name: this.$t(`m.audit['授权类API白名单删除']`) },
                     { id: 'management.api.allow.list.config.create', name: this.$t(`m.audit['管理类API白名单创建']`) },
-                    { id: 'management.api.allow.list.config.delete', name: this.$t(`m.audit['管理类API白名单删除']`) }
+                    { id: 'management.api.allow.list.config.delete', name: this.$t(`m.audit['管理类API白名单删除']`) },
+                    { id: 'group.transfer', name: this.$t(`m.audit['用户组权限交接']`) }
                 ];
                 if (value === '') {
                     return Promise.resolve(list);
@@ -644,6 +694,20 @@
             handleSearch (payload, result) {
                 this.searchParams = payload;
                 this.searchList = result;
+                this.resetPagination();
+                this.fetchAuditList(true);
+            },
+
+            handleEmptyClear () {
+                this.searchParams = {};
+                this.searchValue = [];
+                this.emptyData.tipType = '';
+                this.$refs.iamSearchSelect.$refs.searchSelect.isTagMultLine = false;
+                this.resetPagination();
+                this.fetchAuditList(true);
+            },
+
+            handleEmptyRefresh () {
                 this.resetPagination();
                 this.fetchAuditList(true);
             },

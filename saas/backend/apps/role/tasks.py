@@ -10,13 +10,15 @@ specific language governing permissions and limitations under the License.
 """
 import logging
 import time
-from typing import Set
+from abc import ABC, abstractmethod
+from typing import Dict, Optional, Set, Tuple, Type
 from urllib.parse import urlencode
 
 from blue_krill.web.std_error import APIError
-from celery import Task, current_app, task
+from celery import Task, current_app, shared_task
 from django.conf import settings
 from django.template.loader import render_to_string
+from pydantic.main import BaseModel
 
 from backend.apps.group.models import Group
 from backend.apps.organization.models import User
@@ -32,11 +34,11 @@ from backend.component import esb
 from backend.component.cmdb import list_biz
 from backend.component.sops import list_project
 from backend.service.action import ActionService
-from backend.service.constants import ADMIN_USER, RoleRelatedObjectType, RoleType, SubjectType
+from backend.service.constants import ADMIN_USER, RoleRelatedObjectType, RoleType
 from backend.service.models import Action, PathResourceType
 from backend.service.models.policy import ResourceGroupList
 from backend.service.models.subject import Subject
-from backend.service.role import AuthScopeAction, AuthScopeSystem
+from backend.service.role import AuthScopeAction, AuthScopeSystem, RoleMember
 from backend.util.url import url_join
 from backend.util.uuid import gen_uuid
 
@@ -45,7 +47,7 @@ from .constants import ManagementCommonActionNameEnum, ManagementGroupNameSuffix
 logger = logging.getLogger("celery")
 
 
-@task(ignore_result=True)
+@shared_task(ignore_result=True)
 def sync_system_manager():
     """
     创建系统管理员
@@ -71,14 +73,16 @@ def sync_system_manager():
             "name": f"{system.name}",
             "name_en": f"{system.name_en}",
             "description": "",
-            "members": members,
+            "members": [{"username": username} for username in members],
             "authorization_scopes": [{"system_id": system_id, "actions": [{"id": "*", "related_resource_types": []}]}],
             "subject_scopes": [{"type": "*", "id": "*"}],
         }
-        RoleBiz().create(RoleInfoBean.parse_obj(data), "admin")
+        RoleBiz().create_grade_manager(RoleInfoBean.parse_obj(data), "admin")
 
 
 class SendRoleGroupExpireRemindMailTask(Task):
+    name = "backend.apps.role.tasks.SendRoleGroupExpireRemindMailTask"
+
     group_biz = GroupBiz()
 
     base_url = url_join(settings.APP_URL, "/group-perm-renewal")
@@ -116,7 +120,7 @@ class SendRoleGroupExpireRemindMailTask(Task):
 current_app.tasks.register(SendRoleGroupExpireRemindMailTask())
 
 
-@task(ignore_result=True)
+@shared_task(ignore_result=True)
 def role_group_expire_remind():
     """
     角色管理的用户组过期提醒
@@ -151,11 +155,309 @@ def role_group_expire_remind():
         SendRoleGroupExpireRemindMailTask().delay(role_id, expired_at)
 
 
+class ResourceInstance(BaseModel):
+    system_id: str
+    type: str
+    id: str
+    name: str
+
+
+class BaseAuthScopeActionHandler(ABC):
+    @abstractmethod
+    def handle(self, system_id: str, action: Action, instance: ResourceInstance) -> Optional[AuthScopeAction]:
+        pass
+
+
+class DefaultAuthScopeActionHandler(BaseAuthScopeActionHandler):
+    def handle(self, system_id: str, action: Action, instance: ResourceInstance) -> Optional[AuthScopeAction]:
+        # 校验实例视图, 如果校验不过, 需要跳过, 避免错误数据
+        for rrt in action.related_resource_types:
+            for selection in rrt.instance_selections:
+                if selection.match_path([PathResourceType(system_id=instance.system_id, id=instance.type)]):
+                    break
+            else:
+                return None
+
+        return AuthScopeAction.parse_obj(
+            {
+                "id": action.id,
+                "resource_groups": [
+                    {
+                        "related_resource_types": [
+                            {
+                                "system_id": rrt.system_id,
+                                "type": rrt.id,
+                                "condition": [
+                                    {
+                                        "id": gen_uuid(),
+                                        "instances": [
+                                            {
+                                                "type": instance.type,
+                                                "path": [
+                                                    [
+                                                        {
+                                                            "id": instance.id,
+                                                            "name": instance.name,
+                                                            "system_id": instance.system_id,
+                                                            "type": instance.type,
+                                                        }
+                                                    ]
+                                                ],
+                                            }
+                                        ],
+                                        "attributes": [],
+                                    }
+                                ],
+                            }
+                            for rrt in action.related_resource_types
+                        ]
+                    }
+                ],
+            }
+        )
+
+
+class AnyAuthScopeActionHandler(BaseAuthScopeActionHandler):
+    def handle(self, system_id: str, action: Action, instance: ResourceInstance) -> Optional[AuthScopeAction]:
+        return AuthScopeAction.parse_obj(
+            {
+                "id": action.id,
+                "resource_groups": [
+                    {
+                        "related_resource_types": [
+                            {
+                                "system_id": rrt.system_id,
+                                "type": rrt.id,
+                                "condition": [],
+                            }
+                            for rrt in action.related_resource_types
+                        ]
+                    }
+                ],
+            }
+        )
+
+
+class CmdbUnassignBizHostAuthScopeActionHandler(BaseAuthScopeActionHandler):
+
+    resource_biz = ResourceBiz()
+
+    def handle(self, system_id: str, action: Action, instance: ResourceInstance) -> Optional[AuthScopeAction]:
+        return AuthScopeAction.parse_obj(
+            {
+                "id": action.id,
+                "resource_groups": [
+                    {
+                        "related_resource_types": [
+                            {
+                                "system_id": instance.system_id,
+                                "type": instance.type,
+                                "condition": [
+                                    {
+                                        "id": gen_uuid(),
+                                        "instances": [
+                                            {
+                                                "type": instance.type,
+                                                "path": [
+                                                    [
+                                                        {
+                                                            "id": instance.id,
+                                                            "name": instance.name,
+                                                            "system_id": instance.system_id,
+                                                            "type": instance.type,
+                                                        }
+                                                    ]
+                                                ],
+                                            }
+                                        ],
+                                        "attributes": [],
+                                    }
+                                ],
+                            },
+                            {
+                                "system_id": instance.system_id,
+                                "type": "sys_resource_pool_directory",
+                                "condition": [
+                                    {
+                                        "id": gen_uuid(),
+                                        "instances": [
+                                            {
+                                                "type": "sys_resource_pool_directory",
+                                                "path": [
+                                                    [
+                                                        {
+                                                            "id": self._query_cmdb_sys_resource_pool_directory_id(
+                                                                "空闲机"
+                                                            ),
+                                                            "name": "空闲机",
+                                                            "system_id": instance.system_id,
+                                                            "type": "sys_resource_pool_directory",
+                                                        }
+                                                    ]
+                                                ],
+                                            }
+                                        ],
+                                        "attributes": [],
+                                    }
+                                ],
+                            },
+                        ]
+                    }
+                ],
+            }
+        )
+
+    def _query_cmdb_sys_resource_pool_directory_id(self, name: str) -> str:
+        # 查询cmdb主机池id
+        _, resources = self.resource_biz.search_instance_for_topology("bk_cmdb", "sys_resource_pool_directory", name)
+        for r in resources:
+            if r.display_name == name:
+                return r.id
+
+        return "*"  # NOTE: 不应该出现的场景
+
+
+class LogSpaceAuthScopeActionHandler(DefaultAuthScopeActionHandler):
+    def handle(self, system_id: str, action: Action, instance: ResourceInstance) -> Optional[AuthScopeAction]:
+        auth_scope_action = super().handle(system_id, action, instance)
+        if auth_scope_action:
+            return auth_scope_action
+
+        space_instance = ResourceInstance(
+            system_id="bk_monitorv3", type="space", id=instance.id, name="[业务] " + instance.name
+        )
+        return super().handle(system_id, action, space_instance)
+
+
+class JobExecutePublicScriptAuthScopeActionHandler(BaseAuthScopeActionHandler):
+    def handle(self, system_id: str, action: Action, instance: ResourceInstance) -> Optional[AuthScopeAction]:
+        return AuthScopeAction.parse_obj(
+            {
+                "id": action.id,
+                "resource_groups": [
+                    {
+                        "related_resource_types": [
+                            {
+                                "system_id": "bk_job",
+                                "type": "public_script",
+                                "condition": [],
+                            },
+                            {
+                                "system_id": instance.system_id,
+                                "type": "host",
+                                "condition": [
+                                    {
+                                        "id": gen_uuid(),
+                                        "instances": [
+                                            {
+                                                "type": instance.type,
+                                                "path": [
+                                                    [
+                                                        {
+                                                            "id": instance.id,
+                                                            "name": instance.name,
+                                                            "system_id": instance.system_id,
+                                                            "type": instance.type,
+                                                        }
+                                                    ]
+                                                ],
+                                            }
+                                        ],
+                                        "attributes": [],
+                                    }
+                                ],
+                            },
+                        ]
+                    }
+                ],
+            }
+        )
+
+
+class SopsCommonFlowCreateTaskAuthScopeActionHandler(BaseAuthScopeActionHandler):
+    def handle(self, system_id: str, action: Action, instance: ResourceInstance) -> Optional[AuthScopeAction]:
+        return AuthScopeAction.parse_obj(
+            {
+                "id": action.id,
+                "resource_groups": [
+                    {
+                        "related_resource_types": [
+                            {
+                                "system_id": instance.system_id,
+                                "type": "common_flow",
+                                "condition": [],
+                            },
+                            {
+                                "system_id": instance.system_id,
+                                "type": instance.type,
+                                "condition": [
+                                    {
+                                        "id": gen_uuid(),
+                                        "instances": [
+                                            {
+                                                "type": instance.type,
+                                                "path": [
+                                                    [
+                                                        {
+                                                            "id": instance.id,
+                                                            "name": instance.name,
+                                                            "system_id": instance.system_id,
+                                                            "type": instance.type,
+                                                        }
+                                                    ]
+                                                ],
+                                            }
+                                        ],
+                                        "attributes": [],
+                                    }
+                                ],
+                            },
+                        ]
+                    }
+                ],
+            }
+        )
+
+
+class ActionWithoutResourceAuthScopeActionHandler(BaseAuthScopeActionHandler):
+    def handle(self, system_id: str, action: Action, instance: ResourceInstance) -> Optional[AuthScopeAction]:
+        return AuthScopeAction(id=action.id, resource_groups=ResourceGroupList(__root__=[]))
+
+
+class AuthScopeActionGenerator:
+
+    handler_map: Dict[Tuple[str, str], Type[BaseAuthScopeActionHandler]] = {
+        ("bk_nodeman", "cloud_view"): AnyAuthScopeActionHandler,
+        ("bk_cmdb", "unassign_biz_host"): CmdbUnassignBizHostAuthScopeActionHandler,
+        ("bk_sops", "common_flow_view"): AnyAuthScopeActionHandler,
+        ("bk_sops", "common_flow_create_task"): SopsCommonFlowCreateTaskAuthScopeActionHandler,
+        ("bk_job", "execute_public_script"): JobExecutePublicScriptAuthScopeActionHandler,
+    }
+
+    def __init__(self, system_id: str, action: Action, instance: ResourceInstance) -> None:
+        self._system_id = system_id
+        self._action = action
+        self._instance = instance
+
+    def generate(self) -> Optional[AuthScopeAction]:
+        handler = self._get_handler()
+        return handler.handle(self._system_id, self._action, self._instance)
+
+    def _get_handler(self) -> BaseAuthScopeActionHandler:
+        if len(self._action.related_resource_types) == 0:
+            return ActionWithoutResourceAuthScopeActionHandler()
+        elif self._system_id in ["bk_log_search", "bk_monitorv3"]:
+            return LogSpaceAuthScopeActionHandler()
+
+        return self.handler_map.get((self._system_id, self._action.id), DefaultAuthScopeActionHandler)()
+
+
 class InitBizGradeManagerTask(Task):
+    name = "backend.apps.role.tasks.InitBizGradeManagerTask"
+
     biz = RoleBiz()
     role_check_biz = RoleCheckBiz()
     group_biz = GroupBiz()
-    resource_biz = ResourceBiz()
     action_svc = ActionService()
 
     _exist_names: Set[str] = set()
@@ -196,7 +498,7 @@ class InitBizGradeManagerTask(Task):
             return
 
         try:
-            self.role_check_biz.check_unique_name(biz_name)
+            self.role_check_biz.check_grade_manager_unique_name(biz_name)
         except APIError:
             # 缓存结果
             self._exist_names.add(biz_name)
@@ -204,7 +506,7 @@ class InitBizGradeManagerTask(Task):
 
         role_info = self._init_role_info(project, maintainers)
 
-        role = self.biz.create(role_info, ADMIN_USER)
+        role = self.biz.create_grade_manager(role_info, ADMIN_USER)
 
         # 创建用户组并授权
         expired_at = int(time.time()) + 6 * 30 * DAY_SECONDS  # 过期时间半年
@@ -218,11 +520,11 @@ class InitBizGradeManagerTask(Task):
             members = maintainers if name_suffix == ManagementGroupNameSuffixEnum.OPS.value else viewers
             users = User.objects.filter(username__in=members)  # 筛选出已同步存在的用户
             group = self.group_biz.create_and_add_members(
-                role.id,
+                role,
                 biz_name + name_suffix,
                 description=description,
                 creator=ADMIN_USER,
-                subjects=[Subject(type=SubjectType.USER.value, id=u.username) for u in users],
+                subjects=[Subject.from_username(u.username) for u in users],
                 expired_at=expired_at,  # 过期时间半年
             )
 
@@ -242,7 +544,7 @@ class InitBizGradeManagerTask(Task):
         role_info = RoleInfoBean(
             name=data["name"],
             description="管理员可授予他人{}业务的权限".format(data["name"]),
-            members=maintainers or [ADMIN_USER],
+            members=[RoleMember(username=username) for username in maintainers or [ADMIN_USER]],
             subject_scopes=[Subject(type="*", id="*")],
             authorization_scopes=[],
         )
@@ -252,23 +554,14 @@ class InitBizGradeManagerTask(Task):
         bk_sops_system = "bk_sops"
         bk_cmdb_system = "bk_cmdb"
         for system_id in systems:
-            resource_type = "biz"
             if system_id == bk_sops_system:
-                resource_type = "project"
-            # NOTE: 日志平台, 监控平台迁移完成后再处理
-            # elif system_id in ["bk_log_search", "bk_monitorv3"]:
-            #     resource_type = "space"
-
-            resource_system = bk_cmdb_system
-            if system_id == bk_sops_system:
-                resource_system = system_id
-            # if system_id in [bk_sops_system, "bk_log_search", "bk_monitorv3"]:
-            #     resource_system = system_id
-
-            resource_id = data["bk_biz_id"] if system_id != bk_sops_system else data["project_id"]
-            resource_name = data["name"]
-            # if system_id in ["bk_log_search", "bk_monitorv3"]:
-            #     resource_name = "[业务] " + resource_name
+                instance = ResourceInstance(
+                    system_id=bk_sops_system, type="project", id=data["project_id"], name=data["name"]
+                )
+            else:
+                instance = ResourceInstance(
+                    system_id=bk_cmdb_system, type="biz", id=data["bk_biz_id"], name=data["name"]
+                )
 
             auth_scope = AuthScopeSystem(system_id=system_id, actions=[])
 
@@ -297,55 +590,8 @@ class InitBizGradeManagerTask(Task):
                     )
                     continue
 
-                auth_scope_action = None
-                # 不关联资源类型的操作
-                if len(action.related_resource_types) == 0:
-                    auth_scope_action = AuthScopeAction(id=action.id, resource_groups=ResourceGroupList(__root__=[]))
-
-                elif system_id == bk_cmdb_system and action_id == "unassign_biz_host":
-                    # 配置管理 -- 主机归还主机池 主机池默认为空闲机
-                    policy_data = self._gen_cmdb_unassign_biz_host_policy(
-                        action, resource_type, resource_system, resource_id, resource_name
-                    )
-                    auth_scope_action = AuthScopeAction.parse_obj(policy_data)
-
-                elif system_id == "bk_nodeman" and action_id == "cloud_view":
-                    # 节点管理 -- 云区域查看 默认为任意权限
-                    policy_data = self._gen_any_policy(action)
-                    auth_scope_action = AuthScopeAction.parse_obj(policy_data)
-
-                elif system_id in ["bk_log_search", "bk_monitorv3"]:
-                    policy_data = self._gen_space_policy(
-                        system_id, action, resource_type, resource_system, resource_id, resource_name
-                    )
-                    if policy_data:
-                        auth_scope_action = AuthScopeAction.parse_obj(policy_data)
-
-                elif system_id == bk_sops_system and action_id == "common_flow_view":
-                    # 标准运维 -- 公共流程查看 默认为任意权限
-                    policy_data = self._gen_any_policy(action)
-                    auth_scope_action = AuthScopeAction.parse_obj(policy_data)
-
-                elif system_id == bk_sops_system and action_id == "common_flow_create_task":
-                    # 标准运维 -- 公共流程新建任务 公共流程是任意
-                    policy_data = self._gen_common_flow_create_task_policy(
-                        action, resource_type, resource_system, resource_id, resource_name
-                    )
-                    auth_scope_action = AuthScopeAction.parse_obj(policy_data)
-
-                elif system_id == "bk_job" and action_id == "execute_public_script":
-                    # 作业平台 -- 公共脚本执行 公共脚本是任意
-                    policy_data = self._gen_execute_public_script_policy(
-                        action, resource_type, resource_system, resource_id, resource_name
-                    )
-                    auth_scope_action = AuthScopeAction.parse_obj(policy_data)
-
-                else:
-                    policy_data = self._gen_action_policy(
-                        action, resource_type, resource_system, resource_id, resource_name
-                    )
-                    if policy_data:
-                        auth_scope_action = AuthScopeAction.parse_obj(policy_data)
+                # 分发者模式
+                auth_scope_action = AuthScopeActionGenerator(system_id, action, instance).generate()
 
                 if auth_scope_action:
                     auth_scope.actions.append(auth_scope_action)
@@ -355,240 +601,6 @@ class InitBizGradeManagerTask(Task):
                 role_info.authorization_scopes.append(auth_scope)
 
         return role_info
-
-    def _gen_execute_public_script_policy(self, action, resource_type, resource_system, resource_id, resource_name):
-        """
-        作业平台 -- 公共脚本执行 公共脚本是任意
-        """
-        return {
-            "id": action.id,
-            "resource_groups": [
-                {
-                    "related_resource_types": [
-                        {
-                            "system_id": "bk_job",
-                            "type": "public_script",
-                            "condition": [],
-                        },
-                        {
-                            "system_id": resource_system,
-                            "type": "host",
-                            "condition": [
-                                {
-                                    "id": gen_uuid(),
-                                    "instances": [
-                                        {
-                                            "type": resource_type,
-                                            "path": [
-                                                [
-                                                    {
-                                                        "id": resource_id,
-                                                        "name": resource_name,
-                                                        "system_id": resource_system,
-                                                        "type": resource_type,
-                                                    }
-                                                ]
-                                            ],
-                                        }
-                                    ],
-                                    "attributes": [],
-                                }
-                            ],
-                        },
-                    ]
-                }
-            ],
-        }
-
-    def _gen_common_flow_create_task_policy(self, action, resource_type, resource_system, resource_id, resource_name):
-        """
-        bk_sops 的公共流程需要设置为任意
-        """
-        return {
-            "id": action.id,
-            "resource_groups": [
-                {
-                    "related_resource_types": [
-                        {
-                            "system_id": resource_system,
-                            "type": "common_flow",
-                            "condition": [],
-                        },
-                        {
-                            "system_id": resource_system,
-                            "type": resource_type,
-                            "condition": [
-                                {
-                                    "id": gen_uuid(),
-                                    "instances": [
-                                        {
-                                            "type": resource_type,
-                                            "path": [
-                                                [
-                                                    {
-                                                        "id": resource_id,
-                                                        "name": resource_name,
-                                                        "system_id": resource_system,
-                                                        "type": resource_type,
-                                                    }
-                                                ]
-                                            ],
-                                        }
-                                    ],
-                                    "attributes": [],
-                                }
-                            ],
-                        },
-                    ]
-                }
-            ],
-        }
-
-    def _gen_space_policy(self, system_id, action: Action, resource_type, resource_system, resource_id, resource_name):
-        """
-        bk_log_search, bk_monitorv3 兼容新版本 space
-        """
-        policy_data = self._gen_action_policy(action, resource_type, resource_system, resource_id, resource_name)
-        if policy_data:
-            return policy_data
-
-        resource_system = system_id
-        resource_type = "space"
-        resource_name = "[业务] " + resource_name
-        return self._gen_action_policy(action, resource_type, resource_system, resource_id, resource_name)
-
-    def _gen_action_policy(self, action: Action, resource_type, resource_system, resource_id, resource_name):
-        # 校验实例视图, 如果校验不过, 需要跳过, 避免错误数据
-        for rrt in action.related_resource_types:
-            for selection in rrt.instance_selections:
-                if selection.match_path([PathResourceType(system_id=resource_system, id=resource_type)]):
-                    break
-            else:
-                # 所有的实例视图都不匹配
-                return None
-
-        return {
-            "id": action.id,
-            "resource_groups": [
-                {
-                    "related_resource_types": [
-                        {
-                            "system_id": rrt.system_id,
-                            "type": rrt.id,
-                            "condition": [
-                                {
-                                    "id": gen_uuid(),
-                                    "instances": [
-                                        {
-                                            "type": resource_type,
-                                            "path": [
-                                                [
-                                                    {
-                                                        "id": resource_id,
-                                                        "name": resource_name,
-                                                        "system_id": resource_system,
-                                                        "type": resource_type,
-                                                    }
-                                                ]
-                                            ],
-                                        }
-                                    ],
-                                    "attributes": [],
-                                }
-                            ],
-                        }
-                        for rrt in action.related_resource_types
-                    ]
-                }
-            ],
-        }
-
-    def _gen_any_policy(self, action):
-        return {
-            "id": action.id,
-            "resource_groups": [
-                {
-                    "related_resource_types": [
-                        {
-                            "system_id": rrt.system_id,
-                            "type": rrt.id,
-                            "condition": [],
-                        }
-                        for rrt in action.related_resource_types
-                    ]
-                }
-            ],
-        }
-
-    def _gen_cmdb_unassign_biz_host_policy(self, action, resource_type, resource_system, resource_id, resource_name):
-        return {
-            "id": action.id,
-            "resource_groups": [
-                {
-                    "related_resource_types": [
-                        {
-                            "system_id": resource_system,
-                            "type": resource_type,
-                            "condition": [
-                                {
-                                    "id": gen_uuid(),
-                                    "instances": [
-                                        {
-                                            "type": resource_type,
-                                            "path": [
-                                                [
-                                                    {
-                                                        "id": resource_id,
-                                                        "name": resource_name,
-                                                        "system_id": resource_system,
-                                                        "type": resource_type,
-                                                    }
-                                                ]
-                                            ],
-                                        }
-                                    ],
-                                    "attributes": [],
-                                }
-                            ],
-                        },
-                        {
-                            "system_id": resource_system,
-                            "type": "sys_resource_pool_directory",
-                            "condition": [
-                                {
-                                    "id": gen_uuid(),
-                                    "instances": [
-                                        {
-                                            "type": "sys_resource_pool_directory",
-                                            "path": [
-                                                [
-                                                    {
-                                                        "id": self._query_cmdb_sys_resource_pool_directory_id("空闲机"),
-                                                        "name": "空闲机",
-                                                        "system_id": resource_system,
-                                                        "type": "sys_resource_pool_directory",
-                                                    }
-                                                ]
-                                            ],
-                                        }
-                                    ],
-                                    "attributes": [],
-                                }
-                            ],
-                        },
-                    ]
-                }
-            ],
-        }
-
-    def _query_cmdb_sys_resource_pool_directory_id(self, name: str) -> str:
-        # 查询cmdb主机池id
-        _, resources = self.resource_biz.search_instance_for_topology("bk_cmdb", "sys_resource_pool_directory", name)
-        for r in resources:
-            if r.display_name == name:
-                return r.id
-
-        return "*"  # NOTE: 不应该出现的场景
 
     def _init_group_auth_info(self, authorization_scopes, name_suffix: str):
         templates = []
@@ -625,3 +637,6 @@ class InitBizGradeManagerTask(Task):
             templates.append(template)
 
         return templates
+
+
+current_app.tasks.register(InitBizGradeManagerTask())

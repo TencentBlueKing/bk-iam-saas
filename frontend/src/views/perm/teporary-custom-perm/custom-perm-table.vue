@@ -66,7 +66,7 @@
                     <div v-else class="condition-table-cell empty-text">{{ $t(`m.common['无生效条件']`) }}</div>
                 </template>
             </bk-table-column>
-            <bk-table-column prop="expired_dis" :label="$t(`m.common['到期时间']`)"></bk-table-column>
+            <bk-table-column prop="expired_dis" :label="$t(`m.common['有效期']`)"></bk-table-column>
             <bk-table-column :label="$t(`m.common['操作']`)" width="180">
                 <template slot-scope="{ row }">
                     <bk-button text @click="handleDelete(row)">{{ $t(`m.common['删除']`) }}</bk-button>
@@ -501,7 +501,7 @@
                 if (this.previewData[0].tabType === 'resource' && (this.previewData[0].data.length < 1 || this.previewData[0].data.every(item => !item.instance || item.instance.length < 1))) {
                     this.batchDisabled = true;
                 }
-                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${payload.name}】${this.$t(`m.common['的资源实例']`)}`;
+                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)}`;
                 window.changeAlert = 'iamSidesider';
                 this.isShowSideslider = true;
             },
@@ -513,7 +513,7 @@
                 this.environmentsSidesliderData = payload.environments;
                 console.log('environmentsSidesliderData', this.environmentsSidesliderData);
                 this.isShowEnvironmentsSideslider = true;
-                this.environmentsSidesliderTitle = `$【${data.name}】${this.$t(`m.common['生效条件']`)}`;
+                this.environmentsSidesliderTitle = `$${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['生效条件']`)}`;
             },
 
             /**
@@ -521,7 +521,7 @@
              */
             handlerReduceInstance (payload, data) {
                 if (data.resource_groups.length < 2) return;
-                this.deleteDialog.subTitle = `${this.$t(`m.dialog['将删除']`)}一组实例权限`;
+                this.deleteDialog.subTitle = `${this.$t(`m.dialog['将删除']`)}${this.$t(`m.perm['一组实例权限']`)}`;
                 this.deleteDialog.visible = true;
                 this.resourceGrouParams = {
                     id: data.policy_id,
@@ -533,7 +533,6 @@
              * handleViewSidesliderCondition
              */
             handleViewSidesliderCondition () {
-                console.log('environmentsSidesliderData', this.environmentsSidesliderData);
                 this.isShowResourceInstanceEffectTime = true;
             },
 
@@ -542,7 +541,7 @@
              */
             handleDelete (payload) {
                 this.curDeleteIds.splice(0, this.curDeleteIds.length, ...[payload.policy_id]);
-                this.deleteDialog.subTitle = `${this.$t(`m.dialog['将删除']`)}【${payload.name}】权限`;
+                this.deleteDialog.subTitle = `${this.$t(`m.dialog['将删除']`)}${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}权限`;
                 this.deleteDialog.visible = true;
             },
 
@@ -552,7 +551,6 @@
             async handleSumbitDelete () {
                 this.deleteDialog.loading = true;
                 try {
-                    console.log(11111, this.resourceGrouParams.id && this.resourceGrouParams.resourceGroupId);
                     if (this.resourceGrouParams.id && this.resourceGrouParams.resourceGroupId) { // 表示删除的是资源组
                         await this.$store.dispatch('permApply/deleteRosourceGroupPerm', this.resourceGrouParams);
                         this.fetchData(this.params);

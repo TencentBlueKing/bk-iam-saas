@@ -98,3 +98,21 @@ export const GLOBAL_TIME_ZONE_ENUM = {
     'Pacific/Fiji': '(GMT+12:00)',
     'Pacific/Tongatapu': '(GMT+13:00)'
 };
+
+// 逐项/批量编辑
+export const AGGREGATION_EDIT_ENUM = [
+    { name: '逐项编辑', value: false },
+    { name: '批量编辑', value: true }
+];
+
+// 批量展开
+export const BOUNDARY_KEYS_ENUM = {
+    resourcePerm: {
+        title: '最大可授权操作和资源边界',
+        isExpanded: false
+    },
+    membersPerm: {
+        title: '最大可授权人员边界',
+        isExpanded: false
+    }
+};

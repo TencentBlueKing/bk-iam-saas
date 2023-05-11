@@ -1,0 +1,121 @@
+### Batch resource topology authorization/recovery
+
+Authorization and recovery interface for multiple resource topologies, multiple operations
+
+
+{% include '_api_v1_open_authorization_path.md.j2' %}
+
+
+#### Parameters
+
+
+| field | type | mandatory | description |
+|:---|:---|:---|:---|
+| asynchronous | boolean | yes | whether to call asynchronously, default no, only synchronous is currently supported
+| operate | string | yes | grant or revoke |
+| system | string | yes | system id |
+| actions | array[object] | yes | actions |
+| subject | string | yes | authorization object |
+| resources | array[object] | yes | resource topology, the order of the resource types must be the same as when the action was registered|
+
+actions
+
+| field | type | mandatory | description |
+|:---|:---|:---|:---|
+| id | string | yes | action ID |
+
+subject
+
+| field | type |required | description |
+|:---|:---|:---|:---|
+| type | string | yes | Authorized object type, currently only user | is supported
+| id | string | yes | authorization object ID |
+
+resources
+
+| field | type | mandatory | description |
+|:---|:---|:---|:---|
+| system | string | yes | resource system ID |
+| type | string | yes | resource type ID |
+| paths | array[[object]] | yes | Batch resource topology, `up to 1000` |
+
+resources.paths
+
+| field | type | is required | description |
+|:---|:---|:---|:---|
+| type | string | yes | topology node type ID |
+| id | string | yes | topology node instance ID |
+| name | string | yes | topology node instance name |
+
+#### Request
+
+```json
+{
+  "asynchronous": false,
+  "operator": "grant",
+  "system": "bk_cmdb",
+  "actions": [ # Batch of operations
+    {
+      "id": "edit_host"
+    }
+  ],
+  "subject": {
+    "type": "user",
+    "id": "admin"
+  },
+  "resources": [
+    { # The resource type associated with the operation, must match all actions, and the order of the resource types must be the same as the order in which the operations are registered
+      "system": "bk_cmdb",
+      "type": "host",
+      "paths": [ # Batch resource topology
+        [
+          {
+            "type": "biz",
+            "id": "1",
+            "name": "biz1"
+          },
+          {
+            "type": "set",
+            "id": "*",
+            "name": ""
+          }
+        ]
+      ]
+    }
+  ]
+}
+```
+
+#### Response
+
+| Field | Type | Description |
+|:---|:---|:---|
+| policy_id | value | permission_policy id |
+| action | object | action |
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": [
+    {
+      "action": {
+        "id": "edit_host"
+      },
+      "policy_id": 1
+    }
+  ]
+}
+```
+
+#### Response when async (not implemented yet)
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {
+    "task_id": 1 // task id
+  }
+}
+```

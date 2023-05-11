@@ -116,17 +116,17 @@ class TestRoleListQuery:
         q = RoleListQuery(role=role)
         assert q.list_scope_action_id("system") == [ACTION_ALL]
 
-        role = Role(type=RoleType.RATING_MANAGER.value)
+        role = Role(type=RoleType.GRADE_MANAGER.value)
         q = RoleListQuery(role=role)
         q.get_scope_system_actions = mock.Mock(return_value=role_scope_system_action_normal)
         assert q.list_scope_action_id("test") == []
 
-        role = Role(type=RoleType.RATING_MANAGER.value)
+        role = Role(type=RoleType.GRADE_MANAGER.value)
         q = RoleListQuery(role=role)
         q.get_scope_system_actions = mock.Mock(return_value=role_scope_system_action_system_all)
         assert q.list_scope_action_id("system") == [ACTION_ALL]
 
-        role = Role(type=RoleType.RATING_MANAGER.value)
+        role = Role(type=RoleType.GRADE_MANAGER.value)
         q = RoleListQuery(role=role)
         q.get_scope_system_actions = mock.Mock(return_value=role_scope_system_action_normal)
         assert q.list_scope_action_id("system") == ["action"]

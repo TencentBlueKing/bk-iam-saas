@@ -12,9 +12,10 @@ from typing import Any, Dict, List, Union
 
 from pydantic import BaseModel, Field
 
+from backend.service.models.subject import Applicant
 from backend.util.model import ListModel
 
-from ..constants import ApplicationStatus, ApplicationTypeEnum, SubjectType
+from ..constants import ApplicationStatus, ApplicationType, SubjectType
 
 
 class ApplicationTicket(BaseModel):
@@ -41,7 +42,7 @@ class ApplicantInfo(BaseModel):
 
 
 class ApplicationDataBaseInfo(BaseModel):
-    type: ApplicationTypeEnum
+    type: ApplicationType
     # 申请者信息
     applicant_info: ApplicantInfo
     # 申请原因
@@ -167,6 +168,7 @@ class GrantActionApplicationContent(BaseModel):
 
     system: ApplicationSystem
     policies: List[ApplicationPolicyInfo] = Field(alias="actions")
+    applicants: List[Applicant]
 
     class Config:
         # 当字段设置别名时，初始化支持原名或别名传入，False时，则只能是别名传入，同时配合dict(by_alias=True)可控制字典数据时的key是否别名
@@ -211,6 +213,7 @@ class GroupApplicationContent(BaseModel):
     """加入用户组的申请内容"""
 
     groups: List[ApplicationGroupInfo]
+    applicants: List[Applicant]
 
 
 class GroupApplicationData(ApplicationDataBaseInfo):
@@ -228,6 +231,7 @@ class GroupApplicationData(ApplicationDataBaseInfo):
             "groups": [
                 group.dict(include={"id", "name", "description", "expired_at"}) for group in self.content.groups
             ],
+            "applicants": [one.dict() for one in self.content.applicants],
         }
         return data
 
@@ -243,10 +247,15 @@ class ApplicationSubject(BaseModel):
     full_name: str = ""  # 仅仅部门有全名
 
 
-class ApplicationAuthorizationScope(GrantActionApplicationContent):
+class ApplicationAuthorizationScope(BaseModel):
     """分级管理员可授权范围"""
 
-    pass
+    system: ApplicationSystem
+    policies: List[ApplicationPolicyInfo] = Field(alias="actions")
+
+    class Config:
+        # 当字段设置别名时，初始化支持原名或别名传入，False时，则只能是别名传入，同时配合dict(by_alias=True)可控制字典数据时的key是否别名
+        allow_population_by_field_name = True
 
 
 class GradeManagerApplicationContent(BaseModel):
@@ -258,6 +267,8 @@ class GradeManagerApplicationContent(BaseModel):
     members: List[ApplicationSubject]
     subject_scopes: List[ApplicationSubject]
     authorization_scopes: List[ApplicationAuthorizationScope]
+    sync_perm: bool = False
+    group_name: str = ""
 
 
 class GradeManagerApplicationData(ApplicationDataBaseInfo):
@@ -274,6 +285,8 @@ class GradeManagerApplicationData(ApplicationDataBaseInfo):
             "members": [member.id for member in self.content.members],
             "subject_scopes": [subject.dict(include={"type", "id"}) for subject in self.content.subject_scopes],
             "authorization_scopes": [scope.dict(by_alias=True) for scope in self.content.authorization_scopes],
+            "sync_perm": self.content.sync_perm,
+            "group_name": self.content.group_name,
         }
 
         return data

@@ -61,7 +61,15 @@
                     </section>
                 </template>
             </bk-table-column>
-
+            <template slot="empty">
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-refresh="handleEmptyRefresh"
+                />
+            </template>
         </bk-table>
 
         <bk-sideslider
@@ -75,20 +83,25 @@
                     <div class="link-btn">
                         <bk-link class="link" theme="primary" href="https://bk.tencent.com/docs/document/6.0/160/8402" target="_blank">{{$t(`m.user['同步失败排查指引']`)}}</bk-link>
                     </div>
-                    <div class="msg-content">
-                        <div v-if="exceptionMsg || tracebackMsg">
+                    <div v-if="exceptionMsg || tracebackMsg"
+                        class="msg-content">
+                        <div>
                             <div v-html="exceptionMsg"></div>
                             <div v-html="tracebackMsg"></div>
                         </div>
-                        <div v-else>{{ $t(`m.user['暂无日志详情']`) }}</div>
+                        <!-- <div v-else>{{ $t(`m.user['暂无日志详情']`) }}</div> -->
+                    </div>
+                    <div v-else>
+                        <ExceptionEmpty style="background: #ffffff" />
                     </div>
                 </section>
             </div>
         </bk-sideslider>
     </div>
 </template>
+
 <script>
-    import { timestampToTime } from '@/common/util';
+    import { formatCodeData, timestampToTime } from '@/common/util';
     import RenderStatus from './render-status';
     import moment from 'moment';
 
@@ -131,7 +144,7 @@
                 triggerType: { 'periodic_task': this.$t(`m.user['定时同步']`), 'manual_sync': this.$t(`m.user['手动同步']`) },
                 shortcuts: [
                     {
-                        text: '今天',
+                        text: this.$t(`m.user['今天']`),
                         value () {
                             const end = new Date();
                             const start = new Date();
@@ -139,7 +152,7 @@
                         }
                     },
                     {
-                        text: '最近7天',
+                        text: this.$t(`m.user['最近7天']`),
                         value () {
                             const end = new Date();
                             const start = new Date();
@@ -148,7 +161,7 @@
                         }
                     },
                     {
-                        text: '最近30天',
+                        text: this.$t(`m.user['最近30天']`),
                         value () {
                             const end = new Date();
                             const start = new Date();
@@ -157,7 +170,13 @@
                         }
                     }
                 ],
-                dateRange: { startTime: '', endTime: '' }
+                dateRange: { startTime: '', endTime: '' },
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         watch: {
@@ -182,18 +201,21 @@
                     end_time: this.dateRange.endTime
                 };
                 try {
-                    const res = await this.$store.dispatch('organization/getRecordsList', params);
-                    this.pagination.count = res.data.count;
-                    res.data.results = res.data.results.length && res.data.results.sort(
+                    const { code, data } = await this.$store.dispatch('organization/getRecordsList', params);
+                    this.pagination.count = data.count;
+                    data.results = data.results.length && data.results.sort(
                         (a, b) => new Date(b.updated_time) - new Date(a.updated_time));
                         
-                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
+                    this.tableList.splice(0, this.tableList.length, ...(data.results || []));
+                    this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });

@@ -19,7 +19,7 @@ from backend.common.error_codes import error_codes
 from .constants import (
     GROUP_SAAS_ATTRIBUTE_DEFAULT_VALUE_MAP,
     GROUP_SAAS_ATTRIBUTE_VALUE_TYPE_MAP,
-    GroupAttributeValueTypeEnum,
+    GroupAttributeValueType,
     GroupSaaSAttributeEnum,
 )
 from .models import GroupAttributes
@@ -28,16 +28,16 @@ logger = logging.getLogger("app")
 
 
 class GroupAttributeService:
-    def convert_attr_value(self, value_str: str, data_type: GroupAttributeValueTypeEnum) -> Any:
+    def convert_attr_value(self, value_str: str, data_type: GroupAttributeValueType) -> Any:
         """将属性值的数据类型从string转换为实际数据类型"""
         error_message = f"convert attr value from str to {data_type} fail, value_str: {value_str}"
 
         # 字符串
-        if data_type == GroupAttributeValueTypeEnum.String.value:
+        if data_type == GroupAttributeValueType.String.value:
             return value_str
 
         # 整数
-        if data_type == GroupAttributeValueTypeEnum.Integer.value:
+        if data_type == GroupAttributeValueType.Integer.value:
             # 如果转换错误则直接异常
             try:
                 value = int(value_str, base=10)
@@ -46,7 +46,7 @@ class GroupAttributeService:
                 logger.exception(f"{error_message}")
                 raise error_codes.VALUE_ERROR.format(error_message, replace=True)
         # 布尔
-        if data_type == GroupAttributeValueTypeEnum.Boolean.value:
+        if data_type == GroupAttributeValueType.Boolean.value:
             if value_str not in ["True", "False"]:
                 raise error_codes.VALUE_ERROR.format(error_message, replace=True)
             return value_str == "True"
@@ -69,7 +69,7 @@ class GroupAttributeService:
             # 遍历每个属性是否配置了，若配置了则使用配置的值
             for attr_enum in GroupSaaSAttributeEnum:  # type: ignore[attr-defined]
                 attr = attr_enum.value
-                value_str = group_attr_values[attr]
+                value_str = group_attr_values[(group_id, attr)]
                 # 若value为空字符串，则说明没有配置
                 if value_str == "":
                     continue

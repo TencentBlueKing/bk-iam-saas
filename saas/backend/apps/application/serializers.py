@@ -17,12 +17,12 @@ from rest_framework import serializers
 from backend.apps.application.models import Application
 from backend.apps.organization.models import User
 from backend.apps.policy.serializers import PolicyActionSLZ, ResourceSLZ, ResourceTypeSLZ, ValueFiled
-from backend.apps.role.serializers import RatingMangerCreateSLZ
+from backend.apps.role.serializers import GradeMangerCreateSLZ
 from backend.biz.application import ApplicationBiz
 from backend.biz.subject import SubjectInfoList
 from backend.biz.system import SystemBiz
 from backend.common.time import PERMANENT_SECONDS, expired_at_display
-from backend.service.constants import ApplicationTypeEnum
+from backend.service.constants import ApplicationType, SubjectType
 from backend.service.models import Subject
 
 from .base_serializers import BaseAggActionListSLZ, SystemInfoSLZ, validate_action_repeat
@@ -58,6 +58,7 @@ class ApplicationSLZ(ReasonSLZ):
     aggregations = serializers.ListField(
         label="聚合操作", child=AggActionListSLZ(label="聚合操作"), required=False, default=list
     )
+    usernames = serializers.ListField(label="权限获得者", child=serializers.CharField(), required=False, default=list)
 
     def validate(self, data):
 
@@ -139,14 +140,14 @@ class ApplicationListSLZ(serializers.ModelSerializer):
         extra_info = {}
         # 自定义需要返回system_name、system_name_en
         if obj.type in [
-            ApplicationTypeEnum.GRANT_ACTION.value,
-            ApplicationTypeEnum.RENEW_ACTION.value,
-            ApplicationTypeEnum.GRANT_TEMPORARY_ACTION.value,
+            ApplicationType.GRANT_ACTION.value,
+            ApplicationType.RENEW_ACTION.value,
+            ApplicationType.GRANT_TEMPORARY_ACTION.value,
         ]:
             system = obj.data["system"]
             extra_info["system_name"] = system.get("name")
             extra_info["system_name_en"] = system.get("name_en")
-        elif obj.type in [ApplicationTypeEnum.JOIN_GROUP.value, ApplicationTypeEnum.RENEW_GROUP.value]:
+        elif obj.type in [ApplicationType.JOIN_GROUP.value, ApplicationType.RENEW_GROUP.value]:
             extra_info["group_count"] = len(obj.data["groups"])
         return extra_info
 
@@ -186,22 +187,22 @@ class ApplicationDetailSLZ(serializers.ModelSerializer):
         """
         data = obj.data
         # 对于自定义权限申请
-        if obj.type in [ApplicationTypeEnum.GRANT_ACTION.value, ApplicationTypeEnum.RENEW_ACTION.value]:
+        if obj.type in [ApplicationType.GRANT_ACTION.value, ApplicationType.RENEW_ACTION.value]:
             # 兼容老数据，老数据只有expired_at，而没有expired_display
             for p in data["actions"]:
                 if not p.get("expired_display"):
                     p["expired_display"] = expired_at_display(p["expired_at"], obj.created_timestamp)
 
         # 对于加入用户组权限申请
-        if obj.type == ApplicationTypeEnum.JOIN_GROUP.value:
+        if obj.type == ApplicationType.JOIN_GROUP.value:
             # 兼容老数据，老数据只有expired_at，而没有expired_display
             if not data.get("expired_display"):
                 data["expired_display"] = expired_at_display(data["expired_at"], obj.created_timestamp)
 
         # 对于申请创建分级管理员
         if obj.type in [
-            ApplicationTypeEnum.CREATE_RATING_MANAGER.value,
-            ApplicationTypeEnum.UPDATE_RATING_MANAGER.value,
+            ApplicationType.CREATE_GRADE_MANAGER.value,
+            ApplicationType.UPDATE_GRADE_MANAGER.value,
         ]:
             # 兼容老数据，老数据只有system_id，而不是完整的system
             # 授权范围处理
@@ -236,11 +237,20 @@ class ApplicationGroupInfoSLZ(serializers.Serializer):
     id = serializers.IntegerField(label="用户组ID")
 
 
+class ApplicantSLZ(serializers.Serializer):
+    type = serializers.ChoiceField(
+        label="申请者类型", choices=[one for one in SubjectType.get_choices() if one[0] in ["user", "department"]]
+    )
+    id = serializers.CharField(label="申请者id")
+
+
 class GroupApplicationSLZ(ExpiredAtSLZ, ReasonSLZ):
     groups = serializers.ListField(label="加入的用户组", child=ApplicationGroupInfoSLZ(label="用户组"), allow_empty=False)
+    source_system_id = serializers.CharField(label="系统ID", allow_blank=True, required=False, default="")
+    applicants = serializers.ListField(label="权限获得者", child=ApplicantSLZ("获得者"), required=False, default=list)
 
 
-class GradeManagerCreatedApplicationSLZ(RatingMangerCreateSLZ, ReasonSLZ):
+class GradeManagerCreatedApplicationSLZ(GradeMangerCreateSLZ, ReasonSLZ):
     pass
 
 
@@ -254,6 +264,7 @@ class ApplicationGroupExpiredAtSLZ(ApplicationGroupInfoSLZ, ExpiredAtSLZ):
 
 class RenewGroupApplicationSLZ(ReasonSLZ):
     groups = serializers.ListField(label="加入的用户组", child=ApplicationGroupExpiredAtSLZ(label="用户组"), allow_empty=False)
+    source_system_id = serializers.CharField(label="系统ID", allow_blank=True, required=False, default="")
 
 
 class IDExpiredAtSLZ(ExpiredAtSLZ):

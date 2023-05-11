@@ -1,0 +1,45 @@
+#### Parameters
+
+Path Parameters
+
+| Field | Type | Required | Location | Description |
+| :--- | :--- | :--- |:--- |:--- |
+| system_id | string | yes | path | system ID |
+
+Parameters
+
+| field | type | mandatory | description |
+|:---|:---|:---|:---|
+| effect |string | Yes | Support for black and white lists, with values of deny or allow |
+| feature | string | Yes | The feature to turn on or off |
+| action | Object | Yes | action |
+
+Description of the feature field enumeration value.
+
+| enumerated values | description |
+|:---|:---|:---|
+| application.custom_permission.grant | Request custom permission |
+| application.custom_permission.renew | Request custom permission renewal |
+| user_permission.custom_permission.delete | Custom permission delete |
+
+
+action Field Description.
+
+| field | type | whether required | description |
+|:---|:---|:---|:---|
+| id | string | is the unique identifier of the | action, `special note:` If the function is for the entire access system, then the id is * |
+
+
+`Special note:`.
+1. the logic for determining the final effect of multiple allow/deny rules (similar to Nginx's IP whitelisting), i.e., the logic for determining whether a feature is on or off.
+
+```bash
+The system's Action under a certain function is on or off: allow *[on] > allow action_id[on] > deny *[off] > deny action_id[off] > default on
+(1) If there is a rule match for allow * or allow action_id, then it is on
+(2) If no allow * and allow action_id rules exist, but there is a deny * or deny action_id rule match, then turn off
+(3) If there is no rule match, then the default is on
+
+Generally speaking, you only need to configure the function of blocking
+``` ``
+
+2. If a dependent operation is blocked, it will not be created. For example, if edit depends on view, but view is blocked, its dependent operation view will not be created when edit permissions are requested.

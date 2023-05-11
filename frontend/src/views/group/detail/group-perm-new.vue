@@ -1,12 +1,25 @@
 <template>
     <div class="iam-user-group-perm-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
-        <bk-button
-            v-if="!isLoading && isEditMode"
-            theme="primary"
-            style="margin-bottom: 16px"
-            @click="handleAddPerm">
-            {{ $t(`m.common['添加权限']`) }}
-        </bk-button>
+        <template v-if="!groupAttributes.source_from_role">
+            <template v-if="externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle">
+                <bk-button
+                    v-if="!isLoading && isEditMode && !groupAttributes.source_type"
+                    theme="primary"
+                    style="margin-bottom: 16px"
+                    @click="handleAddPerm">
+                    {{ $t(`m.common['添加权限']`) }}
+                </bk-button>
+            </template>
+            <template v-if="!externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle">
+                <bk-button
+                    v-if="!isLoading && isEditMode"
+                    theme="primary"
+                    style="margin-bottom: 16px"
+                    @click="handleAddPerm">
+                    {{ $t(`m.common['添加权限']`) }}
+                </bk-button>
+            </template>
+        </template>
         <template v-if="!isLoading && !isEmpty">
             <render-perm-item
                 data-test-id="myPerm_list_permItem"
@@ -29,6 +42,8 @@
                             :key="subIndex"
                             :title="subItem.name"
                             :count="subItem.count"
+                            :external-edit="formatOperate"
+                            :external-delete="formatOperate"
                             :is-edit="subItem.isEdit"
                             :loading="subItem.editLoading"
                             :expanded.sync="subItem.expanded"
@@ -53,6 +68,7 @@
                                     :group-id="groupId"
                                     :template-id="subItem.id"
                                     :is-edit="subItem.isEdit"
+                                    :external-delete="!!groupAttributes.source_type"
                                     @on-delete="handleSingleDelete(...arguments, item)" />
                             </div>
                         </render-template-item>
@@ -62,8 +78,15 @@
         </template>
         <template v-if="!isLoading && isEmpty">
             <div class="empty-wrapper">
-                <iam-svg />
-                <p class="text">{{ $t(`m.common['暂无数据']`) }}</p>
+                <!-- <iam-svg />
+                <p class="text">{{ $t(`m.common['暂无数据']`) }}</p> -->
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-refresh="handleEmptyRefresh"
+                />
             </div>
         </template>
     </div>
@@ -71,6 +94,7 @@
 <script>
     import _ from 'lodash';
     import { mapGetters } from 'vuex';
+    import { formatCodeData } from '@/common/util';
     import GroupPolicy from '@/model/group-policy';
     import RenderPermItem from '../common/render-perm-item-new.vue';
     import RenderTemplateItem from '../common/render-template-item.vue';
@@ -105,11 +129,23 @@
                 groupSystemListLength: '',
                 removingSingle: false,
                 isPermTemplateDetail: false,
-                role: ''
+                role: '',
+                // source_type == openapi, 那就是接口创建的, 在蓝盾上面不能修改权限, 如果是空就可以用户编辑权限
+                // 只要 source_from_role = true, 不能改权限, 不能添加部门, 不区分是iam的页面还是蓝盾的页面
+                groupAttributes: {
+                    source_type: '',
+                    source_from_role: false
+                },
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
-            ...mapGetters(['user']),
+            ...mapGetters(['user', 'externalSystemsLayout', 'externalSystemId']),
             isEmpty () {
                 return this.groupSystemList.length < 1;
             },
@@ -118,6 +154,18 @@
             },
             expandedText () {
                 return this.isAllExpanded ? this.$t(`m.grading['逐项编辑']`) : this.$t(`m.grading['批量编辑']`);
+            },
+            canEditGroup () {
+                return this.$route.query.edit === 'GroupEdit';
+            },
+            formatOperate () {
+                let result = true;
+                if (this.externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle) {
+                    result = !(!this.groupAttributes.source_from_role && !this.groupAttributes.source_type);
+                } else {
+                    result = !!this.groupAttributes.source_from_role;
+                }
+                return result;
             }
         },
         watch: {
@@ -125,41 +173,46 @@
                 handler (value) {
                     this.groupId = value;
                     this.handleInit();
+                    this.fetchDetail(value);
                 },
                 immediate: true
             },
             mode: {
                 handler (value) {
                     console.log('value', value);
+                    window.parent.postMessage({ type: 'IAM', data: { tab: 'group_perm' }, code: 'change_group_detail_tab' }, '*');
                 },
                 immediate: true
             }
         },
-        // created () {
-        //     this.role = store.state.user.role.type
-        //     if (this.$route.name === 'permTemplateDetail') {
-        //         this.isPermTemplateDetail = true
-        //     }
-        // },
         methods: {
             async handleInit () {
                 this.isLoading = true;
                 this.$emit('on-init', true);
                 try {
-                    const res = await this.$store.dispatch('userGroup/getGroupSystems', { id: this.groupId })
-                    ;(res.data || []).forEach(item => {
+                    const params = {
+                        id: this.groupId
+                    };
+                    if (this.externalSystemId) {
+                        params.hidden = false;
+                    }
+                    const { code, data } = await this.$store.dispatch('userGroup/getGroupSystems', params);
+                    (data || []).forEach(item => {
                         item.expanded = false; // 此处会在子组件更新为true
                         item.loading = false;
                         item.templates = []; // 在getGroupTemplateList方法赋值
                     });
-                    this.groupSystemList = res.data; // groupSystemList会通过handleExpanded调用其他方法做属性的添加
-                    this.groupSystemListLength = res.data.length;
+                    this.groupSystemList = data; // groupSystemList会通过handleExpanded调用其他方法做属性的添加
+                    this.groupSystemListLength = data.length;
+                    this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
@@ -169,14 +222,39 @@
                 }
             },
 
+            async fetchDetail (payload) {
+                if (this.$parent.fetchDetail) {
+                    const { data } = await this.$parent.fetchDetail(payload);
+                    const { attributes } = data;
+                    if (Object.keys(attributes).length) {
+                        this.groupAttributes = Object.assign(this.groupAttributes, attributes);
+                    }
+                }
+            },
+
             handleAddPerm () {
                 window.changeAlert = false;
-                this.$router.push({
-                    name: 'addGroupPerm',
-                    params: {
-                        id: this.id
-                    }
-                });
+                if (this.externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle) {
+                    const { source, role_id, system_id } = this.$route.query;
+                    this.$router.push({
+                        name: 'addGroupPerm',
+                        params: {
+                            id: this.id
+                        },
+                        query: {
+                            source,
+                            role_id,
+                            system_id
+                        }
+                    });
+                } else {
+                    this.$router.push({
+                        name: 'addGroupPerm',
+                        params: {
+                            id: this.id
+                        }
+                    });
+                }
             },
 
             handleEdit (paylaod) {
@@ -205,7 +283,8 @@
                         item.deleteLoading = false;
                     });
                     groupSystem.templates = res.data; // 赋值给展开项
-                    if (groupSystem.custom_policy_count) {
+                    if (groupSystem.custom_policy_count
+                        && !this.externalSystemsLayout.userGroup.groupDetail.hideCustomPerm) {
                         groupSystem.templates.push({
                             name: this.$t(`m.perm['自定义权限']`),
                             id: CUSTOM_CUSTOM_TEMPLATE_ID, // 自定义权限 id 为 0
@@ -232,9 +311,15 @@
                     });
                 } finally {
                     groupSystem.loading = false;
-                    if (res.data.length === 1) {
+                    if (!this.externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle) {
+                        if (res.data.length === 1) {
+                            this.$nextTick(() => {
+                                this.$refs[`rTemplateItem${groupSystem.id}`] && this.$refs[`rTemplateItem${groupSystem.id}`][0].handleExpanded();
+                            });
+                        }
+                    } else {
                         this.$nextTick(() => {
-                            this.$refs[`rTemplateItem${groupSystem.id}`][0].handleExpanded();
+                            this.$refs[`rTemplateItem${groupSystem.id}`] && this.$refs[`rTemplateItem${groupSystem.id}`][0].handleExpanded();
                         });
                     }
                 }

@@ -14,7 +14,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from backend.api.authentication import ESBAuthentication
-from backend.api.management.constants import ManagementAPIEnum, VerifyAPIParamLocationEnum
+from backend.api.management.constants import ManagementAPIEnum, VerifyApiParamLocationEnum
 from backend.api.management.v1.permissions import ManagementAPIPermission
 from backend.api.management.v1.serializers import (
     ManagementGradeManagerBasicSLZ,
@@ -26,7 +26,7 @@ from backend.apps.group.models import Group
 from backend.apps.role.models import Role, RoleRelatedObject
 from backend.biz.group import GroupBiz
 from backend.biz.role import RoleBiz
-from backend.service.constants import RoleRelatedObjectType, RoleType, SubjectType
+from backend.service.constants import RoleRelatedObjectType, RoleType
 from backend.service.models import Subject
 
 
@@ -38,7 +38,7 @@ class ManagementUserGradeManagerViewSet(GenericViewSet):
     authentication_classes = [ESBAuthentication]
     permission_classes = [ManagementAPIPermission]
     management_api_permission = {
-        "list": (VerifyAPIParamLocationEnum.SYSTEM_IN_QUERY.value, ManagementAPIEnum.USER_ROLE_LIST.value),
+        "list": (VerifyApiParamLocationEnum.SYSTEM_IN_QUERY.value, ManagementAPIEnum.USER_ROLE_LIST.value),
     }
 
     role_biz = RoleBiz()
@@ -68,11 +68,11 @@ class ManagementUserGradeManagerGroupViewSet(GenericViewSet):
     authentication_classes = [ESBAuthentication]
     permission_classes = [ManagementAPIPermission]
     management_api_permission = {
-        "list": (VerifyAPIParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.USER_ROLE_GROUP_LIST.value),
+        "list": (VerifyApiParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.USER_ROLE_GROUP_LIST.value),
     }
 
     lookup_field = "id"
-    queryset = Role.objects.filter(type=RoleType.RATING_MANAGER.value).order_by("-updated_time")
+    queryset = Role.objects.filter(type=RoleType.GRADE_MANAGER.value).order_by("-updated_time")
 
     group_biz = GroupBiz()
 
@@ -91,7 +91,7 @@ class ManagementUserGradeManagerGroupViewSet(GenericViewSet):
 
         # 查询用户加入的用户组
         # NOTE: 可能会有性能问题, 用户的组过多
-        relations = self.group_biz.list_all_subject_group(Subject(type=SubjectType.USER.value, id=data["user_id"]))
+        relations = self.group_biz.list_all_subject_group(Subject.from_username(data["user_id"]))
 
         user_group_ids = [one.id for one in relations]
         # 查询分级管理员下的用户组列表

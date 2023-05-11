@@ -13,7 +13,7 @@ from datetime import timedelta
 from itertools import groupby
 from urllib.parse import urlencode
 
-from celery import Task, current_app, task
+from celery import Task, current_app, shared_task
 from django.conf import settings
 from django.core.paginator import Paginator
 from django.db.models import F, Q
@@ -26,6 +26,7 @@ from backend.apps.policy.models import Policy
 from backend.apps.subject.audit import log_user_cleanup_policy_audit_event
 from backend.apps.user.models import UserPermissionCleanupRecord
 from backend.biz.group import GroupBiz
+from backend.biz.helper import RoleWithPermGroupBiz
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleBiz
 from backend.biz.system import SystemBiz
@@ -40,10 +41,12 @@ from .constants import UserPermissionCleanupRecordStatusEnum
 logger = logging.getLogger("celery")
 
 
-MAX_USER_PERMISSION_CLEANUP_RETRY_COUNT = 3
+MAX_USER_PERMISSION_CLEAN_RETRY_COUNT = 3
 
 
 class SendUserExpireRemindMailTask(Task):
+    name = "backend.apps.user.tasks.SendUserExpireRemindMailTask"
+
     policy_biz = PolicyQueryBiz()
     group_biz = GroupBiz()
 
@@ -54,7 +57,7 @@ class SendUserExpireRemindMailTask(Task):
         if not user:
             return
 
-        subject = Subject(type=SubjectType.USER.value, id=username)
+        subject = Subject.from_username(username)
 
         # 注意: rbac用户所属组很大, 这里会变成多次查询, 也变成多次db io (单次 1000 个)
         groups = self.group_biz.list_all_subject_group_before_expired_at(subject, expired_at)
@@ -82,7 +85,7 @@ class SendUserExpireRemindMailTask(Task):
 current_app.tasks.register(SendUserExpireRemindMailTask())
 
 
-@task(ignore_result=True)
+@shared_task(ignore_result=True)
 def user_group_policy_expire_remind():
     """
     用户的用户组, 自定义权限过期检查
@@ -119,7 +122,7 @@ def user_group_policy_expire_remind():
         SendUserExpireRemindMailTask().delay(username, expired_at)
 
 
-@task(ignore_result=True)
+@shared_task(ignore_result=True)
 def user_cleanup_expired_policy():
     """
     清理用户的长时间过期策略
@@ -152,7 +155,7 @@ def user_cleanup_expired_policy():
             if not user:
                 continue
 
-            subject = Subject(type=SubjectType.USER.value, id=username)
+            subject = Subject.from_username(username)
 
             # 查询用户指定过期时间之前的所有策略
             policies = policy_query_biz.list_expired(subject, expired_at)
@@ -180,14 +183,15 @@ class UserPermissionCleaner:
 
     group_biz = GroupBiz()
     role_biz = RoleBiz()
+    role_with_perm_group_biz = RoleWithPermGroupBiz()
 
     def __init__(self, username: str) -> None:
         record = UserPermissionCleanupRecord.objects.get(username=username)
 
         self._record = record
-        self._subject = Subject(type=SubjectType.USER.value, id=username)
+        self._subject = Subject.from_username(username)
 
-    def cleanup(self):
+    def clean(self):
         # 有其他的任务在处理, 忽略
         if self._record.status == UserPermissionCleanupRecordStatusEnum.RUNNING.value:
             return
@@ -199,9 +203,9 @@ class UserPermissionCleaner:
             return
 
         try:
-            self._cleanup_policy()
-            self._cleanup_group()
-            self._cleanup_role()
+            self._clean_policy()
+            self._clean_group()
+            self._clean_role()
         except Exception as e:  # pylint: disable=broad-except
             self._record.status = UserPermissionCleanupRecordStatusEnum.FAILED.value
             self._record.error_info = str(e)
@@ -210,7 +214,7 @@ class UserPermissionCleaner:
             self._record.status = UserPermissionCleanupRecordStatusEnum.SUCCEED.value
             self._record.save(update_fields=["status"])
 
-    def _cleanup_policy(self):
+    def _clean_policy(self):
         """
         清理自定义权限, 临时权限
         """
@@ -232,7 +236,7 @@ class UserPermissionCleaner:
                     system_id, self._subject, [p.policy_id for p in temporary_policies]
                 )
 
-    def _cleanup_group(self):
+    def _clean_group(self):
         """
         清理用户组
         """
@@ -246,7 +250,7 @@ class UserPermissionCleaner:
             if len(groups) < 1000:
                 break
 
-    def _cleanup_role(self):
+    def _clean_role(self):
         """
         清理角色
         """
@@ -255,8 +259,11 @@ class UserPermissionCleaner:
         username = self._subject.id
         roles = self.role_biz.list_user_role(username)
         for role in roles:
-            if role.type == RoleType.RATING_MANAGER.value:
-                self.role_biz.delete_member(role.id, username)
+            if role.type in (
+                RoleType.GRADE_MANAGER.value,
+                RoleType.SUBSET_MANAGER.value,
+            ):
+                self.role_with_perm_group_biz.delete_role_member(role, username)
 
             elif role.type == RoleType.SUPER_MANAGER.value:
                 self.role_biz.delete_super_manager_member(username)
@@ -267,15 +274,15 @@ class UserPermissionCleaner:
                 self.role_biz.modify_system_manager_members(role_id=role.id, members=members)
 
 
-@task(ignore_result=True)
-def user_permission_cleanup(username: str):
+@shared_task(ignore_result=True)
+def user_permission_clean(username: str):
     """
     清理用户权限
     """
-    UserPermissionCleaner(username).cleanup()
+    UserPermissionCleaner(username).clean()
 
 
-@task(ignore_result=True)
+@shared_task(ignore_result=True)
 def check_user_permission_clean_task():
     """
     检查用户权限清理任务
@@ -283,16 +290,16 @@ def check_user_permission_clean_task():
     hour_before = timezone.now() - timedelta(hours=1)
 
     qs = UserPermissionCleanupRecord.objects.filter(
-        created_time__lt=hour_before, retry_count__lte=MAX_USER_PERMISSION_CLEANUP_RETRY_COUNT
+        created_time__lt=hour_before, retry_count__lte=MAX_USER_PERMISSION_CLEAN_RETRY_COUNT
     ).filter(~Q(status=UserPermissionCleanupRecordStatusEnum.SUCCEED.value))
 
     qs.update(status=UserPermissionCleanupRecordStatusEnum.CREATED.value, retry_count=F("retry_count") + 1)  # 重置status
 
     for r in qs:
-        user_permission_cleanup(r.username)
+        user_permission_clean(r.username)
 
 
-@task(ignore_result=True)
+@shared_task(ignore_result=True)
 def clean_user_permission_clean_record():
     # 删除3天之前已完成的记录
     day_before = timezone.now() - timedelta(days=30)

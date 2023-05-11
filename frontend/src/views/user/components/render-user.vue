@@ -50,7 +50,7 @@
                 curData: {},
                 panels: [
                     { name: 'groupPerm', label: this.$t(`m.perm['用户组权限']`) },
-                    { name: 'departmentGroupPerm', label: this.$t(`m.perm['所属部门用户组权限']`) },
+                    { name: 'departmentGroupPerm', label: this.$t(`m.perm['所属组织用户组权限']`) },
                     { name: 'customPerm', label: this.$t(`m.perm['自定义权限']`) }
                     // { name: 'teporaryCustomPerm', label: this.$t(`m.myApply['临时权限']`) }
                 ],

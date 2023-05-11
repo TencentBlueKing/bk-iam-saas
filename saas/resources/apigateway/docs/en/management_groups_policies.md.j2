@@ -1,0 +1,81 @@
+### User group authorization
+
+#### Parameters
+
+| Field | Type | Required | Location | Description |
+| -----------|------------|--------|------------|------------|
+| group_id | int | yes | path | user_group_id |
+| system | string | yes | body | system id |
+| actions | array[object] | yes | body | actions |
+| resources | array[object] | yes | body | resource topology, the order of the resource types must be the same as the order in which the actions are registered|
+
+actions
+
+| field | type | required | location | description |
+| -----------|------------|--------|------------|------------|
+| id | string | yes | body | action ID |
+
+resources
+
+| field | type | required | location | description |
+| -----------|------------|--------|------------|------------|
+| system | string | yes | body | resource system ID |
+| type | string | yes | body | resource type ID |
+| paths | `array[array[object]]` | yes | body | Batch resource topology, `max 1000` |
+
+paths
+
+| field | type | required | location | description |
+| -----------|------------|--------|------------|------------|
+| system | string | yes | body | System ID of the topology node type |
+| type | string | yes | body | topology node type ID |
+| id | string | yes | body | Topology node instance ID |
+| name | string | yes | body | Topology node instance name |
+
+`resources.paths` is the bulk resource instance topology
+
+
+#### Request
+
+```json
+{
+  "system": "bk_cmdb",
+  "actions": [
+    {
+      "id": "edit_host"
+    }
+  ],
+  "resources": [
+    { # The resource type associated with the operation, must match all actions, and the order of the resource types must match the order of the operation registration
+      "system": "bk_cmdb",
+      "type": "host",
+      "paths": [ # Batch resource topology
+        [
+          {
+            "system": "bk_cmdb",
+            "type": "biz",
+            "id": "1",
+            "name": "biz1"
+          },
+          {
+            "system": "bk_cmdb",
+            "type": "set",
+            "id": "*",
+            "name": ""
+          }
+        ]
+      ]
+    }
+  ]
+}
+```
+
+#### Response
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {}
+}
+```

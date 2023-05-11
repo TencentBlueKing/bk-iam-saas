@@ -65,7 +65,7 @@
                                 </template>
                                 <template v-else>
                                     <div class="empty-wrapper">
-                                        <iam-svg />
+                                        <ExceptionEmpty />
                                     </div>
                                 </template>
                             </div>
@@ -137,6 +137,11 @@
 
     export default {
         name: '',
+        provide: function () {
+            return {
+                getDragDynamicWidth: () => this.dragWidth
+            };
+        },
         components: {
             renderResourceInstance,
             renderOrderNumber,
@@ -380,7 +385,6 @@
             getAuthorizationScopeAction () {
                 if (Object.keys(this.curScopeAction).length > 0) {
                     const curData = new RelateResourceTypes(this.curScopeAction.resource_groups[0].related_resource_types[this.resIndex], { name: this.curScopeAction.name, type: this.curScopeAction.type }, 'detail');
-                    console.log(curData);
                     const len = curData.condition.length;
                     if (len > 0) {
                         this.conditionLimitData = curData.condition;

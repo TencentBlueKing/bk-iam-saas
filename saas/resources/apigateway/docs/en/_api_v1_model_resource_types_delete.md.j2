@@ -1,0 +1,3 @@
+Both of the following conditions must be met for a resource type to be successfully deleted
+1. the resource type is not used as a parent resource, specifically iterate through the parents of all resource types to see if the resource type exists
+2. The resource type is not used as the action object resource type of the Action, specifically, iterate through all Action's related_resource_types to see if the resource type exists

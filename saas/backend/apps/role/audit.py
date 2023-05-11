@@ -8,8 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from backend.apps.organization.models import User
-from backend.audit.audit import DataProvider, audit_context_getter
+from backend.audit.audit import DataProvider, NoNeedAuditException, audit_context_getter
 from backend.audit.constants import AuditObjectType, AuditType
 
 
@@ -28,6 +27,8 @@ class BaseRoleDataProvider(DataProvider):
 
     @property
     def object_id(self):
+        if not self.role:
+            raise NoNeedAuditException
         return str(self.role.id)
 
     @property
@@ -47,26 +48,8 @@ class RoleUpdateAuditProvider(BaseRoleDataProvider):
         return {key: value for key, value in self.request.data.items() if key in {"name", "description"}}
 
 
-class UserRoleDeleteAuditProvider(DataProvider):
-    type = AuditType.USER_ROLE_DELETE.value
-
-    @property
-    def extra(self):
-        return {"role_id": audit_context_getter(self.request, "role_id")}
-
-    @property
-    def object_type(self):
-        return AuditObjectType.USER.value
-
-    @property
-    def object_id(self):
-        return self.request.user.username
-
-    @property
-    def object_name(self):
-        username = self.request.user.username
-        user = User.objects.filter(username=username).only("display_name").first()
-        return user.display_name if user else username
+class RoleDeleteAuditProvider(BaseRoleDataProvider):
+    type = AuditType.ROLE_DELETE.value
 
 
 class RoleMemberUpdateAuditProvider(BaseRoleDataProvider):

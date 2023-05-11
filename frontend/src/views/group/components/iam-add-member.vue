@@ -45,7 +45,23 @@
                                 <span class="active-line" v-if="tabActive === item.name"></span>
                             </section>
                         </div>
-                        <div :class="['search-input', { 'active': isSerachFocus }, { 'disabled': (isRatingManager || isAll) && !isAllFlag }]" v-if="isOrganization">
+                        <!-- <div
+                            :class="[
+                                'search-input',
+                                { 'active': isSearchFocus },
+                                { 'disabled': externalSource ? false : (isRatingManager || isAll) && !isAllFlag }
+                            ]"
+                            v-if="isOrganization"
+                        > -->
+                        <!-- 所有平台都开放搜索，通过选中做校验 -->
+                        <div
+                            :class="[
+                                'search-input',
+                                { 'active': isSearchFocus },
+                                { 'disabled': isAll && !isAllFlag }
+                            ]"
+                            v-if="isOrganization"
+                        >
                             <bk-dropdown-menu
                                 align="left"
                                 ref="dropdown"
@@ -70,7 +86,7 @@
                                 :placeholder="$t(`m.common['搜索提示1']`)"
                                 maxlength="64"
                                 clearable
-                                :disabled="(isRatingManager || isAll) && !isAllFlag"
+                                :disabled="isAll && !isAllFlag"
                                 ext-cls="iam-add-member-search-input-cls"
                                 @focus="handleSearchInput"
                                 @blur="handleSearchBlur"
@@ -92,9 +108,12 @@
                                         :is-rating-manager="curIsRatingManager"
                                         :key="infiniteTreeKey"
                                         :is-disabled="isAll"
+                                        :empty-data="emptyData"
                                         @async-load-nodes="handleRemoteLoadNode"
                                         @expand-node="handleExpanded"
-                                        @on-select="handleOnSelected">
+                                        @on-select="handleOnSelected"
+                                        @on-clear="handleEmptyClear"
+                                        @on-refresh="handleEmptyRefresh">
                                     </infinite-tree>
                                 </div>
                             </template>
@@ -117,10 +136,18 @@
                                             <p class="text">{{ $t(`m.info['搜索结果']`) }}</p>
                                         </div>
                                     </template>
-                                    <template v-if="isSeachResultEmpty">
+                                    <template v-if="isSearchResultEmpty">
                                         <div class="search-empty-wrapper">
-                                            <iam-svg />
-                                            <p class="empty-tips">{{ $t(`m.common['搜索无结果']`) }}</p>
+                                            <ExceptionEmpty
+                                                :type="emptyData.type"
+                                                :empty-text="emptyData.text"
+                                                :tip-text="emptyData.tip"
+                                                :tip-type="emptyData.tipType"
+                                                @on-clear="handleEmptyClear"
+                                                @on-refresh="handleEmptyRefresh"
+                                            />
+                                            <!-- <iam-svg />
+                                            <p class="empty-tips">{{ $t(`m.common['搜索无结果']`) }}</p> -->
                                         </div>
                                     </template>
                                 </div>
@@ -160,7 +187,8 @@
                                 <template v-if="curLanguageIsCn">
                                     {{ $t(`m.common['已选择']`) }}
                                     <template v-if="isShowSelectedText">
-                                        <span class="organization-count">{{ hasSelectedDepartments.length }}</span>{{ $t(`m.common['个']`) }} {{ $t(`m.common['组织']`) }}，
+                                        <span class="organization-count">{{ hasSelectedDepartments.length }}</span>
+                                        {{ $t(`m.common['个']`) }} {{ $t(`m.common['组织']`) }}，
                                         <span class="user-count">{{ hasSelectedUsers.length }}</span>{{ $t(`m.common['个']`) }} {{ $t(`m.common['用户']`) }}
                                     </template>
                                     <template v-else>
@@ -184,20 +212,21 @@
                             <div class="organization-content" v-if="isDepartSelectedEmpty">
                                 <div class="organization-item" v-for="item in hasSelectedDepartments" :key="item.id">
                                     <Icon type="file-close" class="folder-icon" />
-                                    <span class="organization-name" :title="item.fullName">{{ item.name }}</span><span class="user-count" v-if="item.showCount">{{ '(' + item.count + `)` }}</span>
+                                    <span class="organization-name" :title="nameType(item)">{{ item.name }}</span>
+                                    <span class="user-count" v-if="item.showCount">{{ '(' + item.count + `)` }}</span>
                                     <Icon bk type="close-circle-shape" class="delete-depart-icon" @click="handleDelete(item, 'organization')" />
                                 </div>
                             </div>
                             <div class="user-content" v-if="isUserSelectedEmpty">
                                 <div class="user-item" v-for="item in hasSelectedUsers" :key="item.id">
                                     <Icon type="personal-user" class="user-icon" />
-                                    <span class="user-name" :title="item.name !== '' ? `${item.username}(${item.name})` : item.username">{{ item.username }}<template v-if="item.name !== ''">({{ item.name }})</template>
+                                    <span class="user-name" :title="nameType(item)">{{ item.username }}<template v-if="item.name !== ''">({{ item.name }})</template>
                                     </span>
                                     <Icon bk type="close-circle-shape" class="delete-icon" @click="handleDelete(item, 'user')" />
                                 </div>
                             </div>
                             <div class="selected-empty-wrapper" v-if="isSelectedEmpty">
-                                <iam-svg />
+                                <ExceptionEmpty />
                             </div>
                         </div>
                     </div>
@@ -239,7 +268,7 @@
     import InfiniteTree from '@/components/infinite-tree';
     import dialogInfiniteList from '@/components/dialog-infinite-list';
     import IamDeadline from '@/components/iam-deadline/horizontal';
-    import { guid } from '@/common/util';
+    import { guid, formatCodeData } from '@/common/util';
     import { bus } from '@/common/bus';
 
     // 去除()以及之间的字符
@@ -347,7 +376,7 @@
                     }
                 ],
                 searchConditionValue: 'fuzzy',
-                isSerachFocus: false,
+                isSearchFocus: false,
 
                 panels: [
                     { name: 'organization', label: this.$t(`m.common['组织架构']`) },
@@ -359,7 +388,14 @@
                 manualInputError: false,
                 manualValueBackup: [],
                 isAll: false,
-                isAllFlag: false
+                isAllFlag: false,
+                externalSource: '',
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -378,7 +414,7 @@
             isSeachResultTooMuch () {
                 return !this.treeLoading && this.isShowTooMuch;
             },
-            isSeachResultEmpty () {
+            isSearchResultEmpty () {
                 return this.searchedDepartment.length < 1
                     && this.searchedUsers.length < 1 && !this.treeLoading && !this.isShowTooMuch;
             },
@@ -439,6 +475,25 @@
             },
             isHierarchicalAdmin () {
                 return this.$store.getters.roleList.find(item => item.id === this.$store.getters.navCurRoleId) || {};
+            },
+            nameType () {
+                return (payload) => {
+                    const { name, type, username, full_name: fullName } = payload;
+                    const typeMap = {
+                        user: () => {
+                            if (fullName) {
+                                const result = fullName.indexOf(';') > -1 ? fullName.replace(/[,;；]/g, '\n') : fullName;
+                                return result;
+                            } else {
+                                return name ? `${username}(${name})` : username;
+                            }
+                        },
+                        depart: () => {
+                            return fullName || payload.fullName || name;
+                        }
+                    };
+                    return typeMap[type] ? typeMap[type]() : typeMap['user']();
+                };
             }
         },
         watch: {
@@ -449,20 +504,7 @@
                         this.infiniteTreeKey = new Date().getTime();
                         this.hasSelectedUsers.splice(0, this.hasSelectedUsers.length, ...this.users);
                         this.hasSelectedDepartments.splice(0, this.hasSelectedDepartments.length, ...this.departments);
-                        if (this.showExpiredAt) {
-                            if (this.isBatch) {
-                                this.fetchCategoriesList();
-                            } else {
-                                this.fetchMemberList();
-                            }
-                        } else {
-                            this.requestQueue = ['categories'];
-                            if (this.isRatingManager) {
-                                this.fetchRoleSubjectScope(false, true);
-                            } else {
-                                this.fetchCategories(false, true);
-                            }
-                        }
+                        this.fetchInitData();
                     }
                 },
                 immediate: true
@@ -493,17 +535,50 @@
             }
         },
         created () {
-            if (this.$route.name === 'gradingAdminCreate') {
+            const { name, query } = this.$route;
+            if (name === 'gradingAdminCreate') {
                 this.handleSave();
+            }
+            if (query.source && query.source === 'externalApp') {
+                this.externalSource = query.source;
             }
         },
         methods: {
+            fetchInitData () {
+                if (this.showExpiredAt) {
+                    if (this.isBatch) {
+                        this.fetchCategoriesList();
+                    } else {
+                        this.fetchMemberList();
+                    }
+                } else {
+                    this.requestQueue = ['categories'];
+                    if (this.isRatingManager) {
+                        this.fetchRoleSubjectScope(false, true);
+                    } else {
+                        this.fetchCategories(false, true);
+                    }
+                }
+            },
+
             handleSearchInput () {
-                this.isSerachFocus = true;
+                this.isSearchFocus = true;
             },
 
             handleSearchBlur () {
-                this.isSerachFocus = false;
+                this.isSearchFocus = false;
+            },
+
+            handleEmptyRefresh () {
+                this.fetchInitData();
+                this.requestQueue = [];
+            },
+
+            handleEmptyClear () {
+                this.keyword = '';
+                this.emptyData.tipType = '';
+                this.fetchInitData();
+                this.requestQueue = [];
             },
 
             handleTabChange ({ name }) {
@@ -539,7 +614,10 @@
                         })
                     });
                     const temps = res.data.filter(
-                        item => !this.hasSelectedUsers.map(subItem => subItem.username).includes(item.username)
+                        item => {
+                            this.$set(item, 'full_name', item.departments && item.departments.length ? item.departments.join(';') : '');
+                            return !this.hasSelectedUsers.map(subItem => subItem.username).includes(item.username);
+                        }
                     );
                     this.hasSelectedUsers.push(...temps);
                     if (res.data.length > 0) {
@@ -572,7 +650,7 @@
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: '用户名输入格式错误'
+                        message: this.$t(`m.verify['用户名输入格式错误]`)
                     });
                 } finally {
                     this.manualAddLoading = false;
@@ -665,14 +743,14 @@
             async fetchRoleSubjectScope (isTreeLoading = false, isDialogLoading = false) {
                 this.treeLoading = isTreeLoading;
                 try {
-                    const res = await this.$store.dispatch('role/getRoleSubjectScope');
-
-                    const departments = [...res.data];
+                    const { code, data } = await this.$store.dispatch('role/getRoleSubjectScope');
+                    const departments = [...data];
                     this.isAllFlag = departments.some(item => item.type === '*' && item.id === '*');
                     if (this.isAllFlag) {
                         this.fetchCategories(false, true);
                         return;
                     }
+                    this.emptyData = formatCodeData(code, this.emptyData, departments.length === 0);
                     departments.forEach(child => {
                         child.visiable = true;
                         child.level = 0;
@@ -688,41 +766,72 @@
                         child.async = child.child_count > 0 || child.member_count > 0;
                         child.isNewMember = false;
                         child.parentNodeId = '';
+                        // if (child.type === 'user') {
+                        //     child.username = child.id;
+                        // }
+
+                        // if (this.hasSelectedDepartments.length > 0) {
+                        //     child.is_selected = this.hasSelectedDepartments.map(item => item.id).includes(child.id);
+                        // } else {
+                        //     child.is_selected = false;
+                        // }
+
+                        // if (this.hasSelectedUsers.length > 0) {
+                        //     child.is_selected = this.hasSelectedUsers.map(item => item.id).includes(child.id);
+                        // } else {
+                        //     child.is_selected = false;
+                        // }
+
+                        // if (this.defaultDepartments.length > 0
+                        //     && this.defaultDepartments.map(item => item.id).includes(child.id.toString())
+                        // ) {
+                        //     child.is_selected = true;
+                        //     child.disabled = true;
+                        // }
+
+                        // if (this.defaultUsers.length && this.defaultUsers.map(item => item.id).includes(child.id)) {
+                        //     child.is_selected = true;
+                        //     child.disabled = true;
+                        // }
+
                         if (child.type === 'user') {
                             child.username = child.id;
-                        }
+                            if (this.hasSelectedUsers.length > 0) {
+                                child.is_selected = this.hasSelectedUsers.map(item => item.id).includes(child.id);
+                            } else {
+                                child.is_selected = false;
+                            }
 
-                        if (this.hasSelectedDepartments.length > 0) {
-                            child.is_selected = this.hasSelectedDepartments.map(item => item.id).includes(child.id);
-                        } else {
-                            child.is_selected = false;
+                            if (this.defaultUsers.length && this.defaultUsers.map(item => item.id).includes(child.id)) {
+                                child.is_selected = true;
+                                child.disabled = true;
+                            }
                         }
-
-                        if (this.hasSelectedUsers.length > 0) {
-                            child.is_selected = this.hasSelectedUsers.map(item => item.id).includes(child.id);
-                        } else {
-                            child.is_selected = false;
-                        }
-
-                        if (this.defaultDepartments.length > 0
-                            && this.defaultDepartments.map(item => item.id).includes(child.id.toString())
-                        ) {
-                            child.is_selected = true;
-                            child.disabled = true;
-                        }
-
-                        if (this.defaultUsers.length && this.defaultUsers.map(item => item.id).includes(child.id)) {
-                            child.is_selected = true;
-                            child.disabled = true;
+                        
+                        if (child.type === 'depart') {
+                            if (this.hasSelectedDepartments.length > 0) {
+                                child.is_selected = this.hasSelectedDepartments.map(item => item.id).includes(child.id);
+                            } else {
+                                child.is_selected = false;
+                            }
+    
+                            if (this.defaultDepartments.length > 0
+                                && this.defaultDepartments.map(item => item.id).includes(child.id.toString())
+                            ) {
+                                child.is_selected = true;
+                                child.disabled = true;
+                            }
                         }
                     });
                     this.treeList = _.cloneDeep(departments);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
@@ -737,8 +846,9 @@
             async fetchCategories (isTreeLoading = false, isDialogLoading = false) {
                 this.treeLoading = isTreeLoading;
                 try {
-                    const res = await this.$store.dispatch('organization/getCategories');
-                    const categories = [...res.data];
+                    const { code, data } = await this.$store.dispatch('organization/getCategories');
+                    this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
+                    const categories = [...data];
                     categories.forEach((item, index) => {
                         item.visiable = true;
                         item.level = 0;
@@ -770,6 +880,7 @@
                                 child.async = child.child_count > 0 || child.member_count > 0;
                                 child.isNewMember = false;
                                 child.parentNodeId = item.id;
+                                child.full_name = `${item.name}：${child.name}`;
 
                                 if (this.hasSelectedDepartments.length > 0) {
                                     child.is_selected = this.hasSelectedDepartments.map(
@@ -792,9 +903,11 @@
                     this.treeList = _.cloneDeep(categories);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: message || data.msg || statusText
                     });
                 } finally {
                     this.treeLoading = false;
@@ -886,14 +999,15 @@
                     is_exact: this.searchConditionValue === 'exact'
                 };
                 try {
-                    const res = await this.$store.dispatch('organization/getSeachOrganizations', params);
-                    if (res.data.is_too_much) {
+                    const { code, data } = await this.$store.dispatch('organization/getSearchOrganizations', params);
+                    const { users, departments } = data;
+                    if (data.is_too_much) {
                         this.isShowTooMuch = true;
                         return;
                     }
                     this.isShowTooMuch = false;
-                    if (res.data.departments.length > 0) {
-                        res.data.departments.forEach(depart => {
+                    if (departments.length > 0) {
+                        data.departments.forEach(depart => {
                             depart.showRadio = true;
                             depart.type = 'depart';
                             if (departIds.length && departIds.includes(depart.id)) {
@@ -908,13 +1022,14 @@
                             depart.count = depart.recursive_member_count;
                             depart.showCount = true;
                         });
-                        this.searchedDepartment.splice(0, this.searchedDepartment.length, ...res.data.departments);
+                        this.searchedDepartment.splice(0, this.searchedDepartment.length, ...data.departments);
                     }
-                    if (res.data.users.length > 0) {
-                        res.data.users.forEach(user => {
+                    if (users.length > 0) {
+                        data.users.forEach(user => {
                             user.id = guid();
                             user.showRadio = true;
                             user.type = 'user';
+                            this.$set(user, 'full_name', user.departments && user.departments.length ? user.departments.join(';') : '');
                             if (userIds.length && userIds.includes(user.username)) {
                                 this.$set(user, 'is_selected', true);
                             } else {
@@ -925,18 +1040,23 @@
                                 this.$set(user, 'disabled', true);
                             }
                         });
-                        this.searchedUsers.splice(0, this.searchedUsers.length, ...res.data.users);
+                        this.searchedUsers.splice(0, this.searchedUsers.length, ...data.users);
                     }
                     this.searchedResult.splice(
                         0,
                         this.searchedResult.length,
                         ...this.searchedDepartment.concat(this.searchedUsers)
                     );
+                    const isEmpty = users.length === 0 && departments.length === 0;
+                    this.emptyData.tipType = 'search';
+                    this.emptyData = formatCodeData(code, this.emptyData, isEmpty);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: message || data.msg || statusText
                     });
                 } finally {
                     this.treeLoading = false;
@@ -998,6 +1118,7 @@
                             child.async = child.child_count > 0 || child.member_count > 0;
                             child.isNewMember = false;
                             child.parentNodeId = payload.id;
+                            child.full_name = `${payload.full_name}/${child.name}`;
 
                             if (this.hasSelectedDepartments.length > 0) {
                                 child.is_selected = this.hasSelectedDepartments.map(item => item.id).includes(child.id);
@@ -1029,6 +1150,8 @@
                             child.async = false;
                             child.isNewMember = false;
                             child.parentNodeId = payload.id;
+                            // child.full_name = `${payload.full_name}/${child.name}`;
+                            child.full_name = payload.full_name;
 
                             // parentNodeId + username 组合成id
                             child.id = `${child.parentNodeId}${child.username}`;
@@ -1077,6 +1200,7 @@
                     }, 300);
                 }
             },
+
             handleDelete (item, type) {
                 if (this.isAll) {
                     return;

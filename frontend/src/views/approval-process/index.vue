@@ -35,6 +35,7 @@
     import JoinGroupProcess from './components/join-group-process';
     import CustomPermProcess from './components/custom-perm-process';
     import CreateRateManagerProcess from './components/create-rate-manager-process';
+    import { formatCodeData } from '@/common/util';
 
     /**
      * ACTIVE_COMPONENT_MAP
@@ -70,7 +71,7 @@
                         type: 'join_group'
                     },
                     {
-                        title: this.$t(`m.approvalProcess['创建分级管理员']`),
+                        title: this.$t(`m.approvalProcess['创建管理空间']`),
                         isOpen: false,
                         value: '3',
                         type: 'create_rating_manager'
@@ -88,7 +89,13 @@
                     'create_rating_manager': []
                     // 'alter_rating_manager': []
                 },
-                activeMap: ACTIVE_COMPONENT_MAP
+                activeMap: ACTIVE_COMPONENT_MAP,
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -121,21 +128,31 @@
              * 111
              */
             async fetchPageData () {
-                if (this.curRole === 'system_manager') {
-                    await Promise.all([
-                        this.fetchProcesses('grant_action'),
-                        this.fetchProcesses('join_group')
-                    ]);
-                } else if (this.curRole === 'rating_manager') {
-                    await this.fetchProcesses('join_group');
-                } else {
-                    await Promise.all([
-                        this.fetchProcesses('grant_action'),
-                        this.fetchProcesses('join_group'),
-                        this.fetchProcesses('create_rating_manager'),
-                        this.fetchDefaultProcesses()
-                    ]);
-                }
+                const roleItem = {
+                    system_manager: async () => {
+                        await Promise.all([
+                            this.fetchProcesses('grant_action'),
+                            this.fetchProcesses('join_group')
+                        ]);
+                    },
+                    rating_manager: async () => {
+                        await this.fetchProcesses('join_group');
+                    },
+                    subset_manager: async () => {
+                        await this.fetchProcesses('join_group');
+                    }
+                };
+                return roleItem[this.curRole] ? roleItem[this.curRole]() : this.fetchAllRequest();
+            },
+
+            async fetchAllRequest () {
+                const allReq = [
+                    this.fetchProcesses('grant_action'),
+                    this.fetchProcesses('join_group'),
+                    this.fetchProcesses('create_rating_manager'),
+                    this.fetchDefaultProcesses()
+                ];
+                await Promise.all(allReq);
             },
 
             /**
@@ -143,14 +160,17 @@
              */
             async fetchProcesses (type) {
                 try {
-                    const res = await this.$store.dispatch('approvalProcess/getProcessesList', { type });
-                    this.processData[type] = Object.freeze(res.data);
+                    const { code, data } = await this.$store.dispatch('approvalProcess/getProcessesList', { type });
+                    this.processData[type] = Object.freeze(data);
+                    this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
@@ -162,8 +182,8 @@
              */
             async fetchDefaultProcesses () {
                 try {
-                    const res = await this.$store.dispatch('approvalProcess/getDefaultProcesses');
-                    const defaultProcesses = res.data || [];
+                    const { code, data } = await this.$store.dispatch('approvalProcess/getDefaultProcesses');
+                    const defaultProcesses = data || [];
                     const grantAction = defaultProcesses.find(item => item.type === 'grant_action');
                     if (grantAction) {
                         this.processSetList[0].process_id = grantAction.process_id;
@@ -176,12 +196,15 @@
                     if (createRatingManager) {
                         this.processSetList[2].process_id = createRatingManager.process_id;
                     }
+                    this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
@@ -192,18 +215,21 @@
              * getFilterPanels
              */
             getFilterPanels () {
-                switch (this.curRole) {
-                    case 'system_manager':
+                const roleItem = {
+                    system_manager: () => {
                         this.panels = this.panels.filter(item => ['CustomPermProcess', 'JoinGroupProcess'].includes(item.name));
                         this.active = 'CustomPermProcess';
-                        break;
-                    case 'rating_manager':
+                    },
+                    rating_manager: () => {
                         this.panels = this.panels.filter(item => ['JoinRateManagerProcess', 'JoinGroupProcess'].includes(item.name));
                         this.active = 'JoinGroupProcess';
-                        break;
-                    default:
-                        this.active = 'CustomPermProcess';
-                }
+                    },
+                    subset_manager: () => {
+                        this.panels = this.panels.filter(item => ['JoinRateManagerProcess', 'JoinGroupProcess'].includes(item.name));
+                        this.active = 'JoinGroupProcess';
+                    }
+                };
+                return roleItem[this.curRole] ? roleItem[this.curRole]() : 'CustomPermProcess';
             },
 
             /**

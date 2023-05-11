@@ -311,11 +311,11 @@ def log_user_permission_clean_event(
     """
     Event = get_event_model()
     event = Event(
-        type=AuditType.USER_PERMISSION_CLEANUP.value,
+        type=AuditType.USER_PERMISSION_CLEAN.value,
         username=subject.id,
         object_type=AuditObjectType.USER_PERMISSION_CLEANUP.value,
         object_id="0",
-        object_name="user_permission_cleanup",
+        object_name="user_permission_clean",
         source_type=source_type,
     )
     extra = extra if extra else {}

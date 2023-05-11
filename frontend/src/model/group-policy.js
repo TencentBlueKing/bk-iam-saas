@@ -22,7 +22,7 @@
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
-*/
+ */
 
 import Policy from './policy';
 import { il8n } from '@/language';
@@ -34,6 +34,8 @@ export default class GroupPolicy extends Policy {
         super(payload, flag, instanceNotDisabled);
         this.detail = data;
         this.mode = mode;
+        this.system_name = payload.system_name;
+        this.system_id = payload.system_id;
         this.conditionIds = payload.conditionIds;
         // 聚合id，相同aggregationId的数据聚合时会被聚合在一起
         this.aggregationId = '';

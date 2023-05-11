@@ -15,11 +15,12 @@ from typing import Dict
 from django.conf import settings
 from django.utils.translation import gettext as _
 
+from backend.apps.organization.models import User as UserModel
 from backend.biz.application import ActionApplicationDataBean
 from backend.biz.policy import PolicyBeanList, PolicyQueryBiz
 from backend.common.error_codes import error_codes
 from backend.service.constants import SubjectType
-from backend.service.models import Subject
+from backend.service.models import Applicant, Subject
 
 from .policy import PolicyTrans
 
@@ -42,7 +43,7 @@ class ApplicationDataTrans:
         # 1. 查询已有权限
         old_policy_list = self.policy_query_biz.new_policy_list(
             system_id,
-            Subject(type=SubjectType.USER.value, id=applicant),
+            Subject.from_username(applicant),
         )
 
         # 2. 申请的策略里移除已有策略数据, 生成移除已有权限后的策略
@@ -76,7 +77,7 @@ class ApplicationDataTrans:
 
         # 6. 数据完全没有变更
         if len(application_policies) == 0:
-            raise error_codes.INVALID_ARGS.format(message=_("无权限变更申请，无需提交"), replace=True)
+            raise error_codes.INVALID_ARGS.format(message=_("无新的权限申请，无需提交"), replace=True)
 
         return PolicyBeanList(system_id, application_policies)
 
@@ -169,12 +170,26 @@ class ApplicationDataTrans:
         # 1. 转换数据结构
         policy_list = self.policy_trans.from_aggregate_actions_and_actions(system_id, data)
 
-        # 2. 只对新增的策略进行申请，所以需要移除掉已有的权限
-        application_policy_list = self._gen_need_apply_policy_list(applicant, system_id, policy_list)
+        if "usernames" in data and data["usernames"]:
+            application_policy_list = policy_list
+            usernames = data["usernames"]
+            application_policy_list.fill_empty_fields()
+        else:
+            # 2. 只对新增的策略进行申请，所以需要移除掉已有的权限
+            application_policy_list = self._gen_need_apply_policy_list(applicant, system_id, policy_list)
+            usernames = [applicant]
 
         # 3. 转换为ApplicationBiz创建申请单所需数据结构
+        applicants = [
+            Applicant(type=SubjectType.USER.value, id=u.username, display_name=u.display_name)
+            for u in UserModel.objects.filter(username__in=usernames)
+        ]
+
         application_data = ActionApplicationDataBean(
-            applicant=applicant, policy_list=application_policy_list, reason=data["reason"]
+            applicant=applicant,
+            policy_list=application_policy_list,
+            applicants=applicants,
+            reason=data["reason"],
         )
 
         return application_data
@@ -195,9 +210,20 @@ class ApplicationDataTrans:
         # 3. 检查每个操作新增的资源实例数量不超过限制
         self._check_application_policy_instance_count_limit(policy_list)
 
+        if "usernames" in data and data["usernames"]:
+            usernames = data["usernames"]
+        else:
+            usernames = [applicant]
+
+        # 4. 转换为ApplicationBiz创建申请单所需数据结构
+        applicants = [
+            Applicant(type=SubjectType.USER.value, id=u.username, display_name=u.display_name)
+            for u in UserModel.objects.filter(username__in=usernames)
+        ]
+
         # 4. 转换为ApplicationBiz创建申请单所需数据结构
         application_data = ActionApplicationDataBean(
-            applicant=applicant, policy_list=policy_list, reason=data["reason"]
+            applicant=applicant, policy_list=policy_list, applicants=applicants, reason=data["reason"]
         )
 
         return application_data
@@ -213,7 +239,7 @@ class ApplicationDataTrans:
         # 2. 获取某个系统的所有的临时权限, 包括过期的
         old_policies = self.policy_query_biz.list_temporary_by_subject(
             system_id,
-            Subject(type=SubjectType.USER.value, id=applicant),
+            Subject.from_username(applicant),
         )
 
         for p in policy_list.policies:

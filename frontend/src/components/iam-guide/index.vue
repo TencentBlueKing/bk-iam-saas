@@ -1,16 +1,33 @@
 <template>
-    <div :class="['iam-guide-wrapper', { 'has-animation': hasAnimation }]"
-        :style="style" v-if="!noviceGuide[type] && !loading && flag && isShow">
-        <div class="content-wrapper">
-            <section class="content-shade">
-                <div class="text">{{ content }}</div>
-                <div class="knowed-action"
-                    @click.stop="handleKnowed">
-                    {{ $t(`m.guide['我知道了']`) }}
+    <div :style="styles">
+        <div v-if="['custom'].includes(popoverType) && (!noviceGuide[type] && !loading && flag && isShow)">
+            <div :class="['iam-guide-wrapper', { 'has-animation': hasAnimation }]">
+                <div class="content-wrapper">
+                    <section class="content-shade">
+                        <div class="text">{{ content }}</div>
+                        <div class="knowed-action"
+                            @click.stop="handleKnow">
+                            {{ $t(`m.guide['我知道了']`) }}
+                        </div>
+                    </section>
+                    <div :class="['triangle', direction]"></div>
                 </div>
-            </section>
-            <div :class="['triangle', direction]"></div>
+            </div>
         </div>
+        <template v-if="['component'].includes(popoverType) && (!noviceGuide[type] && isShow)">
+            <bk-popconfirm
+                ref="popconfirmCom"
+                v-bind="$attrs"
+                v-on="$listeners"
+                @confirm="handleKnow"
+                width="288">
+                <div slot="content">
+                    <slot name="popconfirm-header" />
+                    <slot name="popconfirm-content" />
+                </div>
+                <slot name="popconfirm-show" />
+            </bk-popconfirm>
+        </template>
     </div>
 </template>
 <script>
@@ -47,6 +64,10 @@
             flag: {
                 type: Boolean,
                 default: true
+            },
+            popoverType: {
+                type: String,
+                default: 'custom'
             }
         },
         data () {
@@ -57,34 +78,89 @@
         computed: {
             ...mapGetters(['noviceGuide', 'user']),
             isShow () {
+                const index = Number(window.localStorage.getItem('index') || 0);
                 const types = [
                     'rating_manager_subject_scope',
                     'rating_manager_merge_action',
                     'rating_manager_authorization_scope'
                 ];
+                const staffTypes = [
+                    'grade_manager_upgrade'
+                ];
+                const managerTypes = [
+                    'create_perm_template',
+                    'set_group_approval_process'
+                ];
                 if (types.includes(this.type)) {
                     return ['super_manager', 'staff'].includes(this.user.role.type);
                 }
+                if (staffTypes.includes(this.type)) {
+                    return ['staff'].includes(this.user.role.type);
+                }
+                if (managerTypes.includes(this.type)) {
+                    return !['staff'].includes(this.user.role.type) && Number(index) === 1;
+                }
                 return true;
+            },
+            styles () {
+                if (!['component'].includes(this.popoverType)) {
+                    return {
+                        ...this.style,
+                        'position': 'relative'
+                    };
+                }
+                return '';
             }
         },
         created () {
-            // 动画显示5秒后关闭
-            this.timer = setTimeout(() => {
-                this.hasAnimation = false;
-                clearTimeout(this.timer);
-            }, 5000);
+            this.handleInit();
         },
         methods: {
-            async handleKnowed () {
-                this.$store.commit('updateNoviceGuide', this.type);
+            async handleInit () {
+                // 动画显示5秒后关闭
+                const popoverItem = {
+                    custom: () => {
+                        this.timer = setTimeout(() => {
+                            this.hasAnimation = false;
+                            clearTimeout(this.timer);
+                        }, 5000);
+                    },
+                    component: () => {
+                        this.handleShowGuide();
+                    }
+                };
+                return popoverItem[this.popoverType]();
+            },
+
+            async handleKnow () {
                 try {
                     await this.$store.dispatch('editNoviceGuide', {
                         scene: this.type
                     });
+                    const popoverItem = {
+                        custom: () => {
+                            this.$store.commit('updateNoviceGuide', this.type);
+                        },
+                        component: () => {
+                            this.handleHideGuide();
+                            // this.showTimer = setTimeout(() => {
+                            this.$store.commit('updateNoviceGuide', this.type);
+                            //     clearTimeout(this.showTimer);
+                            // }, 5 * 1000);
+                        }
+                    };
+                    popoverItem[this.popoverType]();
                 } catch (e) {
                     console.error(e);
                 }
+            },
+
+            handleShowGuide () {
+                this.$parent.fetchSpaceUpdateGuide && this.$parent.fetchSpaceUpdateGuide();
+            },
+
+            handleHideGuide () {
+                this.$refs.popconfirmCom && this.$refs.popconfirmCom.$refs.popover.hideHandler();
             }
         }
     };

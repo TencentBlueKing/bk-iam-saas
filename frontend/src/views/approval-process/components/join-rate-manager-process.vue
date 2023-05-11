@@ -9,7 +9,7 @@
             <div slot="right">
                 <bk-input
                     v-model="searchValue"
-                    :placeholder="$t(`m.approvalProcess['加入分级管理员流程搜索提示']`)"
+                    :placeholder="$t(`m.approvalProcess['加入管理空间流程搜索提示']`)"
                     clearable
                     style="margin-left: 8px; width: 320px;"
                     right-icon="bk-icon icon-search"
@@ -31,7 +31,7 @@
             @row-mouse-enter="handleRowMouseEnter"
             @row-mouse-leave="handleRowMouseLeave">
             <bk-table-column type="selection" align="center" :selectable="getSelectable"></bk-table-column>
-            <bk-table-column :label="$t(`m.approvalProcess['分级管理员名称']`)" width="400">
+            <bk-table-column :label="$t(`m.approvalProcess['管理空间名称']`)" width="400">
                 <template slot-scope="{ row }">
                     <span class="rate-manager-name" :title="row.groupName" @click.stop="handleViewDetail(row)">
                         {{ row.groupName }}
@@ -64,6 +64,16 @@
                     </section>
                 </template>
             </bk-table-column>
+            <template slot="empty">
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-clear="handleEmptyClear"
+                    @on-refresh="handleEmptyRefresh"
+                />
+            </template>
         </bk-table>
 
         <edit-process-dialog
@@ -98,7 +108,7 @@
                 currentSelectList: [],
                 tableList: [
                     {
-                        groupName: '测试分级管理员',
+                        groupName: '测试管理空间',
                         id: 1,
                         description: 'qqqq',
                         processValue: '1'
@@ -112,7 +122,13 @@
                 currentBackup: 1,
                 searchValue: '',
                 tableLoading: false,
-                isProcessDialogShow: false
+                isProcessDialogShow: false,
+                emptyData: {
+                    type: 'empty',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {

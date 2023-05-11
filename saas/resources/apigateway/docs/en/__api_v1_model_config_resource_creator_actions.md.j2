@@ -1,0 +1,40 @@
+#### Parameters
+
+Path Parameters
+
+| Field | Type | Required | Location | Description |
+| :--- | :--- | :--- |:--- |:--- |
+| system_id | string | yes | path | system ID |
+
+Parameters
+
+| field | type | mandatory | description |
+|:---|:---|:---|:---|
+| config | array(object) | Yes | A new associated configuration file containing the Action that can be authorized to the creator at creation for each resource type |
+
+A description of the fields in each element of the config:
+
+| field | type | mandatory | description |
+|:---|:---|:---|:---|
+| id | string | Yes | A unique identifier for the resource type |
+| actions | array(object) | yes | A list of actions that can be authorized to the creator when the resource is created |
+| sub_resource_types | array(object) | no | The configuration information related to the Action that can be authorized for the subresource type, each element of the list is the same as each element of the config list, which is a recursive structure|
+
+The field descriptions for each element in actions.
+
+| field | type | mandatory | description |
+|:---|:---|:---|:---|
+| id | string | is | the unique identifier of the Action |
+| required | bool | Yes | Whether the Action is required, i.e., whether the Action can be unselected when the Permission Center supports enterprise and user modification of creator empowerment |
+
+**`required field special note`**
+
+> Assume that the resource type host can be created with 3 permissions, host_edit, host_view, host_delete, and host_delete configured with required=true
+
+- Later IAM (Identity and Access Management) will support users and enterprises to customize the configuration of this new association, host_delete is mandatory and cannot be removed
+- If the user-defined configuration of the new management is authorized for host_view and host_delete when the host is created (host_edit and host_view can be configured not to be authorized because required=false), then the user will automatically have host_view and host_delete after accessing the system to add a new host. view and host_delete
+
+
+`Note:`
+1. the hierarchy is based on the resource hierarchy
+2. later IAM (Identity and Access Management) will support this configuration can be modified globally by the enterprise and customized by each user

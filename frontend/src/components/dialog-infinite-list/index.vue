@@ -13,14 +13,17 @@
                     <Icon type="file-close" class="folder-icon" />
                     <span
                         class="organization-name"
-                        :class="item.disabled ? 'is-disabled' : ''">
+                        :class="item.disabled ? 'is-disabled' : ''"
+                        :title="nameType(item)">
                         {{ item.name }}
                     </span>
-                    <span class="user-count" v-if="item.showCount">{{ '(' + item.count + ')' }}</span>
+                    <span class="user-count" v-if="item.showCount">
+                        {{ '(' + item.count + ')' }}
+                    </span>
                     <div class="organization-checkbox" v-if="item.showRadio">
                         <span class="node-checkbox"
                             :class="{
-                                'is-disabled': item.disabled || isDisabled,
+                                'is-disabled': disabledNode(item),
                                 'is-checked': item.is_selected,
                                 'is-indeterminate': item.indeterminate
                             }"
@@ -40,7 +43,7 @@
                     <span
                         class="user-name"
                         :class="item.disabled ? 'is-disabled' : ''"
-                        :title="item.name !== '' ? `${item.username}(${item.name})` : item.username">
+                        :title="nameType(item)">
                         {{ item.username }}
                         <template v-if="item.name !== ''">
                             ({{ item.name }})
@@ -49,7 +52,7 @@
                     <div class="user-checkbox" v-if="item.showRadio">
                         <span class="node-checkbox"
                             :class="{
-                                'is-disabled': item.disabled || isDisabled,
+                                'is-disabled': disabledNode(item),
                                 'is-checked': item.is_selected,
                                 'is-indeterminate': item.indeterminate
                             }"
@@ -64,9 +67,11 @@
 </template>
 <script>
     import _ from 'lodash';
+    import { mapGetters } from 'vuex';
 
     export default {
         name: 'dialog-infinite-list',
+        inject: ['getGroupAttributes'],
         props: {
             // 所有数据
             allData: {
@@ -102,6 +107,7 @@
             };
         },
         computed: {
+            ...mapGetters(['user']),
             ghostStyle () {
                 return {
                     height: this.allData.length * this.itemHeight + 'px'
@@ -117,6 +123,33 @@
             },
             renderUserList () {
                 return this.renderData.filter(item => item.type === 'user');
+            },
+            disabledNode () {
+                return (payload) => {
+                    const isDisabled = payload.disabled || this.isDisabled;
+                    return this.getGroupAttributes ? isDisabled || (this.getGroupAttributes().source_from_role && payload.type === 'depart') : isDisabled;
+                };
+            },
+            isStaff () {
+                return this.user.role.type === 'staff';
+            },
+            nameType () {
+                return (payload) => {
+                    const { name, type, username, full_name: fullName } = payload;
+                    const typeMap = {
+                        user: () => {
+                            if (fullName) {
+                                return fullName;
+                            } else {
+                                return name ? `${username}(${name})` : username;
+                            }
+                        },
+                        depart: () => {
+                            return fullName || name;
+                        }
+                    };
+                    return typeMap[type] ? typeMap[type]() : typeMap['user']();
+                };
             }
         },
         watch: {
@@ -211,23 +244,74 @@
              *
              * @param {Object} node 当前节点
              */
-            nodeClick (node) {
-                if (this.isDisabled) {
+            async nodeClick (node) {
+                if (this.isDisabled || (this.getGroupAttributes && this.getGroupAttributes().source_from_role && node.type === 'depart')) {
                     return;
                 }
                 this.$emit('on-click', node);
                 if (!node.disabled) {
-                    node.is_selected = !node.is_selected;
-                    this.$emit('on-checked', node.is_selected, !node.is_selected, node.is_selected, node);
+                    if (this.isStaff) {
+                        node.is_selected = !node.is_selected;
+                        this.$emit('on-checked', node.is_selected, !node.is_selected, node.is_selected, node);
+                    } else {
+                        const result = await this.fetchSubjectScopeCheck(node);
+                        if (result) {
+                            node.is_selected = !node.is_selected;
+                            this.$emit('on-checked', node.is_selected, !node.is_selected, node.is_selected, node);
+                        } else {
+                            this.messageError(this.$t(`m.verify['当前选择项不在授权范围内']`));
+                        }
+                    }
                 }
             },
 
-            handleNodeClick (node) {
-                if (this.isDisabled) {
-                    return;
+            async handleNodeClick (node) {
+                const isDisabled = this.isDisabled || (this.getGroupAttributes && this.getGroupAttributes().source_from_role && node.type === 'depart');
+                if (!isDisabled) {
+                    if (this.isStaff) {
+                        node.is_selected = !node.is_selected;
+                        this.$emit('on-checked', node.is_selected, !node.is_selected, true, node);
+                    } else {
+                        const result = await this.fetchSubjectScopeCheck(node);
+                        if (result) {
+                            node.is_selected = !node.is_selected;
+                            this.$emit('on-checked', node.is_selected, !node.is_selected, true, node);
+                        } else {
+                            this.messageError(this.$t(`m.verify['当前选择项不在授权范围内']`));
+                        }
+                    }
                 }
-                node.is_selected = !node.is_selected;
-                this.$emit('on-checked', node.is_selected, !node.is_selected, true, node);
+            },
+
+            // 校验组织架构选择器部门/用户范围是否满足条件
+            async fetchSubjectScopeCheck ({ type, id, username }) {
+                const subjectItem = {
+                    depart: () => {
+                        return {
+                            subjects: [{
+                                type: 'department',
+                                id
+                     
+                            }]
+                        };
+                    },
+                    user: () => {
+                        return {
+                            subjects: [{
+                                type: 'user',
+                                id: username
+                            }]
+                        };
+                    }
+                };
+                const params = subjectItem[type]();
+                const { code, data } = await this.$store.dispatch('organization/getSubjectScopeCheck', params);
+                if (code === 0) {
+                    const { id: subjectId, type: subjectType } = params.subjects[0];
+                    const result = data && data.length
+                        && data.find(item => item.type === subjectType && item.id === String(subjectId));
+                    return result;
+                }
             }
         }
     };

@@ -14,6 +14,7 @@
     import BasicInfo from './basic-info';
     import RenderGroupTable from './apply-group-table';
     import RenderProcess from '../common/render-process';
+    import { mapGetters } from 'vuex';
     export default {
         name: '',
         components: {
@@ -43,6 +44,7 @@
             };
         },
         computed: {
+            ...mapGetters(['externalSystemId']),
             isLoading () {
                 return this.initRequestQueue.length > 0;
             },
@@ -76,7 +78,13 @@
         methods: {
             async fetchData (id) {
                 try {
-                    const res = await this.$store.dispatch('myApply/getApplyDetail', { id });
+                    const params = {
+                        id
+                    };
+                    if (this.externalSystemId) {
+                        params.hidden = false;
+                    }
+                    const res = await this.$store.dispatch('myApply/getApplyDetail', params);
                     const {
                         sn, type, applicant, organizations, reason, data,
                         status, created_time, ticket_url
@@ -89,7 +97,8 @@
                         reason,
                         expiredDisplay: data.expired_display,
                         created_time,
-                        ticket_url
+                        ticket_url,
+                        applicants: data.applicants || []
                     }
                     ;(data.groups || []).forEach(item => {
                         item.display_id = `#${item.id}`;
@@ -119,7 +128,7 @@
 </script>
 <style lang="postcss" scoped>
     .iam-apply-group-detail-wrapper {
-        height: calc(100vh - 121px);
+        /* height: calc(100vh - 121px); */
         .action {
             padding-bottom: 50px;
         }

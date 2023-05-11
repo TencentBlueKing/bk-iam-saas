@@ -10,11 +10,10 @@
         @after-leave="handleAfterEditLeave">
         <div slot="header" class="title">
             <!-- eslint-disable max-len -->
-            <template v-if="curLanguageIsCn">
-                将【<span class="group-title" :title="name">{{ name }}</span>】关联到以下用户组
-            </template>
-            <template v-else>
-                The【<span class="group-title" :title="name">{{ name }}</span>】will be associated with the following groups
+            <template>
+                <span> {{$t(`m.common['将']`)}}{{$t(`m.common['【']`)}}</span>
+                <span class="group-title" :title="name">{{ name }}</span>
+                <span>{{$t(`m.common['】']`)}}{{$t(`m.common['关联到以下用户组']`)}}</span>
             </template>
         </div>
         <div class="user-group-content-wrapper">
@@ -23,6 +22,7 @@
                     <iam-search-select
                         @on-change="handleSearch"
                         :data="searchData"
+                        :value="searchValue"
                         :quick-search-method="quickSearchMethod"
                         style="width: 420px;" />
                 </div>
@@ -112,8 +112,16 @@
                                     <td colspan="3">
                                         <div class="search-empty-wrapper">
                                             <div class="empty-wrapper">
-                                                <iam-svg />
-                                                <p class="empty-tips">{{ isSearch ? $t(`m.common['搜索无结果']`) : $t(`m.common['暂无数据']`) }}</p>
+                                                <ExceptionEmpty
+                                                    :type="emptyData.type"
+                                                    :empty-text="emptyData.text"
+                                                    :tip-text="emptyData.tip"
+                                                    :tip-type="emptyData.tipType"
+                                                    @on-clear="handleEmptyClear"
+                                                    @on-refresh="handleEmptyRefresh"
+                                                />
+                                                <!-- <iam-svg />
+                                                <p class="empty-tips">{{ isSearch ? $t(`m.common['搜索无结果']`) : $t(`m.common['暂无数据']`) }}</p> -->
                                             </div>
                                         </div>
                                     </td>
@@ -132,6 +140,8 @@
 </template>
 <script>
     import IamSearchSelect from '@/components/iam-search-select';
+    import { formatCodeData } from '@/common/util';
+    import { mapGetters } from 'vuex';
 
     export default {
         name: '',
@@ -183,11 +193,16 @@
                 requestQueue: ['groupList'],
                 defaultGroupIds: [],
                 tableLoading: false,
-
-                isSearch: false
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
+            ...mapGetters(['externalSystemId']),
             isLoading () {
                 return this.requestQueue.length > 0 && this.isShowDialog;
             },
@@ -311,15 +326,33 @@
                 this.pagination.limit = 7;
                 this.pagination.totalPage = 1;
                 this.pagination.current = 1;
-                this.isSearch = true;
+                // this.isSearch = true;
+                this.emptyData.tipType = 'search';
                 this.fetchData(true);
             },
 
             handleRemoteSystem (value) {
-                return this.$store.dispatch('system/getSystems')
+                const params = {};
+                if (this.externalSystemId) {
+                    params.hidden = false;
+                }
+                return this.$store.dispatch('system/getSystems', params)
                     .then(({ data }) => {
                         return data.map(({ id, name }) => ({ id, name })).filter(item => item.name.indexOf(value) > -1);
                     });
+            },
+
+            handleEmptyClear () {
+                this.searchParams = {};
+                this.searchValue = [];
+                this.emptyData.tipType = '';
+                this.pagination = Object.assign(this.pagination, { current: 1, limit: 7, totalPage: 1 });
+                this.fetchData(true);
+            },
+
+            handleEmptyRefresh () {
+                this.pagination = Object.assign(this.pagination, { current: 1, limit: 7, totalPage: 1 });
+                this.fetchData(true);
             },
 
             async fetchData (isTableLoading = false) {
@@ -331,9 +364,9 @@
                 };
                 const ids = this.hasChekedList.map(item => item.id);
                 try {
-                    const res = await this.$store.dispatch('userGroup/getUserGroupList', params);
-                    this.pagination.totalPage = Math.ceil(res.data.count / this.pagination.limit)
-                    ;(res.data.results || []).forEach(item => {
+                    const { code, data } = await this.$store.dispatch('userGroup/getUserGroupList', params);
+                    this.pagination.totalPage = Math.ceil(data.count / this.pagination.limit);
+                    (data.results || []).forEach(item => {
                         if (ids.includes(item.id)) {
                             this.$set(item, 'checked', true);
                         } else {
@@ -347,12 +380,16 @@
                             this.$set(item, 'disabled', true);
                         }
                     });
-                    this.userGroupList.splice(0, this.userGroupList.length, ...(res.data.results || []));
+                    this.userGroupList.splice(0, this.userGroupList.length, ...(data.results || []));
+                    this.emptyData = formatCodeData(code, this.emptyData, data.results.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
+                    this.userGroupList = [];
                     this.bkMessageInstance = this.$bkMessage({
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: message || data.msg || statusText
                     });
                 } finally {
                     this.requestQueue.shift();

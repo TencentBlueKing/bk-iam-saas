@@ -65,7 +65,7 @@
                                 </template>
                                 <template v-else>
                                     <div class="empty-wrapper">
-                                        <iam-svg />
+                                        <ExceptionEmpty />
                                     </div>
                                 </template>
                             </div>
@@ -136,6 +136,11 @@
 
     export default {
         name: '',
+        provide: function () {
+            return {
+                getDragDynamicWidth: () => this.dragWidth
+            };
+        },
         components: {
             renderResourceInstance,
             renderOrderNumber,

@@ -20,7 +20,7 @@ from rest_framework.viewsets import views
 from backend.api.authentication import ESBAuthentication
 from backend.biz.application import ApplicationBiz
 from backend.biz.open import ApplicationPolicyListCache
-from backend.service.constants import ApplicationTypeEnum
+from backend.service.constants import ApplicationType
 from backend.trans.open_application import AccessSystemApplicationTrans
 from backend.util.url import url_join
 
@@ -99,6 +99,6 @@ class ApplicationCustomPolicyView(views.APIView):
         # 将Dict数据转换为创建单据所需的数据结构
         application_data = self.access_system_application_trans.from_grant_policy_application(username, data)
         # 创建单据
-        applications = self.application_biz.create_for_policy(ApplicationTypeEnum.GRANT_ACTION.value, application_data)
+        applications = self.application_biz.create_for_policy(ApplicationType.GRANT_ACTION.value, application_data)
 
         return Response({"id": applications[0].id, "sn": applications[0].sn})

@@ -50,3 +50,7 @@ class TemporaryPolicy(BaseModel):
     @resources.setter
     def resources(self, resources):
         self._resources = json_dumps(resources)
+
+    @property
+    def display_name(self):
+        return f"subject: {self.subject_type}/{self.subject_id} system: {self.system_id} action: {self.action_id}"

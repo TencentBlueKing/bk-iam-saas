@@ -23,26 +23,24 @@ def add_admin_to_super_manager_member(apps, schema_editor):
     #  由于admin的特殊性，IAM后台判断super permission时是先判断是否super user，然后再判断是否super role
     #  所以不向后台将admin添加为super role并不会影响admin的鉴权（admin在后台代码里默认初始化为super user）
 
-    username = "admin"
-    role = Role.objects.get(type=RoleType.SUPER_MANAGER.value)
-    # 判断是否已存在
-    if username in role.members:
-        return
+    # username = "admin"
+    # role = Role.objects.get(type=RoleType.SUPER_MANAGER.value)
+    # # 判断是否已存在
+    # if username in role.members:
+    #     return
 
-    # 添加成员
-    RoleUser.objects.create(role_id=role.id, username=username)
+    # # 添加成员
+    # RoleUser.objects.create(role_id=role.id, username=username)
 
-    # 拥有所有系统的权限
-    RoleUserSystemPermission.add_enabled_users(role.id, username)
+    # # 拥有所有系统的权限
+    # RoleUserSystemPermission.add_enabled_users(role.id, username)
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('role', '0007_auto_20201209_1437'),
-        ('organization', '0004_auto_20201230_1653'),
+        ("role", "0007_auto_20201209_1437"),
+        ("organization", "0004_auto_20201230_1653"),
     ]
 
-    operations = [
-        migrations.RunPython(add_admin_to_super_manager_member)
-    ]
+    operations = [migrations.RunPython(add_admin_to_super_manager_member)]

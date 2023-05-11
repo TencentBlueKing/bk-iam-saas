@@ -1,0 +1,126 @@
+### Batch pulling permission policy for a batch of operations
+
+Scenario: The access system needs to identify multiple operations for a batch of resource instances of the same resource type, for example, the resource instance list page shows whether multiple operations have permissions
+
+Binding:
+
+1. the resource type of a batch of resources must be the same
+2. if the action has a dependency on the cmdb resource, the dependent cmdb resource instance must be the same
+
+SDK implementation:
+
+1. Batch pull permission policy for a batch of actions
+2. local traversal to calculate if the resource instance has permissions
+
+#### Parameters
+
+| Field | Type | Required | Description
+|:---|:---|:---|:---|
+| system |string | yes | system unique identifier |
+| subject | string | yes | subject |
+| actions | Array(actions) | yes | list of actions |
+| resources | Array(resource_node) | Yes | Resource instances, the order of the resource types must be the same as the order in which the actions are registered |
+
+action
+
+| field | type | mandatory | description |
+|:---|:---|:---|:---|
+| id | string | yes | action ID |
+
+subject
+
+| field | type |required | description |
+|:---|:---|:---|:---|
+| type | string | yes | Authorize object type, currently only user | is supported
+| id | string | yes | authorization_id |
+
+resource_node
+
+| field | type | mandatory | description |
+|:---|:---|:---|:---|
+| system | string | yes | resource_system_id |
+| type | string | yes | resource type ID |
+| id | string | yes | resource instance ID |
+| attribute | object | yes | resource attribute |
+
+#### Request
+
+##### No cmdb dependency
+
+```json
+{
+    "system": "bk_job",
+    "subject":
+    {
+        "type": "user",
+        "id": "admin"
+    },
+    "actions": [
+        {
+            "id": "edit"
+        },
+        {
+            "id": "view"
+        }
+    ],
+    "resources": []
+}
+```
+
+##### No cmdb dependency
+
+```json
+{
+    "system": "bk_job",
+    "subject":
+    {
+        "type": "user",
+        "id": "admin"
+    },
+    "actions": [
+        {
+            "id": "execute"
+        },
+        {
+            "id": "quick_execute"
+        }
+    ],
+    "resources": [
+    {
+        "system": "bk_cmdb",
+        "type": "host",
+        "id": "192.168.1.1"
+    }]
+}
+```
+
+#### Response
+
+```json
+{
+    "code": 0,
+    "message": "ok",
+    "data": [ // the order of the actions is the same as the order of the acitons in the request
+        {
+            "action":{
+                "id": "edit"
+            },
+            "condition": { // conditional expression
+                "field": "host.id",
+                "op": "any",
+                "value": []
+            }
+        },
+        {
+            "action":{
+                "id": "view"
+            },
+            "condition": { // conditional expression
+                "field": "host.id",
+                "op": "any",
+                "value": []
+            }
+        }
+    ]
+}
+```

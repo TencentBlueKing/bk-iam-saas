@@ -1,0 +1,116 @@
+### Resource topology authorization/recovery
+
+Authorization and reclamation interface for individual resource topologies, individual operations
+
+`Note`:
+
+- `resources.type` is the resource type associated with the operation, `resources.path` is the topology level that the resource type can select
+- The path of `resources.path` must match the topology level of the resource instance selection view registered in the access system, otherwise the authorized topology level will not be selected in the IAM (Identity and Access Management) view (no check mark)
+
+{% include '_api_v1_open_authorization_path.md.j2' %}
+
+#### Parameters
+
+
+| field | type | mandatory | description |
+|:---|:---|:---|:---|
+| asynchronous | boolean | yes | whether to call asynchronously, default no, only synchronous is currently supported
+| operate | string | yes | grant or revoke |
+| system | string | yes | system id |
+| action | string | yes | operation |
+| subject | string | yes | authorization object |
+| resources | array[object] | yes | resource topology, the order of resource types must be the same as when the action was registered |
+
+action
+
+| field | type | mandatory | description |
+|:---|:---|:---|:---|
+| id | string | yes | action ID |
+
+subject
+
+| field | type |required | description |
+|:---|:---|:---|:---|
+| type | string | yes | Authorized object type, currently only user | is supported
+| id | string | yes | authorization object ID |
+
+resources
+
+| field | type | mandatory | description |
+|:---|:---|:---|:---|
+| system | string | yes | resource system ID |
+| type | string | yes | resource type ID |
+| path | array[object] | yes | topology of the resource |
+
+resources.path
+
+| field | type | whether required | description |
+|:---|:---|:---|:---|
+| type | string | yes | topology node type ID |
+| id | string | yes | topology node instance ID |
+| name | string | yes | topology node instance name |
+
+#### Request
+
+```json
+{
+  "asynchronous": false, # default false, currently only synchronous is supported
+  "operate": "grant", # grant authorize revoke recall
+  "system": "bk_cmdb",
+  "action": {
+    "id": "edit_host"
+  },
+  "subject": { # currently only authorized for user
+    "type": "user",
+    "id": "admin"
+  },
+  "resources": [ # If the operation depends on multiple resource types, it means a combined resource, and the order of the resource types must be the same as the order of the operation registration
+    {
+      "system": "bk_cmdb",
+      "type": "host",
+      "path": [
+        {
+          "type": "biz",
+          "id": "1",
+          "name": "biz1"
+        },{
+          "type": "set",
+          "id": "*",
+          "name": ""
+        }
+      ]
+    }
+  ]
+}
+```
+
+#### Response
+
+| Field | Type | Required | Description |
+|:---|:---|:---|:---|
+| policy_id | value | permission_policy_id |
+
+
+> Status: 200 OK
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {
+    "policy_id": 1
+  }
+}
+```
+
+#### Response when async (not implemented yet)
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {
+    "task_id": 1 // task id
+  }
+}
+```

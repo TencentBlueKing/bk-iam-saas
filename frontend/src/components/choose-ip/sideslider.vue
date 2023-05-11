@@ -12,6 +12,7 @@
             <div class="select-wrapper">
                 <div class="left-content">
                     <topology-input
+                        ref="topologyInput"
                         :is-filter="isFilter"
                         :placeholder="curPlaceholder"
                         @on-search="handleSearch" />
@@ -36,7 +37,14 @@
                                 <div v-bkloading="{ isLoading: true, size: 'mini' }"></div>
                             </div>
                             <div class="empty-wrapper" v-if="selectList.length < 1 && !listLoading">
-                                <iam-svg />
+                                <ExceptionEmpty
+                                    :type="emptyData.type"
+                                    :empty-text="emptyData.text"
+                                    :tip-text="emptyData.tip"
+                                    :tip-type="emptyData.tipType"
+                                    @on-clear="handleEmptyClear"
+                                    @on-refresh="handleEmptyRefresh"
+                                />
                             </div>
                         </template>
                     </div>
@@ -54,7 +62,7 @@
                             <span class="action" @click.stop="handleRemove(item)">{{ $t(`m.common['移除']`) }}</span>
                         </p>
                         <div class="empty-wrapper" v-if="curSelectedList.length < 1">
-                            <iam-svg />
+                            <ExceptionEmpty />
                         </div>
                     </section>
                 </div>
@@ -68,8 +76,10 @@
 </template>
 <script>
     import _ from 'lodash';
-    import TopologyInput from '@/components/choose-ip/topology-input';
     import { leaveConfirm } from '@/common/leave-confirm';
+    import { formatCodeData } from '@/common/util';
+    import TopologyInput from '@/components/choose-ip/topology-input';
+
     export default {
         name: '',
         components: {
@@ -113,7 +123,13 @@
                 isFilter: false,
                 listLoading: false,
                 isScrollBottom: false,
-                curSelectedIds: []
+                curSelectedIds: [],
+                emptyData: {
+                    type: 'empty',
+                    text: '暂无数据',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -180,21 +196,27 @@
                     offset: this.pagination.limit * (this.pagination.current - 1),
                     ancestors: [],
                     system_id: this.params.system_id,
+                    action_system_id: this.params.system_id,
+                    action_id: '',
                     type: this.params.id
                 };
                 try {
-                    const res = await this.$store.dispatch('permApply/getResources', params);
-                    this.pagination.totalPage = Math.ceil(res.data.count / this.pagination.limit);
-                    this.selectList = res.data.results || [];
+                    const { code, data } = await this.$store.dispatch('permApply/getResources', params);
+                    this.pagination.totalPage = Math.ceil(data.count / this.pagination.limit);
+                    this.selectList = data.results || [];
                     this.selectList.forEach(item => {
                         item.checked = this.curSelectedIds.includes(item.id);
                     });
+                    this.emptyData = formatCodeData(code, this.emptyData, data.results.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
+                    this.resetData();
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
@@ -219,6 +241,8 @@
                             offset: this.pagination.limit * (this.pagination.current - 1),
                             ancestors: [],
                             system_id: this.params.system_id,
+                            action_system_id: this.params.system_id,
+                            action_id: '',
                             type: this.params.id
                         };
                         try {
@@ -250,6 +274,7 @@
             handleSearch (payload) {
                 window.changeAlert = true;
                 this.searchValue = payload;
+                this.emptyData.tipType = 'search';
                 if (this.isFilter && payload === '') {
                     this.isFilter = false;
                 } else {
@@ -331,6 +356,18 @@
                 } else {
                     this.curSelectedList = this.curSelectedList.filter(item => item.id !== payload.id);
                 }
+            },
+
+            handleEmptyClear () {
+                this.$refs.topologyInput.value = '';
+                this.emptyData.tipType = '';
+                this.resetData();
+                this.fetchData();
+            },
+
+            handleEmptyRefresh () {
+                this.resetData();
+                this.fetchData();
             },
 
             resetData () {

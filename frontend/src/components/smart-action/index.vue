@@ -4,7 +4,16 @@
             <slot />
         </div>
         <div ref="actionPosition" :style="positionStyles" role="action-position">
-            <div ref="dynamicPosition" class="fixed" style="padding-left:284px" role="dynamic-position">
+            <div
+                ref="dynamicPosition"
+                :class="[
+                    'fixed',
+                    customClass
+                ]"
+                :style="{ paddingLeft: externalSystemId ? '50px' : '284px' }"
+                style="margin-top: 52px;"
+                role="dynamic-position"
+            >
                 <div :style="styles">
                     <slot name="action" />
                 </div>
@@ -15,6 +24,7 @@
 <script>
     import _ from 'lodash';
     import { bus } from '@/common/bus';
+    import { mapGetters } from 'vuex';
 
     export default {
         props: {
@@ -34,6 +44,7 @@
             };
         },
         computed: {
+            ...mapGetters(['externalSystemId', 'externalSystemsLayout']),
             classes () {
                 if (this.isHide) {
                     return 'fixed';
@@ -43,10 +54,14 @@
             positionStyles () {
                 if (this.isHide) {
                     return {
-                        height: '50px'
+                        height: '50px',
+                        marginTop: '50px'
+                    };
+                } else {
+                    return {
+                        marginTop: '52px'
                     };
                 }
-                return {};
             },
             styles () {
                 const styles = {
@@ -61,6 +76,13 @@
                     };
                 }
                 return {};
+            },
+            customClass () {
+                if (this.externalSystemsLayout.addMemberBoundary.customFooterClass) {
+                    const externalClass = !['addMemberBoundary'].includes(this.$route.name) ? 'external-page-fixed-custom' : 'external-dialog-fixed-custom';
+                    return externalClass;
+                }
+                return '';
             }
         },
         mounted () {
@@ -132,6 +154,17 @@
             height: 52px;
             background: #fff;
             box-shadow: 0px -2px 4px 0px rgba(0, 0, 0, 0.06);
+        }
+
+        .external-dialog-fixed-custom,
+        .external-page-fixed-custom {
+           box-shadow: none;
+           border-top: 1px solid #dcdee5;
+           padding-left: 0px !important;
+        }
+
+        .external-page-fixed-custom {
+            padding-left: 24px !important;
         }
     }
 </style>

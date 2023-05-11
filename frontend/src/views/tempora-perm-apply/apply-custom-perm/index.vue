@@ -8,7 +8,9 @@
                         v-model="systemValue"
                         style="width: 480px;"
                         :popover-min-width="480"
-                        searchable
+                        :empty-text="$t(`m.common['暂无数据']`)"
+                        :search-placeholder="$t(`m.info['搜索关键字']`)"
+                        :searchable="true"
                         :clearable="false"
                         @selected="handleSysSelected">
                         <bk-option v-for="option in systemList"
@@ -165,8 +167,15 @@
                             </template>
                             <template v-if="originalCustomTmplList.length < 1 && !customLoading">
                                 <div class="empty-wrapper">
-                                    <Icon type="warning" />
-                                    {{ isActionsFilter ? $t(`m.common['搜索无结果']`) : $t(`m.permApply['暂无可申请的操作']`) }}
+                                    <!-- <Icon type="warning" />
+                                    {{ isActionsFilter ? $t(`m.common['搜索无结果']`) : $t(`m.permApply['暂无可申请的操作']`) }} -->
+                                    <ExceptionEmpty
+                                        :type="emptyData.type"
+                                        :empty-text="emptyData.text"
+                                        :tip-text="emptyData.tip"
+                                        :tip-type="emptyData.tipType"
+                                        @on-clear="handleEmptyClear"
+                                    />
                                 </div>
                             </template>
                         </div>
@@ -245,10 +254,19 @@
                             {{ item }}
                         </span>
                     </div>
-                    <p class="info">{{ $t(`m.info['分级管理员成员提示']`) }}</p>
+                    <p class="info">{{ $t(`m.info['管理空间成员提示']`) }}</p>
                 </template>
             </div>
         </bk-sideslider>
+
+        <confirmDialog
+            :width="600"
+            :show.sync="isShowConfirmDialog"
+            :title="confirmDialogTitle"
+            :is-custom-style="true"
+            @on-cancel="isShowConfirmDialog = false"
+            @on-sumbit="isShowConfirmDialog = false"
+        />
     </div>
 </template>
 
@@ -263,12 +281,15 @@
     import Condition from '@/model/condition';
     import { PERMANENT_TIMESTAMP } from '@/common/constants';
     import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider';
+    import ConfirmDialog from '@/components/iam-confirm-dialog/index';
+
     export default {
         name: '',
         components: {
             RenderActionTag,
             ResourceInstanceTable,
-            RenderPermSideslider
+            RenderPermSideslider,
+            ConfirmDialog
         },
         data () {
             return {
@@ -324,12 +345,19 @@
                 tagActionList: [],
                 hoverActionData: {
                     actions: []
-                }
-
+                },
+                emptyData: {
+                    type: 'search-empty',
+                    text: '',
+                    tip: '',
+                    tipType: 'search'
+                },
+                isShowConfirmDialog: false,
+                confirmDialogTitle: this.$t(`m.verify['admin无需申请权限']`)
             };
         },
         computed: {
-            ...mapGetters(['user']),
+            ...mapGetters(['user', 'externalSystemId']),
             // 是否无权限申请
             isNoPermApplay () {
                 return this.routerQuery.system_id;
@@ -493,7 +521,7 @@
             handleViewDetail (payload) {
                 if (payload.role && payload.role.name) {
                     this.isShowGradeSlider = true;
-                    this.gradeSliderTitle = `【${payload.role.name}】${this.$t(`m.grading['分级管理员']`)} ${this.$t(`m.common['成员']`)}`;
+                    this.gradeSliderTitle = `【${payload.role.name}】${this.$t(`m.grading['管理空间']`)} ${this.$t(`m.common['成员']`)}`;
                     this.fetchRoles(payload.role.id);
                 }
             },
@@ -714,6 +742,11 @@
                 tempList = tempList.filter(item => item.actions.length > 0 || item.sub_groups.length > 0);
                 this.originalCustomTmplList = _.cloneDeep(tempList);
                 this.handleActionLinearData(true);
+            },
+
+            handleEmptyClear () {
+                this.actionSearchValue = '';
+                this.emptyData.tipType = '';
             },
 
             /**
@@ -1657,7 +1690,11 @@
                     this.systemValue = this.routerQuery.system_id;
                 }
                 try {
-                    const res = await this.$store.dispatch('system/getSystems');
+                    const params = {};
+                    if (this.externalSystemId) {
+                        params.hidden = false;
+                    }
+                    const res = await this.$store.dispatch('system/getSystems', params);
                     (res.data || []).forEach(item => {
                         item.displayName = `${item.name}(${item.id})`;
                     });
@@ -1839,13 +1876,17 @@
                     });
                 } catch (e) {
                     console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
+                    if (['admin'].includes(this.user.username)) {
+                        this.isShowConfirmDialog = true;
+                    } else {
+                        this.bkMessageInstance = this.$bkMessage({
+                            limit: 1,
+                            theme: 'error',
+                            message: e.message || e.data.msg || e.statusText,
+                            ellipsisLine: 2,
+                            ellipsisCopy: true
+                        });
+                    }
                 } finally {
                     this.buttonLoading = false;
                 }
@@ -1910,13 +1951,17 @@
                     });
                 } catch (e) {
                     console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
+                    if (['admin'].includes(this.user.username)) {
+                        this.isShowConfirmDialog = true;
+                    } else {
+                        this.bkMessageInstance = this.$bkMessage({
+                            limit: 1,
+                            theme: 'error',
+                            message: e.message || e.data.msg || e.statusText,
+                            ellipsisLine: 2,
+                            ellipsisCopy: true
+                        });
+                    }
                 } finally {
                     this.buttonLoading = false;
                 }

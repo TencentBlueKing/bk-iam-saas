@@ -8,7 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from aenum import LowerStrEnum, StrEnum, auto, skip
+from aenum import LowerStrEnum, StrEnum, auto, enum, skip
 from django.utils.translation import gettext as _
 
 from backend.util.enum import ChoicesEnum
@@ -59,12 +59,18 @@ class GroupMemberType(ChoicesEnum, LowerStrEnum):
 class GroupSaaSAttributeEnum(ChoicesEnum, LowerStrEnum):
     """用户组SaaS属性枚举"""
 
-    READONLY = auto()
+    SOURCE_TYPE = auto()
+    SOURCE_FROM_ROLE = auto()
 
-    _choices_labels = skip(((READONLY, "只读"),))
+    _choices_labels = skip(
+        (
+            (SOURCE_TYPE, "来源类型"),
+            (SOURCE_FROM_ROLE, "是否来源于ROLE"),
+        )
+    )
 
 
-class GroupAttributeValueTypeEnum(ChoicesEnum, LowerStrEnum):
+class GroupAttributeValueType(ChoicesEnum, LowerStrEnum):
     """用户组SaaS属性值的数据类型"""
 
     String = auto()
@@ -74,10 +80,14 @@ class GroupAttributeValueTypeEnum(ChoicesEnum, LowerStrEnum):
 
 # 每个属性的值类型
 GROUP_SAAS_ATTRIBUTE_VALUE_TYPE_MAP = {
-    GroupSaaSAttributeEnum.READONLY.value: GroupAttributeValueTypeEnum.Boolean.value
+    GroupSaaSAttributeEnum.SOURCE_TYPE.value: GroupAttributeValueType.String.value,
+    GroupSaaSAttributeEnum.SOURCE_FROM_ROLE.value: GroupAttributeValueType.Boolean.value,
 }
 # 每个属性的默认值
-GROUP_SAAS_ATTRIBUTE_DEFAULT_VALUE_MAP = {GroupSaaSAttributeEnum.READONLY.value: False}
+GROUP_SAAS_ATTRIBUTE_DEFAULT_VALUE_MAP = {
+    GroupSaaSAttributeEnum.SOURCE_TYPE.value: "",
+    GroupSaaSAttributeEnum.SOURCE_FROM_ROLE.value: False,
+}
 
 
 # ---------------------------------------------------------------------------------------------- #
@@ -98,10 +108,17 @@ class RoleType(ChoicesEnum, LowerStrEnum):
     STAFF = auto()
     SUPER_MANAGER = auto()
     SYSTEM_MANAGER = auto()
-    RATING_MANAGER = auto()
+    GRADE_MANAGER: enum = "rating_manager"  # NOTE: 不能直接改成auto, 历史原因以前分级管理员是rating_manager, 数据已入库
+    SUBSET_MANAGER = auto()
 
     _choices_labels = skip(
-        ((STAFF, "个人用户"), (SUPER_MANAGER, "超级管理员"), (SYSTEM_MANAGER, "系统管理员"), (RATING_MANAGER, "分级管理员"))
+        (
+            (STAFF, "个人用户"),
+            (SUPER_MANAGER, "超级管理员"),
+            (SYSTEM_MANAGER, "系统管理员"),
+            (GRADE_MANAGER, "分级管理员"),
+            (SUBSET_MANAGER, "子集管理员"),
+        )
     )
 
 
@@ -127,7 +144,7 @@ class RoleScopeSubjectType(ChoicesEnum, LowerStrEnum):
     _choices_labels = skip(((USER, "用户"), (DEPARTMENT, "部门"), (ANY, "任意")))
 
 
-class RoleSourceTypeEnum(ChoicesEnum, LowerStrEnum):
+class RoleSourceType(ChoicesEnum, LowerStrEnum):
     """角色创建来源"""
 
     API = auto()
@@ -140,11 +157,10 @@ class RoleSourceTypeEnum(ChoicesEnum, LowerStrEnum):
 class PermissionCodeEnum(ChoicesEnum, LowerStrEnum):
     MANAGE_GROUP = auto()
     MANAGE_TEMPLATE = auto()
-    MANAGE_RATING_MANAGER_MEMBER = auto()
     MANAGE_SUPER_MANAGER_MEMBER = auto()
     MANAGE_SYSTEM_MANAGER_MEMBER = auto()
-    CREATE_RATING_MANAGER = auto()
-    MANAGE_RATING_MANAGER = auto()
+    CREATE_GRADE_MANAGER: enum = "create_rating_manager"  # NOTE: 不能直接改成auto, 历史原因以前分级管理员是rating_manager, 数据已入库
+    MANAGE_GRADE_MANAGER: enum = "manage_rating_manager"
     TRANSFER_GROUP = auto()
     AUDIT = auto()
     CONFIGURE_APPROVAL_PROCESS = auto()
@@ -156,6 +172,9 @@ class PermissionCodeEnum(ChoicesEnum, LowerStrEnum):
     VIEW_AUTHORIZED_SUBJECTS = auto()
     MANAGE_API_WHITE_LIST = auto()
     MANAGE_LONG_TASK = auto()
+    CREATE_SUBSET_MANAGER = auto()
+    MANAGE_SUBSET_MANAGER = auto()
+    TRANSFER_GROUP_BY_GRADE_MANAGER = auto()
 
 
 # ---------------------------------------------------------------------------------------------- #
@@ -172,14 +191,14 @@ class TemplatePreUpdateStatus(ChoicesEnum, LowerStrEnum):
 # ---------------------------------------------------------------------------------------------- #
 # Application & Approval Constants
 # ---------------------------------------------------------------------------------------------- #
-class ApplicationTypeEnum(ChoicesEnum, LowerStrEnum):
+class ApplicationType(ChoicesEnum, LowerStrEnum):
     GRANT_ACTION = auto()
     RENEW_ACTION = auto()
     JOIN_GROUP = auto()
     RENEW_GROUP = auto()
-    JOIN_RATING_MANAGER = auto()
-    CREATE_RATING_MANAGER = auto()
-    UPDATE_RATING_MANAGER = auto()
+    JOIN_GRADE_MANAGER: enum = "join_rating_manager"  # NOTE: 不能直接改成auto, 历史原因以前分级管理员是rating_manager, 数据已入库
+    CREATE_GRADE_MANAGER: enum = "create_rating_manager"
+    UPDATE_GRADE_MANAGER: enum = "update_rating_manager"
     GRANT_TEMPORARY_ACTION = auto()
 
     _choices_labels = skip(
@@ -188,43 +207,43 @@ class ApplicationTypeEnum(ChoicesEnum, LowerStrEnum):
             (RENEW_ACTION, "自定义权限续期"),
             (JOIN_GROUP, "加入用户组"),
             (RENEW_GROUP, "用户组续期"),
-            (JOIN_RATING_MANAGER, "加入分级管理员"),
-            (CREATE_RATING_MANAGER, "创建分级管理员"),
-            (UPDATE_RATING_MANAGER, "修改分级管理员"),
+            (JOIN_GRADE_MANAGER, "加入管理空间"),
+            (CREATE_GRADE_MANAGER, "创建管理空间"),
+            (UPDATE_GRADE_MANAGER, "修改管理空间"),
             (GRANT_TEMPORARY_ACTION, "临时权限申请"),
         )
     )
 
 
 # IAM支持的审批流程节点类型
-class ProcessorNodeTypeEnum(LowerStrEnum):
+class ProcessorNodeType(LowerStrEnum):
     SUPER_MANAGER = auto()
     SYSTEM_MANAGER = auto()
-    RATING_MANAGER = auto()
+    GRADE_MANAGER: enum = "rating_manager"
     INSTANCE_APPROVER = auto()
 
 
 # 每一种申请单据，对应的审批流程节点可以支持的ROLE
 APPLICATION_SUPPORT_PROCESSOR_ROLE_MAP = {
-    ApplicationTypeEnum.GRANT_ACTION.value: (
-        ProcessorNodeTypeEnum.SUPER_MANAGER.value,
-        ProcessorNodeTypeEnum.SYSTEM_MANAGER.value,
-        ProcessorNodeTypeEnum.INSTANCE_APPROVER.value,
+    ApplicationType.GRANT_ACTION.value: (
+        ProcessorNodeType.SUPER_MANAGER.value,
+        ProcessorNodeType.SYSTEM_MANAGER.value,
+        ProcessorNodeType.INSTANCE_APPROVER.value,
     ),
-    ApplicationTypeEnum.JOIN_GROUP.value: (
-        ProcessorNodeTypeEnum.SUPER_MANAGER.value,
-        ProcessorNodeTypeEnum.RATING_MANAGER.value,
+    ApplicationType.JOIN_GROUP.value: (
+        ProcessorNodeType.SUPER_MANAGER.value,
+        ProcessorNodeType.GRADE_MANAGER.value,
     ),
-    ApplicationTypeEnum.JOIN_RATING_MANAGER.value: (
-        ProcessorNodeTypeEnum.SUPER_MANAGER.value,
-        ProcessorNodeTypeEnum.RATING_MANAGER.value,
+    ApplicationType.JOIN_GRADE_MANAGER.value: (
+        ProcessorNodeType.SUPER_MANAGER.value,
+        ProcessorNodeType.GRADE_MANAGER.value,
     ),
-    ApplicationTypeEnum.CREATE_RATING_MANAGER.value: (ProcessorNodeTypeEnum.SUPER_MANAGER.value,),
-    ApplicationTypeEnum.UPDATE_RATING_MANAGER.value: (ProcessorNodeTypeEnum.SUPER_MANAGER.value,),
+    ApplicationType.CREATE_GRADE_MANAGER.value: (ProcessorNodeType.SUPER_MANAGER.value,),
+    ApplicationType.UPDATE_GRADE_MANAGER.value: (ProcessorNodeType.SUPER_MANAGER.value,),
 }
 
 
-class ProcessorSourceEnum(ChoicesEnum, StrEnum):
+class ProcessorSource(ChoicesEnum, StrEnum):
     """审批流程节点里的处理者来源"""
 
     IAM = auto()
@@ -233,18 +252,18 @@ class ProcessorSourceEnum(ChoicesEnum, StrEnum):
 
 # 对于IAM来源的处理者，IAM有固定支持的处理者类型
 IAM_SUPPORT_PROCESSOR_TYPES = [
-    ProcessorNodeTypeEnum.SUPER_MANAGER.value,
-    ProcessorNodeTypeEnum.SYSTEM_MANAGER.value,
-    ProcessorNodeTypeEnum.RATING_MANAGER.value,
-    ProcessorNodeTypeEnum.INSTANCE_APPROVER.value,
+    ProcessorNodeType.SUPER_MANAGER.value,
+    ProcessorNodeType.SYSTEM_MANAGER.value,
+    ProcessorNodeType.GRADE_MANAGER.value,
+    ProcessorNodeType.INSTANCE_APPROVER.value,
 ]
 
 
 # 支持配置默认流程的申请审批类型
 DEFAULT_PROCESS_SUPPORT_APPLICATION_TYPES = [
-    ApplicationTypeEnum.GRANT_ACTION.value,
-    ApplicationTypeEnum.JOIN_GROUP.value,
-    ApplicationTypeEnum.CREATE_RATING_MANAGER.value,
+    ApplicationType.GRANT_ACTION.value,
+    ApplicationType.JOIN_GROUP.value,
+    ApplicationType.CREATE_GRADE_MANAGER.value,
 ]
 
 
@@ -259,19 +278,19 @@ class ApplicationStatus(ChoicesEnum, LowerStrEnum):
     _choices_labels = skip(((PENDING, _("审批中")), (PASS, _("通过")), (REJECT, _("拒绝")), (CANCELLED, _("已取消"))))
 
 
-DEAULT_RESOURCE_GROUP_ID = "00000000000000000000000000000000"
+DEFAULT_RESOURCE_GROUP_ID = "00000000000000000000000000000000"
 
 
 # ---------------------------------------------------------------------------------------------- #
 # Policy environment
 # ---------------------------------------------------------------------------------------------- #
-class PolicyEnvTypeEnum(ChoicesEnum, LowerStrEnum):
+class PolicyEnvType(ChoicesEnum, LowerStrEnum):
     PERIOD_DAILY = auto()
 
     _choices_labels = skip(((PERIOD_DAILY, _("时间")),))
 
 
-class PolicyEnvConditionTypeEnum(ChoicesEnum, LowerStrEnum):
+class PolicyEnvConditionType(ChoicesEnum, LowerStrEnum):
     TZ = auto()
     HMS = auto()
     WEEKDAY = auto()
@@ -310,12 +329,12 @@ class WeekDayEnum(ChoicesEnum):
 # ---------------------------------------------------------------------------------------------- #
 # Model Change Event
 # ---------------------------------------------------------------------------------------------- #
-class ModelChangeEventTypeEnum(ChoicesEnum, LowerStrEnum):
+class ModelChangeEventType(ChoicesEnum, LowerStrEnum):
     ActionPolicyDeleted = "action_policy_deleted"
     ActionDeleted = "action_deleted"
 
 
-class ModelChangeEventStatusEnum(ChoicesEnum, LowerStrEnum):
+class ModelChangeEventStatus(ChoicesEnum, LowerStrEnum):
     Pending = auto()
     Finished = auto()
 
@@ -323,7 +342,7 @@ class ModelChangeEventStatusEnum(ChoicesEnum, LowerStrEnum):
 # ---------------------------------------------------------------------------------------------- #
 # UniversalPolicy
 # ---------------------------------------------------------------------------------------------- #
-class AuthTypeEnum(ChoicesEnum, LowerStrEnum):
+class AuthType(ChoicesEnum, LowerStrEnum):
     RBAC = auto()
     ABAC = auto()
     ALL = auto()

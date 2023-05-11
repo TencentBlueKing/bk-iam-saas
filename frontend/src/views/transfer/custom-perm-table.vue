@@ -34,7 +34,7 @@
                     </template>
                 </template>
             </bk-table-column>
-            <bk-table-column prop="expired_dis" :label="$t(`m.common['到期时间']`)"></bk-table-column>
+            <bk-table-column prop="expired_dis" :label="$t(`m.common['有效期']`)"></bk-table-column>
         </bk-table>
     </div>
 </template>

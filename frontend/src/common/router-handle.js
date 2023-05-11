@@ -22,12 +22,12 @@
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
-*/
+ */
 
 /**
  * 获取不同身份的router差异
  *
- * @param {String} payload 身份类型(staff: 普通用户，super_manager: 超级用户，system_manager: 系统管理员，rating_manager: 分级管理员)
+ * @param {String} payload 身份类型(staff: 普通用户，super_manager: 超级用户，system_manager: 系统管理员，rating_manager: 管理空间)
  *
  * @return {Array}
  */
@@ -48,7 +48,12 @@ export const getRouterDiff = (payload) => {
             'permTemplateEdit',
             'permTemplateDiff',
             'addGroupPerm',
-            'resourcePermiss'
+            'resourcePermiss',
+            'firstManageSpace',
+            'ratingManager',
+            'secondaryManageSpace',
+            'authorBoundary',
+            'secondaryManageSpaceCreate'
         ];
     }
     if (payload === 'super_manager') {
@@ -77,7 +82,14 @@ export const getRouterDiff = (payload) => {
             'systemAccessOptimize',
             'systemAccessComplete',
             'resourcePermiss',
-            'userGroupDetail'
+            'userGroupDetail',
+            'firstManageSpace',
+            'secondaryManageSpace',
+            'authorBoundary',
+            'myManageSpace',
+            'myManageSpaceCreate',
+            'permTransfer',
+            'myManageSpaceSubDetail'
         ];
     }
     if (payload === 'system_manager') {
@@ -104,7 +116,11 @@ export const getRouterDiff = (payload) => {
             'systemAccessRegistry',
             'systemAccessOptimize',
             'systemAccessComplete',
-            'resourcePermiss'
+            'resourcePermiss',
+            'firstManageSpace',
+            'secondaryManageSpace',
+            'authorBoundary',
+            'myManageSpace'
         ];
     }
     if (payload === 'rating_manager') {
@@ -132,7 +148,43 @@ export const getRouterDiff = (payload) => {
             'systemAccessRegistry',
             'systemAccessOptimize',
             'systemAccessComplete',
-            'resourcePermiss'
+            'myManageSpace',
+            'resourcePermiss',
+            'firstManageSpace'
+        ];
+    }
+    if (payload === 'subset_manager') {
+        return [
+            'applyCustomPerm',
+            'applyProvisionPerm',
+            'applyJoinUserGroup',
+            'apply',
+            'myPerm',
+            'templatePermDetail',
+            'groupPermDetail',
+            'orgPermDetail',
+            'ratingManager',
+            'gradingAdminCreate',
+            'gradingAdminDetail',
+            'user',
+            'gradingAdminUpdateTemplate',
+            'administrator',
+            'approval',
+            'permRenewal',
+            'audit',
+            'systemAccess',
+            'systemAccessCreate',
+            'systemAccessAccess',
+            'systemAccessRegistry',
+            'systemAccessOptimize',
+            'systemAccessComplete',
+            'resourcePermiss',
+            'secondaryManageSpace',
+            'secondaryManageSpaceCreate',
+            'secondaryManageSpaceDetail',
+            'firstManageSpace',
+            'myManageSpace',
+            'permTemplate'
         ];
     }
     // payload其它取值默认返回全部菜单
@@ -172,7 +224,13 @@ export const getRouterDiff = (payload) => {
         'audit',
         'permTemplateEdit',
         'permTemplateDiff',
-        'addGroupPerm'
+        'addGroupPerm',
+        'authorBoundary',
+        'authorBoundaryEditFirstLevel',
+        'authorBoundaryEditSecondLevel',
+        'secondaryManageSpace',
+        'myManageSpace',
+        'MyManageSpaceCreate'
     ];
 };
 
@@ -194,7 +252,11 @@ export const getNavRouterDiff = (navIndex) => {
             'permTemplateEdit',
             'permTemplateDiff',
             'addGroupPerm',
-            'resourcePermiss'
+            'resourcePermiss',
+            'firstManageSpace',
+            'ratingManager',
+            'authorBoundary',
+            'secondaryManageSpace'
         ];
     }
 
@@ -235,7 +297,13 @@ export const getNavRouterDiff = (navIndex) => {
             'permTemplateEdit',
             'permTemplateDiff',
             'addGroupPerm',
-            'resourcePermiss'
+            'resourcePermiss',
+            'firstManageSpace',
+            'authorBoundary',
+            'secondaryManageSpace',
+            'myManageSpace',
+            'secondaryManageSpaceCreate',
+            'secondaryManageSpaceDetail'
         ];
     }
 
@@ -265,7 +333,12 @@ export const getNavRouterDiff = (navIndex) => {
             'permTemplate',
             'permTemplateDetail',
             'permTemplateCreate',
-            'approvalProcess'
+            'approvalProcess',
+            'authorBoundary',
+            'secondaryManageSpace',
+            'myManageSpace',
+            'secondaryManageSpaceCreate',
+            'secondaryManageSpaceDetail'
         ];
     }
 };

@@ -1,16 +1,39 @@
 <template>
-    <div :class="['iam-template-item', extCls, { 'is-not-expanded': !isExpanded }]">
-        <div class="header" @click="handleExpanded" @mousemove="isShowEditFill" @mouseleave="cancelShowEditFill">
+    <div :class="
+        [
+            'iam-template-item',
+            extCls,
+            { 'is-not-expanded': !isExpanded },
+            { 'external-iam-template-item': externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle }
+        ]"
+    >
+        <div
+            :class="[
+                'header',
+                { 'external-header-lang': externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle
+                    && !['zh-cn'].includes(language) }
+            ]"
+            @click="handleExpanded"
+            @mousemove="isShowEditFill"
+            @mouseleave="cancelShowEditFill">
             <section>
-                <Icon class="expanded-icon" :type="isExpanded ? 'down-angle' : 'right-angle'" />
-                <span>
+                <Icon
+                    v-if="!externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle"
+                    class="expanded-icon"
+                    :type="isExpanded ? 'down-angle' : 'right-angle'"
+                />
+                <span v-if="!externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle">
                     {{ title }}
                     <template v-if="count > 0">
                         ({{ count }})
                     </template>
                 </span>
                 <template v-if="(isExpanded || ShowEditFill) && !isUser">
-                    <section class="edit-action" @click.stop="handleEdit">
+                    <section
+                        class="edit-action"
+                        @click.stop="handleEdit"
+                        v-if="!externalEdit"
+                    >
                         <Icon type="edit-fill" v-if="isStaff || isPermTemplateDetail || isDetail ? false : true" />
                     </section>
                 </template>
@@ -20,9 +43,14 @@
                     @confirm="handleDelete"
                     v-if="isStaff || isPermTemplateDetail || isUser || isDetail ? false : true">
                     <template v-if="isExpanded || ShowEditFill && !isUser">
-                        <section class="delete-action" @click.stop="toDeletePolicyCount">
+                        <template v-if="!externalDelete">
+                            <section class="delete-action" @click.stop="toDeletePolicyCount">
+                                <Icon type="delete-line" v-if="isStaff || isPermTemplateDetail ? false : true" />
+                            </section>
+                        </template>
+                        <!-- <section class="delete-action" @click.stop="toDeletePolicyCount">
                             <Icon type="delete-line" v-if="isStaff || isPermTemplateDetail ? false : true" />
-                        </section>
+                        </section> -->
                     </template>
                 </bk-popconfirm>
             </section>
@@ -52,6 +80,7 @@
 </template>
 <script>
     import store from '@/store';
+    import { mapGetters } from 'vuex';
     export default {
         name: '',
         props: {
@@ -83,6 +112,14 @@
             mode: {
                 type: String,
                 default: 'edit'
+            },
+            externalEdit: {
+                type: Boolean,
+                default: false
+            },
+            externalDelete: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
@@ -93,10 +130,13 @@
                 role: '',
                 isShowDeleteDialog: false,
                 showIcon: false,
-                footerPosition: 'center'
+                footerPosition: 'center',
+                language: window.CUR_LANGUAGE,
+                initDistance: 40
             };
         },
         computed: {
+            ...mapGetters(['externalSystemsLayout']),
             isDetail () {
                 return this.mode === 'detail';
             },
@@ -121,7 +161,19 @@
                 immediate: true
             }
         },
+        mounted () {
+            this.fetchDynamicStyle();
+        },
         methods: {
+            fetchDynamicStyle () {
+                if (this.externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle) {
+                    const len = String(this.count).length;
+                    const langLen = !['zh-cn'].includes(this.language) ? 80 : this.initDistance;
+                    const distance = len > 2 ? (len - 1) * this.initDistance : langLen;
+                    const root = document.querySelector(':root');
+                    root.style.setProperty('--translate-icon', `translate(${distance}px, -40px)`);
+                }
+            },
             handleExpanded () {
                 this.isExpanded = !this.isExpanded;
                 this.$emit('update:expanded', true);
@@ -144,13 +196,15 @@
                 this.isEditMode = false;
                 this.$emit('on-cancel');
             },
+
             toDeletePolicyCount () {
                 this.isExpanded = true;
                 this.isShowDeleteDialog = true;
                 this.$emit('on-expanded', this.isExpanded);
             },
-            async handleDelete () {
-                await this.$emit('on-delete');
+
+            handleDelete () {
+                this.$emit('on-delete');
             },
 
             isShowEditFill () {
@@ -164,6 +218,9 @@
     };
 </script>
 <style lang="postcss" scoped>
+    :root {
+        --translate-icon: translate(40px, -40px);
+    }
     .iam-template-item {
         &.is-not-expanded:hover {
             background: #f0f1f5;
@@ -188,7 +245,7 @@
             }
         }
         .edit-action,
-        .delete-action{
+        .delete-action {
             display: inline-block;
             width: 40px;
             text-align: center;
@@ -202,6 +259,33 @@
             position: relative;
             .slot-content {
                 padding: 0 30px 0 30px;
+            }
+        }
+
+        &.external-iam-template-item {
+            .header {
+                height: 0;
+                .edit-action,
+                .delete-action {
+                    display: inline-block;
+                    width: 40px;
+                    text-align: center;
+                    transform: var(--translate-icon);
+                    &:hover {
+                        i {
+                            color: #3a84ff;
+                        }
+                    }
+                }
+                &.external-header-lang {
+                    .edit-action,
+                    .delete-action {
+                        transform: var(--translate-icon);
+                    }
+                }
+            }
+            .slot-content {
+                padding: 0;
             }
         }
     }

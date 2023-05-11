@@ -79,7 +79,7 @@ class AccessSystemApplicationSLZ(serializers.Serializer):
             try:
                 self._convert_system(data)
                 for action in data.get("actions", []):
-                    for rrt in action.get("related_resource_types", []):
+                    for rrt in action.get("related_resource_types", None) or []:
                         self._convert_system(rrt)
                         for rrt_instance in rrt.get("instances", []):
                             for node in rrt_instance:

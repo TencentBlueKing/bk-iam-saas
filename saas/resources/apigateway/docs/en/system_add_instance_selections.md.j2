@@ -1,0 +1,62 @@
+### Add instanceSelection
+
+limitation:
+- A system can only create up to 50 instanceSelections
+
+----------
+{% include '_api_v1_model_instance_selections.md.j2' %}
+----------
+
+#### Parameters
+
+| field | type | required | location | description |
+| :--- | :---| :--- |:--- |:--- |
+| system_id | string | yes | path | system_id |
+
+#### Request
+
+```json
+[
+    {
+		"id": "free_host",
+		"name": "free host",
+		"name_en": "free host",
+		"resource_type_chain": [{
+			"system_id": "bk_cmdb",
+			"id": "host"
+		}]
+    },
+	{
+		"id": "biz_topology",
+		"name": "Business Name topology",
+		"name_en": "biz topology",
+		"resource_type_chain": [{
+				"system_id": "bk_cmdb",
+				"id": "biz"
+			},
+			{
+				"system_id": "bk_cmdb",
+				"id": "set"
+			},
+			{
+				"system_id": "bk_cmdb",
+				"id": "module"
+			},
+			{
+				"system_id": "bk_cmdb",
+				"id": "host"
+			}
+		]
+	}
+]
+```
+
+#### Response
+
+```json
+{
+    "code": 0,
+    "message": "",
+    "data": {}
+}
+```

@@ -5,7 +5,7 @@ import json
 from django.core.paginator import Paginator
 from django.db import migrations
 
-from backend.service.constants import AuthTypeEnum
+from backend.service.constants import AuthType
 from backend.util.json import json_dumps
 
 
@@ -30,7 +30,7 @@ def migrate_template_auth_types(apps, schema_editor):
                 else:
                     continue
 
-                auth_types[action_id] = AuthTypeEnum.ABAC.value
+                auth_types[action_id] = AuthType.ABAC.value
 
             auth._auth_types = json_dumps(auth_types)
             auth.save(update_fields=["_auth_types"])

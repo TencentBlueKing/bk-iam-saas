@@ -1,0 +1,50 @@
+### Get details of a policy
+
+Get policy details based on policy ID
+
+Note:
+- If the record corresponding to `policy_id` does not exist (wrong ID or has been deleted), it will return `code=1901404(NotFoundError)`.
+- If the policy ID is from another system, it will return `code=1901403(ForbiddenError)`.
+- The return result `expired_at` is the expiration time, you need to determine whether it is expired or not (it may not be expired at the moment of checking, but it may be expired when you pass it to use)
+
+#### Parameters
+
+| field | type | required | location | description |
+| :--- | :--- | :--- |:--- |:--- |
+| system_id | string | yes | path | system ID |
+| policy_id | integer | yes | path | policy_id |
+
+#### Request
+
+#### Response
+
+```json
+{
+    "code": 0,
+    "message": "ok",
+    "data": {
+        "version": "1",
+        "id": 2,
+        "system": "bk_cmdb",
+        "subject": {
+            "type": "user",
+            "id": "admin",
+            "name": "admin"
+        },
+        "action": {
+            "id": "view_host"
+        },
+        "expression": {
+            "content": [
+                {
+                    "field": "host.id",
+                    "op": "any",
+                    "value": []
+                }
+            ],
+            "op": "OR"
+        },
+        "expired_at": 4102444800
+    }
+}
+```

@@ -21,3 +21,12 @@ class AdminSystemViewSet(SystemViewSet):
     admin_api_permission = {"list": AdminAPIEnum.SYSTEM_LIST.value}
 
     pagination_class = None  # 去掉swagger中的limit offset参数
+
+    translate_exempt = True
+
+    def list(self, request, *args, **kwargs):
+        request.query_params._mutable = True
+        request.query_params["all"] = True
+        request.query_params["hidden"] = False
+
+        return super().list(request, *args, **kwargs)
