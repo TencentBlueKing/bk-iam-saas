@@ -7,7 +7,7 @@
                 {{ curType === 'group' ? $t(`m.myApply['申请加入']`) : $t(`m.myApply['申请']`) }}
                 <div class="sub-item">
                     <span v-for="item in data" :key="item.id">
-                        【{{ item.name }}】
+                        {{$t(`m.common['【']`)}}{{ item.name }}{{$t(`m.common['】']`)}}
                     </span>
                 </div>
                 {{ $t(`m.common['共']`) }}

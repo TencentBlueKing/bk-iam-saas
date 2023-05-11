@@ -709,7 +709,8 @@ export const m = {
         '编辑中': 'Edit',
         '个模板': 'templates',
         '删除权限模版不会影响已授权用户，可以放心删除。': 'Deleting the permission template will not affect authorized users and can be safely deleted.',
-        '该模板无法选择的原因是：管理空间缩小了授权范围，但是没有同步删除模板里的操作，如需选择请重新编辑模板或者创建新的模板。': 'The reason why this template cannot be selected is that the management space reduces the scope of authorization, but does not synchronously delete the operations in the template. If you need to select, please edit the template again or create a new template.'
+        '该模板无法选择的原因是：管理空间缩小了授权范围，但是没有同步删除模板里的操作，如需选择请重新编辑模板或者创建新的模板。': 'The reason why this template cannot be selected is that the management space reduces the scope of authorization, but does not synchronously delete the operations in the template. If you need to select, please edit the template again or create a new template.',
+        '未分组操作': 'Ungrouped operations'
     },
     permTemplateDetail: {
         '模板名称': 'Template name:',
