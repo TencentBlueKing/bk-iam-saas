@@ -125,5 +125,7 @@ export const NEED_CONFIRM_DIALOG_ROUTER = [
     'createUserGroup',
     'gradingAdminCreate',
     'gradingAdminEdit',
-    'myManageSpaceCreate'
+    'myManageSpaceCreate',
+    'authorBoundaryEditFirstLevel',
+    'secondaryManageSpaceCreate'
 ];
