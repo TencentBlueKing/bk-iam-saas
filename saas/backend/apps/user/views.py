@@ -14,8 +14,9 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from backend.account.serializers import AccountRoleSLZ
+from backend.apps.group.audit import GroupMemberDeleteAuditProvider
+from backend.apps.group.models import Group
 from backend.apps.role.serializers import RoleCommonActionSLZ
-from backend.apps.subject.audit import SubjectGroupDeleteAuditProvider
 from backend.apps.subject.serializers import SubjectGroupSLZ, UserRelationSLZ
 from backend.apps.user.models import UserProfile
 from backend.audit.audit import audit_context_setter, view_audit_decorator
@@ -24,10 +25,10 @@ from backend.biz.role import RoleBiz
 from backend.common.pagination import CustomPageNumberPagination
 from backend.common.serializers import SystemQuerySLZ
 from backend.common.time import get_soon_expire_ts
-from backend.service.constants import SubjectRelationType, SubjectType
+from backend.service.constants import SubjectRelationType
 from backend.service.models import Subject
 
-from .serializers import GroupSLZ, QueryRoleSLZ, UserNewbieSLZ, UserNewbieUpdateSLZ
+from .serializers import GroupSLZ, QueryGroupSLZ, QueryRoleSLZ, UserNewbieSLZ, UserNewbieUpdateSLZ
 
 
 class UserGroupViewSet(GenericViewSet):
@@ -38,13 +39,25 @@ class UserGroupViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="我的权限-用户组列表",
+        query_serializer=QueryGroupSLZ(label="query_group"),
         responses={status.HTTP_200_OK: SubjectGroupSLZ(label="用户组", many=True)},
         tags=["user"],
     )
     def list(self, request, *args, **kwargs):
-        subject = Subject(type=SubjectType.USER.value, id=request.user.username)
+        slz = QueryGroupSLZ(data=request.query_params)
+        slz.is_valid(raise_exception=True)
+        system_id = slz.validated_data["system_id"]
+
+        subject = Subject.from_username(request.user.username)
         limit, offset = CustomPageNumberPagination().get_limit_offset_pair(request)
-        count, relations = self.biz.list_paging_subject_group(subject, limit=limit, offset=offset)
+
+        if system_id:
+            count, relations = self.biz.list_paging_system_subject_group(
+                system_id, subject, limit=limit, offset=offset
+            )
+        else:
+            count, relations = self.biz.list_paging_subject_group(subject, limit=limit, offset=offset)
+
         slz = GroupSLZ(instance=relations, many=True)
         return Response({"count": count, "results": slz.data})
 
@@ -54,9 +67,9 @@ class UserGroupViewSet(GenericViewSet):
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["user"],
     )
-    @view_audit_decorator(SubjectGroupDeleteAuditProvider)
+    @view_audit_decorator(GroupMemberDeleteAuditProvider)
     def destroy(self, request, *args, **kwargs):
-        subject = Subject(type=SubjectType.USER.value, id=request.user.username)
+        subject = Subject.from_username(request.user.username)
 
         serializer = UserRelationSLZ(data=request.query_params)
         serializer.is_valid(raise_exception=True)
@@ -67,7 +80,8 @@ class UserGroupViewSet(GenericViewSet):
             self.biz.remove_members(data["id"], [subject])
 
             # 写入审计上下文
-            audit_context_setter(subject=subject, group=Subject.parse_obj(data))
+            group = Group.objects.filter(id=int(data["id"])).first()
+            audit_context_setter(group=group, members=[subject.dict()])
 
         return Response({})
 
@@ -84,7 +98,7 @@ class UserDepartmentGroupViewSet(GenericViewSet):
         tags=["user"],
     )
     def list(self, request, *args, **kwargs):
-        subject = Subject(type=SubjectType.USER.value, id=request.user.username)
+        subject = Subject.from_username(request.user.username)
         # 目前只能查询所有的, 暂时不支持分页, 如果有性能问题, 需要考虑优化
         relations = self.biz.list_all_user_department_group(subject)
         slz = GroupSLZ(instance=relations, many=True)
@@ -100,16 +114,27 @@ class UserGroupRenewViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="用户即将过期用户组列表",
+        query_serializer=QueryGroupSLZ(label="query_group"),
         responses={status.HTTP_200_OK: SubjectGroupSLZ(label="用户组", many=True)},
         tags=["user"],
     )
     def list(self, request, *args, **kwargs):
-        subject = Subject(type=SubjectType.USER.value, id=request.user.username)
+        slz = QueryGroupSLZ(data=request.query_params)
+        slz.is_valid(raise_exception=True)
+        system_id = slz.validated_data["system_id"]
+
+        subject = Subject.from_username(request.user.username)
         limit, offset = CustomPageNumberPagination().get_limit_offset_pair(request)
         expired_at = get_soon_expire_ts()
-        count, relations = self.group_biz.list_paging_subject_group_before_expired_at(
-            subject, expired_at=expired_at, limit=limit, offset=offset
-        )
+
+        if system_id:
+            count, relations = self.group_biz.list_paging_system_subject_group_before_expired_at(
+                system_id, subject, expired_at=expired_at, limit=limit, offset=offset
+            )
+        else:
+            count, relations = self.group_biz.list_paging_subject_group_before_expired_at(
+                subject, expired_at=expired_at, limit=limit, offset=offset
+            )
         return Response({"count": count, "results": [one.dict() for one in relations]})
 
 
@@ -187,5 +212,5 @@ class RoleViewSet(GenericViewSet):
         slz.is_valid(raise_exception=True)
         with_perm = slz.validated_data["with_perm"]
 
-        user_roles = self.biz.list_user_role(request.user.username, with_perm)
+        user_roles = self.biz.list_user_role(request.user.username, with_perm, with_hidden=False)
         return Response([one.dict() for one in user_roles])

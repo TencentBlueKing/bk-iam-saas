@@ -21,7 +21,6 @@ from backend.apps.role.models import Role, RoleUser
 from backend.biz.group import GroupBiz, SubjectGroupBean
 from backend.biz.policy import PolicyQueryBiz
 from backend.biz.system import SystemBiz
-from backend.service.constants import SubjectType
 from backend.service.models.subject import Subject
 
 
@@ -58,7 +57,7 @@ class GroupInfoProcessor(BaseHandoverDataProcessor):
 
     @cached_property
     def subject_groups(self) -> List[SubjectGroupBean]:
-        subject = Subject(type=SubjectType.USER.value, id=self.handover_from)
+        subject = Subject.from_username(self.handover_from)
         # NOTE: 可能会有性能问题, 这里需要查询用户的所有组列表
         return self.biz.list_all_subject_group(subject)
 
@@ -76,7 +75,7 @@ class GustomPolicyProcessor(BaseHandoverDataProcessor):
         1. 查询用户的每个系统的自定义权限
         2. 校验id是否在自定义权限中
         """
-        subject = Subject(type=SubjectType.USER.value, id=self.handover_from)
+        subject = Subject.from_username(self.handover_from)
         for system_policy in self.custom_policies:
             policies = self.biz.list_by_subject(system_policy["system_id"], subject)
             subject_policy_id_set = {p.policy_id for p in policies if not p.is_expired()}

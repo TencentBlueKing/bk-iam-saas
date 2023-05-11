@@ -12,15 +12,15 @@ from collections import defaultdict
 from typing import Any, Dict, List, Type
 
 from backend.common.error_codes import error_codes
-from backend.service.constants import ANY_ID, PolicyEnvConditionTypeEnum
+from backend.service.constants import ANY_ID, PolicyEnvConditionType
 from backend.util.json import json_dumps
 
 from .environment import BaseEnvCondition, HMSEnvCondition, TZEnvCondition, WeekdayEnvCondition
 
 ENV_TYPE_CONDITION_MAP: Dict[str, Type[BaseEnvCondition]] = {
-    PolicyEnvConditionTypeEnum.TZ.value: TZEnvCondition,
-    PolicyEnvConditionTypeEnum.HMS.value: HMSEnvCondition,
-    PolicyEnvConditionTypeEnum.WEEKDAY.value: WeekdayEnvCondition,
+    PolicyEnvConditionType.TZ.value: TZEnvCondition,
+    PolicyEnvConditionType.HMS.value: HMSEnvCondition,
+    PolicyEnvConditionType.WEEKDAY.value: WeekdayEnvCondition,
 }
 
 
@@ -217,6 +217,8 @@ class ResourceExpressionTranslator:
                 if len(p) == 1:
                     ids.append(p[0]["id"])
                 else:
+                    valid_path_without_last_node(p[:-1])
+
                     path = translate_path(p[:-1])
 
                     # 如果叶子节点是任意, 只是用路径StringPrefix
@@ -227,6 +229,8 @@ class ResourceExpressionTranslator:
                     # 具有相同路径前缀的叶子节点, 聚合到一个AND的条件中
                     path_ids[path].append(p[-1]["id"])
             else:
+                valid_path_without_last_node(p)
+
                 paths.append(translate_path(p))
 
         if ids:
@@ -264,3 +268,21 @@ def translate_path(path_nodes: List[Dict]) -> str:
     for n in path_nodes:
         path.append("{},{}/".format(n["type"], n["id"]))
     return "".join(path)
+
+
+def valid_path_without_last_node(path_nodes: List[Dict]):
+    """
+    校验路径数据, 必须排除路径最后的叶子节点 (叶子节点是可以为 * 的)
+
+    1. 路径的中间节点不能为 *
+    2. 路径中不能存在重复的节点
+    """
+    node_set = set()
+
+    for n in path_nodes:
+        # 校验节点数据不能重复
+        ns = "{},{}".format(n["type"], n["id"])
+        if ns in node_set:
+            raise error_codes.INVALID_ARGS.format("path: {} nodes must not repeat".format(translate_path(path_nodes)))
+
+        node_set.add(ns)

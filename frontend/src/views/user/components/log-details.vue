@@ -70,7 +70,6 @@
                     readOnly: true
                 });
                 setTimeout(() => {
-                    console.log(this.value);
                     this.editor.setValue(this.value);
                 }, 300);
                 this.editor.setSize(this.width, this.height);

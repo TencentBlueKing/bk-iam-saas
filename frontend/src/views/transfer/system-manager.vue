@@ -44,13 +44,22 @@
         </template>
         <template v-if="!isLoading && isEmpty">
             <div class="empty-wrapper">
-                <iam-svg />
-                <p class="text">{{ $t(`m.common['暂无数据']`) }}</p>
+                <!-- <iam-svg />
+                <p class="text">{{ $t(`m.common['暂无数据']`) }}</p> -->
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-refresh="handleEmptyRefresh"
+                />
             </div>
         </template>
     </div>
 </template>
 <script>
+    import { formatCodeData } from '@/common/util';
+
     export default {
         name: '',
         components: {
@@ -60,10 +69,16 @@
                 isEmpty: false,
                 isLoading: false,
                 systemListRender: [],
-                systemListAll: [], // 分级管理员权限交接
+                systemListAll: [], // 管理空间权限交接
                 systemExpanded: true,
                 isSelectAllChecked: false,
-                systemSelectData: []
+                systemSelectData: [],
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         mounted () {
@@ -73,25 +88,32 @@
             async fetchData () {
                 this.isLoading = true;
                 try {
-                    const res = await this.$store.dispatch('role/getSystemManager');
-                    const systemListAll = res.data || [];
+                    const { code, data } = await this.$store.dispatch('role/getSystemManager');
+                    const systemListAll = data || [];
                     this.systemListAll.splice(0, this.systemListAll.length, ...systemListAll);
-                    const systemListRender = res.data.length > 5
-                        ? res.data.slice(0, 5) : res.data;
+                    const systemListRender = data.length > 5
+                        ? data.slice(0, 5) : data;
                     this.systemListRender.splice(0, this.systemListRender.length, ...systemListRender);
                     this.isEmpty = systemListAll.length < 1;
+                    this.emptyData = formatCodeData(code, this.emptyData, this.isEmpty);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
                 } finally {
                     this.isLoading = false;
                 }
+            },
+
+            handleEmptyRefresh () {
+                this.fetchData();
             },
 
             handlesystemExpanded () {

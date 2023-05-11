@@ -9,7 +9,7 @@
                 <bk-option v-for="option in effectList"
                     :key="option.value"
                     :id="option.value"
-                    :name="option.name">
+                    :name="$t(`m.info['${option.name}']`)">
                 </bk-option>
             </bk-select>
             <div class="effect-flex">
@@ -21,11 +21,11 @@
                     multiple
                     disabled
                     ext-cls="effect-select-week"
-                    placeholder="请选择日期">
+                    :placeholder="$t(`m.verify['请选择日期']`)">
                     <bk-option v-for="option in effectWeekList"
                         :key="option.value"
                         :id="option.value"
-                        :name="option.name"
+                        :name="$t(`m.info['${option.name}']`)"
                     >
                     </bk-option>
                 </bk-select>
@@ -34,22 +34,24 @@
                     :clearable="false"
                     disabled
                     ext-cls="effect-select-condition"
-                    placeholder="请选择时区">
+                    :placeholder="$t(`m.verify['请选择时区']`)">
                     <bk-option v-for="option in effectWeekTimeZone"
                         :key="option.value"
                         :id="option.value"
-                        :name="option.name"
+                        :name="$t(`m.info['${option.name}']`)"
                     >
                     </bk-option>
                 </bk-select>
                 <div class="initTimeWarp">
                     <bk-time-picker
+                        :type="'timerange'"
                         v-model="environmentsItem.initTimeRange"
-                        :placeholder="'选择时间范围'"
-                        :type="'timerange'"></bk-time-picker>
+                        :placeholder="$t(`m.verify['请选择时间范围']`)"
+                    />
                     <p class="error-tips pt5" v-if="timeRangeEmpty &&
                         (!environmentsItem.initTimeRange[0] || !environmentsItem.initTimeRange[1])">
-                        请选择时间范围</p>
+                        {{ $t(`m.verify['请选择时间范围']`) }}
+                    </p>
                 </div>
             </div>
         </div>
@@ -82,13 +84,12 @@
                 date: [],
                 environmentsData: [],
                 timeRangeEmpty: false,
-                tooltips: '每天'
+                tooltips: this.$t(`m.info['每天']`)
             };
         },
         watch: {
             data: {
                 handler (val) {
-                    console.log('val1', val);
                     if (!val.length) {
                         this.environmentsData = [{ type: 'period_daily', date: ['1', '2', '3', '4', '5', '6', '0'], TimeZone: 'Asia/Shanghai', initTimeRange: [] }];
                     } else {
@@ -150,7 +151,6 @@
                     delete item.initTimeRange;
                     return item;
                 });
-                console.log('environments', environments);
                 return environments;
             }
         }

@@ -22,19 +22,27 @@ from rest_framework.request import Request
 from backend.apps.application.models import Application
 from backend.apps.group.models import Group
 from backend.apps.organization.constants import StaffStatus
-from backend.apps.organization.models import User
+from backend.apps.organization.models import User as UserModel
 from backend.apps.policy.models import Policy
-from backend.apps.role.models import Role
+from backend.apps.role.models import Role, RoleSource
 from backend.apps.template.models import PermTemplatePolicyAuthorized
 from backend.audit.audit import log_group_event, log_role_event, log_user_event
-from backend.audit.constants import AuditType
+from backend.audit.constants import AuditSourceType, AuditType
 from backend.common.cache import cachedmethod
 from backend.common.error_codes import error_codes
 from backend.common.time import expired_at_display
 from backend.service.application import ApplicationService
 from backend.service.approval import ApprovalProcessService
-from backend.service.constants import ApplicationStatus, ApplicationTypeEnum, RoleType, SubjectType
+from backend.service.constants import (
+    ApplicationStatus,
+    ApplicationType,
+    GroupSaaSAttributeEnum,
+    RoleSourceType,
+    RoleType,
+    SubjectType,
+)
 from backend.service.models import (
+    Applicant,
     ApplicantDepartment,
     ApplicantInfo,
     ApplicationAuthorizationScope,
@@ -57,7 +65,7 @@ from backend.service.models import (
 from backend.service.role import RoleService
 from backend.service.system import SystemService
 
-from .application_process import InstanceAproverHandler, PolicyProcess, PolicyProcessHandler
+from .application_process import InstanceApproverHandler, PolicyProcess, PolicyProcessHandler
 from .group import GroupBiz, GroupMemberExpiredAtBean
 from .policy import PolicyBean, PolicyBeanList, PolicyOperationBiz, PolicyQueryBiz
 from .role import RoleBiz, RoleInfo, RoleInfoBean
@@ -78,6 +86,7 @@ class ActionApplicationDataBean(BaseApplicationDataBean):
     """自定义权限申请或续期"""
 
     policy_list: PolicyBeanList
+    applicants: List[Applicant]
 
     class Config:
         # 由于PolicyBeanList并非继承于BaseModel，而是普通的类，所以需要声明允许"随意"类型
@@ -103,6 +112,7 @@ class GroupApplicationDataBean(BaseApplicationDataBean):
     """用户组申请或续期"""
 
     groups: List[ApplicationGroupInfoBean]
+    applicants: List[Applicant]
 
 
 class GradeManagerApplicationDataBean(BaseApplicationDataBean):
@@ -110,6 +120,7 @@ class GradeManagerApplicationDataBean(BaseApplicationDataBean):
 
     role_id: int = 0
     role_info: RoleInfo
+    group_name: str = ""
 
 
 class ApplicationIDStatusDict(BaseModel):
@@ -154,7 +165,7 @@ class ApprovedPassApplicationBiz:
         检查subject是否在职
         """
         assert subject.type == SubjectType.USER.value  # 只有用户类型的subject才需要检查
-        user = User.objects.filter(username=subject.id).first()
+        user = UserModel.objects.filter(username=subject.id).first()
         if not user:
             return False, f"user [{subject.id}] not exists"
 
@@ -167,19 +178,31 @@ class ApprovedPassApplicationBiz:
         self, subject: Subject, application: Application, audit_type: str = AuditType.USER_POLICY_CREATE.value
     ):
         """用户自定义权限授权"""
-        ok, msg = self._check_subject_exists(subject)
-        if not ok:
-            logger.warn("application [%d] grant action approve fail: %s", application.id, msg)
-            return
-
         system_id = application.data["system"]["id"]
         actions = application.data["actions"]
-
-        self.policy_operation_biz.alter(
-            system_id=system_id, subject=subject, policies=parse_obj_as(List[PolicyBean], actions)
+        applicants = (
+            application.data["applicants"]
+            if "applicants" in application.data
+            else [{"type": subject.type, "id": subject.id}]
         )
 
-        log_user_event(audit_type, subject, system_id, actions, sn=application.sn)
+        for applicant in applicants:
+            if applicant["type"] != SubjectType.USER.value:
+                logger.warn(
+                    "application [%d] grant action approve fail: %s", application.id, f"{subject} type is not user"
+                )
+                continue
+
+            subject = Subject.parse_obj(applicant)
+            ok, msg = self._check_subject_exists(subject)
+            if not ok:
+                logger.warn("application [%d] grant action approve fail: %s", application.id, msg)
+                continue
+
+            policies = parse_obj_as(List[PolicyBean], actions)
+            self.policy_operation_biz.alter(system_id=system_id, subject=subject, policies=policies)
+
+            log_user_event(audit_type, subject, system_id, actions, sn=application.sn)
 
     def _renew_action(self, subject: Subject, application: Application):
         """用户自定义权限续期"""
@@ -197,6 +220,14 @@ class ApprovedPassApplicationBiz:
             logger.warn("application [%d] join group approve fail: %s", application.id, msg)
             return
 
+        applicants = (
+            application.data["applicants"]
+            if "applicants" in application.data
+            else [{"type": subject.type, "id": subject.id}]
+        )
+
+        subjects = [Subject.parse_obj(one) for one in applicants]
+
         # 兼容，新老数据在data都存在expired_at
         default_expired_at = application.data["expired_at"]
         # 加入用户组
@@ -204,7 +235,7 @@ class ApprovedPassApplicationBiz:
             # 新数据才有，老数据则使用data外层的expired_at
             expired_at = group.get("expired_at", default_expired_at)
             try:
-                self.group_biz.add_members(group["id"], [subject], expired_at)
+                self.group_biz.add_members(group["id"], subjects, expired_at)
             except Group.DoesNotExist:
                 # 若审批通过时，用户组已经被删除，则直接忽略
                 logger.error(
@@ -225,6 +256,14 @@ class ApprovedPassApplicationBiz:
         qs = Group.objects.filter(id__in=[group["id"] for group in groups]).values_list("id", flat=True)
         group_id_set = set(qs)
 
+        applicants = (
+            application.data["applicants"]
+            if "applicants" in application.data
+            else [{"type": subject.type, "id": subject.id}]
+        )
+
+        subjects = [Subject.parse_obj(one) for one in applicants]
+
         for group in groups:
             if group["id"] not in group_id_set:
                 logger.error(
@@ -235,7 +274,10 @@ class ApprovedPassApplicationBiz:
 
             self.group_biz.update_members_expired_at(
                 group["id"],
-                [GroupMemberExpiredAtBean(type=subject.type, id=subject.id, expired_at=group["expired_at"])],
+                [
+                    GroupMemberExpiredAtBean(type=subject.type, id=subject.id, expired_at=group["expired_at"])
+                    for subject in subjects
+                ],
             )
 
         log_group_event(
@@ -245,7 +287,9 @@ class ApprovedPassApplicationBiz:
             sn=application.sn,
         )
 
-    def _gen_role_info_bean(self, data: Dict[Any, Any]) -> RoleInfoBean:
+    def _gen_role_info_bean(
+        self, data: Dict[Any, Any], source_system_id: str = "", hidden: bool = False
+    ) -> RoleInfoBean:
         """处理分级管理员数据"""
         # 兼容新老数据
         auth_scopes = data["authorization_scopes"]
@@ -253,20 +297,57 @@ class ApprovedPassApplicationBiz:
             # 新数据是system，没有system_id
             if "system_id" not in scope:
                 scope["system_id"] = scope["system"]["id"]
-        return RoleInfoBean(**data)
+
+        data["members"] = [{"username": username} for username in data["members"]]
+        return RoleInfoBean(source_system_id=source_system_id, hidden=hidden, **data)
 
     def _create_rating_manager(self, subject: Subject, application: Application):
         """创建分级管理员"""
-        info = self._gen_role_info_bean(application.data)
-        role = self.role_biz.create(info, subject.id)
+        info = self._gen_role_info_bean(
+            application.data, source_system_id=application.source_system_id, hidden=application.hidden
+        )
+        with transaction.atomic():
+            role = self.role_biz.create_grade_manager(info, subject.id)
+
+            # 创建同步权限用户组
+            if info.sync_perm:
+                attrs = {
+                    GroupSaaSAttributeEnum.SOURCE_FROM_ROLE.value: True,
+                }
+                if application.source_system_id:
+                    attrs[GroupSaaSAttributeEnum.SOURCE_TYPE.value] = AuditSourceType.OPENAPI.value
+
+                self.group_biz.create_sync_perm_group_by_role(
+                    role, application.applicant, group_name=application.data.get("group_name", ""), attrs=attrs
+                )
+
+            if application.source_system_id:
+                # 记录role创建来源信息
+                RoleSource.objects.create(
+                    role_id=role.id,
+                    source_type=RoleSourceType.API.value,
+                    source_system_id=application.source_system_id,
+                )
 
         log_role_event(AuditType.ROLE_CREATE.value, subject, role, sn=application.sn)
 
+        return role
+
     def _update_rating_manager(self, subject: Subject, application: Application):
         """更新分级管理员"""
-        role = Role.objects.get(type=RoleType.RATING_MANAGER.value, id=application.data["id"])
+        role = Role.objects.get(type=RoleType.GRADE_MANAGER.value, id=application.data["id"])
         info = self._gen_role_info_bean(application.data)
         self.role_biz.update(role, info, subject.id)
+
+        role = Role.objects.get(id=role.id)
+        # 更新同步权限用户组信息
+        self.group_biz.update_sync_perm_group_by_role(
+            role,
+            application.applicant,
+            sync_members=True,
+            sync_prem=True,
+            group_name=application.data.get("group_name", ""),
+        )
 
         log_role_event(
             AuditType.ROLE_UPDATE.value,
@@ -275,6 +356,8 @@ class ApprovedPassApplicationBiz:
             extra={"name": info.name, "description": info.description},
             sn=application.sn,
         )
+
+        return role
 
     def _grant_temporary_action(self, subject: Subject, application: Application):
         """临时权限授权"""
@@ -297,8 +380,8 @@ class ApprovedPassApplicationBiz:
         func_name = f"_{application.type}"
         handle_func = getattr(self, func_name)
 
-        subject = Subject(type=SubjectType.USER.value, id=application.applicant)
-        handle_func(subject, application)
+        subject = Subject.from_username(application.applicant)
+        return handle_func(subject, application)
 
 
 class ApplicationBiz:
@@ -335,7 +418,7 @@ class ApplicationBiz:
                 processors = self.approval_processor_biz.get_super_manager_members()
             elif node.processor_type == RoleType.SYSTEM_MANAGER.value:
                 processors = self.approval_processor_biz.get_system_manager_members(system_id=kwargs["system_id"])
-            elif node.processor_type == RoleType.RATING_MANAGER.value:
+            elif node.processor_type == RoleType.GRADE_MANAGER.value:
                 processors = self.approval_processor_biz.get_grade_manager_members_by_group_id(
                     group_id=kwargs["group_id"]
                 )
@@ -362,7 +445,11 @@ class ApplicationBiz:
     def _get_applicant_info(self, applicant: str) -> ApplicantInfo:
         """获取申请者相关信息"""
         # 查询用户的部门信息
-        departments = User.objects.get(username=applicant).departments
+        user = UserModel.objects.filter(username=applicant).first()
+        if not user:
+            raise error_codes.INVALID_ARGS.format(f"user: {applicant} not exists")
+
+        departments = user.departments
         applicant_departments = [
             ApplicantDepartment(id=dept.id, name=dept.name, full_name=dept.full_name) for dept in departments
         ]
@@ -376,7 +463,7 @@ class ApplicationBiz:
         return parse_obj_as(ApplicationSystem, system)
 
     def create_for_policy(
-        self, application_type: ApplicationTypeEnum, data: ActionApplicationDataBean
+        self, application_type: ApplicationType, data: ActionApplicationDataBean
     ) -> List[Application]:
         """自定义权限"""
         # 1. 提前查询部分信息
@@ -402,7 +489,7 @@ class ApplicationBiz:
             policy_process_list.append(PolicyProcess(policy=policy, process=process))
 
         # 5. 通过管道填充可能的资源实例审批人/分级管理员审批节点的审批人
-        pipeline: List[PolicyProcessHandler] = [InstanceAproverHandler()]  # NOTE: 未来需要实现分级管理员审批handler
+        pipeline: List[PolicyProcessHandler] = [InstanceApproverHandler()]  # NOTE: 未来需要实现分级管理员审批handler
         for pipe in pipeline:
             policy_process_list = pipe.handle(policy_process_list)
 
@@ -420,6 +507,7 @@ class ApplicationBiz:
                 content=GrantActionApplicationContent(
                     system=system_info,
                     policies=parse_obj_as(List[ApplicationPolicyInfo], policy_list.policies),
+                    applicants=data.applicants,
                 ),
             )
             new_data_list.append((application_data, process))
@@ -456,7 +544,7 @@ class ApplicationBiz:
         self, policy_infos: List[ApplicationRenewPolicyInfoBean], applicant: str, reason: str
     ) -> List[Application]:
         """自定义权限续期"""
-        subject = Subject(type=SubjectType.USER.value, id=applicant)
+        subject = Subject.from_username(applicant)
         policy_expired_at_dict = {p.id: p.expired_at for p in policy_infos}
 
         # 查询策略所属系统
@@ -469,6 +557,9 @@ class ApplicationBiz:
             .order_by("system_id")
         )
 
+        # 转换为ApplicationBiz创建申请单所需数据结构
+        user = UserModel.objects.get(username=applicant)
+
         # 按系统分组
         data_list = []
         for system_id, policies in groupby(db_policies, lambda p: p.system_id):
@@ -478,18 +569,27 @@ class ApplicationBiz:
             for p in policy_list.policies:
                 p.set_expired_at(policy_expired_at_dict[p.policy_id])
 
-            data_list.append(ActionApplicationDataBean(applicant=applicant, policy_list=policy_list, reason=reason))
+            data_list.append(
+                ActionApplicationDataBean(
+                    applicant=applicant,
+                    policy_list=policy_list,
+                    applicants=[
+                        Applicant(type=SubjectType.USER.value, id=user.username, display_name=user.display_name)
+                    ],
+                    reason=reason,
+                )
+            )
 
         # 循环创建申请单
         applications = []
         for data in data_list:
-            applications.extend(self.create_for_policy(ApplicationTypeEnum.RENEW_ACTION.value, data))
+            applications.extend(self.create_for_policy(ApplicationType.RENEW_ACTION.value, data))
 
         return applications
 
     def _gen_group_permission_data(self, group_id: int) -> List[ApplicationGroupPermTemplate]:
         """生成用户组权限数据"""
-        subject = Subject(type=SubjectType.GROUP.value, id=str(group_id))
+        subject = Subject.from_group_id(group_id)
 
         application_templates = []
 
@@ -530,7 +630,9 @@ class ApplicationBiz:
 
         return application_templates
 
-    def _gen_group_application_content(self, group_infos: List[ApplicationGroupInfoBean]) -> GroupApplicationContent:
+    def _gen_group_application_content(
+        self, group_infos: List[ApplicationGroupInfoBean], applicants: List[Applicant]
+    ) -> GroupApplicationContent:
         """生成用户组单据所需内容"""
         # 1. 用户组基本信息
         groups = Group.objects.filter(id__in=[g.id for g in group_infos])
@@ -548,10 +650,10 @@ class ApplicationBiz:
             for group in groups
         ]
 
-        return GroupApplicationContent(groups=group_infos)
+        return GroupApplicationContent(groups=group_infos, applicants=applicants)
 
     def create_for_group(
-        self, application_type: ApplicationTypeEnum, data: GroupApplicationDataBean
+        self, application_type: ApplicationType, data: GroupApplicationDataBean, source_system_id: str = ""
     ) -> List[Application]:
         """申请加入用户组"""
         # 1. 查询申请者信息
@@ -579,24 +681,26 @@ class ApplicationBiz:
                 type=application_type,
                 applicant_info=applicant_info,
                 reason=data.reason,
-                content=self._gen_group_application_content([g for g in data.groups if g.id in group_ids]),
+                content=self._gen_group_application_content(
+                    [g for g in data.groups if g.id in group_ids], data.applicants
+                ),
             )
             new_data_list.append((application_data, process))
 
         # 7. 循环创建申请单
         applications = []
         for _data, _process in new_data_list:
-            application = self.svc.create_for_group(_data, _process)
+            application = self.svc.create_for_group(_data, _process, source_system_id=source_system_id)
             applications.append(application)
 
         return applications
 
     def _gen_grade_manager_application_content(
-        self, role_info: RoleInfo, role_id: int
+        self, role_info: RoleInfo, role_id: int, group_name: str = ""
     ) -> GradeManagerApplicationContent:
         """生成申请单据所需内容"""
         # 成员需要显示名称
-        members = SubjectInfoList([Subject(type=SubjectType.USER.value, id=m) for m in role_info.members])
+        members = SubjectInfoList(Subject.from_usernames(role_info.member_usernames))
         # 授权成员范围，查询相关信息
         subject_scopes = SubjectInfoList(role_info.subject_scopes)
 
@@ -618,10 +722,19 @@ class ApplicationBiz:
             members=parse_obj_as(List[ApplicationSubject], members.subjects),
             subject_scopes=parse_obj_as(List[ApplicationSubject], subject_scopes.subjects),
             authorization_scopes=authorization_scopes,
+            sync_perm=role_info.sync_perm,
+            group_name=group_name,
         )
 
     def create_for_grade_manager(
-        self, application_type: ApplicationTypeEnum, data: GradeManagerApplicationDataBean
+        self,
+        application_type: ApplicationType,
+        data: GradeManagerApplicationDataBean,
+        source_system_id: str = "",
+        callback_id: str = "",
+        callback_url: str = "",
+        approval_title: str = "",
+        approval_content: Optional[Dict] = None,
     ) -> List[Application]:
         """分级管理员"""
         # 1. 查询申请者信息
@@ -629,7 +742,7 @@ class ApplicationBiz:
 
         # 2. 查询对应的审批流程(所有分级管理员的申请都使用同一个流程)
         grade_manager_process = self.approval_process_svc.get_default_process(
-            ApplicationTypeEnum.CREATE_RATING_MANAGER.value
+            ApplicationType.CREATE_GRADE_MANAGER.value
         )
 
         # 3. 实例化流程
@@ -641,9 +754,16 @@ class ApplicationBiz:
                 type=application_type,
                 applicant_info=applicant_info,
                 reason=data.reason,
-                content=self._gen_grade_manager_application_content(data.role_info, data.role_id),
+                content=self._gen_grade_manager_application_content(
+                    data.role_info, data.role_id, group_name=data.group_name
+                ),
             ),
             process,
+            source_system_id=source_system_id,
+            callback_id=callback_id,
+            callback_url=callback_url,
+            approval_title=approval_title,
+            approval_content=approval_content,
         )
 
         return [application]
@@ -654,15 +774,24 @@ class ApplicationBiz:
         if status == ApplicationStatus.PENDING.value:
             return
 
-        with transaction.atomic():
-            # 对于非审批中，都需要将单据状态更新保存
-            # Note: 由于application里的data字段较大，使用save更新时相当所有字段都更新，所以需指定status字段更新
-            application.status = status
-            application.save(update_fields=["status", "updated_time"])
+        # 已处理的单据不需要继续处理
+        if application.status != ApplicationStatus.PENDING.value:
+            return
 
+        # 对于非审批中，都需要将单据状态更新保存
+        # Note: 由于application里的data字段较大，使用save更新时相当所有字段都更新，所以需指定status字段更新
+        application.status = status
+        application.save(update_fields=["status", "updated_time"])
+
+        try:
             # 审批通过，则执行相关授权等
             if status == ApplicationStatus.PASS.value:
-                self.approved_pass_biz.handle(application)
+                return self.approved_pass_biz.handle(application)
+        except Exception as e:  # pylint: disable=broad-except
+            # NOTE: 由于以上执行过程中会记录审计信息, 如果发生异常, 事务不能正常回滚, 所以这里手动回滚下
+            application.status = ApplicationStatus.PENDING.value
+            application.save(update_fields=["status", "updated_time"])
+            raise e
 
     def handle_approval_callback_request(self, callback_id: str, request: Request):
         """处理审批回调请求"""
@@ -675,7 +804,7 @@ class ApplicationBiz:
             raise error_codes.NOT_FOUND_ERROR
 
         # 处理申请单结果
-        self.handle_application_result(application, ticket.status)
+        return self.handle_application_result(application, ticket.status)
 
     def query_application_approval_status(self, applications: List[Application]) -> ApplicationIDStatusDict:
         """查询申请单审批状态"""
@@ -684,13 +813,15 @@ class ApplicationBiz:
 
         return ApplicationIDStatusDict(data={sn_id_dict[t.sn]: t.status for t in tickets})
 
-    def cancel_application(self, application: Application, operator: str):
+    def cancel_application(self, application: Application, operator: str, need_cancel_ticket: bool = True):
         """撤销申请单"""
         if application.applicant != operator:
             raise error_codes.INVALID_ARGS.format(_("只有申请人能取消"))  # 只能取消自己的申请单
 
-        # 撤销单据
-        self.svc.cancel_ticket(application.sn, application.applicant)
+        if need_cancel_ticket:
+            # 撤销单据
+            self.svc.cancel_ticket(application.sn, application.applicant)
+
         # 更新状态
         self.handle_application_result(application, ApplicationStatus.CANCELLED.value)
 

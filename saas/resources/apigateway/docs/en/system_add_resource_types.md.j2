@@ -1,0 +1,114 @@
+### Add resourceType
+
+limit:
+- A system can only create up to 50 resourceTypes
+
+----------
+{% include '_api_v1_model_resource_types.md.j2' %}
+----------
+
+#### Parameters
+
+| field | type | required | location | description |
+| :---| :--- | :---|:---|:--- |
+| system_id | string | yes | path | system_id |
+
+#### Request
+
+```json
+[
+    {
+        "id": "biz_set",
+        "name": "Business Name set",
+        "name_en": "biz_set",
+        "description": "The Business Name set is..." ,
+        "description_en": "biz_set is a ..." ,
+        "parents": [],
+        "provider_config": {
+            "path": "/api/v1/resources/biz_set/query"
+        },
+        "version": 1
+    },
+    {
+        "id": "biz",
+        "name": "Business Name",
+        "name_en": "biz",
+        "description": "Business Name is..." ,
+        "description_en": "biz is a ..." ,
+        "parents": [
+            {"system_id": "bk_cmdb", "id": "biz_set"}
+        ],
+        "provider_config": {
+            "path": "/api/v1/resources/biz/query"
+        },
+        "version": 1
+    },
+    {
+        "id": "dir",
+        "name": "directory",
+        "name_en": "dir",
+        "description": "The directory is..." ,
+        "description_en": "dir is a ..." ,
+        "parents": [
+            { "system_id": "bk_cmdb", "id": "biz"}
+        ],
+        "provider_config": {
+            "path": "/api/v1/resources/dir/query"
+        },
+        "version": 1
+    },
+    {
+        "id": "set",
+        "name": "set",
+        "name_en": "set",
+        "description": "Set is...",
+        "description_en": "set is a ..." ,
+        "parents": [
+            { "system_id": "bk_cmdb", "id": "biz"},
+            {"system_id": "bk_cmdb", "id": "dir"}
+        ],
+        "provider_config": {
+            "path": "/api/v1/resources/set/query"
+        },
+        "version": 1
+    },
+    {
+        "id": "module",
+        "name": "module",
+        "name_en": "module",
+        "description": "The module is..." ,
+        "description_en": "module is a ..." ,
+        "parents": [
+            {"system_id": "bk_cmdb", "id": "set"}
+        ],
+        "provider_config": {
+            "path": "/api/v1/resources/module/query"
+        },
+        "version": 1
+    },
+    {
+        "id": "host",
+        "name": "host",
+        "name_en": "host",
+        "description": "The host is..." ,
+        "description_en": "host is a ..." ,
+        "parents": [
+            {"system_id": "bk_cmdb", "id": "module"}
+        ],
+        "provider_config": {
+            "path": "/api/v1/resources/host/query"
+        },
+        "version": 1
+    }
+]
+```
+
+#### Response
+
+```json
+{
+    "code": 0,
+    "message": "",
+    "data": {}
+}
+```

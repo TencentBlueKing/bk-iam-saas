@@ -13,9 +13,9 @@ from django.utils.translation import gettext as _
 from rest_framework import serializers
 
 from backend.apps.application.serializers import ExpiredAtSLZ, ReasonSLZ
-from backend.apps.role.serializers import RatingMangerBaseInfoSZL, RoleScopeSubjectSLZ
+from backend.apps.role.serializers import GradeMangerBaseInfoSLZ, RoleScopeSubjectSLZ
 from backend.biz.role import RoleCheckBiz
-from backend.service.constants import GroupMemberType, SubjectType
+from backend.service.constants import GroupMemberType
 from backend.service.models import Subject
 
 
@@ -77,7 +77,12 @@ class ManagementRoleScopeAuthorizationSLZ(serializers.Serializer):
         return data
 
 
-class ManagementGradeManagerCreateSLZ(ManagementSourceSystemSLZ, RatingMangerBaseInfoSZL):
+class ManagementGradeManagerCreateSLZ(ManagementSourceSystemSLZ, GradeMangerBaseInfoSLZ):
+    members = serializers.ListField(
+        label="成员列表",
+        child=serializers.CharField(label="用户ID", max_length=64),
+        max_length=settings.SUBJECT_AUTHORIZATION_LIMIT["grade_manager_member_limit"],
+    )
     authorization_scopes = serializers.ListField(
         label="可授权的权限范围", child=ManagementRoleScopeAuthorizationSLZ(label="系统操作"), allow_empty=False
     )
@@ -114,7 +119,7 @@ class ManagementGradeManagerBasicInfoSLZ(serializers.Serializer):
     description = serializers.CharField(label="描述", allow_blank=True)
 
     class Meta:
-        ref_name = "V1ManagementGradeManagerBasicInfoSZL"
+        ref_name = "V1ManagementGradeManagerBasicInfoSLZ"
 
 
 class ManagementGradeManagerMembersSLZ(serializers.Serializer):
@@ -130,7 +135,7 @@ class ManagementGradeManagerMembersSLZ(serializers.Serializer):
         role_check_biz = RoleCheckBiz()
         for username in data["members"]:
             # subject加入的分级管理员数量不能超过最大值
-            role_check_biz.check_subject_grade_manager_limit(Subject(type=SubjectType.USER.value, id=username))
+            role_check_biz.check_subject_grade_manager_limit(Subject.from_username(username))
         return data
 
 
@@ -156,8 +161,8 @@ class ManagementGradeManagerMembersDeleteSLZ(serializers.Serializer):
 
 
 class ManagementGroupBasicInfoSLZ(serializers.Serializer):
-    name = serializers.CharField(label="用户组名称", min_length=2, max_length=128)
-    description = serializers.CharField(label="描述", min_length=10)
+    name = serializers.CharField(label="用户组名称", min_length=2, max_length=512)
+    description = serializers.CharField(label="描述", allow_blank=True)
 
     class Meta:
         ref_name = "V1ManagementGroupBasicInfoSLZ"
@@ -184,7 +189,7 @@ class ManagementGradeManagerGroupCreateSLZ(serializers.Serializer):
         names = set()
         for g in groups_data:
             if g["name"] in names:
-                raise serializers.ValidationError({"groups": [_("用户组名称{}不能重复").format(g["name"])]})
+                raise serializers.ValidationError({"groups": [_("存在同名的用户组:{}").format(g["name"])]})
             names.add(g["name"])
         return data
 
@@ -198,7 +203,7 @@ class ManagementGroupBasicSLZ(ManagementGroupBasicInfoSLZ):
 
 class ManagementGroupBaseInfoUpdateSLZ(serializers.Serializer):
     name = serializers.CharField(label="用户组名称", min_length=2, max_length=128, required=False)
-    description = serializers.CharField(label="描述", min_length=10, required=False)
+    description = serializers.CharField(label="描述", allow_blank=True, required=False)
 
     class Meta:
         ref_name = "V1ManagementGroupBaseInfoUpdateSLZ"

@@ -23,7 +23,7 @@ from rest_framework import serializers
 from backend.apps.application.models import Application
 from backend.apps.group.models import Group
 from backend.apps.organization.models import Department, DepartmentMember, User
-from backend.apps.role.models import Role, RoleRelatedObject, RoleSource, RoleUser, ScopeSubject
+from backend.apps.role.models import Role, RoleRelatedObject, RoleRelation, RoleSource, RoleUser, ScopeSubject
 from backend.apps.template.models import PermTemplate
 from backend.biz.policy import (
     ConditionBean,
@@ -43,15 +43,15 @@ from backend.service.constants import (
     SUBJECT_TYPE_ALL,
     SYSTEM_ALL,
     ApplicationStatus,
-    ApplicationTypeEnum,
+    ApplicationType,
     RoleRelatedObjectType,
     RoleScopeSubjectType,
-    RoleSourceTypeEnum,
+    RoleSourceType,
     RoleType,
     SubjectType,
 )
 from backend.service.models import Attribute, Subject, System
-from backend.service.role import AuthScopeAction, AuthScopeSystem, CommonAction, RoleInfo, RoleService
+from backend.service.role import AuthScopeAction, AuthScopeSystem, CommonAction, RoleInfo, RoleService, UserRole
 from backend.service.system import SystemService
 
 logger = logging.getLogger("app")
@@ -59,6 +59,11 @@ logger = logging.getLogger("app")
 
 class RoleInfoBean(RoleInfo):
     pass
+
+
+class UserRoleNode(UserRole):
+    is_member: bool = True
+    sub_roles: List["UserRoleNode"] = []
 
 
 class AuthScopeSystemBean(BaseModel):
@@ -115,14 +120,58 @@ class RoleBiz:
     list_user_role = RoleService.__dict__["list_user_role"]
     list_paging_user_role = RoleService.__dict__["list_paging_user_role"]
     list_user_role_for_system = RoleService.__dict__["list_user_role_for_system"]
-    list_paging_role_for_system = RoleService.__dict__["list_paging_role_for_system"]
-    add_grade_manager_members = RoleService.__dict__["add_grade_manager_members"]
     list_subject_scope = RoleService.__dict__["list_subject_scope"]
     list_auth_scope = RoleService.__dict__["list_auth_scope"]
     list_by_ids = RoleService.__dict__["list_by_ids"]
     list_members_by_role_id = RoleService.__dict__["list_members_by_role_id"]
 
     transfer_groups_role = RoleService.__dict__["transfer_groups_role"]
+
+    def list_role_tree_by_user(self, user_id: str) -> List[UserRoleNode]:
+        """
+        查询用户的角色关系树
+        """
+        tree: List[UserRoleNode] = []
+        grade_manager_dict: Dict[int, UserRoleNode] = {}
+        subset_manager_dict: Dict[int, UserRoleNode] = {}
+
+        # 查询用户直接加入的role
+        roles = self.list_user_role(user_id, with_hidden=False)
+        for role in roles:
+            node = UserRoleNode.parse_obj(role)
+
+            if node.type != RoleType.SUBSET_MANAGER.value:
+                tree.append(node)
+                if node.type == RoleType.GRADE_MANAGER.value:
+                    grade_manager_dict[node.id] = node
+            else:
+                subset_manager_dict[node.id] = node
+
+        if not subset_manager_dict:
+            return tree
+
+        relations = RoleRelation.objects.filter(role_id__in=list(subset_manager_dict.keys()))
+        relation_dict = {r.role_id: r.parent_id for r in relations}
+
+        # 查询子集管理员所属的分级管理员, 不包含用户已加入的分级管理员
+        out_roles = Role.objects.filter(id__in=[id for id in relation_dict.values() if id not in grade_manager_dict])
+        for role in out_roles:
+            node = UserRoleNode(
+                id=role.id,
+                type=role.type,
+                name=role.name,
+                name_en=role.name_en,
+                description=role.description,
+                is_member=False,
+            )
+
+            tree.append(node)
+            grade_manager_dict[node.id] = node
+
+        for role_id, parent_id in relation_dict.items():
+            grade_manager_dict[parent_id].sub_roles.append(subset_manager_dict[role_id])
+
+        return tree
 
     def get_role_scope_include_user(self, role_id: int, username: str) -> Optional[Role]:
         """
@@ -134,12 +183,12 @@ class RoleBiz:
 
         checker = RoleSubjectScopeChecker(role)
         try:
-            checker.check([Subject(type=SubjectType.USER.value, id=username)])
+            checker.check([Subject.from_username(username)])
             return role
         except APIError:
             return None
 
-    def create(self, info: RoleInfoBean, creator: str) -> Role:
+    def create_grade_manager(self, info: RoleInfoBean, creator: str) -> Role:
         """
         创建分级管理员
         """
@@ -149,7 +198,21 @@ class RoleBiz:
         """
         更新分级管理员
         """
-        return self.svc.update(role, info, updater)
+        self.svc.update(role, info, updater)
+
+        # 同步更新自动跟随的子集管理员的人员选择范围
+        if role.type == RoleType.GRADE_MANAGER.value and "subject_scopes" in info.get_partial_fields():
+            subject_scopes = self.svc.list_subject_scope(role.id)
+
+            subset_manager_ids = list(RoleRelation.objects.filter(parent_id=role.id).values_list("role_id", flat=True))
+            for subset_manager in Role.objects.filter(id__in=subset_manager_ids, inherit_subject_scope=True):
+                self.svc.update_role_subject_scope(subset_manager.id, subject_scopes)
+
+    def create_subset_manager(self, grade_manager: Role, info: RoleInfoBean, creator: str) -> Role:
+        """
+        创建子集管理员
+        """
+        return self.svc.create_subset_manager(grade_manager, info, creator)
 
     def modify_system_manager_members(self, role_id: int, members: List[str]):
         """修改系统管理员的成员"""
@@ -169,11 +232,27 @@ class RoleBiz:
         """删除超级管理员成员"""
         self.svc.delete_super_manager_member(username)
 
+    def add_grade_manager_members(self, role_id: int, usernames: List[str]):
+        """
+        添加分级管理员成员
+        """
+        self.svc.add_grade_manager_members(role_id, usernames)
+
+    def delete_grade_manager_member(self, role_id: int, usernames: List[str]):
+        """
+        批量删除分级管理员成员
+        """
+        RoleUser.objects.delete_grade_manager_member(role_id, usernames)
+
     def delete_member(self, role_id: int, username: str):
         """
         角色删除成员
         """
         self.svc.delete_member(role_id, username)
+
+        # 同步删除子集管理员的成员
+        for one in RoleRelation.objects.filter(parent_id=role_id):
+            self.svc.delete_member(one.role_id, username)
 
     def update_super_manager_member_system_permission(self, username: str, need_sync_backend_role: bool):
         """
@@ -295,19 +374,58 @@ class RoleBiz:
 
         return auth_system_bean
 
-    def inc_update_auth_scope(self, role_id: int, system_id: str, incr_policies: List[PolicyBean]):
-        """增量更新分级管理员的授权范围
-        Note: 这里没有判断是否已经包含了，而是直接合并添加，比如已有父资源，则增量里有子资源也会添加
-        需要去除包含的，则单独在外层调用RoleAuthorizationScopeChecker进行判断去除，然后提取增量数据后再调用
+    def incr_update_subject_scope(self, role: Role, subjects: List[Subject]):
         """
-        # 增量数据为空，无需更新
-        if len(incr_policies) == 0:
-            return
-        # 转为PolicyList，便于进行数据合并操作
-        incr_policy_list = PolicyBeanList(system_id=system_id, policies=incr_policies, need_fill_empty_fields=True)
+        增量更新管理员的人员授权范围
+        """
 
+        # 1. 对比超出管理员范围的部分subjects
+        checker = RoleSubjectScopeChecker(role)
+        exists_subjects = set(checker.check(subjects, raise_exception=False))
+
+        incr_subjects = [subject for subject in subjects if subject not in exists_subjects]
+        if not incr_subjects:
+            return
+
+        # 2. 把这部分subjects添加到管理员的管理范围
+        subjects = self.list_subject_scope(role.id)
+        subjects.extend(incr_subjects)
+        self.svc.update_role_subject_scope(role.id, subjects)
+
+    def incr_update_auth_scope(self, role: Role, incr_scopes: List[AuthScopeSystem]):
+        """
+        增量更新管理员的授权范围
+        """
         # 查询已有的可授权范围
-        auth_scopes = self.svc.list_auth_scope(role_id)
+        auth_scopes = self.svc.list_auth_scope(role.id)
+        need_update = False  # 是否需要更新
+
+        checker = RoleAuthorizationScopeChecker(role)
+        for scope in incr_scopes:
+            # 比对出需要扩大的授权范围
+            need_added_policies = checker.list_not_match_policy(
+                scope.system_id, parse_obj_as(List[PolicyBean], scope.actions)
+            )
+            if not need_added_policies:
+                continue
+
+            need_update = True
+            # 合并需要扩大的授权范围
+            self._merge_auth_scope(auth_scopes, scope.system_id, need_added_policies)
+
+        # 不需要变更
+        if not need_update:
+            return
+
+        # 变更可授权的权限范围
+        self.svc.update_role_auth_scope(role.id, auth_scopes)
+
+    def _merge_auth_scope(self, auth_scopes: List[AuthScopeSystem], system_id: str, policies: List[PolicyBean]):
+        """
+        合并授权范围
+        """
+        # 转为PolicyList，便于进行数据合并操作
+        policy_list = PolicyBeanList(system_id=system_id, policies=policies, need_fill_empty_fields=True)
 
         # 遍历，查找需要修改的数据和对应位置
         need_modified_policy_list = PolicyBeanList(system_id=system_id, policies=[])
@@ -321,7 +439,7 @@ class RoleBiz:
                 break
 
         # 合并增量数据
-        need_modified_policy_list.add(incr_policy_list)
+        need_modified_policy_list.add(policy_list)
 
         # 修改已有的可授权范围
         new_auth_scope = AuthScopeSystem(
@@ -331,9 +449,6 @@ class RoleBiz:
             auth_scopes.append(new_auth_scope)
         else:
             auth_scopes[index] = new_auth_scope
-
-        # 变更可授权的权限范围
-        self.svc.update_role_auth_scope(role_id, auth_scopes)
 
     def get_common_action_by_name(self, system_id: str, name: str) -> Optional[CommonAction]:
         common_actions = self.list_system_common_actions(system_id)
@@ -345,7 +460,7 @@ class RoleBiz:
 
 
 class RoleCheckBiz:
-    def check_unique_name(self, new_name: str, old_name: str = ""):
+    def check_grade_manager_unique_name(self, new_name: str, old_name: str = ""):
         """
         检查分级管理员名称唯一性
         仅仅检查分级管理员，若分级管理员类型是系统管理员和超级管理员则不检查
@@ -356,20 +471,65 @@ class RoleCheckBiz:
             return
 
         # 新名称已经有对应的分级管理员，则不可以
-        if Role.objects.filter(name=new_name).exists():
+        if Role.objects.filter(
+            name=new_name,
+            type__in=[RoleType.SUPER_MANAGER.value, RoleType.SYSTEM_MANAGER.value, RoleType.GRADE_MANAGER.value],
+        ).exists():
             raise error_codes.CONFLICT_ERROR.format(_("名称[{}]已存在，请修改为其他名称").format(new_name), True)
 
         # 检测是否已经有正在申请中的
         applications = Application.objects.filter(
             type__in=[
-                ApplicationTypeEnum.CREATE_RATING_MANAGER.value,
-                ApplicationTypeEnum.UPDATE_RATING_MANAGER.value,
+                ApplicationType.CREATE_GRADE_MANAGER.value,
+                ApplicationType.UPDATE_GRADE_MANAGER.value,
             ],
             status=ApplicationStatus.PENDING.value,
         )
         names = {i.data.get("name") for i in applications}
         if new_name in names:
-            raise error_codes.CONFLICT_ERROR.format(_("正在申请的单据中名称[{}]已存在，请修改为其他名称，或等单据被处理后再提交").format(new_name), True)
+            raise error_codes.CONFLICT_ERROR.format(_("存在同名分级管理员[{}]或者在处理中的单据，请修改后再提交").format(new_name), True)
+
+    def check_subset_manager_unique_name(self, grade_manager: Role, new_name: str, old_name: str = ""):
+        """
+        检查子集管理员的唯一性
+        每个分级管理员里面的子集管理员名字必须唯一
+        """
+        # 如果新名称与旧名称一致，说明名称没改变
+        if new_name == old_name:
+            return
+
+        # 查询分级管理员已有的子集管理员id
+        sub_ids = RoleRelation.objects.list_sub_id(grade_manager.id)
+
+        # 检查对应的子集管理员名字是否冲突
+        if Role.objects.filter(name=new_name, id__in=sub_ids).exists():
+            raise error_codes.CONFLICT_ERROR.format(_("名称[{}]已存在，请修改为其他名称").format(new_name), True)
+
+    def check_subset_manager_auth_scope(self, grade_manager: Role, auth_scopes: List[AuthScopeSystem]):
+        """
+        检查子集管理员的授权范围
+        子集管理员的授权范围必须是分级管理员的子集
+        """
+        scope_checker = RoleAuthorizationScopeChecker(grade_manager)
+
+        for system_scope in auth_scopes:
+            try:
+                scope_checker.check_policies(
+                    system_scope.system_id, [PolicyBean.parse_obj(action) for action in system_scope.actions]
+                )
+            except APIError as e:
+                raise error_codes.VALIDATE_ERROR.format(
+                    _("系统: {} 授权范围校验错误: {}").format(system_scope.system_id, e.message),
+                    replace=True,
+                )
+
+    def check_subset_manager_subject_scope(self, grade_manager: Role, subject_scopes: List[Subject]):
+        """
+        检查子集管理员的人员范围
+        子集管理员的人员范围必须是否分级管理员的子集
+        """
+        scope_checker = RoleSubjectScopeChecker(grade_manager)
+        scope_checker.check(subject_scopes)
 
     def check_member_count(self, role_id: int, new_member_count: int):
         """
@@ -379,9 +539,7 @@ class RoleCheckBiz:
         member_limit = settings.SUBJECT_AUTHORIZATION_LIMIT["grade_manager_member_limit"]
         if exists_count + new_member_count > member_limit:
             raise error_codes.VALIDATE_ERROR.format(
-                _("分级管理员({})已有{}个成员，不可再添加{}个成员，否则超出分级管理员最大成员数量{}的限制").format(
-                    role_id, exists_count, new_member_count, member_limit
-                ),
+                _("超过分级管理员最大可添加成员数{}").format(member_limit),
                 True,
             )
 
@@ -391,9 +549,10 @@ class RoleCheckBiz:
         Note: 目前subject仅仅支持User
         """
         limit = settings.SUBJECT_AUTHORIZATION_LIMIT["subject_grade_manager_limit"]
-        exists_count = RoleUser.objects.filter(username=subject.id).count()
+        role_ids = Role.objects.filter(type=RoleType.GRADE_MANAGER.value).values_list("id", flat=True)
+        exists_count = RoleUser.objects.filter(username=subject.id, role_id__in=role_ids).count()
         if exists_count >= limit:
-            raise serializers.ValidationError(_("成员({}): 加入的分级管理员数量已超过最大值 {}").format(subject.id, limit))
+            raise serializers.ValidationError(_("成员({}): 可加入的分级管理员数量已超限 {}").format(subject.id))
 
     def check_grade_manager_of_system_limit(self, system_id: str):
         """
@@ -418,10 +577,10 @@ class RoleCheckBiz:
         limit = system_limits[system_id] if system_id in system_limits else default_limit
 
         exists_count = RoleSource.objects.filter(
-            source_type=RoleSourceTypeEnum.API.value, source_system_id=system_id
+            source_type=RoleSourceType.API.value, source_system_id=system_id
         ).count()
         if exists_count >= limit:
-            raise serializers.ValidationError(_("系统({}): 创建的分级管理员数量已超过最大值 {}").format(system_id, limit))
+            raise serializers.ValidationError(_("系统({}): 可创建的分级管理员数量已超过最大值 {}").format(system_id, limit))
 
 
 class RoleListQuery:
@@ -477,17 +636,76 @@ class RoleListQuery:
         """
         assert self.user
 
-        template_ids = self._get_role_related_object_ids(RoleRelatedObjectType.TEMPLATE.value)
+        if self.role.type == RoleType.SUBSET_MANAGER.value:
+            template_ids = self._query_subset_manager_template_id()
+        else:
+            template_ids = self._get_role_related_object_ids(RoleRelatedObjectType.TEMPLATE.value)
         return PermTemplate.objects.filter(id__in=template_ids)
 
-    def query_group(self):
+    def _query_subset_manager_template_id(self) -> List[int]:
+        """
+        查询子集管理员可授权的模板列表
+
+        1. 子集管理员可授权的模板列表来源于父级分级管理员的模板列表
+        2. 子集管理员可授权的模板必须满足子集管理员的授权范围
+        """
+
+        assert self.role.type == RoleType.SUBSET_MANAGER.value
+
+        # 1. 查询子集管理员的父级分级管理员
+        parent_role_id = RoleRelation.objects.get_parent_role_id(self.role.id)
+        if not parent_role_id:
+            return []
+
+        # 2. 查询子集管理员的授权范围
+        system_actions = self.get_scope_system_actions()
+
+        # 3. 查询分级管理员的模板列表
+        parent_template_ids = list(
+            RoleRelatedObject.objects.filter(
+                role_id=parent_role_id, object_type=RoleRelatedObjectType.TEMPLATE.value
+            ).values_list("object_id", flat=True)
+        )
+
+        template_ids = []
+        # 4. 遍历筛选出满足子集管理员授权范围的模板id
+        for template in PermTemplate.objects.filter(id__in=parent_template_ids):
+            if not system_actions.has_system(template.system_id):
+                continue
+
+            # 满足授权范围
+            if system_actions.is_all_action(template.system_id):
+                template_ids.append(template.id)
+                continue
+
+            # 满足授权范围
+            if set(template.action_ids).issubset(set(system_actions.list_action_id(template.system_id))):
+                template_ids.append(template.id)
+
+        return template_ids
+
+    def query_group(self, inherit: bool = True):
         """
         查询用户组列表
         """
-        group_ids = self._get_role_related_object_ids(RoleRelatedObjectType.GROUP.value)
+        group_ids = self._get_role_related_object_ids(RoleRelatedObjectType.GROUP.value, inherit=inherit)
         return Group.objects.filter(id__in=group_ids)
 
-    def _get_role_related_object_ids(self, object_type: str) -> List[int]:
+    def _get_role_related_object_ids(self, object_type: str, inherit: bool = True) -> List[int]:
+        # 分级管理员可以管理子集管理员的所有用户组
+        if (
+            self.role.type == RoleType.GRADE_MANAGER.value
+            and object_type == RoleRelatedObjectType.GROUP.value
+            and inherit
+        ):
+            role_ids = RoleRelation.objects.list_sub_id(self.role.id)
+            role_ids.append(self.role.id)
+            return list(
+                RoleRelatedObject.objects.filter(role_id__in=role_ids, object_type=object_type).values_list(
+                    "object_id", flat=True
+                )
+            )
+
         if self.role.type != RoleType.STAFF.value:
             return list(
                 RoleRelatedObject.objects.filter(role_id=self.role.id, object_type=object_type).values_list(
@@ -532,7 +750,7 @@ class RoleListQuery:
         assert self.user
 
         mgr_ids = self._list_authorization_scope_include_user_role_ids()
-        return self.role_svc.list_by_ids(mgr_ids)
+        return self.role_svc.list_by_ids(mgr_ids, with_hidden=False)
 
     def query_grade_manager(self):
         """
@@ -540,13 +758,37 @@ class RoleListQuery:
         """
         # 作为超级管理员时，可以管理所有分级管理员
         if self.role.type == RoleType.SUPER_MANAGER.value:
-            return Role.objects.filter(type=RoleType.RATING_MANAGER.value).order_by("-updated_time")
+            return Role.objects.filter(type=RoleType.GRADE_MANAGER.value).order_by("-updated_time")
 
         # 作为个人时，只能管理加入的的分级管理员
         assert self.user
 
+        # 查询用户加入的角色id
         role_ids = list(RoleUser.objects.filter(username=self.user.username).values_list("role_id", flat=True))
-        return Role.objects.filter(type=RoleType.RATING_MANAGER.value, id__in=role_ids).order_by("-updated_time")
+
+        # 查询子集管理员的父级分级管理员id
+        grade_manager_ids = list(RoleRelation.objects.filter(role_id__in=role_ids).values_list("parent_id", flat=True))
+        role_ids.extend(grade_manager_ids)
+
+        return Role.objects.filter(type=RoleType.GRADE_MANAGER.value, id__in=role_ids).order_by("-updated_time")
+
+    def query_subset_manager(self):
+        """
+        查询子集管理员
+        """
+        if self.role.type == RoleType.GRADE_MANAGER.value:
+            sub_ids = RoleRelation.objects.list_sub_id(self.role.id)
+            return Role.objects.filter(type=RoleType.SUBSET_MANAGER.value, id__in=sub_ids).order_by("-updated_time")
+        elif self.role.type == RoleType.SUBSET_MANAGER.value:
+            return Role.objects.filter(type=RoleType.SUBSET_MANAGER.value, id=self.role.id)
+        elif self.role.type == RoleType.STAFF.value:
+            assert self.user
+            role_ids = list(RoleUser.objects.filter(username=self.user.username).values_list("role_id", flat=True))
+            return Role.objects.filter(type=RoleType.SUBSET_MANAGER.value, id__in=role_ids)
+        elif self.role.type == RoleType.SUPER_MANAGER.value:
+            return Role.objects.filter(type=RoleType.SUBSET_MANAGER.value)
+
+        return Role.objects.none()
 
 
 class RoleObjectRelationChecker:
@@ -557,12 +799,28 @@ class RoleObjectRelationChecker:
     def __init__(self, role: Role):
         self.role = role
 
+    def _list_relation_role_id(self):
+        """
+        查询出role关联的所有role id
+
+        分级管理员可以管理所有的子集管理员相关的信息
+        """
+        role_ids = [self.role.id]
+
+        if self.role.type == RoleType.GRADE_MANAGER.value:
+            sub_ids = RoleRelation.objects.list_sub_id(self.role.id)
+            return role_ids + sub_ids
+
+        return role_ids
+
     def _check_object(self, obj_type: str, obj_id: int) -> bool:
-        return RoleRelatedObject.objects.filter(role_id=self.role.id, object_type=obj_type, object_id=obj_id).exists()
+        return RoleRelatedObject.objects.filter(
+            role_id__in=self._list_relation_role_id(), object_type=obj_type, object_id=obj_id
+        ).exists()
 
     def _check_object_ids(self, obj_type: str, obj_ids: List[int]) -> bool:
         count = RoleRelatedObject.objects.filter(
-            role_id=self.role.id, object_type=obj_type, object_id__in=obj_ids
+            role_id__in=self._list_relation_role_id(), object_type=obj_type, object_id__in=obj_ids
         ).count()
         return count == len(set(obj_ids))
 
@@ -597,7 +855,9 @@ class RoleAuthorizationScopeChecker:
     def _check_system_in_scope(self, system_id):
         system_action_scope = self.system_action_scope
         if system_id not in system_action_scope and SYSTEM_ALL not in system_action_scope:
-            raise error_codes.FORBIDDEN.format(message=_("{} 系统不在角色的授权范围中").format(system_id), replace=True)
+            raise error_codes.FORBIDDEN.format(
+                message=_("{} 系统不在分级管理员的授权范围内，请先编辑分级管理员授权范围").format(system_id), replace=True
+            )
 
     def _check_action_in_scope(self, system_id, action_id):
         system_action_scope = self.system_action_scope
@@ -607,7 +867,7 @@ class RoleAuthorizationScopeChecker:
         action_scope = system_action_scope[system_id]
         if action_id not in action_scope:
             raise error_codes.FORBIDDEN.format(
-                message=_("{} 操作不在角色的授权范围内").format(action_id), replace=True
+                message=_("{} 操作不在分级管理员的授权范围内，请先编辑分级管理员授权范围").format(action_id), replace=True
             )  # 操作不在授权范围内
 
         return ""
@@ -697,7 +957,7 @@ class RoleAuthorizationScopeChecker:
         differ = ActionScopeDiffer(policy, PolicyBean.parse_obj(policy_scope))
         if not differ.diff():
             raise error_codes.FORBIDDEN.format(
-                message=_("{} 操作配置的资源范围不满足角色的授权范围").format(policy.action_id), replace=True
+                message=_("{} 操作选择的资源实例不在分级管理员的授权范围内，请编辑分级管理员授权范围").format(policy.action_id), replace=True
             )  # 操作的资源选择范围不满足分级管理员的资源选择范围
 
     def check_systems(self, system_ids: List[str]):
@@ -796,7 +1056,9 @@ class RoleSubjectScopeChecker:
             if s.type == SubjectType.DEPARTMENT.value:
                 if len(department_ancestors[int(s.id)] & department_scopes) == 0:
                     if raise_exception:
-                        raise error_codes.FORBIDDEN.format(message=_("部门({})不满足角色的授权范围").format(s.id), replace=True)
+                        raise error_codes.FORBIDDEN.format(
+                            message=_("部门({})在分级管理员的授权范围内，请编辑分级管理员授权范围").format(s.id), replace=True
+                        )
 
                     need_delete_set.add((s.type, s.id))
 
@@ -807,7 +1069,9 @@ class RoleSubjectScopeChecker:
                     department_set.update(department_ancestors[d])
                 if len(department_set & department_scopes) == 0:
                     if raise_exception:
-                        raise error_codes.FORBIDDEN.format(message=_("用户({})不满足角色的授权范围").format(s.id), replace=True)
+                        raise error_codes.FORBIDDEN.format(
+                            message=_("用户({})在分级管理员的授权范围内，请编辑分级管理员授权范围").format(s.id), replace=True
+                        )
 
                     need_delete_set.add((s.type, s.id))
 

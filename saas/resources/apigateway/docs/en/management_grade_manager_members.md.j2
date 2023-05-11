@@ -1,0 +1,28 @@
+### Query the list of hierarchical administrator members
+
+#### Parameters
+
+| Field | Type | Required | Location | Description |
+|--------|--------|--------|--------|--------|--------|--------|
+| grade_manager_id | int | yes | path | grade_manager_id |
+
+#### Request
+
+
+#### Response
+
+| field | type | description |
+| -----------|-----------|-----------|
+| data | array[string] | list of user names |
+
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": [
+    "admin",
+    "test"
+  ]
+}
+```

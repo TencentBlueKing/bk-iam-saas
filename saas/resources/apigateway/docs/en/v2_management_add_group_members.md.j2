@@ -1,0 +1,49 @@
+### Add user group members
+
+#### Parameters
+
+| Field | Type | Location | Required | Description |
+|--|--|--|--|--|--|--|
+| system_id | string | path | Yes | Access to system unique identifier |
+| group_id | int | path | yes | user_group_id |
+| members | array[object] | yes | body | list of members |
+| expired_at | int | yes | body | Expiration timestamp (in seconds), i.e. the user or department will not have permissions related to the user group after expired_at |
+
+members list element
+
+| field | type | location | required | description |
+|--|--|--|--|--|--|
+| type | string | body | yes | member type, user for user, department for department |
+| id | string | body | Yes | User or department ID |
+
+#### Request
+
+```json
+{
+  "members": [
+    {
+      "type": "user".
+      "id": "admin"
+    }.
+    {
+      "type": "department".
+      "id": "1"
+    }
+  ].
+  "expired_at": 1619587562
+}
+```
+
+#### Response
+
+> Status: 200 OK
+
+```json
+{
+  "code": 0.
+  "message": "ok".
+  "data": {}
+}
+```
+
+{% include '_api_v2_status_code.md.j2' %}

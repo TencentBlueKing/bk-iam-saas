@@ -68,12 +68,14 @@
                         :all-data="treeList"
                         :style="contentStyle"
                         :is-sync="isSync"
+                        :empty-data="emptyData"
                         location="page"
                         @async-load-nodes="handleRemoteLoadNode"
                         @expand-node="handleExpanded"
                         @on-select="handleOnSelected"
-                        @on-click="handleOnClick">
-                    </infinite-tree>
+                        @on-click="handleOnClick"
+                        @on-refresh="handleEmptyRefresh"
+                    />
                 </template>
                 <template v-else>
                     <div class="search-content-wrapper"
@@ -94,8 +96,16 @@
                         </template>
                         <template v-if="isSeachResultEmpty">
                             <div class="search-empty-wrapper">
-                                <iam-svg />
-                                <p class="empty-tips">{{ $t(`m.common['搜索无结果']`) }}</p>
+                                <!-- <iam-svg />
+                                <p class="empty-tips">{{ $t(`m.common['搜索无结果']`) }}</p> -->
+                                <ExceptionEmpty
+                                    :type="emptyData.type"
+                                    :empty-text="emptyData.text"
+                                    :tip-text="emptyData.tip"
+                                    :tip-type="emptyData.tipType"
+                                    @on-clear="handleEmptyClear"
+                                    @on-refresh="handleEmptyRefresh"
+                                />
                             </div>
                         </template>
                     </div>
@@ -145,7 +155,8 @@
             :style="dragStyle">
             <img
                 class="drag-bar"
-                src="@/images/drag-icon.svg" alt=""
+                src="@/images/drag-icon.svg"
+                alt=""
                 :draggable="false"
                 @mousedown="handleDragMouseenter($event)"
                 @mouseout="handleDragMouseleave($event)">
@@ -174,7 +185,7 @@
 <script>
     import _ from 'lodash';
     import { mapGetters } from 'vuex';
-    import { guid } from '@/common/util';
+    import { formatCodeData, guid } from '@/common/util';
     import { bus } from '@/common/bus';
     import InfiniteTree from '@/components/infinite-tree';
     import dialogInfiniteList from '@/components/dialog-infinite-list';
@@ -230,7 +241,13 @@
                     }
                 ],
                 searchConditionValue: 'fuzzy',
-                isSerachFocus: false
+                isSerachFocus: false,
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -403,8 +420,8 @@
             async fetchCategories (isTreeLoading = false) {
                 this.treeLoading = isTreeLoading;
                 try {
-                    const res = await this.$store.dispatch('organization/getCategories');
-                    const categories = [...res.data];
+                    const { code, data } = await this.$store.dispatch('organization/getCategories');
+                    const categories = [...data];
                     categories.forEach((item, index) => {
                         item.visiable = true;
                         item.level = 0;
@@ -438,7 +455,8 @@
                                 child.disabled = false;
                                 child.type = 'depart';
                                 child.count = child.recursive_member_count;
-                                child.showCount = true;
+                                // child.showCount = true;
+                                child.showCount = false;
                                 child.async = child.child_count > 0 || child.member_count > 0;
                                 child.isNewMember = false;
                                 child.parentNodeId = item.id;
@@ -458,11 +476,14 @@
                     }
                     categories.splice(firstIndex + 1, 0, ...children);
                     this.treeList = _.cloneDeep(categories);
+                    this.emptyData = formatCodeData(code, this.emptyData, this.treeList.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: message || data.msg || statusText
                     });
                 } finally {
                     this.treeLoading = false;
@@ -482,15 +503,13 @@
              * handleSearch
              */
             async handleSearch () {
-                if (this.searchKeyWord === '') {
+                if (!this.searchKeyWord) {
                     return;
                 }
-
                 this.treeList.splice(0, this.treeList.length, ...[]);
                 this.isBeingSearch = true;
                 this.treeLoading = true;
                 this.isShowSearchResult = true;
-
                 this.searchedResult.splice(0, this.searchedResult.length, ...[]);
                 this.searchedDepartment.splice(0, this.searchedDepartment.length, ...[]);
                 this.searchedUsers.splice(0, this.searchedUsers.length, ...[]);
@@ -499,14 +518,15 @@
                     is_exact: this.searchConditionValue === 'exact'
                 };
                 try {
-                    const res = await this.$store.dispatch('organization/getSeachOrganizations', params);
-                    if (res.data.is_too_much) {
+                    const { code, data } = await this.$store.dispatch('organization/getSearchOrganizations', params);
+                    const { departments, users } = data;
+                    if (data.is_too_much) {
                         this.isShowTooMuch = true;
                         return;
                     }
                     this.isShowTooMuch = false;
-                    if (res.data.departments.length > 0) {
-                        res.data.departments.forEach(depart => {
+                    if (departments.length > 0) {
+                        departments.forEach(depart => {
                             depart.showRadio = false;
                             depart.type = 'depart';
                             this.$set(depart, 'is_selected', false);
@@ -516,12 +536,13 @@
                                 this.$set(depart, 'selected', false);
                             }
                             depart.count = depart.recursive_member_count;
-                            depart.showCount = true;
+                            // depart.showCount = true;
+                            depart.showCount = false;
                         });
-                        this.searchedDepartment.splice(0, this.searchedDepartment.length, ...res.data.departments);
+                        this.searchedDepartment.splice(0, this.searchedDepartment.length, ...departments);
                     }
-                    if (res.data.users.length > 0) {
-                        res.data.users.forEach(user => {
+                    if (users.length > 0) {
+                        users.forEach(user => {
                             user.id = guid();
                             user.showRadio = false;
                             user.type = 'user';
@@ -534,22 +555,41 @@
                                 this.$set(user, 'selected', false);
                             }
                         });
-                        this.searchedUsers.splice(0, this.searchedUsers.length, ...res.data.users);
+                        this.searchedUsers.splice(0, this.searchedUsers.length, ...users);
                     }
                     this.searchedResult.splice(
                         0,
                         this.searchedResult.length,
                         ...this.searchedDepartment.concat(this.searchedUsers)
                     );
+                    const isEmpty = users.length === 0 && departments.length === 0;
+                    this.emptyData.tipType = 'search';
+                    this.emptyData = formatCodeData(code, this.emptyData, isEmpty);
                 } catch (e) {
-                    console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
+                        message: message || data.msg || statusText
                     });
                 } finally {
                     this.treeLoading = false;
                 }
+            },
+
+            /**
+             * handleEmptyClear
+             */
+            handleEmptyClear () {
+                this.searchKeyWord = '';
+                this.emptyData.tipType = '';
+            },
+            
+            /**
+             * handleEmptyRefresh
+             */
+            handleEmptyRefresh () {
+                this.fetchPageData();
             },
 
             /**
@@ -672,7 +712,8 @@
                             child.disabled = this.disabled;
                             child.type = 'depart';
                             child.count = child.recursive_member_count;
-                            child.showCount = true;
+                            // child.showCount = true;
+                            child.showCount = false;
                             child.async = child.child_count > 0 || child.member_count > 0;
                             child.isNewMember = false;
                             child.parentNodeId = payload.id;

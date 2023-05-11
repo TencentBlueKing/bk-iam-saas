@@ -13,7 +13,7 @@ import json
 from django.db import models
 
 from backend.common.models import BaseModel
-from backend.service.constants import AuthTypeEnum
+from backend.service.constants import AuthType
 from backend.util.json import json_dumps
 
 
@@ -38,9 +38,7 @@ class Policy(BaseModel):
     # policy_id = models.BigIntegerField("后端policy_id", default=0)
 
     # 策略的鉴权类型
-    auth_type = models.CharField(
-        "策略的鉴权类型", max_length=16, choices=AuthTypeEnum.get_choices(), default=AuthTypeEnum.ABAC.value
-    )
+    auth_type = models.CharField("策略的鉴权类型", max_length=16, choices=AuthType.get_choices(), default=AuthType.ABAC.value)
 
     class Meta:
         verbose_name = "权限策略"
@@ -60,3 +58,7 @@ class Policy(BaseModel):
     def delete_by_action(cls, system_id: str, action_id: str):
         """通过操作删除策略"""
         cls.objects.filter(system_id=system_id, action_id=action_id).delete()
+
+    @property
+    def display_name(self):
+        return f"subject: {self.subject_type}/{self.subject_id} system: {self.system_id} action: {self.action_id}"

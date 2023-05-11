@@ -9,13 +9,15 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import time
+from collections import defaultdict
 
 from django.conf import settings
+from django.db.models import QuerySet
 from rest_framework import serializers
 
 from backend.apps.application.base_serializers import BaseAggActionListSLZ, SystemInfoSLZ, validate_action_repeat
 from backend.apps.policy.serializers import ConditionSLZ, InstanceSLZ, ResourceGroupSLZ, ResourceSLZ, ResourceTypeSLZ
-from backend.apps.role.models import Role, RoleCommonAction, RoleUser
+from backend.apps.role.models import Role, RoleCommonAction, RoleRelation, RoleUser
 from backend.biz.role import RoleBiz
 from backend.biz.subject import SubjectInfoList
 from backend.common.time import PERMANENT_SECONDS
@@ -109,21 +111,27 @@ class RoleScopeAuthorizationSLZ(serializers.Serializer):
         return data
 
 
-class RatingMangerBaseInfoSZL(serializers.Serializer):
+class RoleMember(serializers.Serializer):
+    username = serializers.CharField(label="用户ID", max_length=128)
+    readonly = serializers.BooleanField(default=False)
+
+
+class GradeMangerBaseInfoSLZ(serializers.Serializer):
     name = serializers.CharField(label="分级管理员名称", max_length=128)
     description = serializers.CharField(label="描述", allow_blank=True)
     members = serializers.ListField(
         label="成员列表",
-        child=serializers.CharField(label="用户ID", max_length=64),
+        child=RoleMember(label="成员"),
         max_length=settings.SUBJECT_AUTHORIZATION_LIMIT["grade_manager_member_limit"],
     )
 
 
-class RatingMangerCreateSLZ(RatingMangerBaseInfoSZL):
+class GradeMangerCreateSLZ(GradeMangerBaseInfoSLZ):
     authorization_scopes = serializers.ListField(
         label="系统操作", child=RoleScopeAuthorizationSLZ(label="系统操作"), allow_empty=False
     )
     subject_scopes = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=False)
+    sync_perm = serializers.BooleanField(label="同步分级管理员权限到用户组", default=False)
 
     def validate(self, data):
         if len(data["authorization_scopes"]) != len({sys["system_id"] for sys in data["authorization_scopes"]}):
@@ -139,12 +147,32 @@ class RoleIdSLZ(serializers.Serializer):
     id = serializers.IntegerField(label="角色ID")
 
 
-class RatingMangerListSchemaSLZ(serializers.Serializer):
-    members = serializers.ListField(label="成员列表", child=serializers.CharField(label="用户ID", max_length=128))
+class BaseGradeMangerSchemaSLZ(serializers.Serializer):
+    members = serializers.ListField(label="成员列表", child=RoleMember(label="成员"))
 
     class Meta:
         model = Role
         fields = ("id", "name", "description", "updated_time", "creator", "members")
+
+
+class GradeMangerListSchemaSLZ(BaseGradeMangerSchemaSLZ):
+    is_member = serializers.BooleanField(label="是否是成员")
+    has_subset_manager = serializers.BooleanField(label="是否有子集管理员")
+
+    class Meta:
+        model = Role
+        fields = (
+            "id",
+            "name",
+            "description",
+            "creator",
+            "created_time",
+            "updated_time",
+            "updater",
+            "members",
+            "is_member",
+            "has_subset_manager",
+        )
 
 
 class RoleScopeAuthorizationSchemaSLZ(serializers.Serializer):
@@ -152,7 +180,7 @@ class RoleScopeAuthorizationSchemaSLZ(serializers.Serializer):
     actions = serializers.ListField(label="操作策略", child=GradeManagerActionSLZ(label="策略"))
 
 
-class RatingMangerDetailSchemaSLZ(RatingMangerListSchemaSLZ):
+class GradeMangerDetailSchemaSLZ(BaseGradeMangerSchemaSLZ):
     authorization_scopes = serializers.ListField(
         label="系统操作", child=RoleScopeAuthorizationSchemaSLZ(label="系统操作"), allow_empty=False
     )
@@ -169,10 +197,11 @@ class RatingMangerDetailSchemaSLZ(RatingMangerListSchemaSLZ):
             "members",
             "authorization_scopes",
             "subject_scopes",
+            "sync_perm",
         )
 
 
-class RatingMangerListSLZ(serializers.ModelSerializer):
+class BaseGradeMangerSLZ(serializers.ModelSerializer):
     members = serializers.SerializerMethodField(label="成员列表")
 
     class Meta:
@@ -180,10 +209,68 @@ class RatingMangerListSLZ(serializers.ModelSerializer):
         fields = ("id", "name", "description", "creator", "created_time", "updated_time", "updater", "members")
 
     def get_members(self, obj):
-        return list(RoleUser.objects.filter(role_id=obj.id).values_list("username", flat=True))
+        return [
+            {"username": one.username, "readonly": one.readonly} for one in RoleUser.objects.filter(role_id=obj.id)
+        ]
 
 
-class RatingMangerDetailSLZ(RatingMangerListSLZ):
+class GradeManagerListSLZ(BaseGradeMangerSLZ):
+    is_member = serializers.SerializerMethodField(label="是否是成员")
+    has_subset_manager = serializers.SerializerMethodField(label="是否有子集管理员")
+
+    class Meta:
+        model = Role
+        fields = (
+            "id",
+            "name",
+            "description",
+            "creator",
+            "created_time",
+            "updated_time",
+            "updater",
+            "members",
+            "is_member",
+            "has_subset_manager",
+        )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.role_users = defaultdict(list)
+        self.role_subset_managers = defaultdict(list)
+        self.user_role_ids = []
+        if isinstance(self.instance, (QuerySet, list)) and self.instance:
+            role_ids = [role.id for role in self.instance]
+
+            # 查询role_users
+            for one in RoleUser.objects.filter(role_id__in=role_ids):
+                self.role_users[one.role_id].append({"username": one.username, "readonly": one.readonly})
+
+            # 查询role_subset_managers
+            for one in RoleRelation.objects.filter(parent_id__in=role_ids):
+                self.role_subset_managers[one.parent_id].append(one.role_id)
+
+            # user_role_ids
+            username = self.context["request"].user.username
+            self.user_role_ids = list(RoleUser.objects.filter(username=username).values_list("role_id", flat=True))
+
+    def get_members(self, obj):
+        return self.role_users[obj.id]
+
+    def get_is_member(self, obj):
+        username = self.context["request"].user.username
+        return username in {one["username"] for one in self.role_users[obj.id]}
+
+    def get_has_subset_manager(self, obj):
+        # 查询是否有子集管理员
+        subset_manager_ids = self.role_subset_managers[obj.id]
+        if not subset_manager_ids:
+            return False
+
+        # 查询子集管理员中是否有当前用户
+        return bool(set(subset_manager_ids) & set(self.user_role_ids))
+
+
+class GradeMangerDetailSLZ(BaseGradeMangerSLZ):
     authorization_scopes = serializers.SerializerMethodField(label="系统操作")
     subject_scopes = serializers.SerializerMethodField(label="授权对象")
 
@@ -198,6 +285,7 @@ class RatingMangerDetailSLZ(RatingMangerListSLZ):
             "members",
             "authorization_scopes",
             "subject_scopes",
+            "sync_perm",
         )
 
     def get_authorization_scopes(self, obj):
@@ -211,7 +299,7 @@ class RatingMangerDetailSLZ(RatingMangerListSLZ):
         return [one.dict() for one in subject_list.subjects]
 
 
-class SystemManagerSLZ(RatingMangerListSLZ):
+class SystemManagerSLZ(BaseGradeMangerSLZ):
     system_permission_global_enabled = serializers.SerializerMethodField(label="是否拥有系统所有权限")
 
     class Meta:
@@ -328,3 +416,51 @@ class AuthorizedSubjectsSLZ(serializers.Serializer):
     type = serializers.CharField(label="Subject对象类型")
     id = serializers.CharField(label="Subject对象ID")
     name = serializers.CharField(label="Subject对象名称")
+
+
+class SubsetMangerCreateSLZ(GradeMangerCreateSLZ):
+    subject_scopes = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=True)
+    inherit_subject_scope = serializers.BooleanField(label="继承分级管理员人员管理范围")
+
+    def validate(self, data):
+        data = super().validate(data)
+        if not data["inherit_subject_scope"] and not data["subject_scopes"]:
+            raise serializers.ValidationError({"subject_scopes": ["must not be empty"]})
+        return data
+
+
+class SubsetMangerDetailSLZ(GradeMangerDetailSLZ):
+    class Meta:
+        model = Role
+        fields = (
+            "id",
+            "name",
+            "description",
+            "updated_time",
+            "creator",
+            "members",
+            "authorization_scopes",
+            "inherit_subject_scope",
+            "subject_scopes",
+            "sync_perm",
+        )
+
+
+class RoleSubjectCheckSLZ(serializers.Serializer):
+    subjects = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"))
+
+
+class RoleSearchSLZ(BaseGradeMangerSLZ):
+    class Meta:
+        model = Role
+        fields = (
+            "id",
+            "name",
+            "description",
+            "type",
+            "creator",
+            "created_time",
+            "updated_time",
+            "updater",
+            "members",
+        )

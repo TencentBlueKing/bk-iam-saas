@@ -17,27 +17,31 @@ from backend.util.enum import ChoicesEnum
 class NewbieSceneEnum(ChoicesEnum, LowerStrEnum):
     """新手指引场景枚举"""
 
-    RATING_MANAGER_AUTHORIZATION_SCOPE = auto()
-    RATING_MANAGER_SUBJECT_SCOPE = auto()
-    RATING_MANAGER_MERGE_ACTION = auto()
+    GRADE_MANAGER_AUTHORIZATION_SCOPE = (
+        "rating_manager_authorization_scope"  # NOTE: 不能直接改成auto, 历史原因以前分级管理员是rating_manager, 数据已入库
+    )
+    GRADE_MANAGER_SUBJECT_SCOPE = "rating_manager_subject_scope"
+    GRADE_MANAGER_MERGE_ACTION = "rating_manager_merge_action"
     SWITCH_ROLE = auto()
     CREATE_PERM_TEMPLATE = auto()
     CREATE_GROUP = auto()
     ADD_GROUP_MEMBER = auto()
     ADD_GROUP_PERM_TEMPLATE = auto()
     SET_GROUP_APPROVAL_PROCESS = auto()
+    GRADE_MANAGER_UPGRADE = auto()
 
     _choices_labels = skip(
         (
-            (RATING_MANAGER_AUTHORIZATION_SCOPE, "分级管理员权限授权范围"),
-            (RATING_MANAGER_SUBJECT_SCOPE, "分级管理员人员授权范围"),
-            (RATING_MANAGER_MERGE_ACTION, "分级管理员合并操作"),
+            (GRADE_MANAGER_AUTHORIZATION_SCOPE, "分级管理员权限授权范围"),
+            (GRADE_MANAGER_SUBJECT_SCOPE, "分级管理员人员授权范围"),
+            (GRADE_MANAGER_MERGE_ACTION, "分级管理员合并操作"),
             (SWITCH_ROLE, "切换角色"),
             (CREATE_PERM_TEMPLATE, "创建权限模板"),
             (CREATE_GROUP, "创建用户组"),
             (ADD_GROUP_MEMBER, "添加用户组成员"),
             (ADD_GROUP_PERM_TEMPLATE, "添加用户组权限"),
             (SET_GROUP_APPROVAL_PROCESS, "配置用户组审批流程"),
+            (GRADE_MANAGER_UPGRADE, "一级管理员升级"),
         )
     )
 

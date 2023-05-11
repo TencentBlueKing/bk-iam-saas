@@ -11,23 +11,23 @@ specific language governing permissions and limitations under the License.
 import logging
 import time
 
-from celery import task
+from celery import shared_task
 
 from backend.biz.model_event import ModelEventBiz
 from backend.component import iam
-from backend.service.constants import ModelChangeEventStatusEnum
+from backend.service.constants import ModelChangeEventStatus
 
 logger = logging.getLogger("celery")
 
 
-@task(ignore_result=True)
+@shared_task(ignore_result=True)
 def execute_model_change_event():
     """作为后台模型事件的异步任务消费者，目前包括删除Action的相关策略，删除Action权限模型"""
     biz = ModelEventBiz()
 
     # 1. 查询未执行过的模型变更事件
     # Note: 由于定时任务处理时，若数量过多，单个周期内处理不完，会导致多个周期重叠处理相同事件，所以默认只处理1000条
-    events = biz.list(ModelChangeEventStatusEnum.Pending.value)
+    events = biz.list(ModelChangeEventStatus.Pending.value)
     # 2. 逐一执行事件
     for event in events:
         executor = biz.get_executor(event)
@@ -38,7 +38,7 @@ def execute_model_change_event():
             logger.exception(f"execute model change event fail! event={event}")
 
 
-@task(ignore_result=True)
+@shared_task(ignore_result=True)
 def cleanup_finished_model_change_event():
     """
     清理已经结束很长时间的模型变更事件
@@ -50,7 +50,7 @@ def cleanup_finished_model_change_event():
     biz.delete_finished_event(before_updated_at, 1000)
 
 
-@task(ignore_result=True)
+@shared_task(ignore_result=True)
 def delete_unreferenced_expressions():
     """删除未被引用的expression"""
     iam.delete_unreferenced_expressions()

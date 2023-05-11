@@ -194,20 +194,26 @@ export function json2Query (param, key) {
     const mappingOperator = '=';
     const separator = '&';
     let paramStr = '';
-
-    if (param instanceof String || typeof param === 'string'
-            || param instanceof Number || typeof param === 'number'
-            || param instanceof Boolean || typeof param === 'boolean'
+    if (
+        param instanceof String
+        || typeof param === 'string'
+        || param instanceof Number
+        || typeof param === 'number'
+        || param instanceof Boolean
+        || typeof param === 'boolean'
     ) {
         paramStr += separator + key + mappingOperator + encodeURIComponent(param);
     } else {
-        Object.keys(param).forEach(p => {
-            const value = param[p];
-            const k = (key === null || key === '' || key === undefined)
-                ? p
-                : key + (param instanceof Array ? '[' + p + ']' : '.' + p);
-            paramStr += separator + json2Query(value, k);
-        });
+        if (param) {
+            Object.keys(param).forEach((p) => {
+                const value = param[p];
+                const k
+                    = key === null || key === '' || key === undefined
+                        ? p
+                        : key + (param instanceof Array ? '[' + p + ']' : '.' + p);
+                paramStr += separator + json2Query(value, k);
+            });
+        }
     }
     return paramStr.substr(1);
 }
@@ -415,4 +421,176 @@ export function deepEquals (x, y) {
         }
     }
     return true;
+}
+
+/**
+ * 查找地址栏是否有传入的值
+ *
+ * @param {number/string/object} x
+ */
+export function existValue (value) {
+    // 1、url截取?之后的字符串(不包含?)
+    const pathSearch = window.location.search.substr(1);
+    const result = [];
+    // 2、以&为界截取参数键值对
+    const paramItems = pathSearch.split('&');
+    // 3、将键值对形式的参数存入数组
+    for (let i = 0; i < paramItems.length; i++) {
+        const paramKey = paramItems[i].split('=')[0];
+        const paramValue = paramItems[i].split('=')[1];
+        result.push({
+            key: paramKey,
+            value: paramValue
+        });
+    }
+
+    // 4、遍历value值
+    for (let j = 0; j < result.length; j++) {
+        if (result[j].value === value) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * 根据参数key获取地址栏的value
+ *
+ * @param {number/string/object} x
+ */
+export function getParamsValue (key) {
+    // 1、url截取?之后的字符串(不包含?)
+    const pathSearch = window.location.search.substr(1);
+    const result = [];
+    // 2、以&为界截取参数键值对
+    const paramItems = pathSearch.split('&');
+    // 3、将键值对形式的参数存入数组
+    for (let i = 0; i < paramItems.length; i++) {
+        const paramKey = paramItems[i].split('=')[0];
+        const paramValue = paramItems[i].split('=')[1];
+        result.push({
+            key: paramKey,
+            value: paramValue
+        });
+    }
+
+    // 4、遍历value值
+    for (let j = 0; j < result.length; j++) {
+        if (result[j].key === key) {
+            return result[j].value;
+        }
+    }
+}
+
+/**
+ * 根据毫秒生成睡眠函数
+ *
+ * @param number
+ */
+export function sleep (time) {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            resolve();
+        }, time);
+    });
+}
+
+/**
+ * 根据状态码生成不同提示
+ *
+ * @param {number/string} type
+ * @param {object} payload
+ * @param {boolean} isEmpty 为了处理异常数据刷新一次正常，执行正常code，这时候需要清空字段
+ */
+export function formatCodeData (type, payload, isEmpty = true) {
+    type = +type;
+    const codeData = {
+        0: () => {
+            const operateEmpty = {
+                true: () => {
+                    return payload.tipType === 'search'
+                        ? Object.assign(payload, { type: 'search-empty', text: '搜索结果为空', tipType: 'search' })
+                        : Object.assign(payload, { type: 'empty', text: '暂无数据', tipType: '' });
+                },
+                false: () => {
+                    return Object.assign(payload, { type: '', text: '', tipType: '' });
+                }
+            };
+            return operateEmpty[isEmpty]();
+        },
+        401: () => {
+            return Object.assign(payload, { type: 403, text: '没有权限', tipType: 'refresh' });
+        },
+        403: () => {
+            return Object.assign(payload, { type: 403, text: '没有权限', tipType: 'refresh' });
+        },
+        404: () => {
+            return Object.assign(payload, { type: 404, text: '数据不存在', tipType: 'refresh' });
+        },
+        500: () => {
+            return Object.assign(payload, { type: 500, text: '数据获取异常', tipType: 'refresh' });
+        },
+        1902000: () => {
+            return Object.assign(payload, { type: 500, text: '数据获取异常', tipType: 'refresh' });
+        },
+        1902200: () => {
+            return Object.assign(payload, { type: 500, text: '数据获取异常', tipType: 'refresh' });
+        },
+        1902204: () => {
+            return Object.assign(payload, { type: 500, text: '暂不支持搜索', tipType: 'refresh' });
+        },
+        1902229: () => {
+            return Object.assign(payload, { type: 500, text: '搜索过于频繁', tipType: 'refresh' });
+        },
+        1902222: () => {
+            return Object.assign(payload, { type: 500, text: '搜索结果太多', tipType: 'refresh' });
+        }
+    };
+    return codeData[type] ? codeData[type]() : codeData[500]();
+}
+
+/**
+ * 递归查询匹配角色id
+ *
+ * @param {number} id
+ * @param {Array} list
+ */
+export function getTreeNode (id, list) {
+    for (let i = 0; i < list.length; i++) {
+        if (list[i].id === id) {
+            return list[i];
+        } else if (list[i].sub_roles && list[i].sub_roles.length) {
+            const result = getTreeNode(id, list[i].sub_roles);
+            if (result) {
+                return result;
+            }
+        }
+    }
+}
+
+// 处理中英文国际化
+export function renderLabelWidth (payload) {
+    const isCN = ['zh-cn'].includes(window.CUR_LANGUAGE);
+    const typeMap = {
+        resource: () => {
+            return isCN ? 120 : 120;
+        },
+        member: () => {
+            return isCN ? 140 : 350;
+        },
+        rating_manager_merge_action_guide: () => {
+            return isCN ? { top: '-25px', right: '260px' } : { top: '-30px', right: '260px' };
+        }
+    };
+    return typeMap[payload]();
+}
+
+// 获取cookie
+export function getCookie (name) {
+    const data = document.cookie.split(';');
+    const params = {};
+    for (let i = 0; i < data.length; i++) {
+        params[data[i].split('=')[0].replace(/\s/, '')] = data[i].split('=')[1];
+    }
+    return params[name];
 }

@@ -10,11 +10,11 @@ specific language governing permissions and limitations under the License.
 """
 from rest_framework import serializers
 
-from backend.service.constants import ApplicationTypeEnum
+from backend.service.constants import ApplicationType
 
 
 class ApporvalProcessQuerySLZ(serializers.Serializer):
-    type = serializers.ChoiceField(label="申请审批类型", choices=ApplicationTypeEnum.get_choices())
+    type = serializers.ChoiceField(label="申请审批类型", choices=ApplicationType.get_choices())
 
 
 class ApprovalProcessSLZ(serializers.Serializer):
@@ -24,13 +24,13 @@ class ApprovalProcessSLZ(serializers.Serializer):
 
 
 class ApprovalProcessGlobalConfigSLZ(serializers.Serializer):
-    type = serializers.ChoiceField(label="申请类型", choices=ApplicationTypeEnum.get_choices())
+    type = serializers.ChoiceField(label="申请类型", choices=ApplicationType.get_choices())
     process_id = serializers.IntegerField(label="流程ID")
     process_name = serializers.CharField(label="流程名称")
 
 
 class ApprovalProcessGlobalConfigModifySLZ(serializers.Serializer):
-    type = serializers.ChoiceField(label="申请审批类型", choices=ApplicationTypeEnum.get_choices())
+    type = serializers.ChoiceField(label="申请审批类型", choices=ApplicationType.get_choices())
     process_id = serializers.IntegerField(label="流程ID")
 
 

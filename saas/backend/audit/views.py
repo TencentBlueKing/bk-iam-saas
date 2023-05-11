@@ -39,7 +39,7 @@ class EventViewSet(mixins.ListModelMixin, GenericViewSet):
         role = self.request.role
         if role.type == RoleType.SUPER_MANAGER.value:
             return queryset
-        elif role.type in [RoleType.SYSTEM_MANAGER.value, RoleType.RATING_MANAGER.value]:
+        elif role.type in [RoleType.SYSTEM_MANAGER.value, RoleType.GRADE_MANAGER.value]:
             return queryset.filter(role_id=role.id)
 
         return queryset.none()

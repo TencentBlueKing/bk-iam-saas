@@ -4,8 +4,9 @@
             <iam-guide
                 type="create_perm_template"
                 direction="left"
-                :style="{ top: '-15px', left: '80px' }"
-                :content="$t(`m.guide['创建模板']`)" />
+                :style="{ top: curLanguageIsCn ? '-20px' : '-32px', left: '80px' }"
+                :content="$t(`m.guide['创建模板']`)"
+            />
             <bk-button theme="primary" @click="handleCreate" data-test-id="permTemplate_btn_create">
                 {{ $t(`m.common['新建']`) }}
             </bk-button>
@@ -14,11 +15,12 @@
                 </bk-button> -->
             <div slot="right">
                 <iam-search-select
-                    @on-change="handleSearch"
+                    style="width: 420px"
                     :data="searchData"
                     :value="searchValue"
                     :quick-search-method="quickSearchMethod"
-                    style="width: 420px;" />
+                    @on-change="handleSearch"
+                />
             </div>
         </render-search>
         <bk-table
@@ -26,14 +28,16 @@
             size="small"
             :class="{ 'set-border': tableLoading }"
             ext-cls="perm-template-table"
+            :max-height="tableHeight"
             :pagination="pagination"
             @page-change="handlePageChange"
             @page-limit-change="handleLimitChange"
             @select="handlerChange"
             @select-all="handlerAllChange"
-            v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
+            v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
+        >
             <!-- <bk-table-column type="selection" align="center"></bk-table-column> -->
-            <bk-table-column :label="$t(`m.permTemplate['模板名']`)" :min-width="220">
+            <bk-table-column :label="$t(`m.permTemplate['模板名']`)" width="220">
                 <template slot-scope="{ row }">
                     <span class="perm-template-name" :title="row.name" @click="handleView(row, 'TemplateDetail')">
                         {{ row.name }}
@@ -47,6 +51,19 @@
                     <span :title="row.system.name">{{ row.system.name }}</span>
                 </template>
             </bk-table-column>
+            <!-- <template v-if="['rating_manager'].includes(curRole)">
+                <bk-table-column
+                    :label="$t(`m.nav['管理空间']`)"
+                >
+                    <template slot-scope="{ row }">
+                        <span class="user-group-name" :title="row.role.name" @click="handleView(row)">
+                            {{ row.role.name || '--' }}
+                        </span>
+                        <span>{{ user.role && user.role.name === row.role.name
+                            ? `(${il8n('levelSpace', '当前空间')})` : '' }}</span>
+                    </template>
+                </bk-table-column>
+            </template> -->
             <bk-table-column :label="$t(`m.permTemplate['关联的组']`)">
                 <template slot-scope="{ row }">
                     <template v-if="!!row.subject_count">
@@ -54,23 +71,21 @@
                             {{ row.subject_count }}
                         </bk-button>
                     </template>
-                    <template v-else>
-                        --
-                    </template>
+                    <template v-else> -- </template>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.permTemplate['创建人']`)" prop="creator"></bk-table-column>
-            <bk-table-column :label="$t(`m.common['创建时间']`)">
+            <bk-table-column :label="$t(`m.common['创建时间']`)" width="240">
                 <template slot-scope="{ row }">
                     <span :title="row.created_time">{{ row.created_time }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.common['描述']`)">
+            <bk-table-column :label="$t(`m.common['描述']`)" width="300">
                 <template slot-scope="{ row }">
                     <span :title="row.description !== '' ? row.description : ''">{{ row.description || '--' }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.common['操作']`)" width="270">
+            <bk-table-column :label="$t(`m.common['操作']`)" width="100">
                 <template slot-scope="{ row }">
                     <section>
                         <!-- <bk-button
@@ -79,25 +94,27 @@
                             @click="handleRelateGroup(row)">
                             {{ $t(`m.permTemplate['关联用户组']`) }}
                         </bk-button> -->
-                        <bk-button
-                            theme="primary"
-                            text
-                            v-if="row.subject_count < 1"
-                            @click="handleTemplateDelete(row)">
+                        <bk-button theme="primary" text v-if="row.subject_count < 1" @click="handleTemplateDelete(row)">
                             {{ $t(`m.common['删除']`) }}
                         </bk-button>
-                        <bk-button
-                            theme="primary"
-                            disabled
-                            text
-                            v-else>
-                            <span v-bk-tooltips.bottom="$t(`m.permTemplate['有关联的组时不能删除']`)">
+                        <bk-button theme="primary" disabled text v-else>
+                            <span :title="$t(`m.permTemplate['有关联的组时不能删除']`)">
                                 {{ $t(`m.common['删除']`) }}
                             </span>
                         </bk-button>
                     </section>
                 </template>
             </bk-table-column>
+            <template slot="empty">
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-clear="handleEmptyClear"
+                    @on-refresh="handleEmptyRefresh"
+                />
+            </template>
         </bk-table>
 
         <user-group-dialog
@@ -106,16 +123,19 @@
             :template-id="curTempalteId"
             :loading="addGroupLoading"
             @on-cancel="handleCancelSelect"
-            @on-sumbit="handleSumbitSelectUserGroup" />
+            @on-sumbit="handleSumbitSelectUserGroup"
+        />
     </div>
 </template>
 <script>
     import _ from 'lodash';
+    import { mapGetters } from 'vuex';
     import UserGroupDialog from '@/components/render-user-group-dialog';
     import IamSearchSelect from '@/components/iam-search-select';
     import IamGuide from '@/components/iam-guide/index.vue';
     import { fuzzyRtxSearch } from '@/common/rtx';
     import { buildURLParams } from '@/common/url';
+    import { formatCodeData, getWindowHeight } from '@/common/util';
     export default {
         name: '',
         components: {
@@ -139,21 +159,42 @@
                 currentSelectList: [],
                 currentPermTemplate: {},
                 editLoading: false,
-
                 isShowUserGroupDialog: false,
                 curTemplateName: '',
                 curTempalteId: '',
-                addGroupLoading: false
+                addGroupLoading: false,
+                spaceFiltersList: [],
+                curRole: 'staff',
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
+            ...mapGetters(['user', 'externalSystemId']),
             isCanBatchDelete () {
                 return this.currentSelectList.length > 0;
+            },
+            isRatingManager () {
+                return this.curRole === 'rating_manager';
+            },
+            tableHeight () {
+                return getWindowHeight() - 185;
             }
         },
         watch: {
             'pagination.current' (value) {
                 this.currentBackup = value;
+            },
+            user: {
+                handler (value) {
+                    this.curRole = value.role.type || 'staff';
+                },
+                immediate: true,
+                deep: true
             }
         },
         created () {
@@ -179,6 +220,7 @@
                     disabled: true
                 }
             ];
+            this.setCurrentQueryCache(this.refreshCurrentQuery());
             const isObject = payload => {
                 return Object.prototype.toString.call(payload) === '[object Object]';
             };
@@ -236,7 +278,7 @@
                 window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
                 for (const key in this.searchParams) {
                     const tempObj = this.searchData.find(item => key === item.id);
-                    if (tempObj.remoteMethod && typeof tempObj.remoteMethod === 'function') {
+                    if (tempObj && tempObj.remoteMethod && typeof tempObj.remoteMethod === 'function') {
                         if (this.searchList.length > 0) {
                             const tempData = this.searchList.find(item => item.id === key);
                             params[key] = tempData.values[0];
@@ -245,6 +287,7 @@
                         params[key] = this.searchParams[key];
                     }
                 }
+                this.emptyData = Object.assign(this.emptyData, { tipType: Object.keys(this.searchParams).length > 0 ? 'search' : '' });
                 return {
                     ...params,
                     limit,
@@ -276,6 +319,19 @@
                 });
             },
 
+            handleEmptyClear () {
+                this.searchParams = {};
+                this.searchValue = [];
+                this.emptyData.tipType = '';
+                this.resetPagination();
+                this.fetchTemplateList(true);
+            },
+
+            handleEmptyRefresh () {
+                this.resetPagination();
+                this.fetchTemplateList(true);
+            },
+
             handleTemplateDelete ({ id }) {
                 this.$bkInfo({
                     title: this.$t(`m.dialog['确认删除']`),
@@ -304,17 +360,20 @@
                     offset: this.pagination.limit * (this.pagination.current - 1)
                 };
                 try {
-                    const res = await this.$store.dispatch('permTemplate/getTemplateList', params);
-                    this.pagination.count = res.data.count;
-                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
+                    const { code, data } = await this.$store.dispatch('permTemplate/getTemplateList', params);
+                    this.pagination.count = data.count;
+                    this.tableList.splice(0, this.tableList.length, ...(data.results || []));
                     this.$store.commit('setGuideShowByField', { field: 'template', flag: !this.tableList.length > 0 });
                     this.$store.commit('setGuideShowByField', { field: 'group', flag: this.tableList.length > 0 });
+                    this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
@@ -365,13 +424,13 @@
                 const hasSelectedLen = this.currentSelectList.length;
                 let deleteTitle = '';
                 if (hasSelectedLen === 1) {
-                    deleteTitle = `确认删除？`;
+                    deleteTitle = `${this.$t(`m.dialog['确认删除']`)}`;
                 } else {
-                    deleteTitle = `确认删除${hasSelectedLen}个模板？`;
+                    deleteTitle = `${this.$t(`m.common['确认删除']`)}${hasSelectedLen}${this.$t(`m.permTemplate['个模板']`)}？`;
                 }
                 this.$bkInfo({
                     title: deleteTitle,
-                    subTitle: '删除权限模版不会影响已授权用户，可以放心删除。',
+                    subTitle: this.$t(`m.permTemplate['删除权限模版不会影响已授权用户，可以放心删除。']`),
                     maskClose: true,
                     confirmFn: async () => {
                         console.warn('');
@@ -387,7 +446,11 @@
             },
 
             handleRemoteSystem (value) {
-                return this.$store.dispatch('system/getSystems')
+                const params = {};
+                if (this.externalSystemId) {
+                    params.hidden = false;
+                }
+                return this.$store.dispatch('system/getSystems', params)
                     .then(({ data }) => {
                         return data.map(({ id, name }) => ({ id, name })).filter(item => item.name.indexOf(value) > -1);
                     });
@@ -396,6 +459,7 @@
             handleSearch (payload, result) {
                 this.searchParams = payload;
                 this.searchList = result;
+                this.emptyData.tipType = 'search';
                 this.resetPagination();
                 this.fetchTemplateList(true);
             },
@@ -449,26 +513,26 @@
     };
 </script>
 <style lang="postcss">
-    .iam-perm-template-wrapper {
-        .perm-template-table {
-            margin-top: 16px;
-            border-right: none;
-            border-bottom: none;
-            &.set-border {
-                border-right: 1px solid #dfe0e5;
-                border-bottom: 1px solid #dfe0e5;
-            }
-            .perm-template-name {
-                color: #3a84ff;
-                cursor: pointer;
-                &:hover {
-                    color: #699df4;
-                }
-            }
-            .lock-status {
-                font-size: 12px;
-                color: #fe9c00;
-            }
-        }
+.iam-perm-template-wrapper {
+  .perm-template-table {
+    margin-top: 16px;
+    border-right: none;
+    border-bottom: none;
+    &.set-border {
+      border-right: 1px solid #dfe0e5;
+      border-bottom: 1px solid #dfe0e5;
     }
+    .perm-template-name {
+      color: #3a84ff;
+      cursor: pointer;
+      &:hover {
+        color: #699df4;
+      }
+    }
+    .lock-status {
+      font-size: 12px;
+      color: #fe9c00;
+    }
+  }
+}
 </style>

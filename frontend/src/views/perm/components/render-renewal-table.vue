@@ -8,6 +8,7 @@
             ext-cls="perm-renewal-table"
             :outer-border="false"
             :header-border="false"
+            :max-height="500"
             :pagination="pagination"
             @page-change="pageChange"
             @page-limit-change="limitChange"
@@ -24,7 +25,9 @@
                     :label="item.label"
                     :prop="item.prop">
                     <template slot-scope="{ row }">
-                        <span>{{ row.system ? row.system.name || '' : '' }}</span>
+                        <span :title="row.system ? row.system.name || '' : ''">
+                            {{ row.system ? row.system.name || '' : '' }}
+                        </span>
                     </template>
                 </bk-table-column>
                 <bk-table-column
@@ -51,13 +54,24 @@
                     </template>
                 </bk-table-column>
             </template>
+            <template slot="empty">
+                <ExceptionEmpty
+                    :type="emptyRenewalData.type"
+                    :empty-text="emptyRenewalData.text"
+                    :tip-text="emptyRenewalData.tip"
+                    :tip-type="emptyRenewalData.tipType"
+                    @on-refresh="handleEmptyRefresh"
+                />
+            </template>
         </bk-table>
     </div>
 </template>
 <script>
+    import _ from 'lodash';
     import { mapGetters } from 'vuex';
     import renderExpireDisplay from '@/components/render-renewal-dialog/display';
     import { PERMANENT_TIMESTAMP } from '@/common/constants';
+    import { formatCodeData } from '@/common/util';
 
     // 过期时间的天数区间
     const EXPIRED_DISTRICT = 15;
@@ -87,6 +101,17 @@
             count: {
                 type: Number,
                 default: () => 0
+            },
+            emptyData: {
+                type: Object,
+                default: () => {
+                    return {
+                        type: '',
+                        text: '',
+                        tip: '',
+                        tipType: ''
+                    };
+                }
             }
         },
         data () {
@@ -102,7 +127,13 @@
                 currentBackup: 1,
                 tableProps: [],
                 systemFilter: [],
-                isLoading: false
+                isLoading: false,
+                emptyRenewalData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -166,34 +197,52 @@
             },
             data: {
                 handler (value) {
-                    this.allData = value;
+                    this.allData = _.cloneDeep(value);
                     this.pagination = Object.assign(this.pagination, { count: value.length });
                     const data = this.getCurPageData();
                     this.tableList.splice(0, this.tableList.length, ...data);
-                    const getDays = payload => {
-                        const dif = payload - this.user.timestamp;
-                        if (dif < 1) {
-                            return 0;
-                        }
-                        return Math.ceil(dif / (24 * 3600));
-                    };
-                    this.currentSelectList = this.tableList.filter(item => getDays(item.expired_at) < EXPIRED_DISTRICT);
-                    if (this.type === 'custom') {
-                        this.tableList.forEach(item => {
-                            if (!this.systemFilter.find(subItem => subItem.value === item.system.id)) {
-                                this.systemFilter.push({
-                                    text: item.system.name,
-                                    value: item.system.id
+                    // this.currentSelectList = this.tableList.filter(item =>
+                    //     this.getDays(item.expired_at) < EXPIRED_DISTRICT);
+                    // if (this.type === 'custom') {
+                    //     this.tableList.forEach(item => {
+                    //         if (!this.systemFilter.find(subItem => subItem.value === item.system.id)) {
+                    //             this.systemFilter.push({
+                    //                 text: item.system.name,
+                    //                 value: item.system.id
+                    //             });
+                    //         }
+                    //     });
+                    // }
+                    this.$nextTick(() => {
+                        const tableItem = {
+                            group: () => {
+                                this.currentSelectList = this.tableList.filter(item =>
+                                    this.getDays(item.expired_at) < EXPIRED_DISTRICT);
+                                this.tableList.forEach(item => {
+                                    if (this.currentSelectList.map(_ => _.id).includes(item.id)) {
+                                        this.$refs.permTableRef
+                                            && this.$refs.permTableRef.toggleRowSelection(item, true);
+                                    }
+                                });
+                            },
+                            custom: () => {
+                                this.currentSelectList = this.allData.filter(item =>
+                                    this.getDays(item.expired_at) < EXPIRED_DISTRICT);
+                                this.allData.forEach(item => {
+                                    if (!this.systemFilter.find(subItem => subItem.value === item.system.id)) {
+                                        this.systemFilter.push({
+                                            text: item.system.name,
+                                            value: item.system.id
+                                        });
+                                    }
+                                    if (this.currentSelectList.map(_ => _.id).includes(item.id)) {
+                                        this.$refs.permTableRef
+                                            && this.$refs.permTableRef.toggleRowSelection(item, true);
+                                    }
                                 });
                             }
-                        });
-                    }
-                    this.$nextTick(() => {
-                        this.tableList.forEach(item => {
-                            if (this.currentSelectList.map(_ => _.id).includes(item.id)) {
-                                this.$refs.permTableRef && this.$refs.permTableRef.toggleRowSelection(item, true);
-                            }
-                        });
+                        };
+                        return tableItem[this.type] ? tableItem[this.type]() : tableItem['group']();
                     });
                 },
                 immediate: true
@@ -203,9 +252,23 @@
                     this.pagination.count = value;
                 },
                 immediate: true
+            },
+            emptyData: {
+                handler (value) {
+                    this.emptyRenewalData = value;
+                },
+                immediate: true
             }
         },
         methods: {
+            getDays (payload) {
+                const dif = payload - this.user.timestamp;
+                if (dif < 1) {
+                    return 0;
+                }
+                return Math.ceil(dif / (24 * 3600));
+            },
+
             getIsSelect () {
                 return this.tableList.length > 0;
             },
@@ -214,13 +277,13 @@
                 if (payload === 'group') {
                     return [
                         { label: this.$t(`m.userGroup['用户组名']`), prop: 'name' },
-                        { label: this.$t(`m.common['到期时间']`), prop: 'expired_at' }
+                        { label: this.$t(`m.common['有效期']`), prop: 'expired_at' }
                     ];
                 }
                 return [
                     { label: this.$t(`m.common['操作']`), prop: 'action' },
                     { label: this.$t(`m.common['所属系统']`), prop: 'system' },
-                    { label: this.$t(`m.common['到期时间']`), prop: 'expired_at' }
+                    { label: this.$t(`m.common['有效期']`), prop: 'expired_at' }
                 ];
             },
 
@@ -246,7 +309,25 @@
             },
 
             handlerAllChange (selection) {
-                this.currentSelectList = [...selection];
+                const tabItem = {
+                    group: () => {
+                        this.currentSelectList = [...selection];
+                    },
+                    custom: () => {
+                        // 直接点全选按钮切换数量为当前页条数，处理点击其他页面数据再点全选数量不对等问题
+                        if (selection.length === this.tableList.length || selection.length === this.allData.length) {
+                            this.currentSelectList = [...this.allData];
+                            this.currentSelectList.forEach(item => {
+                                this.$refs.permTableRef
+                                    && this.$refs.permTableRef.toggleRowSelection(item, true);
+                            });
+                        } else {
+                            this.currentSelectList = [];
+                            this.$refs.permTableRef.clearSelection();
+                        }
+                    }
+                };
+                return tabItem[this.type] ? tabItem[this.type]() : tabItem['group']();
             },
 
             handlerChange (selection, row) {
@@ -271,36 +352,52 @@
                     const { current, limit } = this.pagination;
                     const tabItem = {
                         group: async () => {
-                            const { data } = await this.$store.dispatch('renewal/getExpireSoonGroupWithUser', {
+                            const { code, data } = await this.$store.dispatch('renewal/getExpireSoonGroupWithUser', {
                                 page_size: limit,
                                 page: current
                             });
                             this.tableList = data.results || [];
                             this.pagination.count = data.count;
+                            this.emptyRenewalData
+                                = formatCodeData(code, this.emptyRenewalData, this.tableList.length === 0);
                         },
                         custom: () => {
                             this.tableList = this.getCurPageData(current);
-                            console.log(this.tableList);
+                            this.$nextTick(() => {
+                                this.allData.forEach(item => {
+                                    if (this.currentSelectList.map(_ => _.id).includes(item.id)) {
+                                        this.$refs.permTableRef
+                                            && this.$refs.permTableRef.toggleRowSelection(item, true);
+                                    }
+                                });
+                            });
                         }
                     };
                     return tabItem[this.type]();
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyRenewalData = formatCodeData(code, this.emptyRenewalData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
                 } finally {
                     this.isLoading = false;
                 }
-            }
+            },
 
+            handleEmptyRefresh () {
+                this.pagination = Object.assign(this.pagination, { current: 1, limit: 10 });
+                this.fetchTableData();
+            }
         }
     };
 </script>
+
 <style lang="postcss">
     .iam-perm-renewal-table-wrapper {
         min-height: 200px;

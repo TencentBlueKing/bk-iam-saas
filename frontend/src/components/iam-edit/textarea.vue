@@ -10,7 +10,7 @@
                         </template>
                     </slot>
                 </div>
-                <div class="edit-action-box">
+                <div class="edit-action-box" v-if="isEditMode">
                     <Icon
                         type="edit-fill"
                         class="edit-action"
@@ -30,7 +30,7 @@
                 ref="input"
                 type="textarea"
                 :placeholder="placeholder"
-                maxlength="255"
+                :maxlength="maxLength"
                 :rows="3"
                 @input="handleInput"
                 @blur="handleBlur" />
@@ -67,6 +67,17 @@
             rules: {
                 type: Array,
                 default: () => []
+            },
+            maxLength: {
+                type: Number,
+                default: 255
+            },
+            mode: {
+                type: String,
+                default: 'edit',
+                validator: function (value) {
+                    return ['detail', 'edit'].includes(value);
+                }
             }
         },
         data () {
@@ -83,6 +94,9 @@
                 return {
                     width: this.width
                 };
+            },
+            isEditMode () {
+                return this.mode === 'edit';
             }
         },
         watch: {

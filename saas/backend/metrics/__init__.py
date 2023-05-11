@@ -12,7 +12,7 @@ specific language governing permissions and limitations under the License.
 from urllib.parse import urlparse
 
 from aenum import LowerStrEnum, auto
-from prometheus_client import Histogram
+from prometheus_client import Counter, Histogram
 
 
 class ComponentEnum(LowerStrEnum):
@@ -58,4 +58,11 @@ callback_request_duration = Histogram(
     "How long it took to process the request, partitioned by status code, method and HTTP path.",
     ("system", "resource_type", "function", "method", "path", "status"),
     buckets=(50, 100, 200, 500, 1000, 2000, 5000),
+)
+
+# for long task
+long_task_run_counter = Counter(
+    "bkiam_long_task_run_counter",
+    "Counter of the long task, partitioned by id, type and status.",
+    ("id", "type"),
 )

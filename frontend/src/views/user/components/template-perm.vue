@@ -16,8 +16,8 @@
                     </template>
                 </bk-table-column>
                 <bk-table-column :label="$t(`m.common['所属系统']`)" prop="system.name"></bk-table-column>
-                <bk-table-column :label="$t(`m.common['到期时间']`)" prop="expired_at_display"></bk-table-column>
-                <bk-table-column :label="$t(`m.perm['最近一次更新时间']`)">
+                <bk-table-column :label="$t(`m.common['有效期']`)" prop="expired_at_display"></bk-table-column>
+                <bk-table-column :label="$t(`m.perm['最近一次更新时间']`)" width="240">
                     <template slot-scope="{ row }">
                         <span :title="row.updated_time">{{ row.updated_time }}</span>
                     </template>
@@ -35,6 +35,15 @@
                             @click="showQuitTemplates(row)">{{ $t(`m.common['移除']`) }}</bk-button>
                     </template>
                 </bk-table-column>
+                <template slot="empty">
+                    <ExceptionEmpty
+                        :type="emptyData.type"
+                        :empty-text="emptyData.text"
+                        :tip-text="emptyData.tip"
+                        :tip-type="emptyData.tipType"
+                        @on-refresh="handleEmptyRefresh"
+                    />
+                </template>
             </bk-table>
         </div>
 
@@ -102,6 +111,7 @@
     import PreviewResourceSideslider from '../../perm-template/components/preview-resource-sideslider';
     import RenderPermSideslider from '../../perm/components/render-template-perm-sideslider';
     import RenderDetail from '../../perm/components/render-detail';
+    import { formatCodeData } from '@/common/util';
 
     export default {
         name: '',
@@ -155,7 +165,13 @@
                 renderDetailCom: 'RenderDetail',
 
                 pageLoading: false,
-                tableLoading: false
+                tableLoading: false,
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -173,19 +189,22 @@
                 this.pageLoading = isPageLoading;
                 const { type } = this.data;
                 try {
-                    const res = await this.$store.dispatch('perm/getPermTemplates', {
+                    const { code, data } = await this.$store.dispatch('perm/getPermTemplates', {
                         subjectType: type === 'user' ? type : 'department',
                         subjectId: type === 'user' ? this.data.username : this.data.id
                     });
-                    this.dataList.splice(0, this.dataList.length, ...(res.data || []));
+                    this.dataList.splice(0, this.dataList.length, ...(data || []));
                     this.initPageConf();
                     this.curPageData = this.getDataByPage(this.pageConf.current);
+                    this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
@@ -202,6 +221,10 @@
                 this.pageConf.current = 1;
                 const total = this.dataList.length;
                 this.pageConf.count = total;
+            },
+
+            async handleEmptyRefresh () {
+                await this.fetchPermTemplates(false, true);
             },
 
             handleCheckUpdate (payload) {
@@ -307,7 +330,7 @@
             showQuitTemplates (row) {
                 this.deleteDialogConf.visiable = true;
                 this.deleteDialogConf.row = Object.assign({}, row);
-                this.deleteDialogConf.msg = `${this.$t(`m.info['解除与权限模板']`)}【${row.name}】${this.$t(`m.common['的关联']`)}，${this.$t(`m.info['当前用户将不再继承该模板权限']`)}。`;
+                this.deleteDialogConf.msg = `${this.$t(`m.info['解除与权限模板']`)}${this.$t(`m.common['【']`)}${row.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的关联']`)}${this.$t(`m.common['，']`)}${this.$t(`m.info['当前用户将不再继承该模板权限']`)}${this.$t(`m.common['。']`)}`;
             },
 
             /**

@@ -61,8 +61,12 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getApplyDetail ({ commit, state, dispatch }, { id }, config) {
-            return http.get(`${AJAX_URL_PREFIX}/applications/${id}/`, {}, config);
+        getApplyDetail ({ commit, state, dispatch }, params, config) {
+            const requestParams = Object.assign({}, params);
+            const id = requestParams.id;
+            delete requestParams.id;
+            const queryParams = Object.keys(requestParams).length ? `${id}/?${json2Query(requestParams)}` : `${id}/`;
+            return http.get(`${AJAX_URL_PREFIX}/applications/${queryParams}`, {}, config);
         },
 
         /**
@@ -76,8 +80,12 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        applyCancel ({ commit, state, dispatch }, { id }, config) {
-            return http.put(`${AJAX_URL_PREFIX}/applications/${id}/cancel/`, {}, config);
+        applyCancel ({ commit, state, dispatch }, params, config) {
+            const requestParams = Object.assign({}, params);
+            const id = requestParams.id;
+            delete requestParams.id;
+            const queryParams = Object.keys(requestParams).length ? `${id}/cancel/?${json2Query(requestParams)}` : `${id}/cancel/`;
+            return http.put(`${AJAX_URL_PREFIX}/applications/${queryParams}`, {}, config);
         }
     }
 };

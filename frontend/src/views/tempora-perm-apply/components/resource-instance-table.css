@@ -49,7 +49,8 @@ min-height: 101px;
         }
         td:first-child .cell,
         th:first-child .cell {
-            padding-left: 15px;
+            /* padding-left: 15px; */
+            padding-left: 10px;
         }
         .iam-deadline-select.is-default-trigger.is-unselected:before {
             color: #63656e !important;
@@ -130,7 +131,7 @@ min-height: 101px;
 
     .cancel-renewal-action {
         display: block;
-        width: 100px;
+        width: 120px;
         margin: 10px 0 0 78px;
     }
 

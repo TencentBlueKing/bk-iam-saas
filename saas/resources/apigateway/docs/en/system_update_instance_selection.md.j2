@@ -1,0 +1,36 @@
+### Modify instanceSelection
+
+----------
+{% include '_api_v1_model_instance_selections.md.j2' %}
+----------
+
+#### Parameters
+
+| field | type | required | location | description |
+| :--- | :--- | :--- |:---|:--- |
+| system_id | string | yes | path | system ID |
+| instance_selection_id | string | yes | path | instance_view_id |
+
+#### Request
+
+```json
+{
+	"id": "free_host1".
+	"name": "free_host1".
+	"name_en": "free host1".
+	"resource_type_chain": [{
+		"system_id": "bk_cmdb".
+		"id": "host"
+	}]
+}
+```
+
+#### Response
+
+```json
+{
+    "code": 0.
+    "message": "".
+    "data": {}
+}
+```

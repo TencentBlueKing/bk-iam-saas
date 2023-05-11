@@ -2,7 +2,7 @@
     <bk-sideslider
         :is-show="isShow"
         :quick-close="true"
-        :width="890"
+        :width="permSideWidth"
         ext-cls="iam-add-group-perm-sideslider"
         :title="$t(`m.userGroup['添加组权限']`)"
         @update:isShow="handleCancel">
@@ -11,12 +11,12 @@
                 <div class="template-content-wrapper">
                     <render-search>
                         <div class="search-title">
-                            {{ $t(`m.info['从权限模板选择添加']`) }}：{{ $t(`m.common['已选择']`) }}
+                            {{ $t(`m.info['从权限模板选择添加：']`) }}{{ $t(`m.common['已选择']`) }}
                             <span style="color: #2dcb56;">{{ currentSelectList.length }}</span>
                             {{ $t(`m.common['条']`) }}
                         </div>
                         <div slot="right">
-                            <div class="add-button">
+                            <div class="add-button" v-if="!externalTemplate && !isSubset">
                                 <bk-button
                                     size="small"
                                     text
@@ -27,6 +27,7 @@
                                 </bk-button>
                             </div>
                             <iam-search-select
+                                ref="iamSearchSelect"
                                 @on-change="handleSearch"
                                 :data="searchData"
                                 :value="searchValue"
@@ -61,12 +62,12 @@
                                         <Icon v-if="row.need_to_update" type="error-fill" class="error-icon" />
                                     </template>
                                     <div slot="content" class="iam-perm-apply-action-popover-content">
-                                        该模板无法选择的原因是：分级管理员缩小了授权范围，但是没有同步删除模板里的操作，如需选择请重新编辑模板或者创建新的模板。
+                                        {{ $t(`m.permTemplate['该模板无法选择的原因是：管理空间缩小了授权范围，但是没有同步删除模板里的操作，如需选择请重新编辑模板或者创建新的模板。']`) }}
                                         <bk-button
                                             text
                                             :loading="editLoading"
                                             @click="handleEdit(row)">
-                                            去编辑
+                                            {{ $t(`m.common['去编辑']`) }}
                                         </bk-button>
                                     </div>
                                 </bk-popover>
@@ -83,6 +84,16 @@
                                 <span :title="row.description !== '' ? row.description : ''">{{ row.description || '--' }}</span>
                             </template>
                         </bk-table-column>
+                        <template slot="empty">
+                            <ExceptionEmpty
+                                :type="emptyData.type"
+                                :empty-text="emptyData.text"
+                                :tip-text="emptyData.tip"
+                                :tip-type="emptyData.tipType"
+                                @on-clear="handleEmptyClear"
+                                @on-refresh="handleRefresh"
+                            />
+                        </template>
                     </bk-table>
                 </div>
                 <div class="custom-perm-wrapper">
@@ -92,7 +103,7 @@
                             {{ $t(`m.common['已选择']`) }}
                             {{ sysCount }}
                             {{ $t(`m.common['个']`) }}
-                            {{ $t(`m.common['系统']`) }}，
+                            {{ $t(`m.common['系统']`) }},
                             {{ actionCount }}
                             {{ $t(`m.common['个']`) }}
                             {{ $t(`m.common['操作']`) }}
@@ -102,8 +113,8 @@
                         </p>
                     </template>
                     <template v-else>
-                        {{ $t(`m.info['没有在模板中找到']`) }}，{{ $t(`m.common['也可']`) }}
-                        <bk-button style="margin-left: 5px;" text theme="primary" @click="hadleAddCustomPerm" data-test-id="group_btn_addCustomPerm">
+                        {{ $t(`m.info['没有在模板中找到']`) }}, {{ $t(`m.common['也可']`) }}
+                        <bk-button style="margin-left: 5px;" text theme="primary" @click="handleAddCustomPerm" data-test-id="group_btn_addCustomPerm">
                             {{ $t(`m.info['添加自定义权限']`) }}
                         </bk-button>
                     </template>
@@ -122,6 +133,8 @@
     import IamSearchSelect from '@/components/iam-search-select';
     import { leaveConfirm } from '@/common/leave-confirm';
     import { fuzzyRtxSearch } from '@/common/rtx';
+    import { formatCodeData } from '@/common/util';
+    import { mapGetters } from 'vuex';
 
     export default {
         name: '',
@@ -156,6 +169,14 @@
             groupId: {
                 type: [String, Number],
                 default: ''
+            },
+            externalTemplate: {
+                type: Boolean,
+                default: false
+            },
+            permSideWidth: {
+                type: Number,
+                default: 890
             }
         },
         data () {
@@ -183,10 +204,20 @@
                 requestQueueBySys: [],
                 requestQueueByTemplate: [],
                 selectLength: '',
-                selection: []
+                selection: [],
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
+            ...mapGetters(['user', 'externalSystemId']),
+            isSubset () {
+                return this.user.role.type === 'subset_manager';
+            },
             isDisabled () {
                 return this.requestQueueBySys.length > 0 || this.requestQueueByTemplate.length > 0;
             }
@@ -282,9 +313,9 @@
                     params.group_id = this.groupId;
                 }
                 try {
-                    const res = await this.$store.dispatch('permTemplate/getTemplateList', params);
-                    this.pagination.count = res.data.count;
-                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
+                    const { code, data } = await this.$store.dispatch('permTemplate/getTemplateList', params);
+                    this.pagination.count = data.count;
+                    this.tableList.splice(0, this.tableList.length, ...(data.results || []));
                     this.$nextTick(() => {
                         this.tableList.forEach(item => {
                             if (this.currentSelectList.includes(item.id)) {
@@ -292,12 +323,15 @@
                             }
                         });
                     });
+                    this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
@@ -309,6 +343,16 @@
 
             getIsSelect (row, index) {
                 return row.tag === 'unchecked' && !row.need_to_update && !this.isDisabled;
+            },
+
+            handleEmptyClear () {
+                this.searchParams = {};
+                this.searchValue = [];
+                this.searchList = [];
+                this.emptyData.tipType = '';
+                this.$refs.iamSearchSelect.$refs.searchSelect.isTagMultLine = false;
+                this.resetPagination();
+                this.fetchData(true);
             },
 
             handleRefresh () {
@@ -364,12 +408,12 @@
                 this.$emit('on-submit', this.tempalteDetailList, this.aggregationData, this.authorizationScope);
             },
 
-            hadleAddCustomPerm () {
+            handleAddCustomPerm () {
                 window.changeAlert = true;
-                this.$emit('on-add-custom');
+                this.$emit('on-add-custom', '');
             },
 
-            hadleEditCustomPerm () {
+            handleEditCustomPerm () {
                 window.changeAlert = true;
                 this.$emit('on-edit-custom');
             },
@@ -386,7 +430,11 @@
             },
 
             handleRemoteSystem (value) {
-                return this.$store.dispatch('system/getSystems')
+                const params = {};
+                if (this.externalSystemId) {
+                    params.hidden = false;
+                }
+                return this.$store.dispatch('system/getSystems', params)
                     .then(({ data }) => {
                         return data.map(({ id, name }) => ({ id, name })).filter(item => item.name.indexOf(value) > -1);
                     });
@@ -509,6 +557,7 @@
                 window.changeAlert = true;
                 this.searchParams = payload;
                 this.searchList = result;
+                this.emptyData.tipType = 'search';
                 this.resetPagination();
                 this.fetchData(true);
             },

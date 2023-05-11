@@ -58,7 +58,9 @@
         flex-direction: column;
         &.see {
             .detail-label {
-                color: #b2b5bd;
+                /* color: #b2b5bd; */
+                font-size: 12px;
+                color: #63656E;
             }
         }
         &.vertical {

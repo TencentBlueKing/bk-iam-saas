@@ -1,7 +1,7 @@
 <template>
     <div class="iam-grading-admin-detail-wrapper">
         <p class="edit-action">
-            {{ $t(`m.grading['如需编辑分级管理员的内容请点击']`) }}
+            {{curRoleType === 'staff' ? $t(`m.levelSpace['如需编辑授权边界的内容请点击']`) : $t(`m.grading['如需编辑管理空间的内容请点击']`)}}
             <bk-button
                 theme="primary"
                 text
@@ -20,8 +20,8 @@
             </render-horizontal-block>
 
             <!-- <p class="tips">{{ infoText }}</p> -->
-            <render-perm
-                :title="$t(`m.grading['最大可授权资源范围']`)"
+            <!-- <render-perm
+                :title="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
                 :perm-length="policyList.length"
                 :expanded.sync="curExpanded"
                 ext-cls="iam-grade-detail-panel-cls">
@@ -29,15 +29,18 @@
             </render-perm>
 
             <render-horizontal-block
-                :label="$t(`m.grading['最大可授权人员范围']`)">
+                :label="$t(`m.levelSpace['最大可授权人员边界']`)"
+                :label-width="renderLabelWidth('member')"
+            >
                 <template v-if="isAll">
                     <span class="all-item">{{ $t(`m.common['全员']`) }}(All)</span>
                 </template>
                 <template v-else>
                     <p class="member-info">
-                        <!-- eslint-disable max-len -->
                         <template v-if="users.length > 0">
-                            {{ $t(`m.common['共']`) }} <span class="count">{{ users.length }}</span> {{ $t(`m.common['个用户']`) }}
+                            {{ $t(`m.common['共']`) }} <span class="count">
+                                {{ users.length }}</span>
+                                 {{ $t(`m.common['个用户']`) }}
                         </template>
                         <template v-if="departments.length > 0">
                             <template v-if="users.length > 0">，</template>
@@ -47,27 +50,67 @@
                     <render-member-item :data="users" v-if="isHasUser" mode="view" />
                     <render-member-item :data="departments" type="department" mode="view" v-if="isHasDepartment" />
                 </template>
-            </render-horizontal-block>
+            </render-horizontal-block> -->
+            <RenderPermBoundary
+                :title="$t(`m.nav['授权边界']`)"
+                :modules="['resourcePerm', 'membersPerm']"
+                :resource-title="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
+                :members-title="$t(`m.levelSpace['最大可授权人员边界']`)"
+                :perm-length="policyList.length"
+                :user-length="users.length"
+                :depart-length="departments.length"
+                @on-expanded="handleExpanded"
+                ext-cls="iam-grade-detail-panel-cls"
+            >
+                <div
+                    slot="resourcePerm"
+                    class="resources-boundary-detail"
+                >
+                    <render-detail-table :actions="policyList" />
+                </div>
+                <div
+                    slot="membersPerm"
+                    class="members-boundary-detail"
+                >
+                    <template>
+                        <render-member-item
+                            :data="users"
+                            mode="view"
+                            v-if="isHasUser"
+                        />
+                        <render-member-item
+                            mode="view"
+                            type="department"
+                            :data="departments"
+                            v-if="isHasDepartment" />
+                    </template>
+                </div>
+            </RenderPermBoundary>
         </div>
     </div>
 </template>
 <script>
     import _ from 'lodash';
+    import { mapGetters } from 'vuex';
     import store from '@/store';
-    import RenderPerm from '@/components/render-perm';
+    // import RenderPerm from '@/components/render-perm';
+    import RenderPermBoundary from '@/components/render-perm-boundary';
     import basicInfo from '../components/basic-info-detail';
     import RenderMemberItem from '../../group/common/render-member-display';
     import renderDetailTable from '../components/render-instance-detail-table';
+    import { renderLabelWidth } from '@/common/util';
     export default {
         name: '',
         components: {
-            RenderPerm,
+            // RenderPerm,
+            RenderPermBoundary,
             basicInfo,
             RenderMemberItem,
             renderDetailTable
         },
         data () {
             return {
+                renderLabelWidth,
                 formData: {
                     name: '',
                     description: '',
@@ -86,11 +129,15 @@
             next();
         },
         computed: {
+            ...mapGetters(['user']),
             isHasUser () {
                 return this.users.length > 0;
             },
             isHasDepartment () {
                 return this.departments.length > 0;
+            },
+            curRoleType () {
+                return this.user.role.type;
             }
         },
         methods: {
@@ -141,13 +188,22 @@
                         departments.push({
                             name: item.name,
                             count: item.member_count,
-                            fullName: item.full_name
+                            fullName: item.full_name,
+                            full_name: item.full_name || item.fullName
                         });
                     }
                     if (item.type === 'user') {
                         users.push({
                             name: item.name,
-                            username: item.id
+                            username: item.id,
+                            full_name: item.full_name || item.fullName
+                        });
+                    }
+                    if (item.id === '*' && item.type === '*') {
+                        departments.push({
+                            name: this.$t(`m.common['全员']`),
+                            count: 'All',
+                            full_name: `${this.$t(`m.common['全员']`)}(All)`
                         });
                     }
                 });
@@ -219,9 +275,9 @@
             margin-left: 10px;
             color: #979ba5;
         }
-        .horizontal-item .label {
+        /* .horizontal-item .label {
             width: 126px;
-        }
+        } */
         /* .horizontal-item .content {
             margin-left: 42px;
         } */

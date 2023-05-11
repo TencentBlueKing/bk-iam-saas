@@ -14,15 +14,15 @@ from typing import Dict, List, Union
 from django.db import models
 from django.utils.functional import cached_property
 
-from backend.common.models import BaseModel
-from backend.service.constants import RoleRelatedObjectType, RoleScopeType, RoleSourceTypeEnum, RoleType, SubjectType
+from backend.common.models import BaseModel, BaseSystemHiddenModel
+from backend.service.constants import RoleRelatedObjectType, RoleScopeType, RoleSourceType, RoleType, SubjectType
 from backend.util.json import json_dumps
 
 from .constants import DEFAULT_ROLE_PERMISSIONS
-from .managers import RoleRelatedObjectManager, RoleUserManager
+from .managers import RoleRelatedObjectManager, RoleRelationManager, RoleUserManager
 
 
-class Role(BaseModel):
+class Role(BaseModel, BaseSystemHiddenModel):
     """
     角色
     """
@@ -32,6 +32,8 @@ class Role(BaseModel):
     description = models.CharField("描述", max_length=255, default="")
     type = models.CharField("类型", max_length=32, choices=RoleType.get_choices())
     code = models.CharField("标志", max_length=64, default="")
+    inherit_subject_scope = models.BooleanField("继承人员管理范围", default=False)
+    sync_perm = models.BooleanField("同步角色权限", default=False)
 
     class Meta:
         verbose_name = "角色"
@@ -59,6 +61,7 @@ class RoleUser(BaseModel):
 
     role_id = models.IntegerField("角色ID")
     username = models.CharField("用户id", max_length=64)
+    readonly = models.BooleanField("只读标识", default=False)  # 增加可读标识
 
     objects = RoleUserManager()
 
@@ -210,6 +213,7 @@ class RoleRelatedObject(BaseModel):
     role_id = models.IntegerField("角色ID")
     object_type = models.CharField("对象类型", max_length=32, choices=RoleRelatedObjectType.get_choices())
     object_id = models.IntegerField("对象ID")
+    sync_perm = models.BooleanField("跟随角色同步", default=False)
 
     objects = RoleRelatedObjectManager()
 
@@ -220,6 +224,24 @@ class RoleRelatedObject(BaseModel):
         indexes = [
             models.Index(fields=["object_id", "object_type"]),
         ]
+
+
+class RoleRelation(BaseModel):
+    """
+    角色关系
+
+    当前只有 分级管理员 -- 子集管理员 的1对多关系
+    """
+
+    parent_id = models.IntegerField("父级角色ID")
+    role_id = models.IntegerField("角色ID", db_index=True)
+
+    objects = RoleRelationManager()
+
+    class Meta:
+        verbose_name = "角色关系"
+        verbose_name_plural = "角色关系"
+        unique_together = ["parent_id", "role_id"]
 
 
 class RoleCommonAction(BaseModel):
@@ -254,7 +276,7 @@ class RoleSource(BaseModel):
     """
 
     role_id = models.IntegerField("角色ID", unique=True)
-    source_type = models.CharField("来源类型", max_length=32, choices=RoleSourceTypeEnum.get_choices())
+    source_type = models.CharField("来源类型", max_length=32, choices=RoleSourceType.get_choices())
     source_system_id = models.CharField("来源系统", max_length=32, default="")
 
 

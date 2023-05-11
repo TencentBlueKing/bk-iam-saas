@@ -21,8 +21,8 @@
                     </span>
                 </template>
             </bk-table-column>
-            <!-- 所属分级管理员 -->
-            <bk-table-column :label="$t(`m.audit['所属分级管理员']`)">
+            <!-- 所属管理空间 -->
+            <bk-table-column :label="$t(`m.audit['所属管理空间']`)">
                 <template slot-scope="{ row }">
                     <span :class="row.role && row.role.name ? 'can-view' : ''"
                         :title="row.role && row.role.name ? row.role.name : ''"
@@ -44,8 +44,8 @@
                     </span>
                 </template>
             </bk-table-column>
-            <!-- 到期时间 -->
-            <bk-table-column :label="$t(`m.common['到期时间']`)" prop="expired_at_display"></bk-table-column>
+            <!-- 有效期 -->
+            <bk-table-column :label="$t(`m.common['有效期']`)" prop="expired_at_display"></bk-table-column>
             <!-- 操作 -->
             <bk-table-column :label="$t(`m.common['操作']`)" width="200">
                 <template slot-scope="props">
@@ -57,6 +57,15 @@
                     </bk-button>
                 </template>
             </bk-table-column>
+            <template slot="empty">
+                <ExceptionEmpty
+                    :type="groupPermEmptyData.type"
+                    :empty-text="groupPermEmptyData.text"
+                    :tip-text="groupPermEmptyData.tip"
+                    :tip-type="groupPermEmptyData.tipType"
+                    @on-refresh="handleEmptyRefresh"
+                />
+            </template>
         </bk-table>
 
         <delete-dialog
@@ -74,13 +83,13 @@
             :group-id="curGroupId"
             @animation-end="handleAnimationEnd" />
 
-        <!-- 分级管理员 成员 侧边弹出框 -->
+        <!-- 管理空间 成员 侧边弹出框 -->
         <bk-sideslider
             :is-show.sync="isShowGradeSlider"
             :width="640"
-            :title="gradeSliderTitle"
             :quick-close="true"
             @animation-end="gradeSliderTitle === ''">
+            <div slot="header" class="single-hide" :title="gradeSliderTitle">{{ gradeSliderTitle }}</div>
             <div slot="content" class="grade-memebers-content" v-bkloading="{ isLoading: sliderLoading, opacity: 1 }"
                 data-test-id="myPerm_sideslider_gradeMemebersContent">
                 <template v-if="!sliderLoading">
@@ -89,14 +98,16 @@
                             {{ item }}
                         </span>
                     </div>
-                    <p class="info">{{ $t(`m.info['分级管理员成员提示']`) }}</p>
+                    <p class="info">{{ $t(`m.info['管理空间成员提示']`) }}</p>
                 </template>
             </div>
         </bk-sideslider>
     </div>
 </template>
+
 <script>
     import { mapGetters } from 'vuex';
+    import { formatCodeData } from '@/common/util';
     import DeleteDialog from '@/components/iam-confirm-dialog/index.vue';
     import RenderGroupPermSideslider from '../components/render-group-perm-sideslider';
 
@@ -110,6 +121,17 @@
             personalGroupList: {
                 type: Array,
                 default: () => []
+            },
+            emptyData: {
+                type: Object,
+                default: () => {
+                    return {
+                        type: '',
+                        text: '',
+                        tip: '',
+                        tipType: ''
+                    };
+                }
             }
         },
         data () {
@@ -136,11 +158,17 @@
                 isShowGradeSlider: false,
                 sliderLoading: false,
                 gradeSliderTitle: '',
-                isLoading: false
+                isLoading: false,
+                groupPermEmptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
-            ...mapGetters(['user'])
+            ...mapGetters(['user', 'externalSystemId'])
         },
         watch: {
             personalGroupList: {
@@ -153,9 +181,13 @@
                     }
                 },
                 immediate: true
+            },
+            emptyData: {
+                handler (value) {
+                    this.groupPermEmptyData = value;
+                },
+                immediate: true
             }
-        },
-        async created () {
         },
         methods: {
             /**
@@ -211,18 +243,26 @@
             async getDataByPage () {
                 this.isLoading = true;
                 try {
-                    const res = await this.$store.dispatch('perm/getPersonalGroups', {
+                    const params = {
                         page_size: this.pageConf.limit,
                         page: this.pageConf.current
-                    });
-                    this.pageConf.count = res.data.count;
-                    this.curPageData.splice(0, this.curPageData.length, ...(res.data.results || []));
+                    };
+                    if (this.externalSystemId) {
+                        params.system_id = this.externalSystemId;
+                    }
+                    const { code, data } = await this.$store.dispatch('perm/getPersonalGroups', params);
+                    this.pageConf.count = data.count;
+                    this.curPageData.splice(0, this.curPageData.length, ...(data.results || []));
+                    this.groupPermEmptyData
+                        = formatCodeData(code, this.groupPermEmptyData, data.count === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.groupPermEmptyData = formatCodeData(code, this.groupPermEmptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
@@ -255,6 +295,11 @@
                 this.handlePageChange(this.pageConf.current);
             },
 
+            handleEmptyRefresh () {
+                this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10 });
+                this.getDataByPage();
+            },
+
             /**
              * 跳转到 group-perm 详情
              *
@@ -279,7 +324,7 @@
             showQuitTemplates (row) {
                 this.deleteDialogConf.visiable = true;
                 this.deleteDialogConf.row = Object.assign({}, row);
-                this.deleteDialogConf.msg = `${this.$t(`m.common['退出']`)}【${row.name}】，${this.$t(`m.info['将不再拥有该用户组的权限']`)}。`;
+                this.deleteDialogConf.msg = `${this.$t(`m.common['退出']`)}${this.$t(`m.common['【']`)}${row.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['，']`)}${this.$t(`m.info['将不再拥有该用户组的权限']`)}${this.$t(`m.info['将不再拥有该用户组的权限']`)}${this.$t(`m.common['。']`)}`;
             },
 
             /**
@@ -325,7 +370,7 @@
             },
 
             /**
-             * 调用接口获取分级管理员各项数据
+             * 调用接口获取管理空间各项数据
              */
             async fetchRoles (id) {
                 this.sliderLoading = true;
@@ -346,12 +391,12 @@
                 }
             },
             /**
-            * 点击分级管理员中的项弹出侧边框且显示数据
+            * 点击管理空间中的项弹出侧边框且显示数据
             */
             handleViewDetail (payload) {
                 if (payload.role && payload.role.name) {
                     this.isShowGradeSlider = true;
-                    this.gradeSliderTitle = `【${payload.role.name}】${this.$t(`m.grading['分级管理员']`)} ${this.$t(`m.common['成员']`)}`;
+                    this.gradeSliderTitle = `【${payload.role.name}】${this.$t(`m.grading['管理空间']`)} ${this.$t(`m.common['成员']`)}`;
                     this.fetchRoles(payload.role.id);
                 }
             }

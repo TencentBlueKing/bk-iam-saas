@@ -823,7 +823,6 @@
              */
             async saveAction (item, index) {
                 const formComp = this.$refs[`basicInfoRef${index}`];
-                console.log(formComp);
                 if (formComp && formComp[0]) {
                     try {
                         await formComp[0].handleValidator();
@@ -1042,9 +1041,6 @@
                     });
                     return;
                 }
-
-                // console.log('actionList', this.actionList)
-                // console.log('actionListBackup', this.actionListBackup)
 
                 this.$router.push({
                     // name: 'systemAccessComplete',

@@ -1,7 +1,8 @@
 <template>
     <div class="iam-transfer-wrapper" v-bkloading="{ isLoading: submitLoading, opacity: 1 }">
         <bk-button
-            v-if="enablePermissionHandover.toLowerCase() === 'true'"
+            v-if="enablePermissionHandover.toLowerCase() === 'true'
+                && !externalSystemsLayout.myPerm.transfer.hideTextBtn"
             data-test-id="permTransfer_btn_history"
             text
             style="position: relative; top: -13px; width: 100%; text-align: right;"
@@ -11,9 +12,13 @@
 
         <Group @group-selection-change="handleGroupSelection" />
 
-        <Custom @custom-selection-change="handleCustomSelection" />
+        <Custom
+            v-if="!externalSystemsLayout.myPerm.transfer.hideCustomData"
+            @custom-selection-change="handleCustomSelection" />
 
-        <Manager @manager-selection-change="handleManagerSelection" />
+        <Manager
+            v-if="!externalSystemsLayout.myPerm.transfer.hideManagerData"
+            @manager-selection-change="handleManagerSelection" />
 
         <div class="iam-transfer-group-wrapper" :style="{ minHeight: isLoading ? '328px' : 0 }"
             v-bkloading="{ isLoading, opacity: 1 }">
@@ -29,14 +34,17 @@
                                     :multiple="false"
                                     :value="formData.members"
                                     :api="userApi"
-                                    :placeholder="$t(`m.verify['请输入']`)"
+                                    :placeholder="$t(`m.verify['请填写管理员']`)"
+                                    :empty-text="$t(`m.common['无匹配人员']`)"
                                     style="width: 100%;"
                                     :class="isShowMemberError ? 'is-member-empty-cls' : ''"
                                     @focus="handleRtxFocus"
                                     @blur="handleRtxBlur"
                                     @change="handleRtxChange">
                                 </bk-user-selector>
-                                <p class="name-empty-error" v-if="isShowMemberError">{{ $t(`m.verify['请选择成员']`) }}</p>
+                                <p class="name-empty-error" v-if="isShowMemberError">
+                                    {{ $t(`m.verify['请填写管理员']`) }}
+                                </p>
                                 <p class="name-empty-error" v-if="isPermissionsPrompt">
                                     {{ $t(`m.verify['目标交接人不能为本人']`) }}
                                 </p>
@@ -61,7 +69,14 @@
         </div>
 
         <!-- <div style="background: red; height: 800px;"></div> -->
-        <div class="fixed-action" style="height: 50px;" :style="{ paddingLeft: fixedActionPaddingLeft }">
+        <div
+            class="fixed-action"
+            style="height: 50px;"
+            :style="{
+                paddingLeft: externalSystemsLayout.myPerm.transfer.setFooterBtnPadding ?
+                    '24px' : fixedActionPaddingLeft
+            }"
+        >
             <bk-button theme="primary" @click="submit">
                 {{ $t(`m.common['提交']`) }}
             </bk-button>
@@ -104,7 +119,7 @@
             };
         },
         computed: {
-            ...mapGetters(['user'])
+            ...mapGetters(['user', 'externalSystemsLayout'])
         },
         created () {
             // this.fetchCategories()

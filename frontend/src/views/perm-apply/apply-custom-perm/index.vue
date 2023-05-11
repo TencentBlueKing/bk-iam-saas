@@ -9,6 +9,8 @@
                         v-model="systemValue"
                         style="width: 480px;"
                         :popover-min-width="480"
+                        :empty-text="$t(`m.common['暂无数据']`)"
+                        :search-placeholder="$t(`m.info['搜索关键字']`)"
                         :searchable="true"
                         :search-with-pinyin="true"
                         :clearable="false"
@@ -182,8 +184,15 @@
                             </template>
                             <template v-if="originalCustomTmplList.length < 1 && !customLoading">
                                 <div class="empty-wrapper">
-                                    <Icon type="warning" />
-                                    {{ isActionsFilter ? $t(`m.common['搜索无结果']`) : $t(`m.permApply['暂无可申请的操作']`) }}
+                                    <ExceptionEmpty
+                                        :type="emptyData.type"
+                                        :empty-text="emptyData.text"
+                                        :tip-text="emptyData.tip"
+                                        :tip-type="emptyData.tipType"
+                                        @on-clear="handleEmptyClear"
+                                    />
+                                    <!-- <Icon type="warning" />
+                                    {{ isActionsFilter ? $t(`m.common['搜索无结果']`) : $t(`m.permApply['暂无可申请的操作']`) }} -->
                                 </div>
                             </template>
                         </div>
@@ -211,6 +220,22 @@
                         </bk-switcher>
                         <span class="expanded-text">{{ isAllExpanded ? $t(`m.grading['逐项编辑']`) : $t(`m.grading['批量编辑']`) }}</span>
                     </div>
+                </section>
+            </render-horizontal-block>
+            <render-horizontal-block :label="$t(`m.permApply['选择权限获得者']`)" :required="false">
+                <section ref="permRecipientRef">
+                    <bk-user-selector
+                        :value="permMembers"
+                        :api="userApi"
+                        :placeholder="$t(`m.permApply['请输入权限获得者']`)"
+                        :style="{ width: '60%' }"
+                        :class="isShowMemberError ? 'is-member-empty-cls' : ''"
+                        :empty-text="$t(`m.common['无匹配人员']`)"
+                        data-test-id="grading_userSelector_member"
+                        @focus="handleRtxFocus"
+                        @blur="handleRtxBlur"
+                        @change="handleRtxChange" />
+                    <!-- <p class="perm-recipient-error" v-if="isShowMemberError">{{ $t(`m.permApply['请选择权限获得者']`) }}</p> -->
                 </section>
             </render-horizontal-block>
             <render-horizontal-block ext-cls="reason-wrapper" :label="$t(`m.common['理由']`)" :required="true">
@@ -289,18 +314,20 @@
                                         <bk-table-column type="selection" align="center" :selectable="setDefaultSelect"></bk-table-column>
                                         <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
                                             <template slot-scope="{ row }">
-                                                <span class="user-group-name" :title="row.name" @click="handleView(row)">{{ row.name }}</span>
-                                                <template v-if="!setDefaultSelect(row)">
-                                                    <Icon type="error-fill" class="error-icon" />
-                                                    <span class="expired-text">{{$t(`m.permApply['你已获得该组权限，但是已过期']`)}}</span>
-                                                    <bk-button
-                                                        text
-                                                        theme="primary"
-                                                        style="font-size: 12px;"
-                                                        @click="handleBatchRenewal">
-                                                        {{ $t(`m.permApply['去续期']`) }}
-                                                    </bk-button>
-                                                </template>
+                                                <div class="user-group-name-column">
+                                                    <span class="user-group-name" :title="row.name" @click="handleView(row)">{{ row.name }}</span>
+                                                    <div v-if="row.expired_at && user.timestamp > row.expired_at">
+                                                        <Icon type="error-fill" class="error-icon" />
+                                                        <span class="expired-text">{{$t(`m.permApply['你已获得该组权限，但是已过期']`)}}</span>
+                                                        <bk-button
+                                                            text
+                                                            theme="primary"
+                                                            style="font-size: 12px;"
+                                                            @click="handleBatchRenewal">
+                                                            {{ $t(`m.permApply['去续期']`) }}
+                                                        </bk-button>
+                                                    </div>
+                                                </div>
                                             </template>
                                         </bk-table-column>
                                         <bk-table-column :label="$t(`m.userGroup['描述']`)">
@@ -308,13 +335,16 @@
                                                 <span :title="row.description !== '' ? row.description : ''">{{ row.description || '--' }}</span>
                                             </template>
                                         </bk-table-column>
-                                        <bk-table-column :label="$t(`m.userGroup['所属分级管理员']`)">
+                                        <bk-table-column :label="$t(`m.userGroup['所属管理空间']`)">
                                             <template slot-scope="{ row }">
                                                 <span :class="row.role && row.role.name ? 'can-view' : ''"
                                                     :title="row.role && row.role.name ? row.role.name : ''"
                                                     @click.stop="handleViewDetail(row)">{{ row.role ? row.role.name : '--' }}</span>
                                             </template>
                                         </bk-table-column>
+                                        <template slot="empty">
+                                            <ExceptionEmpty />
+                                        </template>
                                     </bk-table>
                                     <p class="user-group-error" v-if="isShowGroupError">{{ $t(`m.permApply['请选择用户组']`) }}</p>
                                 </div>
@@ -547,10 +577,19 @@
                             {{ item }}
                         </span>
                     </div>
-                    <p class="info">{{ $t(`m.info['分级管理员成员提示']`) }}</p>
+                    <p class="info">{{ $t(`m.info['管理空间成员提示']`) }}</p>
                 </template>
             </div>
         </bk-sideslider>
+
+        <confirmDialog
+            :width="600"
+            :show.sync="isShowConfirmDialog"
+            :title="confirmDialogTitle"
+            :is-custom-style="true"
+            @on-cancel="isShowConfirmDialog = false"
+            @on-sumbit="isShowConfirmDialog = false"
+        />
     </div>
 </template>
 
@@ -558,14 +597,16 @@
     import _ from 'lodash';
     import { mapGetters } from 'vuex';
     import { guid } from '@/common/util';
+    import { PERMANENT_TIMESTAMP } from '@/common/constants';
     import RenderActionTag from '@/components/common-action';
     import ResourceInstanceTable from '../components/resource-instance-table';
     import Policy from '@/model/policy';
     import AggregationPolicy from '@/model/aggregation-policy';
     import Condition from '@/model/condition';
     import IamDeadline from '@/components/iam-deadline/horizontal';
-    import { PERMANENT_TIMESTAMP } from '@/common/constants';
     import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider';
+    import BkUserSelector from '@blueking/user-selector';
+    import ConfirmDialog from '@/components/iam-confirm-dialog/index';
 
     export default {
         name: '',
@@ -573,10 +614,13 @@
             RenderActionTag,
             ResourceInstanceTable,
             IamDeadline,
-            RenderPermSideslider
+            RenderPermSideslider,
+            BkUserSelector,
+            ConfirmDialog
         },
         data () {
             return {
+                userApi: window.BK_USER_API,
                 systemValue: '',
                 systemList: [],
                 buttonLoading: false,
@@ -590,7 +634,6 @@
                 isShowReasonError: false,
                 routerQuery: {},
                 linearActionList: [],
-
                 requestQueue: ['action', 'policy', 'aggregate', 'commonAction'],
                 isAllExpanded: false,
                 aggregationMap: [],
@@ -610,8 +653,9 @@
                 isShowIndependent: false,
                 isShowExpiredError: false,
                 isShowGroupError: false,
-                sliderLoading: false,
                 isShowHasUserGroup: false,
+                isShowMemberError: false,
+                sliderLoading: false,
                 currentSelectList: [],
                 curUserGroup: [],
                 expiredAt: 15552000,
@@ -620,7 +664,6 @@
                 checkRadio: 'userGroup',
                 tableLoading: false,
                 gradeMembers: [],
-
                 // route.query 里的 tid 参数改变名字为 cache_id
                 sysAndtid: false,
                 routerValue: {},
@@ -639,11 +682,22 @@
                 hoverId: -1,
                 hoverActionData: {
                     actions: []
-                }
+                },
+                // permMembers: [{ username: 'poloohuang', readonly: false }, { username: 'gc_lihao', readonly: false }].map(item => item.username)
+                permMembers: [],
+                personalUserGroup: [],
+                emptyData: {
+                    type: 'search-empty',
+                    text: '',
+                    tip: '',
+                    tipType: 'search'
+                },
+                isShowConfirmDialog: false,
+                confirmDialogTitle: this.$t(`m.verify['admin无需申请权限']`)
             };
         },
         computed: {
-            ...mapGetters(['user']),
+            ...mapGetters(['user', 'externalSystemId']),
             // 是否无权限申请
             isNoPermApplay () {
                 return this.routerQuery.system_id;
@@ -748,40 +802,9 @@
                 return false;
             };
             this.isActionsFilter = false;
+            this.permMembers = [this.user.username];
         },
         methods: {
-            // 用户组数据
-            async fetchUserGroupList () {
-                this.tableLoading = true;
-                const params = {
-                    cache_id: this.routerQuery.cache_id
-                };
-                try {
-                    const res = await this.$store.dispatch('userGroup/getUserGroupList', params);
-                    if (res.data.count > 0) {
-                        this.isShowHasUserGroup = true;
-                    }
-                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
-                    this.$nextTick(() => {
-                        this.tableList.forEach(item => {
-                            if (this.curUserGroup.includes(item.id.toString())) {
-                                this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
-                            }
-                        });
-                    });
-                } catch (e) {
-                    console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
-                } finally {
-                    this.tableLoading = false;
-                }
-            },
             handleView (payload) {
                 this.curGroupName = payload.name;
                 this.curGroupId = payload.id;
@@ -795,7 +818,7 @@
             handleViewDetail (payload) {
                 if (payload.role && payload.role.name) {
                     this.isShowGradeSlider = true;
-                    this.gradeSliderTitle = `【${payload.role.name}】${this.$t(`m.grading['分级管理员']`)} ${this.$t(`m.common['成员']`)}`;
+                    this.gradeSliderTitle = `【${payload.role.name}】${this.$t(`m.grading['管理空间']`)} ${this.$t(`m.common['成员']`)}`;
                     this.fetchRoles(payload.role.id);
                 }
             },
@@ -828,16 +851,67 @@
                 }
                 return {};
             },
+            handleRtxFocus () {
+                this.isShowMemberError = false;
+            },
+
+            handleRtxBlur () {
+                this.isShowMemberError = this.permMembers.length < 1;
+            },
+
+            handleRtxChange (payload) {
+                this.isShowMemberError = false;
+                this.permMembers = [...payload];
+            },
             setDefaultSelect (payload) {
                 return !this.curUserGroup.includes(payload.id.toString());
             },
+            // 用户组数据
+            async fetchUserGroupList () {
+                this.tableLoading = true;
+                const params = {
+                    cache_id: this.routerQuery.cache_id
+                };
+                try {
+                    const res = await this.$store.dispatch('userGroup/getUserGroupList', params);
+                    if (res.data.count > 0) {
+                        this.isShowHasUserGroup = true;
+                    }
+                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
+                    this.$nextTick(() => {
+                        this.tableList.forEach(item => {
+                            this.personalUserGroup.forEach(v => {
+                                if (String(item.id) === v.id) {
+                                    this.$set(item, 'expired_at', v.expired_at);
+                                    this.$set(item, 'expired_at_display', v.expired_at_display);
+                                    this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
+                                }
+                            });
+                        });
+                    });
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                } finally {
+                    this.tableLoading = false;
+                }
+            },
             async fetchCurUserGroup () {
                 try {
-                    const res = await this.$store.dispatch('perm/getPersonalGroups', {
+                    const { data } = await this.$store.dispatch('perm/getPersonalGroups', {
                         page_size: 100,
                         page: 1
                     });
-                    this.curUserGroup = res.data.results.filter(item => item.department_id === 0).map(item => item.id);
+                    if (data.results && data.results.length) {
+                        this.curUserGroup = data.results.filter(item => item.department_id === 0).map(item => item.id);
+                        this.personalUserGroup = data.results.filter(item => item.department_id === 0);
+                    }
                 } catch (e) {
                     this.$emit('toggle-loading', false);
                     console.error(e);
@@ -1072,6 +1146,11 @@
                 tempList = tempList.filter(item => item.actions.length > 0 || item.sub_groups.length > 0);
                 this.originalCustomTmplList = _.cloneDeep(tempList);
                 this.handleActionLinearData(true);
+            },
+
+            handleEmptyClear () {
+                this.actionSearchValue = '';
+                this.emptyData.tipType = '';
             },
 
             /**
@@ -2016,7 +2095,11 @@
                     this.systemValue = this.routerQuery.system_id;
                 }
                 try {
-                    const res = await this.$store.dispatch('system/getSystems');
+                    const params = {};
+                    if (this.externalSystemId) {
+                        params.hidden = false;
+                    }
+                    const res = await this.$store.dispatch('system/getSystems', params);
                     (res.data || []).forEach(item => {
                         item.displayName = `${item.name}(${item.id})`;
                         item.collection = item.collection ? 1 : 0;
@@ -2068,9 +2151,15 @@
                 try {
                     const res = await this.$store.dispatch('permApply/getPolicies', params);
                     const data = res.data.map(item => {
-                        const relatedActions = this.linearActionList.find(sub => sub.id === item.id).related_actions;
-                        // eslint-disable-next-line max-len
-                        item.related_environments = this.linearActionList.find(sub => sub.id === item.id).related_environments;
+                        let relatedActions = [];
+                        const findLinerActions = this.linearActionList.find(sub => sub.id === item.id);
+                        if (findLinerActions) {
+                            const { related_actions, related_environments } = findLinerActions;
+                            // eslint-disable-next-line camelcase
+                            relatedActions = [...related_actions];
+                            // eslint-disable-next-line camelcase
+                            item.related_environments = related_environments;
+                        }
                         // 此处处理related_resource_types中value的赋值
                         return new Policy({
                             ...item,
@@ -2231,13 +2320,18 @@
                     }
                     const tableRef = this.$refs.instanceTableRef;
                     const reasonRef = this.$refs.resInstanceReasonRef;
-                    if (!flag && this.reason === '') {
+                    if (!flag && !this.reason) {
                         this.scrollToLocation(reasonRef);
                     } else {
                         this.scrollToLocation(tableRef);
                     }
                     return;
                 }
+                // if (!this.permMembers.length) {
+                // this.isShowMemberError = true;
+                // this.scrollToLocation(this.$refs.permRecipientRef);
+                // return;
+                // }
                 const systemName = this.systemList.find(item => item.id === this.systemValue).name;
                 const params = {
                     system: {
@@ -2247,7 +2341,8 @@
                     templates: [],
                     actions,
                     aggregations,
-                    reason: this.reason
+                    reason: this.reason,
+                    usernames: this.permMembers
                 };
                 this.buttonLoading = true;
                 try {
@@ -2258,13 +2353,17 @@
                     });
                 } catch (e) {
                     console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
+                    if (['admin'].includes(this.user.username)) {
+                        this.isShowConfirmDialog = true;
+                    } else {
+                        this.bkMessageInstance = this.$bkMessage({
+                            limit: 1,
+                            theme: 'error',
+                            message: e.message || e.data.msg || e.statusText,
+                            ellipsisLine: 2,
+                            ellipsisCopy: true
+                        });
+                    }
                 } finally {
                     this.buttonLoading = false;
                 }
@@ -2349,13 +2448,17 @@
                     });
                 } catch (e) {
                     console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
+                    if (['admin'].includes(this.user.username)) {
+                        this.isShowConfirmDialog = true;
+                    } else {
+                        this.bkMessageInstance = this.$bkMessage({
+                            limit: 1,
+                            theme: 'error',
+                            message: e.message || e.data.msg || e.statusText,
+                            ellipsisLine: 2,
+                            ellipsisCopy: true
+                        });
+                    }
                 } finally {
                     this.buttonLoading = false;
                 }
@@ -2377,7 +2480,7 @@
                 this.$router.push({
                     name: 'permRenewal',
                     query: {
-                        tab: 'custom'
+                        tab: 'group'
                     }
                 });
             },
@@ -2424,9 +2527,31 @@
     background: #E7EFFE;
     color: #3a84ff;
 }
+
+.user-group-name-column {
+    display: flex;
+    align-items: center;
+    .user-group-name {
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
 .select-collection {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+/deep/ .bk-table-header-wrapper {
+    .has-gutter {
+        .is-first {
+            .bk-form-checkbox  {
+                display: none;
+            }
+        }
+    }
 }
 </style>

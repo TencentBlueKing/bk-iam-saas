@@ -8,7 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import Callable, List, Tuple
+from typing import Callable, Dict, List, Optional, Tuple
 
 from django.conf import settings
 from rest_framework.request import Request
@@ -55,9 +55,19 @@ class ApplicationService:
         callback_url = url_join(settings.APP_API_URL, f"/api/v1/applications/{callback_id}/approve/")
         return callback_id, callback_url
 
-    def _create(self, data: TypeUnionApplicationData, create_ticket_func: Callable[[str], str]) -> Application:
+    def _create(
+        self,
+        data: TypeUnionApplicationData,
+        create_ticket_func: Callable[[str], str],
+        source_system_id: str = "",
+        callback_id: str = "",
+        callback_url: str = "",
+    ) -> Application:
         """创建申请逻辑"""
-        callback_id, callback_url = self._generate_callback_info()
+        # NOTE: 兼容申请自定义callback
+        if not callback_id or not callback_url:
+            callback_id, callback_url = self._generate_callback_info()
+
         # 调用第三方插件进行单据创建
         ticket_sn = create_ticket_func(callback_url)
         application = Application.objects.create(
@@ -67,6 +77,8 @@ class ApplicationService:
             reason=data.reason,
             _data=json_dumps(data.raw_content()),
             callback_id=callback_id,
+            source_system_id=source_system_id,
+            hidden=source_system_id in settings.HIDDEN_SYSTEM_LIST if source_system_id else False,
         )
         return application
 
@@ -76,16 +88,40 @@ class ApplicationService:
         """创建或续期自定义权限申请单"""
         return self._create(data, lambda callback_url: self.provider.create_for_policy(data, process, callback_url))
 
-    def create_for_group(self, data: GroupApplicationData, process: ApprovalProcessWithNodeProcessor) -> Application:
+    def create_for_group(
+        self, data: GroupApplicationData, process: ApprovalProcessWithNodeProcessor, source_system_id: str = ""
+    ) -> Application:
         """创建加入或续期用户组申请单"""
-        return self._create(data, lambda callback_url: self.provider.create_for_group(data, process, callback_url))
+        return self._create(
+            data,
+            lambda callback_url: self.provider.create_for_group(data, process, callback_url, tag=source_system_id),
+            source_system_id=source_system_id,
+        )
 
     def create_for_grade_manager(
-        self, data: GradeManagerApplicationData, process: ApprovalProcessWithNodeProcessor
+        self,
+        data: GradeManagerApplicationData,
+        process: ApprovalProcessWithNodeProcessor,
+        source_system_id: str = "",
+        callback_id: str = "",
+        callback_url: str = "",
+        approval_title: str = "",
+        approval_content: Optional[Dict] = None,
     ) -> Application:
         """创建变更分级管理员申请单"""
         return self._create(
-            data, lambda callback_url: self.provider.create_for_grade_manager(data, process, callback_url)
+            data,
+            lambda callback_url: self.provider.create_for_grade_manager(
+                data,
+                process,
+                callback_url,
+                approval_title=approval_title,
+                approval_content=approval_content,
+                tag=source_system_id,
+            ),
+            source_system_id=source_system_id,
+            callback_id=callback_id,
+            callback_url=callback_url,
         )
 
     def get_approval_ticket_from_callback_request(self, request: Request) -> ApplicationTicket:

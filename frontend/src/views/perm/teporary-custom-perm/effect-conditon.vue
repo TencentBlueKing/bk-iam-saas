@@ -31,7 +31,7 @@
                 isActive: false,
                 immediatelyShow: false,
                 effectWeekList: {
-                    1: '每周一',
+                    1: this.$t(`m.info['每周一']`),
                     2: '每周二',
                     3: '每周三',
                     4: '每周四',
@@ -50,7 +50,7 @@
             value: {
                 handler (val) {
                     if (this.isEmpty) {
-                        this.curValue = '无生效条件';
+                        this.curValue = this.$t(`m.common['无生效条件']`);
                     } else {
                         this.curValue = val.reduce((p, v) => {
                             let curValue = '';
@@ -89,9 +89,9 @@
                                 prev = `${prev}${hms}${tz}${weekday}`;
                                 return prev;
                             }, '');
-                            p = `${this.effectType[v.type]}: ${p}${weekCopy ? '' : '每天'}${curValue}${this.effectType[v.type]}生效`;
+                            p = `${this.effectType[v.type]}: ${p}${weekCopy ? '' : this.$t(`m.info['每天']`)}${curValue}${this.effectType[v.type]}${this.$t(`m.info['生效']`)}`;
                             return p;
-                        }, '在');
+                        }, this.$t(`m.info['在']`));
                         this.effectConditionData = _.cloneDeep(val);
                     }
                 },

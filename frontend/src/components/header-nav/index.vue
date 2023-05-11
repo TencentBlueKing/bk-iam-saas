@@ -1,56 +1,97 @@
 <template>
     <!-- eslint-disable max-len -->
     <header class="header-nav-layout">
-        <div :class="['logo', 'fl']">
+        <div :class="['logo', 'fl']" @click.stop="handleBackHome">
             <iam-svg name="logo" :alt="$t(`m.nav['蓝鲸权限中心']`)" />
             <span class="text">{{ $t('m.nav["蓝鲸权限中心"]') }}</span>
         </div>
         <div class="header-breadcrumbs fl">
             <div class="nav-container">
                 <span v-for="(item, i) in navData" :key="item.id">
-                    <h2 v-if="item.show" class="heaer-nav-title"
+                    <h2
+                        v-if="item.show"
+                        class="heaer-nav-title"
                         @click="handleSelect(item, i)"
-                        :class="index === i ? 'active' : ''">
-                        {{item.text}}
+                        :class="index === i ? 'active' : ''"
+                    >
+                        {{ item.text }}
                     </h2>
                 </span>
-                <iam-guide
+                <!-- <iam-guide
                     v-if="haveManager"
                     type="switch_role"
                     direction="top"
                     :flag="showGuide"
-                    :style="{ top: '60px', left: '45px' }"
-                    :content="$t(`m.guide['分级管理员导航']`)" />
+                    :style="{ top: '10px', left: '240px' }"
+                    :content="$t(`m.guide['管理空间导航']`)"
+                /> -->
             </div>
         </div>
         <div class="user fr">
             <div class="help-flag">
-                <Icon type="help-fill-2" />
-                <div class="dropdown-panel">
+                <Icon type="help-fill" style="color: #979ba5" />
+                <div :class="[
+                    'dropdown-panel',
+                    { 'lang-dropdown-panel': !curLanguageIsCn }
+                ]">
                     <div class="item" @click="handleOpenDocu">{{ $t(`m.common['产品文档']`) }}</div>
-                    <div class="item" @click="handleOpenVersion">{{ $t(`m.common['版本日志']`) }}</div>
-                    <div class="item" @click="handleOpenQuestion">{{ $t(`m.common['问题反馈']`) }}</div>
+                    <div class="item" @click="handleOpenVersion">
+                        {{ $t(`m.common['版本日志']`) }}
+                    </div>
+                    <div class="item" @click="handleOpenQuestion">
+                        {{ $t(`m.common['问题反馈']`) }}
+                    </div>
                 </div>
             </div>
-            <p class="user-name" @click.stop="handleSwitchIdentity" data-test-id="header_btn_triggerSwitchRole">
+            <div class="lang-flag">
+                <Icon :type="`icon-${$i18n.locale}`" />
+                <div class="dropdown-panel">
+                    <div
+                        :class="[
+                            'item',
+                            {
+                                'item-active': $i18n.locale === item.value
+                            }
+                        ]"
+                        @click="handleChangeLocale(item.value)"
+                        v-for="item in languageList"
+                        :key="item.value"
+                    >
+                        {{ item.label }}
+                    </div>
+                </div>
+            </div>
+            <p
+                class="user-name"
+                @click.stop="handleSwitchIdentity"
+                data-test-id="header_btn_triggerSwitchRole"
+            >
                 {{ user.username }}
-                <Icon type="down-angle" :class="['user-name-angle', { dropped: isShowUserDropdown }]" />
+                <Icon
+                    type="down-angle"
+                    :class="['user-name-angle', { dropped: isShowUserDropdown }]"
+                />
             </p>
             <transition name="toggle-slide">
                 <section
                     class="iam-grading-admin-list-wrapper"
                     :style="style"
                     v-show="isShowGradingWrapper"
-                    v-bk-clickoutside="handleClickOutSide">
+                    v-bk-clickoutside="handleClickOutSide"
+                >
                     <template>
-                        <div class="operation auth-manager" v-if="roleList.length">
-                            <div class="user-dropdown-item " :title="$t(`m.nav['切换分级管理员']`)" @click="handleManager">
+                        <!-- <div class="operation auth-manager" v-if="roleList.length">
+                            <div class="user-dropdown-item " :title="$t(`m.nav['切换管理空间']`)" @click="handleManager">
                                 <Icon type="grade-admin" class="iam-manager-icon" />
-                                {{ $t(`m.nav['切换分级管理员']`) }}
+                                {{ $t(`m.nav['切换管理空间']`) }}
                             </div>
-                        </div>
+                        </div> -->
                         <div class="operation">
-                            <div class="user-dropdown-item " :title="$t(`m.nav['退出登录']`)" @click="handleLogout">
+                            <div
+                                class="user-dropdown-item"
+                                :title="$t(`m.nav['退出登录']`)"
+                                @click="handleLogout"
+                            >
                                 <Icon type="logout" />
                                 {{ $t(`m.nav['退出登录']`) }}
                             </div>
@@ -73,32 +114,39 @@
 
 <script>
     import { mapGetters } from 'vuex';
-    import IamGuide from '@/components/iam-guide/index.vue';
+    // import IamGuide from '@/components/iam-guide/index.vue';
     import { leavePageConfirm } from '@/common/leave-page-confirm';
     import { il8n, language } from '@/language';
     import { bus } from '@/common/bus';
     import { buildURLParams } from '@/common/url';
+    import { getCookie } from '@/common/util';
     import SystemLog from '../system-log';
     import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
+    import Cookie from 'js-cookie';
+    import magicbox from 'bk-magic-vue';
 
     // 有选项卡的页面，user-group-detail 以及 perm-template-detail
     const getTabData = (routerName) => {
         const map = {
             '': [],
-            'permTemplateDetail': [
+            permTemplateDetail: [
                 {
-                    name: 'TemplateDetail', label: il8n('permTemplate', '模板详情')
+                    name: 'TemplateDetail',
+                    label: il8n('permTemplate', '模板详情')
                 },
                 {
-                    name: 'AttachGroup', label: il8n('permTemplate', '关联的组')
+                    name: 'AttachGroup',
+                    label: il8n('permTemplate', '关联的组')
                 }
             ],
-            'userGroupDetail': [
+            userGroupDetail: [
                 {
-                    name: 'GroupDetail', label: il8n('userGroup', '组详情')
+                    name: 'GroupDetail',
+                    label: il8n('userGroup', '组详情')
                 },
                 {
-                    name: 'GroupPerm', label: il8n('userGroup', '组权限')
+                    name: 'GroupPerm',
+                    label: il8n('userGroup', '组权限')
                 }
             ]
         };
@@ -110,14 +158,14 @@
         const str = language === 'zh-cn' ? '' : '-en';
         return {
             '': `super-admin-new${str}`,
-            'super_manager': `super-admin-new${str}`,
-            'system_manager': `system-admin-new${str}`,
-            'rating_manager': `grade-admin-new${str}`
+            super_manager: `super-admin-new${str}`,
+            system_manager: `system-admin-new${str}`,
+            rating_manager: `grade-admin-new${str}`
         };
     };
 
     const NORMAL_DOCU_LINK = '/权限中心/产品白皮书/产品简介/README.md';
-    const GRADE_DOCU_LINK = '/权限中心/产品白皮书/场景案例/GradingManager.md';
+    // const GRADE_DOCU_LINK = '/权限中心/产品白皮书/场景案例/GradingManager.md';
 
     const docuLinkMap = new Map([
         // 权限模板
@@ -125,7 +173,10 @@
         // 首页
         [['', 'index'], NORMAL_DOCU_LINK],
         // 用户组
-        [['userGroup', 'userGroupDetail', 'createUserGroup', 'userGroupPermDetail'], NORMAL_DOCU_LINK],
+        [
+            ['userGroup', 'userGroupDetail', 'createUserGroup', 'userGroupPermDetail'],
+            NORMAL_DOCU_LINK
+        ],
         // 系统接入
         [['systemAccess'], NORMAL_DOCU_LINK],
         // 我的申请
@@ -134,8 +185,11 @@
         [['applyCustomPerm', 'applyJoinUserGroup'], NORMAL_DOCU_LINK],
         // 我的权限
         [['myPerm', 'templatePermDetail', 'groupPermDetail', 'permRenewal'], NORMAL_DOCU_LINK],
-        // 分级管理员
-        [['ratingManager', 'gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'], GRADE_DOCU_LINK],
+        // 管理空间
+        [
+            ['ratingManager', 'gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'],
+            NORMAL_DOCU_LINK
+        ],
         // 管理员
         [['administrator'], NORMAL_DOCU_LINK],
         // 审批流程
@@ -156,8 +210,8 @@
     export default {
         name: '',
         components: {
-            SystemLog,
-            IamGuide
+            SystemLog
+            // IamGuide
         },
         props: {
             routeName: {
@@ -178,25 +232,23 @@
                 curRoleId: 0,
                 iconMap: {
                     '': 'personal-user',
-                    'super_manager': 'super-admin',
-                    'system_manager': 'system-admin',
-                    'rating_manager': 'grade-admin',
-                    'staff': 'personal-user'
+                    super_manager: 'super-admin',
+                    system_manager: 'system-admin',
+                    rating_manager: 'grade-admin',
+                    staff: 'personal-user'
                 },
                 identityIconMap: getIdentityIcon(),
-                // super_manager: 超级用户, staff: 普通用户, system_manager: 系统管理员, rating_manager: 分级管理员
+                // super_manager: 超级用户, staff: 普通用户, system_manager: 系统管理员, rating_manager: 管理空间
                 roleDisplayMap: {
-                    'super_manager': this.$t(`m.myApproval['超级管理员']`),
-                    'system_manager': this.$t(`m.nav['系统管理员']`),
-                    'rating_manager': this.$t(`m.grading['分级管理员']`),
-                    'staff': this.$t(`m.nav['普通用户']`)
+                    super_manager: this.$t(`m.myApproval['超级管理员']`),
+                    system_manager: this.$t(`m.nav['系统管理员']`),
+                    rating_manager: this.$t(`m.grading['管理空间']`),
+                    staff: this.$t(`m.nav['普通用户']`)
                 },
                 // curHeight: 500,
 
                 hasPageTab: false,
-                panels: [
-                    { name: 'mission', label: '任务报表' }
-                ],
+                panels: [{ name: 'mission', label: '任务报表' }],
                 active: 'mission',
                 getTabData: getTabData,
                 curRoleList: [],
@@ -209,30 +261,43 @@
                 userGroupName: '',
                 navData: [
                     { text: this.$t(`m.nav['个人工作台']`), id: 0, show: true, type: 'staff' },
-                    { text: this.$t(`m.nav['权限管理']`), id: 1, show: true, type: 'all_manager' },
+                    { text: this.$t(`m.nav['管理空间']`), id: 1, show: true, type: 'all_manager' },
                     { text: this.$t(`m.nav['统计分析']`), id: 2, show: false, type: 'super_manager' },
                     { text: this.$t(`m.nav['平台管理']`), id: 3, show: false, type: 'super_manager' }
                 ],
+                defaultRouteList: ['myPerm', 'userGroup', 'audit', 'user', 'addGroupPerm'],
                 isRatingChange: false,
                 haveManager: false,
                 showNavDataLength: 0,
-                curHeight: 78
+                curHeight: 78,
+                languageList: [
+                    {
+                        label: '中文',
+                        value: 'zh-cn'
+                    },
+                    {
+                        label: 'English',
+                        value: 'en'
+                    }
+                ]
             };
         },
         computed: {
             ...mapGetters([
-                'navStick',
-                'headerTitle',
-                'backRouter',
-                'user',
-                'mainContentLoading',
-                'roleList',
-                'index',
-                'navCurRoleId'
+            'navStick',
+            'headerTitle',
+            'backRouter',
+            'user',
+            'mainContentLoading',
+            'roleList',
+            'index',
+            'navCurRoleId',
+            'externalSystemId'
             ]),
             style () {
                 return {
-                    height: `${this.roleList.length ? this.curHeight : 46}px`
+                    // height: `${this.roleList.length ? this.curHeight : 46}px`
+                    height: `46px`
                 };
             },
             curAccountLogo () {
@@ -246,7 +311,7 @@
             }
         },
         watch: {
-            '$route': function (to, from) {
+            $route: function (to, from) {
                 this.hasPageTab = !!to.meta.hasPageTab;
                 if (['permTemplateDetail', 'userGroupDetail'].includes(to.name)) {
                     this.panels = this.getTabData(to.name);
@@ -288,19 +353,11 @@
             },
             routeName: {
                 handler (value) {
-                    if (value === 'addGroupPerm') {
-                        this.fetchUserGroup();
-                    }
-
-                    if (value === 'myPerm') {
-                        this.$store.commit('updateIndex', 0);
-                    } else if (value === 'userGroup') {
-                        this.$store.commit('updateIndex', 1);
-                        // this.updateRouter(this.user.role.type);
-                    } else if (value === 'audit') {
-                        this.$store.commit('updateIndex', 2);
-                    } else if (value === 'user') {
-                        this.$store.commit('updateIndex', 3);
+                    const index = this.defaultRouteList.findIndex((item) => item === value);
+                    if (index > -1) {
+                        ['addGroupPerm'].includes(value)
+                            ? this.fetchUserGroup()
+                            : this.$store.commit('updateIndex', index);
                     }
                 },
                 immediate: true
@@ -310,17 +367,21 @@
                     if ((!oldValue || (oldValue && oldValue.length < 1)) && newValue.length > 0) {
                         this.showGuide = true;
                     }
-                    this.showNavDataLength = newValue.filter(e => e.show).length;
-                    this.haveManager = this.showNavDataLength && this.showGuide && newValue.find(item => ['all_manager'].includes(item.type) && item.show);
+                    this.showNavDataLength = newValue.filter((e) => e.show).length;
+                    this.haveManager
+                        = this.showNavDataLength
+                            && this.showGuide
+                            && newValue.find((item) => ['all_manager'].includes(item.type) && item.show);
                 },
                 immediate: true,
                 deep: true
             }
         },
         created () {
-            this.curRole = this.user.role.type;
-            this.curIdentity = this.user.role.name;
-            this.curRoleId = this.user.role.id;
+            const { id, name, type } = this.user.role;
+            this.curRole = type;
+            this.curIdentity = name;
+            this.curRoleId = id;
             this.$once('hook:beforeDestroy', () => {
                 bus.$off('reload-page');
                 bus.$off('refresh-role');
@@ -330,12 +391,12 @@
             this.setNavData();
         },
         mounted () {
-            bus.$on('on-set-tab', data => {
+            bus.$on('on-set-tab', (data) => {
                 this.active = data;
             });
 
             bus.$on('rating-admin-change', () => {
-                const data = this.navData.find(e => e.type === 'staff');
+                const data = this.navData.find((e) => e.type === 'staff');
                 this.isRatingChange = true;
                 this.handleSelect(data, 0);
             });
@@ -346,6 +407,9 @@
                 const params = {
                     id: this.userGroupId
                 };
+                if (this.externalSystemId) {
+                    params.hidden = false;
+                }
                 try {
                     const res = await this.$store.dispatch('userGroup/getUserGroupDetail', params);
                     this.$nextTick(() => {
@@ -366,7 +430,7 @@
                 this.isShowGradingWrapper = false;
             },
 
-            // super_manager: 超级用户, staff: 普通用户, system_manager: 系统管理员, rating_manager: 分级管理员
+            // super_manager: 超级用户, staff: 普通用户, system_manager: 系统管理员, rating_manager: 管理空间
             isShowSuperManager (value) {
                 if (value.type === 'super_manager') {
                     return true;
@@ -384,7 +448,7 @@
             },
 
             handleInput (value) {
-                this.curRoleList = this.roleList.filter(item => item.name.indexOf(value) > -1);
+                this.curRoleList = this.roleList.filter((item) => item.name.indexOf(value) > -1);
             },
 
             handleOpenVersion () {
@@ -406,21 +470,24 @@
                 if (window.changeDialog && needConfirmFlag) {
                     cancelHandler = leavePageConfirm();
                 }
-                cancelHandler.then(() => {
-                    if (this.$route.name === 'applyCustomPerm') {
-                        this.$router.push({
-                            name: 'applyJoinUserGroup'
-                        });
-                    } else if (this.backRouter === -1) {
-                        history.go(-1);
-                    } else {
-                        this.$router.push({
-                            name: this.backRouter,
-                            params: this.$route.params,
-                            query: this.$route.query
-                        });
-                    }
-                }, _ => _);
+                cancelHandler.then(
+                    () => {
+                        if (this.$route.name === 'applyCustomPerm') {
+                            this.$router.push({
+                                name: 'applyJoinUserGroup'
+                            });
+                        } else if (this.backRouter === -1) {
+                            history.go(-1);
+                        } else {
+                            this.$router.push({
+                                name: this.backRouter,
+                                params: this.$route.params,
+                                query: this.$route.query
+                            });
+                        }
+                    },
+                    (_) => _
+                );
             },
 
             async updateRouter (navIndex = 0) {
@@ -440,41 +507,113 @@
                         this.$store.commit('setHeaderTitle', '');
                         window.localStorage.removeItem('iam-header-title-cache');
                         window.localStorage.removeItem('iam-header-name-cache');
-                        let name = 'myPerm';
-                        if (this.isRatingChange) {
-                            name = 'ratingManager';
-                        }
-                        if (navIndex === 1) {
-                            name = 'userGroup';
-                        } else if (navIndex === 2) {
-                            name = 'audit';
-                        } else if (navIndex === 3) {
-                            name = 'user';
-                        }
                         this.$router.push({
-                            name
+                            name: this.isRatingChange ? 'myManageSpace' : this.defaultRouteList[navIndex],
+                            params: navIndex === 1 ? { id: this.user.role.id, entry: 'updateRole' } : {}
                         });
+                    } else {
+                        // if (navIndex === 0 && ['gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'].includes(curRouterName)) {
+                        //     this.$router.push({
+                        //         name: 'myPerm'
+                        //     });
+                        // } else if (navIndex === 3 && ['gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit', 'myManageSpaceCreate', 'myManageSpaceSubDetail'].includes(curRouterName)) {
+                        //     this.$router.push({
+                        //         name: 'user'
+                        //     });
+                        // }
+                        // 修复当前是添加组权限页面点击其他角色菜单会再次跳到权限管理
+                        // 处理二级管理空间点击staff菜单不刷新路由问题
+                        // 处理超级管理员账号下头部导航没选择默认路由问题
+                        const OtherRoute = [
+                            'gradingAdminDetail',
+                            'gradingAdminCreate',
+                            'gradingAdminEdit',
+                            'myManageSpaceCreate',
+                            'secondaryManageSpaceCreate',
+                            'secondaryManageSpaceDetail',
+                            'addGroupPerm',
+                            'authorBoundaryEditFirstLevel'
+                        ];
+                        if (OtherRoute.includes(curRouterName)) {
+                            this.$router.push({
+                                name: this.defaultRouteList[navIndex]
+                            });
+                        }
                     }
                 }
             },
 
             async handleSelect (roleData, index) {
-                this.navData.forEach(e => {
+                const currentData = { ...roleData };
+                this.navData.forEach((e) => {
                     e.active = false;
                 });
-                roleData.active = true;
+                this.$set(currentData, 'active', true);
                 this.$store.commit('updateIndex', index);
                 window.localStorage.setItem('index', index);
-                if (this.routeName === 'addGroupPerm') {
-                    this.$router.push({
-                        name: 'userGroup'
-                    });
-                }
+                // if (this.routeName === 'addGroupPerm') {
+                //     this.$router.push({
+                //         name: 'userGroup'
+                //     });
+                // }
                 this.isShowGradingWrapper = false;
                 this.isShowUserDropdown = false;
-                await this.$store.dispatch('role/updateCurrentRole', { id: roleData.id });
-                bus.$emit('nav-change', { id: roleData.id }, index);
-                this.updateRouter(index);
+                try {
+                    await this.$store.dispatch('role/updateCurrentRole', { id: currentData.id });
+                    bus.$emit('nav-change', { id: currentData.id }, index);
+                    this.updateRouter(index);
+                } catch (err) {
+                    if (index === 1 && this.curRoleList.length) {
+                        this.resetLocalStorage();
+                        const { id, type, name } = this.curRoleList[0];
+                        this.$set(currentData, 'id', id);
+                        this.navCurRoleId = id;
+                        this.curRoleId = id;
+                        this.curRole = type;
+                        this.$store.commit('updateCurRoleId', id);
+                        this.$store.commit('updateIdentity', { id, type, name });
+                        this.$store.commit('updateNavId', id);
+                        this.$store.commit('updateIndex', index);
+                        window.localStorage.setItem('index', index);
+                        bus.$emit('nav-change', { id: currentData.id }, index);
+                        await this.$store.dispatch('role/updateCurrentRole', { id });
+                        this.updateRouter(index, type);
+                    }
+                }
+            },
+
+            async handleBackHome () {
+                await this.$store.dispatch('role/updateCurrentRole', { id: 0 });
+                await this.$store.dispatch('userInfo');
+                this.$store.commit('updateIndex', 0);
+                window.localStorage.setItem('index', 0);
+                this.$router.push({ name: 'myPerm' });
+            },
+
+            setMagicBoxLocale (targetLocale) {
+                const { lang, locale } = magicbox;
+                const magicBoxLanguageMap = {
+                    'zh-cn': lang.zhCN,
+                    en: lang.enUS
+                };
+                locale.use(magicBoxLanguageMap[getCookie('blueking_language')]);
+                window.CUR_LANGUAGE = getCookie('blueking_language');
+                this.$i18n.locale = getCookie('blueking_language');
+                window.location.reload();
+            },
+        
+            handleChangeLocale (payload) {
+                this.setCookie('blueking_language', payload);
+                Cookie.set('blueking_language', payload, {
+                    domain: window.location.hostname.split('.').slice(1).join('.')
+                });
+                this.setMagicBoxLocale(payload);
+            },
+
+            setCookie (name, value) {
+                const date = new Date();
+                date.setTime(date.getTime() - 10000);
+                document.cookie = name + '=' + value + ';' + 'expire=' + date.toGMTString() + '; path=/';
             },
 
             handleSwitchIdentity () {
@@ -497,7 +636,7 @@
             },
 
             handleManager () {
-                const data = this.navData.find(e => e.type !== 'staff');
+                const data = this.navData.find((e) => e.type !== 'staff');
                 this.handleSelect(data, 1);
                 this.$store.commit('updateSelectManager', true);
             },
@@ -525,16 +664,22 @@
                     tab = 'group_perm';
                 }
                 if (tab) {
-                    window.history.replaceState({}, '', `?${buildURLParams(Object.assign({}, this.$route.query, {
-                        tab: tab
-                    }))}`);
+                    window.history.replaceState(
+                        {},
+                        '',
+                        `?${buildURLParams(
+                            Object.assign({}, this.$route.query, {
+                                tab: tab
+                            })
+                        )}`
+                    );
                 }
             },
-            
+
             // 根据角色设置
             setTabRoleData () {
-                const superManager = this.curRoleList.find(e => e.type === 'super_manager');
-                const allManager = this.curRoleList.find(e => e.type !== 'staff');
+                const superManager = this.curRoleList.find((e) => e.type === 'super_manager');
+                const allManager = this.curRoleList.find((e) => e.type !== 'staff');
                 this.navData.forEach((element, i) => {
                     element.active = i === this.index;
                     if (element.type === 'super_manager' && superManager) {
@@ -563,5 +708,5 @@
 </script>
 
 <style>
-    @import './index';
+@import "./index";
 </style>

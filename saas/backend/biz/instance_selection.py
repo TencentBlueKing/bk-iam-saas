@@ -79,7 +79,7 @@ class InstanceSelectionList:
         填充视图节点的name
         """
         system_ids = self._list_system_id()
-        name_provider = ResourceTypeService().get_resource_type_dict(system_ids)
+        name_provider = ResourceTypeService().get_system_resource_type_dict(system_ids)
 
         for selection in self.selections:
             for node in selection.resource_type_chain:

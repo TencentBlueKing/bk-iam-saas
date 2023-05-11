@@ -23,6 +23,7 @@ init:
 
 lint:
 	pflake8 --config=./pyproject.toml .
+	bandit -c ./pyproject.toml -r .
 	mypy --config-file=./pyproject.toml .
 
 fmt:

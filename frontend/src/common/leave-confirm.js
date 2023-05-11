@@ -25,7 +25,7 @@
 */
 
 import Vue from 'vue';
-import il8n from '@/language';
+import { il8n, language } from '@/language';
 
 export const leaveConfirm = () => {
     if (!window.changeAlert || window.changeAlert === 'iamSidesider') {
@@ -36,6 +36,7 @@ export const leaveConfirm = () => {
     return new Promise((resolve, reject) => {
         vm.$bkInfo({
             title: il8n('info', '离开将会导致未保存信息丢失'),
+            width: language === 'zh-cn' ? 400 : 600,
             subHeader: h('p', {
                 style: {
                     color: '#63656e',
@@ -43,8 +44,8 @@ export const leaveConfirm = () => {
                     textAlign: 'center'
                 }
             }, il8n('info', '确认离开当前页')),
-            okText: il8n('common', '确定'),
-            cancelText: il8n('common', '取消'),
+            okText: il8n('common', '离开'),
+            cancelText: il8n('common', '取消-dialog'),
             confirmFn: () => {
                 window.changeAlert = false;
                 resolve();

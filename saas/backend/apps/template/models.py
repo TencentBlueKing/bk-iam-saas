@@ -123,7 +123,7 @@ class PermTemplatePolicyAuthorized(BaseModel):
         should_updated_policies = []
         for ap in authorized_policies:
             data = ap.data
-            actions = [a for a in data["actions"] if a["id"] != action_id]
+            actions = [a for a in data["actions"] if a.get("id", a.get("action_id")) != action_id]
             data["actions"] = actions
             ap.data = data
             should_updated_policies.append(ap)

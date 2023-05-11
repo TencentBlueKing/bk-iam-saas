@@ -12,6 +12,7 @@ from typing import List
 
 import pytest
 from blue_krill.web.std_error import APIError
+from mock import Mock
 
 from backend.biz.policy import (
     ConditionBean,
@@ -22,14 +23,19 @@ from backend.biz.policy import (
     PathNodeBeanList,
     PolicyBean,
     PolicyBeanList,
+    PolicyBeanListMixin,
     PolicyEmptyException,
     RelatedResourceBean,
     RelatedResourceBeanList,
+    ResourceGroupBean,
     ResourceGroupBeanList,
+    ResourceTypeInstanceCount,
     group_paths,
 )
+from backend.biz.resource import ResourceNodeAttributeDictBean, ResourceNodeBean
 from backend.common.time import PERMANENT_SECONDS, expired_at_display
-from backend.service.constants import DEAULT_RESOURCE_GROUP_ID, SelectionMode
+from backend.service.action import ActionList
+from backend.service.constants import DEFAULT_RESOURCE_GROUP_ID, SelectionMode
 from backend.service.models import PathResourceType, ResourceTypeDict
 from backend.service.models.action import Action, RelatedResourceType
 from backend.service.models.instance_selection import InstanceSelection
@@ -286,6 +292,30 @@ class TestInstanceBean:
         except APIError:
             assert raise_exception
 
+    @pytest.mark.parametrize(
+        "renamed_resources, result",
+        [
+            (
+                {
+                    PathNodeBean(
+                        id="id",
+                        name="name",
+                        system_id="system_id",
+                        type="type",
+                        type_name="type_name",
+                        type_name_en="type_name_en",
+                    ): "test"
+                },
+                True,
+            ),
+            ({}, False),
+        ],
+    )
+    def test_update_resource_name(self, instance_bean: InstanceBean, renamed_resources, result):
+        assert instance_bean.update_resource_name(renamed_resources) == result
+        if result:
+            assert instance_bean.path[0][0].name == "test"
+
 
 @pytest.fixture()
 def instance_bean_list(instance_bean: InstanceBean):
@@ -459,6 +489,30 @@ class TestRelatedResourceBean:
         _list = list(related_resource_bean.iter_path_list())
         assert len(_list) == 1
 
+    @pytest.mark.parametrize(
+        "renamed_resources, result",
+        [
+            (
+                {
+                    PathNodeBean(
+                        id="id",
+                        name="name",
+                        system_id="system_id",
+                        type="type",
+                        type_name="type_name",
+                        type_name_en="type_name_en",
+                    ): "test"
+                },
+                True,
+            ),
+            ({}, False),
+        ],
+    )
+    def test_update_resource_name(self, related_resource_bean: RelatedResourceBean, renamed_resources, result):
+        assert related_resource_bean.update_resource_name(renamed_resources) == result
+        if result:
+            assert related_resource_bean.condition[0].instances[0].path[0][0].name == "test"
+
 
 @pytest.fixture()
 def related_resource_bean_list(related_resource_bean: RelatedResourceBean):
@@ -511,7 +565,7 @@ class TestPolicyBean:
         assert policy_bean.get_system_id_set() == {"system_id"}
 
     def test_get_related_resource_type(self, policy_bean: PolicyBean):
-        assert policy_bean.get_related_resource_type(DEAULT_RESOURCE_GROUP_ID, "system_id", "type")
+        assert policy_bean.get_related_resource_type(DEFAULT_RESOURCE_GROUP_ID, "system_id", "type")
 
     def test_set_expired_at(self, policy_bean: PolicyBean):
         policy_bean.set_expired_at(PERMANENT_SECONDS)
@@ -545,7 +599,7 @@ class TestPolicyBean:
             policy_bean.resource_groups[0].remove_related_resource_types(
                 policy_bean.resource_groups[0].related_resource_types
             )
-            assert False
+            raise AssertionError()
         except PolicyEmptyException:
             assert True
 
@@ -554,12 +608,84 @@ class TestPolicyBean:
             policy_bean.resource_groups[0].remove_related_resource_types(
                 policy_bean.resource_groups[0].related_resource_types
             )
-            assert False
+            raise AssertionError()
         except PolicyEmptyException:
             assert True
 
     def test_list_path_node(self, policy_bean: PolicyBean):
         assert len(policy_bean.list_path_node()) == 2
+
+    @pytest.mark.parametrize(
+        "instance_selection, raise_exception",
+        [
+            (
+                gen_instance_selection(
+                    [{"system_id": "system_id", "id": "type"}, {"system_id": "system_id", "id": "type1"}]
+                ),
+                False,
+            ),
+            (gen_instance_selection([{"system_id": "system_id", "id": "type"}]), True),
+        ],
+    )
+    def test_check_instance_selection(self, policy_bean: PolicyBean, instance_selection, raise_exception):
+        try:
+            policy_bean.check_instance_selection(
+                Action(
+                    id="",
+                    name="",
+                    name_en="",
+                    description="",
+                    description_en="",
+                    related_resource_types=[
+                        RelatedResourceType(
+                            system_id="system_id",
+                            id="type",
+                            name="",
+                            name_en="",
+                            instance_selections=[instance_selection],
+                        )
+                    ],
+                )
+            )
+            assert not raise_exception
+        except APIError:
+            assert raise_exception
+
+    def test_list_resource_type_instance_count(self, policy_bean: PolicyBean):
+        counts = policy_bean.list_resource_type_instance_count()
+        assert counts == [ResourceTypeInstanceCount(type="type", count=1)]
+
+        policy_bean.resource_groups = ResourceGroupBeanList(__root__=[])
+
+        counts = policy_bean.list_resource_type_instance_count()
+        assert counts == [ResourceTypeInstanceCount(type="", count=0)]
+
+    @pytest.mark.parametrize(
+        "renamed_resources, result",
+        [
+            (
+                {
+                    PathNodeBean(
+                        id="id",
+                        name="name",
+                        system_id="system_id",
+                        type="type",
+                        type_name="type_name",
+                        type_name_en="type_name_en",
+                    ): "test"
+                },
+                True,
+            ),
+            ({}, False),
+        ],
+    )
+    def test_update_resource_name(self, policy_bean: PolicyBean, renamed_resources, result):
+        assert policy_bean.update_resource_name(renamed_resources) == result
+        if result:
+            assert (
+                policy_bean.resource_groups[0].related_resource_types[0].condition[0].instances[0].path[0][0].name
+                == "test"
+            )
 
 
 @pytest.fixture()
@@ -775,11 +901,11 @@ def test_group_paths():
 
 class TestResourceGroupBeanList:
     def test_get_by_id(self, policy_bean: PolicyBean):
-        resource_group = policy_bean.resource_groups.get_by_id(DEAULT_RESOURCE_GROUP_ID)
+        resource_group = policy_bean.resource_groups.get_by_id(DEFAULT_RESOURCE_GROUP_ID)
         assert resource_group
 
     def test_pop_by_id(self, policy_bean: PolicyBean):
-        resource_group = policy_bean.resource_groups.pop_by_id(DEAULT_RESOURCE_GROUP_ID)
+        resource_group = policy_bean.resource_groups.pop_by_id(DEFAULT_RESOURCE_GROUP_ID)
         assert resource_group
         assert len(policy_bean.resource_groups) == 0
 
@@ -815,6 +941,214 @@ class TestResourceGroupBeanList:
     def test_sub(self, policy_bean: PolicyBean):
         try:
             policy_bean.resource_groups - policy_bean.resource_groups
-            assert False
+            raise AssertionError()
         except PolicyEmptyException:
             assert True
+
+
+@pytest.fixture()
+def related_group_bean(related_resource_bean: RelatedResourceBean):
+    return ResourceGroupBean(related_resource_types=[related_resource_bean.copy(deep=True)])
+
+
+class TestResourceGroupBean:
+    @pytest.mark.parametrize(
+        "renamed_resources, result",
+        [
+            (
+                {
+                    PathNodeBean(
+                        id="id",
+                        name="name",
+                        system_id="system_id",
+                        type="type",
+                        type_name="type_name",
+                        type_name_en="type_name_en",
+                    ): "test"
+                },
+                True,
+            ),
+            ({}, False),
+        ],
+    )
+    def test_update_resource_name(self, related_group_bean: ResourceGroupBean, renamed_resources, result):
+        assert related_group_bean.update_resource_name(renamed_resources) == result
+        if result:
+            assert related_group_bean.related_resource_types[0].condition[0].instances[0].path[0][0].name == "test"
+
+    @pytest.mark.parametrize(
+        "instance_selection, raise_exception",
+        [
+            (
+                gen_instance_selection(
+                    [{"system_id": "system_id", "id": "type"}, {"system_id": "system_id", "id": "type1"}]
+                ),
+                False,
+            ),
+            (gen_instance_selection([{"system_id": "system_id", "id": "type"}]), True),
+        ],
+    )
+    def test_check_instance_selection(
+        self, related_group_bean: ResourceGroupBean, instance_selection, raise_exception
+    ):
+        try:
+            related_group_bean.check_instance_selection(
+                Action(
+                    id="",
+                    name="",
+                    name_en="",
+                    description="",
+                    description_en="",
+                    related_resource_types=[
+                        RelatedResourceType(
+                            system_id="system_id",
+                            id="type",
+                            name="",
+                            name_en="",
+                            instance_selections=[instance_selection],
+                        )
+                    ],
+                )
+            )
+            assert not raise_exception
+        except APIError:
+            assert raise_exception
+
+
+@pytest.fixture()
+def policy_bean_list_mixin(policy_bean: PolicyBean):
+    return PolicyBeanListMixin("system_id", [policy_bean.copy(deep=True)])
+
+
+class TestPolicyBeanListMixin:
+    @pytest.mark.parametrize(
+        "instance_selection, raise_exception",
+        [
+            (
+                gen_instance_selection(
+                    [{"system_id": "system_id", "id": "type"}, {"system_id": "system_id", "id": "type1"}]
+                ),
+                False,
+            ),
+            (gen_instance_selection([{"system_id": "system_id", "id": "type"}]), True),
+        ],
+    )
+    def test_check_instance_selection(
+        self, policy_bean_list_mixin: PolicyBeanListMixin, instance_selection, raise_exception
+    ):
+        policy_bean_list_mixin.action_svc.new_action_list = Mock(
+            return_value=ActionList(
+                [
+                    Action(
+                        id="action_id",
+                        name="",
+                        name_en="",
+                        description="",
+                        description_en="",
+                        related_resource_types=[
+                            RelatedResourceType(
+                                system_id="system_id",
+                                id="type",
+                                name="",
+                                name_en="",
+                                instance_selections=[instance_selection],
+                            )
+                        ],
+                    )
+                ]
+            )
+        )
+
+        try:
+            policy_bean_list_mixin.check_instance_selection()
+            assert not raise_exception
+        except APIError:
+            assert raise_exception
+
+    @pytest.mark.parametrize(
+        "resource_name_dict, raise_exception",
+        [
+            (
+                ResourceNodeAttributeDictBean(
+                    data={
+                        ResourceNodeBean(id="id", system_id="system_id", type="type"): "name",
+                        ResourceNodeBean(id="id1", system_id="system_id", type="type1"): "name1",
+                    }
+                ),
+                False,
+            ),
+            (
+                ResourceNodeAttributeDictBean(
+                    data={
+                        ResourceNodeBean(id="id", system_id="system_id", type="type"): "name",
+                        ResourceNodeBean(id="id1", system_id="system_id", type="type1"): "test",
+                    }
+                ),
+                True,
+            ),
+            (
+                ResourceNodeAttributeDictBean(data={}),
+                True,
+            ),
+        ],
+    )
+    def test_check_resource_name(
+        self, policy_bean_list_mixin: PolicyBeanListMixin, resource_name_dict, raise_exception
+    ):
+        policy_bean_list_mixin.resource_biz.fetch_resource_name = Mock(return_value=resource_name_dict)
+        try:
+            policy_bean_list_mixin.check_resource_name()
+            assert not raise_exception
+        except APIError:
+            assert raise_exception
+
+    def test_check_instance_count_limit(self, policy_bean_list_mixin: PolicyBeanListMixin):
+        assert policy_bean_list_mixin.check_instance_count_limit() is None
+
+    def test_get_renamed_resources(self, policy_bean_list_mixin: PolicyBeanListMixin):
+        policy_bean_list_mixin.resource_biz.fetch_resource_name = Mock(
+            return_value=ResourceNodeAttributeDictBean(
+                data={
+                    ResourceNodeBean(id="id", system_id="system_id", type="type"): "name",
+                    ResourceNodeBean(id="id1", system_id="system_id", type="type1"): "test",
+                }
+            )
+        )
+        renamed_resources = policy_bean_list_mixin.get_renamed_resources()
+        assert renamed_resources == {
+            PathNodeBean(
+                id="id1",
+                name="name1",
+                system_id="system_id",
+                type="type1",
+                type_name="type_name1",
+                type_name_en="type_name_en1",
+            ): "test"
+        }
+
+    @pytest.mark.parametrize(
+        "resource_name_dict, result",
+        [
+            (
+                ResourceNodeAttributeDictBean(
+                    data={
+                        ResourceNodeBean(id="id", system_id="system_id", type="type"): "name",
+                        ResourceNodeBean(id="id1", system_id="system_id", type="type1"): "name1",
+                    }
+                ),
+                False,
+            ),
+            (
+                ResourceNodeAttributeDictBean(
+                    data={
+                        ResourceNodeBean(id="id", system_id="system_id", type="type"): "name",
+                        ResourceNodeBean(id="id1", system_id="system_id", type="type1"): "test",
+                    }
+                ),
+                True,
+            ),
+        ],
+    )
+    def test_auto_update_resource_name(self, policy_bean_list_mixin: PolicyBeanListMixin, resource_name_dict, result):
+        policy_bean_list_mixin.resource_biz.fetch_resource_name = Mock(return_value=resource_name_dict)
+        assert bool(policy_bean_list_mixin.auto_update_resource_name()) == result

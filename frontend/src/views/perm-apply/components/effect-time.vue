@@ -56,17 +56,17 @@
                 isActive: false,
                 immediatelyShow: false,
                 effectWeekList: {
-                    1: '每周一',
-                    2: '每周二',
-                    3: '每周三',
-                    4: '每周四',
-                    5: '每周五',
-                    6: '每周六',
-                    0: '每周日'
+                    1: this.$t(`m.info['每周一']`),
+                    2: this.$t(`m.info['每周二']`),
+                    3: this.$t(`m.info['每周三']`),
+                    4: this.$t(`m.info['每周四']`),
+                    5: this.$t(`m.info['每周五']`),
+                    6: this.$t(`m.info['每周六']`),
+                    0: this.$t(`m.info['每周日']`)
                 },
                 effectWeekTimeZone: GLOBAL_TIME_ZONE_ENUM,
                 effectType: {
-                    'period_daily': '时间'
+                    'period_daily': this.$t(`m.info['时间']`)
                 }
             };
         },

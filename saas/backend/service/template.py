@@ -10,6 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 from typing import Any, Dict, List, Optional, Tuple
 
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Count, F
 from pydantic import BaseModel
@@ -19,7 +20,7 @@ from backend.common.lock import gen_policy_alter_lock
 from backend.common.time import PERMANENT_SECONDS
 
 from .action import ActionList
-from .constants import AuthTypeEnum
+from .constants import AuthType
 from .models import Policy, Subject, SystemCounter, UniversalPolicyChangedContent
 from .policy.backend import BackendPolicyOperationService
 from .policy.common import UniversalPolicyChangedContentAnalyzer
@@ -158,14 +159,14 @@ class TemplateService:
         action_auth_types = authorized_template.auth_types
         # 3.1 移除被删除的策略的AuthType
         for action_id in delete_action_ids:
-            action_auth_types.pop(action_id)
+            action_auth_types.pop(action_id, None)
         # 3.2 添加新增的策略的AuthType
         action_auth_types.update(
             {
                 cp.action_id: cp.auth_type
                 for cp in changed_policies
                 # Note: 变更后策略的AuthType为None，说明是策略变删除，不需要记录了，只取未被删除的
-                if cp.auth_type != AuthTypeEnum.NONE.value
+                if cp.auth_type != AuthType.NONE.value
             }
         )
 
@@ -254,7 +255,7 @@ class TemplateService:
                 )
                 authorized_template.data = {"actions": [p.dict() for p in saas_policies]}
                 authorized_template.auth_types = action_auth_types
-                authorized_template.save(update_fields=["_data"])
+                authorized_template.save(update_fields=["_data", "_auth_types"])
 
                 # 后端策略变更
                 self.backend_svc.alter_backend_policies(subject, template_id, system_id, changed_policies)
@@ -290,7 +291,7 @@ class TemplateService:
             policies.append(Policy.parse_obj(action))
         return PolicyList(policies)
 
-    def list_system_counter_by_subject(self, subject: Subject) -> List[SystemCounter]:
+    def list_system_counter_by_subject(self, subject: Subject, hidden: bool = True) -> List[SystemCounter]:
         """
         查询subject有权限的系统-模板数量信息
         """
@@ -300,6 +301,13 @@ class TemplateService:
             .annotate(count=Count("system_id"))
             .order_by()
         )
+
+        if hidden:
+            return [
+                SystemCounter(id=one["system_id"], count=one["count"])
+                for one in qs
+                if one["system_id"] not in settings.HIDDEN_SYSTEM_LIST
+            ]  # NOTE: 屏蔽掉需要隐藏的系统
 
         return [SystemCounter(id=one["system_id"], count=one["count"]) for one in qs]
 

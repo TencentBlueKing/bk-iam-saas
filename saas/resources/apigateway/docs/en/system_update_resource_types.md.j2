@@ -1,0 +1,37 @@
+### 修改资源类型
+
+----------
+{% include '_api_v1_model_resource_types.md.j2'%}包括'_api_v1_model_resource_types.md.j2'%。
+----------
+
+#### 参数
+
+| 字段 | 类型 | 是否必须 | 位置 | 描述
+
+| 系统_ID | string | 是 | path | 系统ID |
+资源类型_id | string | 是 | path | 资源类型 ID | |
+
+#### 请求
+
+````json
+{
+    "name". "企业名称新".
+    "name_en". "biz new".
+    "描述". "企业名称新..."、
+    "description_en". "biz new是...."、
+    "provider_config". {
+        "path". "/api/v2/resources/biz/query"
+    },
+    "版本". 2
+}
+```
+
+#### 响应
+
+````json
+{
+    "code". 0,
+    "消息". "",
+    "数据". {}
+}
+```

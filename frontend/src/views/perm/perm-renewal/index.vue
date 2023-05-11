@@ -27,6 +27,7 @@
                 :type="active"
                 :data="getTableList"
                 :loading="tableLoading"
+                :empty-data="curEmptyData"
                 @on-select="handleSelected" />
         </render-horizontal-block>
         <p class="error-tips" v-if="isShowErrorTips">{{ $t(`m.renewal['请选择过期权限']`) }}</p>
@@ -64,10 +65,13 @@
     </smart-action>
 </template>
 <script>
+    import _ from 'lodash';
     import { buildURLParams } from '@/common/url';
+    import { formatCodeData } from '@/common/util';
     import { SIX_MONTH_TIMESTAMP, ONE_DAY_TIMESTAMP } from '@/common/constants';
     import IamDeadline from '@/components/iam-deadline/horizontal';
     import RenderTable from '../components/render-renewal-table';
+    import { mapGetters } from 'vuex';
 
     export default {
         name: '',
@@ -78,49 +82,86 @@
         data () {
             return {
                 panels: [
-                    { name: 'group', label: this.$t(`m.perm['用户组权限']`), count: 0, total: 0, data: [] },
-                    { name: 'custom', label: this.$t(`m.perm['自定义权限']`), count: 0, total: 0, data: [] }
+                    {
+                        name: 'group',
+                        label: this.$t(`m.perm['用户组权限']`),
+                        count: 0,
+                        total: 0,
+                        data: [],
+                        emptyData: {
+                            type: '',
+                            text: '',
+                            tip: '',
+                            tipType: ''
+                        }
+                    },
+                    {
+                        name: 'custom',
+                        label: this.$t(`m.perm['自定义权限']`),
+                        count: 0,
+                        total: 0,
+                        data: [],
+                        emptyData: {
+                            type: '',
+                            text: '',
+                            tip: '',
+                            tipType: ''
+                        }
+                    }
                 ],
                 active: 'group',
                 expiredAt: SIX_MONTH_TIMESTAMP,
                 tableList: [],
                 tabKey: 'tab-key',
-                reason: '权限续期',
+                reason: this.$t(`m.renewal['权限续期']`),
                 submitLoading: false,
                 tableLoading: false,
                 isShowErrorTips: false,
                 isEmpty: false,
+                curEmptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                },
                 isShowReasonError: false
             };
         },
         computed: {
             getTableList () {
-                return this.panels.find(item => item.name === this.active).data || [];
+                const panelData = this.panels.find(item => item.name === this.active);
+                if (panelData) {
+                    this.curEmptyData = _.cloneDeep(panelData.emptyData);
+                    return panelData.data;
+                }
+                return [];
             },
             curBadgeTheme () {
                 return payload => {
                     return payload === this.active ? '#e1ecff' : '#f0f1f5';
                 };
-            }
+            },
+            ...mapGetters(['externalSystemsLayout', 'externalSystemId'])
         },
         watch: {
             panels: {
                 handler (value) {
-                    if (this.active === 'group') {
-                        if (value[0].total > 0) {
-                            this.isEmpty = false;
-                        } else {
-                            this.isEmpty = true;
-                        }
-                    } else if (this.active === 'custom') {
-                        if (value[1].total > 0) {
-                            this.isEmpty = false;
-                        } else {
-                            this.isEmpty = true;
-                        }
-                    }
+                    this.fetchActiveTabData(value);
                 },
                 immediate: true
+            },
+            externalSystemsLayout: {
+                handler (value) {
+                    if (value.myPerm.renewal.hideCustomTab) {
+                        this.panels.splice(1, 1);
+                        this.active = 'group';
+                    }
+                },
+                immediate: true,
+                deep: true
+            },
+            active () {
+                this.fetchActiveTabData(this.panels);
             }
         },
         async created () {
@@ -128,22 +169,61 @@
             this.curSelectedList = [];
             const query = this.$route.query;
             this.active = query.tab || 'group';
-            this.fetchData();
+            await this.fetchData();
         },
         methods: {
             async fetchData () {
                 this.tableLoading = true;
-                const promiseList = [this.$store.dispatch('renewal/getExpireSoonGroupWithUser', {
-                    page_size: 10,
-                    page: 1
-                }), this.$store.dispatch('renewal/getExpireSoonPerm')];
-                const resultList = await Promise.all(promiseList).finally(() => {
-                    this.tableLoading = false;
-                });
-                this.panels[0].total = resultList[0].data.count;
-                this.panels[0].data = resultList[0].data.results;
-                this.panels[1].data = resultList[1].data;
-                this.panels[1].total = resultList[1].data.length;
+                try {
+                    const userGroupParams = {
+                        page_size: 10,
+                        page: 1
+                    };
+                    if (this.externalSystemId) {
+                        userGroupParams.system_id = this.externalSystemId;
+                    }
+                    const resultList = await Promise.all([
+                        this.$store.dispatch('renewal/getExpireSoonGroupWithUser', userGroupParams),
+                        this.$store.dispatch('renewal/getExpireSoonPerm')
+                    ]).finally(() => {
+                        this.tableLoading = false;
+                    });
+                    const { code, data } = resultList[0];
+                    const { code: customCode, data: customList } = resultList[1];
+                    this.panels[0].emptyData
+                        = formatCodeData(code, this.panels[0].emptyData, data.results.length === 0);
+                    this.panels[0] = Object.assign(this.panels[0], { data: data.results, total: data.count });
+                    if (this.panels[1]) {
+                        this.panels[1] = Object.assign(this.panels[1], {
+                            data: customList,
+                            total: customList.length,
+                            emptyData: formatCodeData(customCode, this.panels[1].emptyData, customList.length === 0)
+                        });
+                    }
+                    this.tabKey = +new Date();
+                    this.fetchActiveTabData(this.panels);
+                } catch (e) {
+                    console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.curEmptyData = formatCodeData(code, this.curEmptyData);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: message || data.msg || statusText
+                    });
+                }
+            },
+
+            async fetchActiveTabData (payload) {
+                const activeItem = {
+                    group: () => {
+                        return !(payload[0].total > 0);
+                    },
+                    custom: () => {
+                        return !(payload[1] && payload[1].total > 0);
+                    }
+                };
+                this.isEmpty = activeItem[this.active]();
                 this.tabKey = +new Date();
             },
             // async fetchPageData () {
@@ -196,8 +276,10 @@
                     this.panels[0].count = this.panels[0].total;
                     this.curSelectedList = value;
                 } else {
-                    this.panels[1].count = value.length;
-                    this.curSelectedList = value;
+                    if (this.panels[1]) {
+                        this.panels[1].count = value.length;
+                        this.curSelectedList = value;
+                    }
                 }
                 this.isShowErrorTips = false;
                 this.$nextTick(() => {
@@ -214,6 +296,7 @@
                 }
                 if (!this.reason) {
                     this.isShowReasonError = true;
+                    this.scrollToLocation(this.$refs.reasonRef);
                     return;
                 }
                 this.submitLoading = true;
@@ -222,6 +305,9 @@
                     reason: this.reason
                 };
                 if (isGroup) {
+                    if (this.externalSystemId) {
+                        params.source_system_id = this.externalSystemId;
+                    }
                     params.groups = this.curSelectedList.map(
                         ({ id, name, description, expired_at }) => ({ id, name, description, expired_at })
                     );
@@ -263,6 +349,9 @@
             .bk-tab-section {
                 padding: 0;
             }
+        }
+        .iam-renewal-tab-cls {
+            margin-top: -15px;
         }
         .panel-name {
             margin: 0 3px;

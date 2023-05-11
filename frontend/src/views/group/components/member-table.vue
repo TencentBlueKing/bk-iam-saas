@@ -1,7 +1,7 @@
 <template>
     <div class="iam-user-group-member">
         <render-search>
-            <bk-button @click="handleAddMember">{{ $t(`m.userGroup['添加成员']`) }}</bk-button>
+            <bk-button :disabled="readOnly" @click="handleAddMember">{{ $t(`m.userGroup['添加成员']`) }}</bk-button>
             <bk-button :disabled="!isCanBatchDelete" @click="handleBatchDelete">{{ $t(`m.common['批量移除']`) }}</bk-button>
         </render-search>
         <bk-table
@@ -34,10 +34,10 @@
             </bk-table-column>
             <bk-table-column :label="$t(`m.common['加入时间']`)">
                 <template slot-scope="{ row }">
-                    <span :title="row.created_time">{{ row.created_time.replace(/T/, ' ') }}</span>
+                    <span :title="row.created_time.replace(/T/, ' ')">{{ row.created_time.replace(/T/, ' ') }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.common['到期时间']`)" prop="expired_at_display"></bk-table-column>
+            <bk-table-column :label="$t(`m.common['有效期']`)" prop="expired_at_display"></bk-table-column>
             <bk-table-column :label="$t(`m.common['操作']`)" width="180">
                 <template slot-scope="{ row }">
                     <div>
@@ -51,6 +51,15 @@
                     </div>
                 </template>
             </bk-table-column>
+            <template slot="empty">
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-refresh="handleEmptyRefresh"
+                />
+            </template>
         </bk-table>
 
         <delete-dialog
@@ -60,7 +69,7 @@
             :sub-title="deleteDialog.subTitle"
             @on-after-leave="handleAfterDeleteLeave"
             @on-cancel="hideCancelDelete"
-            @on-sumbit="handleSumbitDelete" />
+            @on-sumbit="handleSubmitDelete" />
 
         <add-member-dialog
             :show.sync="isShowAddMemberDialog"
@@ -70,7 +79,7 @@
             show-expired-at
             :is-rating-manager="isRatingManager"
             @on-cancel="handleCancelAdd"
-            @on-sumbit="handleSumbitAdd"
+            @on-sumbit="handleSubmitAdd"
             @on-after-leave="handleAddAfterClose" />
 
         <render-renewal-dialog
@@ -82,8 +91,10 @@
     </div>
 </template>
 <script>
+    import _ from 'lodash';
     import { mapGetters } from 'vuex';
     import { PERMANENT_TIMESTAMP } from '@/common/constants';
+    import { formatCodeData } from '@/common/util';
     import renderRenewalDialog from '@/components/render-renewal-dialog';
     import DeleteDialog from '../common/iam-confirm-dialog';
     import AddMemberDialog from './iam-add-member';
@@ -111,6 +122,10 @@
             data: {
                 type: Array,
                 default: () => []
+            },
+            readOnly: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
@@ -136,7 +151,13 @@
 
                 isShowRenewalDialog: false,
                 curData: {},
-                renewalLoading: false
+                renewalLoading: false,
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -145,7 +166,7 @@
                 return this.currentSelectList.length > 0 && this.tableList.length > 0;
             },
             isRatingManager () {
-                return this.user.role.type === 'rating_manager';
+                return ['rating_manager', 'subset_manager'].includes(this.user.role.type);
             },
             curType () {
                 return this.curData.type || 'department';
@@ -170,8 +191,17 @@
         },
         created () {
             this.PERMANENT_TIMESTAMP = PERMANENT_TIMESTAMP;
+            this.fetchMemberList();
+            // window.addEventListener('message', this.fetchReceiveData);
         },
         methods: {
+            
+            // 接收iframe父页面传递的message
+            fetchReceiveData (payload) {
+                const { data } = payload;
+                console.log(data, '接受传递过来的数据');
+                // this.fetchResetData(data);
+            },
             async fetchMemberList () {
                 this.tableLoading = true;
                 try {
@@ -180,21 +210,34 @@
                         limit: this.pagination.limit,
                         offset: this.pagination.limit * (this.pagination.current - 1)
                     };
-                    const res = await this.$store.dispatch('userGroup/getUserGroupMemberList', params);
-                    this.pagination.count = res.data.count;
-                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
+                    const { code, data } = await this.$store.dispatch('userGroup/getUserGroupMemberList', params);
+                    this.pagination.count = data.count;
+                    this.tableList.splice(0, this.tableList.length, ...(data.results || []));
+                    this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
                 } finally {
                     this.tableLoading = false;
                 }
+            },
+
+            async handleEmptyRefresh () {
+                this.pagination = Object.assign(
+                    this.pagination,
+                    {
+                        offset: 0,
+                        limit: 10
+                    });
+                await this.fetchMemberList();
             },
 
             handleShowRenewal (payload) {
@@ -213,7 +256,8 @@
             handleAddAfterClose () {
             },
 
-            async handleSumbitAdd (payload) {
+            async handleSubmitAdd (payload) {
+                const externalPayload = _.cloneDeep(payload);
                 this.loading = true;
                 const { users, departments, expiredAt } = payload;
                 let expired = payload.policy_expired_at;
@@ -248,10 +292,13 @@
                     id: this.id
                 };
                 try {
-                    await this.$store.dispatch('userGroup/addUserGroupMember', params);
-                    this.isShowAddMemberDialog = false;
-                    this.messageSuccess(this.$t(`m.info['添加成员成功']`), 2000);
-                    this.fetchMemberList();
+                    const { code, data } = await this.$store.dispatch('userGroup/addUserGroupMember', params);
+                    if (code === 0 && data) {
+                        window.parent.postMessage({ type: 'IAM', data: externalPayload, code: 'add_user_confirm' }, '*');
+                        this.isShowAddMemberDialog = false;
+                        this.messageSuccess(this.$t(`m.info['添加成员成功']`), 2000);
+                        this.fetchMemberList();
+                    }
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
@@ -269,15 +316,16 @@
             handleBatchDelete () {
                 if (this.currentSelectList.length === 1) {
                     const payload = this.currentSelectList[0];
-                    this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)}【${payload.id}(${payload.name})】，${this.$t(`m.info['该成员将不再继承该组的权限']`)}。`;
+                    this.deleteDialog.subTitle
+                        = `${this.$t(`m.common['移除']`)}${this.$t(`m.common['【']`)}${payload.id}(${payload.name})${this.$t(`m.common['】']`)}${this.$t(`m.common['，']`)}${this.$t(`m.info['该成员将不再继承该组的权限']`)}}${this.$t(`m.common['。']`)}`;
                 } else {
-                    this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)} ${this.currentSelectList.length} ${this.$t(`m.common['位成员']`)}，${this.$t(`m.info['这些成员将不再继承该组的权限']`)}。`;
+                    this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)} ${this.currentSelectList.length} ${this.$t(`m.common['位成员']`)}${this.$t(`m.common['，']`)}${this.$t(`m.info['这些成员将不再继承该组的权限']`)}${this.$t(`m.common['。']`)}`;
                 }
                 this.deleteDialog.visible = true;
             },
 
             handleDelete (payload) {
-                this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)}【${payload.id}(${payload.name})】，${this.$t(`m.info['该成员将不再继承该组的权限']`)}。`;
+                this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)}${this.$t(`m.common['【']`)}${payload.id}(${payload.name})${this.$t(`m.common['】']`)}${this.$t(`m.common['，']`)}${this.$t(`m.info['该成员将不再继承该组的权限']`)}${this.$t(`m.common['。']`)}`;
                 this.deleteDialog.visible = true;
                 this.curMember = Object.assign({}, {
                     id: payload.id,
@@ -316,7 +364,7 @@
                 this.deleteDialog.visible = false;
             },
 
-            async handleSumbitDelete () {
+            async handleSubmitDelete () {
                 this.deleteDialog.loading = true;
                 try {
                     const params = {
@@ -325,11 +373,18 @@
                             ? [this.curMember]
                             : this.currentSelectList.map(({ id, type }) => ({ id, type }))
                     };
-                    await this.$store.dispatch('userGroup/deleteUserGroupMember', params);
-                    this.messageSuccess(this.$t(`m.info['移除成功']`), 2000);
-                    this.currentSelectList = [];
-                    this.pagination.current = 1;
-                    this.fetchMemberList();
+                    const { code, data } = await this.$store.dispatch('userGroup/deleteUserGroupMember', params);
+                    if (code === 0 && data) {
+                        const externalParams = {
+                            ...params,
+                            count: params.members.length
+                        };
+                        window.parent.postMessage({ type: 'IAM', data: externalParams, code: 'remove_user_confirm' }, '*');
+                        this.messageSuccess(this.$t(`m.info['移除成功']`), 2000);
+                        this.currentSelectList = [];
+                        this.pagination.current = 1;
+                        this.fetchMemberList();
+                    }
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({

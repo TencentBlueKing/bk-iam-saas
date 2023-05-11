@@ -4,7 +4,9 @@
             <render-horizontal-block :label="$t(`m.common['基本信息']`)" ext-cls="basic-info-wrapper">
                 <detail-layout mode="see">
                     <render-layout>
-                        <detail-item :label="$t(`m.userGroupDetail['用户组名']`)">
+                        <detail-item
+                            :label="$t(`m.userGroupDetail['用户组名']`)"
+                            v-if="!externalSystemsLayout.userGroup.groupDetail.hideGroupName">
                             <iam-edit-input
                                 field="name"
                                 :placeholder="$t(`m.verify['用户组名输入提示']`)"
@@ -15,13 +17,23 @@
                         <detail-item :label="$t(`m.userGroupDetail['ID']`)">{{ basicInfo.id }}</detail-item>
                         <detail-item :label="$t(`m.userGroupDetail['创建时间']`)">{{ basicInfo.created_time }}</detail-item>
                         <detail-item :label="$t(`m.userGroupDetail['描述']`)">
-                            <iam-edit-textarea
-                                field="description"
-                                width="600px"
-                                :placeholder="$t(`m.verify['用户组描述提示']`)"
-                                :rules="descRules"
-                                :value="basicInfo.description"
-                                :remote-hander="handleUpdateGroup" />
+                            <template v-if="externalSystemsLayout.userGroup.groupDetail.hideGroupDescEdit">
+                                <div
+                                    :title="basicInfo.description"
+                                    class="single-hide"
+                                    style="max-width: 600px;">
+                                    {{ basicInfo.description }}
+                                </div>
+                            </template>
+                            <template v-else>
+                                <iam-edit-textarea
+                                    field="description"
+                                    width="600px"
+                                    :placeholder="$t(`m.verify['请输入']`)"
+                                    :rules="descRules"
+                                    :value="basicInfo.description"
+                                    :remote-hander="handleUpdateGroup" />
+                            </template>
                         </detail-item>
                     </render-layout>
                 </detail-layout>
@@ -30,6 +42,8 @@
                 <member-table
                     :id="groupId"
                     :name="basicInfo.name"
+                    :read-only="readOnly"
+                    :group-attributes="groupAttributes"
                     :data="memberList"
                     :count="pagination.count" />
             </render-horizontal-block>
@@ -37,14 +51,21 @@
     </div>
 </template>
 <script>
+    import { mapGetters } from 'vuex';
     import DetailLayout from '@/components/detail-layout';
     import DetailItem from '@/components/detail-layout/item';
     import IamEditInput from '@/components/iam-edit/input';
     import IamEditTextarea from '@/components/iam-edit/textarea';
     import RenderLayout from '../common/render-layout';
     import MemberTable from '../components/member-table';
+    
     export default {
         name: '',
+        provide: function () {
+            return {
+                getGroupAttributes: () => this.groupAttributes
+            };
+        },
         components: {
             DetailLayout,
             DetailItem,
@@ -77,14 +98,23 @@
                     count: 0,
                     limit: 10
                 },
+                groupAttributes: {
+                    source_type: '',
+                    source_from_role: false
+                },
                 memberList: [],
-                groupId: ''
+                groupId: '',
+                readOnly: false // 当前用户组是否可编辑成员
             };
+        },
+        computed: {
+            ...mapGetters(['externalSystemsLayout'])
         },
         watch: {
             id: {
                 handler (value) {
                     this.groupId = value;
+                    window.parent.postMessage({ type: 'IAM', data: { tab: 'group_detail' }, code: 'change_group_detail_tab' }, '*');
                     this.handleInit(value);
                 },
                 immediate: true
@@ -122,57 +152,56 @@
             ];
             this.descRules = [
                 {
-                    required: true,
-                    message: this.$t(`m.verify['描述必填']`),
-                    trigger: 'blur'
-                },
-                {
-                    validator: (value) => {
-                        return value.length >= 10;
-                    },
-                    message: this.$t(`m.verify['描述最短不少于10个字符']`),
+                    required: false,
+                    message: this.$t(`m.verify['请输入']`),
                     trigger: 'blur'
                 }
+                // {
+                //     validator: (value) => {
+                //         return value.length >= 10;
+                //     },
+                //     message: this.$t(`m.verify['描述最短不少于10个字符']`),
+                //     trigger: 'blur'
+                // }
             ];
         },
         methods: {
             async handleInit (payload) {
                 this.isLoading = true;
                 this.$emit('on-init', true);
-                try {
-                    const res = await Promise.all([this.fetchDetail(payload), this.fetchMemberList(payload)]);
-                    const { id, name, created_time, description } = res[0].data;
-                    this.basicInfo = Object.assign({}, {
-                        id,
-                        name,
-                        created_time,
-                        description
-                    });
-                    this.pagination.count = res[1].data.count;
-                    this.memberList.splice(0, this.memberList.length, ...(res[1].data.results || []));
-
-                    window.localStorage.setItem('iam-header-title-cache', name);
-                    window.localStorage.setItem('iam-header-name-cache', name);
-                    this.$store.commit('setHeaderTitle', name);
-                } catch (e) {
-                    console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
-                } finally {
-                    this.isLoading = false;
-                    this.$emit('on-init', false);
+                if (this.$parent.fetchDetail) {
+                    try {
+                        const { data } = await this.$parent.fetchDetail(payload);
+                        const { id, name, created_time, description, readonly, attributes } = data;
+                        this.basicInfo = Object.assign({}, {
+                            id,
+                            name,
+                            created_time,
+                            description
+                        });
+                        this.readOnly = readonly;
+                        this.groupAttributes = Object.assign(this.groupAttributes, attributes);
+                        // this.pagination.count = data.count || 0;
+                        // this.memberList.splice(0, this.memberList.length, ...(data.results || []));
+                        window.localStorage.setItem('iam-header-title-cache', name);
+                        window.localStorage.setItem('iam-header-name-cache', name);
+                        this.$store.commit('setHeaderTitle', name);
+                    } catch (e) {
+                        console.error(e);
+                        this.bkMessageInstance = this.$bkMessage({
+                            limit: 1,
+                            theme: 'error',
+                            message: e.message || e.data.msg || e.statusText,
+                            ellipsisLine: 2,
+                            ellipsisCopy: true
+                        });
+                    } finally {
+                        this.isLoading = false;
+                        this.$emit('on-init', false);
+                    }
                 }
             },
-
-            fetchDetail (payload) {
-                return this.$store.dispatch('userGroup/getUserGroupDetail', { id: payload });
-            },
-
+            
             fetchMemberList (payload) {
                 const params = {
                     id: payload,

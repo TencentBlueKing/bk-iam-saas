@@ -16,7 +16,7 @@ from pydantic import BaseModel, Field
 from backend.apps.policy.models import Policy as PolicyModel
 from backend.apps.temporary_policy.models import TemporaryPolicy
 from backend.common.time import PERMANENT_SECONDS
-from backend.service.constants import ANY_ID, DEAULT_RESOURCE_GROUP_ID, AbacPolicyChangeType, AuthTypeEnum
+from backend.service.constants import ANY_ID, DEFAULT_RESOURCE_GROUP_ID, AbacPolicyChangeType, AuthType
 from backend.service.utils.translate import ResourceExpressionTranslator
 from backend.util.model import ListModel
 from backend.util.uuid import gen_uuid
@@ -94,6 +94,9 @@ class PathNodeList(ListModel):
         # 所以这里可以直接认为只能是RBAC策略，暂时不进行实例视图匹配的分析
         return True
 
+    def __hash__(self):
+        return hash((hash(one) for one in self.__root__))
+
 
 class Instance(BaseModel):
     type: str
@@ -105,6 +108,12 @@ class Instance(BaseModel):
         """
         for i in range(len(self.path)):
             node_list = self.path[i]
+
+            last_node = node_list.get_last_node_without_any()
+            # 只有最后一层的资源类型与资源实例一致才需要忽略路径
+            if last_node.system_id != resource_system_id or last_node.type != resource_type_id:
+                continue
+
             for selection in selections:
                 if node_list.match_selection(resource_system_id, resource_type_id, selection):
                     self.path[i] = node_list.ignore_path(selection)
@@ -226,6 +235,13 @@ class ResourceGroupList(ListModel):
 
         return [ThinResourceType(rrt.system_id, rrt.type) for rrt in self[0].related_resource_types]
 
+    def ignore_path(self, action: Action):
+        """
+        检查资源的实例视图是否匹配
+        """
+        for rg in self:
+            rg.ignore_path(action)
+
 
 class Policy(BaseModel):
     action_id: str = Field(alias="id")
@@ -237,7 +253,7 @@ class Policy(BaseModel):
     expired_at: int
     resource_groups: ResourceGroupList
 
-    auth_type: str = AuthTypeEnum.ABAC.value
+    auth_type: str = AuthType.ABAC.value
 
     class Config:
         allow_population_by_field_name = True  # 支持alias字段同时传 action_id 与 id
@@ -251,7 +267,7 @@ class Policy(BaseModel):
                 data["resource_groups"] = [
                     # NOTE: 固定resource_group_id方便删除逻辑
                     {
-                        "id": DEAULT_RESOURCE_GROUP_ID,
+                        "id": DEFAULT_RESOURCE_GROUP_ID,
                         "related_resource_types": data.pop("related_resource_types"),
                     }
                 ]
@@ -274,7 +290,7 @@ class Policy(BaseModel):
         resource_groups = policy.resources
         if cls._is_old_structure(policy.resources):
             # NOTE: 固定resource_group_id, 方便删除逻辑
-            resource_groups = [ResourceGroup(id=DEAULT_RESOURCE_GROUP_ID, related_resource_types=policy.resources)]
+            resource_groups = [ResourceGroup(id=DEFAULT_RESOURCE_GROUP_ID, related_resource_types=policy.resources)]
 
         obj = cls(
             action_id=policy.action_id,
@@ -332,8 +348,7 @@ class Policy(BaseModel):
         """
         检查资源的实例视图是否匹配
         """
-        for rg in self.resource_groups:
-            rg.ignore_path(action)
+        self.resource_groups.ignore_path(action)
 
 
 class BackendThinPolicy(BaseModel):
@@ -364,7 +379,7 @@ class RbacPolicyChangeContent(BaseModel):
 class UniversalPolicyChangedContent(BaseModel):
     action_id: str
     # 策略变更后的策略类型
-    auth_type: str = AuthTypeEnum.ABAC.value
+    auth_type: str = AuthType.ABAC.value
     # ABAC策略变更
     abac: Optional[AbacPolicyChangeContent]
     # RBAC策略变更
@@ -398,7 +413,7 @@ class UniversalPolicy(Policy):
         对于策略，某些情况下可以立马判断为ABAC策略
         """
         # 0. Action在模型注册时是否表示支持RBAC，如果不支持则保持原有ABAC
-        if action_auth_type == AuthTypeEnum.ABAC.value:
+        if action_auth_type == AuthType.ABAC.value:
             return True
 
         # TODO: 写单元测试时，顺便添加一些debug日志, 排查问题时能精确知道在哪个分支被return, 降低成本
@@ -487,17 +502,17 @@ class UniversalPolicy(Policy):
         """计算auth_type"""
         # 1 abac和rbac都有
         if has_abac and has_rbac:
-            return AuthTypeEnum.ALL.value
+            return AuthType.ALL.value
 
         # 2 有abac，无rbac
         if has_abac and not has_rbac:
-            return AuthTypeEnum.ABAC.value
+            return AuthType.ABAC.value
 
         # 3 无abac，有rbac
         if not has_abac and has_rbac:
-            return AuthTypeEnum.RBAC.value
+            return AuthType.RBAC.value
 
-        return AuthTypeEnum.NONE.value
+        return AuthType.NONE.value
 
     def _init_abac_and_rbac_data(self, resource_groups: ResourceGroupList, action_auth_type: str):
         """
@@ -566,7 +581,7 @@ class UniversalPolicy(Policy):
         return translator.translate(system_id, self.expression_resource_groups.dict())
 
     def has_abac(self) -> bool:
-        return self.auth_type in (AuthTypeEnum.ABAC.value, AuthTypeEnum.ALL.value)
+        return self.auth_type in (AuthType.ABAC.value, AuthType.ALL.value)
 
     def has_rbac(self) -> bool:
-        return self.auth_type in (AuthTypeEnum.RBAC.value, AuthTypeEnum.ALL.value)
+        return self.auth_type in (AuthType.RBAC.value, AuthType.ALL.value)

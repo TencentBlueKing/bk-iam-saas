@@ -1,0 +1,21 @@
+### Query system token
+
+Used for `IAM (Identity and Access Management)` to call the `access system` to pull the authentication of resource information related interfaces
+
+#### Parameters
+
+| Field | Type | Required | Location | Description |
+| :--- | :---| :--- |:--- |:--- |
+| system_id | string | yes | path | system_id |
+
+#### Response
+
+```bash
+{
+    "code": 0,
+    "data": {
+        "token": "dk9httsqmq4bbdu7aqq6cqp1az6i8org"
+    },
+    "message": "ok"
+}
+```

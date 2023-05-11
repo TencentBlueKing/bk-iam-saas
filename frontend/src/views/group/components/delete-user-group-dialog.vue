@@ -17,11 +17,11 @@
                 <p><Icon bk type="info-circle-shape" class="warn" /> {{ $t(`m.dialog['组内用户继承该组的权限将失效']`) }}</p>
             </div>
             <div class="operate-buttons">
-                <bk-button theme="primary" :loading="loading" @click="handleSumbitDelete">
+                <bk-button theme="primary" :loading="loading" @click="handleSubmitDelete">
                     {{ $t(`m.common['确定']`) }}
                 </bk-button>
                 <bk-button theme="default" style="margin-left: 10px;" @click="hideCancelDelete">
-                    {{ $t(`m.common['取消']`) }}
+                    {{ $t(`m.common['取消-dialog']`) }}
                 </bk-button>
             </div>
         </div>
@@ -44,26 +44,23 @@
                 default: false
             }
         },
-        data () {
-            return {
-                isShowDialog: false
-            };
-        },
-        watch: {
-            show: {
-                handler (value) {
-                    this.isShowDialog = !!value;
+        computed: {
+            isShowDialog: {
+                get () {
+                    return this.show;
                 },
-                immediate: true
+                set (value) {
+                    this.$emit('update:show', value);
+                }
             }
         },
         methods: {
-            handleSumbitDelete () {
-                this.$emit('on-sumbit');
+            handleSubmitDelete () {
+                this.$emit('on-submit');
             },
 
             hideCancelDelete () {
-                this.$emit('on-cancel');
+                this.$emit('update:show', false);
             },
 
             handleAfterDeleteLeave () {
@@ -79,6 +76,7 @@
             .delete-tips {
                 padding-left: 44px;
                 text-align: left;
+                word-break: break-all;
                 .warn {
                     color: #ffb848;
                 }
