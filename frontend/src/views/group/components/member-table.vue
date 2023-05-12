@@ -52,7 +52,7 @@
                             :disabled="disabledGroup()"
                             :title="disabledGroup() ? $t(`m.userGroup['管理员组至少保留一条数据']`) : ''"
                             @click="handleDelete(row)">
-                            {{ $t(`m.common['移除']`) }}{{ disabledGroup()}}
+                            {{ $t(`m.common['移除']`) }}
                         </bk-button>
                         <bk-button v-if="row.expired_at !== PERMANENT_TIMESTAMP"
                             theme="primary" style="margin-left: 4px;" text @click="handleShowRenewal(row)">
