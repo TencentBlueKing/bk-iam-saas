@@ -1,0 +1,128 @@
+### Bulk third-party dependency forensic policy queries
+
+#### Background
+
+The operation of this system depends on external system resource type, and needs to use external resource instance authentication in large batch
+
+For example, the user needs to trigger the execution of a job on thousands of hosts in Job System, for example, job1 needs to be executed on host1, host2.
+
+This interface supports pulling policies and helping the access system to pull the resource information needed for policy calculation from the `dependent system'; 
+
+The access system can get both `policy` and `resource information` to complete the computation and check if it has permission;
+
+Note: Since the large batch traversal calculation expression is a cpu-intensive calculation, if the calculation is placed in the IAM, the CPU resources of the IAM service will be insufficient when the concurrent batch calculation is performed, and the service will be unavailable, so the calculation should be distributed to the access system to reduce the pressure on the IAM service.
+
+Scenario 1: The number of external dependent resource instances **not** exceeds 1000
+
+Usage suggestions:
+
+Use the `query_by_ext_resources` interface to query policy expressions and resource instances and then iterate through them locally to calculate whether they have permissions.
+
+Scenario 2: The number of instances of external dependent resources **exceeds** 1000
+
+Usage suggestions:
+
+1. use the `policy/query` interface to query policy expressions
+2. locally calculate whether there are `any`, `id in ["id1", "id2"]` instances in the expression to initially calculate whether some of the external dependency instances have permissions or not
+3. For the resource instances that are calculated without permission in the second step, call the `query_by_ext_resources` interface in batches (no more than 1000 at a time) to query the policy expression and the resource instances locally and then iterate through them to calculate whether they have permission or not
+
+How to use ####
+
+1. in the request body resources pass job1 related resource information, in ext_resources pass host1, host2 of third-party dependencies
+2. The expression in the returned result is a conditional expression after filtering the resource-related conditions in the request, and the ext_resources of the result returns the resource information of the filled attribute.
+3. **Authentication calculation**: The access system gets the ext_resource and iterates through each host instance and brings in the expression to get the authentication result.
+
+Note:
+
+- The relationship between resources and ext_resources in request, current ext_resources can only have one instance of a third-party dependent type, resource must be an instance of another resource type that the action depends on
+- ext_resources can't have more than 1000 queries at a time, if more than that, it is recommended to query in batches
+
+------
+
+#### Request
+
+```json
+{
+  "system": "bk_job",
+  "subject": {
+    "type": "user",
+    "id": "admin"
+  },
+  "action": {
+    "id": "execute"
+  },
+  "resources": [ # Instances of resources participating in the filtering policy, only 1 of each resource type can be passed, can be left out, if not the returned expression contains the condition that the action is associated with all resource types
+    {
+      "system": "bk_job",
+      "type": "job",
+      "id": "job1",
+      "attribute": {}
+    }
+  ],
+  "ext_resources": [ # Resource types not involved in the calculation, can be passed in bulk, IAM will query the third-party system for the resource's attribute information, up to 1000 at a time
+    {
+      "system": "bk_cmdb",
+      "type": "host",
+      "ids": [
+        "host1",
+        "host2"
+      ]
+    }
+  ]
+}
+```
+
+#### Response
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {
+    "expression": { # The expression that has been substituted into resources in the request
+      "op": "AND",
+      "content": [
+        {
+          "op": "in",
+          "field": "host.id",
+          "value": [
+            "host1",
+            "host2"
+          ]
+        },
+        {
+          "op": "starts_with",
+          "field": "host._bk_iam_path_",
+          "value": [
+            "/biz,5/"
+          ]
+        }
+      ]
+    },
+    "ext_resources": [ # Third-party resource instances obtained by query, populated with attributes associated with the expression
+      {
+        "system": "bk_cmdb",
+        "type": "host",
+        "instances": [
+          {
+            "id": "host1",
+            "attribute": {
+              "_bk_iam_path_": [
+                "/biz,5/"
+              ]
+            }
+          },
+          {
+            "id": "host2",
+            "attribute": {
+              "_bk_iam_path_": [
+                "/biz,5/"
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
+```

@@ -22,7 +22,7 @@
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
-*/
+ */
 
 import http from '@/api';
 import { json2Query } from '@/common/util';
@@ -61,8 +61,12 @@ export default {
          * @return {Promise} promise 对象
          */
         getUserGroupDetail ({ commit, state, dispatch }, params, config) {
-            const { id } = params;
-            return http.get(`${AJAX_URL_PREFIX}/groups/${id}/`, config);
+            const requestParams = Object.assign({}, params);
+            const id = requestParams.id;
+            delete requestParams.id;
+            // return http.get(`${AJAX_URL_PREFIX}/groups/${id}/`, config);
+            const queryParams = Object.keys(requestParams).length ? `${id}/?${json2Query(requestParams)}` : `${id}/`;
+            return http.get(`${AJAX_URL_PREFIX}/groups/${queryParams}`, {}, config);
         },
 
         /**
@@ -233,6 +237,22 @@ export default {
         },
 
         /**
+         * 分配(二级管理空间)
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object} params 请求参数
+         * @param {Object?} config http config
+         *
+         * @return {Promise} promise 对象
+         */
+        userGroupDistribute ({ commit, state, dispatch }, params, config) {
+            const { id } = params;
+            return http.post(`${AJAX_URL_PREFIX}/groups/${id}/transfer/`, params, config);
+        },
+
+        /**
          * 获取用户组有权限的系统列表
          *
          * @param {Function} commit store commit mutation handler
@@ -243,8 +263,12 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getGroupSystems ({ commit, state, dispatch }, { id }, config) {
-            return http.get(`${AJAX_URL_PREFIX}/groups/${id}/systems/`, config);
+        getGroupSystems ({ commit, state, dispatch }, params, config) {
+            const requestParams = Object.assign({}, params);
+            const { id } = requestParams;
+            delete requestParams.id;
+            const queryParams = Object.keys(requestParams).length ? `${id}/systems/?${json2Query(requestParams)}` : `${id}/systems/`;
+            return http.get(`${AJAX_URL_PREFIX}/groups/${queryParams}`, {}, config);
         },
 
         /**
@@ -334,7 +358,11 @@ export default {
          * @return {Promise} promise 对象
          */
         groupTemplateCompare ({ commit, state, dispatch }, { id, templateId, data }, config) {
-            return http.post(`${AJAX_URL_PREFIX}/groups/${id}/templates/${templateId}/condition_compare/`, data, config);
+            return http.post(
+                `${AJAX_URL_PREFIX}/groups/${id}/templates/${templateId}/condition_compare/`,
+                data,
+                config
+            );
         },
 
         /**

@@ -22,7 +22,7 @@ from backend.biz.subject import SubjectInfoList
 from backend.biz.system import SystemBiz
 from backend.service.action import ActionService
 from backend.service.approval import ApprovalProcessService
-from backend.service.constants import ApplicationTypeEnum
+from backend.service.constants import ApplicationType
 from backend.service.models import Subject
 from backend.util.time import timestamp_to_local
 
@@ -101,15 +101,6 @@ class GroupTransferProvider(BaseProvider):
         return objects
 
 
-class SubjectGroupProvider(BaseProvider):
-    @property
-    def sub_objects(self) -> List:
-        extra = self.event.extra
-
-        group = Group.objects.filter(id=extra["group"]["id"]).first()
-        return [{"type": extra["group"]["type"], "id": extra["group"]["id"], "name": group.name if group else ""}]
-
-
 class SubjectPoliciesProvider(BaseProvider):
     biz = SystemBiz()
 
@@ -184,18 +175,6 @@ class RoleUpdateProvider(BaseProvider):
         return _("名称: {}, 描述: {}").format(extra["name"], extra["description"])
 
 
-class UserRoleDeleteProvider(BaseProvider):
-    @property
-    def sub_objects(self) -> List:
-        extra = self.event.extra
-        role = Role.objects.filter(id=extra["role_id"]).first()
-        return (
-            [{"type": AuditObjectType.ROLE.value, "id": str(role.id), "name": role.name, "name_en": role.name_en}]
-            if role
-            else []
-        )
-
-
 class RoleMemberProvider(BaseProvider):
     @property
     def sub_objects(self) -> List:
@@ -268,7 +247,7 @@ class ApprovalGlobalProvider(ApprovalNameMixin, BaseProvider):
     @property
     def description(self) -> str:
         type_ = self.event.extra["type"]
-        type_name = dict(ApplicationTypeEnum.get_choices()).get(type_)
+        type_name = dict(ApplicationType.get_choices()).get(type_)
         process_id = self.event.extra["process_id"]
         process_name = self.get_process_name(process_id)
         return f"设置 [{type_name}] 类型全局审批流程: {process_name}(#{process_id})"
@@ -323,11 +302,9 @@ class EventDetailExtra:
         AuditType.GROUP_POLICY_DELETE.value: SubjectPoliciesProvider,
         AuditType.GROUP_POLICY_UPDATE.value: SubjectPoliciesUpdateProvider,
         # department/user
-        AuditType.DEPARTMENT_GROUP_DELETE.value: SubjectGroupProvider,
-        AuditType.USER_GROUP_DELETE.value: SubjectGroupProvider,
         AuditType.USER_POLICY_UPDATE.value: SubjectPoliciesProvider,
         AuditType.USER_POLICY_CREATE.value: SubjectPoliciesProvider,
-        AuditType.USER_ROLE_DELETE.value: UserRoleDeleteProvider,
+        AuditType.USER_POLICY_DELETE.value: SubjectPoliciesProvider,
         AuditType.USER_TEMPORARY_POLICY_CREATE.value: SubjectPoliciesProvider,
         AuditType.USER_TEMPORARY_POLICY_DELETE.value: SubjectPoliciesProvider,
         # template

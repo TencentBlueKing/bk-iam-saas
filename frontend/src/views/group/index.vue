@@ -1,35 +1,58 @@
 <template>
     <div class="iam-user-group-wrapper">
         <render-search>
+            <!-- <bk-button v-if="isSuperManager" :disabled="currentSelectList.length < 1" style="margin-left: 6px"
+                data-test-id="group_btn_transferOut" @click="handleTransferOut">
+                {{ $t(`m.userGroup['转出']`) }}
+            </bk-button>
+            <bk-button
+                :disabled="currentSelectList.length < 1"
+                theme="primary"
+                @click="handleBatchAddMember"
+                data-test-id="group_btn_create"
+            >
+                {{ $t(`m.common['批量添加成员']`) }}
+            </bk-button>
+            <bk-button
+                v-if="isRatingManager"
+                :disabled="currentSelectList.length < 1"
+                style="margin-left: 6px"
+                data-test-id="group_btn_distribute"
+                @click="handleDistribute"
+            >
+                {{ $t(`m.userGroup['分配']`) }}
+            </bk-button> -->
             <div class="search_left">
                 <bk-button theme="primary" @click="handleCreate" data-test-id="group_btn_create">
                     {{ $t(`m.common['新建']`) }}
                 </bk-button>
-                <!-- <bk-button v-if="isSuperManager" :disabled="currentSelectList.length < 1" style="margin-left: 6px"
+                <bk-button v-if="isSuperManager" :disabled="currentSelectList.length < 1"
                     data-test-id="group_btn_transferOut" @click="handleTransferOut">
                     {{ $t(`m.userGroup['转出']`) }}
-                </bk-button> -->
-                <!-- <bk-button
+                </bk-button>
+                <bk-button
                     :disabled="currentSelectList.length < 1"
-                    theme="primary"
                     @click="handleBatchAddMember"
                     data-test-id="group_btn_create"
                 >
                     {{ $t(`m.common['批量添加成员']`) }}
-                </bk-button> -->
+                </bk-button>
                 <!-- <bk-button
                     v-if="isRatingManager"
                     :disabled="currentSelectList.length < 1"
                     style="margin-left: 6px"
                     data-test-id="group_btn_distribute"
                     @click="handleDistribute"
-                >{{ $t(`m.userGroup['分配']`) }}</bk-button
-                > -->
-                <bk-select
+                >
+                    {{ $t(`m.userGroup['分配']`) }}
+                </bk-button> -->
+                <!-- 注释掉下拉选择，采取button -->
+                <!-- <bk-select
                     ref="userGroupSelect"
                     v-model="selectKeyword"
                     :searchable="true"
                     :placeholder="$t(`m.userGroup['批量']`)"
+                    :search-placeholder="$t(`m.approvalProcess['请输入关键字搜索']`)"
                     ext-cls="select-custom"
                     ext-popover-cls="select-popover-custom"
                     @toggle="handleToggle">
@@ -40,18 +63,19 @@
                         :name="option.name"
                         :disabled="option.disabled"
                     >
-                        <div class="select-collection" @click.stop="handleSelect(option)">
-                            <span>{{ option.name }}</span>
+                        <div @click.stop="handleSelect(option)">
+                            {{option.name}}
                         </div>
                     </bk-option>
-                </bk-select>
+                </bk-select> -->
             </div>
             <!-- 先屏蔽 -->
             <div slot="right">
                 <iam-search-select
                     style="width: 420px;"
                     :placeholder="$t(`m.userGroup['搜索用户组名、描述、管理空间、创建人']`)"
-                    :data="searchData" :value="searchValue"
+                    :data="searchData"
+                    :value="searchValue"
                     :quick-search-method="quickSearchMethod"
                     @on-change="handleSearch" />
             </div>
@@ -83,17 +107,21 @@
                 </template>
             </bk-table-column>
             <template v-if="['rating_manager'].includes(curRole)">
-                <bk-table-column :label="$t(`m.nav['二级管理空间']`)" :filters="spaceFiltersList"
-                    :filter-method="handleSpaceFilter" :filter-multiple="true">
+                <bk-table-column :label="$t(`m.info['二级管理空间']`)" width="240">
                     <template slot-scope="{ row }">
-                        <!-- <span class="user-group-name" :title="row.role.name" @click="handleView(row)">
-                            {{ row.role.name || '--' }}
-                        </span> -->
                         <div class="user-group-space">
-                            <Icon type="level-two" :style="{ color: '#9B80FE' }" />
-                            <iam-edit-input field="name" :placeholder="$t(`m.verify['请输入']`)"
-                                :value="row.role.name || ''" :rules="rules" style="width: 100%; margin-left: 5px;"
-                                :remote-hander="handleUpdateManageSpace" />
+                            <Icon
+                                v-if="['subset_manager'].includes(row.role.type)"
+                                type="level-two"
+                                :style="{ color: '#9B80FE' }"
+                            />
+                            <iam-edit-input
+                                field="name"
+                                style="width: 100%; margin-left: 5px;"
+                                :placeholder="$t(`m.verify['请输入']`)"
+                                :is-show-other="true"
+                                :value="['subset_manager'].includes(row.role.type) ? row.role.name : '--'"
+                                @handleShow="handleDistribute(row)" />
                         </div>
 
                     </template>
@@ -112,7 +140,7 @@
                     </span>
                 </template>
             </bk-table-column> -->
-            <bk-table-column :label="$t(`m.common['创建时间']`)">
+            <bk-table-column :label="$t(`m.common['创建时间']`)" width="240">>
                 <template slot-scope="{ row }">
                     <span :title="row.created_time">{{ row.created_time }}</span>
                 </template>
@@ -122,13 +150,18 @@
                     <span :title="row.description !== '' ? row.description : ''">{{ row.description || '--' }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.common['操作']`)" width="300">
+            <bk-table-column :label="$t(`m.common['操作']`)" width="320">
                 <template slot-scope="{ row }">
                     <div>
                         <bk-button theme="primary" text @click="handleAddMember(row)">
                             {{ $t(`m.common['添加成员']`) }}
                         </bk-button>
-                        <bk-button theme="primary" text style="margin-left: 10px" @click="handleAddPerm(row)">
+                        <bk-button
+                            text
+                            theme="primary"
+                            style="margin-left: 10px"
+                            :disabled="row.attributes && row.attributes.source_from_role"
+                            @click="handleAddPerm(row)">
                             {{ $t(`m.common['添加权限']`) }}
                         </bk-button>
                         <bk-button theme="primary" text style="margin-left: 10px" @click="handleClone(row)">
@@ -140,6 +173,16 @@
                     </div>
                 </template>
             </bk-table-column>
+            <template slot="empty">
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-clear="handleEmptyClear"
+                    @on-refresh="handleEmptyRefresh"
+                />
+            </template>
         </bk-table>
 
         <delete-dialog
@@ -179,19 +222,20 @@
         />
 
         <DistributeToDialog
-            :show.sync="isShowSpaceDialog"
+            :show.sync="isShowDistributeDialog"
             :group-ids="curSelectIds"
+            :distribute-detail="distributeDetail"
             @on-success="handleDistributeSuccess"
         />
 
-        <novice-guide :flag="showNoviceGuide" :content="content" />
+        <!-- <novice-guide :flag="showNoviceGuide" :content="content" /> -->
     </div>
 </template>
 <script>
     import _ from 'lodash';
     import { mapGetters } from 'vuex';
     import { il8n } from '@/language';
-    import { getWindowHeight } from '@/common/util';
+    import { getWindowHeight, formatCodeData } from '@/common/util';
     import IamSearchSelect from '@/components/iam-search-select';
     import { fuzzyRtxSearch } from '@/common/rtx';
     import { buildURLParams } from '@/common/url';
@@ -200,8 +244,9 @@
     import EditProcessDialog from './components/edit-process-dialog';
     import TransferOutDialog from './components/transfer-out-dialog';
     import DistributeToDialog from './components/distribute-to-dialog';
-    import NoviceGuide from '@/components/iam-novice-guide';
+    // import NoviceGuide from '@/components/iam-novice-guide';
     import IamEditInput from '@/components/iam-edit/input';
+
     export default {
         name: '',
         components: {
@@ -211,7 +256,7 @@
             TransferOutDialog,
             DistributeToDialog,
             IamSearchSelect,
-            NoviceGuide,
+            // NoviceGuide,
             IamEditInput
         },
         data () {
@@ -242,61 +287,48 @@
                 curRole: 'staff',
                 isShowRolloutGroupDialog: false,
                 isBatch: false,
-                content: this.$t('m.nav["【分级管理员】 功能，全面升级为【权限管理空间】啦！"]'),
+                content: this.$t('m.nav["【管理空间】 功能，全面升级为【权限管理空间】啦！"]'),
                 il8n,
-                spaceFiltersList: [],
                 selectKeyword: '',
-                isShowSpaceDialog: false,
-                rules: [
-                    {
-                        required: true,
-                        message: this.$t(`m.verify['空间名称必填']`),
-                        trigger: 'blur'
-                    },
-                    {
-                        validator: (value) => {
-                            return value.length <= 32;
-                        },
-                        message: this.$t(`m.verify['空间名称最长不超过32个字符']`),
-                        trigger: 'blur'
-                    },
-                    {
-                        validator: (value) => {
-                            return /^[^\s]*$/g.test(value);
-                        },
-                        message: this.$t(`m.verify['空间名称不允许空格']`),
-                        trigger: 'blur'
-                    }
-                ],
+                isShowDistributeDialog: false,
                 batchOptions: [
                     {
                         id: 0,
                         name: this.$t(`m.common['添加成员']`),
-                        disabled: false,
-                        method: 'handleBatchAddMember'
+                        method: 'handleBatchAddMember',
+                        roles: ['allManager']
                     },
-                    {
-                        id: 1,
-                        name: this.$t(`m.userGroup['分配 (二级管理空间)']`),
-                        disabled: false,
-                        method: 'handleDistribute'
-                    },
+                    // 暂不支持批量，后期迭代再开放该选项
+                    // {
+                    //     id: 1,
+                    //     name: this.$t(`m.userGroup['分配 (二级管理空间)']`),
+                    //     method: 'handleDistribute',
+                    //     roles: ['rating_manager']
+                    // },
                     {
                         id: 2,
                         name: this.$t(`m.userGroup['转出']`),
-                        disabled: false,
-                        method: 'handleTransferOut'
+                        method: 'handleTransferOut',
+                        roles: ['super_manager']
                     }
-                ]
+                ],
+                distributeDetail: null,
+                queryParams: {},
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
-            ...mapGetters(['user', 'showNoviceGuide']),
+            ...mapGetters(['user', 'showNoviceGuide', 'externalSystemId']),
             isCanEditProcess () {
                 return this.currentSelectList.length > 0;
             },
             isRatingManager () {
-                return this.curRole === 'rating_manager';
+                return ['rating_manager', 'subset_manager'].includes(this.curRole);
             },
             isSuperManager () {
                 return this.curRole === 'super_manager';
@@ -329,7 +361,7 @@
                 deep: true
             }
         },
-        created () {
+        async created () {
             this.curRole = this.user.role.type || 'staff';
             this.searchData = [
                 {
@@ -371,15 +403,20 @@
                     disabled: true
                 }
             ];
+            this.searchParams = this.$route.query;
+            this.setCurrentQueryCache(this.refreshCurrentQuery());
             const isObject = (payload) => {
                 return Object.prototype.toString.call(payload) === '[object Object]';
             };
-
-            const currentQueryCache = this.getCurrentQueryCache();
+            const currentQueryCache = await this.getCurrentQueryCache();
             if (currentQueryCache && Object.keys(currentQueryCache).length) {
                 if (currentQueryCache.limit) {
-                    this.pagination.limit = currentQueryCache.limit;
-                    this.pagination.current = currentQueryCache.current;
+                    this.pagination = Object.assign(
+                        this.pagination,
+                        { current: Number(currentQueryCache.current), limit: Number(currentQueryCache.limit) }
+                    );
+                    // this.pagination.limit = currentQueryCache.limit;
+                    // this.pagination.current = currentQueryCache.current;
                 }
                 for (const key in currentQueryCache) {
                     if (key !== 'limit' && key !== 'current') {
@@ -428,30 +465,35 @@
             },
 
             refreshCurrentQuery () {
-                const { limit, current } = this.pagination;
                 const params = {};
                 const queryParams = {
-                    limit,
-                    current,
-                ...this.searchParams,
-                ...this.$route.query
+                    ...this.searchParams,
+                    ...this.$route.query,
+                    ...this.queryParams
                 };
-                window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
+                if (Object.keys(queryParams).length) {
+                    window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
+                }
                 for (const key in this.searchParams) {
                     const tempObj = this.searchData.find((item) => key === item.id);
-                    if (tempObj.remoteMethod && typeof tempObj.remoteMethod === 'function') {
-                        if (this.searchList.length > 0) {
+                    if (tempObj && tempObj.remoteMethod && typeof tempObj.remoteMethod === 'function') {
+                        if (this.searchList.length) {
                             const tempData = this.searchList.find((item) => item.id === key);
-                            params[key] = tempData.values[0];
+                            if (tempData) {
+                                params[key] = tempData.values[0];
+                            }
                         }
                     } else {
                         params[key] = this.searchParams[key];
                     }
                 }
+                this.emptyData = Object.assign(this.emptyData, { tipType: Object.keys(this.searchParams).length > 0 ? 'search' : '' });
+                this.pagination = Object.assign(
+                    this.pagination,
+                    { current: queryParams.current || 1, limit: queryParams.limit || 10 }
+                );
                 return {
-                ...params,
-                limit,
-                current
+                    ...queryParams
                 };
             },
 
@@ -475,43 +517,35 @@
                 this.tableLoading = isLoading;
                 this.setCurrentQueryCache(this.refreshCurrentQuery());
                 const params = {
-                ...this.searchParams,
-                limit: this.pagination.limit,
-                offset: this.pagination.limit * (this.pagination.current - 1)
+                    ...this.searchParams,
+                    limit: this.pagination.limit,
+                    offset: this.pagination.limit * (this.pagination.current - 1)
                 };
                 try {
-                    const res = await this.$store.dispatch('userGroup/getUserGroupList', params);
-                    this.pagination.count = res.data.count || 0;
-                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
+                    const { code, data } = await this.$store.dispatch('userGroup/getUserGroupList', params);
+                    this.pagination.count = data.count || 0;
+                    this.tableList.splice(0, this.tableList.length, ...(data.results || []));
                     this.currentSelectList = this.currentSelectList.filter((item) => {
                         return this.tableList.map((_) => _.id).includes(item.id);
                     });
                     if (this.currentSelectList.length < 1) {
                         this.$refs.tableRef && this.$refs.tableRef.clearSelection();
                     }
+                    this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
                 } finally {
                     this.tableLoading = false;
                 }
-            },
-
-            handleUpdateManageSpace (payload) {
-                return this.$store.dispatch().then(() => {
-                    
-                });
-            },
-
-            handleSpaceFilter (value, row, column) {
-                const property = column.property;
-                return row[property] === value;
             },
 
             handleRemoteRtx (value) {
@@ -522,7 +556,11 @@
             },
 
             handleRemoteSystem (value) {
-                return this.$store.dispatch('system/getSystems').then(({ data }) => {
+                const params = {};
+                if (this.externalSystemId) {
+                    params.hidden = false;
+                }
+                return this.$store.dispatch('system/getSystems', params).then(({ data }) => {
                     return data.map(({ id, name }) => ({ id, name })).filter((item) => item.name.indexOf(value) > -1);
                 });
             },
@@ -533,13 +571,12 @@
                 });
             },
 
-            handleClone (data) {
+            handleClone (payload) {
+                const { id } = payload;
                 this.$router.push({
                     name: 'cloneUserGroup',
                     query: {
-                        name: data.name,
-                        description: data.description,
-                        id: data.id
+                        id
                     }
                 });
             },
@@ -555,19 +592,20 @@
                 this.fetchUserGroupList(true);
             },
 
-            handleDistribute () {
-                this.isShowSpaceDialog = true;
+            handleDistribute ({ id, role }) {
+                this.isShowDistributeDialog = true;
+                this.distributeDetail = Object.assign({}, { id, role });
             },
 
             handleDistributeSuccess () {
-                this.isShowSpaceDialog = false;
+                this.isShowDistributeDialog = false;
                 this.currentSelectList = [];
                 this.resetPagination();
                 this.fetchUserGroupList(true);
             },
 
             handleEditApprovalProcess () {
-                this.isShowSpaceDialog = true;
+                this.isShowDistributeDialog = true;
             },
 
             resetPagination () {
@@ -584,6 +622,21 @@
             handleSearch (payload, result) {
                 this.searchParams = payload;
                 this.searchList = result;
+                this.emptyData.tipType = 'search';
+                this.resetPagination();
+                this.fetchUserGroupList(true);
+            },
+
+            handleEmptyClear () {
+                this.queryParams = {};
+                this.searchParams = {};
+                this.searchValue = [];
+                this.emptyData.tipType = '';
+                this.resetPagination();
+                this.fetchUserGroupList(true);
+            },
+
+            handleEmptyRefresh () {
                 this.resetPagination();
                 this.fetchUserGroupList(true);
             },
@@ -687,12 +740,13 @@
                     return;
                 }
                 this.pagination.current = page;
+                this.queryParams = Object.assign(this.queryParams, { current: page });
                 this.fetchUserGroupList(true);
             },
 
             limitChange (currentLimit, prevLimit) {
-                this.pagination.limit = currentLimit;
-                this.pagination.current = 1;
+                this.pagination = Object.assign(this.pagination, { current: 1, limit: currentLimit });
+                this.queryParams = Object.assign(this.queryParams, { current: 1, limit: currentLimit });
                 this.fetchUserGroupList(true);
             },
 
@@ -765,6 +819,7 @@
 
             handleSelect (value) {
                 const { id, disabled, method } = value;
+                console.log(value);
                 if (!disabled) {
                     this.selectKeyword = id;
                     this.$refs.userGroupSelect.close();
@@ -780,13 +835,12 @@
 
             formatOption () {
                 const batchItem = [false, !this.isRatingManager, !this.isSuperManager];
-                this.batchOptions.forEach((item) => {
-                    if (this.isCanEditProcess) {
-                        item.disabled = batchItem[item.id];
-                    } else {
-                        item.disabled = true;
-                    }
-                });
+                this.batchOptions = this.batchOptions.reduce((current, next) => {
+                    return next.roles.includes('allManager') || next.roles.includes(this.curRole)
+                        ? current.concat(Object.assign({}, next, {
+                            disabled: this.isCanEditProcess ? batchItem[next.id] : true
+                        })) : current;
+                }, []);
             }
         }
     };
@@ -825,6 +879,14 @@
                 .depart {
                     background: #fff;
                 }
+            }
+        }
+
+        .user-group-name {
+            color: #3a84ff;
+            cursor: pointer;
+            &:hover {
+              color: #699df4;
             }
         }
 
@@ -876,5 +938,11 @@
 
 .bk-table-pagination-wrapper {
     background-color: #ffffff;
+}
+
+.search_left {
+    .bk-button {
+        margin-right: 6px;
+    }
 }
 </style>

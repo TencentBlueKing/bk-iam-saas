@@ -1,0 +1,27 @@
+### Delete all policies for an action
+
+If an action has been configured with permissions and a policy has been generated, it cannot be deleted directly.
+
+You need to:
+1. call this interface to delete the policy of the action (it will be marked and reclaimed by the asynchronous task in the background)
+2. call the delete operation interface to delete the operation (this step can be executed if the first step is successful, you don't need to wait for the first asynchronous task to execute successfully)
+
+#### Parameters
+
+| field | type | required | location | description |
+| :--- | :--- | :--- |:--- |:--- |
+| system_id | string | yes | path | system ID |
+| action_id | string | yes | path | action_id |
+
+
+#### Request
+
+#### Response
+
+```json
+{
+    "code": 0,
+    "message": "",
+    "data": {}
+}
+```

@@ -12,7 +12,7 @@ from copy import deepcopy
 
 import pytest
 
-from backend.service.constants import AbacPolicyChangeType, AuthTypeEnum
+from backend.service.constants import AbacPolicyChangeType, AuthType
 from backend.service.models.instance_selection import InstanceSelection, PathResourceType
 from backend.service.models.policy import (
     AbacPolicyChangeContent,
@@ -92,6 +92,21 @@ class TestPathNodeList:
         assert new_path_node_list[0].type == "type1"
 
 
+class TestInstance:
+    def test_ignore_path_true(self, path_node_list: PathNodeList, instance_selection: InstanceSelection):
+        instance = Instance(type="type1", path=[path_node_list])
+        instance_selection.ignore_iam_path = True
+        instance.ignore_path("system_id", "type1", [instance_selection])
+        assert len(instance.path[0]) == 1
+        assert instance.path[0][0].type == "type1"
+
+    def test_ignore_path_diff_type(self, path_node_list: PathNodeList, instance_selection: InstanceSelection):
+        instance = Instance(type="type1", path=[path_node_list])
+        instance_selection.ignore_iam_path = True
+        instance.ignore_path("system_id", "type2", [instance_selection])
+        assert len(instance.path[0]) == 2
+
+
 class TestDataGenerator:
     @classmethod
     def gen_only_attr_related_resource_data(cls):
@@ -149,7 +164,7 @@ class TestUniversalPolicy:
                 # resource_groups
                 [],
                 # action_auth_type
-                AuthTypeEnum.ABAC.value,
+                AuthType.ABAC.value,
                 # expected
                 True,
             ),
@@ -158,7 +173,7 @@ class TestUniversalPolicy:
                 # resource_groups
                 [],
                 # action_auth_type
-                AuthTypeEnum.RBAC.value,
+                AuthType.RBAC.value,
                 # expected
                 True,
             ),
@@ -170,7 +185,7 @@ class TestUniversalPolicy:
                     ResourceGroup(related_resource_types=[]),
                 ],
                 # action_auth_type
-                AuthTypeEnum.RBAC.value,
+                AuthType.RBAC.value,
                 # expected
                 True,
             ),
@@ -186,7 +201,7 @@ class TestUniversalPolicy:
                     ),
                 ],
                 # action_auth_type
-                AuthTypeEnum.RBAC.value,
+                AuthType.RBAC.value,
                 # expected
                 True,
             ),
@@ -200,7 +215,7 @@ class TestUniversalPolicy:
                     ),
                 ],
                 # action_auth_type
-                AuthTypeEnum.RBAC.value,
+                AuthType.RBAC.value,
                 # expected
                 True,
             ),
@@ -213,7 +228,7 @@ class TestUniversalPolicy:
                     ),
                 ],
                 # action_auth_type
-                AuthTypeEnum.RBAC.value,
+                AuthType.RBAC.value,
                 # expected
                 True,
             ),
@@ -230,7 +245,7 @@ class TestUniversalPolicy:
                     ),
                 ],
                 # action_auth_type
-                AuthTypeEnum.RBAC.value,
+                AuthType.RBAC.value,
                 # expected
                 False,
             ),
@@ -285,10 +300,10 @@ class TestUniversalPolicy:
     @pytest.mark.parametrize(
         "has_abac,has_rbac,expected",
         [
-            (True, True, AuthTypeEnum.ALL.value),
-            (True, False, AuthTypeEnum.ABAC.value),
-            (False, True, AuthTypeEnum.RBAC.value),
-            (False, False, AuthTypeEnum.NONE.value),
+            (True, True, AuthType.ALL.value),
+            (True, False, AuthType.ABAC.value),
+            (False, True, AuthType.RBAC.value),
+            (False, False, AuthType.NONE.value),
         ],
     )
     def test_calculate_auth_type(self, has_abac, has_rbac, expected):
@@ -341,15 +356,15 @@ class TestUniversalPolicy:
             (
                 # new(auth_type, abac_data, rbac_data)
                 (
-                    AuthTypeEnum.ABAC.value,
+                    AuthType.ABAC.value,
                     [ResourceGroup(related_resource_types=[TestDataGenerator.gen_only_attr_related_resource_data()])],
                     [],
                 ),
                 # old(auth_type, abac_data, rbac_data)
-                (AuthTypeEnum.NONE.value, [], []),
+                (AuthType.NONE.value, [], []),
                 # expected(auth_type, abac_data, rbac_data)
                 (
-                    AuthTypeEnum.ABAC.value,
+                    AuthType.ABAC.value,
                     AbacPolicyChangeContent(
                         change_type=AbacPolicyChangeType.CREATED.value,
                         resource_expression='{"StringEquals":{"s_id.rt_id.attr_id":["id"]}}',
@@ -361,15 +376,15 @@ class TestUniversalPolicy:
             (
                 # new
                 (
-                    AuthTypeEnum.ABAC.value,
+                    AuthType.ABAC.value,
                     [ResourceGroup(related_resource_types=[TestDataGenerator.gen_only_attr_related_resource_data()])],
                     [],
                 ),
                 # old
-                (AuthTypeEnum.ABAC.value, [ResourceGroup(related_resource_types=[])], []),
+                (AuthType.ABAC.value, [ResourceGroup(related_resource_types=[])], []),
                 # expected
                 (
-                    AuthTypeEnum.ABAC.value,
+                    AuthType.ABAC.value,
                     AbacPolicyChangeContent(
                         id=1,
                         change_type=AbacPolicyChangeType.UPDATED.value,
@@ -381,16 +396,16 @@ class TestUniversalPolicy:
             # Delete
             (
                 # new
-                (AuthTypeEnum.NONE.value, [], []),
+                (AuthType.NONE.value, [], []),
                 # old
                 (
-                    AuthTypeEnum.ABAC.value,
+                    AuthType.ABAC.value,
                     [ResourceGroup(related_resource_types=[TestDataGenerator.gen_only_attr_related_resource_data()])],
                     [],
                 ),
                 # expected
                 (
-                    AuthTypeEnum.NONE.value,
+                    AuthType.NONE.value,
                     AbacPolicyChangeContent(id=1, change_type=AbacPolicyChangeType.DELETED.value),
                     None,
                 ),
@@ -398,12 +413,12 @@ class TestUniversalPolicy:
             # RBAC: Create
             (
                 # new
-                (AuthTypeEnum.RBAC.value, [], [TestDataGenerator.gen_path_node("1")]),
+                (AuthType.RBAC.value, [], [TestDataGenerator.gen_path_node("1")]),
                 # old
-                (AuthTypeEnum.RBAC.value, [], []),
+                (AuthType.RBAC.value, [], []),
                 # expected
                 (
-                    AuthTypeEnum.RBAC.value,
+                    AuthType.RBAC.value,
                     None,
                     RbacPolicyChangeContent(created=[TestDataGenerator.gen_path_node("1")]),
                 ),
@@ -411,12 +426,12 @@ class TestUniversalPolicy:
             # RBAC: Delete
             (
                 # new
-                (AuthTypeEnum.RBAC.value, [], []),
+                (AuthType.RBAC.value, [], []),
                 # old
-                (AuthTypeEnum.RBAC.value, [], [TestDataGenerator.gen_path_node("1")]),
+                (AuthType.RBAC.value, [], [TestDataGenerator.gen_path_node("1")]),
                 # expected
                 (
-                    AuthTypeEnum.RBAC.value,
+                    AuthType.RBAC.value,
                     None,
                     RbacPolicyChangeContent(deleted=[TestDataGenerator.gen_path_node("1")]),
                 ),

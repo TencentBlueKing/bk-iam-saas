@@ -12,7 +12,13 @@
         </template>
         <template v-if="isEmpty">
             <div class="apply-content-empty-wrapper">
-                <iam-svg />
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-refresh="handleEmptyRefresh"
+                />
             </div>
         </template>
     </div>
@@ -22,6 +28,8 @@
     import PermTable from './perm-table';
     import PermPolicy from '@/model/my-perm-policy';
     import RenderProcess from '../common/render-process';
+    import { formatCodeData } from '@/common/util';
+    import { mapGetters } from 'vuex';
     export default {
         name: '',
         components: {
@@ -48,10 +56,17 @@
                 initRequestQueue: ['detail'],
                 systemName: '',
                 systemId: '',
-                status: ''
+                status: '',
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
+            ...mapGetters(['externalSystemId']),
             isLoading () {
                 return this.initRequestQueue.length > 0;
             },
@@ -95,7 +110,13 @@
         methods: {
             async fetchData (id) {
                 try {
-                    const res = await this.$store.dispatch('myApply/getApplyDetail', { id });
+                    const params = {
+                        id
+                    };
+                    if (this.externalSystemId) {
+                        params.hidden = false;
+                    }
+                    const res = await this.$store.dispatch('myApply/getApplyDetail', params);
                     const {
                         sn, type, applicant, organizations, reason, data,
                         status, created_time, ticket_url
@@ -107,14 +128,17 @@
                         applicant,
                         reason,
                         created_time,
-                        ticket_url
+                        ticket_url,
+                        applicants: data.applicants || []
                     };
                     this.systemName = data.system.name;
                     this.systemId = data.system.id;
                     this.status = status;
                     this.tableList = data.actions.map(item => new PermPolicy(item));
+                    this.emptyData = formatCodeData(res.code, this.emptyData, this.tableList.length === 0);
                 } catch (e) {
                     console.error(e);
+                    this.emptyData = formatCodeData(e.code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
@@ -127,6 +151,11 @@
                 }
             },
 
+            handleEmptyRefresh () {
+                this.initRequestQueue = ['detail'];
+                this.fetchData(this.params.id);
+            },
+
             handleCancel () {
                 this.$emit('on-cancel');
             }
@@ -135,7 +164,7 @@
 </script>
 <style lang="postcss" scoped>
     .iam-apply-detail-wrapper {
-        height: calc(100vh - 121px);
+        /* height: calc(100vh - 121px); */
         .action {
             padding-bottom: 50px;
         }

@@ -15,9 +15,11 @@ from django.db import transaction
 from django.utils.translation import gettext as _
 from pydantic import BaseModel, Field, parse_obj_as
 
+from backend.apps.group.models import Group
 from backend.apps.role.models import (
     Role,
     RoleRelatedObject,
+    RoleRelation,
     RoleScope,
     RoleSource,
     RoleUser,
@@ -31,10 +33,10 @@ from backend.util.json import json_dumps
 from backend.util.model import PartialModel
 
 from .constants import (
-    DEAULT_RESOURCE_GROUP_ID,
+    DEFAULT_RESOURCE_GROUP_ID,
     RoleRelatedObjectType,
     RoleScopeType,
-    RoleSourceTypeEnum,
+    RoleSourceType,
     RoleType,
     SubjectType,
 )
@@ -54,7 +56,7 @@ class AuthScopeAction(BaseModel):
                 data["resource_groups"] = [
                     # NOTE: 固定resource_group_id方便删除逻辑
                     {
-                        "id": DEAULT_RESOURCE_GROUP_ID,
+                        "id": DEFAULT_RESOURCE_GROUP_ID,
                         "related_resource_types": data.pop("related_resource_types"),
                     }
                 ]
@@ -95,16 +97,30 @@ class UserRoleMember(BaseModel):
     members: list
 
 
+class RoleMember(BaseModel):
+    username: str
+
+
 class RoleInfo(PartialModel):
     code: str = ""
     name: str
     name_en: str = ""
     description: str
-    type: str = RoleType.RATING_MANAGER.value
+    type: str = RoleType.GRADE_MANAGER.value
+    inherit_subject_scope: bool = False
+    sync_perm: bool = False
 
-    members: List[str]
+    members: List[RoleMember]
     subject_scopes: List[Subject] = []
     authorization_scopes: List[AuthScopeSystem] = []
+
+    # NOTE: 只在role创建时有用
+    source_system_id: str = ""
+    hidden: bool = False
+
+    @property
+    def member_usernames(self):
+        return [member.username for member in self.members]
 
 
 class CommonAction(BaseModel):
@@ -132,14 +148,14 @@ class RoleService:
 
         return parse_obj_as(List[AuthScopeSystem], json.loads(role_scope.content))
 
-    def list_user_role(self, user_id: str, with_permission: bool = False) -> List[UserRole]:
+    def list_user_role(self, user_id: str, with_permission: bool = False, with_hidden: bool = True) -> List[UserRole]:
         """查询用户的角色列表"""
         role_ids = list(RoleUser.objects.filter(username=user_id).values_list("role_id", flat=True))
 
         if not with_permission:
-            return self.list_by_ids(role_ids)
+            return self.list_by_ids(role_ids, with_hidden=with_hidden)
 
-        roles = Role.objects.exclude(type=RoleType.RATING_MANAGER.value).filter(id__in=role_ids)
+        roles = Role.objects.exclude(type=RoleType.GRADE_MANAGER.value).filter(id__in=role_ids)
         role_dict = {role.id: role for role in roles}
 
         role_user_system_perms = RoleUserSystemPermission.objects.filter(role_id__in=role_dict.keys())
@@ -158,21 +174,28 @@ class RoleService:
         role_ids = list(queryset.values_list("role_id", flat=True)[offset : offset + limit])
         return count, self.list_by_ids(role_ids)
 
-    def list_members_by_role_id(self, role_id: int):
+    def list_members_by_role_id(self, role_id: int) -> List[str]:
         """查询指定角色的成员列表"""
-        members = list(RoleUser.objects.filter(role_id=role_id).values_list("username", flat=True))
-        return members
+        return list(RoleUser.objects.filter(role_id=role_id).values_list("username", flat=True))
 
-    def list_by_ids(self, role_ids: List[int]) -> List[UserRole]:
+    def list_by_ids(self, role_ids: List[int], with_hidden: bool = True) -> List[UserRole]:
         roles = Role.objects.filter(id__in=role_ids)
+        if not with_hidden:
+            roles = roles.filter(hidden=False)
+
         data = [UserRole.convert_from_role(role) for role in roles]
 
         # 按超级管理员 - 系统管理员 - 分级管理员排序
-        sort_index = [RoleType.SUPER_MANAGER.value, RoleType.SYSTEM_MANAGER.value, RoleType.RATING_MANAGER.value]
+        sort_index = [
+            RoleType.SUPER_MANAGER.value,
+            RoleType.SYSTEM_MANAGER.value,
+            RoleType.GRADE_MANAGER.value,
+            RoleType.SUBSET_MANAGER.value,
+        ]
         sorted_data = sorted(data, key=lambda r: sort_index.index(r.type))
         return sorted_data
 
-    def create(self, info: RoleInfo, creator: str) -> Role:
+    def create(self, info: RoleInfo, creator: str, add_member=True) -> Role:
         """创建Role"""
         with transaction.atomic():
             role = Role(
@@ -181,19 +204,35 @@ class RoleService:
                 name_en=info.name_en,
                 description=info.description,
                 type=info.type,
+                inherit_subject_scope=info.inherit_subject_scope,
+                sync_perm=info.sync_perm,
                 creator=creator,
                 updater=creator,
+                source_system_id=info.source_system_id,
+                hidden=info.hidden,
             )
             role.save(force_insert=True)
 
-            self._add_members(role.id, info.members)
+            if add_member:
+                self._add_members(role.id, info.member_usernames)
+
             self._create_role_scope(role.id, info.subject_scopes, info.authorization_scopes)
 
         return role
 
-    def _add_members(self, role_id: int, usernames: List[str]):
+    def create_subset_manager(self, grade_manager: Role, info: RoleInfo, creator: str) -> Role:
+        """
+        创建子集管理员
+        """
+        with transaction.atomic():
+            role = self.create(info, creator, add_member=True)
+            RoleRelation.objects.create(parent_id=grade_manager.id, role_id=role.id)
+
+        return role
+
+    def _add_members(self, role_id: int, members: List[str]):
         """Role增加成员"""
-        role_users = [RoleUser(role_id=role_id, username=username) for username in usernames]
+        role_users = [RoleUser(role_id=role_id, username=username) for username in members]
         if role_users:
             RoleUser.objects.bulk_create(role_users, batch_size=100)
 
@@ -238,13 +277,17 @@ class RoleService:
                 role.name_en = info.name_en
             if "description" in update_fields:
                 role.description = info.description
+            if role.type == RoleType.SUBSET_MANAGER.value and "inherit_subject_scope" in update_fields:
+                role.inherit_subject_scope = info.inherit_subject_scope
+            if "sync_perm" in update_fields:
+                role.sync_perm = info.sync_perm
 
             role.updater = updater
             role.save()
 
             # 分级管理员成员
             if "members" in update_fields:
-                self._update_members(role, info.members)
+                self._update_members(role, info.member_usernames)
 
             # 可授权的权限范围
             if "authorization_scopes" in update_fields:
@@ -252,18 +295,31 @@ class RoleService:
 
             # 可授权的人员范围
             if "subject_scopes" in update_fields:
-                self._update_role_subject_scope(role.id, info.subject_scopes)
+                self.update_role_subject_scope(role.id, info.subject_scopes)
 
     def _update_members(self, role: Role, members: List[str], need_sync_backend_role: bool = False):
-        """更新Role成员"""
+        """
+        更新Role成员
+
+        NOTE: 只变更readonly为False的成员
+        """
         role_id = role.id
-        new_members = sorted(set(members), key=members.index)  # 去重，但保持顺序不变
-        old_members = list(RoleUser.objects.filter(role_id=role_id).values_list("username", flat=True))
+
+        # 查询用户的已设置为readonly的成员
+        readonly_usernames = set(
+            RoleUser.objects.filter(role_id=role_id, readonly=True).values_list("username", flat=True)
+        )
+
+        # NOTE readonly的成员只能通过其它逻辑处理
+        update_usernames = [username for username in members if username not in readonly_usernames]
+
+        new_members = sorted(set(update_usernames), key=update_usernames.index)  # 去重，但保持顺序不变
+        old_members = list(RoleUser.objects.filter(role_id=role_id, readonly=False).values_list("username", flat=True))
 
         # 由于需要保持顺序不变，所以需要看是否变化了包括顺序，如果改变了则直接全删除，然后全添加
         if new_members != old_members:
             # 全删除
-            RoleUser.objects.filter(role_id=role_id).delete()
+            RoleUser.objects.filter(role_id=role_id, readonly=False).delete()
             # 重新全部添加
             self._add_members(role_id, new_members)
 
@@ -300,7 +356,7 @@ class RoleService:
             content=json_dumps([system.dict() for system in systems])
         )
 
-    def _update_role_subject_scope(self, role_id: int, subjects: List[Subject]):
+    def update_role_subject_scope(self, role_id: int, subjects: List[Subject]):
         """更新Role可授权的人员范围"""
         # 1. 修改授权对象的限制范围
         RoleScope.objects.filter(role_id=role_id, type=RoleScopeType.SUBJECT.value).update(
@@ -497,27 +553,6 @@ class RoleService:
         # 查询角色
         return Role.objects.get(id=role_related_object.role_id)
 
-    def list_paging_role_for_system(self, system_id: str, limit: int = 10, offset: int = 0) -> Tuple[int, List[Role]]:
-        """查询某个系统通过API创建的分级管理员"""
-        # 需要过滤出source_system_id通过API创建的
-        system_role_queryset = RoleSource.objects.filter(
-            source_system_id=system_id,
-            source_type=RoleSourceTypeEnum.API.value,
-        )
-
-        # 分页
-        count = system_role_queryset.count()
-        system_role_ids = list(system_role_queryset.values_list("role_id", flat=True)[offset : offset + limit])
-
-        # 无数据则提前返回
-        if len(system_role_ids) == 0:
-            return 0, []
-
-        # 获取Role详情
-        roles = Role.objects.filter(id__in=system_role_ids)
-
-        return count, roles
-
     def list_user_role_for_system(self, user_id: str, system_id: str) -> List[UserRole]:
         """
         获取用户的角色列表，且只能是某个系统通过API创建的
@@ -529,7 +564,7 @@ class RoleService:
         role_ids = [r.id for r in all_roles]
         system_role_ids = set(
             RoleSource.objects.filter(
-                source_system_id=system_id, source_type=RoleSourceTypeEnum.API.value, role_id__in=role_ids
+                source_system_id=system_id, source_type=RoleSourceType.API.value, role_id__in=role_ids
             ).values_list("role_id", flat=True)
         )
 
@@ -559,6 +594,16 @@ class RoleService:
         """
         转移用户组角色关系
         """
+        # 排除只读用户组
+        group_ids = list(Group.objects.filter(id__in=group_ids, readonly=False).values_list("id", flat=True))
+
+        # 排除默认跟随角色权限的用户组
+        group_ids = list(
+            RoleRelatedObject.objects.filter(
+                object_type=RoleRelatedObjectType.GROUP.value, object_id__in=group_ids, sync_perm=False
+            ).values_list("object_id", flat=True)
+        )
+
         # 查询所有用户组的权限模板, 检查查询的模板是否关联了除了选中的用户组的其它用户组
         template_ids = list(
             PermTemplatePolicyAuthorized.objects.filter(
@@ -579,7 +624,7 @@ class RoleService:
                 # 存在权限模板关联了其它用户组的情况
                 names = PermTemplate.objects.filter(id__in=over_template_ids).values_list("name", flat=True)
                 raise error_codes.GROUP_TRANSFER_ERROR.format(
-                    _("权限模板 [{}] 关联了其它用户组, 请移除关系后再转移.").format("|".join(names)), True
+                    _("权限模板 [{}] 已被用户组关联, 请解除关联后再转移.").format("|".join(names)), True
                 )
 
         # 转移用户组, 权限模板的角色归属

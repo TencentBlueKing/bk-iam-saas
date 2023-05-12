@@ -30,6 +30,10 @@ class ResourceQuerySLZ(serializers.Serializer):
     keyword = serializers.CharField(label="搜索关键词", required=False, allow_blank=True, allow_null=True)
     limit = serializers.IntegerField(label="分页Limit", min_value=1, max_value=100)
     offset = serializers.IntegerField(label="分页offset", min_value=0)
+    action_system_id = serializers.CharField(
+        label="操作系统id", required=False, allow_blank=True, allow_null=True, default=""
+    )
+    action_id = serializers.CharField(label="操作系统id", required=False, allow_blank=True, allow_null=True, default="")
 
 
 class BaseInfoSLZ(serializers.Serializer):

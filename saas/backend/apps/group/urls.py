@@ -36,11 +36,23 @@ urlpatterns = [
         views.GroupMemberUpdateExpiredAtViewSet.as_view({"post": "create"}),
         name="group.members.renew",
     ),
+    path(
+        "<str:id>/transfer/",
+        views.GradeManagerGroupTransferView.as_view({"post": "post"}),
+        name="group.grade_manager_transfer",
+    ),
+    # 用户组的模板
     path("<str:id>/templates/", views.GroupTemplateViewSet.as_view({"get": "list"}), name="group.templates"),
     path(
         "<str:id>/templates/<int:template_id>/",
-        views.GroupTemplateViewSet.as_view({"get": "retrieve"}),
+        views.GroupTemplateViewSet.as_view({"get": "retrieve", "delete": "destroy"}),
         name="group.template_detail",
+    ),
+    # 用户组对应的角色的模板列表
+    path(
+        "<str:id>/role/templates/",
+        views.GroupRoleTemplatesViewSet.as_view({"get": "list"}),
+        name="group.role_templates",
     ),
     # 用户组有权限的系统
     path("<str:id>/systems/", views.GroupSystemViewSet.as_view({"get": "list"}), name="group.list_policy_system"),

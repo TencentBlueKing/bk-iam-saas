@@ -1,14 +1,14 @@
 <template>
     <div class="iam-slider-resource-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
         <div class="no-limit-wrapper" v-if="!isLoading">
-            <div class="no-limit" :title="$t(`m.resource['无限制总文案']`)">
+            <div v-if="!curSelectionCondition.length" class="no-limit" :title="$t(`m.resource['无限制总文案']`)">
                 <span>
                     <Icon type="info-new" />
                     <span class="text">{{ $t(`m.resource['无限制文案']`) }}</span>
                     <bk-checkbox
                         :ext-cls="'no-limit-checkbox'"
                         v-model="notLimitValue"
-                        :disabled="disabled"
+                        :disabled="limitDisabled"
                         @change="handleLimitChange">
                         {{ $t(`m.common['无限制']`) }}
                     </bk-checkbox>
@@ -30,7 +30,7 @@
                         :disabled="notLimitValue"
                         mode="edit"
                         :can-delete="condition.instanceCanDelete"
-                        :selection-mode="selectionMode"
+                        :selection-mode="curSelectionMode(index)"
                         :need-order="conditionData.length > 1"
                         @on-add="handleAdd(condition, index, 'instance')"
                         @on-expand="handleExpanded(...arguments, condition)"
@@ -41,10 +41,11 @@
                             <div class="left-layout" :style="leftLayoutStyle">
                                 <choose-ip
                                     :ref="`${index}TreeRef`"
-                                    mode="grade"
+                                    :cur-selection-condition="curSelectionCondition"
                                     :tree-value="condition.instance"
-                                    :select-list="selectList"
-                                    :select-value="selectValue"
+                                    :limit-value="getLimitInstance(conditionLimitData[index])"
+                                    :select-list="curSelectList(index)"
+                                    :select-value="curSelectValue(index)"
                                     @on-tree-select="handlePathSelect(...arguments, index)" />
                                 <div class="drag-dotted-line" v-if="isDrag" :style="dottedLineStyle"></div>
                                 <div class="drag-line"
@@ -65,7 +66,7 @@
                                 </template>
                                 <template v-else>
                                     <div class="empty-wrapper">
-                                        <iam-svg />
+                                        <ExceptionEmpty />
                                     </div>
                                 </template>
                             </div>
@@ -75,8 +76,7 @@
                         v-if="condition.hasOwnProperty('attribute')"
                         type="property"
                         mode="edit"
-                        :can-delete="condition.attributeCanDelete"
-                        :selection-mode="selectionMode"
+                        :selection-mode="curSelectionMode(index)"
                         :need-order="conditionData.length > 1"
                         :sub-title="condition.attributeTitle"
                         :disabled="notLimitValue"
@@ -85,9 +85,11 @@
                         :hovering="condition.isHovering"
                         @on-add="handleAdd(condition, index, 'attribute')"
                         @on-delete="handleDelete(condition, index, 'attribute')">
+                        <!-- :mode="attributeMode(condition)" -->
                         <attribute
                             :value="condition.attribute"
                             :list="attributes"
+                            :limit-value="getLimitAttribute(conditionLimitData[index])"
                             :params="attributeParams"
                             ref="attributeRef"
                             @on-change="handleAttrValueChange(...arguments, condition)" />
@@ -99,7 +101,7 @@
         <bk-button
             text
             size="small"
-            v-if="!isHide && !isLoading && selectionMode !== 'instance'"
+            v-if="!isHide && !isLoading && selectionMode !== 'instance' && conditionLimitData.length < 1"
             :disabled="notLimitValue"
             style="margin: 5px 0 0 25px; padding-left: 0;"
             icon="plus-circle-shape"
@@ -121,6 +123,7 @@
     import Attribute from '@/views/perm-apply/components/attribute';
     import Instance from '@/model/instance';
     import Condition from '@/model/condition';
+    import RelateResourceTypes from '@/model/related-resource-types';
 
     const ATTRIBUTE_ITEM = {
         id: '',
@@ -135,6 +138,11 @@
 
     export default {
         name: '',
+        provide: function () {
+            return {
+                getDragDynamicWidth: () => this.dragWidth
+            };
+        },
         components: {
             renderResourceInstance,
             renderOrderNumber,
@@ -170,6 +178,26 @@
             selectionMode: {
                 type: String,
                 default: 'all'
+            },
+            resIndex: {
+                type: Number,
+                default: -1
+            },
+            groupIndex: {
+                type: Number,
+                default: -1
+            },
+            curScopeAction: {
+                type: Object,
+                default: () => {
+                    return {};
+                }
+            },
+            curSelectionCondition: {
+                type: Array,
+                default: () => {
+                    return [];
+                }
             }
         },
         data () {
@@ -185,7 +213,11 @@
                 // isEmptyResource: false,
                 dragWidth: 220,
                 dragRealityWidth: 220,
-                isDrag: false
+                isDrag: false,
+                conditionLimitData: [],
+                selectListMap: {},
+                selectValueMap: {},
+                selectionModeMap: {}
             };
         },
         computed: {
@@ -202,6 +234,15 @@
                 }
                 return {};
             },
+            // attributeMode () {
+            //     return payload => {
+            //         console.log(payload)
+            //         if (!payload || !payload.attribute) {
+            //             return 'normal'
+            //         }
+            //         return 'disabled'
+            //     }
+            // },
             dragStyle () {
                 return {
                     'left': `${this.dragWidth}px`
@@ -219,6 +260,33 @@
                     };
                 }
                 return {};
+            },
+            curSelectList () {
+                return payload => {
+                    if (this.selectListMap[payload] && this.selectListMap[payload].length > 0) {
+                        return this.selectListMap[payload];
+                    }
+                    return this.selectList;
+                };
+            },
+            curSelectValue () {
+                return payload => {
+                    if (this.selectValueMap[payload]) {
+                        return this.selectValueMap[payload];
+                    }
+                    return this.selectValue;
+                };
+            },
+            curSelectionMode () {
+                return payload => {
+                    if (this.selectionModeMap[payload]) {
+                        return this.selectionModeMap[payload];
+                    }
+                    return this.selectionMode;
+                };
+            },
+            limitDisabled () {
+                return this.disabled || this.conditionLimitData.length > 0;
             }
         },
         watch: {
@@ -227,14 +295,17 @@
                     if (Object.keys(value).length > 0) {
                         this.$emit('on-init', false);
                         if (this.selectionMode === 'all') {
-                            this.requestQueue = ['instanceSelection', 'resourceAttr'];
+                            // this.requestQueue = ['instanceSelection', 'resourceAttr']
+                            this.requestQueue.push(...['instanceSelection', 'resourceAttr']);
                             this.fetchInstanceSelection(value);
                             this.fetchResourceAttrs();
                         } else if (this.selectionMode === 'instance') {
-                            this.requestQueue = ['instanceSelection'];
+                            // this.requestQueue = ['instanceSelection']
+                            this.requestQueue.push('instanceSelection');
                             this.fetchInstanceSelection(value);
                         } else {
-                            this.requestQueue = ['resourceAttr'];
+                            this.requestQueue.push('resourceAttr');
+                            // this.requestQueue = ['resourceAttr']
                             this.fetchResourceAttrs();
                         }
                     }
@@ -294,7 +365,34 @@
                 }
             }
         },
+        created () {
+            this.isArrayInclude = (target, origin) => {
+                const itemAry = [];
+                target.forEach(function (p1) {
+                    if (origin.indexOf(p1) !== -1) {
+                        itemAry.push(p1);
+                    }
+                });
+                if (itemAry.length === target.length) {
+                    return true;
+                }
+                return false;
+            };
+        },
         methods: {
+            getLimitInstance (payload) {
+                if (payload && payload.instance) {
+                    return payload.instance;
+                }
+                return [];
+            },
+            getLimitAttribute (payload) {
+                if (payload && payload.attribute) {
+                    return payload.attribute;
+                }
+                return [];
+            },
+
             handleDragMouseenter (e) {
                 if (this.isDrag) {
                     return;
@@ -331,9 +429,11 @@
                 try {
                     const res = await this.$store.dispatch('permApply/getInstanceSelection', params);
                     this.selectList = [...res.data];
+                    console.warn('this.selectList', this.selectList);
                     if (this.selectList.length > 0) {
-                        this.selectValue = res.data[0].id || '';
+                        this.selectValue = res.data[0].id;
                     }
+                    this.getAuthorizationScopeAction();
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
@@ -346,6 +446,101 @@
                 } finally {
                     this.requestQueue.shift();
                 }
+            },
+
+            getAuthorizationScopeAction () {
+                if (Object.keys(this.curScopeAction).length > 0) {
+                    console.log('this.curScopeAction.resource_groups', this.curScopeAction.resource_groups, this.resIndex);
+                    const curData = new RelateResourceTypes(this.curScopeAction.resource_groups[0].related_resource_types[this.resIndex], { name: this.curScopeAction.name, type: this.curScopeAction.type }, 'detail');
+                    const len = curData.condition.length;
+                    // debugger
+                    if (len > 0) {
+                        this.conditionLimitData = curData.condition;
+                        if (this.conditionData.length < len) {
+                            const differenceLen = len - this.conditionData.length;
+                            for (let i = 0; i < differenceLen; i++) {
+                                this.conditionData.push(new Condition({ selection_mode: this.selectionMode }, 'init', 'add'));
+                            }
+                        }
+                        this.conditionLimitData.forEach((item, index) => {
+                            const tempList = this.selectList.filter(subItem => {
+                                const chainLen = subItem.resource_type_chain.length;
+                                const curChainId = subItem.resource_type_chain.map(item => item.id);
+                                const lastChainId = subItem.resource_type_chain[chainLen - 1].id;
+                                const curTypes = item.instance.map(v => v.path.map(vItem => vItem.map(_ => _.type)));
+                                return curTypes.filter(typeItem => {
+                                    if (subItem.ignore_iam_path && typeItem.length === 1) {
+                                        return typeItem[0] === lastChainId;
+                                    }
+                                    return this.isArrayInclude(curChainId, typeItem);
+                                });
+                            });
+                            if (tempList.length > 0) {
+                                this.$set(this.selectListMap, index, tempList);
+                                this.$set(this.selectValueMap, index, tempList[0].id);
+                            }
+                            const isHasInstance = item.instance && item.instance.length > 0;
+                            const isHasAttribute = item.attribute && item.attribute.length > 0;
+                            let curSelectMode = '';
+                            if (!isHasInstance && isHasAttribute) {
+                                curSelectMode = 'attribute';
+                                this.$delete(this.conditionData[index], 'instance');
+                            } else if (isHasInstance && !isHasAttribute) {
+                                curSelectMode = 'instance';
+                                this.$delete(this.conditionData[index], 'attribute');
+                            } else {
+                                curSelectMode = 'all';
+                            }
+                            this.$set(this.selectionModeMap, index, curSelectMode);
+                        });
+                    }
+                }
+                // try {
+                //     const res = await this.$store.dispatch('permTemplate/getAuthorizationScopeActions', { systemId: this.params.system_id })
+                //     const curAction = res.data.find(item => item.id === this.params.action_id)
+                //     if (curAction && curAction.related_resource_types && curAction.related_resource_types.length > 0) {
+                //         const curData = new RelateResourceTypes(curAction.related_resource_types[this.resIndex], { name: curAction.name, type: curAction.type }, 'detail')
+                //         const len = curData.condition.length
+                //         if (len > 0) {
+                //             this.conditionLimitData = curData.condition
+                //             if (this.conditionData.length < len) {
+                //                 const differenceLen = len - this.conditionData.length
+                //                 for (let i = 0; i < differenceLen; i++) {
+                //                     this.conditionData.push(new Condition({ selection_mode: this.selectionMode }, 'init', 'add'))
+                //                 }
+                //             }
+                //             this.conditionLimitData.forEach((item, index) => {
+                //                 const tempList = this.selectList.filter(subItem => {
+                //                     return item.instance.map(v => v.path[0][0].type).includes(subItem.resource_type_chain[0].id)
+                //                 })
+                //                 this.$set(this.selectListMap, index, tempList)
+                //                 this.$set(this.selectValueMap, index, tempList[0].id)
+                //                 const isHasInstance = item.instance && item.instance.length > 0
+                //                 const isHasAttribute = item.attribute && item.attribute.length > 0
+                //                 let curSelectMode = ''
+                //                 if (!isHasInstance && isHasAttribute) {
+                //                     curSelectMode = 'attribute'
+                //                     this.$delete(this.conditionData[index], 'instance')
+                //                 } else if (isHasInstance && !isHasAttribute) {
+                //                     curSelectMode = 'instance'
+                //                     this.$delete(this.conditionData[index], 'attribute')
+                //                 } else {
+                //                     curSelectMode = 'all'
+                //                 }
+                //                 this.$set(this.selectionModeMap, index, curSelectMode)
+                //             })
+                //         }
+                //     }
+                // } catch (e) {
+                //     console.error(e)
+                //     this.bkMessageInstance = this.$bkMessage({
+                //         limit: 1,
+                //         theme: 'error',
+                //         message: e.message || e.data.msg || e.statusText
+                //     })
+                // } finally {
+                //     this.requestQueue.shift()
+                // }
             },
 
             async fetchResourceAttrs () {
@@ -387,6 +582,9 @@
                         this.conditionData[0].instanceExpanded = true;
                     }
                 }
+                // else {
+                //     this.isEmptyResource = false
+                // }
 
                 if (this.flag === '') {
                     this.$emit('on-limit-change');
@@ -408,6 +606,7 @@
                 }
                 if (!currentData.instance && !currentData.attribute) {
                     this.conditionData.splice(index, 1);
+                    this.conditionLimitData.splice(index, 1);
                 } else {
                     this.conditionData.splice(index, 1, currentData);
                 }
@@ -440,6 +639,7 @@
                 // this.isEmptyResource = false
                 window.changeAlert = true;
                 this.conditionData.push(new Condition({ selection_mode: this.selectionMode }, 'init', 'add'));
+                // this.conditionLimitData.push(this.conditionLimitData[this.conditionLimitData.length - 1])
                 const lastConditionData = this.conditionData[this.conditionData.length - 1];
                 if (lastConditionData.instance) {
                     lastConditionData.instanceExpanded = true;
@@ -484,6 +684,7 @@
             },
 
             handleGetValue () {
+                // debugger
                 if (this.notLimitValue) {
                     return {
                         isEmpty: false,
@@ -491,7 +692,6 @@
                     };
                 }
                 if (this.conditionData.length < 1) {
-                    // this.isEmptyResource = true
                     return {
                         isEmpty: false,
                         data: ['none']
@@ -555,6 +755,26 @@
             },
 
             handleIntanceDelete (payload, payloadIndex, childIndex, index) {
+                // const curIds = payload.parentChain.map(v => `${v.id}&${v.type}`)
+
+                // const curInstance = this.conditionData[index].instance
+                // let id = payload.id
+                // let type = payload.type
+                // if (payload.id === '*') {
+                //     const data = curInstance[payloadIndex].path[childIndex]
+                //     const idIndex = data.findIndex(item => item.id === '*')
+                //     id = data[idIndex - 1].id
+                //     type = data[idIndex - 1].type
+                // }
+                // curInstance[payloadIndex].path.splice(childIndex, 1)
+                // curInstance[payloadIndex].paths.splice(childIndex, 1)
+                // if (curInstance.every(item => item.path.length < 1)) {
+                //     const len = curInstance.length
+                //     curInstance.splice(0, len, ...[])
+                // }
+
+                // curIds.push(`${id}&${type}`)
+                // this.$refs[`${index}TreeRef`][0] && this.$refs[`${index}TreeRef`][0].handeCancelChecked(curIds.join('#'))
                 window.changeAlert = true;
                 const curIds = payload.parentChain.map(v => `${v.id}&${v.type}`);
                 const isCarryNextNoLimit = payload.id === '*';

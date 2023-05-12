@@ -1,6 +1,19 @@
 # See https://pre-pre-commit --versioncommit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.3.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-ast
+      - id: check-byte-order-marker
+      - id: check-case-conflict
+      - id: check-executables-have-shebangs
+      - id: check-merge-conflict
+      - id: debug-statements
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
   - repo: local
     hooks:
       - id: isort
@@ -18,6 +31,11 @@ repos:
         language: python
         pass_filenames: false
         entry: pflake8 --config=saas/pyproject.toml saas
+      - id: bandit
+        name: bandit
+        language: python
+        pass_filenames: false
+        entry: bandit -c saas/pyproject.toml -r saas
       - id: mypy
         name: mypy
         language: python

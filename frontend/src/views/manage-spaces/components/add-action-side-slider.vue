@@ -6,7 +6,7 @@
         :width="890"
         ext-cls="iam-add-action-sideslider"
         :title="$t(`m.grading['添加系统和操作']`)"
-        @update:isShow="handleCancel">
+        @update:isShow="handleCancel('leave')">
         <div slot="content"
             class="content-wrapper"
             v-bkloading="{ isLoading, opacity: 1 }">
@@ -32,7 +32,7 @@
                     <div :class="['system-wrapper', curSystemList.length > 20 ? 'system-item-fixed' : '']">
                         <template v-if="curSystemList.length > 0">
                             <div v-bkloading="{ isLoading: systemListIsLoading, opacity: 1 }">
-                                <div class="system-item"
+                                <div class="system-item single-hide"
                                     v-for="item in curSystemList"
                                     :key="item.id"
                                     :class="item.id === curSystem ? 'active' : ''"
@@ -49,12 +49,21 @@
                                 <!-- <div
                                     v-if="isHierarchicalAdmin.type === 'rating_manager'"
                                     :class="['skip-link', curSystemList.length > 20 ? 'skip-link-fixed' : '']"
-                                    :title="$t(`m.grading['修改分级管理员授权范围']`)"
+                                    :title="$t(`m.grading['修改管理空间授权范围']`)"
                                     @click="handleSkip">
                                     <i class="iam-icon iamcenter-edit-fill"></i>
-                                    {{ $t(`m.grading['修改分级管理员授权范围']`) }}
+                                    {{ $t(`m.grading['修改管理空间授权范围']`) }}
                                 </div> -->
                             </div>
+                        </template>
+                        <template v-else>
+                            <ExceptionEmpty
+                                :type="emptyData.type"
+                                :empty-text="emptyData.text"
+                                :tip-text="emptyData.tip"
+                                :tip-type="emptyData.tipType"
+                                @on-clear="handleEmptyClear"
+                            />
                         </template>
                         <!-- <template v-else>
                             <div class="empty-wrapper empty-wrapper2">
@@ -63,7 +72,7 @@
                                         class="exception-wrap-item exception-part"
                                         type="search-empty"
                                         scene="part"></bk-exception>
-                                    <p class="tips-link" @click="handleSkip">{{ $t(`m.grading['修改分级管理员授权范围']`) }}</p>
+                                    <p class="tips-link" @click="handleSkip">{{ $t(`m.grading['修改管理空间授权范围']`) }}</p>
                                 </template>
                                 <iam-svg v-else />
                             </div>
@@ -147,18 +156,27 @@
                     </template>
                     <template v-if="systemData[curSystem].list.length < 1 && !isRightLoading">
                         <div class="empty-wrapper">
-                            <iam-svg />
+                            <ExceptionEmpty
+                                :type="emptyData.type"
+                                :empty-text="emptyData.text"
+                                :tip-text="emptyData.tip"
+                                :tip-type="emptyData.tipType"
+                                @on-clear="handleEmptyClear"
+                            />
                         </div>
                     </template>
                 </div>
             </template>
+            <div v-else style="margin: 0 auto;">
+                <ExceptionEmpty />
+            </div>
         </div>
         <div slot="footer" style="padding-left: 30px;">
             <bk-button theme="primary" :disabled="isDisabled" @click="handleSubmit"
                 data-test-id="grading_btn_addActionConfirm">
                 {{ $t(`m.common['确定']`) }}
             </bk-button>
-            <bk-button style="margin-left: 10px;" @click="handleCancel">{{ $t(`m.common['取消']`) }}</bk-button>
+            <bk-button style="margin-left: 10px;" @click="handleCancel('cancel')">{{ $t(`m.common['取消']`) }}</bk-button>
         </div>
     </bk-sideslider>
 </template>
@@ -166,8 +184,9 @@
 <script>
     import _ from 'lodash';
     import { leaveConfirm } from '@/common/leave-confirm';
-    import { guid } from '@/common/util';
+    import { guid, formatCodeData } from '@/common/util';
     import RenderActionTag from '@/components/common-action';
+    import { mapGetters } from 'vuex';
 
     export default {
         name: '',
@@ -190,6 +209,12 @@
             defaultData: {
                 type: Object,
                 default: () => []
+            },
+            all: {
+                type: Boolean,
+                default: () => {
+                    return false;
+                }
             }
         },
         data () {
@@ -208,10 +233,17 @@
                 quickClose: false,
                 tagActionList: [],
                 tagActionListBackUp: [],
-                systemListIsLoading: false
+                systemListIsLoading: false,
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
+            ...mapGetters(['externalSystemId']),
             isLoading () {
                 return this.initRequestQueue.length > 0;
             },
@@ -408,9 +440,9 @@
                                 }
                             }
                         }
-                    })
+                    });
 
-                    ;(item.sub_groups || []).forEach(sub => {
+                    (item.sub_groups || []).forEach(sub => {
                         sub.actions.forEach(act => {
                             if (payload.related_actions.includes(act.id) && flag) {
                                 if (!act.checked) {
@@ -460,14 +492,7 @@
                         item.$id = guid();
                     });
                 } catch (e) {
-                    console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
+                    this.fetchErrorMsg(e);
                 } finally {
                     this.initRequestQueue.shift();
                 }
@@ -479,50 +504,57 @@
             async fetchSystems () {
                 this.systemListIsLoading = true;
                 try {
-                    const res = await this.$store.dispatch('system/getSystems');
-                    this.systemList = _.cloneDeep(res.data);
-                    this.curSystemList = _.cloneDeep(res.data);
-                    this.curSystem = this.defaultSystem || this.systemList[0].id;
-                    this.systemList.forEach(item => {
-                        this.$set(this.systemData, item.id, {});
-                        this.systemData[item.id].system_name = item.name;
-                        this.$set(this.systemData[item.id], 'count', 0);
-                        this.$set(this.systemData[item.id], 'list', []);
-                        console.log('this.defaultData', this.defaultData);
-                        const isExistSys = this.defaultData.find(sys => sys.system_id === item.id);
-                        console.log(isExistSys);
-                        if (isExistSys) {
-                            isExistSys.list.forEach(act => {
-                                this.$set(act, 'checked', this.defaultValue.includes(act.$id));
-                            });
-                            this.systemData[item.id].list.push({
-                                name: '',
-                                actions: _.cloneDeep(isExistSys.list)
-                            });
+                    const params = {
+                        all: this.all
+                    };
+                    if (this.externalSystemId) {
+                        params.hidden = false;
+                    }
+                    const { code, data } = await this.$store.dispatch('system/getSystems', params);
+                    this.systemList = _.cloneDeep(data);
+                    this.curSystemList = _.cloneDeep(data);
+                    this.curSystem = this.defaultSystem;
+                    this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
+                    if (this.systemList.length) {
+                        if (!this.curSystem) {
+                            this.curSystem = this.systemList[0].id;
                         }
-
-                        if (this.defaultValue.length > 0) {
-                            const curAllActionIds = [];
-                            this.systemData[item.id].list.forEach(subItem => {
-                                subItem.actions.forEach(act => {
-                                    curAllActionIds.push(act.$id);
+                        this.systemList.forEach(item => {
+                            this.$set(this.systemData, item.id, {});
+                            this.systemData[item.id].system_name = item.name;
+                            this.$set(this.systemData[item.id], 'count', 0);
+                            this.$set(this.systemData[item.id], 'list', []);
+                            console.log('this.defaultData', this.defaultData);
+                            const isExistSys = this.defaultData.find(sys => sys.system_id === item.id);
+                            console.log(isExistSys);
+                            if (isExistSys) {
+                                isExistSys.list.forEach(act => {
+                                    this.$set(act, 'checked', this.defaultValue.includes(act.$id));
                                 });
-                            });
-                            const intersection = curAllActionIds.filter(v => this.defaultValue.includes(v));
-                            this.systemData[item.id].count = intersection.length;
-                        }
-                    });
-                    this.fetchActions(this.curSystem, false);
-                    this.fetchCommonActions(this.curSystem);
+                                this.systemData[item.id].list.push({
+                                    name: '',
+                                    actions: _.cloneDeep(isExistSys.list)
+                                });
+                            }
+    
+                            if (this.defaultValue.length > 0) {
+                                const curAllActionIds = [];
+                                this.systemData[item.id].list.forEach(subItem => {
+                                    subItem.actions.forEach(act => {
+                                        curAllActionIds.push(act.$id);
+                                    });
+                                });
+                                const intersection = curAllActionIds.filter(v => this.defaultValue.includes(v));
+                                this.systemData[item.id].count = intersection.length;
+                            }
+                        });
+                    }
+                    await Promise.all([
+                        this.fetchCommonActions(this.curSystem, false),
+                        this.fetchActions(this.curSystem)
+                    ]);
                 } catch (e) {
-                    console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
+                    this.fetchErrorMsg(e);
                 } finally {
                     this.initRequestQueue.shift();
                     this.systemListIsLoading = false;
@@ -542,17 +574,10 @@
             async fetchActions (systemId, isLoading = true) {
                 this.isRightLoading = isLoading;
                 try {
-                    const res = await this.$store.dispatch('permApply/getActions', { system_id: systemId });
+                    const res = await this.$store.dispatch('permApply/getActions', { system_id: systemId, all: this.all });
                     this.handleDefaultData(systemId, res.data);
                 } catch (e) {
-                    console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
+                    this.fetchErrorMsg(e);
                 } finally {
                     this.isRightLoading = false;
                     this.initRequestQueue.length > 0 && this.initRequestQueue.shift();
@@ -813,14 +838,25 @@
                 window.changeAlert = true;
             },
 
+            // handleSearch () {
+            //     if (this.keyword === '') {
+            //         return;
+            //     }
+            //     window.changeAlert = true;
+            //     this.isFilter = true;
+            //     const filterList = this.systemList.filter(item => item.name.indexOf(this.keyword) > -1);
+            //     this.curSystemList.splice(0, this.curSystemList.length, ...filterList);
+            // },
+
             handleSearch () {
-                if (this.keyword === '') {
+                if (!this.keyword) {
                     return;
                 }
                 window.changeAlert = true;
                 this.isFilter = true;
                 const filterList = this.systemList.filter(item => item.name.indexOf(this.keyword) > -1);
                 this.curSystemList.splice(0, this.curSystemList.length, ...filterList);
+                this.emptyData = formatCodeData(0, { ...this.emptyData, ...{ tipType: 'search' } });
             },
 
             resetData () {
@@ -834,15 +870,43 @@
                 this.curSelectValue = [];
             },
 
-            handleCancel () {
+            fetchErrorMsg (payload) {
+                console.error(payload);
+                const { code, data, message, statusText } = payload;
+                this.emptyData = formatCodeData(code, this.emptyData);
+                this.bkMessageInstance = this.$bkMessage({
+                    limit: 1,
+                    theme: 'error',
+                    message: message || data.msg || statusText,
+                    ellipsisLine: 2,
+                    ellipsisCopy: true
+                });
+            },
+
+            handleCancel (payload) {
                 let cancelHandler = Promise.resolve();
                 if (window.changeAlert) {
                     cancelHandler = leaveConfirm();
                 }
-                cancelHandler.then(() => {
-                    this.$emit('update:isShow', false);
-                    this.resetData();
-                }, _ => _);
+                const operateMap = {
+                    leave: () => {
+                        // let cancelHandler = Promise.resolve();
+                        // if (window.changeAlert) {
+                        //     cancelHandler = leaveConfirm();
+                        // }
+                        cancelHandler.then(() => {
+                            this.$emit('update:isShow', false);
+                            this.resetData();
+                        }, _ => _);
+                    },
+                    cancel: () => {
+                        cancelHandler.then(() => {
+                            this.$emit('update:isShow', false);
+                            this.resetData();
+                        }, _ => _);
+                    }
+                };
+                operateMap[payload]();
             },
 
             handleSkip () {
@@ -852,6 +916,18 @@
                         id: this.$store.getters.navCurRoleId
                     }
                 });
+            },
+
+            handleEmptyClear () {
+                this.keyword = '';
+                this.emptyData.tipType = '';
+                this.fetchSystems();
+                // this.requestQueue = [];
+            },
+
+            handleEmptyRefresh () {
+                this.resetData();
+                this.fetchSystems();
             },
 
             refreshList () {
@@ -955,7 +1031,7 @@
             }
             .right-wrapper {
                 position: relative;
-                flex: 0 0 calc(100% - 220px);
+                flex: 0 0 calc(100% - 260px);
                 padding: 12px 20px;
                 background: #f5f6fa;
                 .custom-tmpl-wrapper {

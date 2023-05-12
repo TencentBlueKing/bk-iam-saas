@@ -44,6 +44,11 @@ class BaseModel(models.Model):
         # 时间戳
         return int(self.created_time.timestamp())
 
+    @property
+    def updated_timestamp(self):
+        # 时间戳
+        return int(self.updated_time.timestamp())
+
     class Meta:
         abstract = True
 
@@ -82,5 +87,19 @@ class CompressedJSONField(models.BinaryField):
         value = super(CompressedJSONField, self).to_python(value)
         return json.loads(zlib.decompress(value).decode("utf-8"))
 
-    def from_db_value(self, value, expression, connection, context):
+    def from_db_value(self, value, expression, connection, context=None):
         return self.to_python(value)
+
+
+class BaseSystemHiddenModel(models.Model):
+    """
+    系统隐藏字段
+
+    用于记录model对象是否需要在权限中心SaaS隐藏
+    """
+
+    source_system_id = models.CharField(max_length=32, default="")
+    hidden = models.BooleanField(default=False)
+
+    class Meta:
+        abstract = True

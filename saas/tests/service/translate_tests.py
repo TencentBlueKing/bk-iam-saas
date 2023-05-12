@@ -10,9 +10,11 @@ specific language governing permissions and limitations under the License.
 import json
 from typing import Dict, List, Optional
 
+import pytest
+from blue_krill.web.std_error import APIError
 from django.test import TestCase
 
-from backend.service.utils.translate import ResourceExpressionTranslator
+from backend.service.utils.translate import ResourceExpressionTranslator, valid_path_without_last_node
 
 
 def new_attribute_dict(_id: str, name: str, values: Optional[List[Dict]] = None) -> Dict:
@@ -31,21 +33,21 @@ class TransferAttributeTests(TestCase):
         """空值属性"""
         attribute = new_attribute_dict("id", "name")
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(APIError):
             self.translator._translate_attribute("system", "type", attribute)
 
     def test_multi_bool_err(self):
         """多值bool"""
         attribute = new_attribute_dict("id", "name", [{"id": True, "name": ""}, {"id": False, "name": ""}])
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(APIError):
             self.translator._translate_attribute("system", "type", attribute)
 
     def test_wrong_type_err(self):
         """错误的值类型"""
         attribute = new_attribute_dict("id", "name", [{"id": set(), "name": ""}])
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(APIError):
             self.translator._translate_attribute("system", "type", attribute)
 
     def test_string_ok(self):
@@ -93,7 +95,7 @@ class TransferInstanceTests(TestCase):
         """
         instance = new_instance_dict("host", "主机")
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(APIError):
             self.translator._translate_instance("system", "host", instance)
 
     def test_id_ok(self):
@@ -411,3 +413,14 @@ class TransferResourcesTests(TestCase):
             {"NumericLte": {"bk_cmdb._bk_iam_env_.hms": [120000]}},
             {"NumericEquals": {"bk_cmdb._bk_iam_env_.weekday": [0, 1, 3]}},
         ]
+
+
+class TestValidPathWithoutLastNode:
+    def test_node_repeat(self):
+        nodes = [{"type": "type1", "id": "id1"}, {"type": "type1", "id": "id2"}, {"type": "type1", "id": "id1"}]
+        with pytest.raises(APIError):
+            valid_path_without_last_node(nodes)
+
+    def test_ok(self):
+        nodes = [{"type": "type1", "id": "id1"}, {"type": "type1", "id": "id2"}]
+        valid_path_without_last_node(nodes)

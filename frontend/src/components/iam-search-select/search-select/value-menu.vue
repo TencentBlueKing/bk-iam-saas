@@ -18,7 +18,9 @@
                 menu: {},
                 error: '',
                 loading: false,
-                checkeMap: {} // 多选已选中的项
+                checkeMap: {}, // 多选已选中的项
+                cacheList: [],
+                searchValue: ''
             };
         },
         computed: {
@@ -145,6 +147,7 @@
                 if (this.isCondition && !this.menu.condition[this.searchSelect.primaryKey]) {
                     this.loading = false;
                     this.list = Object.freeze([...currentItem.conditions]);
+                    this.cacheList = _.cloneDeep(this.list);
                     return;
                 }
 
@@ -175,6 +178,7 @@
                     try {
                         const list = await remoteMethod(this.search, currentItem, 0);
                         this.list = Object.freeze([...list]);
+                        this.cacheList = _.cloneDeep(this.list);
                     } catch {
                         this.error = true;
                     } finally {
@@ -245,6 +249,10 @@
                 this.$emit('cancel');
             },
 
+            handleInput (value) {
+                this.list = this.cacheList.filter(item => `${item.name}(${item.id})`.toLowerCase().indexOf(value) > -1);
+            },
+
             renderContent () {
                 // 显示错误
                 if (this.error) {
@@ -259,7 +267,7 @@
                     );
                 }
                 // 列表为空
-                if (this.needRender && !this.list.length) {
+                if (this.needRender && !this.list.length && !['action_id'].includes(this.currentItem.id)) {
                     return (
                         <div class="iam-bk-search-list-loading">{ this.searchSelect.remoteEmptyText }</div>
                     );
@@ -268,32 +276,75 @@
                 const renderList = () => {
                     const displayKey = this.searchSelect.displayKey;
                     const primaryKey = this.searchSelect.primaryKey;
-
-                    return (
-                        <ul ref="list" class="iam-bk-search-list-menu">
-                            { this.list.map((item, index) => {
-                                const id = item[primaryKey];
-                                
-                                return (
-                                    <li class={{
-                                        'iam-bk-search-list-menu-item': true,
-                                        'is-group': !!item.isGroup,
-                                        'is-disabled': item.disabled,
-                                        'active': this.activeIndex === index
-                                        }}>
-                                        <div
-                                            class="item-name"
-                                            onClick={e => this.handleClick(item, index, id)}>
-                                            { item[displayKey] }
-                                        </div>
-                                        { this.isMultiable && !!this.checkeMap[item.id]
-                                            ? <i class="bk-icon icon-check-1 item-icon" />
-                                            : '' }
-                                    </li>
-                                );
-                            }) }
-                        </ul>
-                    );
+                    if (['action_id'].includes(this.currentItem.id)) {
+                        return (
+                        <div style="width: 240px;">
+                            <div style="padding: 0 10px; margin-bottom: 10px;">
+                                <bk-input
+                                        clearable={true}
+                                        right-icon="bk-icon icon-search"
+                                        value={this.searchValue}
+                                        onInput={($event) => this.handleInput($event)}
+                                    />
+                            </div>
+                            <ul ref="list" class="iam-bk-search-list-menu">
+                                {
+                                    this.list.length
+                                    ? this.list.map((item, index) => {
+                                        const id = item[primaryKey];
+                                        return (
+                                            <li class={{
+                                                'iam-bk-search-list-menu-item': true,
+                                                'is-group': !!item.isGroup,
+                                                'is-disabled': item.disabled,
+                                                'active': this.activeIndex === index
+                                                }}>
+                                                <div
+                                                    class="item-name"
+                                                    onClick={e => this.handleClick(item, index, id)}>
+                                                    { item[displayKey] }({item[primaryKey]})
+                                                </div>
+                                                { this.isMultiable && !!this.checkeMap[item.id]
+                                                    ? <i class="bk-icon icon-check-1 item-icon" />
+                                                    : '' }
+                                            </li>
+                                        );
+                                })
+                                : (<div class="iam-bk-search-list-loading">{ this.searchSelect.remoteEmptyText }</div>)
+                            }
+                            </ul>
+                        </div>
+                        );
+                    } else {
+                        return (
+                        <div>
+                            <ul ref="list" class="iam-bk-search-list-menu">
+                                { this.list.map((item, index) => {
+                                    const id = item[primaryKey];
+                                    
+                                    return (
+                                        <li class={{
+                                            'iam-bk-search-list-menu-item': true,
+                                            'is-group': !!item.isGroup,
+                                            'is-disabled': item.disabled,
+                                            'active': this.activeIndex === index
+                                            }}>
+                                            <div
+                                                class="item-name"
+                                                onClick={e => this.handleClick(item, index, id)}>
+                                                { item[displayKey] }
+                                            </div>
+                                            { this.isMultiable && !!this.checkeMap[item.id]
+                                                ? <i class="bk-icon icon-check-1 item-icon" />
+                                                : '' }
+                                        </li>
+                                    );
+                                }) }
+                            </ul>
+                            
+                        </div>
+                        );
+                    }
                 };
 
                 const renderFooter = () => {

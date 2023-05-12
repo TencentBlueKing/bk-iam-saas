@@ -4,7 +4,7 @@
         ext-cls="iam-system-log-dialog"
         :show-footer="false"
         :width="1105"
-        :mask-close="false"
+        :mask-close="true"
         @after-leave="handleClose">
         <div class="log-layout">
             <div class="layout-left">

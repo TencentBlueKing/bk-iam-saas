@@ -170,7 +170,8 @@
 </script>
 <style lang='postcss'>
     .iam-perm-aggregate-table {
-        min-height: 101px;
+        /* max-height: 300px;
+        overflow-y: auto; */
         .bk-table-enable-row-hover .bk-table-body tr:hover > td {
             background-color: #fff;
         }

@@ -1,0 +1,42 @@
+### Add system
+
+Note:
+
+- An app_code can only create one system, and the system_id must be equal to the app_code; if not, the interface returns `1901400 bad request: system_id should be the app_code!`
+- If the system is created without adding itself to clients, the app_code of the currently launched `add system` will be added to `clients` automatically
+
+-------
+
+{% include '_api_v1_model_system.md.j2' %}
+
+-------
+
+#### Request
+
+``json
+{
+    "id": "bk_cmdb",
+    "name": "CMDB",
+    "name_en": "CMDB",
+    "description": "CMDB is a..." ,
+    "description_en": "CMDB is a..." ,
+    "clients": "bk_cmdb,cmdb",
+    "provider_config": {
+        "host": "http://cmdb.service.consul",
+        "auth": "basic",
+        "healthz": "/api/v1/healthz"
+    }
+}
+```
+
+#### Response
+
+```json
+{
+    "code": 0,
+    "message": "",
+    "data": {
+        "id": "bk_cmdb"
+    }
+}
+```

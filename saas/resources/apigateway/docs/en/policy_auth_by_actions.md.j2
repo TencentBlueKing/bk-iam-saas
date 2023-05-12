@@ -1,0 +1,81 @@
+### policy auth by actions
+
+Authentication scenario: Check if a `user` has `view`/`edit`/`delete` permission for `resource A`.
+Limitations: actions can pass a maximum of 10 actions
+
+#### Parameters
+
+| field | type | mandatory | description |
+|:---|:---|:---|:---|
+| system |string | yes | system unique identifier |
+| subject | string | yes | subject |
+| actions | Array(action) | yes | actions |
+| resources | Array(resource_node) | Yes | Resource instances, the order of the resource types must be the same as the order in which the actions are registered |
+
+action
+
+| field | type | mandatory | description |
+|:---|:---|:---|:---|
+| id | string | yes | action ID |
+
+subject
+
+| field | type |required | description |
+|:---|:---|:---|:---|
+| type | string | yes | Authorize object type, currently only user | is supported
+| id | string | yes | authorization_id |
+
+resource_node
+
+| field | type | mandatory | description |
+|:---|:---|:---|:---|
+| system | string | yes | resource_system_id |
+| type | string | yes | resource type ID |
+| id | string | yes | resource instance ID |
+| attribute | object | yes | resource attribute |
+
+#### Request
+
+```json
+{
+	"system": "bk_job",
+	"subject": {
+		"type": "user",
+		"id": "admin"
+	},
+	"actions": [{
+		"id": "execute"
+	}, {
+		"id": "view"
+	}],
+	"resources": [{ // The order of the resource types must be the same as the order of the operation registration, otherwise it will cause authentication failure!
+		"system": "bk_job",
+		"type": "job",
+		"id": "ping",
+		"attribute": { // There may be multiple attribute values for the resource, currently string/int/boolean, and path stringList are supported
+			"os": "linux",
+			"_bk_iam_path_": ["/biz,1/set,2/"],
+			"is_ready": true,
+			"area_id": 200
+		}
+	}, {
+		"system": "bk_cmdb",
+		"type": "host",
+		"id": "192.168.1.1",
+		"attribute": {} // The attribute of the external resource is the responsibility of iam to look up the attribute, the accessing party does not need to pass it in
+	}]
+}
+````
+
+#### Response
+
+```json
+{
+    "code": 0,
+    "message": "ok",
+    "data": {
+        "execute": true,
+        "view": false
+    }
+}
+```

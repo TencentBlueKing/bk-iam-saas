@@ -22,6 +22,7 @@ class OperateEnum(ChoicesEnum, LowerStrEnum):
     GROUP_POLICY_DELETE = auto()
     GROUP_POLICY_UPDATE = auto()
     GROUP_MEMBER_RENEW = auto()
+    GROUP_TRANSFER = auto()
 
     _choices_labels = skip(
         (
@@ -33,5 +34,6 @@ class OperateEnum(ChoicesEnum, LowerStrEnum):
             (GROUP_POLICY_DELETE, "用户组删除权限"),
             (GROUP_POLICY_UPDATE, "用户组更新权限"),
             (GROUP_MEMBER_RENEW, "用户组成员续期"),
+            (GROUP_TRANSFER, "用户组转移"),
         )
     )

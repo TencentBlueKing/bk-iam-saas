@@ -7,11 +7,12 @@
         </bk-button>
         <div>
             <bk-table
+                v-if="!pageLoading"
                 :data="curPageData"
                 :size="'small'"
-                v-if="!pageLoading"
                 :pagination="pageConf"
                 :ext-cls="tableLoading ? 'is-be-loading' : ''"
+                :max-height="tableHeight"
                 v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
                 @page-change="handlePageChange"
                 @page-limit-change="handlePageLimitChange">
@@ -20,7 +21,7 @@
                         <span class="user-group-name" :title="row.name" @click="goDetail(row)">{{ row.name }}</span>
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t(`m.common['到期时间']`)" prop="expired_at_display"></bk-table-column>
+                <bk-table-column :label="$t(`m.common['有效期']`)" prop="expired_at_display"></bk-table-column>
                 <bk-table-column :label="$t(`m.perm['加入用户组的时间']`)">
                     <template slot-scope="{ row }">
                         <span :title="row.created_time">{{ row.created_time.replace(/T/, ' ') }}</span>
@@ -51,6 +52,15 @@
                         </bk-button>
                     </template>
                 </bk-table-column>
+                <template slot="empty">
+                    <ExceptionEmpty
+                        :type="emptyData.type"
+                        :empty-text="emptyData.text"
+                        :tip-text="emptyData.tip"
+                        :tip-type="emptyData.tipType"
+                        @on-refresh="handleEmptyRefresh"
+                    />
+                </template>
             </bk-table>
         </div>
 
@@ -73,11 +83,12 @@
                                 :quick-search-method="quickSearchMethod" />
                         </div>
                         <bk-table
-                            ref="groupTableRef"
-                            :data="tableList"
                             size="small"
-                            :class="{ 'set-border': tableLoading }"
+                            ref="groupTableRef"
                             ext-cls="user-group-table"
+                            :max-height="400"
+                            :data="tableList"
+                            :class="{ 'set-border': tableLoading }"
                             :pagination="pagination"
                             :cell-attributes="handleCellAttributes"
                             @page-change="pageChange"
@@ -100,6 +111,16 @@
                                     </span>
                                 </template>
                             </bk-table-column>
+                            <template slot="empty">
+                                <ExceptionEmpty
+                                    :type="emptyDialogData.type"
+                                    :empty-text="emptyDialogData.text"
+                                    :tip-text="emptyDialogData.tip"
+                                    :tip-type="emptyDialogData.tipType"
+                                    @on-clear="handleEmptyDialogClear"
+                                    @on-refresh="handleEmptyDialogRefresh"
+                                />
+                            </template>
                         </bk-table>
                     </div>
                     <p class="user-group-error" v-if="isShowGroupError">{{ $t(`m.permApply['请选择用户组']`) }}</p>
@@ -141,10 +162,11 @@
 </template>
 <script>
     import { mapGetters } from 'vuex';
+    import { PERMANENT_TIMESTAMP } from '@/common/constants';
+    import { formatCodeData, getWindowHeight } from '@/common/util';
     import DeleteDialog from '@/components/iam-confirm-dialog/index.vue';
     import IamSearchSelect from '@/components/iam-search-select';
     import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider';
-    import { PERMANENT_TIMESTAMP } from '@/common/constants';
     import IamDeadline from '@/components/iam-deadline/horizontal';
 
     export default {
@@ -201,13 +223,28 @@
                     count: 0,
                     limit: 10
                 },
-                searchParams: {}
+                searchParams: {},
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                },
+                emptyDialogData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
             ...mapGetters(['user']),
             curSelectIds () {
                 return this.currentSelectList.map(item => item.id);
+            },
+            tableHeight () {
+                return getWindowHeight() - 290;
             }
         },
         watch: {
@@ -248,21 +285,24 @@
                 this.pageLoading = isPageLoading;
                 const { type } = this.data;
                 try {
-                    const res = await this.$store.dispatch('perm/getPermGroups', {
+                    const { code, data } = await this.$store.dispatch('perm/getPermGroups', {
                         subjectType: type === 'user' ? type : 'department',
                         subjectId: type === 'user' ? this.data.username : this.data.id,
                         limit: this.pageConf.limit,
                         offset: this.pageConf.current
                     });
-                    this.pageConf.count = res.data.count || 0;
-                    this.dataList.splice(0, this.dataList.length, ...(res.data.results || []));
+                    this.pageConf.count = data.count || 0;
+                    this.dataList.splice(0, this.dataList.length, ...(data.results || []));
                     this.curPageData = [...this.dataList];
+                    this.emptyData = formatCodeData(code, this.emptyData, this.curPageData.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
@@ -312,7 +352,7 @@
             showQuitTemplates (row) {
                 this.deleteDialogConf.visiable = true;
                 this.deleteDialogConf.row = Object.assign({}, row);
-                this.deleteDialogConf.msg = `${this.$t(`m.common['退出']`)}【${row.name}】，${this.$t(`m.info['将不再继承该组的权限']`)}。`;
+                this.deleteDialogConf.msg = `${this.$t(`m.common['退出']`)}${this.$t(`m.common['【']`)}${row.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['，']`)}${this.$t(`m.info['将不再继承该组的权限']`)}${this.$t(`m.common['。']`)}`;
             },
 
             /**
@@ -374,8 +414,27 @@
             handleSearch (payload, result) {
                 this.currentSelectList = [];
                 this.searchParams = payload;
+                this.emptyDialogData.tipType = 'search';
                 this.resetPagination();
                 this.fetchUserGroupList(true);
+            },
+
+            async handleEmptyDialogClear () {
+                this.searchParams = {};
+                this.searchValue = [];
+                this.emptyDialogData.tipType = '';
+                this.resetPagination();
+                await this.fetchUserGroupList();
+            },
+
+            async handleEmptyDialogRefresh () {
+                this.resetPagination();
+                await this.fetchUserGroupList(true);
+            },
+
+            async handleEmptyRefresh () {
+                this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10 });
+                await this.fetchPermGroups(false, true);
             },
 
             resetPagination () {
@@ -433,15 +492,18 @@
                     offset: this.pagination.limit * (this.pagination.current - 1)
                 };
                 try {
-                    const res = await this.$store.dispatch('userGroup/getUserGroupList', params);
-                    this.pagination.count = res.data.count || 0;
-                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
+                    const { code, data } = await this.$store.dispatch('userGroup/getUserGroupList', params);
+                    this.pagination.count = data.count || 0;
+                    this.tableList.splice(0, this.tableList.length, ...(data.results || []));
+                    this.emptyDialogData = formatCodeData(code, this.emptyDialogData, this.tableList.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyDialogData = formatCodeData(code, this.emptyDialogData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'primary',
-                        message: e.message || e.data.msg || e.statusText
+                        message: message || data.msg || statusText
                     });
                 } finally {
                     this.tableDialogLoading = false;

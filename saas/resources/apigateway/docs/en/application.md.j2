@@ -1,0 +1,193 @@
+### Generate an unprivileged request URL
+
+#### Parameters
+
+| field | type | mandatory | description |
+|:---|:---|:---|:---|
+|system|string|Yes|system id|
+|actions|array|is|the|action|to|apply|permission|to
+
+actions
+
+|fields |type |required |description |
+|:---|:---|:---|:---|
+|id|string|yes|action id|
+|related_resource_types|array|is|the|operation's associated resource type, ``the order of the resource types must be the same as the order in which the operation is registered'||
+
+related_resource_types
+
+|field |type |must |description |
+|:---|:---|:---|:---|
+|system|string|is|the|system id of the resource type|
+|type|string|is|the|resource|type|
+|instances|array[array]|no|resource instance,optional|
+|attributes|array|no|instance attributes,optional|
+
+related_resource_types.instances
+
+|field |type |required |description |
+|:---|:---|:---|:---|
+|type|String|Yes|Resource type|
+|id|String|Yes|Resource_Instance id|
+
+related_resource_types.attributes
+
+|field |type |must |description |
+|:---|:---|:---|:---|
+|id|String|Yes|attribute key|
+|name|string|is|the|attribute key name|
+|values|array|is|the|property's optional values|
+
+related_resource_types.attributes.values
+
+|field |type |required |description |
+|:---|:---|:---|:---|
+|id|String|Yes|property value|
+|name|string|yes|property value name|
+
+#### Request
+
+1. Example of an unassociated resource type operation:
+
+The ``create_job`'' operation of the system ``bk_job`' is not associated with a resource type
+
+```json
+{
+  "system": "bk_job", # system of permissions
+  "actions": [
+    {
+      "id": "create_job", # operation id
+      "related_resource_types": [] # related_resource_types An empty array means that the operation is not associated with a resource type
+    }
+  ]
+}
+```
+
+2. Example of a resource topology path operation:
+
+The `view_job` operation of the system `bk_job` is associated with the resource type `job`, and the instance view `business(biz)`-`job(job)` is registered, this instance view topology path has 2 levels
+
+```json
+{
+  "system": "bk_job", # system of permissions
+  "actions": [
+    {
+      "id": "view_job", # operation id
+      "related_resource_types": [
+        {
+          "system": "bk_job", # The system id to which the resource type belongs
+          "type": "job", # the resource type
+          "instances": [
+            [ # An array representing the topology path of an instance, the topology path must match the resource link of the instance view, business(biz) - job(job)
+              {
+                "type": "biz", # the first level of business of the resource in the instance view
+                "id": "biz1",
+              },
+              {
+                "type": "job", # The second level job of the resource topology path in the instance view
+                "id": "job1",
+              }
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+3. Example of an operation that associates multiple resource types:
+
+The `execute_job` operation of system `bk_job` associates resource type `job` with resource type `host` of system `bk_cmdb`,
+`job` registers the instance view `business(biz)`-`job(job)`, this instance view topology path has 2 levels,
+`bk_cmdb` with resource type `host` registers the instance view, ``business(biz)`-`cluster(set)`-`module(module)`-`host(host)`, this instance view topology path has 4 layers
+
+```json
+{
+  "system": "bk_job", # system of permissions
+  "actions": [
+    {
+      "id": "execute_job", # operation id
+      "associated_resource_types": [ # associated_resource_types, here you must pass several items, and the order of the resource types must be the same as the order of the resource types when registering the action
+        {
+          "system": "bk_job",
+          "type": "job",
+          "instances": [
+            [ # business(biz)-job(job)
+              {
+                "type": "biz",
+                "id": "biz1",
+              },
+              {
+                "type": "job",
+                "id": "job1",
+              }
+            ]
+          ]
+        },
+        {
+          "system": "bk_cmdb", # The system id to which the resource type belongs
+          "type": "host", # Another resource type that the operation depends on
+          "instances": [
+            [ # Topology path for layer 4, must match the resource link of the instance view: business(biz) - cluster(set) - module(module) - host
+              {
+                "type": "biz",
+                "id": "biz1",
+              }, {
+                "type": "set",
+                "id": "set1",
+              }, {
+                "type": "module",
+                "id": "module1",
+              }, {
+                "type": "host",
+                "id": "host1",
+              }
+            ]
+          ],
+          "attributes": [ # The values of the attributes that support the configuration instance, the combination of attributes and instances is AND
+            {
+              "id": "os", # key of the attribute
+              "name": "operating system",
+              "values": [
+                {
+                  "id": "linux", # the value of the attribute, can have more than one
+                  "name": "linux"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+#### Response
+
+
+```json
+{
+  "data": {
+    "url": "https://{PAAS_DOMAIN}/o/bk_iam_app/perm-apply?system_id=bk_job&amp;tid=09d432dccac74ec4aa17629f5f83715f" # link valid for 10 minutes
+  },
+  "result": true,
+  "code": 0,
+  "message": "OK"
+}
+```
+
+data
+
+| field | type | description |
+|:---|:---|:---|
+|url| string| permission request redirect URL|
+
+
+Return result error description
+
+Since the resource instance name, not the ID, needs to be displayed on the product after the jump application, the IAM (Identity and Access Management) will call back to query the access system
+1. If the query-related interface is not provided, the error code code=1902204
+2. if the name of the resource instance is not queried or the corresponding resource instance does not exist in the access system, the error code code=1902416
+3. it will check the resource types associated with the `related_resource_types` operation, `the order of resource types must be the same as the order of the operation registration`, if not, error code `1902417`

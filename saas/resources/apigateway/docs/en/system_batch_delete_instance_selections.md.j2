@@ -1,0 +1,34 @@
+### Batch delete instanceSelection
+
+----------
+{% include '_api_v1_model_instance_selections_delete.md.j2' %}
+----------
+
+#### Parameters
+
+|field |type |required |location |description |
+| :---| :--- | :---|:---|:---|
+| system_id | string | yes | path | system_id |
+|check_existence |boolean |no |query |default will check if id exists, if it doesn't, the delete will fail, set false to not check if id exists, go straight to delete ( `delete from table where id in []` ) |
+
+#### Request
+
+```json
+[
+    {
+        "id": "free_host"
+    },
+    {
+        "id": "biz_topology"
+    }
+]
+```
+#### Response
+
+```json
+{
+    "code": 0,
+    "message": "",
+    "data": {}
+}
+```

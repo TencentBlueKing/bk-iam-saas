@@ -12,7 +12,7 @@ from typing import List
 
 from pydantic import BaseModel
 
-from backend.service.constants import PolicyEnvConditionTypeEnum, PolicyEnvTypeEnum, SubjectType, WeekDayEnum
+from backend.service.constants import PolicyEnvConditionType, PolicyEnvType, SubjectType, WeekDayEnum
 from backend.service.models import (
     ApplicationAuthorizationScope,
     ApplicationEnvironment,
@@ -227,17 +227,17 @@ class EnvironmentColumnValue(BaseModel):
 
     @classmethod
     def from_environment(cls, environment: ApplicationEnvironment) -> "EnvironmentColumnValue":
-        type = BaseDictStrValue(value=dict(PolicyEnvTypeEnum.get_choices())[environment.type])
+        type = BaseDictStrValue(value=dict(PolicyEnvType.get_choices())[environment.type])
         condition = BaseDictListValue(value=[])
 
-        cond_type_dict = dict(PolicyEnvConditionTypeEnum.get_choices())
+        cond_type_dict = dict(PolicyEnvConditionType.get_choices())
         for cond in environment.condition:
             text = f"{cond_type_dict[cond.type]}: "
-            if cond.type == PolicyEnvConditionTypeEnum.TZ.value:
+            if cond.type == PolicyEnvConditionType.TZ.value:
                 text += cond.values[0].value
-            elif cond.type == PolicyEnvConditionTypeEnum.HMS.value:
+            elif cond.type == PolicyEnvConditionType.HMS.value:
                 text += f"{cond.values[0].value} -- {cond.values[1].value}"
-            elif cond.type == PolicyEnvConditionTypeEnum.WEEKDAY.value:
+            elif cond.type == PolicyEnvConditionType.WEEKDAY.value:
                 week_day_dict = dict(WeekDayEnum.get_choices())
                 text += ", ".join([week_day_dict[int(v.value)] for v in cond.values])
 
@@ -453,7 +453,7 @@ class GradeManagerForm(BaseModel):
     def from_application(cls, application_data: GradeManagerApplicationContent):
         form_data = [
             # 基本信息
-            BaseText(label="【分级管理员名称】", value=application_data.name),
+            BaseText(label="【管理空间名称】", value=application_data.name),
             BaseText(label="【描述】", value=application_data.description if application_data.description else "--"),
             BaseText(label="【成员列表】", value=";".join([f"{m.id}({m.name})" for m in application_data.members])),
             BaseText(label="【操作和实例范围】"),

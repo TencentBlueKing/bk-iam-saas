@@ -14,11 +14,11 @@
             v-if="!isHasPermTemplate"
             data-test-id="group_btn_showAddGroupPerm"
             @on-click="handleAddPerm">
-            <iam-guide
+            <!-- <iam-guide
                 type="add_group_perm_template"
                 direction="left"
                 :style="{ top: '-10px', left: '125px' }"
-                :content="$t(`m.guide['添加组权限']`)" />
+                :content="$t(`m.guide['添加组权限']`)" /> -->
         </render-action>
         <render-horizontal-block
             :label="$t(`m.grading['操作和资源范围']`)"
@@ -62,11 +62,11 @@
             style="margin-bottom: 16px;"
             data-test-id="group_btn_showAddGroupMember"
             @on-click="handleAddMember">
-            <iam-guide
+            <!-- <iam-guide
                 type="add_group_member"
                 direction="left"
                 :style="{ top: '-20px', left: '180px' }"
-                :content="$t(`m.guide['添加组成员']`)" />
+                :content="$t(`m.guide['添加组成员']`)" /> -->
         </render-action>
         <section v-else ref="memberRef">
             <render-member
@@ -100,6 +100,8 @@
             :template="tempalteDetailList"
             :aggregation="aggregationData"
             :authorization="authorizationData"
+            :external-template="externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn"
+            :perm-side-width="permSideWidth"
             @on-view="handleViewDetail"
             @on-add-custom="handleAddCustom"
             @on-edit-custom="handleEditCustom"
@@ -125,7 +127,7 @@
     import { bus } from '@/common/bus';
     import { CUSTOM_PERM_TEMPLATE_ID, PERMANENT_TIMESTAMP, SIX_MONTH_TIMESTAMP } from '@/common/constants';
     import { leavePageConfirm } from '@/common/leave-page-confirm';
-    import IamGuide from '@/components/iam-guide/index.vue';
+    // import IamGuide from '@/components/iam-guide/index.vue';
     import AddMemberDialog from '../components/iam-add-member';
     import RenderMember from '../components/render-member';
     import basicInfo from '../components/basic-info';
@@ -146,7 +148,7 @@
             basicInfo,
             renderAction,
             RenderMember,
-            IamGuide,
+            // IamGuide,
             AddPermSideslider,
             AddActionSideslider,
             ResourceInstanceTable,
@@ -187,11 +189,12 @@
                     isShow: false,
                     id: ''
                 },
-                curMap: null
+                curMap: null,
+                permSideWidth: 890
             };
         },
         computed: {
-            ...mapGetters(['user']),
+            ...mapGetters(['user', 'externalSystemId', 'externalSystemsLayout']),
             /**
              * isAggregateDisabled
              */
@@ -261,7 +264,7 @@
                 return this.tableList.length > 0;
             },
             isRatingManager () {
-                return this.user.role.type === 'rating_manager';
+                return ['rating_manager', 'subset_manager'].includes(this.user.role.type);
             },
             isSuperManager () {
                 return this.user.role.type === 'super_manager';
@@ -269,6 +272,13 @@
             curAuthorizationData () {
                 const data = Object.assign(this.authorizationData, this.authorizationDataByCustom);
                 return data;
+            }
+        },
+        watch: {
+            isShowAddSideslider (value) {
+                if (!value) {
+                    this.permSideWidth = 890;
+                }
             }
         },
         methods: {
@@ -285,12 +295,16 @@
              */
             handleAddCancel () {
                 this.isShowAddSideslider = false;
+                this.permSideWidth = 890;
             },
 
             /**
              * handleAddCustom
              */
             handleAddCustom () {
+                if (!this.externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn) {
+                    this.permSideWidth = 1090;
+                }
                 this.isShowAddActionSideslider = true;
             },
 
@@ -389,7 +403,7 @@
              * handleResSelect
              */
             handleResSelect (index, resIndex, condition, groupIndex, resItem) {
-                debugger;
+                // debugger;
                 if (this.curMap.size > 0) {
                     const item = this.tableList[index];
                     const actions = this.curMap.get(item.aggregationId) || [];
@@ -704,6 +718,9 @@
              * handleEditCustom
              */
             handleEditCustom () {
+                if (!this.externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn) {
+                    this.permSideWidth = 1090;
+                }
                 this.curActionValue = this.originalList.map(item => item.$id);
                 this.isShowAddActionSideslider = true;
             },
@@ -731,6 +748,23 @@
                 this.originalList = _.cloneDeep(payload);
                 this.aggregationDataByCustom = _.cloneDeep(aggregation);
                 this.authorizationDataByCustom = _.cloneDeep(authorization);
+                if (this.externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn) {
+                    if (this.originalList.length) {
+                        this.curActionValue = this.originalList.map(item => item.$id);
+                        this.handleSubmitPerm(
+                            [],
+                            this.aggregationDataByCustom,
+                            this.authorizationDataByCustom
+                        );
+                    } else {
+                        this.curActionValue = [];
+                        this.handleSubmitPerm(
+                            [],
+                            this.aggregationDataByCustom,
+                            this.authorizationDataByCustom
+                        );
+                    }
+                }
             },
 
             /**
@@ -771,12 +805,18 @@
                         templates
                     };
                     try {
-                        await this.$store.dispatch('userGroup/addUserGroup', params);
-                        this.messageSuccess(this.$t(`m.info['新建用户组成功']`), 1000);
-                        bus.$emit('show-guide', 'process');
-                        this.$router.push({
-                            name: 'userGroup'
-                        });
+                        const { code, data } = await this.$store.dispatch('userGroup/addUserGroup', params);
+                        if (code === 0 && data) {
+                            this.messageSuccess(this.$t(`m.info['新建用户组成功']`), 1000);
+                            if (this.externalSystemId) { // 如果用户组新建成功需要发送一个postmessage给外部页面
+                                window.parent.postMessage({ type: 'IAM', data, code: 'create_user_group_submit' }, '*');
+                            } else {
+                                bus.$emit('show-guide', 'process');
+                                this.$router.push({
+                                    name: 'userGroup'
+                                });
+                            }
+                        }
                     } catch (e) {
                         console.error(e);
                         this.bkMessageInstance = this.$bkMessage({
@@ -796,15 +836,19 @@
              * handleCancel
              */
             handleCancel () {
-                let cancelHandler = Promise.resolve();
-                if (window.changeDialog) {
-                    cancelHandler = leavePageConfirm();
+                if (this.externalSystemId) { // 用户组取消也需要发送一个postmessage给外部页面
+                    window.parent.postMessage({ type: 'IAM', code: 'create_user_group_cancel' }, '*');
+                } else {
+                    let cancelHandler = Promise.resolve();
+                    if (window.changeDialog) {
+                        cancelHandler = leavePageConfirm();
+                    }
+                    cancelHandler.then(() => {
+                        this.$router.push({
+                            name: 'userGroup'
+                        });
+                    }, _ => _);
                 }
-                cancelHandler.then(() => {
-                    this.$router.push({
-                        name: 'userGroup'
-                    });
-                }, _ => _);
             },
 
             /**
@@ -850,7 +894,8 @@
              * handleAddPerm
              */
             handleAddPerm () {
-                this.isShowAddSideslider = true;
+                this.externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn
+                    ? this.isShowAddActionSideslider = true : this.isShowAddSideslider = true;
             },
 
             /**
@@ -870,6 +915,19 @@
                 this.departments = _.cloneDeep(departments);
                 this.isShowMemberAdd = false;
                 this.isShowAddMemberDialog = false;
+            }
+        },
+        beforeRouteLeave (to, from, next) {
+            window.parent.postMessage({ type: 'IAM', code: 'create_user_group_cancel' }, '*');
+            let cancelHandler = Promise.resolve();
+            if (window.changeDialog) {
+                cancelHandler = leavePageConfirm();
+                cancelHandler.then(() => {
+                    // next({ path: `${window.SITE_URL}${to.fullPath.slice(1, to.fullPath.length)}` });
+                    next();
+                }, _ => _);
+            } else {
+                next();
             }
         }
     };

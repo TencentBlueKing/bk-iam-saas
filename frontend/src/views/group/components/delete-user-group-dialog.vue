@@ -21,7 +21,7 @@
                     {{ $t(`m.common['确定']`) }}
                 </bk-button>
                 <bk-button theme="default" style="margin-left: 10px;" @click="hideCancelDelete">
-                    {{ $t(`m.common['取消']`) }}
+                    {{ $t(`m.common['取消-dialog']`) }}
                 </bk-button>
             </div>
         </div>
@@ -76,6 +76,7 @@
             .delete-tips {
                 padding-left: 44px;
                 text-align: left;
+                word-break: break-all;
                 .warn {
                     color: #ffb848;
                 }

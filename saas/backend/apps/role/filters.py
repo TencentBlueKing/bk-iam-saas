@@ -10,15 +10,22 @@ specific language governing permissions and limitations under the License.
 """
 from django_filters import rest_framework as filters
 
-from backend.apps.role.models import Role, RoleCommonAction
+from backend.apps.role.models import Role, RoleCommonAction, RoleUser
+from backend.common.filters import InitialFilterSet
 
 
-class RatingMangerFilter(filters.FilterSet):
+class GradeMangerFilter(InitialFilterSet):
     name = filters.CharFilter(lookup_expr="icontains", label="名称")
+    hidden = filters.BooleanFilter(method="hidden_filter", initial=True)
 
     class Meta:
         model = Role
-        fields = ["name"]
+        fields = ["name", "hidden"]
+
+    def hidden_filter(self, queryset, name, value):
+        if value:
+            return queryset.filter(hidden=False)
+        return queryset
 
 
 class RoleCommonActionFilter(filters.FilterSet):
@@ -27,3 +34,15 @@ class RoleCommonActionFilter(filters.FilterSet):
     class Meta:
         model = RoleCommonAction
         fields = ["system_id"]
+
+
+class RoleSearchFilter(GradeMangerFilter):
+    member = filters.CharFilter(label="成员", method="member_filter")
+
+    class Meta:
+        model = Role
+        fields = ["name", "hidden", "member"]
+
+    def member_filter(self, queryset, name, value):
+        role_ids = list(RoleUser.objects.filter(username=value).values_list("role_id", flat=True))
+        return queryset.filter(id__in=role_ids)

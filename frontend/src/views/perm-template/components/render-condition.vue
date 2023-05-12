@@ -160,13 +160,17 @@
                     actions: this.params.actions.slice(0, 1)
                 };
                 try {
-                    const res = await this.$store.dispatch('permApply/resourceBatchCopy', params);
-                    console.warn(res);
-                    const condition = res.data[0].resource_type.condition;
-                    this.$emit('on-paste', {
-                        flag: true,
-                        data: condition
-                    });
+                    const { data } = await this.$store.dispatch('permApply/resourceBatchCopy', params);
+                    console.warn(data);
+                    if (data && data.length) {
+                        const condition = data[0].resource_type.condition;
+                        this.$emit('on-paste', {
+                            flag: true,
+                            data: condition
+                        });
+                    } else {
+                        this.messageError(this.$t(`m.info['暂无可批量复制包含有属性条件的资源实例']`), 2000);
+                    }
                 } catch (e) {
                     this.$emit('on-paste', {
                         flag: false,
@@ -234,7 +238,8 @@
         display: flex;
         justify-content: flex-start;
         position: relative;
-        padding: 0 6px;
+        /* padding: 0 6px; */
+        padding: 0 12px;
         width: 100%;
         line-height: 1;
         vertical-align: middle;

@@ -1,6 +1,6 @@
 <template>
-    <div class="iam-grading-admin-detail-wrapper">
-        <p class="edit-action" v-show="$route.params.id">
+    <div class="iam-grading-admin-detail-wrapper" v-bkloading="{ isLoading: loading, opacity: 1 }">
+        <p class="edit-action" v-show="curRoleType !== 'subset_manager'">
             {{ $t(`m.levelSpace['如需编辑授权边界的内容请点击']`) }}
             <bk-button
                 theme="primary"
@@ -15,38 +15,111 @@
                 <basic-info
                     :data="formData"
                     ref="basicInfoRef"
-                    :id="$route.params.id"
+                    :id="curRoleId"
+                    :mode="['rating_manager'].includes(user.role.type) ? 'edit' : 'detail'"
                     @on-change="handleBasicInfoChange" />
             </render-horizontal-block>
 
-            <render-perm
-                :title="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
-                :perm-length="policyList.length"
-                :expanded.sync="curExpanded"
-                ext-cls="iam-grade-detail-panel-cls">
-                <render-detail-table :actions="policyList" />
-            </render-perm>
+            <!-- <div>
+                <render-perm
+                    mode="action"
+                    :title="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
+                    :expanded.sync="curExpanded"
+                    :perm-length="policyList.length"
+                    :user-length="users.length"
+                    :depart-length="departments.length"
+                    ext-cls="iam-grade-detail-panel-cls">
+                    <render-detail-table :actions="policyList" />
+                    <div class="members-boundary">
+                        <template v-if="isAll">
+                            <span class="all-item">{{ $t(`m.common['全员']`) }}(All)</span>
+                        </template>
+                        <template v-else>
+                            <p class="member-info">
+                                <template v-if="users.length > 0">
+                                    {{ $t(`m.common['共']`) }} <span class="count">
+                                        {{ users.length }}</span> {{ $t(`m.common['个用户']`) }}
+                                </template>
+                                <template v-if="departments.length > 0">
+                                    <template v-if="users.length > 0">，</template>
+                                    <span class="count">{{ departments.length }}</span> {{ $t(`m.common['个组织']`) }}
+                                </template>
+                            </p>
+                            <render-member-item :data="users" v-if="isHasUser" mode="view" />
+                            <render-member-item
+                            :data="departments"
+                             type="department"
+                             mode="view"
+                             v-if="isHasDepartment" />
+                        </template>
+                    </div>
+                </render-perm>
 
-            <render-perm
-                :title="$t(`m.levelSpace['最大可授权人员边界']`)">
-                <template v-if="isAll">
-                    <span class="all-item">{{ $t(`m.common['全员']`) }}(All)</span>
-                </template>
-                <template v-else>
-                    <p class="member-info">
-                        <!-- eslint-disable max-len -->
-                        <template v-if="users.length > 0">
-                            {{ $t(`m.common['共']`) }} <span class="count">{{ users.length }}</span> {{ $t(`m.common['个用户']`) }}
-                        </template>
-                        <template v-if="departments.length > 0">
-                            <template v-if="users.length > 0">，</template>
-                            <span class="count">{{ departments.length }}</span> {{ $t(`m.common['个组织']`) }}
-                        </template>
-                    </p>
-                    <render-member-item :data="users" v-if="isHasUser" mode="view" />
-                    <render-member-item :data="departments" type="department" mode="view" v-if="isHasDepartment" />
-                </template>
-            </render-perm>
+                <render-perm
+                    mode="member"
+                    :title="$t(`m.levelSpace['最大可授权人员边界']`)"
+                    :user-length="users.length"
+                    :depart-length="departments.length"
+                >
+                    <template v-if="isAll">
+                        <span class="all-item">{{ $t(`m.common['全员']`) }}(All)</span>
+                    </template>
+                    <template v-else>
+                        <p class="member-info">
+                            <template v-if="users.length > 0">
+                                {{ $t(`m.common['共']`) }}
+                                <span class="count">{{ users.length }}</span>
+                                {{ $t(`m.common['个用户']`) }}
+                            </template>
+                            <template v-if="departments.length > 0">
+                                <template v-if="users.length > 0">，</template>
+                                <span class="count">{{ departments.length }}</span> {{ $t(`m.common['个组织']`) }}
+                            </template>
+                        </p>
+                        <render-member-item :data="users" v-if="isHasUser" mode="view" />
+                        <render-member-item :data="departments" type="department" mode="view" v-if="isHasDepartment" />
+                    </template>
+                </render-perm>
+            </div> -->
+
+            <RenderPermBoundary
+                :title="$t(`m.nav['授权边界']`)"
+                :modules="['resourcePerm', 'membersPerm']"
+                :resource-title="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
+                :members-title="$t(`m.levelSpace['最大可授权人员边界']`)"
+                :perm-length="policyList.length"
+                :user-length="users.length"
+                :depart-length="departments.length"
+                @on-expanded="handleExpanded"
+                ext-cls="iam-grade-detail-panel-cls"
+            >
+                <div
+                    slot="resourcePerm"
+                    class="resources-boundary-detail"
+                >
+                    <render-detail-table :actions="policyList" />
+                </div>
+                <div
+                    slot="membersPerm"
+                    class="members-boundary-detail"
+                >
+                    <!-- <template v-if="isAll">
+                        <span class="all-item">{{ $t(`m.common['全员']`) }}(All)</span>
+                    </template> -->
+                    <template>
+                        <render-member-item
+                            :data="users"
+                            mode="view"
+                            v-if="isHasUser"
+                        />
+                        <render-member-item
+                            mode="view"
+                            type="department"
+                            :data="departments"
+                            v-if="isHasDepartment" />
+                    </template>
+                </div>
+            </RenderPermBoundary>
         </div>
     </div>
 </template>
@@ -56,14 +129,16 @@
     import { mapGetters } from 'vuex';
     import BasicInfo from '../components/basic-info-detail';
     import RenderDetailTable from '@/views/manage-spaces/components/render-instance-detail-table';
-    import RenderPerm from '@/components/render-perm';
+    // import RenderPerm from '@/components/render-perm';
+    import RenderPermBoundary from '@/components/render-perm-boundary';
     import RenderMemberItem from '@/views/group/common/render-member-display';
     export default {
         components: {
             BasicInfo,
-            RenderPerm,
+            // RenderPerm,
             RenderMemberItem,
-            RenderDetailTable
+            RenderDetailTable,
+            RenderPermBoundary
         },
         data () {
             return {
@@ -72,7 +147,8 @@
                 policyList: [],
                 infoText: this.$t(`m.grading['选择提示']`),
                 curExpanded: false,
-                isAll: false
+                isAll: false,
+                loading: false
             };
         },
         computed: {
@@ -84,22 +160,29 @@
             },
             isHasDepartment () {
                 return this.departments.length > 0;
+            },
+            curRoleId () {
+                return this.user.role.id;
+            },
+            curRoleType () {
+                return this.user.role.type;
+            }
+        },
+        watch: {
+            '$route': {
+                handler () {
+                    this.fetchRatingManagerDetail();
+                },
+                immediate: true
             }
         },
         methods: {
-            /**
-             * @description: fetchPageData 进入页面时在路由文件中统一请求 @/router/index.js
-             * @param {*}
-             * @return {*}
-             */
-            async fetchPageData () {
-                await this.fetchRatingManagerDetail();
-            },
-
             async fetchRatingManagerDetail () {
-                if (this.$route.params.id) {
+                if (this.curRoleId) {
                     try {
-                        const res = await this.$store.dispatch('role/getRatingManagerDetail', { id: this.$route.params.id });
+                        this.loading = true;
+                        const fetchUrl = this.curRoleType === 'subset_manager' ? 'spaceManage/getSecondManagerDetail' : 'role/getRatingManagerDetail';
+                        const res = await this.$store.dispatch(fetchUrl, { id: this.curRoleId });
                         this.getDetailData(res.data);
                     } catch (e) {
                         console.error(e);
@@ -110,6 +193,8 @@
                             ellipsisLine: 2,
                             ellipsisCopy: true
                         });
+                    } finally {
+                        this.loading = false;
                     }
                 }
             },
@@ -128,7 +213,7 @@
                 });
                 this.formData = Object.assign({}, {
                     name,
-                    description: description || '--',
+                    description,
                     members
                 });
                 // this.$store.commit('setHeaderTitle', name);
@@ -137,13 +222,22 @@
                         departments.push({
                             name: item.name,
                             count: item.member_count,
-                            fullName: item.full_name
+                            fullName: item.full_name,
+                            full_name: item.full_name || item.fullName
                         });
                     }
                     if (item.type === 'user') {
                         users.push({
                             name: item.name,
-                            username: item.id
+                            username: item.id,
+                            full_name: item.full_name || item.fullName
+                        });
+                    }
+                    if (item.id === '*' && item.type === '*') {
+                        departments.push({
+                            name: this.$t(`m.common['全员']`),
+                            count: 'All',
+                            full_name: `${this.$t(`m.common['全员']`)}(All)`
                         });
                     }
                 });
@@ -164,12 +258,10 @@
             },
 
             handleEdit () {
-                const { id, type } = this.$route.params;
                 this.$router.push({
-                    name: type === 'first' ? 'authorBoundaryEditFirstLevel' : 'authorBoundaryEditSecondLevel',
+                    name: this.curRoleType === 'subset_manager' ? 'authorBoundaryEditSecondLevel' : 'authorBoundaryEditFirstLevel',
                     params: {
-                        id,
-                        type
+                        id: this.curRoleId
                     }
                 });
             },
@@ -215,7 +307,7 @@
             color: #979ba5;
         }
         .horizontal-item .label {
-            width: 126px;
+            width: 120px;
         }
         /* .horizontal-item .content {
             margin-left: 42px;

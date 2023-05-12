@@ -8,12 +8,12 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from rest_framework.request import Request
 
 from backend.component import itsm
-from backend.service.constants import ApplicationStatus, ApplicationTypeEnum, ProcessorSourceEnum
+from backend.service.constants import ApplicationStatus, ApplicationType, ProcessorSource, SubjectType
 from backend.service.models import (
     ApplicationTicket,
     ApprovalProcessWithNodeProcessor,
@@ -54,7 +54,7 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
         node_processors_dict = {
             node.id: ",".join(node.processors)
             for node in process.nodes
-            if node.processor_source == ProcessorSourceEnum.IAM.value
+            if node.processor_source == ProcessorSource.IAM.value
         }
 
         # 申请人的组织架构
@@ -67,7 +67,7 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
             "creator": data.applicant_info.username,
             "callback_url": callback_url,
             "node_processors": node_processors_dict,
-            "application_type_display": ApplicationTypeEnum.get_choice_label(data.type),
+            "application_type_display": ApplicationType.get_choice_label(data.type),
             "organization_names": organization_names,
             "reason": data.reason,
         }
@@ -88,39 +88,71 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
         if process.has_instance_approver_node():
             params["has_instance_approver"] = int(process.has_instance_approver_node(judge_empty=True))
 
+        # 在params中加上权限获得者
+        params["applicants"] = ", ".join(
+            [
+                "{}: {}({})".format("用户" if u.type == SubjectType.USER.value else "部门", u.display_name, u.id)
+                for u in data.content.applicants
+            ]
+        )
+
         ticket = itsm.create_ticket(**params)
         return ticket["sn"]
 
     def create_for_group(
-        self, data: GroupApplicationData, process: ApprovalProcessWithNodeProcessor, callback_url: str
+        self, data: GroupApplicationData, process: ApprovalProcessWithNodeProcessor, callback_url: str, tag: str = ""
     ) -> str:
         """创建 - 申请加入或续期用户组单据"""
         params = self._generate_ticket_common_params(data, process, callback_url)
 
         title_prefix = (
             f"申请加入 {len(data.content.groups)} 个用户组"
-            if data.type == ApplicationTypeEnum.JOIN_GROUP
+            if data.type == ApplicationType.JOIN_GROUP
             else f"申请续期 {len(data.content.groups)} 个用户组"
         )
         params["title"] = "{}：{}".format(title_prefix, "、".join([one.name for one in data.content.groups]))
 
         params["content"] = {"schemes": FORM_SCHEMES, "form_data": [GroupTable.from_application(data.content).dict()]}
+
+        # 在params中加上权限获得者
+        params["applicants"] = ", ".join(
+            [
+                "{}: {}({})".format("用户" if u.type == SubjectType.USER.value else "部门", u.display_name, u.id)
+                for u in data.content.applicants
+            ]
+        )
+
+        params["tag"] = tag
         ticket = itsm.create_ticket(**params)
         return ticket["sn"]
 
     def create_for_grade_manager(
-        self, data: GradeManagerApplicationData, process: ApprovalProcessWithNodeProcessor, callback_url: str
+        self,
+        data: GradeManagerApplicationData,
+        process: ApprovalProcessWithNodeProcessor,
+        callback_url: str,
+        approval_title: str = "",
+        approval_content: Optional[Dict] = None,
+        tag: str = "",
     ) -> str:
         """创建 - 创建或更新分级管理员"""
         params = self._generate_ticket_common_params(data, process, callback_url)
 
-        title_prefix = "申请创建分级管理员" if data.type == ApplicationTypeEnum.CREATE_RATING_MANAGER.value else "申请编辑分级管理员"
-        params["title"] = f"{title_prefix}：{data.content.name}"
+        if approval_title:
+            params["title"] = approval_title
+        else:
+            title_prefix = "申请创建管理空间" if data.type == ApplicationType.CREATE_GRADE_MANAGER.value else "申请编辑管理空间"
+            params["title"] = f"{title_prefix}：{data.content.name}"
 
-        params["content"] = {
-            "schemes": FORM_SCHEMES,
-            "form_data": GradeManagerForm.from_application(data.content).form_data,
-        }
+        if approval_content:
+            params["content"] = approval_content
+        else:
+            params["content"] = {
+                "schemes": FORM_SCHEMES,
+                "form_data": GradeManagerForm.from_application(data.content).form_data,
+            }
+
+        params["tag"] = tag
         ticket = itsm.create_ticket(**params)
         return ticket["sn"]
 

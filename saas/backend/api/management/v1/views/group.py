@@ -17,7 +17,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from backend.api.authentication import ESBAuthentication
-from backend.api.management.constants import ManagementAPIEnum, VerifyAPIParamLocationEnum
+from backend.api.management.constants import ManagementAPIEnum, VerifyApiParamLocationEnum
 from backend.api.management.v1.permissions import ManagementAPIPermission
 from backend.api.management.v1.serializers import (
     ManagementGradeManagerGroupCreateSLZ,
@@ -43,11 +43,13 @@ from backend.apps.group.models import Group
 from backend.apps.group.serializers import GroupAddMemberSLZ
 from backend.apps.role.models import Role
 from backend.audit.audit import add_audit, audit_context_setter, view_audit_decorator
-from backend.biz.group import GroupBiz, GroupCheckBiz, GroupCreateBean, GroupTemplateGrantBean
+from backend.audit.constants import AuditSourceType
+from backend.biz.group import GroupBiz, GroupCheckBiz, GroupCreationBean, GroupTemplateGrantBean
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleBiz, RoleListQuery
+from backend.common.lock import gen_group_upsert_lock
 from backend.common.pagination import CompatiblePagination
-from backend.service.constants import RoleType, SubjectType
+from backend.service.constants import GroupSaaSAttributeEnum, RoleType
 from backend.service.models import Subject
 from backend.trans.open_management import ManagementCommonTrans
 
@@ -59,12 +61,12 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
     permission_classes = [ManagementAPIPermission]
 
     management_api_permission = {
-        "create": (VerifyAPIParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.GROUP_BATCH_CREATE.value),
-        "list": (VerifyAPIParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.GROUP_LIST.value),
+        "create": (VerifyApiParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.GROUP_BATCH_CREATE.value),
+        "list": (VerifyApiParamLocationEnum.ROLE_IN_PATH.value, ManagementAPIEnum.GROUP_LIST.value),
     }
 
     lookup_field = "id"
-    queryset = Role.objects.filter(type=RoleType.RATING_MANAGER.value).order_by("-updated_time")
+    queryset = Role.objects.filter(type=RoleType.GRADE_MANAGER.value).order_by("-updated_time")
     pagination_class = CompatiblePagination
 
     group_biz = GroupBiz()
@@ -83,15 +85,28 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
         serializer.is_valid(raise_exception=True)
         groups_data = serializer.validated_data["groups"]
 
-        # 用户组名称在角色内唯一
-        group_names = [g["name"] for g in groups_data]
-        self.group_check_biz.batch_check_role_group_names_unique(role.id, group_names)
         # 用户组数量在角色内是否超限
         self.group_check_biz.check_role_group_limit(role, len(groups_data))
 
-        groups = self.group_biz.batch_create(
-            role.id, parse_obj_as(List[GroupCreateBean], groups_data), request.user.username
-        )
+        infos = parse_obj_as(List[GroupCreationBean], groups_data)
+        # NOTE: 兼容v2 api记录用户组来源系统, 是否隐藏
+        for one in infos:
+            one.source_system_id = role.source_system_id
+            one.hidden = role.hidden
+
+        with gen_group_upsert_lock(role.id):
+            # 用户组名称在角色内唯一
+            group_names = [g["name"] for g in groups_data]
+            self.group_check_biz.batch_check_role_group_names_unique(role.id, group_names)
+
+            groups = self.group_biz.batch_create(
+                role.id,
+                infos,
+                request.user.username,
+                attrs={
+                    GroupSaaSAttributeEnum.SOURCE_TYPE.value: AuditSourceType.OPENAPI.value,
+                },
+            )
 
         # 添加审计信息
         # TODO: 后续其他地方也需要批量添加审计时再抽象出一个batch_add_audit方法，将for循环逻辑放到方法里
@@ -139,8 +154,8 @@ class ManagementGroupViewSet(GenericViewSet):
     permission_classes = [ManagementAPIPermission]
 
     management_api_permission = {
-        "update": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.GROUP_UPDATE.value),
-        "destroy": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.GROUP_DELETE.value),
+        "update": (VerifyApiParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.GROUP_UPDATE.value),
+        "destroy": (VerifyApiParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.GROUP_DELETE.value),
     }
 
     lookup_field = "id"
@@ -172,10 +187,12 @@ class ManagementGroupViewSet(GenericViewSet):
 
         # 用户组名称在角色内唯一
         role = self.role_biz.get_role_by_group_id(group.id)
-        self.group_check_biz.check_role_group_name_unique(role.id, name, group.id)
 
-        # 更新
-        group = self.biz.update(group, name, description, user_id)
+        with gen_group_upsert_lock(role.id):
+            self.group_check_biz.check_role_group_name_unique(role.id, name, group.id)
+
+            # 更新
+            group = self.biz.update(group, name, description, user_id)
 
         # 写入审计上下文
         audit_context_setter(group=group)
@@ -206,9 +223,9 @@ class ManagementGroupMemberViewSet(GenericViewSet):
     permission_classes = [ManagementAPIPermission]
 
     management_api_permission = {
-        "list": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.GROUP_MEMBER_LIST.value),
-        "create": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.GROUP_MEMBER_ADD.value),
-        "destroy": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.GROUP_MEMBER_DELETE.value),
+        "list": (VerifyApiParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.GROUP_MEMBER_LIST.value),
+        "create": (VerifyApiParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.GROUP_MEMBER_ADD.value),
+        "destroy": (VerifyApiParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.GROUP_MEMBER_DELETE.value),
     }
 
     lookup_field = "id"
@@ -296,8 +313,8 @@ class ManagementGroupPolicyViewSet(GenericViewSet):
     permission_classes = [ManagementAPIPermission]
 
     management_api_permission = {
-        "create": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.GROUP_POLICY_GRANT.value),
-        "destroy": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.GROUP_POLICY_REVOKE.value),
+        "create": (VerifyApiParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.GROUP_POLICY_GRANT.value),
+        "destroy": (VerifyApiParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.GROUP_POLICY_REVOKE.value),
     }
 
     lookup_field = "id"
@@ -344,7 +361,7 @@ class ManagementGroupPolicyViewSet(GenericViewSet):
 
         # Note: 这里不能使用 group_biz封装的"异步"授权（其是针对模板权限的），否则会导致连续授权时，第二次调用会失败
         # 这里主要是针对自定义授权，直接使用policy_biz提供的方法即可
-        self.policy_biz.alter(system_id, Subject(type=SubjectType.GROUP.value, id=group.id), policy_list.policies)
+        self.policy_biz.alter(system_id, Subject.from_group_id(group.id), policy_list.policies)
 
         # 写入审计上下文
         audit_context_setter(group=group, system_id=system_id, policies=policy_list.policies)
@@ -374,7 +391,7 @@ class ManagementGroupPolicyViewSet(GenericViewSet):
 
         # Note: 这里不能使用 group_biz封装的"异步"变更权限（其是针对模板权限的），否则会导致连续授权时，第二次调用会失败
         # 这里主要是针对自定义授权的回收，直接使用policy_biz提供的方法即可
-        self.policy_biz.revoke(system_id, Subject(type=SubjectType.GROUP.value, id=group.id), policy_list.policies)
+        self.policy_biz.revoke(system_id, Subject.from_group_id(group.id), policy_list.policies)
 
         # 写入审计上下文
         audit_context_setter(group=group, system_id=system_id, policies=policy_list.policies)
@@ -389,7 +406,7 @@ class ManagementGroupActionPolicyViewSet(GenericViewSet):
     permission_classes = [ManagementAPIPermission]
 
     management_api_permission = {
-        "destroy": (VerifyAPIParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.GROUP_POLICY_DELETE.value),
+        "destroy": (VerifyApiParamLocationEnum.GROUP_IN_PATH.value, ManagementAPIEnum.GROUP_POLICY_DELETE.value),
     }
 
     lookup_field = "id"
@@ -417,15 +434,11 @@ class ManagementGroupActionPolicyViewSet(GenericViewSet):
         action_ids = [a["id"] for a in data["actions"]]
 
         # 查询将要被删除PolicyID列表
-        policies = self.policy_query_biz.list_by_subject(
-            system_id, Subject(type=SubjectType.GROUP.value, id=group.id), action_ids
-        )
+        policies = self.policy_query_biz.list_by_subject(system_id, Subject.from_group_id(group.id), action_ids)
 
         # 根据PolicyID删除策略
         policy_ids = [p.policy_id for p in policies]
-        self.policy_operation_biz.delete_by_ids(
-            system_id, Subject(type=SubjectType.GROUP.value, id=group.id), policy_ids
-        )
+        self.policy_operation_biz.delete_by_ids(system_id, Subject.from_group_id(group.id), policy_ids)
 
         # 写入审计上下文
         audit_context_setter(group=group, system_id=system_id, policies=policies)

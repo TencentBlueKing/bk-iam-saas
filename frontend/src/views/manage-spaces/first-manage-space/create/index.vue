@@ -6,7 +6,7 @@
             </section>
         </render-horizontal-block>
         <render-horizontal-block
-            :label="$t(`m.levelSpace['最大可授权范围操作和资源边界']`)"
+            :label="$t(`m.levelSpace['最大可授权操作和资源边界']`)"
             v-if="isSelectSystem || isSelectSystemShow">
             <div class="grade-admin-select-wrapper">
                 <div class="action">
@@ -61,7 +61,7 @@
                 </div>
             </div>
         </render-horizontal-block>
-        <p class="action-empty-error" v-if="isShowActionEmptyError">{{ $t(`m.verify['操作和资源边界范围不可为空']`) }}</p>
+        <p class="action-empty-error" v-if="isShowActionEmptyError">{{ $t(`m.verify['操作和资源边界不可为空']`) }}</p>
         <section v-if="isShowMemberAdd" ref="memberRef">
             <render-action
                 ref="memberRef"
@@ -164,7 +164,7 @@
                 reason: '',
                 tips: this.$t(`m.grading['添加操作提示']`),
                 infoText: this.$t(`m.grading['选择提示']`),
-                addMemberTips: this.$t(`m.levelSpace['一级管理空间缩小/修改授权边界时，同步修改相关的二级管理空间的授权边界']`),
+                addMemberTips: this.$t(`m.levelSpace['管理空间缩小/修改授权边界时，同步修改相关的二级管理空间的授权边界']`),
                 addMemberTitle: this.$t(`m.levelSpace['最大可授权人员边界']`),
                 submitLoading: false,
                 isShowAddMemberDialog: false,
@@ -243,7 +243,7 @@
             }
         },
         mounted () {
-            this.formData.members = [this.user.username];
+            this.formData.members = [{ username: this.user.username, readonly: true }];
         },
         methods: {
             async fetchPageData () {
@@ -833,7 +833,7 @@
                 try {
                     await this.$store.dispatch('role/addRatingManager', params);
                     await this.$store.dispatch('roleList');
-                    this.messageSuccess(this.$t(`m.info['新建分级管理员成功']`), 1000);
+                    this.messageSuccess(this.$t(`m.info['新建管理空间成功']`), 1000);
                     this.$router.push({
                         name: 'ratingManager'
                     });

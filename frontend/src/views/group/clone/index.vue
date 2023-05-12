@@ -50,6 +50,7 @@
                         :authorization="curAuthorizationData"
                         :original-list="tableListBackup"
                         :is-all-expanded="isAllExpanded"
+                        :group-id="groupId"
                         @handleAggregateAction="handleAggregateAction"
                         @on-select="handleAttrValueSelected"
                         @on-resource-select="handleResSelect" />
@@ -100,6 +101,7 @@
             :template="tempalteDetailList"
             :aggregation="aggregationData"
             :authorization="authorizationData"
+            :external-template="externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn"
             @on-view="handleViewDetail"
             @on-add-custom="handleAddCustom"
             @on-edit-custom="handleEditCustom"
@@ -197,7 +199,7 @@
             };
         },
         computed: {
-            ...mapGetters(['user']),
+            ...mapGetters(['user', 'externalSystemsLayout', 'externalSystemId']),
             /**
              * isAggregateDisabled
              */
@@ -268,7 +270,7 @@
                 return this.tableList.length > 0;
             },
             isRatingManager () {
-                return this.user.role.type === 'rating_manager';
+                return ['rating_manager', 'subset_manager'].includes(this.user.role.type);
             },
             isSuperManager () {
                 return this.user.role.type === 'super_manager';
@@ -281,19 +283,57 @@
                 return data;
             }
         },
-        mounted () {
-            this.formData.name = `${this.$route.query.name}_克隆`;
-            this.formData.description = this.$route.query.description;
+        async mounted () {
+            // this.formData.name = `${this.$route.query.name}_${this.$t(`m.grading['克隆']`)}`;
+            // this.formData.description = this.$route.query.description;
             this.groupId = this.$route.query.id;
-            console.log(this.groupId, this.groupId);
-            this.handleInit();
+            await this.handleInit();
         },
         methods: {
-            // 先请求最外层数据（系统）
             async handleInit () {
+                if (this.groupId) {
+                    this.fetchDetail();
+                    this.fetchGroupSystem();
+                }
+            },
+
+            async fetchDetail () {
+                try {
+                    const params = {
+                        id: this.groupId
+                    };
+                    if (this.externalSystemId) {
+                        params.hidden = false;
+                    }
+                    const { data } = await this.$store.dispatch('userGroup/getUserGroupDetail', params);
+                    const { name, description } = data;
+                    this.formData = Object.assign(this.formData, {
+                        name: `${name}_${this.$t(`m.grading['克隆']`)}`,
+                        description
+                    });
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                }
+            },
+            
+            // 先请求最外层数据（系统）
+            async fetchGroupSystem () {
                 this.tableList = [];
                 try {
-                    const res = await this.$store.dispatch('userGroup/getGroupSystems', { id: this.groupId });
+                    const params = {
+                        id: this.groupId
+                    };
+                    if (this.externalSystemId) {
+                        params.hidden = false;
+                    }
+                    const res = await this.$store.dispatch('userGroup/getGroupSystems', params);
                     this.groupSystemList = res.data || []; // groupSystemList会通过handleExpanded调用其他方法做属性的添加
                     this.groupSystemListLength = res.data.length;
                     console.log('this.groupSystemList', this.groupSystemList);
@@ -1124,6 +1164,10 @@
                 this.isShowMemberAdd = false;
                 this.isShowAddMemberDialog = false;
             }
+        },
+        beforeRouteLeave (to, from, next) {
+            delete to.query.id;
+            next();
         }
     };
 </script>

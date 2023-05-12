@@ -308,11 +308,6 @@
                 }
             }
         }
-        .reason-empty-wrapper {
-            margin-top: 5px;
-            font-size: 12px;
-            color: #ff4d4d;
-    }
     }
     .buttonBox {
         margin-left:22px
@@ -343,7 +338,8 @@
                     display: inline-block;
                     font-size: 12px;
                     color: #3A84FF;
-                    width: 44px;
+                    /* width: 44px; */
+                    padding: 0 5px;
                     height: 22px;
                     line-height: 22px;
                     background: #EDF4FF;
@@ -385,4 +381,16 @@
 .expired-text{
     font-size: 12px;
     color: #63656e;
+}
+
+.is-member-empty-cls {
+    .user-selector-container {
+        border-color: #ff4d4d;
+    }
+}
+.perm-recipient-error,
+.reason-empty-wrapper {
+    margin-top: 5px;
+    font-size: 12px;
+    color: #ff4d4d;
 }

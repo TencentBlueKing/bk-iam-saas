@@ -31,17 +31,17 @@
                 isActive: false,
                 immediatelyShow: false,
                 effectWeekList: {
-                    1: '每周一',
-                    2: '每周二',
-                    3: '每周三',
-                    4: '每周四',
-                    5: '每周五',
-                    6: '每周六',
-                    0: '每周日'
+                    1: this.$t(`m.info['每周一']`),
+                    2: this.$t(`m.info['每周二']`),
+                    3: this.$t(`m.info['每周三']`),
+                    4: this.$t(`m.info['每周四']`),
+                    5: this.$t(`m.info['每周五']`),
+                    6: this.$t(`m.info['每周六']`),
+                    0: this.$t(`m.info['每周日']`)
                 },
                 effectWeekTimeZone: GLOBAL_TIME_ZONE_ENUM,
                 effectType: {
-                    'period_daily': '时间'
+                    'period_daily': this.$t(`m.info['时间']`)
                 }
             };
         },
@@ -50,7 +50,7 @@
             value: {
                 handler (val) {
                     if (!val || !val.length) {
-                        this.curValue = '无生效条件';
+                        this.curValue = this.$t(`m.common['无生效条件']`);
                     } else {
                         this.curValue = val.reduce((p, v) => {
                             let curValue = '';
@@ -89,9 +89,9 @@
                                 prev = `${prev}${hms}${tz}${weekday}`;
                                 return prev;
                             }, '');
-                            p = `${this.effectType[v.type]}: ${p}${weekCopy ? '' : '每天'}${curValue}${this.effectType[v.type]}生效`;
+                            p = `${this.effectType[v.type]}: ${p}${weekCopy ? '' : this.$t(`m.info['每天']`)}${curValue}${this.effectType[v.type]}${this.$t(`m.info['生效']`)}`;
                             return p;
-                        }, '在');
+                        }, this.$t(`m.info['在']`));
                         this.effectConditionData = _.cloneDeep(val);
                     }
                 },

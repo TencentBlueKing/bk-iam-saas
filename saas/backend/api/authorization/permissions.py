@@ -12,7 +12,7 @@ from rest_framework import permissions
 
 from backend.api.mixins import SystemClientCheckMixin
 
-from .constants import VerifyAPIParamLocationEnum
+from .constants import VerifyApiParamLocationEnum
 from .mixins import AuthorizationAPIAllowListCheckMixin
 from .serializers import AuthActionSLZ, AuthActionsSLZ, AuthResourceTypeSLZ, AuthSystemSLZ
 
@@ -71,11 +71,11 @@ class AuthorizationAPIPermission(
         self.verify_system_client(system_id, app_code)
 
         # 如果仅仅是校验System，则上面已校验，可以直接忽略了
-        if param_source == VerifyAPIParamLocationEnum.SYSTEM_IN_BODY.value:
+        if param_source == VerifyApiParamLocationEnum.SYSTEM_IN_BODY.value:
             return
 
         # 资源类型
-        if param_source == VerifyAPIParamLocationEnum.RESOURCE_TYPE_IN_BODY.value:
+        if param_source == VerifyApiParamLocationEnum.RESOURCE_TYPE_IN_BODY.value:
             slz = AuthResourceTypeSLZ(data=request.data)
             slz.is_valid(raise_exception=True)
             resource_type_id = slz.validated_data["type"]
@@ -83,14 +83,14 @@ class AuthorizationAPIPermission(
             return
 
         # 操作
-        if param_source == VerifyAPIParamLocationEnum.ACTION_IN_BODY.value:
+        if param_source == VerifyApiParamLocationEnum.ACTION_IN_BODY.value:
             slz = AuthActionSLZ(data=request.data)
             slz.is_valid(raise_exception=True)
             action_id = slz.validated_data["action"]["id"]
             self.verify_api(system_id, action_id, api)
             return
 
-        if param_source == VerifyAPIParamLocationEnum.ACTIONS_IN_BODY.value:
+        if param_source == VerifyApiParamLocationEnum.ACTIONS_IN_BODY.value:
             slz = AuthActionsSLZ(data=request.data)
             slz.is_valid(raise_exception=True)
             action_ids = [a["id"] for a in slz.validated_data["actions"]]

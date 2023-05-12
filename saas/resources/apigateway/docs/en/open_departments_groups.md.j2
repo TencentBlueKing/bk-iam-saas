@@ -1,0 +1,33 @@
+### Query the list of groups joined by a department
+
+
+#### Parameters
+
+| Field | Type | Required | Location | Description |
+| :--- | :--- | :--- |:---|:--- |
+| department_id | string | yes | path | department_id |
+
+Example: `inherit=true`
+
+#### Request
+
+#### Response
+
+```json
+{
+    "code": 0,
+    "message": "ok",
+    "data": [
+        {
+            "type": "group",
+            "id": "143",
+            "name": "Test User Group A"
+        },
+        {
+            "type": "group",
+            "id": "176",
+            "name": "Test User Group B"
+        }
+    ]
+}
+```

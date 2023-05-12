@@ -27,7 +27,7 @@
 /**
  * 获取不同身份的router差异
  *
- * @param {String} payload 身份类型(staff: 普通用户，super_manager: 超级用户，system_manager: 系统管理员，rating_manager: 分级管理员)
+ * @param {String} payload 身份类型(staff: 普通用户，super_manager: 超级用户，system_manager: 系统管理员，rating_manager: 管理空间)
  *
  * @return {Array}
  */
@@ -50,8 +50,10 @@ export const getRouterDiff = (payload) => {
             'addGroupPerm',
             'resourcePermiss',
             'firstManageSpace',
+            'ratingManager',
             'secondaryManageSpace',
-            'authorBoundary'
+            'authorBoundary',
+            'secondaryManageSpaceCreate'
         ];
     }
     if (payload === 'super_manager') {
@@ -82,7 +84,12 @@ export const getRouterDiff = (payload) => {
             'resourcePermiss',
             'userGroupDetail',
             'firstManageSpace',
-            'myManageSpace'
+            'secondaryManageSpace',
+            'authorBoundary',
+            'myManageSpace',
+            'myManageSpaceCreate',
+            'permTransfer',
+            'myManageSpaceSubDetail'
         ];
     }
     if (payload === 'system_manager') {
@@ -141,7 +148,43 @@ export const getRouterDiff = (payload) => {
             'systemAccessRegistry',
             'systemAccessOptimize',
             'systemAccessComplete',
-            'myManageSpace'
+            'myManageSpace',
+            'resourcePermiss',
+            'firstManageSpace'
+        ];
+    }
+    if (payload === 'subset_manager') {
+        return [
+            'applyCustomPerm',
+            'applyProvisionPerm',
+            'applyJoinUserGroup',
+            'apply',
+            'myPerm',
+            'templatePermDetail',
+            'groupPermDetail',
+            'orgPermDetail',
+            'ratingManager',
+            'gradingAdminCreate',
+            'gradingAdminDetail',
+            'user',
+            'gradingAdminUpdateTemplate',
+            'administrator',
+            'approval',
+            'permRenewal',
+            'audit',
+            'systemAccess',
+            'systemAccessCreate',
+            'systemAccessAccess',
+            'systemAccessRegistry',
+            'systemAccessOptimize',
+            'systemAccessComplete',
+            'resourcePermiss',
+            'secondaryManageSpace',
+            'secondaryManageSpaceCreate',
+            'secondaryManageSpaceDetail',
+            'firstManageSpace',
+            'myManageSpace',
+            'permTemplate'
         ];
     }
     // payload其它取值默认返回全部菜单
@@ -211,13 +254,10 @@ export const getNavRouterDiff = (navIndex) => {
             'addGroupPerm',
             'resourcePermiss',
             'firstManageSpace',
+            'ratingManager',
             'authorBoundary',
             'secondaryManageSpace'
         ];
-    }
-
-    if (navIndex === 1) {
-        return ['firstManageSpace'];
     }
 
     if (navIndex === 2) {
@@ -261,7 +301,9 @@ export const getNavRouterDiff = (navIndex) => {
             'firstManageSpace',
             'authorBoundary',
             'secondaryManageSpace',
-            'myManageSpace'
+            'myManageSpace',
+            'secondaryManageSpaceCreate',
+            'secondaryManageSpaceDetail'
         ];
     }
 
@@ -294,7 +336,9 @@ export const getNavRouterDiff = (navIndex) => {
             'approvalProcess',
             'authorBoundary',
             'secondaryManageSpace',
-            'myManageSpace'
+            'myManageSpace',
+            'secondaryManageSpaceCreate',
+            'secondaryManageSpaceDetail'
         ];
     }
 };

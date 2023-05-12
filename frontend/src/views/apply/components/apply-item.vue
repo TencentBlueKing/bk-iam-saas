@@ -1,5 +1,5 @@
 <template>
-    <div :class="['item', { 'has-bottom-border': hasBottomborder }, { 'is-active': isActive }]"
+    <div :class="['item', { 'has-bottom-border': hasBottomBorder }, { 'is-active': isActive }]"
         @click.stop="handleClick">
         <div class="up-info">
             <span class="title" :title="getApplyTitle(data)">{{ getApplyTitle(data) }}</span>
@@ -43,7 +43,7 @@
                 type: Number,
                 required: true
             },
-            hasBottomborder: {
+            hasBottomBorder: {
                 type: Boolean,
                 default: true
             }
@@ -73,6 +73,7 @@
              * getApplyTitle
              */
             getApplyTitle (data) {
+                const { source } = this.$route.query;
                 let str = '';
                 switch (data.type) {
                     case 'grant_action':
@@ -91,10 +92,10 @@
                         str = `${this.$t(`m.info['申请续期']`)} ${data.extra_info.group_count} ${this.$t(`m.common['个用户组#']`)}`;
                         break;
                     case 'create_rating_manager':
-                        str = this.$t(`m.info['申请创建分级管理员']`);
+                        str = this.$t(source && source === 'externalApp' ? `m.myApply['申请创建项目']` : `m.info['申请创建管理空间']`);
                         break;
                     case 'update_rating_manager':
-                        str = this.$t(`m.info['申请编辑分级管理员']`);
+                        str = this.$t(source && source === 'externalApp' ? `m.myApply['申请编辑项目']` : `m.info['申请编辑管理空间']`);
                         break;
                     default:
                         str = '';

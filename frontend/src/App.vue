@@ -1,12 +1,17 @@
 <template>
-    <div id="app" :class="systemCls">
-        <iam-guide
+    <div id="app"
+        :class="[
+            systemCls,
+            { 'external-system-layout': externalSystemsLayout.userGroup.groupDetail.setMainLayoutHeight },
+            { 'external-app-layout': $route.name === 'addMemberBoundary' }
+        ]">
+        <!-- <iam-guide
             v-if="groupGuideShow"
             type="create_group"
             direction="left"
             :style="groupGuideStyle"
             :flag="groupGuideShow"
-            :content="$t(`m.guide['创建用户组']`)" />
+            :content="$t(`m.guide['创建用户组']`)" /> -->
         <iam-guide
             v-if="processGuideShow"
             type="set_group_approval_process"
@@ -23,15 +28,23 @@
         <the-header @reload-page="handleRefreshPage"
             :route-name="routeName"
             :user-group-id="userGroupId"
-            v-if="isRouterAlive && !externalSystemsLayout.hideIamBreadCrumbs">
-        </the-header>
+        />
         <the-nav class="nav-layout"
             @reload-page="reloadCurPage"
-            v-if="!externalSystemsLayout.hideIamSlider">
-        </the-nav>
-        <main class="main-layout" :class="layoutCls"
+            v-if="!externalSystemsLayout.hideIamSlider" />
+        <main
+            :class="[
+                'main-layout',
+                layoutCls,
+                { 'external-main-layout': externalSystemsLayout.userGroup.groupDetail.setMainLayoutHeight }
+            ]"
             v-bkloading="{ isLoading: mainContentLoading, opacity: 1, zIndex: 1000 }">
-            <div ref="mainScroller" class="main-scroller" v-if="isShowPage">
+            <div ref="mainScroller"
+                :class="[
+                    'main-scroller',
+                    { 'external-main-scroller': externalSystemsLayout.userGroup.groupDetail.setMainLayoutHeight }
+                ]"
+                v-if="isShowPage">
                 <router-view class="views-layout" :key="routerKey" v-show="!mainContentLoading"></router-view>
             </div>
         </main>
@@ -39,14 +52,17 @@
     </div>
 </template>
 <script>
+    // import Cookie from 'js-cookie';
     import HeaderNav from '@/components/header-nav/index.vue';
     import theHeader from '@/components/header/index.vue';
     import theNav from '@/components/nav/index.vue';
     import IamGuide from '@/components/iam-guide/index.vue';
+    import { existValue, getCookie } from '@/common/util';
     import { bus } from '@/common/bus';
     import { mapGetters } from 'vuex';
     import { afterEach } from '@/router';
     import { kebabCase } from 'lodash';
+    
     export default {
         name: 'app',
         provide () {
@@ -72,10 +88,11 @@
                     left: '270px'
                 },
                 processGuideStyle: {
+                    position: 'absolute',
                     top: '342px',
                     left: '270px'
                 },
-                processGuideShow: false,
+                processGuideShow: true,
                 groupGuideShow: false,
                 routeName: '',
                 userGroupId: '',
@@ -94,12 +111,21 @@
             },
             user: {
                 handler (value) {
-                    if (['rating_manager', 'system_manager'].includes(value.role.type)) {
-                        this.processGuideStyle.top = '305px';
-                    }
-                    if (value.role.type === 'super_manager') {
-                        this.processGuideStyle.top = '255px';
-                    }
+                    const roleMap = {
+                        super_manager: () => {
+                            this.processGuideStyle.top = '255px';
+                        },
+                        system_manager: () => {
+                            this.processGuideStyle.top = '305px';
+                        },
+                        rating_manager: () => {
+                            this.processGuideStyle.top = '385px';
+                        },
+                        subset_manager: () => {
+                            this.processGuideStyle.top = '305px';
+                        }
+                    };
+                    return roleMap[value.role.type] ? roleMap[value.role.type]() : '';
                 },
                 immediate: true,
                 deep: true
@@ -107,11 +133,15 @@
         },
         created () {
             const platform = window.navigator.platform.toLowerCase();
+            window.CUR_LANGUAGE = getCookie('blueking_language') || 'zh-cn';
+            this.$i18n.locale = window.CUR_LANGUAGE;
             if (platform.indexOf('win') === 0) {
                 this.systemCls = 'win';
             }
-            this.fetchVersionLog();
-            this.fetchNoviceGuide();
+            if (!existValue('externalApp')) {
+                this.fetchVersionLog();
+                this.fetchNoviceGuide();
+            }
 
             const isPoll = window.localStorage.getItem('isPoll');
             if (isPoll) {
@@ -151,17 +181,24 @@
                 this.processGuideStyle.left = flag ? '270px' : '90px';
             });
             bus.$on('show-guide', payload => {
-                if (payload === 'group') {
-                    this.groupGuideShow = true;
+                const guideMap = {
+                    group: () => {
+                        this.groupGuideShow = true;
+                    },
+                    process: () => {
+                        this.processGuideShow = true;
+                    }
+                };
+                if (guideMap[payload]) {
+                    guideMap[payload]();
                 }
-                if (payload === 'process') {
-                    this.processGuideShow = true;
-                }
+                // if (payload === 'group') {
+                //     this.groupGuideShow = true;
+                // }
+                // if (payload === 'process') {
+                //     this.processGuideShow = true;
+                // }
             });
-
-            if (this.existKey('source')) {
-                this.fetchExternalSystemsLayout();
-            }
         },
         methods: {
             reload () {
@@ -252,16 +289,8 @@
                 }
             },
 
-            async fetchExternalSystemsLayout () {
-                try {
-                    await this.$store.dispatch('getExternalSystemsLayout');
-                } catch (e) {
-                    console.error(e);
-                }
-            },
-
             // 是否存在key
-            existKey (key) {
+            existKey (value) {
                 // 1、url截取?之后的字符串(不包含?)
                 const pathSearch = window.location.search.substr(1);
                 const result = [];
@@ -278,7 +307,7 @@
                 }
                 // 4、遍历key值
                 for (let j = 0; j < result.length; j++) {
-                    if (result[j].key === key) {
+                    if (result[j].value === value) {
                         return true;
                     }
                 }
@@ -317,10 +346,40 @@
         padding: 24px;
     }
 
+    .external-system-layout {
+        height: calc(100% - 1px) !important;
+    }
+
+    .external-main-scroller, .external-main-layout {
+        height: 100%;
+    }
+
+    .add-member-boundary-container {
+        .external-main-scroller {
+            overflow: hidden;
+        }
+    }
+    
     .single-hide {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+    }
+
+    .external-app-layout {
+        min-width: 0 !important;
+        max-width: 900px !important;
+    }
+
+    .user-selector .user-selector-selected .user-selector-selected-clear {
+        line-height: 20px !important;
+    }
+
+    .flex-between {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
     }
 
 </style>

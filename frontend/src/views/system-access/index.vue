@@ -37,12 +37,12 @@
                     <span :title="row.owner">{{ row.owner }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.common['创建时间']`)" :sortable="true" sort-by="created_time">
+            <bk-table-column :label="$t(`m.common['创建时间']`)" width="240" :sortable="true" sort-by="created_time">
                 <template slot-scope="{ row }">
                     <span :title="row.created_time">{{ row.created_time }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t(`m.access['更新时间']`)" :sortable="true" sort-by="updated_time">
+            <bk-table-column :label="$t(`m.access['更新时间']`)" :sortable="true" sort-by="updated_time" width="240">
                 <template slot-scope="{ row }">
                     <span :title="row.updated_time">{{ row.updated_time }}</span>
                 </template>
@@ -79,11 +79,21 @@
                     </section>
                 </template>
             </bk-table-column>
+            <template slot="empty">
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-clear="handleEmptyClear"
+                    @on-refresh="handleEmptyRefresh"
+                />
+            </template>
         </bk-table>
         <bk-dialog
             v-model="helpDialog"
             :show-footer="noFooter"
-            title="接入帮助"
+            :title="$t(`m.access['接入帮助']`)"
             width="1000"
             header-position="left"
             ext-cls="showHelp">
@@ -91,7 +101,7 @@
                 <div class="help-info">
                     <div class="info-right ml20">
                         <p class="info-title">{{$t(`m.nav['系统接入']`)}}</p>
-                        <p class="info">蓝鲸权限中心提供了体验DEMO、接入文档、多语言SDK、接入视频，帮助开发者更快地实现权限接入。</p>
+                        <p class="info">{{$t(`m.access['蓝鲸权限中心提供了体验DEMO、接入文档、多语言SDK、接入视频，帮助开发者更快地实现权限接入。']`)}}</p>
                         <bk-button theme="primary" @click="goCreate">{{$t(`m.access['去接入']`)}}</bk-button>
                     </div>
                 </div>
@@ -99,7 +109,9 @@
                     <div v-for="item in helpList" :key="item.name">
                         <div>{{item.name}}</div>
                         <p class="pt10" v-for="e in item.urlInfo" :key="e.text">
-                            <bk-link theme="primary" :href="e.url" target="_blank">{{e.text}}</bk-link>
+                            <bk-link theme="primary" :href="e.url" target="_blank">
+                                {{$t(`m.access['${e.text}']`) }}
+                            </bk-link>
                         </p>
                     </div>
                 </div>
@@ -109,6 +121,7 @@
 </template>
 <script>
     import { buildURLParams } from '@/common/url';
+    import { formatCodeData } from '@/common/util';
 
     export default {
         name: 'system-access-index',
@@ -127,7 +140,7 @@
                 noFooter: false,
                 helpList: [
                     {
-                        name: '接入前准备',
+                        name: this.$t(`m.access['接入前准备']`),
                         urlInfo: [
                             {
                                 'text': '什么是蓝鲸权限中心', url: 'https://bk.tencent.com/docs/document/6.0/131/7337'
@@ -141,7 +154,7 @@
                         ]
                     },
                     {
-                        name: '接入教程',
+                        name: this.$t(`m.access['接入教程']`),
                         urlInfo: [
                             {
                                 'text': '开发接入文档', url: 'https://bk.tencent.com/docs/document/6.0/160/8391'
@@ -163,7 +176,7 @@
                     //     ]
                     // },
                     {
-                        name: '鉴权SDK',
+                        name: this.$t(`m.access['鉴权SDK']`),
                         urlInfo: [
                             {
                                 'text': 'Python', url: 'https://github.com/TencentBlueKing/iam-python-sdk'
@@ -175,11 +188,17 @@
                                 'text': 'PHP', url: 'https://github.com/TencentBlueKing/iam-php-sdk'
                             },
                             {
-                                'text': '更多', url: 'https://bk.tencent.com/docs/document/6.0/160/8470'
+                                'text': this.$t(`m.common['更多']`), url: 'https://bk.tencent.com/docs/document/6.0/160/8470'
                             }
                         ]
                     }
-                ]
+                ],
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         watch: {
@@ -236,18 +255,21 @@
                     offset: this.pagination.limit * (this.pagination.current - 1)
                 };
                 try {
-                    const res = await this.$store.dispatch('access/getModelingList', params);
-                    this.pagination.count = res.data.count;
-                    res.data.results = res.data.results.length && res.data.results.sort(
+                    const { code, data } = await this.$store.dispatch('access/getModelingList', params);
+                    this.pagination.count = data.count;
+                    data.results = data.results.length && data.results.sort(
                         (a, b) => new Date(b.updated_time) - new Date(a.updated_time));
                         
-                    this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
+                    this.tableList.splice(0, this.tableList.length, ...(data.results || []));
+                    this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });

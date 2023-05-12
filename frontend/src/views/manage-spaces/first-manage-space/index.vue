@@ -13,7 +13,7 @@
         <bk-table size="small" :max-height="tableHeight" :data="tableList" :class="{ 'set-border': tableLoading }"
             ext-cls="level-manage-table" :pagination="pagination" @page-change="handlePageChange"
             @page-limit-change="handleLimitChange" v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
-            <bk-table-column :label="$t(`m.levelSpace['空间名']`)">
+            <bk-table-column :label="$t(`m.levelSpace['名称']`)">
                 <template slot-scope="{ row }">
                     <span class="level-manage-name" :title="row.name" @click="handleNavAuthBoundary(row)">
                         {{ row.name }}
@@ -26,7 +26,7 @@
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.levelSpace['创建人']`)" prop="creator"></bk-table-column>
-            <bk-table-column :label="$t(`m.common['创建时间']`)">
+             <bk-table-column :label="$t(`m.common['创建时间']`)" width="240">>
                 <template slot-scope="{ row }">
                     <span :title="row.created_time">{{ row.created_time }}</span>
                 </template>

@@ -1,0 +1,112 @@
+### Pulling a list of policies for an action under the system
+
+
+Used for accessing systems to pull all policies for an action in bulk; full volume with paging;
+Access systems can use this interface to periodically pull policies for full verification and `compensation`.
+
+A note about timestamp:
+- Since the policy is with expiration time, the process of page-flipping is a relatively long operation, if each page is queried in real time for the `current unexpired` policy list, then the overall result set and the content of the policy in the fixed page number will change dynamically; the access system cannot really pull the `full` policy of a certain action
+- This interface pulls the first page, the default setting `timestamp` is the day `00:00:00` timestamp, for example `1593273600`
+- When turning the second to the last page, the access system recommends passing `timestamp` as a parameter; to locate an `anchor point`; to prevent the dynamic change of the policy list during the page turning process across days; (if you don't worry about this, you can always leave it out)
+- `timestamp` is minimum `current time - 24 hours`.
+
+Note:
+- Query back to each policy `expired_at` is the expiration time, access to the system before use need to determine again whether the expiration
+- Only query your own system's `action_id`, if this `action_id` is not found in our system, it will return `code=1901404(NotFoundError)`
+
+-----
+
+#### Parameters
+
+| field | type | required | location | description |
+| :--- | :--- | :--- | :--- |:---|:--- |
+| system_id | string | yes | path | system_id |
+| action_id | string | yes | query | action id, must be a legitimate action registered to IAM (Identity and Access Management) for this system
+| page | integer | no | query | page number, not passed default is `1` |
+| page_size | integer | no| query | page size, do not pass default `100`, limit single page to `500`|
+| timestamp | integer | no| query |query timestamp, anchor |
+
+Example: `action_id=edit_host&page=1&page_size=100&timestamp=1592899208`
+
+#### Request
+
+#### Response
+
+```json
+{
+    "code": 0,
+    "message": "ok",
+    "data": {
+        "metadata": {
+            "system": "bk_cmdb",
+            "action": {
+                "id": "edit_host"
+            },
+            "timestamp": 1593273600
+        },
+        "count": 3,
+        "results": [
+            {
+                "version": "1",
+                "id": 3,
+                "subject": {
+                    "type": "user",
+                    "id": "test2",
+                    "name": "test2"
+                },
+                "expression": {
+                    "content": [
+                        {
+                            "field": "host.id",
+                            "op": "eq",
+                            "value": "192.168.1.1"
+                        }
+                    ],
+                    "op": "OR"
+                },
+                "expired_at": 4102444800
+            },
+            {
+                "version": "1",
+                "id": 4,
+                "subject": {
+                    "type": "user",
+                    "id": "test1",
+                    "name": "test1"
+                },
+                "expression": {
+                    "content": [
+                        {
+                            "field": "host.system",
+                            "op": "eq",
+                            "value": "linux"
+                        }
+                    ],
+                    "op": "OR"
+                },
+                "expired_at": 4102444800
+            },
+            {
+                "version": "1",
+                "id": 7,
+                "subject": {
+                    "type": "user",
+                    "id": "admin",
+                    "name": "admin"
+                },
+                "expression": {
+                    "content": [
+                        {
+                            "field": "host.id",
+                            "op": "any",
+                            "value": []  
+                        }
+                    ],
+                    "op": "OR"
+                },
+                "expired_at": 4102444800
+            }
+        ]
+    }
+}
+```                      

@@ -4,9 +4,10 @@
             :sub-title="subTitle"
             expanded>
             <bk-table
-                :data="superUserList"
                 size="small"
                 ext-cls="super-user-table-cls"
+                :max-height="tableHeight"
+                :data="superUserList"
                 :outer-border="false"
                 :header-border="false"
                 @row-mouse-enter="handleSuperRowMouseEnter"
@@ -20,6 +21,7 @@
                                 :api="userApi"
                                 style="width: 100%;"
                                 :placeholder="$t(`m.verify['请输入']`)"
+                                :empty-text="$t(`m.common['无匹配人员']`)"
                                 @change="handleSuperRtxChange(...arguments, row)"
                                 @keydown="handleSuperRtxEnter(...arguments, row)">
                             </bk-user-selector>
@@ -27,6 +29,7 @@
                         <template v-else>
                             <div
                                 :class="['user-wrapper', { 'is-hover': row.canEdit && row.user[0] !== 'admin' }]"
+                                :title="row.user.join('；')"
                             >
                                 {{ row.user.join('；') }}
                             </div>
@@ -77,6 +80,16 @@
                         </template>
                     </template>
                 </bk-table-column>
+                <template slot="empty">
+                    <ExceptionEmpty
+                        :type="emptyData.type"
+                        :empty-text="emptyData.text"
+                        :tip-text="emptyData.tip"
+                        :tip-type="emptyData.tipType"
+                        @on-clear="handleEmptyClear"
+                        @on-refresh="handleEmptyRefresh"
+                    />
+                </template>
             </bk-table>
             <render-action
                 :title="$t(`m.set['添加超级管理员']`)"
@@ -88,10 +101,12 @@
     import _ from 'lodash';
     import { mapGetters } from 'vuex';
     import { bus } from '@/common/bus';
+    import { formatCodeData, getWindowHeight } from '@/common/util';
     import IamPopoverConfirm from '@/components/iam-popover-confirm';
     import BkUserSelector from '@blueking/user-selector';
     import RenderItem from '../common/render-item';
     import RenderAction from '../common/render-action';
+    
     export default {
         name: '',
         components: {
@@ -112,7 +127,13 @@
             return {
                 subTitle: this.$t(`m.set['超级管理员提示']`),
                 superUserList: [],
-                userApi: window.BK_USER_API
+                userApi: window.BK_USER_API,
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -127,6 +148,9 @@
                     }
                     return false;
                 };
+            },
+            tableHeight () {
+                return getWindowHeight() - 297;
             }
         },
         created () {
@@ -149,9 +173,9 @@
             async fetchSuperManager () {
                 this.$emit('data-ready', false);
                 try {
-                    const res = await this.$store.dispatch('role/getSuperManager');
+                    const { code, data } = await this.$store.dispatch('role/getSuperManager');
                     const tempArr = [];
-                    res.data.forEach(item => {
+                    data.forEach(item => {
                         const { username, system_permission_enabled } = item;
                         tempArr.push({
                             user: [username],
@@ -162,12 +186,15 @@
                         });
                     });
                     this.superUserList.splice(0, this.superUserList.length, ...tempArr);
+                    this.emptyData = formatCodeData(code, this.emptyData, this.superUserList.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });

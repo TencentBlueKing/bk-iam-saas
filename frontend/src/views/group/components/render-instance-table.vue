@@ -57,7 +57,7 @@
                             :title="$t(`m.common['详情']`)"
                             v-if="isShowView(row)"
                             @click.stop="handleViewResource(row)" />
-                        <template v-if="!isUserGroupDetail ? false : true && row.showDelete">
+                        <template v-if="!isUserGroupDetail ? false : true && row.showDelete && !externalDelete">
                             <Icon class="remove-icon" type="close-small" @click.stop="toHandleDelete(row)" />
                         </template>
                     </template>
@@ -135,6 +135,9 @@
                     </template>
                 </template>
             </bk-table-column>
+            <template slot="empty">
+                <ExceptionEmpty />
+            </template>
         </bk-table>
         <bk-sideslider
             :is-show="isShowResourceInstanceSideslider"
@@ -217,6 +220,7 @@
     import PreviewResourceDialog from './preview-resource-dialog';
     import RenderResourcePopover from '@/components/iam-view-resource-popover';
     import RenderDetail from '../common/render-detail';
+
     // import store from '@/store'
     export default {
         name: 'resource-instance-table',
@@ -286,6 +290,10 @@
                 default: false
             },
             isGroup: {
+                type: Boolean,
+                default: false
+            },
+            externalDelete: {
                 type: Boolean,
                 default: false
             }
@@ -1043,6 +1051,7 @@
                     groupId: this.groupId,
                     policy_id: this.tableList[this.curIndex].policy_id,
                     isTemplate: this.tableList[this.curIndex].isTemplate,
+                    resource_group_id: this.tableList[this.curIndex].resource_groups[this.curGroupIndex].id,
                     isNotLimit: conditionData.length === 0
                 };
                 this.previewDialogTitle = `${this.$t(`m.common['操作']`)}【${this.tableList[this.curIndex].name}】${this.$t(`m.common['的资源实例']`)} ${this.$t(`m.common['差异对比']`)}`;
@@ -1085,6 +1094,7 @@
                     reverse: true,
                     groupId: this.groupId,
                     policy_id: payload.policy_id,
+                    resource_group_id: payload.resource_groups[this.curGroupIndex].id,
                     isTemplate: payload.isTemplate
                 };
                 this.previewDialogTitle = `${this.$t(`m.common['操作']`)}【${payload.name}】${this.$t(`m.common['的资源实例']`)} ${this.$t(`m.common['差异对比']`)}`;
@@ -1092,7 +1102,7 @@
                     this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: '无资源ID，无法预览'
+                        message: this.$t(`m.info['无资源ID，无法预览']`)
                     });
                     return;
                 }
@@ -1740,7 +1750,8 @@
                 }
                 td:first-child .cell,
                 th:first-child .cell {
-                    padding-left: 15px;
+                    /* padding-left: 15px; */
+                    padding-left: 10px;
                 }
                 .iam-new-action {
                     display: inline-block;

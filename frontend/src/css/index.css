@@ -10,6 +10,10 @@
             -webkit-box-orient: vertical;
         }
 
+        .bk-table-empty-block {
+            background-color: #ffffff;
+        }
+
         .tippy-content {
             padding: 0 !important;
         }
@@ -230,5 +234,10 @@
         .bk-select-name {
             height: 40px !important;
         }
+    }
+
+    .iam-custom-dialog-title {
+        text-align: center;
+        word-break: break-all;
     }
 }

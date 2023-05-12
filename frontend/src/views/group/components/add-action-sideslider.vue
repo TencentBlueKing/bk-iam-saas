@@ -7,7 +7,7 @@
         :width="890"
         ext-cls="iam-add-action-sideslider"
         :title="$t(`m.grading['添加系统和操作']`)"
-        @update:isShow="handleCancel">
+        @update:isShow="handleCancel('leave')">
         <div slot="content"
             class="content-wrapper"
             v-bkloading="{ isLoading, opacity: 1 }">
@@ -17,13 +17,13 @@
                         <bk-input
                             clearable
                             right-icon="bk-icon icon-search"
-                            style="width: 190px;"
+                            style="max-width: calc(100% - 48px)"
                             v-model="keyword"
                             @input="handleInput"
                             @enter="handleSearch">
                         </bk-input>
                         <div
-                            v-if="user.role.type === 'rating_manager'"
+                            v-if="['rating_manager', 'subset_manager'].includes(user.role.type)"
                             class="icon-iamcenter-wrapper"
                             @click.stop="refreshList">
                             <i class="iam-icon iamcenter-refresh"></i>
@@ -32,7 +32,7 @@
                     <div :class="['system-wrapper', curSystemList.length > 20 ? 'system-item-fixed' : '']">
                         <template v-if="curSystemList.length > 0">
                             <div v-bkloading="{ isLoading: systemListIsLoading, opacity: 1 }">
-                                <div class="system-item"
+                                <div class="system-item single-hide"
                                     v-for="item in curSystemList"
                                     :key="item.id"
                                     :class="item.id === curSystem ? 'active' : ''"
@@ -49,18 +49,28 @@
                                 <!-- <div
                                     v-if="user.role.type === 'rating_manager'"
                                     :class="['skip-link', curSystemList.length > 20 ? 'skip-link-fixed' : '']"
-                                    :title="$t(`m.grading['修改分级管理员授权范围']`)"
+                                    :title="$t(`m.grading['修改管理空间授权范围']`)"
                                     @click="handleSkip">
                                     <i class="iam-icon iamcenter-edit-fill"></i>
-                                    {{ $t(`m.grading['修改分级管理员授权范围']`) }}
+                                    {{ $t(`m.grading['修改管理空间授权范围']`) }}
                                 </div> -->
                             </div>
+                        </template>
+                        <template v-else>
+                            <ExceptionEmpty
+                                :type="emptyData.type"
+                                :empty-text="emptyData.text"
+                                :tip-text="emptyData.tip"
+                                :tip-type="emptyData.tipType"
+                                @on-clear="handleEmptyClear"
+                                @on-refresh="handleEmptyRefresh"
+                            />
                         </template>
                         <!-- <template v-else>
                             <div class="empty-wrapper empty-wrapper2">
                                 <template v-if="user.role.type === 'rating_manager'">
                                     <bk-exception class="exception-wrap-item exception-part" type="search-empty" scene="part"></bk-exception>
-                                    <p class="tips-link" @click="handleSkip">{{ $t(`m.grading['修改分级管理员授权范围']`) }}</p>
+                                    <p class="tips-link" @click="handleSkip">{{ $t(`m.grading['修改管理空间授权范围']`) }}</p>
                                 </template>
                                 <iam-svg v-else />
                             </div>
@@ -68,7 +78,7 @@
                     </div>
                 </div>
                 <div class="right-wrapper" v-bkloading="{ isLoading: isRightLoading, opacity: 1, color: '#f5f6fa' }">
-                    <template v-if="systemData[curSystem].list.length > 0 && !isRightLoading">
+                    <template v-if="systemData[curSystem] && systemData[curSystem].list.length > 0 && !isRightLoading">
                         <render-action-tag
                             style="margin: 0;"
                             :system-id="curSystem"
@@ -81,7 +91,7 @@
                             <label class="bk-label" style="line-height: 20px;">
                                 <span class="name">{{ customTmpl.name }}</span>
                                 <span :class="['select-all', { 'disabled': customTmpl.allDisabled }]" data-test-id="group_btn_selectAllAction" @click.stop="handleSelectAll(customTmpl, index)">
-                                    （{{ customTmpl.text }}）
+                                    ({{ customTmpl.text }})
                                 </span>
                             </label>
                             <div
@@ -145,17 +155,27 @@
                             </section>
                         </div>
                     </template>
-                    <template v-if="systemData[curSystem].list.length < 1 && !isRightLoading">
+                    <template v-if="systemData[curSystem] && !systemData[curSystem].list.length && !isRightLoading">
                         <div class="empty-wrapper">
-                            <iam-svg />
+                            <ExceptionEmpty
+                                :type="emptyData.type"
+                                :empty-text="emptyData.text"
+                                :tip-text="emptyData.tip"
+                                :tip-type="emptyData.tipType"
+                                @on-clear="handleEmptyClear"
+                                @on-refresh="handleEmptyRefresh"
+                            />
                         </div>
                     </template>
                 </div>
             </template>
+            <div v-else style="margin: 0 auto;">
+                <ExceptionEmpty />
+            </div>
         </div>
         <div slot="footer" style="padding-left: 30px;">
             <bk-button theme="primary" @click="handleSubmit">{{ $t(`m.common['确定']`) }}</bk-button>
-            <bk-button style="margin-left: 10px;" @click="handleCancel">{{ $t(`m.common['取消']`) }}</bk-button>
+            <bk-button style="margin-left: 10px;" @click="handleCancel('cancel')">{{ $t(`m.common['取消']`) }}</bk-button>
         </div>
     </bk-sideslider>
 </template>
@@ -163,7 +183,7 @@
 <script>
     import _ from 'lodash';
     import { leaveConfirm } from '@/common/leave-confirm';
-    import { guid } from '@/common/util';
+    import { guid, formatCodeData } from '@/common/util';
     import RenderActionTag from '@/components/common-action';
     import { mapGetters } from 'vuex';
     import { bus } from '@/common/bus';
@@ -223,11 +243,17 @@
                 authorizationData: {},
                 linearAction: [],
                 tagActionList: [],
-                systemListIsLoading: false
+                systemListIsLoading: false,
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
-            ...mapGetters(['user']),
+            ...mapGetters(['user', 'externalSystemId']),
             isLoading () {
                 return this.initRequestQueue.length > 0;
             },
@@ -267,10 +293,11 @@
                     this.curSystemList.splice(0, this.curSystemList.length, ...this.systemList);
                 }
             },
-            defaultValue (value) {
-                if (value.length > 0) {
+            defaultValue: {
+                handler (value) {
                     this.curSelectValue = [...value];
-                }
+                },
+                immediate: true
             }
         },
         created () {
@@ -451,20 +478,14 @@
              */
             async fetchCommonActions (systemId) {
                 try {
-                    const res = await this.$store.dispatch('permApply/getUserCommonAction', { systemId });
-                    this.commonActions.splice(0, this.commonActions.length, ...(res.data || []));
+                    const { code, data } = await this.$store.dispatch('permApply/getUserCommonAction', { systemId });
+                    this.commonActions.splice(0, this.commonActions.length, ...(data || []));
                     this.commonActions.forEach(item => {
                         item.$id = guid();
                     });
+                    this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
                 } catch (e) {
-                    console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
+                    this.fetchErrorMsg(e);
                 } finally {
                     this.initRequestQueue.shift();
                 }
@@ -476,37 +497,48 @@
             async fetchSystems () {
                 this.systemListIsLoading = true;
                 try {
-                    const res = await this.$store.dispatch('system/getSystems');
-                    this.systemList = _.cloneDeep(res.data);
-                    this.curSystemList = _.cloneDeep(res.data);
-                    this.curSystem = this.defaultSystem || this.systemList[0].id;
-                    this.systemList.forEach(item => {
-                        this.$set(this.systemData, item.id, {});
-                        this.systemData[item.id].system_name = item.name;
-                        this.$set(this.systemData[item.id], 'count', 0);
-                        this.$set(this.systemData[item.id], 'list', []);
-                        const isExistSys = this.defaultData.find(sys => sys.system_id === item.id);
-                        if (isExistSys) {
-                            isExistSys.list.forEach(act => {
-                                this.$set(act, 'checked', this.defaultValue.includes(act.$id));
-                            });
-                            this.systemData[item.id].list.push({
-                                name: '',
-                                actions: _.cloneDeep(isExistSys.list)
-                            });
+                    this.curSystem = this.defaultSystem;
+                    const params = {};
+                    if (this.externalSystemId) {
+                        params.hidden = false;
+                        this.curSystem = this.externalSystemId;
+                    }
+                    const { code, data } = await this.$store.dispatch('system/getSystems', params);
+                    this.systemList = _.cloneDeep(data);
+                    this.curSystemList = _.cloneDeep(data);
+                    this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
+                    if (this.systemList.length) {
+                        if (!this.curSystem) {
+                            this.curSystem = this.systemList[0].id;
                         }
-
-                        if (this.defaultValue.length > 0) {
-                            const curAllActionIds = [];
-                            this.systemData[item.id].list.forEach(subItem => {
-                                subItem.actions.forEach(act => {
-                                    curAllActionIds.push(act.$id);
+                        this.systemList.forEach(item => {
+                            this.$set(this.systemData, item.id, {});
+                            this.systemData[item.id].system_name = item.name;
+                            this.$set(this.systemData[item.id], 'count', 0);
+                            this.$set(this.systemData[item.id], 'list', []);
+                            const isExistSys = this.defaultData.find(sys => sys.system_id === item.id);
+                            if (isExistSys) {
+                                isExistSys.list.forEach(act => {
+                                    this.$set(act, 'checked', this.defaultValue.includes(act.$id));
                                 });
-                            });
-                            const intersection = curAllActionIds.filter(v => this.defaultValue.includes(v));
-                            this.systemData[item.id].count = intersection.length;
-                        }
-                    });
+                                this.systemData[item.id].list.push({
+                                    name: '',
+                                    actions: _.cloneDeep(isExistSys.list)
+                                });
+                            }
+    
+                            if (this.defaultValue.length > 0) {
+                                const curAllActionIds = [];
+                                this.systemData[item.id].list.forEach(subItem => {
+                                    subItem.actions.forEach(act => {
+                                        curAllActionIds.push(act.$id);
+                                    });
+                                });
+                                const intersection = curAllActionIds.filter(v => this.defaultValue.includes(v));
+                                this.systemData[item.id].count = intersection.length;
+                            }
+                        });
+                    }
                     // this.fetchCommonActions(this.curSystem)
                     // this.fetchActions(this.curSystem, false)
                     await Promise.all([
@@ -516,14 +548,7 @@
                     this.handleCommonAction();
                     this.isRightLoading = false;
                 } catch (e) {
-                    console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
+                    this.fetchErrorMsg(e);
                 } finally {
                     this.initRequestQueue.shift();
                     this.systemListIsLoading = false;
@@ -535,17 +560,11 @@
                     return;
                 }
                 try {
-                    const res = await this.$store.dispatch('aggregate/getAggregateAction', { system_ids: this.curSystem });
-                    this.aggregationData[this.curSystem] = res.data.aggregations;
+                    const { code, data } = await this.$store.dispatch('aggregate/getAggregateAction', { system_ids: this.curSystem });
+                    this.aggregationData[this.curSystem] = data.aggregations;
+                    this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
                 } catch (e) {
-                    console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
+                    this.fetchErrorMsg(e);
                 }
             },
 
@@ -554,17 +573,11 @@
                     return;
                 }
                 try {
-                    const res = await this.$store.dispatch('permTemplate/getAuthorizationScopeActions', { systemId: this.curSystem });
-                    this.authorizationData[this.curSystem] = res.data.filter(item => item.id !== '*');
+                    const { code, data } = await this.$store.dispatch('permTemplate/getAuthorizationScopeActions', { systemId: this.curSystem });
+                    this.authorizationData[this.curSystem] = data.filter(item => item.id !== '*');
+                    this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
                 } catch (e) {
-                    console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
+                    this.fetchErrorMsg(e);
                 }
             },
 
@@ -585,17 +598,11 @@
                     params.group_id = this.groupId;
                 }
                 try {
-                    const res = await this.$store.dispatch('permApply/getActions', params);
-                    this.handleDefaultData(systemId, res.data);
+                    const { code, data } = await this.$store.dispatch('permApply/getActions', params);
+                    this.handleDefaultData(systemId, data);
+                    this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
                 } catch (e) {
-                    console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
+                    this.fetchErrorMsg(e);
                 } finally {
                     this.isRightLoading = false;
                     this.initRequestQueue.length > 0 && this.initRequestQueue.shift();
@@ -603,56 +610,59 @@
             },
 
             handleDefaultData (payload, data) {
-                this.systemData[payload].list = _.cloneDeep(data);
-                this.systemData[payload].list.forEach(item => {
-                    if (!item.actions) {
-                        item.actions = [];
-                    }
-                    if (!item.sub_groups) {
-                        item.sub_groups = [];
-                    }
-                    let allChecked = true;
-                    let allDisabled = true;
-                    item.actions.forEach(act => {
-                        act.$id = `${payload}&${act.id}`;
-                        act.related_resource_types.forEach(v => {
-                            v.type = v.id;
-                        });
-                        this.$set(act, 'checked', this.defaultValue.includes(act.$id) || this.curSelectValue.includes(act.$id) || (act.tag === 'readonly' && !!this.groupId));
-                        if (!act.checked) {
-                            allChecked = false;
+                if (this.systemData[payload]) {
+                    this.$set(this.systemData[payload], 'count', 0);
+                    this.$set(this.systemData[payload], 'list', _.cloneDeep(data));
+                    this.systemData[payload].list.forEach(item => {
+                        if (!item.actions) {
+                            item.actions = [];
                         }
-                        if (act.tag === 'readonly' && !!this.groupId) {
-                            this.$set(act, 'disabled', true);
-                            ++this.systemData[payload].count;
-                        } else {
-                            allDisabled = false;
+                        if (!item.sub_groups) {
+                            item.sub_groups = [];
                         }
-                        this.linearAction.push(act);
-                    });
-                    item.sub_groups.forEach(act => {
-                        (act.actions || []).forEach(v => {
-                            v.$id = `${payload}&${v.id}`;
-                            v.related_resource_types.forEach(subItem => {
-                                subItem.type = subItem.id;
+                        let allChecked = true;
+                        let allDisabled = true;
+                        item.actions.forEach(act => {
+                            act.$id = `${payload}&${act.id}`;
+                            act.related_resource_types.forEach(v => {
+                                v.type = v.id;
                             });
-                            this.$set(v, 'checked', this.defaultValue.includes(v.$id) || this.curSelectValue.includes(v.$id) || (v.tag === 'readonly' && !!this.groupId));
-                            if (!v.checked) {
+                            this.$set(act, 'checked', this.defaultValue.includes(act.$id) || this.curSelectValue.includes(act.$id) || (act.tag === 'readonly' && !!this.groupId));
+                            if (!act.checked) {
                                 allChecked = false;
                             }
-                            if (v.tag === 'readonly' && !!this.groupId) {
-                                this.$set(v, 'disabled', true);
+                            if (act.tag === 'readonly' && !!this.groupId) {
+                                this.$set(act, 'disabled', true);
                                 ++this.systemData[payload].count;
                             } else {
                                 allDisabled = false;
                             }
-                            this.linearAction.push(v);
+                            this.linearAction.push(act);
                         });
+                        item.sub_groups.forEach(act => {
+                            (act.actions || []).forEach(v => {
+                                v.$id = `${payload}&${v.id}`;
+                                v.related_resource_types.forEach(subItem => {
+                                    subItem.type = subItem.id;
+                                });
+                                this.$set(v, 'checked', this.defaultValue.includes(v.$id) || this.curSelectValue.includes(v.$id) || (v.tag === 'readonly' && !!this.groupId));
+                                if (!v.checked) {
+                                    allChecked = false;
+                                }
+                                if (v.tag === 'readonly' && !!this.groupId) {
+                                    this.$set(v, 'disabled', true);
+                                    ++this.systemData[payload].count;
+                                } else {
+                                    allDisabled = false;
+                                }
+                                this.linearAction.push(v);
+                            });
+                        });
+                        this.$set(item, 'text', allChecked ? this.$t(`m.common['取消全选']`) : this.$t(`m.common['全选']`));
+                        this.$set(item, 'allDisabled', allDisabled);
                     });
-                    this.$set(item, 'text', allChecked ? this.$t(`m.common['取消全选']`) : this.$t(`m.common['全选']`));
-                    this.$set(item, 'allDisabled', allDisabled);
-                });
-                this.systemData[payload].system_name = this.systemList.find(item => item.id === payload).name;
+                    this.systemData[payload].system_name = this.systemList.find(item => item.id === payload).name;
+                }
 
                 if (this.defaultValue.length > 0) {
                     const curAllActionIds = [];
@@ -902,13 +912,14 @@
             },
 
             handleSearch () {
-                if (this.keyword === '') {
+                if (!this.keyword) {
                     return;
                 }
                 window.changeAlert = true;
                 this.isFilter = true;
                 const filterList = this.systemList.filter(item => item.name.indexOf(this.keyword) > -1);
                 this.curSystemList.splice(0, this.curSystemList.length, ...filterList);
+                this.emptyData = formatCodeData(0, { ...this.emptyData, ...{ tipType: 'search' } });
             },
 
             resetData () {
@@ -922,16 +933,45 @@
                 this.curSelectValue = [];
             },
 
-            handleCancel () {
-                let cancelHandler = Promise.resolve();
-                if (window.changeAlert) {
-                    cancelHandler = leaveConfirm();
-                }
-                cancelHandler.then(() => {
-                    this.$emit('update:isShow', false);
-                    this.aggregationData = _.cloneDeep(this.aggregation);
-                    this.resetData();
-                }, _ => _);
+            fetchErrorMsg (payload) {
+                console.error(payload);
+                const { code, data, message, statusText } = payload;
+                this.emptyData = formatCodeData(code, this.emptyData);
+                this.bkMessageInstance = this.$bkMessage({
+                    limit: 1,
+                    theme: 'error',
+                    message: message || data.msg || statusText,
+                    ellipsisLine: 2,
+                    ellipsisCopy: true
+                });
+            },
+
+            handleCancel (payload) {
+                const operateMap = {
+                    leave: () => {
+                        let cancelHandler = Promise.resolve();
+                        if (window.changeAlert) {
+                            cancelHandler = leaveConfirm();
+                        }
+                        cancelHandler.then(() => {
+                            this.$emit('update:isShow', false);
+                            this.aggregationData = _.cloneDeep(this.aggregation);
+                            this.resetData();
+                        }, _ => _);
+                    },
+                    cancel: () => {
+                        let cancelHandler = Promise.resolve();
+                        if (window.changeAlert) {
+                            cancelHandler = leaveConfirm();
+                        }
+                        cancelHandler.then(() => {
+                            this.$emit('update:isShow', false);
+                            this.aggregationData = _.cloneDeep(this.aggregation);
+                            this.resetData();
+                        }, _ => _);
+                    }
+                };
+                operateMap[payload]();
             },
 
             async handleSkip () {
@@ -946,6 +986,15 @@
             refreshList () {
                 this.keyword = '';
                 this.fetchSystems();
+            },
+            
+            handleEmptyClear () {
+                this.emptyData.tipType = '';
+                this.refreshList();
+            },
+
+            handleEmptyRefresh () {
+                this.resetData();
             }
         }
     };
@@ -1044,7 +1093,7 @@
             }
             .right-wrapper {
                 position: relative;
-                flex: 0 0 calc(100% - 220px);
+                flex: 0 0 calc(100% - 240px);
                 padding: 12px 20px;
                 background: #f5f6fa;
                 .custom-tmpl-wrapper {

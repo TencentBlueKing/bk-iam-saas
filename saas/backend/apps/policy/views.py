@@ -39,7 +39,6 @@ from backend.common.error_codes import error_codes
 from backend.common.serializers import ActionQuerySLZ
 from backend.common.time import get_soon_expire_ts
 from backend.service.action import ActionService
-from backend.service.constants import SubjectType
 from backend.service.models import Subject as SvcSubject
 
 from .serializers import (
@@ -88,7 +87,7 @@ class PolicyViewSet(GenericViewSet):
 
             return Response([p.dict() for p in apply_policy_list.policies])
 
-        subject = SvcSubject(type=SubjectType.USER.value, id=request.user.username)
+        subject = SvcSubject.from_username(request.user.username)
         policies = self.policy_query_biz.list_by_subject(system_id, subject)
 
         # ResourceNameAutoUpdate
@@ -109,7 +108,7 @@ class PolicyViewSet(GenericViewSet):
 
         system_id = slz.validated_data["system_id"]
         ids = slz.validated_data["ids"]
-        subject = SvcSubject(type=SubjectType.USER.value, id=request.user.username)
+        subject = SvcSubject.from_username(request.user.username)
 
         policy_list = self.policy_query_biz.query_policy_list_by_policy_ids(system_id, subject, ids)
 
@@ -141,7 +140,7 @@ class PolicyViewSet(GenericViewSet):
         condition_ids = data["ids"]
         condition = data["condition"]
 
-        subject = SvcSubject(type=SubjectType.USER.value, id=request.user.username)
+        subject = SvcSubject.from_username(request.user.username)
 
         system_id = self.policy_query_biz.get_policy_system_by_id(subject, policy_id)
         update_policy = self.policy_operation_biz.delete_partial(
@@ -175,7 +174,7 @@ class PolicyResourceGroupDeleteViewSet(GenericViewSet):
     def destroy(self, request, *args, **kwargs):
         policy_id = kwargs["pk"]
         resource_group_id = kwargs["resource_group_id"]
-        subject = SvcSubject(type=SubjectType.USER.value, id=request.user.username)
+        subject = SvcSubject.from_username(request.user.username)
 
         system_id = self.policy_query_biz.get_policy_system_by_id(subject, policy_id)
         # 删除权限
@@ -201,7 +200,7 @@ class PolicySystemViewSet(GenericViewSet):
         tags=["policy"],
     )
     def list(self, request, *args, **kwargs):
-        subject = SvcSubject(type=SubjectType.USER.value, id=request.user.username)
+        subject = SvcSubject.from_username(request.user.username)
 
         data = self.biz.list_system_counter_by_subject(subject)
 
@@ -220,7 +219,7 @@ class PolicyExpireSoonViewSet(GenericViewSet):
         tags=["policy"],
     )
     def list(self, request, *args, **kwargs):
-        subject = SvcSubject(type=SubjectType.USER.value, id=request.user.username)
+        subject = SvcSubject.from_username(request.user.username)
 
         data = self.biz.list_expired(subject, get_soon_expire_ts())
 
@@ -250,7 +249,7 @@ class RelatedPolicyViewSet(GenericViewSet):
         source_policy = PolicyBean.parse_obj(data["source_policy"])
 
         # 移除用户已有的权限, 只需要生成新增数据的依赖操作权限
-        subject = SvcSubject(type=SubjectType.USER.value, id=request.user.username)
+        subject = SvcSubject.from_username(request.user.username)
         old_policy_list = self.policy_query_biz.new_policy_list(system_id, subject)
         old_policy = old_policy_list.get(source_policy.action_id)
         if old_policy:
@@ -399,7 +398,7 @@ class RecommendPolicyViewSet(GenericViewSet):
             policy_list.add(PolicyBeanList(system_id, recommend_policies))  # 合并去重
 
         # 移除用户已有的操作
-        subject = SvcSubject(type=SubjectType.USER.value, id=request.user.username)
+        subject = SvcSubject.from_username(request.user.username)
         own_policies = self.policy_query_biz.list_by_subject(system_id, subject)
 
         # 只移除用户已有的实例

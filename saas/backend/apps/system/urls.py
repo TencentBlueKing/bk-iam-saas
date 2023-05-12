@@ -20,4 +20,11 @@ urlpatterns = [
         views.ResourceTypeViewSet.as_view({"get": "list_resource_types"}),
         name="system.list_resource_types",
     ),
+    # 蓝盾定制页面
+    # 定制前端配置
+    path(
+        "<str:system_id>/custom_frontend_settings/",
+        views.SystemCustomFrontendSettingsView.as_view(),
+        name="system.custom_frontend_settings",
+    ),
 ]

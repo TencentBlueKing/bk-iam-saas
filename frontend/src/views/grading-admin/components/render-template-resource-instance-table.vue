@@ -137,8 +137,15 @@
                 <template v-else>
                     <tr class="empty-tr-wrapper">
                         <td colspan="3">
-                            <p><Icon bk type="empty" /></p>
-                            <span class="text">{{ $t(`m.common['暂无数据']`) }}</span>
+                            <!-- <p><Icon bk type="empty" /></p>
+                            <span class="text">{{ $t(`m.common['暂无数据']`) }}</span> -->
+                            <ExceptionEmpty
+                                :type="emptyData.type"
+                                :empty-text="emptyData.text"
+                                :tip-text="emptyData.tip"
+                                :tip-type="emptyData.tipType"
+                                @on-refresh="handleEmptyRefresh"
+                            />
                         </td>
                     </tr>
                 </template>
@@ -182,6 +189,20 @@
             data: {
                 type: Array,
                 default: () => []
+            },
+            emptyData: {
+                type: Object,
+                default: () => {
+                    return {
+                        type: '',
+                        text: '',
+                        tip: '',
+                        tipType: ''
+                    };
+                }
+            },
+            onRefresh: {
+                type: Function
             }
         },
         data () {
@@ -489,6 +510,10 @@
                     flag,
                     data
                 };
+            },
+
+            handleEmptyRefresh () {
+                this.onRefresh();
             }
         }
     };

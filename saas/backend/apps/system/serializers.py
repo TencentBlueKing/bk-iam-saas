@@ -10,6 +10,8 @@ specific language governing permissions and limitations under the License.
 """
 from rest_framework import serializers
 
+from backend.common.serializers import HiddenSLZ
+
 
 class SystemSLZ(serializers.Serializer):
     id = serializers.CharField()
@@ -35,3 +37,7 @@ class QueryResourceTypeSLZ(serializers.Serializer):
 class SystemResourceTypeSLZ(serializers.Serializer):
     id = serializers.CharField(label="资源类别ID")
     name = serializers.CharField(label="资源类别名称")
+
+
+class SystemQuerySLZ(HiddenSLZ):
+    all = serializers.BooleanField(label="查询所有的系统", default=False)

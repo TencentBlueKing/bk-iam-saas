@@ -91,7 +91,7 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
                 }
             }
         }
-        .help-flag {
+        .help-flag, .lang-flag {
             position: absolute;
             top: 11px;
             left: -30px;
@@ -114,7 +114,7 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
             position: absolute;
             top: 36px;
             width: 90px;
-            padding: 6px 0;
+            /* padding: 6px 0; */
             font-size: 14px;
             border-radius: 2px;
             border: 1px solid #dcdee5;
@@ -135,6 +135,12 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
                 border-right: 1px solid #dcdee5;
                 transform: rotateZ(-45deg);
             }
+            &.lang-dropdown-panel {
+                width: 120px;
+                &:before {
+                    right: 60px;
+                }
+            }
             .item {
                 height: 32px;
                 padding: 0 16px;
@@ -145,6 +151,25 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
                     background-color: #eaf3ff;
                     color: #3a84ff;
                 }
+            }
+        }
+        .lang-flag {
+            left: -60px;
+            display: inline-flex;
+            align-items: center;
+            &:hover {
+                .dropdown-panel {
+                    width: 90px;
+                    opacity: 1;
+                    visibility: visible;
+                    z-index: 9999;
+                    transform: translateY(0);
+                }
+         
+            }
+            .item-active {
+                background-color: #eaf3ff;
+                color: #3a84ff;
             }
         }
         .user-name {
@@ -463,6 +488,7 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
         color: #fff;
         border-bottom: 1px solid rgba(255, 255, 255, 0.06);
         overflow: hidden;
+        cursor: pointer;
         &.dark-theme {
             background: #1b1b1b;
         }

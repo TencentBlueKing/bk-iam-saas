@@ -15,12 +15,11 @@ from rest_framework.views import APIView
 from backend.api.authentication import ESBAuthentication
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.resource_creator_action import ResourceCreatorActionBiz
-from backend.service.constants import SubjectType
 from backend.service.models import Subject
 from backend.trans.open_authorization import AuthorizationTrans
 
 from ..audit import SubjectPolicyGrantOrRevokeAuditProvider
-from ..constants import AuthorizationAPIEnum, OperateEnum, VerifyAPIParamLocationEnum
+from ..constants import AuthorizationAPIEnum, OperateEnum, VerifyApiParamLocationEnum
 from ..mixins import AuthViewMixin
 from ..permissions import AuthorizationAPIPermission
 from ..serializers import BatchResourceCreatorActionSLZ, ResourceCreatorActionAttributeSLZ, ResourceCreatorActionSLZ
@@ -35,7 +34,7 @@ class ResourceCreatorActionView(AuthViewMixin, APIView):
     permission_classes = [AuthorizationAPIPermission]
     authorization_api_permission = {
         "post": (
-            VerifyAPIParamLocationEnum.RESOURCE_TYPE_IN_BODY.value,
+            VerifyApiParamLocationEnum.RESOURCE_TYPE_IN_BODY.value,
             AuthorizationAPIEnum.CREATOR_AUTHORIZATION_INSTANCE.value,
         ),
     }
@@ -56,7 +55,7 @@ class ResourceCreatorActionView(AuthViewMixin, APIView):
 
         data = serializer.validated_data
 
-        subject = Subject(type=SubjectType.USER.value, id=data["creator"])
+        subject = Subject.from_username(data["creator"])
         system_id = data["system"]
         resource_type_id = data["type"]
         instances = [{"id": data["id"], "name": data["name"], "ancestors": data.get("ancestors")}]
@@ -86,7 +85,7 @@ class BatchResourceCreatorActionView(AuthViewMixin, APIView):
     permission_classes = [AuthorizationAPIPermission]
     authorization_api_permission = {
         "post": (
-            VerifyAPIParamLocationEnum.RESOURCE_TYPE_IN_BODY.value,
+            VerifyApiParamLocationEnum.RESOURCE_TYPE_IN_BODY.value,
             AuthorizationAPIEnum.CREATOR_AUTHORIZATION_INSTANCE.value,
         ),
     }
@@ -107,7 +106,7 @@ class BatchResourceCreatorActionView(AuthViewMixin, APIView):
 
         data = serializer.validated_data
 
-        subject = Subject(type=SubjectType.USER.value, id=data["creator"])
+        subject = Subject.from_username(data["creator"])
         system_id = data["system"]
         resource_type_id = data["type"]
         instances = data["instances"]
@@ -137,7 +136,7 @@ class ResourceCreatorActionAttributeView(AuthViewMixin, APIView):
     permission_classes = [AuthorizationAPIPermission]
     authorization_api_permission = {
         "post": (
-            VerifyAPIParamLocationEnum.SYSTEM_IN_BODY.value,
+            VerifyApiParamLocationEnum.SYSTEM_IN_BODY.value,
             AuthorizationAPIEnum.CREATOR_AUTHORIZATION_INSTANCE.value,
         ),
     }
@@ -158,7 +157,7 @@ class ResourceCreatorActionAttributeView(AuthViewMixin, APIView):
 
         data = serializer.validated_data
 
-        subject = Subject(type=SubjectType.USER.value, id=data["creator"])
+        subject = Subject.from_username(data["creator"])
         system_id = data["system"]
         resource_type_id = data["type"]
         attributes = data["attributes"]

@@ -21,8 +21,8 @@
                     </span>
                 </template>
             </bk-table-column>
-            <!-- 所属分级管理员 -->
-            <bk-table-column :label="$t(`m.audit['所属分级管理员']`)">
+            <!-- 所属管理空间 -->
+            <bk-table-column :label="$t(`m.audit['所属管理空间']`)">
                 <template slot-scope="{ row }">
                     <span :class="row.role && row.role.name ? 'can-view' : ''"
                         :title="row.role && row.role.name ? row.role.name : ''"
@@ -44,8 +44,8 @@
                     </span>
                 </template>
             </bk-table-column>
-            <!-- 到期时间 -->
-            <bk-table-column :label="$t(`m.common['到期时间']`)" prop="expired_at_display"></bk-table-column>
+            <!-- 有效期 -->
+            <bk-table-column :label="$t(`m.common['有效期']`)" prop="expired_at_display"></bk-table-column>
             <!-- 操作 -->
             <bk-table-column :label="$t(`m.common['操作']`)" width="200">
                 <template slot-scope="props">
@@ -57,6 +57,15 @@
                     </bk-button>
                 </template>
             </bk-table-column>
+            <template slot="empty">
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-refresh="handleEmptyRefresh"
+                />
+            </template>
         </bk-table>
 
         <delete-dialog
@@ -74,7 +83,7 @@
             :group-id="curGroupId"
             @animation-end="handleAnimationEnd" />
 
-        <!-- 分级管理员 成员 侧边弹出框 -->
+        <!-- 管理空间 成员 侧边弹出框 -->
         <bk-sideslider
             :is-show.sync="isShowGradeSlider"
             :width="640"
@@ -89,8 +98,17 @@
                             {{ item }}
                         </span>
                     </div>
-                    <p class="info">{{ $t(`m.info['分级管理员成员提示']`) }}</p>
+                    <p class="info">{{ $t(`m.info['管理空间成员提示']`) }}</p>
                 </template>
+                <div v-if="gradeMembers.length === 0">
+                    <ExceptionEmpty
+                        :type="emptySliderData.type"
+                        :empty-text="emptySliderData.text"
+                        :tip-text="emptySliderData.tip"
+                        :tip-type="emptySliderData.tipType"
+                        @on-refresh="handleEmptySliderRefresh"
+                    />
+                </div>
             </div>
         </bk-sideslider>
     </div>
@@ -99,6 +117,7 @@
     import { mapGetters } from 'vuex';
     import DeleteDialog from '@/components/iam-confirm-dialog/index.vue';
     import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider';
+    import { formatCodeData } from '@/common/util';
 
     export default {
         name: '',
@@ -136,7 +155,21 @@
                 // 控制侧边弹出层显示
                 isShowGradeSlider: false,
                 sliderLoading: false,
-                gradeSliderTitle: ''
+                gradeSliderTitle: '',
+                gradeMembers: [],
+                curRoleId: -1,
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                },
+                emptySliderData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
@@ -150,25 +183,43 @@
                 this.pageLoading = true;
                 const { type } = this.data;
                 try {
-                    const res = await this.$store.dispatch('perm/getDepartPermGroups', {
+                    const { code, data } = await this.$store.dispatch('perm/getDepartPermGroups', {
                         subjectType: type === 'user' ? type : 'department',
                         subjectId: type === 'user' ? this.data.username : this.data.id
                     });
-                    this.dataList = res.data || [];
+                    this.dataList = data || [];
                     this.pageConf.count = this.dataList.length;
                     this.curPageData = this.getDataByPage(this.pageConf.current);
+                    this.emptyData = formatCodeData(code, this.emptyData, this.dataList.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
                 } finally {
                     this.pageLoading = false;
                 }
+            },
+
+            handleEmptyRefresh () {
+                this.pageConf = Object.assign(
+                    {},
+                    {
+                        current: 1,
+                        count: 0,
+                        limit: 10
+                    });
+                this.fetchSystems();
+            },
+
+            handleEmptySliderRefresh () {
+                this.fetchRoles(this.curRoleId);
             },
 
             handleAnimationEnd () {
@@ -255,7 +306,7 @@
             showQuitTemplates (row) {
                 this.deleteDialogConf.visiable = true;
                 this.deleteDialogConf.row = Object.assign({}, row);
-                this.deleteDialogConf.msg = `${this.$t(`m.common['退出']`)}【${row.name}】，${this.$t(`m.info['将不再继承该组的权限']`)}。`;
+                this.deleteDialogConf.msg = `${this.$t(`m.common['退出']`)}${this.$t(`m.common['【']`)}${row.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['，']`)}${this.$t(`m.info['将不再继承该组的权限']`)}${this.$t(`m.common['。']`)}`;
             },
 
             /**
@@ -301,19 +352,22 @@
             },
 
             /**
-             * 调用接口获取分级管理员各项数据
+             * 调用接口获取管理空间各项数据
              */
             async fetchRoles (id) {
                 this.sliderLoading = true;
                 try {
-                    const res = await this.$store.dispatch('role/getGradeMembers', { id });
-                    this.gradeMembers = [...res.data];
+                    const { code, data } = await this.$store.dispatch('role/getGradeMembers', { id });
+                    this.gradeMembers = [...data];
+                    this.emptySliderData = formatCodeData(code, this.emptySliderData, data.length === 0);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptySliderData = formatCodeData(code, this.emptySliderData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
@@ -322,13 +376,15 @@
                 }
             },
             /**
-            * 点击分级管理员中的项弹出侧边框且显示数据
+            * 点击管理空间中的项弹出侧边框且显示数据
             */
             handleViewDetail (payload) {
                 if (payload.role && payload.role.name) {
+                    const { name, id } = payload.role;
                     this.isShowGradeSlider = true;
-                    this.gradeSliderTitle = `【${payload.role.name}】${this.$t(`m.grading['分级管理员']`)} ${this.$t(`m.common['成员']`)}`;
-                    this.fetchRoles(payload.role.id);
+                    this.gradeSliderTitle = `【${name}】${this.$t(`m.grading['管理空间']`)} ${this.$t(`m.common['成员']`)}`;
+                    this.curRoleId = id;
+                    this.fetchRoles(id);
                 }
             }
         }

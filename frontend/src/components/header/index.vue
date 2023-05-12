@@ -1,20 +1,26 @@
 <template>
     <!-- eslint-disable max-len -->
-    <header :class="['header-layout', { 'nav-sticked': navStick }]">
-        <iam-guide
+    <header :class="[
+        'header-layout',
+        { 'nav-sticked': navStick, 'hide-bread': externalSystemsLayout.hideIamBreadCrumbs && !externalRouter.includes($route.name) },
+        { 'external-nav-sticked': isShowExternal }
+    ]">
+        <!-- <iam-guide
             v-if="showGuide"
             type="switch_role"
             direction="right"
             :flag="showGuide"
             :style="{ top: '5px', right: '125px' }"
-            :content="$t(`m.guide['切换分级管理员']`)" />
+            :content="$t(`m.guide['切换管理空间']`)" /> -->
         <div class="breadcrumbs fl"
             :class="backRouter ? 'has-cursor' : ''"
-            v-show="!mainContentLoading"
+            v-show="isShowExternal || (!mainContentLoading && !externalSystemsLayout.hideIamBreadCrumbs)"
             @click="back">
             <div v-if="!isHide">
                 <Icon type="arrows-left" class="breadcrumbs-back" v-if="backRouter" />
-                <h2 v-if="routeName === 'addGroupPerm'" class="breadcrumbs-current">{{ $t(`m.common['用户组']`) }}【{{userGroupName}}】{{ $t(`m.common['添加权限']`) }}</h2>
+                <h2 v-if="routeName === 'addGroupPerm'" class="breadcrumbs-current">
+                    {{ $t(`m.common['用户组']`) }}{{ $t(`m.common['【']`) }}{{userGroupName}}{{ $t(`m.common['】']`) }}{{ $t(`m.common['添加权限']`) }}
+                </h2>
                 <h2 v-else class="breadcrumbs-current">{{ headerTitle }}</h2>
             </div>
         </div>
@@ -95,7 +101,7 @@
                 </section>
             </transition>
         </div> -->
-        <div class="page-tab-wrapper" v-if="hasPageTab">
+        <div class="page-tab-wrapper" :style="{ top: externalSystemsLayout.hideIamBreadCrumbs ? '0' : '51px' }" v-if="hasPageTab">
             <bk-tab
                 :active.sync="active"
                 type="unborder-card"
@@ -114,7 +120,7 @@
 
 <script>
     import { mapGetters } from 'vuex';
-    import IamGuide from '@/components/iam-guide/index.vue';
+    // import IamGuide from '@/components/iam-guide/index.vue';
     import { leavePageConfirm } from '@/common/leave-page-confirm';
     import { il8n, language } from '@/language';
     import { bus } from '@/common/bus';
@@ -158,7 +164,7 @@
     };
 
     const NORMAL_DOCU_LINK = '/权限中心/产品白皮书/产品简介/README.md';
-    const GRADE_DOCU_LINK = '/权限中心/产品白皮书/场景案例/GradingManager.md';
+    // const GRADE_DOCU_LINK = '/权限中心/产品白皮书/场景案例/GradingManager.md';
 
     const docuLinkMap = new Map([
         // 权限模板
@@ -175,8 +181,8 @@
         [['applyCustomPerm', 'applyJoinUserGroup'], NORMAL_DOCU_LINK],
         // 我的权限
         [['myPerm', 'templatePermDetail', 'groupPermDetail', 'permRenewal'], NORMAL_DOCU_LINK],
-        // 分级管理员
-        [['ratingManager', 'gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'], GRADE_DOCU_LINK],
+        // 管理空间
+        [['ratingManager', 'gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'], NORMAL_DOCU_LINK],
         // 管理员
         [['administrator'], NORMAL_DOCU_LINK],
         // 审批流程
@@ -197,8 +203,8 @@
     export default {
         name: '',
         components: {
-            SystemLog,
-            IamGuide
+            SystemLog
+            // IamGuide
         },
         props: {
             routeName: {
@@ -225,11 +231,11 @@
                     'staff': 'personal-user'
                 },
                 identityIconMap: getIdentityIcon(),
-                // super_manager: 超级用户, staff: 普通用户, system_manager: 系统管理员, rating_manager: 分级管理员
+                // super_manager: 超级用户, staff: 普通用户, system_manager: 系统管理员, rating_manager: 管理空间
                 roleDisplayMap: {
                     'super_manager': this.$t(`m.myApproval['超级管理员']`),
                     'system_manager': this.$t(`m.nav['系统管理员']`),
-                    'rating_manager': this.$t(`m.grading['分级管理员']`),
+                    'rating_manager': this.$t(`m.grading['管理空间']`),
                     'staff': this.$t(`m.nav['普通用户']`)
                 },
                 // curHeight: 500,
@@ -247,7 +253,8 @@
                 showGuide: false,
                 isShowHeader: false,
                 placeholderValue: '',
-                userGroupName: ''
+                userGroupName: '',
+                externalRouter: ['permTransfer', 'permRenewal', 'addGroupPerm'] // 开放内嵌页面需要面包屑的页面
             };
         },
         computed: {
@@ -257,7 +264,9 @@
                 'backRouter',
                 'user',
                 'mainContentLoading',
-                'roleList'
+                'roleList',
+                'externalSystemsLayout',
+                'externalSystemId'
             ]),
             style () {
                 return {
@@ -272,6 +281,9 @@
             },
             isShowSearch () {
                 return this.searchValue === '';
+            },
+            isShowExternal () {
+               return this.externalRouter.includes(this.$route.name) && this.externalSystemsLayout.hideIamBreadCrumbs;
             }
         },
         watch: {
@@ -344,6 +356,9 @@
                 const params = {
                     id: this.userGroupId
                 };
+                if (this.externalSystemId) {
+                    params.hidden = false;
+                }
                 try {
                     const res = await this.$store.dispatch('userGroup/getUserGroupDetail', params);
                     this.$nextTick(() => {
@@ -364,7 +379,7 @@
                 this.isShowGradingWrapper = false;
             },
 
-            // super_manager: 超级用户, staff: 普通用户, system_manager: 系统管理员, rating_manager: 分级管理员
+            // super_manager: 超级用户, staff: 普通用户, system_manager: 系统管理员, rating_manager: 管理空间
             isShowSuperManager (value) {
                 if (value.type === 'super_manager') {
                     return true;

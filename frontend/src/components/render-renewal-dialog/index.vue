@@ -24,7 +24,7 @@
             <iam-deadline :value="expiredAt" @on-change="handleDeadlineChange" />
         </div>
         <div class="item">
-            <label :class="{ 'en': !curLanguageIsCn }">{{ $t(`m.common['到期时间']`) }}</label>
+            <label :class="{ 'en': !curLanguageIsCn }">{{ $t(`m.common['有效期']`) }}</label>
             <render-expire-display selected :renewal-time="expiredAt" :cur-time="curTime" />
         </div>
         <section slot="footer">

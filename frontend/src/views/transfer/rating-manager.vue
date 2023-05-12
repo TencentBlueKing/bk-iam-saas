@@ -5,7 +5,7 @@
             <div class="transfer-group-content">
                 <div class="header" @click="handlerateExpanded">
                     <Icon bk class="expanded-icon" :type="rateExpanded ? 'down-shape' : 'right-shape'" />
-                    <label class="title">分级管理员权限交接</label>
+                    <label class="title">{{ $t(`m.permTransfer['管理空间权限交接']`) }}</label>
                 </div>
                 <div class="content" v-if="rateExpanded">
                     <div class="slot-content">
@@ -22,7 +22,7 @@
                             <bk-table-column type="selection" align="center"
                                 :reserve-selection="true">
                             </bk-table-column>
-                            <bk-table-column :label="$t(`m.grading['分级管理员名称']`)" width="300">
+                            <bk-table-column :label="$t(`m.grading['管理空间名称']`)" width="300">
                                 <template slot-scope="{ row }">
                                     <bk-button text>{{row.name}}</bk-button>
                                 </template>
@@ -44,13 +44,23 @@
         </template>
         <template v-if="!isLoading && isEmpty">
             <div class="empty-wrapper">
-                <iam-svg />
-                <p class="text">{{ $t(`m.common['暂无数据']`) }}</p>
+                <!-- <iam-svg />
+                <p class="text">{{ $t(`m.common['暂无数据']`) }}</p> -->
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-clear="handleEmptyClear"
+                    @on-refresh="handleEmptyRefresh"
+                />
             </div>
         </template>
     </div>
 </template>
+
 <script>
+    import { formatCodeData } from '@/common/util';
     export default {
         name: '',
         components: {
@@ -60,10 +70,16 @@
                 isEmpty: false,
                 isLoading: false,
                 rateListRender: [],
-                rateListAll: [], // 分级管理员权限交接
+                rateListAll: [], // 管理空间权限交接
                 rateExpanded: true,
                 isSelectAllChecked: false,
-                rateSelectData: []
+                rateSelectData: [],
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         mounted () {
@@ -73,29 +89,36 @@
             async fetchData () {
                 this.isLoading = true;
                 try {
-                    const res = await this.$store.dispatch('role/getRatingManagerList', {
+                    const { code, data } = await this.$store.dispatch('role/getRatingManagerList', {
                         limit: 1024, // 接口是分页接口...需要确认
                         offset: '',
                         name: ''
                     });
-                    const rateListAll = res.data.results || [];
+                    const rateListAll = data.results || [];
                     this.rateListAll.splice(0, this.rateListAll.length, ...rateListAll);
-                    const rateListRender = res.data.results.length > 5
-                        ? res.data.results.slice(0, 5) : res.data.results;
+                    const rateListRender = data.results.length > 5
+                        ? data.results.slice(0, 5) : data.results;
                     this.rateListRender.splice(0, this.rateListRender.length, ...rateListRender);
                     this.isEmpty = rateListAll.length < 1;
+                    this.emptyData = formatCodeData(code, this.emptyData, this.isEmpty);
                 } catch (e) {
                     console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
+                        message: message || data.msg || statusText,
                         ellipsisLine: 2,
                         ellipsisCopy: true
                     });
                 } finally {
                     this.isLoading = false;
                 }
+            },
+            
+            handleEmptyRefresh () {
+                this.fetchData();
             },
 
             handlerateExpanded () {

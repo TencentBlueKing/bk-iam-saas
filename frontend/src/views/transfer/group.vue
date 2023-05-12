@@ -55,7 +55,7 @@
                                     </span>
                                 </template>
                             </bk-table-column>
-                            <bk-table-column :label="$t(`m.common['到期时间']`)" width="220">
+                            <bk-table-column :label="$t(`m.common['有效期']`)" width="220">
                                 <template slot-scope="{ row }">
                                     <span>{{row.expired_at_display}}</span>
                                 </template>
@@ -70,16 +70,24 @@
                 </div>
             </div>
         </template>
-        <!-- <template v-if="!isLoading && isEmpty">
+        <div v-if="!isLoading && isEmpty" style="height: 60px;">
             <div class="empty-wrapper">
-                <iam-svg />
-                <p class="text">{{ $t(`m.common['暂无数据']`) }}</p>
+                <!-- <iam-svg />
+                <p class="text">{{ $t(`m.common['暂无数据']`) }}</p> -->
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-refresh="handleEmptyRefresh"
+                />
             </div>
-        </template> -->
+        </div>
     </div>
 </template>
 <script>
     import { mapGetters } from 'vuex';
+    import { formatCodeData } from '@/common/util';
 
     export default {
         name: '',
@@ -95,11 +103,17 @@
                 groupNotTransferCount: 0,
                 isSelectAllChecked: false,
                 groupSelectData: [],
-                pageContainer: null
+                pageContainer: null,
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
-            ...mapGetters(['user'])
+            ...mapGetters(['user', 'externalSystemId'])
         },
         mounted () {
             this.pageContainer = document.querySelector('.main-scroller');
@@ -109,23 +123,27 @@
             async fetchData () {
                 this.isLoading = true;
                 try {
-                    const res = await this.$store.dispatch('perm/getPersonalGroups', {
-                        page_size: 100,
+                    const userGroupParams = {
+                        page_size: 10,
                         page: 1
-                    });
-                    const groupList = res.data.results || [];
+                    };
+                    if (this.externalSystemId) {
+                        userGroupParams.system_id = this.externalSystemId;
+                    }
+                    const { code, data } = await this.$store.dispatch('perm/getPersonalGroups', userGroupParams);
+                    const groupList = data.results || [];
                     groupList.forEach(item => {
                         if (String(item.department_id) !== '0' || item.expired_at < this.user.timestamp) {
                             this.groupNotTransferCount += 1;
                             item.canNotTransfer = true;
                         }
                     });
-
                     this.groupList.splice(0, this.groupList.length, ...groupList);
-
                     this.isEmpty = groupList.length < 1;
+                    this.emptyData = formatCodeData(code, this.emptyData, this.isEmpty);
                 } catch (e) {
                     console.error(e);
+                    this.emptyData = formatCodeData(e.code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
@@ -136,6 +154,10 @@
                 } finally {
                     this.isLoading = false;
                 }
+            },
+
+            handleEmptyRefresh () {
+                this.fetchData();
             },
 
             handleGroupExpanded () {

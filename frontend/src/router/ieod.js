@@ -52,11 +52,22 @@ const Apply = () => import(/* webpackChunkName: 'my-apply' */ '../views/apply');
 // 我的权限
 const MyPerm = () => import(/* webpackChunkName: 'my-perm' */ '../views/perm');
 
+// 申请权限外链页面
+const ApplyPerm = () => import(/* webpackChunkName: 'my-perm' */ '../views/perm/apply-perm');
+
 // 我的管理空间
 const MyManageSpace = () => import(/* webpackChunkName: 'my-manage-space' */ '../views/my-manage-space');
 
 // 新建我的管理空间
 const MyManageSpaceCreate = () => import(/* webpackChunkName: 'my-manage-space' */ '../views/my-manage-space/create');
+
+// 我的管理空间二级管理员授权边界
+const MyManageSpaceSubDetail = () =>
+    import(/* webpackChunkName: 'my-manage-space' */ '../views/my-manage-space/detail');
+
+// 最大可授权人员边界
+const AddMemberBoundary = () =>
+    import(/* webpackChunkName: 'my-manage-space' */ '../views/my-manage-space/add-member-boundary');
 
 // 用户组
 const UserGroup = () => import(/* webpackChunkName: 'user-group' */ '../views/group');
@@ -96,35 +107,35 @@ const PermTemplateDifference = () =>
 // 用户
 const User = () => import(/* webpackChunkName: 'user' */ '../views/user');
 
-// 分级管理员
+// 管理空间
 const GradingAdmin = () => import(/* webpackChunkName: 'grading-admin' */ '../views/grading-admin');
 
-// 分级管理员新建
+// 管理空间新建
 const GradingAdminCreate = () => import(/* webpackChunkName: 'grading-admin' */ '../views/grading-admin/create');
 
-// 分级管理员详情
+// 管理空间详情
 const GradingAdminDetail = () => import(/* webpackChunkName: 'grading-admin' */ '../views/grading-admin/detail');
 
-// 分级管理员编辑
+// 管理空间编辑
 const GradingAdminEdit = () => import(/* webpackChunkName: 'grading-admin' */ '../views/grading-admin/edit');
 
-// 分级管理员更新权限模板
+// 管理空间更新权限模板
 const GradingAdminUpdateTemplate = () =>
     import(/* webpackChunkName: 'grading-admin' */ '../views/grading-admin/update-template');
 
-// 一级管理空间
-const FirstManageSpace = () =>
-    import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/first-manage-space');
+// // 管理空间
+// const FirstManageSpace = () =>
+//     import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/first-manage-space');
 
-// 一级管理空间新建
-const FirstManageSpaceCreate = () =>
-    import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/first-manage-space/create');
+// // 管理空间新建
+// const FirstManageSpaceCreate = () =>
+//     import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/first-manage-space/create');
 
 // 授权边界
 const AuthorizationBoundary = () =>
     import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/authorization-boundary');
 
-// 授权边界一级管理空间编辑
+// 授权边界管理空间编辑
 const AuthorizationBoundaryEditFirstLevel = () =>
     import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/authorization-boundary/edit/first-level');
 
@@ -139,6 +150,14 @@ const SecondaryManageSpace = () =>
 // 二极管理空间新建
 const SecondaryManageSpaceCreate = () =>
     import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/secondary-manage-space/create');
+
+// 二极管理空间编辑
+const SecondaryManageSpaceEdit = () =>
+    import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/secondary-manage-space/Edit');
+
+// 二极管理空间详情
+const SecondaryManageSpaceDetail = () =>
+    import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/secondary-manage-space/detail');
 
 // 资源权限管理
 const ResourcePermiss = () => import(/* webpackChunkName: 'grading-admin' */ '../views/resource-permiss');
@@ -246,6 +265,14 @@ export const routes = [
                 component: MyPerm
             },
             {
+                path: 'my-perm/apply-perm',
+                name: 'applyPerm',
+                meta: {
+                    headerTitle: il8n('nav', '申请权限')
+                },
+                component: ApplyPerm
+            },
+            {
                 path: 'my-manage-space',
                 name: 'myManageSpace',
                 meta: {
@@ -261,6 +288,23 @@ export const routes = [
                     backRouter: 'myManageSpace'
                 },
                 component: MyManageSpaceCreate
+            },
+            {
+                path: 'my-manage-space/sub-detail/:id',
+                name: 'myManageSpaceSubDetail',
+                meta: {
+                    backRouter: 'myManageSpace'
+                },
+                component: MyManageSpaceSubDetail
+            },
+            {
+                path: 'add-member-boundary',
+                name: 'addMemberBoundary',
+                meta: {
+                    backRouter: -1
+                },
+                props: (route) => ({ ...route.query, ...route.params }),
+                component: AddMemberBoundary
             },
             {
                 path: 'perm-renewal',
@@ -316,7 +360,7 @@ export const routes = [
                 path: 'manage-spaces/authorization-boundary',
                 name: 'authorBoundary',
                 meta: {
-                    headerTitle: il8n('nav', '授权边界')
+                    // headerTitle: il8n('nav', '授权边界')
                 },
                 component: AuthorizationBoundary
             },
@@ -347,13 +391,31 @@ export const routes = [
                 component: SecondaryManageSpace
             },
             {
-                path: 'manage-spaces/secondary-manage-space/create',
+                path: ':id/manage-spaces/secondary-manage-space/create',
                 name: 'secondaryManageSpaceCreate',
                 meta: {
-                    headerTitle: il8n('levelSpace', '新建二级管理空间'),
-                    backRouter: 'secondaryManageSpace'
+                    headerTitle: '',
+                    backRouter: -1
                 },
+                props: true,
                 component: SecondaryManageSpaceCreate
+            },
+            {
+                path: ':id/manage-spaces/secondary-manage-space/edit',
+                name: 'secondaryManageSpaceEdit',
+                meta: {
+                    backRouter: -1
+                },
+                props: true,
+                component: SecondaryManageSpaceEdit
+            },
+            {
+                path: ':id/manage-spaces/secondary-manage-space/detail',
+                name: 'secondaryManageSpaceDetail',
+                meta: {
+                    backRouter: -1
+                },
+                component: SecondaryManageSpaceDetail
             },
             {
                 path: 'user-group',
@@ -500,7 +562,7 @@ export const routes = [
                 path: 'rating-manager',
                 name: 'ratingManager',
                 meta: {
-                    headerTitle: il8n('grading', '分级管理员')
+                    headerTitle: il8n('nav', '管理空间')
                 },
                 component: GradingAdmin
             },
@@ -508,8 +570,8 @@ export const routes = [
                 path: ':id/rating-manager-create',
                 name: 'gradingAdminCreate',
                 meta: {
-                    headerTitle: il8n('nav', '新建分级管理员'),
-                    backRouter: 'ratingManager'
+                    headerTitle: il8n('nav', '新建管理空间'),
+                    backRouter: -1
                 },
                 props: true,
                 component: GradingAdminCreate
@@ -526,7 +588,7 @@ export const routes = [
                 path: ':id/rating-manager-edit',
                 name: 'gradingAdminEdit',
                 meta: {
-                    backRouter: 'gradingAdminDetail'
+                    backRouter: -1
                 },
                 component: GradingAdminEdit
             },
@@ -534,29 +596,29 @@ export const routes = [
                 path: ':id/rating-manager-update-template',
                 name: 'gradingAdminUpdateTemplate',
                 meta: {
-                    headerTitle: il8n('nav', '编辑分级管理员'),
+                    headerTitle: il8n('nav', '编辑管理空间'),
                     backRouter: 'gradingAdminEdit'
                 },
                 component: GradingAdminUpdateTemplate
             },
-            {
-                path: 'first-manage-space',
-                name: 'firstManageSpace',
-                meta: {
-                    headerTitle: il8n('nav', '一级管理空间')
-                },
-                component: FirstManageSpace
-            },
-            {
-                path: ':id/first-manage-space-create',
-                name: 'firstManageSpaceCreate',
-                meta: {
-                    headerTitle: il8n('levelSpace', '新建一级管理空间'),
-                    backRouter: 'firstManageSpace'
-                },
-                props: true,
-                component: FirstManageSpaceCreate
-            },
+            // {
+            //     path: 'first-manage-space',
+            //     name: 'firstManageSpace',
+            //     meta: {
+            //         headerTitle: il8n('nav', '管理空间')
+            //     },
+            //     component: FirstManageSpace
+            // },
+            // {
+            //     path: ':id/first-manage-space-create',
+            //     name: 'firstManageSpaceCreate',
+            //     meta: {
+            //         headerTitle: il8n('levelSpace', '新建管理空间'),
+            //         backRouter: 'firstManageSpace'
+            //     },
+            //     props: true,
+            //     component: FirstManageSpaceCreate
+            // },
             {
                 path: 'resource-permiss',
                 name: 'resourcePermiss',

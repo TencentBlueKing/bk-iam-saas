@@ -34,14 +34,17 @@
                                     :multiple="false"
                                     :value="formData.members"
                                     :api="userApi"
-                                    :placeholder="$t(`m.verify['请输入']`)"
+                                    :placeholder="$t(`m.verify['请填写管理员']`)"
+                                    :empty-text="$t(`m.common['无匹配人员']`)"
                                     style="width: 100%;"
                                     :class="isShowMemberError ? 'is-member-empty-cls' : ''"
                                     @focus="handleRtxFocus"
                                     @blur="handleRtxBlur"
                                     @change="handleRtxChange">
                                 </bk-user-selector>
-                                <p class="name-empty-error" v-if="isShowMemberError">{{ $t(`m.verify['请选择成员']`) }}</p>
+                                <p class="name-empty-error" v-if="isShowMemberError">
+                                    {{ $t(`m.verify['请填写管理员']`) }}
+                                </p>
                                 <p class="name-empty-error" v-if="isPermissionsPrompt">
                                     {{ $t(`m.verify['目标交接人不能为本人']`) }}
                                 </p>
@@ -66,7 +69,14 @@
         </div>
 
         <!-- <div style="background: red; height: 800px;"></div> -->
-        <div class="fixed-action" style="height: 50px;" :style="{ paddingLeft: fixedActionPaddingLeft }">
+        <div
+            class="fixed-action"
+            style="height: 50px;"
+            :style="{
+                paddingLeft: externalSystemsLayout.myPerm.transfer.setFooterBtnPadding ?
+                    '24px' : fixedActionPaddingLeft
+            }"
+        >
             <bk-button theme="primary" @click="submit">
                 {{ $t(`m.common['提交']`) }}
             </bk-button>

@@ -55,6 +55,7 @@ class Action(BaseModel):
     description: str
     description_en: str
     type: str = ""
+    hidden: bool = False
     related_resource_types: List[RelatedResourceType] = []
     related_actions: List[str] = []  # 依赖操作
     related_environments: List[RelatedEnvironment] = []
@@ -98,19 +99,6 @@ def _filter_error_instance_selection(
 
     resource_type_system: Dict[str, str] = {}
     for selection in selections:
-        # 视图链路的最后一层如果不是操作关联的资源类型, 又配置了ignore_iam_path, 会产生错误的权限, 需要跳过
-        if (
-            selection.resource_type_chain[-1].id != resource_type_id
-            or selection.resource_type_chain[-1].system_id != system_id  # noqa
-        ) and selection.ignore_iam_path:
-            logger.error(
-                "system: %s, related_type: %s, instance_selection: %s ignore_iam_path conflict",
-                system_id,
-                resource_type_id,
-                selection,
-            )
-            continue
-
         # 检验实例视图节点不存在类型id一样, 系统id不一样的情况
         for node in selection.resource_type_chain:
             if node.id in resource_type_system and resource_type_system[node.id] != node.system_id:

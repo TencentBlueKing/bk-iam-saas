@@ -3,7 +3,8 @@
         <div class="ghost-wrapper" :style="ghostStyle"></div>
         <div class="render-wrapper" ref="content">
             <div
-                v-for="item in renderData" :key="item.id"
+                v-for="item in renderData"
+                :key="item.id"
                 :style="getNodeStyle(item)"
                 :class="['node-item', { 'active': item.selected }, { 'is-disabled': item.disabled || isDisabled }]"
                 :title="item.disabled ? $t(`m.common['该成员已添加']`) : ''"
@@ -29,14 +30,19 @@
                 <span
                     :style="nameStyle(item)"
                     :class="['node-title', { 'node-selected': item.selected }]"
-                    :title="item.type === 'user' ? item.name !== '' ? `${item.username}(${item.name})` : item.username : item.name">
-                    {{ item.type === 'user' ? item.username : item.name }}<template v-if="item.type === 'user' && item.name !== ''">({{ item.name }})</template>
-                </span><span class="red-dot" v-if="item.isNewMember"></span><span class="node-user-count" v-if="item.showCount">{{ '(' + item.count + `)` }}</span>
+                    :title="nameType(item)">
+                    {{ item.type === 'user' ? item.username : item.name }}
+                    <template v-if="item.type === 'user' && item.name !== ''">({{ item.name }})</template>
+                </span>
+                <span class="red-dot" v-if="item.isNewMember"></span>
+                <span class="node-user-count" v-if="item.showCount && !externalSystemsLayout.addMemberBoundary.hideInfiniteTreeCount">
+                    {{ '(' + item.count + `)` }}
+                </span>
                 <spin-loading ext-cls="loading" v-if="item.loading" />
                 <div class="node-radio" v-if="item.showRadio">
                     <span class="node-checkbox"
                         :class="{
-                            'is-disabled': item.disabled || isDisabled,
+                            'is-disabled': disabledNode(item),
                             'is-checked': item.is_selected,
                             'is-indeterminate': item.indeterminate
                         }"
@@ -44,14 +50,25 @@
                     </span>
                 </div>
             </div>
+            <template v-if="!renderData.length && emptyData.type">
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-type="emptyData.tipType"
+                    @on-refresh="handleEmptyRefresh"
+                />
+            </template>
         </div>
     </div>
 </template>
+
 <script>
     import _ from 'lodash';
+    import { mapGetters } from 'vuex';
 
     export default {
         name: 'infinite-tree',
+        inject: ['getGroupAttributes'],
         props: {
             // 所有数据
             allData: {
@@ -93,6 +110,18 @@
             isDisabled: {
                 type: Boolean,
                 default: false
+            },
+            // 根据状态码渲染落地空内容
+            emptyData: {
+                type: Object,
+                default: () => {
+                    return {
+                        type: 'empty',
+                        text: '暂无数据',
+                        tip: '',
+                        tipType: ''
+                    };
+                }
             }
         },
         data () {
@@ -103,6 +132,7 @@
             };
         },
         computed: {
+            ...mapGetters(['externalSystemsLayout']),
             ghostStyle () {
                 return {
                     height: this.visiableData.length * this.itemHeight + 'px'
@@ -140,6 +170,32 @@
                         'maxWidth': `calc(100% - ${otherOffset}px)`
                     };
                 };
+            },
+            nameType () {
+                return (payload) => {
+                    const { name, type, username, full_name: fullName } = payload;
+                    const typeMap = {
+                        user: () => {
+                           // eslint-disable-next-line camelcase
+                           if (fullName) {
+                            return fullName;
+                           } else {
+                            return name ? `${username}(${name})` : username;
+                           }
+                        },
+                        depart: () => {
+                            // eslint-disable-next-line camelcase
+                            return fullName || name;
+                        }
+                    };
+                    return typeMap[type]();
+                };
+            },
+            disabledNode () {
+                return (payload) => {
+                    const isDisabled = payload.disabled || this.isDisabled;
+                    return this.getGroupAttributes ? isDisabled || (this.getGroupAttributes().source_from_role && payload.type === 'depart') : isDisabled;
+                };
             }
         },
         watch: {
@@ -149,8 +205,6 @@
                 }
                 this.clickTriggerTypeBat = val;
             }
-        },
-        created () {
         },
         mounted () {
             const height = this.$el.clientHeight === 0
@@ -202,8 +256,8 @@
              *
              * @param {Object} node 当前节点
              */
-            nodeClick (node) {
-                if (this.isDisabled) {
+            async nodeClick (node) {
+                if (this.isDisabled || (this.getGroupAttributes && this.getGroupAttributes().source_from_role && node.type === 'depart')) {
                     return;
                 }
                 if ((node.level === 0 || (node.async && node.disabled)) && !this.isRatingManager) {
@@ -294,21 +348,21 @@
                 });
             },
 
-            handleNodeClick (node) {
-                if (node.disabled || this.isDisabled) {
-                    return;
+            async handleNodeClick (node) {
+                const isDisabled = node.disabled || this.isDisabled || (this.getGroupAttributes && this.getGroupAttributes().source_from_role && node.type === 'depart');
+                if (!isDisabled) {
+                    node.is_selected = !node.is_selected;
+                    if (node.type === 'user') {
+                        this.handleBanUser(node, node.is_selected);
+                    }
+                    this.$emit('on-select', node.is_selected, node);
                 }
-                node.is_selected = !node.is_selected;
-                if (node.type === 'user') {
-                    this.handleBanUser(node, node.is_selected);
-                }
-                this.$emit('on-select', node.is_selected, node);
             },
 
             /**
              * radio 选择回调
              */
-            nodeChange (newVal, oldVal, localVal, node) {
+            async nodeChange (newVal, oldVal, localVal, node) {
                 this.$emit('on-select', newVal, node);
             },
 
@@ -336,6 +390,10 @@
                         item.is_selected = isSelected;
                     }
                 });
+            },
+
+            handleEmptyRefresh () {
+                this.$emit('on-refresh', {});
             }
         }
     };

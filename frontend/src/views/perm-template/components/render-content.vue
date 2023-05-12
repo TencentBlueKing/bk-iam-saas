@@ -200,7 +200,7 @@
             };
         },
         computed: {
-            ...mapGetters(['user']),
+            ...mapGetters(['user', 'externalSystemId']),
             isShowGroupAction () {
                 return (item) => {
                     const isExistSubGroup = (item.sub_groups || []).some(v => v.sub_groups && v.sub_groups.length > 0);
@@ -286,7 +286,7 @@
                 const params = {
                     id: this.id,
                     types: 'group',
-                    limit: 0,
+                    limit: 10,
                     offset: 0
                 };
                 try {
@@ -392,17 +392,18 @@
                     let count = 0;
                     let delCount = 0;
                     let deleteCount = 0;
-                    item.actions.forEach(item => {
-                        if (!item.disabled) {
-                            if (payload.includes(item.id)) {
-                                if (!item.checked && flag) {
+                    item.actions.forEach(subItem => {
+                        if (!subItem.disabled) {
+                            if (payload.includes(subItem.id)) {
+                                if (!subItem.checked && flag) {
                                     ++count;
                                 }
-                                if (item.checked && !flag) {
+                                if (subItem.checked && !flag) {
                                     ++delCount;
                                 }
-                                item.checked = flag;
-                                this.$refs.actionsRef.handleRelatedActions(item, flag);
+                                subItem.checked = flag;
+                                this.$set(item, 'expanded', flag);
+                                this.$refs.actionsRef.handleRelatedActions(subItem, flag);
                             }
                         }
                         if (item.tag === 'delete') {
@@ -412,11 +413,17 @@
                             allCheckedLen++;
                         }
                     });
-                    item.allChecked = allCheckedLen === item.actions.length
-
-                    ;(item.sub_groups || []).forEach(subItem => {
-                        let allSubCheckedLen = 0
-                        ;(subItem.actions || []).forEach(act => {
+                    // const haveActions = item.actions.filter(v => v.id);
+                    // const haveActionsChecked = !!item.actions.find(v => v.checked === true);
+                    // this.$set(item, 'expanded', haveActionsChecked);
+                    // if (!flag && haveActions) {
+                    //     // const isExpand = [...haveActions].filter(v => payload.includes(v));
+                    //     this.$set(item, 'expanded', haveActionsChecked);
+                    // }
+                    item.allChecked = allCheckedLen === item.actions.length;
+                    (item.sub_groups || []).forEach(subItem => {
+                        let allSubCheckedLen = 0;
+                        (subItem.actions || []).forEach(act => {
                             if (!act.disabled) {
                                 if (payload.includes(act.id)) {
                                     if (!act.checked && flag) {
@@ -426,6 +433,7 @@
                                         ++delCount;
                                     }
                                     act.checked = flag;
+                                    this.$set(item, 'expanded', flag);
                                     this.$refs.actionsRef.handleRelatedActions(act, flag);
                                 }
                             }
@@ -437,9 +445,13 @@
                                 allSubCheckedLen++;
                             }
                         });
+                        // const haveGroupActions = subItem.actions.filter(v => v.id);
+                        // const haveGroupActionsChecked = !!subItem.actions.find(v => v.checked === true);
                         subItem.allChecked = allSubCheckedLen === subItem.actions.length;
+                        // if (!flag && haveGroupActions) {
+                        //     this.$set(item, 'expanded', haveGroupActionsChecked);
+                        // }
                     });
-
                     item.actionsAllChecked = item.actions.every(act => act.checked) && (item.sub_groups || []).every(
                         v => {
                             return v.actions.every(act => act.checked);
@@ -452,14 +464,19 @@
                         item.count = item.count - delCount;
                     }
                     this.$set(item, 'deleteCount', deleteCount);
+                    this.$set(item, 'expanded', item.count > 0);
                 });
                 this.tagActionList = [...payload];
             },
 
             async fetchSystems () {
                 try {
-                    const res = await this.$store.dispatch('system/getSystems')
-                    ;(res.data || []).forEach(item => {
+                    const params = {};
+                    if (this.externalSystemId) {
+                        params.hidden = false;
+                    }
+                    const res = await this.$store.dispatch('system/getSystems', params);
+                    (res.data || []).forEach(item => {
                         item.displayName = `${item.name}(${item.id})`;
                     });
                     this.systemList = res.data || [];
@@ -920,6 +937,7 @@
             position: relative;
             font-size: 12px;
             color: #ff4d4d;
+            top: 0;
             &.mt {
                 margin-top: 10px;
             }

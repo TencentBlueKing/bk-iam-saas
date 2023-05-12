@@ -4,6 +4,7 @@
         <bk-table
             v-if="!isLoading"
             :data="tableList"
+            :max-height="tableList.length > 0 ? 500 : 280"
             border
             :row-class-name="handleRowClass"
             :cell-class-name="getCellClass"
@@ -209,6 +210,9 @@
                     </template>
                 </template>
             </bk-table-column>
+            <template slot="empty">
+                <ExceptionEmpty />
+            </template>
         </bk-table>
 
         <bk-sideslider
@@ -429,11 +433,9 @@
                 const environmentsData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
                     .environments;
 
-                console.log(2222, environmentsData);
                 if (!environmentsData) {
                     return [];
                 }
-                console.log(1111, _.cloneDeep(environmentsData));
                 return _.cloneDeep(environmentsData);
             },
             curDisabled () {
@@ -515,9 +517,6 @@
                 },
                 immediate: true
             }
-        },
-        created () {
-            console.log('1. 申请自定义权限');
         },
         methods: {
             handleOpenRenewal (row, index) {
@@ -1568,7 +1567,6 @@
             },
 
             handlerAddCondition (data, index, resIndex) {
-                console.log('data', data, resIndex);
                 const dataClone = _.cloneDeep(data);
                 // dataClone.related_resource_types[resIndex].condition = ['none']
                 // dataClone.related_resource_types[resIndex].conditionBackup = ['none']
@@ -1577,7 +1575,6 @@
                     e.conditionBackup = ['none'];
                     return e;
                 });
-                console.log('dataClone', dataClone);
                 const relatedResourceTypes = _.cloneDeep(
                     {
                         id: '',
@@ -1588,9 +1585,7 @@
                     relatedResourceTypes.environments = [];
                 }
                 this.tableList[index].resource_groups.push(relatedResourceTypes);
-                console.log('this.tableList', this.tableList);
                 this.originalList = _.cloneDeep(this.tableList);
-                console.log('this.originalList', this.originalList);
             },
 
             handlerReduceCondition (data, index, resIndex, groupIndex) {

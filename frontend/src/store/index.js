@@ -55,7 +55,7 @@ import myApply from './modules/myApply';
 // 用户组 模块
 import userGroup from './modules/userGroup';
 
-// 分级管理员模块
+// 一级管理空间模块
 import role from './modules/role';
 
 // 审批流程设置
@@ -78,6 +78,9 @@ import resourcePermiss from './modules/resource-permiss';
 
 // 临时权限模块
 import applyProvisionPerm from './modules/apply-provision-perm';
+
+// 管理空间模块
+import spaceManage from './modules/space-manage';
 
 Vue.use(Vuex);
 
@@ -135,34 +138,11 @@ const currentNav = [
                 disabled: false
             },
             {
-                icon: 'grade-admin',
+                icon: 'my-manage-space',
                 id: 'myManageSpaceNav',
                 rkey: 'myManageSpace',
                 name: il8n('nav', '我的管理空间'),
                 path: `${SITE_URL}my-manage-space`,
-                disabled: false
-            }
-        ]
-    },
-    {
-        icon: 'perm-manage',
-        name: il8n('nav', '管理空间'),
-        rkey: 'manageSpaces',
-        children: [
-            {
-                icon: 'user-group',
-                id: 'authorBoundaryNav',
-                rkey: 'authorBoundary',
-                name: il8n('nav', '授权边界'),
-                path: `${SITE_URL}manage-spaces/authorization-boundary`,
-                disabled: false
-            },
-            {
-                icon: 'perm-template',
-                id: 'secondaryManageSpaceNav',
-                rkey: 'secondaryManageSpace',
-                name: il8n('nav', '二级管理空间'),
-                path: `${SITE_URL}manage-spaces/secondary-manage-space`,
                 disabled: false
             }
         ]
@@ -189,7 +169,7 @@ const currentNav = [
                 disabled: false
             },
             {
-                icon: 'user-fill',
+                icon: 'personal-user',
                 id: 'userNav',
                 rkey: 'user',
                 name: il8n('nav', '用户'),
@@ -199,23 +179,46 @@ const currentNav = [
         ]
     },
     {
-        icon: 'grade-admin',
+        icon: 'perm-manage',
+        name: il8n('nav', '管理空间'),
+        rkey: 'manageSpaces',
+        children: [
+            {
+                icon: 'auth-scope',
+                id: 'authorBoundaryNav',
+                rkey: 'authorBoundary',
+                name: il8n('nav', '授权边界-nav'),
+                path: `${SITE_URL}manage-spaces/authorization-boundary`,
+                disabled: false
+            },
+            {
+                icon: 'level-two-manage-space',
+                id: 'secondaryManageSpaceNav',
+                rkey: 'secondaryManageSpace',
+                name: il8n('nav', '二级管理空间'),
+                path: `${SITE_URL}manage-spaces/secondary-manage-space`,
+                disabled: false
+            }
+        ]
+    },
+    {
+        icon: 'level-one-manage-space',
         id: 'gradingAdminNav',
         rkey: 'ratingManager',
-        name: il8n('grading', '分级管理员'),
+        name: il8n('nav', '管理空间'),
         path: `${SITE_URL}rating-manager`,
         disabled: false
     },
+    // {
+    //     icon: 'grade-admin',
+    //     id: 'firstManageSpaceNav',
+    //     rkey: 'firstManageSpace',
+    //     name: il8n('nav', '一级管理空间'),
+    //     path: `${SITE_URL}first-manage-space`,
+    //     disabled: false
+    // },
     {
-        icon: 'grade-admin',
-        id: 'firstManageSpaceNav',
-        rkey: 'firstManageSpace',
-        name: il8n('nav', '一级管理空间'),
-        path: `${SITE_URL}first-manage-space`,
-        disabled: false
-    },
-    {
-        icon: 'grade-admin',
+        icon: 'resource-perm-manage',
         id: 'resourcePermissNav',
         rkey: 'resourcePermiss',
         name: il8n('nav', '资源权限管理'),
@@ -228,7 +231,7 @@ const currentNav = [
         rkey: 'set',
         children: [
             {
-                icon: 'perm-apply',
+                icon: 'super-admin',
                 name: il8n('common', '管理员'),
                 id: 'settingNav',
                 rkey: 'administrator',
@@ -275,7 +278,7 @@ if (window.ENABLE_MODEL_BUILD.toLowerCase() === 'true') {
 
 if (window.ENABLE_TEMPORARY_POLICY.toLowerCase() === 'true') {
     currentNav[0].children.push({
-        icon: 'perm-apply',
+        icon: 'tempora-perm-apply',
         name: il8n('nav', '临时权限申请'),
         id: 'provisionPermApplyNav',
         rkey: 'applyProvisionPerm',
@@ -301,7 +304,8 @@ const store = new Vuex.Store({
         audit,
         access,
         resourcePermiss,
-        applyProvisionPerm
+        applyProvisionPerm,
+        spaceManage
     },
     state: {
         mainContentLoading: false,
@@ -328,7 +332,6 @@ const store = new Vuex.Store({
         isSync: false,
         routerDiff: [],
         currentNav: currentNav,
-
         roleList: [],
         noviceGuide: {
             rating_manager_authorization_scope: true,
@@ -339,7 +342,8 @@ const store = new Vuex.Store({
             create_group: true,
             set_group_approval_process: true,
             add_group_member: true,
-            add_group_perm_template: true
+            add_group_perm_template: true,
+            grade_manager_upgrade: true
         },
         loadingConf: {
             speed: 2,
@@ -366,29 +370,48 @@ const store = new Vuex.Store({
             hideIamHeader: false, // 第一层级头部导航
             hideIamSlider: false, // 第一层级侧边导航
             hideIamBreadCrumbs: false, // 第一层级面包屑
+            hideIamGuide: false, // 隐藏所有guide的tooltip
             myPerm: { // 我的权限
-                hideCustomTab: true, // 自定义权限tab - 1
-                hideApplyBtn: true, // 申请权限按钮 - 1
-                hideTemporaryCustomTab: true, // 临时权限tab -1
+                hideCustomTab: false, // 自定义权限tab - 1
+                hideApplyBtn: false, // 申请权限按钮 - 1
+                hideTemporaryCustomTab: false, // 临时权限tab -1
                 renewal: { // 我的权限-权限续期
-                    hideCustomTab: true // 自定义权限tab - 2
+                    hideCustomTab: false // 自定义权限tab - 2
                 },
                 transfer: { // 我的权限-权限交接
-                    hideTextBtn: true, // 交接历史文本按钮 - 3
-                    hideCustomData: true, // 自定义权限交接-3
-                    hideManagerData: true, // 管理员交接数据-3
-                    showUserGroupSearch: true // 显示权限交接用户组查询-3
+                    hideTextBtn: false, // 交接历史文本按钮 - 3
+                    hideCustomData: false, // 自定义权限交接-3
+                    hideManagerData: false, // 管理员交接数据-3
+                    showUserGroupSearch: false, // 显示权限交接用户组查询-3
+                    setFooterBtnPadding: false // 设置内嵌页面权限交接底部按钮你编剧
                 }
             },
             userGroup: { // 用户组
                 addGroup: { // 用户组 - 添加用户组 - 添加权限抽屉
-                    hideAddTemplateTextBtn: true // 右侧抽屉新增文本按钮-7.1
+                    hideAddTemplateTextBtn: false, // 右侧抽屉新增文本按钮-7.1
+                    AddUserGroupDiaLogUrl: '' // 用户组 - 添加用户组 - 组成员链接跳转
                 },
                 groupDetail: { // 用户组 - 组详情
-                    hideAddBtn: true, // 用户组-组权限-添加权限按钮-6
-                    hideEditBtn: true, // 用户组-组权限-编辑权限按钮-6
-                    hideDeleteBtn: true // 用户组-组权限-删除权限按钮-6
+                    hideAddBtn: false, // 用户组-组权限-添加权限按钮-6
+                    hideEditBtn: false, // 用户组-组权限-编辑权限按钮-6
+                    hideDeleteBtn: false, // 用户组-组权限-删除权限按钮-6
+                    hideGroupName: false, // 用户组-组详情-组名称-6
+                    hideGroupDescEdit: false, // 用户组-组详情-组描述编辑-6
+                    hideCustomPerm: false, // 用户组-组权限-自定义权限相关信息-6
+                    hideGroupPermExpandTitle: false, // 用户组-组权限-隐藏自定义权限标题
+                    setMainLayoutHeight: false // 用户组-详情页面-区分主体高度
                 }
+            },
+            // 我的申请
+            myApply: {
+                leftLayoutHeight: false, // 设置外部嵌套我的申请页面左侧主体内容高度
+                rightLayoutHeight: false, // 设置外部嵌套我的申请页面右侧主体内容高度
+                externalSystemParams: false // 设置获取我的申请嵌套页面url传参，根据id自动选中当前数据
+            },
+            // 设置项目最大可授权范围
+            addMemberBoundary: {
+                customFooterClass: false, // 设置项目最大可授权范围, 底部插槽自定义样式
+                hideInfiniteTreeCount: false // 隐藏设置项目最大可授权范围左边拓扑树显示成员个数
             }
         }
     },
@@ -416,7 +439,8 @@ const store = new Vuex.Store({
         navCurRoleId: state => state.navCurRoleId,
         showNoviceGuide: state => state.showNoviceGuide,
         curRoleId: state => state.curRoleId,
-        externalSystemsLayout: state => state.externalSystemsLayout
+        externalSystemsLayout: state => state.externalSystemsLayout,
+        externalSystemId: state => state.externalSystemId
     },
     mutations: {
         updateHost (state, params) {
@@ -559,7 +583,6 @@ const store = new Vuex.Store({
         },
 
         updataRouterDiff (state, role) {
-            console.log(state, role);
             state.routerDiff = [...getRouterDiff(role)];
         },
 
@@ -590,6 +613,10 @@ const store = new Vuex.Store({
 
         setExternalSystemsLayout (state, payload) {
             state.externalSystemsLayout = payload;
+        },
+
+        updateSystemId (state, payload) {
+            state.externalSystemId = payload;
         }
     },
     actions: {
@@ -718,11 +745,13 @@ const store = new Vuex.Store({
          * @return {Promise} promise 对象
          */
         getNoviceGuide ({ commit, state, dispatch }, config) {
-            const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
-            return http.get(`${AJAX_URL_PREFIX}/users/profile/newbie/`, config).then((response) => {
-                commit('setNoviceGuide', response.data);
-                return response.data;
-            });
+            if (!store.getters.externalSystemsLayout.hideIamGuide) {
+                const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
+                return http.get(`${AJAX_URL_PREFIX}/users/profile/newbie/`, config).then((response) => {
+                    commit('setNoviceGuide', response.data);
+                    return response.data;
+                });
+            }
         },
 
         /**
@@ -766,9 +795,63 @@ const store = new Vuex.Store({
          *
          * @return {Promise} promise 对象
          */
-        getExternalSystemsLayout ({ commit, state, dispatch }, config) {
-            return http.get(`${AJAX_URL_PREFIX}/systems/`, config).then(response => {
-                commit('setExternalSystemsLayout', response.data);
+        getExternalSystemsLayout ({ commit, state, dispatch }, params, config) {
+            const externalSystemsLayout = {
+                hideIamHeader: true, // 第一层级头部导航
+                hideIamSlider: true, // 第一层级侧边导航
+                hideIamBreadCrumbs: true, // 第一层级面包屑
+                hideIamGuide: true, // 隐藏所有guide的tooltip
+                myPerm: { // 我的权限
+                    hideCustomTab: true, // 自定义权限tab - 1
+                    hideApplyBtn: true, // 申请权限按钮 - 1
+                    hideTemporaryCustomTab: true, // 临时权限tab -1
+                    renewal: { // 我的权限-权限续期
+                        hideCustomTab: true // 自定义权限tab - 2
+                    },
+                    transfer: { // 我的权限-权限交接
+                        hideTextBtn: true, // 交接历史文本按钮 - 3
+                        hideCustomData: true, // 自定义权限交接-3
+                        hideManagerData: true, // 管理员交接数据-3
+                        showUserGroupSearch: true, // 显示权限交接用户组查询-3
+                        setFooterBtnPadding: true // 设置内嵌页面权限交接底部按钮你编剧
+                    }
+                },
+                userGroup: { // 用户组
+                    addGroup: { // 用户组 - 添加用户组 - 添加权限抽屉
+                        hideAddTemplateTextBtn: true, // 右侧抽屉新增文本按钮-7.1
+                        AddUserGroupDiaLogUrl: '' // 用户组 - 添加用户组 - 组成员链接跳转
+                    },
+                    groupDetail: { // 用户组 - 组详情
+                        hideAddBtn: true, // 用户组-组权限-添加权限按钮-6
+                        hideEditBtn: true, // 用户组-组权限-编辑权限按钮-6
+                        hideDeleteBtn: true, // 用户组-组权限-删除权限按钮-6
+                        hideGroupName: true, // 用户组-组详情-隐藏组名称
+                        hideGroupDescEdit: true, // 用户组-组详情-隐藏组描述编辑
+                        hideCustomPerm: false, // 用户组-组权限-隐藏自定义权限相关信息
+                        hideGroupPermExpandTitle: true, // 用户组-组权限-隐藏自定义权限标题
+                        setMainLayoutHeight: true // 用户组-详情页面-区分主体高度
+                    }
+                },
+                // 我的申请
+                myApply: {
+                    leftLayoutHeight: true, // 设置外部嵌套我的申请页面左侧主体内容高度
+                    rightLayoutHeight: true, // 设置外部嵌套我的申请页面右侧主体内容高度
+                    externalSystemParams: true // 设置获取我的申请嵌套页面url传参，根据id自动选中当前数据
+                },
+                // 设置项目最大可授权范围
+                addMemberBoundary: {
+                    customFooterClass: true, // 设置项目最大可授权范围, 底部插槽自定义样式
+                    hideInfiniteTreeCount: true// 隐藏设置项目最大可授权范围左边拓扑树显示成员个数
+                }
+            };
+            commit('setExternalSystemsLayout', externalSystemsLayout);
+            const { externalSystemId } = params;
+            return http.get(`${AJAX_URL_PREFIX}/systems/${externalSystemId}/custom_frontend_settings/`, config).then(response => {
+                if (Array.from(response.data).length) {
+                    commit('setExternalSystemsLayout', response.data);
+                } else {
+                    commit('setExternalSystemsLayout', externalSystemsLayout);
+                }
                 return response.data;
             });
         }

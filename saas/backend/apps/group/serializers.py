@@ -21,7 +21,7 @@ from backend.apps.application.base_serializers import BaseAggActionListSLZ, vali
 from backend.apps.application.serializers import ExpiredAtSLZ, SystemInfoSLZ
 from backend.apps.group.models import Group
 from backend.apps.policy.serializers import BasePolicyActionSLZ, ResourceTypeSLZ
-from backend.apps.role.models import Role, RoleRelatedObject
+from backend.apps.role.models import Role, RoleRelatedObject, RoleRelation
 from backend.apps.template.models import PermTemplatePolicyAuthorized
 from backend.biz.group import GroupBiz
 from backend.biz.policy import PolicyBean, PolicyBeanList
@@ -78,6 +78,8 @@ class GroupSLZ(serializers.ModelSerializer):
 
             # 查询涉及到的用户组的属性
             self.group_attrs_dict = GroupAttributeService().batch_get_attributes(group_ids)
+        elif isinstance(self.instance, Group):
+            self.group_attrs_dict = GroupAttributeService().batch_get_attributes([self.instance.id])
 
     def get_role(self, obj):
         if not self.group_role_dict:
@@ -129,7 +131,7 @@ class GroupsAddMemberSLZ(GroupAddMemberSLZ):
 
 class GroupUpdateSLZ(serializers.Serializer):
     name = serializers.CharField(label="用户组名称", min_length=2, max_length=128)
-    description = serializers.CharField(label="描述", min_length=10)
+    description = serializers.CharField(label="描述", allow_blank=True)
 
     def validate(self, data):
         """
@@ -137,7 +139,7 @@ class GroupUpdateSLZ(serializers.Serializer):
         """
         if self.instance:
             if Group.objects.exclude(id=self.instance.id).filter(name=data["name"]).exists():
-                raise serializers.ValidationError({"name": [_("用户组名称不能与已有的重复")]})
+                raise serializers.ValidationError({"name": [_("存在同名用户组")]})
 
         return data
 
@@ -297,7 +299,7 @@ def validate_template_authorization(templates):
 
 class GroupCreateSLZ(serializers.Serializer):
     name = serializers.CharField(label="用户组名称", min_length=2, max_length=128)
-    description = serializers.CharField(label="描述", min_length=10)
+    description = serializers.CharField(label="描述", allow_blank=True)
     members = serializers.ListField(label="成员列表", child=GroupMemberSLZ(label="成员"))
     expired_at = serializers.IntegerField(label="过期时间", max_value=PERMANENT_SECONDS)
     templates = serializers.ListField(label="授权信息", child=TemplateAuthorizationSLZ(label="模板授权"), allow_empty=True)
@@ -317,7 +319,17 @@ class GroupCreateSLZ(serializers.Serializer):
         return data
 
 
-class GroupAuthoriedConditionSLZ(serializers.Serializer):
+class GroupAuthorizedConditionSLZ(serializers.Serializer):
     action_id = serializers.CharField(label="操作ID")
     resource_group_id = serializers.CharField(label="资源条件组ID")
     related_resource_type = ResourceTypeSLZ(label="资源类型")
+
+
+class GradeManagerGroupTransferSLZ(serializers.Serializer):
+    subset_manager_id = serializers.IntegerField(label="子集管理员id")
+
+    def validate_subset_manager_id(self, value):
+        role = self.context["role"]
+        if not RoleRelation.objects.filter(parent_id=role.id, role_id=value).exists():
+            raise serializers.ValidationError(f"subset manager id {value} not exists")
+        return value

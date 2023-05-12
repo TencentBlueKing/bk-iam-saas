@@ -1,0 +1,57 @@
+### Add user group members
+
+#### Parameters
+
+| Field | Type | Required | Location | Description |
+|--------|--------|--------|--------|--------|--------|
+| group_id | int | yes | path | user_group_id |
+| members | array[object] | yes | body | list of members |
+| expired_at | int | Yes | body | Expiration timestamp (in seconds), i.e. the user or department will not have the relevant permissions for the user group after expired_at, where a value of 4102444800 means permanent |
+
+members
+
+| field | type | mandatory | location | description |
+|--------|--------|--------|--------|--------|--------|--------|
+| type | string | yes | body | member type, user for user, department for department |
+| id | string | yes | body | User or department ID |
+
+#### Request
+
+```json
+{
+  "members": [
+    {
+      "type": "user",
+      "id": "admin"
+    },
+    {
+      "type": "department",
+      "id": "1"
+    }
+  ],
+  "expired_at": 1619587562
+}
+```
+
+#### Response
+
+| field | type | description |
+| -----------|-----------|-----------|
+| count | int | total number |
+| results | array[object] | paginated query to results |
+
+results
+| field | type | description |
+| -----------|-----------|-----------|
+| type | string | Member type, user means user, department means department
+| id | string | User or department ID |
+| name | string | User or department name |
+| expired_at | int | Expiration timestamp (in seconds), i.e. the user or department will not have privileges related to the user group after expired_at, where a value of 4102444800 means permanent |
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {}
+}
+```

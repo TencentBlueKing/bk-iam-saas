@@ -66,7 +66,7 @@
                     <div v-else class="condition-table-cell empty-text">{{ $t(`m.common['无生效条件']`) }}</div>
                 </template>
             </bk-table-column>
-            <bk-table-column prop="expired_dis" min-width="100" :label="$t(`m.common['到期时间']`)"></bk-table-column>
+            <bk-table-column prop="expired_dis" min-width="100" :label="$t(`m.common['有效期']`)"></bk-table-column>
             <bk-table-column :label="$t(`m.common['操作']`)">
                 <template slot-scope="{ row }">
                     <bk-button text @click="handleDelete(row)">{{ $t(`m.common['删除']`) }}</bk-button>
@@ -314,7 +314,6 @@
                         item.related_environments = this.linearActionList.find(sub => sub.id === item.id).related_environments;
                         return new PermPolicy(item);
                     });
-                    console.log('this.policyList', this.policyList);
                 } catch (e) {
                     console.error(e);
                     this.bkMessageInstance = this.$bkMessage({
@@ -507,7 +506,6 @@
              */
             handleEnvironmentsViewResource (payload, data) {
                 this.environmentsSidesliderData = payload.environments;
-                console.log('environmentsSidesliderData', this.environmentsSidesliderData);
                 this.isShowEnvironmentsSideslider = true;
                 this.environmentsSidesliderTitle = `$【${data.name}】${this.$t(`m.common['生效条件']`)}`;
             },
@@ -517,7 +515,7 @@
              */
             handlerReduceInstance (payload, data) {
                 if (data.resource_groups.length < 2) return;
-                this.deleteDialog.subTitle = `${this.$t(`m.dialog['将删除']`)}一组实例权限`;
+                this.deleteDialog.subTitle = `${this.$t(`m.dialog['将删除']`)}${this.$t(`m.perm['一组实例权限']`)}`;
                 this.deleteDialog.visible = true;
                 this.resourceGrouParams = {
                     id: data.policy_id,

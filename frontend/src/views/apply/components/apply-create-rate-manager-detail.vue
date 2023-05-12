@@ -4,7 +4,7 @@
             <basic-info :data="basicInfo" />
             <p class="rate-manager-info">
                 <span class="name">{{ name }}</span>
-                <span class="text">({{ $t(`m.grading['分级管理员']`) }})</span>
+                <span class="text">({{ $t(`m.nav['管理空间']`) }})</span>
             </p>
             <render-perm
                 v-for="(item, index) in authorizationScopes"
@@ -35,7 +35,13 @@
         </template>
         <template v-if="isEmpty">
             <div class="apply-content-empty-wrapper">
-                <iam-svg />
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-refresh="handleEmptyRefresh"
+                />
             </div>
         </template>
     </div>
@@ -48,6 +54,8 @@
     import PermPolicy from '@/model/my-perm-policy';
     import RenderProcess from '../common/render-process';
     import RenderMemberItem from '../common/render-member-display';
+    import { formatCodeData } from '@/common/util';
+    import { mapGetters } from 'vuex';
     export default {
         name: '',
         components: {
@@ -79,10 +87,17 @@
                 authorizationScopes: [],
                 name: '',
                 users: [],
-                departments: []
+                departments: [],
+                emptyData: {
+                    type: '',
+                    text: '',
+                    tip: '',
+                    tipType: ''
+                }
             };
         },
         computed: {
+            ...mapGetters(['externalSystemId']),
             isLoading () {
                 return this.initRequestQueue.length > 0;
             },
@@ -123,8 +138,14 @@
         },
         methods: {
             async fetchData (id) {
+                const params = {
+                    id
+                };
+                if (this.externalSystemId) {
+                    params.hidden = false;
+                }
                 try {
-                    const res = await this.$store.dispatch('myApply/getApplyDetail', { id });
+                    const res = await this.$store.dispatch('myApply/getApplyDetail', params);
                     const {
                         sn, type, applicant, organizations, reason, data,
                         status, created_time, ticket_url
@@ -136,7 +157,8 @@
                         applicant,
                         reason,
                         created_time,
-                        ticket_url
+                        ticket_url,
+                        applicants: data.applicants || []
                     };
                     this.status = status;
                     this.name = data.name;
@@ -147,8 +169,10 @@
                     this.authorizationScopes = _.cloneDeep(data.authorization_scopes);
                     this.users = data.subject_scopes.filter(item => item.type === 'user');
                     this.departments = data.subject_scopes.filter(item => item.type === 'department');
+                    this.emptyData = formatCodeData(res.code, this.emptyData, this.authorizationScopes.length === 0);
                 } catch (e) {
                     console.error(e);
+                    this.emptyData = formatCodeData(e.code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
@@ -169,7 +193,7 @@
 </script>
 <style lang="postcss">
     .iam-apply-create-rate-manager-detail-wrapper {
-        height: calc(100vh - 121px);
+        /* height: calc(100vh - 121px); */
         .action {
             padding-bottom: 50px;
         }

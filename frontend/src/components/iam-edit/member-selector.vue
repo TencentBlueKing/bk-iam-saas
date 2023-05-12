@@ -36,6 +36,7 @@
                 ref="selector"
                 :api="userApi"
                 :placeholder="$t(`m.verify['请输入']`)"
+                :empty-text="$t(`m.common['无匹配人员']`)"
                 @keydown="handleEnter(...arguments)">
             </bk-user-selector>
         </template>
@@ -205,6 +206,7 @@
                 i {
                     font-size: 18px;
                     color: #979ba5;
+                    vertical-align: middle;
                     cursor: pointer;
                     &.disabled {
                         color: #c4c6cc;
