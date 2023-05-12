@@ -150,7 +150,6 @@
                         </bk-table-column>
                         <template slot="empty">
                             <ExceptionEmpty
-                                v-if="!subLoading && !row.children.length"
                                 :type="emptyData.type"
                                 :empty-text="emptyData.text"
                                 :tip-text="emptyData.tip"
