@@ -645,9 +645,9 @@
     .tippy-tooltip.light-border-theme {
         box-shadow: 0 0 2px 0 #dcdee5;
     }
-    .tippy-arrow {
+    /* .tippy-arrow {
         top: 120px !important;
-    }
+    } */
  }
 </style>
 

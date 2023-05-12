@@ -193,13 +193,13 @@
                     });
                 }
                 this.previewData = _.cloneDeep(params);
-                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${payload.name}】${this.$t(`m.common['的资源实例']`)}`;
+                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)}`;
                 this.isShowSideslider = true;
             },
 
             handleDelete (payload) {
                 this.curDeleteIds.splice(0, this.curDeleteIds.length, ...[payload.policy_id]);
-                this.deleteDialog.subTitle = `${this.$t(`m.dialog['将删除']`)}【${payload.name}】${this.$t(`m.common['权限']`)}`;
+                this.deleteDialog.subTitle = `${this.$t(`m.dialog['将删除']`)}${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['权限']`)}`;
                 this.deleteDialog.visible = true;
             },
 

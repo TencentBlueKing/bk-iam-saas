@@ -202,7 +202,7 @@
                 this.environmentsSidesliderData = payload.environments;
                 console.log('environmentsSidesliderData', this.environmentsSidesliderData);
                 this.isShowEnvironmentsSideslider = true;
-                this.environmentsSidesliderTitle = `${this.$t(`m.common['关联操作']`)}【${data.name}】${this.$t(`m.common['生效条件']`)}`;
+                this.environmentsSidesliderTitle = `${this.$t(`m.common['关联操作']`)}${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['生效条件']`)}`;
             },
 
             /**
