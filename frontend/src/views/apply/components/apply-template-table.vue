@@ -160,7 +160,7 @@
              */
             handleOnView (payload) {
                 const { name, data } = payload;
-                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${name}】${this.$t(`m.common['的资源实例']`)}`;
+                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}${this.$t(`m.common['【']`)}${name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)}`;
                 this.previewData = _.cloneDeep(data);
                 this.isShowSideslider = true;
             },

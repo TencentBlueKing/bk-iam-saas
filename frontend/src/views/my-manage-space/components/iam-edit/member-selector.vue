@@ -164,7 +164,7 @@
             handleEnter (event) {
                 if (!this.isEditable) return;
                 if (event.key === 'Enter' && event.keyCode === 13) {
-                    this.triggerChange();
+                    this.handleEmptyChange();
                 }
             },
 
@@ -185,7 +185,6 @@
             },
             
             triggerChange () {
-                this.isEditable = false;
                 if (JSON.stringify(this.displayValue) !== JSON.stringify(this.value)) {
                     this.isLoading = true;
                     this.remoteHandler({
@@ -216,14 +215,19 @@
 
             handleRtxBlur () {
                 if (JSON.stringify(this.displayValue) !== JSON.stringify(this.value)) {
-                    this.isEditable = false;
-                    if (this.displayValue.length < 1) {
-                        this.displayValue = [...this.value];
-                        this.messageError(this.$t(`m.verify['管理员不能为空']`), 2000);
-                        return;
-                    }
-                    this.triggerChange();
+                    this.handleEmptyChange();
                 }
+            },
+
+            // 判空校验
+            handleEmptyChange () {
+                this.isEditable = false;
+                if (this.displayValue.length < 1) {
+                    this.displayValue = [...this.value];
+                    this.messageError(this.$t(`m.verify['管理员不能为空']`), 2000);
+                    return;
+                }
+                this.triggerChange();
             }
         }
     };

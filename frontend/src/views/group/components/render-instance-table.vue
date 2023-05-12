@@ -597,7 +597,7 @@
                     });
                 }
                 this.previewData = _.cloneDeep(params);
-                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${payload.name}】${this.$t(`m.common['的资源实例']`)}`;
+                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)}`;
                 this.isShowSideslider = true;
             },
             handleAnimationEnd () {
@@ -889,7 +889,7 @@
                 this.curIndex = index;
                 this.curResIndex = resIndex;
                 this.curGroupIndex = groupIndex;
-                this.resourceInstanceSidesliderTitle = `${this.$t(`m.common['关联操作']`)}【${data.name}】${this.$t(`m.common['的资源实例']`)}`;
+                this.resourceInstanceSidesliderTitle = `${this.$t(`m.common['关联操作']`)}${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)}`;
                 window.changeAlert = 'iamSidesider';
                 this.isShowResourceInstanceSideslider = true;
             },
@@ -1054,7 +1054,7 @@
                     resource_group_id: this.tableList[this.curIndex].resource_groups[this.curGroupIndex].id,
                     isNotLimit: conditionData.length === 0
                 };
-                this.previewDialogTitle = `${this.$t(`m.common['操作']`)}【${this.tableList[this.curIndex].name}】${this.$t(`m.common['的资源实例']`)} ${this.$t(`m.common['差异对比']`)}`;
+                this.previewDialogTitle = `${this.$t(`m.common['操作']`)}${this.$t(`m.common['【']`)}${this.tableList[this.curIndex].name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)} ${this.$t(`m.common['差异对比']`)}`;
                 this.isShowPreviewDialog = true;
             },
             handlerConditionMouseover (payload) {
@@ -1097,7 +1097,7 @@
                     resource_group_id: payload.resource_groups[this.curGroupIndex].id,
                     isTemplate: payload.isTemplate
                 };
-                this.previewDialogTitle = `${this.$t(`m.common['操作']`)}【${payload.name}】${this.$t(`m.common['的资源实例']`)} ${this.$t(`m.common['差异对比']`)}`;
+                this.previewDialogTitle = `${this.$t(`m.common['操作']`)}${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)} ${this.$t(`m.common['差异对比']`)}`;
                 if (!this.previewResourceParams.id) {
                     this.$bkMessage({
                         limit: 1,

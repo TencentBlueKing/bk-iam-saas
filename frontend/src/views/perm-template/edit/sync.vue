@@ -850,7 +850,7 @@
                 this.curActionIndex = index;
                 this.curResIndex = resIndex;
                 this.curGroupIndex = groupIndex;
-                this.instanceSidesliderTitle = `${this.$t(`m.common['关联操作']`)}【${data.add_actions[index].name}】${this.$t(`m.common['的资源实例']`)}`;
+                this.instanceSidesliderTitle = `${this.$t(`m.common['关联操作']`)}${this.$t(`m.common['【']`)}${data.add_actions[index].name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)}`;
                 window.changeAlert = 'iamSidesider';
                 this.isShowInstanceSideslider = true;
             },
@@ -870,7 +870,7 @@
                     });
                 }
                 this.previewData = params;
-                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${payload.name}】${this.$t(`m.common['的资源实例']`)}`;
+                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)}`;
                 this.isShowSideslider = true;
             },
 

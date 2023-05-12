@@ -43,7 +43,6 @@
                     :id="groupId"
                     :name="basicInfo.name"
                     :read-only="readOnly"
-                    :group-attributes="groupAttributes"
                     :data="memberList"
                     :count="pagination.count" />
             </render-horizontal-block>

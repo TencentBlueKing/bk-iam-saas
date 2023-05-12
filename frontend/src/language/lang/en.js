@@ -57,7 +57,7 @@ export const m = {
         '实例': 'Instances',
         '搜索无结果': 'No Results',
         '退出': 'Drop Out',
-        '批量移除': 'Batch Remove',
+        '批量移除': 'Batch remove',
         '版本日志': 'Release Note',
         '帮助文档': 'Help',
         '申请加入用户组': 'Apply for join group',
@@ -96,7 +96,7 @@ export const m = {
         '授予的权限': 'Granted permissions',
         '组织继承新权限的有效期': 'the expiration date for the organization to inherit the new permissions',
         '该模板已添加': 'The template has been added',
-        '加入时间': 'Joined Time',
+        '加入时间': 'Joined time',
         '成员': 'member',
         '位成员': 'member',
         '设置新用户加入': 'Set up new users to join',
@@ -119,7 +119,7 @@ export const m = {
         '新用户': 'New user',
         '继承': 'Inherit',
         '权限': 'Permission',
-        '的权限': 'Permission',
+        '的权限': 'permission',
         '有效期': 'Expiration date',
         '设置': 'Set Up',
         '添加权限': 'Add permissions',
@@ -240,8 +240,8 @@ export const m = {
         或: 'or',
         清空筛选条件: 'Clear filter criteria',
         没有权限: 'No permission',
-        '搜索过于频繁': '搜索过于频繁',
-        数据获取异常: 'Search too often',
+        '搜索过于频繁': 'Search too often',
+        数据获取异常: 'Data acquisition exception',
         数据不存在: 'Data does not exist',
         '搜索结果太多': 'There are too many search results, please improve the search criteria',
         '暂不支持搜索': 'Search is not supported temporarily. We will go online as soon as possible',
@@ -709,7 +709,8 @@ export const m = {
         '编辑中': 'Edit',
         '个模板': 'templates',
         '删除权限模版不会影响已授权用户，可以放心删除。': 'Deleting the permission template will not affect authorized users and can be safely deleted.',
-        '该模板无法选择的原因是：管理空间缩小了授权范围，但是没有同步删除模板里的操作，如需选择请重新编辑模板或者创建新的模板。': 'The reason why this template cannot be selected is that the management space reduces the scope of authorization, but does not synchronously delete the operations in the template. If you need to select, please edit the template again or create a new template.'
+        '该模板无法选择的原因是：管理空间缩小了授权范围，但是没有同步删除模板里的操作，如需选择请重新编辑模板或者创建新的模板。': 'The reason why this template cannot be selected is that the management space reduces the scope of authorization, but does not synchronously delete the operations in the template. If you need to select, please edit the template again or create a new template.',
+        '未分组操作': 'Ungrouped operations'
     },
     permTemplateDetail: {
         '模板名称': 'Template name:',
@@ -751,7 +752,8 @@ export const m = {
         '分配至': 'Distribution to',
         '分配 (二级管理空间)': 'Allocation (secondary management space)',
         '搜索用户组名、描述、管理空间、创建人': 'Search user group name, description, management space and creator',
-        '批量': 'Batch'
+        '批量': 'Batch',
+        '管理员组至少保留一条数据': 'The administrator group retains at least one piece of data'
     },
     userGroupDetail: {
         '用户组名': 'Group name:',
@@ -848,7 +850,7 @@ export const m = {
         '创建人': 'Creator',
         '创建时间': 'Created time',
         '更新人': 'Updater',
-        '更新时间': 'Update',
+        '更新时间': 'Update time',
         "进入空间": "Get into space",
         "克隆": "Clone",
         '请输入空间名': 'Please enter the space name',

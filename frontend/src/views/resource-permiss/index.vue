@@ -543,7 +543,7 @@
 
                 this.curResIndex = resIndex;
                 this.groupIndex = groupIndex;
-                this.resourceInstanceSidesliderTitle = `${this.$t(`m.common['关联操作']`)}【${data.name}】${this.$t(`m.common['的资源实例']`)}`;
+                this.resourceInstanceSidesliderTitle = `${this.$t(`m.common['关联操作']`)}${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)}`;
                 window.changeAlert = 'iamSidesider';
                 this.isShowResourceInstanceSideslider = true;
             },

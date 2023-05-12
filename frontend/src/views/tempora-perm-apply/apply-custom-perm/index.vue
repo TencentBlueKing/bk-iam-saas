@@ -175,6 +175,7 @@
                                         :tip-text="emptyData.tip"
                                         :tip-type="emptyData.tipType"
                                         @on-clear="handleEmptyClear"
+                                        @on-refresh="handleEmptyRefresh"
                                     />
                                 </div>
                             </template>
@@ -273,7 +274,7 @@
 <script>
     import _ from 'lodash';
     import { mapGetters } from 'vuex';
-    import { guid } from '@/common/util';
+    import { guid, formatCodeData } from '@/common/util';
     import RenderActionTag from '@/components/common-action';
     import ResourceInstanceTable from '../components/resource-instance-table';
     import Policy from '@/model/policy';
@@ -347,7 +348,7 @@
                     actions: []
                 },
                 emptyData: {
-                    type: 'search-empty',
+                    type: '',
                     text: '',
                     tip: '',
                     tipType: 'search'
@@ -521,7 +522,7 @@
             handleViewDetail (payload) {
                 if (payload.role && payload.role.name) {
                     this.isShowGradeSlider = true;
-                    this.gradeSliderTitle = `【${payload.role.name}】${this.$t(`m.grading['管理空间']`)} ${this.$t(`m.common['成员']`)}`;
+                    this.gradeSliderTitle = `${this.$t(`m.common['【']`)}${payload.role.name}${this.$t(`m.common['】']`)}${this.$t(`m.grading['管理空间']`)} ${this.$t(`m.common['成员']`)}`;
                     this.fetchRoles(payload.role.id);
                 }
             },
@@ -717,6 +718,7 @@
                     return;
                 }
                 this.isActionsFilter = true;
+                this.emptyData = formatCodeData(0, Object.assign(this.emptyData, { tipType: 'search' }));
                 let tempList = [];
                 this.originalCustomTmplListBackup.forEach(item => {
                     let tempAction = [];
@@ -747,6 +749,10 @@
             handleEmptyClear () {
                 this.actionSearchValue = '';
                 this.emptyData.tipType = '';
+            },
+            
+            handleEmptyRefresh () {
+                this.fetchPageData();
             },
 
             /**
@@ -1773,12 +1779,14 @@
                     params.cache_id = this.routerQuery.cache_id;
                 }
                 try {
-                    const res = await this.$store.dispatch('permApply/getActions', params);
-                    this.originalCustomTmplListBackup = _.cloneDeep(res.data);
-                    this.originalCustomTmplList = _.cloneDeep(res.data);
+                    const { code, data } = await this.$store.dispatch('permApply/getActions', params);
+                    this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
+                    this.originalCustomTmplListBackup = _.cloneDeep(data);
+                    this.originalCustomTmplList = _.cloneDeep(data);
                     this.handleActionLinearData();
                 } catch (e) {
                     console.error(e);
+                    this.emptyData = formatCodeData(e.code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',

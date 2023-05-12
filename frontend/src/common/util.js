@@ -503,7 +503,7 @@ export function sleep (time) {
  * @param {boolean} isEmpty 为了处理异常数据刷新一次正常，执行正常code，这时候需要清空字段
  */
 export function formatCodeData (type, payload, isEmpty = true) {
-    type = +type;
+    type = Number(type);
     const codeData = {
         0: () => {
             const operateEmpty = {

@@ -2,7 +2,12 @@
     <div class="iam-user-group-member">
         <render-search>
             <bk-button :disabled="readOnly" @click="handleAddMember">{{ $t(`m.userGroup['添加成员']`) }}</bk-button>
-            <bk-button :disabled="!isCanBatchDelete" @click="handleBatchDelete">{{ $t(`m.common['批量移除']`) }}</bk-button>
+            <bk-button
+                :disabled="isNoBatchDelete()"
+                :title="isNoBatchDelete() ? $t(`m.userGroup['管理员组至少保留一条数据']`) : ''"
+                @click="handleBatchDelete">
+                {{ $t(`m.common['批量移除']`) }}
+            </bk-button>
         </render-search>
         <bk-table
             :data="tableList"
@@ -41,7 +46,12 @@
             <bk-table-column :label="$t(`m.common['操作']`)" width="180">
                 <template slot-scope="{ row }">
                     <div>
-                        <bk-button theme="primary" text @click="handleDelete(row)">
+                        <bk-button
+                            text
+                            theme="primary"
+                            :disabled="disabledGroup()"
+                            :title="disabledGroup() ? $t(`m.userGroup['管理员组至少保留一条数据']`) : ''"
+                            @click="handleDelete(row)">
                             {{ $t(`m.common['移除']`) }}
                         </bk-button>
                         <bk-button v-if="row.expired_at !== PERMANENT_TIMESTAMP"
@@ -101,6 +111,7 @@
 
     export default {
         name: '',
+        inject: ['getGroupAttributes'],
         components: {
             DeleteDialog,
             AddMemberDialog,
@@ -162,14 +173,26 @@
         },
         computed: {
             ...mapGetters(['user']),
-            isCanBatchDelete () {
-                return this.currentSelectList.length > 0 && this.tableList.length > 0;
+            isNoBatchDelete () {
+                return () => {
+                    const hasData = this.tableList.length && this.currentSelectList.length;
+                    if (this.getGroupAttributes && this.getGroupAttributes().source_from_role) {
+                        return hasData && this.currentSelectList.length === this.pagination.count;
+                    }
+                    return !hasData;
+                };
             },
             isRatingManager () {
                 return ['rating_manager', 'subset_manager'].includes(this.user.role.type);
             },
             curType () {
                 return this.curData.type || 'department';
+            },
+            disabledGroup () {
+                return () => {
+                    return this.getGroupAttributes && this.getGroupAttributes().source_from_role
+                    && this.pagination.count === 1;
+                };
             }
         },
         watch: {
@@ -317,7 +340,7 @@
                 if (this.currentSelectList.length === 1) {
                     const payload = this.currentSelectList[0];
                     this.deleteDialog.subTitle
-                        = `${this.$t(`m.common['移除']`)}${this.$t(`m.common['【']`)}${payload.id}(${payload.name})${this.$t(`m.common['】']`)}${this.$t(`m.common['，']`)}${this.$t(`m.info['该成员将不再继承该组的权限']`)}}${this.$t(`m.common['。']`)}`;
+                        = `${this.$t(`m.common['移除']`)}${this.$t(`m.common['【']`)}${payload.id}(${payload.name})${this.$t(`m.common['】']`)}${this.$t(`m.common['，']`)}${this.$t(`m.info['该成员将不再继承该组的权限']`)}${this.$t(`m.common['。']`)}`;
                 } else {
                     this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)} ${this.currentSelectList.length} ${this.$t(`m.common['位成员']`)}${this.$t(`m.common['，']`)}${this.$t(`m.info['这些成员将不再继承该组的权限']`)}${this.$t(`m.common['。']`)}`;
                 }

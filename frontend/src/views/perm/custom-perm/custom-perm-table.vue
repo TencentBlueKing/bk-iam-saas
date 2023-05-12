@@ -72,6 +72,15 @@
                     <bk-button text @click="handleDelete(row)">{{ $t(`m.common['删除']`) }}</bk-button>
                 </template>
             </bk-table-column>
+            <template slot="empty">
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-refresh="handleRefreshData"
+                />
+            </template>
         </bk-table>
 
         <delete-dialog
@@ -195,6 +204,17 @@
             systemId: {
                 type: String,
                 default: ''
+            },
+            emptyData: {
+                type: Object,
+                default: () => {
+                    return {
+                        type: '',
+                        text: '',
+                        tip: '',
+                        tipType: ''
+                    };
+                }
             }
         },
         data () {
@@ -496,7 +516,7 @@
                 if (this.previewData[0].tabType === 'resource' && (this.previewData[0].data.length < 1 || this.previewData[0].data.every(item => !item.instance || item.instance.length < 1))) {
                     this.batchDisabled = true;
                 }
-                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${payload.name}】${this.$t(`m.common['的资源实例']`)}`;
+                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)}`;
                 window.changeAlert = 'iamSidesider';
                 this.isShowSideslider = true;
             },
@@ -507,7 +527,7 @@
             handleEnvironmentsViewResource (payload, data) {
                 this.environmentsSidesliderData = payload.environments;
                 this.isShowEnvironmentsSideslider = true;
-                this.environmentsSidesliderTitle = `$【${data.name}】${this.$t(`m.common['生效条件']`)}`;
+                this.environmentsSidesliderTitle = `${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['生效条件']`)}`;
             },
 
             /**
@@ -536,7 +556,8 @@
              */
             handleDelete (payload) {
                 this.curDeleteIds.splice(0, this.curDeleteIds.length, ...[payload.policy_id]);
-                this.deleteDialog.subTitle = `${this.$t(`m.dialog['将删除']`)}【${payload.name}】权限`;
+                this.deleteDialog.subTitle
+                    = `${this.$t(`m.dialog['将删除']`)}${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的权限']`)}`;
                 this.deleteDialog.visible = true;
             },
 
