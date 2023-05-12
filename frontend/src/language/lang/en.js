@@ -96,7 +96,7 @@ export const m = {
         '授予的权限': 'Granted permissions',
         '组织继承新权限的有效期': 'the expiration date for the organization to inherit the new permissions',
         '该模板已添加': 'The template has been added',
-        '加入时间': 'Joined Time',
+        '加入时间': 'Joined time',
         '成员': 'member',
         '位成员': 'member',
         '设置新用户加入': 'Set up new users to join',
@@ -752,7 +752,8 @@ export const m = {
         '分配至': 'Distribution to',
         '分配 (二级管理空间)': 'Allocation (secondary management space)',
         '搜索用户组名、描述、管理空间、创建人': 'Search user group name, description, management space and creator',
-        '批量': 'Batch'
+        '批量': 'Batch',
+        '管理员组至少保留一条数据': 'The administrator group retains at least one piece of data'
     },
     userGroupDetail: {
         '用户组名': 'Group name:',
