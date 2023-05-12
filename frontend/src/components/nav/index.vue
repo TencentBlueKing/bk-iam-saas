@@ -175,7 +175,7 @@
         [['', 'index'], 'indexNav'],
         // 用户组
         [
-            ['userGroup', 'userGroupDetail', 'createUserGroup', 'userGroupPermDetail', 'groupPermRenewal', 'addGroupPerm'],
+            ['userGroup', 'userGroupDetail', 'createUserGroup', 'cloneUserGroup', 'userGroupPermDetail', 'groupPermRenewal', 'addGroupPerm'],
             'userGroupNav'
         ],
         // 系统接入

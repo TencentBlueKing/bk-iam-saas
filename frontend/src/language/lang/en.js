@@ -365,8 +365,8 @@ export const m = {
         '给用户或组织授权时需要设置有效期': 'Expiration date needs to be set when authorizing users or organizations',
         '添加权限成功': 'The Permission Added',
         '编辑成功': 'Edited',
-        '该成员将不再继承该组的权限': 'The member will no longer inherit the permissions of the group',
-        '这些成员将不再继承该组的权限': 'These members will no longer inherit the permissions of the group',
+        '该成员将不再继承该组的权限': 'the member will no longer inherit the permissions of the group',
+        '这些成员将不再继承该组的权限': 'these members will no longer inherit the permissions of the group',
         '该组将不再继承该模板的权限': 'The group will no longer inherit the permissions of the template',
         '解除成功': 'Lifted',
         '当前用户将不再继承该模板权限': 'The current user will no longer inherit the template permissions',
@@ -753,7 +753,11 @@ export const m = {
         '分配 (二级管理空间)': 'Allocation (secondary management space)',
         '搜索用户组名、描述、管理空间、创建人': 'Search user group name, description, management space and creator',
         '批量': 'Batch',
-        '管理员组至少保留一条数据': 'The administrator group retains at least one piece of data'
+        '管理员组至少保留一条数据': 'The administrator group retains at least one piece of data',
+        '不可被申请': 'Not applicable',
+        '设置不可被申请': 'Setting cannot be applied for',
+        '该组织能管理员主动授权，用户无法主动申请': 'The organization can be actively authorized by administrators, but users cannot actively apply',
+        '勾选后，该用户组只能通过管理员主动授权': 'After checking, the user group can only be actively authorized by the administrator'
     },
     userGroupDetail: {
         '用户组名': 'Group name:',
