@@ -5,13 +5,13 @@
             <div class="transfer-group-content">
                 <div class="header" @click="handlesuperExpanded">
                     <Icon bk class="expanded-icon" :type="superExpanded ? 'down-shape' : 'right-shape'" />
-                    <label class="title">超级管理员权限交接</label>
+                    <label class="title">{{ $t(`m.permTransfer['超级管理员权限交接']`) }}</label>
                 </div>
                 <div class="content" v-if="superExpanded">
                     <div class="slot-content">
                         <div class="member-item">
                             <span class="member-name">
-                                超级管理员
+                                {{ $t(`m.myApproval['超级管理员']`) }}
                             </span>
                         </div>
                     </div>

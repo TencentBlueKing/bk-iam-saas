@@ -1243,6 +1243,8 @@ export const m = {
         '管理员交接': 'Admin handover',
         '将以上权限交接给': 'hand permissions to',
         '交接人': 'transfer person',
+        '系统管理员权限交接': 'System manager Permission Handover',
+        '超级管理员权限交接': 'Super user Permission Handover',
         '管理空间权限交接': 'Manage Space Permission Handover',
         '您还没有权限，无需交接': "You don't have permission and don't need to hand over"
     },

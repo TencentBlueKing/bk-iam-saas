@@ -84,6 +84,14 @@
                 validator: function (value) {
                     return ['detail', 'edit'].includes(value);
                 }
+            },
+            allowEmpty: {
+                type: Boolean,
+                default: false
+            },
+            allowEdit: {
+                type: Boolean,
+                default: true
             }
         },
         data () {
@@ -131,7 +139,7 @@
             // 设置只读
             handleReadOnly () {
                 this.$nextTick(() => {
-                    if (this.isEditable) {
+                    if (this.isEditable && this.$refs.selector) {
                         const selectedTag = this.$refs.selector.$refs.selected;
                         if (selectedTag && selectedTag.length === 1) {
                             selectedTag.forEach(item => {
@@ -152,6 +160,11 @@
             },
 
             handleEdit () {
+                // 处理需要勾选才能修改人员的页面
+                // if (['administrator'].includes(this.$route.name) && !this.allowEdit) {
+                //     this.messageError(this.$t(`m.common['必须勾选拥有该系统的所有操作权限，才能修改系统管理员成员拥有的权限']`), 6000);
+                //     return;
+                // }
                 document.body.click();
                 this.isEditable = true;
                 this.$nextTick(() => {
@@ -164,7 +177,10 @@
             handleEnter (event) {
                 if (!this.isEditable) return;
                 if (event.key === 'Enter' && event.keyCode === 13) {
-                    this.handleEmptyChange();
+                    this.handleDefaultEmpty();
+                    if (JSON.stringify(this.displayValue) !== JSON.stringify(this.value)) {
+                        this.handleEmptyChange();
+                    }
                 }
             },
 
@@ -200,7 +216,7 @@
             },
 
             handleChange () {
-                if (this.displayValue.length < 1) {
+                if (this.displayValue.length < 1 && !this.allowEmpty) {
                     return;
                 }
                 const editValue = this.editValue.reduce((p, v) => {
@@ -214,6 +230,7 @@
             },
 
             handleRtxBlur () {
+                this.handleDefaultEmpty();
                 if (JSON.stringify(this.displayValue) !== JSON.stringify(this.value)) {
                     this.handleEmptyChange();
                 }
@@ -228,6 +245,13 @@
                     return;
                 }
                 this.triggerChange();
+            },
+
+            // 处理默认是空的管理员列表的数据
+            handleDefaultEmpty () {
+                if (!this.displayValue.length && this.allowEmpty) {
+                    this.$emit('on-empty-change', this.index);
+                }
             }
         }
     };
