@@ -4,7 +4,7 @@
             <bk-button :disabled="readOnly" @click="handleAddMember">{{ $t(`m.userGroup['添加成员']`) }}</bk-button>
             <bk-button
                 :disabled="isNoBatchDelete()"
-                :title="isNoBatchDelete() ? $t(`m.userGroup['管理员组至少保留一条数据']`) : ''"
+                :title="adminGroupTitle"
                 @click="handleBatchDelete">
                 {{ $t(`m.common['批量移除']`) }}
             </bk-button>
@@ -168,7 +168,8 @@
                     text: '',
                     tip: '',
                     tipType: ''
-                }
+                },
+                adminGroupTitle: ''
             };
         },
         computed: {
@@ -177,7 +178,9 @@
                 return () => {
                     const hasData = this.tableList.length && this.currentSelectList.length;
                     if (this.getGroupAttributes && this.getGroupAttributes().source_from_role) {
-                        return hasData && this.currentSelectList.length === this.pagination.count;
+                        const isAll = hasData && this.currentSelectList.length === this.pagination.count;
+                        this.adminGroupTitle = isAll ? this.$t(`m.userGroup['管理员组至少保留一条数据']`) : '';
+                        return isAll;
                     }
                     return !hasData;
                 };

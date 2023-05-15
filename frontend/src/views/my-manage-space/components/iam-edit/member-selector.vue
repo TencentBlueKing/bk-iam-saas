@@ -88,10 +88,6 @@
             allowEmpty: {
                 type: Boolean,
                 default: false
-            },
-            allowEdit: {
-                type: Boolean,
-                default: true
             }
         },
         data () {
@@ -160,11 +156,6 @@
             },
 
             handleEdit () {
-                // 处理需要勾选才能修改人员的页面
-                // if (['administrator'].includes(this.$route.name) && !this.allowEdit) {
-                //     this.messageError(this.$t(`m.common['必须勾选拥有该系统的所有操作权限，才能修改系统管理员成员拥有的权限']`), 6000);
-                //     return;
-                // }
                 document.body.click();
                 this.isEditable = true;
                 this.$nextTick(() => {
@@ -176,11 +167,11 @@
 
             handleEnter (event) {
                 if (!this.isEditable) return;
-                if (event.key === 'Enter' && event.keyCode === 13) {
+                const { key, keyCode } = event;
+                const isUpdate = JSON.stringify(this.displayValue) !== JSON.stringify(this.value);
+                if (key === 'Enter' && keyCode === 13) {
                     this.handleDefaultEmpty();
-                    if (JSON.stringify(this.displayValue) !== JSON.stringify(this.value)) {
-                        this.handleEmptyChange();
-                    }
+                    isUpdate ? this.handleEmptyChange() : this.isEditable = false;
                 }
             },
 

@@ -38,7 +38,6 @@
                                 :placeholder="$t(`m.verify['请输入']`)"
                                 :value="row.members"
                                 :index="$index"
-                                :allow-edit="row.system_permission_global_enabled"
                                 :allow-empty="true"
                                 @on-change="handleUpdateMembers"
                                 @on-empty-change="handleEmptyChange" />
@@ -172,10 +171,6 @@
                 if (!payload.canEdit) {
                     return;
                 }
-                // if (!payload.system_permission_global_enabled) {
-                //     this.messageError(this.$t(`m.common['必须勾选拥有该系统的所有操作权限， 才能修改系统管理员成员拥有的权限']`), 6000);
-                //     return;
-                // }
                 this.$set(this.systemUserList[index], 'isEdit', true);
                 this.$nextTick(() => {
                     this.$refs[`sysRef${index}`].isEditable = true;
