@@ -8,6 +8,7 @@
 |actions|数组|是|申请权限的操作|
 | applicant | string | 是 | body |申请人用户名 |
 | reason | string | 是 | body |申请理由 |
+| expired_at | int | 否 | body | 过期时间戳(单位秒)，即用户在 expired_at 后将不具有该权限 |
 
 actions
 
@@ -63,7 +64,8 @@ related_resource_types.attributes.values
     }
   ],
   "applicant": "user001",
-  "reason": "for grant policies"
+  "reason": "for grant policies",
+  "expired_at: 1704042061
 }
 ```
 
@@ -98,7 +100,8 @@ related_resource_types.attributes.values
     }
   ],
   "applicant": "user001",
-  "reason": "for grant policies"
+  "reason": "for grant policies",
+  "expired_at: 1704042061
 }
 ```
 
@@ -168,7 +171,8 @@ related_resource_types.attributes.values
     }
   ],
   "applicant": "user001",
-  "reason": "for grant policies"
+  "reason": "for grant policies",
+  "expired_at: 1704042061
 }
 ```
 
