@@ -240,13 +240,14 @@
                 if (this.externalSystemId) {
                     userGroupParams.system_id = this.externalSystemId;
                 }
+                const externalParams = userGroupParams.system_id ? { system_id: userGroupParams.system_id } : '';
                 const requestList = [
                     this.$store.dispatch('perm/getPersonalGroups', userGroupParams),
-                    this.$store.dispatch('permApply/getHasPermSystem'),
+                    this.$store.dispatch('permApply/getHasPermSystem', externalParams),
                     this.$store.dispatch('renewal/getExpireSoonGroupWithUser', userGroupParams),
-                    this.$store.dispatch('renewal/getExpireSoonPerm'),
-                    this.$store.dispatch('permApply/getTeporHasPermSystem'),
-                    this.$store.dispatch('perm/getDepartMentsPersonalGroups')
+                    this.$store.dispatch('renewal/getExpireSoonPerm', externalParams),
+                    this.$store.dispatch('permApply/getTeporHasPermSystem', externalParams),
+                    this.$store.dispatch('perm/getDepartMentsPersonalGroups', externalParams)
                     // this.fetchPermGroups(),
                     // this.fetchSystems(),
                     // this.fetchSoonGroupWithUser(),

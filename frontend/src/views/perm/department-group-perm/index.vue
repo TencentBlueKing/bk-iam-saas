@@ -158,7 +158,7 @@
             };
         },
         computed: {
-            ...mapGetters(['user'])
+            ...mapGetters(['user', 'externalSystemId'])
         },
         watch: {
             departmentGroupList: {
@@ -355,7 +355,7 @@
             },
 
             handleEmptyRefresh () {
-                this.$store.dispatch('perm/getDepartMentsPersonalGroups');
+                this.$store.dispatch('perm/getDepartMentsPersonalGroups', this.externalSystemId ? { system_id: this.externalSystemId } : '');
                 this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10 });
                 this.handlePageChange(1);
             }
