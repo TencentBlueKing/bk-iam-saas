@@ -679,7 +679,10 @@ export const m = {
         '组权限': 'Permissions',
         '所属组织用户组权限': 'Organization User Group Permissions',
         '临时权限申请': 'Provisional apply',
-        '一组实例权限': ' a set of instance permissions'
+        '一组实例权限': ' a set of instance permissions',
+        '不能删除当前操作': 'Cannot delete the current operation',
+        '等': '',
+        '个操作关联了': ' related operations have been completed '
     },
     permTemplate: {
         '模板名': 'Template name',

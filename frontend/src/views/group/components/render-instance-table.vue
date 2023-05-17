@@ -58,7 +58,7 @@
                             v-if="isShowView(row)"
                             @click.stop="handleViewResource(row)" />
                         <template v-if="!isUserGroupDetail ? false : true && row.showDelete && !externalDelete">
-                            <Icon class="remove-icon" type="close-small" @click.stop="toHandleDelete(row)" />
+                            <Icon class="remove-icon" type="close-small" @click.stop="handleShowDelDialog(row)" />
                         </template>
                     </template>
                     <template v-else>
@@ -296,6 +296,10 @@
             externalDelete: {
                 type: Boolean,
                 default: false
+            },
+            linearActionList: {
+                type: Array,
+                default: () => []
             }
         },
         data () {
@@ -571,7 +575,24 @@
                     this.$set(row, 'showDelete', false);
                 }
             },
-            toHandleDelete (row) {
+            handleShowDelDialog (row) {
+                const { id, name } = row;
+                const list = [];
+                this.linearActionList.forEach(item => {
+                    if (item.related_actions.includes(id)) {
+                        list.push(item.name);
+                    }
+                });
+                if (list.length) {
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: `${this.$t(`m.perm['不能删除当前操作']`)}, ${this.$t(`m.common['【']`)}${list.join()}${this.$t(`m.common['】']`)}${this.$t(`m.perm['等']`)}${list.length}${this.$t(`m.perm['个操作关联了']`)}${name}`,
+                        ellipsisLine: 10,
+                        ellipsisCopy: true
+                    });
+                    return;
+                }
                 this.isShowDeleteDialog = true;
                 this.newRow = row;
             },
