@@ -11,7 +11,7 @@ specific language governing permissions and limitations under the License.
 import logging
 import time
 from abc import ABC, abstractmethod
-from typing import Dict, Optional, Set, Tuple, Type
+from typing import Dict, List, Optional, Set, Tuple, Type
 from urllib.parse import urlencode
 
 from blue_krill.web.std_error import APIError
@@ -24,7 +24,7 @@ from backend.apps.group.models import Group
 from backend.apps.organization.models import User
 from backend.apps.role.models import Role, RoleRelatedObject, RoleUser
 from backend.biz.group import GroupBiz, GroupTemplateGrantBean
-from backend.biz.policy import PolicyBean, PolicyBeanList
+from backend.biz.policy import PolicyBean, PolicyBeanList, ResourceGroupBeanList
 from backend.biz.resource import ResourceBiz
 from backend.biz.role import RoleBiz, RoleCheckBiz, RoleInfoBean
 from backend.biz.system import SystemBiz
@@ -640,3 +640,86 @@ class InitBizGradeManagerTask(Task):
 
 
 current_app.tasks.register(InitBizGradeManagerTask())
+
+
+class AuthScopeMerger:
+    """
+    授权范围合并
+    """
+
+    def __init__(
+        self, old_authorization_scopes: List[AuthScopeSystem], new_authorization_scopes: List[AuthScopeSystem]
+    ):
+        self._old_authorization_scopes = old_authorization_scopes
+        self._new_authorization_scopes = new_authorization_scopes
+
+    def merge(self) -> List[AuthScopeSystem]:
+        """
+        合并两个授权范围
+        """
+
+        # 合并相同系统的操作
+        new_auth_scope_dict = {one.system_id: one for one in self._new_authorization_scopes}
+        for one in self._old_authorization_scopes:
+            if one.system_id in new_auth_scope_dict:
+                self._merge_system_auth_scope(one, new_auth_scope_dict[one.system_id])
+
+        # 如果有新的系统直接加入
+        old_auth_scope_dict = {one.system_id: one for one in self._old_authorization_scopes}
+        for one in self._new_authorization_scopes:
+            if one.system_id not in old_auth_scope_dict:
+                self._old_authorization_scopes.append(one)
+
+        return self._old_authorization_scopes
+
+    def _merge_system_auth_scope(self, old_auth_scope: AuthScopeSystem, new_auth_scope: AuthScopeSystem):
+        """
+        合并两个授权范围
+        """
+        assert old_auth_scope.system_id == new_auth_scope.system_id
+
+        new_action_scope_dict = {one.id: one for one in new_auth_scope.actions}
+        for one in old_auth_scope.actions:
+            if one.id in new_action_scope_dict:
+                self._merge_action_auth_scope(one, new_action_scope_dict[one.id])
+
+        old_action_scope_dict = {one.id: one for one in old_auth_scope.actions}
+        for one in new_auth_scope.actions:
+            if one.id not in old_action_scope_dict:
+                old_auth_scope.actions.append(one)
+
+    def _merge_action_auth_scope(self, old_action_scope: AuthScopeAction, new_action_scope: AuthScopeAction):
+        """
+        合并两个授权范围
+        """
+        assert old_action_scope.id == new_action_scope.id
+
+        old_resource_group_list = ResourceGroupBeanList.parse_obj(old_action_scope.resource_groups)
+        new_resource_group_list = ResourceGroupBeanList.parse_obj(new_action_scope.resource_groups)
+
+        old_resource_group_list += new_resource_group_list
+
+        old_action_scope.resource_groups = ResourceGroupList.parse_obj(old_resource_group_list.dict())
+
+
+"""
+BCS 初始化管理员
+
+1. 查询BCS项目列表
+2. 查询cmdb业务列表, 生成业务字典
+3. 查询项目对应的二级管理员是否存在, 如果存在直接跳过
+4. 如果不存在, 再查询项目对应的一级管理员, 是否存在
+5. 如果一级管理员不存在先创建一级管理员
+6. 创建二级管理员, 并且更新一级管理员, 如果一级管理员是新建的不需要更新
+
+---
+
+更新一级管理员的授权范围, 涉及BCS/日志/监控
+
+需要有一个范围合并的逻辑, 要可以复用现有的policy合并相关的逻辑
+
+---
+
+多个系统多个操作的的授权范围合并
+用户组通过自定义权限直接授权是默认合并的所以直接授权即可
+"""
