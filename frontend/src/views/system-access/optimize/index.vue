@@ -25,7 +25,7 @@
                             <div class="action-item set-border reset-padding-top">
                                 <p class="title-wrapper">
                                     <section class="action-group-name">
-                                        <span class="name">未分组操作</span>
+                                        <span class="name"> {{$t(`m.permTemplate['未分组操作']`)}}</span>
                                     </section>
                                 </p>
                                 <div class="action-content no-bg" v-if="noGroupActionList.length">

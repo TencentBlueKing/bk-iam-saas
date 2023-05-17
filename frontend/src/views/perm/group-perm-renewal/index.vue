@@ -203,8 +203,8 @@
             handleBatchDelete (payload, index) {
                 const { checkList } = payload;
                 const deleteContent = checkList.length === 1
-                    ? `【${checkList[0].id}(${checkList[0].name})】，${this.$t(`m.renewal['该成员在该用户组将不再存在续期']`)}`
-                    : `${checkList.length} ${this.$t(`m.common['位成员']`)}，${this.$t(`m.renewal['这些成员在该用户组将不再存在续期']`)}`;
+                    ? `${this.$t(`m.common['【']`)}${checkList[0].id}(${checkList[0].name})${this.$t(`m.common['】']`)}${this.$t(`m.common['，']`)}${this.$t(`m.renewal['该成员在该用户组将不再存在续期']`)}`
+                    : `${checkList.length} ${this.$t(`m.common['位成员']`)}${this.$t(`m.common['，']`)}${this.$t(`m.renewal['这些成员在该用户组将不再存在续期']`)}`;
                 this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)}${deleteContent}`;
                 this.tableIndex = index;
                 this.curDelMember = {};
@@ -212,7 +212,7 @@
             },
 
             handleDelete (payload, index) {
-                this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)}【${payload.id}(${payload.name})】，${this.$t(`m.renewal['该成员在该用户组将不再存在续期']`)}`;
+                this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)}${this.$t(`m.common['【']`)}${payload.id}(${payload.name})${this.$t(`m.common['】']`)}${this.$t(`m.common['，']`)}${this.$t(`m.renewal['该成员在该用户组将不再存在续期']`)}`;
                 this.curDelMember = Object.assign({}, {
                     id: payload.id,
                     type: payload.type

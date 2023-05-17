@@ -72,7 +72,7 @@
             };
         },
         computed: {
-            ...mapGetters(['user'])
+            ...mapGetters(['user', 'externalSystemId'])
         },
         mounted () {
             this.fetchData();
@@ -81,7 +81,8 @@
             async fetchData () {
                 this.isLoading = true;
                 try {
-                    const res = await this.$store.dispatch('permApply/getHasPermSystem');
+                    const externalSystemParams = this.externalSystemId ? { system_id: this.externalSystemId } : '';
+                    const res = await this.$store.dispatch('permApply/getHasPermSystem', externalSystemParams);
                     const list = res.data || [];
                     const systemPolicyList = list.map(item => {
                         const sys = new PermSystem(item);

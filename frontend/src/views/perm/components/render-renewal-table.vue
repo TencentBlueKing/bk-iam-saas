@@ -137,7 +137,7 @@
             };
         },
         computed: {
-            ...mapGetters(['user'])
+            ...mapGetters(['user', 'externalSystemId'])
         },
         watch: {
             'pagination.current' (value) {
@@ -352,10 +352,14 @@
                     const { current, limit } = this.pagination;
                     const tabItem = {
                         group: async () => {
-                            const { code, data } = await this.$store.dispatch('renewal/getExpireSoonGroupWithUser', {
+                            const userGroupParams = {
                                 page_size: limit,
                                 page: current
-                            });
+                            };
+                            if (this.externalSystemId) {
+                                userGroupParams.system_id = this.externalSystemId;
+                            }
+                            const { code, data } = await this.$store.dispatch('renewal/getExpireSoonGroupWithUser', userGroupParams);
                             this.tableList = data.results || [];
                             this.pagination.count = data.count;
                             this.emptyRenewalData

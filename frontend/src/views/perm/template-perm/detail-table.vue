@@ -140,7 +140,7 @@
                     });
                 }
                 this.previewData = _.cloneDeep(params);
-                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${payload.name}】${this.$t(`m.common['的资源实例']`)}`;
+                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)}`;
                 this.isShowSideslider = true;
             }
         }

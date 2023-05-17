@@ -34,6 +34,7 @@
     import CustomPermSystemPolicy from '@/components/custom-perm-system-policy/index.vue';
     import PermSystem from '@/model/my-perm-system';
     import CustomPermTable from './custom-perm-table.vue';
+    import { mapGetters } from 'vuex';
 
     export default {
         name: 'CustomPerm',
@@ -65,6 +66,7 @@
             };
         },
         computed: {
+            ...mapGetters(['externalSystemId']),
             hasPerm () {
                 return this.systemPolicyList.length > 0;
             }
@@ -99,7 +101,8 @@
             },
 
             handleEmptyRefresh () {
-                this.$store.dispatch('permApply/getTeporHasPermSystem');
+                const externalSystemParams = this.externalSystemId ? { system_id: this.externalSystemId } : '';
+                this.$store.dispatch('permApply/getTeporHasPermSystem', externalSystemParams);
             }
         }
     };

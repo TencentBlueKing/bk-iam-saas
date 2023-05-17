@@ -32,6 +32,7 @@
                 :api="userApi"
                 :placeholder="$t(`m.verify['请输入']`)"
                 :empty-text="$t(`m.common['无匹配人员']`)"
+                @keydown="handleEnter(...arguments)"
                 @blur="handleBlur"
                 @change="handleRtxChange">
             </bk-user-selector>
@@ -187,9 +188,15 @@
                     }
                 }
             },
-            handleEnter (value, event) {
+            handleEnter (event) {
                 if (!this.isEditable) return;
                 if (event.key === 'Enter' && event.keyCode === 13) {
+                    if (this.newVal.length < 1) {
+                        this.isEditable = false;
+                        this.newVal = [...this.value].map(e => e.username);
+                        this.messageError(this.$t(`m.verify['管理员不能为空']`), 2000);
+                        return;
+                    }
                     this.triggerChange();
                 }
             },

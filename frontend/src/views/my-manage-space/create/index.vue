@@ -191,7 +191,7 @@
     import _ from 'lodash';
     import { mapGetters } from 'vuex';
     import { guid, renderLabelWidth } from '@/common/util';
-    import { leavePageConfirm } from '@/common/leave-page-confirm';
+    // import { leavePageConfirm } from '@/common/leave-page-confirm';
     import { AGGREGATION_EDIT_ENUM } from '@/common/constants';
     import IamGuide from '@/components/iam-guide/index';
     import basicInfo from '@/views/manage-spaces/components/basic-info';
@@ -1048,22 +1048,22 @@
                     this.isShowReasonError = true;
                 }
             }
-        },
-        beforeRouteLeave (to, from, next) {
-            let cancelHandler = Promise.resolve();
-            if (window.changeDialog && this.operate !== 'cancel') {
-                cancelHandler = leavePageConfirm();
-                next(false);
-                cancelHandler.then(
-                    () => {
-                        next();
-                    },
-                    (_) => _
-                );
-            } else {
-                next();
-            }
         }
+        // beforeRouteLeave (to, from, next) {
+        //     let cancelHandler = Promise.resolve();
+        //     if (window.changeDialog && this.operate !== 'cancel') {
+        //         cancelHandler = leavePageConfirm();
+        //         next(false);
+        //         cancelHandler.then(
+        //             () => {
+        //                 next();
+        //             },
+        //             (_) => _
+        //         );
+        //     } else {
+        //         next();
+        //     }
+        // }
     };
 </script>
 <style lang="postcss">

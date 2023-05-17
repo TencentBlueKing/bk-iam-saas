@@ -69,6 +69,7 @@
                                     :template-id="subItem.id"
                                     :is-edit="subItem.isEdit"
                                     :external-delete="!!groupAttributes.source_type"
+                                    :linear-action-list="linearActionList"
                                     @on-delete="handleSingleDelete(...arguments, item)" />
                             </div>
                         </render-template-item>
@@ -405,8 +406,8 @@
                 this.originalCustomTmplList.forEach((item, index) => {
                     item.actions.forEach(act => {
                         linearActions.push(act);
-                    })
-                    ;(item.sub_groups || []).forEach(sub => {
+                    });
+                    (item.sub_groups || []).forEach(sub => {
                         sub.actions.forEach(act => {
                             linearActions.push(act);
                         });

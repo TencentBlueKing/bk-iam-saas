@@ -14,6 +14,7 @@
                 <custom-perm-table
                     :key="sys.id"
                     :system-id="sys.id"
+                    :empty-data="emptyData"
                     @after-delete="handleAfterDelete(...arguments, sysIndex)" />
             </custom-perm-system-policy>
         </template>

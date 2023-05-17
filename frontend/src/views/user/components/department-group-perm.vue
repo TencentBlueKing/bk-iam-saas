@@ -382,7 +382,7 @@
                 if (payload.role && payload.role.name) {
                     const { name, id } = payload.role;
                     this.isShowGradeSlider = true;
-                    this.gradeSliderTitle = `【${name}】${this.$t(`m.grading['管理空间']`)} ${this.$t(`m.common['成员']`)}`;
+                    this.gradeSliderTitle = `${this.$t(`m.common['【']`)}${this.$t(`m.grading['管理空间']`)}${name}${this.$t(`m.common['】']`)}${this.$t(`m.grading['管理空间']`)} ${this.$t(`m.common['成员']`)}`;
                     this.curRoleId = id;
                     this.fetchRoles(id);
                 }

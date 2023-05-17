@@ -918,14 +918,18 @@
             }
         },
         beforeRouteLeave (to, from, next) {
-            window.parent.postMessage({ type: 'IAM', code: 'create_user_group_cancel' }, '*');
-            let cancelHandler = Promise.resolve();
-            if (window.changeDialog) {
-                cancelHandler = leavePageConfirm();
-                cancelHandler.then(() => {
-                    // next({ path: `${window.SITE_URL}${to.fullPath.slice(1, to.fullPath.length)}` });
+            if (this.externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn) {
+                window.parent.postMessage({ type: 'IAM', code: 'create_user_group_cancel' }, '*');
+                let cancelHandler = Promise.resolve();
+                if (window.changeDialog) {
+                    cancelHandler = leavePageConfirm();
+                    cancelHandler.then(() => {
+                        // next({ path: `${window.SITE_URL}${to.fullPath.slice(1, to.fullPath.length)}` });
+                        next();
+                    }, _ => _);
+                } else {
                     next();
-                }, _ => _);
+                }
             } else {
                 next();
             }
