@@ -147,8 +147,9 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getHasPermSystem ({ commit, state, dispatch }, config) {
-            return http.get(`${AJAX_URL_PREFIX}/policies/systems/`, config);
+        getHasPermSystem ({ commit, state, dispatch }, params, config) {
+            const queryParams = params ? `?${json2Query(params)}` : '';
+            return http.get(`${AJAX_URL_PREFIX}/policies/systems/${queryParams}`, config);
         },
 
         /**
@@ -160,8 +161,9 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getTeporHasPermSystem ({ commit, state, dispatch }, config) {
-            return http.get(`${AJAX_URL_PREFIX}/temporary_policies/systems/`, config);
+        getTeporHasPermSystem ({ commit, state, dispatch }, params, config) {
+            const queryParams = params ? `?${json2Query(params)}` : '';
+            return http.get(`${AJAX_URL_PREFIX}/temporary_policies/systems/${queryParams}`, config);
         },
 
         /**

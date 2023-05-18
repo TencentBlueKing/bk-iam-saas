@@ -270,7 +270,7 @@
     import { mapGetters } from 'vuex';
     import { guid, renderLabelWidth } from '@/common/util';
     import { CUSTOM_PERM_TEMPLATE_ID, PERMANENT_TIMESTAMP, SIX_MONTH_TIMESTAMP, AGGREGATION_EDIT_ENUM } from '@/common/constants';
-    import { leavePageConfirm } from '@/common/leave-page-confirm';
+    // import { leavePageConfirm } from '@/common/leave-page-confirm';
     import IamGuide from '@/components/iam-guide/index.vue';
     import AddMemberDialog from '../components/iam-add-member';
     import RenderMember from '@/views/manage-spaces/components/render-member';
@@ -1246,13 +1246,14 @@
              * handleCancel
              */
             handleCancel () {
-                let cancelHandler = Promise.resolve();
-                if (window.changeDialog) {
-                    cancelHandler = leavePageConfirm();
-                }
-                cancelHandler.then(() => {
-                    this.$router.go(-1);
-                }, _ => _);
+                // let cancelHandler = Promise.resolve();
+                // if (window.changeDialog) {
+                //     cancelHandler = leavePageConfirm();
+                // }
+                // cancelHandler.then(() => {
+                //     this.$router.go(-1);
+                // }, _ => _);
+                this.$router.go(-1);
             },
 
             /**

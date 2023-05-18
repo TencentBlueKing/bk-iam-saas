@@ -39,7 +39,7 @@
                             {{ $t(`m.common['共']`) }} <span class="count">{{ users.length }}</span> {{ $t(`m.common['个用户']`) }}
                         </template>
                         <template v-if="departments.length > 0">
-                            <template v-if="users.length > 0">，</template>
+                            <template v-if="users.length > 0">{{ $t(`m.common['，']`) }}</template>
                             <span class="count">{{ departments.length }}</span> {{ $t(`m.common['个组织']`) }}
                         </template>
                     </p>

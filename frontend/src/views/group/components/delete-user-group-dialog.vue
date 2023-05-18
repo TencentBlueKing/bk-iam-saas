@@ -11,7 +11,10 @@
         @after-leave="handleAfterDeleteLeave">
         <div class="delete-content-wrapper">
             <div class="delete-tips">
-                <p>{{ $t(`m.common['删除']`) + '【' + name + '】，' + $t(`m.dialog['将产生以下影响']`) + '：'}}</p>
+                <p>
+                    {{ `${$t(`m.common['删除']`)}${$t(`m.common['【']`)}${name}${$t(`m.common['】']`)},
+                    ${$t(`m.dialog['将产生以下影响']`)}: `}}
+                </p>
                 <p><Icon bk type="info-circle-shape" class="warn" /> {{ $t(`m.dialog['组内用户和组织将被全部移除']`) }}</p>
                 <p><Icon bk type="info-circle-shape" class="warn" /> {{ $t(`m.dialog['组权限将被全部移除']`) }}</p>
                 <p><Icon bk type="info-circle-shape" class="warn" /> {{ $t(`m.dialog['组内用户继承该组的权限将失效']`) }}</p>

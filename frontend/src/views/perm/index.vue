@@ -76,7 +76,7 @@
                 <div class="empty-wrapper">
                     <ExceptionEmpty
                         style="background: #f5f6fa"
-                        empty-text="您还没有任何权限"
+                        :empty-text="$t(`m.common['您还没有任何权限']`)"
                     />
                 </div>
             </template>
@@ -240,16 +240,14 @@
                 if (this.externalSystemId) {
                     userGroupParams.system_id = this.externalSystemId;
                 }
+                const externalParams = userGroupParams.system_id ? { system_id: userGroupParams.system_id } : '';
                 const requestList = [
                     this.$store.dispatch('perm/getPersonalGroups', userGroupParams),
-                    this.$store.dispatch('permApply/getHasPermSystem'),
-                    this.$store.dispatch('renewal/getExpireSoonGroupWithUser', {
-                        page_size: 10,
-                        page: 1
-                    }),
-                    this.$store.dispatch('renewal/getExpireSoonPerm'),
-                    this.$store.dispatch('permApply/getTeporHasPermSystem'),
-                    this.$store.dispatch('perm/getDepartMentsPersonalGroups')
+                    this.$store.dispatch('permApply/getHasPermSystem', externalParams),
+                    this.$store.dispatch('renewal/getExpireSoonGroupWithUser', userGroupParams),
+                    this.$store.dispatch('renewal/getExpireSoonPerm', externalParams),
+                    this.$store.dispatch('permApply/getTeporHasPermSystem', externalParams),
+                    this.$store.dispatch('perm/getDepartMentsPersonalGroups', externalParams)
                     // this.fetchPermGroups(),
                     // this.fetchSystems(),
                     // this.fetchSoonGroupWithUser(),
@@ -286,8 +284,7 @@
                     this.soonGroupLength = data3.results.length;
                     this.soonPermLength = data4.length;
                     this.isNoRenewal = this.soonGroupLength < 1 && this.soonPermLength < 1;
-                    this.isNoExternalRenewal = this.soonGroupLength < 1
-                        || (personalGroupList.length < 1 && systemList.length < 1 && departmentGroupList.length < 1);
+                    this.isNoExternalRenewal = this.soonGroupLength < 1;
                 } catch (e) {
                     console.error(e);
                     const { code, data, message, statusText } = e;

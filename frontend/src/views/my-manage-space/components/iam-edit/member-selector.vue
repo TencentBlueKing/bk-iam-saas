@@ -84,6 +84,10 @@
                 validator: function (value) {
                     return ['detail', 'edit'].includes(value);
                 }
+            },
+            allowEmpty: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
@@ -131,7 +135,7 @@
             // 设置只读
             handleReadOnly () {
                 this.$nextTick(() => {
-                    if (this.isEditable) {
+                    if (this.isEditable && this.$refs.selector) {
                         const selectedTag = this.$refs.selector.$refs.selected;
                         if (selectedTag && selectedTag.length === 1) {
                             selectedTag.forEach(item => {
@@ -163,8 +167,11 @@
 
             handleEnter (event) {
                 if (!this.isEditable) return;
-                if (event.key === 'Enter' && event.keyCode === 13) {
-                    this.triggerChange();
+                const { key, keyCode } = event;
+                const isUpdate = JSON.stringify(this.displayValue) !== JSON.stringify(this.value);
+                if (key === 'Enter' && keyCode === 13) {
+                    this.handleDefaultEmpty();
+                    isUpdate ? this.handleEmptyChange() : this.isEditable = false;
                 }
             },
 
@@ -185,7 +192,6 @@
             },
             
             triggerChange () {
-                this.isEditable = false;
                 if (JSON.stringify(this.displayValue) !== JSON.stringify(this.value)) {
                     this.isLoading = true;
                     this.remoteHandler({
@@ -201,7 +207,7 @@
             },
 
             handleChange () {
-                if (this.displayValue.length < 1) {
+                if (this.displayValue.length < 1 && !this.allowEmpty) {
                     return;
                 }
                 const editValue = this.editValue.reduce((p, v) => {
@@ -215,14 +221,27 @@
             },
 
             handleRtxBlur () {
+                this.handleDefaultEmpty();
                 if (JSON.stringify(this.displayValue) !== JSON.stringify(this.value)) {
-                    this.isEditable = false;
-                    if (this.displayValue.length < 1) {
-                        this.displayValue = [...this.value];
-                        this.messageError(this.$t(`m.verify['管理员不能为空']`), 2000);
-                        return;
-                    }
-                    this.triggerChange();
+                    this.handleEmptyChange();
+                }
+            },
+
+            // 判空校验
+            handleEmptyChange () {
+                this.isEditable = false;
+                if (this.displayValue.length < 1) {
+                    this.displayValue = [...this.value];
+                    this.messageError(this.$t(`m.verify['管理员不能为空']`), 2000);
+                    return;
+                }
+                this.triggerChange();
+            },
+
+            // 处理默认是空的管理员列表的数据
+            handleDefaultEmpty () {
+                if (!this.displayValue.length && this.allowEmpty) {
+                    this.$emit('on-empty-change', this.index);
                 }
             }
         }
