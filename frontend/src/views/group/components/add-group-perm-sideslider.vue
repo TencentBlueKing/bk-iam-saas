@@ -107,7 +107,7 @@
                             {{ actionCount }}
                             {{ $t(`m.common['个']`) }}
                             {{ $t(`m.common['操作']`) }}
-                            <bk-button style="margin-left: 5px;" text theme="primary" @click="hadleEditCustomPerm" data-test-id="group_btn_editCustomPerm">
+                            <bk-button style="margin-left: 5px;" text theme="primary" @click="handleEditCustomPerm" data-test-id="group_btn_editCustomPerm">
                                 {{ $t(`m.common['编辑']`) }}
                             </bk-button>
                         </p>

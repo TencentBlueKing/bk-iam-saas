@@ -14,10 +14,11 @@
                 <div v-if="isBatch">{{ $t(`m.common['批量添加成员']`) }}</div>
                 <div v-else>
                     <div v-if="isPrev">
-                        {{ $t(`m.common['添加成员至']`) }}【<span class="member-title" :title="name">{{ name }}</span>】
+                        {{ $t(`m.common['添加成员至']`) }}
+                        {{$t(`m.common['【']`)}}<span class="member-title" :title="name">{{ name }}</span>{{$t(`m.common['】']`)}}
                     </div>
-                    <div v-else :title="`${$t(`m.common['设置新用户加入']`)}【${name}】${$t(`m.common['用户组的有效期']`)}`">
-                        {{ $t(`m.common['设置新用户加入']`) }}<span class="expired-at-title" :title="name">【{{ name }}</span>】{{ $t(`m.common['用户组的有效期']`) }}
+                    <div v-else :title="`${$t(`m.common['设置新用户加入']`)}${$t(`m.common['【']`)}${name}${$t(`m.common['】']`)}${$t(`m.common['用户组的有效期']`)}`">
+                        {{ $t(`m.common['设置新用户加入']`) }}<span class="expired-at-title" :title="name">{{$t(`m.common['【']`)}}{{ name }}</span>{{$t(`m.common['】']`)}}{{ $t(`m.common['用户组的有效期']`) }}
                     </div>
                 </div>
             </template>
@@ -1439,6 +1440,7 @@
                         }
                     }
                     .search-empty-wrapper {
+                        width: 100%;
                         position: absolute;
                         left: 50%;
                         top: 50%;

@@ -161,7 +161,7 @@
              */
             goDetail (row) {
                 this.curDepartId = row.id;
-                this.permSidesilderTitle = `${this.$t(`m.common['组织']`)}【${row.full_name}】${this.$t(`m.common['的权限']`)}`;
+                this.permSidesilderTitle = `${this.$t(`m.common['组织']`)}${this.$t(`m.common['【']`)}${row.full_name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的权限']`)}`;
                 this.isShowPermSidesilder = true;
             }
         }

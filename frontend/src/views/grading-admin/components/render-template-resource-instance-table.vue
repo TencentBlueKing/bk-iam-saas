@@ -432,7 +432,7 @@
                 this.condition = _.cloneDeep(resItem.condition);
                 this.curSelectionMode = resItem.selectionMode;
                 this.curDisabled = resItem.isDefaultLimit;
-                this.resourceInstanceSidesliderTitle = `${this.$t(`m.common['关联操作']`)}【${data.name}】${this.$t(`m.common['的资源实例']`)}`;
+                this.resourceInstanceSidesliderTitle = `${this.$t(`m.common['关联操作']`)}${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)}`;
                 this.isShowResourceInstanceSideslider = true;
             },
 

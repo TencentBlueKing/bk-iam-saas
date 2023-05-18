@@ -17,6 +17,7 @@ Authorization and recovery interface for multiple resource topologies, multiple 
 | actions | array[object] | yes | actions |
 | subject | string | yes | authorization object |
 | resources | array[object] | yes | resource topology, the order of the resource types must be the same as when the action was registered|
+| expired_at | int | no | body | Expiration timestamp (in seconds), i.e. the user will not have the relevant permissions after expired_at, where a value of 4102444800 means permanent |
 
 actions
 
@@ -82,7 +83,8 @@ resources.paths
         ]
       ]
     }
-  ]
+  ],
+  "expired_at: 1704042061
 }
 ```
 

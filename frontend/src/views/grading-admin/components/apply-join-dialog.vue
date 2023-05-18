@@ -15,7 +15,7 @@
         @after-leave="handleAfterDeleteLeave">
         <div slot="header" class="title">
             {{ $t(`m.myApply['申请加入']`)}}
-            <span class="name" :title="name">【{{ name }}】</span>
+            <span class="name" :title="name">{{ $t(`m.common['【']`)}}{{ name }}{{ $t(`m.common['】']`)}}</span>
         </div>
         <div class="confirm-content-wrapper">
             <bk-input

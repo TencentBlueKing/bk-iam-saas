@@ -158,7 +158,7 @@
             };
         },
         computed: {
-            ...mapGetters(['user'])
+            ...mapGetters(['user', 'externalSystemId'])
         },
         watch: {
             departmentGroupList: {
@@ -349,13 +349,13 @@
             handleViewDetail (payload) {
                 if (payload.role && payload.role.name) {
                     this.isShowGradeSlider = true;
-                    this.gradeSliderTitle = `【${payload.role.name}】${this.$t(`m.grading['管理空间']`)} ${this.$t(`m.common['成员']`)}`;
+                    this.gradeSliderTitle = `${this.$t(`m.common['【']`)}${payload.role.name}${this.$t(`m.common['】']`)}${this.$t(`m.grading['管理空间']`)} ${this.$t(`m.common['成员']`)}`;
                     this.fetchRoles(payload.role.id);
                 }
             },
 
             handleEmptyRefresh () {
-                this.$store.dispatch('perm/getDepartMentsPersonalGroups');
+                this.$store.dispatch('perm/getDepartMentsPersonalGroups', this.externalSystemId ? { system_id: this.externalSystemId } : '');
                 this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10 });
                 this.handlePageChange(1);
             }

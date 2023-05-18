@@ -99,8 +99,8 @@
                                     :remote-hander="handleUpdateSubManageSpace" />
                             </template>
                         </bk-table-column>
-                        <bk-table-column :label="$t(`m.levelSpace['更新人']`)" prop="updater"></bk-table-column>
-                        <bk-table-column :label="$t(`m.levelSpace['更新时间']`)" prop="updated_time">
+                        <bk-table-column :label="$t(`m.levelSpace['更新人']`)" prop="updater" />
+                        <bk-table-column :label="$t(`m.levelSpace['更新时间']`)" prop="updated_time" width="240">
                             <template slot-scope="child">
                                 <span :title="child.row.updated_time">{{ child.row.updated_time }}</span>
                             </template>
@@ -212,7 +212,7 @@
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.grading['更新人']`)" prop="updater"></bk-table-column>
-            <bk-table-column :label="$t(`m.grading['更新时间']`)" prop="updated_time">
+            <bk-table-column :label="$t(`m.grading['更新时间']`)" prop="updated_time" width="240">
                 <template slot-scope="{ row }">
                     <span :title="row.updated_time">{{ row.updated_time }}</span>
                 </template>
@@ -772,7 +772,7 @@
                 this.curOperateType = 'drop';
                 this.curId = payload.id;
                 this.confirmDialogTitle = this.$t(`m.dialog['确认退出']`);
-                this.confirmDialogSubTitle = `${this.$t(`m.common['退出']`)}【${payload.name}】，${this.$t(`m.grading['退出提示']`)}`;
+                this.confirmDialogSubTitle = `${this.$t(`m.common['退出']`)}${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}, ${this.$t(`m.grading['退出提示']`)}`;
                 this.isShowConfirmDialog = true;
             },
 
@@ -780,7 +780,7 @@
                 this.curOperateType = 'delete';
                 this.curId = payload.id;
                 this.confirmDialogTitle = this.$t(`m.dialog['确认删除']`);
-                this.confirmDialogSubTitle = `${this.$t(`m.common['删除']`)}【${payload.name}】，${this.$t(`m.grading['删除提示']`)}`;
+                this.confirmDialogSubTitle = `${this.$t(`m.common['删除']`)}${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}, ${this.$t(`m.grading['删除提示']`)}`;
                 this.isShowConfirmDialog = true;
             },
 

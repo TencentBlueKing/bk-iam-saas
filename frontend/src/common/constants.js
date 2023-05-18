@@ -116,3 +116,16 @@ export const BOUNDARY_KEYS_ENUM = {
         isExpanded: false
     }
 };
+
+// 需要弹出保存提示dialog的页面
+export const NEED_CONFIRM_DIALOG_ROUTER = [
+    'permTemplateCreate',
+    'permTemplateEdit',
+    'permTemplateDiff',
+    'createUserGroup',
+    'gradingAdminCreate',
+    'gradingAdminEdit',
+    'myManageSpaceCreate',
+    'authorBoundaryEditFirstLevel',
+    'secondaryManageSpaceCreate'
+];

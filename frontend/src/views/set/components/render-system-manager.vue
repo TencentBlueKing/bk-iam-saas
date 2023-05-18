@@ -17,7 +17,7 @@
                         <span :title="row.name">{{ row.name }}</span>
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t(`m.set['成员列表']`)">
+                <bk-table-column :label="$t(`m.set['成员列表']`)" width="600">
                     <template slot-scope="{ row, $index }">
                         <template v-if="row.isEdit || row.members.length">
                             <!-- <bk-user-selector
@@ -34,11 +34,13 @@
                             <iam-edit-member-selector
                                 :ref="`sysRef${$index}`"
                                 field="members"
-                                width="200"
+                                style="width: 100%;"
                                 :placeholder="$t(`m.verify['请输入']`)"
                                 :value="row.members"
                                 :index="$index"
-                                @on-change="handleUpdateMembers" />
+                                :allow-empty="true"
+                                @on-change="handleUpdateMembers"
+                                @on-empty-change="handleEmptyChange" />
                         </template>
                         <template v-else>
                             <!-- <div
@@ -231,22 +233,23 @@
 
             handleUpdateMembers (payload, index) {
                 const { members } = payload;
-                const { memberBackup, id } = this.systemUserList[index];
+                const { id } = this.systemUserList[index];
                 if (!members.length) {
                     this.$refs[`sysRef${index}`].isEditable = false;
                     this.$set(this.systemUserList[index], 'isEdit', false);
                     this.$set(this.systemUserList[index], 'members', []);
                 }
-                if (JSON.stringify(members) === JSON.stringify(memberBackup)) {
-                    return;
-                }
+                // if (JSON.stringify(members) === JSON.stringify(memberBackup)) {
+                //     return;
+                // }
                 try {
                     const params = {
                         id,
                         members: _.cloneDeep(members.map(item => item.username))
                     };
                     this.$store.dispatch('role/editSystemManagerMember', params);
-                    this.$set(this.systemUserList[index], 'memberBackup', _.cloneDeep(members));
+                    // this.$set(this.systemUserList[index], 'memberBackup', _.cloneDeep(members));
+                    this.fetchSystemManager();
                     this.messageSuccess(this.$t(`m.common['操作成功']`));
                 } catch (e) {
                     console.error(e);
@@ -258,6 +261,12 @@
                         ellipsisCopy: true
                     });
                 }
+            },
+
+            handleEmptyChange (index) {
+                const users = this.systemUserList[index];
+                users.isError = false;
+                users.isEdit = false;
             },
 
             async handleSystemEnabledChange (newVal, oldVal, val, payload) {

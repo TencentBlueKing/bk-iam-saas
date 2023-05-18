@@ -809,7 +809,7 @@
                 this.curResIndex = resIndex;
                 this.curGroupIndex = groupIndex;
 
-                this.resourceInstanceSidesliderTitle = `${this.$t(`m.common['关联操作']`)}【${data.name}】${this.$t(`m.common['的资源实例']`)}`;
+                this.resourceInstanceSidesliderTitle = `${this.$t(`m.common['关联操作']`)}${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)}`;
                 window.changeAlert = 'iamSidesider';
                 this.isShowResourceInstanceSideslider = true;
             },
@@ -1034,7 +1034,7 @@
                         condition: condition.filter(item => item.attributes.length > 0 || item.instances.length > 0)
                     }
                 };
-                this.previewDialogTitle = `${this.$t(`m.common['操作']`)}【${this.tableList[this.curIndex].name}】${this.$t(`m.common['的资源实例']`)} ${this.$t(`m.common['差异对比']`)}`;
+                this.previewDialogTitle = `${this.$t(`m.common['操作']`)}${this.$t(`m.common['【']`)}${this.tableList[this.curIndex].name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)} ${this.$t(`m.common['差异对比']`)}`;
                 this.isShowPreviewDialog = true;
             },
 
@@ -1075,7 +1075,7 @@
                         condition: condition.filter(item => item.attributes.length > 0 || item.instances.length > 0)
                     }
                 };
-                this.previewDialogTitle = `${this.$t(`m.common['操作']`)}【${payload.name}】${this.$t(`m.common['的资源实例']`)} ${this.$t(`m.common['差异对比']`)}`;
+                this.previewDialogTitle = `${this.$t(`m.common['操作']`)}${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)} ${this.$t(`m.common['差异对比']`)}`;
                 this.isShowPreviewDialog = true;
             },
 
@@ -1599,7 +1599,7 @@
                 this.curIndex = index;
                 this.curGroupIndex = groupIndex;
                 this.isShowResourceInstanceEffectTime = true;
-                this.resourceInstanceEffectTimeTitle = `${this.$t(`m.common['关联操作']`)}【${data.name}】${this.$t(`m.common['生效条件']`)}`;
+                this.resourceInstanceEffectTimeTitle = `${this.$t(`m.common['关联操作']`)}${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['生效条件']`)}`;
             },
 
             // 生效条件保存

@@ -120,6 +120,7 @@
     import { bus } from '@/common/bus';
     import { buildURLParams } from '@/common/url';
     import { getCookie } from '@/common/util';
+    import { NEED_CONFIRM_DIALOG_ROUTER } from '@/common/constants';
     import SystemLog from '../system-log';
     import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
     import Cookie from 'js-cookie';
@@ -197,15 +198,6 @@
         // 用户
         [['user'], NORMAL_DOCU_LINK]
     ]);
-
-    const NEED_CONFIRM_DIALOG_ROUTER = [
-        'permTemplateCreate',
-        'permTemplateEdit',
-        'permTemplateDiff',
-        'createUserGroup',
-        'gradingAdminCreate',
-        'gradingAdminEdit'
-    ];
 
     export default {
         name: '',
@@ -544,6 +536,21 @@
             },
 
             async handleSelect (roleData, index) {
+                if (window.changeDialog && NEED_CONFIRM_DIALOG_ROUTER.includes(this.$route.name)) {
+                    const cancelHandler = leavePageConfirm();
+                    cancelHandler.then(
+                        () => {
+                            this.handleHeaderNav(roleData, index);
+                        },
+                        (_) => _
+                    );
+                } else {
+                    this.handleHeaderNav(roleData, index);
+                }
+            },
+
+            // 处理当前页未保存信息切换头部导航栏校验
+            async handleHeaderNav (roleData, index) {
                 const currentData = { ...roleData };
                 this.navData.forEach((e) => {
                     e.active = false;
