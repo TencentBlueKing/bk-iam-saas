@@ -84,7 +84,8 @@ class AccessSystemApplicationTrans(OpenCommonTrans, ApplicationDataTrans):
             # 将给所有资源实例添加名字
             open_policy.fill_instance_name()
 
-        return self._to_policy_list(system_id, open_policies)
+        expired_at = data.get("expired_at", 0)
+        return self._to_policy_list(system_id, open_policies, expired_at=expired_at)
 
     def from_grant_policy_application(self, applicant: str, data: Dict) -> ActionApplicationDataBean:
         """来着自定义权限申请的数据转换"""
