@@ -68,6 +68,7 @@ class GroupSLZ(serializers.ModelSerializer):
             "role",
             "attributes",
             "readonly",
+            "role_members",
         )
 
     def __init__(self, *args, **kwargs):
