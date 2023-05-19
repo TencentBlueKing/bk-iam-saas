@@ -20,6 +20,7 @@ urlpatterns = [
         name="group.members",
     ),
     path("transfer/", views.GroupTransferView.as_view(), name="group.transfer"),
+    path("search/", views.GroupSearchViewSet.as_view({"post": "search"}), name="group.search"),
     # 用户组详情
     path(
         "<str:id>/",
@@ -72,5 +73,4 @@ urlpatterns = [
         views.GroupCustomPolicyConditionCompareView.as_view({"post": "create"}),
         name="group.custom_policy_condition_compare",
     ),
-    path("search/", views.GroupSearchViewSet.as_view({"post": "search"}), name="group.search"),
 ]
