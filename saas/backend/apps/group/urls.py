@@ -72,5 +72,5 @@ urlpatterns = [
         views.GroupCustomPolicyConditionCompareView.as_view({"post": "create"}),
         name="group.custom_policy_condition_compare",
     ),
-    path("search/", views.GroupSearchViewSet.as_view({"post": "list"}), name="group.search"),
+    path("search/", views.GroupSearchViewSet.as_view({"post": "search"}), name="group.search"),
 ]
