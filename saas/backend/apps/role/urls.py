@@ -103,5 +103,5 @@ urlpatterns = [
         name="role.user_subset_manager",
     ),
     path("subject_scope_check/", views.RoleSubjectScopCheckView.as_view(), name="role.subject_scope_check"),
-    path("search/", views.RoleSearchViewSet.as_view({"get": "list"}), name="role.role_search"),
+    path("search/", views.RoleSearchViewSet.as_view({"get": "search"}), name="role.role_search"),
 ]

@@ -981,7 +981,7 @@ class GroupSearchViewSet(mixins.ListModelMixin, GenericViewSet):
         responses={status.HTTP_200_OK: GroupSLZ(label="用户组", many=True)},
         tags=["group"],
     )
-    def list(self, request, *args, **kwargs):
+    def search(self, request, *args, **kwargs):
         slz = GroupSearchSLZ(data=request.data)
         slz.is_valid(raise_exception=True)
 
