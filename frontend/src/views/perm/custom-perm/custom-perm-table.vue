@@ -333,7 +333,8 @@
                     const res = await this.$store.dispatch('permApply/getPolicies', { system_id: params.systemId });
                     this.policyList = res.data.map(item => {
                         // eslint-disable-next-line max-len
-                        item.related_environments = this.linearActionList.find(sub => sub.id === item.id).related_environments;
+                        const relatedEnvironments = this.linearActionList.find(sub => sub.id === item.id);
+                        item.related_environments = relatedEnvironments ? relatedEnvironments.related_environments : [];
                         return new PermPolicy(item);
                     });
                 } catch (e) {
@@ -557,25 +558,54 @@
              * handleDelete
              */
             handleDelete (payload) {
-                const list = [];
                 const { id, name, policy_id } = payload;
-                this.linearActionList.forEach(item => {
+                const actionList = [];
+                const delRelatedActions = [];
+                let curAction = {};
+                const policyIdList = this.policyList.map(v => v.id);
+                const linearActionList = this.linearActionList.filter(item => policyIdList.includes(item.id));
+                linearActionList.forEach(item => {
+                    if (item.id === id) {
+                        curAction = _.cloneDeep(item);
+                    }
+                    if (Object.keys(curAction).length
+                        && curAction.related_actions && curAction.related_actions.length) {
+                        curAction.related_actions.forEach(action => {
+                            // 如果这里过滤自己还能在其他数据找到相同的related_actions，就代表有其他数据也关联了相同的操作
+                            if (policyIdList.includes(action)
+                                && item.related_actions.includes(action) && item.id !== id) {
+                                console.log(action, item, 555);
+                                delRelatedActions.push(item);
+                            }
+                        });
+                    }
                     if (item.related_actions.includes(id)) {
-                        list.push(item.name);
+                        actionList.push(item.name);
                     }
                 });
-                if (list.length) {
+                console.log(delRelatedActions, linearActionList, curAction.related_actions, actionList);
+                if (actionList.length) {
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: `${this.$t(`m.perm['不能删除当前操作']`)}, ${this.$t(`m.common['【']`)}${list.join()}${this.$t(`m.common['】']`)}${this.$t(`m.perm['等']`)}${list.length}${this.$t(`m.perm['个操作关联了']`)}${name}`,
+                        message: `${this.$t(`m.perm['不能删除当前操作']`)}, ${this.$t(`m.common['【']`)}${actionList.join()}${this.$t(`m.common['】']`)}${this.$t(`m.perm['等']`)}${actionList.length}${this.$t(`m.perm['个操作关联了']`)}${name}`,
                         ellipsisLine: 10,
                         ellipsisCopy: true
                     });
                     return;
                 }
                 // eslint-disable-next-line camelcase
-                this.curDeleteIds.splice(0, this.curDeleteIds.length, ...[policy_id]);
+                let policyIds = [policy_id];
+                if (!delRelatedActions.length && curAction.related_actions && curAction.related_actions.length) {
+                    const list = [...this.policyList].filter(v => curAction.related_actions.includes(v.id));
+                    if (list.length) {
+                        console.log(list.map(v => v.policy_id), 4555);
+                        // eslint-disable-next-line camelcase
+                        policyIds = [policy_id].concat(list.map(v => v.policy_id));
+                    }
+                }
+                console.log(curAction.related_actions, policyIds, 7777777777);
+                this.curDeleteIds.splice(0, this.curDeleteIds.length, ...policyIds);
                 this.deleteDialog.subTitle
                     = `${this.$t(`m.dialog['将删除']`)}${this.$t(`m.common['【']`)}${name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的权限']`)}`;
                 this.deleteDialog.visible = true;

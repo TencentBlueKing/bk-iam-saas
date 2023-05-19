@@ -112,7 +112,7 @@
                         <div class="user-group-space">
                             <Icon
                                 v-if="['subset_manager'].includes(row.role.type)"
-                                type="level-two"
+                                type="level-two-manage-space"
                                 :style="{ color: '#9B80FE' }"
                             />
                             <iam-edit-input
