@@ -353,6 +353,10 @@
                 return this.user.role.type === 'super_manager';
             },
             sliderWidth () {
+                console.log(this.$route.name);
+                if (['myPerm', 'applyJoinUserGroup'].includes(this.$route.name) && ['detail'].includes(this.mode)) {
+                    return window.innerWidth - 700;
+                }
                 return this.mode === 'detail' ? 890 : 725;
             },
             condition () {
@@ -578,25 +582,44 @@
                 }
             },
             handleShowDelDialog (row) {
-                const { id, name } = row;
-                const list = [];
-                this.linearActionList.forEach(item => {
-                    if (item.related_actions.includes(id)) {
-                        list.push(item.name);
+                let delRelatedActions = [];
+                const actionList = [];
+                const { id, mode, name } = row;
+                const isCustom = ['custom'].includes(mode);
+                const policyIdList = this.tableList.map(item => item.id);
+                const linearActionList = this.linearActionList.filter(item => policyIdList.includes(item.id));
+                const curAction = linearActionList.find(item => item.id === id);
+                const hasRelatedActions = curAction && curAction.related_actions && curAction.related_actions.length;
+                linearActionList.forEach(item => {
+                    // 如果这里过滤自己还能在其他数据找到相同的related_actions，就代表有其他数据也关联了相同的操作
+                    if (isCustom && hasRelatedActions && item.related_actions && item.related_actions.length
+                        && item.id !== id) {
+                        delRelatedActions = item.related_actions.filter(v => curAction.related_actions.includes(v));
+                    }
+                    if (item.related_actions && item.related_actions.includes(id)) {
+                        actionList.push(item.name);
                     }
                 });
-                if (list.length) {
+                if (actionList.length) {
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: `${this.$t(`m.perm['不能删除当前操作']`)}, ${this.$t(`m.common['【']`)}${list.join()}${this.$t(`m.common['】']`)}${this.$t(`m.perm['等']`)}${list.length}${this.$t(`m.perm['个操作关联了']`)}${name}`,
+                        message: `${this.$t(`m.perm['不能删除当前操作']`)}, ${this.$t(`m.common['【']`)}${actionList.join()}${this.$t(`m.common['】']`)}${this.$t(`m.perm['等']`)}${actionList.length}${this.$t(`m.perm['个操作关联了']`)}${name}`,
                         ellipsisLine: 10,
                         ellipsisCopy: true
                     });
                     return;
                 }
+                let ids = [row.policy_id];
+                if (isCustom && !delRelatedActions.length && hasRelatedActions) {
+                    const list = [...this.tableList].filter(v => curAction.related_actions.includes(v.id));
+                    if (list.length) {
+                        // eslint-disable-next-line camelcase
+                        ids = [row.policy_id].concat(list.map(v => v.policy_id));
+                    }
+                }
                 this.isShowDeleteDialog = true;
-                this.newRow = row;
+                this.newRow = Object.assign(row, { ids });
             },
             handleDelete () {
                 this.$emit('on-delete', this.newRow);

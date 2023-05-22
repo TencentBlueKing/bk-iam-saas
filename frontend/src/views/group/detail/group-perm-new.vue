@@ -647,7 +647,7 @@
                     id: this.groupId,
                     data: {
                         system_id: item.id,
-                        ids: data.policy_id
+                        ids: data.ids ? data.ids.join(',') : data.policy_id
                     }
                 }, item, {}, false);
             }
