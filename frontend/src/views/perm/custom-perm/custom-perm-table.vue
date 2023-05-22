@@ -558,32 +558,22 @@
              * handleDelete
              */
             handleDelete (payload) {
-                const { id, name, policy_id } = payload;
+                let delRelatedActions = [];
                 const actionList = [];
-                const delRelatedActions = [];
-                let curAction = {};
+                const { id, name, policy_id } = payload;
                 const policyIdList = this.policyList.map(v => v.id);
                 const linearActionList = this.linearActionList.filter(item => policyIdList.includes(item.id));
+                const curAction = linearActionList.find(item => item.id === id);
+                const hasRelatedActions = curAction && curAction.related_actions && curAction.related_actions.length;
                 linearActionList.forEach(item => {
-                    if (item.id === id) {
-                        curAction = _.cloneDeep(item);
+                    // 如果这里过滤自己还能在其他数据找到相同的related_actions，就代表有其他数据也关联了相同的操作
+                    if (hasRelatedActions && item.related_actions && item.related_actions.length && item.id !== id) {
+                        delRelatedActions = item.related_actions.filter(v => curAction.related_actions.includes(v));
                     }
-                    if (Object.keys(curAction).length
-                        && curAction.related_actions && curAction.related_actions.length) {
-                        curAction.related_actions.forEach(action => {
-                            // 如果这里过滤自己还能在其他数据找到相同的related_actions，就代表有其他数据也关联了相同的操作
-                            if (policyIdList.includes(action)
-                                && item.related_actions.includes(action) && item.id !== id) {
-                                console.log(action, item, 555);
-                                delRelatedActions.push(item);
-                            }
-                        });
-                    }
-                    if (item.related_actions.includes(id)) {
+                    if (item.related_actions && item.related_actions.includes(id)) {
                         actionList.push(item.name);
                     }
                 });
-                console.log(delRelatedActions, linearActionList, curAction.related_actions, actionList);
                 if (actionList.length) {
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
@@ -596,15 +586,13 @@
                 }
                 // eslint-disable-next-line camelcase
                 let policyIds = [policy_id];
-                if (!delRelatedActions.length && curAction.related_actions && curAction.related_actions.length) {
+                if (!delRelatedActions.length && hasRelatedActions) {
                     const list = [...this.policyList].filter(v => curAction.related_actions.includes(v.id));
                     if (list.length) {
-                        console.log(list.map(v => v.policy_id), 4555);
                         // eslint-disable-next-line camelcase
                         policyIds = [policy_id].concat(list.map(v => v.policy_id));
                     }
                 }
-                console.log(curAction.related_actions, policyIds, 7777777777);
                 this.curDeleteIds.splice(0, this.curDeleteIds.length, ...policyIds);
                 this.deleteDialog.subTitle
                     = `${this.$t(`m.dialog['将删除']`)}${this.$t(`m.common['【']`)}${name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的权限']`)}`;
