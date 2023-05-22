@@ -728,8 +728,12 @@
             },
 
             handleAddPerm () {
-                this.externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn
-                    ? this.isShowAddActionSideslider = true : this.isShowAddSideslider = true;
+                if (this.externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn) {
+                    this.isShowAddActionSideslider = true;
+                } else {
+                    this.isShowAddSideslider = true;
+                    this.permSideWidth = 1090;
+                }
             }
         }
     };

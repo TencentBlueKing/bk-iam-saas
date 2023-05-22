@@ -353,7 +353,6 @@
                 return this.user.role.type === 'super_manager';
             },
             sliderWidth () {
-                console.log(this.$route.name);
                 if (['myPerm', 'applyJoinUserGroup'].includes(this.$route.name) && ['detail'].includes(this.mode)) {
                     return window.innerWidth - 700;
                 }
