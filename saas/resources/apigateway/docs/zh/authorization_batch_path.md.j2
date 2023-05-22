@@ -17,6 +17,7 @@
 | actions |  数组[对象]   | 是   | 操作 |
 | subject |  字符串   | 是   | 授权对象 |
 | resources |  数组[对象]   | 是   | 资源拓扑, 资源类型的顺序必须操作注册时的顺序一致|
+| expired_at | int | 否 | body | 过期时间戳(单位秒)，即用户在 expired_at 后将不具有该权限 |
 
 actions
 
@@ -82,7 +83,8 @@ resources.paths
         ]
       ]
     }
-  ]
+  ],
+  "expired_at: 1704042061
 }
 ```
 
@@ -119,4 +121,3 @@ resources.paths
   }
 }
 ```
-

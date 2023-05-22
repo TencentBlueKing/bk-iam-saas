@@ -27,8 +27,8 @@ class Role(BaseModel, BaseSystemHiddenModel):
     角色
     """
 
-    name = models.CharField("名称", max_length=128)
-    name_en = models.CharField("英文名", max_length=128, default="")
+    name = models.CharField("名称", max_length=512)
+    name_en = models.CharField("英文名", max_length=512, default="")
     description = models.CharField("描述", max_length=255, default="")
     type = models.CharField("类型", max_length=32, choices=RoleType.get_choices())
     code = models.CharField("标志", max_length=64, default="")

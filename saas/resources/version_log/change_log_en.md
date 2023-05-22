@@ -1,3 +1,12 @@
+<!-- 2023-05-18 -->
+# V1.10.1 ChangeLog
+
+### Bug Fixes
+* The open api creation permission application form increases the expiration time
+* Fix the unprocessed permission removal when submitting a custom permission application
+
+---
+
 <!-- 2023-05-10 -->
 # V1.10.0 ChangeLog
 
