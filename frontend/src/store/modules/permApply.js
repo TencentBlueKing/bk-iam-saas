@@ -408,7 +408,11 @@ export default {
          * @return {Promise} promise 对象
          */
         getJoinGroupSearch ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/groups/search/`, params, config);
+            const { offset, limit } = params;
+            const queryParams = Object.assign({}, { offset, limit });
+            delete params.offset;
+            delete params.limit;
+            return http.post(`${AJAX_URL_PREFIX}/groups/search/?${json2Query(queryParams)}`, params, config);
         }
         
     }
