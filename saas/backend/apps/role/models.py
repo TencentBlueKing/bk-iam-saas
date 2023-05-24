@@ -9,9 +9,10 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import json
+from textwrap import dedent
 from typing import Dict, List, Union
 
-from django.db import models
+from django.db import connection, models
 from django.utils.functional import cached_property
 
 from backend.common.models import BaseModel, BaseSystemHiddenModel
@@ -278,6 +279,26 @@ class RoleSource(BaseModel):
     role_id = models.IntegerField("角色ID", unique=True)
     source_type = models.CharField("来源类型", max_length=32, choices=RoleSourceType.get_choices())
     source_system_id = models.CharField("来源系统", max_length=32, default="")
+
+    @classmethod
+    def get_role_count(cls, role_type: str, system_id: str, source_type: str = RoleSourceType.API.value):
+        with connection.cursor() as cursor:
+            cursor.execute(
+                dedent(
+                    """SELECT
+                    COUNT(*)
+                    FROM
+                    role_rolesource a
+                    left join role_role b ON a.role_id = b.id
+                    WHERE
+                    a.source_type = %s
+                    AND a.source_system_id = %s
+                    AND b.type = %s"""
+                ),
+                [source_type, system_id, role_type],
+            )
+            row = cursor.fetchone()
+            return row[0]
 
 
 class AnonymousRole:
