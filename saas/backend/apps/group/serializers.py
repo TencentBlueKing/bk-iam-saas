@@ -21,7 +21,8 @@ from backend.apps.application.base_serializers import BaseAggActionListSLZ, vali
 from backend.apps.application.serializers import ExpiredAtSLZ, SystemInfoSLZ
 from backend.apps.group.models import Group
 from backend.apps.policy.serializers import BasePolicyActionSLZ, ResourceTypeSLZ
-from backend.apps.role.models import Role, RoleRelatedObject, RoleRelation
+from backend.apps.role.models import Role, RoleRelatedObject, RoleRelation, RoleUser
+from backend.apps.role.serializers import ResourceInstancesSLZ
 from backend.apps.template.models import PermTemplatePolicyAuthorized
 from backend.biz.group import GroupBiz
 from backend.biz.policy import PolicyBean, PolicyBeanList
@@ -52,6 +53,7 @@ class GroupIdSLZ(serializers.Serializer):
 class GroupSLZ(serializers.ModelSerializer):
     role = serializers.SerializerMethodField()
     attributes = serializers.SerializerMethodField()
+    role_members = serializers.SerializerMethodField()
 
     class Meta:
         model = Group
@@ -66,6 +68,7 @@ class GroupSLZ(serializers.ModelSerializer):
             "role",
             "attributes",
             "readonly",
+            "role_members",
         )
 
     def __init__(self, *args, **kwargs):
@@ -98,6 +101,15 @@ class GroupSLZ(serializers.ModelSerializer):
         if group_attributes:
             return group_attributes.get_attributes()
         return {}
+
+    def get_role_members(self, obj):
+        if not self.group_role_dict:
+            return []
+        role = self.group_role_dict.get(obj.id)
+        if not role:
+            return []
+
+        return list(RoleUser.objects.filter(role_id=role.id).values_list("username", flat=True))
 
 
 class MemberSLZ(serializers.Serializer):
@@ -333,3 +345,12 @@ class GradeManagerGroupTransferSLZ(serializers.Serializer):
         if not RoleRelation.objects.filter(parent_id=role.id, role_id=value).exists():
             raise serializers.ValidationError(f"subset manager id {value} not exists")
         return value
+
+
+class GroupSearchSLZ(serializers.Serializer):
+    name = serializers.CharField(label="用户组名称", required=False, default="", allow_blank=True)
+    system_id = serializers.CharField(label="系统ID")
+    action_id = serializers.CharField(label="操作ID")
+    resource_instances = serializers.ListField(
+        label="资源实例", required=False, child=ResourceInstancesSLZ(label="资源实例信息"), default=list
+    )
