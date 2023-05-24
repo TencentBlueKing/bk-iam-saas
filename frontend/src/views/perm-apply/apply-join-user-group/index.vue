@@ -42,7 +42,7 @@
                                         :clearable="false"
                                         :allow-enter="false"
                                         :placeholder="$t(`m.verify['请选择']`)"
-                                        @selected="handleSelected"
+                                        @selected="handleSelectedAction"
                                         searchable>
                                         <bk-option v-for="option in processesList"
                                             :key="option.id"
@@ -72,10 +72,10 @@
                                                 :clearable="false"
                                                 :allow-enter="false"
                                                 :placeholder="$t(`m.verify['请选择']`)"
-                                                @change="handleResourceTypeChange"
+                                                @change="handleResourceTypeChange(index)"
                                             >
                                                 <bk-option
-                                                    v-for="related in _.related_resource_types"
+                                                    v-for="related in _.related_resource_types_list"
                                                     :key="related.type"
                                                     :id="related.type"
                                                     :name="related.name">
@@ -85,8 +85,7 @@
                                         <div class="relation-content-item"
                                             v-for="(content, contentIndex) in _.related_resource_types"
                                             :key="contentIndex">
-                                            <div class="content"
-                                                v-if="content.type === curResourceData.type">
+                                            <div class="content">
                                                 <render-condition
                                                     :ref="`condition_${index}_${contentIndex}_ref`"
                                                     :value="curResourceData.type ?
@@ -459,7 +458,6 @@
                 },
                 resourceInstanceSideSliderTitle: '',
                 params: {},
-                curRelatedResourceTypes: [],
                 curResIndex: -1,
                 groupIndex: -1
             };
@@ -616,7 +614,7 @@
                 this.resourceActionData = [];
                 this.processesList = [];
                 this.applyGroupData.action_id = '';
-                this.resourceTypeData = { isEmpty: true };
+                this.resourceTypeData = Object.assign({}, { isEmpty: true, resource_groups: [] });
                 if (this.applyGroupData.system_id) {
                     try {
                         const { data } = await this.$store.dispatch('approvalProcess/getActionGroups', { system_id: this.applyGroupData.system_id });
@@ -632,27 +630,33 @@
                 }
             },
 
-            handleResourceTypeChange (value) {
-                console.log(value, this.curResourceData, 555);
+            handleResourceTypeChange (index) {
+                this.groupIndex = index;
                 this.resourceInstances = [];
                 if (this.resourceTypeData
                     && this.resourceTypeData.resource_groups
                     && this.resourceTypeData.resource_groups.length) {
-                    const resourceTypes = _.cloneDeep(this.resourceTypeData.resource_groups[0].related_resource_types);
-                    this.curRelatedResourceTypes
-                        = resourceTypes.filter(item => this.curResourceData.type === item.type);
-                    console.log(this.curRelatedResourceTypes, 555);
+                    const resourceGroups = this.resourceTypeData.resource_groups[index];
+                    const typesList = _.cloneDeep(resourceGroups.related_resource_types_list);
+                    resourceGroups.related_resource_types
+                        = typesList.filter(item => item.type === this.curResourceData.type);
                 }
             },
 
-            // 操作选择
-            handleSelected () {
+            handleSelectedAction () {
                 this.actionIdError = false;
                 this.resourceTypeError = false;
                 this.curResourceData.type = '';
                 this.resourceInstances = [];
                 this.resourceTypeData = this.processesList.find(e => e.id === this.applyGroupData.action_id);
-                console.log(this.resourceTypeData, this.curResourceData, 6565656);
+                if (this.resourceTypeData && this.resourceTypeData.resource_groups) {
+                    this.resourceTypeData.resource_groups.forEach(item => {
+                        this.$set(item, 'related_resource_types_list', _.cloneDeep(item.related_resource_types));
+                        if (!this.curResourceData.type) {
+                            item.related_resource_types = [];
+                        }
+                    });
+                }
             },
             
             handleFormatRecursion (list) {
@@ -681,7 +685,7 @@
                 });
                 if (this.processesList.length) {
                     this.applyGroupData.action_id = this.processesList[0].id;
-                    this.handleSelected();
+                    this.handleSelectedAction();
                 }
             },
 
@@ -718,7 +722,6 @@
                     resource_type_system: resItem.system_id,
                     resource_type_id: resItem.type
                 };
-                console.log(666, groupIndex);
                 this.curResIndex = resIndex;
                 this.groupIndex = groupIndex;
                 this.resourceInstanceSideSliderTitle = `${this.$t(`m.common['关联操作']`)}${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)}`;
@@ -754,7 +757,6 @@
                     this.resourceTypeError = true;
                     return;
                 }
-                this.resetPagination();
                 let resourceInstances = _.cloneDeep(this.resourceInstances);
                 resourceInstances = resourceInstances.reduce((prev, item) => {
                     const { id, resourceInstancesPath } = this.handlePathData(item, item.type);
@@ -771,6 +773,7 @@
                     this.resourceTypeError = true;
                     return;
                 }
+                this.resetPagination();
                 const { current, limit } = this.pagination;
                 const params = {
                     ...this.applyGroupData,
