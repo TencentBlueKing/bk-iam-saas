@@ -253,7 +253,7 @@
             };
         },
         computed: {
-            ...mapGetters(['user']),
+            ...mapGetters(['user', 'externalSystemId']),
             loading () {
                 return this.initRequestQueue.length > 0;
             },
@@ -295,6 +295,9 @@
                     system_id: systemId,
                     user_id: this.user.username
                 };
+                if (this.externalSystemId) {
+                    params.system_id = this.externalSystemId;
+                }
                 try {
                     const res = await this.$store.dispatch('permApply/getActions', params);
                     this.originalCustomTmplList = _.cloneDeep(res.data);

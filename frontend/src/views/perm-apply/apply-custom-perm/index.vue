@@ -2233,6 +2233,9 @@
                 if (this.routerQuery.cache_id) {
                     params.cache_id = this.routerQuery.cache_id;
                 }
+                if (this.externalSystemId) {
+                    params.hidden = false;
+                }
                 try {
                     const { code, data } = await this.$store.dispatch('permApply/getActions', params);
                     this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
