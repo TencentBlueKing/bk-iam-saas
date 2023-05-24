@@ -576,9 +576,9 @@ class RoleCheckBiz:
 
         limit = system_limits[system_id] if system_id in system_limits else default_limit
 
-        exists_count = RoleSource.objects.filter(
-            source_type=RoleSourceType.API.value, source_system_id=system_id
-        ).count()
+        exists_count = RoleSource.get_role_count(
+            RoleType.GRADE_MANAGER.value, system_id, source_type=RoleSourceType.API.value
+        )
         if exists_count >= limit:
             raise serializers.ValidationError(_("系统({}): 可创建的分级管理员数量已超过最大值 {}").format(system_id, limit))
 
