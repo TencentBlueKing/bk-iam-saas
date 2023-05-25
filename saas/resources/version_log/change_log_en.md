@@ -1,3 +1,11 @@
+<!-- 2023-05-25 -->
+# V1.10.2 ChangeLog
+
+### Optimization Updates
+* Optimize the bkci permission migration function
+
+---
+
 <!-- 2023-05-18 -->
 # V1.10.1 ChangeLog
 

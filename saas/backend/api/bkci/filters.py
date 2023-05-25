@@ -16,4 +16,4 @@ from backend.api.bkci.models import MigrateData
 class MigrateDataFilter(filters.FilterSet):
     class Meta:
         model = MigrateData
-        fields = ["project_id", "type"]
+        fields = ["project_id", "type", "version"]
