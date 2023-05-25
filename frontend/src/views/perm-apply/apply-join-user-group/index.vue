@@ -511,15 +511,17 @@
             this.searchParams = this.$route.query;
             // delete this.searchParams.limit;
             // delete this.searchParams.current;
-            this.curRole = this.user.role.type;
+            const { role, name, username } = this.user;
+            this.curRole = role.type;
             this.users = [
                 {
-                    'username': this.user.username,
-                    'name': this.user.username,
+                    'username': username,
+                    'name': name || username,
                     'showRadio': true,
                     'type': 'user',
                     'is_selected': true
-                }];
+                }
+            ];
             this.searchData = [
                 {
                     id: 'name',
