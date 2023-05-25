@@ -92,7 +92,7 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
         params["dynamic_fields"] = [
             {
                 "name": "权限获得者",
-                "type": "TEXT",
+                "type": "STRING",
                 "value": ", ".join(
                     [
                         "{}: {}({})".format("用户" if u.type == SubjectType.USER.value else "部门", u.display_name, u.id)
@@ -124,7 +124,7 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
         params["dynamic_fields"] = [
             {
                 "name": "权限获得者",
-                "type": "TEXT",
+                "type": "STRING",
                 "value": ", ".join(
                     [
                         "{}: {}({})".format("用户" if u.type == SubjectType.USER.value else "部门", u.display_name, u.id)
