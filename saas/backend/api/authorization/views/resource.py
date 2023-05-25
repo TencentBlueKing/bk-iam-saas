@@ -65,7 +65,7 @@ class AuthInstanceView(AuthViewMixin, APIView):
 
         audit_context_setter(operate=operate, subject=subject, system_id=system_id, policies=policies)
 
-        return self.policy_response(policies[0])
+        return self.policy_response(policies[0] if policies else {})
 
 
 class AuthPathView(AuthViewMixin, APIView):
@@ -109,7 +109,7 @@ class AuthPathView(AuthViewMixin, APIView):
 
         audit_context_setter(operate=operate, subject=subject, system_id=system_id, policies=policies)
 
-        return self.policy_response(policies[0])
+        return self.policy_response(policies[0] if policies else {})
 
 
 class AuthBatchInstanceView(AuthViewMixin, APIView):
