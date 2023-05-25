@@ -26,6 +26,7 @@ from backend.apps.application.serializers import ConditionCompareSLZ, ConditionT
 from backend.apps.group import tasks  # noqa
 from backend.apps.group.models import Group
 from backend.apps.policy.serializers import PolicyDeleteSLZ, PolicySLZ, PolicySystemSLZ
+from backend.apps.role.constants import PermissionTypeEnum
 from backend.apps.role.models import Role, RoleRelatedObject
 from backend.apps.template.audit import TemplateMemberDeleteAuditProvider
 from backend.apps.template.filters import TemplateFilter
@@ -33,6 +34,7 @@ from backend.apps.template.models import PermTemplate, PermTemplatePolicyAuthori
 from backend.apps.template.serializers import TemplateListSchemaSLZ, TemplateListSLZ
 from backend.audit.audit import audit_context_setter, log_api_event, view_audit_decorator
 from backend.biz.group import GroupBiz, GroupCheckBiz, GroupMemberExpiredAtBean
+from backend.biz.permission_audit import QueryAuthorizedSubjects
 from backend.biz.policy import PolicyBean, PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.policy_tag import ConditionTagBean, ConditionTagBiz
 from backend.biz.role import AuthScopeAction, AuthScopeSystem, RoleBiz, RoleListQuery, RoleObjectRelationChecker
@@ -73,6 +75,7 @@ from .serializers import (
     GroupMemberUpdateExpiredAtSLZ,
     GroupPolicyUpdateSLZ,
     GroupsAddMemberSLZ,
+    GroupSearchSLZ,
     GroupSLZ,
     GroupTemplateDetailSchemaSLZ,
     GroupTemplateDetailSLZ,
@@ -957,3 +960,50 @@ class GradeManagerGroupTransferView(GroupQueryMixin, GenericViewSet):
             )
 
         return auth_scope_systems
+
+
+class GroupSearchViewSet(mixins.ListModelMixin, GenericViewSet):
+
+    queryset = Group.objects.all()
+    serializer_class = GroupSLZ
+
+    role_biz = RoleBiz()
+
+    def get_queryset(self):
+        request = self.request
+        role = request.role
+
+        return RoleListQuery(role, request.user).query_group()
+
+    @swagger_auto_schema(
+        operation_description="搜索用户组列表",
+        request_body=GroupSearchSLZ(label="用户组搜索"),
+        responses={status.HTTP_200_OK: GroupSLZ(label="用户组", many=True)},
+        tags=["group"],
+    )
+    def search(self, request, *args, **kwargs):
+        slz = GroupSearchSLZ(data=request.data)
+        slz.is_valid(raise_exception=True)
+
+        data = slz.validated_data
+
+        queryset = self.get_queryset()
+        if data["name"]:
+            queryset = queryset.filter(name__icontains=data["name"])
+
+        # 通过实例或操作查询用户组
+        data["permission_type"] = PermissionTypeEnum.RESOURCE_INSTANCE.value
+        data["limit"] = 1000
+        subjects = QueryAuthorizedSubjects(data).query_by_resource_instance(subject_type="group")
+        if not subjects:
+            queryset = queryset.none()
+        else:
+            queryset = queryset.filter(id__in=[int(s["id"]) for s in subjects])
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
