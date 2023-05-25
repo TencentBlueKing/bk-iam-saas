@@ -230,7 +230,7 @@
                 if (this.isScrollBottom || this.isHasDefaultData) {
                     return;
                 }
-                if (event.target.scrollTop + event.target.offsetHeight >= event.target.scrollHeight) {
+                if (event.target.scrollTop + event.target.offsetHeight >= event.target.scrollHeight - 5) {
                     window.changeAlert = true;
                     ++this.pagination.current;
                     if (this.pagination.current <= this.pagination.totalPage) {
@@ -420,6 +420,7 @@
             border-left: 1px solid #dcdee5;
             .list-wrapper {
                 position: relative;
+                min-height: 446px;
                 padding: 5px 10px;
                 height: calc(100% - 32px);
                 overflow: auto;

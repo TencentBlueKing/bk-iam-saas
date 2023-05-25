@@ -30,7 +30,7 @@
 /* eslint-disable */
 export const m = {
     common: {
-        '全选': 'ALL',
+        '全选': 'All',
         '取消全选': 'Unselect All',
         '理由': 'Reason',
         '操作': 'Action',
@@ -147,11 +147,11 @@ export const m = {
         '个组织': 'Organizations',
         '已获得': 'Obtained',
         '未选择': 'Not Selected',
-        '选择全部': 'ALL',
+        '选择全部': 'All',
         '加载中': 'Loading...',
         '返回': 'Back',
-        '期限选择提示': '1-365，Press Enter to save',
-        '临时期限选择提示': '1-24 Enter to save',
+        '期限选择提示': '1-365, press enter to save',
+        '临时期限选择提示': '1-24 enter to save',
         '精确搜索': 'Precise search',
         '模糊搜索': 'Fuzzy search',
         '组织架构': 'Organization',
@@ -406,7 +406,7 @@ export const m = {
         '操作搜索提示': 'Enter the operation name and press Enter to search',
         '从权限模板选择添加：': 'Select Add from the permission template:',
         '没有在模板中找到': 'Not found in the template',
-        '添加自定义权限': 'add custom permissions',
+        '添加自定义权限': 'Add custom permissions',
         '确定删除': 'Confirm delete?',
         '用户组添加权限成功': 'Added permission successfully',
         '提交成功': 'Submitted successfully',
