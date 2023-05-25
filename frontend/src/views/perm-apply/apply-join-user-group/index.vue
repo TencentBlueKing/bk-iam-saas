@@ -10,123 +10,129 @@
                         :placeholder="$t(`m.applyEntrance['申请加入用户组搜索提示']`)"
                         :quick-search-method="quickSearchMethod" /> -->
                     <render-search>
-                        <div>
-                            <bk-form
-                                form-type="inline"
-                                class="pb10">
-                                <iam-form-item
-                                    :label="$t(`m.permApply['选择系统']`)"
-                                    class="pb20 pr20 form-item-resource">
-                                    <bk-select
-                                        :style="defaultFormItemStyle"
-                                        v-model="applyGroupData.system_id"
-                                        :clearable="true"
-                                        :allow-enter="false"
-                                        :placeholder="$t(`m.verify['请选择']`)"
-                                        @change="handleCascadeChange"
-                                        @clear="handleClearSearch"
-                                        searchable>
-                                        <bk-option v-for="option in systemList"
-                                            :key="option.id"
-                                            :id="option.id"
-                                            :name="`${option.name} (${option.id})`">
-                                        </bk-option>
-                                    </bk-select>
-                                </iam-form-item>
-                                <iam-form-item
-                                    :label="$t(`m.permApply['选择操作']`)"
-                                    class="pb20">
-                                    <bk-select
-                                        :style="defaultFormItemStyle"
-                                        v-model="applyGroupData.action_id"
-                                        :clearable="false"
-                                        :allow-enter="false"
-                                        :placeholder="$t(`m.verify['请选择']`)"
-                                        @selected="handleSelectedAction"
-                                        searchable>
-                                        <bk-option v-for="option in processesList"
-                                            :key="option.id"
-                                            :id="option.id"
-                                            :name="`${option.name} (${option.id})`">
-                                        </bk-option>
-                                    </bk-select>
-                                    <p class="error-tips" v-if="actionError">
-                                        {{$t(`m.resourcePermiss['操作必填']`)}}
-                                    </p>
-                                </iam-form-item>
-                            </bk-form>
-                        </div>
-                        <div v-if="!resourceTypeData.isEmpty">
-                            <bk-form
-                                form-type="inline"
-                                class="pb10">
-                                <iam-form-item class="pb20 form-item-resource" :label="$t(`m.permApply['资源类型']`)">
-                                    <div
-                                        v-for="(_, index) in resourceTypeData.resource_groups"
-                                        :key="_.id"
-                                        class="resource-group-container">
-                                        <div>
-                                            <bk-select
-                                                :style="defaultFormItemStyle"
-                                                v-model="curResourceData.type"
-                                                :clearable="false"
-                                                :allow-enter="false"
-                                                :placeholder="$t(`m.verify['请选择']`)"
-                                                @change="handleResourceTypeChange(index)"
-                                            >
-                                                <bk-option
-                                                    v-for="related in _.related_resource_types_list"
-                                                    :key="related.type"
-                                                    :id="related.type"
-                                                    :name="related.name">
-                                                </bk-option>
-                                            </bk-select>
-                                        </div>
-                                        <div class="relation-content-item"
-                                            v-for="(content, contentIndex) in _.related_resource_types"
-                                            :key="contentIndex">
-                                            <div class="content">
-                                                <render-condition
-                                                    :ref="`condition_${index}_${contentIndex}_ref`"
-                                                    :value="curResourceData.type ?
-                                                        content.value : $t(`m.verify['请选择']`)"
-                                                    :is-empty="content.empty"
-                                                    :params="curCopyParams"
-                                                    :disabled="!curResourceData.type"
-                                                    :is-error="content.isLimitExceeded || content.isError"
-                                                    @on-click="handleShowResourceInstance(
-                                                        resourceTypeData,
-                                                        content, contentIndex, index)"
-                                                />
-                                                <p class="error-tips" v-if="resourceTypeError">
-                                                    {{$t(`m.resourcePermiss['请选择资源实例']`)}}
-                                                </p>
+                        <div
+                            :class="[
+                                'join-user-group-form',
+                                { 'join-user-group-form-lang': !curLanguageIsCn }
+                            ]">
+                            <div>
+                                <bk-form
+                                    form-type="inline"
+                                    class="pb10">
+                                    <iam-form-item
+                                        :label="$t(`m.permApply['选择系统']`)"
+                                        class="pb20 pr20 form-item-resource">
+                                        <bk-select
+                                            :style="defaultFormItemStyle"
+                                            v-model="applyGroupData.system_id"
+                                            :clearable="true"
+                                            :allow-enter="false"
+                                            :placeholder="$t(`m.verify['请选择']`)"
+                                            @change="handleCascadeChange"
+                                            @clear="handleClearSearch"
+                                            searchable>
+                                            <bk-option v-for="option in systemList"
+                                                :key="option.id"
+                                                :id="option.id"
+                                                :name="`${option.name} (${option.id})`">
+                                            </bk-option>
+                                        </bk-select>
+                                    </iam-form-item>
+                                    <iam-form-item
+                                        :label="$t(`m.permApply['选择操作']`)"
+                                        class="pb20">
+                                        <bk-select
+                                            :style="defaultFormItemStyle"
+                                            v-model="applyGroupData.action_id"
+                                            :clearable="false"
+                                            :allow-enter="false"
+                                            :placeholder="$t(`m.verify['请选择']`)"
+                                            @selected="handleSelectedAction"
+                                            searchable>
+                                            <bk-option v-for="option in processesList"
+                                                :key="option.id"
+                                                :id="option.id"
+                                                :name="`${option.name} (${option.id})`">
+                                            </bk-option>
+                                        </bk-select>
+                                        <p class="error-tips" v-if="actionError">
+                                            {{$t(`m.resourcePermiss['操作必填']`)}}
+                                        </p>
+                                    </iam-form-item>
+                                </bk-form>
+                            </div>
+                            <div v-if="!resourceTypeData.isEmpty">
+                                <bk-form
+                                    form-type="inline"
+                                    class="pb10">
+                                    <iam-form-item class="pb20 form-item-resource" :label="$t(`m.permApply['资源类型']`)">
+                                        <div
+                                            v-for="(_, index) in resourceTypeData.resource_groups"
+                                            :key="_.id"
+                                            class="resource-group-container">
+                                            <div>
+                                                <bk-select
+                                                    :style="defaultFormItemStyle"
+                                                    v-model="curResourceData.type"
+                                                    :clearable="false"
+                                                    :allow-enter="false"
+                                                    :placeholder="$t(`m.verify['请选择']`)"
+                                                    @change="handleResourceTypeChange(index)"
+                                                >
+                                                    <bk-option
+                                                        v-for="related in _.related_resource_types_list"
+                                                        :key="related.type"
+                                                        :id="related.type"
+                                                        :name="related.name">
+                                                    </bk-option>
+                                                </bk-select>
+                                            </div>
+                                            <div class="relation-content-item"
+                                                v-for="(content, contentIndex) in _.related_resource_types"
+                                                :key="contentIndex">
+                                                <div class="content">
+                                                    <render-condition
+                                                        :ref="`condition_${index}_${contentIndex}_ref`"
+                                                        :value="curResourceData.type ?
+                                                            content.value : $t(`m.verify['请选择']`)"
+                                                        :is-empty="content.empty"
+                                                        :params="curCopyParams"
+                                                        :disabled="!curResourceData.type"
+                                                        :is-error="content.isLimitExceeded || content.isError"
+                                                        @on-click="handleShowResourceInstance(
+                                                            resourceTypeData,
+                                                            content, contentIndex, index)"
+                                                    />
+                                                    <p class="error-tips" v-if="resourceTypeError">
+                                                        {{$t(`m.resourcePermiss['请选择资源实例']`)}}
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </iam-form-item>
-                            </bk-form>
-                        </div>
-                        <div>
-                            <bk-form
-                                form-type="inline"
-                                class="pb10">
-                                <iam-form-item class="pb20 form-item-resource" :label="$t(`m.userGroup['用户组名']`)">
-                                    <bk-input
-                                        :style="defaultFormItemStyle"
-                                        clearable
-                                        v-model="applyGroupData.name"
-                                        @enter="handleSearchName"
-                                        @clear="handleClearSearch">
-                                    </bk-input>
-                                </iam-form-item>
-                                <bk-button
-                                    class="ml30 mb20"
-                                    theme="primary"
-                                    @click="handleSearchUserGroup()">
-                                    {{ $t(`m.common['查询']`) }}
-                                </bk-button>
-                            </bk-form>
+                                    </iam-form-item>
+                                </bk-form>
+                            </div>
+                            <div>
+                                <bk-form
+                                    form-type="inline"
+                                    class="pb10">
+                                    <iam-form-item class="pb20 form-item-resource" :label="$t(`m.userGroup['用户组名']`)">
+                                        <bk-input
+                                            :style="defaultFormItemStyle"
+                                            clearable
+                                            v-model="applyGroupData.name"
+                                            @enter="handleSearchName"
+                                            @clear="handleClearSearch">
+                                        </bk-input>
+                                    </iam-form-item>
+                                    <bk-button
+                                        class="ml30 mb20"
+                                        theme="primary"
+                                        @click="handleSearchUserGroup()">
+                                        {{ $t(`m.common['查询']`) }}
+                                    </bk-button>
+                                </bk-form>
+                            </div>
                         </div>
                     </render-search>
                     <div class="info">
@@ -1438,5 +1444,12 @@
             line-height: 22px;
         }
     }
-
+    .join-user-group-form {
+        &-lang {
+            .bk-form.bk-inline-form .bk-form-item .bk-label {
+                min-width: 100px;
+                text-align: left;
+            }
+        }
+    }
 </style>
