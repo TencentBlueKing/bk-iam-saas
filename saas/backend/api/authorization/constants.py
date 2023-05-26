@@ -35,7 +35,7 @@ class AllowListMatchOperationEnum(ChoicesEnum, LowerStrEnum):
     STARTS_WITH = auto()
 
 
-AllowListObjectOperationSep = ":"
+ALLOW_LIST_OBJECT_OPERATION_STEP = ":"
 
 
 class VerifyApiParamLocationEnum(ChoicesEnum, LowerStrEnum):

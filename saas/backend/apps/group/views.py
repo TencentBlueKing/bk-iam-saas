@@ -432,7 +432,7 @@ class GroupsMemberViewSet(GenericViewSet):
                     exists_role_ids.add(group_role.id)
                     self.role_biz.incr_update_subject_scope(group_role, members)
 
-            except Exception as e:
+            except Exception as e:  # pylint: disable=broad-except noqa
                 failed_info.update({group.name: "{}".format(e)})
 
             else:
