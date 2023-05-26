@@ -569,7 +569,7 @@ class RoleCheckBiz:
             for one_system_limit in split_system_limits:
                 system_limit = one_system_limit.split(":")
                 system_limits[system_limit[0].strip()] = int(system_limit[1].strip())
-        except Exception as error:
+        except Exception as error:  # pylint: disable=broad-except noqa
             logger.error(
                 f"parse grade_manager_of_specified_systems_limit from setting failed, value:{value}, error: {error}"
             )

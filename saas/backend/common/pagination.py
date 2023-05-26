@@ -11,7 +11,8 @@ specific language governing permissions and limitations under the License.
 # 目标是统一使用page_size/page参数
 # WebAPI: 使用config/default.py里DEFAULT_PAGINATION_CLASS默认配置的CompatiblePagination，后续需要前端配合一起调整为page_size/page参数
 # OpenAPI:
-# 对于已开放接口admin.list_groups/admin.list_group_member/mgmt.list_group/mgmt.list_group_member使用CompatiblePagination兼容limit/offset和page_size/page
+# 对于已开放接口admin.list_groups/admin.list_group_member/mgmt.list_group/mgmt.list_group_member
+# 使用CompatiblePagination兼容limit/offset和page_size/page
 # 对于OpenAPI新接口，需要ViewSet需要显示配置pagination_class=CustomPageNumberPagination
 from collections import OrderedDict
 

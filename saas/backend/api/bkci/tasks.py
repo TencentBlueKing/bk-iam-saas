@@ -44,6 +44,19 @@ from backend.service.models.subject import Subject
 from backend.util.json import json_dumps
 
 
+def get_user_set():
+    user_set = set()
+
+    queryset = User.objects.filter(staff_status="IN").only("username").order_by("id")
+    paginator = Paginator(queryset, 1000)
+
+    for i in paginator.page_range:
+        for u in paginator.page(i):
+            user_set.add(u.username)
+
+    return user_set
+
+
 class BKCIMigrateTask(Task):
     name = "backend.api.bkci.tasks.BKCIMigrateTask"
 
@@ -57,10 +70,12 @@ class BKCIMigrateTask(Task):
 
         role_ids = json.loads(task.role_ids)
 
+        user_set = get_user_set()
+
         # create new migrate data
-        self.handle_group_api_policy(role_ids)
-        self.handle_group_web_policy(role_ids)
-        self.handle_user_custom_policy()
+        self.handle_group_api_policy(role_ids, user_set)
+        self.handle_group_web_policy(role_ids, user_set)
+        self.handle_user_custom_policy(user_set)
 
         # update status
         task.status = "SUCCESS"
@@ -89,7 +104,7 @@ class BKCIMigrateTask(Task):
                                 policy.action_id
                             )
 
-    def handle_user_custom_policy(self):
+    def handle_user_custom_policy(self, user_set):
         project_subject_path_action = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(set))))
 
         qs = PolicyModel.objects.filter(system_id="bk_ci", subject_type="user").order_by("id")
@@ -97,14 +112,17 @@ class BKCIMigrateTask(Task):
 
         for i in paginator.page_range:
             for p in paginator.page(i):
+                if p.subject_id not in user_set:
+                    continue
+
                 pb = Policy.from_db_model(p, 0)
 
                 subject = Subject(type=p.subject_type, id=p.subject_id)
                 self._handle_policy(pb, subject, project_subject_path_action)
 
-        self.batch_create_migrate_data(project_subject_path_action, "user_custom_policy")
+        self.batch_create_migrate_data(project_subject_path_action, "user_custom_policy", user_set)
 
-    def handle_group_web_policy(self, role_ids):
+    def handle_group_web_policy(self, role_ids, user_set):
         project_subject_path_action = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(set))))
 
         if role_ids:
@@ -141,9 +159,9 @@ class BKCIMigrateTask(Task):
             for p in policies:
                 self._handle_policy(p, subject, project_subject_path_action)
 
-        self.batch_create_migrate_data(project_subject_path_action, "group_web_policy")
+        self.batch_create_migrate_data(project_subject_path_action, "group_web_policy", user_set)
 
-    def handle_group_api_policy(self, role_ids):
+    def handle_group_api_policy(self, role_ids, user_set):
         if not role_ids:
             return
 
@@ -185,9 +203,9 @@ class BKCIMigrateTask(Task):
             for p in policies:
                 self._handle_policy(p, subject, project_subject_path_action)
 
-        self.batch_create_migrate_data(project_subject_path_action, "group_api_policy")
+        self.batch_create_migrate_data(project_subject_path_action, "group_api_policy", user_set)
 
-    def batch_create_migrate_data(self, project_subject_path_action, handler_type):
+    def batch_create_migrate_data(self, project_subject_path_action, handler_type, user_set):
         for project, subject_path_action in project_subject_path_action.items():
             for subject, path_type_action in subject_path_action.items():
                 subject_dict = subject.dict()
@@ -216,7 +234,12 @@ class BKCIMigrateTask(Task):
                 }
 
                 if subject.type == "group":
-                    data["members"] = list_all_subject_member(subject.type, subject.id)
+                    members = list_all_subject_member(subject.type, subject.id)
+                    members = [one for one in members if one["type"] == "user" and one["id"] in user_set]
+                    if not members:
+                        continue
+
+                    data["members"] = members
 
                 migrate_data = MigrateData(
                     project_id=project[1],
@@ -238,25 +261,13 @@ class BKCILegacyMigrateTask(Task):
             return
 
         project_ids = json.loads(task.project_ids)
-        user_set = self.get_user_set()
+        user_set = get_user_set()
         for project_id in project_ids:
             self.handle_project(project_id, user_set)
 
         # update status
         task.status = "SUCCESS"
         task.save(update_fields=["status"])
-
-    def get_user_set(self):
-        user_set = set()
-
-        queryset = User.objects.filter(staff_status="IN").only("username").order_by("id")
-        paginator = Paginator(queryset, 1000)
-
-        for i in paginator.page_range:
-            for u in paginator.page(i):
-                user_set.add(u.username)
-
-        return user_set
 
     def handle_project(self, project_id: str, user_set):
         MigrateData.objects.filter(version="v0", project_id=project_id).delete()
