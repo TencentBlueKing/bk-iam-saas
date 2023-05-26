@@ -415,8 +415,6 @@
                         this.pagination,
                         { current: Number(currentQueryCache.current), limit: Number(currentQueryCache.limit) }
                     );
-                    // this.pagination.limit = currentQueryCache.limit;
-                    // this.pagination.current = currentQueryCache.current;
                 }
                 for (const key in currentQueryCache) {
                     if (key !== 'limit' && key !== 'current') {
@@ -521,6 +519,7 @@
                     limit: this.pagination.limit,
                     offset: this.pagination.limit * (this.pagination.current - 1)
                 };
+                delete params.current;
                 try {
                     const { code, data } = await this.$store.dispatch('userGroup/getUserGroupList', params);
                     this.pagination.count = data.count || 0;
@@ -632,11 +631,13 @@
                 this.searchParams = {};
                 this.searchValue = [];
                 this.emptyData.tipType = '';
+                this.queryParams = Object.assign(this.queryParams, { current: 1, limit: 10 });
                 this.resetPagination();
                 this.fetchUserGroupList(true);
             },
 
             handleEmptyRefresh () {
+                this.queryParams = Object.assign(this.queryParams, { current: 1, limit: 10 });
                 this.resetPagination();
                 this.fetchUserGroupList(true);
             },
