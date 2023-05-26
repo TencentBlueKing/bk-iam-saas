@@ -39,6 +39,7 @@ from backend.apps.policy.models import Policy as PolicyModel
 from backend.apps.role.models import RoleRelatedObject
 from backend.apps.template.models import PermTemplatePolicyAuthorized
 from backend.component.iam import list_all_subject_member
+from backend.service.constants import SubjectType
 from backend.service.models.policy import Policy
 from backend.service.models.subject import Subject
 from backend.util.json import json_dumps
@@ -235,7 +236,12 @@ class BKCIMigrateTask(Task):
 
                 if subject.type == "group":
                     members = list_all_subject_member(subject.type, subject.id)
-                    members = [one for one in members if one["type"] == "user" and one["id"] in user_set]
+                    members = [
+                        one
+                        for one in members
+                        if (one["type"] == SubjectType.USER.value and one["id"] in user_set)
+                        or one["type"] == SubjectType.DEPARTMENT.value
+                    ]
                     if not members:
                         continue
 
