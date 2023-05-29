@@ -23,11 +23,12 @@
                 />
             </div>
         </render-search>
+
         <bk-table
-            :data="tableList"
             size="small"
-            :class="{ 'set-border': tableLoading }"
             ext-cls="perm-template-table"
+            :class="{ 'set-border': tableLoading }"
+            :data="tableList"
             :max-height="tableHeight"
             :pagination="pagination"
             @page-change="handlePageChange"
@@ -329,19 +330,19 @@
                 });
             },
 
-            handleEmptyClear () {
+            async handleEmptyClear () {
                 this.searchParams = {};
                 this.searchValue = [];
                 this.emptyData.tipType = '';
                 this.queryParams = Object.assign({}, { current: 1, limit: 10 });
                 this.resetPagination();
-                this.fetchTemplateList(true);
+                await this.fetchTemplateList(true);
             },
 
             async handleEmptyRefresh () {
                 this.queryParams = Object.assign({}, { current: 1, limit: 10 });
                 this.resetPagination();
-                this.fetchTemplateList(true);
+                await this.fetchTemplateList(true);
             },
 
             handleTemplateDelete ({ id }) {
@@ -374,13 +375,14 @@
                 delete params.current;
                 try {
                     const { code, data } = await this.$store.dispatch('permTemplate/getTemplateList', params);
-                    this.pagination = Object.assign(this.pagination, { count: data.count });
+                    this.pagination = Object.assign(this.pagination, { count: data.count || 0 });
                     this.tableList.splice(0, this.tableList.length, ...(data.results || []));
                     this.$store.commit('setGuideShowByField', { field: 'template', flag: !this.tableList.length > 0 });
                     this.$store.commit('setGuideShowByField', { field: 'group', flag: this.tableList.length > 0 });
                     this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
                 } catch (e) {
                     console.error(e);
+                    this.tableList = [];
                     const { code, data, message, statusText } = e;
                     this.emptyData = formatCodeData(code, this.emptyData);
                     this.bkMessageInstance = this.$bkMessage({

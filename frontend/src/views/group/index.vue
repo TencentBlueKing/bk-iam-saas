@@ -535,6 +535,7 @@
                     console.error(e);
                     const { code, data, message, statusText } = e;
                     this.emptyData = formatCodeData(code, this.emptyData);
+                    this.tableList = [];
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',

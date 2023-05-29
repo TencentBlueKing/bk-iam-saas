@@ -29,7 +29,7 @@
                                             :allow-enter="false"
                                             :placeholder="$t(`m.verify['请选择']`)"
                                             @change="handleCascadeChange"
-                                            @clear="handleClearSearch"
+                                            @clear="handleClearSearch('system_id')"
                                             searchable>
                                             <bk-option v-for="option in systemList"
                                                 :key="option.id"
@@ -122,7 +122,7 @@
                                             clearable
                                             v-model="applyGroupData.name"
                                             @enter="handleSearchName"
-                                            @clear="handleClearSearch">
+                                            @clear="handleClearSearch('name')">
                                         </bk-input>
                                     </iam-form-item>
                                     <bk-button
@@ -759,12 +759,6 @@
             },
 
             async handleSearchUserGroup () {
-                if (!this.resourceTypeData.isEmpty && this.resourceTypeData.resource_groups[this.groupIndex]
-                    && this.resourceTypeData.resource_groups[this.groupIndex]
-                        .related_resource_types.some(e => e.empty)) {
-                    this.resourceTypeError = true;
-                    return;
-                }
                 let resourceInstances = _.cloneDeep(this.resourceInstances);
                 resourceInstances = resourceInstances.reduce((prev, item) => {
                     const { id, resourceInstancesPath } = this.handlePathData(item, item.type);
@@ -777,7 +771,10 @@
                     });
                     return prev;
                 }, []);
-                if (this.curResourceData.type && !resourceInstances.length) {
+                if (this.curResourceData.type && !resourceInstances.length
+                    && !this.resourceTypeData.isEmpty && this.resourceTypeData.resource_groups[this.groupIndex]
+                    && this.resourceTypeData.resource_groups[this.groupIndex]
+                        .related_resource_types.some(e => e.empty)) {
                     this.resourceTypeError = true;
                     return;
                 }
@@ -1031,9 +1028,14 @@
                 }
             },
 
-            async handleClearSearch () {
+            async handleClearSearch (type) {
                 const { system_id, name } = this.applyGroupData;
                 this.currentSelectList = [];
+                if (type === 'system_id') {
+                    this.applyGroupData.action_id = '';
+                    this.curResourceData.type = '';
+                    this.resourceInstances = [];
+                }
                 this.emptyData.tipType = '';
                 this.resetPagination();
                 // eslint-disable-next-line camelcase
@@ -1116,6 +1118,7 @@
                     this.$emit('toggle-loading', false);
                     this.emptyData = formatCodeData(e.code, this.emptyData);
                     console.error(e);
+                    this.curUserGroup = [];
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
