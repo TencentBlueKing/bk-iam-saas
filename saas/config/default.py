@@ -285,6 +285,14 @@ if ENABLE_INIT_GRADE_MANAGER:
         "schedule": crontab(minute="*/2"),  # 每2分钟执行一次
     }
 
+# 是否开启初始化BCS一级/二级管理员
+ENABLE_INIT_BCS_PROJECT_MANAGER = env.bool("BKAPP_ENABLE_INIT_BCS_PROJECT_MANAGER", default=False)
+if ENABLE_INIT_BCS_PROJECT_MANAGER:
+    CELERYBEAT_SCHEDULE["init_bcs_manager"] = {
+        "task": "backend.apps.role.tasks.InitBcsProjectManagerTask",
+        "schedule": crontab(minute="*/2"),  # 每2分钟执行一次
+    }
+
 # 环境变量中有rabbitmq时使用rabbitmq, 没有时使用BK_BROKER_URL
 # V3 Smart可能会配RABBITMQ_HOST或者BK_BROKER_URL
 # V2 Smart只有BK_BROKER_URL
@@ -432,3 +440,7 @@ BK_IAM_MIGRATION_JSON_PATH = "resources/iam/"
 
 # IAM metric 接口密码
 BK_IAM_METRIC_TOKEN = env.str("BK_IAM_METRIC_TOKEN", default="")
+
+
+# BCS初始化ROLE网关api配置
+BK_BCS_APIGW_URL = env.str("BK_BCS_APIGW_URL", default="")
