@@ -1,3 +1,11 @@
+<!-- 2023-05-29 -->
+# V1.10.3 ChangeLog
+
+### Optimization Updates
+* Optimize the method of creating dynamic fields in permission application approval form
+
+---
+
 <!-- 2023-05-25 -->
 # V1.10.2 ChangeLog
 
