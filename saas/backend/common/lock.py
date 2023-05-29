@@ -82,7 +82,7 @@ def gen_long_task_create_lock(key: str) -> RedisLock:
 
 
 def gen_init_grade_manager_lock() -> RedisLock:
-    return RedisLock(LockTypeEnum.INIT_GRADE_MANAGER.value, timeout=120)  # 执行周期是2分钟
+    return RedisLock(LockTypeEnum.INIT_GRADE_MANAGER.value, timeout=600)
 
 
 def gen_group_upsert_lock(role_id: int) -> RedisLock:
@@ -99,4 +99,4 @@ def gen_role_upsert_lock(name: str) -> RedisLock:
 
 
 def gen_bcs_manager_lock() -> RedisLock:
-    return RedisLock(LockTypeEnum.BCS_MANAGER.value, timeout=120)  # 执行周期是2分钟
+    return RedisLock(LockTypeEnum.BCS_MANAGER.value, timeout=600)
