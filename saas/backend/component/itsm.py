@@ -8,7 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from .esb import _call_esb_api
 from .http import http_get, http_post
@@ -41,6 +41,7 @@ def create_ticket(
     reason: str,
     content: Dict,
     tag: str = "",
+    dynamic_fields: Optional[List] = None,
     **kwargs,
 ) -> Dict:
     """获取审批流程，并根据单据创建者判断是否实例化审批节点"""
@@ -57,6 +58,9 @@ def create_ticket(
             {"key": "content", "value": content},
         ],
     }
+
+    if dynamic_fields:
+        data["dynamic_fields"] = dynamic_fields
 
     if tag:
         data["tag"] = tag  # NOTE: 用于ITSM审批单列表api筛选过滤字段

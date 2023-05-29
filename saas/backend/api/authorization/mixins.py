@@ -24,7 +24,7 @@ from backend.service.constants import ADMIN_USER, SubjectType
 from backend.service.models import Subject
 from backend.trans.role import RoleAuthScopeTrans
 
-from .constants import AllowListMatchOperationEnum, AllowListObjectOperationSep, AuthorizationAPIEnum, OperateEnum
+from .constants import ALLOW_LIST_OBJECT_OPERATION_STEP, AllowListMatchOperationEnum, AuthorizationAPIEnum, OperateEnum
 from .models import AuthAPIAllowListConfig
 
 logger = logging.getLogger("app")
@@ -39,8 +39,8 @@ class AllowItem:
 
         # 解析object_id，拆分出operation 和 匹配的对象
         # 若分隔符在object_id里，说明需要拆分出真正的object_id和operation
-        if AllowListObjectOperationSep in object_id:
-            object_split_list = object_id.split(AllowListObjectOperationSep)
+        if ALLOW_LIST_OBJECT_OPERATION_STEP in object_id:
+            object_split_list = object_id.split(ALLOW_LIST_OBJECT_OPERATION_STEP)
             # 长度非2，则说明非正常的规则，则默认使用等于匹配
             if len(object_split_list) == 2:
                 self.operation = object_split_list[0]

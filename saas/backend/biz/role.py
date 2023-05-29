@@ -10,10 +10,12 @@ specific language governing permissions and limitations under the License.
 """
 import logging
 from collections import defaultdict
+from textwrap import dedent
 from typing import Dict, List, Optional, Set
 
 from blue_krill.web.std_error import APIError
 from django.conf import settings
+from django.db import connection
 from django.db.models import Q
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
@@ -23,7 +25,7 @@ from rest_framework import serializers
 from backend.apps.application.models import Application
 from backend.apps.group.models import Group
 from backend.apps.organization.models import Department, DepartmentMember, User
-from backend.apps.role.models import Role, RoleRelatedObject, RoleRelation, RoleSource, RoleUser, ScopeSubject
+from backend.apps.role.models import Role, RoleRelatedObject, RoleRelation, RoleSource, RoleUser
 from backend.apps.template.models import PermTemplate
 from backend.biz.policy import (
     ConditionBean,
@@ -45,7 +47,6 @@ from backend.service.constants import (
     ApplicationStatus,
     ApplicationType,
     RoleRelatedObjectType,
-    RoleScopeSubjectType,
     RoleSourceType,
     RoleType,
     SubjectType,
@@ -568,7 +569,7 @@ class RoleCheckBiz:
             for one_system_limit in split_system_limits:
                 system_limit = one_system_limit.split(":")
                 system_limits[system_limit[0].strip()] = int(system_limit[1].strip())
-        except Exception as error:
+        except Exception as error:  # pylint: disable=broad-except noqa
             logger.error(
                 f"parse grade_manager_of_specified_systems_limit from setting failed, value:{value}, error: {error}"
             )
@@ -730,11 +731,39 @@ class RoleListQuery:
         department_ids = self.user.ancestor_department_ids
 
         # 2. 查询 subjects 相关的分级管理员
-        grade_mgr_ids = ScopeSubject.objects.filter(
-            Q(subject_type=RoleScopeSubjectType.DEPARTMENT.value, subject_id__in=department_ids)
-            | Q(subject_type=RoleScopeSubjectType.USER.value, subject_id=self.user.username)  # noqa
-            | Q(subject_type=SUBJECT_TYPE_ALL, subject_id=SUBJECT_ALL)  # noqa
-        ).values_list("role_id", flat=True)
+        # grade_mgr_ids = ScopeSubject.objects.filter(
+        #     Q(subject_type=RoleScopeSubjectType.DEPARTMENT.value, subject_id__in=department_ids)
+        #     | Q(subject_type=RoleScopeSubjectType.USER.value, subject_id=self.user.username)  # noqa
+        #     | Q(subject_type=SUBJECT_TYPE_ALL, subject_id=SUBJECT_ALL)  # noqa
+        # ).values_list("role_id", flat=True)
+
+        sql = dedent(
+            """SELECT
+            a.id
+            FROM
+            role_role a
+            LEFT JOIN role_scopesubject b ON a.id = b.role_id
+            WHERE
+            a.hidden = 0
+            AND (
+                (
+                b.subject_id IN %s
+                AND b.subject_type = 'department'
+                )
+                OR (
+                b.subject_id = %s
+                AND b.`subject_type` = 'user'
+                )
+                OR (
+                b.`subject_id` = '*'
+                AND b.`subject_type` = '*'
+                )
+            )"""
+        )
+
+        with connection.cursor() as cursor:
+            cursor.execute(sql, (tuple(department_ids), self.user.username))
+            grade_mgr_ids = [row[0] for row in cursor.fetchall()]
 
         # 3. 查询 超级管理员 + 系统管理员的 ids
         super_ids = Role.objects.filter(

@@ -107,7 +107,7 @@ class ResourceIDNameCache:
         # 缓存有问题，不影响正常逻辑
         try:
             self.cache.set_many(data, timeout=5 * 60)
-        except Exception:  # noqa
+        except Exception:  # pylint: disable=broad-except noqa
             logger.exception("set resource id:name cache fail")
 
     def get(self, ids: List[str]) -> Dict[str, Optional[str]]:
@@ -120,7 +120,7 @@ class ResourceIDNameCache:
         # 缓存有问题，不影响正常逻辑
         try:
             results = self.cache.get_many(list(map_keys.keys()))
-        except Exception:  # noqa
+        except Exception:  # pylint: disable=broad-except noqa
             logger.exception("get resource id:name cache fail")
             results = {}
 
