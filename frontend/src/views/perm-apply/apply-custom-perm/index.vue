@@ -946,24 +946,40 @@
             /**
              * 获取页面数据
              */
+            // async fetchPageData () {
+            //     await this.fetchSystems();
+            //     if (this.systemValue) {
+            //         await Promise.all([
+            //             this.fetchPolicies(this.systemValue),
+            //             this.fetchAggregationAction(this.systemValue),
+            //             this.fetchCommonActions(this.systemValue)
+            //         ]);
+            //     }
+            //     if (this.sysAndtid) {
+            //         await Promise.all([
+            //             // 获取用户组数据
+            //             this.fetchUserGroupList(),
+            //             // 获取个人用户的用户组列表
+            //             this.fetchCurUserGroup(),
+            //             // 获取推荐操作
+            //             this.fetchRecommended()
+            //         ]);
+            //     }
+            // },
             async fetchPageData () {
                 await this.fetchSystems();
                 if (this.systemValue) {
-                    await Promise.all([
-                        this.fetchPolicies(this.systemValue),
-                        this.fetchAggregationAction(this.systemValue),
-                        this.fetchCommonActions(this.systemValue)
-                    ]);
+                    await this.fetchPolicies(this.systemValue);
+                    await this.fetchAggregationAction(this.systemValue);
+                    await this.fetchCommonActions(this.systemValue);
                 }
                 if (this.sysAndtid) {
-                    await Promise.all([
-                        // 获取用户组数据
-                        this.fetchUserGroupList(),
-                        // 获取个人用户的用户组列表
-                        this.fetchCurUserGroup(),
-                        // 获取推荐操作
-                        this.fetchRecommended()
-                    ]);
+                    // 获取用户组数据
+                    await this.fetchUserGroupList();
+                    // 获取个人用户的用户组列表
+                    await this.fetchCurUserGroup();
+                    // 获取推荐操作
+                    await this.fetchRecommended();
                 }
             },
 
@@ -1173,8 +1189,8 @@
                     });
                     if (this.commonActions.length > 0) {
                         if (this.originalCustomTmplList.length > 1) {
-                            this.originalCustomTmplList.forEach(item => {
-                                item.expanded = false;
+                            this.originalCustomTmplList.forEach((item, index) => {
+                                item.expanded = index < 1;
                             });
                         }
                     }
