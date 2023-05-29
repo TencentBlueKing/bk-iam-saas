@@ -385,6 +385,9 @@
                     system_id: item.system.id,
                     user_id: this.user.username
                 };
+                if (this.externalSystemId) {
+                    params.hidden = false;
+                }
                 try {
                     const res = await this.$store.dispatch('permApply/getActions', params);
                     this.originalCustomTmplList = _.cloneDeep(res.data);
@@ -647,7 +650,7 @@
                     id: this.groupId,
                     data: {
                         system_id: item.id,
-                        ids: data.policy_id
+                        ids: data.ids ? data.ids.join(',') : data.policy_id
                     }
                 }, item, {}, false);
             }

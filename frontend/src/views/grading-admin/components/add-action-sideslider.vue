@@ -507,7 +507,7 @@
                     if (this.externalSystemId) {
                         params.hidden = false;
                     }
-                    const { code, data } = await this.$store.dispatch('system/getSystems');
+                    const { code, data } = await this.$store.dispatch('system/getSystems', params);
                     this.systemList = _.cloneDeep(data);
                     this.curSystemList = _.cloneDeep(data);
                     this.curSystem = this.defaultSystem;
@@ -570,8 +570,14 @@
              */
             async fetchActions (systemId, isLoading = true) {
                 this.isRightLoading = isLoading;
+                const params = {
+                    system_id: systemId
+                };
+                if (this.externalSystemId) {
+                    params.hidden = false;
+                }
                 try {
-                    const { code, data } = await this.$store.dispatch('permApply/getActions', { system_id: systemId });
+                    const { code, data } = await this.$store.dispatch('permApply/getActions', params);
                     this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
                     this.handleDefaultData(systemId, data);
                 } catch (e) {

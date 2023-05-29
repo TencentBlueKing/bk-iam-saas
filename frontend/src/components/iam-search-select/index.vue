@@ -81,7 +81,8 @@
                         // eslint-disable-next-line max-len
                         oldSearchComponentValue = (this.$refs.searchSelect.chip && this.$refs.searchSelect.chip.list) || [];
                     }
-                    this.searchValue = filterValue([...oldSearchComponentValue, ...val]);
+                    const list = val.hasOwnProperty('length') ? val : [];
+                    this.searchValue = filterValue([...oldSearchComponentValue, ...list]);
                 },
                 immediate: true
             },

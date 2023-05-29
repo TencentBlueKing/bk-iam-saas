@@ -42,7 +42,7 @@
                                     <render-resource-popover
                                         :key="item.type"
                                         :data="item.condition"
-                                        :value="`${item.name}：${item.value}`"
+                                        :value="`${item.name}: ${item.value}`"
                                         :max-width="380"
                                         @on-view="handleViewResource(row)" />
                                 </p>
@@ -63,7 +63,9 @@
                     </template>
                     <template v-else>
                         <div class="relation-content-wrapper" v-if="!!row.isAggregate">
-                            <label class="resource-type-name" v-if="row.aggregateResourceType.length === 1">{{ row.aggregateResourceType[0].name }}</label>
+                            <label class="resource-type-name" v-if="row.aggregateResourceType && row.aggregateResourceType.length === 1">
+                                {{ row.aggregateResourceType[0].name }}
+                            </label>
                             <div class="bk-button-group tab-button" v-else>
                                 <bk-button v-for="(item, index) in row.aggregateResourceType"
                                     :key="item.id" @click="selectResourceType(row, index)"
@@ -351,6 +353,9 @@
                 return this.user.role.type === 'super_manager';
             },
             sliderWidth () {
+                if (['myPerm', 'applyJoinUserGroup'].includes(this.$route.name) && ['detail'].includes(this.mode)) {
+                    return window.innerWidth - 700;
+                }
                 return this.mode === 'detail' ? 890 : 725;
             },
             condition () {
@@ -576,25 +581,44 @@
                 }
             },
             handleShowDelDialog (row) {
-                const { id, name } = row;
-                const list = [];
-                this.linearActionList.forEach(item => {
-                    if (item.related_actions.includes(id)) {
-                        list.push(item.name);
+                let delRelatedActions = [];
+                const actionList = [];
+                const { id, mode, name } = row;
+                const isCustom = ['custom'].includes(mode);
+                const policyIdList = this.tableList.map(item => item.id);
+                const linearActionList = this.linearActionList.filter(item => policyIdList.includes(item.id));
+                const curAction = linearActionList.find(item => item.id === id);
+                const hasRelatedActions = curAction && curAction.related_actions && curAction.related_actions.length;
+                linearActionList.forEach(item => {
+                    // 如果这里过滤自己还能在其他数据找到相同的related_actions，就代表有其他数据也关联了相同的操作
+                    if (isCustom && hasRelatedActions && item.related_actions && item.related_actions.length
+                        && item.id !== id) {
+                        delRelatedActions = item.related_actions.filter(v => curAction.related_actions.includes(v));
+                    }
+                    if (item.related_actions && item.related_actions.includes(id)) {
+                        actionList.push(item.name);
                     }
                 });
-                if (list.length) {
+                if (actionList.length) {
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
-                        message: `${this.$t(`m.perm['不能删除当前操作']`)}, ${this.$t(`m.common['【']`)}${list.join()}${this.$t(`m.common['】']`)}${this.$t(`m.perm['等']`)}${list.length}${this.$t(`m.perm['个操作关联了']`)}${name}`,
+                        message: `${this.$t(`m.perm['不能删除当前操作']`)}, ${this.$t(`m.common['【']`)}${actionList.join()}${this.$t(`m.common['】']`)}${this.$t(`m.perm['等']`)}${actionList.length}${this.$t(`m.perm['个操作关联了']`)}${name}`,
                         ellipsisLine: 10,
                         ellipsisCopy: true
                     });
                     return;
                 }
+                let ids = [row.policy_id];
+                if (isCustom && !delRelatedActions.length && hasRelatedActions) {
+                    const list = [...this.tableList].filter(v => curAction.related_actions.includes(v.id));
+                    if (list.length) {
+                        // eslint-disable-next-line camelcase
+                        ids = [row.policy_id].concat(list.map(v => v.policy_id));
+                    }
+                }
                 this.isShowDeleteDialog = true;
-                this.newRow = row;
+                this.newRow = Object.assign(row, { ids });
             },
             handleDelete () {
                 this.$emit('on-delete', this.newRow);
@@ -1480,16 +1504,17 @@
                         const groupResourceTypes = [];
                         const { type, id, name, environment, description } = item;
                         systemId = item.detail.system.id;
-                        if (item.resource_groups.length > 0) {
+                        if (item.resource_groups && item.resource_groups.length > 0) {
                             item.resource_groups.forEach(groupItem => {
                                 const relatedResourceTypes = [];
-                                if (groupItem.related_resource_types.length > 0) {
+                                if (groupItem.related_resource_types && groupItem.related_resource_types.length > 0) {
                                     groupItem.related_resource_types.forEach(resItem => {
                                         if (resItem.empty) {
                                             resItem.isError = true;
                                             flag = true;
                                         }
-                                        const conditionList = (resItem.condition.length > 0 && !resItem.empty)
+                                        const conditionList = (resItem.condition && resItem.condition.length > 0
+                                            && !resItem.empty)
                                             ? resItem.condition.map(conItem => {
                                                 const { id, instance, attribute } = conItem;
                                                 const attributeList = (attribute && attribute.length > 0)
@@ -1522,7 +1547,8 @@
                                             system_id: resItem.system_id,
                                             name: resItem.name,
                                             condition: conditionList.filter(
-                                                item => item.instances.length > 0 || item.attributes.length > 0
+                                                item => (item.instances && item.instances.length)
+                                                    || (item.attributes && item.attributes.length)
                                             )
                                         });
                                     });
@@ -1546,7 +1572,7 @@
                     } else {
                         systemId = item.system_id;
                         const { actions, aggregateResourceType, instances, instancesDisplayData } = item;
-                        if (instances.length < 1) {
+                        if (instances && instances.length < 1) {
                             item.isError = true;
                             flag = true;
                         } else {
@@ -1574,8 +1600,8 @@
                     // eslint-disable-next-line max-len
                     const templateId = item.isTemplate ? item.isAggregate ? item.actions[0].detail.id : item.detail.id : CUSTOM_PERM_TEMPLATE_ID;
                     const compareId = `${templateId}&${systemId}`;
-                    const isHasAggregation = Object.keys(aggregationParam).length > 0;
-                    const isHasActions = Object.keys(actionParam).length > 0;
+                    const isHasAggregation = aggregationParam && Object.keys(aggregationParam).length > 0;
+                    const isHasActions = actionParam && Object.keys(actionParam).length > 0;
                     if (!templates.map(sub => `${sub.template_id}&${sub.system_id}`).includes(compareId)) {
                         templates.push({
                             system_id: systemId,
@@ -1622,16 +1648,17 @@
                     if (!item.isAggregate) {
                         const groupResourceTypes = [];
                         const { type, id, name, environment, description } = item;
-                        if (item.resource_groups.length > 0) {
+                        if (item.resource_groups && item.resource_groups.length > 0) {
                             item.resource_groups.forEach(groupItem => {
                                 const relatedResourceTypes = [];
-                                if (groupItem.related_resource_types.length > 0) {
+                                if (groupItem.related_resource_types && groupItem.related_resource_types.length > 0) {
                                     groupItem.related_resource_types.forEach(resItem => {
                                         if (resItem.empty) {
                                             resItem.isError = true;
                                             flag = true;
                                         }
-                                        const conditionList = (resItem.condition.length > 0 && !resItem.empty)
+                                        const conditionList = ((resItem.condition && resItem.condition.length > 0)
+                                            && !resItem.empty)
                                             ? resItem.condition.map(conItem => {
                                                 const { id, instance, attribute } = conItem;
                                                 const attributeList = (attribute && attribute.length > 0)
@@ -1664,7 +1691,8 @@
                                             system_id: resItem.system_id,
                                             name: resItem.name,
                                             condition: conditionList.filter(
-                                                item => item.instances.length > 0 || item.attributes.length > 0
+                                                item => (item.instances && item.instances.length > 0)
+                                                    || (item.attributes && item.attributes.length > 0)
                                             )
                                         });
                                     });
@@ -1689,7 +1717,7 @@
                         actionList.push(_.cloneDeep(params));
                     } else {
                         const { actions, aggregateResourceType, instances } = item;
-                        if (instances.length < 1) {
+                        if (instances && instances.length < 1) {
                             item.isError = true;
                             flag = true;
                         } else {

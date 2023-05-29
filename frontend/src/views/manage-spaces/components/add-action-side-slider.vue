@@ -573,8 +573,15 @@
              */
             async fetchActions (systemId, isLoading = true) {
                 this.isRightLoading = isLoading;
+                const params = {
+                    system_id: systemId,
+                    all: this.all
+                };
+                if (this.externalSystemId) {
+                    params.hidden = false;
+                }
                 try {
-                    const res = await this.$store.dispatch('permApply/getActions', { system_id: systemId, all: this.all });
+                    const res = await this.$store.dispatch('permApply/getActions', params);
                     this.handleDefaultData(systemId, res.data);
                 } catch (e) {
                     this.fetchErrorMsg(e);

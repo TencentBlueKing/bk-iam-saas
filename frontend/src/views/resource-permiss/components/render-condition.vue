@@ -1,5 +1,10 @@
 <template>
-    <div :class="['iam-condition-item', { active: isActive }, { error: isError }]"
+    <div :class="[
+             'iam-condition-item',
+             { active: isActive },
+             { error: isError },
+             { disabled: isDisabled }
+         ]"
         @mouseenter="handleMouseenter"
         @mouseleave="handleMouseleave"
         @click.stop="handleClick">
@@ -47,6 +52,10 @@
                 default: () => {
                     return {};
                 }
+            },
+            disabled: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
@@ -81,7 +90,7 @@
                 };
             },
             isDisabled () {
-                return this.isLoading || this.pasteLoading;
+                return this.isLoading || this.pasteLoading || this.disabled;
             }
         },
         watch: {
@@ -241,6 +250,14 @@
         }
         &.error {
             border-color: #ff5656;
+        }
+        &.disabled {
+            color: #c4c6cc;
+            background-color: #fafbfd;
+            border-color: #dcdee5;
+            .iam-condition-input {
+                cursor: not-allowed !important;
+            }
         }
         .iam-input-text {
             .iam-condition-input {

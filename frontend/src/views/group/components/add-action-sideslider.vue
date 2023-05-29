@@ -597,6 +597,9 @@
                 if (this.groupId) {
                     params.group_id = this.groupId;
                 }
+                if (this.externalSystemId) {
+                    params.hidden = false;
+                }
                 try {
                     const { code, data } = await this.$store.dispatch('permApply/getActions', params);
                     this.handleDefaultData(systemId, data);

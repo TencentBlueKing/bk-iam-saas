@@ -102,6 +102,7 @@
             :aggregation="aggregationData"
             :authorization="authorizationData"
             :external-template="externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn"
+            :perm-side-width="permSideWidth"
             @on-view="handleViewDetail"
             @on-add-custom="handleAddCustom"
             @on-edit-custom="handleEditCustom"
@@ -195,7 +196,8 @@
                 groupSystemList: [],
                 groupSystemListLength: 0,
                 groupId: '',
-                cloneLoading: true
+                cloneLoading: true,
+                permSideWidth: 890
             };
         },
         computed: {
@@ -281,6 +283,13 @@
                  this.authorizationDataByCustom,
                  this.authorizationDataClone);
                 return data;
+            }
+        },
+        watch: {
+            isShowAddSideslider (value) {
+                if (!value) {
+                    this.permSideWidth = 890;
+                }
             }
         },
         async mounted () {
@@ -576,12 +585,16 @@
              */
             handleAddCancel () {
                 this.isShowAddSideslider = false;
+                this.permSideWidth = 890;
             },
 
             /**
              * handleAddCustom
              */
             handleAddCustom () {
+                if (!this.externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn) {
+                    this.permSideWidth = 1090;
+                }
                 this.isShowAddActionSideslider = true;
             },
 
@@ -999,6 +1012,9 @@
              * handleEditCustom
              */
             handleEditCustom () {
+                if (!this.externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn) {
+                    this.permSideWidth = 1090;
+                }
                 this.curActionValue = this.originalList.map(item => item.$id);
                 this.isShowAddActionSideslider = true;
             },
@@ -1143,7 +1159,12 @@
              * handleAddPerm
              */
             handleAddPerm () {
-                this.isShowAddSideslider = true;
+                if (this.externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn) {
+                    this.isShowAddActionSideslider = true;
+                } else {
+                    this.isShowAddSideslider = true;
+                    this.permSideWidth = 1090;
+                }
             },
 
             /**
