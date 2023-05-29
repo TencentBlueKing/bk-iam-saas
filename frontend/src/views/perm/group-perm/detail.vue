@@ -66,7 +66,7 @@
                 });
                 return;
             }
-            this.$store.commit('setHeaderTitle', `${this.$t(`m.myApply['用户组']`)}【${this.groupName}】${this.$t(`m.common['的权限']`)}`);
+            this.$store.commit('setHeaderTitle', `${this.$t(`m.myApply['用户组']`)}${this.$t(`m.common['【']`)}${this.groupName}${this.$t(`m.common['】']`)}${this.$t(`m.common['的权限']`)}`);
             this.$store.commit('setBackRouter', -1);
         },
         methods: {

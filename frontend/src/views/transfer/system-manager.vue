@@ -5,7 +5,7 @@
             <div class="transfer-group-content">
                 <div class="header" @click="handlesystemExpanded">
                     <Icon bk class="expanded-icon" :type="systemExpanded ? 'down-shape' : 'right-shape'" />
-                    <label class="title">系统管理员权限交接</label>
+                    <label class="title">{{ $t(`m.permTransfer['系统管理员权限交接']`) }}</label>
                 </div>
                 <div class="content" v-if="systemExpanded">
                     <div class="slot-content">

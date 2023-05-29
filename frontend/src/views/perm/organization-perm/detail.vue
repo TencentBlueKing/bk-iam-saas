@@ -65,7 +65,7 @@
                 });
                 return;
             }
-            this.$store.commit('setHeaderTitle', `${this.$t(`m.perm['加入的组织']`)}【${this.groupName}】${this.$t(`m.perm['的权限']`)}`);
+            this.$store.commit('setHeaderTitle', `${this.$t(`m.perm['加入的组织']`)}${this.$t(`m.common['【']`)}${this.groupName}${this.$t(`m.common['】']`)}${this.$t(`m.perm['的权限']`)}`);
             this.$store.commit('setBackRouter', -1);
         },
         methods: {

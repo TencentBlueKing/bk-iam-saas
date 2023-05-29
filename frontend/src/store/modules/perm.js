@@ -610,8 +610,9 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getDepartMentsPersonalGroups ({ commit, state, dispatch }, config) {
-            return http.get(`${AJAX_URL_PREFIX}/users/departments/-/groups/`, {}, config);
+        getDepartMentsPersonalGroups ({ commit, state, dispatch }, params, config) {
+            const queryParams = params ? `?${json2Query(params)}` : '';
+            return http.get(`${AJAX_URL_PREFIX}/users/departments/-/groups/${queryParams}`, {}, config);
         },
 
         /**

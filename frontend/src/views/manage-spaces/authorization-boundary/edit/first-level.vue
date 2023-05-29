@@ -243,7 +243,7 @@
 <script>
     import _ from 'lodash';
     import { mapGetters } from 'vuex';
-    import { leavePageConfirm } from '@/common/leave-page-confirm';
+    // import { leavePageConfirm } from '@/common/leave-page-confirm';
     import basicInfo from '@/views/manage-spaces/components/basic-info';
     // import renderAction from '@/views/manage-spaces/common/render-action';
     import AddMemberDialog from '@/views/group/components/iam-add-member';
@@ -1041,18 +1041,24 @@
             },
 
             handleCancel () {
-                let cancelHandler = Promise.resolve();
-                if (window.changeDialog) {
-                    cancelHandler = leavePageConfirm();
-                }
-                cancelHandler.then(() => {
-                    this.$router.push({
-                        name: 'authorBoundary',
-                        params: {
-                            id: this.$route.params.id
-                        }
-                    });
-                }, _ => _);
+                // let cancelHandler = Promise.resolve();
+                // if (window.changeDialog) {
+                //     cancelHandler = leavePageConfirm();
+                // }
+                // cancelHandler.then(() => {
+                //     this.$router.push({
+                //         name: 'authorBoundary',
+                //         params: {
+                //             id: this.$route.params.id
+                //         }
+                //     });
+                // }, _ => _);
+                this.$router.push({
+                    name: 'authorBoundary',
+                    params: {
+                        id: this.$route.params.id
+                    }
+                });
             },
 
             handleReasonInput () {

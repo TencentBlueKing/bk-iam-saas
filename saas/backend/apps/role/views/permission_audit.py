@@ -38,7 +38,7 @@ class QueryAuthorizedSubjectsViewSet(GenericViewSet):
         serializer = QueryAuthorizedSubjectsSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-        subjects = QueryAuthorizedSubjects(data)._query_by_permission_type()
+        subjects = QueryAuthorizedSubjects(data).query_by_permission_type()
         return Response(subjects)
 
     @swagger_auto_schema(

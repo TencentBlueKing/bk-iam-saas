@@ -122,6 +122,7 @@
     import { mapGetters } from 'vuex';
     // import IamGuide from '@/components/iam-guide/index.vue';
     import { leavePageConfirm } from '@/common/leave-page-confirm';
+    import { NEED_CONFIRM_DIALOG_ROUTER } from '@/common/constants';
     import { il8n, language } from '@/language';
     import { bus } from '@/common/bus';
     import { buildURLParams } from '@/common/url';
@@ -190,15 +191,6 @@
         // 用户
         [['user'], NORMAL_DOCU_LINK]
     ]);
-
-    const NEED_CONFIRM_DIALOG_ROUTER = [
-        'permTemplateCreate',
-        'permTemplateEdit',
-        'permTemplateDiff',
-        'createUserGroup',
-        'gradingAdminCreate',
-        'gradingAdminEdit'
-    ];
 
     export default {
         name: '',

@@ -16,6 +16,7 @@ from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
+from backend.apps.organization.models import User
 from backend.apps.role.models import RoleUser
 from backend.biz.role import RoleBiz
 from backend.common.error_codes import error_codes
@@ -34,12 +35,16 @@ class UserViewSet(GenericViewSet):
         user = request.user
         role = request.role
         timestamp = int(time.time())
+
+        u = User.objects.filter(username=user.username).only("display_name").first()
+
         return Response(
             {
                 "timestamp": timestamp,
                 "username": user.username,
                 "role": {"type": role.type, "id": role.id, "name": role.name},
                 "timezone": user.get_property("time_zone"),
+                "name": u.display_name,
             }
         )
 

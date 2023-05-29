@@ -40,7 +40,7 @@
                 <template slot-scope="props">
                     <span v-if="props.row.department_id === 0">{{ $t(`m.perm['直接加入']`) }}</span>
                     <span v-else :title="`${$t(`m.perm['通过组织加入']`)}：${props.row.department_name}`">
-                        {{ $t(`m.perm['通过组织加入']`) }}：{{ props.row.department_name }}
+                        {{ $t(`m.perm['通过组织加入']`) }}: {{ props.row.department_name }}
                     </span>
                 </template>
             </bk-table-column>
@@ -396,7 +396,7 @@
             handleViewDetail (payload) {
                 if (payload.role && payload.role.name) {
                     this.isShowGradeSlider = true;
-                    this.gradeSliderTitle = `【${payload.role.name}】${this.$t(`m.grading['管理空间']`)} ${this.$t(`m.common['成员']`)}`;
+                    this.gradeSliderTitle = `${this.$t(`m.common['【']`)}${payload.role.name}${this.$t(`m.common['】']`)}${this.$t(`m.grading['管理空间']`)} ${this.$t(`m.common['成员']`)}`;
                     this.fetchRoles(payload.role.id);
                 }
             }

@@ -60,7 +60,7 @@ REDIS_SENTINEL_ADDR_STR = env.str("BKAPP_REDIS_SENTINEL_ADDR", "")
 REDIS_SENTINEL_ADDR_LIST = []
 try:
     REDIS_SENTINEL_ADDR_LIST = [tuple(addr.split(":")) for addr in REDIS_SENTINEL_ADDR_STR.split(",") if addr]
-except Exception as e:
+except Exception as e:  # pylint: disable=broad-except noqa
     print(f"BKAPP_REDIS_SENTINEL_ADDR {REDIS_SENTINEL_ADDR_STR} is invalid: {e}")
 
 CACHES = {

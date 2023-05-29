@@ -89,12 +89,18 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
             params["has_instance_approver"] = int(process.has_instance_approver_node(judge_empty=True))
 
         # 在params中加上权限获得者
-        params["applicants"] = ", ".join(
-            [
-                "{}: {}({})".format("用户" if u.type == SubjectType.USER.value else "部门", u.display_name, u.id)
-                for u in data.content.applicants
-            ]
-        )
+        params["dynamic_fields"] = [
+            {
+                "name": "权限获得者",
+                "type": "STRING",
+                "value": ", ".join(
+                    [
+                        "{}: {}({})".format("用户" if u.type == SubjectType.USER.value else "部门", u.display_name, u.id)
+                        for u in data.content.applicants
+                    ]
+                ),
+            }
+        ]
 
         ticket = itsm.create_ticket(**params)
         return ticket["sn"]
@@ -115,12 +121,18 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
         params["content"] = {"schemes": FORM_SCHEMES, "form_data": [GroupTable.from_application(data.content).dict()]}
 
         # 在params中加上权限获得者
-        params["applicants"] = ", ".join(
-            [
-                "{}: {}({})".format("用户" if u.type == SubjectType.USER.value else "部门", u.display_name, u.id)
-                for u in data.content.applicants
-            ]
-        )
+        params["dynamic_fields"] = [
+            {
+                "name": "权限获得者",
+                "type": "STRING",
+                "value": ", ".join(
+                    [
+                        "{}: {}({})".format("用户" if u.type == SubjectType.USER.value else "部门", u.display_name, u.id)
+                        for u in data.content.applicants
+                    ]
+                ),
+            }
+        ]
 
         params["tag"] = tag
         ticket = itsm.create_ticket(**params)

@@ -1,3 +1,28 @@
+<!-- 2023-05-29 -->
+# V1.10.3 ChangeLog
+
+### Optimization Updates
+* Optimize the method of creating dynamic fields in permission application approval form
+
+---
+
+<!-- 2023-05-25 -->
+# V1.10.2 ChangeLog
+
+### Optimization Updates
+* Optimize the bkci permission migration function
+
+---
+
+<!-- 2023-05-18 -->
+# V1.10.1 ChangeLog
+
+### Bug Fixes
+* The open api creation permission application form increases the expiration time
+* Fix the unprocessed permission removal when submitting a custom permission application
+
+---
+
 <!-- 2023-05-10 -->
 # V1.10.0 ChangeLog
 

@@ -22,18 +22,20 @@
                                 <render-resource-popover
                                     :key="item.type"
                                     :data="item.condition"
-                                    :value="`${item.name}：${item.value}`"
+                                    :value="`${item.name}: ${item.value}`"
                                     :max-width="380"
                                     @on-view="handleViewResource(_, row)" />
                             </p>
                             <Icon
+                                v-if="isShowPreview(row)"
                                 type="detail-new"
                                 class="view-icon"
                                 :title="$t(`m.common['详情']`)"
-                                v-if="isShowPreview(row)"
                                 @click.stop="handleViewResource(_, row)" />
-                            <Icon v-if="isShowPreview(row) && row.resource_groups.length > 2"
-                                :title="$t(`m.common['删除']`)" type="reduce-hollow"
+                            <Icon
+                                v-if="isShowPreview(row) && row.resource_groups.length > 2"
+                                type="reduce-hollow"
+                                :title="$t(`m.common['删除']`)"
                                 :class="row.resource_groups.length > 1 ? 'effect-icon' : 'effect-icon-disabled'"
                                 @click.stop="handlerReduceInstance(_, row)" />
                         </div>
@@ -72,6 +74,15 @@
                     <bk-button text @click="handleDelete(row)">{{ $t(`m.common['删除']`) }}</bk-button>
                 </template>
             </bk-table-column>
+            <template slot="empty">
+                <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-refresh="handleRefreshData"
+                />
+            </template>
         </bk-table>
 
         <delete-dialog
@@ -81,7 +92,7 @@
             :sub-title="deleteDialog.subTitle"
             @on-after-leave="handleAfterDeleteLeave"
             @on-cancel="hideCancelDelete"
-            @on-sumbit="handleSumbitDelete" />
+            @on-sumbit="handleSubmitDelete" />
 
         <bk-sideslider
             :is-show="isShowSideslider"
@@ -195,6 +206,17 @@
             systemId: {
                 type: String,
                 default: ''
+            },
+            emptyData: {
+                type: Object,
+                default: () => {
+                    return {
+                        type: '',
+                        text: '',
+                        tip: '',
+                        tipType: ''
+                    };
+                }
             }
         },
         data () {
@@ -496,7 +518,7 @@
                 if (this.previewData[0].tabType === 'resource' && (this.previewData[0].data.length < 1 || this.previewData[0].data.every(item => !item.instance || item.instance.length < 1))) {
                     this.batchDisabled = true;
                 }
-                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${payload.name}】${this.$t(`m.common['的资源实例']`)}`;
+                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)}`;
                 window.changeAlert = 'iamSidesider';
                 this.isShowSideslider = true;
             },
@@ -507,7 +529,7 @@
             handleEnvironmentsViewResource (payload, data) {
                 this.environmentsSidesliderData = payload.environments;
                 this.isShowEnvironmentsSideslider = true;
-                this.environmentsSidesliderTitle = `$【${data.name}】${this.$t(`m.common['生效条件']`)}`;
+                this.environmentsSidesliderTitle = `${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['生效条件']`)}`;
             },
 
             /**
@@ -535,15 +557,34 @@
              * handleDelete
              */
             handleDelete (payload) {
-                this.curDeleteIds.splice(0, this.curDeleteIds.length, ...[payload.policy_id]);
-                this.deleteDialog.subTitle = `${this.$t(`m.dialog['将删除']`)}【${payload.name}】权限`;
+                const list = [];
+                const { id, name, policy_id } = payload;
+                this.linearActionList.forEach(item => {
+                    if (item.related_actions.includes(id)) {
+                        list.push(item.name);
+                    }
+                });
+                if (list.length) {
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: `${this.$t(`m.perm['不能删除当前操作']`)}, ${this.$t(`m.common['【']`)}${list.join()}${this.$t(`m.common['】']`)}${this.$t(`m.perm['等']`)}${list.length}${this.$t(`m.perm['个操作关联了']`)}${name}`,
+                        ellipsisLine: 10,
+                        ellipsisCopy: true
+                    });
+                    return;
+                }
+                // eslint-disable-next-line camelcase
+                this.curDeleteIds.splice(0, this.curDeleteIds.length, ...[policy_id]);
+                this.deleteDialog.subTitle
+                    = `${this.$t(`m.dialog['将删除']`)}${this.$t(`m.common['【']`)}${name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的权限']`)}`;
                 this.deleteDialog.visible = true;
             },
 
             /**
-             * handleSumbitDelete
+             * handleSubmitDelete
              */
-            async handleSumbitDelete () {
+            async handleSubmitDelete () {
                 this.deleteDialog.loading = true;
                 try {
                     if (this.resourceGrouParams.id && this.resourceGrouParams.resourceGroupId) { // 表示删除的是资源组
