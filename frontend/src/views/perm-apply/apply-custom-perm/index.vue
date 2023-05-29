@@ -2287,18 +2287,29 @@
              * @param {String} 系统id
              * @param {Object} option
              */
+            // async handleSysSelected (value, option) {
+            //     // 切换系统时重置数据
+            //     this.reason = '';
+            //     this.isShowReasonError = false;
+            //     this.isShowActionError = false;
+            //     this.fetchResetData();
+            //     await Promise.all([
+            //         this.fetchActions(value),
+            //         this.fetchPolicies(value),
+            //         this.fetchAggregationAction(value),
+            //         this.fetchCommonActions(value)
+            //     ]);
+            // },
             async handleSysSelected (value, option) {
                 // 切换系统时重置数据
                 this.reason = '';
                 this.isShowReasonError = false;
                 this.isShowActionError = false;
                 this.fetchResetData();
-                await Promise.all([
-                    this.fetchActions(value),
-                    this.fetchPolicies(value),
-                    this.fetchAggregationAction(value),
-                    this.fetchCommonActions(value)
-                ]);
+                await this.fetchActions(value);
+                await this.fetchPolicies(value);
+                await this.fetchAggregationAction(value);
+                await this.fetchCommonActions(value);
             },
 
             /**
