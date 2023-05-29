@@ -600,6 +600,9 @@
                     system_id: systemId,
                     template_id: this.id
                 };
+                if (this.externalSystemId) {
+                    params.hidden = false;
+                }
                 try {
                     const res = await this.$store.dispatch('permApply/getActions', params);
                     this.originalCustomTmplList = _.cloneDeep(res.data);

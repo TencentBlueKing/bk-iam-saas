@@ -3,12 +3,138 @@
         <render-horizontal-block :label="$t(`m.permApply['选择用户组']`)" :required="true">
             <div class="user-group-table">
                 <div class="search-wrapper">
-                    <iam-search-select
+                    <!-- <iam-search-select
                         @on-change="handleSearch"
                         :data="searchData"
                         :value="searchValue"
                         :placeholder="$t(`m.applyEntrance['申请加入用户组搜索提示']`)"
-                        :quick-search-method="quickSearchMethod" />
+                        :quick-search-method="quickSearchMethod" /> -->
+                    <render-search>
+                        <div
+                            :class="[
+                                'join-user-group-form',
+                                { 'join-user-group-form-lang': !curLanguageIsCn }
+                            ]">
+                            <div>
+                                <bk-form
+                                    form-type="inline"
+                                    class="pb10">
+                                    <iam-form-item
+                                        :label="$t(`m.permApply['选择系统']`)"
+                                        class="pb20 pr20 form-item-resource">
+                                        <bk-select
+                                            :style="defaultFormItemStyle"
+                                            v-model="applyGroupData.system_id"
+                                            :clearable="true"
+                                            :allow-enter="false"
+                                            :placeholder="$t(`m.verify['请选择']`)"
+                                            @change="handleCascadeChange"
+                                            @clear="handleClearSearch('system_id')"
+                                            searchable>
+                                            <bk-option v-for="option in systemList"
+                                                :key="option.id"
+                                                :id="option.id"
+                                                :name="`${option.name} (${option.id})`">
+                                            </bk-option>
+                                        </bk-select>
+                                    </iam-form-item>
+                                    <iam-form-item
+                                        :label="$t(`m.permApply['选择操作']`)"
+                                        class="pb20">
+                                        <bk-select
+                                            :style="defaultFormItemStyle"
+                                            v-model="applyGroupData.action_id"
+                                            :clearable="false"
+                                            :allow-enter="false"
+                                            :placeholder="$t(`m.verify['请选择']`)"
+                                            @selected="handleSelectedAction"
+                                            searchable>
+                                            <bk-option v-for="option in processesList"
+                                                :key="option.id"
+                                                :id="option.id"
+                                                :name="`${option.name} (${option.id})`">
+                                            </bk-option>
+                                        </bk-select>
+                                        <p class="error-tips" v-if="actionError">
+                                            {{$t(`m.resourcePermiss['操作必填']`)}}
+                                        </p>
+                                    </iam-form-item>
+                                </bk-form>
+                            </div>
+                            <div v-if="!resourceTypeData.isEmpty">
+                                <bk-form
+                                    form-type="inline"
+                                    class="pb10">
+                                    <iam-form-item class="pb20 form-item-resource" :label="$t(`m.permApply['资源类型']`)">
+                                        <div
+                                            v-for="(_, index) in resourceTypeData.resource_groups"
+                                            :key="_.id"
+                                            class="resource-group-container">
+                                            <div>
+                                                <bk-select
+                                                    :style="defaultFormItemStyle"
+                                                    v-model="curResourceData.type"
+                                                    :clearable="false"
+                                                    :allow-enter="false"
+                                                    :placeholder="$t(`m.verify['请选择']`)"
+                                                    @change="handleResourceTypeChange(index)"
+                                                >
+                                                    <bk-option
+                                                        v-for="related in _.related_resource_types_list"
+                                                        :key="related.type"
+                                                        :id="related.type"
+                                                        :name="related.name">
+                                                    </bk-option>
+                                                </bk-select>
+                                            </div>
+                                            <div class="relation-content-item"
+                                                v-for="(content, contentIndex) in _.related_resource_types"
+                                                :key="contentIndex">
+                                                <div class="content">
+                                                    <render-condition
+                                                        :ref="`condition_${index}_${contentIndex}_ref`"
+                                                        :value="curResourceData.type ?
+                                                            content.value : $t(`m.verify['请选择']`)"
+                                                        :is-empty="content.empty"
+                                                        :params="curCopyParams"
+                                                        :disabled="!curResourceData.type"
+                                                        :is-error="content.isLimitExceeded || content.isError"
+                                                        @on-click="handleShowResourceInstance(
+                                                            resourceTypeData,
+                                                            content, contentIndex, index)"
+                                                    />
+                                                    <p class="error-tips" v-if="resourceTypeError">
+                                                        {{$t(`m.resourcePermiss['请选择资源实例']`)}}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </iam-form-item>
+                                </bk-form>
+                            </div>
+                            <div>
+                                <bk-form
+                                    form-type="inline"
+                                    class="pb10">
+                                    <iam-form-item class="pb20 form-item-resource" :label="$t(`m.userGroup['用户组名']`)">
+                                        <bk-input
+                                            :style="defaultFormItemStyle"
+                                            clearable
+                                            v-model="applyGroupData.name"
+                                            @enter="handleSearchName"
+                                            @clear="handleClearSearch('name')">
+                                        </bk-input>
+                                    </iam-form-item>
+                                    <bk-button
+                                        class="ml30 mb20"
+                                        theme="primary"
+                                        @click="handleSearchUserGroup()">
+                                        {{ $t(`m.common['查询']`) }}
+                                    </bk-button>
+                                </bk-form>
+                            </div>
+                        </div>
+                    </render-search>
                     <div class="info">
                         {{ $t(`m.info['如果以下用户组不满足您的权限需求']`) }}
                         {{ $t(`m.common['，']`) }}
@@ -52,14 +178,27 @@
                             </span>
                         </template>
                     </bk-table-column>
-                    <bk-table-column :label="$t(`m.common['所属管理空间']`)">
+                    <bk-table-column :label="$t(`m.grading['管理空间']`)">
                         <template slot-scope="{ row }">
                             <span
                                 :class="row.role && row.role.name ? 'can-view' : ''"
                                 :title="row.role && row.role.name ? row.role.name : ''"
-                                @click.stop="handleViewDetail(row)"
-                            >{{ row.role ? row.role.name : '--' }}</span
                             >
+                                {{ row.role ? row.role.name : '--' }}
+                            </span>
+                        </template>
+                    </bk-table-column>
+                    <bk-table-column :label="$t(`m.levelSpace['管理员']`)">
+                        <template slot-scope="{ row, $index }">
+                            <iam-edit-member-selector
+                                mode="detail"
+                                field="members"
+                                width="200"
+                                :placeholder="$t(`m.verify['请输入']`)"
+                                :value="row.role_members"
+                                :index="$index"
+                                @on-change="handleUpdateMembers"
+                            />
                         </template>
                     </bk-table-column>
                     <template slot="empty">
@@ -163,7 +302,7 @@
             :title="gradeSliderTitle"
             :quick-close="true"
             @animation-end="gradeSliderTitle === ''">
-            <div class="grade-memebers-content"
+            <div class="grade-members-content"
                 slot="content"
                 v-bkloading="{ isLoading: sliderLoading, opacity: 1 }">
                 <template v-if="!sliderLoading">
@@ -176,6 +315,35 @@
                     </div>
                     <p class="info">{{ $t(`m.info['管理空间成员提示']`) }}</p>
                 </template>
+            </div>
+        </bk-sideslider>
+
+        <bk-sideslider
+            :is-show="isShowResourceInstanceSideSlider"
+            :title="resourceInstanceSideSliderTitle"
+            :width="720"
+            quick-close
+            transfer
+            :ext-cls="'relate-instance-sideslider'"
+            @update:isShow="handleResourceCancel">
+            <div slot="content"
+                class="sideslider-content">
+                <render-resource
+                    ref="renderResourceRef"
+                    :data="condition"
+                    :original-data="originalCondition"
+                    :selection-mode="curSelectionMode"
+                    :params="params"
+                    @on-limit-change="handleLimitChange"
+                />
+            </div>
+            <div slot="footer" style="margin-left: 25px;">
+                <bk-button theme="primary" :loading="sliderLoading" @click="handleResourceSubmit">
+                    {{ $t(`m.common['保存']`) }}
+                </bk-button>
+                <bk-button style="margin-left: 10px;" @click="handleResourceCancel">
+                    {{ $t(`m.common['取消']`) }}
+                </bk-button>
             </div>
         </bk-sideslider>
             
@@ -191,18 +359,23 @@
 </template>
 <script>
     import _ from 'lodash';
+    import Policy from '@/model/policy';
     import { mapGetters } from 'vuex';
     import { buildURLParams } from '@/common/url';
     import { formatCodeData } from '@/common/util';
     import { PERMANENT_TIMESTAMP } from '@/common/constants';
+    import { leaveConfirm } from '@/common/leave-confirm';
     import IamDeadline from '@/components/iam-deadline/horizontal';
-    import IamSearchSelect from '@/components/iam-search-select';
+    // import IamSearchSelect from '@/components/iam-search-select';
     // import IamGuide from '@/components/iam-guide/index.vue';
     import RenderPermSideSlider from '@/views/perm/components/render-group-perm-sideslider';
     // import RenderAction from '@/views/grading-admin/common/render-action';
     import RenderMember from '@/views/grading-admin/components/render-member';
     import AddMemberDialog from '@/views/group/components/iam-add-member';
     import ConfirmDialog from '@/components/iam-confirm-dialog/index';
+    import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
+    import RenderCondition from '@/views/resource-permiss/components/render-condition';
+    import RenderResource from '@/views/resource-permiss/components/render-resource';
     // import BkUserSelector from '@blueking/user-selector';
 
     export default {
@@ -210,12 +383,15 @@
         components: {
             // IamGuide,
             IamDeadline,
-            IamSearchSelect,
+            // IamSearchSelect,
+            IamEditMemberSelector,
             RenderPermSideSlider,
             // RenderAction,
             RenderMember,
             AddMemberDialog,
-            ConfirmDialog
+            ConfirmDialog,
+            RenderCondition,
+            RenderResource
             // BkUserSelector
         },
         data () {
@@ -265,12 +441,63 @@
                     tip: '',
                     tipType: ''
                 },
+                applyGroupData: {
+                    name: '',
+                    system_id: '',
+                    action_id: ''
+                },
+                systemList: [],
+                processesList: [],
+                resourceInstances: [],
                 isShowConfirmDialog: false,
-                confirmDialogTitle: this.$t(`m.verify['admin无需申请权限']`)
+                confirmDialogTitle: this.$t(`m.verify['admin无需申请权限']`),
+                actionIdError: false,
+                searchTypeError: false,
+                resourceTypeError: false,
+                isShowResourceInstanceSideSlider: false,
+                resourceTypeData: {
+                    resource_groups: [],
+                    isEmpty: true
+                },
+                curResourceData: {
+                    type: ''
+                },
+                resourceInstanceSideSliderTitle: '',
+                params: {},
+                curResIndex: -1,
+                groupIndex: -1
             };
         },
         computed: {
-            ...mapGetters(['user', 'externalSystemId'])
+            ...mapGetters(['user', 'externalSystemId']),
+            condition () {
+                if (this.curResIndex === -1 || this.groupIndex === -1) {
+                    return [];
+                }
+                this.curResourceData = this.resourceTypeData.resource_groups[this.groupIndex]
+                    .related_resource_types[this.curResIndex];
+                if (!this.curResourceData) {
+                    return [];
+                }
+                if (this.curResourceData.condition.length === 0) this.curResourceData.condition = ['none'];
+                return _.cloneDeep(this.curResourceData.condition);
+            },
+            curSelectionMode () {
+                if (this.curResIndex === -1 || this.groupIndex === -1) {
+                    return 'all';
+                }
+                this.curResourceData = this.resourceTypeData.resource_groups[this.groupIndex]
+                    .related_resource_types[this.curResIndex];
+                return this.curResourceData.selectionMode;
+            },
+            originalCondition () {
+                return _.cloneDeep(this.condition);
+            },
+            defaultFormItemStyle () {
+                return {
+                    width: '300px'
+                };
+            }
         },
         watch: {
             reason () {
@@ -284,15 +511,17 @@
             this.searchParams = this.$route.query;
             // delete this.searchParams.limit;
             // delete this.searchParams.current;
-            this.curRole = this.user.role.type;
+            const { role, name, username } = this.user;
+            this.curRole = role.type;
             this.users = [
                 {
-                    'username': this.user.username,
-                    'name': this.user.username,
+                    'username': username,
+                    'name': name || username,
                     'showRadio': true,
                     'type': 'user',
                     'is_selected': true
-                }];
+                }
+            ];
             this.searchData = [
                 {
                     id: 'name',
@@ -350,6 +579,7 @@
                                 });
                                 this.searchList.push(..._.cloneDeep(this.searchValue));
                                 this.searchParams[key] = curData.id;
+                                this.applyGroupData[key] = curData.id;
                             }
                         } else if (tempData) {
                             this.searchValue.push({
@@ -364,8 +594,10 @@
                             });
                             this.searchList.push(..._.cloneDeep(this.searchValue));
                             this.searchParams[key] = curData;
+                            this.applyGroupData[key] = curData;
                         } else {
                             this.searchParams[key] = curData;
+                            this.applyGroupData[key] = curData;
                         }
                     }
                 }
@@ -376,8 +608,133 @@
              * 获取页面数据
              */
             async fetchPageData () {
+                this.fetchSystemList();
                 await this.fetchCurUserGroup();
                 await this.fetchUserGroupList();
+                const { system_id, name } = this.applyGroupData;
+                // eslint-disable-next-line camelcase
+                if (system_id || name) {
+                    await this.handleSearchUserGroup();
+                }
+            },
+
+            async handleCascadeChange () {
+                this.resourceActionData = [];
+                this.processesList = [];
+                this.applyGroupData.action_id = '';
+                this.resourceTypeData = Object.assign({}, { isEmpty: true, resource_groups: [] });
+                if (this.applyGroupData.system_id) {
+                    try {
+                        const { data } = await this.$store.dispatch('approvalProcess/getActionGroups', { system_id: this.applyGroupData.system_id });
+                        this.handleFormatRecursion(data || []);
+                    } catch (e) {
+                        console.error(e);
+                        this.bkMessageInstance = this.$bkMessage({
+                            limit: 1,
+                            theme: 'error',
+                            message: e.message || e.data.msg || e.statusText
+                        });
+                    }
+                }
+            },
+
+            handleResourceTypeChange (index) {
+                this.groupIndex = index;
+                this.resourceInstances = [];
+                if (this.resourceTypeData
+                    && this.resourceTypeData.resource_groups
+                    && this.resourceTypeData.resource_groups.length) {
+                    const resourceGroups = this.resourceTypeData.resource_groups[index];
+                    const typesList = _.cloneDeep(resourceGroups.related_resource_types_list);
+                    resourceGroups.related_resource_types
+                        = typesList.filter(item => item.type === this.curResourceData.type);
+                }
+            },
+
+            handleSelectedAction () {
+                this.actionIdError = false;
+                this.resourceTypeError = false;
+                this.curResourceData.type = '';
+                this.resourceInstances = [];
+                this.resourceTypeData = this.processesList.find(e => e.id === this.applyGroupData.action_id);
+                if (this.resourceTypeData && this.resourceTypeData.resource_groups) {
+                    this.resourceTypeData.resource_groups.forEach(item => {
+                        this.$set(item, 'related_resource_types_list', _.cloneDeep(item.related_resource_types));
+                        if (!this.curResourceData.type) {
+                            item.related_resource_types = [];
+                        }
+                    });
+                }
+            },
+            
+            handleFormatRecursion (list) {
+                list.forEach(data => {
+                    if (data.actions && data.actions.length) {
+                        data.actions.forEach(e => {
+                            this.resourceActionData.push(e);
+                        });
+                    }
+                    if (data.sub_groups && data.sub_groups.length) {
+                        data.sub_groups.forEach(item => {
+                            if (item.actions && item.actions.length) {
+                                item.actions.forEach(e => {
+                                    this.resourceActionData.push(e);
+                                });
+                            }
+                        });
+                    }
+                });
+                this.resourceActionData = this.resourceActionData.filter((e, index, self) => self.indexOf(e) === index);
+                this.resourceActionData.forEach(item => {
+                    if (!item.resource_groups || !item.resource_groups.length) {
+                        item.resource_groups = item.related_resource_types.length ? [{ id: '', related_resource_types: item.related_resource_types }] : [];
+                    }
+                    this.processesList.push(new Policy({ ...item, tag: 'add' }, 'custom'));
+                });
+                if (this.processesList.length) {
+                    this.applyGroupData.action_id = this.processesList[0].id;
+                    this.handleSelectedAction();
+                }
+            },
+
+            handlePathData (data, type) {
+                if (data.resourceInstancesPath && data.resourceInstancesPath.length) {
+                    const lastIndex = data.resourceInstancesPath.length - 1;
+                    const path = data.resourceInstancesPath[lastIndex];
+                    let id = '';
+                    let resourceInstancesPath = [];
+                    if (type === path.type) {
+                        id = path.id;
+                        data.resourceInstancesPath.splice(lastIndex, 1);
+                    } else {
+                        id = '*';
+                    }
+                    resourceInstancesPath = data.resourceInstancesPath.reduce((p, e) => {
+                        p.push({
+                            type: e.type,
+                            id: e.id,
+                            name: e.name
+                        });
+                        return p;
+                    }, []);
+                    return { id, resourceInstancesPath };
+                }
+                return { id: '*', resourceInstancesPath: [] };
+            },
+
+            // 显示资源实例
+            handleShowResourceInstance (data, resItem, resIndex, groupIndex) {
+                this.params = {
+                    system_id: this.applyGroupData.system_id,
+                    action_id: data.id,
+                    resource_type_system: resItem.system_id,
+                    resource_type_id: resItem.type
+                };
+                this.curResIndex = resIndex;
+                this.groupIndex = groupIndex;
+                this.resourceInstanceSideSliderTitle = `${this.$t(`m.common['关联操作']`)}${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)}`;
+                window.changeAlert = 'iamSidesider';
+                this.isShowResourceInstanceSideSlider = true;
             },
 
             handleToCustomApply () {
@@ -388,7 +745,8 @@
 
             handleEmptyRefresh () {
                 this.resetPagination();
-                this.fetchUserGroupList(true);
+                this.resetSearchParams();
+                this.fetchUserGroupList(false);
             },
 
             handleEmptyClear () {
@@ -396,60 +754,86 @@
                 this.searchValue = [];
                 this.emptyData.tipType = '';
                 this.resetPagination();
-                this.fetchUserGroupList(true);
+                this.resetSearchParams();
+                this.fetchUserGroupList(false);
             },
 
-            refreshCurrentQuery () {
-                const params = {};
-                const queryParams = {
-                    ...this.searchParams,
-                    ...this.$route.query,
-                    ...this.queryParams
-                };
-                if (Object.keys(queryParams).length) {
-                    window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
+            async handleSearchUserGroup () {
+                let resourceInstances = _.cloneDeep(this.resourceInstances);
+                resourceInstances = resourceInstances.reduce((prev, item) => {
+                    const { id, resourceInstancesPath } = this.handlePathData(item, item.type);
+                    prev.push({
+                        system_id: item.system_id,
+                        id: id,
+                        type: item.type,
+                        name: item.name,
+                        path: resourceInstancesPath
+                    });
+                    return prev;
+                }, []);
+                if (this.curResourceData.type && !resourceInstances.length
+                    && !this.resourceTypeData.isEmpty && this.resourceTypeData.resource_groups[this.groupIndex]
+                    && this.resourceTypeData.resource_groups[this.groupIndex]
+                        .related_resource_types.some(e => e.empty)) {
+                    this.resourceTypeError = true;
+                    return;
                 }
-                for (const key in this.searchParams) {
-                    const tempObj = this.searchData.find((item) => key === item.id);
-                    if (tempObj && tempObj.remoteMethod && typeof tempObj.remoteMethod === 'function') {
-                        if (this.searchList.length) {
-                            const tempData = this.searchList.find((item) => item.id === key);
-                            if (tempData) {
-                                params[key] = tempData.values[0];
+                this.resetPagination();
+                const { current, limit } = this.pagination;
+                const params = {
+                    ...this.applyGroupData,
+                    limit,
+                    offset: limit * (current - 1),
+                    resource_instances: resourceInstances || []
+                };
+                try {
+                    const { code, data } = await this.$store.dispatch('permApply/getJoinGroupSearch', params);
+                    this.tableList = data || [];
+                    this.tableListClone = _.cloneDeep(this.tableList);
+                    this.pagination.count = data.length;
+                    this.tableList.splice(0, this.tableList.length, ...data);
+                    this.emptyData.tipType = 'search';
+                    this.$nextTick(() => {
+                        this.tableList.forEach((item) => {
+                            if (item.role_members && item.role_members.length) {
+                                item.role_members.map(v => {
+                                    return {
+                                        username: v,
+                                        readonly: false
+                                    };
+                                });
                             }
-                        }
-                    } else {
-                        params[key] = this.searchParams[key];
-                    }
+                            if (this.curUserGroup.includes(item.id.toString())) {
+                                this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
+                                this.currentSelectList.push(item);
+                            }
+                        });
+                    });
+                    this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
+                } catch (e) {
+                    console.error(e);
+                    const { code, data, message, statusText } = e;
+                    this.tableList = [];
+                    this.emptyData = formatCodeData(code, this.emptyData);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: message || data.msg || statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                } finally {
+                    this.tableLoading = false;
                 }
-                this.emptyData = Object.assign(this.emptyData, { tipType: Object.keys(this.searchParams).length > 0 ? 'search' : '' });
-                return {
-                    ...queryParams
-                };
             },
 
-            setCurrentQueryCache (payload) {
-                window.localStorage.setItem('applyGroupList', JSON.stringify(payload));
-            },
-
-            getCurrentQueryCache () {
-                return JSON.parse(window.localStorage.getItem('applyGroupList'));
-            },
-
-            quickSearchMethod (value) {
-                return {
-                    name: this.$t(`m.common['关键字']`),
-                    id: 'keyword',
-                    values: [value]
-                };
-            },
-
-            async fetchUserGroupList () {
-                this.tableLoading = true;
+            async fetchUserGroupList (isTableLoading = true) {
+                this.tableLoading = isTableLoading;
                 this.setCurrentQueryCache(this.refreshCurrentQuery());
                 const { current, limit } = this.pagination;
                 const params = {
-                    ...this.searchParams,
+                    ...this.applyGroupData,
+                    // ...this.searchParams,
                     limit,
                     offset: limit * (current - 1)
                 };
@@ -460,6 +844,14 @@
                     this.tableList.splice(0, this.tableList.length, ...(results || []));
                     this.$nextTick(() => {
                         this.tableList.forEach((item) => {
+                            if (item.role_members && item.role_members.length) {
+                                item.role_members.map(v => {
+                                    return {
+                                        username: v,
+                                        readonly: false
+                                    };
+                                });
+                            }
                             if (this.curUserGroup.includes(item.id.toString())) {
                                 this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
                                 this.currentSelectList.push(item);
@@ -551,15 +943,56 @@
                 );
             },
 
+            resetSearchParams () {
+                this.applyGroupData = Object.assign({}, {
+                    name: '',
+                    system_id: '',
+                    action_id: ''
+                });
+                this.curResourceData = Object.assign({}, {
+                    type: ''
+                });
+                this.resourceInstances = [];
+            },
+
+            resetDataAfterClose () {
+                this.curResIndex = -1;
+                this.groupIndex = -1;
+                this.params = {};
+                this.resourceInstanceSideSliderTitle = '';
+            },
+
             // 系统包含数据
-            handleRemoteSystem (value) {
+            async handleRemoteSystem (value) {
                 const params = {};
                 if (this.externalSystemId) {
                     params.hidden = false;
                 }
-                return this.$store.dispatch('system/getSystems', params).then(({ data }) => {
+                await this.$store.dispatch('system/getSystems', params).then(({ data }) => {
                     return data.map(({ id, name }) => ({ id, name })).filter((item) => item.name.indexOf(value) > -1);
                 });
+            },
+
+            async fetchSystemList () {
+                try {
+                    const params = {};
+                    if (this.externalSystemId) {
+                        params.hidden = false;
+                    }
+                    const { data } = await this.$store.dispatch('system/getSystems', params);
+                    this.systemList = data || [];
+                } catch (e) {
+                    console.error(e);
+                    this.bkMessageInstance = this.$bkMessage({
+                        limit: 1,
+                        theme: 'error',
+                        message: e.message || e.data.msg || e.statusText,
+                        ellipsisLine: 2,
+                        ellipsisCopy: true
+                    });
+                } finally {
+                    // this.requestQueue.shift()
+                }
             },
 
             // 管理空间数据
@@ -580,6 +1013,37 @@
                 this.emptyData.tipType = 'search';
                 this.resetPagination();
                 this.fetchUserGroupList(true);
+            },
+
+            async handleSearchName () {
+                const { system_id, name } = this.applyGroupData;
+                this.currentSelectList = [];
+                this.emptyData.tipType = 'search';
+                this.resetPagination();
+                // eslint-disable-next-line camelcase
+                if (name || system_id) {
+                    await this.handleSearchUserGroup();
+                } else {
+                    await this.fetchUserGroupList(true);
+                }
+            },
+
+            async handleClearSearch (type) {
+                const { system_id, name } = this.applyGroupData;
+                this.currentSelectList = [];
+                if (type === 'system_id') {
+                    this.applyGroupData.action_id = '';
+                    this.curResourceData.type = '';
+                    this.resourceInstances = [];
+                }
+                this.emptyData.tipType = '';
+                this.resetPagination();
+                // eslint-disable-next-line camelcase
+                if (name || system_id) {
+                    await this.handleSearchUserGroup();
+                } else {
+                    await this.fetchUserGroupList(true);
+                }
             },
 
             handleView (payload) {
@@ -606,16 +1070,29 @@
                 if (this.currentBackup === page) {
                     return;
                 }
+                const { system_id, name } = this.applyGroupData;
                 this.pagination.current = page;
                 this.queryParams = Object.assign(this.queryParams, { current: page });
                 this.currentSelectList = [];
-                this.fetchUserGroupList(true);
+                this.resetPagination();
+                // eslint-disable-next-line camelcase
+                if (name || system_id) {
+                    this.handleSearchUserGroup();
+                } else {
+                    this.fetchUserGroupList(true);
+                }
             },
 
             limitChange (currentLimit, prevLimit) {
                 this.pagination = Object.assign(this.pagination, { current: 1, limit: currentLimit });
                 this.queryParams = Object.assign(this.queryParams, { current: 1, limit: currentLimit });
-                this.fetchUserGroupList(true);
+                const { system_id, name } = this.applyGroupData;
+                // eslint-disable-next-line camelcase
+                if (name || system_id) {
+                    this.handleSearchUserGroup();
+                } else {
+                    this.fetchUserGroupList(true);
+                }
             },
 
             handlerAllChange (selection) {
@@ -641,6 +1118,7 @@
                     this.$emit('toggle-loading', false);
                     this.emptyData = formatCodeData(e.code, this.emptyData);
                     console.error(e);
+                    this.curUserGroup = [];
                     this.bkMessageInstance = this.$bkMessage({
                         limit: 1,
                         theme: 'error',
@@ -683,6 +1161,41 @@
                 const nowSecond = parseInt(tempArr.splice(0, dotIndex).join(''), 10);
                 const expiredAt = this.expiredAtUse + nowSecond;
                 return expiredAt;
+            },
+            
+            async handleResourceSubmit () {
+                const conditionData = this.$refs.renderResourceRef.handleGetValue();
+                const { isEmpty, data } = conditionData;
+                if (isEmpty) {
+                    return;
+                }
+                const resItem = this.resourceTypeData.resource_groups[this.groupIndex]
+                    .related_resource_types[this.curResIndex];
+                const isConditionEmpty = data.length === 1 && data[0] === 'none';
+                if (isConditionEmpty) {
+                    resItem.condition = ['none'];
+                    resItem.isLimitExceeded = false;
+                    this.resourceInstances = [];
+                } else {
+                    resItem.condition = data;
+                    if (data.length) {
+                        data.forEach(item => {
+                            item.instance.forEach(e => {
+                                resItem.resourceInstancesPath = e.path[0];
+                            });
+                        });
+                    } else {
+                        delete resItem.resourceInstancesPath;
+                    }
+                    if (this.curResIndex !== -1) {
+                        this.resourceInstances.splice(this.curResIndex, 1, resItem);
+                    }
+                }
+                window.changeAlert = false;
+                this.resourceInstanceSideSliderTitle = '';
+                this.isShowResourceInstanceSideSlider = false;
+                this.curResIndex = -1;
+                this.resourceTypeError = false;
             },
 
             async handleSubmit () {
@@ -758,6 +1271,62 @@
                 }
             },
 
+            handleResourceCancel () {
+                let cancelHandler = Promise.resolve();
+                if (window.changeAlert) {
+                    cancelHandler = leaveConfirm();
+                }
+                cancelHandler.then(() => {
+                    this.isShowResourceInstanceSideSlider = false;
+                    this.resetDataAfterClose();
+                }, _ => _);
+            },
+            
+            refreshCurrentQuery () {
+                const params = {};
+                const queryParams = {
+                    ...this.searchParams,
+                    ...this.$route.query,
+                    ...this.queryParams
+                };
+                if (Object.keys(queryParams).length) {
+                    window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
+                }
+                for (const key in this.searchParams) {
+                    const tempObj = this.searchData.find((item) => key === item.id);
+                    if (tempObj && tempObj.remoteMethod && typeof tempObj.remoteMethod === 'function') {
+                        if (this.searchList.length) {
+                            const tempData = this.searchList.find((item) => item.id === key);
+                            if (tempData) {
+                                params[key] = tempData.values[0];
+                            }
+                        }
+                    } else {
+                        params[key] = this.searchParams[key];
+                    }
+                }
+                this.emptyData = Object.assign(this.emptyData, { tipType: Object.keys(this.searchParams).length > 0 ? 'search' : '' });
+                return {
+                    ...queryParams
+                };
+            },
+
+            setCurrentQueryCache (payload) {
+                window.localStorage.setItem('applyGroupList', JSON.stringify(payload));
+            },
+
+            getCurrentQueryCache () {
+                return JSON.parse(window.localStorage.getItem('applyGroupList'));
+            },
+
+            quickSearchMethod (value) {
+                return {
+                    name: this.$t(`m.common['关键字']`),
+                    id: 'keyword',
+                    values: [value]
+                };
+            },
+
             handleCancel () {
                 this.$router.push({
                     name: 'permApply'
@@ -785,13 +1354,13 @@
                     }
                 }
             }
-            .can-view {
+            /* .can-view {
                 color: #3a84ff;
                 cursor: pointer;
                 &:hover {
                     color: #699df4;
                 }
-            }
+            } */
         }
         .search-wrapper {
             .info {
@@ -824,7 +1393,7 @@
             }
         }
     }
-    .grade-memebers-content {
+    .grade-members-content {
         padding: 20px;
         height: calc(100vh - 61px);
         .member-item {
@@ -854,6 +1423,38 @@
             margin-top: 5px;
             color: #c4c6cc;
             font-size: 14px;
+        }
+    }
+    .resource-group-container {
+        display: flex;
+        justify-content: space-between;
+        .relation-content-item{
+            display: flex;
+            /* width: 220px; */
+            .content-name{
+                font-size: 14px;
+                padding-right: 10px;
+            }
+            .content{
+                width: 300px;
+            }
+        }
+
+        .relation-content-item:nth-child(2){
+            margin-left: 32px;
+        }
+    }
+    .search-wrapper {
+        .error-tips {
+            line-height: 22px;
+        }
+    }
+    .join-user-group-form {
+        &-lang {
+            .bk-form.bk-inline-form .bk-form-item .bk-label {
+                min-width: 100px;
+                text-align: left;
+            }
         }
     }
 </style>

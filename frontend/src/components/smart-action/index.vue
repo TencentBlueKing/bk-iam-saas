@@ -152,6 +152,7 @@
             display: flex;
             align-items: center;
             height: 52px;
+            line-height: 52px;
             background: #fff;
             box-shadow: 0px -2px 4px 0px rgba(0, 0, 0, 0.06);
         }

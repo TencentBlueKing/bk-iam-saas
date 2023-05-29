@@ -395,6 +395,25 @@ export default {
          */
         getRelatedPolicy ({ commit, state, dispatch }, params, config) {
             return http.post(`${AJAX_URL_PREFIX}/policies/related/`, params, config);
+        },
+
+        /**
+         * 新增用户组操作/实例搜索接口
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object} params 提交参数
+         *
+         * @return {Promise} promise 对象
+         */
+        getJoinGroupSearch ({ commit, state, dispatch }, params, config) {
+            const { offset, limit } = params;
+            const queryParams = Object.assign({}, { offset, limit });
+            delete params.offset;
+            delete params.limit;
+            return http.post(`${AJAX_URL_PREFIX}/groups/search/?${json2Query(queryParams)}`, params, config);
         }
+        
     }
 };
