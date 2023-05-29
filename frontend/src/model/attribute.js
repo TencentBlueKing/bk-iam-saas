@@ -25,21 +25,21 @@
 */
 
 export default class Attribute {
-    // flag = '' 为默认拉取，flag = 'add' 为新添加的
-    constructor (payload, flag = 'add') {
-        this.id = payload.id || '';
-        this.name = payload.name || '';
-        this.disabled = flag === '';
-        this.loading = false;
-        this.init(payload);
+  // flag = '' 为默认拉取，flag = 'add' 为新添加的
+  constructor (payload, flag = 'add') {
+    this.id = payload.id || '';
+    this.name = payload.name || '';
+    this.disabled = flag === '';
+    this.loading = false;
+    this.init(payload);
+  }
+  init (payload) {
+    if (!payload.values || payload.values.length < 1) {
+      this.values = [];
+      this.selecteds = [];
+      return;
     }
-    init (payload) {
-        if (!payload.values || payload.values.length < 1) {
-            this.values = [];
-            this.selecteds = [];
-            return;
-        }
-        this.values = payload.values;
-        this.selecteds = payload.values.map(item => item.id) || [];
-    }
+    this.values = payload.values;
+    this.selecteds = payload.values.map(item => item.id) || [];
+  }
 }

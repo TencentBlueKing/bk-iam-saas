@@ -30,12 +30,12 @@ import { json2Query } from '@/common/util';
 const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
 
 export default {
-    namespaced: true,
-    state: {},
-    getters: {},
-    mutations: {},
-    actions: {
-        /**
+  namespaced: true,
+  state: {},
+  getters: {},
+  mutations: {},
+  actions: {
+    /**
          * 获取审批列表
          *
          * @param {Function} commit store commit mutation handler
@@ -45,11 +45,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getApprovalList ({ commit, state, dispatch }, params, config) {
-            return http.get(`${AJAX_URL_PREFIX}/approvals/?${json2Query(params)}`, config);
-        },
+    getApprovalList ({ commit, state, dispatch }, params, config) {
+      return http.get(`${AJAX_URL_PREFIX}/approvals/?${json2Query(params)}`, config);
+    },
 
-        /**
+    /**
          * 单据审批
          *
          * @param {Function} commit store commit mutation handler
@@ -59,8 +59,8 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        approvalAction ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/approvals/approve/`, params, config);
-        }
+    approvalAction ({ commit, state, dispatch }, params, config) {
+      return http.post(`${AJAX_URL_PREFIX}/approvals/approve/`, params, config);
     }
+  }
 };

@@ -32,12 +32,12 @@ const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
 const CSRF_COOKIE_NAME = window.CSRF_COOKIE_NAME;
 
 export default {
-    namespaced: true,
-    state: {},
-    getters: {},
-    mutations: {},
-    actions: {
-        /**
+  namespaced: true,
+  state: {},
+  getters: {},
+  mutations: {},
+  actions: {
+    /**
          * 获取资源管理员
          *
          * @param {Function} commit store commit mutation handler
@@ -47,11 +47,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getResourceManager ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/roles/query_authorized_subjects/`, params, config);
-        },
+    getResourceManager ({ commit, state, dispatch }, params, config) {
+      return http.post(`${AJAX_URL_PREFIX}/roles/query_authorized_subjects/`, params, config);
+    },
 
-        /**
+    /**
          * 导出资源管理员
          *
          * @param {Function} commit store commit mutation handler
@@ -62,18 +62,18 @@ export default {
          * @return {Promise} promise 对象
          */
 
-        exportResourceManager ({ commit, state, dispatch }, params, config = {}) {
-            const url = `${AJAX_URL_PREFIX}/roles/query_authorized_subjects/export/`;
-            const CSRFToken = cookie.parse(document.cookie)[CSRF_COOKIE_NAME];
-            return fetch(url, {
-                credentials: 'include',
-                method: 'POST',
-                body: JSON.stringify(params),
-                headers: new Headers({
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': CSRFToken
-                })
-            });
-        }
+    exportResourceManager ({ commit, state, dispatch }, params, config = {}) {
+      const url = `${AJAX_URL_PREFIX}/roles/query_authorized_subjects/export/`;
+      const CSRFToken = cookie.parse(document.cookie)[CSRF_COOKIE_NAME];
+      return fetch(url, {
+        credentials: 'include',
+        method: 'POST',
+        body: JSON.stringify(params),
+        headers: new Headers({
+          'Content-Type': 'application/json',
+          'X-CSRFToken': CSRFToken
+        })
+      });
     }
+  }
 };

@@ -30,12 +30,12 @@ import { json2Query } from '@/common/util';
 const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
 
 export default {
-    namespaced: true,
-    state: {},
-    getters: {},
-    mutations: {},
-    actions: {
-        /**
+  namespaced: true,
+  state: {},
+  getters: {},
+  mutations: {},
+  actions: {
+    /**
          * 获取聚合的action列表
          *
          * @param {Function} commit store commit mutation handler
@@ -45,8 +45,8 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getAggregateAction ({ commit, state, dispatch }, params, config) {
-            return http.get(`${AJAX_URL_PREFIX}/actions/aggregation/?${json2Query(params)}`, config);
-        }
+    getAggregateAction ({ commit, state, dispatch }, params, config) {
+      return http.get(`${AJAX_URL_PREFIX}/actions/aggregation/?${json2Query(params)}`, config);
     }
+  }
 };

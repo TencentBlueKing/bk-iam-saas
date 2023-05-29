@@ -26,7 +26,7 @@
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.levelSpace['创建人']`)" prop="creator"></bk-table-column>
-             <bk-table-column :label="$t(`m.common['创建时间']`)" width="240">>
+            <bk-table-column :label="$t(`m.common['创建时间']`)" width="240">>
                 <template slot-scope="{ row }">
                     <span :title="row.created_time">{{ row.created_time }}</span>
                 </template>

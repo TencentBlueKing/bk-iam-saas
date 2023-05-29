@@ -31,35 +31,35 @@ import { json2Query } from '@/common/util';
 const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
 
 export default {
-    namespaced: true,
-    state: {
-        actions: [],
-        preActionIds: [],
-        cloneActions: [],
-        preGroupOnePage: false
+  namespaced: true,
+  state: {
+    actions: [],
+    preActionIds: [],
+    cloneActions: [],
+    preGroupOnePage: false
+  },
+  getters: {
+    actions: state => state.actions,
+    preActionIds: state => state.preActionIds,
+    cloneActions: state => state.cloneActions,
+    preGroupOnePage: state => state.preGroupOnePage
+  },
+  mutations: {
+    updateAction (state, payload) {
+      state.actions = _.cloneDeep(payload);
     },
-    getters: {
-        actions: state => state.actions,
-        preActionIds: state => state.preActionIds,
-        cloneActions: state => state.cloneActions,
-        preGroupOnePage: state => state.preGroupOnePage
+    updatePreActionIds (state, payload) {
+      state.preActionIds = _.cloneDeep(payload);
     },
-    mutations: {
-        updateAction (state, payload) {
-            state.actions = _.cloneDeep(payload);
-        },
-        updatePreActionIds (state, payload) {
-            state.preActionIds = _.cloneDeep(payload);
-        },
-        updateCloneActions (state, payload) {
-            state.cloneActions = _.cloneDeep(payload);
-        },
-        updatePreGroupOnePage (state, payload) {
-            state.preGroupOnePage = payload;
-        }
+    updateCloneActions (state, payload) {
+      state.cloneActions = _.cloneDeep(payload);
     },
-    actions: {
-        /**
+    updatePreGroupOnePage (state, payload) {
+      state.preGroupOnePage = payload;
+    }
+  },
+  actions: {
+    /**
          * 获取模板列表
          *
          * @param {Function} commit store commit mutation handler
@@ -70,11 +70,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getTemplateList ({ commit, state, dispatch }, params, config) {
-            return http.get(`${AJAX_URL_PREFIX}/templates/?${json2Query(params)}`, config);
-        },
+    getTemplateList ({ commit, state, dispatch }, params, config) {
+      return http.get(`${AJAX_URL_PREFIX}/templates/?${json2Query(params)}`, config);
+    },
 
-        /**
+    /**
          * 新建模板
          *
          * @param {Function} commit store commit mutation handler
@@ -85,11 +85,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        createTemplate ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/templates/`, params, config);
-        },
+    createTemplate ({ commit, state, dispatch }, params, config) {
+      return http.post(`${AJAX_URL_PREFIX}/templates/`, params, config);
+    },
 
-        /**
+    /**
          * 更新模板
          *
          * @param {Function} commit store commit mutation handler
@@ -100,14 +100,14 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        updateTemplate ({ commit, state, dispatch }, params, config) {
-            const requestParams = Object.assign({}, params);
-            const id = requestParams.id;
-            delete requestParams.id;
-            return http.patch(`${AJAX_URL_PREFIX}/templates/${id}/`, requestParams, config);
-        },
+    updateTemplate ({ commit, state, dispatch }, params, config) {
+      const requestParams = Object.assign({}, params);
+      const id = requestParams.id;
+      delete requestParams.id;
+      return http.patch(`${AJAX_URL_PREFIX}/templates/${id}/`, requestParams, config);
+    },
 
-        /**
+    /**
          * 获取模板详情
          *
          * @param {Function} commit store commit mutation handler
@@ -118,11 +118,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getTemplateDetail ({ commit, state, dispatch }, { id, grouping }, config) {
-            return http.get(`${AJAX_URL_PREFIX}/templates/${id}/?grouping=${grouping}`, config);
-        },
+    getTemplateDetail ({ commit, state, dispatch }, { id, grouping }, config) {
+      return http.get(`${AJAX_URL_PREFIX}/templates/${id}/?grouping=${grouping}`, config);
+    },
 
-        /**
+    /**
          * 获取模板成员
          *
          * @param {Function} commit store commit mutation handler
@@ -133,14 +133,14 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getTemplateMember ({ commit, state, dispatch }, params, config) {
-            const id = params.id;
-            const requestParams = Object.assign({}, params);
-            delete requestParams.id;
-            return http.get(`${AJAX_URL_PREFIX}/templates/${id}/members/?${json2Query(requestParams)}`, config);
-        },
+    getTemplateMember ({ commit, state, dispatch }, params, config) {
+      const id = params.id;
+      const requestParams = Object.assign({}, params);
+      delete requestParams.id;
+      return http.get(`${AJAX_URL_PREFIX}/templates/${id}/members/?${json2Query(requestParams)}`, config);
+    },
 
-        /**
+    /**
          * 模板添加成员
          *
          * @param {Function} commit store commit mutation handler
@@ -151,14 +151,14 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        addTemplateMember ({ commit, state, dispatch }, params, config) {
-            const id = params.id;
-            const requestParams = Object.assign({}, params);
-            delete requestParams.id;
-            return http.post(`${AJAX_URL_PREFIX}/templates/${id}/members/`, requestParams, config);
-        },
+    addTemplateMember ({ commit, state, dispatch }, params, config) {
+      const id = params.id;
+      const requestParams = Object.assign({}, params);
+      delete requestParams.id;
+      return http.post(`${AJAX_URL_PREFIX}/templates/${id}/members/`, requestParams, config);
+    },
 
-        /**
+    /**
          * 模板删除成员
          *
          * @param {Function} commit store commit mutation handler
@@ -169,12 +169,12 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        deleteTemplateMember ({ commit, state, dispatch }, params, config) {
-            const id = params.id;
-            return http.delete(`${AJAX_URL_PREFIX}/templates/${id}/members/`, { data: params.data }, config);
-        },
+    deleteTemplateMember ({ commit, state, dispatch }, params, config) {
+      const id = params.id;
+      return http.delete(`${AJAX_URL_PREFIX}/templates/${id}/members/`, { data: params.data }, config);
+    },
 
-        /**
+    /**
          * 模板删除
          *
          * @param {Function} commit store commit mutation handler
@@ -185,11 +185,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        deleteTemplate ({ commit, state, dispatch }, { id }, config) {
-            return http.delete(`${AJAX_URL_PREFIX}/templates/${id}/`, {}, config);
-        },
+    deleteTemplate ({ commit, state, dispatch }, { id }, config) {
+      return http.delete(`${AJAX_URL_PREFIX}/templates/${id}/`, {}, config);
+    },
 
-        /**
+    /**
          * 权限模板版本对比
          *
          * @param {Function} commit store commit mutation handler
@@ -200,11 +200,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        templateCompare ({ commit, state, dispatch }, { templateId, version }, config) {
-            return http.get(`${AJAX_URL_PREFIX}/templates/${templateId}/compare/?version=${version}`, {}, config);
-        },
+    templateCompare ({ commit, state, dispatch }, { templateId, version }, config) {
+      return http.get(`${AJAX_URL_PREFIX}/templates/${templateId}/compare/?version=${version}`, {}, config);
+    },
 
-        /**
+    /**
          * 权限模板操作条件对比
          *
          * @param {Function} commit store commit mutation handler
@@ -215,14 +215,14 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        templateConditionCompare ({ commit, state, dispatch }, params, config) {
-            const id = params.id;
-            const requestParams = Object.assign({}, params);
-            delete requestParams.id;
-            return http.post(`${AJAX_URL_PREFIX}/templates/${id}/condition_compare/`, requestParams, config);
-        },
+    templateConditionCompare ({ commit, state, dispatch }, params, config) {
+      const id = params.id;
+      const requestParams = Object.assign({}, params);
+      delete requestParams.id;
+      return http.post(`${AJAX_URL_PREFIX}/templates/${id}/condition_compare/`, requestParams, config);
+    },
 
-        /**
+    /**
          * 权限模板授权对象更新
          *
          * @param {Function} commit store commit mutation handler
@@ -233,14 +233,14 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        templateAuthObjectSync ({ commit, state, dispatch }, params, config) {
-            const id = params.templateId;
-            const requestParams = Object.assign({}, params);
-            delete requestParams.templateId;
-            return http.post(`${AJAX_URL_PREFIX}/templates/${id}/sync/`, requestParams, config);
-        },
+    templateAuthObjectSync ({ commit, state, dispatch }, params, config) {
+      const id = params.templateId;
+      const requestParams = Object.assign({}, params);
+      delete requestParams.templateId;
+      return http.post(`${AJAX_URL_PREFIX}/templates/${id}/sync/`, requestParams, config);
+    },
 
-        /**
+    /**
          * 获取常用操作
          *
          * @param {Function} commit store commit mutation handler
@@ -251,11 +251,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getCommonAction ({ commit, state, dispatch }, params, config) {
-            return http.get(`${AJAX_URL_PREFIX}/roles/common_actions/?system_id=${params.systemId}`, config);
-        },
+    getCommonAction ({ commit, state, dispatch }, params, config) {
+      return http.get(`${AJAX_URL_PREFIX}/roles/common_actions/?system_id=${params.systemId}`, config);
+    },
 
-        /**
+    /**
          * 新增常用操作
          *
          * @param {Function} commit store commit mutation handler
@@ -266,11 +266,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        addCommonAction ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/roles/common_actions/`, params, config);
-        },
+    addCommonAction ({ commit, state, dispatch }, params, config) {
+      return http.post(`${AJAX_URL_PREFIX}/roles/common_actions/`, params, config);
+    },
 
-        /**
+    /**
          * 删除常用操作
          *
          * @param {Function} commit store commit mutation handler
@@ -281,11 +281,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        deleteCommonAction ({ commit, state, dispatch }, params, config) {
-            return http.delete(`${AJAX_URL_PREFIX}/roles/common_actions/${params.id}/`, {}, config);
-        },
+    deleteCommonAction ({ commit, state, dispatch }, params, config) {
+      return http.delete(`${AJAX_URL_PREFIX}/roles/common_actions/${params.id}/`, {}, config);
+    },
 
-        /**
+    /**
          * 获取常角色的授权范围
          *
          * @param {Function} commit store commit mutation handler
@@ -295,11 +295,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getAuthorizationScopeActions ({ commit, state, dispatch }, { systemId }, config) {
-            return http.get(`${AJAX_URL_PREFIX}/roles/authorization_scope_actions/?system_id=${systemId}`, config);
-        },
+    getAuthorizationScopeActions ({ commit, state, dispatch }, { systemId }, config) {
+      return http.get(`${AJAX_URL_PREFIX}/roles/authorization_scope_actions/?system_id=${systemId}`, config);
+    },
 
-        /**
+    /**
          * 获取模板预更新信息
          *
          * @param {Function} commit store commit mutation handler
@@ -310,11 +310,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getPreUpdateInfo ({ commit, state, dispatch }, { id }, config) {
-            return http.get(`${AJAX_URL_PREFIX}/templates/${id}/pre_update/`, config);
-        },
+    getPreUpdateInfo ({ commit, state, dispatch }, { id }, config) {
+      return http.get(`${AJAX_URL_PREFIX}/templates/${id}/pre_update/`, config);
+    },
 
-        /**
+    /**
          * 提交模板预更新信息
          *
          * @param {Function} commit store commit mutation handler
@@ -325,11 +325,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        addPreUpdateInfo ({ commit, state, dispatch }, { id, data }, config) {
-            return http.post(`${AJAX_URL_PREFIX}/templates/${id}/pre_update/`, data, config);
-        },
+    addPreUpdateInfo ({ commit, state, dispatch }, { id, data }, config) {
+      return http.post(`${AJAX_URL_PREFIX}/templates/${id}/pre_update/`, data, config);
+    },
 
-        /**
+    /**
          * 获取模板用户组更新预览信息
          *
          * @param {Function} commit store commit mutation handler
@@ -340,11 +340,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getGroupsPreview ({ commit, state, dispatch }, { id, data }, config) {
-            return http.get(`${AJAX_URL_PREFIX}/templates/${id}/groups_preview/?${json2Query(data)}`, config);
-        },
+    getGroupsPreview ({ commit, state, dispatch }, { id, data }, config) {
+      return http.get(`${AJAX_URL_PREFIX}/templates/${id}/groups_preview/?${json2Query(data)}`, config);
+    },
 
-        /**
+    /**
          * 模板更新确认
          *
          * @param {Function} commit store commit mutation handler
@@ -355,11 +355,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        updateCommit ({ commit, state, dispatch }, { id }, config) {
-            return http.post(`${AJAX_URL_PREFIX}/templates/${id}/update_commit/`, config);
-        },
+    updateCommit ({ commit, state, dispatch }, { id }, config) {
+      return http.post(`${AJAX_URL_PREFIX}/templates/${id}/update_commit/`, config);
+    },
 
-        /**
+    /**
          * 取消模板预更新
          *
          * @param {Function} commit store commit mutation handler
@@ -370,11 +370,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        cancelPreUpdate ({ commit, state, dispatch }, { id }, config) {
-            return http.delete(`${AJAX_URL_PREFIX}/templates/${id}/pre_update/`, {}, config);
-        },
+    cancelPreUpdate ({ commit, state, dispatch }, { id }, config) {
+      return http.delete(`${AJAX_URL_PREFIX}/templates/${id}/pre_update/`, {}, config);
+    },
 
-        /**
+    /**
          * 生成克隆的用户组策略
          *
          * @param {Function} commit store commit mutation handler
@@ -385,11 +385,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getCloneAction ({ commit, state, dispatch }, { id, data }, config) {
-            return http.post(`${AJAX_URL_PREFIX}/templates/${id}/clone_action/`, data, config);
-        },
+    getCloneAction ({ commit, state, dispatch }, { id, data }, config) {
+      return http.post(`${AJAX_URL_PREFIX}/templates/${id}/clone_action/`, data, config);
+    },
 
-        /**
+    /**
          * 同步模板预提交
          *
          * @param {Function} commit store commit mutation handler
@@ -400,8 +400,8 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        preGroupSync ({ commit, state, dispatch }, { id, data }, config) {
-            return http.post(`${AJAX_URL_PREFIX}/templates/${id}/pre_group_sync/`, data, config);
-        }
+    preGroupSync ({ commit, state, dispatch }, { id, data }, config) {
+      return http.post(`${AJAX_URL_PREFIX}/templates/${id}/pre_group_sync/`, data, config);
     }
+  }
 };

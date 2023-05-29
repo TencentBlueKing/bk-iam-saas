@@ -36,61 +36,61 @@ import baseConf from './webpack.base.conf';
 import manifest from '../static/lib-manifest.json';
 
 const webpackConfig = merge(baseConf, {
-    mode: 'development',
-    entry: {
-        main: './src/main.js'
-    },
+  mode: 'development',
+  entry: {
+    main: './src/main.js'
+  },
 
-    module: {
-        rules: [
-            {
-                test: /\.(css|postcss)$/,
-                use: [
-                    'vue-style-loader',
-                    {
-                        loader: 'css-loader',
-                        options: {
-                            importLoaders: 1
-                        }
-                    },
-                    {
-                        loader: 'postcss-loader',
-                        options: {
-                            config: {
-                                path: path.resolve(__dirname, '..', 'postcss.config.js')
-                            }
-                        }
-                    }
-                ]
+  module: {
+    rules: [
+      {
+        test: /\.(css|postcss)$/,
+        use: [
+          'vue-style-loader',
+          {
+            loader: 'css-loader',
+            options: {
+              importLoaders: 1
             }
+          },
+          {
+            loader: 'postcss-loader',
+            options: {
+              config: {
+                path: path.resolve(__dirname, '..', 'postcss.config.js')
+              }
+            }
+          }
         ]
-    },
-
-    plugins: [
-        new webpack.DefinePlugin(config.dev.env),
-
-        new webpack.DllReferencePlugin({
-            context: __dirname,
-            manifest: manifest
-        }),
-
-        new webpack.HotModuleReplacementPlugin(),
-
-        new webpack.NoEmitOnErrorsPlugin(),
-
-        new HtmlWebpackPlugin({
-            filename: 'index.html',
-            template: 'index-dev.html',
-            inject: true,
-            staticUrl: config.dev.env.staticUrl
-        }),
-
-        new FriendlyErrorsPlugin()
+      }
     ]
+  },
+
+  plugins: [
+    new webpack.DefinePlugin(config.dev.env),
+
+    new webpack.DllReferencePlugin({
+      context: __dirname,
+      manifest: manifest
+    }),
+
+    new webpack.HotModuleReplacementPlugin(),
+
+    new webpack.NoEmitOnErrorsPlugin(),
+
+    new HtmlWebpackPlugin({
+      filename: 'index.html',
+      template: 'index-dev.html',
+      inject: true,
+      staticUrl: config.dev.env.staticUrl
+    }),
+
+    new FriendlyErrorsPlugin()
+  ]
 });
 
 Object.keys(webpackConfig.entry).forEach(name => {
-    webpackConfig.entry[name] = ['./build/dev-client'].concat(webpackConfig.entry[name]);
+  webpackConfig.entry[name] = ['./build/dev-client'].concat(webpackConfig.entry[name]);
 });
 
 export default webpackConfig;
