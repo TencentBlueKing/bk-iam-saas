@@ -21,6 +21,7 @@ class LockTypeEnum(LowerStrEnum):
     POLICY_ALTER = auto()  # 权限变更
     LONG_TASK_CREATE = auto()  # 长时任务创建
     INIT_GRADE_MANAGER = auto()
+    BCS_MANAGER = auto()
 
     GROUP_UPSERT = auto()
     TEMPLATE_UPSERT = auto()
@@ -95,3 +96,7 @@ def gen_template_upsert_lock(role_id: int, name: str) -> RedisLock:
 
 def gen_role_upsert_lock(name: str) -> RedisLock:
     return RedisLock(LockTypeEnum.TEMPLATE_UPSERT.value, suffix=name, timeout=10)
+
+
+def gen_bcs_manager_lock() -> RedisLock:
+    return RedisLock(LockTypeEnum.BCS_MANAGER.value, timeout=120)  # 执行周期是2分钟
