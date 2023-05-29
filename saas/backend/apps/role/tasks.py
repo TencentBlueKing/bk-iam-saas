@@ -736,7 +736,7 @@ class InitBcsProjectManagerTask(InitBizGradeManagerTask):
             projects = list_project_for_iam()
             for project in projects:
                 if int(project["businessID"]) in biz_dict:
-                    biz = biz_dict[int(project["bk_biz_id"])]
+                    biz = biz_dict[int(project["businessID"])]
 
                     self._create_bcs_manager(project, biz)
                 else:
