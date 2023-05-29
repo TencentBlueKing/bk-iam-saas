@@ -440,3 +440,7 @@ BK_IAM_MIGRATION_JSON_PATH = "resources/iam/"
 
 # IAM metric 接口密码
 BK_IAM_METRIC_TOKEN = env.str("BK_IAM_METRIC_TOKEN", default="")
+
+
+# BCS初始化ROLE网关api配置
+BK_BCS_APIGW_URL = env.str("BK_BCS_APIGW_URL", default="")

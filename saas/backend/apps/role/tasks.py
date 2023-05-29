@@ -31,6 +31,7 @@ from backend.biz.system import SystemBiz
 from backend.common.lock import gen_bcs_manager_lock, gen_init_grade_manager_lock
 from backend.common.time import DAY_SECONDS, get_soon_expire_ts
 from backend.component import esb
+from backend.component.bcs import list_project_for_iam
 from backend.component.cmdb import list_biz
 from backend.component.sops import list_project
 from backend.service.action import ActionService
@@ -732,27 +733,26 @@ class InitBcsProjectManagerTask(InitBizGradeManagerTask):
             biz_info = list_biz()
             biz_dict = {one["bk_biz_id"]: one for one in biz_info["info"]}
 
-            projects = list_project()  # TODO BCS 项目列表
+            projects = list_project_for_iam()
             for project in projects:
-                # TODO 查询项目对应的业务
-                if project["bk_biz_id"] in biz_dict:
-                    biz = biz_dict[project["bk_biz_id"]]
+                if int(project["businessID"]) in biz_dict:
+                    biz = biz_dict[int(project["bk_biz_id"])]
 
                     self._create_bcs_manager(project, biz)
                 else:
-                    logger.debug(  # TODO 填充正确的名字
-                        "init bcs manager: bk_bcs_app project [%s] biz_id [%d] not exists in bk_cmdb",
+                    logger.debug(
+                        "init bcs manager: bk_bcs_app project [%s] biz_id [%s] not exists in bk_cmdb",
                         project["name"],
-                        project["bk_biz_id"],
+                        project["businessID"],
                     )
 
     def _create_bcs_manager(self, project, biz_info):
-        project_name = project["name"]  # TODO 填充正确的名字
+        project_name = project["name"]
         if project_name in self._exist_names:
             return
 
         # 查询是否存在该项目的二级管理员
-        subset_manager_name = project_name  # TODO 生成项目对应二级管理员的名称
+        subset_manager_name = "BCS-" + project_name
         subset_manager = Role.objects.filter(name=subset_manager_name, type=RoleType.SUBSET_MANAGER.value).first()
         if subset_manager:
             self._exist_names.add(project_name)
@@ -771,14 +771,14 @@ class InitBcsProjectManagerTask(InitBizGradeManagerTask):
         )  # 业务的查看人
 
         # 查询项目对应业务的一级管理员
-        grade_manager_name = biz_info["bk_biz_name"]  # TODO 生成业务对应一级管理员的名称
+        grade_manager_name = biz_info["bk_biz_name"]
         grade_manager = Role.objects.filter(name=grade_manager_name, type=RoleType.GRADE_MANAGER.value).first()
 
         if not grade_manager:
             # 创建一级管理员
             grade_manager_info = RoleInfoBean(
                 name=grade_manager_name,
-                description="管理员可授予他人{}业务的权限".format(grade_manager_name),  # TODO 生成一级管理员描述的规则
+                description="管理员可授予他人{}业务的权限".format(grade_manager_name),
                 members=[RoleMember(username=username) for username in maintainers or [ADMIN_USER]],
                 subject_scopes=[Subject(type="*", id="*")],
                 authorization_scopes=auth_scopes,
@@ -795,7 +795,7 @@ class InitBcsProjectManagerTask(InitBizGradeManagerTask):
         # 创建二级管理员
         subset_manager_info = RoleInfoBean(
             name=subset_manager_name,
-            description="管理员可授予他人{}业务的权限".format(subset_manager_name),  # TODO 生成二级管理员描述的规则
+            description="管理员可授予他人{}BCS项目的权限".format(subset_manager_name),
             type=RoleType.SUBSET_MANAGER.value,
             members=[RoleMember(username=username) for username in maintainers or [ADMIN_USER]],
             subject_scopes=[Subject(type="*", id="*")],
@@ -821,12 +821,12 @@ class InitBcsProjectManagerTask(InitBizGradeManagerTask):
                 instance = ResourceInstance(
                     system_id=system_id,
                     type="project",
-                    id=data["project_id"],
-                    name=data["name"],  # TODO 填充获取bcs项目的实例信息
+                    id=data["projectID"],
+                    name=data["name"],
                 )
             else:
                 instance = ResourceInstance(
-                    system_id="bk_monitorv3", type="space", id=data["bk_biz_id"], name=data["name"]  # TODO 填充获取监控空间信息
+                    system_id="bk_monitorv3", type="space", id=data["bkmSpaceBizID"], name=data["bkmSpaceName"]
                 )
 
             auth_scope = self._init_system_auth_scope(system_id, instance)
