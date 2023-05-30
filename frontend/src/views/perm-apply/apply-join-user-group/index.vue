@@ -498,7 +498,7 @@
                 curResIndex: -1,
                 groupIndex: -1,
                 systemIdError: false,
-                actionError: true
+                actionError: false
             };
         },
         computed: {
@@ -1022,8 +1022,10 @@
             resetSearchParams () {
                 this.applyGroupData = Object.assign({}, {
                     name: '',
+                    id: '',
                     system_id: '',
-                    action_id: ''
+                    action_id: '',
+                    description: ''
                 });
                 this.curResourceData = Object.assign({}, {
                     type: ''
@@ -1093,6 +1095,7 @@
                 this.emptyData.tipType = 'search';
                 this.resetPagination();
                 if (this.applyGroupData.system_id) {
+                    this.applyGroupData = Object.assign(this.applyGroupData, this.searchParams);
                     this.fetchSearchUserGroup();
                 } else {
                     this.fetchUserGroupList(true);

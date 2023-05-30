@@ -572,7 +572,7 @@ export const m = {
         '申请自定义权限标题': 'If the previous permission package does not meet your needs, please apply for the permission through customization',
         '申请自定义权限场景1': 'Certain permissions for a single system',
         '申请自定义权限场景2': 'More flexible permission requirements',
-        '申请加入用户组搜索提示': 'Search by ID, user group name and description, etc',
+        '申请加入用户组搜索提示': 'Enter ID, user group name and description, etc. Press Enter to search',
         '超级管理员申请加入用户组搜索提示': 'Search Tips for Super Administrators Applying to Join User Groups',
         '请输入条件搜索用户组': 'Please enter criteria to search for user groups'
     },
