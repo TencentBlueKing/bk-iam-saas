@@ -478,7 +478,10 @@ export const m = {
          '您已退出当前管理员授权范围': 'You have exited the current administrator authorization scope',
          '已添加': 'Added',
          '当前管理员不存在此条数据': 'The current administrator does not have this data',
-         '二级管理空间': 'Secondary management space'
+         '二级管理空间': 'Secondary management space',
+         '添加多组实例可以实现分批鉴权的需求': 'Adding multiple sets of instances can achieve the requirement of batch authentication',
+         '比如，root账号只能登陆主机1，user账号只能登陆主机2，root账号不能登陆主机2，user账号不能登陆主机1': 'For example, the root account can only log in to host 1, the user account can only log in to host 2, the root account cannot log in to host 2, and the user account cannot log in to host 1',
+         '这时可以添加两组实例，第一组实例为[root，主机1]，第二组实例为[user，主机2]来实现': 'At this point, two sets of instances can be added. The first set of instances is [root, host 1], and the second set of instances is [user, host 2] to achieve this'
     },
     // 二次确认弹窗相关
     dialog: {
