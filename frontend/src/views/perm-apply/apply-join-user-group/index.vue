@@ -619,10 +619,17 @@
             },
 
             async handleCascadeChange () {
+                this.systemIdError = false;
                 this.resourceActionData = [];
                 this.processesList = [];
                 this.applyGroupData.action_id = '';
-                this.resourceTypeData = Object.assign({}, { isEmpty: true, resource_groups: [] });
+                this.resourceTypeData = Object.assign({}, {
+                    resource_groups: [{
+                        'related_resource_types': [],
+                        'related_resource_types_list': []
+                    }],
+                    isEmpty: true
+                });
                 if (this.applyGroupData.system_id) {
                     try {
                         const { data } = await this.$store.dispatch('approvalProcess/getActionGroups', { system_id: this.applyGroupData.system_id });
@@ -759,6 +766,10 @@
             },
 
             async handleSearchUserGroup () {
+                if (!this.applyGroupData.system_id) {
+                    this.systemIdError = true;
+                    return;
+                }
                 let resourceInstances = _.cloneDeep(this.resourceInstances);
                 resourceInstances = resourceInstances.reduce((prev, item) => {
                     const { id, resourceInstancesPath } = this.handlePathData(item, item.type);
@@ -788,10 +799,11 @@
                 };
                 try {
                     const { code, data } = await this.$store.dispatch('permApply/getJoinGroupSearch', params);
-                    this.tableList = data || [];
+                    const { count, results } = data;
+                    this.tableList = results || [];
                     this.tableListClone = _.cloneDeep(this.tableList);
-                    this.pagination.count = data.length;
-                    this.tableList.splice(0, this.tableList.length, ...data);
+                    this.pagination.count = count || 0;
+                    this.tableList.splice(0, this.tableList.length, ...(results || []));
                     this.emptyData.tipType = 'search';
                     this.$nextTick(() => {
                         this.tableList.forEach((item) => {

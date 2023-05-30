@@ -1240,6 +1240,9 @@
                     });
                     this.tableData = this.tableData.filter(item => !(item.isAggregate && item.actions.length < 1));
                 }
+                if (this.isAllExpanded) {
+                    this.handleAggregateActionChange(false);
+                }
             },
 
             handleActionTagEnter (payload) {
@@ -1435,6 +1438,9 @@
                     this.handleRelatedActions(item, payload.actionsAllChecked);
                 });
                 payload.count = payload.actionsAllChecked ? payload.allCount : 0;
+                if (this.isAllExpanded) {
+                    this.handleAggregateActionChange(false);
+                }
             },
 
             handleSubAllChange (newVal, oldVal, val, payload, item) {
@@ -1491,6 +1497,9 @@
                 });
 
                 item.count = item.count + count;
+                if (this.isAllExpanded) {
+                    this.handleAggregateActionChange(false);
+                }
             },
 
             handleAllChange (newVal, oldVal, val, payload) {
@@ -1550,6 +1559,9 @@
                 });
 
                 payload.count = payload.count + count;
+                if (this.isAllExpanded) {
+                    this.handleAggregateActionChange(false);
+                }
             },
 
             /**
@@ -1928,6 +1940,9 @@
 
                 this.handleRelatedActions(actData, true);
                 payload.count++;
+                if (this.isAllExpanded) {
+                    this.handleAggregateActionChange(false);
+                }
             },
 
             handleSubActionChecked (newVal, oldVal, val, actData, payload, item) {
@@ -2020,6 +2035,9 @@
 
                 this.handleRelatedActions(actData, true);
                 item.count++;
+                if (this.isAllExpanded) {
+                    this.handleAggregateActionChange(false);
+                }
             },
             
             /**
