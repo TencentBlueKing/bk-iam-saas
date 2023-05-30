@@ -179,7 +179,7 @@ BROKER_HEARTBEAT = 60
 # CELERY 并发数，默认为 2，可以通过环境变量或者 Procfile 设置
 CELERYD_CONCURRENCY = env.int("BK_CELERYD_CONCURRENCY", default=2)
 # 与周期任务配置的定时相关UTC
-CELERY_ENABLE_UTC = True
+CELERY_ENABLE_UTC = False
 # 周期任务beat生产者来源
 CELERYBEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 # Celery队列名称
