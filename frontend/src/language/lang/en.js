@@ -260,7 +260,8 @@ export const m = {
         '将': 'The ',
         '关联到以下用户组': ' will be associated with the following groups',
         '离开': 'LEAVE',
-        '更多': 'More'
+        '更多': 'More',
+        '资源实例': 'Resource instance'
     },
     // 校验
     verify: {
@@ -340,7 +341,10 @@ export const m = {
         '请选择时间范围': 'Please select time range',
         '需添加当前用户为管理员': 'Need to add the current user as an administrator',
         '管理员不能为空': 'Administrator cannot be empty',
-        'admin无需申请权限': 'Admin does not need to apply for permission'
+        'admin无需申请权限': 'Admin does not need to apply for permission',
+        '请选择系统': 'Please select system',
+        '请选择操作': 'Please select action',
+        '请选择资源类型': 'Please select resource type'
     },
     info: {
         '加入用户组申请成功': 'Apply to join the group successfully',
@@ -568,7 +572,7 @@ export const m = {
         '申请自定义权限标题': 'If the previous permission package does not meet your needs, please apply for the permission through customization',
         '申请自定义权限场景1': 'Certain permissions for a single system',
         '申请自定义权限场景2': 'More flexible permission requirements',
-        '申请加入用户组搜索提示': 'Enter group name, description, belonging system and management space, etc. to search',
+        '申请加入用户组搜索提示': 'Search by ID, user group name and description, etc',
         '超级管理员申请加入用户组搜索提示': 'Search Tips for Super Administrators Applying to Join User Groups',
         '请输入条件搜索用户组': 'Please enter criteria to search for user groups'
     },

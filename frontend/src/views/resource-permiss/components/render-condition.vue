@@ -8,7 +8,11 @@
         @mouseenter="handleMouseenter"
         @mouseleave="handleMouseleave"
         @click.stop="handleClick">
-        <div class="iam-input-text" :style="style" :title="!isEmpty ? curValue : ''" @click.stop="handleClick">
+        <div
+            class="iam-input-text"
+            :style="style"
+            :title="!isEmpty ? hoverTitle || curValue : ''"
+            @click.stop="handleClick">
             <section :class="['iam-condition-input', { 'is-empty': isEmpty }]" @click.stop="handleClick">
                 {{ curValue }}
             </section>
@@ -56,6 +60,10 @@
             disabled: {
                 type: Boolean,
                 default: false
+            },
+            hoverTitle: {
+                type: String,
+                default: ''
             }
         },
         data () {
@@ -251,14 +259,6 @@
         &.error {
             border-color: #ff5656;
         }
-        &.disabled {
-            color: #c4c6cc;
-            background-color: #fafbfd;
-            border-color: #dcdee5;
-            .iam-condition-input {
-                cursor: not-allowed !important;
-            }
-        }
         .iam-input-text {
             .iam-condition-input {
                 height: 32px;
@@ -279,6 +279,16 @@
                 &.is-empty {
                     color: #c4c6cc;
                 }
+            }
+        }
+
+        &.disabled {
+            color: #c4c6cc;
+            background-color: #fafbfd;
+            border-color: #dcdee5;
+            .iam-condition-input {
+                cursor: not-allowed !important;
+                background-color: #fafbfd;
             }
         }
         .original-resource-icon {
