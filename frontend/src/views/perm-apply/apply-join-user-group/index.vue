@@ -23,7 +23,7 @@
                                             :allow-enter="false"
                                             :placeholder="$t(`m.verify['请选择']`)"
                                             @change="handleCascadeChange"
-                                            @clear="handleClearSearch('system_id')"
+                                            @clear="handleClearSearch"
                                             searchable>
                                             <bk-option v-for="option in systemList"
                                                 :key="option.id"
@@ -132,7 +132,7 @@
                                 <bk-button
                                     class="ml20"
                                     theme="primary"
-                                    @click="handleSearchUserGroup">
+                                    @click="handleSearchUserGroup(true)">
                                     {{ $t(`m.common['查询']`) }}
                                 </bk-button>
                                 <bk-button
@@ -490,6 +490,24 @@
                     }],
                     isEmpty: true
                 },
+                defaultResourceTypeList: [{
+                    'type': '',
+                    'system_id': '',
+                    'name': '',
+                    'canPaste': false,
+                    'action': {
+                        'name': '',
+                        'type': ''
+                    },
+                    'isError': false,
+                    'tag': '',
+                    'flag': '',
+                    'isChange': false,
+                    'isNew': true,
+                    'selectionMode': '',
+                    'condition': [],
+                    'conditionBackup': []
+                }],
                 curResourceData: {
                     type: ''
                 },
@@ -498,7 +516,8 @@
                 curResIndex: -1,
                 groupIndex: -1,
                 systemIdError: false,
-                actionError: false
+                actionError: false,
+                isSearchSystem: false
             };
         },
         computed: {
@@ -647,18 +666,18 @@
                 const { system_id } = this.applyGroupData;
                 // eslint-disable-next-line camelcase
                 if (system_id) {
-                    await this.fetchSearchUserGroup();
+                    await this.handleSearchUserGroup();
                 }
             },
 
             async handleCascadeChange () {
                 this.systemIdError = false;
                 this.actionError = false;
+                this.resourceTypeError = false;
                 this.resourceActionData = [];
                 this.processesList = [];
                 this.applyGroupData.action_id = '';
                 this.handleResetResourceData();
-                console.log(this.resourceTypeData, 5555);
                 if (this.applyGroupData.system_id) {
                     try {
                         const { data } = await this.$store.dispatch('approvalProcess/getActionGroups', { system_id: this.applyGroupData.system_id });
@@ -684,7 +703,12 @@
                     const typesList = _.cloneDeep(resourceGroups.related_resource_types_list);
                     resourceGroups.related_resource_types
                         = typesList.filter(item => item.type === this.curResourceData.type);
-                    console.log(this.resourceTypeData, resourceGroups.related_resource_types, 5555);
+                    if (typesList.length && !resourceGroups.related_resource_types.length) {
+                        this.$set(this.resourceTypeData.resource_groups[index], 'related_resource_types', this.defaultResourceTypeList);
+                    }
+                }
+                if (!this.applyGroupData.system_id || !this.resourceTypeData.resource_groups.length) {
+                    this.handleResetResourceData();
                 }
             },
 
@@ -696,34 +720,29 @@
                 this.resourceTypeData = this.processesList.find(e => e.id === this.applyGroupData.action_id);
                 if (this.resourceTypeData && this.resourceTypeData.resource_groups) {
                     if (this.resourceTypeData.resource_groups.length) {
+                        const resourceGroups = this.resourceTypeData.resource_groups;
                         this.resourceTypeData.resource_groups.forEach(item => {
-                            this.$set(item, 'related_resource_types_list', _.cloneDeep(item.related_resource_types));
-                            if (!this.curResourceData.type) {
-                                item.related_resource_types = [{
-                                    'type': '',
-                                    'system_id': '',
-                                    'name': '',
-                                    'canPaste': false,
-                                    'action': {
-                                        'name': '',
-                                        'type': ''
-                                    },
-                                    'isError': false,
-                                    'tag': '',
-                                    'flag': '',
-                                    'isChange': false,
-                                    'isNew': true,
-                                    'selectionMode': '',
-                                    'condition': [],
-                                    'conditionBackup': []
-                                }];
+                            // 避免切换操作时，把默认数据代入，从而导致下拉框出现空白项
+                            if (item.related_resource_types.length && item.related_resource_types[0].system_id) {
+                                this.$set(item, 'related_resource_types_list', _.cloneDeep(item.related_resource_types));
                             }
                         });
+                        if (!this.curResourceData.type) {
+                            this.$set(this.resourceTypeData.resource_groups[0], 'related_resource_types', []);
+                        }
+                        // 如果related_resource_types和related_resource_types_list都为空，则需要填充默认数据显示资源实例下路拉框
+                        if ((resourceGroups[0].related_resource_types_list
+                            && resourceGroups[0].related_resource_types_list.length
+                            && !resourceGroups[0].related_resource_types.length)
+                            || (!resourceGroups[0].related_resource_types.length
+                                && !resourceGroups[0].related_resource_types_list.length)
+                        ) {
+                            this.$set(this.resourceTypeData.resource_groups[0], 'related_resource_types', this.defaultResourceTypeList);
+                        }
                     } else {
                         this.handleResetResourceData();
                     }
                 }
-                console.log(777, this.resourceTypeData);
             },
             
             handleFormatRecursion (list) {
@@ -820,40 +839,47 @@
                 this.fetchUserGroupList(false);
             },
 
-            async handleSearchUserGroup () {
-                this.applyGroupData.system_id ? await this.fetchSearchUserGroup() : this.fetchUserGroupList(true);
+            async handleSearchUserGroup (isClick = false) {
+                if (this.applyGroupData.system_id) {
+                    if (!this.applyGroupData.system_id) {
+                        this.systemIdError = true;
+                        return;
+                    }
+                    if (!this.applyGroupData.action_id) {
+                        this.actionError = true;
+                        return;
+                    }
+                    let resourceInstances = _.cloneDeep(this.resourceInstances);
+                    resourceInstances = resourceInstances.reduce((prev, item) => {
+                        const { id, resourceInstancesPath } = this.handlePathData(item, item.type);
+                        prev.push({
+                            system_id: item.system_id,
+                            id: id,
+                            type: item.type,
+                            name: item.name,
+                            path: resourceInstancesPath
+                        });
+                        return prev;
+                    }, []);
+                    if (this.curResourceData.type
+                        && !resourceInstances.length
+                        && this.resourceTypeData.resource_groups[this.groupIndex]
+                            .related_resource_types.some(e => e.empty)) {
+                        this.resourceTypeError = true;
+                        return;
+                    }
+                    this.isSearchSystem = true;
+                    if (isClick) {
+                        this.resetPagination();
+                    }
+                    await this.fetchSearchUserGroup(resourceInstances);
+                } else {
+                    this.isSearchSystem = false;
+                    this.fetchUserGroupList(true);
+                }
             },
 
-            async fetchSearchUserGroup () {
-                if (!this.applyGroupData.system_id) {
-                    this.systemIdError = true;
-                    return;
-                }
-                if (!this.applyGroupData.action_id) {
-                    this.actionError = true;
-                    return;
-                }
-                let resourceInstances = _.cloneDeep(this.resourceInstances);
-                resourceInstances = resourceInstances.reduce((prev, item) => {
-                    const { id, resourceInstancesPath } = this.handlePathData(item, item.type);
-                    prev.push({
-                        system_id: item.system_id,
-                        id: id,
-                        type: item.type,
-                        name: item.name,
-                        path: resourceInstancesPath
-                    });
-                    return prev;
-                }, []);
-                if (this.curResourceData.type && !resourceInstances.length
-                    && !this.resourceTypeData.isEmpty && this.resourceTypeData.resource_groups[this.groupIndex]
-                    && this.resourceTypeData.resource_groups[this.groupIndex]
-                        .related_resource_types.some(e => e.empty)) {
-                    this.resourceTypeError = true;
-                    console.log(5555, this.pagination);
-                    return;
-                }
-                this.resetPagination();
+            async fetchSearchUserGroup (resourceInstances) {
                 const { current, limit } = this.pagination;
                 const params = {
                     ...this.applyGroupData,
@@ -871,7 +897,7 @@
                     this.$nextTick(() => {
                         this.tableList.forEach((item) => {
                             if (item.role_members && item.role_members.length) {
-                                item.role_members.map(v => {
+                                item.role_members = item.role_members.map(v => {
                                     return {
                                         username: v,
                                         readonly: false
@@ -920,7 +946,7 @@
                     this.$nextTick(() => {
                         this.tableList.forEach((item) => {
                             if (item.role_members && item.role_members.length) {
-                                item.role_members.map(v => {
+                                item.role_members = item.role_members.map(v => {
                                     return {
                                         username: v,
                                         readonly: false
@@ -1033,6 +1059,7 @@
                 this.systemIdError = false;
                 this.actionError = false;
                 this.resourceTypeError = false;
+                this.isSearchSystem = false;
                 this.resourceInstances = [];
             },
 
@@ -1088,36 +1115,28 @@
             },
 
             handleSearch (payload, result) {
-                console.log(payload, result);
                 this.currentSelectList = [];
                 this.searchParams = payload;
                 this.searchList = result;
                 this.emptyData.tipType = 'search';
                 this.resetPagination();
-                if (this.applyGroupData.system_id) {
-                    this.applyGroupData = Object.assign(this.applyGroupData, this.searchParams);
-                    this.fetchSearchUserGroup();
-                } else {
-                    this.fetchUserGroupList(true);
+                if (!Object.keys(payload).length) {
+                    this.applyGroupData = Object.assign(this.applyGroupData, {
+                        id: '',
+                        name: '',
+                        description: ''
+                    });
                 }
+                this.handleSearchUserGroup();
             },
 
-            async handleClearSearch (type) {
-                const { system_id, name } = this.applyGroupData;
-                this.currentSelectList = [];
-                if (type === 'system_id') {
-                    this.applyGroupData.action_id = '';
-                    this.curResourceData.type = '';
-                    this.resourceInstances = [];
-                }
+            async handleClearSearch () {
+                this.applyGroupData.action_id = '';
+                this.curResourceData.type = '';
+                this.resourceInstances = [];
                 this.emptyData.tipType = '';
                 this.resetPagination();
-                // eslint-disable-next-line camelcase
-                if (name || system_id) {
-                    await this.fetchSearchUserGroup();
-                } else {
-                    await this.fetchUserGroupList(true);
-                }
+                this.handleSearchUserGroup();
             },
 
             handleView (payload) {
@@ -1144,28 +1163,15 @@
                 if (this.currentBackup === page) {
                     return;
                 }
-                const { system_id } = this.applyGroupData;
-                this.pagination.current = page;
+                this.pagination = Object.assign(this.pagination, { current: page });
                 this.queryParams = Object.assign(this.queryParams, { current: page });
-                this.resetPagination();
-                // eslint-disable-next-line camelcase
-                if (system_id) {
-                    this.fetchSearchUserGroup();
-                } else {
-                    this.fetchUserGroupList(true);
-                }
+                this.isSearchSystem ? this.fetchSearchUserGroup() : this.fetchUserGroupList(true);
             },
 
             limitChange (currentLimit, prevLimit) {
                 this.pagination = Object.assign(this.pagination, { current: 1, limit: currentLimit });
                 this.queryParams = Object.assign(this.queryParams, { current: 1, limit: currentLimit });
-                const { system_id } = this.applyGroupData;
-                // eslint-disable-next-line camelcase
-                if (system_id) {
-                    this.fetchSearchUserGroup();
-                } else {
-                    this.fetchUserGroupList(true);
-                }
+                this.isSearchSystem ? this.fetchSearchUserGroup() : this.fetchUserGroupList(true);
             },
 
             handlerAllChange (selection) {
@@ -1407,30 +1413,12 @@
             },
 
             handleResetResourceData () {
-                this.resourceTypeData = Object.assign({}, {
-                    resource_groups: [{
-                        'related_resource_types': [{
-                            'type': '',
-                            'system_id': '',
-                            'name': '',
-                            'canPaste': false,
-                            'action': {
-                                'name': '',
-                                'type': ''
-                            },
-                            'isError': false,
-                            'tag': '',
-                            'flag': '',
-                            'isChange': false,
-                            'isNew': true,
-                            'selectionMode': '',
-                            'condition': [],
-                            'conditionBackup': []
-                        }],
-                        'related_resource_types_list': []
-                    }],
-                    isEmpty: true
-                });
+                if (this.resourceTypeData.resource_groups && !this.resourceTypeData.resource_groups.length) {
+                    this.resourceTypeData.resource_groups = [].concat([{ isEmpty: true }]);
+                }
+                this.$set(this.resourceTypeData.resource_groups[0], 'related_resource_types', this.defaultResourceTypeList);
+                this.$set(this.resourceTypeData.resource_groups[0], 'related_resource_types_list', []);
+                this.$set(this.resourceTypeData.resource_groups[0], 'isEmpty', true);
             }
         }
     };
