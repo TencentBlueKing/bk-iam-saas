@@ -595,7 +595,7 @@
                         && item.id !== id) {
                         delRelatedActions = item.related_actions.filter(v => curAction.related_actions.includes(v));
                     }
-                    if (item.related_actions && item.related_actions.includes(id)) {
+                    if (isCustom && item.related_actions && item.related_actions.includes(id)) {
                         actionList.push(item.name);
                     }
                 });

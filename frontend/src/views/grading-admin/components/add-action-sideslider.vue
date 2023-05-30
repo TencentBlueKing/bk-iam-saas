@@ -145,7 +145,7 @@
                                                             <span class="name">{{ subTmpl.name }}</span>
                                                             <span :class="getComputedClass(subTmpl)">({{ subTmpl.checked ? $t(`m.common['已选择']`) : $t(`m.common['未选择']`) }})</span>
                                                         </div>
-                                                        <div class="description">{{ $t(`m.common['描述']`) + '：' + (subTmpl.description || '--') }}</div>
+                                                        <div class="description">{{ $t(`m.common['描述']`) + ':' + (subTmpl.description || '--') }}</div>
                                                         <div class="relate-action" v-if="subTmpl.related_actions.length > 0">
                                                             {{ getRelatedActionTips(subTmpl.related_actions) }}
                                                         </div>
