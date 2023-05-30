@@ -349,6 +349,8 @@ class GradeManagerGroupTransferSLZ(serializers.Serializer):
 
 class GroupSearchSLZ(serializers.Serializer):
     name = serializers.CharField(label="用户组名称", required=False, default="", allow_blank=True)
+    id = serializers.IntegerField(label="ID", required=False, default=0)
+    description = serializers.CharField(label="描述", required=False, default="", allow_blank=True)
     system_id = serializers.CharField(label="系统ID")
     action_id = serializers.CharField(label="操作ID")
     resource_instances = serializers.ListField(
