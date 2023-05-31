@@ -1,219 +1,219 @@
 <template>
-    <div :class="['iam-condition-item', { active: isActive }, { error: isError }]"
-        @mouseenter="handleMouseenter"
-        @mouseleave="handleMouseleave"
-        @click.stop="handleClick">
-        <div class="iam-input-text" :style="style" :title="!isEmpty ? curValue : ''" @click.stop="handleClick">
-            <section :class="['iam-condition-input', { 'is-empty': isEmpty }]" @click.stop="handleClick">
-                {{ curValue }}
-            </section>
-        </div>
+  <div :class="['iam-condition-item', { active: isActive }, { error: isError }]"
+    @mouseenter="handleMouseenter"
+    @mouseleave="handleMouseleave"
+    @click.stop="handleClick">
+    <div class="iam-input-text" :style="style" :title="!isEmpty ? curValue : ''" @click.stop="handleClick">
+      <section :class="['iam-condition-input', { 'is-empty': isEmpty }]" @click.stop="handleClick">
+        {{ curValue }}
+      </section>
     </div>
+  </div>
 </template>
 <script>
-    export default {
-        name: '',
-        props: {
-            value: {
-                type: String,
-                default: ''
-            },
-            isEmpty: {
-                type: Boolean,
-                default: false
-            },
-            canView: {
-                type: Boolean,
-                default: false
-            },
-            canPaste: {
-                type: Boolean,
-                default: false
-            },
-            canOperate: {
-                type: Boolean,
-                default: true
-            },
-            canCopy: {
-                type: Boolean,
-                default: true
-            },
-            isError: {
-                type: Boolean,
-                default: false
-            },
-            params: {
-                type: Object,
-                default: () => {
-                    return {};
-                }
-            }
-        },
-        data () {
-            return {
-                curValue: '',
-                isActive: false,
-                immediatelyShow: false,
-                isLoading: false,
-                pasteLoading: false
-            };
-        },
-        computed: {
-            style () {
-                if (!this.canOperate) {
-                    return {
-                        width: '100%'
-                    };
-                }
-                if (this.isEmpty) {
-                    if (this.canPaste) {
-                        return {
-                            width: 'calc(100% - 30px)'
-                        };
-                    }
-                    return {
-                        width: '100%'
-                    };
-                }
-                const statusLen = [this.canView, this.canPaste, this.canCopy].filter(status => !!status).length;
-                return {
-                    width: `calc(100% - ${statusLen * 30}px)`
-                };
-            },
-            isDisabled () {
-                return this.isLoading || this.pasteLoading;
-            }
-        },
-        watch: {
-            value: {
-                handler (val) {
-                    this.curValue = val;
-                },
-                immediate: true
-            }
-        },
-        methods: {
-            handleView () {
-                this.$emit('on-view');
-            },
-
-            handleCopy () {
-                this.$emit('on-copy');
-            },
-
-            handleClick () {
-                if (this.isDisabled) {
-                    return;
-                }
-                this.$emit('on-click');
-            },
-
-            handleMouseenter () {
-                this.isActive = true;
-                this.$emit('on-mouseover');
-            },
-
-            handleMouseleave () {
-                this.isActive = false;
-                this.immediatelyShow = false;
-                this.$emit('on-mouseleave');
-            },
-
-            handleRestore () {
-                this.$emit('on-restore');
-            },
-
-            async handlePaste () {
-                // 无限制时无需请求接口
-                if (Object.keys(this.params).length < 1) {
-                    this.$emit('on-paste');
-                    return;
-                }
-                if (this.params.resource_type.condition.length === 0) {
-                    this.$emit('on-paste', {
-                        flag: true,
-                        data: []
-                    });
-                    return;
-                }
-                this.pasteLoading = true;
-                const params = {
-                    resource_type: this.params.resource_type,
-                    actions: this.params.actions.slice(0, 1)
-                };
-                try {
-                    const { data } = await this.$store.dispatch('permApply/resourceBatchCopy', params);
-                    console.warn(data);
-                    if (data && data.length) {
-                        const condition = data[0].resource_type.condition;
-                        this.$emit('on-paste', {
-                            flag: true,
-                            data: condition
-                        });
-                    } else {
-                        this.messageError(this.$t(`m.info['暂无可批量复制的资源实例']`), 1000);
-                    }
-                } catch (e) {
-                    this.$emit('on-paste', {
-                        flag: false,
-                        data: null
-                    });
-                    console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
-                } finally {
-                    this.pasteLoading = false;
-                }
-            },
-
-            async handleBatchPaste () {
-                if (Object.keys(this.params).length < 1) {
-                    this.$emit('on-batch-paste');
-                    return;
-                }
-                // 无限制时无需请求接口
-                if (this.params.resource_type.condition.length === 0) {
-                    this.$emit('on-batch-paste', {
-                        flag: true,
-                        data: []
-                    });
-                    return;
-                }
-                this.isLoading = true;
-                try {
-                    const res = await this.$store.dispatch('permApply/resourceBatchCopy', this.params);
-                    this.$emit('on-batch-paste', {
-                        flag: true,
-                        data: res.data
-                    });
-                } catch (e) {
-                    this.$emit('on-batch-paste', {
-                        flag: false,
-                        data: null
-                    });
-                    console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
-                } finally {
-                    this.isLoading = false;
-                }
-            },
-
-            setImmediatelyShow (payload) {
-                this.immediatelyShow = !!payload;
-            }
+  export default {
+    name: '',
+    props: {
+      value: {
+        type: String,
+        default: ''
+      },
+      isEmpty: {
+        type: Boolean,
+        default: false
+      },
+      canView: {
+        type: Boolean,
+        default: false
+      },
+      canPaste: {
+        type: Boolean,
+        default: false
+      },
+      canOperate: {
+        type: Boolean,
+        default: true
+      },
+      canCopy: {
+        type: Boolean,
+        default: true
+      },
+      isError: {
+        type: Boolean,
+        default: false
+      },
+      params: {
+        type: Object,
+        default: () => {
+          return {};
         }
-    };
+      }
+    },
+    data () {
+      return {
+        curValue: '',
+        isActive: false,
+        immediatelyShow: false,
+        isLoading: false,
+        pasteLoading: false
+      };
+    },
+    computed: {
+      style () {
+        if (!this.canOperate) {
+          return {
+            width: '100%'
+          };
+        }
+        if (this.isEmpty) {
+          if (this.canPaste) {
+            return {
+              width: 'calc(100% - 30px)'
+            };
+          }
+          return {
+            width: '100%'
+          };
+        }
+        const statusLen = [this.canView, this.canPaste, this.canCopy].filter(status => !!status).length;
+        return {
+          width: `calc(100% - ${statusLen * 30}px)`
+        };
+      },
+      isDisabled () {
+        return this.isLoading || this.pasteLoading;
+      }
+    },
+    watch: {
+      value: {
+        handler (val) {
+          this.curValue = val;
+        },
+        immediate: true
+      }
+    },
+    methods: {
+      handleView () {
+        this.$emit('on-view');
+      },
+
+      handleCopy () {
+        this.$emit('on-copy');
+      },
+
+      handleClick () {
+        if (this.isDisabled) {
+          return;
+        }
+        this.$emit('on-click');
+      },
+
+      handleMouseenter () {
+        this.isActive = true;
+        this.$emit('on-mouseover');
+      },
+
+      handleMouseleave () {
+        this.isActive = false;
+        this.immediatelyShow = false;
+        this.$emit('on-mouseleave');
+      },
+
+      handleRestore () {
+        this.$emit('on-restore');
+      },
+
+      async handlePaste () {
+        // 无限制时无需请求接口
+        if (Object.keys(this.params).length < 1) {
+          this.$emit('on-paste');
+          return;
+        }
+        if (this.params.resource_type.condition.length === 0) {
+          this.$emit('on-paste', {
+            flag: true,
+            data: []
+          });
+          return;
+        }
+        this.pasteLoading = true;
+        const params = {
+          resource_type: this.params.resource_type,
+          actions: this.params.actions.slice(0, 1)
+        };
+        try {
+          const { data } = await this.$store.dispatch('permApply/resourceBatchCopy', params);
+          console.warn(data);
+          if (data && data.length) {
+            const condition = data[0].resource_type.condition;
+            this.$emit('on-paste', {
+              flag: true,
+              data: condition
+            });
+          } else {
+            this.messageError(this.$t(`m.info['暂无可批量复制的资源实例']`), 1000);
+          }
+        } catch (e) {
+          this.$emit('on-paste', {
+            flag: false,
+            data: null
+          });
+          console.error(e);
+          this.bkMessageInstance = this.$bkMessage({
+            limit: 1,
+            theme: 'error',
+            message: e.message || e.data.msg || e.statusText,
+            ellipsisLine: 2,
+            ellipsisCopy: true
+          });
+        } finally {
+          this.pasteLoading = false;
+        }
+      },
+
+      async handleBatchPaste () {
+        if (Object.keys(this.params).length < 1) {
+          this.$emit('on-batch-paste');
+          return;
+        }
+        // 无限制时无需请求接口
+        if (this.params.resource_type.condition.length === 0) {
+          this.$emit('on-batch-paste', {
+            flag: true,
+            data: []
+          });
+          return;
+        }
+        this.isLoading = true;
+        try {
+          const res = await this.$store.dispatch('permApply/resourceBatchCopy', this.params);
+          this.$emit('on-batch-paste', {
+            flag: true,
+            data: res.data
+          });
+        } catch (e) {
+          this.$emit('on-batch-paste', {
+            flag: false,
+            data: null
+          });
+          console.error(e);
+          this.bkMessageInstance = this.$bkMessage({
+            limit: 1,
+            theme: 'error',
+            message: e.message || e.data.msg || e.statusText,
+            ellipsisLine: 2,
+            ellipsisCopy: true
+          });
+        } finally {
+          this.isLoading = false;
+        }
+      },
+
+      setImmediatelyShow (payload) {
+        this.immediatelyShow = !!payload;
+      }
+    }
+  };
 </script>
 <style lang="postcss" scoped>
     .iam-condition-item {

@@ -1,12 +1,12 @@
 <template functional>
-    <div class="iam-search-wrapper">
-        <div class="left">
-            <slot />
-        </div>
-        <div class="right">
-            <slot name="right" />
-        </div>
+  <div class="iam-search-wrapper">
+    <div class="left">
+      <slot />
     </div>
+    <div class="right">
+      <slot name="right" />
+    </div>
+  </div>
 </template>
 <style lang="postcss">
     .iam-search-wrapper {

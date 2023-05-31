@@ -1,52 +1,52 @@
 <template>
-    <!-- eslint-disable max-len -->
-    <bk-sideslider
-        :is-show="isShow"
-        quick-close
-        transfer
-        :width="890"
-        ext-cls="iam-add-action-sideslider"
-        :title="$t(`m.grading['添加系统和操作']`)"
-        @update:isShow="handleCancel('leave')">
-        <div slot="content"
-            class="content-wrapper"
-            v-bkloading="{ isLoading, opacity: 1 }">
-            <template v-if="isShowContent">
-                <div class="left-wrapper">
-                    <div class="search-wrappers">
-                        <bk-input
-                            clearable
-                            right-icon="bk-icon icon-search"
-                            style="max-width: calc(100% - 48px)"
-                            v-model="keyword"
-                            @input="handleInput"
-                            @enter="handleSearch">
-                        </bk-input>
-                        <div
-                            v-if="['rating_manager', 'subset_manager'].includes(user.role.type)"
-                            class="icon-iamcenter-wrapper"
-                            @click.stop="refreshList">
-                            <i class="iam-icon iamcenter-refresh"></i>
-                        </div>
-                    </div>
-                    <div :class="['system-wrapper', curSystemList.length > 20 ? 'system-item-fixed' : '']">
-                        <template v-if="curSystemList.length > 0">
-                            <div v-bkloading="{ isLoading: systemListIsLoading, opacity: 1 }">
-                                <div class="system-item single-hide"
-                                    v-for="item in curSystemList"
-                                    :key="item.id"
-                                    :class="item.id === curSystem ? 'active' : ''"
-                                    :title="item.name"
-                                    @click.stop="handleSysChange(item)">
-                                    {{ item.name }}
-                                    <template v-if="systemData[item.id].count">
-                                        <bk-badge
-                                            :theme="getComputedTheme(item.id)"
-                                            ext-cls="action-count-badge-cls"
-                                            :val="systemData[item.id].count" />
-                                    </template>
-                                </div>
-                                <!-- <div
+  <!-- eslint-disable max-len -->
+  <bk-sideslider
+    :is-show="isShow"
+    quick-close
+    transfer
+    :width="890"
+    ext-cls="iam-add-action-sideslider"
+    :title="$t(`m.grading['添加系统和操作']`)"
+    @update:isShow="handleCancel('leave')">
+    <div slot="content"
+      class="content-wrapper"
+      v-bkloading="{ isLoading, opacity: 1 }">
+      <template v-if="isShowContent">
+        <div class="left-wrapper">
+          <div class="search-wrappers">
+            <bk-input
+              clearable
+              right-icon="bk-icon icon-search"
+              style="max-width: calc(100% - 48px)"
+              v-model="keyword"
+              @input="handleInput"
+              @enter="handleSearch">
+            </bk-input>
+            <div
+              v-if="['rating_manager', 'subset_manager'].includes(user.role.type)"
+              class="icon-iamcenter-wrapper"
+              @click.stop="refreshList">
+              <i class="iam-icon iamcenter-refresh"></i>
+            </div>
+          </div>
+          <div :class="['system-wrapper', curSystemList.length > 20 ? 'system-item-fixed' : '']">
+            <template v-if="curSystemList.length > 0">
+              <div v-bkloading="{ isLoading: systemListIsLoading, opacity: 1 }">
+                <div class="system-item single-hide"
+                  v-for="item in curSystemList"
+                  :key="item.id"
+                  :class="item.id === curSystem ? 'active' : ''"
+                  :title="item.name"
+                  @click.stop="handleSysChange(item)">
+                  {{ item.name }}
+                  <template v-if="systemData[item.id].count">
+                    <bk-badge
+                      :theme="getComputedTheme(item.id)"
+                      ext-cls="action-count-badge-cls"
+                      :val="systemData[item.id].count" />
+                  </template>
+                </div>
+                <!-- <div
                                     v-if="user.role.type === 'rating_manager'"
                                     :class="['skip-link', curSystemList.length > 20 ? 'skip-link-fixed' : '']"
                                     :title="$t(`m.grading['修改管理空间授权范围']`)"
@@ -54,19 +54,19 @@
                                     <i class="iam-icon iamcenter-edit-fill"></i>
                                     {{ $t(`m.grading['修改管理空间授权范围']`) }}
                                 </div> -->
-                            </div>
-                        </template>
-                        <template v-else>
-                            <ExceptionEmpty
-                                :type="emptyData.type"
-                                :empty-text="emptyData.text"
-                                :tip-text="emptyData.tip"
-                                :tip-type="emptyData.tipType"
-                                @on-clear="handleEmptyClear"
-                                @on-refresh="handleEmptyRefresh"
-                            />
-                        </template>
-                        <!-- <template v-else>
+              </div>
+            </template>
+            <template v-else>
+              <ExceptionEmpty
+                :type="emptyData.type"
+                :empty-text="emptyData.text"
+                :tip-text="emptyData.tip"
+                :tip-type="emptyData.tipType"
+                @on-clear="handleEmptyClear"
+                @on-refresh="handleEmptyRefresh"
+              />
+            </template>
+            <!-- <template v-else>
                             <div class="empty-wrapper empty-wrapper2">
                                 <template v-if="user.role.type === 'rating_manager'">
                                     <bk-exception class="exception-wrap-item exception-part" type="search-empty" scene="part"></bk-exception>
@@ -75,184 +75,184 @@
                                 <iam-svg v-else />
                             </div>
                         </template> -->
-                    </div>
-                </div>
-                <div class="right-wrapper" v-bkloading="{ isLoading: isRightLoading, opacity: 1, color: '#f5f6fa' }">
-                    <template v-if="systemData[curSystem] && systemData[curSystem].list.length > 0 && !isRightLoading">
-                        <render-action-tag
-                            style="margin: 0;"
-                            :system-id="curSystem"
-                            :data="commonActions"
-                            :tag-action-list="tagActionList"
-                            mode="detail"
-                            v-if="!isRightLoading && commonActions.length > 0"
-                            @on-change="handleActionTagChange" />
-                        <div class="custom-tmpl-wrapper" v-for="(customTmpl, index) in systemData[curSystem].list" :key="index">
-                            <label class="bk-label" style="line-height: 20px;">
-                                <span class="name">{{ customTmpl.name }}</span>
-                                <span :class="['select-all', { 'disabled': customTmpl.allDisabled }]" data-test-id="group_btn_selectAllAction" @click.stop="handleSelectAll(customTmpl, index)">
-                                    ({{ customTmpl.text }})
-                                </span>
-                            </label>
-                            <div
-                                :class="['choose-perm-tmpl', { 'set-style': index !== systemData[curSystem].list.length - 1 }]">
-                                <span v-for="tmpl in customTmpl.actions" :key="tmpl.$id">
-                                    <bk-checkbox
-                                        :true-value="true"
-                                        :false-value="false"
-                                        v-model="tmpl.checked"
-                                        :disabled="tmpl.disabled"
-                                        ext-cls="custom-action-checkbox-cls"
-                                        @change="handleActionChange(...arguments, customTmpl, tmpl.id, tmpl)">
-                                        <bk-popover placement="top" :delay="[300, 0]" ext-cls="iam-tooltips-cls">
-                                            <span class="text">{{ tmpl.name }}</span>
-                                            <div slot="content" class="iam-perm-apply-action-popover-content">
-                                                <div>
-                                                    <span class="name">{{ tmpl.name }}</span>
-                                                    <span :class="getComputedClass(tmpl)">({{ tmpl.checked ? $t(`m.common['已选择']`) : $t(`m.common['未选择']`) }})</span>
-                                                </div>
-                                                <div class="description">{{ $t(`m.common['描述']`) + '：' + (tmpl.description || '--') }}</div>
-                                                <div class="relate-action" v-if="tmpl.related_actions.length > 0">
-                                                    {{ getRelatedActionTips(tmpl.related_actions) }}
-                                                </div>
-                                            </div>
-                                        </bk-popover>
-                                    </bk-checkbox>
-                                </span>
+          </div>
+        </div>
+        <div class="right-wrapper" v-bkloading="{ isLoading: isRightLoading, opacity: 1, color: '#f5f6fa' }">
+          <template v-if="systemData[curSystem] && systemData[curSystem].list.length > 0 && !isRightLoading">
+            <render-action-tag
+              style="margin: 0;"
+              :system-id="curSystem"
+              :data="commonActions"
+              :tag-action-list="tagActionList"
+              mode="detail"
+              v-if="!isRightLoading && commonActions.length > 0"
+              @on-change="handleActionTagChange" />
+            <div class="custom-tmpl-wrapper" v-for="(customTmpl, index) in systemData[curSystem].list" :key="index">
+              <label class="bk-label" style="line-height: 20px;">
+                <span class="name">{{ customTmpl.name }}</span>
+                <span :class="['select-all', { 'disabled': customTmpl.allDisabled }]" data-test-id="group_btn_selectAllAction" @click.stop="handleSelectAll(customTmpl, index)">
+                  ({{ customTmpl.text }})
+                </span>
+              </label>
+              <div
+                :class="['choose-perm-tmpl', { 'set-style': index !== systemData[curSystem].list.length - 1 }]">
+                <span v-for="tmpl in customTmpl.actions" :key="tmpl.$id">
+                  <bk-checkbox
+                    :true-value="true"
+                    :false-value="false"
+                    v-model="tmpl.checked"
+                    :disabled="tmpl.disabled"
+                    ext-cls="custom-action-checkbox-cls"
+                    @change="handleActionChange(...arguments, customTmpl, tmpl.id, tmpl)">
+                    <bk-popover placement="top" :delay="[300, 0]" ext-cls="iam-tooltips-cls">
+                      <span class="text">{{ tmpl.name }}</span>
+                      <div slot="content" class="iam-perm-apply-action-popover-content">
+                        <div>
+                          <span class="name">{{ tmpl.name }}</span>
+                          <span :class="getComputedClass(tmpl)">({{ tmpl.checked ? $t(`m.common['已选择']`) : $t(`m.common['未选择']`) }})</span>
+                        </div>
+                        <div class="description">{{ $t(`m.common['描述']`) + '：' + (tmpl.description || '--') }}</div>
+                        <div class="relate-action" v-if="tmpl.related_actions.length > 0">
+                          {{ getRelatedActionTips(tmpl.related_actions) }}
+                        </div>
+                      </div>
+                    </bk-popover>
+                  </bk-checkbox>
+                </span>
+              </div>
+              <section class="sub-group-wrapper">
+                <div
+                  v-for="subItem in customTmpl.sub_groups"
+                  class="sub-item"
+                  :key="subItem.name">
+                  <label class="sub-item-name" :title="subItem.name">{{ subItem.name }}</label>
+                  <div class="choose-perm-sub-tmpl">
+                    <span v-for="subTmpl in subItem.actions" :key="subTmpl.$id">
+                      <bk-checkbox
+                        :true-value="true"
+                        :false-value="false"
+                        :disabled="subTmpl.disabled"
+                        v-model="subTmpl.checked"
+                        ext-cls="custom-action-checkbox-sub-cls"
+                        @change="handleSubActionChange(...arguments, customTmpl, subTmpl, subTmpl.id)">
+                        <bk-popover placement="top" :delay="[300, 0]" ext-cls="iam-tooltips-cls">
+                          <span class="text">{{ subTmpl.name }}</span>
+                          <div slot="content" class="iam-perm-apply-action-popover-content">
+                            <div>
+                              <span class="name">{{ subTmpl.name }}</span>
+                              <span :class="getComputedClass(subTmpl)">({{ subTmpl.checked ? $t(`m.common['已选择']`) : $t(`m.common['未选择']`) }})</span>
                             </div>
-                            <section class="sub-group-wrapper">
-                                <div
-                                    v-for="subItem in customTmpl.sub_groups"
-                                    class="sub-item"
-                                    :key="subItem.name">
-                                    <label class="sub-item-name" :title="subItem.name">{{ subItem.name }}</label>
-                                    <div class="choose-perm-sub-tmpl">
-                                        <span v-for="subTmpl in subItem.actions" :key="subTmpl.$id">
-                                            <bk-checkbox
-                                                :true-value="true"
-                                                :false-value="false"
-                                                :disabled="subTmpl.disabled"
-                                                v-model="subTmpl.checked"
-                                                ext-cls="custom-action-checkbox-sub-cls"
-                                                @change="handleSubActionChange(...arguments, customTmpl, subTmpl, subTmpl.id)">
-                                                <bk-popover placement="top" :delay="[300, 0]" ext-cls="iam-tooltips-cls">
-                                                    <span class="text">{{ subTmpl.name }}</span>
-                                                    <div slot="content" class="iam-perm-apply-action-popover-content">
-                                                        <div>
-                                                            <span class="name">{{ subTmpl.name }}</span>
-                                                            <span :class="getComputedClass(subTmpl)">({{ subTmpl.checked ? $t(`m.common['已选择']`) : $t(`m.common['未选择']`) }})</span>
-                                                        </div>
-                                                        <div class="description">{{ $t(`m.common['描述']`) + '：' + (subTmpl.description || '--') }}</div>
-                                                        <div class="relate-action" v-if="subTmpl.related_actions.length > 0">
-                                                            {{ getRelatedActionTips(subTmpl.related_actions) }}
-                                                        </div>
-                                                    </div>
-                                                </bk-popover>
-                                            </bk-checkbox>
-                                        </span>
-                                    </div>
-                                </div>
-                            </section>
-                        </div>
-                    </template>
-                    <template v-if="systemData[curSystem] && !systemData[curSystem].list.length && !isRightLoading">
-                        <div class="empty-wrapper">
-                            <ExceptionEmpty
-                                :type="emptyData.type"
-                                :empty-text="emptyData.text"
-                                :tip-text="emptyData.tip"
-                                :tip-type="emptyData.tipType"
-                                @on-clear="handleEmptyClear"
-                                @on-refresh="handleEmptyRefresh"
-                            />
-                        </div>
-                    </template>
+                            <div class="description">{{ $t(`m.common['描述']`) + '：' + (subTmpl.description || '--') }}</div>
+                            <div class="relate-action" v-if="subTmpl.related_actions.length > 0">
+                              {{ getRelatedActionTips(subTmpl.related_actions) }}
+                            </div>
+                          </div>
+                        </bk-popover>
+                      </bk-checkbox>
+                    </span>
+                  </div>
                 </div>
-            </template>
-            <div v-else style="margin: 0 auto;">
-                <ExceptionEmpty />
+              </section>
             </div>
+          </template>
+          <template v-if="systemData[curSystem] && !systemData[curSystem].list.length && !isRightLoading">
+            <div class="empty-wrapper">
+              <ExceptionEmpty
+                :type="emptyData.type"
+                :empty-text="emptyData.text"
+                :tip-text="emptyData.tip"
+                :tip-type="emptyData.tipType"
+                @on-clear="handleEmptyClear"
+                @on-refresh="handleEmptyRefresh"
+              />
+            </div>
+          </template>
         </div>
-        <div slot="footer" style="padding-left: 30px;">
-            <bk-button theme="primary" @click="handleSubmit">{{ $t(`m.common['确定']`) }}</bk-button>
-            <bk-button style="margin-left: 10px;" @click="handleCancel('cancel')">{{ $t(`m.common['取消']`) }}</bk-button>
-        </div>
-    </bk-sideslider>
+      </template>
+      <div v-else style="margin: 0 auto;">
+        <ExceptionEmpty />
+      </div>
+    </div>
+    <div slot="footer" style="padding-left: 30px;">
+      <bk-button theme="primary" @click="handleSubmit">{{ $t(`m.common['确定']`) }}</bk-button>
+      <bk-button style="margin-left: 10px;" @click="handleCancel('cancel')">{{ $t(`m.common['取消']`) }}</bk-button>
+    </div>
+  </bk-sideslider>
 </template>
 
 <script>
-    import _ from 'lodash';
-    import { leaveConfirm } from '@/common/leave-confirm';
-    import { guid, formatCodeData } from '@/common/util';
-    import RenderActionTag from '@/components/common-action';
-    import { mapGetters } from 'vuex';
-    import { bus } from '@/common/bus';
+  import _ from 'lodash';
+  import { leaveConfirm } from '@/common/leave-confirm';
+  import { guid, formatCodeData } from '@/common/util';
+  import RenderActionTag from '@/components/common-action';
+  import { mapGetters } from 'vuex';
+  import { bus } from '@/common/bus';
 
-    export default {
-        name: '',
-        components: {
-            RenderActionTag
-        },
-        props: {
-            isShow: {
-                type: Boolean,
-                default: false
-            },
-            defaultValue: {
-                type: Array,
-                default: () => []
-            },
-            defaultSystem: {
-                type: String,
-                default: ''
-            },
-            defaultData: {
-                type: Object,
-                default: () => []
-            },
-            aggregation: {
-                type: Object,
-                default: () => {
-                    return {};
-                }
-            },
-            groupId: {
-                type: [String, Number],
-                default: ''
-            },
-            authorization: {
-                type: Object,
-                default: () => {
-                    return {};
-                }
-            }
-        },
-        data () {
-            return {
-                keyword: '',
-                systemList: [],
-                curSystemList: [],
-                initRequestQueue: ['system', 'action', 'commonActions'],
-                isFilter: false,
-                isRightLoading: false,
-                curSystem: '',
-                systemData: {},
-                curSelectValue: [],
-                commonActions: [],
-                aggregationData: {},
-                authorizationData: {},
-                linearAction: [],
-                tagActionList: [],
-                systemListIsLoading: false,
-                emptyData: {
-                    type: '',
-                    text: '',
-                    tip: '',
-                    tipType: ''
-                }
-            };
-        },
-        computed: {
+  export default {
+    name: '',
+    components: {
+      RenderActionTag
+    },
+    props: {
+      isShow: {
+        type: Boolean,
+        default: false
+      },
+      defaultValue: {
+        type: Array,
+        default: () => []
+      },
+      defaultSystem: {
+        type: String,
+        default: ''
+      },
+      defaultData: {
+        type: Object,
+        default: () => []
+      },
+      aggregation: {
+        type: Object,
+        default: () => {
+          return {};
+        }
+      },
+      groupId: {
+        type: [String, Number],
+        default: ''
+      },
+      authorization: {
+        type: Object,
+        default: () => {
+          return {};
+        }
+      }
+    },
+    data () {
+      return {
+        keyword: '',
+        systemList: [],
+        curSystemList: [],
+        initRequestQueue: ['system', 'action', 'commonActions'],
+        isFilter: false,
+        isRightLoading: false,
+        curSystem: '',
+        systemData: {},
+        curSelectValue: [],
+        commonActions: [],
+        aggregationData: {},
+        authorizationData: {},
+        linearAction: [],
+        tagActionList: [],
+        systemListIsLoading: false,
+        emptyData: {
+          type: '',
+          text: '',
+          tip: '',
+          tipType: ''
+        }
+      };
+    },
+    computed: {
             ...mapGetters(['user', 'externalSystemId']),
             isLoading () {
                 return this.initRequestQueue.length > 0;
@@ -260,744 +260,744 @@
             isShowContent () {
                 return this.initRequestQueue.length < 1 && this.systemList.length > 0;
             }
+    },
+    watch: {
+      aggregation: {
+        handler (value) {
+          this.aggregationData = _.cloneDeep(value);
         },
-        watch: {
-            aggregation: {
-                handler (value) {
-                    this.aggregationData = _.cloneDeep(value);
-                },
-                immediate: true
-            },
-            authorization: {
-                handler (value) {
-                    this.authorizationData = _.cloneDeep(value);
-                },
-                immediate: true
-            },
-            isShow: {
-                handler (value) {
-                    if (value) {
-                        this.pageChangeAlertMemo = window.changeAlert;
-                        this.linearAction = [];
-                        window.changeAlert = 'iamSidesider';
-                        this.fetchSystems();
-                    } else {
-                        window.changeAlert = this.pageChangeAlertMemo;
-                    }
-                },
-                immediate: true
-            },
-            keyword (newVal, oldVal) {
-                if (newVal === '' && oldVal !== '' && this.isFilter) {
-                    this.isFilter = false;
-                    this.curSystemList.splice(0, this.curSystemList.length, ...this.systemList);
-                }
-            },
-            defaultValue: {
-                handler (value) {
-                    this.curSelectValue = [...value];
-                },
-                immediate: true
-            }
+        immediate: true
+      },
+      authorization: {
+        handler (value) {
+          this.authorizationData = _.cloneDeep(value);
         },
-        created () {
-            this.pageChangeAlertMemo = false;
+        immediate: true
+      },
+      isShow: {
+        handler (value) {
+          if (value) {
+            this.pageChangeAlertMemo = window.changeAlert;
+            this.linearAction = [];
+            window.changeAlert = 'iamSidesider';
+            this.fetchSystems();
+          } else {
+            window.changeAlert = this.pageChangeAlertMemo;
+          }
         },
-        methods: {
-            handleActionTagChange (flag, selects) {
-                window.changeDialog = true;
-                if (selects.length < 1) {
-                    return;
-                }
-                const curSelects = selects.map(item => {
-                    return `${this.curSystem}&${item}`;
-                });
-                const setCurSelected = (value, payload) => {
-                    const isExistFlag = this.curSelectValue.includes(`${this.curSystem}&${value}`);
-                    if (payload) {
-                        if (!isExistFlag) {
-                            this.curSelectValue.push(`${this.curSystem}&${value}`);
-                        }
-                    } else {
-                        if (isExistFlag) {
-                            this.curSelectValue = this.curSelectValue.filter(item => item !== `${this.curSystem}&${value}`);
-                        }
-                    }
-                };
-                this.systemData[this.curSystem].list.forEach(payload => {
-                    payload.actions.forEach(item => {
-                        if (flag) {
-                            if (curSelects.includes(item.$id)) {
-                                if (!item.disabled && !item.checked) {
-                                    item.checked = true;
-                                    ++this.systemData[this.curSystem].count;
-                                    this.handleRelatedActions(item, true, item.$id);
-                                    setCurSelected(item.id, true);
-                                }
-                            }
-                        } else {
-                            if (curSelects.includes(item.$id)) {
-                                if (!item.disabled && item.checked) {
-                                    item.checked = false;
-                                    --this.systemData[this.curSystem].count;
-                                    this.handleRelatedActions(item, false, item.$id);
-                                    setCurSelected(item.id, false);
-                                }
-                            }
-                        }
-                    });
-                    payload.sub_groups.forEach(item => {
-                        (item.actions || []).forEach(subItem => {
-                            if (flag) {
-                                if (curSelects.includes(subItem.$id)) {
-                                    if (!subItem.disabled && !subItem.checked) {
-                                        subItem.checked = true;
-                                        ++this.systemData[this.curSystem].count;
-                                        this.handleRelatedActions(subItem, true, subItem.$id);
-                                        setCurSelected(subItem.id, true);
-                                    }
-                                }
-                            } else {
-                                if (curSelects.includes(subItem.$id)) {
-                                    if (!subItem.disabled && subItem.checked) {
-                                        subItem.checked = false;
-                                        --this.systemData[this.curSystem].count;
-                                        this.handleRelatedActions(subItem, false, subItem.$id);
-                                        setCurSelected(subItem.id, false);
-                                    }
-                                }
-                            }
-                        });
-                    });
-
-                    const checked = payload.actions.every(item => item.checked);
-                    let subChecked = true;
-                    if (payload.sub_groups.length) {
-                        subChecked = payload.sub_groups.every(item => {
-                            return item.actions.every(v => v.checked);
-                        });
-                    }
-                    const allChecked = checked && subChecked;
-                    payload.text = allChecked ? this.$t(`m.common['取消全选']`) : this.$t(`m.common['全选']`);
-                });
-                if (this.curSelectValue.length) {
-                    this.tagActionList = this.curSelectValue.map(e => {
-                        return e.split('&')[1];
-                    });
-                } else {
-                    this.tagActionList = [];
-                }
-                if (flag) {
-                    Promise.all([this.fetchAggregationAction(), this.fetchAuthorizationScopeActions()]);
-                }
-            },
-
-            getRelatedActionTips (payload) {
-                const relatedActions = this.linearAction.filter(item => payload.includes(item.id));
-                return `${this.$t(`m.common['依赖操作']`)}: ${relatedActions.map(item => item.name).join('；')}`;
-            },
-
-            handleRelatedActions (payload, flag, $id) {
-                const setCurSelected = (value, data) => {
-                    const isExistFlag = this.curSelectValue.includes(`${this.curSystem}&${value}`);
-                    if (data) {
-                        if (!isExistFlag) {
-                            this.curSelectValue.push(`${this.curSystem}&${value}`);
-                        }
-                    } else {
-                        if (isExistFlag) {
-                            this.curSelectValue = this.curSelectValue.filter(item => item !== `${this.curSystem}&${value}`);
-                        }
-                    }
-                };
-                this.systemData[this.curSystem].list.forEach((item, index) => {
-                    item.actions.forEach(act => {
-                        if (payload.related_actions.includes(act.id) && flag) {
-                            if (!act.checked) {
-                                act.checked = true;
-                                if (`${this.curSystem}&${act.id}` !== $id) {
-                                    ++this.systemData[this.curSystem].count;
-                                    setCurSelected(act.id, true);
-                                }
-                            }
-                        }
-                        if (act.related_actions.includes(payload.id) && !flag) {
-                            if (act.checked) {
-                                act.checked = false;
-                                if (`${this.curSystem}&${act.id}` !== $id) {
-                                    if (this.systemData[this.curSystem].count > 0) {
-                                        --this.systemData[this.curSystem].count;
-                                        setCurSelected(act.id, false);
-                                    }
-                                }
-                            }
-                        }
-                    })
-
-                    ;(item.sub_groups || []).forEach(sub => {
-                        sub.actions.forEach(act => {
-                            if (payload.related_actions.includes(act.id) && flag) {
-                                if (!act.checked) {
-                                    act.checked = true;
-                                    if (`${this.curSystem}&${act.id}` !== $id) {
-                                        ++this.systemData[this.curSystem].count;
-                                        setCurSelected(act.id, true);
-                                    }
-                                }
-                            }
-                            if (act.related_actions.includes(payload.id) && !flag) {
-                                if (act.checked) {
-                                    act.checked = false;
-                                    if (`${this.curSystem}&${act.id}` !== $id) {
-                                        if (this.systemData[this.curSystem].count > 0) {
-                                            --this.systemData[this.curSystem].count;
-                                            setCurSelected(act.id, false);
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                    });
-
-                    const checked = item.actions.every(item => item.checked);
-                    let subChecked = true;
-                    if (item.sub_groups.length) {
-                        subChecked = item.sub_groups.every(item => {
-                            return item.actions.every(v => v.checked);
-                        });
-                    }
-                    const allChecked = checked && subChecked;
-                    item.text = allChecked ? this.$t(`m.common['取消全选']`) : this.$t(`m.common['全选']`);
-                });
-            },
-
-            /**
-             * 获取系统对应的常用操作
-             *
-             * @param {String} systemId 系统id
-             */
-            async fetchCommonActions (systemId) {
-                try {
-                    const { code, data } = await this.$store.dispatch('permApply/getUserCommonAction', { systemId });
-                    this.commonActions.splice(0, this.commonActions.length, ...(data || []));
-                    this.commonActions.forEach(item => {
-                        item.$id = guid();
-                    });
-                    this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
-                } catch (e) {
-                    this.fetchErrorMsg(e);
-                } finally {
-                    this.initRequestQueue.shift();
-                }
-            },
-
-            /**
-             * 获取系统列表
-             */
-            async fetchSystems () {
-                this.systemListIsLoading = true;
-                try {
-                    this.curSystem = this.defaultSystem;
-                    const params = {};
-                    if (this.externalSystemId) {
-                        params.hidden = false;
-                        this.curSystem = this.externalSystemId;
-                    }
-                    const { code, data } = await this.$store.dispatch('system/getSystems', params);
-                    this.systemList = _.cloneDeep(data);
-                    this.curSystemList = _.cloneDeep(data);
-                    this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
-                    if (this.systemList.length) {
-                        if (!this.curSystem) {
-                            this.curSystem = this.systemList[0].id;
-                        }
-                        this.systemList.forEach(item => {
-                            this.$set(this.systemData, item.id, {});
-                            this.systemData[item.id].system_name = item.name;
-                            this.$set(this.systemData[item.id], 'count', 0);
-                            this.$set(this.systemData[item.id], 'list', []);
-                            const isExistSys = this.defaultData.find(sys => sys.system_id === item.id);
-                            if (isExistSys) {
-                                isExistSys.list.forEach(act => {
-                                    this.$set(act, 'checked', this.defaultValue.includes(act.$id));
-                                });
-                                this.systemData[item.id].list.push({
-                                    name: '',
-                                    actions: _.cloneDeep(isExistSys.list)
-                                });
-                            }
-    
-                            if (this.defaultValue.length > 0) {
-                                const curAllActionIds = [];
-                                this.systemData[item.id].list.forEach(subItem => {
-                                    subItem.actions.forEach(act => {
-                                        curAllActionIds.push(act.$id);
-                                    });
-                                });
-                                const intersection = curAllActionIds.filter(v => this.defaultValue.includes(v));
-                                this.systemData[item.id].count = intersection.length;
-                            }
-                        });
-                    }
-                    // this.fetchCommonActions(this.curSystem)
-                    // this.fetchActions(this.curSystem, false)
-                    await Promise.all([
-                        this.fetchCommonActions(this.curSystem),
-                        this.fetchActions(this.curSystem)
-                    ]);
-                    this.handleCommonAction();
-                    this.isRightLoading = false;
-                } catch (e) {
-                    this.fetchErrorMsg(e);
-                } finally {
-                    this.initRequestQueue.shift();
-                    this.systemListIsLoading = false;
-                }
-            },
-
-            async fetchAggregationAction () {
-                if (this.aggregationData[this.curSystem]) {
-                    return;
-                }
-                try {
-                    const { code, data } = await this.$store.dispatch('aggregate/getAggregateAction', { system_ids: this.curSystem });
-                    this.aggregationData[this.curSystem] = data.aggregations;
-                    this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
-                } catch (e) {
-                    this.fetchErrorMsg(e);
-                }
-            },
-
-            async fetchAuthorizationScopeActions () {
-                if (this.authorizationData[this.curSystem]) {
-                    return;
-                }
-                try {
-                    const { code, data } = await this.$store.dispatch('permTemplate/getAuthorizationScopeActions', { systemId: this.curSystem });
-                    this.authorizationData[this.curSystem] = data.filter(item => item.id !== '*');
-                    this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
-                } catch (e) {
-                    this.fetchErrorMsg(e);
-                }
-            },
-
-            getComputedClass (payload) {
-                return payload.checked ? 'has-selected' : 'no-obtained';
-            },
-
-            /**
-             * 获取系统对应的自定义操作
-             *
-             * @param {String} systemId 系统id
-             */
-            async fetchActions (systemId) {
-                const params = {
-                    system_id: systemId
-                };
-                if (this.groupId) {
-                    params.group_id = this.groupId;
-                }
-                try {
-                    const { code, data } = await this.$store.dispatch('permApply/getActions', params);
-                    this.handleDefaultData(systemId, data);
-                    this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
-                } catch (e) {
-                    this.fetchErrorMsg(e);
-                } finally {
-                    this.isRightLoading = false;
-                    this.initRequestQueue.length > 0 && this.initRequestQueue.shift();
-                }
-            },
-
-            handleDefaultData (payload, data) {
-                if (this.systemData[payload]) {
-                    this.$set(this.systemData[payload], 'count', 0);
-                    this.$set(this.systemData[payload], 'list', _.cloneDeep(data));
-                    this.systemData[payload].list.forEach(item => {
-                        if (!item.actions) {
-                            item.actions = [];
-                        }
-                        if (!item.sub_groups) {
-                            item.sub_groups = [];
-                        }
-                        let allChecked = true;
-                        let allDisabled = true;
-                        item.actions.forEach(act => {
-                            act.$id = `${payload}&${act.id}`;
-                            act.related_resource_types.forEach(v => {
-                                v.type = v.id;
-                            });
-                            this.$set(act, 'checked', this.defaultValue.includes(act.$id) || this.curSelectValue.includes(act.$id) || (act.tag === 'readonly' && !!this.groupId));
-                            if (!act.checked) {
-                                allChecked = false;
-                            }
-                            if (act.tag === 'readonly' && !!this.groupId) {
-                                this.$set(act, 'disabled', true);
-                                ++this.systemData[payload].count;
-                            } else {
-                                allDisabled = false;
-                            }
-                            this.linearAction.push(act);
-                        });
-                        item.sub_groups.forEach(act => {
-                            (act.actions || []).forEach(v => {
-                                v.$id = `${payload}&${v.id}`;
-                                v.related_resource_types.forEach(subItem => {
-                                    subItem.type = subItem.id;
-                                });
-                                this.$set(v, 'checked', this.defaultValue.includes(v.$id) || this.curSelectValue.includes(v.$id) || (v.tag === 'readonly' && !!this.groupId));
-                                if (!v.checked) {
-                                    allChecked = false;
-                                }
-                                if (v.tag === 'readonly' && !!this.groupId) {
-                                    this.$set(v, 'disabled', true);
-                                    ++this.systemData[payload].count;
-                                } else {
-                                    allDisabled = false;
-                                }
-                                this.linearAction.push(v);
-                            });
-                        });
-                        this.$set(item, 'text', allChecked ? this.$t(`m.common['取消全选']`) : this.$t(`m.common['全选']`));
-                        this.$set(item, 'allDisabled', allDisabled);
-                    });
-                    this.systemData[payload].system_name = this.systemList.find(item => item.id === payload).name;
-                }
-
-                if (this.defaultValue.length > 0) {
-                    const curAllActionIds = [];
-                    this.systemData[payload].list.forEach(item => {
-                        item.actions.forEach(act => {
-                            curAllActionIds.push(act.$id);
-                        });
-                        item.sub_groups.forEach(sub => {
-                            (sub.actions || []).forEach(v => {
-                                curAllActionIds.push(v.$id);
-                            });
-                        });
-                    });
-                    const intersection = curAllActionIds.filter(item => this.defaultValue.includes(item));
-                    this.systemData[payload].count = intersection.length;
-                }
-            },
-
-            handleCommonAction () {
-                const linearActionIdList = this.linearAction.map(la => la.id);
-                const commonActions = [];
-                this.commonActions.forEach(ca => {
-                    if (ca.action_ids.every(aId => linearActionIdList.indexOf(aId) > -1)) {
-                        commonActions.push(ca);
-                    }
-                });
-                this.commonActions.splice(0, this.commonActions.length, ...commonActions);
-            },
-
-            handleSelectAll (payload, index) {
-                if (payload.allDisabled) {
-                    return;
-                }
-                window.changeAlert = true;
-                const hasSelectValue = payload.actions.filter(item => item.checked).map(item => item.$id);
-                const actionIds = [];
-                payload.actions.forEach(item => {
-                    if (!item.disabled) {
-                        actionIds.push(item.$id);
-                    }
-                });
-                payload.sub_groups.forEach(item => {
-                    (item.actions || []).forEach(subItem => {
-                        if (!subItem.disabled) {
-                            actionIds.push(subItem.$id);
-                            if (subItem.checked) {
-                                hasSelectValue.push(subItem.$id);
-                            }
-                        }
-                    });
-                });
-
-                const differenceSetIds = actionIds.filter(item => !hasSelectValue.includes(item));
-
-                payload.text = this.$t(`m.common['取消全选']`);
-                if (differenceSetIds.length > 0) {
-                    payload.actions.forEach(item => {
-                        this.$set(item, 'checked', true);
-                        this.handleRelatedActions(item, true, `${this.curSystem}&${item.id}`);
-                    });
-                    payload.sub_groups.forEach(item => {
-                        (item.actions || []).forEach(subItem => {
-                            this.$set(subItem, 'checked', true);
-                            this.handleRelatedActions(subItem, true, `${this.curSystem}&${subItem.id}`);
-                        });
-                    });
-                    this.systemData[this.curSystem].count = this.systemData[this.curSystem].count
-                        + differenceSetIds.length;
-                    this.curSelectValue.push(...differenceSetIds);
-
-                    this.setCurSelectedCount();
-                    Promise.all([this.fetchAggregationAction(), this.fetchAuthorizationScopeActions()]);
-                    return;
-                }
-                payload.text = this.$t(`m.common['全选']`);
-                payload.actions.forEach(item => {
-                    if (!item.disabled) {
-                        this.$set(item, 'checked', false);
-                        this.handleRelatedActions(item, false, `${this.curSystem}&${item.id}`);
-                    }
-                });
-                payload.sub_groups.forEach(item => {
-                    (item.actions || []).forEach(subItem => {
-                        if (!subItem.disabled) {
-                            this.$set(subItem, 'checked', false);
-                            this.handleRelatedActions(subItem, false, `${this.curSystem}&${subItem.id}`);
-                        }
-                    });
-                });
-                this.curSelectValue = this.curSelectValue.filter(item => !actionIds.includes(item));
-
-                this.setCurSelectedCount();
-            },
-
-            setCurSelectedCount () {
-                let count = 0;
-                this.systemData[this.curSystem].list.forEach((item, index) => {
-                    item.actions.forEach(act => {
-                        if (act.checked) {
-                            ++count;
-                        }
-                    })
-
-                    ;(item.sub_groups || []).forEach(sub => {
-                        sub.actions.forEach(act => {
-                            if (act.checked) {
-                                ++count;
-                            }
-                        });
-                    });
-                });
-
-                this.systemData[this.curSystem].count = count;
-            },
-
-            getComputedTheme (payload) {
-                if (payload === this.curSystem) {
-                    return '#3a84ff';
-                }
-                return '#c3cdd7';
-            },
-
-            handleActionChange (curVal, oldVal, val, payload, value, item) {
-                window.changeAlert = true;
-                const checked = payload.actions.every(item => item.checked);
-                let subChecked = true;
-                if (payload.sub_groups.length) {
-                    subChecked = payload.sub_groups.every(item => {
-                        return item.actions.every(v => v.checked);
-                    });
-                }
-                const allChecked = checked && subChecked;
-                payload.text = allChecked ? this.$t(`m.common['取消全选']`) : this.$t(`m.common['全选']`);
-                const $id = `${this.curSystem}&${value}`;
-                if (curVal) {
-                    ++this.systemData[this.curSystem].count;
-                    this.curSelectValue.push($id);
-                    this.handleRelatedActions(item, true, $id);
-                } else {
-                    const index = this.curSelectValue.findIndex(item => item === $id);
-                    index > -1 && this.curSelectValue.splice(index, 1);
-                    if (this.systemData[this.curSystem].count > 0) {
-                        --this.systemData[this.curSystem].count;
-                    }
-                    this.handleRelatedActions(item, false, $id);
-                }
-
-                if (curVal) {
-                    Promise.all([this.fetchAggregationAction(), this.fetchAuthorizationScopeActions()]);
-                }
-            },
-
-            handleSubActionChange (curVal, oldVal, val, parent, payload, value) {
-                window.changeAlert = true;
-                const checked = parent.actions.every(item => item.checked);
-                let subChecked = true;
-                if (parent.sub_groups.length) {
-                    subChecked = parent.sub_groups.every(item => {
-                        return item.actions.every(v => v.checked);
-                    });
-                }
-                const allChecked = checked && subChecked;
-                parent.text = allChecked ? this.$t(`m.common['取消全选']`) : this.$t(`m.common['全选']`);
-
-                const $id = `${this.curSystem}&${value}`;
-                if (curVal) {
-                    ++this.systemData[this.curSystem].count;
-                    this.curSelectValue.push($id);
-                    this.handleRelatedActions(payload, true, $id);
-                } else {
-                    const index = this.curSelectValue.findIndex(item => item === $id);
-                    index > -1 && this.curSelectValue.splice(index, 1);
-                    if (this.systemData[this.curSystem].count > 0) {
-                        --this.systemData[this.curSystem].count;
-                    }
-                    this.handleRelatedActions(payload, false, $id);
-                }
-
-                if (curVal) {
-                    Promise.all([this.fetchAggregationAction(), this.fetchAuthorizationScopeActions()]);
-                }
-            },
-
-            handleSubmit () {
-                const tempData = [];
-                for (const key in this.systemData) {
-                    const curData = this.systemData[key];
-                    const { list } = curData;
-                    const isSelect = list.some(item => {
-                        return item.actions.some(act => act.checked)
-                            || item.sub_groups.some(sub => sub.actions.some(v => v.checked));
-                    });
-                    if (isSelect) {
-                        list.forEach(item => {
-                            (item.actions || []).forEach(subItem => {
-                                if (subItem.checked && !subItem.disabled) {
-                                    tempData.push({
-                                        system_id: key,
-                                        system_name: curData.system_name,
-                                        ...subItem,
-                                        $id: `${key}&${subItem.id}`
-                                    });
-                                }
-                            })
-                            ;(item.sub_groups || []).forEach(subItem => {
-                                (subItem.actions || []).forEach(act => {
-                                    if (act.checked && !act.disabled) {
-                                        tempData.push({
-                                            system_id: key,
-                                            system_name: curData.system_name,
-                                            ...act,
-                                            $id: `${key}&${act.id}`
-                                        });
-                                    }
-                                });
-                            });
-                        });
-                    }
-                }
-                this.$emit('update:isShow', false);
-                this.$emit('on-submit', tempData, this.aggregationData, this.authorizationData);
-                this.resetData();
-            },
-
-            async handleSysChange (payload) {
-                window.changeAlert = true;
-                if (this.curSystem === payload.id) {
-                    return;
-                }
-                this.curSystem = payload.id;
-                this.linearAction = [];
-                // this.fetchCommonActions(this.curSystem)
-                // this.fetchActions(this.curSystem)
-
-                this.isRightLoading = true;
-                await Promise.all([
-                    this.fetchCommonActions(this.curSystem),
-                    this.fetchActions(this.curSystem)
-                ]);
-                this.handleCommonAction();
-                this.tagActionList = [];
-                this.isRightLoading = false;
-            },
-
-            handleInput () {
-                window.changeAlert = true;
-            },
-
-            handleSearch () {
-                if (!this.keyword) {
-                    return;
-                }
-                window.changeAlert = true;
-                this.isFilter = true;
-                const filterList = this.systemList.filter(item => item.name.indexOf(this.keyword) > -1);
-                this.curSystemList.splice(0, this.curSystemList.length, ...filterList);
-                this.emptyData = formatCodeData(0, { ...this.emptyData, ...{ tipType: 'search' } });
-            },
-
-            resetData () {
-                this.initRequestQueue = ['system', 'action', 'commonActions'];
-                this.keyword = '';
-                this.systemList = [];
-                this.curSystemList = [];
-                this.systemData = {};
-                this.isFilter = false;
-                this.curSystem = '';
-                this.curSelectValue = [];
-            },
-
-            fetchErrorMsg (payload) {
-                console.error(payload);
-                const { code, data, message, statusText } = payload;
-                this.emptyData = formatCodeData(code, this.emptyData);
-                this.bkMessageInstance = this.$bkMessage({
-                    limit: 1,
-                    theme: 'error',
-                    message: message || data.msg || statusText,
-                    ellipsisLine: 2,
-                    ellipsisCopy: true
-                });
-            },
-
-            handleCancel (payload) {
-                const operateMap = {
-                    leave: () => {
-                        let cancelHandler = Promise.resolve();
-                        if (window.changeAlert) {
-                            cancelHandler = leaveConfirm();
-                        }
-                        cancelHandler.then(() => {
-                            this.$emit('update:isShow', false);
-                            this.aggregationData = _.cloneDeep(this.aggregation);
-                            this.resetData();
-                        }, _ => _);
-                    },
-                    cancel: () => {
-                        let cancelHandler = Promise.resolve();
-                        if (window.changeAlert) {
-                            cancelHandler = leaveConfirm();
-                        }
-                        cancelHandler.then(() => {
-                            this.$emit('update:isShow', false);
-                            this.aggregationData = _.cloneDeep(this.aggregation);
-                            this.resetData();
-                        }, _ => _);
-                    }
-                };
-                operateMap[payload]();
-            },
-
-            async handleSkip () {
-                bus.$emit('nav-change', { id: this.$store.getters.navCurRoleId }, 0);
-                await this.$store.dispatch('role/updateCurrentRole', { id: 0 });
-                if (this.user.role.type === 'rating_manager') {
-                    const routeData = this.$router.resolve({ path: `${this.$store.getters.navCurRoleId}/rating-manager-edit`, params: { id: this.$store.getters.navCurRoleId } });
-                    window.open(routeData.href, '_blank');
-                }
-            },
-
-            refreshList () {
-                this.keyword = '';
-                this.fetchSystems();
-            },
-            
-            handleEmptyClear () {
-                this.emptyData.tipType = '';
-                this.refreshList();
-            },
-
-            handleEmptyRefresh () {
-                this.resetData();
-            }
+        immediate: true
+      },
+      keyword (newVal, oldVal) {
+        if (newVal === '' && oldVal !== '' && this.isFilter) {
+          this.isFilter = false;
+          this.curSystemList.splice(0, this.curSystemList.length, ...this.systemList);
         }
-    };
+      },
+      defaultValue: {
+        handler (value) {
+          this.curSelectValue = [...value];
+        },
+        immediate: true
+      }
+    },
+    created () {
+      this.pageChangeAlertMemo = false;
+    },
+    methods: {
+      handleActionTagChange (flag, selects) {
+        window.changeDialog = true;
+        if (selects.length < 1) {
+          return;
+        }
+        const curSelects = selects.map(item => {
+          return `${this.curSystem}&${item}`;
+        });
+        const setCurSelected = (value, payload) => {
+          const isExistFlag = this.curSelectValue.includes(`${this.curSystem}&${value}`);
+          if (payload) {
+            if (!isExistFlag) {
+              this.curSelectValue.push(`${this.curSystem}&${value}`);
+            }
+          } else {
+            if (isExistFlag) {
+              this.curSelectValue = this.curSelectValue.filter(item => item !== `${this.curSystem}&${value}`);
+            }
+          }
+        };
+        this.systemData[this.curSystem].list.forEach(payload => {
+          payload.actions.forEach(item => {
+            if (flag) {
+              if (curSelects.includes(item.$id)) {
+                if (!item.disabled && !item.checked) {
+                  item.checked = true;
+                  ++this.systemData[this.curSystem].count;
+                  this.handleRelatedActions(item, true, item.$id);
+                  setCurSelected(item.id, true);
+                }
+              }
+            } else {
+              if (curSelects.includes(item.$id)) {
+                if (!item.disabled && item.checked) {
+                  item.checked = false;
+                  --this.systemData[this.curSystem].count;
+                  this.handleRelatedActions(item, false, item.$id);
+                  setCurSelected(item.id, false);
+                }
+              }
+            }
+          });
+          payload.sub_groups.forEach(item => {
+            (item.actions || []).forEach(subItem => {
+              if (flag) {
+                if (curSelects.includes(subItem.$id)) {
+                  if (!subItem.disabled && !subItem.checked) {
+                    subItem.checked = true;
+                    ++this.systemData[this.curSystem].count;
+                    this.handleRelatedActions(subItem, true, subItem.$id);
+                    setCurSelected(subItem.id, true);
+                  }
+                }
+              } else {
+                if (curSelects.includes(subItem.$id)) {
+                  if (!subItem.disabled && subItem.checked) {
+                    subItem.checked = false;
+                    --this.systemData[this.curSystem].count;
+                    this.handleRelatedActions(subItem, false, subItem.$id);
+                    setCurSelected(subItem.id, false);
+                  }
+                }
+              }
+            });
+          });
+
+          const checked = payload.actions.every(item => item.checked);
+          let subChecked = true;
+          if (payload.sub_groups.length) {
+            subChecked = payload.sub_groups.every(item => {
+              return item.actions.every(v => v.checked);
+            });
+          }
+          const allChecked = checked && subChecked;
+          payload.text = allChecked ? this.$t(`m.common['取消全选']`) : this.$t(`m.common['全选']`);
+        });
+        if (this.curSelectValue.length) {
+          this.tagActionList = this.curSelectValue.map(e => {
+            return e.split('&')[1];
+          });
+        } else {
+          this.tagActionList = [];
+        }
+        if (flag) {
+          Promise.all([this.fetchAggregationAction(), this.fetchAuthorizationScopeActions()]);
+        }
+      },
+
+      getRelatedActionTips (payload) {
+        const relatedActions = this.linearAction.filter(item => payload.includes(item.id));
+        return `${this.$t(`m.common['依赖操作']`)}: ${relatedActions.map(item => item.name).join('；')}`;
+      },
+
+      handleRelatedActions (payload, flag, $id) {
+        const setCurSelected = (value, data) => {
+          const isExistFlag = this.curSelectValue.includes(`${this.curSystem}&${value}`);
+          if (data) {
+            if (!isExistFlag) {
+              this.curSelectValue.push(`${this.curSystem}&${value}`);
+            }
+          } else {
+            if (isExistFlag) {
+              this.curSelectValue = this.curSelectValue.filter(item => item !== `${this.curSystem}&${value}`);
+            }
+          }
+        };
+        this.systemData[this.curSystem].list.forEach((item, index) => {
+          item.actions.forEach(act => {
+            if (payload.related_actions.includes(act.id) && flag) {
+              if (!act.checked) {
+                act.checked = true;
+                if (`${this.curSystem}&${act.id}` !== $id) {
+                  ++this.systemData[this.curSystem].count;
+                  setCurSelected(act.id, true);
+                }
+              }
+            }
+            if (act.related_actions.includes(payload.id) && !flag) {
+              if (act.checked) {
+                act.checked = false;
+                if (`${this.curSystem}&${act.id}` !== $id) {
+                  if (this.systemData[this.curSystem].count > 0) {
+                    --this.systemData[this.curSystem].count;
+                    setCurSelected(act.id, false);
+                  }
+                }
+              }
+            }
+          })
+
+          ;(item.sub_groups || []).forEach(sub => {
+            sub.actions.forEach(act => {
+              if (payload.related_actions.includes(act.id) && flag) {
+                if (!act.checked) {
+                  act.checked = true;
+                  if (`${this.curSystem}&${act.id}` !== $id) {
+                    ++this.systemData[this.curSystem].count;
+                    setCurSelected(act.id, true);
+                  }
+                }
+              }
+              if (act.related_actions.includes(payload.id) && !flag) {
+                if (act.checked) {
+                  act.checked = false;
+                  if (`${this.curSystem}&${act.id}` !== $id) {
+                    if (this.systemData[this.curSystem].count > 0) {
+                      --this.systemData[this.curSystem].count;
+                      setCurSelected(act.id, false);
+                    }
+                  }
+                }
+              }
+            });
+          });
+
+          const checked = item.actions.every(item => item.checked);
+          let subChecked = true;
+          if (item.sub_groups.length) {
+            subChecked = item.sub_groups.every(item => {
+              return item.actions.every(v => v.checked);
+            });
+          }
+          const allChecked = checked && subChecked;
+          item.text = allChecked ? this.$t(`m.common['取消全选']`) : this.$t(`m.common['全选']`);
+        });
+      },
+
+      /**
+       * 获取系统对应的常用操作
+       *
+       * @param {String} systemId 系统id
+       */
+      async fetchCommonActions (systemId) {
+        try {
+          const { code, data } = await this.$store.dispatch('permApply/getUserCommonAction', { systemId });
+          this.commonActions.splice(0, this.commonActions.length, ...(data || []));
+          this.commonActions.forEach(item => {
+            item.$id = guid();
+          });
+          this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
+        } catch (e) {
+          this.fetchErrorMsg(e);
+        } finally {
+          this.initRequestQueue.shift();
+        }
+      },
+
+      /**
+       * 获取系统列表
+       */
+      async fetchSystems () {
+        this.systemListIsLoading = true;
+        try {
+          this.curSystem = this.defaultSystem;
+          const params = {};
+          if (this.externalSystemId) {
+            params.hidden = false;
+            this.curSystem = this.externalSystemId;
+          }
+          const { code, data } = await this.$store.dispatch('system/getSystems', params);
+          this.systemList = _.cloneDeep(data);
+          this.curSystemList = _.cloneDeep(data);
+          this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
+          if (this.systemList.length) {
+            if (!this.curSystem) {
+              this.curSystem = this.systemList[0].id;
+            }
+            this.systemList.forEach(item => {
+              this.$set(this.systemData, item.id, {});
+              this.systemData[item.id].system_name = item.name;
+              this.$set(this.systemData[item.id], 'count', 0);
+              this.$set(this.systemData[item.id], 'list', []);
+              const isExistSys = this.defaultData.find(sys => sys.system_id === item.id);
+              if (isExistSys) {
+                isExistSys.list.forEach(act => {
+                  this.$set(act, 'checked', this.defaultValue.includes(act.$id));
+                });
+                this.systemData[item.id].list.push({
+                  name: '',
+                  actions: _.cloneDeep(isExistSys.list)
+                });
+              }
+    
+              if (this.defaultValue.length > 0) {
+                const curAllActionIds = [];
+                this.systemData[item.id].list.forEach(subItem => {
+                  subItem.actions.forEach(act => {
+                    curAllActionIds.push(act.$id);
+                  });
+                });
+                const intersection = curAllActionIds.filter(v => this.defaultValue.includes(v));
+                this.systemData[item.id].count = intersection.length;
+              }
+            });
+          }
+          // this.fetchCommonActions(this.curSystem)
+          // this.fetchActions(this.curSystem, false)
+          await Promise.all([
+            this.fetchCommonActions(this.curSystem),
+            this.fetchActions(this.curSystem)
+          ]);
+          this.handleCommonAction();
+          this.isRightLoading = false;
+        } catch (e) {
+          this.fetchErrorMsg(e);
+        } finally {
+          this.initRequestQueue.shift();
+          this.systemListIsLoading = false;
+        }
+      },
+
+      async fetchAggregationAction () {
+        if (this.aggregationData[this.curSystem]) {
+          return;
+        }
+        try {
+          const { code, data } = await this.$store.dispatch('aggregate/getAggregateAction', { system_ids: this.curSystem });
+          this.aggregationData[this.curSystem] = data.aggregations;
+          this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
+        } catch (e) {
+          this.fetchErrorMsg(e);
+        }
+      },
+
+      async fetchAuthorizationScopeActions () {
+        if (this.authorizationData[this.curSystem]) {
+          return;
+        }
+        try {
+          const { code, data } = await this.$store.dispatch('permTemplate/getAuthorizationScopeActions', { systemId: this.curSystem });
+          this.authorizationData[this.curSystem] = data.filter(item => item.id !== '*');
+          this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
+        } catch (e) {
+          this.fetchErrorMsg(e);
+        }
+      },
+
+      getComputedClass (payload) {
+        return payload.checked ? 'has-selected' : 'no-obtained';
+      },
+
+      /**
+       * 获取系统对应的自定义操作
+       *
+       * @param {String} systemId 系统id
+       */
+      async fetchActions (systemId) {
+        const params = {
+          system_id: systemId
+        };
+        if (this.groupId) {
+          params.group_id = this.groupId;
+        }
+        try {
+          const { code, data } = await this.$store.dispatch('permApply/getActions', params);
+          this.handleDefaultData(systemId, data);
+          this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
+        } catch (e) {
+          this.fetchErrorMsg(e);
+        } finally {
+          this.isRightLoading = false;
+          this.initRequestQueue.length > 0 && this.initRequestQueue.shift();
+        }
+      },
+
+      handleDefaultData (payload, data) {
+        if (this.systemData[payload]) {
+          this.$set(this.systemData[payload], 'count', 0);
+          this.$set(this.systemData[payload], 'list', _.cloneDeep(data));
+          this.systemData[payload].list.forEach(item => {
+            if (!item.actions) {
+              item.actions = [];
+            }
+            if (!item.sub_groups) {
+              item.sub_groups = [];
+            }
+            let allChecked = true;
+            let allDisabled = true;
+            item.actions.forEach(act => {
+              act.$id = `${payload}&${act.id}`;
+              act.related_resource_types.forEach(v => {
+                v.type = v.id;
+              });
+              this.$set(act, 'checked', this.defaultValue.includes(act.$id) || this.curSelectValue.includes(act.$id) || (act.tag === 'readonly' && !!this.groupId));
+              if (!act.checked) {
+                allChecked = false;
+              }
+              if (act.tag === 'readonly' && !!this.groupId) {
+                this.$set(act, 'disabled', true);
+                ++this.systemData[payload].count;
+              } else {
+                allDisabled = false;
+              }
+              this.linearAction.push(act);
+            });
+            item.sub_groups.forEach(act => {
+              (act.actions || []).forEach(v => {
+                v.$id = `${payload}&${v.id}`;
+                v.related_resource_types.forEach(subItem => {
+                  subItem.type = subItem.id;
+                });
+                this.$set(v, 'checked', this.defaultValue.includes(v.$id) || this.curSelectValue.includes(v.$id) || (v.tag === 'readonly' && !!this.groupId));
+                if (!v.checked) {
+                  allChecked = false;
+                }
+                if (v.tag === 'readonly' && !!this.groupId) {
+                  this.$set(v, 'disabled', true);
+                  ++this.systemData[payload].count;
+                } else {
+                  allDisabled = false;
+                }
+                this.linearAction.push(v);
+              });
+            });
+            this.$set(item, 'text', allChecked ? this.$t(`m.common['取消全选']`) : this.$t(`m.common['全选']`));
+            this.$set(item, 'allDisabled', allDisabled);
+          });
+          this.systemData[payload].system_name = this.systemList.find(item => item.id === payload).name;
+        }
+
+        if (this.defaultValue.length > 0) {
+          const curAllActionIds = [];
+          this.systemData[payload].list.forEach(item => {
+            item.actions.forEach(act => {
+              curAllActionIds.push(act.$id);
+            });
+            item.sub_groups.forEach(sub => {
+              (sub.actions || []).forEach(v => {
+                curAllActionIds.push(v.$id);
+              });
+            });
+          });
+          const intersection = curAllActionIds.filter(item => this.defaultValue.includes(item));
+          this.systemData[payload].count = intersection.length;
+        }
+      },
+
+      handleCommonAction () {
+        const linearActionIdList = this.linearAction.map(la => la.id);
+        const commonActions = [];
+        this.commonActions.forEach(ca => {
+          if (ca.action_ids.every(aId => linearActionIdList.indexOf(aId) > -1)) {
+            commonActions.push(ca);
+          }
+        });
+        this.commonActions.splice(0, this.commonActions.length, ...commonActions);
+      },
+
+      handleSelectAll (payload, index) {
+        if (payload.allDisabled) {
+          return;
+        }
+        window.changeAlert = true;
+        const hasSelectValue = payload.actions.filter(item => item.checked).map(item => item.$id);
+        const actionIds = [];
+        payload.actions.forEach(item => {
+          if (!item.disabled) {
+            actionIds.push(item.$id);
+          }
+        });
+        payload.sub_groups.forEach(item => {
+          (item.actions || []).forEach(subItem => {
+            if (!subItem.disabled) {
+              actionIds.push(subItem.$id);
+              if (subItem.checked) {
+                hasSelectValue.push(subItem.$id);
+              }
+            }
+          });
+        });
+
+        const differenceSetIds = actionIds.filter(item => !hasSelectValue.includes(item));
+
+        payload.text = this.$t(`m.common['取消全选']`);
+        if (differenceSetIds.length > 0) {
+          payload.actions.forEach(item => {
+            this.$set(item, 'checked', true);
+            this.handleRelatedActions(item, true, `${this.curSystem}&${item.id}`);
+          });
+          payload.sub_groups.forEach(item => {
+            (item.actions || []).forEach(subItem => {
+              this.$set(subItem, 'checked', true);
+              this.handleRelatedActions(subItem, true, `${this.curSystem}&${subItem.id}`);
+            });
+          });
+          this.systemData[this.curSystem].count = this.systemData[this.curSystem].count
+            + differenceSetIds.length;
+          this.curSelectValue.push(...differenceSetIds);
+
+          this.setCurSelectedCount();
+          Promise.all([this.fetchAggregationAction(), this.fetchAuthorizationScopeActions()]);
+          return;
+        }
+        payload.text = this.$t(`m.common['全选']`);
+        payload.actions.forEach(item => {
+          if (!item.disabled) {
+            this.$set(item, 'checked', false);
+            this.handleRelatedActions(item, false, `${this.curSystem}&${item.id}`);
+          }
+        });
+        payload.sub_groups.forEach(item => {
+          (item.actions || []).forEach(subItem => {
+            if (!subItem.disabled) {
+              this.$set(subItem, 'checked', false);
+              this.handleRelatedActions(subItem, false, `${this.curSystem}&${subItem.id}`);
+            }
+          });
+        });
+        this.curSelectValue = this.curSelectValue.filter(item => !actionIds.includes(item));
+
+        this.setCurSelectedCount();
+      },
+
+      setCurSelectedCount () {
+        let count = 0;
+        this.systemData[this.curSystem].list.forEach((item, index) => {
+          item.actions.forEach(act => {
+            if (act.checked) {
+              ++count;
+            }
+          })
+
+          ;(item.sub_groups || []).forEach(sub => {
+            sub.actions.forEach(act => {
+              if (act.checked) {
+                ++count;
+              }
+            });
+          });
+        });
+
+        this.systemData[this.curSystem].count = count;
+      },
+
+      getComputedTheme (payload) {
+        if (payload === this.curSystem) {
+          return '#3a84ff';
+        }
+        return '#c3cdd7';
+      },
+
+      handleActionChange (curVal, oldVal, val, payload, value, item) {
+        window.changeAlert = true;
+        const checked = payload.actions.every(item => item.checked);
+        let subChecked = true;
+        if (payload.sub_groups.length) {
+          subChecked = payload.sub_groups.every(item => {
+            return item.actions.every(v => v.checked);
+          });
+        }
+        const allChecked = checked && subChecked;
+        payload.text = allChecked ? this.$t(`m.common['取消全选']`) : this.$t(`m.common['全选']`);
+        const $id = `${this.curSystem}&${value}`;
+        if (curVal) {
+          ++this.systemData[this.curSystem].count;
+          this.curSelectValue.push($id);
+          this.handleRelatedActions(item, true, $id);
+        } else {
+          const index = this.curSelectValue.findIndex(item => item === $id);
+          index > -1 && this.curSelectValue.splice(index, 1);
+          if (this.systemData[this.curSystem].count > 0) {
+            --this.systemData[this.curSystem].count;
+          }
+          this.handleRelatedActions(item, false, $id);
+        }
+
+        if (curVal) {
+          Promise.all([this.fetchAggregationAction(), this.fetchAuthorizationScopeActions()]);
+        }
+      },
+
+      handleSubActionChange (curVal, oldVal, val, parent, payload, value) {
+        window.changeAlert = true;
+        const checked = parent.actions.every(item => item.checked);
+        let subChecked = true;
+        if (parent.sub_groups.length) {
+          subChecked = parent.sub_groups.every(item => {
+            return item.actions.every(v => v.checked);
+          });
+        }
+        const allChecked = checked && subChecked;
+        parent.text = allChecked ? this.$t(`m.common['取消全选']`) : this.$t(`m.common['全选']`);
+
+        const $id = `${this.curSystem}&${value}`;
+        if (curVal) {
+          ++this.systemData[this.curSystem].count;
+          this.curSelectValue.push($id);
+          this.handleRelatedActions(payload, true, $id);
+        } else {
+          const index = this.curSelectValue.findIndex(item => item === $id);
+          index > -1 && this.curSelectValue.splice(index, 1);
+          if (this.systemData[this.curSystem].count > 0) {
+            --this.systemData[this.curSystem].count;
+          }
+          this.handleRelatedActions(payload, false, $id);
+        }
+
+        if (curVal) {
+          Promise.all([this.fetchAggregationAction(), this.fetchAuthorizationScopeActions()]);
+        }
+      },
+
+      handleSubmit () {
+        const tempData = [];
+        for (const key in this.systemData) {
+          const curData = this.systemData[key];
+          const { list } = curData;
+          const isSelect = list.some(item => {
+            return item.actions.some(act => act.checked)
+              || item.sub_groups.some(sub => sub.actions.some(v => v.checked));
+          });
+          if (isSelect) {
+            list.forEach(item => {
+              (item.actions || []).forEach(subItem => {
+                if (subItem.checked && !subItem.disabled) {
+                  tempData.push({
+                    system_id: key,
+                    system_name: curData.system_name,
+                                        ...subItem,
+                    $id: `${key}&${subItem.id}`
+                  });
+                }
+              })
+              ;(item.sub_groups || []).forEach(subItem => {
+                (subItem.actions || []).forEach(act => {
+                  if (act.checked && !act.disabled) {
+                    tempData.push({
+                      system_id: key,
+                      system_name: curData.system_name,
+                                            ...act,
+                      $id: `${key}&${act.id}`
+                    });
+                  }
+                });
+              });
+            });
+          }
+        }
+        this.$emit('update:isShow', false);
+        this.$emit('on-submit', tempData, this.aggregationData, this.authorizationData);
+        this.resetData();
+      },
+
+      async handleSysChange (payload) {
+        window.changeAlert = true;
+        if (this.curSystem === payload.id) {
+          return;
+        }
+        this.curSystem = payload.id;
+        this.linearAction = [];
+        // this.fetchCommonActions(this.curSystem)
+        // this.fetchActions(this.curSystem)
+
+        this.isRightLoading = true;
+        await Promise.all([
+          this.fetchCommonActions(this.curSystem),
+          this.fetchActions(this.curSystem)
+        ]);
+        this.handleCommonAction();
+        this.tagActionList = [];
+        this.isRightLoading = false;
+      },
+
+      handleInput () {
+        window.changeAlert = true;
+      },
+
+      handleSearch () {
+        if (!this.keyword) {
+          return;
+        }
+        window.changeAlert = true;
+        this.isFilter = true;
+        const filterList = this.systemList.filter(item => item.name.indexOf(this.keyword) > -1);
+        this.curSystemList.splice(0, this.curSystemList.length, ...filterList);
+        this.emptyData = formatCodeData(0, { ...this.emptyData, ...{ tipType: 'search' } });
+      },
+
+      resetData () {
+        this.initRequestQueue = ['system', 'action', 'commonActions'];
+        this.keyword = '';
+        this.systemList = [];
+        this.curSystemList = [];
+        this.systemData = {};
+        this.isFilter = false;
+        this.curSystem = '';
+        this.curSelectValue = [];
+      },
+
+      fetchErrorMsg (payload) {
+        console.error(payload);
+        const { code, data, message, statusText } = payload;
+        this.emptyData = formatCodeData(code, this.emptyData);
+        this.bkMessageInstance = this.$bkMessage({
+          limit: 1,
+          theme: 'error',
+          message: message || data.msg || statusText,
+          ellipsisLine: 2,
+          ellipsisCopy: true
+        });
+      },
+
+      handleCancel (payload) {
+        const operateMap = {
+          leave: () => {
+            let cancelHandler = Promise.resolve();
+            if (window.changeAlert) {
+              cancelHandler = leaveConfirm();
+            }
+            cancelHandler.then(() => {
+              this.$emit('update:isShow', false);
+              this.aggregationData = _.cloneDeep(this.aggregation);
+              this.resetData();
+            }, _ => _);
+          },
+          cancel: () => {
+            let cancelHandler = Promise.resolve();
+            if (window.changeAlert) {
+              cancelHandler = leaveConfirm();
+            }
+            cancelHandler.then(() => {
+              this.$emit('update:isShow', false);
+              this.aggregationData = _.cloneDeep(this.aggregation);
+              this.resetData();
+            }, _ => _);
+          }
+        };
+        operateMap[payload]();
+      },
+
+      async handleSkip () {
+        bus.$emit('nav-change', { id: this.$store.getters.navCurRoleId }, 0);
+        await this.$store.dispatch('role/updateCurrentRole', { id: 0 });
+        if (this.user.role.type === 'rating_manager') {
+          const routeData = this.$router.resolve({ path: `${this.$store.getters.navCurRoleId}/rating-manager-edit`, params: { id: this.$store.getters.navCurRoleId } });
+          window.open(routeData.href, '_blank');
+        }
+      },
+
+      refreshList () {
+        this.keyword = '';
+        this.fetchSystems();
+      },
+            
+      handleEmptyClear () {
+        this.emptyData.tipType = '';
+        this.refreshList();
+      },
+
+      handleEmptyRefresh () {
+        this.resetData();
+      }
+    }
+  };
 </script>
 
 <style lang="postcss">

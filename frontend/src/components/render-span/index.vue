@@ -1,16 +1,16 @@
 <template functional>
-    <!-- status: add 为新增 delete 为删除 unchanged 为未改变 -->
-    <div class="iam-render-span" :title="props.content || ''">
-        <span v-if="props.visible && ['add', 'delete'].includes(props.status)"
-            :class="['span-flag', { 'add': props.status === 'add' }, { 'delete': props.status === 'delete' }]">
-        </span>
-        <template v-if="props.status === 'add' || props.status === 'unchanged'">
-            <span style="display: inline-block; color: #63656e; vertical-align: middle;">{{ props.content }}</span>
-        </template>
-        <template v-else>
-            <s style="display: inline-block; color: #c4c6cc; vertical-align: middle;">{{ props.content }}</s>
-        </template>
-    </div>
+  <!-- status: add 为新增 delete 为删除 unchanged 为未改变 -->
+  <div class="iam-render-span" :title="props.content || ''">
+    <span v-if="props.visible && ['add', 'delete'].includes(props.status)"
+      :class="['span-flag', { 'add': props.status === 'add' }, { 'delete': props.status === 'delete' }]">
+    </span>
+    <template v-if="props.status === 'add' || props.status === 'unchanged'">
+      <span style="display: inline-block; color: #63656e; vertical-align: middle;">{{ props.content }}</span>
+    </template>
+    <template v-else>
+      <s style="display: inline-block; color: #c4c6cc; vertical-align: middle;">{{ props.content }}</s>
+    </template>
+  </div>
 </template>
 <style lang="postcss" scoped>
     .iam-render-span {

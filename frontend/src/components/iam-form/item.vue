@@ -1,28 +1,28 @@
 <template>
-    <bk-form-item
-        ref="formItem"
-        class="iam-form-item"
-        v-bind="$attrs"
-        v-on="$listeners">
-        <slot />
-        <p v-if="validator.state === 'error'" class="error">{{ validator.content }}</p>
-    </bk-form-item>
+  <bk-form-item
+    ref="formItem"
+    class="iam-form-item"
+    v-bind="$attrs"
+    v-on="$listeners">
+    <slot />
+    <p v-if="validator.state === 'error'" class="error">{{ validator.content }}</p>
+  </bk-form-item>
 </template>
 <script>
-    export default {
-        name: 'iam-form-item',
-        data () {
-            return {
-                validator: {
-                    state: '',
-                    content: ''
-                }
-            };
-        },
-        mounted () {
-            this.validator = this.$refs.formItem.validator;
+  export default {
+    name: 'iam-form-item',
+    data () {
+      return {
+        validator: {
+          state: '',
+          content: ''
         }
-    };
+      };
+    },
+    mounted () {
+      this.validator = this.$refs.formItem.validator;
+    }
+  };
 </script>
 <style lang='postcss'>
     .iam-form-item {

@@ -1,52 +1,52 @@
 <template>
-    <bk-dialog
-        v-model="isShowDialog"
-        width="700"
-        title=""
-        :mask-close="false"
-        draggable
-        header-position="left"
-        ext-cls="iam-add-member-dialog"
-        @after-leave="handleAfterLeave">
-        <!-- eslint-disable max-len -->
-        <div slot="header" class="title">
-            <template v-if="showExpiredAt">
-                <div v-if="isBatch">{{ $t(`m.common['批量添加成员']`) }}</div>
-                <div v-else>
-                    <div v-if="isPrev">
-                        {{ $t(`m.common['添加成员至']`) }}
-                        {{$t(`m.common['【']`)}}<span class="member-title" :title="name">{{ name }}</span>{{$t(`m.common['】']`)}}
-                    </div>
-                    <div v-else :title="`${$t(`m.common['设置新用户加入']`)}${$t(`m.common['【']`)}${name}${$t(`m.common['】']`)}${$t(`m.common['用户组的有效期']`)}`">
-                        {{ $t(`m.common['设置新用户加入']`) }}<span class="expired-at-title" :title="name">{{$t(`m.common['【']`)}}{{ name }}</span>{{$t(`m.common['】']`)}}{{ $t(`m.common['用户组的有效期']`) }}
-                    </div>
-                </div>
-            </template>
-            <template v-else>
-                <template v-if="title !== ''">
-                    {{ title }}
-                </template>
-                <template v-else>
-                    {{ $t(`m.common['选择用户或组织']`) }}
-                </template>
-            </template>
+  <bk-dialog
+    v-model="isShowDialog"
+    width="700"
+    title=""
+    :mask-close="false"
+    draggable
+    header-position="left"
+    ext-cls="iam-add-member-dialog"
+    @after-leave="handleAfterLeave">
+    <!-- eslint-disable max-len -->
+    <div slot="header" class="title">
+      <template v-if="showExpiredAt">
+        <div v-if="isBatch">{{ $t(`m.common['批量添加成员']`) }}</div>
+        <div v-else>
+          <div v-if="isPrev">
+            {{ $t(`m.common['添加成员至']`) }}
+            {{$t(`m.common['【']`)}}<span class="member-title" :title="name">{{ name }}</span>{{$t(`m.common['】']`)}}
+          </div>
+          <div v-else :title="`${$t(`m.common['设置新用户加入']`)}${$t(`m.common['【']`)}${name}${$t(`m.common['】']`)}${$t(`m.common['用户组的有效期']`)}`">
+            {{ $t(`m.common['设置新用户加入']`) }}<span class="expired-at-title" :title="name">{{$t(`m.common['【']`)}}{{ name }}</span>{{$t(`m.common['】']`)}}{{ $t(`m.common['用户组的有效期']`) }}
+          </div>
         </div>
-        <div class="add-member-content-wrapper" v-bkloading="{ isLoading, opacity: 1 }" :style="style">
-            <div v-show="!isLoading">
-                <template v-if="isPrev">
-                    <div class="left">
-                        <div class="tab-wrapper">
-                            <section
-                                v-for="(item, index) in panels"
-                                :key="item.name"
-                                :class="['tab-item', { 'has-margin-left': index !== 0 }]"
-                                data-test-id="group_addGroupMemberDialog_tab_switch"
-                                @click.stop="handleTabChange(item)">
-                                {{ item.label }}
-                                <span class="active-line" v-if="tabActive === item.name"></span>
-                            </section>
-                        </div>
-                        <!-- <div
+      </template>
+      <template v-else>
+        <template v-if="title !== ''">
+          {{ title }}
+        </template>
+        <template v-else>
+          {{ $t(`m.common['选择用户或组织']`) }}
+        </template>
+      </template>
+    </div>
+    <div class="add-member-content-wrapper" v-bkloading="{ isLoading, opacity: 1 }" :style="style">
+      <div v-show="!isLoading">
+        <template v-if="isPrev">
+          <div class="left">
+            <div class="tab-wrapper">
+              <section
+                v-for="(item, index) in panels"
+                :key="item.name"
+                :class="['tab-item', { 'has-margin-left': index !== 0 }]"
+                data-test-id="group_addGroupMemberDialog_tab_switch"
+                @click.stop="handleTabChange(item)">
+                {{ item.label }}
+                <span class="active-line" v-if="tabActive === item.name"></span>
+              </section>
+            </div>
+            <!-- <div
                             :class="[
                                 'search-input',
                                 { 'active': isSearchFocus },
@@ -54,1247 +54,1247 @@
                             ]"
                             v-if="isOrganization"
                         > -->
-                        <!-- 所有平台都开放搜索，通过选中做校验 -->
-                        <div
-                            :class="[
-                                'search-input',
-                                { 'active': isSearchFocus },
-                                { 'disabled': isAll && !isAllFlag }
-                            ]"
-                            v-if="isOrganization"
-                        >
-                            <bk-dropdown-menu
-                                align="left"
-                                ref="dropdown"
-                                trigger="click">
-                                <template slot="dropdown-trigger">
-                                    <Icon class="search-icon" :type="searchConditionValue === 'fuzzy' ? 'fuzzy-search-allow' : 'exact-search-allow'" />
-                                </template>
-                                <ul class="bk-dropdown-list" slot="dropdown-content">
-                                    <li
-                                        v-for="item in searchConditionList"
-                                        :key="item.id"
-                                        @click.stop="handleConditionSelcted(item)">
-                                        <a href="javascript:;" :class="{ 'active': item.id === searchConditionValue }">
-                                            <Icon class="search-config-icon" style="font-size: 16px;" :type="item.id === 'fuzzy' ? 'fuzzy-search-allow' : 'exact-search-allow'" />
-                                            {{ item.name }}
-                                        </a>
-                                    </li>
-                                </ul>
-                            </bk-dropdown-menu>
-                            <bk-input
-                                v-model="keyword"
-                                :placeholder="$t(`m.common['搜索提示1']`)"
-                                maxlength="64"
-                                clearable
-                                :disabled="isAll && !isAllFlag"
-                                ext-cls="iam-add-member-search-input-cls"
-                                @focus="handleSearchInput"
-                                @blur="handleSearchBlur"
-                                @keyup.enter.native="handleSearch"
-                                @keyup.up.native="handleKeyup"
-                                @keyup.down.native="handleKeydown">
-                            </bk-input>
-                        </div>
-                        <div class="member-tree-wrapper"
-                            v-bkloading="{ isLoading: treeLoading, opacity: 1 }"
-                            v-if="isOrganization">
-                            <template v-if="isShowMemberTree">
-                                <div class="tree">
-                                    <infinite-tree
-                                        ref="memberTreeRef"
-                                        data-test-id="group_addGroupMemberDialog_tree_member"
-                                        :all-data="treeList"
-                                        :empty-data="emptyData"
-                                        style="height: 309px;"
-                                        :is-rating-manager="curIsRatingManager"
-                                        :key="infiniteTreeKey"
-                                        :is-disabled="isAll"
-                                        @async-load-nodes="handleRemoteLoadNode"
-                                        @expand-node="handleExpanded"
-                                        @on-select="handleOnSelected"
-                                        @on-refresh="handleEmptyRefresh"
-                                    />
-                                </div>
-                            </template>
-                            <template v-if="isShowSearchResult">
-                                <div class="search-content">
-                                    <template v-if="isHasSeachResult">
-                                        <dialog-infinite-list
-                                            ref="searchedResultsRef"
-                                            data-test-id="group_addGroupMemberDialog_list_searchResult"
-                                            :all-data="searchedResult"
-                                            :focus-index.sync="focusItemIndex"
-                                            :is-disabled="isAll"
-                                            style="height: 309px;"
-                                            @on-checked="handleSearchResultSelected">
-                                        </dialog-infinite-list>
-                                    </template>
-                                    <template v-if="isSeachResultTooMuch">
-                                        <div class="too-much-wrapper">
-                                            <Icon type="warning" class="much-tips-icon" />
-                                            <p class="text">{{ $t(`m.info['搜索结果']`) }}</p>
-                                        </div>
-                                    </template>
-                                    <template v-if="isSeachResultEmpty">
-                                        <div class="search-empty-wrapper">
-                                            <!-- <iam-svg />
+            <!-- 所有平台都开放搜索，通过选中做校验 -->
+            <div
+              :class="[
+                'search-input',
+                { 'active': isSearchFocus },
+                { 'disabled': isAll && !isAllFlag }
+              ]"
+              v-if="isOrganization"
+            >
+              <bk-dropdown-menu
+                align="left"
+                ref="dropdown"
+                trigger="click">
+                <template slot="dropdown-trigger">
+                  <Icon class="search-icon" :type="searchConditionValue === 'fuzzy' ? 'fuzzy-search-allow' : 'exact-search-allow'" />
+                </template>
+                <ul class="bk-dropdown-list" slot="dropdown-content">
+                  <li
+                    v-for="item in searchConditionList"
+                    :key="item.id"
+                    @click.stop="handleConditionSelcted(item)">
+                    <a href="javascript:;" :class="{ 'active': item.id === searchConditionValue }">
+                      <Icon class="search-config-icon" style="font-size: 16px;" :type="item.id === 'fuzzy' ? 'fuzzy-search-allow' : 'exact-search-allow'" />
+                      {{ item.name }}
+                    </a>
+                  </li>
+                </ul>
+              </bk-dropdown-menu>
+              <bk-input
+                v-model="keyword"
+                :placeholder="$t(`m.common['搜索提示1']`)"
+                maxlength="64"
+                clearable
+                :disabled="isAll && !isAllFlag"
+                ext-cls="iam-add-member-search-input-cls"
+                @focus="handleSearchInput"
+                @blur="handleSearchBlur"
+                @keyup.enter.native="handleSearch"
+                @keyup.up.native="handleKeyup"
+                @keyup.down.native="handleKeydown">
+              </bk-input>
+            </div>
+            <div class="member-tree-wrapper"
+              v-bkloading="{ isLoading: treeLoading, opacity: 1 }"
+              v-if="isOrganization">
+              <template v-if="isShowMemberTree">
+                <div class="tree">
+                  <infinite-tree
+                    ref="memberTreeRef"
+                    data-test-id="group_addGroupMemberDialog_tree_member"
+                    :all-data="treeList"
+                    :empty-data="emptyData"
+                    style="height: 309px;"
+                    :is-rating-manager="curIsRatingManager"
+                    :key="infiniteTreeKey"
+                    :is-disabled="isAll"
+                    @async-load-nodes="handleRemoteLoadNode"
+                    @expand-node="handleExpanded"
+                    @on-select="handleOnSelected"
+                    @on-refresh="handleEmptyRefresh"
+                  />
+                </div>
+              </template>
+              <template v-if="isShowSearchResult">
+                <div class="search-content">
+                  <template v-if="isHasSeachResult">
+                    <dialog-infinite-list
+                      ref="searchedResultsRef"
+                      data-test-id="group_addGroupMemberDialog_list_searchResult"
+                      :all-data="searchedResult"
+                      :focus-index.sync="focusItemIndex"
+                      :is-disabled="isAll"
+                      style="height: 309px;"
+                      @on-checked="handleSearchResultSelected">
+                    </dialog-infinite-list>
+                  </template>
+                  <template v-if="isSeachResultTooMuch">
+                    <div class="too-much-wrapper">
+                      <Icon type="warning" class="much-tips-icon" />
+                      <p class="text">{{ $t(`m.info['搜索结果']`) }}</p>
+                    </div>
+                  </template>
+                  <template v-if="isSeachResultEmpty">
+                    <div class="search-empty-wrapper">
+                      <!-- <iam-svg />
                                             <p class="empty-tips">{{ $t(`m.common['搜索无结果']`) }}</p> -->
-                                            <ExceptionEmpty
-                                                :type="emptyData.type"
-                                                :empty-text="emptyData.text"
-                                                :tip-text="emptyData.tip"
-                                                :tip-type="emptyData.tipType"
-                                                @on-clear="handleEmptyClear"
-                                                @on-refresh="handleEmptyRefresh"
-                                            />
-                                        </div>
-                                    </template>
-                                </div>
-                            </template>
-                        </div>
-                        <div class="manual-wrapper" v-if="!isOrganization">
-                            <bk-input
-                                :placeholder="$t(`m.common['手动输入提示']`)"
-                                data-test-id="group_addGroupMemberDialog_input_manualUser"
-                                type="textarea"
-                                :rows="14"
-                                v-model="manualValue"
-                                :disabled="isAll"
-                                @input="handleManualInput">
-                            </bk-input>
-                            <p class="manual-error-text" v-if="isManualInputOverLimit">{{ $t(`m.common['手动输入提示1']`) }}</p>
-                            <p class="manual-error-text pr10" v-if="manualInputError">
-                                {{ $t(`m.common['手动输入提示2']`) }}
-                                <template v-if="isHierarchicalAdmin.type === 'rating_manager'">
-                                    ，{{ $t(`m.common['请尝试']`) }}<span class="highlight" @click="handleSkip">{{ $t(`m.common['修改授权人员范围']`) }}</span>
-                                </template>
-                            </p>
-                            <bk-button
-                                theme="primary"
-                                :style="{ width: '100%', marginTop: curLanguageIsCn ? '35px' : '50px' }"
-                                :loading="manualAddLoading"
-                                :disabled="isManualDisabled || isAll"
-                                data-test-id="group_addGroupMemberDialog_btn_addManualUser"
-                                @click="handleAddManualUser">
-                                {{ $t(`m.common['添加到已选列表']`) }}
-                            </bk-button>
-                        </div>
+                      <ExceptionEmpty
+                        :type="emptyData.type"
+                        :empty-text="emptyData.text"
+                        :tip-text="emptyData.tip"
+                        :tip-type="emptyData.tipType"
+                        @on-clear="handleEmptyClear"
+                        @on-refresh="handleEmptyRefresh"
+                      />
                     </div>
-                    <div class="right">
-                        <div class="header">
-                            <div class="has-selected">
-                                <template v-if="curLanguageIsCn">
-                                    {{ $t(`m.common['已选择']`) }}
-                                    <template v-if="isShowSelectedText">
-                                        <span class="organization-count">{{ hasSelectedDepartments.length }}</span>{{ $t(`m.common['个']`) }} {{ $t(`m.common['组织']`) }}，
-                                        <span class="user-count">{{ hasSelectedUsers.length }}</span>{{ $t(`m.common['个']`) }} {{ $t(`m.common['用户']`) }}
-                                    </template>
-                                    <template v-else>
-                                        <span class="user-count">0</span>
-                                    </template>
-                                </template>
-                                <template v-else>
-                                    <template v-if="isShowSelectedText">
-                                        <span class="organization-count">{{ hasSelectedDepartments.length }}</span>Org，
-                                        <span class="user-count">{{ hasSelectedUsers.length }}</span>User
-                                    </template>
-                                    <template v-else>
-                                        <span class="user-count">0</span>
-                                    </template>
-                                    {{ $t(`m.common['已选择']`) }}
-                                </template>
-                            </div>
-                            <bk-button theme="primary" text :disabled="!isShowSelectedText || isAll" @click="handleDeleteAll">{{ $t(`m.common['清空']`) }}</bk-button>
-                        </div>
-                        <div class="content">
-                            <div class="organization-content" v-if="isDepartSelectedEmpty">
-                                <div class="organization-item" v-for="item in hasSelectedDepartments" :key="item.id">
-                                    <Icon type="file-close" class="folder-icon" />
-                                    <span class="organization-name" :title="nameType(item)">{{ item.name }}</span>
-                                    <span class="user-count" v-if="item.showCount">{{ '(' + item.count + `)` }}</span>
-                                    <Icon bk type="close-circle-shape" class="delete-depart-icon" @click="handleDelete(item, 'organization')" />
-                                </div>
-                            </div>
-                            <div class="user-content" v-if="isUserSelectedEmpty">
-                                <div class="user-item" v-for="item in hasSelectedUsers" :key="item.id">
-                                    <Icon type="personal-user" class="user-icon" />
-                                    <span class="user-name" :title="nameType(item)">{{ item.username }}<template v-if="item.name !== ''">({{ item.name }})</template>
-                                    </span>
-                                    <Icon bk type="close-circle-shape" class="delete-icon" @click="handleDelete(item, 'user')" />
-                                </div>
-                            </div>
-                            <div class="selected-empty-wrapper" v-if="isSelectedEmpty">
-                                <ExceptionEmpty />
-                            </div>
-                        </div>
-                    </div>
+                  </template>
+                </div>
+              </template>
+            </div>
+            <div class="manual-wrapper" v-if="!isOrganization">
+              <bk-input
+                :placeholder="$t(`m.common['手动输入提示']`)"
+                data-test-id="group_addGroupMemberDialog_input_manualUser"
+                type="textarea"
+                :rows="14"
+                v-model="manualValue"
+                :disabled="isAll"
+                @input="handleManualInput">
+              </bk-input>
+              <p class="manual-error-text" v-if="isManualInputOverLimit">{{ $t(`m.common['手动输入提示1']`) }}</p>
+              <p class="manual-error-text pr10" v-if="manualInputError">
+                {{ $t(`m.common['手动输入提示2']`) }}
+                <template v-if="isHierarchicalAdmin.type === 'rating_manager'">
+                  ，{{ $t(`m.common['请尝试']`) }}<span class="highlight" @click="handleSkip">{{ $t(`m.common['修改授权人员范围']`) }}</span>
+                </template>
+              </p>
+              <bk-button
+                theme="primary"
+                :style="{ width: '100%', marginTop: curLanguageIsCn ? '35px' : '50px' }"
+                :loading="manualAddLoading"
+                :disabled="isManualDisabled || isAll"
+                data-test-id="group_addGroupMemberDialog_btn_addManualUser"
+                @click="handleAddManualUser">
+                {{ $t(`m.common['添加到已选列表']`) }}
+              </bk-button>
+            </div>
+          </div>
+          <div class="right">
+            <div class="header">
+              <div class="has-selected">
+                <template v-if="curLanguageIsCn">
+                  {{ $t(`m.common['已选择']`) }}
+                  <template v-if="isShowSelectedText">
+                    <span class="organization-count">{{ hasSelectedDepartments.length }}</span>{{ $t(`m.common['个']`) }} {{ $t(`m.common['组织']`) }}，
+                    <span class="user-count">{{ hasSelectedUsers.length }}</span>{{ $t(`m.common['个']`) }} {{ $t(`m.common['用户']`) }}
+                  </template>
+                  <template v-else>
+                    <span class="user-count">0</span>
+                  </template>
                 </template>
                 <template v-else>
-                    <div style="margin-top: 25px;">
-                        <iam-deadline :value="expiredAt" type="dialog" @on-change="handleDeadlineChange" />
-                    </div>
+                  <template v-if="isShowSelectedText">
+                    <span class="organization-count">{{ hasSelectedDepartments.length }}</span>Org，
+                    <span class="user-count">{{ hasSelectedUsers.length }}</span>User
+                  </template>
+                  <template v-else>
+                    <span class="user-count">0</span>
+                  </template>
+                  {{ $t(`m.common['已选择']`) }}
                 </template>
+              </div>
+              <bk-button theme="primary" text :disabled="!isShowSelectedText || isAll" @click="handleDeleteAll">{{ $t(`m.common['清空']`) }}</bk-button>
             </div>
-        </div>
-        <div slot="footer">
-            <div v-if="showLimit" class="limit-wrapper">
-                <bk-checkbox
-                    :true-value="true"
-                    :false-value="false"
-                    v-model="isAll">
-                    {{ $t(`m.common['全员']`) }}
-                </bk-checkbox>
+            <div class="content">
+              <div class="organization-content" v-if="isDepartSelectedEmpty">
+                <div class="organization-item" v-for="item in hasSelectedDepartments" :key="item.id">
+                  <Icon type="file-close" class="folder-icon" />
+                  <span class="organization-name" :title="nameType(item)">{{ item.name }}</span>
+                  <span class="user-count" v-if="item.showCount">{{ '(' + item.count + `)` }}</span>
+                  <Icon bk type="close-circle-shape" class="delete-depart-icon" @click="handleDelete(item, 'organization')" />
+                </div>
+              </div>
+              <div class="user-content" v-if="isUserSelectedEmpty">
+                <div class="user-item" v-for="item in hasSelectedUsers" :key="item.id">
+                  <Icon type="personal-user" class="user-icon" />
+                  <span class="user-name" :title="nameType(item)">{{ item.username }}<template v-if="item.name !== ''">({{ item.name }})</template>
+                  </span>
+                  <Icon bk type="close-circle-shape" class="delete-icon" @click="handleDelete(item, 'user')" />
+                </div>
+              </div>
+              <div class="selected-empty-wrapper" v-if="isSelectedEmpty">
+                <ExceptionEmpty />
+              </div>
             </div>
-            <template v-if="showExpiredAt">
-                <template v-if="isPrev">
-                    <bk-button theme="primary" :disabled="isDisabled" @click="handleNextStep">{{ $t(`m.common['下一步']`) }}</bk-button>
-                </template>
-                <template v-else>
-                    <bk-button @click="handlePrevStep">{{ $t(`m.common['上一步']`) }}</bk-button>
-                    <bk-button style="margin-left: 10px;" theme="primary" :disabled="isNextSureDisabled" :loading="loading" @click="handleSave" data-test-id="group_btn_addMemberConfirm">{{ $t(`m.common['确定']`) }}</bk-button>
-                </template>
-            </template>
-            <template v-else>
-                <bk-button theme="primary" :disabled="isDisabled && !isAll" @click="handleSave" data-test-id="group_btn_addMemberConfirm">{{ $t(`m.common['确定']`) }}</bk-button>
-            </template>
-            <bk-button style="margin-left: 10px;" :disabled="loading" @click="handleCancel">{{ $t(`m.common['取消']`) }}</bk-button>
-        </div>
-    </bk-dialog>
+          </div>
+        </template>
+        <template v-else>
+          <div style="margin-top: 25px;">
+            <iam-deadline :value="expiredAt" type="dialog" @on-change="handleDeadlineChange" />
+          </div>
+        </template>
+      </div>
+    </div>
+    <div slot="footer">
+      <div v-if="showLimit" class="limit-wrapper">
+        <bk-checkbox
+          :true-value="true"
+          :false-value="false"
+          v-model="isAll">
+          {{ $t(`m.common['全员']`) }}
+        </bk-checkbox>
+      </div>
+      <template v-if="showExpiredAt">
+        <template v-if="isPrev">
+          <bk-button theme="primary" :disabled="isDisabled" @click="handleNextStep">{{ $t(`m.common['下一步']`) }}</bk-button>
+        </template>
+        <template v-else>
+          <bk-button @click="handlePrevStep">{{ $t(`m.common['上一步']`) }}</bk-button>
+          <bk-button style="margin-left: 10px;" theme="primary" :disabled="isNextSureDisabled" :loading="loading" @click="handleSave" data-test-id="group_btn_addMemberConfirm">{{ $t(`m.common['确定']`) }}</bk-button>
+        </template>
+      </template>
+      <template v-else>
+        <bk-button theme="primary" :disabled="isDisabled && !isAll" @click="handleSave" data-test-id="group_btn_addMemberConfirm">{{ $t(`m.common['确定']`) }}</bk-button>
+      </template>
+      <bk-button style="margin-left: 10px;" :disabled="loading" @click="handleCancel">{{ $t(`m.common['取消']`) }}</bk-button>
+    </div>
+  </bk-dialog>
 </template>
 <script>
-    import _ from 'lodash';
-    import InfiniteTree from '@/components/infinite-tree';
-    import dialogInfiniteList from '@/components/dialog-infinite-list';
-    import IamDeadline from '@/components/iam-deadline/horizontal';
-    import { guid, formatCodeData } from '@/common/util';
-    import { bus } from '@/common/bus';
+  import _ from 'lodash';
+  import InfiniteTree from '@/components/infinite-tree';
+  import dialogInfiniteList from '@/components/dialog-infinite-list';
+  import IamDeadline from '@/components/iam-deadline/horizontal';
+  import { guid, formatCodeData } from '@/common/util';
+  import { bus } from '@/common/bus';
 
-    // 去除()以及之间的字符
-    const getUsername = (str) => {
-        const array = str.split('');
-        const index = array.findIndex(item => item === '(');
-        if (index !== -1) {
-            return array.splice(0, index).join('');
+  // 去除()以及之间的字符
+  const getUsername = (str) => {
+    const array = str.split('');
+    const index = array.findIndex(item => item === '(');
+    if (index !== -1) {
+      return array.splice(0, index).join('');
+    }
+    return str;
+  };
+
+  export default {
+    name: '',
+    components: {
+      InfiniteTree,
+      dialogInfiniteList,
+      IamDeadline
+    },
+    props: {
+      show: {
+        type: Boolean,
+        default: false
+      },
+      users: {
+        type: Array,
+        default: () => []
+      },
+      departments: {
+        type: Array,
+        default: () => []
+      },
+      // 已选择的是否需要禁用
+      disabled: {
+        type: Boolean,
+        default: false
+      },
+      loading: {
+        type: Boolean,
+        default: false
+      },
+      showExpiredAt: {
+        type: Boolean,
+        default: false
+      },
+      name: {
+        type: String,
+        default: ''
+      },
+      id: {
+        type: [String, Number],
+        default: ''
+      },
+      title: {
+        type: String,
+        default: ''
+      },
+      isRatingManager: {
+        type: Boolean,
+        default: false
+      },
+      showLimit: {
+        type: Boolean,
+        default: false
+      },
+      allChecked: {
+        type: Boolean,
+        default: false
+      },
+      isBatch: {
+        type: Boolean,
+        default: false
+      }
+    },
+    data () {
+      return {
+        isShowDialog: false,
+        keyword: '',
+        treeLoading: false,
+        isBeingSearch: false,
+        hasSelectedUsers: [],
+        searchedUsers: [],
+        searchedDepartment: [],
+        hasSelectedDepartments: [],
+        treeList: [],
+        infiniteTreeKey: -1,
+        searchedResult: [],
+        // 搜索时 键盘上下键 hover 的 index
+        focusItemIndex: -1,
+        isPrev: true,
+        expiredAt: 15552000,
+        requestQueue: ['categories', 'memberList'],
+        defaultDepartments: [],
+        defaultUsers: [],
+        isShowTooMuch: false,
+
+        searchConditionList: [
+          {
+            id: 'fuzzy',
+            name: this.$t(`m.common['模糊搜索']`)
+          },
+          {
+            id: 'exact',
+            name: this.$t(`m.common['精确搜索']`)
+          }
+        ],
+        searchConditionValue: 'fuzzy',
+        isSearchFocus: false,
+
+        panels: [
+          { name: 'organization', label: this.$t(`m.common['组织架构']`) },
+          { name: 'manual', label: this.$t(`m.common['手动输入']`) }
+        ],
+        tabActive: 'organization',
+        manualValue: '',
+        manualAddLoading: false,
+        manualInputError: false,
+        manualValueBackup: [],
+        isAll: false,
+        isAllFlag: false,
+        externalSource: '',
+        emptyData: {
+          type: '',
+          text: '',
+          tip: '',
+          tipType: ''
         }
-        return str;
-    };
-
-    export default {
-        name: '',
-        components: {
-            InfiniteTree,
-            dialogInfiniteList,
-            IamDeadline
-        },
-        props: {
-            show: {
-                type: Boolean,
-                default: false
-            },
-            users: {
-                type: Array,
-                default: () => []
-            },
-            departments: {
-                type: Array,
-                default: () => []
-            },
-            // 已选择的是否需要禁用
-            disabled: {
-                type: Boolean,
-                default: false
-            },
-            loading: {
-                type: Boolean,
-                default: false
-            },
-            showExpiredAt: {
-                type: Boolean,
-                default: false
-            },
-            name: {
-                type: String,
-                default: ''
-            },
-            id: {
-                type: [String, Number],
-                default: ''
-            },
-            title: {
-                type: String,
-                default: ''
-            },
-            isRatingManager: {
-                type: Boolean,
-                default: false
-            },
-            showLimit: {
-                type: Boolean,
-                default: false
-            },
-            allChecked: {
-                type: Boolean,
-                default: false
-            },
-            isBatch: {
-                type: Boolean,
-                default: false
-            }
-        },
-        data () {
+      };
+    },
+    computed: {
+      isLoading () {
+        return this.requestQueue.length > 0;
+      },
+      isDisabled () {
+        return this.isLoading || (this.hasSelectedUsers.length < 1 && this.hasSelectedDepartments.length < 1);
+      },
+      isNextSureDisabled () {
+        return this.expiredAt === 0;
+      },
+      isHasSeachResult () {
+        return (this.searchedDepartment.length > 0 || this.searchedUsers.length > 0) && !this.treeLoading;
+      },
+      isSeachResultTooMuch () {
+        return !this.treeLoading && this.isShowTooMuch;
+      },
+      isSeachResultEmpty () {
+        return this.searchedDepartment.length < 1
+          && this.searchedUsers.length < 1 && !this.treeLoading && !this.isShowTooMuch;
+      },
+      isShowSelectedText () {
+        return this.hasSelectedDepartments.length > 0 || this.hasSelectedUsers.length > 0;
+      },
+      isShowSearchResult () {
+        return this.isBeingSearch && !this.treeLoading;
+      },
+      isShowMemberTree () {
+        return !this.isBeingSearch && !this.treeLoading;
+      },
+      isDepartSelectedEmpty () {
+        return this.hasSelectedDepartments.length > 0;
+      },
+      isUserSelectedEmpty () {
+        return this.hasSelectedUsers.length > 0;
+      },
+      isSelectedEmpty () {
+        return this.hasSelectedDepartments.length < 1 && this.hasSelectedUsers.length < 1;
+      },
+      style () {
+        if (this.showExpiredAt) {
+          if (this.isPrev) {
             return {
-                isShowDialog: false,
-                keyword: '',
-                treeLoading: false,
-                isBeingSearch: false,
-                hasSelectedUsers: [],
-                searchedUsers: [],
-                searchedDepartment: [],
-                hasSelectedDepartments: [],
-                treeList: [],
-                infiniteTreeKey: -1,
-                searchedResult: [],
-                // 搜索时 键盘上下键 hover 的 index
-                focusItemIndex: -1,
-                isPrev: true,
-                expiredAt: 15552000,
-                requestQueue: ['categories', 'memberList'],
-                defaultDepartments: [],
-                defaultUsers: [],
-                isShowTooMuch: false,
-
-                searchConditionList: [
-                    {
-                        id: 'fuzzy',
-                        name: this.$t(`m.common['模糊搜索']`)
-                    },
-                    {
-                        id: 'exact',
-                        name: this.$t(`m.common['精确搜索']`)
-                    }
-                ],
-                searchConditionValue: 'fuzzy',
-                isSearchFocus: false,
-
-                panels: [
-                    { name: 'organization', label: this.$t(`m.common['组织架构']`) },
-                    { name: 'manual', label: this.$t(`m.common['手动输入']`) }
-                ],
-                tabActive: 'organization',
-                manualValue: '',
-                manualAddLoading: false,
-                manualInputError: false,
-                manualValueBackup: [],
-                isAll: false,
-                isAllFlag: false,
-                externalSource: '',
-                emptyData: {
-                    type: '',
-                    text: '',
-                    tip: '',
-                    tipType: ''
-                }
+              height: this.curLanguageIsCn ? '383px' : '400px'
             };
-        },
-        computed: {
-            isLoading () {
-                return this.requestQueue.length > 0;
-            },
-            isDisabled () {
-                return this.isLoading || (this.hasSelectedUsers.length < 1 && this.hasSelectedDepartments.length < 1);
-            },
-            isNextSureDisabled () {
-                return this.expiredAt === 0;
-            },
-            isHasSeachResult () {
-                return (this.searchedDepartment.length > 0 || this.searchedUsers.length > 0) && !this.treeLoading;
-            },
-            isSeachResultTooMuch () {
-                return !this.treeLoading && this.isShowTooMuch;
-            },
-            isSeachResultEmpty () {
-                return this.searchedDepartment.length < 1
-                    && this.searchedUsers.length < 1 && !this.treeLoading && !this.isShowTooMuch;
-            },
-            isShowSelectedText () {
-                return this.hasSelectedDepartments.length > 0 || this.hasSelectedUsers.length > 0;
-            },
-            isShowSearchResult () {
-                return this.isBeingSearch && !this.treeLoading;
-            },
-            isShowMemberTree () {
-                return !this.isBeingSearch && !this.treeLoading;
-            },
-            isDepartSelectedEmpty () {
-                return this.hasSelectedDepartments.length > 0;
-            },
-            isUserSelectedEmpty () {
-                return this.hasSelectedUsers.length > 0;
-            },
-            isSelectedEmpty () {
-                return this.hasSelectedDepartments.length < 1 && this.hasSelectedUsers.length < 1;
-            },
-            style () {
-                if (this.showExpiredAt) {
-                    if (this.isPrev) {
-                        return {
-                            height: this.curLanguageIsCn ? '383px' : '400px'
-                        };
-                    }
-                    return {
-                        height: '80px'
-                    };
-                }
-                return {
-                    height: '383px'
-                };
-            },
-            isOrganization () {
-                return this.tabActive === 'organization';
-            },
-            isManualInputOverLimit () {
-                if (this.manualValue === '') {
-                    return false;
-                }
-                const MAX_LEN = 100;
-                return this.manualValue.split(';').filter(item => item !== '').length > MAX_LEN;
-            },
-            isManualDisabled () {
-                return this.manualValue === '' || this.isManualInputOverLimit;
-            },
-            manualValueActual () {
-                return this.manualValue.replace(/\n|\s+/g, ';');
-            },
-            curIsRatingManager () {
-                if (this.isAllFlag) {
-                    return false;
-                }
-                return this.isRatingManager;
-            },
-            isHierarchicalAdmin () {
-                return this.$store.getters.roleList.find(item => item.id === this.$store.getters.navCurRoleId) || {};
-            },
-            nameType () {
-                return (payload) => {
-                    const { name, type, username, full_name: fullName } = payload;
-                    const typeMap = {
-                        user: () => {
-                            if (fullName) {
-                                const result = fullName.indexOf(';') > -1 ? fullName.replace(/[,;；]/g, '\n') : fullName;
-                                return result;
-                            } else {
-                                return name ? `${username}(${name})` : username;
-                            }
-                        },
-                        depart: () => {
-                            return fullName || payload.fullName || name;
-                        }
-                    };
-                    return typeMap[type] ? typeMap[type]() : typeMap['user']();
-                };
-            }
-        },
-        watch: {
-            show: {
-                handler (value) {
-                    this.isShowDialog = !!value;
-                    if (this.isShowDialog) {
-                        this.infiniteTreeKey = new Date().getTime();
-                        this.hasSelectedUsers.splice(0, this.hasSelectedUsers.length, ...this.users);
-                        this.hasSelectedDepartments.splice(0, this.hasSelectedDepartments.length, ...this.departments);
-                        this.fetchInitData();
-                    }
-                },
-                immediate: true
-            },
-            keyword (newVal, oldVal) {
-                this.focusItemIndex = -1;
-                if (!newVal && oldVal) {
-                    if (this.isBeingSearch) {
-                        this.infiniteTreeKey = new Date().getTime();
-                        if (this.isAllFlag) {
-                            this.fetchCategories(true, false);
-                        } else {
-                            if (this.isRatingManager) {
-                                this.fetchRoleSubjectScope(true, false);
-                            } else {
-                                this.fetchCategories(true, false);
-                            }
-                        }
-                        this.isBeingSearch = false;
-                    }
-                }
-            },
-            allChecked: {
-                handler (value) {
-                    this.isAll = !!value;
-                },
-                immediate: true
-            }
-        },
-        created () {
-            const { name, query } = this.$route;
-            if (name === 'gradingAdminCreate') {
-                this.handleSave();
-            }
-            if (query.source && query.source === 'externalApp') {
-                this.externalSource = query.source;
-            }
-        },
-        methods: {
-            fetchInitData () {
-                if (this.showExpiredAt) {
-                    if (this.isBatch) {
-                        this.fetchCategoriesList();
-                    } else {
-                        this.fetchMemberList();
-                    }
-                } else {
-                    this.requestQueue = ['categories'];
-                    if (this.isRatingManager) {
-                        this.fetchRoleSubjectScope(false, true);
-                    } else {
-                        this.fetchCategories(false, true);
-                    }
-                }
-            },
-            
-            handleSearchInput () {
-                this.isSearchFocus = true;
-            },
-
-            handleSearchBlur () {
-                this.isSearchFocus = false;
-            },
-            
-            handleEmptyClear () {
-                this.keyword = '';
-                this.emptyData.tipType = '';
-                this.fetchInitData();
-                this.requestQueue = [];
-            },
-
-            handleEmptyRefresh () {
-                this.fetchInitData();
-                this.requestQueue = [];
-            },
-
-            handleTabChange ({ name }) {
-                this.tabActive = name;
-                // 已选择的需要从输入框中去掉
-                if (this.tabActive === 'manual'
-                    && this.hasSelectedUsers.length > 0
-                    && this.manualValue !== '') {
-                    const templateArr = [];
-                    const usernameList = this.hasSelectedUsers.map(item => item.username);
-                    const manualValueBackup = this.manualValueActual.split(';').filter(item => item !== '');
-                    manualValueBackup.forEach(item => {
-                        const name = getUsername(item);
-                        if (!usernameList.includes(name)) {
-                            templateArr.push(item);
-                        }
-                    });
-                    this.manualValue = templateArr.join(';');
-                }
-            },
-
-            handleManualInput () {
-                this.manualInputError = false;
-            },
-
-            async handleAddManualUser () {
-                this.manualAddLoading = true;
-                try {
-                    const url = this.isRatingManager ? 'role/queryRolesUsers' : 'organization/verifyManualUser';
-                    const res = await this.$store.dispatch(url, {
-                        usernames: this.manualValueActual.split(';').filter(item => item !== '').map(item => {
-                            return getUsername(item);
-                        })
-                    });
-                    const temps = res.data.filter(
-                        item => {
-                            this.$set(item, 'full_name', item.departments && item.departments.length ? item.departments.join(';') : '');
-                            return !this.hasSelectedUsers.map(subItem => subItem.username).includes(item.username);
-                        }
-                    );
-                    this.hasSelectedUsers.push(...temps);
-                    if (res.data.length > 0) {
-                        const usernameList = res.data.map(item => item.username);
-                        // 分号拼接
-                        // const templateArr = [];
-                        // this.manualValueBackup = this.manualValueActual.split(';').filter(item => item !== '');
-                        // this.manualValueBackup.forEach(item => {
-                        //     const name = getUsername(item);
-                        //     if (!usernameList.includes(name)) {
-                        //         templateArr.push(item);
-                        //     }
-                        // });
-                        // this.manualValue = templateArr.join(';');
-
-                        // 保存原有格式
-                        let formatStr = this.manualValue;
-                        usernameList.forEach(item => {
-                            formatStr = formatStr.replace(this.evil('/' + item + '(;\\n|\\s\\n|;|\\s|\\n|)/g'), '');
-                        });
-                        this.manualValue = formatStr;
-                        if (this.manualValue !== '') {
-                            this.manualInputError = true;
-                        }
-                    } else {
-                        this.manualInputError = true;
-                    }
-                } catch (e) {
-                    console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: this.$t(`m.verify['用户名输入格式错误]`)
-                    });
-                } finally {
-                    this.manualAddLoading = false;
-                }
-            },
-
-            handleKeyup () {
-                // 当搜索的结果数据小于10条时才支持键盘上下键选中
-                if (!this.isBeingSearch || this.searchedResult.length > 10) {
-                    return;
-                }
-                const len = this.$refs.searchedResultsRef.renderData.length;
-                this.focusItemIndex--;
-                this.focusItemIndex = this.focusItemIndex < 0 ? -1 : this.focusItemIndex;
-                if (this.focusItemIndex === -1) {
-                    this.focusItemIndex = len - 1;
-                }
-            },
-
-            handleKeydown () {
-                // 当搜索的结果数据小于10条时才支持键盘上下键选中
-                if (!this.isBeingSearch || this.searchedResult.length > 10) {
-                    return;
-                }
-                const len = this.$refs.searchedResultsRef.renderData.length;
-                this.focusItemIndex++;
-                this.focusItemIndex = this.focusItemIndex > len - 1
-                    ? len
-                    : this.focusItemIndex;
-                if (this.focusItemIndex === len) {
-                    this.focusItemIndex = 0;
-                }
-            },
-
-            handleDeadlineChange (payload) {
-                this.expiredAt = payload;
-            },
-
-            async fetchMemberList () {
-                try {
-                    const params = {
-                        id: this.id,
-                        limit: 1000,
-                        offset: 0
-                    };
-                    const res = await this.$store.dispatch('userGroup/getUserGroupMemberList', params);
-
-                    this.defaultDepartments = res.data.results.filter(item => item.type === 'department');
-                    this.defaultUsers = res.data.results.filter(item => item.type === 'user');
-                    if (this.isRatingManager) {
-                        this.fetchRoleSubjectScope(false, true);
-                    } else {
-                        this.fetchCategories(false, true);
-                    }
-                } catch (e) {
-                    console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
-                } finally {
-                    this.requestQueue.shift();
-                }
-            },
-
-            fetchCategoriesList () {
-                try {
-                    if (this.isRatingManager) {
-                        this.fetchRoleSubjectScope(false, true);
-                    } else {
-                        this.fetchCategories(false, true);
-                    }
-                } catch (e) {
-                    console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
-                } finally {
-                    this.requestQueue.shift();
-                }
-            },
-
-            async fetchRoleSubjectScope (isTreeLoading = false, isDialogLoading = false) {
-                this.treeLoading = isTreeLoading;
-                try {
-                    const { code, data } = await this.$store.dispatch('role/getRoleSubjectScope');
-                    const departments = [...data];
-                    this.isAllFlag = departments.some(item => item.type === '*' && item.id === '*');
-                    if (this.isAllFlag) {
-                        this.fetchCategories(false, true);
-                        return;
-                    }
-                    this.emptyData = formatCodeData(code, this.emptyData, departments.length === 0);
-                    departments.forEach(child => {
-                        child.visiable = true;
-                        child.level = 0;
-                        child.loading = false;
-                        child.showRadio = true;
-                        child.selected = false;
-                        child.expanded = false;
-                        child.disabled = false;
-                        child.type = child.type === 'user' ? 'user' : 'depart';
-                        // child.count = child.recursive_member_count
-                        child.count = child.member_count;
-                        child.showCount = child.type !== 'user';
-                        child.async = child.child_count > 0 || child.member_count > 0;
-                        child.isNewMember = false;
-                        child.parentNodeId = '';
-                        if (child.type === 'user') {
-                            child.username = child.id;
-                            if (this.hasSelectedUsers.length > 0) {
-                                child.is_selected = this.hasSelectedUsers.map(item => item.id).includes(child.id);
-                            } else {
-                                child.is_selected = false;
-                            }
-
-                            if (this.defaultUsers.length && this.defaultUsers.map(item => item.id).includes(child.id)) {
-                                child.is_selected = true;
-                                child.disabled = true;
-                            }
-                        }
-                        if (child.type === 'depart') {
-                            if (this.hasSelectedDepartments.length > 0) {
-                                child.is_selected = this.hasSelectedDepartments.map(item => item.id).includes(child.id);
-                            } else {
-                                child.is_selected = false;
-                            }
-    
-                            if (this.defaultDepartments.length > 0
-                                && this.defaultDepartments.map(item => item.id).includes(child.id.toString())
-                            ) {
-                                child.is_selected = true;
-                                child.disabled = true;
-                            }
-                        }
-                    });
-                    this.treeList = _.cloneDeep(departments);
-                } catch (e) {
-                    console.error(e);
-                    const { code, data, message, statusText } = e;
-                    this.emptyData = formatCodeData(code, this.emptyData);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: message || data.msg || statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
-                } finally {
-                    this.treeLoading = false;
-                    if (isDialogLoading) {
-                        this.requestQueue.shift();
-                    }
-                }
-            },
-
-            async fetchCategories (isTreeLoading = false, isDialogLoading = false) {
-                this.treeLoading = isTreeLoading;
-                try {
-                    const { code, data } = await this.$store.dispatch('organization/getCategories');
-                    const categories = [...data];
-                    this.emptyData = formatCodeData(code, this.emptyData, categories.length === 0);
-                    categories.forEach((item, index) => {
-                        item.visiable = true;
-                        item.level = 0;
-                        item.showRadio = false;
-                        item.selected = false;
-                        item.expanded = false;
-                        item.count = 0;
-                        item.disabled = !item.departments || item.departments.length < 1;
-                        item.type = 'depart';
-                        item.showCount = false;
-                        item.async = item.departments && item.departments.length > 0;
-                        item.isNewMember = false;
-                        item.loading = false;
-                        item.is_selected = false;
-                        item.parentNodeId = '';
-                        item.id = `${item.id}&${item.level}`;
-                        if (item.departments && item.departments.length > 0) {
-                            item.departments.forEach((child, childIndex) => {
-                                child.visiable = false;
-                                child.level = 1;
-                                child.loading = false;
-                                child.showRadio = true;
-                                child.selected = false;
-                                child.expanded = false;
-                                child.disabled = false;
-                                child.type = 'depart';
-                                child.count = child.recursive_member_count;
-                                child.showCount = true;
-                                child.async = child.child_count > 0 || child.member_count > 0;
-                                child.isNewMember = false;
-                                child.parentNodeId = item.id;
-                                child.full_name = `${item.name}：${child.name}`;
-
-                                if (this.hasSelectedDepartments.length > 0) {
-                                    child.is_selected = this.hasSelectedDepartments.map(
-                                        item => item.id
-                                    ).includes(child.id);
-                                } else {
-                                    child.is_selected = false;
-                                }
-
-                                if (this.defaultDepartments.length > 0
-                                    && this.defaultDepartments.map(item => item.id).includes(child.id.toString())
-                                ) {
-                                    child.is_selected = true;
-                                    child.disabled = true;
-                                }
-                            });
-                            item.children = _.cloneDeep(item.departments);
-                        }
-                    });
-                    this.treeList = _.cloneDeep(categories);
-                } catch (e) {
-                    console.error(e);
-                    const { code, data, message, statusText } = e;
-                    this.emptyData = formatCodeData(code, this.emptyData);
-                    this.bkMessageInstance = this.$bkMessage({
-                        theme: 'error',
-                        message: message || data.msg || statusText
-                    });
-                } finally {
-                    this.treeLoading = false;
-                    if (isDialogLoading) {
-                        this.requestQueue.shift();
-                    }
-                }
-            },
-
-            async handleOnSelected (newVal, node) {
-                if (newVal) {
-                    if (node.type === 'user') {
-                        this.hasSelectedUsers.push(node);
-                    } else {
-                        this.hasSelectedDepartments.push(node);
-                    }
-                } else {
-                    if (node.type === 'user') {
-                        this.hasSelectedUsers = [
-                            ...this.hasSelectedUsers.filter(item => item.username !== node.username)
-                        ];
-                    } else {
-                        this.hasSelectedDepartments = [
-                            ...this.hasSelectedDepartments.filter(item => item.id !== node.id)
-                        ];
-                    }
-                }
-            },
-
-            handleDeleteAll () {
-                if (this.searchedUsers.length) {
-                    this.searchedUsers.forEach(search => {
-                        search.is_selected = false;
-                    });
-                }
-                if (this.searchedDepartment.length) {
-                    this.searchedDepartment.forEach(organ => {
-                        organ.is_selected = false;
-                    });
-                }
-                this.hasSelectedUsers.splice(0, this.hasSelectedUsers.length, ...[]);
-                this.hasSelectedDepartments.splice(0, this.hasSelectedDepartments.length, ...[]);
-                this.$refs.memberTreeRef && this.$refs.memberTreeRef.clearAllIsSelectedStatus();
-            },
-
-            handleConditionSelcted (payload) {
-                this.$refs.dropdown.hide();
-                this.searchConditionValue = payload.id;
-                this.handleSearch();
-            },
-
-            async handleSearch () {
-                if (this.keyword === '') {
-                    return;
-                }
-
-                // if (this.searchedResult.length === 1) {
-                //     if (this.searchedDepartment.length === 1) {
-                //         this.hasSelectedDepartments.push(this.searchedDepartment[0])
-                //     } else {
-                //         this.hasSelectedUsers.push(this.searchedUsers[0])
-                //     }
-                //     this.keyword = ''
-                //     this.searchedResult.splice(0, this.searchedResult.length, ...[])
-                //     this.searchedDepartment.splice(0, this.searchedDepartment.length, ...[])
-                //     this.searchedUsers.splice(0, this.searchedUsers.length, ...[])
-                //     return
-                // }
-
-                if (this.focusItemIndex !== -1) {
-                    this.$refs.searchedResultsRef.setCheckStatusByIndex();
-                    return;
-                }
-
-                this.treeList.splice(0, this.treeList.length, ...[]);
-                this.isBeingSearch = true;
-                this.treeLoading = true;
-
-                this.searchedResult.splice(0, this.searchedResult.length, ...[]);
-                this.searchedDepartment.splice(0, this.searchedDepartment.length, ...[]);
-                this.searchedUsers.splice(0, this.searchedUsers.length, ...[]);
-
-                const defaultDepartIds = [...this.defaultDepartments.map(item => item.id)];
-                const defaultUserIds = [...this.defaultUsers.map(item => item.id)];
-                const departIds = [...this.hasSelectedDepartments.map(item => item.id)];
-                const userIds = [...this.hasSelectedUsers.map(item => item.username)];
-                const params = {
-                    keyword: this.keyword,
-                    is_exact: this.searchConditionValue === 'exact'
-                };
-                try {
-                    const { code, data } = await this.$store.dispatch('organization/getSearchOrganizations', params);
-                    if (data.is_too_much) {
-                        this.isShowTooMuch = true;
-                        return;
-                    }
-                    this.isShowTooMuch = false;
-                    if (data.departments.length > 0) {
-                        data.departments.forEach(depart => {
-                            depart.showRadio = true;
-                            depart.type = 'depart';
-                            if (departIds.length && departIds.includes(depart.id)) {
-                                this.$set(depart, 'is_selected', true);
-                            } else {
-                                this.$set(depart, 'is_selected', false);
-                            }
-                            if (defaultDepartIds.length && defaultDepartIds.includes(depart.id.toString())) {
-                                this.$set(depart, 'is_selected', true);
-                                this.$set(depart, 'disabled', true);
-                            }
-                            depart.count = depart.recursive_member_count;
-                            depart.showCount = true;
-                        });
-                        this.searchedDepartment.splice(0, this.searchedDepartment.length, ...data.departments);
-                    }
-                    if (data.users.length > 0) {
-                        data.users.forEach(user => {
-                            user.id = guid();
-                            user.showRadio = true;
-                            user.type = 'user';
-                            this.$set(user, 'full_name', user.departments && user.departments.length ? user.departments.join(';') : '');
-                            if (userIds.length && userIds.includes(user.username)) {
-                                this.$set(user, 'is_selected', true);
-                            } else {
-                                this.$set(user, 'is_selected', false);
-                            }
-                            if (defaultUserIds.length && defaultUserIds.includes(user.username)) {
-                                this.$set(user, 'is_selected', true);
-                                this.$set(user, 'disabled', true);
-                            }
-                        });
-                        this.searchedUsers.splice(0, this.searchedUsers.length, ...data.users);
-                    }
-                    this.searchedResult.splice(
-                        0,
-                        this.searchedResult.length,
-                        ...this.searchedDepartment.concat(this.searchedUsers)
-                    );
-                    const isEmpty = data.users.length === 0 && data.departments.length === 0;
-                    if (isEmpty) {
-                        this.emptyData.tipType = 'search';
-                    }
-                    this.emptyData = formatCodeData(code, this.emptyData, isEmpty);
-                } catch (e) {
-                    console.error(e);
-                    this.emptyData = formatCodeData(e.code, this.emptyData);
-                    this.bkMessageInstance = this.$bkMessage({
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
-                    });
-                } finally {
-                    this.treeLoading = false;
-                }
-            },
-
-            handleExpanded (payload) {
-                if (this.isRatingManager && !this.isAllFlag) {
-                    return;
-                }
-                const flag = this.treeList.some(item => item.parentNodeId === payload.id);
-                if (payload.level === 0 && !flag) {
-                    const curIndex = this.treeList.findIndex(item => item.id === payload.id);
-                    if (curIndex !== -1) {
-                        const children = _.cloneDeep(this.treeList[curIndex].children);
-                        if (children && children.length > 0) {
-                            children.forEach(item => {
-                                item.visiable = true;
-                            });
-                            this.treeList.splice(curIndex + 1, 0, ...children);
-                        }
-                    }
-                }
-            },
-
-            async handleRemoteLoadNode (payload) {
-                if (payload.level === 0 && !this.isRatingManager) {
-                    return;
-                }
-                payload.loading = true;
-                try {
-                    const res = await this.$store.dispatch('organization/getOrganizations', { departmentId: payload.id });
-                    // const { child_count, children, id, member_count, members, name, recursive_member_count } = res.data
-                    const { children, members } = res.data;
-                    if (children.length < 1 && members.length < 1) {
-                        payload.expanded = false;
-                        return;
-                    }
-
-                    const curIndex = this.treeList.findIndex(item => item.id === payload.id);
-
-                    if (curIndex === -1) {
-                        return;
-                    }
-                    const treeList = [];
-                    treeList.splice(0, 0, ...this.treeList);
-                    if (children.length > 0) {
-                        children.forEach((child, childIndex) => {
-                            child.visiable = payload.expanded;
-                            child.level = payload.level + 1;
-                            child.loading = false;
-                            child.showRadio = true;
-                            child.selected = false;
-                            child.expanded = false;
-                            child.disabled = this.disabled;
-                            child.type = 'depart';
-                            child.count = child.recursive_member_count;
-                            child.showCount = true;
-                            child.async = child.child_count > 0 || child.member_count > 0;
-                            child.isNewMember = false;
-                            child.parentNodeId = payload.id;
-                            // child.full_name = `${payload.full_name}/${child.name}`;
-                            child.full_name = payload.full_name;
-
-                            if (this.hasSelectedDepartments.length > 0) {
-                                child.is_selected = this.hasSelectedDepartments.map(item => item.id).includes(child.id);
-                            } else {
-                                child.is_selected = false;
-                            }
-
-                            if (this.defaultDepartments.length > 0
-                                && this.defaultDepartments.map(item => item.id).includes(child.id.toString())
-                            ) {
-                                child.is_selected = true;
-                                child.disabled = true;
-                            }
-                        });
-                    }
-
-                    if (members.length > 0) {
-                        members.forEach((child, childIndex) => {
-                            child.visiable = payload.expanded;
-                            child.level = payload.level + 1;
-                            child.loading = false;
-                            child.showRadio = true;
-                            child.selected = false;
-                            child.expanded = false;
-                            child.disabled = this.disabled;
-                            child.type = 'user';
-                            child.count = 0;
-                            child.showCount = false;
-                            child.async = false;
-                            child.isNewMember = false;
-                            child.parentNodeId = payload.id;
-                            child.full_name = `${payload.full_name}/${child.name}`;
-
-                            // parentNodeId + username 组合成id
-                            child.id = `${child.parentNodeId}${child.username}`;
-
-                            if (this.hasSelectedUsers.length > 0) {
-                                child.is_selected = this.hasSelectedUsers.map(item => item.id).includes(child.id);
-                            } else {
-                                child.is_selected = false;
-                            }
-                            const existSelectedNode = this.treeList.find(
-                                item => item.is_selected && item.username === child.username
-                            );
-                            if (existSelectedNode) {
-                                child.is_selected = true;
-                                child.disabled = true;
-                            }
-
-                            if (this.defaultUsers.length
-                                && this.defaultUsers.map(item => item.id).includes(child.username)) {
-                                child.is_selected = true;
-                                child.disabled = true;
-                            }
-                        });
-                    }
-
-                    const loadChildren = children.concat([...members]);
-
-                    treeList.splice(curIndex + 1, 0, ...loadChildren);
-
-                    this.treeList.splice(0, this.treeList.length, ...treeList);
-
-                    if (!payload.children) {
-                        payload.children = [];
-                    }
-
-                    payload.children.splice(0, payload.children.length, ...loadChildren);
-                } catch (e) {
-                    console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText
-                    });
-                } finally {
-                    setTimeout(() => {
-                        payload.loading = false;
-                    }, 300);
-                }
-            },
-            handleDelete (item, type) {
-                if (this.isAll) {
-                    return;
-                }
-                if (this.isBeingSearch) {
-                    if (this.searchedUsers.length) {
-                        this.searchedUsers.forEach(search => {
-                            if (search.username === item.username) {
-                                search.is_selected = false;
-                            }
-                        });
-                    }
-                    if (this.searchedDepartment.length) {
-                        this.searchedDepartment.forEach(organ => {
-                            if (organ.id === item.id) {
-                                organ.is_selected = false;
-                            }
-                        });
-                    }
-                } else {
-                    this.tabActive === 'organization' && this.$refs.memberTreeRef.setSingleSelectedStatus(item.id, false);
-                }
-                if (type === 'user') {
-                    this.hasSelectedUsers = [...this.hasSelectedUsers.filter(user => user.username !== item.username)];
-                } else {
-                    // eslint-disable-next-line max-len
-                    this.hasSelectedDepartments = [...this.hasSelectedDepartments.filter(organ => organ.id !== item.id)];
-                }
-            },
-
-            async handleSearchResultSelected (newVal, oldVal, localVal, item) {
-                if (item.type === 'user') {
-                    this.handleSearchUserSelected(newVal, item);
-                } else {
-                    if (newVal) {
-                        this.hasSelectedDepartments.push(item);
-                    } else {
-                        this.hasSelectedDepartments = this.hasSelectedDepartments.filter(organ => organ.id !== item.id);
-                    }
-                }
-            },
-
-            handleSearchUserSelected (newVal, item) {
-                if (newVal) {
-                    this.hasSelectedUsers.push(item);
-                } else {
-                    this.hasSelectedUsers = this.hasSelectedUsers.filter(user => user.username !== item.username);
-                }
-            },
-
-            handleAfterLeave () {
-                this.isPrev = true;
-                this.expiredAt = 15552000;
-                this.keyword = '';
-                this.treeLoading = false;
-                this.isBeingSearch = false;
-                this.hasSelectedUsers.splice(0, this.hasSelectedUsers.length, ...[]);
-                this.hasSelectedDepartments.splice(0, this.hasSelectedDepartments.length, ...[]);
-                this.searchedDepartment.splice(0, this.searchedDepartment.length, ...[]);
-                this.searchedUsers.splice(0, this.searchedUsers.length, ...[]);
-                this.searchedResult.splice(0, this.searchedResult.length, ...[]);
-                this.treeList.splice(0, this.treeList.length, ...[]);
-                this.requestQueue = ['categories', 'memberList'];
-                this.focusItemIndex = -1;
-                this.$refs.memberTreeRef && this.$refs.memberTreeRef.clearAllIsSelectedStatus();
-                this.searchConditionValue = 'fuzzy';
-                this.tabActive = 'organization';
-                this.manualValue = '';
-                this.manualAddLoading = false;
-                this.manualInputError = false;
-                this.manualValueBackup = [];
-                this.$emit('update:show', false);
-                this.$emit('on-after-leave');
-            },
-
-            handleCancel () {
-                this.$emit('on-cancel');
-            },
-
-            handleNextStep () {
-                this.isPrev = false;
-            },
-
-            handlePrevStep () {
-                this.expiredAt = 15552000;
-                this.isPrev = true;
-            },
-
-            handleSave () {
-                const params = {
-                    users: this.hasSelectedUsers,
-                    departments: this.hasSelectedDepartments,
-                    expiredAt: this.expiredAt,
-                    isAll: this.isAll
-                };
-                if (this.showExpiredAt) {
-                    if (this.expiredAt !== 4102444800) {
-                        params.policy_expired_at = this.expiredAt;
-                    } else {
-                        params.policy_expired_at = this.expiredAt;
-                    }
-                }
-                window.parent.postMessage({ type: 'IAM', data: params, code: 'add_user_confirm' }, '*');
-                this.$emit('on-sumbit', params);
-            },
-
-            evil (fn) {
-                const Fn = Function;
-                return new Fn('return ' + fn)();
-            },
-            
-            async handleSkip () {
-                bus.$emit('nav-change', { id: this.$store.getters.navCurRoleId }, 0);
-                await this.$store.dispatch('role/updateCurrentRole', { id: 0 });
-                const routeData = this.$router.resolve({ path: `${this.$store.getters.navCurRoleId}/rating-manager-edit`, params: { id: this.$store.getters.navCurRoleId } });
-                window.open(routeData.href, '_blank');
-                // this.$router.push({
-                //     name: 'gradingAdminEdit',
-                //     params: {
-                //         id: this.$store.getters.navCurRoleId
-                //     }
-                // });
-            }
+          }
+          return {
+            height: '80px'
+          };
         }
-    };
+        return {
+          height: '383px'
+        };
+      },
+      isOrganization () {
+        return this.tabActive === 'organization';
+      },
+      isManualInputOverLimit () {
+        if (this.manualValue === '') {
+          return false;
+        }
+        const MAX_LEN = 100;
+        return this.manualValue.split(';').filter(item => item !== '').length > MAX_LEN;
+      },
+      isManualDisabled () {
+        return this.manualValue === '' || this.isManualInputOverLimit;
+      },
+      manualValueActual () {
+        return this.manualValue.replace(/\n|\s+/g, ';');
+      },
+      curIsRatingManager () {
+        if (this.isAllFlag) {
+          return false;
+        }
+        return this.isRatingManager;
+      },
+      isHierarchicalAdmin () {
+        return this.$store.getters.roleList.find(item => item.id === this.$store.getters.navCurRoleId) || {};
+      },
+      nameType () {
+        return (payload) => {
+          const { name, type, username, full_name: fullName } = payload;
+          const typeMap = {
+            user: () => {
+              if (fullName) {
+                const result = fullName.indexOf(';') > -1 ? fullName.replace(/[,;；]/g, '\n') : fullName;
+                return result;
+              } else {
+                return name ? `${username}(${name})` : username;
+              }
+            },
+            depart: () => {
+              return fullName || payload.fullName || name;
+            }
+          };
+          return typeMap[type] ? typeMap[type]() : typeMap['user']();
+        };
+      }
+    },
+    watch: {
+      show: {
+        handler (value) {
+          this.isShowDialog = !!value;
+          if (this.isShowDialog) {
+            this.infiniteTreeKey = new Date().getTime();
+            this.hasSelectedUsers.splice(0, this.hasSelectedUsers.length, ...this.users);
+            this.hasSelectedDepartments.splice(0, this.hasSelectedDepartments.length, ...this.departments);
+            this.fetchInitData();
+          }
+        },
+        immediate: true
+      },
+      keyword (newVal, oldVal) {
+        this.focusItemIndex = -1;
+        if (!newVal && oldVal) {
+          if (this.isBeingSearch) {
+            this.infiniteTreeKey = new Date().getTime();
+            if (this.isAllFlag) {
+              this.fetchCategories(true, false);
+            } else {
+              if (this.isRatingManager) {
+                this.fetchRoleSubjectScope(true, false);
+              } else {
+                this.fetchCategories(true, false);
+              }
+            }
+            this.isBeingSearch = false;
+          }
+        }
+      },
+      allChecked: {
+        handler (value) {
+          this.isAll = !!value;
+        },
+        immediate: true
+      }
+    },
+    created () {
+      const { name, query } = this.$route;
+      if (name === 'gradingAdminCreate') {
+        this.handleSave();
+      }
+      if (query.source && query.source === 'externalApp') {
+        this.externalSource = query.source;
+      }
+    },
+    methods: {
+      fetchInitData () {
+        if (this.showExpiredAt) {
+          if (this.isBatch) {
+            this.fetchCategoriesList();
+          } else {
+            this.fetchMemberList();
+          }
+        } else {
+          this.requestQueue = ['categories'];
+          if (this.isRatingManager) {
+            this.fetchRoleSubjectScope(false, true);
+          } else {
+            this.fetchCategories(false, true);
+          }
+        }
+      },
+            
+      handleSearchInput () {
+        this.isSearchFocus = true;
+      },
+
+      handleSearchBlur () {
+        this.isSearchFocus = false;
+      },
+            
+      handleEmptyClear () {
+        this.keyword = '';
+        this.emptyData.tipType = '';
+        this.fetchInitData();
+        this.requestQueue = [];
+      },
+
+      handleEmptyRefresh () {
+        this.fetchInitData();
+        this.requestQueue = [];
+      },
+
+      handleTabChange ({ name }) {
+        this.tabActive = name;
+        // 已选择的需要从输入框中去掉
+        if (this.tabActive === 'manual'
+          && this.hasSelectedUsers.length > 0
+          && this.manualValue !== '') {
+          const templateArr = [];
+          const usernameList = this.hasSelectedUsers.map(item => item.username);
+          const manualValueBackup = this.manualValueActual.split(';').filter(item => item !== '');
+          manualValueBackup.forEach(item => {
+            const name = getUsername(item);
+            if (!usernameList.includes(name)) {
+              templateArr.push(item);
+            }
+          });
+          this.manualValue = templateArr.join(';');
+        }
+      },
+
+      handleManualInput () {
+        this.manualInputError = false;
+      },
+
+      async handleAddManualUser () {
+        this.manualAddLoading = true;
+        try {
+          const url = this.isRatingManager ? 'role/queryRolesUsers' : 'organization/verifyManualUser';
+          const res = await this.$store.dispatch(url, {
+            usernames: this.manualValueActual.split(';').filter(item => item !== '').map(item => {
+              return getUsername(item);
+            })
+          });
+          const temps = res.data.filter(
+            item => {
+              this.$set(item, 'full_name', item.departments && item.departments.length ? item.departments.join(';') : '');
+              return !this.hasSelectedUsers.map(subItem => subItem.username).includes(item.username);
+            }
+          );
+          this.hasSelectedUsers.push(...temps);
+          if (res.data.length > 0) {
+            const usernameList = res.data.map(item => item.username);
+            // 分号拼接
+            // const templateArr = [];
+            // this.manualValueBackup = this.manualValueActual.split(';').filter(item => item !== '');
+            // this.manualValueBackup.forEach(item => {
+            //     const name = getUsername(item);
+            //     if (!usernameList.includes(name)) {
+            //         templateArr.push(item);
+            //     }
+            // });
+            // this.manualValue = templateArr.join(';');
+
+            // 保存原有格式
+            let formatStr = this.manualValue;
+            usernameList.forEach(item => {
+              formatStr = formatStr.replace(this.evil('/' + item + '(;\\n|\\s\\n|;|\\s|\\n|)/g'), '');
+            });
+            this.manualValue = formatStr;
+            if (this.manualValue !== '') {
+              this.manualInputError = true;
+            }
+          } else {
+            this.manualInputError = true;
+          }
+        } catch (e) {
+          console.error(e);
+          this.bkMessageInstance = this.$bkMessage({
+            limit: 1,
+            theme: 'error',
+            message: this.$t(`m.verify['用户名输入格式错误]`)
+          });
+        } finally {
+          this.manualAddLoading = false;
+        }
+      },
+
+      handleKeyup () {
+        // 当搜索的结果数据小于10条时才支持键盘上下键选中
+        if (!this.isBeingSearch || this.searchedResult.length > 10) {
+          return;
+        }
+        const len = this.$refs.searchedResultsRef.renderData.length;
+        this.focusItemIndex--;
+        this.focusItemIndex = this.focusItemIndex < 0 ? -1 : this.focusItemIndex;
+        if (this.focusItemIndex === -1) {
+          this.focusItemIndex = len - 1;
+        }
+      },
+
+      handleKeydown () {
+        // 当搜索的结果数据小于10条时才支持键盘上下键选中
+        if (!this.isBeingSearch || this.searchedResult.length > 10) {
+          return;
+        }
+        const len = this.$refs.searchedResultsRef.renderData.length;
+        this.focusItemIndex++;
+        this.focusItemIndex = this.focusItemIndex > len - 1
+          ? len
+          : this.focusItemIndex;
+        if (this.focusItemIndex === len) {
+          this.focusItemIndex = 0;
+        }
+      },
+
+      handleDeadlineChange (payload) {
+        this.expiredAt = payload;
+      },
+
+      async fetchMemberList () {
+        try {
+          const params = {
+            id: this.id,
+            limit: 1000,
+            offset: 0
+          };
+          const res = await this.$store.dispatch('userGroup/getUserGroupMemberList', params);
+
+          this.defaultDepartments = res.data.results.filter(item => item.type === 'department');
+          this.defaultUsers = res.data.results.filter(item => item.type === 'user');
+          if (this.isRatingManager) {
+            this.fetchRoleSubjectScope(false, true);
+          } else {
+            this.fetchCategories(false, true);
+          }
+        } catch (e) {
+          console.error(e);
+          this.bkMessageInstance = this.$bkMessage({
+            limit: 1,
+            theme: 'error',
+            message: e.message || e.data.msg || e.statusText,
+            ellipsisLine: 2,
+            ellipsisCopy: true
+          });
+        } finally {
+          this.requestQueue.shift();
+        }
+      },
+
+      fetchCategoriesList () {
+        try {
+          if (this.isRatingManager) {
+            this.fetchRoleSubjectScope(false, true);
+          } else {
+            this.fetchCategories(false, true);
+          }
+        } catch (e) {
+          console.error(e);
+          this.bkMessageInstance = this.$bkMessage({
+            limit: 1,
+            theme: 'error',
+            message: e.message || e.data.msg || e.statusText,
+            ellipsisLine: 2,
+            ellipsisCopy: true
+          });
+        } finally {
+          this.requestQueue.shift();
+        }
+      },
+
+      async fetchRoleSubjectScope (isTreeLoading = false, isDialogLoading = false) {
+        this.treeLoading = isTreeLoading;
+        try {
+          const { code, data } = await this.$store.dispatch('role/getRoleSubjectScope');
+          const departments = [...data];
+          this.isAllFlag = departments.some(item => item.type === '*' && item.id === '*');
+          if (this.isAllFlag) {
+            this.fetchCategories(false, true);
+            return;
+          }
+          this.emptyData = formatCodeData(code, this.emptyData, departments.length === 0);
+          departments.forEach(child => {
+            child.visiable = true;
+            child.level = 0;
+            child.loading = false;
+            child.showRadio = true;
+            child.selected = false;
+            child.expanded = false;
+            child.disabled = false;
+            child.type = child.type === 'user' ? 'user' : 'depart';
+            // child.count = child.recursive_member_count
+            child.count = child.member_count;
+            child.showCount = child.type !== 'user';
+            child.async = child.child_count > 0 || child.member_count > 0;
+            child.isNewMember = false;
+            child.parentNodeId = '';
+            if (child.type === 'user') {
+              child.username = child.id;
+              if (this.hasSelectedUsers.length > 0) {
+                child.is_selected = this.hasSelectedUsers.map(item => item.id).includes(child.id);
+              } else {
+                child.is_selected = false;
+              }
+
+              if (this.defaultUsers.length && this.defaultUsers.map(item => item.id).includes(child.id)) {
+                child.is_selected = true;
+                child.disabled = true;
+              }
+            }
+            if (child.type === 'depart') {
+              if (this.hasSelectedDepartments.length > 0) {
+                child.is_selected = this.hasSelectedDepartments.map(item => item.id).includes(child.id);
+              } else {
+                child.is_selected = false;
+              }
+    
+              if (this.defaultDepartments.length > 0
+                && this.defaultDepartments.map(item => item.id).includes(child.id.toString())
+              ) {
+                child.is_selected = true;
+                child.disabled = true;
+              }
+            }
+          });
+          this.treeList = _.cloneDeep(departments);
+        } catch (e) {
+          console.error(e);
+          const { code, data, message, statusText } = e;
+          this.emptyData = formatCodeData(code, this.emptyData);
+          this.bkMessageInstance = this.$bkMessage({
+            limit: 1,
+            theme: 'error',
+            message: message || data.msg || statusText,
+            ellipsisLine: 2,
+            ellipsisCopy: true
+          });
+        } finally {
+          this.treeLoading = false;
+          if (isDialogLoading) {
+            this.requestQueue.shift();
+          }
+        }
+      },
+
+      async fetchCategories (isTreeLoading = false, isDialogLoading = false) {
+        this.treeLoading = isTreeLoading;
+        try {
+          const { code, data } = await this.$store.dispatch('organization/getCategories');
+          const categories = [...data];
+          this.emptyData = formatCodeData(code, this.emptyData, categories.length === 0);
+          categories.forEach((item, index) => {
+            item.visiable = true;
+            item.level = 0;
+            item.showRadio = false;
+            item.selected = false;
+            item.expanded = false;
+            item.count = 0;
+            item.disabled = !item.departments || item.departments.length < 1;
+            item.type = 'depart';
+            item.showCount = false;
+            item.async = item.departments && item.departments.length > 0;
+            item.isNewMember = false;
+            item.loading = false;
+            item.is_selected = false;
+            item.parentNodeId = '';
+            item.id = `${item.id}&${item.level}`;
+            if (item.departments && item.departments.length > 0) {
+              item.departments.forEach((child, childIndex) => {
+                child.visiable = false;
+                child.level = 1;
+                child.loading = false;
+                child.showRadio = true;
+                child.selected = false;
+                child.expanded = false;
+                child.disabled = false;
+                child.type = 'depart';
+                child.count = child.recursive_member_count;
+                child.showCount = true;
+                child.async = child.child_count > 0 || child.member_count > 0;
+                child.isNewMember = false;
+                child.parentNodeId = item.id;
+                child.full_name = `${item.name}：${child.name}`;
+
+                if (this.hasSelectedDepartments.length > 0) {
+                  child.is_selected = this.hasSelectedDepartments.map(
+                    item => item.id
+                  ).includes(child.id);
+                } else {
+                  child.is_selected = false;
+                }
+
+                if (this.defaultDepartments.length > 0
+                  && this.defaultDepartments.map(item => item.id).includes(child.id.toString())
+                ) {
+                  child.is_selected = true;
+                  child.disabled = true;
+                }
+              });
+              item.children = _.cloneDeep(item.departments);
+            }
+          });
+          this.treeList = _.cloneDeep(categories);
+        } catch (e) {
+          console.error(e);
+          const { code, data, message, statusText } = e;
+          this.emptyData = formatCodeData(code, this.emptyData);
+          this.bkMessageInstance = this.$bkMessage({
+            theme: 'error',
+            message: message || data.msg || statusText
+          });
+        } finally {
+          this.treeLoading = false;
+          if (isDialogLoading) {
+            this.requestQueue.shift();
+          }
+        }
+      },
+
+      async handleOnSelected (newVal, node) {
+        if (newVal) {
+          if (node.type === 'user') {
+            this.hasSelectedUsers.push(node);
+          } else {
+            this.hasSelectedDepartments.push(node);
+          }
+        } else {
+          if (node.type === 'user') {
+            this.hasSelectedUsers = [
+              ...this.hasSelectedUsers.filter(item => item.username !== node.username)
+            ];
+          } else {
+            this.hasSelectedDepartments = [
+              ...this.hasSelectedDepartments.filter(item => item.id !== node.id)
+            ];
+          }
+        }
+      },
+
+      handleDeleteAll () {
+        if (this.searchedUsers.length) {
+          this.searchedUsers.forEach(search => {
+            search.is_selected = false;
+          });
+        }
+        if (this.searchedDepartment.length) {
+          this.searchedDepartment.forEach(organ => {
+            organ.is_selected = false;
+          });
+        }
+        this.hasSelectedUsers.splice(0, this.hasSelectedUsers.length, ...[]);
+        this.hasSelectedDepartments.splice(0, this.hasSelectedDepartments.length, ...[]);
+        this.$refs.memberTreeRef && this.$refs.memberTreeRef.clearAllIsSelectedStatus();
+      },
+
+      handleConditionSelcted (payload) {
+        this.$refs.dropdown.hide();
+        this.searchConditionValue = payload.id;
+        this.handleSearch();
+      },
+
+      async handleSearch () {
+        if (this.keyword === '') {
+          return;
+        }
+
+        // if (this.searchedResult.length === 1) {
+        //     if (this.searchedDepartment.length === 1) {
+        //         this.hasSelectedDepartments.push(this.searchedDepartment[0])
+        //     } else {
+        //         this.hasSelectedUsers.push(this.searchedUsers[0])
+        //     }
+        //     this.keyword = ''
+        //     this.searchedResult.splice(0, this.searchedResult.length, ...[])
+        //     this.searchedDepartment.splice(0, this.searchedDepartment.length, ...[])
+        //     this.searchedUsers.splice(0, this.searchedUsers.length, ...[])
+        //     return
+        // }
+
+        if (this.focusItemIndex !== -1) {
+          this.$refs.searchedResultsRef.setCheckStatusByIndex();
+          return;
+        }
+
+        this.treeList.splice(0, this.treeList.length, ...[]);
+        this.isBeingSearch = true;
+        this.treeLoading = true;
+
+        this.searchedResult.splice(0, this.searchedResult.length, ...[]);
+        this.searchedDepartment.splice(0, this.searchedDepartment.length, ...[]);
+        this.searchedUsers.splice(0, this.searchedUsers.length, ...[]);
+
+        const defaultDepartIds = [...this.defaultDepartments.map(item => item.id)];
+        const defaultUserIds = [...this.defaultUsers.map(item => item.id)];
+        const departIds = [...this.hasSelectedDepartments.map(item => item.id)];
+        const userIds = [...this.hasSelectedUsers.map(item => item.username)];
+        const params = {
+          keyword: this.keyword,
+          is_exact: this.searchConditionValue === 'exact'
+        };
+        try {
+          const { code, data } = await this.$store.dispatch('organization/getSearchOrganizations', params);
+          if (data.is_too_much) {
+            this.isShowTooMuch = true;
+            return;
+          }
+          this.isShowTooMuch = false;
+          if (data.departments.length > 0) {
+            data.departments.forEach(depart => {
+              depart.showRadio = true;
+              depart.type = 'depart';
+              if (departIds.length && departIds.includes(depart.id)) {
+                this.$set(depart, 'is_selected', true);
+              } else {
+                this.$set(depart, 'is_selected', false);
+              }
+              if (defaultDepartIds.length && defaultDepartIds.includes(depart.id.toString())) {
+                this.$set(depart, 'is_selected', true);
+                this.$set(depart, 'disabled', true);
+              }
+              depart.count = depart.recursive_member_count;
+              depart.showCount = true;
+            });
+            this.searchedDepartment.splice(0, this.searchedDepartment.length, ...data.departments);
+          }
+          if (data.users.length > 0) {
+            data.users.forEach(user => {
+              user.id = guid();
+              user.showRadio = true;
+              user.type = 'user';
+              this.$set(user, 'full_name', user.departments && user.departments.length ? user.departments.join(';') : '');
+              if (userIds.length && userIds.includes(user.username)) {
+                this.$set(user, 'is_selected', true);
+              } else {
+                this.$set(user, 'is_selected', false);
+              }
+              if (defaultUserIds.length && defaultUserIds.includes(user.username)) {
+                this.$set(user, 'is_selected', true);
+                this.$set(user, 'disabled', true);
+              }
+            });
+            this.searchedUsers.splice(0, this.searchedUsers.length, ...data.users);
+          }
+          this.searchedResult.splice(
+            0,
+            this.searchedResult.length,
+            ...this.searchedDepartment.concat(this.searchedUsers)
+          );
+          const isEmpty = data.users.length === 0 && data.departments.length === 0;
+          if (isEmpty) {
+            this.emptyData.tipType = 'search';
+          }
+          this.emptyData = formatCodeData(code, this.emptyData, isEmpty);
+        } catch (e) {
+          console.error(e);
+          this.emptyData = formatCodeData(e.code, this.emptyData);
+          this.bkMessageInstance = this.$bkMessage({
+            theme: 'error',
+            message: e.message || e.data.msg || e.statusText
+          });
+        } finally {
+          this.treeLoading = false;
+        }
+      },
+
+      handleExpanded (payload) {
+        if (this.isRatingManager && !this.isAllFlag) {
+          return;
+        }
+        const flag = this.treeList.some(item => item.parentNodeId === payload.id);
+        if (payload.level === 0 && !flag) {
+          const curIndex = this.treeList.findIndex(item => item.id === payload.id);
+          if (curIndex !== -1) {
+            const children = _.cloneDeep(this.treeList[curIndex].children);
+            if (children && children.length > 0) {
+              children.forEach(item => {
+                item.visiable = true;
+              });
+              this.treeList.splice(curIndex + 1, 0, ...children);
+            }
+          }
+        }
+      },
+
+      async handleRemoteLoadNode (payload) {
+        if (payload.level === 0 && !this.isRatingManager) {
+          return;
+        }
+        payload.loading = true;
+        try {
+          const res = await this.$store.dispatch('organization/getOrganizations', { departmentId: payload.id });
+          // const { child_count, children, id, member_count, members, name, recursive_member_count } = res.data
+          const { children, members } = res.data;
+          if (children.length < 1 && members.length < 1) {
+            payload.expanded = false;
+            return;
+          }
+
+          const curIndex = this.treeList.findIndex(item => item.id === payload.id);
+
+          if (curIndex === -1) {
+            return;
+          }
+          const treeList = [];
+          treeList.splice(0, 0, ...this.treeList);
+          if (children.length > 0) {
+            children.forEach((child, childIndex) => {
+              child.visiable = payload.expanded;
+              child.level = payload.level + 1;
+              child.loading = false;
+              child.showRadio = true;
+              child.selected = false;
+              child.expanded = false;
+              child.disabled = this.disabled;
+              child.type = 'depart';
+              child.count = child.recursive_member_count;
+              child.showCount = true;
+              child.async = child.child_count > 0 || child.member_count > 0;
+              child.isNewMember = false;
+              child.parentNodeId = payload.id;
+              // child.full_name = `${payload.full_name}/${child.name}`;
+              child.full_name = payload.full_name;
+
+              if (this.hasSelectedDepartments.length > 0) {
+                child.is_selected = this.hasSelectedDepartments.map(item => item.id).includes(child.id);
+              } else {
+                child.is_selected = false;
+              }
+
+              if (this.defaultDepartments.length > 0
+                && this.defaultDepartments.map(item => item.id).includes(child.id.toString())
+              ) {
+                child.is_selected = true;
+                child.disabled = true;
+              }
+            });
+          }
+
+          if (members.length > 0) {
+            members.forEach((child, childIndex) => {
+              child.visiable = payload.expanded;
+              child.level = payload.level + 1;
+              child.loading = false;
+              child.showRadio = true;
+              child.selected = false;
+              child.expanded = false;
+              child.disabled = this.disabled;
+              child.type = 'user';
+              child.count = 0;
+              child.showCount = false;
+              child.async = false;
+              child.isNewMember = false;
+              child.parentNodeId = payload.id;
+              child.full_name = `${payload.full_name}/${child.name}`;
+
+              // parentNodeId + username 组合成id
+              child.id = `${child.parentNodeId}${child.username}`;
+
+              if (this.hasSelectedUsers.length > 0) {
+                child.is_selected = this.hasSelectedUsers.map(item => item.id).includes(child.id);
+              } else {
+                child.is_selected = false;
+              }
+              const existSelectedNode = this.treeList.find(
+                item => item.is_selected && item.username === child.username
+              );
+              if (existSelectedNode) {
+                child.is_selected = true;
+                child.disabled = true;
+              }
+
+              if (this.defaultUsers.length
+                && this.defaultUsers.map(item => item.id).includes(child.username)) {
+                child.is_selected = true;
+                child.disabled = true;
+              }
+            });
+          }
+
+          const loadChildren = children.concat([...members]);
+
+          treeList.splice(curIndex + 1, 0, ...loadChildren);
+
+          this.treeList.splice(0, this.treeList.length, ...treeList);
+
+          if (!payload.children) {
+            payload.children = [];
+          }
+
+          payload.children.splice(0, payload.children.length, ...loadChildren);
+        } catch (e) {
+          console.error(e);
+          this.bkMessageInstance = this.$bkMessage({
+            theme: 'error',
+            message: e.message || e.data.msg || e.statusText
+          });
+        } finally {
+          setTimeout(() => {
+            payload.loading = false;
+          }, 300);
+        }
+      },
+      handleDelete (item, type) {
+        if (this.isAll) {
+          return;
+        }
+        if (this.isBeingSearch) {
+          if (this.searchedUsers.length) {
+            this.searchedUsers.forEach(search => {
+              if (search.username === item.username) {
+                search.is_selected = false;
+              }
+            });
+          }
+          if (this.searchedDepartment.length) {
+            this.searchedDepartment.forEach(organ => {
+              if (organ.id === item.id) {
+                organ.is_selected = false;
+              }
+            });
+          }
+        } else {
+          this.tabActive === 'organization' && this.$refs.memberTreeRef.setSingleSelectedStatus(item.id, false);
+        }
+        if (type === 'user') {
+          this.hasSelectedUsers = [...this.hasSelectedUsers.filter(user => user.username !== item.username)];
+        } else {
+          // eslint-disable-next-line max-len
+          this.hasSelectedDepartments = [...this.hasSelectedDepartments.filter(organ => organ.id !== item.id)];
+        }
+      },
+
+      async handleSearchResultSelected (newVal, oldVal, localVal, item) {
+        if (item.type === 'user') {
+          this.handleSearchUserSelected(newVal, item);
+        } else {
+          if (newVal) {
+            this.hasSelectedDepartments.push(item);
+          } else {
+            this.hasSelectedDepartments = this.hasSelectedDepartments.filter(organ => organ.id !== item.id);
+          }
+        }
+      },
+
+      handleSearchUserSelected (newVal, item) {
+        if (newVal) {
+          this.hasSelectedUsers.push(item);
+        } else {
+          this.hasSelectedUsers = this.hasSelectedUsers.filter(user => user.username !== item.username);
+        }
+      },
+
+      handleAfterLeave () {
+        this.isPrev = true;
+        this.expiredAt = 15552000;
+        this.keyword = '';
+        this.treeLoading = false;
+        this.isBeingSearch = false;
+        this.hasSelectedUsers.splice(0, this.hasSelectedUsers.length, ...[]);
+        this.hasSelectedDepartments.splice(0, this.hasSelectedDepartments.length, ...[]);
+        this.searchedDepartment.splice(0, this.searchedDepartment.length, ...[]);
+        this.searchedUsers.splice(0, this.searchedUsers.length, ...[]);
+        this.searchedResult.splice(0, this.searchedResult.length, ...[]);
+        this.treeList.splice(0, this.treeList.length, ...[]);
+        this.requestQueue = ['categories', 'memberList'];
+        this.focusItemIndex = -1;
+        this.$refs.memberTreeRef && this.$refs.memberTreeRef.clearAllIsSelectedStatus();
+        this.searchConditionValue = 'fuzzy';
+        this.tabActive = 'organization';
+        this.manualValue = '';
+        this.manualAddLoading = false;
+        this.manualInputError = false;
+        this.manualValueBackup = [];
+        this.$emit('update:show', false);
+        this.$emit('on-after-leave');
+      },
+
+      handleCancel () {
+        this.$emit('on-cancel');
+      },
+
+      handleNextStep () {
+        this.isPrev = false;
+      },
+
+      handlePrevStep () {
+        this.expiredAt = 15552000;
+        this.isPrev = true;
+      },
+
+      handleSave () {
+        const params = {
+          users: this.hasSelectedUsers,
+          departments: this.hasSelectedDepartments,
+          expiredAt: this.expiredAt,
+          isAll: this.isAll
+        };
+        if (this.showExpiredAt) {
+          if (this.expiredAt !== 4102444800) {
+            params.policy_expired_at = this.expiredAt;
+          } else {
+            params.policy_expired_at = this.expiredAt;
+          }
+        }
+        window.parent.postMessage({ type: 'IAM', data: params, code: 'add_user_confirm' }, '*');
+        this.$emit('on-sumbit', params);
+      },
+
+      evil (fn) {
+        const Fn = Function;
+        return new Fn('return ' + fn)();
+      },
+            
+      async handleSkip () {
+        bus.$emit('nav-change', { id: this.$store.getters.navCurRoleId }, 0);
+        await this.$store.dispatch('role/updateCurrentRole', { id: 0 });
+        const routeData = this.$router.resolve({ path: `${this.$store.getters.navCurRoleId}/rating-manager-edit`, params: { id: this.$store.getters.navCurRoleId } });
+        window.open(routeData.href, '_blank');
+        // this.$router.push({
+        //     name: 'gradingAdminEdit',
+        //     params: {
+        //         id: this.$store.getters.navCurRoleId
+        //     }
+        // });
+      }
+    }
+  };
 </script>
 <style lang='postcss'>
     .iam-add-member-dialog {

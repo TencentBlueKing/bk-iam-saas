@@ -1,97 +1,97 @@
 <template>
-    <div class="iam-member-display-wrapper">
-        <label class="label">
-            <Icon :type="icon" class="icon" />
-            <span class="name">{{ title }}</span>
-        </label>
-        <div class="content">
-            <div v-for="(item, index) in data"
-                :key="index"
-                class="member-item"
-                :title="getTitle(item)">
-                <span class="member-name">
-                    {{ isDepartment ? item.name : item.id }}
-                </span>
-                <template v-if="isDepartment">
-                    <span class="count">({{ item.member_count }})</span>
-                </template>
-                <template v-if="!isDepartment && item.name !== ''">
-                    <span class="display_name">({{ item.name }})</span>
-                </template>
-                <Icon
-                    type="close-fill"
-                    class="remove-icon"
-                    v-if="isEdit"
-                    @click="handleDelete(index)" />
-            </div>
-        </div>
+  <div class="iam-member-display-wrapper">
+    <label class="label">
+      <Icon :type="icon" class="icon" />
+      <span class="name">{{ title }}</span>
+    </label>
+    <div class="content">
+      <div v-for="(item, index) in data"
+        :key="index"
+        class="member-item"
+        :title="getTitle(item)">
+        <span class="member-name">
+          {{ isDepartment ? item.name : item.id }}
+        </span>
+        <template v-if="isDepartment">
+          <span class="count">({{ item.member_count }})</span>
+        </template>
+        <template v-if="!isDepartment && item.name !== ''">
+          <span class="display_name">({{ item.name }})</span>
+        </template>
+        <Icon
+          type="close-fill"
+          class="remove-icon"
+          v-if="isEdit"
+          @click="handleDelete(index)" />
+      </div>
     </div>
+  </div>
 </template>
 <script>
-    export default {
-        name: '',
-        props: {
-            data: {
-                type: Array,
-                default: () => []
-            },
-            // user：用户，department：组织
-            type: {
-                type: String,
-                default: 'user'
-            },
-            mode: {
-                type: String,
-                default: 'edit'
-            }
-        },
-        computed: {
-            /**
-             * icon
-             */
-            icon () {
-                return this.type === 'user' ? 'personal-user' : 'organization-fill';
-            },
-            /**
-             * title
-             */
-            title () {
-                return this.type === 'user' ? this.$t(`m.common['用户']`) : this.$t(`m.common['组织']`);
-            },
+  export default {
+    name: '',
+    props: {
+      data: {
+        type: Array,
+        default: () => []
+      },
+      // user：用户，department：组织
+      type: {
+        type: String,
+        default: 'user'
+      },
+      mode: {
+        type: String,
+        default: 'edit'
+      }
+    },
+    computed: {
+      /**
+       * icon
+       */
+      icon () {
+        return this.type === 'user' ? 'personal-user' : 'organization-fill';
+      },
+      /**
+       * title
+       */
+      title () {
+        return this.type === 'user' ? this.$t(`m.common['用户']`) : this.$t(`m.common['组织']`);
+      },
 
-            /**
-             * isDepartment
-             */
-            isDepartment () {
-                return this.type === 'department';
-            },
+      /**
+       * isDepartment
+       */
+      isDepartment () {
+        return this.type === 'department';
+      },
 
-            /**
-             * isEdit
-             */
-            isEdit () {
-                return this.mode === 'edit';
-            }
-        },
-        methods: {
-            /**
-             * getTitle
-             */
-            getTitle (payload) {
-                if (this.isDepartment) {
-                    return payload.full_name !== '' ? payload.full_name : payload.name;
-                }
-                return payload.name !== '' ? `${payload.id}(${payload.name})` : payload.id;
-            },
-
-            /**
-             * handleDelete
-             */
-            handleDelete (payload) {
-                this.$emit('on-delete', payload);
-            }
+      /**
+       * isEdit
+       */
+      isEdit () {
+        return this.mode === 'edit';
+      }
+    },
+    methods: {
+      /**
+       * getTitle
+       */
+      getTitle (payload) {
+        if (this.isDepartment) {
+          return payload.full_name !== '' ? payload.full_name : payload.name;
         }
-    };
+        return payload.name !== '' ? `${payload.id}(${payload.name})` : payload.id;
+      },
+
+      /**
+       * handleDelete
+       */
+      handleDelete (payload) {
+        this.$emit('on-delete', payload);
+      }
+    }
+  };
 </script>
 <style lang="postcss" scoped>
     .iam-member-display-wrapper {

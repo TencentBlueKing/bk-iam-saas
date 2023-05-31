@@ -1,39 +1,39 @@
 <template>
-    <div class="iam-action-block-wrapper" :class="extCls" @click.stop="handleClick">
-        <section class="action-wrapper">
-            <Icon bk type="plus-circle-shape" />
-            <span>{{ title }}</span>
-        </section>
-        <Icon
-            type="info-fill"
-            class="info-icon"
-            v-bk-tooltips.top="{ content: tips, width: 236, extCls: 'iam-tooltips-cls' }" />
-        <slot />
-    </div>
+  <div class="iam-action-block-wrapper" :class="extCls" @click.stop="handleClick">
+    <section class="action-wrapper">
+      <Icon bk type="plus-circle-shape" />
+      <span>{{ title }}</span>
+    </section>
+    <Icon
+      type="info-fill"
+      class="info-icon"
+      v-bk-tooltips.top="{ content: tips, width: 236, extCls: 'iam-tooltips-cls' }" />
+    <slot />
+  </div>
 </template>
 <script>
-    export default {
-        name: '',
-        props: {
-            title: {
-                type: String,
-                required: true
-            },
-            extCls: {
-                type: String,
-                default: ''
-            },
-            tips: {
-                type: String,
-                default: ''
-            }
-        },
-        methods: {
-            handleClick () {
-                this.$emit('on-click');
-            }
-        }
-    };
+  export default {
+    name: '',
+    props: {
+      title: {
+        type: String,
+        required: true
+      },
+      extCls: {
+        type: String,
+        default: ''
+      },
+      tips: {
+        type: String,
+        default: ''
+      }
+    },
+    methods: {
+      handleClick () {
+        this.$emit('on-click');
+      }
+    }
+  };
 </script>
 <style lang="postcss">
     .iam-action-block-wrapper {

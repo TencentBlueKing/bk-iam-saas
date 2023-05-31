@@ -1,219 +1,219 @@
 <template>
-    <div class="iam-apply-content">
-        <render-vertical-block
-            :label="applyTitle"
-            ext-cls="apply-title">
-            <bk-table
-                :data="tableList"
-                ext-cls="apply-content-table"
-                border
-                :cell-class-name="getCellClass">
-                <bk-table-column :label="$t(`m.common['操作']`)" min-width="160">
-                    <template slot-scope="{ row }">
-                        <Icon
-                            type="pin"
-                            class="relate-action-tips-icon"
-                            v-bk-tooltips="{ content: $t(`m.common['依赖操作']`), extCls: 'iam-tooltips-cls' }"
-                            v-if="row.tag === 'related'" />
-                        <span :title="row.name">{{ row.name }}</span>
-                    </template>
-                </bk-table-column>
-                <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)" min-width="360">
-                    <template slot-scope="{ row }">
-                        <template v-if="!row.isEmpty">
-                            <div v-for="(_, _index) in row.resource_groups" :key="_.id" class="related-resource-list"
-                                :class="row.resource_groups === 1 || _index === row.resource_groups.length - 1
-                                    ? '' : 'related-resource-list-border'">
-                                <p class="related-resource-item"
-                                    v-for="item in _.related_resource_types"
-                                    :key="item.type">
-                                    <render-resource-popover
-                                        :key="item.type"
-                                        :data="item.condition"
-                                        :value="`${item.name}：${item.value}`"
-                                        :max-width="380"
-                                        @on-view="handleViewResource(_, row)" />
-                                </p>
-                                <Icon
-                                    type="detail-new"
-                                    class="view-icon"
-                                    :title="$t(`m.common['详情']`)"
-                                    v-if="!row.isEmpty"
-                                    @click.stop="handleViewResource(_, row)" />
-                            </div>
-                        </template>
-                        <template v-else>
-                            <div class="pl20 mt20">{{ $t(`m.common['无需关联实例']`) }}</div>
-                        </template>
-                    </template>
-                </bk-table-column>
-                <bk-table-column :label="$t(`m.common['生效条件']`)" min-width="300">
-                    <template slot-scope="{ row, $index }">
-                        <div class="condition-table-cell" v-if="row.resource_groups.length">
-                            <div v-for="(_, groIndex) in row.resource_groups" :key="_.id"
-                                class="related-condition-list"
-                                :class="[row.resource_groups.length > 1 ? 'related-resource-list' : 'environ-group-one',
-                                         row.resource_groups === 1 || groIndex === row.resource_groups.length - 1
-                                             ? '' : 'related-resource-list-border']">
-                                <effect-conditon
-                                    :value="_.environments"
-                                    @on-click="showTimeSlider(row, $index, groIndex)">
-                                </effect-conditon>
-                                <Icon
-                                    type="detail-new"
-                                    class="effect-icon"
-                                    :title="$t(`m.common['详情']`)"
-                                    v-if="isShowPreview(row)"
-                                    @click.stop="handleEnvironmentsViewResource(_, row)" />
-                            </div>
-                        </div>
-                        <div v-else class="ml20 mt20">{{ $t(`m.common['无生效条件']`) }}</div>
-                    </template>
-                </bk-table-column>
-                <bk-table-column prop="expired_dis" min-width="100" :label="$t(`m.common['申请期限']`)"></bk-table-column>
-            </bk-table>
-        </render-vertical-block>
-        <bk-sideslider
-            :is-show.sync="isShowSideslider"
-            :title="sidesliderTitle"
-            :width="725"
-            :quick-close="true"
-            @animation-end="handleAnimationEnd">
-            <div slot="content">
-                <component :is="renderDetailCom" :data="previewData" />
-            </div>
-        </bk-sideslider>
-        <bk-sideslider
-            :is-show="isShowEnvironmentsSideslider"
-            :title="environmentsSidesliderTitle"
-            :width="725"
-            quick-close
-            @update:isShow="handleResourceCancel"
-            ext-cls="effect-conditon-side">
-            <div slot="content">
+  <div class="iam-apply-content">
+    <render-vertical-block
+      :label="applyTitle"
+      ext-cls="apply-title">
+      <bk-table
+        :data="tableList"
+        ext-cls="apply-content-table"
+        border
+        :cell-class-name="getCellClass">
+        <bk-table-column :label="$t(`m.common['操作']`)" min-width="160">
+          <template slot-scope="{ row }">
+            <Icon
+              type="pin"
+              class="relate-action-tips-icon"
+              v-bk-tooltips="{ content: $t(`m.common['依赖操作']`), extCls: 'iam-tooltips-cls' }"
+              v-if="row.tag === 'related'" />
+            <span :title="row.name">{{ row.name }}</span>
+          </template>
+        </bk-table-column>
+        <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)" min-width="360">
+          <template slot-scope="{ row }">
+            <template v-if="!row.isEmpty">
+              <div v-for="(_, _index) in row.resource_groups" :key="_.id" class="related-resource-list"
+                :class="row.resource_groups === 1 || _index === row.resource_groups.length - 1
+                  ? '' : 'related-resource-list-border'">
+                <p class="related-resource-item"
+                  v-for="item in _.related_resource_types"
+                  :key="item.type">
+                  <render-resource-popover
+                    :key="item.type"
+                    :data="item.condition"
+                    :value="`${item.name}：${item.value}`"
+                    :max-width="380"
+                    @on-view="handleViewResource(_, row)" />
+                </p>
+                <Icon
+                  type="detail-new"
+                  class="view-icon"
+                  :title="$t(`m.common['详情']`)"
+                  v-if="!row.isEmpty"
+                  @click.stop="handleViewResource(_, row)" />
+              </div>
+            </template>
+            <template v-else>
+              <div class="pl20 mt20">{{ $t(`m.common['无需关联实例']`) }}</div>
+            </template>
+          </template>
+        </bk-table-column>
+        <bk-table-column :label="$t(`m.common['生效条件']`)" min-width="300">
+          <template slot-scope="{ row, $index }">
+            <div class="condition-table-cell" v-if="row.resource_groups.length">
+              <div v-for="(_, groIndex) in row.resource_groups" :key="_.id"
+                class="related-condition-list"
+                :class="[row.resource_groups.length > 1 ? 'related-resource-list' : 'environ-group-one',
+                         row.resource_groups === 1 || groIndex === row.resource_groups.length - 1
+                           ? '' : 'related-resource-list-border']">
                 <effect-conditon
-                    :value="environmentsSidesliderData"
-                    :is-empty="!environmentsSidesliderData.length"
-                    @on-view="handleViewSidesliderCondition"
-                >
+                  :value="_.environments"
+                  @on-click="showTimeSlider(row, $index, groIndex)">
                 </effect-conditon>
+                <Icon
+                  type="detail-new"
+                  class="effect-icon"
+                  :title="$t(`m.common['详情']`)"
+                  v-if="isShowPreview(row)"
+                  @click.stop="handleEnvironmentsViewResource(_, row)" />
+              </div>
             </div>
-        </bk-sideslider>
-    </div>
+            <div v-else class="ml20 mt20">{{ $t(`m.common['无生效条件']`) }}</div>
+          </template>
+        </bk-table-column>
+        <bk-table-column prop="expired_dis" min-width="100" :label="$t(`m.common['申请期限']`)"></bk-table-column>
+      </bk-table>
+    </render-vertical-block>
+    <bk-sideslider
+      :is-show.sync="isShowSideslider"
+      :title="sidesliderTitle"
+      :width="725"
+      :quick-close="true"
+      @animation-end="handleAnimationEnd">
+      <div slot="content">
+        <component :is="renderDetailCom" :data="previewData" />
+      </div>
+    </bk-sideslider>
+    <bk-sideslider
+      :is-show="isShowEnvironmentsSideslider"
+      :title="environmentsSidesliderTitle"
+      :width="725"
+      quick-close
+      @update:isShow="handleResourceCancel"
+      ext-cls="effect-conditon-side">
+      <div slot="content">
+        <effect-conditon
+          :value="environmentsSidesliderData"
+          :is-empty="!environmentsSidesliderData.length"
+          @on-view="handleViewSidesliderCondition"
+        >
+        </effect-conditon>
+      </div>
+    </bk-sideslider>
+  </div>
 </template>
 <script>
-    import _ from 'lodash';
-    import Resource from '@/components/render-resource/detail';
-    import RenderResourcePopover from '@/components/iam-view-resource-popover';
-    import DetailContent from './detail-content';
-    import EffectConditon from './effect-conditon';
-    import SidesliderEffectConditon from './sideslider-effect-condition';
-    export default {
-        name: '',
-        components: {
-            Resource,
-            DetailContent,
-            RenderResourcePopover,
-            EffectConditon,
-            SidesliderEffectConditon
-        },
-        props: {
-            data: {
-                type: Array,
-                default: () => []
-            },
-            system: {
-                type: Object,
-                default: () => {
-                    return {};
-                }
-            },
-            actionTopologies: {
-                type: Array,
-                default: () => []
-            }
-        },
-        data () {
-            return {
-                previewData: {},
-                renderDetailCom: 'DetailContent',
-                isShowSideslider: false,
-                sidesliderTitle: '',
-                tableList: [],
-                curId: '',
-                environmentsSidesliderData: [],
-                isShowResourceInstanceEffectTime: false
-            };
-        },
-        computed: {
-            applyTitle () {
-                return `${this.$t(`m.myApply['申请内容']`)}（${this.system.system_name}）`;
-            },
-            isShowPreview () {
-                return (payload) => {
-                    return !payload.isEmpty && payload.policy_id !== '';
-                };
-            }
-        },
-        watch: {
-            data: {
-                handler (value) {
-                    this.tableList = _.cloneDeep(value);
-                },
-                immediate: true
-            }
-        },
-        methods: {
-            getCellClass ({ row, column, rowIndex, columnIndex }) {
-                if (columnIndex === 1 || columnIndex === 2) {
-                    return 'iam-perm-table-cell-cls';
-                }
-                return '';
-            },
-
-            handleViewResource (groupItem, row) {
-                this.previewData = _.cloneDeep(this.handleDetailData(groupItem));
-                this.renderDetailCom = 'DetailContent';
-                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}${this.$t(`m.common['【']`)}${row.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)}`;
-                this.isShowSideslider = true;
-            },
-
-            handleDetailData (payload) {
-                this.curId = payload.id;
-                const params = [];
-                if (payload.related_resource_types.length > 0) {
-                    payload.related_resource_types.forEach(item => {
-                        const { name, type, condition } = item;
-                        params.push({
-                            name: type,
-                            label: `${name} ${this.$t(`m.common['实例']`)}`,
-                            tabType: 'resource',
-                            data: condition
-                        });
-                    });
-                }
-                return params;
-            },
-
-            /**
-             * handleEnvironmentsViewResource
-             */
-            handleEnvironmentsViewResource (payload, data) {
-                this.environmentsSidesliderData = payload.environments;
-                console.log('environmentsSidesliderData', this.environmentsSidesliderData);
-                this.isShowEnvironmentsSideslider = true;
-                this.environmentsSidesliderTitle = `${this.$t(`m.common['关联操作']`)}${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['生效条件']`)}`;
-            },
-
-            /**
-             * handleViewSidesliderCondition
-             */
-            handleViewSidesliderCondition () {
-                console.log('environmentsSidesliderData', this.environmentsSidesliderData);
-                this.isShowResourceInstanceEffectTime = true;
-            }
+  import _ from 'lodash';
+  import Resource from '@/components/render-resource/detail';
+  import RenderResourcePopover from '@/components/iam-view-resource-popover';
+  import DetailContent from './detail-content';
+  import EffectConditon from './effect-conditon';
+  import SidesliderEffectConditon from './sideslider-effect-condition';
+  export default {
+    name: '',
+    components: {
+      Resource,
+      DetailContent,
+      RenderResourcePopover,
+      EffectConditon,
+      SidesliderEffectConditon
+    },
+    props: {
+      data: {
+        type: Array,
+        default: () => []
+      },
+      system: {
+        type: Object,
+        default: () => {
+          return {};
         }
-    };
+      },
+      actionTopologies: {
+        type: Array,
+        default: () => []
+      }
+    },
+    data () {
+      return {
+        previewData: {},
+        renderDetailCom: 'DetailContent',
+        isShowSideslider: false,
+        sidesliderTitle: '',
+        tableList: [],
+        curId: '',
+        environmentsSidesliderData: [],
+        isShowResourceInstanceEffectTime: false
+      };
+    },
+    computed: {
+      applyTitle () {
+        return `${this.$t(`m.myApply['申请内容']`)}（${this.system.system_name}）`;
+      },
+      isShowPreview () {
+        return (payload) => {
+          return !payload.isEmpty && payload.policy_id !== '';
+        };
+      }
+    },
+    watch: {
+      data: {
+        handler (value) {
+          this.tableList = _.cloneDeep(value);
+        },
+        immediate: true
+      }
+    },
+    methods: {
+      getCellClass ({ row, column, rowIndex, columnIndex }) {
+        if (columnIndex === 1 || columnIndex === 2) {
+          return 'iam-perm-table-cell-cls';
+        }
+        return '';
+      },
+
+      handleViewResource (groupItem, row) {
+        this.previewData = _.cloneDeep(this.handleDetailData(groupItem));
+        this.renderDetailCom = 'DetailContent';
+        this.sidesliderTitle = `${this.$t(`m.common['操作']`)}${this.$t(`m.common['【']`)}${row.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)}`;
+        this.isShowSideslider = true;
+      },
+
+      handleDetailData (payload) {
+        this.curId = payload.id;
+        const params = [];
+        if (payload.related_resource_types.length > 0) {
+          payload.related_resource_types.forEach(item => {
+            const { name, type, condition } = item;
+            params.push({
+              name: type,
+              label: `${name} ${this.$t(`m.common['实例']`)}`,
+              tabType: 'resource',
+              data: condition
+            });
+          });
+        }
+        return params;
+      },
+
+      /**
+       * handleEnvironmentsViewResource
+       */
+      handleEnvironmentsViewResource (payload, data) {
+        this.environmentsSidesliderData = payload.environments;
+        console.log('environmentsSidesliderData', this.environmentsSidesliderData);
+        this.isShowEnvironmentsSideslider = true;
+        this.environmentsSidesliderTitle = `${this.$t(`m.common['关联操作']`)}${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['生效条件']`)}`;
+      },
+
+      /**
+       * handleViewSidesliderCondition
+       */
+      handleViewSidesliderCondition () {
+        console.log('environmentsSidesliderData', this.environmentsSidesliderData);
+        this.isShowResourceInstanceEffectTime = true;
+      }
+    }
+  };
 </script>
 <style lang='postcss'>
     .iam-apply-content {

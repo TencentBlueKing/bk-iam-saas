@@ -1,81 +1,81 @@
 <template>
-    <div :style="styles">
-        <div v-if="['custom'].includes(popoverType) && (!noviceGuide[type] && !loading && flag && isShow)">
-            <div :class="['iam-guide-wrapper', { 'has-animation': hasAnimation }]">
-                <div class="content-wrapper">
-                    <section class="content-shade">
-                        <div class="text">{{ content }}</div>
-                        <div class="knowed-action"
-                            @click.stop="handleKnow">
-                            {{ $t(`m.guide['我知道了']`) }}
-                        </div>
-                    </section>
-                    <div :class="['triangle', direction]"></div>
-                </div>
+  <div :style="styles">
+    <div v-if="['custom'].includes(popoverType) && (!noviceGuide[type] && !loading && flag && isShow)">
+      <div :class="['iam-guide-wrapper', { 'has-animation': hasAnimation }]">
+        <div class="content-wrapper">
+          <section class="content-shade">
+            <div class="text">{{ content }}</div>
+            <div class="knowed-action"
+              @click.stop="handleKnow">
+              {{ $t(`m.guide['我知道了']`) }}
             </div>
+          </section>
+          <div :class="['triangle', direction]"></div>
         </div>
-        <template v-if="['component'].includes(popoverType) && (!noviceGuide[type] && isShow)">
-            <bk-popconfirm
-                ref="popconfirmCom"
-                v-bind="$attrs"
-                v-on="$listeners"
-                @confirm="handleKnow"
-                width="288">
-                <div slot="content">
-                    <slot name="popconfirm-header" />
-                    <slot name="popconfirm-content" />
-                </div>
-                <slot name="popconfirm-show" />
-            </bk-popconfirm>
-        </template>
+      </div>
     </div>
+    <template v-if="['component'].includes(popoverType) && (!noviceGuide[type] && isShow)">
+      <bk-popconfirm
+        ref="popconfirmCom"
+        v-bind="$attrs"
+        v-on="$listeners"
+        @confirm="handleKnow"
+        width="288">
+        <div slot="content">
+          <slot name="popconfirm-header" />
+          <slot name="popconfirm-content" />
+        </div>
+        <slot name="popconfirm-show" />
+      </bk-popconfirm>
+    </template>
+  </div>
 </template>
 <script>
-    import { mapGetters } from 'vuex';
+  import { mapGetters } from 'vuex';
 
-    export default {
-        name: '',
-        props: {
-            content: {
-                type: String,
-                default: 'default'
-            },
-            style: {
-                type: Object,
-                default: () => {
-                    return {};
-                }
-            },
-            type: {
-                type: String,
-                default: 'create_group'
-            },
-            direction: {
-                type: String,
-                default: 'top',
-                validator: (value) => {
-                    return ['top', 'right', 'bottom', 'left'].includes(value);
-                }
-            },
-            loading: {
-                type: Boolean,
-                default: false
-            },
-            flag: {
-                type: Boolean,
-                default: true
-            },
-            popoverType: {
-                type: String,
-                default: 'custom'
-            }
-        },
-        data () {
-            return {
-                hasAnimation: true
-            };
-        },
-        computed: {
+  export default {
+    name: '',
+    props: {
+      content: {
+        type: String,
+        default: 'default'
+      },
+      style: {
+        type: Object,
+        default: () => {
+          return {};
+        }
+      },
+      type: {
+        type: String,
+        default: 'create_group'
+      },
+      direction: {
+        type: String,
+        default: 'top',
+        validator: (value) => {
+          return ['top', 'right', 'bottom', 'left'].includes(value);
+        }
+      },
+      loading: {
+        type: Boolean,
+        default: false
+      },
+      flag: {
+        type: Boolean,
+        default: true
+      },
+      popoverType: {
+        type: String,
+        default: 'custom'
+      }
+    },
+    data () {
+      return {
+        hasAnimation: true
+      };
+    },
+    computed: {
             ...mapGetters(['noviceGuide', 'user']),
             isShow () {
                 const index = Number(window.localStorage.getItem('index') || 0);
@@ -111,59 +111,59 @@
                 }
                 return '';
             }
-        },
-        created () {
-            this.handleInit();
-        },
-        methods: {
-            async handleInit () {
-                // 动画显示5秒后关闭
-                const popoverItem = {
-                    custom: () => {
-                        this.timer = setTimeout(() => {
-                            this.hasAnimation = false;
-                            clearTimeout(this.timer);
-                        }, 5000);
-                    },
-                    component: () => {
-                        this.handleShowGuide();
-                    }
-                };
-                return popoverItem[this.popoverType]();
-            },
+    },
+    created () {
+      this.handleInit();
+    },
+    methods: {
+      async handleInit () {
+        // 动画显示5秒后关闭
+        const popoverItem = {
+          custom: () => {
+            this.timer = setTimeout(() => {
+              this.hasAnimation = false;
+              clearTimeout(this.timer);
+            }, 5000);
+          },
+          component: () => {
+            this.handleShowGuide();
+          }
+        };
+        return popoverItem[this.popoverType]();
+      },
 
-            async handleKnow () {
-                try {
-                    await this.$store.dispatch('editNoviceGuide', {
-                        scene: this.type
-                    });
-                    const popoverItem = {
-                        custom: () => {
-                            this.$store.commit('updateNoviceGuide', this.type);
-                        },
-                        component: () => {
-                            this.handleHideGuide();
-                            // this.showTimer = setTimeout(() => {
-                            this.$store.commit('updateNoviceGuide', this.type);
-                            //     clearTimeout(this.showTimer);
-                            // }, 5 * 1000);
-                        }
-                    };
-                    popoverItem[this.popoverType]();
-                } catch (e) {
-                    console.error(e);
-                }
+      async handleKnow () {
+        try {
+          await this.$store.dispatch('editNoviceGuide', {
+            scene: this.type
+          });
+          const popoverItem = {
+            custom: () => {
+              this.$store.commit('updateNoviceGuide', this.type);
             },
-
-            handleShowGuide () {
-                this.$parent.fetchSpaceUpdateGuide && this.$parent.fetchSpaceUpdateGuide();
-            },
-
-            handleHideGuide () {
-                this.$refs.popconfirmCom && this.$refs.popconfirmCom.$refs.popover.hideHandler();
+            component: () => {
+              this.handleHideGuide();
+              // this.showTimer = setTimeout(() => {
+              this.$store.commit('updateNoviceGuide', this.type);
+              //     clearTimeout(this.showTimer);
+              // }, 5 * 1000);
             }
+          };
+          popoverItem[this.popoverType]();
+        } catch (e) {
+          console.error(e);
         }
-    };
+      },
+
+      handleShowGuide () {
+        this.$parent.fetchSpaceUpdateGuide && this.$parent.fetchSpaceUpdateGuide();
+      },
+
+      handleHideGuide () {
+        this.$refs.popconfirmCom && this.$refs.popconfirmCom.$refs.popover.hideHandler();
+      }
+    }
+  };
 </script>
 <style lang="postcss" scoped>
     $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);

@@ -238,7 +238,7 @@ module.exports = {
         'vue/html-end-tags': 'error',
 
         // https://github.com/vuejs/eslint-plugin-vue/blob/master/docs/rules/html-indent.md
-        'vue/html-indent': ['error', 4, {
+        'vue/html-indent': ['error', 2, {
             'attribute': 1,
             'baseIndent': 1,
             'closeBracket': 0,
@@ -433,7 +433,7 @@ module.exports = {
         'vue/return-in-computed-property': 'error',
 
         // https://github.com/vuejs/eslint-plugin-vue/blob/master/docs/rules/script-indent.md
-        'vue/script-indent': ['error', 4, {
+        'vue/script-indent': ['error', 2, {
             'baseIndent': 1,
             'switchCase': 1
         }],

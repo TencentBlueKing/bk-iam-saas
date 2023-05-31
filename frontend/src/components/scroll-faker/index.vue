@@ -1,108 +1,108 @@
 <template>
+  <div
+    ref="scrollWraper"
+    class="scroll-faker-warper"
+    :style="wraperStyles">
     <div
-        ref="scrollWraper"
-        class="scroll-faker-warper"
-        :style="wraperStyles">
-        <div
-            ref="scrollContent"
-            class="scroll-faker-content"
-            :style="scrollContentStyles"
-            @scroll="handleContentScroll">
-            <slot />
-        </div>
-        <!-- <div v-if="showScrollBar" class="scroll-faker-scrollbar">
+      ref="scrollContent"
+      class="scroll-faker-content"
+      :style="scrollContentStyles"
+      @scroll="handleContentScroll">
+      <slot />
+    </div>
+    <!-- <div v-if="showScrollBar" class="scroll-faker-scrollbar">
             <div class="scroll-scrollbar-track" :style="scrollTrackStyles" />
         </div> -->
-    </div>
+  </div>
 </template>
 <script>
-    import _ from 'lodash';
+  import _ from 'lodash';
 
-    export default {
-        name: 'scroll-faker',
-        props: {
-            height: {
-                type: Number,
-                default: 0
-            },
-            maxHeight: {
-                type: Number
-            },
-            scrollbarColor: {
-                type: String
-            },
-            trackColor: {
-                type: String
-            }
-        },
-        data () {
-            return {
-                realHeight: 0,
-                contentHeight: 1,
-                contentScrollHeight: 1,
-                contentScrollTop: 0
-            };
-        },
-        computed: {
-            wraperStyles () {
-                if (this.height < 1) {
-                    return {};
-                }
-                return {
-                    height: `${this.height}px`
-                };
-            },
-            scrollContentStyles () {
-                if (this.maxHeight > 0) {
-                    return {
-                        'max-height': `${this.maxHeight}px`
-                    };
-                }
-                return {};
-            },
-            speed () {
-                return this.contentHeight / this.contentScrollHeight;
-            },
-            scrollTrackStyles () {
-                return {
-                    height: `${this.contentHeight * this.speed}px`,
-                    top: `${this.contentScrollTop * this.speed}px`
-                };
-            },
-            showScrollBar () {
-                return this.contentScrollHeight > this.contentHeight;
-            }
-        },
-        mounted () {
-            const init = _.debounce(() => this.init(), 300);
-            window.addEventListener('resize', init);
-            const observer = new MutationObserver(() => {
-                init();
-            });
-            observer.observe(this.$refs.scrollContent, {
-                subtree: true,
-                childList: true
-            });
-            this.$once('hook:beforeDestroy', () => {
-                observer.takeRecords();
-                observer.disconnect();
-                window.removeEventListener('resize', init);
-            });
-            init();
-        },
-        methods: {
-            init () {
-                if (!this.$refs.scrollContent) {
-                    return;
-                }
-                this.contentHeight = this.$refs.scrollContent.getBoundingClientRect().height;
-                this.contentScrollHeight = this.$refs.scrollContent.scrollHeight;
-            },
-            handleContentScroll (event) {
-                this.contentScrollTop = event.target.scrollTop;
-            }
+  export default {
+    name: 'scroll-faker',
+    props: {
+      height: {
+        type: Number,
+        default: 0
+      },
+      maxHeight: {
+        type: Number
+      },
+      scrollbarColor: {
+        type: String
+      },
+      trackColor: {
+        type: String
+      }
+    },
+    data () {
+      return {
+        realHeight: 0,
+        contentHeight: 1,
+        contentScrollHeight: 1,
+        contentScrollTop: 0
+      };
+    },
+    computed: {
+      wraperStyles () {
+        if (this.height < 1) {
+          return {};
         }
-    };
+        return {
+          height: `${this.height}px`
+        };
+      },
+      scrollContentStyles () {
+        if (this.maxHeight > 0) {
+          return {
+            'max-height': `${this.maxHeight}px`
+          };
+        }
+        return {};
+      },
+      speed () {
+        return this.contentHeight / this.contentScrollHeight;
+      },
+      scrollTrackStyles () {
+        return {
+          height: `${this.contentHeight * this.speed}px`,
+          top: `${this.contentScrollTop * this.speed}px`
+        };
+      },
+      showScrollBar () {
+        return this.contentScrollHeight > this.contentHeight;
+      }
+    },
+    mounted () {
+      const init = _.debounce(() => this.init(), 300);
+      window.addEventListener('resize', init);
+      const observer = new MutationObserver(() => {
+        init();
+      });
+      observer.observe(this.$refs.scrollContent, {
+        subtree: true,
+        childList: true
+      });
+      this.$once('hook:beforeDestroy', () => {
+        observer.takeRecords();
+        observer.disconnect();
+        window.removeEventListener('resize', init);
+      });
+      init();
+    },
+    methods: {
+      init () {
+        if (!this.$refs.scrollContent) {
+          return;
+        }
+        this.contentHeight = this.$refs.scrollContent.getBoundingClientRect().height;
+        this.contentScrollHeight = this.$refs.scrollContent.scrollHeight;
+      },
+      handleContentScroll (event) {
+        this.contentScrollTop = event.target.scrollTop;
+      }
+    }
+  };
 </script>
 <style lang='postcss'>
     .scroll-faker-warper{
