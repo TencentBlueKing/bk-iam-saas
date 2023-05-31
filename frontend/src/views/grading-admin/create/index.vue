@@ -639,7 +639,6 @@
                 }
                 window.changeDialog = true;
                 this.isAllExpanded = payload;
-                window.changeDialog = true;
                 const aggregationAction = this.aggregations;
                 const actionIds = [];
                 aggregationAction.forEach(item => {
