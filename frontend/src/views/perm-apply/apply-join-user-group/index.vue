@@ -451,11 +451,8 @@
                     tipType: ''
                 },
                 applyGroupData: {
-                    name: '',
-                    id: '',
                     system_id: '',
-                    action_id: '',
-                    description: ''
+                    action_id: ''
                 },
                 systemList: [],
                 processesList: [],
@@ -631,7 +628,9 @@
                                 });
                                 this.searchList.push(..._.cloneDeep(this.searchValue));
                                 this.searchParams[key] = curData.id;
-                                this.applyGroupData[key] = curData.id;
+                                if (this.applyGroupData.hasOwnProperty(key)) {
+                                    this.applyGroupData[key] = curData.id;
+                                }
                             }
                         } else if (tempData) {
                             this.searchValue.push({
@@ -646,10 +645,14 @@
                             });
                             this.searchList.push(..._.cloneDeep(this.searchValue));
                             this.searchParams[key] = curData;
-                            this.applyGroupData[key] = curData;
+                            if (this.applyGroupData.hasOwnProperty(key)) {
+                                this.applyGroupData[key] = curData;
+                            }
                         } else {
                             this.searchParams[key] = curData;
-                            this.applyGroupData[key] = curData;
+                            if (this.applyGroupData.hasOwnProperty(key)) {
+                                this.applyGroupData[key] = curData;
+                            }
                         }
                     }
                 }
@@ -881,6 +884,12 @@
 
             async fetchSearchUserGroup (resourceInstances) {
                 const { current, limit } = this.pagination;
+                if (this.searchParams.hasOwnProperty('id')) {
+                    console.log(isNaN(Number(this.searchParams.id)));
+                    if (!isNaN(Number(this.searchParams.id))) {
+                        this.searchParams.id = Number(this.searchParams.id);
+                    }
+                }
                 const params = {
                     ...this.applyGroupData,
                     ...this.searchParams,
@@ -1047,11 +1056,8 @@
 
             resetSearchParams () {
                 this.applyGroupData = Object.assign({}, {
-                    name: '',
-                    id: '',
                     system_id: '',
-                    action_id: '',
-                    description: ''
+                    action_id: ''
                 });
                 this.curResourceData = Object.assign({}, {
                     type: ''
@@ -1120,13 +1126,6 @@
                 this.searchList = result;
                 this.emptyData.tipType = 'search';
                 this.resetPagination();
-                if (!Object.keys(payload).length) {
-                    this.applyGroupData = Object.assign(this.applyGroupData, {
-                        id: '',
-                        name: '',
-                        description: ''
-                    });
-                }
                 this.handleSearchUserGroup();
             },
 
