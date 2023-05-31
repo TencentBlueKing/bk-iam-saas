@@ -33,7 +33,7 @@ export const m = {
         '全选': 'All',
         '取消全选': 'Unselect All',
         '理由': 'Reason',
-        '操作': 'Action',
+        '操作': 'Action name',
         '申请期限': 'Expiration date',
         '无需关联实例': 'No need to associate instances',
         '无生效条件': 'No effective condition',
@@ -266,8 +266,7 @@ export const m = {
     // 校验
     verify: {
         '请选择': 'Please select',
-        '请输入理由': 'Please give your reason',
-        '请选择操作': 'Please select the actions',
+        '请输入理由': 'Please enter reason',
         '请选择拓扑实例': 'Please select the topology instances',
         '请设置属性条件': 'Please set condition',
         '请输入': 'Please input',
@@ -331,7 +330,7 @@ export const m = {
         '请填写名称': 'Please fill in the name',
         '名称最长不超过32个字符': 'The name cannot exceed 32 characters',
         '名称不允许空格': 'Name does not allow spaces',
-        '操作和资源边界不可为空': 'Operation and resource boundaries cannot be empty',
+        '操作和资源边界不可为空': 'Action and resource boundaries cannot be empty',
         '可授权人员边界不可为空': 'The boundary of authorized personnel cannot be empty',
         '用户名输入格式错误': 'User name input format error',
         '当前选择项不在授权范围内': 'The current selection is not within the scope of authorization',
@@ -343,7 +342,7 @@ export const m = {
         '管理员不能为空': 'Administrator cannot be empty',
         'admin无需申请权限': 'Admin does not need to apply for permission',
         '请选择系统': 'Please select system',
-        '请选择操作': 'Please select action',
+        '请选择操作': 'Please select action name',
         '请选择资源类型': 'Please select resource type'
     },
     info: {
@@ -485,7 +484,9 @@ export const m = {
          '二级管理空间': 'Secondary management space',
          '添加多组实例可以实现分批鉴权的需求': 'Adding multiple sets of instances can achieve the requirement of batch authentication',
          '比如，root账号只能登陆主机1，user账号只能登陆主机2，root账号不能登陆主机2，user账号不能登陆主机1': 'For example, the root account can only log in to host 1, the user account can only log in to host 2, the root account cannot log in to host 2, and the user account cannot log in to host 1',
-         '这时可以添加两组实例，第一组实例为[root，主机1]，第二组实例为[user，主机2]来实现': 'At this point, two sets of instances can be added. The first set of instances is [root, host 1], and the second set of instances is [user, host 2] to achieve this'
+         '这时可以添加两组实例，第一组实例为[root，主机1]，第二组实例为[user，主机2]来实现': 'At this point, two sets of instances can be added. The first set of instances is [root, host 1], and the second set of instances is [user, host 2] to achieve this',
+         '关联侧边栏操作的资源实例': 'Resource instances associated with the operation {value}',
+         '关联侧边栏操作生效条件': 'Effective conditions associated with the operation {value}'
     },
     // 二次确认弹窗相关
     dialog: {
@@ -1199,12 +1200,12 @@ export const m = {
         '分组名称': 'Group Name',
         '分组操作': 'Group Operation',
         '分组英文名称': 'English name',
-        '操作': 'Operate',
-        '请选择操作': 'Please select operate',
-        '确认删除常用操作？': 'Are you sure to delete common operations?',
-        '删除常用操作成功': 'Successfully deleted common operations',
+        '操作': 'Action name',
+        '请选择操作': 'Please select action name',
+        '确认删除常用操作？': 'Are you sure to delete common action?',
+        '删除常用操作成功': 'Successfully deleted common action',
         '删除资源类型成功': 'Successfully deleted resource type',
-        '编辑常用操作': 'Edit common operations',
+        '编辑常用操作': 'Edit common action',
         '资源实例选择方式至少选择一个': 'Select at least one resource instance selection method',
         '通过拓扑选择时必须要选择实例视图': 'When selecting through topology, an instance view must be selected',
         '请输入分组英文名称': 'Please enter the English name of the group',
@@ -1264,8 +1265,8 @@ export const m = {
         '有权限的成员': 'Authorized members',
         '权限类型': 'Permission type',
         '条数展示': 'Number of impressions',
-        '用户类型': 'user type',
-        '请选择查询类型': 'Please select a query type',
+        '用户类型': 'User type',
+        '请选择查询类型': 'Please select query type',
         '系统必填': 'system required',
         '操作必填': 'Action required',
         '请选择资源实例': 'Please select resource instance',

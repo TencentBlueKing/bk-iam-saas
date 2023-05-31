@@ -669,7 +669,7 @@
                 const { system_id } = this.applyGroupData;
                 // eslint-disable-next-line camelcase
                 if (system_id) {
-                    await this.handleSearchUserGroup();
+                    await this.handleSearchUserGroup(true);
                 }
             },
 
@@ -813,7 +813,7 @@
                 };
                 this.curResIndex = resIndex;
                 this.groupIndex = groupIndex;
-                this.resourceInstanceSideSliderTitle = `${this.$t(`m.common['关联操作']`)}${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)}`;
+                this.resourceInstanceSidesliderTitle = this.$t(`m.info['关联侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}` });
                 window.changeAlert = 'iamSidesider';
                 this.isShowResourceInstanceSideSlider = true;
             },
@@ -875,14 +875,15 @@
                     if (isClick) {
                         this.resetPagination();
                     }
-                    await this.fetchSearchUserGroup(resourceInstances);
+                    await this.fetchSearchUserGroup(resourceInstances, true);
                 } else {
                     this.isSearchSystem = false;
-                    this.fetchUserGroupList(true);
+                    await this.fetchUserGroupList(true);
                 }
             },
 
-            async fetchSearchUserGroup (resourceInstances) {
+            async fetchSearchUserGroup (resourceInstances, isTableLoading = true) {
+                this.tableLoading = isTableLoading;
                 const { current, limit } = this.pagination;
                 if (this.searchParams.hasOwnProperty('id')) {
                     if (!isNaN(Number(this.searchParams.id))) {
@@ -1163,13 +1164,15 @@
                 }
                 this.pagination = Object.assign(this.pagination, { current: page });
                 this.queryParams = Object.assign(this.queryParams, { current: page });
-                this.isSearchSystem ? this.fetchSearchUserGroup() : this.fetchUserGroupList(true);
+                this.handleSearchUserGroup();
+                // this.isSearchSystem ? this.fetchSearchUserGroup() : this.fetchUserGroupList(true);
             },
 
             limitChange (currentLimit, prevLimit) {
                 this.pagination = Object.assign(this.pagination, { current: 1, limit: currentLimit });
                 this.queryParams = Object.assign(this.queryParams, { current: 1, limit: currentLimit });
-                this.isSearchSystem ? this.fetchSearchUserGroup() : this.fetchUserGroupList(true);
+                this.handleSearchUserGroup();
+                // this.isSearchSystem ? this.fetchSearchUserGroup() : this.fetchUserGroupList(true);
             },
 
             handlerAllChange (selection) {

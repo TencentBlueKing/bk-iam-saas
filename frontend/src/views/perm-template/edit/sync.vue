@@ -850,7 +850,7 @@
                 this.curActionIndex = index;
                 this.curResIndex = resIndex;
                 this.curGroupIndex = groupIndex;
-                this.instanceSidesliderTitle = `${this.$t(`m.common['关联操作']`)}${this.$t(`m.common['【']`)}${data.add_actions[index].name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)}`;
+                this.instanceSidesliderTitle = this.$t(`m.info['关联侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${data.add_actions[index].name}${this.$t(`m.common['】']`)}` });
                 window.changeAlert = 'iamSidesider';
                 this.isShowInstanceSideslider = true;
             },

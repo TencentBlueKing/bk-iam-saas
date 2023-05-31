@@ -808,8 +808,7 @@
                 this.curIndex = index;
                 this.curResIndex = resIndex;
                 this.curGroupIndex = groupIndex;
-
-                this.resourceInstanceSidesliderTitle = `${this.$t(`m.common['关联操作']`)}${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)}`;
+                this.resourceInstanceSidesliderTitle = this.$t(`m.info['关联侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}` });
                 window.changeAlert = 'iamSidesider';
                 this.isShowResourceInstanceSideslider = true;
             },
@@ -1599,7 +1598,7 @@
                 this.curIndex = index;
                 this.curGroupIndex = groupIndex;
                 this.isShowResourceInstanceEffectTime = true;
-                this.resourceInstanceEffectTimeTitle = `${this.$t(`m.common['关联操作']`)}${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['生效条件']`)}`;
+                this.resourceInstanceEffectTimeTitle = this.$t(`m.info['关联侧边栏操作生效条件']`, { value: `${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}` });
             },
 
             // 生效条件保存
