@@ -10,7 +10,7 @@
                     'fixed',
                     customClass
                 ]"
-                :style="{ paddingLeft: externalSystemId ? '50px' : '284px' }"
+                :style="navStickStyle"
                 style="margin-top: 52px;"
                 role="dynamic-position"
             >
@@ -44,7 +44,7 @@
             };
         },
         computed: {
-            ...mapGetters(['externalSystemId', 'externalSystemsLayout']),
+            ...mapGetters(['externalSystemId', 'externalSystemsLayout', 'navStick']),
             classes () {
                 if (this.isHide) {
                     return 'fixed';
@@ -83,6 +83,17 @@
                     return externalClass;
                 }
                 return '';
+            },
+            navStickStyle () {
+                if (this.externalSystemId) {
+                    return {
+                        paddingLeft: '50px'
+                    };
+                } else {
+                    return {
+                        paddingLeft: this.navStick ? '284px' : '84px'
+                    };
+                }
             }
         },
         mounted () {
