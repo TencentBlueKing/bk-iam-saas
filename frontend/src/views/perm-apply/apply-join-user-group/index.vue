@@ -885,7 +885,6 @@
             async fetchSearchUserGroup (resourceInstances) {
                 const { current, limit } = this.pagination;
                 if (this.searchParams.hasOwnProperty('id')) {
-                    console.log(isNaN(Number(this.searchParams.id)));
                     if (!isNaN(Number(this.searchParams.id))) {
                         this.searchParams.id = Number(this.searchParams.id);
                     }
