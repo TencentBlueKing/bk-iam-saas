@@ -946,24 +946,40 @@
             /**
              * 获取页面数据
              */
+            // async fetchPageData () {
+            //     await this.fetchSystems();
+            //     if (this.systemValue) {
+            //         await Promise.all([
+            //             this.fetchPolicies(this.systemValue),
+            //             this.fetchAggregationAction(this.systemValue),
+            //             this.fetchCommonActions(this.systemValue)
+            //         ]);
+            //     }
+            //     if (this.sysAndtid) {
+            //         await Promise.all([
+            //             // 获取用户组数据
+            //             this.fetchUserGroupList(),
+            //             // 获取个人用户的用户组列表
+            //             this.fetchCurUserGroup(),
+            //             // 获取推荐操作
+            //             this.fetchRecommended()
+            //         ]);
+            //     }
+            // },
             async fetchPageData () {
                 await this.fetchSystems();
                 if (this.systemValue) {
-                    await Promise.all([
-                        this.fetchPolicies(this.systemValue),
-                        this.fetchAggregationAction(this.systemValue),
-                        this.fetchCommonActions(this.systemValue)
-                    ]);
+                    await this.fetchPolicies(this.systemValue);
+                    await this.fetchAggregationAction(this.systemValue);
+                    await this.fetchCommonActions(this.systemValue);
                 }
                 if (this.sysAndtid) {
-                    await Promise.all([
-                        // 获取用户组数据
-                        this.fetchUserGroupList(),
-                        // 获取个人用户的用户组列表
-                        this.fetchCurUserGroup(),
-                        // 获取推荐操作
-                        this.fetchRecommended()
-                    ]);
+                    // 获取用户组数据
+                    await this.fetchUserGroupList();
+                    // 获取个人用户的用户组列表
+                    await this.fetchCurUserGroup();
+                    // 获取推荐操作
+                    await this.fetchRecommended();
                 }
             },
 
@@ -1173,8 +1189,8 @@
                     });
                     if (this.commonActions.length > 0) {
                         if (this.originalCustomTmplList.length > 1) {
-                            this.originalCustomTmplList.forEach(item => {
-                                item.expanded = false;
+                            this.originalCustomTmplList.forEach((item, index) => {
+                                item.expanded = index < 1;
                             });
                         }
                     }
@@ -1223,6 +1239,9 @@
                         }
                     });
                     this.tableData = this.tableData.filter(item => !(item.isAggregate && item.actions.length < 1));
+                }
+                if (this.isAllExpanded) {
+                    this.handleAggregateActionChange(false);
                 }
             },
 
@@ -1419,6 +1438,9 @@
                     this.handleRelatedActions(item, payload.actionsAllChecked);
                 });
                 payload.count = payload.actionsAllChecked ? payload.allCount : 0;
+                if (this.isAllExpanded) {
+                    this.handleAggregateActionChange(false);
+                }
             },
 
             handleSubAllChange (newVal, oldVal, val, payload, item) {
@@ -1475,6 +1497,9 @@
                 });
 
                 item.count = item.count + count;
+                if (this.isAllExpanded) {
+                    this.handleAggregateActionChange(false);
+                }
             },
 
             handleAllChange (newVal, oldVal, val, payload) {
@@ -1534,6 +1559,9 @@
                 });
 
                 payload.count = payload.count + count;
+                if (this.isAllExpanded) {
+                    this.handleAggregateActionChange(false);
+                }
             },
 
             /**
@@ -1912,6 +1940,9 @@
 
                 this.handleRelatedActions(actData, true);
                 payload.count++;
+                if (this.isAllExpanded) {
+                    this.handleAggregateActionChange(false);
+                }
             },
 
             handleSubActionChecked (newVal, oldVal, val, actData, payload, item) {
@@ -2004,6 +2035,9 @@
 
                 this.handleRelatedActions(actData, true);
                 item.count++;
+                if (this.isAllExpanded) {
+                    this.handleAggregateActionChange(false);
+                }
             },
             
             /**
@@ -2287,18 +2321,29 @@
              * @param {String} 系统id
              * @param {Object} option
              */
+            // async handleSysSelected (value, option) {
+            //     // 切换系统时重置数据
+            //     this.reason = '';
+            //     this.isShowReasonError = false;
+            //     this.isShowActionError = false;
+            //     this.fetchResetData();
+            //     await Promise.all([
+            //         this.fetchActions(value),
+            //         this.fetchPolicies(value),
+            //         this.fetchAggregationAction(value),
+            //         this.fetchCommonActions(value)
+            //     ]);
+            // },
             async handleSysSelected (value, option) {
                 // 切换系统时重置数据
                 this.reason = '';
                 this.isShowReasonError = false;
                 this.isShowActionError = false;
                 this.fetchResetData();
-                await Promise.all([
-                    this.fetchActions(value),
-                    this.fetchPolicies(value),
-                    this.fetchAggregationAction(value),
-                    this.fetchCommonActions(value)
-                ]);
+                await this.fetchActions(value);
+                await this.fetchPolicies(value);
+                await this.fetchAggregationAction(value);
+                await this.fetchCommonActions(value);
             },
 
             /**

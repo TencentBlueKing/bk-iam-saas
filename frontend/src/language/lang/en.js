@@ -260,7 +260,8 @@ export const m = {
         '将': 'The ',
         '关联到以下用户组': ' will be associated with the following groups',
         '离开': 'LEAVE',
-        '更多': 'More'
+        '更多': 'More',
+        '资源实例': 'Resource instance'
     },
     // 校验
     verify: {
@@ -340,7 +341,10 @@ export const m = {
         '请选择时间范围': 'Please select time range',
         '需添加当前用户为管理员': 'Need to add the current user as an administrator',
         '管理员不能为空': 'Administrator cannot be empty',
-        'admin无需申请权限': 'Admin does not need to apply for permission'
+        'admin无需申请权限': 'Admin does not need to apply for permission',
+        '请选择系统': 'Please select system',
+        '请选择操作': 'Please select action',
+        '请选择资源类型': 'Please select resource type'
     },
     info: {
         '加入用户组申请成功': 'Apply to join the group successfully',
@@ -478,7 +482,10 @@ export const m = {
          '您已退出当前管理员授权范围': 'You have exited the current administrator authorization scope',
          '已添加': 'Added',
          '当前管理员不存在此条数据': 'The current administrator does not have this data',
-         '二级管理空间': 'Secondary management space'
+         '二级管理空间': 'Secondary management space',
+         '添加多组实例可以实现分批鉴权的需求': 'Adding multiple sets of instances can achieve the requirement of batch authentication',
+         '比如，root账号只能登陆主机1，user账号只能登陆主机2，root账号不能登陆主机2，user账号不能登陆主机1': 'For example, the root account can only log in to host 1, the user account can only log in to host 2, the root account cannot log in to host 2, and the user account cannot log in to host 1',
+         '这时可以添加两组实例，第一组实例为[root，主机1]，第二组实例为[user，主机2]来实现': 'At this point, two sets of instances can be added. The first set of instances is [root, host 1], and the second set of instances is [user, host 2] to achieve this'
     },
     // 二次确认弹窗相关
     dialog: {
@@ -565,7 +572,7 @@ export const m = {
         '申请自定义权限标题': 'If the previous permission package does not meet your needs, please apply for the permission through customization',
         '申请自定义权限场景1': 'Certain permissions for a single system',
         '申请自定义权限场景2': 'More flexible permission requirements',
-        '申请加入用户组搜索提示': 'Enter group name, description, belonging system and management space, etc. to search',
+        '申请加入用户组搜索提示': 'Enter ID, user group name and description, etc. Press Enter to search',
         '超级管理员申请加入用户组搜索提示': 'Search Tips for Super Administrators Applying to Join User Groups',
         '请输入条件搜索用户组': 'Please enter criteria to search for user groups'
     },
