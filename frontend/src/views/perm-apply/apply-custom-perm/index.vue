@@ -717,8 +717,9 @@
                 return this.requestQueue.length > 0;
             },
             isAggregateDisabled () {
-                return this.tableData.length < 1
-                    || this.aggregations.length < 1 || (this.tableData.length === 1 && !this.tableData[0].isAggregate);
+                const isDisabled = this.tableData.length < 1 || this.aggregations.length < 1
+                || (this.tableData.length === 1 && !this.tableData[0].isAggregate);
+                return isDisabled;
             },
             curSelectActions () {
                 const allActionIds = [];
@@ -1635,8 +1636,8 @@
                     });
                     return arr;
                 })();
-                let selectPath = instances[0].path;
-                if (instances.length > 0) {
+                if (instances.length) {
+                    let selectPath = instances[0].path;
                     this.aggregationsTableData.forEach(item => {
                         if (curAction.includes(item.id)) {
                             if (item.tag === 'unchanged') {
@@ -1673,6 +1674,7 @@
             },
 
             handleAggregateAction (payload) {
+                this.isAllExpanded = payload;
                 const aggregationAction = this.aggregations;
                 const actionIds = [];
                 aggregationAction.forEach(item => {

@@ -522,7 +522,7 @@
                 if (this.previewData[0].tabType === 'resource' && (this.previewData[0].data.length < 1 || this.previewData[0].data.every(item => !item.instance || item.instance.length < 1))) {
                     this.batchDisabled = true;
                 }
-                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)}`;
+                this.sidesliderTitle = this.$t(`m.info['操作侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}` });
                 window.changeAlert = 'iamSidesider';
                 this.isShowSideslider = true;
             },
@@ -533,7 +533,7 @@
             handleEnvironmentsViewResource (payload, data) {
                 this.environmentsSidesliderData = payload.environments;
                 this.isShowEnvironmentsSideslider = true;
-                this.environmentsSidesliderTitle = `${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['生效条件']`)}`;
+                this.environmentsSidesliderTitle = this.$t(`m.info['关联侧边栏操作生效条件']`, { value: `${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}` });
             },
 
             /**

@@ -1226,8 +1226,8 @@
                     });
                     return arr;
                 })();
-                let selectPath = instances[0].path;
-                if (instances.length > 0) {
+                if (instances.length) {
+                    let selectPath = instances[0].path;
                     this.aggregationsTableData.forEach(item => {
                         if (curAction.includes(item.id)) {
                             if (item.tag === 'unchanged') {
