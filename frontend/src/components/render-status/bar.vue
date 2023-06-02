@@ -1,7 +1,7 @@
 <template functional>
-    <div class="or-status-bar">
-        <p class="bar">or</p>
-    </div>
+  <div class="or-status-bar">
+    <p class="bar">or</p>
+  </div>
 </template>
 <style lang="postcss" scoped>
     /* .or-status-bar {

@@ -1,8 +1,8 @@
 <template functional>
-    <div class="iam-set-action-wrapper" @click="props.handleClick">
-        <Icon type="add-small" />
-        {{ props.title }}
-    </div>
+  <div class="iam-set-action-wrapper" @click="props.handleClick">
+    <Icon type="add-small" />
+    {{ props.title }}
+  </div>
 </template>
 <style lang="postcss">
     .iam-set-action-wrapper {

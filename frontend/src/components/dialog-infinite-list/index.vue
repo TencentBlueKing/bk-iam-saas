@@ -1,112 +1,112 @@
 <template>
-    <div class="dialog-infinite-list" @scroll="rootScroll">
-        <div class="ghost-wrapper" :style="ghostStyle"></div>
-        <div class="render-wrapper" ref="content">
-            <div class="organization-content">
-                <!-- eslint-disable max-len -->
-                <div
-                    v-for="(item, index) in renderOrganizationList"
-                    :key="item.id"
-                    :class="['organization-item', { focus: index === organizationIndex || item.selected }, { 'is-disabled': item.disabled || isDisabled }]"
-                    :title="item.disabled ? $t(`m.common['该成员已添加']`) : item.full_name"
-                    @click.stop="nodeClick(item)">
-                    <Icon type="file-close" class="folder-icon" />
-                    <span
-                        class="organization-name"
-                        :class="item.disabled ? 'is-disabled' : ''"
-                        :title="nameType(item)">
-                        {{ item.name }}
-                    </span>
-                    <span class="user-count" v-if="item.showCount">
-                        {{ '(' + item.count + ')' }}
-                    </span>
-                    <div class="organization-checkbox" v-if="item.showRadio">
-                        <span class="node-checkbox"
-                            :class="{
-                                'is-disabled': disabledNode(item),
-                                'is-checked': item.is_selected,
-                                'is-indeterminate': item.indeterminate
-                            }"
-                            @click.stop="handleNodeClick(item)">
-                        </span>
-                    </div>
-                </div>
-            </div>
-            <div class="user-content">
-                <div
-                    v-for="(item, index) in renderUserList"
-                    :key="item.id"
-                    :class="['user-item', { focus: index === userIndex || item.selected }, { 'is-disabled': item.disabled || isDisabled }]"
-                    :title="item.disabled ? $t(`m.common['该成员已添加']`) : ''"
-                    @click.stop="nodeClick(item)">
-                    <Icon type="personal-user" class="user-icon" />
-                    <span
-                        class="user-name"
-                        :class="item.disabled ? 'is-disabled' : ''"
-                        :title="nameType(item)">
-                        {{ item.username }}
-                        <template v-if="item.name !== ''">
-                            ({{ item.name }})
-                        </template>
-                    </span>
-                    <div class="user-checkbox" v-if="item.showRadio">
-                        <span class="node-checkbox"
-                            :class="{
-                                'is-disabled': disabledNode(item),
-                                'is-checked': item.is_selected,
-                                'is-indeterminate': item.indeterminate
-                            }"
-                            @click.stop="handleNodeClick(item)">
-                        </span>
-                    </div>
-                </div>
-            </div>
+  <div class="dialog-infinite-list" @scroll="rootScroll">
+    <div class="ghost-wrapper" :style="ghostStyle"></div>
+    <div class="render-wrapper" ref="content">
+      <div class="organization-content">
+        <!-- eslint-disable max-len -->
+        <div
+          v-for="(item, index) in renderOrganizationList"
+          :key="item.id"
+          :class="['organization-item', { focus: index === organizationIndex || item.selected }, { 'is-disabled': item.disabled || isDisabled }]"
+          :title="item.disabled ? $t(`m.common['该成员已添加']`) : item.full_name"
+          @click.stop="nodeClick(item)">
+          <Icon type="file-close" class="folder-icon" />
+          <span
+            class="organization-name"
+            :class="item.disabled ? 'is-disabled' : ''"
+            :title="nameType(item)">
+            {{ item.name }}
+          </span>
+          <span class="user-count" v-if="item.showCount">
+            {{ '(' + item.count + ')' }}
+          </span>
+          <div class="organization-checkbox" v-if="item.showRadio">
+            <span class="node-checkbox"
+              :class="{
+                'is-disabled': disabledNode(item),
+                'is-checked': item.is_selected,
+                'is-indeterminate': item.indeterminate
+              }"
+              @click.stop="handleNodeClick(item)">
+            </span>
+          </div>
         </div>
+      </div>
+      <div class="user-content">
+        <div
+          v-for="(item, index) in renderUserList"
+          :key="item.id"
+          :class="['user-item', { focus: index === userIndex || item.selected }, { 'is-disabled': item.disabled || isDisabled }]"
+          :title="item.disabled ? $t(`m.common['该成员已添加']`) : ''"
+          @click.stop="nodeClick(item)">
+          <Icon type="personal-user" class="user-icon" />
+          <span
+            class="user-name"
+            :class="item.disabled ? 'is-disabled' : ''"
+            :title="nameType(item)">
+            {{ item.username }}
+            <template v-if="item.name !== ''">
+              ({{ item.name }})
+            </template>
+          </span>
+          <div class="user-checkbox" v-if="item.showRadio">
+            <span class="node-checkbox"
+              :class="{
+                'is-disabled': disabledNode(item),
+                'is-checked': item.is_selected,
+                'is-indeterminate': item.indeterminate
+              }"
+              @click.stop="handleNodeClick(item)">
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
 
 </template>
 <script>
-    import _ from 'lodash';
-    import { mapGetters } from 'vuex';
+  import _ from 'lodash';
+  import { mapGetters } from 'vuex';
 
-    export default {
-        name: 'dialog-infinite-list',
-        inject: ['getGroupAttributes'],
-        props: {
-            // 所有数据
-            allData: {
-                type: Array,
-                default: () => []
-            },
-            // 每个节点的高度
-            itemHeight: {
-                type: Number,
-                default: 32
-            },
+  export default {
+    name: 'dialog-infinite-list',
+    inject: ['getGroupAttributes'],
+    props: {
+      // 所有数据
+      allData: {
+        type: Array,
+        default: () => []
+      },
+      // 每个节点的高度
+      itemHeight: {
+        type: Number,
+        default: 32
+      },
 
-            focusIndex: {
-                type: Number,
-                default: -1
-            },
+      focusIndex: {
+        type: Number,
+        default: -1
+      },
 
-            isDisabled: {
-                type: Boolean,
-                default: false
-            }
-        },
-        data () {
-            return {
-                startIndex: 0,
-                endIndex: 0,
+      isDisabled: {
+        type: Boolean,
+        default: false
+      }
+    },
+    data () {
+      return {
+        startIndex: 0,
+        endIndex: 0,
 
-                currentFocusIndex: this.focusIndex,
+        currentFocusIndex: this.focusIndex,
 
-                organizationIndex: -1,
+        organizationIndex: -1,
 
-                userIndex: -1
-            };
-        },
-        computed: {
+        userIndex: -1
+      };
+    },
+    computed: {
             ...mapGetters(['user']),
             ghostStyle () {
                 return {
@@ -151,170 +151,170 @@
                     return typeMap[type] ? typeMap[type]() : typeMap['user']();
                 };
             }
-        },
-        watch: {
-            focusIndex (value) {
-                this.currentFocusIndex = value;
-                if (value === -1) {
-                    this.organizationIndex = -1;
-                    this.userIndex = -1;
-                } else {
-                    this.computedIndex();
-                }
-            }
-        },
-        mounted () {
-            this.endIndex = Math.ceil(this.$el.clientHeight / this.itemHeight);
-        },
-        methods: {
-            /**
-             * 滚动回调函数
-             */
-            rootScroll: _.throttle(function () {
-                this.organizationIndex = -1;
-                this.userIndex = -1;
-                this.$emit('update:focusIndex', -1);
-                this.updateRenderData(this.$el.scrollTop);
-            }, 0),
-
-            /**
-             * 更新可视区渲染的数据列表
-             *
-             * @param {Number} scrollTop 滚动条高度
-             */
-            updateRenderData (scrollTop = 0) {
-                // 可视区显示的条数
-                const count = Math.ceil(this.$el.clientHeight / this.itemHeight);
-                // 滚动后可视区新的 startIndex
-                const newStartIndex = Math.floor(scrollTop / this.itemHeight);
-                // 滚动后可视区新的 endIndex
-                const newEndIndex = newStartIndex + count;
-                this.startIndex = newStartIndex;
-                this.endIndex = newEndIndex;
-                this.$refs.content.style.transform = `translate3d(0, ${newStartIndex * this.itemHeight}px, 0)`;
-            },
-
-            /**
-             * 搜索时支持键盘上下键的 hover index 计算
-             */
-            computedIndex () {
-                if (this.renderOrganizationList.length && this.renderUserList.length) {
-                    if (this.currentFocusIndex < this.renderOrganizationList.length) {
-                        this.organizationIndex = this.currentFocusIndex;
-                        this.userIndex = -1;
-                    } else {
-                        this.userIndex = this.currentFocusIndex - this.renderOrganizationList.length;
-                        this.organizationIndex = -1;
-                    }
-                } else if (this.renderOrganizationList.length && !this.renderUserList.length) {
-                    this.organizationIndex = this.currentFocusIndex;
-                } else if (!this.renderOrganizationList.length && this.renderUserList.length) {
-                    this.userIndex = this.currentFocusIndex;
-                } else {
-                    this.organizationIndex = -1;
-                    this.userIndex = -1;
-                }
-
-                // console.warn('organizationIndex: ' + this.organizationIndex)
-                // console.warn('userIndex: ' + this.userIndex)
-            },
-
-            setCheckStatusByIndex () {
-                if (this.organizationIndex !== -1) {
-                    const currentOrganizationItem = this.renderOrganizationList.find(
-                        (item, index) => index === this.organizationIndex
-                    );
-                    if (!currentOrganizationItem.disabled) {
-                        currentOrganizationItem.is_selected = !currentOrganizationItem.is_selected;
-                        this.$emit('on-checked', currentOrganizationItem.is_selected, !currentOrganizationItem.is_selected, currentOrganizationItem.is_selected, currentOrganizationItem);
-                    }
-                }
-
-                if (this.userIndex !== -1) {
-                    const currentUserItem = this.renderUserList.find((item, index) => index === this.userIndex);
-                    if (!currentUserItem.disabled) {
-                        currentUserItem.is_selected = !currentUserItem.is_selected;
-                        this.$emit('on-checked', currentUserItem.is_selected, !currentUserItem.is_selected, currentUserItem.is_selected, currentUserItem);
-                    }
-                }
-            },
-
-            /**
-             * 点击节点
-             *
-             * @param {Object} node 当前节点
-             */
-            async nodeClick (node) {
-                if (this.isDisabled || (this.getGroupAttributes && this.getGroupAttributes().source_from_role && node.type === 'depart')) {
-                    return;
-                }
-                this.$emit('on-click', node);
-                if (!node.disabled) {
-                    if (this.isStaff) {
-                        node.is_selected = !node.is_selected;
-                        this.$emit('on-checked', node.is_selected, !node.is_selected, node.is_selected, node);
-                    } else {
-                        const result = await this.fetchSubjectScopeCheck(node);
-                        if (result) {
-                            node.is_selected = !node.is_selected;
-                            this.$emit('on-checked', node.is_selected, !node.is_selected, node.is_selected, node);
-                        } else {
-                            this.messageError(this.$t(`m.verify['当前选择项不在授权范围内']`));
-                        }
-                    }
-                }
-            },
-
-            async handleNodeClick (node) {
-                const isDisabled = this.isDisabled || (this.getGroupAttributes && this.getGroupAttributes().source_from_role && node.type === 'depart');
-                if (!isDisabled) {
-                    if (this.isStaff) {
-                        node.is_selected = !node.is_selected;
-                        this.$emit('on-checked', node.is_selected, !node.is_selected, true, node);
-                    } else {
-                        const result = await this.fetchSubjectScopeCheck(node);
-                        if (result) {
-                            node.is_selected = !node.is_selected;
-                            this.$emit('on-checked', node.is_selected, !node.is_selected, true, node);
-                        } else {
-                            this.messageError(this.$t(`m.verify['当前选择项不在授权范围内']`));
-                        }
-                    }
-                }
-            },
-
-            // 校验组织架构选择器部门/用户范围是否满足条件
-            async fetchSubjectScopeCheck ({ type, id, username }) {
-                const subjectItem = {
-                    depart: () => {
-                        return {
-                            subjects: [{
-                                type: 'department',
-                                id
-                     
-                            }]
-                        };
-                    },
-                    user: () => {
-                        return {
-                            subjects: [{
-                                type: 'user',
-                                id: username
-                            }]
-                        };
-                    }
-                };
-                const params = subjectItem[type]();
-                const { code, data } = await this.$store.dispatch('organization/getSubjectScopeCheck', params);
-                if (code === 0) {
-                    const { id: subjectId, type: subjectType } = params.subjects[0];
-                    const result = data && data.length
-                        && data.find(item => item.type === subjectType && item.id === String(subjectId));
-                    return result;
-                }
-            }
+    },
+    watch: {
+      focusIndex (value) {
+        this.currentFocusIndex = value;
+        if (value === -1) {
+          this.organizationIndex = -1;
+          this.userIndex = -1;
+        } else {
+          this.computedIndex();
         }
-    };
+      }
+    },
+    mounted () {
+      this.endIndex = Math.ceil(this.$el.clientHeight / this.itemHeight);
+    },
+    methods: {
+      /**
+       * 滚动回调函数
+       */
+      rootScroll: _.throttle(function () {
+        this.organizationIndex = -1;
+        this.userIndex = -1;
+        this.$emit('update:focusIndex', -1);
+        this.updateRenderData(this.$el.scrollTop);
+      }, 0),
+
+      /**
+       * 更新可视区渲染的数据列表
+       *
+       * @param {Number} scrollTop 滚动条高度
+       */
+      updateRenderData (scrollTop = 0) {
+        // 可视区显示的条数
+        const count = Math.ceil(this.$el.clientHeight / this.itemHeight);
+        // 滚动后可视区新的 startIndex
+        const newStartIndex = Math.floor(scrollTop / this.itemHeight);
+        // 滚动后可视区新的 endIndex
+        const newEndIndex = newStartIndex + count;
+        this.startIndex = newStartIndex;
+        this.endIndex = newEndIndex;
+        this.$refs.content.style.transform = `translate3d(0, ${newStartIndex * this.itemHeight}px, 0)`;
+      },
+
+      /**
+       * 搜索时支持键盘上下键的 hover index 计算
+       */
+      computedIndex () {
+        if (this.renderOrganizationList.length && this.renderUserList.length) {
+          if (this.currentFocusIndex < this.renderOrganizationList.length) {
+            this.organizationIndex = this.currentFocusIndex;
+            this.userIndex = -1;
+          } else {
+            this.userIndex = this.currentFocusIndex - this.renderOrganizationList.length;
+            this.organizationIndex = -1;
+          }
+        } else if (this.renderOrganizationList.length && !this.renderUserList.length) {
+          this.organizationIndex = this.currentFocusIndex;
+        } else if (!this.renderOrganizationList.length && this.renderUserList.length) {
+          this.userIndex = this.currentFocusIndex;
+        } else {
+          this.organizationIndex = -1;
+          this.userIndex = -1;
+        }
+
+        // console.warn('organizationIndex: ' + this.organizationIndex)
+        // console.warn('userIndex: ' + this.userIndex)
+      },
+
+      setCheckStatusByIndex () {
+        if (this.organizationIndex !== -1) {
+          const currentOrganizationItem = this.renderOrganizationList.find(
+            (item, index) => index === this.organizationIndex
+          );
+          if (!currentOrganizationItem.disabled) {
+            currentOrganizationItem.is_selected = !currentOrganizationItem.is_selected;
+            this.$emit('on-checked', currentOrganizationItem.is_selected, !currentOrganizationItem.is_selected, currentOrganizationItem.is_selected, currentOrganizationItem);
+          }
+        }
+
+        if (this.userIndex !== -1) {
+          const currentUserItem = this.renderUserList.find((item, index) => index === this.userIndex);
+          if (!currentUserItem.disabled) {
+            currentUserItem.is_selected = !currentUserItem.is_selected;
+            this.$emit('on-checked', currentUserItem.is_selected, !currentUserItem.is_selected, currentUserItem.is_selected, currentUserItem);
+          }
+        }
+      },
+
+      /**
+       * 点击节点
+       *
+       * @param {Object} node 当前节点
+       */
+      async nodeClick (node) {
+        if (this.isDisabled || (this.getGroupAttributes && this.getGroupAttributes().source_from_role && node.type === 'depart')) {
+          return;
+        }
+        this.$emit('on-click', node);
+        if (!node.disabled) {
+          if (this.isStaff) {
+            node.is_selected = !node.is_selected;
+            this.$emit('on-checked', node.is_selected, !node.is_selected, node.is_selected, node);
+          } else {
+            const result = await this.fetchSubjectScopeCheck(node);
+            if (result) {
+              node.is_selected = !node.is_selected;
+              this.$emit('on-checked', node.is_selected, !node.is_selected, node.is_selected, node);
+            } else {
+              this.messageError(this.$t(`m.verify['当前选择项不在授权范围内']`));
+            }
+          }
+        }
+      },
+
+      async handleNodeClick (node) {
+        const isDisabled = this.isDisabled || (this.getGroupAttributes && this.getGroupAttributes().source_from_role && node.type === 'depart');
+        if (!isDisabled) {
+          if (this.isStaff) {
+            node.is_selected = !node.is_selected;
+            this.$emit('on-checked', node.is_selected, !node.is_selected, true, node);
+          } else {
+            const result = await this.fetchSubjectScopeCheck(node);
+            if (result) {
+              node.is_selected = !node.is_selected;
+              this.$emit('on-checked', node.is_selected, !node.is_selected, true, node);
+            } else {
+              this.messageError(this.$t(`m.verify['当前选择项不在授权范围内']`));
+            }
+          }
+        }
+      },
+
+      // 校验组织架构选择器部门/用户范围是否满足条件
+      async fetchSubjectScopeCheck ({ type, id, username }) {
+        const subjectItem = {
+          depart: () => {
+            return {
+              subjects: [{
+                type: 'department',
+                id
+                     
+              }]
+            };
+          },
+          user: () => {
+            return {
+              subjects: [{
+                type: 'user',
+                id: username
+              }]
+            };
+          }
+        };
+        const params = subjectItem[type]();
+        const { code, data } = await this.$store.dispatch('organization/getSubjectScopeCheck', params);
+        if (code === 0) {
+          const { id: subjectId, type: subjectType } = params.subjects[0];
+          const result = data && data.length
+            && data.find(item => item.type === subjectType && item.id === String(subjectId));
+          return result;
+        }
+      }
+    }
+  };
 </script>
 <style lang="postcss">
     .dialog-infinite-list {

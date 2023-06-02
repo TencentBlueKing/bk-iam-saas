@@ -27,55 +27,55 @@
 import _ from 'lodash';
 import il8n from '@/language';
 export default class GradeAggregationPolicy {
-    constructor (payload) {
-        this.isError = false;
-        this.actions = payload.actions || [];
-        this.instancesDisplayData = payload.instancesDisplayData || {};
-        this.aggregateResourceType = payload.aggregate_resource_types || [];
-        this.instances = payload.instances || [];
-        this.instancesBackup = _.cloneDeep(this.instances);
-        this.isAggregate = true;
-        this.system_id = payload.actions[0].system_id;
-        this.system_name = payload.system_name;
-        this.$id = payload.$id || '';
-        this.selectedIndex = payload.selectedIndex || 0;
-        this.canPaste = false;
-    }
+  constructor (payload) {
+    this.isError = false;
+    this.actions = payload.actions || [];
+    this.instancesDisplayData = payload.instancesDisplayData || {};
+    this.aggregateResourceType = payload.aggregate_resource_types || [];
+    this.instances = payload.instances || [];
+    this.instancesBackup = _.cloneDeep(this.instances);
+    this.isAggregate = true;
+    this.system_id = payload.actions[0].system_id;
+    this.system_name = payload.system_name;
+    this.$id = payload.$id || '';
+    this.selectedIndex = payload.selectedIndex || 0;
+    this.canPaste = false;
+  }
 
-    get empty () {
-        return this.instances.length < 1;
-    }
+  get empty () {
+    return this.instances.length < 1;
+  }
 
-    get value () {
-        if (this.empty) {
-            return il8n('verify', '请选择');
+  get value () {
+    if (this.empty) {
+      return il8n('verify', '请选择');
+    }
+    let str = '';
+    this.aggregateResourceType.forEach(item => {
+      if (this.instancesDisplayData[item.id] && this.instancesDisplayData[item.id].length === 1) {
+        str = `${str}，${item.name}： ${this.instancesDisplayData[item.id][0].name}`;
+      } else if (this.instancesDisplayData[item.id] && this.instancesDisplayData[item.id].length > 1) {
+        for (const key in this.instancesDisplayData) {
+          if (item.id === key) {
+            str = `${str}，已选择 ${this.instancesDisplayData[item.id].length} 个${item.name}`;
+          }
         }
-        let str = '';
-        this.aggregateResourceType.forEach(item => {
-            if (this.instancesDisplayData[item.id] && this.instancesDisplayData[item.id].length === 1) {
-                str = `${str}，${item.name}： ${this.instancesDisplayData[item.id][0].name}`;
-            } else if (this.instancesDisplayData[item.id] && this.instancesDisplayData[item.id].length > 1) {
-                for (const key in this.instancesDisplayData) {
-                    if (item.id === key) {
-                        str = `${str}，已选择 ${this.instancesDisplayData[item.id].length} 个${item.name}`;
-                    }
-                }
-            }
-        });
-        return str.substring(1, str.length);
-    }
+      }
+    });
+    return str.substring(1, str.length);
+  }
 
-    get name () {
-        if (this.actions.length < 1) {
-            return '';
-        }
-        return this.actions.map(item => item.name).join('，');
+  get name () {
+    if (this.actions.length < 1) {
+      return '';
     }
+    return this.actions.map(item => item.name).join('，');
+  }
 
-    get key () {
-        if (this.actions.length < 1) {
-            return '';
-        }
-        return this.actions.map(item => item.id).join('');
+  get key () {
+    if (this.actions.length < 1) {
+      return '';
     }
+    return this.actions.map(item => item.id).join('');
+  }
 }

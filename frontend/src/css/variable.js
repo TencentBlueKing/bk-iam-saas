@@ -25,19 +25,19 @@
 */
 
 module.exports = {
-    // 相对较浅，常用于容器边框色
-    'border-color': '#ebf0f5',
+  // 相对较浅，常用于容器边框色
+  'border-color': '#ebf0f5',
 
-    // 相对较深，常用于输入框边框色
-    'border-weight-color': '#dde4eb',
+  // 相对较深，常用于输入框边框色
+  'border-weight-color': '#dde4eb',
 
-    // 字体色
-    'font-color': '#7b7d8a',
-    'font-weight-color': '#737987',
+  // 字体色
+  'font-color': '#7b7d8a',
+  'font-weight-color': '#737987',
 
-    // 边框色
-    // 相对较浅，常用于容器边框色
-    'borderColor': '#ebf0f5',
-    // 相对较深，常用于输入框边框色
-    'borderWeightColor': '#dde4eb'
+  // 边框色
+  // 相对较浅，常用于容器边框色
+  'borderColor': '#ebf0f5',
+  // 相对较深，常用于输入框边框色
+  'borderWeightColor': '#dde4eb'
 };

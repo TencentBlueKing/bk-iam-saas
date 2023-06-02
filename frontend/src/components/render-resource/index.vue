@@ -1,208 +1,208 @@
 <template>
-    <!-- eslint-disable max-len -->
-    <div :class="['iam-resource-instance',
-                  { instance: type === 'instance' },
-                  { property: type === 'property' },
-                  { edit: currentMode === 'edit' },
-                  { 'is-not-expanded': !isExpanded },
-                  { 'is-group-instance': isInstanceByGroup },
-                  { 'is-group-property': isProPertyByGroup },
-                  { 'is-instance-hover': isInsanceHover },
-                  { 'normal': !isDisabled },
-                  { 'disabled': isDisabled },
-                  { 'is-show-order-number': needOrder }]"
-        @mouseover="handleMouseenter"
-        @mouseleave="handleMouseleave">
-        <div
-            :class="['header', { 'set-header-style': isExpanded && !isEdit }, { 'set-border-bottom': isExpanded && isEdit }]"
-            @click="handleExpanded">
-            <div class="info">
-                <p>
-                    <span v-html="displayTitle"></span>
-                    <iam-svg name="icon-new" ext-cls="new-icon" v-if="isNew && curLanguageIsCn" />
-                    <iam-svg name="icon-new-en" ext-cls="new-icon" v-if="isNew && !curLanguageIsCn" />
-                </p>
-                <template v-if="isEdit">
-                    <p v-html="subTitle"></p>
-                </template>
-                <template v-else>
-                    <p v-if="!isExpanded" v-html="subTitle"></p>
-                </template>
-            </div>
-            <div class="expand-action">
-                <Icon :type="isExpanded ? 'down-angle' : 'up-angle'" />
-                <Icon :type="isExpanded ? 'up-angle' : 'down-angle'" />
-            </div>
-        </div>
-        <div
-            :class="['content',
-                     { 'set-instance-style': isInstanceEdit },
-                     { 'set-property-style': isPropertyEdit }]" v-show="isExpanded">
-            <slot />
-        </div>
-        <div :class="['add-instance-action', { 'is-bottom': type === 'instance' }, { 'is-top': type === 'property' }]" v-if="isShowEditAction" @click="handleAdd">
-            {{ operateTitle }}
-        </div>
-        <div class="delete-action" v-if="isShowClearAction" @click="handleDelete">
-            <Icon type="close-small" />
-        </div>
+  <!-- eslint-disable max-len -->
+  <div :class="['iam-resource-instance',
+                { instance: type === 'instance' },
+                { property: type === 'property' },
+                { edit: currentMode === 'edit' },
+                { 'is-not-expanded': !isExpanded },
+                { 'is-group-instance': isInstanceByGroup },
+                { 'is-group-property': isProPertyByGroup },
+                { 'is-instance-hover': isInsanceHover },
+                { 'normal': !isDisabled },
+                { 'disabled': isDisabled },
+                { 'is-show-order-number': needOrder }]"
+    @mouseover="handleMouseenter"
+    @mouseleave="handleMouseleave">
+    <div
+      :class="['header', { 'set-header-style': isExpanded && !isEdit }, { 'set-border-bottom': isExpanded && isEdit }]"
+      @click="handleExpanded">
+      <div class="info">
+        <p>
+          <span v-html="displayTitle"></span>
+          <iam-svg name="icon-new" ext-cls="new-icon" v-if="isNew && curLanguageIsCn" />
+          <iam-svg name="icon-new-en" ext-cls="new-icon" v-if="isNew && !curLanguageIsCn" />
+        </p>
+        <template v-if="isEdit">
+          <p v-html="subTitle"></p>
+        </template>
+        <template v-else>
+          <p v-if="!isExpanded" v-html="subTitle"></p>
+        </template>
+      </div>
+      <div class="expand-action">
+        <Icon :type="isExpanded ? 'down-angle' : 'up-angle'" />
+        <Icon :type="isExpanded ? 'up-angle' : 'down-angle'" />
+      </div>
     </div>
+    <div
+      :class="['content',
+               { 'set-instance-style': isInstanceEdit },
+               { 'set-property-style': isPropertyEdit }]" v-show="isExpanded">
+      <slot />
+    </div>
+    <div :class="['add-instance-action', { 'is-bottom': type === 'instance' }, { 'is-top': type === 'property' }]" v-if="isShowEditAction" @click="handleAdd">
+      {{ operateTitle }}
+    </div>
+    <div class="delete-action" v-if="isShowClearAction" @click="handleDelete">
+      <Icon type="close-small" />
+    </div>
+  </div>
 </template>
 <script>
-    export default {
-        name: '',
-        props: {
-            // edit: 编辑模式 '': 展示模式
-            mode: {
-                type: String,
-                default: ''
-            },
-            // instance: 实例 property: 属性
-            type: {
-                type: String,
-                default: 'instance'
-            },
-            expanded: {
-                type: Boolean,
-                default: false
-            },
-            subTitle: {
-                type: String,
-                default: ''
-            },
-            // 是否是一个分组: 一个分组既有实例也有属性
-            isGroup: {
-                type: Boolean,
-                default: false
-            },
-            hovering: {
-                type: Boolean,
-                default: false
-            },
-            disabled: {
-                type: Boolean,
-                default: false
-            },
-            title: {
-                type: String,
-                default: ''
-            },
-            isNew: {
-                type: Boolean,
-                default: false
-            },
-            number: {
-                type: Number,
-                default: 0
-            },
-            needOrder: {
-                type: Boolean,
-                default: false
-            },
-            selectionMode: {
-                type: String,
-                default: 'all'
-            },
-            canDelete: {
-                type: Boolean,
-                default: true
-            }
-        },
-        data () {
-            return {
-                isExpanded: this.expanded,
-                currentMode: this.mode,
-                isHovering: this.hovering,
-                isDisabled: this.disabled
-            };
-        },
-        computed: {
-            isEdit () {
-                return this.currentMode === 'edit';
-            },
-            isInstanceEdit () {
-                return this.currentMode === 'edit' && this.type === 'instance';
-            },
-            isPropertyEdit () {
-                return this.currentMode === 'edit' && this.type === 'property';
-            },
-            isShowClearAction () {
-                return this.currentMode === 'edit' && this.canDelete;
-            },
-            isShowEditAction () {
-                return this.currentMode === 'edit' && !this.isGroup && this.selectionMode === 'all';
-            },
-            operateTitle () {
-                return this.type === 'instance' ? this.$t(`m.resource['添加属性选择']`) : this.$t(`m.resource['添加拓扑实例']`);
-            },
-            isInstanceByGroup () {
-                return this.isGroup && this.type === 'instance';
-            },
-            isProPertyByGroup () {
-                return this.isGroup && this.type === 'property';
-            },
-            isInsanceHover () {
-                return this.isGroup && this.type === 'property' && this.isHovering;
-            },
-            displayTitle () {
-                if (this.type === 'instance') {
-                    return this.title || `${this.$t(`m.resource['拓扑实例']`)}：`;
-                }
-                return this.title || `${this.$t(`m.resource['属性条件']`)}：`;
-            }
-        },
-        watch: {
-            mode (value) {
-                this.currentMode = value;
-            },
-            expanded (value) {
-                this.isExpanded = !!value;
-            },
-            hovering (value) {
-                this.isHovering = !!value;
-            },
-            disabled (value) {
-                this.isDisabled = !!value;
-                if (value) {
-                    this.isExpanded = false;
-                }
-            }
-        },
-        methods: {
-            handleExpanded () {
-                if (this.isDisabled) {
-                    return;
-                }
-                this.isExpanded = !this.isExpanded;
-                this.$emit('update:expanded', this.isExpanded);
-                this.$emit('on-expand', this.isExpanded);
-            },
-            handleAdd () {
-                if (this.isDisabled) {
-                    return;
-                }
-                this.$emit('on-add');
-            },
-            handleDelete () {
-                if (this.isDisabled) {
-                    return;
-                }
-                this.$emit('on-delete');
-            },
-            handleMouseenter () {
-                if (this.isDisabled) {
-                    return;
-                }
-                this.$emit('on-mouseover');
-            },
-            handleMouseleave () {
-                if (this.isDisabled) {
-                    return;
-                }
-                this.$emit('on-mouseleave');
-            }
+  export default {
+    name: '',
+    props: {
+      // edit: 编辑模式 '': 展示模式
+      mode: {
+        type: String,
+        default: ''
+      },
+      // instance: 实例 property: 属性
+      type: {
+        type: String,
+        default: 'instance'
+      },
+      expanded: {
+        type: Boolean,
+        default: false
+      },
+      subTitle: {
+        type: String,
+        default: ''
+      },
+      // 是否是一个分组: 一个分组既有实例也有属性
+      isGroup: {
+        type: Boolean,
+        default: false
+      },
+      hovering: {
+        type: Boolean,
+        default: false
+      },
+      disabled: {
+        type: Boolean,
+        default: false
+      },
+      title: {
+        type: String,
+        default: ''
+      },
+      isNew: {
+        type: Boolean,
+        default: false
+      },
+      number: {
+        type: Number,
+        default: 0
+      },
+      needOrder: {
+        type: Boolean,
+        default: false
+      },
+      selectionMode: {
+        type: String,
+        default: 'all'
+      },
+      canDelete: {
+        type: Boolean,
+        default: true
+      }
+    },
+    data () {
+      return {
+        isExpanded: this.expanded,
+        currentMode: this.mode,
+        isHovering: this.hovering,
+        isDisabled: this.disabled
+      };
+    },
+    computed: {
+      isEdit () {
+        return this.currentMode === 'edit';
+      },
+      isInstanceEdit () {
+        return this.currentMode === 'edit' && this.type === 'instance';
+      },
+      isPropertyEdit () {
+        return this.currentMode === 'edit' && this.type === 'property';
+      },
+      isShowClearAction () {
+        return this.currentMode === 'edit' && this.canDelete;
+      },
+      isShowEditAction () {
+        return this.currentMode === 'edit' && !this.isGroup && this.selectionMode === 'all';
+      },
+      operateTitle () {
+        return this.type === 'instance' ? this.$t(`m.resource['添加属性选择']`) : this.$t(`m.resource['添加拓扑实例']`);
+      },
+      isInstanceByGroup () {
+        return this.isGroup && this.type === 'instance';
+      },
+      isProPertyByGroup () {
+        return this.isGroup && this.type === 'property';
+      },
+      isInsanceHover () {
+        return this.isGroup && this.type === 'property' && this.isHovering;
+      },
+      displayTitle () {
+        if (this.type === 'instance') {
+          return this.title || `${this.$t(`m.resource['拓扑实例']`)}：`;
         }
-    };
+        return this.title || `${this.$t(`m.resource['属性条件']`)}：`;
+      }
+    },
+    watch: {
+      mode (value) {
+        this.currentMode = value;
+      },
+      expanded (value) {
+        this.isExpanded = !!value;
+      },
+      hovering (value) {
+        this.isHovering = !!value;
+      },
+      disabled (value) {
+        this.isDisabled = !!value;
+        if (value) {
+          this.isExpanded = false;
+        }
+      }
+    },
+    methods: {
+      handleExpanded () {
+        if (this.isDisabled) {
+          return;
+        }
+        this.isExpanded = !this.isExpanded;
+        this.$emit('update:expanded', this.isExpanded);
+        this.$emit('on-expand', this.isExpanded);
+      },
+      handleAdd () {
+        if (this.isDisabled) {
+          return;
+        }
+        this.$emit('on-add');
+      },
+      handleDelete () {
+        if (this.isDisabled) {
+          return;
+        }
+        this.$emit('on-delete');
+      },
+      handleMouseenter () {
+        if (this.isDisabled) {
+          return;
+        }
+        this.$emit('on-mouseover');
+      },
+      handleMouseleave () {
+        if (this.isDisabled) {
+          return;
+        }
+        this.$emit('on-mouseleave');
+      }
+    }
+  };
 </script>
 <style lang="postcss" scoped>
     .iam-resource-instance {

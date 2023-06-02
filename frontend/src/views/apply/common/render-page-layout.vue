@@ -1,20 +1,20 @@
 <template>
-    <div class="page-layout">
-        <div
-            :class="[
-                'left-layout',
-                { 'external-left-height': externalLeftLayoutHeight }
-            ]">
-            <slot />
-        </div>
-        <div
-            :class="[
-                'right-layout',
-                { 'external-right-height': externalRightLayoutHeight }
-            ]">
-            <slot name="right" />
-        </div>
+  <div class="page-layout">
+    <div
+      :class="[
+        'left-layout',
+        { 'external-left-height': externalLeftLayoutHeight }
+      ]">
+      <slot />
     </div>
+    <div
+      :class="[
+        'right-layout',
+        { 'external-right-height': externalRightLayoutHeight }
+      ]">
+      <slot name="right" />
+    </div>
+  </div>
 </template>
 <script>
     /**
@@ -22,22 +22,22 @@
      *
      * @return component
      */
-    export default {
-        name: '',
-        props: {
-            externalLeftLayoutHeight: {
-                type: Boolean,
-                default: false
-            },
-            externalRightLayoutHeight: {
-                type: Boolean,
-                default: false
-            }
-        },
-        data () {
-            return {};
-        }
-    };
+  export default {
+    name: '',
+    props: {
+      externalLeftLayoutHeight: {
+        type: Boolean,
+        default: false
+      },
+      externalRightLayoutHeight: {
+        type: Boolean,
+        default: false
+      }
+    },
+    data () {
+      return {};
+    }
+  };
 </script>
 <style lang="postcss" scoped>
     .page-layout {

@@ -1,105 +1,105 @@
 <template>
-    <div :class="['registry-action-item', extCls]">
-        <div class="header" @click="handleExpanded" :style="{ position: isExpanded ? 'absolute' : 'relative' }">
-            <Icon bk class="expanded-icon" :type="isExpanded ? 'down-shape' : 'right-shape'" />
-            <label class="title">{{ title }}</label>
-            <div class="sub-title" v-if="!isExpanded">
-                <bk-button theme="primary" text @click="test">
-                    {{ $t(`m.access['查看json源码']`) }}
-                </bk-button>
-            </div>
-        </div>
-        <div v-if="isExpanded" class="btn-wrapper">
-            <template v-if="!isEdit">
-                <bk-button size="small" @click="isEdit = true">{{ $t(`m.common['编辑']`) }}</bk-button>
-            </template>
-            <template v-else>
-                <bk-button size="small" theme="primary">{{ $t(`m.common['保存']`) }}</bk-button>
-                <bk-button size="small" @click.stop.prevent="cancelEdit">{{ $t(`m.common['取消']`) }}</bk-button>
-                <bk-button size="small">{{ $t(`m.common['删除']`) }}</bk-button>
-            </template>
-        </div>
-        <div class="content" v-if="isExpanded">
-            <div class="slot-content">
-                <slot />
-            </div>
-        </div>
+  <div :class="['registry-action-item', extCls]">
+    <div class="header" @click="handleExpanded" :style="{ position: isExpanded ? 'absolute' : 'relative' }">
+      <Icon bk class="expanded-icon" :type="isExpanded ? 'down-shape' : 'right-shape'" />
+      <label class="title">{{ title }}</label>
+      <div class="sub-title" v-if="!isExpanded">
+        <bk-button theme="primary" text @click="test">
+          {{ $t(`m.access['查看json源码']`) }}
+        </bk-button>
+      </div>
     </div>
+    <div v-if="isExpanded" class="btn-wrapper">
+      <template v-if="!isEdit">
+        <bk-button size="small" @click="isEdit = true">{{ $t(`m.common['编辑']`) }}</bk-button>
+      </template>
+      <template v-else>
+        <bk-button size="small" theme="primary">{{ $t(`m.common['保存']`) }}</bk-button>
+        <bk-button size="small" @click.stop.prevent="cancelEdit">{{ $t(`m.common['取消']`) }}</bk-button>
+        <bk-button size="small">{{ $t(`m.common['删除']`) }}</bk-button>
+      </template>
+    </div>
+    <div class="content" v-if="isExpanded">
+      <div class="slot-content">
+        <slot />
+      </div>
+    </div>
+  </div>
 </template>
 <script>
-    export default {
-        props: {
-            // expanded
-            expanded: {
-                type: Boolean,
-                default: false
-            },
-            // edit
-            edit: {
-                type: Boolean,
-                default: true
-            },
-            // title
-            title: {
-                type: String,
-                default: ''
-            },
-            // extCls
-            extCls: {
-                type: String,
-                default: ''
-            }
-        },
-        data () {
-            return {
-                isExpanded: this.expanded,
-                isEdit: this.edit
-            };
-        },
-        watch: {
-            /**
-             * expanded
-             */
-            expanded (value) {
-                this.isExpanded = !!value;
-                this.isEdit = !!value;
-            }
-        },
-        methods: {
-            /**
-             * test
-             */
-            test (e) {
-                e.stopPropagation();
-            },
+  export default {
+    props: {
+      // expanded
+      expanded: {
+        type: Boolean,
+        default: false
+      },
+      // edit
+      edit: {
+        type: Boolean,
+        default: true
+      },
+      // title
+      title: {
+        type: String,
+        default: ''
+      },
+      // extCls
+      extCls: {
+        type: String,
+        default: ''
+      }
+    },
+    data () {
+      return {
+        isExpanded: this.expanded,
+        isEdit: this.edit
+      };
+    },
+    watch: {
+      /**
+       * expanded
+       */
+      expanded (value) {
+        this.isExpanded = !!value;
+        this.isEdit = !!value;
+      }
+    },
+    methods: {
+      /**
+       * test
+       */
+      test (e) {
+        e.stopPropagation();
+      },
 
-            /**
-             * cancelEdit
-             */
-            cancelEdit () {
-                this.isEdit = false;
-            },
+      /**
+       * cancelEdit
+       */
+      cancelEdit () {
+        this.isEdit = false;
+      },
 
-            /**
-             * handlePackup
-             */
-            handlePackup () {
-                this.isEdit = false;
-                this.isExpanded = false;
-                this.$emit('update:expanded', false);
-                this.$emit('on-expanded', false);
-            },
+      /**
+       * handlePackup
+       */
+      handlePackup () {
+        this.isEdit = false;
+        this.isExpanded = false;
+        this.$emit('update:expanded', false);
+        this.$emit('on-expanded', false);
+      },
 
-            /**
-             * handleExpanded
-             */
-            handleExpanded () {
-                this.isExpanded = !this.isExpanded;
-                this.$emit('update:expanded', true);
-                this.$emit('on-expanded', this.isExpanded);
-            }
-        }
-    };
+      /**
+       * handleExpanded
+       */
+      handleExpanded () {
+        this.isExpanded = !this.isExpanded;
+        this.$emit('update:expanded', true);
+        this.$emit('on-expanded', this.isExpanded);
+      }
+    }
+  };
 </script>
 <style lang="postcss" scoped>
     .registry-action-item {

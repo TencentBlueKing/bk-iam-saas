@@ -1,15 +1,15 @@
 <template functional>
-    <div :class="['vertical-item', props.extCls || '']">
-        <div class="label" :class="props.required ? 'is-required' : ''">
-            {{ props.label ? `${props.label}` : '' }}
-            <template v-if="props.subTitle">
-                <span class="sub-title">({{ props.subTitle }})</span>
-            </template>
-        </div>
-        <div class="content">
-            <slot />
-        </div>
+  <div :class="['vertical-item', props.extCls || '']">
+    <div class="label" :class="props.required ? 'is-required' : ''">
+      {{ props.label ? `${props.label}` : '' }}
+      <template v-if="props.subTitle">
+        <span class="sub-title">({{ props.subTitle }})</span>
+      </template>
     </div>
+    <div class="content">
+      <slot />
+    </div>
+  </div>
 </template>
 <style lang="postcss" scoped>
     .vertical-item {

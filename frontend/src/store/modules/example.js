@@ -28,25 +28,25 @@ import http from '@/api';
 import { json2Query } from '@/common/util';
 
 export default {
-    namespaced: true,
-    state: {
+  namespaced: true,
+  state: {
+  },
+  mutations: {
+  },
+  actions: {
+    // 待审批列表
+    getWaitApproval ({ commit, state, dispatch }, params, config) {
+      return http.get(`/app/index?invoke=getWaitApproval`, params, config);
     },
-    mutations: {
+    // 审批记录
+    getApprovalRecord ({ commit, state, dispatch }, params, config) {
+      return http.get(`/app/index?invoke=getApprovalRecord`, params, config);
     },
-    actions: {
-        // 待审批列表
-        getWaitApproval ({ commit, state, dispatch }, params, config) {
-            return http.get(`/app/index?invoke=getWaitApproval`, params, config);
-        },
-        // 审批记录
-        getApprovalRecord ({ commit, state, dispatch }, params, config) {
-            return http.get(`/app/index?invoke=getApprovalRecord`, params, config);
-        },
-        // 审批记录
-        getApprovalDetail ({ commit, state, dispatch }, params, config) {
-            return http.get(`/app/index?invoke=getApprovalDetail`, params, config);
-        },
-        /**
+    // 审批记录
+    getApprovalDetail ({ commit, state, dispatch }, params, config) {
+      return http.get(`/app/index?invoke=getApprovalDetail`, params, config);
+    },
+    /**
          * enterExample1 请求
          *
          * @param {Function} commit store commit mutation handler
@@ -56,11 +56,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        enterExample1 ({ commit, state, dispatch }, params, config) {
-            return http.get(`/app/index?invoke=enterExample1&${json2Query(params)}`, config);
-        },
+    enterExample1 ({ commit, state, dispatch }, params, config) {
+      return http.get(`/app/index?invoke=enterExample1&${json2Query(params)}`, config);
+    },
 
-        /**
+    /**
          * enterExample2 请求
          *
          * @param {Function} commit store commit mutation handler
@@ -70,11 +70,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        enterExample2 ({ commit, state, dispatch }, params, config) {
-            return http.post(`/app/index?invoke=enterExample2`, params, config);
-        },
+    enterExample2 ({ commit, state, dispatch }, params, config) {
+      return http.post(`/app/index?invoke=enterExample2`, params, config);
+    },
 
-        /**
+    /**
          * btn1 请求
          *
          * @param {Function} commit store commit mutation handler
@@ -84,11 +84,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        btn1 ({ commit, state, dispatch }, params, config) {
-            return http.get(`/app/index?invoke=btn1`, params, config);
-        },
+    btn1 ({ commit, state, dispatch }, params, config) {
+      return http.get(`/app/index?invoke=btn1`, params, config);
+    },
 
-        /**
+    /**
          * btn2 请求
          *
          * @param {Function} commit store commit mutation handler
@@ -98,11 +98,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        btn2 ({ commit, state, dispatch }, params, config) {
-            return http.post(`/app/index?invoke=btn2`, params, config);
-        },
+    btn2 ({ commit, state, dispatch }, params, config) {
+      return http.post(`/app/index?invoke=btn2`, params, config);
+    },
 
-        /**
+    /**
          * del 请求
          *
          * @param {Function} commit store commit mutation handler
@@ -112,11 +112,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        del ({ commit, state, dispatch }, params, config) {
-            return http.delete(`/app/index?invoke=del`, { data: params }, config);
-        },
+    del ({ commit, state, dispatch }, params, config) {
+      return http.delete(`/app/index?invoke=del`, { data: params }, config);
+    },
 
-        /**
+    /**
          * same 请求
          *
          * @param {Function} commit store commit mutation handler
@@ -126,11 +126,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        same ({ commit, state, dispatch }, params, config) {
-            return http.get(`/app/index?invoke=same&${json2Query(params)}`, config);
-        },
+    same ({ commit, state, dispatch }, params, config) {
+      return http.get(`/app/index?invoke=same&${json2Query(params)}`, config);
+    },
 
-        /**
+    /**
          * go 请求
          *
          * @param {Function} commit store commit mutation handler
@@ -140,11 +140,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        go ({ commit, state, dispatch }, params, config) {
-            return http.get(`/app/index?invoke=go&${json2Query(params)}`, config);
-        },
+    go ({ commit, state, dispatch }, params, config) {
+      return http.get(`/app/index?invoke=go&${json2Query(params)}`, config);
+    },
 
-        /**
+    /**
          * same post 请求
          *
          * @param {Function} commit store commit mutation handler
@@ -154,11 +154,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        postSame ({ commit, state, dispatch }, params, config) {
-            return http.post(`/app/index?invoke=postSame`, params, config);
-        },
+    postSame ({ commit, state, dispatch }, params, config) {
+      return http.post(`/app/index?invoke=postSame`, params, config);
+    },
 
-        /**
+    /**
          * get 请求
          *
          * @param {Function} commit store commit mutation handler
@@ -168,11 +168,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        get ({ commit, state, dispatch }, params, config) {
-            return http.get(`/app/index?invoke=get&${json2Query(params)}`, config);
-        },
+    get ({ commit, state, dispatch }, params, config) {
+      return http.get(`/app/index?invoke=get&${json2Query(params)}`, config);
+    },
 
-        /**
+    /**
          * post 请求
          *
          * @param {Function} commit store commit mutation handler
@@ -182,11 +182,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        post ({ commit, state, dispatch }, params, config) {
-            return http.post(`/app/index?invoke=post`, params, config);
-        },
+    post ({ commit, state, dispatch }, params, config) {
+      return http.post(`/app/index?invoke=post`, params, config);
+    },
 
-        /**
+    /**
          * long 请求
          *
          * @param {Function} commit store commit mutation handler
@@ -196,11 +196,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        long ({ commit, state, dispatch }, params, config) {
-            return http.get(`/app/index?invoke=long&${json2Query(params)}`, config);
-        },
+    long ({ commit, state, dispatch }, params, config) {
+      return http.get(`/app/index?invoke=long&${json2Query(params)}`, config);
+    },
 
-        /**
+    /**
          * long1 请求
          *
          * @param {Function} commit store commit mutation handler
@@ -210,8 +210,8 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        long1 ({ commit, state, dispatch }, params, config) {
-            return http.get(`/app/index?invoke=long1&${json2Query(params)}`, config);
-        }
+    long1 ({ commit, state, dispatch }, params, config) {
+      return http.get(`/app/index?invoke=long1&${json2Query(params)}`, config);
     }
+  }
 };

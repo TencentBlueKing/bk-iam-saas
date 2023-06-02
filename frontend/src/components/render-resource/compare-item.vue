@@ -1,35 +1,35 @@
 <template>
-    <div :class="['iam-instance-content', { 'set-marging-top': hasGap }]">
-        <p class="iam-instance-title" v-html="title"></p>
-        <div class="iam-instance-item">
-            <p v-for="(item, index) in data" :key="index" class="value">
-                <render-span :content="item.name" :status="item.status" :visible="true" />
-            </p>
-        </div>
+  <div :class="['iam-instance-content', { 'set-marging-top': hasGap }]">
+    <p class="iam-instance-title" v-html="title"></p>
+    <div class="iam-instance-item">
+      <p v-for="(item, index) in data" :key="index" class="value">
+        <render-span :content="item.name" :status="item.status" :visible="true" />
+      </p>
     </div>
+  </div>
 </template>
 <script>
-    import RenderSpan from '../render-span';
-    export default {
-        name: '',
-        components: {
-            RenderSpan
-        },
-        props: {
-            hasGap: {
-                type: Boolean,
-                default: false
-            },
-            title: {
-                type: String,
-                default: ''
-            },
-            data: {
-                type: Array,
-                default: () => []
-            }
-        }
-    };
+  import RenderSpan from '../render-span';
+  export default {
+    name: '',
+    components: {
+      RenderSpan
+    },
+    props: {
+      hasGap: {
+        type: Boolean,
+        default: false
+      },
+      title: {
+        type: String,
+        default: ''
+      },
+      data: {
+        type: Array,
+        default: () => []
+      }
+    }
+  };
 </script>
 <style lang="postcss" scoped>
     .iam-instance-content {

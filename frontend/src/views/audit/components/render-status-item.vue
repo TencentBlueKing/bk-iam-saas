@@ -1,32 +1,32 @@
 <template>
-    <div class="iam-audit-status-item">
-        <span :class="['status-circle', { success: isSuccess }]"></span>
-        {{ statusMap[status] }}
-    </div>
+  <div class="iam-audit-status-item">
+    <span :class="['status-circle', { success: isSuccess }]"></span>
+    {{ statusMap[status] }}
+  </div>
 </template>
 <script>
-    export default {
-        name: '',
-        props: {
-            status: {
-                type: Number,
-                default: 0
-            }
-        },
-        data () {
-            return {
-                statusMap: {
-                    0: this.$t(`m.audit['成功']`),
-                    1: this.$t(`m.audit['失败']`)
-                }
-            };
-        },
-        computed: {
-            isSuccess () {
-                return this.status === 0;
-            }
+  export default {
+    name: '',
+    props: {
+      status: {
+        type: Number,
+        default: 0
+      }
+    },
+    data () {
+      return {
+        statusMap: {
+          0: this.$t(`m.audit['成功']`),
+          1: this.$t(`m.audit['失败']`)
         }
-    };
+      };
+    },
+    computed: {
+      isSuccess () {
+        return this.status === 0;
+      }
+    }
+  };
 </script>
 <style lang="postcss" scoped>
     .iam-audit-status-item {

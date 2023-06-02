@@ -30,11 +30,11 @@ import { json2Query } from '@/common/util';
 const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
 
 export default {
-    namespaced: true,
-    state: {},
-    mutations: {},
-    actions: {
-        /**
+  namespaced: true,
+  state: {},
+  mutations: {},
+  actions: {
+    /**
          * 创建二级管理员
          *
          * @param {Function} commit store commit mutation handler
@@ -45,11 +45,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        addSecondManager ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/roles/subset_managers/`, params, config);
-        },
+    addSecondManager ({ commit, state, dispatch }, params, config) {
+      return http.post(`${AJAX_URL_PREFIX}/roles/subset_managers/`, params, config);
+    },
 
-        /**
+    /**
          * 获取二级管理员
          *
          * @param {Function} commit store commit mutation handler
@@ -60,11 +60,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getSecondManager ({ commit, state, dispatch }, params, config) {
-            return http.get(`${AJAX_URL_PREFIX}/roles/subset_managers/?${json2Query(params)}`, config);
-        },
+    getSecondManager ({ commit, state, dispatch }, params, config) {
+      return http.get(`${AJAX_URL_PREFIX}/roles/subset_managers/?${json2Query(params)}`, config);
+    },
 
-        /**
+    /**
          * 获取二级管理员详情
          *
          * @param {Function} commit store commit mutation handler
@@ -75,11 +75,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getSecondManagerDetail ({ commit, state, dispatch }, { id }, config) {
-            return http.get(`${AJAX_URL_PREFIX}/roles/subset_managers/${id}/`, config);
-        },
+    getSecondManagerDetail ({ commit, state, dispatch }, { id }, config) {
+      return http.get(`${AJAX_URL_PREFIX}/roles/subset_managers/${id}/`, config);
+    },
 
-        /**
+    /**
          * 更新二级管理员成员
          *
          * @param {Function} commit store commit mutation handler
@@ -90,14 +90,14 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        updateSecondManagerManager ({ commit, state, dispatch }, params, config) {
-            const requestParams = Object.assign({}, params);
-            const id = requestParams.id;
-            delete requestParams.id;
-            return http.patch(`${AJAX_URL_PREFIX}/roles/subset_managers/${id}/`, requestParams, config);
-        },
+    updateSecondManagerManager ({ commit, state, dispatch }, params, config) {
+      const requestParams = Object.assign({}, params);
+      const id = requestParams.id;
+      delete requestParams.id;
+      return http.patch(`${AJAX_URL_PREFIX}/roles/subset_managers/${id}/`, requestParams, config);
+    },
 
-        /**
+    /**
          * 获取用户加入的子级管理员列表
          *
          * @param {Function} commit store commit mutation handler
@@ -108,14 +108,14 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getStaffSubManagerList ({ commit, state, dispatch }, params, config) {
-            const requestParams = Object.assign({}, params);
-            const id = requestParams.id;
-            delete requestParams.id;
-            return http.get(`${AJAX_URL_PREFIX}/roles/grade_managers/${id}/subset_managers/?${json2Query(requestParams)}`, config);
-        },
+    getStaffSubManagerList ({ commit, state, dispatch }, params, config) {
+      const requestParams = Object.assign({}, params);
+      const id = requestParams.id;
+      delete requestParams.id;
+      return http.get(`${AJAX_URL_PREFIX}/roles/grade_managers/${id}/subset_managers/?${json2Query(requestParams)}`, config);
+    },
 
-        /**
+    /**
          * 管理员/一级/二级管理空间搜索
          *
          * @param {Function} commit store commit mutation handler
@@ -127,9 +127,9 @@ export default {
          * @return {Promise} promise 对象
          */
 
-        getSearchManagerList ({ commit, state, dispatch }, params, config) {
-            const requestParams = Object.assign({}, params);
-            return http.get(`${AJAX_URL_PREFIX}/roles/search/?${json2Query(requestParams)}`, config);
-        }
+    getSearchManagerList ({ commit, state, dispatch }, params, config) {
+      const requestParams = Object.assign({}, params);
+      return http.get(`${AJAX_URL_PREFIX}/roles/search/?${json2Query(requestParams)}`, config);
     }
+  }
 };

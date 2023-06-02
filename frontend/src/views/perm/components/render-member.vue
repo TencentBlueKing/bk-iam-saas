@@ -1,54 +1,54 @@
 <template>
-    <div class="iam-member-display-wrapper">
-        <label class="label">
-            <Icon :type="icon" class="icon" />
-            <span class="name">{{ title }}</span>
-        </label>
-        <div class="content">
-            <!-- eslint-disable max-len -->
-            <div v-for="(item, index) in data"
-                :key="index"
-                class="member-item"
-                :title="isDepartment ? item.full_name || item.name : !!item.name ? `${item.id}(${item.name})` : item.id">
-                <span class="member-name">
-                    {{ isDepartment ? item.name : item.id }}
-                </span>
-                <template v-if="!isDepartment && item.name !== ''">
-                    <span class="name">({{ item.name }})</span>
-                </template>
-                <template v-if="isDepartment">
-                    <span class="count">({{ item.member_count }})</span>
-                </template>
-            </div>
-        </div>
+  <div class="iam-member-display-wrapper">
+    <label class="label">
+      <Icon :type="icon" class="icon" />
+      <span class="name">{{ title }}</span>
+    </label>
+    <div class="content">
+      <!-- eslint-disable max-len -->
+      <div v-for="(item, index) in data"
+        :key="index"
+        class="member-item"
+        :title="isDepartment ? item.full_name || item.name : !!item.name ? `${item.id}(${item.name})` : item.id">
+        <span class="member-name">
+          {{ isDepartment ? item.name : item.id }}
+        </span>
+        <template v-if="!isDepartment && item.name !== ''">
+          <span class="name">({{ item.name }})</span>
+        </template>
+        <template v-if="isDepartment">
+          <span class="count">({{ item.member_count }})</span>
+        </template>
+      </div>
     </div>
+  </div>
 </template>
 <script>
-    export default {
-        name: '',
-        props: {
-            data: {
-                type: Array,
-                default: () => []
-            },
-            // user：用户，department：组织
-            type: {
-                type: String,
-                default: 'user'
-            }
-        },
-        computed: {
-            icon () {
-                return this.type === 'user' ? 'personal-user' : 'organization-fill';
-            },
-            title () {
-                return this.type === 'user' ? this.$t(`m.common['用户']`) : this.$t(`m.common['组织']`);
-            },
-            isDepartment () {
-                return this.type === 'department';
-            }
-        }
-    };
+  export default {
+    name: '',
+    props: {
+      data: {
+        type: Array,
+        default: () => []
+      },
+      // user：用户，department：组织
+      type: {
+        type: String,
+        default: 'user'
+      }
+    },
+    computed: {
+      icon () {
+        return this.type === 'user' ? 'personal-user' : 'organization-fill';
+      },
+      title () {
+        return this.type === 'user' ? this.$t(`m.common['用户']`) : this.$t(`m.common['组织']`);
+      },
+      isDepartment () {
+        return this.type === 'department';
+      }
+    }
+  };
 </script>
 <style lang="postcss" scoped>
     .iam-member-display-wrapper {

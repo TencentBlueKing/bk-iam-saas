@@ -76,9 +76,9 @@ module.exports = {
         // https://eslint.org/docs/rules/camelcase
         'camelcase': ['error', { 'properties': 'never', 'ignoreDestructuring': true }],
 
-        // 缩进使用 4 个空格，并且 switch 语句中的 Case 需要缩进
+        // 缩进使用 2 个空格，并且 switch 语句中的 Case 需要缩进
         // https://eslint.org/docs/rules/indent
-        'indent': ['error', 4, {
+        'indent': ['error', 2, {
             'SwitchCase': 1,
             'flatTernaryExpressions': true
         }],
@@ -238,7 +238,7 @@ module.exports = {
         'vue/html-end-tags': 'error',
 
         // https://github.com/vuejs/eslint-plugin-vue/blob/master/docs/rules/html-indent.md
-        'vue/html-indent': ['error', 4, {
+        'vue/html-indent': ['error', 2, {
             'attribute': 1,
             'baseIndent': 1,
             'closeBracket': 0,
@@ -433,7 +433,7 @@ module.exports = {
         'vue/return-in-computed-property': 'error',
 
         // https://github.com/vuejs/eslint-plugin-vue/blob/master/docs/rules/script-indent.md
-        'vue/script-indent': ['error', 4, {
+        'vue/script-indent': ['error', 2, {
             'baseIndent': 1,
             'switchCase': 1
         }],
