@@ -1,46 +1,46 @@
 
 <script>
-    import il8n from '@/language';
-    export default {
-        name: 'ExceptionEmpty',
-        props: {
-            type: {
-                type: String,
-                default: 'empty'
-            },
-            scene: {
-                type: String,
-                default: 'part'
-            },
-            emptyText: {
-                type: String,
-                default: '暂无数据'
-            },
-            tipType: {
-                type: String,
-                default: ''
-            }
-        },
-        data () {
-            return {
-                searchTipWidth: 200
-            };
-        },
-        methods: {
-            searchTipStyles () {
-                this.$nextTick(() => {
-                    if (this.$parent.tableId) {
-                        this.searchTipWidth = !['zh-cn'].includes(window.CUR_LANGUAGE) ? 400 : 230;
-                    }
-                });
-                return {
-                    'width': `${this.searchTipWidth}px`
-                };
-            },
-            fetchDefaultOperation (type) {
-                const defaultOperation = {
-                    search: () => {
-                        return (
+  import il8n from '@/language';
+  export default {
+    name: 'ExceptionEmpty',
+    props: {
+      type: {
+        type: String,
+        default: 'empty'
+      },
+      scene: {
+        type: String,
+        default: 'part'
+      },
+      emptyText: {
+        type: String,
+        default: '暂无数据'
+      },
+      tipType: {
+        type: String,
+        default: ''
+      }
+    },
+    data () {
+      return {
+        searchTipWidth: 200
+      };
+    },
+    methods: {
+      searchTipStyles () {
+        this.$nextTick(() => {
+          if (this.$parent.tableId) {
+            this.searchTipWidth = !['zh-cn'].includes(window.CUR_LANGUAGE) ? 400 : 230;
+          }
+        });
+        return {
+          'width': `${this.searchTipWidth}px`
+        };
+      },
+      fetchDefaultOperation (type) {
+        const defaultOperation = {
+          search: () => {
+            return (
                             <div
                                 class="tip-wrap exception-search-tip"
                                 // style={ this.searchTipStyles() }
@@ -52,29 +52,29 @@
                                     {this.$t(`m.common['清空筛选条件']`)}
                                 </span>
                             </div>
-                        );
-                    },
-                    refresh: () => {
-                        return (
+            );
+          },
+          refresh: () => {
+            return (
                             <div class="tip-wrap">
                                 <div class="tip-click" onClick={() => this.handleRefresh()}>
                                     {this.$t(`m.common['刷新']`)}
                                 </div>
                             </div>
-                        );
-                    }
-                };
-                return type && defaultOperation[type] ? defaultOperation[type]() : '';
-            },
-            handleClear () {
-                this.$emit('on-clear', {});
-            },
-            handleRefresh () {
-                this.$emit('on-refresh', {});
-            }
-        },
-        render () {
-            return (
+            );
+          }
+        };
+        return type && defaultOperation[type] ? defaultOperation[type]() : '';
+      },
+      handleClear () {
+        this.$emit('on-clear', {});
+      },
+      handleRefresh () {
+        this.$emit('on-refresh', {});
+      }
+    },
+    render () {
+      return (
                 <div>
                     <bk-exception
                         ext-cls={['exception-wrap']}
@@ -87,9 +87,9 @@
                         {this.fetchDefaultOperation(this.tipType)}
                     </bk-exception>
                 </div>
-            );
-        }
-    };
+      );
+    }
+  };
 </script>
 
 <style lang="postcss" scoped>

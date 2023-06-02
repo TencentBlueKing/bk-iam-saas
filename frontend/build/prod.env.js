@@ -39,12 +39,12 @@ const NODE_ENV = JSON.stringify('production');
 const VERSION = process.env.VERSION;
 
 export default {
-    staticUrl: '',
-    NODE_ENV: NODE_ENV,
-    LOCAL_DEV_URL: JSON.stringify('http://localhost'),
-    LOCAL_DEV_PORT: JSON.stringify(''),
-    // AJAX_URL_PREFIX: JSON.stringify(''),
-    AJAX_MOCK_PARAM: JSON.stringify('mock-file'),
-    USER_INFO_URL: JSON.stringify('user'),
-    VERSION: JSON.stringify(`${VERSION}`)
+  staticUrl: '',
+  NODE_ENV: NODE_ENV,
+  LOCAL_DEV_URL: JSON.stringify('http://localhost'),
+  LOCAL_DEV_PORT: JSON.stringify(''),
+  // AJAX_URL_PREFIX: JSON.stringify(''),
+  AJAX_MOCK_PARAM: JSON.stringify('mock-file'),
+  USER_INFO_URL: JSON.stringify('user'),
+  VERSION: JSON.stringify(`${VERSION}`)
 };

@@ -29,28 +29,28 @@ import prodEnv from './prod.env';
 import devEnv from './dev.env';
 
 export default {
-    build: {
-        // env 会通过 webpack.DefinePlugin 注入到前端代码里
-        env: prodEnv,
-        localDevPort: JSON.parse(prodEnv.LOCAL_DEV_PORT),
-        assetsRoot: path.resolve(__dirname, '../dist/static'),
-        assetsSubDirectory: '',
-        assetsPublicPath: '{{STATIC_URL}}',
-        productionSourceMap: true,
-        productionGzip: false,
-        productionGzipExtensions: ['js', 'css'],
-        bundleAnalyzerReport: process.env.npm_config_report
-    },
-    dev: {
-        // env 会通过 webpack.DefinePlugin 注入到前端代码里
-        env: devEnv,
-        // 这里用 JSON.parse 是因为 dev.env.js 里有一次 JSON.stringify，dev.env.js 里的 JSON.stringify 不能去掉
-        localDevUrl: JSON.parse(devEnv.LOCAL_DEV_URL),
-        localDevPort: JSON.parse(devEnv.LOCAL_DEV_PORT),
-        assetsSubDirectory: 'static',
-        assetsPublicPath: '/',
-        proxyTable: {},
-        cssSourceMap: false,
-        autoOpenBrowser: false
-    }
+  build: {
+    // env 会通过 webpack.DefinePlugin 注入到前端代码里
+    env: prodEnv,
+    localDevPort: JSON.parse(prodEnv.LOCAL_DEV_PORT),
+    assetsRoot: path.resolve(__dirname, '../dist/static'),
+    assetsSubDirectory: '',
+    assetsPublicPath: '{{STATIC_URL}}',
+    productionSourceMap: true,
+    productionGzip: false,
+    productionGzipExtensions: ['js', 'css'],
+    bundleAnalyzerReport: process.env.npm_config_report
+  },
+  dev: {
+    // env 会通过 webpack.DefinePlugin 注入到前端代码里
+    env: devEnv,
+    // 这里用 JSON.parse 是因为 dev.env.js 里有一次 JSON.stringify，dev.env.js 里的 JSON.stringify 不能去掉
+    localDevUrl: JSON.parse(devEnv.LOCAL_DEV_URL),
+    localDevPort: JSON.parse(devEnv.LOCAL_DEV_PORT),
+    assetsSubDirectory: 'static',
+    assetsPublicPath: '/',
+    proxyTable: {},
+    cssSourceMap: false,
+    autoOpenBrowser: false
+  }
 };

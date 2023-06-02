@@ -1,93 +1,93 @@
 <template>
-    <div class="iam-member-display-wrapper">
-        <label class="label">
-            <Icon :type="icon" class="icon" />
-            <span class="name">{{ title }}</span>
-        </label>
-        <div class="content">
-            <!-- <div v-for="(item, index) in data"
+  <div class="iam-member-display-wrapper">
+    <label class="label">
+      <Icon :type="icon" class="icon" />
+      <span class="name">{{ title }}</span>
+    </label>
+    <div class="content">
+      <!-- <div v-for="(item, index) in data"
                 :key="index"
                 class="member-item"
                 :title="isDepartment ? (
                     item.fullName ? item.fullName : `${item.name}`) :
                     item.name !== '' ? `${item.username}(${item.name})` : item.username"> -->
-            <div v-for="(item, index) in data"
-                :key="index"
-                class="member-item"
-                :title="nameType(item)">
-                <span class="member-name">
-                    {{ isDepartment ? item.name : item.username }}
-                </span>
-                <template v-if="isDepartment">
-                    <span class="count">({{ item.count }})</span>
-                </template>
-                <template v-if="!isDepartment && item.name !== ''">
-                    <span class="display_name">({{ item.name }})</span>
-                </template>
-                <Icon type="close-fill" class="remove-icon" v-if="isEdit" @click="handleDelete(index)" />
-            </div>
-        </div>
+      <div v-for="(item, index) in data"
+        :key="index"
+        class="member-item"
+        :title="nameType(item)">
+        <span class="member-name">
+          {{ isDepartment ? item.name : item.username }}
+        </span>
+        <template v-if="isDepartment">
+          <span class="count">({{ item.count }})</span>
+        </template>
+        <template v-if="!isDepartment && item.name !== ''">
+          <span class="display_name">({{ item.name }})</span>
+        </template>
+        <Icon type="close-fill" class="remove-icon" v-if="isEdit" @click="handleDelete(index)" />
+      </div>
     </div>
+  </div>
 </template>
 <script>
-    export default {
-        name: '',
-        props: {
-            data: {
-                type: Array,
-                default: () => []
+  export default {
+    name: '',
+    props: {
+      data: {
+        type: Array,
+        default: () => []
+      },
+      // user：用户，department：组织
+      type: {
+        type: String,
+        default: 'user'
+      },
+      mode: {
+        type: String,
+        default: 'edit'
+      }
+    },
+    computed: {
+      icon () {
+        return this.type === 'user' ? 'personal-user' : 'organization-fill';
+      },
+      title () {
+        return this.type === 'user' ? this.$t(`m.common['用户']`) : this.$t(`m.common['组织']`);
+      },
+      isDepartment () {
+        return this.type === 'department';
+      },
+      isEdit () {
+        return this.mode === 'edit';
+      },
+      nameType () {
+        return (payload) => {
+          const { name, type, username, full_name: fullName } = payload;
+          const typeMap = {
+            user: () => {
+              if (fullName) {
+                return fullName;
+              } else {
+                return name ? `${username}(${name})` : username;
+              }
             },
-            // user：用户，department：组织
-            type: {
-                type: String,
-                default: 'user'
+            department: () => {
+              return fullName || payload.fullName || `${username}(${name})`;
             },
-            mode: {
-                type: String,
-                default: 'edit'
+            depart: () => {
+              return fullName || payload.fullName || `${username}(${name})`;
             }
-        },
-        computed: {
-            icon () {
-                return this.type === 'user' ? 'personal-user' : 'organization-fill';
-            },
-            title () {
-                return this.type === 'user' ? this.$t(`m.common['用户']`) : this.$t(`m.common['组织']`);
-            },
-            isDepartment () {
-                return this.type === 'department';
-            },
-            isEdit () {
-                return this.mode === 'edit';
-            },
-            nameType () {
-                return (payload) => {
-                    const { name, type, username, full_name: fullName } = payload;
-                    const typeMap = {
-                        user: () => {
-                            if (fullName) {
-                                return fullName;
-                            } else {
-                                return name ? `${username}(${name})` : username;
-                            }
-                        },
-                        department: () => {
-                            return fullName || payload.fullName || `${username}(${name})`;
-                        },
-                        depart: () => {
-                            return fullName || payload.fullName || `${username}(${name})`;
-                        }
-                    };
-                    return typeMap[type] ? typeMap[type]() : typeMap['user']();
-                };
-            }
-        },
-        methods: {
-            handleDelete (payload) {
-                this.$emit('on-delete', payload);
-            }
-        }
-    };
+          };
+          return typeMap[type] ? typeMap[type]() : typeMap['user']();
+        };
+      }
+    },
+    methods: {
+      handleDelete (payload) {
+        this.$emit('on-delete', payload);
+      }
+    }
+  };
 </script>
 <style lang="postcss" scoped>
     .iam-member-display-wrapper {

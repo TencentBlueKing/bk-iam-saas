@@ -28,32 +28,32 @@ import Policy from './policy';
 import { il8n } from '@/language';
 
 export default class GroupPolicy extends Policy {
-    // mode: template(模板)， custom(自定义)
-    // instanceNotDisabled: instance 不允许 disabled
-    constructor (payload, flag = 'detail', mode = 'template', data = {}, instanceNotDisabled = false) {
-        super(payload, flag, instanceNotDisabled);
-        this.detail = data;
-        this.mode = mode;
-        this.system_name = payload.system_name;
-        this.system_id = payload.system_id;
-        this.conditionIds = payload.conditionIds;
-        // 聚合id，相同aggregationId的数据聚合时会被聚合在一起
-        this.aggregationId = '';
-        this.aggregateResourceType = {};
-    }
+  // mode: template(模板)， custom(自定义)
+  // instanceNotDisabled: instance 不允许 disabled
+  constructor (payload, flag = 'detail', mode = 'template', data = {}, instanceNotDisabled = false) {
+    super(payload, flag, instanceNotDisabled);
+    this.detail = data;
+    this.mode = mode;
+    this.system_name = payload.system_name;
+    this.system_id = payload.system_id;
+    this.conditionIds = payload.conditionIds;
+    // 聚合id，相同aggregationId的数据聚合时会被聚合在一起
+    this.aggregationId = '';
+    this.aggregateResourceType = {};
+  }
 
-    get isTemplate () {
-        return this.mode === 'template';
-    }
+  get isTemplate () {
+    return this.mode === 'template';
+  }
 
-    get displayName () {
-        if (this.isTemplate) {
-            return this.detail.name || '';
-        }
-        return il8n('perm', '自定义权限');
+  get displayName () {
+    if (this.isTemplate) {
+      return this.detail.name || '';
     }
+    return il8n('perm', '自定义权限');
+  }
 
-    get judgeId () {
-        return `${this.detail.id}&${this.detail.system.id}`;
-    }
+  get judgeId () {
+    return `${this.detail.id}&${this.detail.system.id}`;
+  }
 }

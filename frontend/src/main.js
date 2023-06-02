@@ -65,14 +65,14 @@ Vue.component('Icon', Icon);
 Vue.component('ExceptionEmpty', ExceptionEmpty);
 
 Vue.prototype.scrollToLocation = function ($ref) {
-    const distance = ($ref && $ref.getBoundingClientRect().top) || 0;
-    const $dom = document.getElementsByClassName('main-scroller')[0];
-    $dom.scrollTo(0, distance);
+  const distance = ($ref && $ref.getBoundingClientRect().top) || 0;
+  const $dom = document.getElementsByClassName('main-scroller')[0];
+  $dom.scrollTo(0, distance);
 };
 
 Vue.use(VueI18n);
 Vue.use(magicbox, {
-    i18n: (key, args) => i18n.t(key, args)
+  i18n: (key, args) => i18n.t(key, args)
 });
 
 console.log('start');
@@ -84,30 +84,30 @@ const en = require('./language/lang/en');
 const { lang, locale } = magicbox;
 
 const messages = {
-    'zh-cn': {
-        ...lang.zhCN,
-        ...cn
-    },
-    en: {
-        ...lang.enUS,
-        ...en
-    }
+  'zh-cn': {
+    ...lang.zhCN,
+    ...cn
+  },
+  en: {
+    ...lang.enUS,
+    ...en
+  }
 };
 
 window.changeAlert = false;
 window.changeDialog = false;
 
 const i18n = new VueI18n({
-    // 语言标识
-    locale: language,
-    fallbackLocale: language,
-    // this.$i18n.locale 通过切换locale的值来实现语言切换
-    messages,
-    silentTranslationWarn: true,
-    missing (locale, path) {
-        const parsedPath = i18n._path.parsePath(path);
-        return parsedPath[parsedPath.length - 1];
-    }
+  // 语言标识
+  locale: language,
+  fallbackLocale: language,
+  // this.$i18n.locale 通过切换locale的值来实现语言切换
+  messages,
+  silentTranslationWarn: true,
+  missing (locale, path) {
+    const parsedPath = i18n._path.parsePath(path);
+    return parsedPath[parsedPath.length - 1];
+  }
 });
 
 // if (language === 'zh-cn') {
@@ -124,41 +124,41 @@ Vue.prototype.curLanguageIsCn = language === 'zh-cn';
 Vue.mixin(locale.mixin);
 
 if (NODE_ENV === 'development') {
-    Vue.config.devtools = true;
+  Vue.config.devtools = true;
 }
 
 auth.requestCurrentUser().then(user => {
-    injectCSRFTokenToHeaders();
-    if (!user.isAuthenticated) {
-        auth.redirectToLogin();
-    } else {
-        global.bus = bus;
-        global.mainComponent = new Vue({
-            el: '#app',
-            i18n,
-            router,
-            store,
-            components: {
-                App
-            },
-            template: '<App/>'
-        });
-        if (NODE_ENV === 'development') {
-            window.__VUE_DEVTOOLS_GLOBAL_HOOK__.Vue = global.mainComponent.constructor;
-        }
+  injectCSRFTokenToHeaders();
+  if (!user.isAuthenticated) {
+    auth.redirectToLogin();
+  } else {
+    global.bus = bus;
+    global.mainComponent = new Vue({
+      el: '#app',
+      i18n,
+      router,
+      store,
+      components: {
+        App
+      },
+      template: '<App/>'
+    });
+    if (NODE_ENV === 'development') {
+      window.__VUE_DEVTOOLS_GLOBAL_HOOK__.Vue = global.mainComponent.constructor;
     }
+  }
 }, err => {
-    let message;
-    if (err.status === 403) {
-        message = il8nNew('common', '权限不足');
-        if (err.data && err.data.msg) {
-            message = err.data.msg;
-        }
-    } else {
-        message = il8nNew('info', '无法连接到后端服务');
+  let message;
+  if (err.status === 403) {
+    message = il8nNew('common', '权限不足');
+    if (err.data && err.data.msg) {
+      message = err.data.msg;
     }
+  } else {
+    message = il8nNew('info', '无法连接到后端服务');
+  }
 
-    const divStyle = ''
+  const divStyle = ''
         + 'text-align: center;'
         + 'width: 400px;'
         + 'margin: auto;'
@@ -167,12 +167,12 @@ auth.requestCurrentUser().then(user => {
         + 'left: 50%;'
         + 'transform: translate(-50%, -50%);';
 
-    const h2Style = 'font-size: 20px;color: #979797; margin: 32px 0;font-weight: normal';
+  const h2Style = 'font-size: 20px;color: #979797; margin: 32px 0;font-weight: normal';
 
-    const content = ``
+  const content = ``
         + `<div class="bk-exception bk-exception-center" style="${divStyle}">`
         + `<img src="${Img403}"><h2 class="exception-text" style="${h2Style}">${message}</h2>`
         + `</div>`;
 
-    document.write(content);
+  document.write(content);
 });

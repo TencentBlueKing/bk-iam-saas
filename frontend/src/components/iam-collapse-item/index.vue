@@ -1,32 +1,32 @@
 <template>
-    <div class="iam-collapse-item">
-        <bk-collapse-item ref="collapseItem" v-bind="$attrs" v-on="$listeners" hide-arrow>
-            <template #default>
-                <slot />
-            </template>
-            <template #content>
-                <slot name="content" />
-            </template>
-        </bk-collapse-item>
-    </div>
+  <div class="iam-collapse-item">
+    <bk-collapse-item ref="collapseItem" v-bind="$attrs" v-on="$listeners" hide-arrow>
+      <template #default>
+        <slot />
+      </template>
+      <template #content>
+        <slot name="content" />
+      </template>
+    </bk-collapse-item>
+  </div>
 </template>
 <script>
-    export default {
-        inject: ['collapse'],
-        data () {
-            return {};
-        },
-        mounted () {
-            // const unwatch = this.$watch(() => this.$refs.collapseItem.isActive, newValue => {
-            //     this.iconType = newValue ? 'arrow-full-down' : 'arrow-full-right'
-            // }, {
-            //     immediate: true
-            // })
-            // this.$once('hook:beforeDestroy', () => {
-            //     unwatch()
-            // })
-        }
-    };
+  export default {
+    inject: ['collapse'],
+    data () {
+      return {};
+    },
+    mounted () {
+      // const unwatch = this.$watch(() => this.$refs.collapseItem.isActive, newValue => {
+      //     this.iconType = newValue ? 'arrow-full-down' : 'arrow-full-right'
+      // }, {
+      //     immediate: true
+      // })
+      // this.$once('hook:beforeDestroy', () => {
+      //     unwatch()
+      // })
+    }
+  };
 </script>
 <style lang='postcss'>
     .bk-collapse {

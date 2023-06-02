@@ -1,12 +1,12 @@
 <template functional>
-    <div :class="['iam-instance-content', { 'set-marging-top': props.hasGap }]">
-        <p class="iam-instance-title">{{ props.title || '--' }}</p>
-        <div class="iam-instance-item">
-            <p v-for="(item, index) in props.data" :key="index" class="value" :title="`ID：${item.id}`">
-                {{ item.display_name }}
-            </p>
-        </div>
+  <div :class="['iam-instance-content', { 'set-marging-top': props.hasGap }]">
+    <p class="iam-instance-title">{{ props.title || '--' }}</p>
+    <div class="iam-instance-item">
+      <p v-for="(item, index) in props.data" :key="index" class="value" :title="`ID：${item.id}`">
+        {{ item.display_name }}
+      </p>
     </div>
+  </div>
 </template>
 <style lang="postcss" scoped>
     .iam-instance-content {

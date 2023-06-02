@@ -1,137 +1,137 @@
 <template>
-    <ul :class="['iam-attach-tree', extCls, { 'iam-attach-has-border-tree': isBorder }]">
-        <template v-for="(item, index) in data">
-            <li
-                :key="item[nodeKey] ? item[nodeKey] : item.name"
-                v-if="item.hasOwnProperty('visible') ? item.visible : true"
-                :class="{ 'tree-first-node': !parent && index === 0,
-                          'tree-only-node': !parent && data.length === 1,
-                          'tree-second-node': !parent && index === 1,
-                          'single': true }">
-                <div class="tree-node" :class="item.isRelateActionEmpty ? 'set-padding-bottom' : ''">
-                    <span class="node-title" :title="item.name">
-                        <template v-if="item.tag === 'delete'">
-                            <s style="color: #c4c6cc;">{{ item.name }}</s>
-                        </template>
-                        <template v-else-if="item.tag === 'add'">
-                            <span class="add-status-sign"></span>
-                            {{ item.name }}
-                        </template>
-                        <template v-else>
-                            {{ item.name }}
-                        </template>
-                    </span>
-                    <template v-if="!item.isRelateActionEmpty">
-                        <div :class="['relate-actions',
-                                      { 'relate-actions-has-children': hasChild(item) },
-                                      { 'relate-actions-is-view': isBeingView(item) }]">
-                            <div class="relate-action-item"
-                                v-for="relate in item.related_actions"
-                                :key="relate.id">
-                                <render-tag
-                                    v-if="relate.tag !== 'unchecked'"
-                                    :status="relate.tag"
-                                    :content="relate.name" />
-                            </div>
-                        </div>
-                    </template>
-                </div>
-                <collapse-transition>
-                    <tree
-                        v-if="!isLeaf(item)"
-                        v-show="item.expanded"
-                        :data="item.children"
-                        :is-view="isView"
-                        :parent="item" />
-                </collapse-transition>
-            </li>
-        </template>
-    </ul>
+  <ul :class="['iam-attach-tree', extCls, { 'iam-attach-has-border-tree': isBorder }]">
+    <template v-for="(item, index) in data">
+      <li
+        :key="item[nodeKey] ? item[nodeKey] : item.name"
+        v-if="item.hasOwnProperty('visible') ? item.visible : true"
+        :class="{ 'tree-first-node': !parent && index === 0,
+                  'tree-only-node': !parent && data.length === 1,
+                  'tree-second-node': !parent && index === 1,
+                  'single': true }">
+        <div class="tree-node" :class="item.isRelateActionEmpty ? 'set-padding-bottom' : ''">
+          <span class="node-title" :title="item.name">
+            <template v-if="item.tag === 'delete'">
+              <s style="color: #c4c6cc;">{{ item.name }}</s>
+            </template>
+            <template v-else-if="item.tag === 'add'">
+              <span class="add-status-sign"></span>
+              {{ item.name }}
+            </template>
+            <template v-else>
+              {{ item.name }}
+            </template>
+          </span>
+          <template v-if="!item.isRelateActionEmpty">
+            <div :class="['relate-actions',
+                          { 'relate-actions-has-children': hasChild(item) },
+                          { 'relate-actions-is-view': isBeingView(item) }]">
+              <div class="relate-action-item"
+                v-for="relate in item.related_actions"
+                :key="relate.id">
+                <render-tag
+                  v-if="relate.tag !== 'unchecked'"
+                  :status="relate.tag"
+                  :content="relate.name" />
+              </div>
+            </div>
+          </template>
+        </div>
+        <collapse-transition>
+          <tree
+            v-if="!isLeaf(item)"
+            v-show="item.expanded"
+            :data="item.children"
+            :is-view="isView"
+            :parent="item" />
+        </collapse-transition>
+      </li>
+    </template>
+  </ul>
 </template>
 <script>
-    import CollapseTransition from '@/common/collapse-transition';
-    import RenderTag from '@/components/render-span/tag';
-    export default {
-        name: 'tree',
-        components: {
-            CollapseTransition,
-            RenderTag
-        },
-        props: {
-            data: {
-                type: Array,
-                default: () => []
-            },
-            parent: {
-                type: Object,
-                default: () => {
-                    return null;
-                }
-            },
-            nodeKey: {
-                type: String,
-                default: 'id'
-            },
-            hasBorder: {
-                type: Boolean,
-                default: false
-            },
-            extCls: {
-                type: String,
-                default: ''
-            },
-            isView: {
-                type: Boolean,
-                default: false
-            }
-        },
-        data () {
-            return {
-                isBorder: this.hasBorder
-            };
-        },
-        computed: {
-            hasChild () {
-                return payload => {
-                    return payload.related_actions.some(item => item.tag !== 'unchecked')
-                        && (payload.children && payload.children.length > 0)
-                        && payload.children.some(item => !item.isRelateActionEmpty || item.tag !== 'unchecked');
-                };
-            },
-            isBeingView () {
-                return payload => {
-                    return this.isView
-                        && payload.children
-                        && payload.children.length > 0
-                        && payload.children.some(
-                            child => !child.isRelateActionEmpty || (child.children && child.children.length > 0)
-                        );
-                };
-            }
-        },
-        watch: {
-            data () {
-                this.initTreeData();
-            },
-            hasBorder (value) {
-                this.isBorder = !!value;
-            }
-        },
-        mounted () {
-            this.initTreeData();
-        },
-        methods: {
-            initTreeData () {
-                for (const node of this.data) {
-                    this.$set(node, 'parent', this.parent);
-                }
-            },
-
-            isLeaf (node) {
-                return !(node.children && node.children.length) && node.parent && !node.async;
-            }
+  import CollapseTransition from '@/common/collapse-transition';
+  import RenderTag from '@/components/render-span/tag';
+  export default {
+    name: 'tree',
+    components: {
+      CollapseTransition,
+      RenderTag
+    },
+    props: {
+      data: {
+        type: Array,
+        default: () => []
+      },
+      parent: {
+        type: Object,
+        default: () => {
+          return null;
         }
-    };
+      },
+      nodeKey: {
+        type: String,
+        default: 'id'
+      },
+      hasBorder: {
+        type: Boolean,
+        default: false
+      },
+      extCls: {
+        type: String,
+        default: ''
+      },
+      isView: {
+        type: Boolean,
+        default: false
+      }
+    },
+    data () {
+      return {
+        isBorder: this.hasBorder
+      };
+    },
+    computed: {
+      hasChild () {
+        return payload => {
+          return payload.related_actions.some(item => item.tag !== 'unchecked')
+            && (payload.children && payload.children.length > 0)
+            && payload.children.some(item => !item.isRelateActionEmpty || item.tag !== 'unchecked');
+        };
+      },
+      isBeingView () {
+        return payload => {
+          return this.isView
+            && payload.children
+            && payload.children.length > 0
+            && payload.children.some(
+              child => !child.isRelateActionEmpty || (child.children && child.children.length > 0)
+            );
+        };
+      }
+    },
+    watch: {
+      data () {
+        this.initTreeData();
+      },
+      hasBorder (value) {
+        this.isBorder = !!value;
+      }
+    },
+    mounted () {
+      this.initTreeData();
+    },
+    methods: {
+      initTreeData () {
+        for (const node of this.data) {
+          this.$set(node, 'parent', this.parent);
+        }
+      },
+
+      isLeaf (node) {
+        return !(node.children && node.children.length) && node.parent && !node.async;
+      }
+    }
+  };
 </script>
 <style lang="postcss">
     .fade-enter-active, .fade-leave-active {

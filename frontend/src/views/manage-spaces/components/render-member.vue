@@ -1,137 +1,137 @@
 <template>
-    <div>
-        <div class="authorize-members-content">
-            <div
-                :class="[
-                    'members-boundary-title',
-                    { 'is-required': required }
-                ]"
-            >
-                {{ $t(`m.levelSpace['最大可授权人员边界']`) }}
-            </div>
-            <div class="members-boundary-radio">
-                <bk-radio-group v-model="radioValue" @change="handleChange">
-                    <bk-radio :value="true">
-                        {{ $t(`m.levelSpace['动态继承上级空间']`) }}
-                    </bk-radio>
-                    <bk-radio :value="false" class="pl10">
-                        {{ $t(`m.levelSpace['指定组织架构和人员']`) }}
-                    </bk-radio>
-                </bk-radio-group>
-            </div>
-            <template v-if="!radioValue">
-                <section
-                    class="members-boundary-header"
-                    data-test-id="grading_btn_showAddMember">
-                    <!-- <Icon bk type="plus-circle-shape" />
+  <div>
+    <div class="authorize-members-content">
+      <div
+        :class="[
+          'members-boundary-title',
+          { 'is-required': required }
+        ]"
+      >
+        {{ $t(`m.levelSpace['最大可授权人员边界']`) }}
+      </div>
+      <div class="members-boundary-radio">
+        <bk-radio-group v-model="radioValue" @change="handleChange">
+          <bk-radio :value="true">
+            {{ $t(`m.levelSpace['动态继承上级空间']`) }}
+          </bk-radio>
+          <bk-radio :value="false" class="pl10">
+            {{ $t(`m.levelSpace['指定组织架构和人员']`) }}
+          </bk-radio>
+        </bk-radio-group>
+      </div>
+      <template v-if="!radioValue">
+        <section
+          class="members-boundary-header"
+          data-test-id="grading_btn_showAddMember">
+          <!-- <Icon bk type="plus-circle-shape" />
                 <span>{{ $t(`m.levelSpace['选择可授权人员边界']`) }}</span> -->
-                    <bk-button
-                        theme="default"
-                        size="small"
-                        icon="plus-circle-shape"
-                        class="perm-members-add"
-                        @click.stop="handleAddMember"
-                    >
-                        {{ $t(`m.common['添加']`) }}
-                    </bk-button>
-                </section>
-            <!-- <Icon
+          <bk-button
+            theme="default"
+            size="small"
+            icon="plus-circle-shape"
+            class="perm-members-add"
+            @click.stop="handleAddMember"
+          >
+            {{ $t(`m.common['添加']`) }}
+          </bk-button>
+        </section>
+        <!-- <Icon
                 type="info-fill"
                 class="info-icon"
                 v-bk-tooltips.top="{ content: tips, width: 236, extCls: 'iam-tooltips-cls' }" /> -->
-            </template>
-            <div style="margin-top: 9px;" v-if="isAll">
-                <div class="all-item">
-                    <span class="member-name">{{ $t(`m.common['全员']`) }}</span>
-                    <span class="display-name">(All)</span>
-                    <Icon type="close-fill" class="remove-icon" @click="handleDelete" />
-                </div>
-            </div>
-            <template v-else>
-                <render-member-item :data="users" @on-delete="handleDeleteUser" v-if="isHasUser" />
-                <render-member-item :data="departments" type="department" v-if="isHasDepartment"
-                    @on-delete="handleDeleteDepartment" />
-            </template>
+      </template>
+      <div style="margin-top: 9px;" v-if="isAll">
+        <div class="all-item">
+          <span class="member-name">{{ $t(`m.common['全员']`) }}</span>
+          <span class="display-name">(All)</span>
+          <Icon type="close-fill" class="remove-icon" @click="handleDelete" />
         </div>
+      </div>
+      <template v-else>
+        <render-member-item :data="users" @on-delete="handleDeleteUser" v-if="isHasUser" />
+        <render-member-item :data="departments" type="department" v-if="isHasDepartment"
+          @on-delete="handleDeleteDepartment" />
+      </template>
     </div>
+  </div>
 </template>
 <script>
-    import RenderMemberItem from '@/views/group/common/render-member-display.vue';
-    export default {
-        name: '',
-        components: {
-            RenderMemberItem
-        },
-        props: {
-            users: {
-                type: Array,
-                default: () => []
-            },
-            departments: {
-                type: Array,
-                default: () => []
-            },
-            isAll: {
-                type: Boolean,
-                default: false
-            },
-            tip: {
-                type: String,
-                default: ''
-            },
-            inheritSubjectScope: {
-                type: Boolean,
-                default: true
-            },
-            labelWidth: {
-                type: Number
-            },
-            required: {
-                type: Boolean,
-                default: true
-            }
-        },
-        data () {
-            return {
-                tips: this.tip,
-                radioValue: true
-            };
-        },
-        computed: {
-            isHasUser () {
-                return this.users.length > 0;
-            },
-            isHasDepartment () {
-                return this.departments.length > 0;
-            }
-        },
-        watch: {
-            inheritSubjectScope (value) {
-                this.radioValue = value;
-            }
-        },
-        methods: {
-            handleAddMember () {
-                this.$emit('on-add');
-            },
+  import RenderMemberItem from '@/views/group/common/render-member-display.vue';
+  export default {
+    name: '',
+    components: {
+      RenderMemberItem
+    },
+    props: {
+      users: {
+        type: Array,
+        default: () => []
+      },
+      departments: {
+        type: Array,
+        default: () => []
+      },
+      isAll: {
+        type: Boolean,
+        default: false
+      },
+      tip: {
+        type: String,
+        default: ''
+      },
+      inheritSubjectScope: {
+        type: Boolean,
+        default: true
+      },
+      labelWidth: {
+        type: Number
+      },
+      required: {
+        type: Boolean,
+        default: true
+      }
+    },
+    data () {
+      return {
+        tips: this.tip,
+        radioValue: true
+      };
+    },
+    computed: {
+      isHasUser () {
+        return this.users.length > 0;
+      },
+      isHasDepartment () {
+        return this.departments.length > 0;
+      }
+    },
+    watch: {
+      inheritSubjectScope (value) {
+        this.radioValue = value;
+      }
+    },
+    methods: {
+      handleAddMember () {
+        this.$emit('on-add');
+      },
 
-            handleDeleteUser (payload) {
-                this.$emit('on-delete', 'user', payload);
-            },
+      handleDeleteUser (payload) {
+        this.$emit('on-delete', 'user', payload);
+      },
 
-            handleDeleteDepartment (payload) {
-                this.$emit('on-delete', 'department', payload);
-            },
+      handleDeleteDepartment (payload) {
+        this.$emit('on-delete', 'department', payload);
+      },
 
-            handleDelete () {
-                this.$emit('on-delete-all');
-            },
+      handleDelete () {
+        this.$emit('on-delete-all');
+      },
 
-            handleChange () {
-                this.$emit('on-change', this.radioValue);
-            }
-        }
-    };
+      handleChange () {
+        this.$emit('on-change', this.radioValue);
+      }
+    }
+  };
 </script>
 <style lang="postcss" scoped>
     .action-wrapper {
