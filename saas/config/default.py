@@ -179,7 +179,7 @@ BROKER_HEARTBEAT = 60
 # CELERY 并发数，默认为 2，可以通过环境变量或者 Procfile 设置
 CELERYD_CONCURRENCY = env.int("BK_CELERYD_CONCURRENCY", default=2)
 # 与周期任务配置的定时相关UTC
-CELERY_ENABLE_UTC = True
+CELERY_ENABLE_UTC = False
 # 周期任务beat生产者来源
 CELERYBEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 # Celery队列名称
@@ -282,6 +282,14 @@ ENABLE_INIT_GRADE_MANAGER = env.bool("BKAPP_ENABLE_INIT_GRADE_MANAGER", default=
 if ENABLE_INIT_GRADE_MANAGER:
     CELERYBEAT_SCHEDULE["init_biz_grade_manager"] = {
         "task": "backend.apps.role.tasks.InitBizGradeManagerTask",
+        "schedule": crontab(minute="*/2"),  # 每2分钟执行一次
+    }
+
+# 是否开启初始化BCS一级/二级管理员
+ENABLE_INIT_BCS_PROJECT_MANAGER = env.bool("BKAPP_ENABLE_INIT_BCS_PROJECT_MANAGER", default=False)
+if ENABLE_INIT_BCS_PROJECT_MANAGER:
+    CELERYBEAT_SCHEDULE["init_bcs_manager"] = {
+        "task": "backend.apps.role.tasks.InitBcsProjectManagerTask",
         "schedule": crontab(minute="*/2"),  # 每2分钟执行一次
     }
 
@@ -432,3 +440,7 @@ BK_IAM_MIGRATION_JSON_PATH = "resources/iam/"
 
 # IAM metric 接口密码
 BK_IAM_METRIC_TOKEN = env.str("BK_IAM_METRIC_TOKEN", default="")
+
+
+# BCS初始化ROLE网关api配置
+BK_BCS_APIGW_URL = env.str("BK_BCS_APIGW_URL", default="")

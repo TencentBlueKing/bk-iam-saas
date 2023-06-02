@@ -987,9 +987,12 @@ class GroupSearchViewSet(mixins.ListModelMixin, GenericViewSet):
 
         data = slz.validated_data
 
-        queryset = self.get_queryset()
-        if data["name"]:
-            queryset = queryset.filter(name__icontains=data["name"])
+        # 筛选
+        f = GroupFilter(
+            data={k: v for k, v in data.items() if k in ["id", "name", "description"] and v},
+            queryset=self.get_queryset(),
+        )
+        queryset = f.qs
 
         # 通过实例或操作查询用户组
         data["permission_type"] = PermissionTypeEnum.RESOURCE_INSTANCE.value

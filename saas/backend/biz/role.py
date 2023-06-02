@@ -728,7 +728,7 @@ class RoleListQuery:
         授权范围包含用户的角色id列表
         """
         # 1. 查询普通用户所在的部门id
-        department_ids = self.user.ancestor_department_ids
+        department_ids = self.user.ancestor_department_ids or [0]
 
         # 2. 查询 subjects 相关的分级管理员
         # grade_mgr_ids = ScopeSubject.objects.filter(
@@ -748,7 +748,7 @@ class RoleListQuery:
             AND (
                 (
                 b.subject_id IN %s
-                AND b.subject_type = 'department'
+                AND b.`subject_type` = 'department'
                 )
                 OR (
                 b.subject_id = %s

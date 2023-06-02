@@ -11,7 +11,7 @@ specific language governing permissions and limitations under the License.
 import logging
 import time
 from abc import ABC, abstractmethod
-from typing import Dict, Optional, Set, Tuple, Type
+from typing import Dict, List, Optional, Set, Tuple, Type
 from urllib.parse import urlencode
 
 from blue_krill.web.std_error import APIError
@@ -24,13 +24,14 @@ from backend.apps.group.models import Group
 from backend.apps.organization.models import User
 from backend.apps.role.models import Role, RoleRelatedObject, RoleUser
 from backend.biz.group import GroupBiz, GroupTemplateGrantBean
-from backend.biz.policy import PolicyBean, PolicyBeanList
+from backend.biz.policy import PolicyBean, PolicyBeanList, ResourceGroupBeanList
 from backend.biz.resource import ResourceBiz
 from backend.biz.role import RoleBiz, RoleCheckBiz, RoleInfoBean
 from backend.biz.system import SystemBiz
-from backend.common.lock import gen_init_grade_manager_lock
+from backend.common.lock import gen_bcs_manager_lock, gen_init_grade_manager_lock
 from backend.common.time import DAY_SECONDS, get_soon_expire_ts
 from backend.component import esb
+from backend.component.bcs import list_project_for_iam
 from backend.component.cmdb import list_biz
 from backend.component.sops import list_project
 from backend.service.action import ActionService
@@ -509,11 +510,16 @@ class InitBizGradeManagerTask(Task):
         role = self.biz.create_grade_manager(role_info, ADMIN_USER)
 
         # 创建用户组并授权
+        self._create_groups(role, role_info, maintainers, viewers, biz_name)
+
+        self._exist_names.add(biz_name)
+
+    def _create_groups(self, role, role_info, maintainers, viewers, biz_name):
         expired_at = int(time.time()) + 6 * 30 * DAY_SECONDS  # 过期时间半年
 
         authorization_scopes = role_info.dict()["authorization_scopes"]
         for name_suffix in [ManagementGroupNameSuffixEnum.OPS.value, ManagementGroupNameSuffixEnum.READ.value]:
-            description = "{}业务运维人员的权限".format(biz_name)
+            description = "包含{}运维人员的权限".format(biz_name)
             if name_suffix == ManagementGroupNameSuffixEnum.READ.value:
                 description = "仅包含{}各系统的查看权限".format(biz_name)
 
@@ -530,8 +536,6 @@ class InitBizGradeManagerTask(Task):
 
             templates = self._init_group_auth_info(authorization_scopes, name_suffix)
             self.group_biz.grant(role, group, templates, need_check=False)
-
-        self._exist_names.add(biz_name)
 
     def _init_role_info(self, data, maintainers):
         """
@@ -563,44 +567,50 @@ class InitBizGradeManagerTask(Task):
                     system_id=bk_cmdb_system, type="biz", id=data["bk_biz_id"], name=data["name"]
                 )
 
-            auth_scope = AuthScopeSystem(system_id=system_id, actions=[])
+            # 生成系统的授权范围
+            auth_scope = self._init_system_auth_scope(system_id, instance)
 
-            # 1. 查询常用操作
-            common_action = self.biz.get_common_action_by_name(system_id, ManagementCommonActionNameEnum.OPS.value)
-            if not common_action:
-                logger.debug(
-                    "init grade manager: system [%s] is not configured common action [%s]",
-                    system_id,
-                    ManagementCommonActionNameEnum.OPS.value,
-                )
-                continue
-
-            # 2. 查询操作信息
-            action_list = self.action_svc.new_action_list(system_id)
-
-            # 3. 生成授权范围
-            for action_id in common_action.action_ids:
-                action = action_list.get(action_id)
-                if not action:
-                    logger.debug(
-                        "init grade manager: system [%s] action [%s] not exists in common action [%s]",
-                        system_id,
-                        action_id,
-                        ManagementCommonActionNameEnum.OPS.value,
-                    )
-                    continue
-
-                # 分发者模式
-                auth_scope_action = AuthScopeActionGenerator(system_id, action, instance).generate()
-
-                if auth_scope_action:
-                    auth_scope.actions.append(auth_scope_action)
-
-            # 4. 组合授权范围
+            # 组合授权范围
             if auth_scope.actions:
                 role_info.authorization_scopes.append(auth_scope)
 
         return role_info
+
+    def _init_system_auth_scope(self, system_id, instance):
+        auth_scope = AuthScopeSystem(system_id=system_id, actions=[])
+
+        # 1. 查询常用操作
+        common_action = self.biz.get_common_action_by_name(system_id, ManagementCommonActionNameEnum.OPS.value)
+        if not common_action:
+            logger.debug(
+                "init grade manager: system [%s] is not configured common action [%s]",
+                system_id,
+                ManagementCommonActionNameEnum.OPS.value,
+            )
+            return auth_scope
+
+        # 2. 查询操作信息
+        action_list = self.action_svc.new_action_list(system_id)
+
+        # 3. 生成授权范围
+        for action_id in common_action.action_ids:
+            action = action_list.get(action_id)
+            if not action:
+                logger.debug(
+                    "init grade manager: system [%s] action [%s] not exists in common action [%s]",
+                    system_id,
+                    action_id,
+                    ManagementCommonActionNameEnum.OPS.value,
+                )
+                continue
+
+            # 分发者模式
+            auth_scope_action = AuthScopeActionGenerator(system_id, action, instance).generate()
+
+            if auth_scope_action:
+                auth_scope.actions.append(auth_scope_action)
+
+        return auth_scope
 
     def _init_group_auth_info(self, authorization_scopes, name_suffix: str):
         templates = []
@@ -640,3 +650,192 @@ class InitBizGradeManagerTask(Task):
 
 
 current_app.tasks.register(InitBizGradeManagerTask())
+
+
+class AuthScopeMerger:
+    """
+    授权范围合并
+    """
+
+    def __init__(
+        self, old_authorization_scopes: List[AuthScopeSystem], new_authorization_scopes: List[AuthScopeSystem]
+    ):
+        self._old_authorization_scopes = old_authorization_scopes
+        self._new_authorization_scopes = new_authorization_scopes
+
+    def merge(self) -> List[AuthScopeSystem]:
+        """
+        合并两个授权范围
+        """
+
+        # 合并相同系统的操作
+        new_auth_scope_dict = {one.system_id: one for one in self._new_authorization_scopes}
+        for one in self._old_authorization_scopes:
+            if one.system_id in new_auth_scope_dict:
+                self._merge_system_auth_scope(one, new_auth_scope_dict[one.system_id])
+
+        # 如果有新的系统直接加入
+        old_auth_scope_dict = {one.system_id: one for one in self._old_authorization_scopes}
+        for one in self._new_authorization_scopes:
+            if one.system_id not in old_auth_scope_dict:
+                self._old_authorization_scopes.append(one)
+
+        return self._old_authorization_scopes
+
+    def _merge_system_auth_scope(self, old_auth_scope: AuthScopeSystem, new_auth_scope: AuthScopeSystem):
+        """
+        合并两个授权范围
+        """
+        assert old_auth_scope.system_id == new_auth_scope.system_id
+
+        new_action_scope_dict = {one.id: one for one in new_auth_scope.actions}
+        for one in old_auth_scope.actions:
+            if one.id in new_action_scope_dict:
+                self._merge_action_auth_scope(one, new_action_scope_dict[one.id])
+
+        old_action_scope_dict = {one.id: one for one in old_auth_scope.actions}
+        for one in new_auth_scope.actions:
+            if one.id not in old_action_scope_dict:
+                old_auth_scope.actions.append(one)
+
+    def _merge_action_auth_scope(self, old_action_scope: AuthScopeAction, new_action_scope: AuthScopeAction):
+        """
+        合并两个授权范围
+        """
+        assert old_action_scope.id == new_action_scope.id
+
+        old_resource_group_list = ResourceGroupBeanList.parse_obj(old_action_scope.resource_groups)
+        new_resource_group_list = ResourceGroupBeanList.parse_obj(new_action_scope.resource_groups)
+
+        old_resource_group_list += new_resource_group_list
+
+        old_action_scope.resource_groups = ResourceGroupList.parse_obj(old_resource_group_list.dict())
+
+
+class InitBcsProjectManagerTask(InitBizGradeManagerTask):
+    """
+    BCS初始化
+
+    1. 初始化BCS项目的二级管理员
+    2. 初始化BCS项目对应业务的一级管理员
+    3. 初始化BCS项目对应的用户组并授权
+    """
+
+    name = "backend.apps.role.tasks.InitBcsProjectManagerTask"
+
+    _exist_names: Set[str] = set()
+
+    def run(self):
+        if not settings.ENABLE_INIT_BCS_PROJECT_MANAGER:
+            return
+
+        with gen_bcs_manager_lock():
+            biz_info = list_biz()
+            biz_dict = {one["bk_biz_id"]: one for one in biz_info["info"]}
+
+            projects = list_project_for_iam()
+            for project in projects:
+                if int(project["businessID"]) in biz_dict:
+                    biz = biz_dict[int(project["businessID"])]
+
+                    self._create_bcs_manager(project, biz)
+                else:
+                    logger.debug(
+                        "init bcs manager: bk_bcs_app project [%s] biz_id [%s] not exists in bk_cmdb",
+                        project["name"],
+                        project["businessID"],
+                    )
+
+    def _create_bcs_manager(self, project, biz_info):
+        project_name = project["name"]
+        if project_name in self._exist_names:
+            return
+
+        # 查询是否存在该项目的二级管理员
+        subset_manager_name = "BCS-" + project_name
+        subset_manager = Role.objects.filter(name=subset_manager_name, type=RoleType.SUBSET_MANAGER.value).first()
+        if subset_manager:
+            self._exist_names.add(project_name)
+            return
+
+        # 生成二级管理员管理范围数据
+        auth_scopes = self._init_project_auth_scope(project)
+
+        maintainers = (biz_info.get("bk_biz_maintainer") or "").split(",")  # 业务的负责人
+        viewers = list(
+            set(
+                (biz_info.get("bk_biz_developer") or "").split(",")
+                + (biz_info.get("bk_biz_productor") or "").split(",")
+                + (biz_info.get("bk_biz_tester") or "").split(",")
+            )
+        )  # 业务的查看人
+
+        # 查询项目对应业务的一级管理员
+        grade_manager_name = biz_info["bk_biz_name"]
+        grade_manager = Role.objects.filter(name=grade_manager_name, type=RoleType.GRADE_MANAGER.value).first()
+
+        if not grade_manager:
+            # 创建一级管理员
+            grade_manager_info = RoleInfoBean(
+                name=grade_manager_name,
+                description="管理员可授予他人{}业务的权限".format(grade_manager_name),
+                members=[RoleMember(username=username) for username in maintainers or [ADMIN_USER]],
+                subject_scopes=[Subject(type="*", id="*")],
+                authorization_scopes=auth_scopes,
+            )
+            grade_manager = self.biz.create_grade_manager(grade_manager_info, ADMIN_USER)
+        else:
+            # 更新一级管理员的授权范围
+            grade_manager_auth_scopes = self.biz.svc.list_auth_scope(grade_manager.id)
+            grade_manager_auth_scopes = AuthScopeMerger(
+                grade_manager_auth_scopes, auth_scopes
+            ).merge()  # 合并分级管理员原来的范围与新增的项目的范围
+            self.biz.svc.update_role_auth_scope(grade_manager.id, grade_manager_auth_scopes)
+
+        # 创建二级管理员
+        subset_manager_info = RoleInfoBean(
+            name=subset_manager_name,
+            description="管理员可授予他人{}BCS项目的权限".format(subset_manager_name),
+            type=RoleType.SUBSET_MANAGER.value,
+            members=[RoleMember(username=username) for username in maintainers or [ADMIN_USER]],
+            subject_scopes=[Subject(type="*", id="*")],
+            authorization_scopes=auth_scopes,
+        )
+        subset_manager = self.biz.create_subset_manager(grade_manager, subset_manager_info, ADMIN_USER)
+
+        # 创建二级管理员对应的用户组
+        self._create_groups(subset_manager, subset_manager_info, maintainers, viewers, project_name)
+
+        self._exist_names.add(project_name)
+
+    def _init_project_auth_scope(self, data):
+        """
+        初始化项目的授权范围
+        """
+        auth_scopes = []
+
+        # 默认需要初始化的系统列表
+        systems = ["bk_bcs_app", "bk_log_search", "bk_monitorv3"]
+        for system_id in systems:
+            if system_id == "bk_bcs_app":
+                instance = ResourceInstance(
+                    system_id=system_id,
+                    type="project",
+                    id=data["projectID"],
+                    name=data["name"],
+                )
+            else:
+                instance = ResourceInstance(
+                    system_id="bk_monitorv3", type="space", id=data["bkmSpaceBizID"], name=data["bkmSpaceName"]
+                )
+
+            auth_scope = self._init_system_auth_scope(system_id, instance)
+
+            # 组合授权范围
+            if auth_scope.actions:
+                auth_scopes.append(auth_scope)
+
+        return auth_scopes
+
+
+current_app.tasks.register(InitBcsProjectManagerTask())
