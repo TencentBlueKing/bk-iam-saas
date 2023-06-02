@@ -1,3 +1,15 @@
+<!-- 2023-06-02 -->
+# V1.10.4 ChangeLog
+
+### New Features
+* Added BCS automatic initialization of administrator user group, making it easier for administrators to set up the system.
+
+### Bug Fixes
+* Fixed a bug in the user list query list to improve normal system operation efficiency.
+* Added max request number parameter for gunicorn to optimize system performance.
+
+---
+
 <!-- 2023-05-29 -->
 # V1.10.3 ChangeLog
 
