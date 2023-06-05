@@ -640,7 +640,7 @@
           isTemplate: this.tableList[this.curIndex].isTemplate,
           isNotLimit: conditionData.length === 0
         };
-        this.previewDialogTitle = `${this.$t(`m.common['操作']`)}${this.$t(`m.common['【']`)}${this.tableList[this.curIndex].name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)} ${this.$t(`m.common['差异对比']`)}`;
+        this.previewDialogTitle = this.$t(`m.info['操作侧边栏操作的资源实例差异对比']`, { value: `${this.$t(`m.common['【']`)}${this.tableList[this.curIndex].name}${this.$t(`m.common['】']`)}` });
         this.isShowPreviewDialog = true;
       },
 
@@ -694,7 +694,7 @@
             condition: condition.filter(item => item.attributes.length > 0 || item.instances.length > 0)
           }
         };
-        this.previewDialogTitle = `${this.$t(`m.common['操作']`)}${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)} ${this.$t(`m.common['差异对比']`)}`;
+        this.previewDialogTitle = this.$t(`m.info['操作侧边栏操作的资源实例差异对比']`, { value: `${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}` });
         this.isShowPreviewDialog = true;
       },
 

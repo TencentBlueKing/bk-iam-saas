@@ -490,6 +490,7 @@ export const m = {
          '关联侧边栏操作的资源实例': 'Resource instances associated with the action {value}',
          '关联侧边栏操作生效条件': 'Effective conditions associated with the action {value}',
          '操作侧边栏操作的资源实例': 'Operating the resource instance of {value}',
+         '操作侧边栏操作的资源实例差异对比': 'Comparison of differences in operating {value} resource instances',
          '用户组侧边栏的详情': 'Details of user group {value}'
     },
     // 二次确认弹窗相关
@@ -760,7 +761,7 @@ export const m = {
         '转出用户组至': 'Transfer the group to',
         '个管理空间': 'grading  manager',
         'ID': 'ID',
-        '描述': 'description',
+        '描述': 'Description',
         '所属系统': 'Subordinate to the system',
         '管理空间': 'Management Space',
         '所属管理空间': 'Management space',
