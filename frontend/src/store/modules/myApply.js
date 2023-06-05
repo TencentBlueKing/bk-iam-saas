@@ -30,12 +30,12 @@ import { json2Query } from '@/common/util';
 const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
 
 export default {
-    namespaced: true,
-    state: {},
-    getters: {},
-    mutations: {},
-    actions: {
-        /**
+  namespaced: true,
+  state: {},
+  getters: {},
+  mutations: {},
+  actions: {
+    /**
          * 获取申请列表
          *
          * @param {Function} commit store commit mutation handler
@@ -46,11 +46,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getApplyList ({ commit, state, dispatch }, params, config) {
-            return http.get(`${AJAX_URL_PREFIX}/applications/?${json2Query(params)}`, {}, config);
-        },
+    getApplyList ({ commit, state, dispatch }, params, config) {
+      return http.get(`${AJAX_URL_PREFIX}/applications/?${json2Query(params)}`, {}, config);
+    },
 
-        /**
+    /**
          * 获取申请单详情
          *
          * @param {Function} commit store commit mutation handler
@@ -61,15 +61,15 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getApplyDetail ({ commit, state, dispatch }, params, config) {
-            const requestParams = Object.assign({}, params);
-            const id = requestParams.id;
-            delete requestParams.id;
-            const queryParams = Object.keys(requestParams).length ? `${id}/?${json2Query(requestParams)}` : `${id}/`;
-            return http.get(`${AJAX_URL_PREFIX}/applications/${queryParams}`, {}, config);
-        },
+    getApplyDetail ({ commit, state, dispatch }, params, config) {
+      const requestParams = Object.assign({}, params);
+      const id = requestParams.id;
+      delete requestParams.id;
+      const queryParams = Object.keys(requestParams).length ? `${id}/?${json2Query(requestParams)}` : `${id}/`;
+      return http.get(`${AJAX_URL_PREFIX}/applications/${queryParams}`, {}, config);
+    },
 
-        /**
+    /**
          * 单据撤销
          *
          * @param {Function} commit store commit mutation handler
@@ -80,12 +80,12 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        applyCancel ({ commit, state, dispatch }, params, config) {
-            const requestParams = Object.assign({}, params);
-            const id = requestParams.id;
-            delete requestParams.id;
-            const queryParams = Object.keys(requestParams).length ? `${id}/cancel/?${json2Query(requestParams)}` : `${id}/cancel/`;
-            return http.put(`${AJAX_URL_PREFIX}/applications/${queryParams}`, {}, config);
-        }
+    applyCancel ({ commit, state, dispatch }, params, config) {
+      const requestParams = Object.assign({}, params);
+      const id = requestParams.id;
+      delete requestParams.id;
+      const queryParams = Object.keys(requestParams).length ? `${id}/cancel/?${json2Query(requestParams)}` : `${id}/cancel/`;
+      return http.put(`${AJAX_URL_PREFIX}/applications/${queryParams}`, {}, config);
     }
+  }
 };

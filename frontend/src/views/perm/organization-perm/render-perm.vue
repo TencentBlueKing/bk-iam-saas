@@ -1,64 +1,64 @@
 <template>
-    <div :class="['iam-perm-item', extCls]">
-        <div class="header" @click="handleExpanded">
-            <Icon bk class="expanded-icon" :type="isExpanded ? 'down-shape' : 'right-shape'" />
-            <label class="title">{{ title }}</label>
-        </div>
-        <div class="content" v-if="isExpanded">
-            <div class="slot-content">
-                <slot />
-            </div>
-            <p class="expand-action" @click="handlePackup">
-                <Icon :type="isExpanded ? 'up-angle' : 'down-angle'" />
-                {{ $t(`m.common['点击收起']`) }}
-            </p>
-        </div>
+  <div :class="['iam-perm-item', extCls]">
+    <div class="header" @click="handleExpanded">
+      <Icon bk class="expanded-icon" :type="isExpanded ? 'down-shape' : 'right-shape'" />
+      <label class="title">{{ title }}</label>
     </div>
+    <div class="content" v-if="isExpanded">
+      <div class="slot-content">
+        <slot />
+      </div>
+      <p class="expand-action" @click="handlePackup">
+        <Icon :type="isExpanded ? 'up-angle' : 'down-angle'" />
+        {{ $t(`m.common['点击收起']`) }}
+      </p>
+    </div>
+  </div>
 </template>
 <script>
-    export default {
-        name: '',
-        props: {
-            expanded: {
-                type: Boolean,
-                default: false
-            },
-            title: {
-                type: String,
-                default: ''
-            },
-            extCls: {
-                type: String,
-                default: ''
-            }
-        },
-        data () {
-            return {
-                isExpanded: this.expanded
-            };
-        },
-        watch: {
-            expanded (value) {
-                this.isExpanded = !!value;
-            }
-        },
-        methods: {
-            handlePackup () {
-                this.isExpanded = false;
-                this.$emit('update:expanded', false);
-                this.$emit('on-expanded', false);
-            },
+  export default {
+    name: '',
+    props: {
+      expanded: {
+        type: Boolean,
+        default: false
+      },
+      title: {
+        type: String,
+        default: ''
+      },
+      extCls: {
+        type: String,
+        default: ''
+      }
+    },
+    data () {
+      return {
+        isExpanded: this.expanded
+      };
+    },
+    watch: {
+      expanded (value) {
+        this.isExpanded = !!value;
+      }
+    },
+    methods: {
+      handlePackup () {
+        this.isExpanded = false;
+        this.$emit('update:expanded', false);
+        this.$emit('on-expanded', false);
+      },
 
-            handleExpanded () {
-                // if (this.isExpanded) {
-                //     return
-                // }
-                this.isExpanded = !this.isExpanded;
-                this.$emit('update:expanded', true);
-                this.$emit('on-expanded', true);
-            }
-        }
-    };
+      handleExpanded () {
+        // if (this.isExpanded) {
+        //     return
+        // }
+        this.isExpanded = !this.isExpanded;
+        this.$emit('update:expanded', true);
+        this.$emit('on-expanded', true);
+      }
+    }
+  };
 </script>
 <style lang="postcss" scoped>
     .iam-perm-item {

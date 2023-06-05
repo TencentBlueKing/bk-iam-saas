@@ -30,12 +30,12 @@ import { json2Query } from '@/common/util';
 const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
 
 export default {
-    namespaced: true,
-    state: {},
-    getters: {},
-    mutations: {},
-    actions: {
-        /**
+  namespaced: true,
+  state: {},
+  getters: {},
+  mutations: {},
+  actions: {
+    /**
          * 获取审计事件列表
          *
          * @param {Function} commit store commit mutation handler
@@ -45,11 +45,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getAuditList ({ commit, state, dispatch }, params, config) {
-            return http.get(`${AJAX_URL_PREFIX}/audits/?${json2Query(params)}`, config);
-        },
+    getAuditList ({ commit, state, dispatch }, params, config) {
+      return http.get(`${AJAX_URL_PREFIX}/audits/?${json2Query(params)}`, config);
+    },
 
-        /**
+    /**
          * 获取审计事件详情
          *
          * @param {Function} commit store commit mutation handler
@@ -59,9 +59,9 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getAuditDetail ({ commit, state, dispatch }, params, config) {
-            const { id, month } = params;
-            return http.get(`${AJAX_URL_PREFIX}/audits/${id}/?month=${month}`, config);
-        }
+    getAuditDetail ({ commit, state, dispatch }, params, config) {
+      const { id, month } = params;
+      return http.get(`${AJAX_URL_PREFIX}/audits/${id}/?month=${month}`, config);
     }
+  }
 };

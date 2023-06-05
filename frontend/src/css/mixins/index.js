@@ -25,7 +25,7 @@
 */
 
 module.exports = {
-    /**
+  /**
      * button mixins
      *
      * @example
@@ -36,36 +36,36 @@ module.exports = {
      * @param {[type]} color [description]
      * @param {[type]} bgHover [description]
      */
-    button (mixin, bg, color, bgHover = 'blue') {
-        return {
-            'background': bg,
-            'color': color,
-            '&:hover, &:focus': {
-                'background': bgHover
-            }
-        };
-    },
+  button (mixin, bg, color, bgHover = 'blue') {
+    return {
+      'background': bg,
+      'color': color,
+      '&:hover, &:focus': {
+        'background': bgHover
+      }
+    };
+  },
 
-    /**
+  /**
      * clearfix mixins
      *
      * @example
      *     @mixin clearfix;
      * @param {Ojbect} mixin ast 对象
      */
-    clearfix (mixin) {
-        return {
-            '&::after': {
-                'content': '""',
-                'display': 'block',
-                'clear': 'both',
-                'font-size': 0,
-                'visibility': 'hidden'
-            }
-        };
-    },
+  clearfix (mixin) {
+    return {
+      '&::after': {
+        'content': '""',
+        'display': 'block',
+        'clear': 'both',
+        'font-size': 0,
+        'visibility': 'hidden'
+      }
+    };
+  },
 
-    /**
+  /**
      * ellipsis mixins
      *
      * @example
@@ -74,21 +74,21 @@ module.exports = {
      * @param {Ojbect} mixin ast 对象
      * @param {string} maxWidth 最大宽度，默认为 auto
      */
-    ellipsis (mixin, maxWidth) {
-        const ret = {
-            'overflow': 'hidden',
-            'text-overflow': 'ellipsis',
-            'white-space': 'nowrap'
-        };
+  ellipsis (mixin, maxWidth) {
+    const ret = {
+      'overflow': 'hidden',
+      'text-overflow': 'ellipsis',
+      'white-space': 'nowrap'
+    };
 
-        if (maxWidth) {
-            ret['max-width'] = maxWidth;
-        }
+    if (maxWidth) {
+      ret['max-width'] = maxWidth;
+    }
 
-        return ret;
-    },
+    return ret;
+  },
 
-    /**
+  /**
      * ellipsis mixins
      *
      * @example
@@ -99,17 +99,17 @@ module.exports = {
      * @param {string} backgroundColor 背景颜色
      * @param {string} width 宽度
      */
-    scroller (mixin, backgroundColor = '#e6e9ea', width = '4px') {
-        return {
-            '&::-webkit-scrollbar': {
-                'width': width,
-                'background-color': `lighten(${backgroundColor}, 80%)`
-            },
-            '&::-webkit-scrollbar-thumb': {
-                'height': '5px',
-                'border-radius': '2px',
-                'background-color': backgroundColor
-            }
-        };
-    }
+  scroller (mixin, backgroundColor = '#e6e9ea', width = '4px') {
+    return {
+      '&::-webkit-scrollbar': {
+        'width': width,
+        'background-color': `lighten(${backgroundColor}, 80%)`
+      },
+      '&::-webkit-scrollbar-thumb': {
+        'height': '5px',
+        'border-radius': '2px',
+        'background-color': backgroundColor
+      }
+    };
+  }
 };

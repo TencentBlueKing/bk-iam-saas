@@ -31,25 +31,25 @@ import zhCN from './zh-CN';
 const BLUEKINNG_LANGUAGE = 'blueking_language';
 
 const languageMap = {
-    'zh-CN': zhCN,
-    'en-US': enUS
+  'zh-CN': zhCN,
+  'en-US': enUS
 };
 let localeLanguage = 'zh-CN';
 const bluekingLanguage = Cookie.get(BLUEKINNG_LANGUAGE);
 if (bluekingLanguage && bluekingLanguage.toLowerCase() === 'en') {
-    localeLanguage = 'en-US';
+  localeLanguage = 'en-US';
 }
 
 const languagePackage = languageMap[localeLanguage];
 
 export default {
-    t: (key) => {
-        const keys = key.split('.');
-        let i = -1;
-        let value = languagePackage;
-        while (++i < keys.length) {
-            value = value[keys[i]];
-        }
-        return value;
+  t: (key) => {
+    const keys = key.split('.');
+    let i = -1;
+    let value = languagePackage;
+    while (++i < keys.length) {
+      value = value[keys[i]];
     }
+    return value;
+  }
 };
