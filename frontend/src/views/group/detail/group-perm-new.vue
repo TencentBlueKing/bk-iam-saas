@@ -53,6 +53,7 @@
                                     :group-id="groupId"
                                     :template-id="subItem.id"
                                     :is-edit="subItem.isEdit"
+                                    :linear-action-list="linearActionList"
                                     @on-delete="handleSingleDelete(...arguments, item)" />
                             </div>
                         </render-template-item>
