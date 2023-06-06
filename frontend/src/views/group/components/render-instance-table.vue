@@ -198,14 +198,26 @@
         <component :is="'RenderDetail'" :data="previewData" />
       </div>
     </bk-sideslider>
-    <bk-dialog
-      ext-cls="comfirmDialog"
+
+    <!-- <bk-dialog
+      ext-cls="confirmDialog"
       v-model="isShowDeleteDialog"
       :close-icon="showIcon"
       :footer-position="footerPosition"
       @confirm="handleDelete">
       <h3 style="text-align:center">{{ $t(`m.common['是否删除该自定义权限']`) }}</h3>
-    </bk-dialog>
+    </bk-dialog> -->
+    
+    <delete-action-dialog
+      :show.sync="isShowDeleteDialog"
+      :title="$t(`m.dialog['确认删除内容？']`, { value: $t(`m.dialog['删除实例权限']`) } )"
+      :name="currentActionName"
+      :related-action-list="delActionList"
+      @on-after-leave="handleAfterDeleteLeave"
+      @on-cancel="handleCancelDelete"
+      @on-submit="handleDelete"
+    />
+
   </div>
 </template>
 
@@ -222,6 +234,7 @@
   import PreviewResourceDialog from './preview-resource-dialog';
   import RenderResourcePopover from '@/components/iam-view-resource-popover';
   import RenderDetail from '../common/render-detail';
+  import DeleteActionDialog from '@/views/group/components/delete-related-action-dialog.vue';
 
   // import store from '@/store'
   export default {
@@ -232,7 +245,8 @@
       RenderCondition,
       PreviewResourceDialog,
       RenderResourcePopover,
-      RenderDetail
+      RenderDetail,
+      DeleteActionDialog
     },
     props: {
       list: {
@@ -344,7 +358,9 @@
         selectedIndex: 0,
         instanceKey: '',
         curCopyDataId: '',
-        emptyResourceGroupsList: []
+        emptyResourceGroupsList: [],
+        delActionList: [],
+        currentActionName: ''
       };
     },
     computed: {
@@ -582,8 +598,9 @@
       },
       handleShowDelDialog (row) {
         let delRelatedActions = [];
-        const actionList = [];
+        this.delActionList = [];
         const { id, mode, name } = row;
+        this.currentActionName = name;
         const isCustom = ['custom'].includes(mode);
         const policyIdList = this.tableList.map(item => item.id);
         const linearActionList = this.linearActionList.filter(item => policyIdList.includes(item.id));
@@ -596,25 +613,27 @@
             delRelatedActions = item.related_actions.filter(v => curAction.related_actions.includes(v));
           }
           if (isCustom && item.related_actions && item.related_actions.includes(id)) {
-            actionList.push(item.name);
+            this.delActionList.push(item);
           }
         });
-        if (actionList.length) {
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: `${this.$t(`m.perm['不能删除当前操作']`)}, ${this.$t(`m.common['【']`)}${actionList.join()}${this.$t(`m.common['】']`)}${this.$t(`m.perm['等']`)}${actionList.length}${this.$t(`m.perm['个操作关联了']`)}${name}`,
-            ellipsisLine: 10,
-            ellipsisCopy: true
-          });
-          return;
-        }
         let ids = [row.policy_id];
+        if (this.delActionList.length) {
+          const list = this.tableList.filter(item => this.delActionList.map(action => action.id).includes(item.id));
+          ids = [row.policy_id].concat(list.map(v => v.policy_id));
+          // this.bkMessageInstance = this.$bkMessage({
+          //   limit: 1,
+          //   theme: 'error',
+          //   message: `${this.$t(`m.perm['不能删除当前操作']`)}, ${this.$t(`m.common['【']`)}${this.delActionList.join()}${this.$t(`m.common['】']`)}${this.$t(`m.perm['等']`)}${this.delActionList.length}${this.$t(`m.perm['个操作关联了']`)}${name}`,
+          //   ellipsisLine: 10,
+          //   ellipsisCopy: true
+          // });
+          // return;
+        }
         if (isCustom && !delRelatedActions.length && hasRelatedActions) {
           const list = [...this.tableList].filter(v => curAction.related_actions.includes(v.id));
           if (list.length) {
             // eslint-disable-next-line camelcase
-            ids = [row.policy_id].concat(list.map(v => v.policy_id));
+            ids = ids.concat(list.map(v => v.policy_id));
           }
         }
         this.isShowDeleteDialog = true;
@@ -649,6 +668,13 @@
         this.sidesliderTitle = '';
         this.previewData = [];
         this.curId = '';
+      },
+      handleAfterDeleteLeave () {
+        this.currentActionName = '';
+        this.delActionList = [];
+      },
+      handleCancelDelete () {
+        this.isShowDeleteDialog = false;
       },
       handlerAggregateConditionMouseover (payload) {
         if (this.curCopyData[0] === 'none') {
@@ -1876,4 +1902,12 @@
     .tab-button{
         margin: 10px 0;
     }
+</style>
+
+<style lang="postcss" scoped>
+/deep/ .confirmDialog {
+  .bk-dialog-footer {
+    background-color: #ffffff;
+  }
+}
 </style>
