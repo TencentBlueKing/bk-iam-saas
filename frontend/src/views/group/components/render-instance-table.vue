@@ -597,9 +597,9 @@
         }
       },
       handleShowDelDialog (row) {
+        const { id, mode, name } = row;
         let delRelatedActions = [];
         this.delActionList = [];
-        const { id, mode, name } = row;
         this.currentActionName = name;
         const isCustom = ['custom'].includes(mode);
         const policyIdList = this.tableList.map(item => item.id);

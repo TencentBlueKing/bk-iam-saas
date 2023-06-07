@@ -71,7 +71,7 @@
       <bk-table-column prop="expired_dis" min-width="100" :label="$t(`m.common['有效期']`)"></bk-table-column>
       <bk-table-column :label="$t(`m.common['操作']`)">
         <template slot-scope="{ row }">
-          <bk-button text @click="handleDelete(row)">{{ $t(`m.common['删除']`) }}</bk-button>
+          <bk-button text @click="handleShowDelDialog(row)">{{ $t(`m.common['删除']`) }}</bk-button>
         </template>
       </bk-table-column>
       <template slot="empty">
@@ -178,6 +178,17 @@
           @click="handleResourceEffectTimeCancel">{{ $t(`m.common['取消']`) }}</bk-button>
       </div>
     </bk-sideslider>
+
+    <delete-action-dialog
+      :show.sync="isShowDeleteDialog"
+      :title="$t(`m.dialog['确认删除内容？']`, { value: $t(`m.dialog['删除实例权限']`) } )"
+      :name="currentActionName"
+      :related-action-list="delActionList"
+      @on-after-leave="handleAfterDeleteLeaveAction"
+      @on-cancel="handleCancelDelete"
+      @on-submit="handleSubmitDelete"
+    />
+
   </div>
 </template>
 <script>
@@ -191,6 +202,7 @@
   import RenderDetail from '../components/render-detail-edit';
   import EffectConditon from './effect-conditon';
   import SidesliderEffectConditon from './sideslider-effect-condition';
+  import DeleteActionDialog from '@/views/group/components/delete-related-action-dialog.vue';
 
   export default {
     name: 'CustomPermTable',
@@ -200,7 +212,8 @@
       RenderResourcePopover,
       DeleteDialog,
       EffectConditon,
-      SidesliderEffectConditon
+      SidesliderEffectConditon,
+      DeleteActionDialog
     },
     props: {
       systemId: {
@@ -229,7 +242,6 @@
         curPolicyId: '',
         isShowSideslider: false,
         curDeleteIds: [],
-
         deleteDialog: {
           visible: false,
           title: this.$t(`m.dialog['确认删除']`),
@@ -248,7 +260,10 @@
         isShowResourceInstanceEffectTime: false,
         resourceGrouParams: {},
         params: '',
-        originalCustomTmplList: []
+        originalCustomTmplList: [],
+        isShowDeleteDialog: false,
+        currentActionName: '',
+        delActionList: []
 
       };
     },
@@ -493,6 +508,16 @@
         this.deleteDialog.visible = false;
       },
 
+      handleAfterDeleteLeaveAction () {
+        this.currentActionName = '';
+        this.delActionList = [];
+        this.curDeleteIds = [];
+      },
+
+      handleCancelDelete () {
+        this.isShowDeleteDialog = false;
+      },
+
       /**
        * handleViewResource
        */
@@ -558,12 +583,13 @@
       },
 
       /**
-       * handleDelete
+       * handleShowDelDialog
        */
-      handleDelete (payload) {
+      handleShowDelDialog (payload) {
+        const { id, name } = payload;
         let delRelatedActions = [];
-        const actionList = [];
-        const { id, name, policy_id } = payload;
+        this.delActionList = [];
+        this.currentActionName = name;
         const policyIdList = this.policyList.map(v => v.id);
         const linearActionList = this.linearActionList.filter(item => policyIdList.includes(item.id));
         const curAction = linearActionList.find(item => item.id === id);
@@ -574,32 +600,26 @@
             delRelatedActions = item.related_actions.filter(v => curAction.related_actions.includes(v));
           }
           if (item.related_actions && item.related_actions.includes(id)) {
-            actionList.push(item.name);
+            this.delActionList.push(item);
           }
         });
-        if (actionList.length) {
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: `${this.$t(`m.perm['不能删除当前操作']`)}, ${this.$t(`m.common['【']`)}${actionList.join()}${this.$t(`m.common['】']`)}${this.$t(`m.perm['等']`)}${actionList.length}${this.$t(`m.perm['个操作关联了']`)}${name}`,
-            ellipsisLine: 10,
-            ellipsisCopy: true
-          });
-          return;
+        let policyIds = [payload.policy_id];
+        if (this.delActionList.length) {
+          const list = this.policyList.filter(item => this.delActionList.map(action => action.id).includes(item.id));
+          policyIds = [payload.policy_id].concat(list.map(v => v.policy_id));
         }
-        // eslint-disable-next-line camelcase
-        let policyIds = [policy_id];
         if (!delRelatedActions.length && hasRelatedActions) {
           const list = [...this.policyList].filter(v => curAction.related_actions.includes(v.id));
           if (list.length) {
             // eslint-disable-next-line camelcase
-            policyIds = [policy_id].concat(list.map(v => v.policy_id));
+            policyIds = policyIds.concat(list.map(v => v.policy_id));
           }
         }
         this.curDeleteIds.splice(0, this.curDeleteIds.length, ...policyIds);
-        this.deleteDialog.subTitle
-          = `${this.$t(`m.dialog['将删除']`)}${this.$t(`m.common['【']`)}${name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的权限']`)}`;
-        this.deleteDialog.visible = true;
+        // this.deleteDialog.subTitle
+        //   = `${this.$t(`m.dialog['将删除']`)}${this.$t(`m.common['【']`)}${name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的权限']`)}`;
+        // this.deleteDialog.visible = true;
+        this.isShowDeleteDialog = true;
       },
 
       /**
@@ -623,6 +643,8 @@
             }
             this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
             this.$emit('after-delete', this.policyList.length);
+            await this.fetchActions(this.systemId);
+            await this.fetchData(this.params);
           }
         } catch (e) {
           console.error(e);
@@ -636,6 +658,7 @@
         } finally {
           this.deleteDialog.loading = false;
           this.deleteDialog.visible = false;
+          this.isShowDeleteDialog = false;
         }
       }
     }
