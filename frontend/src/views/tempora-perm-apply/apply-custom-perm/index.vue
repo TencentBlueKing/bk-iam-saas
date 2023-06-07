@@ -398,7 +398,7 @@
                         });
                     }
                 });
-
+                this.getFilterAggregateAction();
                 return allActionIds;
             }
     },

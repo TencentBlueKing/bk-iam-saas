@@ -198,14 +198,26 @@
         <component :is="'RenderDetail'" :data="previewData" />
       </div>
     </bk-sideslider>
-    <bk-dialog
-      ext-cls="comfirmDialog"
+
+    <!-- <bk-dialog
+      ext-cls="confirmDialog"
       v-model="isShowDeleteDialog"
       :close-icon="showIcon"
       :footer-position="footerPosition"
       @confirm="handleDelete">
       <h3 style="text-align:center">{{ $t(`m.common['是否删除该自定义权限']`) }}</h3>
-    </bk-dialog>
+    </bk-dialog> -->
+    
+    <delete-action-dialog
+      :show.sync="isShowDeleteDialog"
+      :title="$t(`m.dialog['确认删除内容？']`, { value: $t(`m.dialog['删除实例权限']`) } )"
+      :name="currentActionName"
+      :related-action-list="delActionList"
+      @on-after-leave="handleAfterDeleteLeave"
+      @on-cancel="handleCancelDelete"
+      @on-submit="handleDelete"
+    />
+
   </div>
 </template>
 
@@ -222,6 +234,7 @@
   import PreviewResourceDialog from './preview-resource-dialog';
   import RenderResourcePopover from '@/components/iam-view-resource-popover';
   import RenderDetail from '../common/render-detail';
+  import DeleteActionDialog from '@/views/group/components/delete-related-action-dialog.vue';
 
   // import store from '@/store'
   export default {
@@ -232,7 +245,8 @@
       RenderCondition,
       PreviewResourceDialog,
       RenderResourcePopover,
-      RenderDetail
+      RenderDetail,
+      DeleteActionDialog
     },
     props: {
       list: {
@@ -344,104 +358,106 @@
         selectedIndex: 0,
         instanceKey: '',
         curCopyDataId: '',
-        emptyResourceGroupsList: []
+        emptyResourceGroupsList: [],
+        delActionList: [],
+        currentActionName: ''
       };
     },
     computed: {
-            ...mapGetters(['user']),
-            isSuperManager () {
-                return this.user.role.type === 'super_manager';
-            },
-            sliderWidth () {
-                if (['myPerm', 'applyJoinUserGroup'].includes(this.$route.name) && ['detail'].includes(this.mode)) {
-                    return window.innerWidth - 700;
-                }
-                return this.mode === 'detail' ? 890 : 725;
-            },
-            condition () {
-                if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
-                    return [];
-                }
-                const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-                    .related_resource_types[this.curResIndex];
-                if (!curData) {
-                    return [];
-                }
-                return _.cloneDeep(curData.condition);
-            },
-            originalCondition () {
-                if (this.curIndex === -1
-                    || this.curResIndex === -1
-                    || this.curGroupIndex === -1
-                    || this.originalList.length < 1) {
-                    return [];
-                }
-                const curId = this.tableList[this.curIndex].id;
-                const curType = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-                    .related_resource_types[this.curResIndex].type;
-                if (!this.originalList.some(item => item.id === curId)) {
-                    return [];
-                }
-                const curResTypeData = this.originalList.find(item => item.id === curId);
-                if (!curResTypeData.resource_groups[this.curGroupIndex]
-                    .related_resource_types.some(item => item.type === curType)) {
-                    return [];
-                }
-                const curData = (curResTypeData.resource_groups[this.curGroupIndex]
-                    .related_resource_types || []).find(item => item.type === curType);
-                if (!curData) {
-                    return [];
-                }
-                return _.cloneDeep(curData.condition);
-            },
-            curDisabled () {
-                if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
-                    return false;
-                }
-                const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-                    .related_resource_types[this.curResIndex];
-                return curData.isDefaultLimit;
-            },
-            curFlag () {
-                if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
-                    return 'add';
-                }
-                const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-                    .related_resource_types[this.curResIndex];
-                return curData.flag;
-            },
-            curSelectionMode () {
-                if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
-                    return 'all';
-                }
-                const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-                    .related_resource_types[this.curResIndex];
-                return curData.selectionMode;
-            },
-            isShowPreview () {
-                if (this.curIndex === -1) {
-                    return false;
-                }
-                return this.tableList[this.curIndex].policy_id !== '';
-            },
-            isShowView () {
-                return (payload) => {
-                    return !payload.isEmpty;
-                };
-            },
-            isCreateMode () {
-                return this.mode === 'create';
-            },
-            isUserGroupDetail () {
-                return this.$route.name === 'userGroupDetail';
-            },
-            curSelectionCondition () {
-                if (this.curIndex === -1 || this.isSuperManager) {
-                    return [];
-                }
-                const curSelectionCondition = this.tableList[this.curIndex].conditionIds;
-                return curSelectionCondition;
-            }
+      ...mapGetters(['user']),
+      isSuperManager () {
+          return this.user.role.type === 'super_manager';
+      },
+      sliderWidth () {
+          if (['myPerm', 'applyJoinUserGroup'].includes(this.$route.name) && ['detail'].includes(this.mode)) {
+              return window.innerWidth - 700;
+          }
+          return this.mode === 'detail' ? 890 : 725;
+      },
+      condition () {
+          if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
+              return [];
+          }
+          const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+              .related_resource_types[this.curResIndex];
+          if (!curData) {
+              return [];
+          }
+          return _.cloneDeep(curData.condition);
+      },
+      originalCondition () {
+          if (this.curIndex === -1
+              || this.curResIndex === -1
+              || this.curGroupIndex === -1
+              || this.originalList.length < 1) {
+              return [];
+          }
+          const curId = this.tableList[this.curIndex].id;
+          const curType = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+              .related_resource_types[this.curResIndex].type;
+          if (!this.originalList.some(item => item.id === curId)) {
+              return [];
+          }
+          const curResTypeData = this.originalList.find(item => item.id === curId);
+          if (!curResTypeData.resource_groups[this.curGroupIndex]
+              .related_resource_types.some(item => item.type === curType)) {
+              return [];
+          }
+          const curData = (curResTypeData.resource_groups[this.curGroupIndex]
+              .related_resource_types || []).find(item => item.type === curType);
+          if (!curData) {
+              return [];
+          }
+          return _.cloneDeep(curData.condition);
+      },
+      curDisabled () {
+          if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
+              return false;
+          }
+          const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+              .related_resource_types[this.curResIndex];
+          return curData.isDefaultLimit;
+      },
+      curFlag () {
+          if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
+              return 'add';
+          }
+          const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+              .related_resource_types[this.curResIndex];
+          return curData.flag;
+      },
+      curSelectionMode () {
+          if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
+              return 'all';
+          }
+          const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+              .related_resource_types[this.curResIndex];
+          return curData.selectionMode;
+      },
+      isShowPreview () {
+          if (this.curIndex === -1) {
+              return false;
+          }
+          return this.tableList[this.curIndex].policy_id !== '';
+      },
+      isShowView () {
+          return (payload) => {
+              return !payload.isEmpty;
+          };
+      },
+      isCreateMode () {
+          return this.mode === 'create';
+      },
+      isUserGroupDetail () {
+          return this.$route.name === 'userGroupDetail';
+      },
+      curSelectionCondition () {
+          if (this.curIndex === -1 || this.isSuperManager) {
+              return [];
+          }
+          const curSelectionCondition = this.tableList[this.curIndex].conditionIds;
+          return curSelectionCondition;
+      }
     },
     watch: {
       list: {
@@ -581,9 +597,10 @@
         }
       },
       handleShowDelDialog (row) {
-        let delRelatedActions = [];
-        const actionList = [];
         const { id, mode, name } = row;
+        let delRelatedActions = [];
+        this.delActionList = [];
+        this.currentActionName = name;
         const isCustom = ['custom'].includes(mode);
         const policyIdList = this.tableList.map(item => item.id);
         const linearActionList = this.linearActionList.filter(item => policyIdList.includes(item.id));
@@ -596,25 +613,27 @@
             delRelatedActions = item.related_actions.filter(v => curAction.related_actions.includes(v));
           }
           if (isCustom && item.related_actions && item.related_actions.includes(id)) {
-            actionList.push(item.name);
+            this.delActionList.push(item);
           }
         });
-        if (actionList.length) {
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: `${this.$t(`m.perm['不能删除当前操作']`)}, ${this.$t(`m.common['【']`)}${actionList.join()}${this.$t(`m.common['】']`)}${this.$t(`m.perm['等']`)}${actionList.length}${this.$t(`m.perm['个操作关联了']`)}${name}`,
-            ellipsisLine: 10,
-            ellipsisCopy: true
-          });
-          return;
-        }
         let ids = [row.policy_id];
+        if (this.delActionList.length) {
+          const list = this.tableList.filter(item => this.delActionList.map(action => action.id).includes(item.id));
+          ids = [row.policy_id].concat(list.map(v => v.policy_id));
+          // this.bkMessageInstance = this.$bkMessage({
+          //   limit: 1,
+          //   theme: 'error',
+          //   message: `${this.$t(`m.perm['不能删除当前操作']`)}, ${this.$t(`m.common['【']`)}${this.delActionList.join()}${this.$t(`m.common['】']`)}${this.$t(`m.perm['等']`)}${this.delActionList.length}${this.$t(`m.perm['个操作关联了']`)}${name}`,
+          //   ellipsisLine: 10,
+          //   ellipsisCopy: true
+          // });
+          // return;
+        }
         if (isCustom && !delRelatedActions.length && hasRelatedActions) {
           const list = [...this.tableList].filter(v => curAction.related_actions.includes(v.id));
           if (list.length) {
             // eslint-disable-next-line camelcase
-            ids = [row.policy_id].concat(list.map(v => v.policy_id));
+            ids = ids.concat(list.map(v => v.policy_id));
           }
         }
         this.isShowDeleteDialog = true;
@@ -642,13 +661,20 @@
           });
         }
         this.previewData = _.cloneDeep(params);
-        this.sidesliderTitle = `${this.$t(`m.common['操作']`)}${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)}`;
+        this.sidesliderTitle = this.$t(`m.info['操作侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}` });
         this.isShowSideslider = true;
       },
       handleAnimationEnd () {
         this.sidesliderTitle = '';
         this.previewData = [];
         this.curId = '';
+      },
+      handleAfterDeleteLeave () {
+        this.currentActionName = '';
+        this.delActionList = [];
+      },
+      handleCancelDelete () {
+        this.isShowDeleteDialog = false;
       },
       handlerAggregateConditionMouseover (payload) {
         if (this.curCopyData[0] === 'none') {
@@ -934,7 +960,7 @@
         this.curIndex = index;
         this.curResIndex = resIndex;
         this.curGroupIndex = groupIndex;
-        this.resourceInstanceSidesliderTitle = `${this.$t(`m.common['关联操作']`)}${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)}`;
+        this.resourceInstanceSidesliderTitle = this.$t(`m.info['关联侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}` });
         window.changeAlert = 'iamSidesider';
         this.isShowResourceInstanceSideslider = true;
       },
@@ -1099,7 +1125,7 @@
           resource_group_id: this.tableList[this.curIndex].resource_groups[this.curGroupIndex].id,
           isNotLimit: conditionData.length === 0
         };
-        this.previewDialogTitle = `${this.$t(`m.common['操作']`)}${this.$t(`m.common['【']`)}${this.tableList[this.curIndex].name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)} ${this.$t(`m.common['差异对比']`)}`;
+        this.previewDialogTitle = this.$t(`m.info['操作侧边栏操作的资源实例差异对比']`, { value: `${this.$t(`m.common['【']`)}${this.tableList[this.curIndex].name}${this.$t(`m.common['】']`)}` });
         this.isShowPreviewDialog = true;
       },
       handlerConditionMouseover (payload) {
@@ -1142,7 +1168,7 @@
           resource_group_id: payload.resource_groups[this.curGroupIndex].id,
           isTemplate: payload.isTemplate
         };
-        this.previewDialogTitle = `${this.$t(`m.common['操作']`)}${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)} ${this.$t(`m.common['差异对比']`)}`;
+        this.previewDialogTitle = this.$t(`m.info['操作侧边栏操作的资源实例差异对比']`, { value: `${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}` });
         if (!this.previewResourceParams.id) {
           this.$bkMessage({
             limit: 1,
@@ -1876,4 +1902,12 @@
     .tab-button{
         margin: 10px 0;
     }
+</style>
+
+<style lang="postcss" scoped>
+/deep/ .confirmDialog {
+  .bk-dialog-footer {
+    background-color: #ffffff;
+  }
+}
 </style>

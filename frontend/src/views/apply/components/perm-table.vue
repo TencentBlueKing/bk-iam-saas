@@ -174,7 +174,8 @@
       handleViewResource (groupItem, row) {
         this.previewData = _.cloneDeep(this.handleDetailData(groupItem));
         this.renderDetailCom = 'DetailContent';
-        this.sidesliderTitle = `${this.$t(`m.common['操作']`)}${this.$t(`m.common['【']`)}${row.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)}`;
+        this.sidesliderTitle = this.$t(`m.info['操作侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${row.name}${this.$t(`m.common['】']`)}` });
+        // this.sidesliderTitle = `${this.$t(`m.common['操作']`)}${this.$t(`m.common['【']`)}${row.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)}`;
         this.isShowSideslider = true;
       },
 
@@ -202,7 +203,8 @@
         this.environmentsSidesliderData = payload.environments;
         console.log('environmentsSidesliderData', this.environmentsSidesliderData);
         this.isShowEnvironmentsSideslider = true;
-        this.environmentsSidesliderTitle = `${this.$t(`m.common['关联操作']`)}${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['生效条件']`)}`;
+        this.environmentsSidesliderTitle = this.$t(`m.info['关联侧边栏操作生效条件']`, { value: `${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}` });
+        // this.environmentsSidesliderTitle = `${this.$t(`m.common['关联操作']`)}${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['生效条件']`)}`;
       },
 
       /**

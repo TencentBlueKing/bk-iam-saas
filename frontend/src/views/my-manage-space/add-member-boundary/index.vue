@@ -11,12 +11,11 @@
               <span class="member-title" :title="name">{{ name }}</span>{{ $t(`m.common['】']`) }}
             </div>
             <div v-else
-              :title="`${$t(`m.common['设置新用户加入']`)}
-                            ${$t(`m.common['【']`)}${name}${$t(`m.common['】']`)}${$t(`m.common['用户组的有效期']`)}`"
+              :title="$t(`m.common['设置新用户加入用户组的有效期']`,
+                         { value: `${$t(`m.common['【']`)}${name}${$t(`m.common['】']`)}` })"
             >
-              {{ $t(`m.common['设置新用户加入']`) }}
-              <span class="expired-at-title" :title="name">{{$t(`m.common['【']`)}}{{ name}}</span>
-              {{$t(`m.common['】']`)}}{{ $t(`m.common['用户组的有效期']`) }}
+              {{ $t(`m.common['设置新用户加入用户组的有效期']`,
+                    { value: `${$t(`m.common['【']`)}${name}${$t(`m.common['】']`)}` }) }}
             </div>
           </div>
         </template>

@@ -10,7 +10,7 @@
           'fixed',
           customClass
         ]"
-        :style="{ paddingLeft: externalSystemId ? '50px' : '284px' }"
+        :style="navStickStyle"
         style="margin-top: 52px;"
         role="dynamic-position"
       >
@@ -44,46 +44,57 @@
       };
     },
     computed: {
-            ...mapGetters(['externalSystemId', 'externalSystemsLayout']),
-            classes () {
-                if (this.isHide) {
-                    return 'fixed';
-                }
-                return '';
-            },
-            positionStyles () {
-                if (this.isHide) {
-                    return {
-                        height: '50px',
-                        marginTop: '50px'
-                    };
-                } else {
-                    return {
-                        marginTop: '52px'
-                    };
-                }
-            },
-            styles () {
-                const styles = {
-                    'padding-left': `${this.offsetLeft + this.fill}px`
-                };
-                return styles;
-            },
-            dymaicStyle () {
-                if (this.isHide) {
-                    return {
-                        'padding-left': `${this.paddingLeft}px`
-                    };
-                }
-                return {};
-            },
-            customClass () {
-                if (this.externalSystemsLayout.addMemberBoundary.customFooterClass) {
-                    const externalClass = !['addMemberBoundary'].includes(this.$route.name) ? 'external-page-fixed-custom' : 'external-dialog-fixed-custom';
-                    return externalClass;
-                }
-                return '';
-            }
+      ...mapGetters(['externalSystemId', 'externalSystemsLayout', 'navStick']),
+      classes () {
+          if (this.isHide) {
+              return 'fixed';
+          }
+          return '';
+      },
+      positionStyles () {
+          if (this.isHide) {
+              return {
+                  height: '50px',
+                  marginTop: '50px'
+              };
+          } else {
+              return {
+                  marginTop: '52px'
+              };
+          }
+      },
+      styles () {
+          const styles = {
+              'padding-left': `${this.offsetLeft + this.fill}px`
+          };
+          return styles;
+      },
+      dymaicStyle () {
+          if (this.isHide) {
+              return {
+                  'padding-left': `${this.paddingLeft}px`
+              };
+          }
+          return {};
+      },
+      customClass () {
+          if (this.externalSystemsLayout.addMemberBoundary.customFooterClass) {
+              const externalClass = !['addMemberBoundary'].includes(this.$route.name) ? 'external-page-fixed-custom' : 'external-dialog-fixed-custom';
+              return externalClass;
+          }
+          return '';
+      },
+      navStickStyle () {
+          if (this.externalSystemId) {
+              return {
+                  paddingLeft: '50px'
+              };
+          } else {
+              return {
+                  paddingLeft: this.navStick ? '284px' : '84px'
+              };
+          }
+      }
     },
     mounted () {
       window.addEventListener('resize', this.smartPosition);

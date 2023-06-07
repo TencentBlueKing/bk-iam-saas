@@ -17,8 +17,9 @@
             {{ $t(`m.common['添加成员至']`) }}
             {{$t(`m.common['【']`)}}<span class="member-title" :title="name">{{ name }}</span>{{$t(`m.common['】']`)}}
           </div>
-          <div v-else :title="`${$t(`m.common['设置新用户加入']`)}${$t(`m.common['【']`)}${name}${$t(`m.common['】']`)}${$t(`m.common['用户组的有效期']`)}`">
-            {{ $t(`m.common['设置新用户加入']`) }}<span class="expired-at-title" :title="name">{{$t(`m.common['【']`)}}{{ name }}</span>{{$t(`m.common['】']`)}}{{ $t(`m.common['用户组的有效期']`) }}
+          <div v-else :title="$t(`m.common['设置新用户加入用户组的有效期']`, { value: `${$t(`m.common['【']`)}${name}${$t(`m.common['】']`)}` })">
+            <!-- {{ $t(`m.common['设置新用户加入']`) }}<span class="expired-at-title" :title="name">{{$t(`m.common['【']`)}}{{ name }}</span>{{$t(`m.common['】']`)}}{{ $t(`m.common['用户组的有效期']`) }} -->
+            {{ $t(`m.common['设置新用户加入用户组的有效期']`, { value: `${$t(`m.common['【']`)}${name}${$t(`m.common['】']`)}` }) }}
           </div>
         </div>
       </template>
@@ -47,13 +48,13 @@
               </section>
             </div>
             <!-- <div
-                            :class="[
-                                'search-input',
-                                { 'active': isSearchFocus },
-                                { 'disabled': externalSource ? false : (isRatingManager || isAll) && !isAllFlag }
-                            ]"
-                            v-if="isOrganization"
-                        > -->
+                          :class="[
+                              'search-input',
+                              { 'active': isSearchFocus },
+                              { 'disabled': externalSource ? false : (isRatingManager || isAll) && !isAllFlag }
+                          ]"
+                          v-if="isOrganization"
+                      > -->
             <!-- 所有平台都开放搜索，通过选中做校验 -->
             <div
               :class="[
@@ -148,7 +149,7 @@
                         @on-refresh="handleEmptyRefresh"
                       />
                       <!-- <iam-svg />
-                                            <p class="empty-tips">{{ $t(`m.common['搜索无结果']`) }}</p> -->
+                                          <p class="empty-tips">{{ $t(`m.common['搜索无结果']`) }}</p> -->
                     </div>
                   </template>
                 </div>
@@ -264,6 +265,7 @@
     </div>
   </bk-dialog>
 </template>
+
 <script>
   import _ from 'lodash';
   import InfiniteTree from '@/components/infinite-tree';
