@@ -7,11 +7,11 @@
 </template>
 
 <script>
-    /**
-     * app-auth
-     * @desc 统一登录
-     * @example1 <app-auth type="404"></app-auth>
-     */
+  /**
+   * app-auth
+   * @desc 统一登录
+   * @example1 <app-auth type="404"></app-auth>
+   */
 
   export default {
     name: 'app-auth',
@@ -40,5 +40,5 @@
 </script>
 
 <style scoped>
-    @import './index';
+  @import './index';
 </style>
