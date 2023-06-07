@@ -181,7 +181,8 @@
 
     <delete-action-dialog
       :show.sync="isShowDeleteDialog"
-      :title="$t(`m.dialog['确认删除内容？']`, { value: $t(`m.dialog['删除实例权限']`) } )"
+      :title="$t(`m.dialog['确认删除内容？']`, { value: $t(`m.dialog['删除操作权限']`) } )"
+      :tip="$t(`m.info['删除依赖操作产生的影响']`, { value: currentActionName })"
       :name="currentActionName"
       :related-action-list="delActionList"
       @on-after-leave="handleAfterDeleteLeaveAction"

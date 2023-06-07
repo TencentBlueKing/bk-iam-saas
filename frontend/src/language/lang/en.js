@@ -493,7 +493,9 @@ export const m = {
          '操作侧边栏操作的资源实例': 'Operating the resource instance of {value}',
          '操作侧边栏操作的资源实例差异对比': 'Comparison of differences in operating {value} resource instances',
          '用户组侧边栏的详情': 'Details of user group {value}',
-         '删除依赖操作产生的影响' : "Deleting instance permissions such as '{value}' will also delete the instance permissions corresponding to the dependent operation permissions:"
+         '删除依赖操作产生的影响' : "Removing the '{value}' operation permission will also remove the following dependent operation permissions:",
+         '删除依赖实例产生的影响' : "Deleting instance permissions such as '{value}' will also delete the instance permissions corresponding to the dependent operation permissions:",
+         '已选数量': '{value} selected'
     },
     // 二次确认弹窗相关
     dialog: {
