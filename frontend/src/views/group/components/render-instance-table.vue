@@ -137,9 +137,6 @@
                     </template>
                 </template>
             </bk-table-column>
-            <template slot="empty">
-                <ExceptionEmpty />
-            </template>
         </bk-table>
         <bk-sideslider
             :is-show="isShowResourceInstanceSideslider"
@@ -365,100 +362,100 @@
             };
         },
         computed: {
-            ...mapGetters(['user']),
-            isSuperManager () {
-                return this.user.role.type === 'super_manager';
-            },
-            sliderWidth () {
-                if (['myPerm', 'applyJoinUserGroup'].includes(this.$route.name) && ['detail'].includes(this.mode)) {
-                    return window.innerWidth - 700;
-                }
-                return this.mode === 'detail' ? 890 : 725;
-            },
-            condition () {
-                if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
-                    return [];
-                }
-                const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-                    .related_resource_types[this.curResIndex];
-                if (!curData) {
-                    return [];
-                }
-                return _.cloneDeep(curData.condition);
-            },
-            originalCondition () {
-                if (this.curIndex === -1
-                    || this.curResIndex === -1
-                    || this.curGroupIndex === -1
-                    || this.originalList.length < 1) {
-                    return [];
-                }
-                const curId = this.tableList[this.curIndex].id;
-                const curType = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-                    .related_resource_types[this.curResIndex].type;
-                if (!this.originalList.some(item => item.id === curId)) {
-                    return [];
-                }
-                const curResTypeData = this.originalList.find(item => item.id === curId);
-                if (!curResTypeData.resource_groups[this.curGroupIndex]
-                    .related_resource_types.some(item => item.type === curType)) {
-                    return [];
-                }
-                const curData = (curResTypeData.resource_groups[this.curGroupIndex]
-                    .related_resource_types || []).find(item => item.type === curType);
-                if (!curData) {
-                    return [];
-                }
-                return _.cloneDeep(curData.condition);
-            },
-            curDisabled () {
-                if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
-                    return false;
-                }
-                const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-                    .related_resource_types[this.curResIndex];
-                return curData.isDefaultLimit;
-            },
-            curFlag () {
-                if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
-                    return 'add';
-                }
-                const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-                    .related_resource_types[this.curResIndex];
-                return curData.flag;
-            },
-            curSelectionMode () {
-                if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
-                    return 'all';
-                }
-                const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-                    .related_resource_types[this.curResIndex];
-                return curData.selectionMode;
-            },
-            isShowPreview () {
-                if (this.curIndex === -1) {
-                    return false;
-                }
-                return this.tableList[this.curIndex].policy_id !== '';
-            },
-            isShowView () {
-                return (payload) => {
-                    return !payload.isEmpty;
-                };
-            },
-            isCreateMode () {
-                return this.mode === 'create';
-            },
-            isUserGroupDetail () {
-                return this.$route.name === 'userGroupDetail';
-            },
-            curSelectionCondition () {
-                if (this.curIndex === -1 || this.isSuperManager) {
-                    return [];
-                }
-                const curSelectionCondition = this.tableList[this.curIndex].conditionIds;
-                return curSelectionCondition;
+        ...mapGetters(['user']),
+        isSuperManager () {
+            return this.user.role.type === 'super_manager';
+        },
+        sliderWidth () {
+            if (['myPerm', 'applyJoinUserGroup'].includes(this.$route.name) && ['detail'].includes(this.mode)) {
+                return window.innerWidth - 700;
             }
+            return this.mode === 'detail' ? 890 : 725;
+        },
+        condition () {
+            if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
+                return [];
+            }
+            const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                .related_resource_types[this.curResIndex];
+            if (!curData) {
+                return [];
+            }
+            return _.cloneDeep(curData.condition);
+        },
+        originalCondition () {
+            if (this.curIndex === -1
+                || this.curResIndex === -1
+                || this.curGroupIndex === -1
+                || this.originalList.length < 1) {
+                return [];
+            }
+            const curId = this.tableList[this.curIndex].id;
+            const curType = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                .related_resource_types[this.curResIndex].type;
+            if (!this.originalList.some(item => item.id === curId)) {
+                return [];
+            }
+            const curResTypeData = this.originalList.find(item => item.id === curId);
+            if (!curResTypeData.resource_groups[this.curGroupIndex]
+                .related_resource_types.some(item => item.type === curType)) {
+                return [];
+            }
+            const curData = (curResTypeData.resource_groups[this.curGroupIndex]
+                .related_resource_types || []).find(item => item.type === curType);
+            if (!curData) {
+                return [];
+            }
+            return _.cloneDeep(curData.condition);
+        },
+        curDisabled () {
+            if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
+                return false;
+            }
+            const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                .related_resource_types[this.curResIndex];
+            return curData.isDefaultLimit;
+        },
+        curFlag () {
+            if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
+                return 'add';
+            }
+            const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                .related_resource_types[this.curResIndex];
+            return curData.flag;
+        },
+        curSelectionMode () {
+            if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
+                return 'all';
+            }
+            const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                .related_resource_types[this.curResIndex];
+            return curData.selectionMode;
+        },
+        isShowPreview () {
+            if (this.curIndex === -1) {
+                return false;
+            }
+            return this.tableList[this.curIndex].policy_id !== '';
+        },
+        isShowView () {
+            return (payload) => {
+                return !payload.isEmpty;
+            };
+        },
+        isCreateMode () {
+            return this.mode === 'create';
+        },
+        isUserGroupDetail () {
+            return this.$route.name === 'userGroupDetail';
+        },
+        curSelectionCondition () {
+            if (this.curIndex === -1 || this.isSuperManager) {
+                return [];
+            }
+            const curSelectionCondition = this.tableList[this.curIndex].conditionIds;
+            return curSelectionCondition;
+        }
         },
         watch: {
             list: {
