@@ -643,10 +643,10 @@
             if (index > -1) {
               this.policyList.splice(index, 1);
             }
-            this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
-            this.$emit('after-delete', this.policyList.length);
             await this.fetchActions(this.systemId);
             await this.fetchData(this.params);
+            this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
+            this.$emit('after-delete', this.policyList.length);
           }
         } catch (e) {
           console.error(e);
