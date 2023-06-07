@@ -120,7 +120,7 @@
       proceeNameFilter (value, list) {
         const data = list.find(item => item.id === value);
         if (data) return data.name;
-        return '默认审批流程';
+        return this.$t(`m.approvalProcess['默认审批流程']`);
       }
     },
     props: {

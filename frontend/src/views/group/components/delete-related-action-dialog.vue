@@ -17,7 +17,7 @@
         class="delete-tips"
         v-if="relatedActionList.length">
         <p class="delete-tips-title">
-          {{ $t(`m.info['删除依赖操作产生的影响']`, { value: name }) }}
+          {{ tip }}
         </p>
         <div class="delete-tips-content">
           <p
@@ -48,6 +48,10 @@
         default: false
       },
       title: {
+        type: String,
+        default: ''
+      },
+      tip: {
         type: String,
         default: ''
       },
