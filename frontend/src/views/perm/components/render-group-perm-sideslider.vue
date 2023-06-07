@@ -8,11 +8,9 @@
     @animation-end="handleAnimationEnd">
     <div slot="header">
       <p class="single-hide"
-        :title="`${$t(`m.userGroup['用户组']`)}
-                ${$t(`m.common['【']`)}${name}${$t(`m.common['】']`)}${$t(`m.common['的详情']`)}`"
+        :title="$t(`m.info['用户组侧边栏的详情']`, { value: `${$t(`m.common['【']`)}${name}${$t(`m.common['】']`)}` })"
       >
-        {{ $t(`m.userGroup['用户组']`) }}
-        {{$t(`m.common['【']`)}}{{ name }}{{$t(`m.common['】']`)}}{{ $t(`m.common['的详情']`) }}
+        {{ $t(`m.info['用户组侧边栏的详情']`, { value: `${$t(`m.common['【']`)}${name}${$t(`m.common['】']`)}` }) }}
       </p>
       <p class="group-id">ID: {{ groupId }}</p>
     </div>

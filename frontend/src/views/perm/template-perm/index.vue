@@ -214,11 +214,11 @@
 
       handleCheckUpdate (payload) {
         this.checkUpdateParams = _.cloneDeep({
-                    ...payload,
-                    system_id: payload.system.id,
-                    templateId: payload.id,
-                    type: 'user',
-                    id: this.user.username
+            ...payload,
+            system_id: payload.system.id,
+            templateId: payload.id,
+            type: 'user',
+            id: this.user.username
         });
         this.checkUpdateSildesliderTitle = `${this.$t(`m.permTemplate['同步权限']`)}-${payload.name}`;
         this.isShowCheckUpdateSildeslider = true;
@@ -288,7 +288,7 @@
 
       handleOnView (payload) {
         const { name, data } = payload;
-        this.sidesliderTitle = `${this.$t(`m.common['操作']`)}${this.$t(`m.common['【']`)}${name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)}`;
+        this.sidesliderTitle = this.$t(`m.info['操作侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${name}${this.$t(`m.common['】']`)}` });
         this.previewData = _.cloneDeep(data);
         this.isShowSideslider = true;
       },
@@ -384,6 +384,7 @@
       }
     }
   };
+      
 </script>
 <style lang="postcss">
     @import './index.css';

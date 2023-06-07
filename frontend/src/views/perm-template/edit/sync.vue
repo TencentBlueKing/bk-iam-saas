@@ -248,118 +248,118 @@
       };
     },
     computed: {
-            ...mapGetters('permTemplate', ['cloneActions']),
-            isShowBatchRefer () {
-                return payload => {
-                    return this.cloneActions.some(item => item.action_id === payload.id);
-                };
-            },
-            condition () {
-                if (this.curIndex === -1
-                    || this.curResIndex === -1
-                    || this.curActionIndex === -1
-                    || this.curGroupIndex === -1) {
-                    return [];
-                }
-                const curData = this.tableList[this.curIndex]
-                    .add_actions[this.curActionIndex].resource_groups[this.curGroupIndex]
-                    .related_resource_types[this.curResIndex];
-
-                if (!curData) {
-                    return [];
-                }
-                return _.cloneDeep(curData.condition);
-            },
-            originalCondition () {
-                if (this.curIndex === -1
-                    || this.curResIndex === -1
-                    || this.curActionIndex === -1
-                    || this.curGroupIndex === -1
-                    || this.originalList.length < 1) {
-                    return [];
-                }
-                const curId = this.tableList[this.curIndex].add_actions[this.curActionIndex].id;
-
-                const curType = this.tableList[this.curIndex]
-                    .add_actions[this.curActionIndex]
-                    .resource_groups[this.curGroupIndex]
-                    .related_resource_types[this.curResIndex]
-                    .type;
-
-                if (!this.originalList.some(item => item.add_actions[this.curActionIndex].id === curId)) {
-                    return [];
-                }
-                const curData = this.originalList.find(item => item.add_actions[this.curActionIndex].id === curId);
-                if (!curData) {
-                    return [];
-                }
-                const curActionData = curData.add_actions[this.curActionIndex].resource_groups[this.curGroupIndex];
-                if (!curActionData.related_resource_types.some(item => item.type === curType)) {
-                    return [];
-                }
-                const curResData = curActionData.related_resource_types.find(item => item.type === curType);
-                if (!curResData) {
-                    return [];
-                }
-                return _.cloneDeep(curResData.condition);
-            },
-            curDisabled () {
-                if (this.curIndex === -1
-                    || this.curResIndex === -1
-                    || this.curActionIndex === -1
-                    || this.curGroupIndex === -1) {
-                    return false;
-                }
-                const curData = this.tableList[this.curIndex]
-                    .add_actions[this.curActionIndex]
-                    .resource_groups[this.curGroupIndex]
-                    .related_resource_types[this.curResIndex];
-
-                return curData.isDefaultLimit;
-            },
-            curFlag () {
-                if (this.curIndex === -1
-                    || this.curResIndex === -1
-                    || this.curActionIndex === -1
-                    || this.curGroupIndex === -1) {
-                    return 'add';
-                }
-                const curData = this.tableList[this.curIndex]
-                    .add_actions[this.curActionIndex]
-                    .resource_groups[this.curGroupIndex]
-                    .related_resource_types[this.curResIndex];
-
-                return curData.flag;
-            },
-            curSelectionMode () {
-                if (this.curIndex === -1
-                    || this.curResIndex === -1
-                    || this.curActionIndex === -1
-                    || this.curGroupIndex === -1) {
-                    return 'all';
-                }
-                const curData = this.tableList[this.curIndex]
-                    .add_actions[this.curActionIndex]
-                    .resource_groups[this.curGroupIndex]
-                    .related_resource_types[this.curResIndex];
-
-                return curData.selectionMode;
-            },
-            batchReferAction () {
-                return payload => {
-                    const temp = this.cloneActions.find(item => item.action_id === payload.id);
-                    if (temp) {
-                        return temp.copy_from_actions;
-                    }
-                    return [];
-                };
-            },
-            syncLoading () {
-                return this.requestQueue.length > 0;
-            },
-            isAddActionEmpty () {
-                return this.addAction.length < 1;
+        ...mapGetters('permTemplate', ['cloneActions']),
+        isShowBatchRefer () {
+            return payload => {
+                return this.cloneActions.some(item => item.action_id === payload.id);
+            };
+        },
+        condition () {
+            if (this.curIndex === -1
+                || this.curResIndex === -1
+                || this.curActionIndex === -1
+                || this.curGroupIndex === -1) {
+                return [];
             }
+            const curData = this.tableList[this.curIndex]
+                .add_actions[this.curActionIndex].resource_groups[this.curGroupIndex]
+                .related_resource_types[this.curResIndex];
+
+            if (!curData) {
+                return [];
+            }
+            return _.cloneDeep(curData.condition);
+        },
+        originalCondition () {
+            if (this.curIndex === -1
+                || this.curResIndex === -1
+                || this.curActionIndex === -1
+                || this.curGroupIndex === -1
+                || this.originalList.length < 1) {
+                return [];
+            }
+            const curId = this.tableList[this.curIndex].add_actions[this.curActionIndex].id;
+
+            const curType = this.tableList[this.curIndex]
+                .add_actions[this.curActionIndex]
+                .resource_groups[this.curGroupIndex]
+                .related_resource_types[this.curResIndex]
+                .type;
+
+            if (!this.originalList.some(item => item.add_actions[this.curActionIndex].id === curId)) {
+                return [];
+            }
+            const curData = this.originalList.find(item => item.add_actions[this.curActionIndex].id === curId);
+            if (!curData) {
+                return [];
+            }
+            const curActionData = curData.add_actions[this.curActionIndex].resource_groups[this.curGroupIndex];
+            if (!curActionData.related_resource_types.some(item => item.type === curType)) {
+                return [];
+            }
+            const curResData = curActionData.related_resource_types.find(item => item.type === curType);
+            if (!curResData) {
+                return [];
+            }
+            return _.cloneDeep(curResData.condition);
+        },
+        curDisabled () {
+            if (this.curIndex === -1
+                || this.curResIndex === -1
+                || this.curActionIndex === -1
+                || this.curGroupIndex === -1) {
+                return false;
+            }
+            const curData = this.tableList[this.curIndex]
+                .add_actions[this.curActionIndex]
+                .resource_groups[this.curGroupIndex]
+                .related_resource_types[this.curResIndex];
+
+            return curData.isDefaultLimit;
+        },
+        curFlag () {
+            if (this.curIndex === -1
+                || this.curResIndex === -1
+                || this.curActionIndex === -1
+                || this.curGroupIndex === -1) {
+                return 'add';
+            }
+            const curData = this.tableList[this.curIndex]
+                .add_actions[this.curActionIndex]
+                .resource_groups[this.curGroupIndex]
+                .related_resource_types[this.curResIndex];
+
+            return curData.flag;
+        },
+        curSelectionMode () {
+            if (this.curIndex === -1
+                || this.curResIndex === -1
+                || this.curActionIndex === -1
+                || this.curGroupIndex === -1) {
+                return 'all';
+            }
+            const curData = this.tableList[this.curIndex]
+                .add_actions[this.curActionIndex]
+                .resource_groups[this.curGroupIndex]
+                .related_resource_types[this.curResIndex];
+
+            return curData.selectionMode;
+        },
+        batchReferAction () {
+            return payload => {
+                const temp = this.cloneActions.find(item => item.action_id === payload.id);
+                if (temp) {
+                    return temp.copy_from_actions;
+                }
+                return [];
+            };
+        },
+        syncLoading () {
+            return this.requestQueue.length > 0;
+        },
+        isAddActionEmpty () {
+            return this.addAction.length < 1;
+        }
     },
     watch: {
       requestQueue (value) {
@@ -850,7 +850,7 @@
         this.curActionIndex = index;
         this.curResIndex = resIndex;
         this.curGroupIndex = groupIndex;
-        this.instanceSidesliderTitle = `${this.$t(`m.common['关联操作']`)}${this.$t(`m.common['【']`)}${data.add_actions[index].name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)}`;
+        this.instanceSidesliderTitle = this.$t(`m.info['关联侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${data.add_actions[index].name}${this.$t(`m.common['】']`)}` });
         window.changeAlert = 'iamSidesider';
         this.isShowInstanceSideslider = true;
       },
@@ -870,7 +870,7 @@
           });
         }
         this.previewData = params;
-        this.sidesliderTitle = `${this.$t(`m.common['操作']`)}${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)}`;
+        this.sidesliderTitle = this.$t(`m.info['操作侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}` });
         this.isShowSideslider = true;
       },
 

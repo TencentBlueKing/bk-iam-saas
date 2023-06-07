@@ -272,62 +272,62 @@
       };
     },
     computed: {
-            ...mapGetters(['user']),
-            condition () {
-                if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
-                    return [];
-                }
-                const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-                    .related_resource_types[this.curResIndex];
-                if (!curData) {
-                    return [];
-                }
-                return _.cloneDeep(curData.condition);
-            },
-            originalCondition () {
-                if (this.curIndex === -1
-                    || this.curResIndex === -1
-                    || this.curGroupIndex === -1
-                    || this.originalList.length < 1
-                    || !this.originalList[this.curIndex]
-                    || this.originalList[this.curIndex].resource_groups[this.curGroupIndex]
-                        .related_resource_types.length < 1) {
-                    return [];
-                }
-                const curData = this.originalList[this.curIndex].resource_groups[this.curGroupIndex]
-                    .related_resource_types[this.curResIndex];
-                return _.cloneDeep(curData.condition);
-            },
-            curDisabled () {
-                if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
-                    return false;
-                }
-                const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-                    .related_resource_types[this.curResIndex];
-                return curData.isDefaultLimit;
-            },
-            curFlag () {
-                if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
-                    return 'add';
-                }
-                const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-                    .related_resource_types[this.curResIndex];
-                return curData.flag;
-            },
-            curSelectionMode () {
-                if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
-                    return 'all';
-                }
-                const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-                    .related_resource_types[this.curResIndex];
-                return curData.selectionMode;
-            },
-            isShowPreview () {
-                if (this.curIndex === -1) {
-                    return false;
-                }
-                return this.tableList[this.curIndex].policy_id !== '';
-            }
+      ...mapGetters(['user']),
+      condition () {
+          if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
+              return [];
+          }
+          const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+              .related_resource_types[this.curResIndex];
+          if (!curData) {
+              return [];
+          }
+          return _.cloneDeep(curData.condition);
+      },
+      originalCondition () {
+          if (this.curIndex === -1
+              || this.curResIndex === -1
+              || this.curGroupIndex === -1
+              || this.originalList.length < 1
+              || !this.originalList[this.curIndex]
+              || this.originalList[this.curIndex].resource_groups[this.curGroupIndex]
+                  .related_resource_types.length < 1) {
+              return [];
+          }
+          const curData = this.originalList[this.curIndex].resource_groups[this.curGroupIndex]
+              .related_resource_types[this.curResIndex];
+          return _.cloneDeep(curData.condition);
+      },
+      curDisabled () {
+          if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
+              return false;
+          }
+          const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+              .related_resource_types[this.curResIndex];
+          return curData.isDefaultLimit;
+      },
+      curFlag () {
+          if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
+              return 'add';
+          }
+          const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+              .related_resource_types[this.curResIndex];
+          return curData.flag;
+      },
+      curSelectionMode () {
+          if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
+              return 'all';
+          }
+          const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+              .related_resource_types[this.curResIndex];
+          return curData.selectionMode;
+      },
+      isShowPreview () {
+          if (this.curIndex === -1) {
+              return false;
+          }
+          return this.tableList[this.curIndex].policy_id !== '';
+      }
     },
     watch: {
       list: {
@@ -489,8 +489,7 @@
         this.curIndex = index;
         this.curResIndex = resIndex;
         this.curGroupIndex = groupIndex;
-
-        this.resourceInstanceSidesliderTitle = `${this.$t(`m.common['关联操作']`)}${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)}`;
+        this.resourceInstanceSidesliderTitle = this.$t(`m.info['关联侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}` });
         window.changeAlert = 'iamSidesider';
         this.isShowResourceInstanceSideslider = true;
       },
@@ -626,7 +625,7 @@
             condition: condition.filter(item => item.attributes.length > 0 || item.instances.length > 0)
           }
         };
-        this.previewDialogTitle = `${this.$t(`m.common['操作']`)}${this.$t(`m.common['【']`)}${this.tableList[this.curIndex].name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)} ${this.$t(`m.common['差异对比']`)}`;
+        this.previewDialogTitle = this.$t(`m.info['操作侧边栏操作的资源实例差异对比']`, { value: `${this.$t(`m.common['【']`)}${this.tableList[this.curIndex].name}${this.$t(`m.common['】']`)}` });
         this.isShowPreviewDialog = true;
       },
 
@@ -680,7 +679,7 @@
             condition: condition.filter(item => item.attributes.length > 0 || item.instances.length > 0)
           }
         };
-        this.previewDialogTitle = `${this.$t(`m.common['操作']`)}${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)} ${this.$t(`m.common['差异对比']`)}`;
+        this.previewDialogTitle = this.$t(`m.info['操作侧边栏操作的资源实例差异对比']`, { value: `${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}` });
         this.isShowPreviewDialog = true;
       },
 

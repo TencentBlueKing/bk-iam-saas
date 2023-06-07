@@ -698,49 +698,50 @@
       };
     },
     computed: {
-            ...mapGetters(['user', 'externalSystemId']),
-            // 是否无权限申请
-            isNoPermApplay () {
-                return this.routerQuery.system_id;
-            },
-            // 无权限组时
-            isNoPermissionsSet () {
-                return this.routerQuery.cache_id;
-            },
-            isShowGroupAction () {
-                return (item) => {
-                    const isExistSubGroup = (item.sub_groups || []).some(v => v.sub_groups && v.sub_groups.length > 0);
-                    return item.sub_groups && item.sub_groups.length > 0 && !isExistSubGroup;
-                };
-            },
-            customLoading () {
-                return this.requestQueue.length > 0;
-            },
-            isAggregateDisabled () {
-                return this.tableData.length < 1
-                    || this.aggregations.length < 1 || (this.tableData.length === 1 && !this.tableData[0].isAggregate);
-            },
-            curSelectActions () {
-                const allActionIds = [];
-                this.originalCustomTmplList.forEach(payload => {
-                    if (!payload.actionsAllDisabled) {
-                        payload.actions.forEach(item => {
-                            if (item.checked) {
-                                allActionIds.push(item.id);
+        ...mapGetters(['user', 'externalSystemId']),
+        // 是否无权限申请
+        isNoPermApplay () {
+            return this.routerQuery.system_id;
+        },
+        // 无权限组时
+        isNoPermissionsSet () {
+            return this.routerQuery.cache_id;
+        },
+        isShowGroupAction () {
+            return (item) => {
+                const isExistSubGroup = (item.sub_groups || []).some(v => v.sub_groups && v.sub_groups.length > 0);
+                return item.sub_groups && item.sub_groups.length > 0 && !isExistSubGroup;
+            };
+        },
+        customLoading () {
+            return this.requestQueue.length > 0;
+        },
+        isAggregateDisabled () {
+            const isDisabled = this.tableData.length < 1 || this.aggregations.length < 1
+            || (this.tableData.length === 1 && !this.tableData[0].isAggregate);
+            return isDisabled;
+        },
+        curSelectActions () {
+            const allActionIds = [];
+            this.originalCustomTmplList.forEach(payload => {
+                if (!payload.actionsAllDisabled) {
+                    payload.actions.forEach(item => {
+                        if (item.checked) {
+                            allActionIds.push(item.id);
+                        }
+                    })
+                    ;(payload.sub_groups || []).forEach(subItem => {
+                        (subItem.actions || []).forEach(act => {
+                            if (act.checked) {
+                                allActionIds.push(act.id);
                             }
-                        })
-                        ;(payload.sub_groups || []).forEach(subItem => {
-                            (subItem.actions || []).forEach(act => {
-                                if (act.checked) {
-                                    allActionIds.push(act.id);
-                                }
-                            });
                         });
-                    }
-                });
-
-                return allActionIds;
-            }
+                    });
+                }
+            });
+            this.getFilterAggregateAction();
+            return allActionIds;
+        }
     },
     watch: {
       '$route': {
@@ -1635,8 +1636,8 @@
           });
           return arr;
         })();
-        let selectPath = instances[0].path;
-        if (instances.length > 0) {
+        if (instances.length) {
+          let selectPath = instances[0].path;
           this.aggregationsTableData.forEach(item => {
             if (curAction.includes(item.id)) {
               if (item.tag === 'unchanged') {
@@ -1673,6 +1674,7 @@
       },
 
       handleAggregateAction (payload) {
+        this.isAllExpanded = payload;
         const aggregationAction = this.aggregations;
         const actionIds = [];
         aggregationAction.forEach(item => {

@@ -72,7 +72,7 @@ export const beforeEach = async (to, from, next) => {
   if (existValue('externalApp')) {
     const externalSystemId = getParamsValue('system_id');
     store.commit('updateSystemId', externalSystemId);
-    fetchExternalSystemsLayout(externalSystemId);
+    await fetchExternalSystemsLayout(externalSystemId);
   }
 
   bus.$emit('close-apply-perm-modal');

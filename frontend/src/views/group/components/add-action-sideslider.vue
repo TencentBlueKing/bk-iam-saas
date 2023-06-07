@@ -501,7 +501,6 @@
           const params = {};
           if (this.externalSystemId) {
             params.hidden = false;
-            this.curSystem = this.externalSystemId;
           }
           const { code, data } = await this.$store.dispatch('system/getSystems', params);
           this.systemList = _.cloneDeep(data);

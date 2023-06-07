@@ -271,30 +271,30 @@
       };
     },
     computed: {
-            ...mapGetters(['externalSystemId']),
-            condition () {
-                if (this.curResIndex === -1 || this.groupIndex === -1) {
-                    return [];
-                }
-                const curData = this.resourceTypeData.resource_groups[this.groupIndex]
-                    .related_resource_types[this.curResIndex];
-                if (!curData) {
-                    return [];
-                }
-                if (curData.condition.length === 0) curData.condition = ['none'];
-                return _.cloneDeep(curData.condition);
-            },
-            curSelectionMode () {
-                if (this.curResIndex === -1 || this.groupIndex === -1) {
-                    return 'all';
-                }
-                const curData = this.resourceTypeData.resource_groups[this.groupIndex]
-                    .related_resource_types[this.curResIndex];
-                return curData.selectionMode;
-            },
-            originalCondition () {
-                return _.cloneDeep(this.condition);
-            }
+      ...mapGetters(['externalSystemId']),
+      condition () {
+          if (this.curResIndex === -1 || this.groupIndex === -1) {
+              return [];
+          }
+          const curData = this.resourceTypeData.resource_groups[this.groupIndex]
+              .related_resource_types[this.curResIndex];
+          if (!curData) {
+              return [];
+          }
+          if (curData.condition.length === 0) curData.condition = ['none'];
+          return _.cloneDeep(curData.condition);
+      },
+      curSelectionMode () {
+          if (this.curResIndex === -1 || this.groupIndex === -1) {
+              return 'all';
+          }
+          const curData = this.resourceTypeData.resource_groups[this.groupIndex]
+              .related_resource_types[this.curResIndex];
+          return curData.selectionMode;
+      },
+      originalCondition () {
+          return _.cloneDeep(this.condition);
+      }
     },
     watch: {
       'pagination.current' (value) {
@@ -543,7 +543,7 @@
 
         this.curResIndex = resIndex;
         this.groupIndex = groupIndex;
-        this.resourceInstanceSidesliderTitle = `${this.$t(`m.common['关联操作']`)}${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的资源实例']`)}`;
+        this.resourceInstanceSidesliderTitle = this.$t(`m.info['关联侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}` });
         window.changeAlert = 'iamSidesider';
         this.isShowResourceInstanceSideslider = true;
       },
