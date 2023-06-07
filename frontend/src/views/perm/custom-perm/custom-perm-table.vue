@@ -516,6 +516,7 @@
 
       handleCancelDelete () {
         this.isShowDeleteDialog = false;
+        this.curDeleteIds = [];
       },
 
       /**
