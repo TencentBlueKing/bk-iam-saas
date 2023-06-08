@@ -111,6 +111,7 @@ export const m = {
         '保存': 'Save',
         '提交': 'Submit',
         '取消': 'Cancel',
+        '取消-dialog': 'CANCEL',
         '组织': 'Organization',
         '用户': 'User',
         '下一步': 'Next Step',
