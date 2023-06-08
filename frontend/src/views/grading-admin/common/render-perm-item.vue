@@ -1,87 +1,87 @@
 <template>
-    <div :class="['iam-render-perm', extCls]">
-        <div class="header" @click="handleExpanded">
-            <label class="title">{{ title }}</label>
-            <div class="sub-title" v-if="count > 0">
-                {{ $t(`m.common['共']`) }}
-                <span class="number">{{ count }}</span>
-                {{ $t(`m.common['个']`) }}
-                {{ $t(`m.perm['操作权限']`) }}
-            </div>
-            <div class="action">
-                <div class="edit" @click.stop="handleEdit">
-                    <Icon type="edit-fill" />
-                </div>
-                <Icon type="close-small" class="delete" @click.stop="handleDelete" />
-            </div>
+  <div :class="['iam-render-perm', extCls]">
+    <div class="header" @click="handleExpanded">
+      <label class="title">{{ title }}</label>
+      <div class="sub-title" v-if="count > 0">
+        {{ $t(`m.common['共']`) }}
+        <span class="number">{{ count }}</span>
+        {{ $t(`m.common['个']`) }}
+        {{ $t(`m.perm['操作权限']`) }}
+      </div>
+      <div class="action">
+        <div class="edit" @click.stop="handleEdit">
+          <Icon type="edit-fill" />
         </div>
-        <div class="content" v-if="isExpanded">
-            <div class="slot-content">
-                <slot />
-            </div>
-            <p class="expand-action" @click="handlePackup">
-                <Icon :type="isExpanded ? 'up-angle' : 'down-angle'" />
-                {{ $t(`m.common['点击收起']`) }}
-            </p>
-        </div>
+        <Icon type="close-small" class="delete" @click.stop="handleDelete" />
+      </div>
     </div>
+    <div class="content" v-if="isExpanded">
+      <div class="slot-content">
+        <slot />
+      </div>
+      <p class="expand-action" @click="handlePackup">
+        <Icon :type="isExpanded ? 'up-angle' : 'down-angle'" />
+        {{ $t(`m.common['点击收起']`) }}
+      </p>
+    </div>
+  </div>
 </template>
 <script>
-    export default {
-        name: '',
-        props: {
-            expanded: {
-                type: Boolean,
-                default: false
-            },
-            title: {
-                type: String,
-                default: ''
-            },
-            count: {
-                type: Number,
-                default: 0
-            },
-            extCls: {
-                type: String,
-                default: ''
-            }
-        },
-        data () {
-            return {
-                isExpanded: this.expanded
-            };
-        },
-        watch: {
-            expanded (value) {
-                this.isExpanded = !!value;
-            }
-        },
-        methods: {
-            handlePackup () {
-                this.isExpanded = false;
-                this.$emit('update:expanded', false);
-                this.$emit('on-expanded', false);
-            },
+  export default {
+    name: '',
+    props: {
+      expanded: {
+        type: Boolean,
+        default: false
+      },
+      title: {
+        type: String,
+        default: ''
+      },
+      count: {
+        type: Number,
+        default: 0
+      },
+      extCls: {
+        type: String,
+        default: ''
+      }
+    },
+    data () {
+      return {
+        isExpanded: this.expanded
+      };
+    },
+    watch: {
+      expanded (value) {
+        this.isExpanded = !!value;
+      }
+    },
+    methods: {
+      handlePackup () {
+        this.isExpanded = false;
+        this.$emit('update:expanded', false);
+        this.$emit('on-expanded', false);
+      },
 
-            handleDelete () {
-                this.$emit('on-delete');
-            },
+      handleDelete () {
+        this.$emit('on-delete');
+      },
 
-            handleEdit () {
-                this.$emit('on-edit');
-            },
+      handleEdit () {
+        this.$emit('on-edit');
+      },
 
-            handleExpanded () {
-                // if (this.isExpanded) {
-                //     return
-                // }
-                this.isExpanded = !this.isExpanded;
-                this.$emit('update:expanded', true);
-                this.$emit('on-expanded', true);
-            }
-        }
-    };
+      handleExpanded () {
+        // if (this.isExpanded) {
+        //     return
+        // }
+        this.isExpanded = !this.isExpanded;
+        this.$emit('update:expanded', true);
+        this.$emit('on-expanded', true);
+      }
+    }
+  };
 </script>
 <style lang="postcss" scoped>
     .iam-render-perm {

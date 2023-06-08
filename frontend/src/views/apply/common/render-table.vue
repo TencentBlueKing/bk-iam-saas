@@ -1,84 +1,84 @@
 <template>
-    <div :class="['iam-perm-item', extCls]">
-        <div class="header" @click="handleExpanded">
-            <Icon bk class="expanded-icon" :type="isExpanded ? 'down-shape' : 'right-shape'" />
-            <label class="title">{{ curType === 'group' ? $t(`m.perm['加入的用户组']`) : $t(`m.myApply['申请的权限模板']`) }}</label>
-            <div class="sub-title" v-if="data.length > 0 && !isExpanded">
-                {{ curType === 'group' ? $t(`m.myApply['申请加入']`) : $t(`m.myApply['申请']`) }}
-                <div class="sub-item">
-                    <span v-for="item in data" :key="item.id">
-                        {{$t(`m.common['【']`)}}{{ item.name }}{{$t(`m.common['】']`)}}
-                    </span>
-                </div>
-                {{ $t(`m.common['共']`) }}
-                <span class="number">{{ data.length }}</span>
-                {{ $t(`m.common['个']`) }}
-                {{ curType === 'group' ? $t(`m.myApply['用户组']`) : $t(`m.myApply['权限模板']`) }}
-            </div>
+  <div :class="['iam-perm-item', extCls]">
+    <div class="header" @click="handleExpanded">
+      <Icon bk class="expanded-icon" :type="isExpanded ? 'down-shape' : 'right-shape'" />
+      <label class="title">{{ curType === 'group' ? $t(`m.perm['加入的用户组']`) : $t(`m.myApply['申请的权限模板']`) }}</label>
+      <div class="sub-title" v-if="data.length > 0 && !isExpanded">
+        {{ curType === 'group' ? $t(`m.myApply['申请加入']`) : $t(`m.myApply['申请']`) }}
+        <div class="sub-item">
+          <span v-for="item in data" :key="item.id">
+            {{$t(`m.common['【']`)}}{{ item.name }}{{$t(`m.common['】']`)}}
+          </span>
         </div>
-        <div class="content" v-if="isExpanded">
-            <div class="slot-content">
-                <slot />
-            </div>
-            <p class="expand-action" @click="handlePackup">
-                <Icon :type="isExpanded ? 'up-angle' : 'down-angle'" />
-                {{ $t(`m.common['点击收起']`) }}
-            </p>
-        </div>
+        {{ $t(`m.common['共']`) }}
+        <span class="number">{{ data.length }}</span>
+        {{ $t(`m.common['个']`) }}
+        {{ curType === 'group' ? $t(`m.myApply['用户组']`) : $t(`m.myApply['权限模板']`) }}
+      </div>
     </div>
+    <div class="content" v-if="isExpanded">
+      <div class="slot-content">
+        <slot />
+      </div>
+      <p class="expand-action" @click="handlePackup">
+        <Icon :type="isExpanded ? 'up-angle' : 'down-angle'" />
+        {{ $t(`m.common['点击收起']`) }}
+      </p>
+    </div>
+  </div>
 </template>
 <script>
-    export default {
-        name: '',
-        props: {
-            expanded: {
-                type: Boolean,
-                default: false
-            },
-            extCls: {
-                type: String,
-                default: ''
-            },
-            type: {
-                type: String,
-                default: 'group'
-            },
-            data: {
-                type: Array,
-                default: () => []
-            }
+  export default {
+    name: '',
+    props: {
+      expanded: {
+        type: Boolean,
+        default: false
+      },
+      extCls: {
+        type: String,
+        default: ''
+      },
+      type: {
+        type: String,
+        default: 'group'
+      },
+      data: {
+        type: Array,
+        default: () => []
+      }
+    },
+    data () {
+      return {
+        isExpanded: this.expanded,
+        curType: ''
+      };
+    },
+    watch: {
+      expanded (value) {
+        this.isExpanded = !!value;
+      },
+      type: {
+        handler (value) {
+          this.curType = value;
         },
-        data () {
-            return {
-                isExpanded: this.expanded,
-                curType: ''
-            };
-        },
-        watch: {
-            expanded (value) {
-                this.isExpanded = !!value;
-            },
-            type: {
-                handler (value) {
-                    this.curType = value;
-                },
-                immediate: true
-            }
-        },
-        methods: {
-            handlePackup () {
-                this.isExpanded = false;
-                this.$emit('update:expanded', false);
-                this.$emit('on-expanded', false);
-            },
+        immediate: true
+      }
+    },
+    methods: {
+      handlePackup () {
+        this.isExpanded = false;
+        this.$emit('update:expanded', false);
+        this.$emit('on-expanded', false);
+      },
 
-            handleExpanded () {
-                this.isExpanded = !this.isExpanded;
-                this.$emit('update:expanded', true);
-                this.$emit('on-expanded', true);
-            }
-        }
-    };
+      handleExpanded () {
+        this.isExpanded = !this.isExpanded;
+        this.$emit('update:expanded', true);
+        this.$emit('on-expanded', true);
+      }
+    }
+  };
 </script>
 <style lang="postcss" scoped>
     .iam-perm-item {

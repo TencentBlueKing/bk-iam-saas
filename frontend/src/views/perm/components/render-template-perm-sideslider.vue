@@ -1,189 +1,189 @@
 <template>
-    <bk-sideslider
-        :is-show.sync="isShowSideslider"
-        :title="title"
-        :width="880"
-        ext-cls="iam-template-perm-sideslider"
-        :quick-close="true"
-        :cell-class-name="getCellClass"
-        @animation-end="handleAnimationEnd">
-        <div
-            slot="content"
-            class="content-wrapper"
-            v-bkloading="{ isLoading, opacity: 1 }">
-            <bk-table
-                v-if="!isLoading"
-                :data="tableList"
-                border
-                :cell-class-name="getCellClass">
-                <bk-table-column :label="$t(`m.common['操作']`)" width="180">
-                    <template slot-scope="{ row }">
-                        <span :title="row.name">{{ row.name }}</span>
-                    </template>
-                </bk-table-column>
-                <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)">
-                    <template slot-scope="{ row }">
-                        <template v-if="!row.isEmpty">
-                            <div v-for="_ in row.resource_groups" :key="_.id">
-                                <p class="related-resource-item"
-                                    v-for="item in _.related_resource_types"
-                                    :key="item.type">
-                                    <render-resource-popover
-                                        :key="item.type"
-                                        :data="item.condition"
-                                        :value="`${item.name}：${item.value}`"
-                                        @on-view="handleViewResource(row)" />
-                                </p>
-                            </div>
-                        </template>
-                        <template v-else>
-                            {{ $t(`m.common['无需关联实例']`) }}
-                        </template>
-                        <Icon
-                            type="detail-new"
-                            class="view-icon"
-                            :title="$t(`m.common['详情']`)"
-                            v-if="isShowPreview(row)"
-                            @click.stop="handleViewResource(row)" />
-                    </template>
-                </bk-table-column>
-            </bk-table>
-        </div>
-    </bk-sideslider>
+  <bk-sideslider
+    :is-show.sync="isShowSideslider"
+    :title="title"
+    :width="880"
+    ext-cls="iam-template-perm-sideslider"
+    :quick-close="true"
+    :cell-class-name="getCellClass"
+    @animation-end="handleAnimationEnd">
+    <div
+      slot="content"
+      class="content-wrapper"
+      v-bkloading="{ isLoading, opacity: 1 }">
+      <bk-table
+        v-if="!isLoading"
+        :data="tableList"
+        border
+        :cell-class-name="getCellClass">
+        <bk-table-column :label="$t(`m.common['操作']`)" width="180">
+          <template slot-scope="{ row }">
+            <span :title="row.name">{{ row.name }}</span>
+          </template>
+        </bk-table-column>
+        <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)">
+          <template slot-scope="{ row }">
+            <template v-if="!row.isEmpty">
+              <div v-for="_ in row.resource_groups" :key="_.id">
+                <p class="related-resource-item"
+                  v-for="item in _.related_resource_types"
+                  :key="item.type">
+                  <render-resource-popover
+                    :key="item.type"
+                    :data="item.condition"
+                    :value="`${item.name}：${item.value}`"
+                    @on-view="handleViewResource(row)" />
+                </p>
+              </div>
+            </template>
+            <template v-else>
+              {{ $t(`m.common['无需关联实例']`) }}
+            </template>
+            <Icon
+              type="detail-new"
+              class="view-icon"
+              :title="$t(`m.common['详情']`)"
+              v-if="isShowPreview(row)"
+              @click.stop="handleViewResource(row)" />
+          </template>
+        </bk-table-column>
+      </bk-table>
+    </div>
+  </bk-sideslider>
 </template>
 <script>
-    import RenderResourcePopover from '@/components/iam-view-resource-popover';
-    import PermPolicy from '@/model/my-perm-policy';
-    export default {
-        name: '',
-        components: {
-            RenderResourcePopover
+  import RenderResourcePopover from '@/components/iam-view-resource-popover';
+  import PermPolicy from '@/model/my-perm-policy';
+  export default {
+    name: '',
+    components: {
+      RenderResourcePopover
+    },
+    props: {
+      show: {
+        type: Boolean,
+        default: false
+      },
+      templateId: {
+        type: [String, Number],
+        default: ''
+      },
+      templateVersion: {
+        type: String,
+        default: ''
+      },
+      // systemId: {
+      //     type: [String, Number],
+      //     default: ''
+      // },
+      title: {
+        type: String,
+        default: ''
+      }
+    },
+    data () {
+      return {
+        tableList: [],
+        policyCountMap: {},
+        curId: '',
+        isShowSideslider: false,
+        requestQueue: ['list'],
+        systemId: ''
+      };
+    },
+    computed: {
+      isShowPreview () {
+        return (payload) => {
+          return !payload.isEmpty;
+        };
+      },
+      isLoading () {
+        return this.requestQueue.length > 0;
+      }
+    },
+    watch: {
+      show: {
+        handler (value) {
+          this.isShowSideslider = !!value;
+          if (this.isShowSideslider) {
+            this.handleInit();
+          }
         },
-        props: {
-            show: {
-                type: Boolean,
-                default: false
-            },
-            templateId: {
-                type: [String, Number],
-                default: ''
-            },
-            templateVersion: {
-                type: String,
-                default: ''
-            },
-            // systemId: {
-            //     type: [String, Number],
-            //     default: ''
-            // },
-            title: {
-                type: String,
-                default: ''
-            }
-        },
-        data () {
-            return {
-                tableList: [],
-                policyCountMap: {},
-                curId: '',
-                isShowSideslider: false,
-                requestQueue: ['list'],
-                systemId: ''
-            };
-        },
-        computed: {
-            isShowPreview () {
-                return (payload) => {
-                    return !payload.isEmpty;
-                };
-            },
-            isLoading () {
-                return this.requestQueue.length > 0;
-            }
-        },
-        watch: {
-            show: {
-                handler (value) {
-                    this.isShowSideslider = !!value;
-                    if (this.isShowSideslider) {
-                        this.handleInit();
-                    }
-                },
-                immediate: true
-            }
-        },
-        methods: {
-            async handleInit () {
-                await this.fetchData();
-            },
+        immediate: true
+      }
+    },
+    methods: {
+      async handleInit () {
+        await this.fetchData();
+      },
 
-            getCellClass ({ row, column, rowIndex, columnIndex }) {
-                if (columnIndex === 1) {
-                    return 'iam-perm-table-cell-cls';
-                }
-                return '';
-            },
-
-            async fetchData () {
-                try {
-                    const params = {
-                        id: this.templateId
-                    };
-                    if (this.templateVersion !== '') {
-                        params.version = this.templateVersion;
-                    }
-
-                    const res = await this.$store.dispatch('perm/getTemplateDetail', params);
-                    const data = res.data || {};
-
-                    this.systemId = data.system.id;
-                    this.tableList.splice(0, this.tableList.length, ...data.actions.map(item => new PermPolicy(item)));
-                } catch (e) {
-                    console.error(e);
-                    this.bkMessageInstance = this.$bkMessage({
-                        limit: 1,
-                        theme: 'error',
-                        message: e.message || e.data.msg || e.statusText,
-                        ellipsisLine: 2,
-                        ellipsisCopy: true
-                    });
-                } finally {
-                    this.requestQueue.shift();
-                }
-            },
-
-            handleAnimationEnd () {
-                this.tableList = [];
-                this.requestQueue = ['list'];
-                this.curId = '';
-                this.$emit('animation-end');
-            },
-
-            handleViewResource (payload) {
-                this.curId = payload.id;
-                const params = [];
-                if (payload.resource_groups.length > 0) {
-                    payload.resource_groups.forEach(groupItem => {
-                        if (groupItem.related_resource_types.length > 0) {
-                            groupItem.related_resource_types.forEach(item => {
-                                const { name, type, condition } = item;
-                                params.push({
-                                    name: type,
-                                    label: `${name} ${this.$t(`m.common['实例']`)}`,
-                                    tabType: 'resource',
-                                    data: condition
-                                });
-                            });
-                        }
-                    });
-                }
-                this.$emit('on-view', {
-                    name: payload.name,
-                    data: params
-                });
-            }
+      getCellClass ({ row, column, rowIndex, columnIndex }) {
+        if (columnIndex === 1) {
+          return 'iam-perm-table-cell-cls';
         }
-    };
+        return '';
+      },
+
+      async fetchData () {
+        try {
+          const params = {
+            id: this.templateId
+          };
+          if (this.templateVersion !== '') {
+            params.version = this.templateVersion;
+          }
+
+          const res = await this.$store.dispatch('perm/getTemplateDetail', params);
+          const data = res.data || {};
+
+          this.systemId = data.system.id;
+          this.tableList.splice(0, this.tableList.length, ...data.actions.map(item => new PermPolicy(item)));
+        } catch (e) {
+          console.error(e);
+          this.bkMessageInstance = this.$bkMessage({
+            limit: 1,
+            theme: 'error',
+            message: e.message || e.data.msg || e.statusText,
+            ellipsisLine: 2,
+            ellipsisCopy: true
+          });
+        } finally {
+          this.requestQueue.shift();
+        }
+      },
+
+      handleAnimationEnd () {
+        this.tableList = [];
+        this.requestQueue = ['list'];
+        this.curId = '';
+        this.$emit('animation-end');
+      },
+
+      handleViewResource (payload) {
+        this.curId = payload.id;
+        const params = [];
+        if (payload.resource_groups.length > 0) {
+          payload.resource_groups.forEach(groupItem => {
+            if (groupItem.related_resource_types.length > 0) {
+              groupItem.related_resource_types.forEach(item => {
+                const { name, type, condition } = item;
+                params.push({
+                  name: type,
+                  label: `${name} ${this.$t(`m.common['实例']`)}`,
+                  tabType: 'resource',
+                  data: condition
+                });
+              });
+            }
+          });
+        }
+        this.$emit('on-view', {
+          name: payload.name,
+          data: params
+        });
+      }
+    }
+  };
 </script>
 <style lang="postcss">
     .iam-template-perm-sideslider {

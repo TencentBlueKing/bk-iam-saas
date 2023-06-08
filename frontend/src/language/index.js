@@ -30,14 +30,14 @@ import { getCookie } from '@/common/util';
 
 const { lang } = magicbox;
 const messages = {
-    'zh-cn': {
-        ...lang.zhCN,
-        ...cn
-    },
-    en: {
-        ...lang.enUS,
-        ...en
-    }
+  'zh-cn': {
+    ...lang.zhCN,
+    ...cn
+  },
+  en: {
+    ...lang.enUS,
+    ...en
+  }
 };
 
 const language = getCookie('blueking_language') || 'zh-cn';
@@ -69,16 +69,16 @@ const language = getCookie('blueking_language') || 'zh-cn';
 // }
 
 const il8n = (key, subKey) => {
-    const local = messages[language]['language'];
-    if (!local[key] || !local[key][subKey]) {
-        return subKey;
-    }
-    return local[key][subKey];
+  const local = messages[language]['language'];
+  if (!local[key] || !local[key][subKey]) {
+    return subKey;
+  }
+  return local[key][subKey];
 };
 
 export default il8n;
 
 export {
-    il8n,
-    language
+  il8n,
+  language
 };

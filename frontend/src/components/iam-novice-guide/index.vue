@@ -1,60 +1,60 @@
 <template>
-    <div class="guide-contaniner" v-if="isSelectManager">
-        <div :class="['iam-guide-wrapper', { 'has-animation': hasAnimation }]"
-            :style="style">
-            <div class="content-wrapper">
-                <section class="content-shade">
-                    <div class="text">{{ content }}</div>
-                    <div class="knowed-action"
-                        @click.stop="handleKnowed">
-                        {{ $t(`m.guide['我知道了']`) }}
-                    </div>
-                </section>
-                <div :class="['triangle', direction]"></div>
-                <div :class="['triangle', 'mamagerTriangle', 'left']"></div>
-            </div>
-        </div>
-        <div class="content">
-            <div class="nav">
-                {{ $t(`m.nav['管理空间']`) }}
-            </div>
-            <div class="select">
-                <div>{{ managerName }}</div>
-                <Icon type="down-angle" class="select-angle" />
-            </div>
-        </div>
+  <div class="guide-contaniner" v-if="isSelectManager">
+    <div :class="['iam-guide-wrapper', { 'has-animation': hasAnimation }]"
+      :style="style">
+      <div class="content-wrapper">
+        <section class="content-shade">
+          <div class="text">{{ content }}</div>
+          <div class="knowed-action"
+            @click.stop="handleKnowed">
+            {{ $t(`m.guide['我知道了']`) }}
+          </div>
+        </section>
+        <div :class="['triangle', direction]"></div>
+        <div :class="['triangle', 'mamagerTriangle', 'left']"></div>
+      </div>
     </div>
+    <div class="content">
+      <div class="nav">
+        {{ $t(`m.nav['管理空间']`) }}
+      </div>
+      <div class="select">
+        <div>{{ managerName }}</div>
+        <Icon type="down-angle" class="select-angle" />
+      </div>
+    </div>
+  </div>
 </template>
 <script>
-    import { mapGetters } from 'vuex';
+  import { mapGetters } from 'vuex';
 
-    export default {
-        name: '',
-        props: {
-            content: {
-                type: String,
-                default: 'default'
-            },
-            direction: {
-                type: String,
-                default: 'top',
-                validator: (value) => {
-                    return ['top', 'right', 'bottom', 'left'].includes(value);
-                }
-            },
-            flag: {
-                type: Boolean,
-                default: true
-            }
-        },
-        data () {
-            return {
-                hasAnimation: true,
-                isSelectManager: true,
-                managerName: this.$t(`m.myApproval['超级管理员']`)
-            };
-        },
-        computed: {
+  export default {
+    name: '',
+    props: {
+      content: {
+        type: String,
+        default: 'default'
+      },
+      direction: {
+        type: String,
+        default: 'top',
+        validator: (value) => {
+          return ['top', 'right', 'bottom', 'left'].includes(value);
+        }
+      },
+      flag: {
+        type: Boolean,
+        default: true
+      }
+    },
+    data () {
+      return {
+        hasAnimation: true,
+        isSelectManager: true,
+        managerName: this.$t(`m.myApproval['超级管理员']`)
+      };
+    },
+    computed: {
             ...mapGetters(['noviceGuide', 'user', 'navCurRoleId', 'roleList']),
             isShow () {
                 const types = [
@@ -67,32 +67,32 @@
                 }
                 return true;
             }
+    },
+    watch: {
+      flag: {
+        handler (value) {
+          this.managerName = (this.roleList.length
+            && this.roleList.find(e => e.id === this.navCurRoleId)
+            && this.roleList.find(e => e.id === this.navCurRoleId).name) || this.$t(`m.myApproval['超级管理员']`);
+          this.isSelectManager = value;
         },
-        watch: {
-            flag: {
-                handler (value) {
-                    this.managerName = (this.roleList.length
-                        && this.roleList.find(e => e.id === this.navCurRoleId)
-                        && this.roleList.find(e => e.id === this.navCurRoleId).name) || this.$t(`m.myApproval['超级管理员']`);
-                    this.isSelectManager = value;
-                },
-                immediate: true,
-                deep: true
-            }
-        },
-        created () {
-            // 动画显示5秒后关闭
-            this.timer = setTimeout(() => {
-                this.hasAnimation = false;
-                clearTimeout(this.timer);
-            }, 5000);
-        },
-        methods: {
-            async handleKnowed () {
-                this.$store.commit('updateSelectManager', false);
-            }
-        }
-    };
+        immediate: true,
+        deep: true
+      }
+    },
+    created () {
+      // 动画显示5秒后关闭
+      this.timer = setTimeout(() => {
+        this.hasAnimation = false;
+        clearTimeout(this.timer);
+      }, 5000);
+    },
+    methods: {
+      async handleKnowed () {
+        this.$store.commit('updateSelectManager', false);
+      }
+    }
+  };
 </script>
 <style lang="postcss" scoped>
     $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);

@@ -1,174 +1,174 @@
 <template>
-    <div :class="['iam-effect-time', { active: isActive }, { error: isError }]"
-        @mouseenter="handleMouseenter"
-        @mouseleave="handleMouseleave"
-        @click.stop="handleClick">
-        <div class="iam-input-text" :style="style" :title="!isEmpty ? curValue : ''" @click.stop="handleClick">
-            <section :class="['iam-time-input', { 'is-empty': isEmpty }]" @click.stop="handleClick">
-                {{ curValue }}
-            </section>
-        </div>
+  <div :class="['iam-effect-time', { active: isActive }, { error: isError }]"
+    @mouseenter="handleMouseenter"
+    @mouseleave="handleMouseleave"
+    @click.stop="handleClick">
+    <div class="iam-input-text" :style="style" :title="!isEmpty ? curValue : ''" @click.stop="handleClick">
+      <section :class="['iam-time-input', { 'is-empty': isEmpty }]" @click.stop="handleClick">
+        {{ curValue }}
+      </section>
     </div>
+  </div>
 </template>
 <script>
-    import { GLOBAL_TIME_ZONE_ENUM } from '@/common/constants';
-    export default {
-        name: '',
-        props: {
-            value: {
-                type: Array,
-                default: []
-            },
-            isEmpty: {
-                type: Boolean,
-                default: false
-            },
-            canView: {
-                type: Boolean,
-                default: false
-            },
-            canPaste: {
-                type: Boolean,
-                default: false
-            },
-            canOperate: {
-                type: Boolean,
-                default: true
-            },
-            canCopy: {
-                type: Boolean,
-                default: true
-            },
-            isError: {
-                type: Boolean,
-                default: false
-            },
-            params: {
-                type: Object,
-                default: () => {
-                    return {};
-                }
-            }
-        },
-        data () {
-            return {
-                curValue: '',
-                isActive: false,
-                immediatelyShow: false,
-                effectWeekList: {
-                    1: this.$t(`m.info['每周一']`),
-                    2: this.$t(`m.info['每周二']`),
-                    3: this.$t(`m.info['每周三']`),
-                    4: this.$t(`m.info['每周四']`),
-                    5: this.$t(`m.info['每周五']`),
-                    6: this.$t(`m.info['每周六']`),
-                    0: this.$t(`m.info['每周日']`)
-                },
-                effectWeekTimeZone: GLOBAL_TIME_ZONE_ENUM,
-                effectType: {
-                    'period_daily': this.$t(`m.info['时间']`)
-                }
-            };
-        },
-        computed: {
-            style () {
-                if (!this.canOperate) {
-                    return {
-                        width: '100%'
-                    };
-                }
-                if (this.isEmpty) {
-                    if (this.canPaste) {
-                        return {
-                            width: 'calc(100% - 30px)'
-                        };
-                    }
-                    return {
-                        width: '100%'
-                    };
-                }
-                const statusLen = [this.canView, this.canPaste, this.canCopy].filter(status => !!status).length;
-                return {
-                    width: `calc(100% - ${statusLen * 30}px)`
-                };
-            }
-        },
-        watch: {
-            value: {
-                handler (val) {
-                    if (this.isEmpty) {
-                        this.curValue = this.$t(`m.permApply['请选择生效条件，默认无限制']`);
-                    } else {
-                        this.curValue = val.reduce((p, v) => {
-                            let curValue = '';
-                            let weekCopy = '';
-                            curValue = v.condition.reduce((prev, item) => {
-                                let hms = '';
-                                let tz = '';
-                                let weekday = '';
-                                if (item.type === 'weekday') {
-                                    weekday = item.values.reduce((pre, e) => {
-                                        pre = `${pre} ${this.effectWeekList[e.value]}`;
-                                        return pre;
-                                    }, '');
-                                    weekCopy = weekday;
-                                }
-
-                                if (item.type === 'hms') {
-                                    hms = item.values.reduce((pre, e) => {
-                                        if (pre) {
-                                            pre = `${pre} - ${e.value}`;
-                                        } else {
-                                            pre = `${pre} ${e.value}`;
-                                        }
-                                        
-                                        return pre;
-                                    }, '');
-                                }
-
-                                if (item.type === 'tz') {
-                                    tz = item.values.reduce((pre, e) => {
-                                        pre = this.effectWeekTimeZone[e.value];
-                                        return pre;
-                                    }, '');
-                                }
-
-                                prev = `${prev}${hms}${tz}${weekday}`;
-                                return prev;
-                            }, '');
-                            p = `${p}${weekCopy ? '' : '每天'}${curValue}${this.effectType[v.type]}生效`;
-                            return p;
-                        }, '在');
-                    }
-                },
-                immediate: true
-            }
-        },
-        methods: {
-
-            handleMouseenter () {
-                this.isActive = true;
-                this.$emit('on-mouseover');
-            },
-
-            handleMouseleave () {
-                this.isActive = false;
-                this.immediatelyShow = false;
-                this.$emit('on-mouseleave');
-            },
-
-            handleRestore () {
-                this.$emit('on-restore');
-            },
-
-            handleClick () {
-                if (this.isDisabled) {
-                    return;
-                }
-                this.$emit('on-click');
-            }
+  import { GLOBAL_TIME_ZONE_ENUM } from '@/common/constants';
+  export default {
+    name: '',
+    props: {
+      value: {
+        type: Array,
+        default: []
+      },
+      isEmpty: {
+        type: Boolean,
+        default: false
+      },
+      canView: {
+        type: Boolean,
+        default: false
+      },
+      canPaste: {
+        type: Boolean,
+        default: false
+      },
+      canOperate: {
+        type: Boolean,
+        default: true
+      },
+      canCopy: {
+        type: Boolean,
+        default: true
+      },
+      isError: {
+        type: Boolean,
+        default: false
+      },
+      params: {
+        type: Object,
+        default: () => {
+          return {};
         }
-    };
+      }
+    },
+    data () {
+      return {
+        curValue: '',
+        isActive: false,
+        immediatelyShow: false,
+        effectWeekList: {
+          1: this.$t(`m.info['每周一']`),
+          2: this.$t(`m.info['每周二']`),
+          3: this.$t(`m.info['每周三']`),
+          4: this.$t(`m.info['每周四']`),
+          5: this.$t(`m.info['每周五']`),
+          6: this.$t(`m.info['每周六']`),
+          0: this.$t(`m.info['每周日']`)
+        },
+        effectWeekTimeZone: GLOBAL_TIME_ZONE_ENUM,
+        effectType: {
+          'period_daily': this.$t(`m.info['时间']`)
+        }
+      };
+    },
+    computed: {
+      style () {
+        if (!this.canOperate) {
+          return {
+            width: '100%'
+          };
+        }
+        if (this.isEmpty) {
+          if (this.canPaste) {
+            return {
+              width: 'calc(100% - 30px)'
+            };
+          }
+          return {
+            width: '100%'
+          };
+        }
+        const statusLen = [this.canView, this.canPaste, this.canCopy].filter(status => !!status).length;
+        return {
+          width: `calc(100% - ${statusLen * 30}px)`
+        };
+      }
+    },
+    watch: {
+      value: {
+        handler (val) {
+          if (this.isEmpty) {
+            this.curValue = this.$t(`m.permApply['请选择生效条件，默认无限制']`);
+          } else {
+            this.curValue = val.reduce((p, v) => {
+              let curValue = '';
+              let weekCopy = '';
+              curValue = v.condition.reduce((prev, item) => {
+                let hms = '';
+                let tz = '';
+                let weekday = '';
+                if (item.type === 'weekday') {
+                  weekday = item.values.reduce((pre, e) => {
+                    pre = `${pre} ${this.effectWeekList[e.value]}`;
+                    return pre;
+                  }, '');
+                  weekCopy = weekday;
+                }
+
+                if (item.type === 'hms') {
+                  hms = item.values.reduce((pre, e) => {
+                    if (pre) {
+                      pre = `${pre} - ${e.value}`;
+                    } else {
+                      pre = `${pre} ${e.value}`;
+                    }
+                                        
+                    return pre;
+                  }, '');
+                }
+
+                if (item.type === 'tz') {
+                  tz = item.values.reduce((pre, e) => {
+                    pre = this.effectWeekTimeZone[e.value];
+                    return pre;
+                  }, '');
+                }
+
+                prev = `${prev}${hms}${tz}${weekday}`;
+                return prev;
+              }, '');
+              p = `${p}${weekCopy ? '' : '每天'}${curValue}${this.effectType[v.type]}生效`;
+              return p;
+            }, '在');
+          }
+        },
+        immediate: true
+      }
+    },
+    methods: {
+
+      handleMouseenter () {
+        this.isActive = true;
+        this.$emit('on-mouseover');
+      },
+
+      handleMouseleave () {
+        this.isActive = false;
+        this.immediatelyShow = false;
+        this.$emit('on-mouseleave');
+      },
+
+      handleRestore () {
+        this.$emit('on-restore');
+      },
+
+      handleClick () {
+        if (this.isDisabled) {
+          return;
+        }
+        this.$emit('on-click');
+      }
+    }
+  };
 </script>
 <style lang="postcss" scoped>
     .iam-effect-time {

@@ -27,8 +27,8 @@
 import Policy from './policy';
 
 export default class PermPolicy extends Policy {
-    constructor (payload) {
-        super(payload);
-        this.expired_dis = payload.expired_display;
-    }
+  constructor (payload) {
+    super(payload);
+    this.expired_dis = payload.expired_display;
+  }
 }
