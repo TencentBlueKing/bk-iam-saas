@@ -495,6 +495,7 @@ export const m = {
          '用户组侧边栏的详情': 'Details of user group {value}',
          '删除依赖操作产生的影响' : "Removing the '{value}' operation permission will also remove the following dependent operation permissions:",
          '删除依赖实例产生的影响' : "Deleting instance permissions such as '{value}' will also delete the instance permissions corresponding to the dependent operation permissions:",
+         '管理空间成员侧边栏标题信息': 'Manage space members {value}',
          '已选数量': '{value} selected'
     },
     // 二次确认弹窗相关

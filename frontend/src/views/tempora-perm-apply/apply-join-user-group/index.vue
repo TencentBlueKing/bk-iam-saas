@@ -8,15 +8,12 @@
             :data="searchData"
             :value="searchValue"
             :placeholder="$t(`m.applyEntrance['申请加入用户组搜索提示']`)"
-            :quick-search-method="quickSearchMethod" />
+            :quick-search-method="quickSearchMethod"
+          />
           <div class="info">
             {{ $t(`m.info['如果以下用户组不满足您的权限需求']`) }}，
             {{ $t(`m.common['可以']`) }}
-            <bk-button
-              text
-              theme="primary"
-              style="font-size: 12px;"
-              @click="handleToCustomApply">
+            <bk-button text theme="primary" style="font-size: 12px" @click="handleToCustomApply">
               {{ $t(`m.applyEntrance['申请自定义权限']`) }}
             </bk-button>
           </div>
@@ -33,7 +30,8 @@
           @page-limit-change="limitChange"
           @select="handlerChange"
           @select-all="handlerAllChange"
-          v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
+          v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
+        >
           <bk-table-column type="selection" align="center" :selectable="setDefaultSelect"></bk-table-column>
           <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
             <template slot-scope="{ row }">
@@ -51,9 +49,12 @@
           </bk-table-column>
           <bk-table-column :label="$t(`m.common['所属管理空间']`)">
             <template slot-scope="{ row }">
-              <span :class="row.role && row.role.name ? 'can-view' : ''"
+              <span
+                :class="row.role && row.role.name ? 'can-view' : ''"
                 :title="row.role && row.role.name ? row.role.name : ''"
-                @click.stop="handleViewDetail(row)">{{ row.role ? row.role.name : '--' }}</span>
+                @click.stop="handleViewDetail(row)"
+              >{{ row.role ? row.role.name : '--' }}</span
+              >
             </template>
           </bk-table-column>
           <template slot="empty">
@@ -85,7 +86,8 @@
           :placeholder="$t(`m.verify['请输入']`)"
           :ext-cls="isShowReasonError ? 'join-reason-error' : ''"
           @input="handleReasonInput"
-          @blur="handleReasonBlur">
+          @blur="handleReasonBlur"
+        >
         </bk-input>
         <p class="reason-empty-wrapper" v-if="isShowReasonError">{{ $t(`m.verify['请输入理由']`) }}</p>
       </section>
@@ -102,21 +104,19 @@
       :name="curGroupName"
       :group-id="curGroupId"
       :show-member="false"
-      @animation-end="handleAnimationEnd" />
+      @animation-end="handleAnimationEnd"
+    />
 
     <bk-sideslider
       :is-show.sync="isShowGradeSlider"
       :width="640"
       :title="gradeSliderTitle"
       :quick-close="true"
-      @animation-end="gradeSliderTitle === ''">
-      <div class="grade-memebers-content"
-        slot="content"
-        v-bkloading="{ isLoading: sliderLoading, opacity: 1 }">
+      @animation-end="gradeSliderTitle === ''"
+    >
+      <div class="grade-memebers-content" slot="content" v-bkloading="{ isLoading: sliderLoading, opacity: 1 }">
         <template v-if="!sliderLoading">
-          <div v-for="(item, index) in gradeMembers"
-            :key="index"
-            class="member-item">
+          <div v-for="(item, index) in gradeMembers" :key="index" class="member-item">
             <span class="member-name">
               {{ item }}
             </span>
@@ -183,7 +183,7 @@
       };
     },
     computed: {
-            ...mapGetters(['user', 'externalSystemId'])
+      ...mapGetters(['user', 'externalSystemId'])
     },
     watch: {
       reason (value) {
@@ -202,10 +202,10 @@
         {
           id: 'id',
           name: 'ID'
-          // validate (values, item) {
-          //     const validate = (values || []).every(_ => /^(\d*)$/.test(_.name))
-          //     return !validate ? '' : true
-          // }
+        // validate (values, item) {
+        //     const validate = (values || []).every(_ => /^(\d*)$/.test(_.name))
+        //     return !validate ? '' : true
+        // }
         },
         {
           id: 'name',
@@ -230,7 +230,7 @@
         }
       ];
       this.setCurrentQueryCache(this.refreshCurrentQuery());
-      const isObject = payload => {
+      const isObject = (payload) => {
         return Object.prototype.toString.call(payload) === '[object Object]';
       };
       const currentQueryCache = this.getCurrentQueryCache();
@@ -242,7 +242,7 @@
         for (const key in currentQueryCache) {
           if (key !== 'limit' && key !== 'current') {
             const curData = currentQueryCache[key];
-            const tempData = this.searchData.find(item => item.id === key);
+            const tempData = this.searchData.find((item) => item.id === key);
             if (isObject(curData)) {
               if (tempData) {
                 this.searchValue.push({
@@ -257,10 +257,12 @@
               this.searchValue.push({
                 id: key,
                 name: tempData.name,
-                values: [{
-                  id: curData,
-                  name: curData
-                }]
+                values: [
+                  {
+                    id: curData,
+                    name: curData
+                  }
+                ]
               });
               this.searchList.push(..._.cloneDeep(this.searchValue));
               this.searchParams[key] = curData;
@@ -305,25 +307,27 @@
         const queryParams = {
           limit,
           current,
-                    ...this.searchParams
+        ...this.searchParams
         };
         window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
         for (const key in this.searchParams) {
-          const tempObj = this.searchData.find(item => key === item.id);
+          const tempObj = this.searchData.find((item) => key === item.id);
           if (tempObj && tempObj.remoteMethod && typeof tempObj.remoteMethod === 'function') {
             if (this.searchList.length > 0) {
-              const tempData = this.searchList.find(item => item.id === key);
+              const tempData = this.searchList.find((item) => item.id === key);
               params[key] = tempData.values[0];
             }
           } else {
             params[key] = this.searchParams[key];
           }
         }
-        this.emptyData = Object.assign(this.emptyData, { tipType: Object.keys(this.searchParams).length > 0 ? 'search' : '' });
+        this.emptyData = Object.assign(this.emptyData, {
+          tipType: Object.keys(this.searchParams).length > 0 ? 'search' : ''
+        });
         return {
-                    ...params,
-                    limit,
-                    current
+        ...params,
+        limit,
+        current
         };
       },
 
@@ -347,16 +351,16 @@
         this.tableLoading = true;
         this.setCurrentQueryCache(this.refreshCurrentQuery());
         const params = {
-                    ...this.searchParams,
-                    limit: this.pagination.limit,
-                    offset: this.pagination.limit * (this.pagination.current - 1)
+        ...this.searchParams,
+        limit: this.pagination.limit,
+        offset: this.pagination.limit * (this.pagination.current - 1)
         };
         try {
           const { code, data } = await this.$store.dispatch('userGroup/getUserGroupList', params);
           this.pagination.count = data.count || 0;
           this.tableList.splice(0, this.tableList.length, ...(data.results || []));
           this.$nextTick(() => {
-            this.tableList.forEach(item => {
+            this.tableList.forEach((item) => {
               if (this.curUserGroup.includes(item.id.toString())) {
                 this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
               }
@@ -412,11 +416,14 @@
       },
 
       resetPagination () {
-        this.pagination = Object.assign({}, {
-          limit: 10,
-          current: 1,
-          count: 0
-        });
+        this.pagination = Object.assign(
+          {},
+          {
+            limit: 10,
+            current: 1,
+            count: 0
+          }
+        );
       },
       // 系统包含数据
       handleRemoteSystem (value) {
@@ -424,22 +431,18 @@
         if (this.externalSystemId) {
           params.hidden = false;
         }
-        return this.$store.dispatch('system/getSystems', params)
-          .then(({ data }) => {
-            return data.map(({ id, name }) => ({ id, name })).filter(item => item.name.indexOf(value) > -1);
-          });
+        return this.$store.dispatch('system/getSystems', params).then(({ data }) => {
+          return data.map(({ id, name }) => ({ id, name })).filter((item) => item.name.indexOf(value) > -1);
+        });
       },
       // 管理空间数据
       handleGradeAdmin (value) {
-        return this.$store.dispatch('role/getScopeHasUser')
-          .then(({ data }) => {
-            const val = value.toLowerCase();
-            return !val
-              ? data.map(({ id, name }) => ({ id, name }))
-              : data.map(({ id, name }) => ({ id, name })).filter(
-                item => item.name.toLowerCase().indexOf(val) > -1
-              );
-          });
+        return this.$store.dispatch('role/getScopeHasUser').then(({ data }) => {
+          const val = value.toLowerCase();
+          return !val
+            ? data.map(({ id, name }) => ({ id, name }))
+            : data.map(({ id, name }) => ({ id, name })).filter((item) => item.name.toLowerCase().indexOf(val) > -1);
+        });
       },
       handleSearch (payload, result) {
         this.currentSelectList = [];
@@ -459,7 +462,9 @@
       handleViewDetail (payload) {
         if (payload.role && payload.role.name) {
           this.isShowGradeSlider = true;
-          this.gradeSliderTitle = `${this.$t(`m.common['【']`)}${payload.role.name}${this.$t(`m.common['】']`)}${this.$t(`m.grading['管理空间']`)} ${this.$t(`m.common['成员']`)}`;
+          this.gradeSliderTitle = this.$t(`m.info['管理空间成员侧边栏标题信息']`, {
+            value: `${this.$t(`m.common['【']`)}${payload.role.name}${this.$t(`m.common['']`)}`
+          });
           this.fetchRoles(payload.role.id);
         }
       },
@@ -486,12 +491,12 @@
       },
 
       handlerAllChange (selection) {
-        this.currentSelectList = selection.filter(item => !this.curUserGroup.includes(item.id.toString()));
+        this.currentSelectList = selection.filter((item) => !this.curUserGroup.includes(item.id.toString()));
         this.isShowGroupError = false;
       },
 
       handlerChange (selection, row) {
-        this.currentSelectList = selection.filter(item => !this.curUserGroup.includes(item.id.toString()));
+        this.currentSelectList = selection.filter((item) => !this.curUserGroup.includes(item.id.toString()));
         this.isShowGroupError = false;
       },
 
@@ -501,7 +506,7 @@
             page_size: 100,
             page: 1
           });
-          this.curUserGroup = data.results.filter(item => item.department_id === 0).map(item => item.id);
+          this.curUserGroup = data.results.filter((item) => item.department_id === 0).map((item) => item.id);
           this.emptyData = formatCodeData(code, this.emptyData, this.curUserGroup.length === 0);
         } catch (e) {
           this.$emit('toggle-loading', false);
@@ -534,7 +539,7 @@
         if (payload !== PERMANENT_TIMESTAMP && payload) {
           const nowTimestamp = +new Date() / 1000;
           const tempArr = String(nowTimestamp).split('');
-          const dotIndex = tempArr.findIndex(item => item === '.');
+          const dotIndex = tempArr.findIndex((item) => item === '.');
           const nowSecond = parseInt(tempArr.splice(0, dotIndex).join(''), 10);
           this.expiredAtUse = payload + nowSecond;
           return;
@@ -545,7 +550,7 @@
       handleExpiredAt () {
         const nowTimestamp = +new Date() / 1000;
         const tempArr = String(nowTimestamp).split('');
-        const dotIndex = tempArr.findIndex(item => item === '.');
+        const dotIndex = tempArr.findIndex((item) => item === '.');
         const nowSecond = parseInt(tempArr.splice(0, dotIndex).join(''), 10);
         const expiredAt = this.expiredAtUse + nowSecond;
         return expiredAt;
@@ -608,87 +613,87 @@
   };
 </script>
 <style lang="postcss">
-    .iam-join-user-group-wrapper {
-        .user-group-table {
-            .user-group-table {
-                margin-top: 10px;
-                border-right: none;
-                border-bottom: none;
-                &.set-border {
-                    border-right: 1px solid #dfe0e5;
-                    border-bottom: 1px solid #dfe0e5;
-                }
-                .user-group-name {
-                    color: #3a84ff;
-                    cursor: pointer;
-                    &:hover {
-                        color: #699df4;
-                    }
-                }
-            }
-            .can-view {
-                color: #3a84ff;
-                cursor: pointer;
-                &:hover {
-                    color: #699df4;
-                }
-            }
+.iam-join-user-group-wrapper {
+  .user-group-table {
+    .user-group-table {
+      margin-top: 10px;
+      border-right: none;
+      border-bottom: none;
+      &.set-border {
+        border-right: 1px solid #dfe0e5;
+        border-bottom: 1px solid #dfe0e5;
+      }
+      .user-group-name {
+        color: #3a84ff;
+        cursor: pointer;
+        &:hover {
+          color: #699df4;
         }
-        .serch-wrapper {
-            .info {
-                line-height: 30px;
-                font-size: 12px;
-            }
-        }
-        .expired-at-wrapper {
-            margin-top: 16px;
-        }
-        .reason-wrapper {
-            margin-top: 16px;
-            .join-reason-error {
-                .bk-textarea-wrapper {
-                    border-color: #ff5656;
-                }
-            }
-        }
-        .user-group-error,
-        .expired-at-error,
-        .reason-empty-wrapper {
-            margin-top: 5px;
-            font-size: 12px;
-            color: #ff4d4d;
-        }
+      }
     }
-    .grade-memebers-content {
-        padding: 20px;
-        height: calc(100vh - 61px);
-        .member-item {
-            position: relative;
-            display: inline-block;
-            margin: 0 6px 6px 0;
-            padding: 0 10px;
-            line-height: 22px;
-            background: #f5f6fa;
-            border: 1px solid #dcdee5;
-            border-radius: 2px;
-            font-size: 12px;
-            .member-name {
-                display: inline-block;
-                max-width: 200px;
-                line-height: 17px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                vertical-align: text-top;
-                .count {
-                    color: #c4c6cc;
-                }
-            }
-        }
-        .info {
-            margin-top: 5px;
-            color: #c4c6cc;
-            font-size: 14px;
-        }
+    .can-view {
+      color: #3a84ff;
+      cursor: pointer;
+      &:hover {
+        color: #699df4;
+      }
     }
+  }
+  .serch-wrapper {
+    .info {
+      line-height: 30px;
+      font-size: 12px;
+    }
+  }
+  .expired-at-wrapper {
+    margin-top: 16px;
+  }
+  .reason-wrapper {
+    margin-top: 16px;
+    .join-reason-error {
+      .bk-textarea-wrapper {
+        border-color: #ff5656;
+      }
+    }
+  }
+  .user-group-error,
+  .expired-at-error,
+  .reason-empty-wrapper {
+    margin-top: 5px;
+    font-size: 12px;
+    color: #ff4d4d;
+  }
+}
+.grade-memebers-content {
+  padding: 20px;
+  height: calc(100vh - 61px);
+  .member-item {
+    position: relative;
+    display: inline-block;
+    margin: 0 6px 6px 0;
+    padding: 0 10px;
+    line-height: 22px;
+    background: #f5f6fa;
+    border: 1px solid #dcdee5;
+    border-radius: 2px;
+    font-size: 12px;
+    .member-name {
+      display: inline-block;
+      max-width: 200px;
+      line-height: 17px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      vertical-align: text-top;
+      .count {
+        color: #c4c6cc;
+      }
+    }
+  }
+  .info {
+    margin-top: 5px;
+    color: #c4c6cc;
+    font-size: 14px;
+  }
+}
 </style>
