@@ -585,7 +585,7 @@
         },
         defaultFormItemStyle () {
             return {
-                width: '300px'
+                width: '240px'
             };
         }
     },
