@@ -1,6 +1,9 @@
 <!-- 2023-06-07 -->
 # V1.10.5 ChangeLog
 
+### New Features
+* Applying for user group permissions can be done by operating and searching user groups in the instances
+
 ### Optimization Updates
 * Optimize the associated permission deletion logic
 
