@@ -3,7 +3,7 @@
     <render-horizontal-block :label="$t(`m.permApply['选择用户组']`)" :required="true">
       <div class="user-group-table">
         <div class="search-wrapper">
-          <render-search>
+          <render-search v-if="enableGroupInstanceSearch">
             <div
               :class="[
                 'join-user-group-form',
@@ -144,6 +144,14 @@
               </div>
             </div>
           </render-search>
+          <div v-else>
+            <iam-search-select
+              @on-change="handleSearch"
+              :data="searchData"
+              :value="searchValue"
+              :placeholder="$t(`m.applyEntrance['申请加入用户组搜索提示']`)"
+              :quick-search-method="quickSearchMethod" />
+          </div>
           <div class="info">
             {{ $t(`m.info['如果以下用户组不满足您的权限需求']`) }}
             {{ $t(`m.common['，']`) }}
@@ -514,39 +522,72 @@
         groupIndex: -1,
         systemIdError: false,
         actionError: false,
-        isSearchSystem: false
+        isSearchSystem: false,
+        initSearchData: [
+          {
+            id: 'name',
+            name: this.$t(`m.userGroup['用户组名']`),
+            default: true
+          },
+          {
+            id: 'id',
+            name: 'ID',
+            default: true
+          // validate (values, item) {
+          //     const validate = (values || []).every(_ => /^(\d*)$/.test(_.name))
+          //     return !validate ? '' : true
+          // }
+          },
+          {
+            id: 'description',
+            name: this.$t(`m.common['描述']`),
+            disabled: true
+          },
+          {
+            id: 'system_id',
+            name: this.$t(`m.common['系统包含']`),
+            remoteMethod: this.handleRemoteSystem
+          },
+          // 管理空间
+          {
+            id: 'role_id',
+            name: this.$t(`m.grading['管理空间']`),
+            remoteMethod: this.handleGradeAdmin
+          }
+        ],
+        enableGroupInstanceSearch: window.ENABLE_GROUP_INSTANCE_SEARCH.toLowerCase() === 'true'
       };
     },
     computed: {
-            ...mapGetters(['user', 'externalSystemId']),
-            condition () {
-                if (this.curResIndex === -1 || this.groupIndex === -1) {
-                    return [];
-                }
-                this.curResourceData = this.resourceTypeData.resource_groups[this.groupIndex]
-                    .related_resource_types[this.curResIndex];
-                if (!this.curResourceData) {
-                    return [];
-                }
-                if (this.curResourceData.condition.length === 0) this.curResourceData.condition = ['none'];
-                return _.cloneDeep(this.curResourceData.condition);
-            },
-            curSelectionMode () {
-                if (this.curResIndex === -1 || this.groupIndex === -1) {
-                    return 'all';
-                }
-                this.curResourceData = this.resourceTypeData.resource_groups[this.groupIndex]
-                    .related_resource_types[this.curResIndex];
-                return this.curResourceData.selectionMode;
-            },
-            originalCondition () {
-                return _.cloneDeep(this.condition);
-            },
-            defaultFormItemStyle () {
-                return {
-                    width: '300px'
-                };
+        ...mapGetters(['user', 'externalSystemId']),
+        condition () {
+            if (this.curResIndex === -1 || this.groupIndex === -1) {
+                return [];
             }
+            this.curResourceData = this.resourceTypeData.resource_groups[this.groupIndex]
+                .related_resource_types[this.curResIndex];
+            if (!this.curResourceData) {
+                return [];
+            }
+            if (this.curResourceData.condition.length === 0) this.curResourceData.condition = ['none'];
+            return _.cloneDeep(this.curResourceData.condition);
+        },
+        curSelectionMode () {
+            if (this.curResIndex === -1 || this.groupIndex === -1) {
+                return 'all';
+            }
+            this.curResourceData = this.resourceTypeData.resource_groups[this.groupIndex]
+                .related_resource_types[this.curResIndex];
+            return this.curResourceData.selectionMode;
+        },
+        originalCondition () {
+            return _.cloneDeep(this.condition);
+        },
+        defaultFormItemStyle () {
+            return {
+                width: '240px'
+            };
+        }
     },
     watch: {
       reason () {
@@ -571,38 +612,7 @@
           'is_selected': true
         }
       ];
-      this.searchData = [
-        {
-          id: 'name',
-          name: this.$t(`m.userGroup['用户组名']`),
-          default: true
-        },
-        {
-          id: 'id',
-          name: 'ID',
-          default: true
-          // validate (values, item) {
-          //     const validate = (values || []).every(_ => /^(\d*)$/.test(_.name))
-          //     return !validate ? '' : true
-          // }
-        },
-        {
-          id: 'description',
-          name: this.$t(`m.common['描述']`),
-          disabled: true
-        }
-        // {
-        //     id: 'system_id',
-        //     name: this.$t(`m.common['系统包含']`),
-        //     remoteMethod: this.handleRemoteSystem
-        // },
-        // // 管理空间
-        // {
-        //     id: 'role_id',
-        //     name: this.$t(`m.grading['管理空间']`),
-        //     remoteMethod: this.handleGradeAdmin
-        // }
-      ];
+      this.searchData = this.enableGroupInstanceSearch ? this.initSearchData.filter(item => ['name', 'id', 'description'].includes(item.id)) : this.initSearchData;
       this.setCurrentQueryCache(this.refreshCurrentQuery());
       const isObject = (payload) => {
         return Object.prototype.toString.call(payload) === '[object Object]';
@@ -843,7 +853,7 @@
       },
 
       async handleSearchUserGroup (isClick = false) {
-        if (this.applyGroupData.system_id) {
+        if (this.applyGroupData.system_id && this.enableGroupInstanceSearch) {
           if (!this.applyGroupData.system_id) {
             this.systemIdError = true;
             return;
@@ -942,10 +952,10 @@
         this.setCurrentQueryCache(this.refreshCurrentQuery());
         const { current, limit } = this.pagination;
         const params = {
-                    // ...this.applyGroupData,
-                    ...this.searchParams,
-                    limit,
-                    offset: limit * (current - 1)
+            // ...this.applyGroupData,
+            ...this.searchParams,
+            limit,
+            offset: limit * (current - 1)
         };
         try {
           const { code, data } = await this.$store.dispatch('userGroup/getUserGroupList', params);
@@ -972,6 +982,7 @@
         } catch (e) {
           console.error(e);
           this.emptyData = formatCodeData(e.code, this.emptyData);
+          this.tableList = [];
           this.bkMessageInstance = this.$bkMessage({
             limit: 1,
             theme: 'primary',
@@ -1146,7 +1157,7 @@
       handleViewDetail (payload) {
         if (payload.role && payload.role.name) {
           this.isShowGradeSlider = true;
-          this.gradeSliderTitle = `${this.$t(`m.common['【']`)}${payload.role.name}${this.$t(`m.common['】']`)}${this.$t(`m.grading['管理空间']`)} ${this.$t(`m.common['成员']`)}`;
+          this.gradeSliderTitle = this.$t(`m.info['管理空间成员侧边栏标题信息']`, { value: `${this.$t(`m.common['【']`)}${payload.role.name}${this.$t(`m.common['']`)}` });
           this.fetchRoles(payload.role.id);
         }
       },
@@ -1347,9 +1358,9 @@
       refreshCurrentQuery () {
         const params = {};
         const queryParams = {
-                    ...this.searchParams,
-                    ...this.$route.query,
-                    ...this.queryParams
+          ...this.searchParams,
+          ...this.$route.query,
+          ...this.queryParams
         };
         if (Object.keys(queryParams).length) {
           window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
@@ -1369,7 +1380,7 @@
         }
         this.emptyData = Object.assign(this.emptyData, { tipType: Object.keys(this.searchParams).length > 0 ? 'search' : '' });
         return {
-                    ...queryParams
+          ...queryParams
         };
       },
 
