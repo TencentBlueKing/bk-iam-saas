@@ -14,6 +14,7 @@ from typing import List
 from bk_audit.log.exporters import LoggerExporter
 from bk_audit.log.models import AuditEvent
 from celery import shared_task
+from django.conf import settings
 from django.utils import timezone
 
 from backend.apps.policy.models import Policy
@@ -89,7 +90,7 @@ class AuditEventHandler:
             request_id=event.source_data_request_id,
             username=event.username,
             start_time=event.created_timestamp * 1000,
-            bk_app_code=event.source_data_app_code,
+            bk_app_code=settings.APP_CODE,
             access_type=AuditSourceType.to_int(event.source_type),
             action_id=action_id,
             resource_type_id=event.object_type,
@@ -120,7 +121,7 @@ class AuditEventHandler:
             request_id=event.source_data_request_id,
             username=event.username,
             start_time=event.created_timestamp * 1000,
-            bk_app_code=event.source_data_app_code,
+            bk_app_code=settings.APP_CODE,
             access_type=AuditSourceType.to_int(event.source_type),
             action_id=action_id,
             result_code=event.status,
@@ -147,7 +148,7 @@ class AuditEventHandler:
             request_id=event.source_data_request_id,
             username=event.username,
             start_time=event.created_timestamp * 1000,
-            bk_app_code=event.source_data_app_code,
+            bk_app_code=settings.APP_CODE,
             access_type=AuditSourceType.to_int(event.source_type),
             action_id=action_id,
             result_code=event.status,
@@ -171,7 +172,7 @@ class AuditEventHandler:
                     request_id=event.source_data_request_id,
                     username=event.username,
                     start_time=event.created_timestamp * 1000,
-                    bk_app_code=event.source_data_app_code,
+                    bk_app_code=settings.APP_CODE,
                     access_type=AuditSourceType.to_int(event.source_type),
                     action_id="policy_update",
                     resource_type_id="policy",
@@ -195,7 +196,7 @@ class AuditEventHandler:
                     request_id=event.source_data_request_id,
                     username=event.username,
                     start_time=event.created_timestamp * 1000,
-                    bk_app_code=event.source_data_app_code,
+                    bk_app_code=settings.APP_CODE,
                     access_type=AuditSourceType.to_int(event.source_type),
                     action_id="policy_update",
                     resource_type_id="policy",
@@ -226,7 +227,7 @@ class AuditEventHandler:
             request_id=event.source_data_request_id,
             username=event.username,
             start_time=event.created_timestamp * 1000,
-            bk_app_code=event.source_data_app_code,
+            bk_app_code=settings.APP_CODE,
             access_type=AuditSourceType.to_int(event.source_type),
             action_id=action_id,
             resource_type_id="policy",
@@ -252,7 +253,7 @@ class AuditEventHandler:
             request_id=event.source_data_request_id,
             username=event.username,
             start_time=event.created_timestamp * 1000,
-            bk_app_code=event.source_data_app_code,
+            bk_app_code=settings.APP_CODE,
             access_type=AuditSourceType.to_int(event.source_type),
             action_id=action_id,
             resource_type_id=resource_type_id,
