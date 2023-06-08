@@ -1,5 +1,6 @@
 apigateway:
   description: "蓝鲸权限中心 API"
+  description_en: "Blueking IAM API"
   is_public: true
   maintainers:
     - "admin"

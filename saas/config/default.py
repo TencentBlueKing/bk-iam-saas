@@ -398,6 +398,7 @@ ENABLE_FRONT_END_FEATURES = {
     "enable_model_build": env.bool("BKAPP_ENABLE_FRONT_END_MODEL_BUILD", default=False),
     "enable_permission_handover": env.bool("BKAPP_ENABLE_FRONT_END_PERMISSION_HANDOVER", default=True),
     "enable_temporary_policy": env.bool("BKAPP_ENABLE_FRONT_END_TEMPORARY_POLICY", default=False),
+    "enable_group_instance_search": env.bool("BKAPP_ENABLE_FRONT_END_GROUP_INSTANCE_SEARCH", default=False),
 }
 
 # Open API接入APIGW后，需要对APIGW请求来源认证，使用公钥解开jwt
