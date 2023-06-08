@@ -22,20 +22,18 @@
                                 <render-resource-popover
                                     :key="item.type"
                                     :data="item.condition"
-                                    :value="`${item.name}: ${item.value}`"
+                                    :value="`${item.name}：${item.value}`"
                                     :max-width="380"
                                     @on-view="handleViewResource(_, row)" />
                             </p>
                             <Icon
-                                v-if="isShowPreview(row)"
                                 type="detail-new"
                                 class="view-icon"
                                 :title="$t(`m.common['详情']`)"
+                                v-if="isShowPreview(row)"
                                 @click.stop="handleViewResource(_, row)" />
-                            <Icon
-                                v-if="isShowPreview(row) && row.resource_groups.length > 2"
-                                type="reduce-hollow"
-                                :title="$t(`m.common['删除']`)"
+                            <Icon v-if="isShowPreview(row) && row.resource_groups.length > 2"
+                                :title="$t(`m.common['删除']`)" type="reduce-hollow"
                                 :class="row.resource_groups.length > 1 ? 'effect-icon' : 'effect-icon-disabled'"
                                 @click.stop="handlerReduceInstance(_, row)" />
                         </div>
@@ -71,11 +69,11 @@
             <bk-table-column prop="expired_dis" min-width="100" :label="$t(`m.common['有效期']`)"></bk-table-column>
             <bk-table-column :label="$t(`m.common['操作']`)">
                 <template slot-scope="{ row }">
-                    <bk-button text @click="handleShowDelDialog(row)">{{ $t(`m.common['删除']`) }}</bk-button>
+                    <bk-button text @click="handleDelete(row)">{{ $t(`m.common['删除']`) }}</bk-button>
                 </template>
             </bk-table-column>
         </bk-table>
-  
+
         <delete-dialog
             :show.sync="deleteDialog.visible"
             :loading="deleteDialog.loading"
@@ -83,8 +81,8 @@
             :sub-title="deleteDialog.subTitle"
             @on-after-leave="handleAfterDeleteLeave"
             @on-cancel="hideCancelDelete"
-            @on-sumbit="handleSubmitDelete" />
-  
+            @on-sumbit="handleSumbitDelete" />
+
         <bk-sideslider
             :is-show="isShowSideslider"
             :title="sidesliderTitle"
@@ -129,7 +127,7 @@
                     @on-change="handleChange" />
             </div>
         </bk-sideslider>
-  
+
         <bk-sideslider
             :is-show="isShowEnvironmentsSideslider"
             :title="environmentsSidesliderTitle"
@@ -146,7 +144,7 @@
                 </effect-conditon>
             </div>
         </bk-sideslider>
-  
+
         <!-- 生效时间编辑功能需要产品确认 暂时隐藏 -->
         <bk-sideslider
             :is-show="isShowResourceInstanceEffectTime"
@@ -169,21 +167,9 @@
                     @click="handleResourceEffectTimeCancel">{{ $t(`m.common['取消']`) }}</bk-button>
             </div>
         </bk-sideslider>
-  
-        <delete-action-dialog
-            :show.sync="isShowDeleteDialog"
-            :title="$t(`m.dialog['确认删除内容？']`, { value: $t(`m.dialog['删除操作权限']`) } )"
-            :tip="$t(`m.info['删除依赖操作产生的影响']`, { value: currentActionName })"
-            :name="currentActionName"
-            :related-action-list="delActionList"
-            @on-after-leave="handleAfterDeleteLeaveAction"
-            @on-cancel="handleCancelDelete"
-            @on-submit="handleSubmitDelete"
-        />
-  
     </div>
 </template>
-  <script>
+<script>
     import _ from 'lodash';
     import { mapGetters } from 'vuex';
     import IamPopoverConfirm from '@/components/iam-popover-confirm';
@@ -194,8 +180,7 @@
     import RenderDetail from '../components/render-detail-edit';
     import EffectConditon from './effect-conditon';
     import SidesliderEffectConditon from './sideslider-effect-condition';
-    import DeleteActionDialog from '@/views/group/components/delete-related-action-dialog.vue';
-  
+
     export default {
         name: 'CustomPermTable',
         components: {
@@ -204,24 +189,12 @@
             RenderResourcePopover,
             DeleteDialog,
             EffectConditon,
-            SidesliderEffectConditon,
-            DeleteActionDialog
+            SidesliderEffectConditon
         },
         props: {
             systemId: {
                 type: String,
                 default: ''
-            },
-            emptyData: {
-                type: Object,
-                default: () => {
-                    return {
-                        type: '',
-                        text: '',
-                        tip: '',
-                        tipType: ''
-                    };
-                }
             }
         },
         data () {
@@ -234,6 +207,7 @@
                 curPolicyId: '',
                 isShowSideslider: false,
                 curDeleteIds: [],
+
                 deleteDialog: {
                     visible: false,
                     title: this.$t(`m.dialog['确认删除']`),
@@ -241,7 +215,7 @@
                     loading: false
                 },
                 sidesliderTitle: '',
-  
+
                 isBatchDelete: true,
                 batchDisabled: false,
                 disabled: true,
@@ -252,23 +226,20 @@
                 isShowResourceInstanceEffectTime: false,
                 resourceGrouParams: {},
                 params: '',
-                originalCustomTmplList: [],
-                isShowDeleteDialog: false,
-                currentActionName: '',
-                delActionList: []
-  
+                originalCustomTmplList: []
+
             };
         },
         computed: {
-          ...mapGetters(['user', 'externalSystemId']),
-          loading () {
-              return this.initRequestQueue.length > 0;
-          },
-          isShowPreview () {
-              return (payload) => {
-                  return !payload.isEmpty && payload.policy_id !== '';
-              };
-          }
+            ...mapGetters(['user']),
+            loading () {
+                return this.initRequestQueue.length > 0;
+            },
+            isShowPreview () {
+                return (payload) => {
+                    return !payload.isEmpty && payload.policy_id !== '';
+                };
+            }
         },
         watch: {
             systemId: {
@@ -302,9 +273,6 @@
                     system_id: systemId,
                     user_id: this.user.username
                 };
-                if (this.externalSystemId) {
-                    params.system_id = this.externalSystemId;
-                }
                 try {
                     const res = await this.$store.dispatch('permApply/getActions', params);
                     this.originalCustomTmplList = _.cloneDeep(res.data);
@@ -332,7 +300,7 @@
                         });
                     });
                 });
-  
+
                 this.linearActionList = _.cloneDeep(linearActions);
             },
             /**
@@ -343,8 +311,7 @@
                     const res = await this.$store.dispatch('permApply/getPolicies', { system_id: params.systemId });
                     this.policyList = res.data.map(item => {
                         // eslint-disable-next-line max-len
-                        const relatedEnvironments = this.linearActionList.find(sub => sub.id === item.id);
-                        item.related_environments = relatedEnvironments ? relatedEnvironments.related_environments : [];
+                        item.related_environments = this.linearActionList.find(sub => sub.id === item.id).related_environments;
                         return new PermPolicy(item);
                     });
                 } catch (e) {
@@ -360,7 +327,7 @@
                     this.initRequestQueue.shift();
                 }
             },
-  
+
             /**
              * getCellClass
              */
@@ -370,7 +337,7 @@
                 }
                 return '';
             },
-  
+
             /**
              * handleRefreshData
              */
@@ -381,7 +348,7 @@
                 };
                 this.fetchData(params);
             },
-  
+
             /**
              * handleBatchDelete
              */
@@ -389,18 +356,18 @@
                 window.changeAlert = true;
                 this.isBatchDelete = false;
             },
-  
+
             handleTabChange (payload) {
                 const { disabled, canDelete } = payload;
                 this.batchDisabled = disabled;
                 this.canOperate = canDelete;
             },
-  
+
             handleChange () {
                 const data = this.$refs.detailComRef.handleGetValue();
                 this.disabled = data.ids.length < 1 && data.condition.length < 1;
             },
-  
+
             async handleDeletePerm (payload) {
                 const data = this.$refs.detailComRef.handleGetValue();
                 const { ids, condition, type, resource_group_id } = data;
@@ -434,11 +401,11 @@
                     payload && payload.hide();
                 }
             },
-  
+
             handleCancel () {
                 this.isBatchDelete = true;
             },
-  
+
             handleResourceCancel () {
                 let cancelHandler = Promise.resolve();
                 if (window.changeAlert) {
@@ -450,7 +417,7 @@
                     this.resetDataAfterClose();
                 }, _ => _);
             },
-  
+
             handleResourceEffectTimeCancel () {
                 let cancelHandler = Promise.resolve();
                 if (window.changeAlert) {
@@ -461,7 +428,7 @@
                     this.resetDataAfterClose();
                 }, _ => _);
             },
-  
+
             /**
              * handleResourceEffectTimeSumit
              */
@@ -470,7 +437,7 @@
                 console.log(this.curIndex, this.curGroupIndex, environments);
                 window.changeAlert = false;
             },
-  
+
             /**
              * resetDataAfterClose
              */
@@ -484,7 +451,7 @@
                 this.curId = '';
                 this.curPolicyId = '';
             },
-  
+
             /**
              * handleAfterDeleteLeave
              */
@@ -492,25 +459,14 @@
                 this.deleteDialog.subTitle = '';
                 this.curDeleteIds = [];
             },
-  
+
             /**
              * hideCancelDelete
              */
             hideCancelDelete () {
                 this.deleteDialog.visible = false;
             },
-  
-            handleAfterDeleteLeaveAction () {
-                this.currentActionName = '';
-                this.delActionList = [];
-                this.curDeleteIds = [];
-            },
-  
-            handleCancelDelete () {
-                this.isShowDeleteDialog = false;
-                this.curDeleteIds = [];
-            },
-  
+
             /**
              * handleViewResource
              */
@@ -518,7 +474,7 @@
                 this.curId = payload.id;
                 this.curPolicyId = payload.policy_id;
                 const params = [];
-  
+
                 if (groupItem.related_resource_types.length > 0) {
                     groupItem.related_resource_types.forEach(item => {
                         const { name, type, condition } = item;
@@ -533,27 +489,27 @@
                     });
                 }
                 this.previewData = _.cloneDeep(params);
-  
+
                 if (this.previewData[0].tabType === 'relate') {
                     this.canOperate = false;
                 }
                 if (this.previewData[0].tabType === 'resource' && (this.previewData[0].data.length < 1 || this.previewData[0].data.every(item => !item.instance || item.instance.length < 1))) {
                     this.batchDisabled = true;
                 }
-                this.sidesliderTitle = this.$t(`m.info['操作侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}` });
+                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${payload.name}】${this.$t(`m.common['的资源实例']`)}`;
                 window.changeAlert = 'iamSidesider';
                 this.isShowSideslider = true;
             },
-  
+
             /**
              * handleEnvironmentsViewResource
              */
             handleEnvironmentsViewResource (payload, data) {
                 this.environmentsSidesliderData = payload.environments;
                 this.isShowEnvironmentsSideslider = true;
-                this.environmentsSidesliderTitle = this.$t(`m.info['关联侧边栏操作生效条件']`, { value: `${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}` });
+                this.environmentsSidesliderTitle = `$【${data.name}】${this.$t(`m.common['生效条件']`)}`;
             },
-  
+
             /**
              * handlerReduceInstance
              */
@@ -566,7 +522,7 @@
                     resourceGroupId: payload.id
                 };
             },
-  
+
             /**
              * handleViewSidesliderCondition
              */
@@ -574,52 +530,20 @@
                 console.log('environmentsSidesliderData', this.environmentsSidesliderData);
                 this.isShowResourceInstanceEffectTime = true;
             },
-  
+
             /**
-             * handleShowDelDialog
+             * handleDelete
              */
-            handleShowDelDialog (payload) {
-                const { id, name } = payload;
-                let delRelatedActions = [];
-                this.delActionList = [];
-                this.currentActionName = name;
-                const policyIdList = this.policyList.map(v => v.id);
-                const linearActionList = this.linearActionList.filter(item => policyIdList.includes(item.id));
-                const curAction = linearActionList.find(item => item.id === id);
-                const hasRelatedActions = curAction && curAction.related_actions && curAction.related_actions.length;
-                linearActionList.forEach(item => {
-                    // 如果这里过滤自己还能在其他数据找到相同的related_actions，就代表有其他数据也关联了相同的操作
-                    if (hasRelatedActions && item.related_actions && item.related_actions.length && item.id !== id) {
-                        delRelatedActions = item.related_actions.filter(v => curAction.related_actions.includes(v));
-                    }
-                    if (item.related_actions && item.related_actions.includes(id)) {
-                        this.delActionList.push(item);
-                    }
-                });
-                let policyIds = [payload.policy_id];
-                if (this.delActionList.length) {
-                    const list = this.policyList.filter(item =>
-                        this.delActionList.map(action => action.id).includes(item.id));
-                    policyIds = [payload.policy_id].concat(list.map(v => v.policy_id));
-                }
-                if (!delRelatedActions.length && hasRelatedActions) {
-                    const list = [...this.policyList].filter(v => curAction.related_actions.includes(v.id));
-                    if (list.length) {
-                        // eslint-disable-next-line camelcase
-                        policyIds = policyIds.concat(list.map(v => v.policy_id));
-                    }
-                }
-                this.curDeleteIds.splice(0, this.curDeleteIds.length, ...policyIds);
-                // this.deleteDialog.subTitle
-                //   = `${this.$t(`m.dialog['将删除']`)}${this.$t(`m.common['【']`)}${name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的权限']`)}`;
-                // this.deleteDialog.visible = true;
-                this.isShowDeleteDialog = true;
+            handleDelete (payload) {
+                this.curDeleteIds.splice(0, this.curDeleteIds.length, ...[payload.policy_id]);
+                this.deleteDialog.subTitle = `${this.$t(`m.dialog['将删除']`)}【${payload.name}】权限`;
+                this.deleteDialog.visible = true;
             },
-  
+
             /**
-             * handleSubmitDelete
+             * handleSumbitDelete
              */
-            async handleSubmitDelete () {
+            async handleSumbitDelete () {
                 this.deleteDialog.loading = true;
                 try {
                     if (this.resourceGrouParams.id && this.resourceGrouParams.resourceGroupId) { // 表示删除的是资源组
@@ -635,8 +559,6 @@
                         if (index > -1) {
                             this.policyList.splice(index, 1);
                         }
-                        await this.fetchActions(this.systemId);
-                        await this.fetchData(this.params);
                         this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
                         this.$emit('after-delete', this.policyList.length);
                     }
@@ -652,141 +574,140 @@
                 } finally {
                     this.deleteDialog.loading = false;
                     this.deleteDialog.visible = false;
-                    this.isShowDeleteDialog = false;
                 }
             }
         }
     };
-  </script>
-  <style lang='postcss'>
-      .my-perm-custom-perm-table {
-          min-height: 101px;
-          .bk-table-enable-row-hover .bk-table-body tr:hover > td {
-              background-color: #fff;
-          }
-          .related-condition-list{
-              flex: 1;
-              display: flex;
-              flex-flow: column;
-              justify-content: center;
-              position: relative;
-              .effect-detail-icon {
-                  display: none;
-                  position: absolute;
-                  top: 50%;
-                  right: 10px;
-                  transform: translate(0, -50%);
-                  font-size: 18px;
-                  cursor: pointer;
-              }
-              &:hover {
-                  .effect-detail-icon {
-                      display: inline-block;
-                      color: #3a84ff;
-                  }
-              }
-          }
-          .related-resource-list{
-              position: relative;
-              .related-resource-item{
-                  margin: 20px !important;
-              }
-              .view-icon {
-                  display: none;
-                  position: absolute;
-                  top: 50%;
-                  right: 40px;
-                  transform: translate(0, -50%);
-                  font-size: 18px;
-                  cursor: pointer;
-              }
-              &:hover {
-                  .view-icon {
-                      display: inline-block;
-                      color: #3a84ff;
-                  }
-              }
-              .effect-icon {
-                  display: none;
-                  position: absolute;
-                  top: 50%;
-                  right: 10px;
-                  transform: translate(0, -50%);
-                  font-size: 18px;
-                  cursor: pointer;
-              }
-              &:hover {
-                  .effect-icon {
-                      display: inline-block;
-                      color: #3a84ff;
-                  }
-              }
-              .effect-icon-disabled{
-                  display: none;
-                  position: absolute;
-                  top: 50%;
-                  right: 10px;
-                  transform: translate(0, -50%);
-                  font-size: 18px;
-                  cursor: pointer;
-              }
-              &:hover {
-                  .effect-icon-disabled {
-                      display: inline-block;
-                      color: #dcdee5;
-                  }
-              }
-              &-border{border-bottom: 1px solid #dfe0e5;}
-          }
-          .bk-table {
-              border-right: none;
-              border-bottom: none;
-              .bk-table-header-wrapper {
-                  .cell {
-                      padding-left: 20px !important;
-                  }
-              }
-              .bk-table-body-wrapper {
-                  .cell {
-                      padding: 20px !important;
-                  }
-              }
-  
-              .iam-perm-table-cell-cls {
-                  .cell {
-                      padding: 0px !important;
-                      height: 100%;
-                  }
-                  .condition-table-cell{
-                      height: 100%;
-                      flex-flow: column;
-                      display: flex;
-                      justify-content: center;
-                      /* padding: 15px 0; */
-                  }
-                  .empty-text {
-                      padding: 0 20px;
-                  }
-              }
-              tr:hover {
-                  background-color: #fff;
-              }
-          }
-  
-          .iam-my-custom-perm-silder-header {
-              display: flex;
-              justify-content: space-between;
-              .action-wrapper {
-                  margin-right: 30px;
-                  font-weight: normal;
-              }
-          }
-  
-          .effect-conditon-side{
-              .text{
-                  font-size: 14px;
-                  color: #63656e;
-              }
-          }
-      }
-  </style>
+</script>
+<style lang='postcss'>
+    .my-perm-custom-perm-table {
+        min-height: 101px;
+        .bk-table-enable-row-hover .bk-table-body tr:hover > td {
+            background-color: #fff;
+        }
+        .related-condition-list{
+            flex: 1;
+            display: flex;
+            flex-flow: column;
+            justify-content: center;
+            position: relative;
+            .effect-detail-icon {
+                display: none;
+                position: absolute;
+                top: 50%;
+                right: 10px;
+                transform: translate(0, -50%);
+                font-size: 18px;
+                cursor: pointer;
+            }
+            &:hover {
+                .effect-detail-icon {
+                    display: inline-block;
+                    color: #3a84ff;
+                }
+            }
+        }
+        .related-resource-list{
+            position: relative;
+            .related-resource-item{
+                margin: 20px !important;
+            }
+            .view-icon {
+                display: none;
+                position: absolute;
+                top: 50%;
+                right: 40px;
+                transform: translate(0, -50%);
+                font-size: 18px;
+                cursor: pointer;
+            }
+            &:hover {
+                .view-icon {
+                    display: inline-block;
+                    color: #3a84ff;
+                }
+            }
+            .effect-icon {
+                display: none;
+                position: absolute;
+                top: 50%;
+                right: 10px;
+                transform: translate(0, -50%);
+                font-size: 18px;
+                cursor: pointer;
+            }
+            &:hover {
+                .effect-icon {
+                    display: inline-block;
+                    color: #3a84ff;
+                }
+            }
+            .effect-icon-disabled{
+                display: none;
+                position: absolute;
+                top: 50%;
+                right: 10px;
+                transform: translate(0, -50%);
+                font-size: 18px;
+                cursor: pointer;
+            }
+            &:hover {
+                .effect-icon-disabled {
+                    display: inline-block;
+                    color: #dcdee5;
+                }
+            }
+            &-border{border-bottom: 1px solid #dfe0e5;}
+        }
+        .bk-table {
+            border-right: none;
+            border-bottom: none;
+            .bk-table-header-wrapper {
+                .cell {
+                    padding-left: 20px !important;
+                }
+            }
+            .bk-table-body-wrapper {
+                .cell {
+                    padding: 20px !important;
+                }
+            }
+
+            .iam-perm-table-cell-cls {
+                .cell {
+                    padding: 0px !important;
+                    height: 100%;
+                }
+                .condition-table-cell{
+                    height: 100%;
+                    flex-flow: column;
+                    display: flex;
+                    justify-content: center;
+                    /* padding: 15px 0; */
+                }
+                .empty-text {
+                    padding: 0 20px;
+                }
+            }
+            tr:hover {
+                background-color: #fff;
+            }
+        }
+
+        .iam-my-custom-perm-silder-header {
+            display: flex;
+            justify-content: space-between;
+            .action-wrapper {
+                margin-right: 30px;
+                font-weight: normal;
+            }
+        }
+
+        .effect-conditon-side{
+            .text{
+                font-size: 14px;
+                color: #63656e;
+            }
+        }
+    }
+</style>

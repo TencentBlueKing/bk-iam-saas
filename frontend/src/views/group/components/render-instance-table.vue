@@ -42,7 +42,7 @@
                                     <render-resource-popover
                                         :key="item.type"
                                         :data="item.condition"
-                                        :value="`${item.name}: ${item.value}`"
+                                        :value="`${item.name}：${item.value}`"
                                         :max-width="380"
                                         @on-view="handleViewResource(row)" />
                                 </p>
@@ -58,14 +58,12 @@
                             v-if="isShowView(row)"
                             @click.stop="handleViewResource(row)" />
                         <template v-if="!isUserGroupDetail ? false : true && row.showDelete && !externalDelete">
-                            <Icon class="remove-icon" type="close-small" @click.stop="handleShowDelDialog(row)" />
+                            <Icon class="remove-icon" type="close-small" @click.stop="toHandleDelete(row)" />
                         </template>
                     </template>
                     <template v-else>
                         <div class="relation-content-wrapper" v-if="!!row.isAggregate">
-                            <label class="resource-type-name" v-if="row.aggregateResourceType && row.aggregateResourceType.length === 1">
-                                {{ row.aggregateResourceType[0].name }}
-                            </label>
+                            <label class="resource-type-name" v-if="row.aggregateResourceType.length === 1">{{ row.aggregateResourceType[0].name }}</label>
                             <div class="bk-button-group tab-button" v-else>
                                 <bk-button v-for="(item, index) in row.aggregateResourceType"
                                     :key="item.id" @click="selectResourceType(row, index)"
@@ -132,11 +130,14 @@
                             </template>
                         </div>
                         <!-- <div class="remove-icon">
-                              <Icon type="close-small" />
-                          </div> -->
+                            <Icon type="close-small" />
+                        </div> -->
                     </template>
                 </template>
             </bk-table-column>
+            <template slot="empty">
+                <ExceptionEmpty />
+            </template>
         </bk-table>
         <bk-sideslider
             :is-show="isShowResourceInstanceSideslider"
@@ -170,13 +171,13 @@
                 <bk-button style="margin-left: 10px;" :disabled="disabled" @click="handleResourceCancel">{{ $t(`m.common['取消']`) }}</bk-button>
             </div>
         </bk-sideslider>
-  
+
         <preview-resource-dialog
             :show="isShowPreviewDialog"
             :title="previewDialogTitle"
             :params="previewResourceParams"
             @on-after-leave="handlePreviewDialogClose" />
-  
+
         <render-aggregate-sideslider
             :show.sync="isShowAggregateSideslider"
             :params="aggregateResourceParams"
@@ -184,7 +185,7 @@
             :value="aggregateValue"
             :default-list="defaultSelectList"
             @on-selected="handlerSelectAggregateRes" />
-  
+
         <bk-sideslider
             :is-show.sync="isShowSideslider"
             :title="sidesliderTitle"
@@ -195,31 +196,18 @@
                 <component :is="'RenderDetail'" :data="previewData" />
             </div>
         </bk-sideslider>
-  
-        <!-- <bk-dialog
-        ext-cls="confirmDialog"
-        v-model="isShowDeleteDialog"
-        :close-icon="showIcon"
-        :footer-position="footerPosition"
-        @confirm="handleDelete">
-        <h3 style="text-align:center">{{ $t(`m.common['是否删除该自定义权限']`) }}</h3>
-      </bk-dialog> -->
-      
-        <delete-action-dialog
-            :show.sync="isShowDeleteDialog"
-            :title="$t(`m.dialog['确认删除内容？']`, { value: $t(`m.dialog['删除操作权限']`) } )"
-            :tip="$t(`m.info['删除依赖操作产生的影响']`, { value: currentActionName })"
-            :name="currentActionName"
-            :related-action-list="delActionList"
-            @on-after-leave="handleAfterDeleteLeave"
-            @on-cancel="handleCancelDelete"
-            @on-submit="handleDelete"
-        />
-  
+        <bk-dialog
+            ext-cls="comfirmDialog"
+            v-model="isShowDeleteDialog"
+            :close-icon="showIcon"
+            :footer-position="footerPosition"
+            @confirm="handleDelete">
+            <h3 style="text-align:center">{{ $t(`m.common['是否删除该自定义权限']`) }}</h3>
+        </bk-dialog>
     </div>
 </template>
-  
-  <script>
+
+<script>
     import _ from 'lodash';
     import { mapGetters } from 'vuex';
     import Condition from '@/model/condition';
@@ -232,8 +220,7 @@
     import PreviewResourceDialog from './preview-resource-dialog';
     import RenderResourcePopover from '@/components/iam-view-resource-popover';
     import RenderDetail from '../common/render-detail';
-    import DeleteActionDialog from '@/views/group/components/delete-related-action-dialog.vue';
-  
+
     // import store from '@/store'
     export default {
         name: 'resource-instance-table',
@@ -243,8 +230,7 @@
             RenderCondition,
             PreviewResourceDialog,
             RenderResourcePopover,
-            RenderDetail,
-            DeleteActionDialog
+            RenderDetail
         },
         props: {
             list: {
@@ -310,10 +296,6 @@
             externalDelete: {
                 type: Boolean,
                 default: false
-            },
-            linearActionList: {
-                type: Array,
-                default: () => []
             }
         },
         data () {
@@ -356,106 +338,101 @@
                 selectedIndex: 0,
                 instanceKey: '',
                 curCopyDataId: '',
-                emptyResourceGroupsList: [],
-                delActionList: [],
-                currentActionName: ''
+                emptyResourceGroupsList: []
             };
         },
         computed: {
-        ...mapGetters(['user']),
-        isSuperManager () {
-            return this.user.role.type === 'super_manager';
-        },
-        sliderWidth () {
-            if (['myPerm', 'applyJoinUserGroup'].includes(this.$route.name) && ['detail'].includes(this.mode)) {
-                return window.innerWidth - 700;
+            ...mapGetters(['user']),
+            isSuperManager () {
+                return this.user.role.type === 'super_manager';
+            },
+            sliderWidth () {
+                return this.mode === 'detail' ? 890 : 725;
+            },
+            condition () {
+                if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
+                    return [];
+                }
+                const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                    .related_resource_types[this.curResIndex];
+                if (!curData) {
+                    return [];
+                }
+                return _.cloneDeep(curData.condition);
+            },
+            originalCondition () {
+                if (this.curIndex === -1
+                    || this.curResIndex === -1
+                    || this.curGroupIndex === -1
+                    || this.originalList.length < 1) {
+                    return [];
+                }
+                const curId = this.tableList[this.curIndex].id;
+                const curType = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                    .related_resource_types[this.curResIndex].type;
+                if (!this.originalList.some(item => item.id === curId)) {
+                    return [];
+                }
+                const curResTypeData = this.originalList.find(item => item.id === curId);
+                if (!curResTypeData.resource_groups[this.curGroupIndex]
+                    .related_resource_types.some(item => item.type === curType)) {
+                    return [];
+                }
+                const curData = (curResTypeData.resource_groups[this.curGroupIndex]
+                    .related_resource_types || []).find(item => item.type === curType);
+                if (!curData) {
+                    return [];
+                }
+                return _.cloneDeep(curData.condition);
+            },
+            curDisabled () {
+                if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
+                    return false;
+                }
+                const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                    .related_resource_types[this.curResIndex];
+                return curData.isDefaultLimit;
+            },
+            curFlag () {
+                if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
+                    return 'add';
+                }
+                const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                    .related_resource_types[this.curResIndex];
+                return curData.flag;
+            },
+            curSelectionMode () {
+                if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
+                    return 'all';
+                }
+                const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                    .related_resource_types[this.curResIndex];
+                return curData.selectionMode;
+            },
+            isShowPreview () {
+                if (this.curIndex === -1) {
+                    return false;
+                }
+                return this.tableList[this.curIndex].policy_id !== '';
+            },
+            isShowView () {
+                return (payload) => {
+                    return !payload.isEmpty;
+                };
+            },
+            isCreateMode () {
+                return this.mode === 'create';
+            },
+            isUserGroupDetail () {
+                return this.$route.name === 'userGroupDetail';
+            },
+            curSelectionCondition () {
+                if (this.curIndex === -1 || this.isSuperManager) {
+                    return [];
+                }
+                const curSelectionCondition = this.tableList[this.curIndex].conditionIds;
+                return curSelectionCondition;
             }
-            return this.mode === 'detail' ? 890 : 725;
-        },
-        condition () {
-            if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
-                return [];
-            }
-            const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-                .related_resource_types[this.curResIndex];
-            if (!curData) {
-                return [];
-            }
-            return _.cloneDeep(curData.condition);
-        },
-        originalCondition () {
-            if (this.curIndex === -1
-                || this.curResIndex === -1
-                || this.curGroupIndex === -1
-                || this.originalList.length < 1) {
-                return [];
-            }
-            const curId = this.tableList[this.curIndex].id;
-            const curType = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-                .related_resource_types[this.curResIndex].type;
-            if (!this.originalList.some(item => item.id === curId)) {
-                return [];
-            }
-            const curResTypeData = this.originalList.find(item => item.id === curId);
-            if (!curResTypeData.resource_groups[this.curGroupIndex]
-                .related_resource_types.some(item => item.type === curType)) {
-                return [];
-            }
-            const curData = (curResTypeData.resource_groups[this.curGroupIndex]
-                .related_resource_types || []).find(item => item.type === curType);
-            if (!curData) {
-                return [];
-            }
-            return _.cloneDeep(curData.condition);
-        },
-        curDisabled () {
-            if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
-                return false;
-            }
-            const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-                .related_resource_types[this.curResIndex];
-            return curData.isDefaultLimit;
-        },
-        curFlag () {
-            if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
-                return 'add';
-            }
-            const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-                .related_resource_types[this.curResIndex];
-            return curData.flag;
-        },
-        curSelectionMode () {
-            if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
-                return 'all';
-            }
-            const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-                .related_resource_types[this.curResIndex];
-            return curData.selectionMode;
-        },
-        isShowPreview () {
-            if (this.curIndex === -1) {
-                return false;
-            }
-            return this.tableList[this.curIndex].policy_id !== '';
-        },
-        isShowView () {
-            return (payload) => {
-                return !payload.isEmpty;
-            };
-        },
-        isCreateMode () {
-            return this.mode === 'create';
-        },
-        isUserGroupDetail () {
-            return this.$route.name === 'userGroupDetail';
-        },
-        curSelectionCondition () {
-            if (this.curIndex === -1 || this.isSuperManager) {
-                return [];
-            }
-            const curSelectionCondition = this.tableList[this.curIndex].conditionIds;
-            return curSelectionCondition;
-        }
         },
         watch: {
             list: {
@@ -524,12 +501,12 @@
                 },
                 immediate: true
             }
-        // tableList: {
-        //     handler (newVal, oldVal) {
-        //         debugger
-        //     },
-        //     deep: true
-        // }
+            // tableList: {
+            //     handler (newVal, oldVal) {
+            //         debugger
+            //     },
+            //     deep: true
+            // }
         },
         methods: {
             handleSpanMethod ({ row, column, rowIndex, columnIndex }) {
@@ -573,11 +550,11 @@
                 const instanceKey = this.tableList[this.aggregateIndex].aggregateResourceType[this.selectedIndex].id;
                 const instancesDisplayData = _.cloneDeep(this.tableList[this.aggregateIndex].instancesDisplayData);
                 this.tableList[this.aggregateIndex].instancesDisplayData = {
-                      ...instancesDisplayData,
-                      [instanceKey]: instances
+                    ...instancesDisplayData,
+                    [instanceKey]: instances
                 };
                 this.tableList[this.aggregateIndex].instances = [];
-  
+
                 for (const key in this.tableList[this.aggregateIndex].instancesDisplayData) {
                     // eslint-disable-next-line max-len
                     this.tableList[this.aggregateIndex].instances.push(...this.tableList[this.aggregateIndex].instancesDisplayData[key]);
@@ -594,49 +571,9 @@
                     this.$set(row, 'showDelete', false);
                 }
             },
-            handleShowDelDialog (row) {
-                const { id, mode, name } = row;
-                let delRelatedActions = [];
-                this.delActionList = [];
-                this.currentActionName = name;
-                const isCustom = ['custom'].includes(mode);
-                const policyIdList = this.tableList.map(item => item.id);
-                const linearActionList = this.linearActionList.filter(item => policyIdList.includes(item.id));
-                const curAction = linearActionList.find(item => item.id === id);
-                const hasRelatedActions = curAction && curAction.related_actions && curAction.related_actions.length;
-                linearActionList.forEach(item => {
-                    // 如果这里过滤自己还能在其他数据找到相同的related_actions，就代表有其他数据也关联了相同的操作
-                    if (isCustom && hasRelatedActions && item.related_actions && item.related_actions.length
-                        && item.id !== id) {
-                        delRelatedActions = item.related_actions.filter(v => curAction.related_actions.includes(v));
-                    }
-                    if (isCustom && item.related_actions && item.related_actions.includes(id)) {
-                        this.delActionList.push(item);
-                    }
-                });
-                let ids = [row.policy_id];
-                if (this.delActionList.length) {
-                    const list = this.tableList.filter(item =>
-                        this.delActionList.map(action => action.id).includes(item.id));
-                    ids = [row.policy_id].concat(list.map(v => v.policy_id));
-                    // this.bkMessageInstance = this.$bkMessage({
-                    //   limit: 1,
-                    //   theme: 'error',
-                    //   message: `${this.$t(`m.perm['不能删除当前操作']`)}, ${this.$t(`m.common['【']`)}${this.delActionList.join()}${this.$t(`m.common['】']`)}${this.$t(`m.perm['等']`)}${this.delActionList.length}${this.$t(`m.perm['个操作关联了']`)}${name}`,
-                    //   ellipsisLine: 10,
-                    //   ellipsisCopy: true
-                    // });
-                    // return;
-                }
-                if (isCustom && !delRelatedActions.length && hasRelatedActions) {
-                    const list = [...this.tableList].filter(v => curAction.related_actions.includes(v.id));
-                    if (list.length) {
-                        // eslint-disable-next-line camelcase
-                        ids = ids.concat(list.map(v => v.policy_id));
-                    }
-                }
+            toHandleDelete (row) {
                 this.isShowDeleteDialog = true;
-                this.newRow = Object.assign(row, { ids });
+                this.newRow = row;
             },
             handleDelete () {
                 this.$emit('on-delete', this.newRow);
@@ -660,20 +597,13 @@
                     });
                 }
                 this.previewData = _.cloneDeep(params);
-                this.sidesliderTitle = this.$t(`m.info['操作侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}` });
+                this.sidesliderTitle = `${this.$t(`m.common['操作']`)}【${payload.name}】${this.$t(`m.common['的资源实例']`)}`;
                 this.isShowSideslider = true;
             },
             handleAnimationEnd () {
                 this.sidesliderTitle = '';
                 this.previewData = [];
                 this.curId = '';
-            },
-            handleAfterDeleteLeave () {
-                this.currentActionName = '';
-                this.delActionList = [];
-            },
-            handleCancelDelete () {
-                this.isShowDeleteDialog = false;
             },
             handlerAggregateConditionMouseover (payload) {
                 if (this.curCopyData[0] === 'none') {
@@ -693,7 +623,7 @@
                 if (conditions.length < 1) {
                     return [];
                 }
-  
+
                 const instances = actions.map(item => {
                     const instancesItem = item.resource_groups[0].related_resource_types[0].condition[0]
                         && item.resource_groups[0].related_resource_types[0].condition[0].instances;
@@ -863,7 +793,7 @@
                 this.$refs[`condition_${index}_aggregateRef`] && this.$refs[`condition_${index}_aggregateRef`].setImmediatelyShow(false);
                 this.showMessage(this.$t(`m.info['批量粘贴成功']`));
             },
-  
+
             // 设置instances
             setInstanceData (data) {
                 return Object.keys(data).reduce((p, v) => {
@@ -871,7 +801,7 @@
                     return p;
                 }, []);
             },
-  
+
             // 设置InstancesDisplayData
             setInstancesDisplayData (data) {
                 data.instancesDisplayData = data.instances.reduce((p, v) => {
@@ -885,7 +815,7 @@
                     return p;
                 }, {});
             },
-  
+
             // 设置正常粘贴InstancesDisplayData
             setNomalInstancesDisplayData (data, key) {
                 data.instancesDisplayData[key] = data.instances.map(e => ({
@@ -893,7 +823,7 @@
                     name: e.name
                 }));
             },
-  
+
             showAggregateResourceInstance (data, index) {
                 this.selectedIndex = data.selectedIndex;
                 window.changeDialog = true;
@@ -959,7 +889,7 @@
                 this.curIndex = index;
                 this.curResIndex = resIndex;
                 this.curGroupIndex = groupIndex;
-                this.resourceInstanceSidesliderTitle = this.$t(`m.info['关联侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}` });
+                this.resourceInstanceSidesliderTitle = `${this.$t(`m.common['关联操作']`)}【${data.name}】${this.$t(`m.common['的资源实例']`)}`;
                 window.changeAlert = 'iamSidesider';
                 this.isShowResourceInstanceSideslider = true;
             },
@@ -1033,9 +963,9 @@
                         const old = this.tableList[curIndex];
                         this.tableList.splice(curIndex, 1, new GroupPolicy(
                             {
-                                  ...item,
-                                  tag: 'add',
-                                  isShowRelatedText: true
+                                ...item,
+                                tag: 'add',
+                                isShowRelatedText: true
                             },
                             '',
                             old.isTemplate ? 'template' : 'custom',
@@ -1124,7 +1054,7 @@
                     resource_group_id: this.tableList[this.curIndex].resource_groups[this.curGroupIndex].id,
                     isNotLimit: conditionData.length === 0
                 };
-                this.previewDialogTitle = this.$t(`m.info['操作侧边栏操作的资源实例差异对比']`, { value: `${this.$t(`m.common['【']`)}${this.tableList[this.curIndex].name}${this.$t(`m.common['】']`)}` });
+                this.previewDialogTitle = `${this.$t(`m.common['操作']`)}【${this.tableList[this.curIndex].name}】${this.$t(`m.common['的资源实例']`)} ${this.$t(`m.common['差异对比']`)}`;
                 this.isShowPreviewDialog = true;
             },
             handlerConditionMouseover (payload) {
@@ -1167,7 +1097,7 @@
                     resource_group_id: payload.resource_groups[this.curGroupIndex].id,
                     isTemplate: payload.isTemplate
                 };
-                this.previewDialogTitle = this.$t(`m.info['操作侧边栏操作的资源实例差异对比']`, { value: `${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}` });
+                this.previewDialogTitle = `${this.$t(`m.common['操作']`)}【${payload.name}】${this.$t(`m.common['的资源实例']`)} ${this.$t(`m.common['差异对比']`)}`;
                 if (!this.previewResourceParams.id) {
                     this.$bkMessage({
                         limit: 1,
@@ -1509,7 +1439,7 @@
                         templates
                     };
                 }
-  
+
                 // 重新赋值
                 // if (this.isAllExpanded) {
                 //     this.tableList = this.tableList.filter(e =>
@@ -1520,7 +1450,7 @@
                 //         this.tableList = [...this.tableList, ...this.emptyResourceGroupsList];
                 //     }
                 // }
-  
+
                 this.tableList.forEach(item => {
                     let actionParam = {};
                     let aggregationParam = {};
@@ -1529,17 +1459,16 @@
                         const groupResourceTypes = [];
                         const { type, id, name, environment, description } = item;
                         systemId = item.detail.system.id;
-                        if (item.resource_groups && item.resource_groups.length > 0) {
+                        if (item.resource_groups.length > 0) {
                             item.resource_groups.forEach(groupItem => {
                                 const relatedResourceTypes = [];
-                                if (groupItem.related_resource_types && groupItem.related_resource_types.length > 0) {
+                                if (groupItem.related_resource_types.length > 0) {
                                     groupItem.related_resource_types.forEach(resItem => {
                                         if (resItem.empty) {
                                             resItem.isError = true;
                                             flag = true;
                                         }
-                                        const conditionList = (resItem.condition && resItem.condition.length > 0
-                                            && !resItem.empty)
+                                        const conditionList = (resItem.condition.length > 0 && !resItem.empty)
                                             ? resItem.condition.map(conItem => {
                                                 const { id, instance, attribute } = conItem;
                                                 const attributeList = (attribute && attribute.length > 0)
@@ -1572,8 +1501,7 @@
                                             system_id: resItem.system_id,
                                             name: resItem.name,
                                             condition: conditionList.filter(
-                                                item => (item.instances && item.instances.length)
-                                                    || (item.attributes && item.attributes.length)
+                                                item => item.instances.length > 0 || item.attributes.length > 0
                                             )
                                         });
                                     });
@@ -1597,7 +1525,7 @@
                     } else {
                         systemId = item.system_id;
                         const { actions, aggregateResourceType, instances, instancesDisplayData } = item;
-                        if (instances && instances.length < 1) {
+                        if (instances.length < 1) {
                             item.isError = true;
                             flag = true;
                         } else {
@@ -1625,8 +1553,8 @@
                     // eslint-disable-next-line max-len
                     const templateId = item.isTemplate ? item.isAggregate ? item.actions[0].detail.id : item.detail.id : CUSTOM_PERM_TEMPLATE_ID;
                     const compareId = `${templateId}&${systemId}`;
-                    const isHasAggregation = aggregationParam && Object.keys(aggregationParam).length > 0;
-                    const isHasActions = actionParam && Object.keys(actionParam).length > 0;
+                    const isHasAggregation = Object.keys(aggregationParam).length > 0;
+                    const isHasActions = Object.keys(actionParam).length > 0;
                     if (!templates.map(sub => `${sub.template_id}&${sub.system_id}`).includes(compareId)) {
                         templates.push({
                             system_id: systemId,
@@ -1673,17 +1601,16 @@
                     if (!item.isAggregate) {
                         const groupResourceTypes = [];
                         const { type, id, name, environment, description } = item;
-                        if (item.resource_groups && item.resource_groups.length > 0) {
+                        if (item.resource_groups.length > 0) {
                             item.resource_groups.forEach(groupItem => {
                                 const relatedResourceTypes = [];
-                                if (groupItem.related_resource_types && groupItem.related_resource_types.length > 0) {
+                                if (groupItem.related_resource_types.length > 0) {
                                     groupItem.related_resource_types.forEach(resItem => {
                                         if (resItem.empty) {
                                             resItem.isError = true;
                                             flag = true;
                                         }
-                                        const conditionList = ((resItem.condition && resItem.condition.length > 0)
-                                            && !resItem.empty)
+                                        const conditionList = (resItem.condition.length > 0 && !resItem.empty)
                                             ? resItem.condition.map(conItem => {
                                                 const { id, instance, attribute } = conItem;
                                                 const attributeList = (attribute && attribute.length > 0)
@@ -1716,13 +1643,12 @@
                                             system_id: resItem.system_id,
                                             name: resItem.name,
                                             condition: conditionList.filter(
-                                                item => (item.instances && item.instances.length > 0)
-                                                    || (item.attributes && item.attributes.length > 0)
+                                                item => item.instances.length > 0 || item.attributes.length > 0
                                             )
                                         });
                                     });
                                 }
-  
+
                                 groupResourceTypes.push({
                                     id: groupItem.id,
                                     related_resource_types: relatedResourceTypes
@@ -1742,7 +1668,7 @@
                         actionList.push(_.cloneDeep(params));
                     } else {
                         const { actions, aggregateResourceType, instances } = item;
-                        if (instances && instances.length < 1) {
+                        if (instances.length < 1) {
                             item.isError = true;
                             flag = true;
                         } else {
@@ -1764,149 +1690,141 @@
                     aggregations
                 };
             },
-  
+
             selectResourceType (data, index) {
                 data.selectedIndex = index;
                 this.selectedIndex = index;
             }
         }
     };
-  </script>
-  
-  <style lang="postcss">
-      .template-resource-instance-table-wrapper {
-          min-height: 101px;
-          .bk-table {
-              width: 100%;
-              margin-top: 8px;
-              border-right: none;
-              border-bottom: none;
-              font-size: 12px;
-              &.is-detail-view {
-                  .bk-table-body-wrapper {
-                      .cell {
-                          padding: 20px !important;
-                      }
-                  }
-              }
-              .bk-table-header-wrapper {
-                  th:first-child .cell {
-                      padding-left: 20px;
-                  }
-              }
-              .bk-table-body-wrapper {
-                  .cell {
-                      .view-icon {
-                          display: none;
-                          position: absolute;
-                          top: 50%;
-                          right: 30px;
-                          transform: translate(0, -50%);
-                          font-size: 18px;
-                          cursor: pointer;
-                      }
-                      &:hover {
-                          .view-icon {
-                              display: inline-block;
-                              color: #3a84ff;
-                          }
-                      }
-                  }
-              }
-              .bk-table-body {
-                  tr {
-                      &:hover {
-                          background-color: transparent;
-                          & > td {
-                              background-color: transparent;
-                          }
-                      }
-                  }
-                  td:first-child .cell,
-                  th:first-child .cell {
-                      /* padding-left: 15px; */
-                      padding-left: 10px;
-                  }
-                  .iam-new-action {
-                      display: inline-block;
-                      position: relative;
-                      top: 3px;
-                      width: 24px;
-                      vertical-align: top;
-                  }
-              }
-              .relation-content-wrapper,
-              .conditions-wrapper {
-                  height: 100%;
-                  padding: 17px 0;
-                  color: #63656e;
-                  .resource-type-name {
-                      display: block;
-                      margin-bottom: 9px;
-                  }
-              }
-              .remove-icon {
-                  position: absolute;
-                  right: 2px;
-                  top: 2px;
-                  font-size: 20px;
-                  cursor: pointer;
-                  &:hover {
-                      color: #3a84ff;
-                  }
-              }
-              .relation-content-item {
-                  margin-top: 17px;
-                  &:first-child {
-                      margin-top: 0;
-                  }
-                  &.reset-margin-top {
-                      margin-top: 10px;
-                  }
-                  .content-name {
-                      margin-bottom: 9px;
-                  }
-              }
-              .action-name {
-                  margin-left: 6px;
-                  display: inline-block;
-                  vertical-align: bottom;
-                  word-wrap: break-word;
-                  word-break: break-all;
-              }
-              .conditions-item {
-                  margin-top: 7px;
-                  &:first-child {
-                      margin-top: 0;
-                  }
-              }
-          }
-      }
-      .relate-instance-sideslider {
-          .sideslider-content {
-              height: calc(100vh - 114px);
-          }
-          .bk-sideslider-footer {
-              background-color: #f5f6fa!important;
-              border-color: #dcdee5!important;
-          }
-      }
-      .error-tips {
-          position: absolute;
-          line-height: 16px;
-          font-size: 10px;
-          color: #ea3636;
-      }
-  
-      .tab-button{
-          margin: 10px 0;
-      }
-  </style>
-  
-  <style lang="postcss" scoped>
-  /deep/ .confirmDialog {
-    .bk-dialog-footer {
-      background-color: #ffffff;
+</script>
+
+<style lang="postcss">
+    .template-resource-instance-table-wrapper {
+        min-height: 101px;
+        .bk-table {
+            width: 100%;
+            margin-top: 8px;
+            border-right: none;
+            border-bottom: none;
+            font-size: 12px;
+            &.is-detail-view {
+                .bk-table-body-wrapper {
+                    .cell {
+                        padding: 20px !important;
+                    }
+                }
+            }
+            .bk-table-header-wrapper {
+                th:first-child .cell {
+                    padding-left: 20px;
+                }
+            }
+            .bk-table-body-wrapper {
+                .cell {
+                    .view-icon {
+                        display: none;
+                        position: absolute;
+                        top: 50%;
+                        right: 30px;
+                        transform: translate(0, -50%);
+                        font-size: 18px;
+                        cursor: pointer;
+                    }
+                    &:hover {
+                        .view-icon {
+                            display: inline-block;
+                            color: #3a84ff;
+                        }
+                    }
+                }
+            }
+            .bk-table-body {
+                tr {
+                    &:hover {
+                        background-color: transparent;
+                        & > td {
+                            background-color: transparent;
+                        }
+                    }
+                }
+                td:first-child .cell,
+                th:first-child .cell {
+                    /* padding-left: 15px; */
+                    padding-left: 10px;
+                }
+                .iam-new-action {
+                    display: inline-block;
+                    position: relative;
+                    top: 3px;
+                    width: 24px;
+                    vertical-align: top;
+                }
+            }
+            .relation-content-wrapper,
+            .conditions-wrapper {
+                height: 100%;
+                padding: 17px 0;
+                color: #63656e;
+                .resource-type-name {
+                    display: block;
+                    margin-bottom: 9px;
+                }
+            }
+            .remove-icon {
+                position: absolute;
+                right: 2px;
+                top: 2px;
+                font-size: 20px;
+                cursor: pointer;
+                &:hover {
+                    color: #3a84ff;
+                }
+            }
+            .relation-content-item {
+                margin-top: 17px;
+                &:first-child {
+                    margin-top: 0;
+                }
+                &.reset-margin-top {
+                    margin-top: 10px;
+                }
+                .content-name {
+                    margin-bottom: 9px;
+                }
+            }
+            .action-name {
+                margin-left: 6px;
+                display: inline-block;
+                vertical-align: bottom;
+                word-wrap: break-word;
+                word-break: break-all;
+            }
+            .conditions-item {
+                margin-top: 7px;
+                &:first-child {
+                    margin-top: 0;
+                }
+            }
+        }
     }
-  }
-  </style>
+    .relate-instance-sideslider {
+        .sideslider-content {
+            height: calc(100vh - 114px);
+        }
+        .bk-sideslider-footer {
+            background-color: #f5f6fa!important;
+            border-color: #dcdee5!important;
+        }
+    }
+    .error-tips {
+        position: absolute;
+        line-height: 16px;
+        font-size: 10px;
+        color: #ea3636;
+    }
+
+    .tab-button{
+        margin: 10px 0;
+    }
+</style>
