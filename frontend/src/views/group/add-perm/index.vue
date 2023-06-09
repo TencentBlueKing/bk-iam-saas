@@ -618,13 +618,14 @@
         } else {
           hasAddCustomList.push(...payload);
         }
-
-        this.hasAddCustomList.splice(0, this.hasAddCustomList.length, ...hasAddCustomList);
-
+        if (!payload.length) {
+          this.curActionValue = [];
+        }
         this.originalList = _.cloneDeep(payload);
         this.aggregationDataByCustom = _.cloneDeep(aggregation);
         this.authorizationDataByCustom = _.cloneDeep(authorization);
-        console.log(this.originalList, this.aggregationDataByCustom, this.authorizationDataByCustom, this.hasAddCustomList, '当前数据');
+        this.hasAddCustomList.splice(0, this.hasAddCustomList.length, ...hasAddCustomList);
+        console.log(this.originalList, this.aggregationDataByCustom, this.authorizationDataByCustom, this.hasAddCustomList, this.originalList, '当前数据');
         if (this.externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn) {
           if (this.originalList.length) {
             this.curActionValue = this.originalList.map(item => item.$id);

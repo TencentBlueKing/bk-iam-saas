@@ -1391,7 +1391,7 @@
                       });
                     });
                   } else {
-                    item.resource_groups.forEach(groupItem => {
+                    item.resource_groups && item.resource_groups.forEach(groupItem => {
                       groupItem.related_resource_types.forEach(resItem => {
                         if (`${resItem.system_id}${resItem.type}` === `${curPasteData.resource_type.system_id}${curPasteData.resource_type.type}`) {
                           resItem.condition = curPasteData.resource_type.condition.map(conditionItem => new Condition(conditionItem, '', 'add'));
@@ -1402,7 +1402,7 @@
                   }
                 }
               } else {
-                item.aggregateResourceType.forEach(aggregateResourceItem => {
+                item.aggregateResourceType && item.aggregateResourceType.forEach(aggregateResourceItem => {
                   const systemId = this.isSuperManager
                     ? aggregateResourceItem.system_id : item.system_id;
                   if (`${systemId}${aggregateResourceItem.id}` === this.curCopyKey) {
@@ -1531,10 +1531,10 @@
             const groupResourceTypes = [];
             const { type, id, name, environment, description } = item;
             systemId = item.detail.system.id;
-            if (item.resource_groups && item.resource_groups.length > 0) {
+            if (item.resource_groups && item.resource_groups.length) {
               item.resource_groups.forEach(groupItem => {
                 const relatedResourceTypes = [];
-                if (groupItem.related_resource_types && groupItem.related_resource_types.length > 0) {
+                if (groupItem.related_resource_types && groupItem.related_resource_types.length) {
                   groupItem.related_resource_types.forEach(resItem => {
                     if (resItem.empty) {
                       resItem.isError = true;
@@ -1579,11 +1579,11 @@
                       )
                     });
                   });
+                  groupResourceTypes.push({
+                    id: groupItem.id,
+                    related_resource_types: relatedResourceTypes
+                  });
                 }
-                groupResourceTypes.push({
-                  id: groupItem.id,
-                  related_resource_types: relatedResourceTypes
-                });
               });
               // 强制刷新下
               item.resource_groups = _.cloneDeep(item.resource_groups);
@@ -1678,17 +1678,17 @@
             if (item.resource_groups && item.resource_groups.length > 0) {
               item.resource_groups.forEach(groupItem => {
                 const relatedResourceTypes = [];
-                if (groupItem.related_resource_types && groupItem.related_resource_types.length > 0) {
+                if (groupItem.related_resource_types && groupItem.related_resource_types.length) {
                   groupItem.related_resource_types.forEach(resItem => {
                     if (resItem.empty) {
                       resItem.isError = true;
                       flag = true;
                     }
-                    const conditionList = ((resItem.condition && resItem.condition.length > 0)
+                    const conditionList = ((resItem.condition && resItem.condition.length)
                       && !resItem.empty)
                       ? resItem.condition.map(conItem => {
                         const { id, instance, attribute } = conItem;
-                        const attributeList = (attribute && attribute.length > 0)
+                        const attributeList = (attribute && attribute.length)
                           ? attribute.map(({ id, name, values }) => ({ id, name, values }))
                           : [];
                         const instanceList = (instance && instance.length > 0)
