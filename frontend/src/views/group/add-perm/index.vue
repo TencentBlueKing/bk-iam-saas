@@ -180,9 +180,12 @@
     methods: {
       handleAddCancel (payload) {
         const { customPerm } = payload;
-        if (customPerm && !customPerm.length) {
-          this.tableList = [];
-          this.tableListBackup = [];
+        if (customPerm) {
+          this.hasAddCustomList = [...customPerm];
+          if (!customPerm.length) {
+            this.tableList = [];
+            this.tableListBackup = [];
+          }
         }
         this.isShowAddSideslider = false;
       },
