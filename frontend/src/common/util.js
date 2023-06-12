@@ -594,3 +594,15 @@ export function getCookie (name) {
   }
   return params[name];
 }
+
+// 兼容外部系统i18的key
+export function formatI18nKey () {
+  let lang = getCookie('blueking_language') || 'zh-cn';
+  if (lang.toLowerCase().indexOf('en') > -1) {
+    lang = 'en';
+  }
+  if (lang.toLowerCase().indexOf('zh') > -1) {
+    lang = 'zh-cn';
+  }
+  return lang;
+}
