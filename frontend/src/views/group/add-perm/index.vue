@@ -178,7 +178,12 @@
       next();
     },
     methods: {
-      handleAddCancel () {
+      handleAddCancel (payload) {
+        const { customPerm } = payload;
+        if (customPerm && !customPerm.length) {
+          this.tableList = [];
+          this.tableListBackup = [];
+        }
         this.isShowAddSideslider = false;
       },
 
