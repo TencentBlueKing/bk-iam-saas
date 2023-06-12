@@ -366,10 +366,11 @@
         if (instances.length > 0) {
           const actions = this.curMap.get(payload.aggregationId);
           actions.forEach(item => {
-            item.resource_groups.forEach(groupItem => {
-              groupItem.related_resource_types.forEach(subItem => {
-                subItem.condition = [new Condition({ instances }, '', 'add')];
-              });
+            item.resource_groups && item.resource_groups.forEach(groupItem => {
+              groupItem.related_resource_types
+                && groupItem.related_resource_types.forEach(subItem => {
+                  subItem.condition = [new Condition({ instances }, '', 'add')];
+                });
             });
           });
         }

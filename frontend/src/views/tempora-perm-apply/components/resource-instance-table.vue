@@ -1232,8 +1232,8 @@
               if (!item.isAggregate) {
                 const curPasteData = payload.data.find(_ => _.id === item.id);
                 if (curPasteData) {
-                  item.resource_groups.forEach(groupItem => {
-                    groupItem.related_resource_types.forEach(resItem => {
+                  item.resource_groups && item.resource_groups.forEach(groupItem => {
+                    groupItem.related_resource_types && groupItem.related_resource_types.forEach(resItem => {
                       if (`${resItem.system_id}${resItem.type}` === `${curPasteData.resource_type.system_id}${curPasteData.resource_type.type}`) {
                         resItem.condition = curPasteData.resource_type.condition.map(conditionItem => new Condition(conditionItem, '', 'add'));
                         resItem.isError = false;
@@ -1242,7 +1242,7 @@
                   });
                 }
               } else {
-                item.aggregateResourceType.forEach(aggregateResourceItem => {
+                item.aggregateResourceType && item.aggregateResourceType.forEach(aggregateResourceItem => {
                   if (`${aggregateResourceItem.system_id}${aggregateResourceItem.id}` === this.curCopyKey) {
                     item.instances = _.cloneDeep(tempArrgegateData);
                     this.instanceKey = aggregateResourceItem.id;
