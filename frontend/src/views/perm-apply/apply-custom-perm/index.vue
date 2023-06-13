@@ -288,7 +288,7 @@
               {{$t(`m.permApply['根据你的需求，自动匹配到以下的用户组']`)}}
             </div>
             <div class="info">
-              {{ $t(`m.info['如果需要更多用户组权限']`) }},
+              {{ $t(`m.info['如果需要更多用户组权限']`) }}{{ $t(`m.common['，']`) }}
               {{ $t(`m.info['可前往']`) }}
               <bk-button
                 text
@@ -398,7 +398,7 @@
               {{$t(`m.permApply['以下是你必须申请的权限']`)}}
             </div>
             <div class="info">
-              {{ $t(`m.info['如果需要更多自定义权限']`) }}，
+              {{ $t(`m.info['如果需要更多自定义权限']`) }}{{ $t(`m.common['，']`) }}
               {{ $t(`m.info['可前往']`) }}
               <bk-button
                 text
@@ -423,7 +423,10 @@
                 </div>
 
                 <div class="requestRecommendText">{{$t(`m.permApply['以下相关权限，你可以按需申请']`)}}</div>
-                <div class="tableData">
+                <div
+                  ref="instanceTableRef"
+                  class="tableData"
+                >
                   <resource-instance-table
                     :is-recommend="isRecommend"
                     :cache-id="routerQuery.cache_id"
@@ -475,7 +478,7 @@
         <div class="tableData">
           <bk-alert type="info">
             <div slot="title">
-              {{ $t(`m.info['没有匹配到合适的用户组']`) }}，
+              {{ $t(`m.info['没有匹配到合适的用户组']`) }}{{ $t(`m.common['，']`) }}
               {{ $t(`m.info['如需要可继续前往']`) }}
               <bk-button
                 text
@@ -490,7 +493,7 @@
         <div class="requestIndependent">
           <div class="requestIndependentText">{{$t(`m.permApply['以下是你必须申请的权限']`)}}</div>
           <div class="info">
-            {{ $t(`m.info['如果需要更多自定义权限']`) }}，
+            {{ $t(`m.info['如果需要更多自定义权限']`) }}{{ $t(`m.common['，']`) }}
             {{ $t(`m.info['可前往']`) }}
             <bk-button
               text
@@ -513,7 +516,10 @@
         </div>
 
         <div class="requestRecommendText">{{$t(`m.permApply['以下相关权限，你可以按需申请']`)}}</div>
-        <div class="tableData">
+        <div
+          ref="instanceTableRef"
+          class="tableData"
+        >
           <resource-instance-table
             :is-recommend="isRecommend"
             :cache-id="routerQuery.cache_id"

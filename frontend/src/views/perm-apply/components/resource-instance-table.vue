@@ -3,6 +3,7 @@
   <div class="resource-instance-table-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
     <bk-table
       v-if="!isLoading"
+      ref="permApplyTableRef"
       :data="tableList"
       :max-height="tableList.length > 0 ? 500 : 280"
       border
@@ -236,7 +237,7 @@
           @on-init="handleOnInit" />
       </div>
       <div slot="footer" style="margin-left: 25px;">
-        <bk-button theme="primary" :loading="sliderLoading" :disabled="disabled" @click="handleResourceSumit">{{ $t(`m.common['保存']`) }}</bk-button>
+        <bk-button theme="primary" :loading="sliderLoading" :disabled="disabled" @click="handleResourceSubmit">{{ $t(`m.common['保存']`) }}</bk-button>
         <bk-button style="margin-left: 10px;" :disabled="disabled" @click="handleResourcePreview" v-if="isShowPreview">{{ $t(`m.common['预览']`) }}</bk-button>
         <bk-button style="margin-left: 10px;" :disabled="disabled" @click="handleResourceCancel">{{ $t(`m.common['取消']`) }}</bk-button>
       </div>
@@ -495,6 +496,7 @@
             this.tableList = value;
           }
           this.originalList = _.cloneDeep(this.tableList);
+          this.fetchInstanceDefaultCheck();
         },
         immediate: true
       },
@@ -519,6 +521,26 @@
       }
     },
     methods: {
+      fetchInstanceDefaultCheck () {
+        if (this.isRecommend) {
+          this.resourceSelectData = [];
+          this.$nextTick(() => {
+            this.tableList.forEach(item => {
+              item.resource_groups && item.resource_groups.forEach(resource => {
+                resource.related_resource_types && resource.related_resource_types.forEach(types => {
+                  if (types.condition && types.condition.length) {
+                    if (types.condition.length === 1 && types.condition[0] === 'none') {
+                      return;
+                    }
+                    this.$refs.permApplyTableRef.toggleRowSelection(item, true);
+                    this.resourceSelectData.push(item.name);
+                  }
+                });
+              });
+            });
+          });
+        }
+      },
       handleOpenRenewal (row, index) {
         row.isShowRenewal = false;
         row.customValueBackup = row.customValue;
@@ -949,7 +971,7 @@
         });
       },
 
-      async handleResourceSumit () {
+      async handleResourceSubmit () {
         const conditionData = this.$refs.renderResourceRef.handleGetValue();
         const { isEmpty, data } = conditionData;
         if (isEmpty) {
@@ -1008,6 +1030,7 @@
         if (this.needEmitFlag) {
           this.$emit('on-realted-change', this.tableList);
         }
+        this.fetchInstanceDefaultCheck();
       },
 
       handleResourcePreview () {
