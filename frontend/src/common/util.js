@@ -604,5 +604,6 @@ export function formatI18nKey () {
   if (lang.toLowerCase().indexOf('zh') > -1) {
     lang = 'zh-cn';
   }
-  return lang;
+  const result = ['zh-cn', 'en'].includes(lang) ? lang : 'zh-cn';
+  return result;
 }
