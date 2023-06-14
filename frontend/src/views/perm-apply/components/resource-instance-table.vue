@@ -5,7 +5,6 @@
       v-if="!isLoading"
       ref="permApplyTableRef"
       :data="tableList"
-      :max-height="tableList.length > 0 ? 500 : 280"
       border
       :row-class-name="handleRowClass"
       :cell-class-name="getCellClass"
@@ -496,7 +495,7 @@
             this.tableList = value;
           }
           this.originalList = _.cloneDeep(this.tableList);
-          this.fetchInstanceDefaultCheck();
+          this.fetchInstanceDefaultCheck(false);
         },
         immediate: true
       },
@@ -521,23 +520,35 @@
       }
     },
     methods: {
-      fetchInstanceDefaultCheck () {
+      fetchInstanceDefaultCheck (payload) {
         if (this.isRecommend) {
-          this.resourceSelectData = [];
           this.$nextTick(() => {
-            this.tableList.forEach(item => {
+            const recommendList = [];
+            this.tableList.forEach((item, index) => {
               item.resource_groups && item.resource_groups.forEach(resource => {
                 resource.related_resource_types && resource.related_resource_types.forEach(types => {
                   if (types.condition && types.condition.length) {
                     if (types.condition.length === 1 && types.condition[0] === 'none') {
+                      types.isError = !!this.resourceSelectData.includes(item.name);
                       return;
                     }
-                    this.$refs.permApplyTableRef.toggleRowSelection(item, true);
-                    this.resourceSelectData.push(item.name);
+                    if (types.empty) {
+                      types.isError = !!this.resourceSelectData.includes(item.name);
+                    }
+                    // 处理单个操作实例勾选项
+                    if (payload && payload === index) {
+                      this.$refs.permApplyTableRef.toggleRowSelection(this.tableList[index], true);
+                    }
+                    // 处理初始化页面默认勾选有实例的操作和粘贴实例默认勾选
+                    if (!payload) {
+                      this.$refs.permApplyTableRef.toggleRowSelection(item, true);
+                    }
+                    recommendList.push(item.name);
                   }
                 });
               });
             });
+            this.resourceSelectData = Array.from(new Set([...this.resourceSelectData, ...recommendList]));
           });
         }
       },
@@ -715,6 +726,7 @@
         this.curCopyData = ['none'];
         this.$refs[`condition_${index}_aggregateRef`] && this.$refs[`condition_${index}_aggregateRef`].setImmediatelyShow(false);
         this.showMessage(this.$t(`m.info['批量粘贴成功']`));
+        this.fetchInstanceDefaultCheck(false);
       },
 
       // 设置instances
@@ -986,6 +998,7 @@
         if (isConditionEmpty) {
           resItem.condition = ['none'];
           resItem.isLimitExceeded = false;
+          resItem.isError = true;
         } else {
           const { isMainAction, related_actions } = this.tableList[this.curIndex];
           // 如果为主操作
@@ -1021,7 +1034,7 @@
             resItem.isLimitExceeded = false;
           }
         }
-
+        this.fetchInstanceDefaultCheck(this.curIndex);
         this.curIndex = -1;
         this.curResIndex = -1;
         this.curGroupIndex = -1;
@@ -1030,7 +1043,6 @@
         if (this.needEmitFlag) {
           this.$emit('on-realted-change', this.tableList);
         }
-        this.fetchInstanceDefaultCheck();
       },
 
       handleResourcePreview () {
@@ -1341,6 +1353,7 @@
         this.$refs[`condition_${index}_${subIndex}_ref`][0] && this.$refs[`condition_${index}_${subIndex}_ref`][0].setImmediatelyShow(false);
         this.curCopyData = ['none'];
         this.showMessage(this.$t(`m.info['批量粘贴成功']`));
+        this.fetchInstanceDefaultCheck(false);
       },
 
       handlePreviewDialogClose () {
@@ -1701,5 +1714,5 @@
 </script>
 
 <style>
-    @import './resource-instance-table.css';
+  @import './resource-instance-table.css';
 </style>

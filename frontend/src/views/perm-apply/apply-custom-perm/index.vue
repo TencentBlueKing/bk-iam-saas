@@ -412,7 +412,10 @@
           <div>
             <bk-transition name="bk-fade-in-ease">
               <div>
-                <div class="tableData">
+                <div
+                  ref="instanceTableRef"
+                  class="tableData"
+                >
                   <resource-instance-table
                     :list="newTableList"
                     :original-list="tableDataBackup"
@@ -504,7 +507,10 @@
             </bk-button>
           </div>
         </div>
-        <div class="tableData">
+        <div
+          ref="instanceTableRef"
+          class="tableData"
+        >
           <resource-instance-table
             :cache-id="routerQuery.cache_id"
             :list="newTableList"
@@ -2368,8 +2374,8 @@
           const tableRecommendData = this.$refs.resInstanceRecommendTableRef.handleGetValue();
           recommendActions = tableRecommendData.actions;
           recommendFlag = recommendActions.some((e, i) => {
-            const newRecommendTableListe = this.newRecommendTableList.find(item => item.id === e.id);
-            return newRecommendTableListe.resource_groups.some(v => {
+            const newRecommendTableList = this.newRecommendTableList.find(item => item.id === e.id);
+            return newRecommendTableList.resource_groups.some(v => {
               return v.related_resource_types.some(j => {
                 return j.empty;
               });
@@ -2377,30 +2383,32 @@
           });
         }
         actions = [...actions, ...recommendActions];
-        if (recommendFlag || flag || this.reason === '') {
-          this.isShowReasonError = this.reason === '';
+        this.isShowReasonError = !this.reason;
+        if (recommendFlag || flag || this.isShowReasonError) {
           if (actions.length < 1 && aggregations.length < 1) {
             this.isShowActionError = true;
           }
           const tableRef = this.$refs.instanceTableRef;
           const reasonRef = this.$refs.resInstanceReasonRef;
-          if (!flag && !this.reason) {
-            this.scrollToLocation(reasonRef);
-          } else {
+          if (flag || recommendFlag) {
             this.scrollToLocation(tableRef);
+            return;
           }
-          return;
+          if (this.isShowReasonError) {
+            this.scrollToLocation(reasonRef);
+            return;
+          }
         }
         // if (!this.permMembers.length) {
         // this.isShowMemberError = true;
         // this.scrollToLocation(this.$refs.permRecipientRef);
         // return;
         // }
-        const systemName = this.systemList.find(item => item.id === this.systemValue).name;
+        const curSystem = this.systemList.find(item => item.id === this.systemValue);
         const params = {
           system: {
             id: this.systemValue,
-            name: systemName
+            name: curSystem ? curSystem.name : ''
           },
           templates: [],
           actions,
