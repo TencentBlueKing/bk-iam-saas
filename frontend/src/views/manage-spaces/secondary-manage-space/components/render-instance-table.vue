@@ -988,11 +988,15 @@
             item.expired_at = PERMANENT_TIMESTAMP;
           });
         }
+        curData.resource_groups = curData.resource_groups.filter(item => item.related_resource_types);
+        const targetPolicies = relatedList.filter(item =>
+          item.resource_groups[this.curGroupIndex].related_resource_types
+          && item.resource_groups[this.curGroupIndex].related_resource_types.length);
         try {
           const res = await this.$store.dispatch('permApply/getRelatedPolicy', {
             source_policy: curData,
-            system_id: this.tableList[this.curIndex].detail.system.id,
-            target_policies: relatedList
+            system_id: curData.system_id,
+            target_policies: targetPolicies
           });
           this.handleRelatedAction(res.data);
         } catch (e) {
@@ -1390,8 +1394,8 @@
                       });
                     });
                   } else {
-                    item.resource_groups.forEach(groupItem => {
-                      groupItem.related_resource_types.forEach(resItem => {
+                    item.resource_groups && item.resource_groups.forEach(groupItem => {
+                      groupItem.related_resource_types && groupItem.related_resource_types.forEach(resItem => {
                         if (`${resItem.system_id}${resItem.type}` === `${curPasteData.resource_type.system_id}${curPasteData.resource_type.type}`) {
                           resItem.condition = curPasteData.resource_type.condition.map(conditionItem => new Condition(conditionItem, '', 'add'));
                           resItem.isError = false;
@@ -1401,7 +1405,7 @@
                   }
                 }
               } else {
-                item.aggregateResourceType.forEach(aggregateResourceItem => {
+                item.aggregateResourceType && item.aggregateResourceType.forEach(aggregateResourceItem => {
                   const systemId = this.isSuperManager
                     ? aggregateResourceItem.system_id : item.system_id;
                   if (`${systemId}${aggregateResourceItem.id}` === this.curCopyKey) {

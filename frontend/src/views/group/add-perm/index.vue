@@ -178,7 +178,15 @@
       next();
     },
     methods: {
-      handleAddCancel () {
+      handleAddCancel (payload) {
+        const { customPerm } = payload;
+        if (customPerm) {
+          this.hasAddCustomList = [...customPerm];
+          if (!customPerm.length) {
+            this.tableList = [];
+            this.tableListBackup = [];
+          }
+        }
         this.isShowAddSideslider = false;
       },
 
@@ -358,10 +366,11 @@
         if (instances.length > 0) {
           const actions = this.curMap.get(payload.aggregationId);
           actions.forEach(item => {
-            item.resource_groups.forEach(groupItem => {
-              groupItem.related_resource_types.forEach(subItem => {
-                subItem.condition = [new Condition({ instances }, '', 'add')];
-              });
+            item.resource_groups && item.resource_groups.forEach(groupItem => {
+              groupItem.related_resource_types
+                && groupItem.related_resource_types.forEach(subItem => {
+                  subItem.condition = [new Condition({ instances }, '', 'add')];
+                });
             });
           });
         }
@@ -618,13 +627,14 @@
         } else {
           hasAddCustomList.push(...payload);
         }
-
-        this.hasAddCustomList.splice(0, this.hasAddCustomList.length, ...hasAddCustomList);
-
+        if (!payload.length) {
+          this.curActionValue = [];
+        }
         this.originalList = _.cloneDeep(payload);
         this.aggregationDataByCustom = _.cloneDeep(aggregation);
         this.authorizationDataByCustom = _.cloneDeep(authorization);
-        console.log(this.originalList, this.aggregationDataByCustom, this.authorizationDataByCustom, this.hasAddCustomList, '当前数据');
+        this.hasAddCustomList.splice(0, this.hasAddCustomList.length, ...hasAddCustomList);
+        console.log(this.originalList, this.aggregationDataByCustom, this.authorizationDataByCustom, this.hasAddCustomList, this.originalList, '当前数据');
         if (this.externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn) {
           if (this.originalList.length) {
             this.curActionValue = this.originalList.map(item => item.$id);

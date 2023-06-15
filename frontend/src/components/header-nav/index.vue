@@ -119,7 +119,7 @@
   import { il8n, language } from '@/language';
   import { bus } from '@/common/bus';
   import { buildURLParams } from '@/common/url';
-  import { getCookie } from '@/common/util';
+  import { formatI18nKey } from '@/common/util';
   import { NEED_CONFIRM_DIALOG_ROUTER } from '@/common/constants';
   import SystemLog from '../system-log';
   import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
@@ -603,9 +603,9 @@
           'zh-cn': lang.zhCN,
           en: lang.enUS
         };
-        locale.use(magicBoxLanguageMap[getCookie('blueking_language')]);
-        window.CUR_LANGUAGE = getCookie('blueking_language');
-        this.$i18n.locale = getCookie('blueking_language');
+        locale.use(magicBoxLanguageMap[formatI18nKey()]);
+        window.CUR_LANGUAGE = formatI18nKey();
+        this.$i18n.locale = formatI18nKey();
         window.location.reload();
       },
         

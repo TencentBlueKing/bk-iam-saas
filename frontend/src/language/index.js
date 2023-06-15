@@ -26,7 +26,7 @@
 import en from './lang/en';
 import cn from './lang/zh';
 import magicbox from 'bk-magic-vue';
-import { getCookie } from '@/common/util';
+import { formatI18nKey } from '@/common/util';
 
 const { lang } = magicbox;
 const messages = {
@@ -40,7 +40,7 @@ const messages = {
   }
 };
 
-const language = getCookie('blueking_language') || 'zh-cn';
+const language = formatI18nKey();
 
 // 检测漏掉的翻译
 // const cnLan = cn.language;
