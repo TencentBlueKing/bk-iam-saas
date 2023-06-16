@@ -3,10 +3,7 @@
     <div class="iam-instance-title">
       <span>{{ title || '--' }}</span>
       <div v-if="canEdit">
-        <span>
-          <span v-if="curLanguageIsCn">已选 {{ count }} 条</span>
-          <span v-else>{{ count }} {{ $t(`m.common['条']`) }} {{ $t(`m.common['已选']`) }} </span>
-        </span>
+        <span>{{ $t(`m.info['已选数量']`, { value: count }) }}</span>
         <bk-button
           theme="primary"
           size="small"
@@ -20,7 +17,7 @@
     <div class="iam-instance-item">
       <p v-for="(item, index) in resourceList"
         :key="index"
-        class="value" :title="`ID：${item.id}`">
+        class="value" :title="`ID: ${item.id}`">
         <span class="name">{{ item.display_name }}</span>
         <bk-checkbox
           v-if="canEdit"
@@ -79,7 +76,6 @@
             this.resourceList = [];
             return;
           }
-
           const tempList = [];
           value.forEach(item => {
             const len = item.length;

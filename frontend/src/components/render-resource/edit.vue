@@ -137,7 +137,7 @@
         const tempData = {
           ids: [],
           condition: [],
-          iaAllDelete: false
+          isAllDelete: false
         };
         this.conditionData.forEach((item, index) => {
           if (item.isGroupChecked) {
@@ -182,7 +182,7 @@
           }
         });
         if (tempData.ids.length === this.conditionData.length) {
-          tempData.iaAllDelete = true;
+          tempData.isAllDelete = true;
         }
         return tempData;
       },
