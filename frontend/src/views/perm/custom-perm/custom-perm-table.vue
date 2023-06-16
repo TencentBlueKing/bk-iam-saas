@@ -130,8 +130,10 @@
                   'popover-custom-content',
                   { 'popover-custom-content-hide': !delActionList.length }
                 ]">
-                <div>
-                  {{ $t(`m.info['删除依赖实例产生的影响']`, { value: formateDelPathTitle }) }}
+                <div :title="formateDelPathTitle">
+                  {{ $t(`m.info['删除依赖实例产生的影响']`, {
+                    value: formateDelPathTitle.length > 1 ? `${formateDelPathTitle[0]}...` : formateDelPathTitle })
+                  }}
                 </div>
                 <div class="custom-related-instance">
                   <p
