@@ -167,8 +167,9 @@
           :can-edit="!isBatchDelete"
           ref="detailComRef"
           @tab-change="handleTabChange"
-          @on-change="handleChange" />
-      </div>
+          @on-change="handleChange"
+          @on-select-all="handleSelectAll">
+        </render-detail></div>
     </bk-sideslider>
 
     <bk-sideslider
@@ -323,7 +324,6 @@
       formateDelPathTitle () {
         let tempList = [];
         tempList = this.curInstancePaths.length && this.curInstancePaths.reduce((prev, next) => {
-          console.log(prev, next);
           prev.push(
             ...next.path.map(v => {
               return v.length && v.map(sub => sub.name).join('/');
@@ -331,8 +331,7 @@
           );
           return prev;
         }, []);
-        console.log(this.curInstancePaths, tempList);
-        return tempList;
+        return tempList || [];
       }
     },
     watch: {
@@ -472,11 +471,20 @@
         console.log(this.curInstancePaths, data, this.previewData, this.curId, 46545);
       },
 
+      handleSelectAll (isAll, payload) {
+        if (!isAll) {
+          this.curInstancePaths = [];
+          return;
+        }
+        const { instance } = payload;
+        this.curInstancePaths = [...instance];
+      },
+
       async handleDeletePerm (payload) {
         const data = this.$refs.detailComRef.handleGetValue();
         const { ids, condition, type, resource_group_id } = data;
         const params = {
-          id: this.curPolicyId,
+          id: this.policyIdList.join(),
           data: {
             system_id: data.system_id,
             type: type,
@@ -485,7 +493,7 @@
             resource_group_id
           }
         };
-        console.log(params, this.delActionList);
+        console.log(params, this.delActionList, this.policyIdList);
         try {
           await this.$store.dispatch('permApply/updatePerm', params);
           window.changeAlert = false;
@@ -531,6 +539,7 @@
             item => this.delActionList.map(action => action.id).includes(item.id));
           policyIds = [payload.policy_id].concat(list.map(v => v.policy_id));
         }
+        this.policyIdList = _.cloneDeep(policyIds);
         const typeMap = {
           action: () => {
             this.currentActionName = name;
@@ -541,7 +550,7 @@
               }
             }
             this.curDeleteIds.splice(0, this.curDeleteIds.length, ...policyIds);
-            this.policyIdList = _.cloneDeep(policyIds);
+            this.policyIdList = _.cloneDeep(this.curDeleteIds);
             this.delActionDialogTitle = this.$t(`m.dialog['确认删除内容？']`, { value: this.$t(`m.dialog['删除操作权限']`) });
             this.delActionDialogTip = this.$t(`m.info['删除依赖操作产生的影响']`, { value: this.currentActionName });
             this.isShowDeleteDialog = true;
@@ -559,7 +568,6 @@
                 );
                 return prev;
               }, []);
-              console.log(curPaths, 666);
               this.curInstancePaths = [...curPaths];
             }
           },

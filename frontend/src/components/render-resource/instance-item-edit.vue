@@ -108,7 +108,7 @@
           this.$set(item, 'checked', this.allChecked);
           // item.checked = this.allChecked
         });
-        this.$emit('on-selelct-all', this.allChecked, this.resourceList.length);
+        this.$emit('on-select-all', this.allChecked, this.resourceList.length);
         // this.trigger()
       },
 
