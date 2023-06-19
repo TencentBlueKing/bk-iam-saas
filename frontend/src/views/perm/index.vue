@@ -420,7 +420,7 @@
             background-color: red;
             border-radius: 50%;
             &-lang {
-                right: -312px;
+                right: -340px;
             }
             &.external-redCircle {
                 right: -90px;

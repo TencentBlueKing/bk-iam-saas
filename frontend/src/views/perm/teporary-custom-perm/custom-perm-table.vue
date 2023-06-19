@@ -485,7 +485,7 @@
             const { name, type, condition } = item;
             params.push({
               name: type,
-              label: `${name} ${this.$t(`m.common['实例']`)}`,
+              label: this.$t(`m.info['tab操作实例']`, { value: name }),
               tabType: 'resource',
               data: condition,
               systemId: item.system_id,
