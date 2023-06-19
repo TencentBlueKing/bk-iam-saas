@@ -38,7 +38,7 @@
           <bk-option v-for="option in effectWeekTimeZone"
             :key="option.value"
             :id="option.value"
-            :name="option.name"
+            :name="$t(`m.info['${option.name}']`)"
           >
           </bk-option>
         </bk-select>
