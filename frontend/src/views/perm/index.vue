@@ -118,7 +118,6 @@
   import GroupPerm from './group-perm/index.vue';
   import { mapGetters } from 'vuex';
   import DepartmentGroupPerm from './department-group-perm/index.vue';
-  import { systemCustomData } from '@/views/my-manage-space/add-member-boundary/testData';
 
   export default {
     name: 'MyPerm',
@@ -268,7 +267,7 @@
           this.personalGroupList.splice(0, this.personalGroupList.length, ...personalGroupList);
           this.emptyData = formatCodeData(code1, this.emptyData, this.personalGroupList.length === 0);
                     
-          const systemList = systemCustomData || data2 || [];
+          const systemList = data2 || [];
           this.systemList.splice(0, this.systemList.length, ...systemList);
           this.emptyData2 = formatCodeData(code2, this.emptyData2, this.systemList.length === 0);
 

@@ -1262,7 +1262,7 @@ export const m = {
         '自定义权限交接': 'custom permission handover:',
         '超级管理员交接': 'super manager handover:',
         '系统管理员交接': 'system manager handover:',
-        '管理空间交接': 'management space handover:',
+        '分级管理员交接': 'rating manager handover',
         '管理员名称': 'ManagerName',
         '无法交接用户组：': 'Unable to handover group:',
         '（通过组织加入、已过期的组无法交接）': '(Joined via an organization, expired groups cannot be handover)',

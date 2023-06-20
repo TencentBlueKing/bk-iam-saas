@@ -237,7 +237,6 @@
   import EffectConditon from './effect-conditon';
   import SidesliderEffectConditon from './sideslider-effect-condition';
   import DeleteActionDialog from '@/views/group/components/delete-related-action-dialog.vue';
-  import { customPermData, policyData } from '@/views/my-manage-space/add-member-boundary/testData';
 
   export default {
     name: 'CustomPermTable',
@@ -370,8 +369,8 @@
           params.system_id = this.externalSystemId;
         }
         try {
-          // const res = await this.$store.dispatch('permApply/getActions', params);
-          this.originalCustomTmplList = _.cloneDeep(customPermData[systemId]);
+          const res = await this.$store.dispatch('permApply/getActions', params);
+          this.originalCustomTmplList = _.cloneDeep(res.data);
           this.handleActionLinearData();
         } catch (e) {
           console.error(e);
@@ -404,9 +403,9 @@
        */
       async fetchData (params) {
         try {
-          // const res = await this.$store.dispatch('permApply/getPolicies', { system_id: params.systemId });
-          console.log(params.systemId, this.linearActionList, 155);
-          this.policyList = policyData[params.systemId].map(item => {
+          const res = await this.$store.dispatch('permApply/getPolicies', { system_id: params.systemId });
+          // this.policyList = policyData[params.systemId].map(item => {
+          this.policyList = res.data.map(item => {
             // eslint-disable-next-line max-len
             const relatedEnvironments = this.linearActionList.find(sub => sub.id === item.id);
             item.related_environments = relatedEnvironments ? relatedEnvironments.related_environments : [];
@@ -464,11 +463,9 @@
       handleChange () {
         const data = this.$refs.detailComRef.handleGetValue();
         this.disabled = data.ids.length < 1 && data.condition.length < 1;
-        console.log(data, 1233);
         if (!this.disabled) {
           this.handleDeleteActionOrInstance(Object.assign(data, { id: this.curId, policy_id: this.curPolicyId }), 'instance');
         }
-        console.log(this.curInstancePaths, data, this.previewData, this.curId, 46545);
       },
 
       handleSelectAll (isAll, payload) {
@@ -690,7 +687,6 @@
         this.sidesliderTitle = this.$t(`m.info['操作侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}` });
         window.changeAlert = 'iamSidesider';
         this.isShowSideslider = true;
-        console.log(groupItem, payload, this.previewData, 32223);
       },
 
       /**
@@ -934,7 +930,7 @@
   padding-left: 44px;
   font-size: 14px;
   word-break: break-all;
-  max-height: 186px;
+  max-height: 220px;
   overflow-y: auto;
   &::-webkit-scrollbar {
     width: 6px;
