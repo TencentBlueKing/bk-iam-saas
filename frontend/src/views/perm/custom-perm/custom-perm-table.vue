@@ -13,31 +13,39 @@
       <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)" min-width="360">
         <template slot-scope="{ row }">
           <template v-if="!row.isEmpty">
-            <div v-for="(_, _index) in row.resource_groups" :key="_.id" class="related-resource-list"
-              :class="row.resource_groups === 1 || _index === row.resource_groups.length - 1
-                ? '' : 'related-resource-list-border'">
-              <p class="related-resource-item"
-                v-for="item in _.related_resource_types"
-                :key="item.type">
+            <div
+              v-for="(_, _index) in row.resource_groups"
+              :key="_.id"
+              class="related-resource-list"
+              :class="
+                row.resource_groups === 1 || _index === row.resource_groups.length - 1
+                  ? ''
+                  : 'related-resource-list-border'
+              "
+            >
+              <p class="related-resource-item" v-for="item in _.related_resource_types" :key="item.type">
                 <render-resource-popover
                   :key="item.type"
                   :data="item.condition"
                   :value="`${item.name}: ${item.value}`"
                   :max-width="380"
-                  @on-view="handleViewResource(_, row)" />
+                  @on-view="handleViewResource(_, row)"
+                />
               </p>
               <Icon
                 v-if="isShowPreview(row)"
                 type="detail-new"
                 class="view-icon"
                 :title="$t(`m.common['详情']`)"
-                @click.stop="handleViewResource(_, row)" />
+                @click.stop="handleViewResource(_, row)"
+              />
               <Icon
                 v-if="isShowPreview(row) && row.resource_groups.length > 2"
                 type="reduce-hollow"
                 :title="$t(`m.common['删除']`)"
                 :class="row.resource_groups.length > 1 ? 'effect-icon' : 'effect-icon-disabled'"
-                @click.stop="handlerReduceInstance(_, row)" />
+                @click.stop="handlerReduceInstance(_, row)"
+              />
             </div>
           </template>
           <template v-else>
@@ -48,21 +56,25 @@
       <bk-table-column :label="$t(`m.common['生效条件']`)" min-width="300">
         <template slot-scope="{ row }">
           <div class="condition-table-cell" v-if="!!row.related_environments.length">
-            <div v-for="(_, groIndex) in row.resource_groups" :key="_.id"
+            <div
+              v-for="(_, groIndex) in row.resource_groups"
+              :key="_.id"
               class="related-condition-list"
-              :class="[row.resource_groups.length > 1 ? 'related-resource-list' : 'environ-group-one',
-                       row.resource_groups === 1 || groIndex === row.resource_groups.length - 1
-                         ? '' : 'related-resource-list-border']">
-              <effect-conditon
-                :value="_.environments"
-                :is-empty="!_.environments.length">
-              </effect-conditon>
+              :class="[
+                row.resource_groups.length > 1 ? 'related-resource-list' : 'environ-group-one',
+                row.resource_groups === 1 || groIndex === row.resource_groups.length - 1
+                  ? ''
+                  : 'related-resource-list-border'
+              ]"
+            >
+              <effect-conditon :value="_.environments" :is-empty="!_.environments.length"> </effect-conditon>
               <Icon
                 type="detail-new"
                 class="effect-detail-icon"
                 :title="$t(`m.common['详情']`)"
                 v-if="isShowPreview(row)"
-                @click.stop="handleEnvironmentsViewResource(_, row)" />
+                @click.stop="handleEnvironmentsViewResource(_, row)"
+              />
             </div>
           </div>
           <div v-else class="condition-table-cell empty-text">{{ $t(`m.common['无生效条件']`) }}</div>
@@ -92,7 +104,8 @@
       :sub-title="deleteDialog.subTitle"
       @on-after-leave="handleAfterDeleteLeave"
       @on-cancel="hideCancelDelete"
-      @on-sumbit="handleSubmitDelete" />
+      @on-sumbit="handleSubmitDelete"
+    />
 
     <bk-sideslider
       :is-show="isShowSideslider"
@@ -100,25 +113,30 @@
       :width="725"
       quick-close
       data-test-id="myPerm_sideslider_resourceInsance"
-      @update:isShow="handleResourceCancel">
+      @update:isShow="handleResourceCancel"
+    >
       <div slot="header" class="iam-my-custom-perm-silder-header">
-        <span>{{ sidesliderTitle}}</span>
+        <span>{{ sidesliderTitle }}</span>
         <div class="action-wrapper" v-if="canOperate">
           <bk-button
             text
             theme="primary"
             size="small"
-            style="padding: 0;"
+            style="padding: 0"
             :disabled="batchDisabled"
             v-if="isBatchDelete"
-            @click="handleBatchDelete">{{ $t(`m.common['批量删除实例权限']`) }}</bk-button>
+            @click="handleBatchDelete"
+          >
+            {{ $t(`m.common['批量删除实例权限']`) }}
+          </bk-button>
           <template v-else>
             <iam-popover-confirm
               :title="$t(`m.info['确定删除实例权限']`)"
               :disabled="disabled"
               :is-custom-footer="true"
               :cancel-text="$t(`m.common['取消-dialog']`)"
-              :confirm-handler="handleDeletePerm">
+              :confirm-handler="handleDeletePerm"
+            >
               <div
                 slot="title"
                 class="popover-custom-title">
@@ -148,15 +166,12 @@
                     {{ item.name }}
                   </p>
                 </div>
-              </div>
-              <bk-button
-                theme="primary"
-                :disabled="disabled"
-              >
+              </div> -->
+              <bk-button theme="primary" :disabled="disabled">
                 {{ $t(`m.common['删除']`) }}
               </bk-button>
             </iam-popover-confirm>
-            <bk-button style="margin-left: 10px;" @click="handleCancel">
+            <bk-button style="margin-left: 10px" @click="handleCancel">
               {{ $t(`m.common['取消']`) }}
             </bk-button>
           </template>
@@ -169,8 +184,10 @@
           ref="detailComRef"
           @tab-change="handleTabChange"
           @on-change="handleChange"
-          @on-select-all="handleSelectAll">
-        </render-detail></div>
+          @on-select-all="handleSelectAll"
+        >
+        </render-detail>
+      </div>
     </bk-sideslider>
 
     <bk-sideslider
@@ -179,7 +196,8 @@
       :width="725"
       quick-close
       @update:isShow="handleResourceCancel"
-      ext-cls="effect-conditon-side">
+      ext-cls="effect-conditon-side"
+    >
       <div slot="content">
         <effect-conditon
           :value="environmentsSidesliderData"
@@ -197,19 +215,18 @@
       :width="725"
       quick-close
       @update:isShow="handleResourceEffectTimeCancel"
-      :ext-cls="'relate-instance-sideslider'">
+      :ext-cls="'relate-instance-sideslider'"
+    >
       <div slot="content" class="sideslider-content">
-        <sideslider-effect-conditon
-          ref="sidesliderRef"
-          :data="environmentsSidesliderData"
-        ></sideslider-effect-conditon>
+        <sideslider-effect-conditon ref="sidesliderRef" :data="environmentsSidesliderData"></sideslider-effect-conditon>
       </div>
-      <div slot="footer" style="margin-left: 25px;">
-        <bk-button theme="primary" :loading="sliderLoading"
-          @click="handleResourceEffectTimeSumit">
-          {{ $t(`m.common['保存']`) }}</bk-button>
-        <bk-button style="margin-left: 10px;"
-          @click="handleResourceEffectTimeCancel">{{ $t(`m.common['取消']`) }}</bk-button>
+      <div slot="footer" style="margin-left: 25px">
+        <bk-button theme="primary" :loading="sliderLoading" @click="handleResourceEffectTimeSumit">
+          {{ $t(`m.common['保存']`) }}</bk-button
+        >
+        <bk-button style="margin-left: 10px" @click="handleResourceEffectTimeCancel">{{
+          $t(`m.common['取消']`)
+        }}</bk-button>
       </div>
     </bk-sideslider>
 
@@ -223,7 +240,6 @@
       @on-cancel="handleCancelDelete"
       @on-submit="handleSubmitDelete"
     />
-
   </div>
 </template>
 <script>
