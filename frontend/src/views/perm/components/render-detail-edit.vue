@@ -9,8 +9,12 @@
           <tree :data="panel.data" :has-border="true" />
         </template>
         <template v-else>
-          <condition-detail :data="panel.data" :can-edit="canEdit" ref="conditionRef"
-            @on-change="handleChange" />
+          <condition-detail
+            ref="conditionRef"
+            :data="panel.data"
+            :can-edit="canEdit"
+            @on-change="handleChange"
+            @on-select-all="handleSelectAll" />
         </template>
       </bk-tab-panel>
     </bk-tab>
@@ -77,19 +81,22 @@
       handleChange () {
         this.$emit('on-change');
       },
+      
+      handleSelectAll (isAll, payload) {
+        this.$emit('on-select-all', isAll, payload);
+      },
 
       handleGetValue () {
         const data = this.$refs.conditionRef[0].handleGetValue();
         const curActiveData = this.panels.find(item => item.name === this.active);
         if (curActiveData.tabType !== 'relate') {
           return {
-                        ...data,
-                        system_id: curActiveData.systemId,
-                        type: this.active,
-                        resource_group_id: curActiveData.resource_group_id
+            ...data,
+            system_id: curActiveData.systemId,
+            type: this.active,
+            resource_group_id: curActiveData.resource_group_id
           };
         }
-
         return { ...data, resource_group_id: curActiveData.resource_group_id };
       }
     }

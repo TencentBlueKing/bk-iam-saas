@@ -29,6 +29,15 @@
           <bk-button theme="primary" text @click="showDetail(row)">{{ $t(`m.common['详情']`) }}</bk-button>
         </template>
       </bk-table-column>
+      <template slot="empty">
+        <ExceptionEmpty
+          :type="emptyData.type"
+          :empty-text="emptyData.text"
+          :tip-text="emptyData.tip"
+          :tip-type="emptyData.tipType"
+          @on-refresh="handleEmptyRefresh"
+        />
+      </template>
     </bk-table>
 
     <history-detail
@@ -39,7 +48,7 @@
 </template>
 <script>
   import { buildURLParams } from '@/common/url';
-
+  import { formatCodeData } from '@/common/util';
   import HistoryDetail from './history-detail.vue';
 
   export default {
@@ -59,7 +68,13 @@
         currentBackup: 1,
         tableLoading: false,
         curHistory: null,
-        isShowDetailSidesilder: false
+        isShowDetailSidesilder: false,
+        emptyData: {
+          type: '',
+          text: '',
+          tip: '',
+          tipType: ''
+        }
       };
     },
     watch: {
@@ -104,13 +119,12 @@
         this.setCurrentQueryCache(this.refreshCurrentQuery());
         try {
           // const res = await this.$store.dispatch('role/getRatingManagerList', {
-          const res = await this.$store.dispatch('perm/getTransferHistory', {
+          const { data, code } = await this.$store.dispatch('perm/getTransferHistory', {
             limit: this.pagination.limit,
             offset: (this.pagination.current - 1) * this.pagination.limit
           });
-          this.pagination.count = res.data.count;
-
-          const list = res.data.results || [];
+          this.pagination.count = data.count || 0;
+          const list = data.results || [];
           list.forEach(item => {
             // 2021-12-08 06:28:15.384996+00:00
             const timeArr = item.created_time.split('.');
@@ -133,13 +147,16 @@
               item.statusStr = '--';
             }
           });
-          this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
+          this.tableList.splice(0, this.tableList.length, ...(data.results || []));
+          this.emptyData = formatCodeData(code, this.emptyData, data.results.length === 0);
         } catch (e) {
           console.error(e);
+          const { code, data, message, statusText } = e;
+          this.emptyData = formatCodeData(code, this.emptyData);
           this.bkMessageInstance = this.$bkMessage({
             limit: 1,
             theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
+            message: message || data.msg || statusText,
             ellipsisLine: 2,
             ellipsisCopy: true
           });
@@ -178,6 +195,11 @@
       handleAnimationEnd () {
         this.curHistory = null;
         this.isShowDetailSidesilder = false;
+      },
+
+      handleEmptyRefresh () {
+        this.resetPagination();
+        this.fetchTransferHistory(false);
       }
     }
   };
