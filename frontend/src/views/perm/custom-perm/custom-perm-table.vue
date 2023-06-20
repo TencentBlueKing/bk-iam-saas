@@ -124,7 +124,8 @@
                 class="popover-custom-title">
                 {{ $t(`m.dialog['确认删除内容？']`, { value: $t(`m.dialog['删除实例权限']`) }) }}
               </div>
-              <div
+              <!-- 这个地方后台需要增加跟当前操作有关联的操作下的资源实例一起删除的接口，目前暂不展示关联操作内容 -->
+              <!-- <div
                 slot="content"
                 :class="[
                   'popover-custom-content',
@@ -481,7 +482,7 @@
         const data = this.$refs.detailComRef.handleGetValue();
         const { ids, condition, type, resource_group_id } = data;
         const params = {
-          id: this.policyIdList.join(),
+          id: this.curPolicyId,
           data: {
             system_id: data.system_id,
             type: type,
@@ -490,7 +491,6 @@
             resource_group_id
           }
         };
-        console.log(params, this.delActionList, this.policyIdList);
         try {
           await this.$store.dispatch('permApply/updatePerm', params);
           window.changeAlert = false;
