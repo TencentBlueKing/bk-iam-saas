@@ -368,7 +368,7 @@ SUBJECT_AUTHORIZATION_LIMIT = {
     "group_auth_system_once_limit": env.int("BKAPP_GROUP_AUTH_SYSTEM_ONCE_LIMIT", default=10),
     # -------- 分级管理员 ---------
     # 一个分级管理员可创建的用户组个数
-    "grade_manager_group_limit": env.int("BKAPP_GRADE_MANAGER_GROUP_LIMIT", default=100),
+    "grade_manager_group_limit": env.int("BKAPP_GRADE_MANAGER_GROUP_LIMIT", default=10000),
     # 一个分级管理员可添加的成员个数
     "grade_manager_member_limit": env.int("BKAPP_GRADE_MANAGER_MEMBER_LIMIT", default=100),
     # 默认每个系统可创建的分级管理数量
