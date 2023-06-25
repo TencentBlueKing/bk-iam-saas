@@ -346,7 +346,8 @@ export const m = {
         'admin无需申请权限': 'Admin does not need to apply for permission',
         '请选择系统': 'Please select system',
         '请选择操作': 'Please select the actions',
-        '请选择资源类型': 'Please select resource type'
+        '请选择资源类型': 'Please select resource type',
+        '管理空间名称不能为空': 'Management space name cannot be empty'
     },
     info: {
         '加入用户组申请成功': 'Apply to join the group successfully',

@@ -166,6 +166,11 @@
       },
       triggerChange () {
         this.isEditable = false;
+        if (!this.newVal) {
+          this.newVal = this.value;
+          this.messageError(this.$t(`m.verify['管理空间名称不能为空']`));
+          return;
+        }
         if (this.newVal === this.value) {
           return;
         }
