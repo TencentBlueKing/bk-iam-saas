@@ -382,7 +382,7 @@
         if (payload.role && payload.role.name) {
           const { name, id } = payload.role;
           this.isShowGradeSlider = true;
-          this.gradeSliderTitle = this.$t(`m.info['管理空间成员侧边栏标题信息']`, { value: `${this.$t(`m.common['【']`)}${name}${this.$t(`m.common['']`)}` });
+          this.gradeSliderTitle = this.$t(`m.info['管理空间成员侧边栏标题信息']`, { value: `${this.$t(`m.common['【']`)}${name}${this.$t(`m.common['】']`)}` });
           this.curRoleId = id;
           this.fetchRoles(id);
         }
