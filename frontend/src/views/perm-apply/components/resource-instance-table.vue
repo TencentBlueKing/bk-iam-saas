@@ -1439,9 +1439,8 @@
             aggregations: []
           };
         }
-        const actionList = [];
+        let actionList = [];
         const aggregations = [];
-
         // 重新赋值
         if (this.isAllExpanded) {
           this.tableList = this.tableList.filter(e =>
@@ -1569,6 +1568,7 @@
           } else {
             const { actions, aggregateResourceType, instances, instancesDisplayData } = item;
             if (instances.length < 1) {
+              actionList = _.cloneDeep(actions);
               item.isError = true;
               flag = true;
             } else {
