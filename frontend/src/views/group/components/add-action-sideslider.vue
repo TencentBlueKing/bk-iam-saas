@@ -4,7 +4,7 @@
     :is-show="isShow"
     quick-close
     transfer
-    :width="890"
+    :width="960"
     ext-cls="iam-add-action-sideslider"
     :title="$t(`m.grading['添加系统和操作']`)"
     @update:isShow="handleCancel('leave')">
@@ -884,9 +884,8 @@
             });
           }
         }
-        this.$emit('update:isShow', false);
         this.$emit('on-submit', tempData, this.aggregationData, this.authorizationData);
-        this.resetData();
+        this.handleCloseSide();
       },
 
       async handleSysChange (payload) {
@@ -956,9 +955,8 @@
               cancelHandler = leaveConfirm();
             }
             cancelHandler.then(() => {
-              this.$emit('update:isShow', false);
               this.aggregationData = _.cloneDeep(this.aggregation);
-              this.resetData();
+              this.handleCloseSide();
             }, _ => _);
           },
           cancel: () => {
@@ -967,9 +965,8 @@
               cancelHandler = leaveConfirm();
             }
             cancelHandler.then(() => {
-              this.$emit('update:isShow', false);
               this.aggregationData = _.cloneDeep(this.aggregation);
-              this.resetData();
+              this.handleCloseSide();
             }, _ => _);
           }
         };
@@ -983,6 +980,12 @@
           const routeData = this.$router.resolve({ path: `${this.$store.getters.navCurRoleId}/rating-manager-edit`, params: { id: this.$store.getters.navCurRoleId } });
           window.open(routeData.href, '_blank');
         }
+      },
+
+      handleCloseSide () {
+        this.$emit('update:isShow', false);
+        this.$emit('on-cancel');
+        this.resetData();
       },
 
       refreshList () {

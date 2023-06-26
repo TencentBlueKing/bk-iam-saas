@@ -174,7 +174,7 @@
               </p>
               <bk-button
                 theme="primary"
-                :style="{ width: '100%', marginTop: curLanguageIsCn ? '35px' : '50px' }"
+                :style="{ width: '100%', marginTop: '35px' }"
                 :loading="manualAddLoading"
                 :disabled="isManualDisabled || isAll"
                 data-test-id="group_addGroupMemberDialog_btn_addManualUser"

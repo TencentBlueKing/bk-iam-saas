@@ -39,7 +39,7 @@
       <bk-table-column :label="$t(`m.perm['加入方式']`)">
         <template slot-scope="props">
           <span v-if="props.row.department_id === 0">{{ $t(`m.perm['直接加入']`) }}</span>
-          <span v-else :title="`${$t(`m.perm['通过组织加入']`)}：${props.row.department_name}`">
+          <span v-else :title="`${$t(`m.perm['通过组织加入']`)}: ${props.row.department_name}`">
             {{ $t(`m.perm['通过组织加入']`) }}: {{ props.row.department_name }}
           </span>
         </template>

@@ -340,7 +340,7 @@
     <bk-sideslider
       :is-show="isShowResourceInstanceSideSlider"
       :title="resourceInstanceSideSliderTitle"
-      :width="720"
+      :width="960"
       quick-close
       transfer
       :ext-cls="'relate-instance-sideslider'"

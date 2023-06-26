@@ -207,7 +207,7 @@
     <bk-sideslider
       :is-show="isShowResourceInstanceSideslider"
       :title="resourceInstanceSidesliderTitle"
-      :width="720"
+      :width="960"
       quick-close
       transfer
       :ext-cls="'relate-instance-sideslider'"
@@ -233,7 +233,7 @@
 
     <bk-sideslider :is-show="isShowResourceInstanceEffectTime"
       :title="resourceInstanceEffectTimeTitle"
-      :width="720"
+      :width="960"
       quick-close
       @update:isShow="handleResourceEffectTimeCancel"
       :ext-cls="'relate-instance-sideslider'">

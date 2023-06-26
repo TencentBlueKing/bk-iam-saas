@@ -141,14 +141,16 @@
         <ExceptionEmpty />
       </template>
     </bk-table>
+
     <bk-sideslider
       :is-show="isShowResourceInstanceSideslider"
       :title="resourceInstanceSidesliderTitle"
-      :width="720"
+      :width="960"
       quick-close
       transfer
       :ext-cls="'relate-instance-sideslider'"
-      @update:isShow="handleResourceCancel">
+      @update:isShow="handleResourceCancel"
+    >
       <div slot="content" class="sideslider-content">
         <render-resource
           ref="renderResourceRef"
@@ -224,6 +226,7 @@
 
 <script>
   import _ from 'lodash';
+  import { bus } from '@/common/bus';
   import { mapGetters } from 'vuex';
   import Condition from '@/model/condition';
   import GroupPolicy from '@/model/group-policy';
@@ -662,17 +665,22 @@
           });
         }
         this.previewData = _.cloneDeep(params);
-        this.sidesliderTitle = this.$t(`m.info['操作侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}` });
+        this.sidesliderTitle = this.$t(`m.info['操作侧边栏操作的资源实例']`, {
+          value: `${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}`
+        });
+        bus.$emit('on-drawer-side', { width: 1160 });
         this.isShowSideslider = true;
       },
       handleAnimationEnd () {
         this.sidesliderTitle = '';
-        this.previewData = [];
         this.curId = '';
+        this.previewData = [];
+        bus.$emit('on-drawer-side', { width: 960 });
       },
       handleAfterDeleteLeave () {
         this.currentActionName = '';
         this.delActionList = [];
+        this.policyIdList = [];
       },
       handleCancelDelete () {
         this.isShowDeleteDialog = false;

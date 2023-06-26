@@ -2,7 +2,7 @@
   <bk-sideslider
     :is-show.sync="isShowSideslider"
     :title="$t(`m.common['详情']`)"
-    :width="720"
+    :width="640"
     ext-cls="iam-transfer-history-sideslider"
     :quick-close="true"
     @animation-end="handleAnimationEnd">
