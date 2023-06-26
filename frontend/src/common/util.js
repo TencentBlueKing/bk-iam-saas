@@ -597,13 +597,31 @@ export function getCookie (name) {
 
 // 兼容外部系统i18的key
 export function formatI18nKey () {
-  let lang = getCookie('blueking_language') || 'zh-cn';
-  if (lang.toLowerCase().indexOf('en') > -1) {
-    lang = 'en';
-  }
-  if (lang.toLowerCase().indexOf('zh') > -1) {
-    lang = 'zh-cn';
-  }
+  const lang = getCookie('blueking_language') || 'zh-cn';
   const result = ['zh-cn', 'en'].includes(lang) ? lang : 'zh-cn';
   return result;
+}
+
+/**
+ *  jsonp请求
+ *
+ * @param {url} str 请求地址
+ * @param {params} str 请求参数
+ * @param {callback} str 回调名
+ *
+ */
+export function jsonpRequest (url, params, callbackName) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    if (callbackName) {
+      callbackName = callbackName + Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+    }
+    Object.assign(params, callbackName ? { callback: callbackName } : {});
+    const arr = Object.keys(params).map(key => `${key}=${params[key]}`);
+    script.src = `${url}?${arr.join('&')}`;
+    document.body.appendChild(script);
+    window[callbackName] = (data) => {
+      resolve(data);
+    };
+  });
 }
