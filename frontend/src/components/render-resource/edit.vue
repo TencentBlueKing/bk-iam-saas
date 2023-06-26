@@ -33,7 +33,7 @@
               :title="`${instanceItem.name}(${instanceItem.path.length})`"
               :has-gap="instanceIndex > 0"
               :data="instanceItem.path"
-              @on-selelct-all="handleSelectAll(...arguments, conIndex, instanceIndex)"
+              @on-select-all="handleSelectAll(...arguments, conIndex, instanceIndex)"
               @on-change="handleInstanceChange(...arguments, conIndex, instanceIndex)" />
           </render-resource-instance>
           <render-resource-instance
@@ -137,7 +137,7 @@
         const tempData = {
           ids: [],
           condition: [],
-          iaAllDelete: false
+          isAllDelete: false
         };
         this.conditionData.forEach((item, index) => {
           if (item.isGroupChecked) {
@@ -182,7 +182,7 @@
           }
         });
         if (tempData.ids.length === this.conditionData.length) {
-          tempData.iaAllDelete = true;
+          tempData.isAllDelete = true;
         }
         return tempData;
       },
@@ -209,8 +209,8 @@
 
         const flag = curCondition.selectCount === curCondition.count;
         this.conditionData[conIndex].isGroupChecked = flag;
-
         this.$emit('on-change');
+        this.$emit('on-select-all', flag, curCondition);
       },
 
       handleInstanceChange (payload, conIndex, instanceIndex) {

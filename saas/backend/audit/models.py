@@ -15,7 +15,6 @@ from typing import Any, Dict, Type
 from django.db import connections, models
 from django.utils import timezone
 
-from backend.audit.apps import AuditConfig
 from backend.common.models import BaseModel
 from backend.service.constants import RoleType
 from backend.util.json import json_dumps
@@ -71,7 +70,7 @@ class EventForMeta(Event):
 
 
 def _get_sub_model(base_cls, suffix: str):
-    table_name = f"{AuditConfig.name}_{base_cls.__name__.lower()}_{suffix}"
+    table_name = f"audit_{base_cls.__name__.lower()}_{suffix}"
 
     class Metaclass(models.base.ModelBase):
         def __new__(cls, name, bases, attrs):
@@ -90,8 +89,8 @@ def _get_sub_model(base_cls, suffix: str):
 
 
 def get_audit_db():
-    if AuditConfig.name in connections:
-        return AuditConfig.name
+    if "audit" in connections:
+        return "audit"
 
     return "default"
 

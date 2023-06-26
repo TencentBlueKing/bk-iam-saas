@@ -368,7 +368,7 @@ SUBJECT_AUTHORIZATION_LIMIT = {
     "group_auth_system_once_limit": env.int("BKAPP_GROUP_AUTH_SYSTEM_ONCE_LIMIT", default=10),
     # -------- 分级管理员 ---------
     # 一个分级管理员可创建的用户组个数
-    "grade_manager_group_limit": env.int("BKAPP_GRADE_MANAGER_GROUP_LIMIT", default=100),
+    "grade_manager_group_limit": env.int("BKAPP_GRADE_MANAGER_GROUP_LIMIT", default=10000),
     # 一个分级管理员可添加的成员个数
     "grade_manager_member_limit": env.int("BKAPP_GRADE_MANAGER_MEMBER_LIMIT", default=100),
     # 默认每个系统可创建的分级管理数量
@@ -398,6 +398,7 @@ ENABLE_FRONT_END_FEATURES = {
     "enable_model_build": env.bool("BKAPP_ENABLE_FRONT_END_MODEL_BUILD", default=False),
     "enable_permission_handover": env.bool("BKAPP_ENABLE_FRONT_END_PERMISSION_HANDOVER", default=True),
     "enable_temporary_policy": env.bool("BKAPP_ENABLE_FRONT_END_TEMPORARY_POLICY", default=False),
+    "enable_group_instance_search": env.bool("BKAPP_ENABLE_FRONT_END_GROUP_INSTANCE_SEARCH", default=False),
 }
 
 # Open API接入APIGW后，需要对APIGW请求来源认证，使用公钥解开jwt

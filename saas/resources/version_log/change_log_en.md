@@ -1,5 +1,17 @@
+<!-- 2023-06-21 -->
+# V1.10.6 ChangeLog
+
+### Bug Fixes
+* Fixed the issue where the default workflow for the graded administrator was empty
+* Fixed the issue with the audit log record table create name
+
+---
+
 <!-- 2023-06-07 -->
 # V1.10.5 ChangeLog
+
+### New Features
+* Applying for user group permissions can be done by operating and searching user groups in the instances
 
 ### Optimization Updates
 * Optimize the associated permission deletion logic

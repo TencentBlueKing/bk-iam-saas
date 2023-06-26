@@ -288,7 +288,7 @@
               {{$t(`m.permApply['根据你的需求，自动匹配到以下的用户组']`)}}
             </div>
             <div class="info">
-              {{ $t(`m.info['如果需要更多用户组权限']`) }},
+              {{ $t(`m.info['如果需要更多用户组权限']`) }}{{ $t(`m.common['，']`) }}
               {{ $t(`m.info['可前往']`) }}
               <bk-button
                 text
@@ -398,7 +398,7 @@
               {{$t(`m.permApply['以下是你必须申请的权限']`)}}
             </div>
             <div class="info">
-              {{ $t(`m.info['如果需要更多自定义权限']`) }}，
+              {{ $t(`m.info['如果需要更多自定义权限']`) }}{{ $t(`m.common['，']`) }}
               {{ $t(`m.info['可前往']`) }}
               <bk-button
                 text
@@ -412,7 +412,10 @@
           <div>
             <bk-transition name="bk-fade-in-ease">
               <div>
-                <div class="tableData">
+                <div
+                  ref="instanceTableRef"
+                  class="tableData"
+                >
                   <resource-instance-table
                     :list="newTableList"
                     :original-list="tableDataBackup"
@@ -423,7 +426,10 @@
                 </div>
 
                 <div class="requestRecommendText">{{$t(`m.permApply['以下相关权限，你可以按需申请']`)}}</div>
-                <div class="tableData">
+                <div
+                  ref="instanceTableRef"
+                  class="tableData"
+                >
                   <resource-instance-table
                     :is-recommend="isRecommend"
                     :cache-id="routerQuery.cache_id"
@@ -475,7 +481,7 @@
         <div class="tableData">
           <bk-alert type="info">
             <div slot="title">
-              {{ $t(`m.info['没有匹配到合适的用户组']`) }}，
+              {{ $t(`m.info['没有匹配到合适的用户组']`) }}{{ $t(`m.common['，']`) }}
               {{ $t(`m.info['如需要可继续前往']`) }}
               <bk-button
                 text
@@ -490,7 +496,7 @@
         <div class="requestIndependent">
           <div class="requestIndependentText">{{$t(`m.permApply['以下是你必须申请的权限']`)}}</div>
           <div class="info">
-            {{ $t(`m.info['如果需要更多自定义权限']`) }}，
+            {{ $t(`m.info['如果需要更多自定义权限']`) }}{{ $t(`m.common['，']`) }}
             {{ $t(`m.info['可前往']`) }}
             <bk-button
               text
@@ -501,7 +507,10 @@
             </bk-button>
           </div>
         </div>
-        <div class="tableData">
+        <div
+          ref="instanceTableRef"
+          class="tableData"
+        >
           <resource-instance-table
             :cache-id="routerQuery.cache_id"
             :list="newTableList"
@@ -513,7 +522,10 @@
         </div>
 
         <div class="requestRecommendText">{{$t(`m.permApply['以下相关权限，你可以按需申请']`)}}</div>
-        <div class="tableData">
+        <div
+          ref="instanceTableRef"
+          class="tableData"
+        >
           <resource-instance-table
             :is-recommend="isRecommend"
             :cache-id="routerQuery.cache_id"
@@ -820,7 +832,7 @@
       handleViewDetail (payload) {
         if (payload.role && payload.role.name) {
           this.isShowGradeSlider = true;
-          this.gradeSliderTitle = `${this.$t(`m.common['【']`)}${payload.role.name}${this.$t(`m.common['】']`)}${this.$t(`m.grading['管理空间']`)} ${this.$t(`m.common['成员']`)}`;
+          this.gradeSliderTitle = this.$t(`m.info['管理空间成员侧边栏标题信息']`, { value: `${this.$t(`m.common['【']`)}${payload.role.name}${this.$t(`m.common['']`)}` });
           this.fetchRoles(payload.role.id);
         }
       },
@@ -2362,8 +2374,8 @@
           const tableRecommendData = this.$refs.resInstanceRecommendTableRef.handleGetValue();
           recommendActions = tableRecommendData.actions;
           recommendFlag = recommendActions.some((e, i) => {
-            const newRecommendTableListe = this.newRecommendTableList.find(item => item.id === e.id);
-            return newRecommendTableListe.resource_groups.some(v => {
+            const newRecommendTableList = this.newRecommendTableList.find(item => item.id === e.id);
+            return newRecommendTableList.resource_groups.some(v => {
               return v.related_resource_types.some(j => {
                 return j.empty;
               });
@@ -2371,30 +2383,32 @@
           });
         }
         actions = [...actions, ...recommendActions];
-        if (recommendFlag || flag || this.reason === '') {
-          this.isShowReasonError = this.reason === '';
+        this.isShowReasonError = !this.reason;
+        if (recommendFlag || flag || this.isShowReasonError) {
           if (actions.length < 1 && aggregations.length < 1) {
             this.isShowActionError = true;
           }
           const tableRef = this.$refs.instanceTableRef;
           const reasonRef = this.$refs.resInstanceReasonRef;
-          if (!flag && !this.reason) {
-            this.scrollToLocation(reasonRef);
-          } else {
+          if (flag || recommendFlag) {
             this.scrollToLocation(tableRef);
+            return;
           }
-          return;
+          if (this.isShowReasonError) {
+            this.scrollToLocation(reasonRef);
+            return;
+          }
         }
         // if (!this.permMembers.length) {
         // this.isShowMemberError = true;
         // this.scrollToLocation(this.$refs.permRecipientRef);
         // return;
         // }
-        const systemName = this.systemList.find(item => item.id === this.systemValue).name;
+        const curSystem = this.systemList.find(item => item.id === this.systemValue);
         const params = {
           system: {
             id: this.systemValue,
-            name: systemName
+            name: curSystem ? curSystem.name : ''
           },
           templates: [],
           actions,

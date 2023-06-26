@@ -493,19 +493,8 @@
               { system: item.system }
             );
           });
-          const tableDataBackup = res.data.map(row => {
-            const linearActionList = this.linearActionList.find(sub => sub.id === row.id);
-            // eslint-disable-next-line max-len
-            row.related_environments = linearActionList ? linearActionList.related_environments : [];
-            return new GroupPolicy(
-              row,
-              'detail',
-              'custom',
-              { system: item.system }
-            );
-          });
-          this.$set(item, 'tableData', tableData);
-          this.$set(item, 'tableDataBackup', tableDataBackup);
+          this.$set(item, 'tableData', _.cloneDeep(tableData));
+          this.$set(item, 'tableDataBackup', _.cloneDeep(tableData));
 
           console.log('itemTableData', item);
         } catch (e) {
@@ -625,9 +614,8 @@
           this.policyList = subItem;
           if (isExistTemplate) {
             this.getGroupTemplateList(item);
-          } else {
-            this.handleInit();
           }
+          this.handleInit();
         } catch (e) {
           console.error(e);
           this.bkMessageInstance = this.$bkMessage({

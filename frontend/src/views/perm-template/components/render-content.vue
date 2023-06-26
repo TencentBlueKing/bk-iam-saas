@@ -475,14 +475,16 @@
           if (this.externalSystemId) {
             params.hidden = false;
           }
-          const res = await this.$store.dispatch('system/getSystems', params);
-          (res.data || []).forEach(item => {
+          const { data } = await this.$store.dispatch('system/getSystems', params);
+          (data || []).forEach(item => {
             item.displayName = `${item.name}(${item.id})`;
           });
-          this.systemList = res.data || [];
-          this.systemValue = res.data[0].id || '';
-          await this.fetchActions(this.systemValue);
-          await this.fetchCommonActions(this.systemValue);
+          this.systemList = data || [];
+          this.systemValue = data && data.length ? data[0].id : '';
+          if (this.systemValue) {
+            await this.fetchActions(this.systemValue);
+            await this.fetchCommonActions(this.systemValue);
+          }
         } catch (e) {
           console.error(e);
           this.bkMessageInstance = this.$bkMessage({

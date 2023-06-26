@@ -583,7 +583,15 @@
       /**
        * handleAddCancel
        */
-      handleAddCancel () {
+      handleAddCancel (payload) {
+        const { customPerm } = payload;
+        if (customPerm) {
+          this.hasAddCustomList = [...customPerm];
+          if (!customPerm.length) {
+            this.tableList = [];
+            this.tableListBackup = [];
+          }
+        }
         this.isShowAddSideslider = false;
         this.permSideWidth = 890;
       },
@@ -1036,7 +1044,9 @@
         } else {
           this.hasAddCustomList = payload;
         }
-
+        if (!payload.length) {
+          this.curActionValue = [];
+        }
         this.originalList = _.cloneDeep(payload);
         this.aggregationDataByCustom = _.cloneDeep(aggregation);
         this.authorizationDataByCustom = _.cloneDeep(authorization);

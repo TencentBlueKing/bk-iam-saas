@@ -293,7 +293,15 @@
       /**
        * handleAddCancel
        */
-      handleAddCancel () {
+      handleAddCancel (payload) {
+        const { customPerm } = payload;
+        if (customPerm) {
+          this.hasAddCustomList = [...customPerm];
+          if (!customPerm.length) {
+            this.tableList = [];
+            this.tableListBackup = [];
+          }
+        }
         this.isShowAddSideslider = false;
         this.permSideWidth = 890;
       },

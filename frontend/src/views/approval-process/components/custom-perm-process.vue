@@ -78,7 +78,7 @@
               </bk-select>
             </section>
             <section class="process-name" v-else>
-              {{ row.process_id | proceeNameFilter(list) }}
+              {{ row.process_id | processNameFilter(list) }}
             </section>
           </template>
         </bk-table-column>
@@ -107,6 +107,7 @@
 </template>
 <script>
   import _ from 'lodash';
+  import il8n from '@/language';
   import editProcessDialog from './edit-process-dialog';
   import { buildURLParams } from '@/common/url';
   import { formatCodeData } from '@/common/util';
@@ -117,10 +118,10 @@
       editProcessDialog
     },
     filters: {
-      proceeNameFilter (value, list) {
+      processNameFilter (value, list) {
         const data = list.find(item => item.id === value);
         if (data) return data.name;
-        return this.$t(`m.approvalProcess['默认审批流程']`);
+        return il8n('approvalProcess', '默认审批流程');
       }
     },
     props: {

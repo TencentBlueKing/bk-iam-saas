@@ -12,7 +12,10 @@
       <p class="confirm-content" ref="confirmContent">
         <slot name="content">{{content}}</slot>
       </p>
-      <div class="confirm-options">
+      <div :class="[
+        'confirm-options',
+        { 'confirm-options-custom': isCustomFooter }
+      ]">
         <slot name="options">
           <bk-button class="confirm-option-button"
             theme="primary"
@@ -69,6 +72,10 @@
       contentMinWidth: {
         type: [String, Number],
         default: ''
+      },
+      isCustomFooter: {
+        type: Boolean,
+        default: false
       },
       disabled: Boolean,
       confirmHandler: Function,
@@ -170,6 +177,10 @@
                 display: flex;
                 justify-content: flex-end;
                 margin: 16px 0 0 0;
+                &-custom {
+                  justify-content: center;
+                  padding-bottom: 16px;
+                }
             }
             .confirm-option-button {
                 margin: 0 0 0 10px;

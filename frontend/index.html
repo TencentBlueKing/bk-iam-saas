@@ -23,6 +23,7 @@
                 const ENABLE_MODEL_BUILD = '{{ ENABLE_MODEL_BUILD }}' || ''
                 const ENABLE_PERMISSION_HANDOVER = '{{ ENABLE_PERMISSION_HANDOVER }}' || ''
                 const ENABLE_TEMPORARY_POLICY = '{{ ENABLE_TEMPORARY_POLICY }}' || ''
+                const ENABLE_GROUP_INSTANCE_SEARCH = '{{ ENABLE_GROUP_INSTANCE_SEARCH }}' || ''
                 document.domain = '{{ SESSION_COOKIE_DOMAIN }}'
                 window.LOGIN_SERVICE_URL = LOGIN_SERVICE_URL
                 window.AJAX_URL_PREFIX = AJAX_URL_PREFIX
@@ -37,6 +38,7 @@
                 window.ENABLE_MODEL_BUILD = ENABLE_MODEL_BUILD
                 window.ENABLE_PERMISSION_HANDOVER = ENABLE_PERMISSION_HANDOVER
                 window.ENABLE_TEMPORARY_POLICY = ENABLE_TEMPORARY_POLICY
+                window.ENABLE_GROUP_INSTANCE_SEARCH = ENABLE_GROUP_INSTANCE_SEARCH
                 window.CE_URL = CE_URL
             })()
 
@@ -49,11 +51,11 @@
                 // }
                 let CUR_LANGUAGE = getCookie('blueking_language') ||'zh-cn'
                 // 英文 兼容处理
-                if (['en', 'en-US', 'en-us'].includes(CUR_LANGUAGE)) {
+                if (CUR_LANGUAGE.toLowerCase().indexOf('en') > -1) {
                     CUR_LANGUAGE = 'en'
                 }
                 // 中文 兼容处理
-                if (['zh-cn', 'zh-CN', 'None', 'none', ''].includes(CUR_LANGUAGE)) {
+                if (CUR_LANGUAGE.toLowerCase().indexOf('zh') > -1) {
                     CUR_LANGUAGE = 'zh-cn'
                 }
                 if (CUR_LANGUAGE === 'en') {
