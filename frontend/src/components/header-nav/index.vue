@@ -119,7 +119,7 @@
   import { il8n, language } from '@/language';
   import { bus } from '@/common/bus';
   import { buildURLParams } from '@/common/url';
-  import { formatI18nKey } from '@/common/util';
+  import { formatI18nKey, jsonpRequest } from '@/common/util';
   import { NEED_CONFIRM_DIALOG_ROUTER } from '@/common/constants';
   import SystemLog from '../system-log';
   import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
@@ -609,18 +609,17 @@
         window.location.reload();
       },
         
-      handleChangeLocale (payload) {
-        this.setCookie('blueking_language', payload);
-        Cookie.set('blueking_language', payload, {
-          domain: window.location.hostname.split('.').slice(1).join('.')
+      handleChangeLocale (language) {
+        Cookie.set('blueking_language', language, {
+          domain: window.BK_DOMAIN || window.location.hostname.split('.').slice(1).join('.')
         });
-        this.setMagicBoxLocale(payload);
-      },
-
-      setCookie (name, value) {
-        const date = new Date();
-        date.setTime(date.getTime() - 10000);
-        document.cookie = name + '=' + value + ';' + 'expire=' + date.toGMTString() + '; path=/';
+        jsonpRequest(
+          `${window.BK_COMPONENT_API_URL}/api/c/compapi/v2/usermanage/fe_update_user_language/`,
+          {
+            language
+          }
+        );
+        this.setMagicBoxLocale(language);
       },
 
       handleSwitchIdentity () {
