@@ -1754,7 +1754,7 @@
                     // }
                     const instanceData = instances[0][0];
                     item.instances = [];
-                    instanceData.map(pathItem => {
+                    instanceData && instanceData.map(pathItem => {
                       const instance = pathItem.path.map(e => {
                         return {
                           id: e[0].id,
