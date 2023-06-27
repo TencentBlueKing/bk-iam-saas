@@ -373,10 +373,10 @@
           return this.user.role.type === 'super_manager';
       },
       sliderWidth () {
-          if (['myPerm', 'applyJoinUserGroup'].includes(this.$route.name) && ['detail'].includes(this.mode)) {
-              return window.innerWidth - 700;
-          }
-          return this.mode === 'detail' ? 890 : 725;
+          // if (['myPerm', 'applyJoinUserGroup'].includes(this.$route.name) && ['detail'].includes(this.mode)) {
+          //     return 960;
+          // }
+          return this.mode === 'detail' ? 960 : 640;
       },
       condition () {
           if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
