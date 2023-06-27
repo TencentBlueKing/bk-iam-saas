@@ -88,10 +88,10 @@
       </bk-table-column>
       <template slot="empty">
         <ExceptionEmpty
-          :type="emptyData.type"
-          :empty-text="emptyData.text"
-          :tip-text="emptyData.tip"
-          :tip-type="emptyData.tipType"
+          :type="policyEmptyData.type"
+          :empty-text="policyEmptyData.text"
+          :tip-text="policyEmptyData.tip"
+          :tip-type="policyEmptyData.tipType"
           @on-refresh="handleRefreshData"
         />
       </template>
@@ -254,6 +254,7 @@
   import EffectConditon from './effect-conditon';
   import SidesliderEffectConditon from './sideslider-effect-condition';
   import DeleteActionDialog from '@/views/group/components/delete-related-action-dialog.vue';
+  import { formatCodeData } from '@/common/util';
 
   export default {
     name: 'CustomPermTable',
@@ -324,29 +325,37 @@
         delActionDialogTip: '',
         delActionList: [],
         curInstancePaths: [],
-        policyIdList: []
+        policyIdList: [],
+        policyEmptyData: {
+          type: '',
+          text: '',
+          tip: '',
+          tipType: ''
+        }
       };
     },
     computed: {
       ...mapGetters(['user', 'externalSystemId']),
       loading () {
-          return this.initRequestQueue.length > 0;
+        return this.initRequestQueue.length > 0;
       },
       isShowPreview () {
-          return (payload) => {
-              return !payload.isEmpty && payload.policy_id !== '';
-          };
+        return (payload) => {
+          return !payload.isEmpty && payload.policy_id !== '';
+        };
       },
       formateDelPathTitle () {
         let tempList = [];
-        tempList = this.curInstancePaths.length && this.curInstancePaths.reduce((prev, next) => {
-          prev.push(
-            ...next.path.map(v => {
-              return v.length && v.map(sub => sub.name).join('/');
-            })
-          );
-          return prev;
-        }, []);
+        tempList
+          = this.curInstancePaths.length
+          && this.curInstancePaths.reduce((prev, next) => {
+            prev.push(
+              ...next.path.map((v) => {
+                return v.length && v.map((sub) => sub.name).join('/');
+              })
+            );
+            return prev;
+          }, []);
         return tempList || [];
       }
     },
@@ -366,6 +375,12 @@
             this.policyList = [];
             this.policyCountMap = {};
           }
+        },
+        immediate: true
+      },
+      emptyData: {
+        handler (value) {
+          this.policyEmptyData = Object.assign({}, value);
         },
         immediate: true
       }
@@ -420,16 +435,17 @@
        */
       async fetchData (params) {
         try {
-          const res = await this.$store.dispatch('permApply/getPolicies', { system_id: params.systemId });
+          const { code, data } = await this.$store.dispatch('permApply/getPolicies', { system_id: params.systemId });
           // this.policyList = policyData[params.systemId].map(item => {
-          this.policyList = res.data.map(item => {
-            // eslint-disable-next-line max-len
+          this.policyList = data.length && data.map(item => {
             const relatedEnvironments = this.linearActionList.find(sub => sub.id === item.id);
             item.related_environments = relatedEnvironments ? relatedEnvironments.related_environments : [];
             return new PermPolicy(item);
           });
+          this.policyEmptyData = formatCodeData(code, this.policyEmptyData, data.length === 0);
         } catch (e) {
           console.error(e);
+          this.policyEmptyData = formatCodeData(e.code, this.policyEmptyData);
           this.bkMessageInstance = this.$bkMessage({
             limit: 1,
             theme: 'error',
