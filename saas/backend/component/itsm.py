@@ -51,11 +51,15 @@ def create_ticket(
         "creator": creator,
         "meta": {"callback_url": callback_url, "state_processors": node_processors},
         "fields": [
-            {"key": "title", "value": title},
-            {"key": "application_type", "value": application_type_display},
-            {"key": "organization", "value": organization_names},
-            {"key": "reason", "value": reason},
-            {"key": "content", "value": content},
+            {"key": "title", "value": title, "meta": {"language": {"en": "title"}}},
+            {
+                "key": "application_type",
+                "value": application_type_display,
+                "meta": {"language": {"en": "application type"}},
+            },
+            {"key": "organization", "value": organization_names, "meta": {"language": {"en": "organization"}}},
+            {"key": "reason", "value": reason, "meta": {"language": {"en": "reason"}}},
+            {"key": "content", "value": content, "meta": {"language": {"en": "content"}}},
         ],
     }
 

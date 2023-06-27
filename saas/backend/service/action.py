@@ -59,3 +59,15 @@ class ActionService:
     def delete(self, system_id: str, action_id: str):
         """删除操作"""
         iam.delete_action(system_id, action_id)
+
+    def list_dependent_action_ids(self, system_id: str, action_id: str) -> List[str]:
+        """查询操作的被依赖操作"""
+        actions = self.list(system_id)
+
+        dependent_action_ids = set()
+        for action in actions:
+            for related_action_id in action.related_actions:
+                if related_action_id == action_id:
+                    dependent_action_ids.add(action.id)
+
+        return list(dependent_action_ids)
