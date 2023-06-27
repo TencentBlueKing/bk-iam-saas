@@ -70,4 +70,7 @@ class ActionService:
                 if related_action_id == action_id:
                     dependent_action_ids.add(action.id)
 
+        # 移除本身
+        dependent_action_ids.remove(action_id)
+
         return list(dependent_action_ids)
