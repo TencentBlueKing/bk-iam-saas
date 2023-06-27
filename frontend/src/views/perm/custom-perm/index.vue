@@ -93,7 +93,8 @@
       handleExpanded (value, payload) {},
 
       handleAfterDelete (policyListLen, sysIndex) {
-        --this.systemPolicyList[sysIndex].count;
+        // --this.systemPolicyList[sysIndex].count;
+        this.$set(this.systemPolicyList[sysIndex], 'count', policyListLen);
         if (this.systemPolicyList[sysIndex].count < 1) {
           this.systemPolicyList.splice(sysIndex, 1);
         }

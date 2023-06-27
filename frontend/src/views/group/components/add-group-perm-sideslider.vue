@@ -176,7 +176,7 @@
       },
       permSideWidth: {
         type: Number,
-        default: 890
+        default: 960
       }
     },
     data () {

@@ -4,7 +4,7 @@
     :is-show="isShow"
     quick-close
     transfer
-    :width="890"
+    :width="960"
     ext-cls="iam-add-action-sideslider"
     :title="$t(`m.grading['添加系统和操作']`)"
     @update:isShow="handleCancel">

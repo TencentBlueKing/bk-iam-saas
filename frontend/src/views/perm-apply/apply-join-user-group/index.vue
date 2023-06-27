@@ -124,6 +124,7 @@
               <div class="group-search-select pb20">
                 <iam-search-select
                   style="width: calc(100% - 20px)"
+                  ref="searchSelectRef"
                   @on-change="handleSearch"
                   :data="searchData"
                   :value="searchValue"
@@ -146,6 +147,7 @@
           </render-search>
           <div v-else>
             <iam-search-select
+              ref="searchSelectRef"
               @on-change="handleSearch"
               :data="searchData"
               :value="searchValue"
@@ -338,7 +340,7 @@
     <bk-sideslider
       :is-show="isShowResourceInstanceSideSlider"
       :title="resourceInstanceSideSliderTitle"
-      :width="720"
+      :width="960"
       quick-close
       transfer
       :ext-cls="'relate-instance-sideslider'"
@@ -847,12 +849,35 @@
         this.searchParams = {};
         this.searchValue = [];
         this.emptyData.tipType = '';
+        if (this.$refs.searchSelectRef && this.$refs.searchSelectRef.$refs.searchSelect) {
+          this.$refs.searchSelectRef.$refs.searchSelect.localValue = '';
+        }
         this.resetPagination();
         this.resetSearchParams();
         this.fetchUserGroupList(false);
       },
 
       async handleSearchUserGroup (isClick = false) {
+        // 处理直接不选择对应字段直接输入内容情况
+        if (
+          this.$refs.searchSelectRef
+          && this.$refs.searchSelectRef.$refs.searchSelect
+          && this.$refs.searchSelectRef.$refs.searchSelect.localValue
+          && !this.searchParams.name
+        ) {
+          this.searchParams.name = this.$refs.searchSelectRef.$refs.searchSelect.localValue;
+          this.searchValue.push({
+            id: 'name',
+            name: this.$t(`m.userGroup['用户组名']`),
+            values: [
+              {
+                id: this.searchParams.name,
+                name: this.searchParams.name
+              }
+            ]
+          });
+          this.$refs.searchSelectRef.$refs.searchSelect.localValue = '';
+        }
         if (this.applyGroupData.system_id && this.enableGroupInstanceSearch) {
           if (!this.applyGroupData.system_id) {
             this.systemIdError = true;
@@ -1157,7 +1182,7 @@
       handleViewDetail (payload) {
         if (payload.role && payload.role.name) {
           this.isShowGradeSlider = true;
-          this.gradeSliderTitle = this.$t(`m.info['管理空间成员侧边栏标题信息']`, { value: `${this.$t(`m.common['【']`)}${payload.role.name}${this.$t(`m.common['']`)}` });
+          this.gradeSliderTitle = this.$t(`m.info['管理空间成员侧边栏标题信息']`, { value: `${this.$t(`m.common['【']`)}${payload.role.name}${this.$t(`m.common['】']`)}` });
           this.fetchRoles(payload.role.id);
         }
       },

@@ -464,7 +464,7 @@
         opacity: 0;
         cursor: no-drop;
         &.info-sys-lang {
-            left: 360px;
+            left: 400px;
         }
     }
 

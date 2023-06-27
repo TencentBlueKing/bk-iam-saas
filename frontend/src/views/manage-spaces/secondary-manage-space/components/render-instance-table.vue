@@ -183,7 +183,7 @@
     <bk-sideslider
       :is-show="isShowResourceInstanceSideslider"
       :title="resourceInstanceSidesliderTitle"
-      :width="720"
+      :width="960"
       quick-close
       transfer
       :ext-cls="'relate-instance-sideslider'"
@@ -382,97 +382,97 @@
       };
     },
     computed: {
-            ...mapGetters(['user']),
-            isSuperManager () {
-                return this.user.role.type === 'super_manager';
-            },
-            sliderWidth () {
-                return this.mode === 'detail' ? 890 : 725;
-            },
-            condition () {
-                if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
-                    return [];
-                }
-                const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-                    .related_resource_types[this.curResIndex];
-                if (!curData) {
-                    return [];
-                }
-                return _.cloneDeep(curData.condition);
-            },
-            originalCondition () {
-                if (this.curIndex === -1
-                    || this.curResIndex === -1
-                    || this.curGroupIndex === -1
-                    || this.originalList.length < 1) {
-                    return [];
-                }
-                const curId = this.tableList[this.curIndex].id;
-                const curType = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-                    .related_resource_types[this.curResIndex].type;
-                if (!this.originalList.some(item => item.id === curId)) {
-                    return [];
-                }
-                const curResTypeData = this.originalList.find(item => item.id === curId);
-                if (!curResTypeData.resource_groups[this.curGroupIndex]
-                    .related_resource_types.some(item => item.type === curType)) {
-                    return [];
-                }
-                const curData = (curResTypeData.resource_groups[this.curGroupIndex]
-                    .related_resource_types || []).find(item => item.type === curType);
-                if (!curData) {
-                    return [];
-                }
-                return _.cloneDeep(curData.condition);
-            },
-            curDisabled () {
-                if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
-                    return false;
-                }
-                const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-                    .related_resource_types[this.curResIndex];
-                return curData.isDefaultLimit;
-            },
-            curFlag () {
-                if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
-                    return 'add';
-                }
-                const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-                    .related_resource_types[this.curResIndex];
-                return curData.flag;
-            },
-            curSelectionMode () {
-                if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
-                    return 'all';
-                }
-                const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-                    .related_resource_types[this.curResIndex];
-                return curData.selectionMode;
-            },
-            isShowPreview () {
-                if (this.curIndex === -1) {
-                    return false;
-                }
-                return this.tableList[this.curIndex].policy_id !== '';
-            },
-            isShowView () {
-                return (payload) => {
-                    return !payload.isEmpty;
-                };
-            },
-            isCreateMode () {
-                return this.mode === 'create';
-            },
-            isUserGroupDetail () {
-                return this.$route.name === 'userGroupDetail';
-            },
-            curSelectionCondition () {
-                if (this.curIndex === -1) {
-                    return false;
-                }
-                const curSelectionCondition = this.tableList[this.curIndex].conditionIds;
-                return curSelectionCondition;
+        ...mapGetters(['user']),
+        isSuperManager () {
+            return this.user.role.type === 'super_manager';
+        },
+        sliderWidth () {
+            return this.mode === 'detail' ? 960 : 640;
+        },
+        condition () {
+            if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
+                return [];
             }
+            const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                .related_resource_types[this.curResIndex];
+            if (!curData) {
+                return [];
+            }
+            return _.cloneDeep(curData.condition);
+        },
+        originalCondition () {
+            if (this.curIndex === -1
+                || this.curResIndex === -1
+                || this.curGroupIndex === -1
+                || this.originalList.length < 1) {
+                return [];
+            }
+            const curId = this.tableList[this.curIndex].id;
+            const curType = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                .related_resource_types[this.curResIndex].type;
+            if (!this.originalList.some(item => item.id === curId)) {
+                return [];
+            }
+            const curResTypeData = this.originalList.find(item => item.id === curId);
+            if (!curResTypeData.resource_groups[this.curGroupIndex]
+                .related_resource_types.some(item => item.type === curType)) {
+                return [];
+            }
+            const curData = (curResTypeData.resource_groups[this.curGroupIndex]
+                .related_resource_types || []).find(item => item.type === curType);
+            if (!curData) {
+                return [];
+            }
+            return _.cloneDeep(curData.condition);
+        },
+        curDisabled () {
+            if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
+                return false;
+            }
+            const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                .related_resource_types[this.curResIndex];
+            return curData.isDefaultLimit;
+        },
+        curFlag () {
+            if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
+                return 'add';
+            }
+            const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                .related_resource_types[this.curResIndex];
+            return curData.flag;
+        },
+        curSelectionMode () {
+            if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
+                return 'all';
+            }
+            const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                .related_resource_types[this.curResIndex];
+            return curData.selectionMode;
+        },
+        isShowPreview () {
+            if (this.curIndex === -1) {
+                return false;
+            }
+            return this.tableList[this.curIndex].policy_id !== '';
+        },
+        isShowView () {
+            return (payload) => {
+                return !payload.isEmpty;
+            };
+        },
+        isCreateMode () {
+            return this.mode === 'create';
+        },
+        isUserGroupDetail () {
+            return this.$route.name === 'userGroupDetail';
+        },
+        curSelectionCondition () {
+            if (this.curIndex === -1) {
+                return false;
+            }
+            const curSelectionCondition = this.tableList[this.curIndex].conditionIds;
+            return curSelectionCondition;
+        }
     },
     watch: {
       list: {

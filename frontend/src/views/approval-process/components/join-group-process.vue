@@ -116,7 +116,9 @@
       @animation-end="handleAnimationEnd" />
   </div>
 </template>
+
 <script>
+  import il8n from '@/language';
   import { mapGetters } from 'vuex';
   import { buildURLParams } from '@/common/url';
   import editProcessDialog from './edit-process-dialog';
@@ -132,7 +134,7 @@
       proceeNameFilter (value, list) {
         const data = list.find(item => item.id === value);
         if (data) return data.name;
-        return '默认审批流程';
+        return il8n('approvalProcess', '默认审批流程');
       }
     },
     props: {
@@ -170,33 +172,33 @@
       };
     },
     computed: {
-            ...mapGetters(['user']),
-            isCanBatchDelete () {
-                return this.currentSelectList.length > 0 && this.tableList.length > 0;
-            },
-            curSelectName () {
-                return payload => {
-                    if (this.list.length > 0 && payload.process_id !== '') {
-                        if (this.list.find(item => item.id === payload.process_id)) {
-                            return this.list.find(item => item.id === payload.process_id).name;
-                        }
-                        return '默认审批流程';
-                    }
-                    return '';
-                };
-            },
-            curTitle () {
-                return payload => {
-                    if (this.list.length > 0 && payload.process_id !== '') {
-                        if (this.list.find(item => item.id === payload.process_id)) {
-                            return `${this.$t(`m.approvalProcess['审批节点']`)}：${this.list.find(item => item.id === payload.process_id).node_names.join(' -> ')}`;
-                        } else {
-                            return '';
-                        }
-                    }
-                    return '';
-                };
-            }
+      ...mapGetters(['user']),
+      isCanBatchDelete () {
+          return this.currentSelectList.length > 0 && this.tableList.length > 0;
+      },
+      curSelectName () {
+          return payload => {
+              if (this.list.length > 0 && payload.process_id !== '') {
+                  if (this.list.find(item => item.id === payload.process_id)) {
+                      return this.list.find(item => item.id === payload.process_id).name;
+                  }
+                  return this.$t(`m.approvalProcess['默认审批流程']`);
+              }
+              return '';
+          };
+      },
+      curTitle () {
+          return payload => {
+              if (this.list.length > 0 && payload.process_id !== '') {
+                  if (this.list.find(item => item.id === payload.process_id)) {
+                      return `${this.$t(`m.approvalProcess['审批节点']`)}：${this.list.find(item => item.id === payload.process_id).node_names.join(' -> ')}`;
+                  } else {
+                      return '';
+                  }
+              }
+              return '';
+          };
+      }
     },
     watch: {
       'pagination.current' (value) {

@@ -218,7 +218,7 @@
     <bk-sideslider
       :is-show="isShowResourceInstanceSideslider"
       :title="resourceInstanceSidesliderTitle"
-      :width="720"
+      :width="960"
       quick-close
       transfer
       :ext-cls="'relate-instance-sideslider'"
@@ -244,7 +244,7 @@
 
     <bk-sideslider :is-show="isShowResourceInstanceEffectTime"
       :title="resourceInstanceEffectTimeTitle"
-      :width="720"
+      :width="960"
       quick-close
       @update:isShow="handleResourceEffectTimeCancel"
       :ext-cls="'relate-instance-sideslider'">
@@ -397,7 +397,8 @@
           if (!curData) {
               return [];
           }
-          if (curData.condition.length === 0) curData.condition = ['none'];
+          // 此处为空如果重新赋值，会一直走不到无限制业务代码逻辑
+          // if (curData.condition.length === 0) curData.condition = ['none'];
           return _.cloneDeep(curData.condition);
       },
       originalCondition () {
@@ -903,7 +904,7 @@
         if (relatedList.length > 0) {
           relatedList.forEach(item => {
             if (!item.policy_id) {
-              item.expired_at = item.expired_at + this.user.timestamp;
+              item.expired_at = Number(item.expired_at) + this.user.timestamp;
             }
             delete item.policy_id;
             item.resource_groups.forEach(groupItem => {
@@ -973,7 +974,7 @@
             const inOriginalList = !!this.originalList.filter(
               original => String(original.id) === String(item.id)
             ).length;
-            item.expired_at = item.expired_at - this.user.timestamp;
+            item.expired_at = Number(item.expired_at) - this.user.timestamp;
             this.tableList.splice(
               curIndex,
               1,
@@ -1439,9 +1440,8 @@
             aggregations: []
           };
         }
-        const actionList = [];
+        let actionList = [];
         const aggregations = [];
-
         // 重新赋值
         if (this.isAllExpanded) {
           this.tableList = this.tableList.filter(e =>
@@ -1569,6 +1569,7 @@
           } else {
             const { actions, aggregateResourceType, instances, instancesDisplayData } = item;
             if (instances.length < 1) {
+              actionList = _.cloneDeep(actions);
               item.isError = true;
               flag = true;
             } else {

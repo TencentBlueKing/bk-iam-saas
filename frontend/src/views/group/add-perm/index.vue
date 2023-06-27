@@ -64,6 +64,7 @@
       :group-id="$route.params.id"
       :aggregation="aggregationDataByCustom"
       :authorization="authorizationDataByCustom"
+      @on-cancel="handleSelectCancel"
       @on-submit="handleSelectSubmit" />
 
     <render-template-sideslider
@@ -117,7 +118,7 @@
           isShow: false,
           id: ''
         },
-        permSideWidth: 890,
+        permSideWidth: 960,
         curMap: null,
         isShowErrorTips: false
       };
@@ -169,7 +170,7 @@
     watch: {
       isShowAddSideslider (value) {
         if (!value) {
-          this.permSideWidth = 890;
+          this.permSideWidth = 960;
         }
       }
     },
@@ -192,7 +193,7 @@
 
       handleAddCustom () {
         if (!this.externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn) {
-          this.permSideWidth = 1090;
+          this.permSideWidth = 1160;
         }
         this.isShowAddActionSideslider = true;
       },
@@ -604,6 +605,9 @@
       },
 
       handleEditCustom () {
+        if (!this.externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn) {
+          this.permSideWidth = 1160;
+        }
         this.curActionValue = this.originalList.map(item => item.$id);
         this.isShowAddActionSideslider = true;
       },
@@ -652,6 +656,10 @@
             );
           }
         }
+      },
+
+      handleSelectCancel () {
+        this.permSideWidth = 960;
       },
 
       async handleSubmit () {
@@ -742,7 +750,7 @@
           this.isShowAddActionSideslider = true;
         } else {
           this.isShowAddSideslider = true;
-          this.permSideWidth = 1090;
+          this.permSideWidth = 1160;
         }
       }
     }

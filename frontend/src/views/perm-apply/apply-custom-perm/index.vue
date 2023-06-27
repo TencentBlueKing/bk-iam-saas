@@ -832,7 +832,7 @@
       handleViewDetail (payload) {
         if (payload.role && payload.role.name) {
           this.isShowGradeSlider = true;
-          this.gradeSliderTitle = this.$t(`m.info['管理空间成员侧边栏标题信息']`, { value: `${this.$t(`m.common['【']`)}${payload.role.name}${this.$t(`m.common['']`)}` });
+          this.gradeSliderTitle = this.$t(`m.info['管理空间成员侧边栏标题信息']`, { value: `${this.$t(`m.common['【']`)}${payload.role.name}${this.$t(`m.common['】']`)}` });
           this.fetchRoles(payload.role.id);
         }
       },
@@ -1754,7 +1754,7 @@
                     // }
                     const instanceData = instances[0][0];
                     item.instances = [];
-                    instanceData.map(pathItem => {
+                    instanceData && instanceData.map(pathItem => {
                       const instance = pathItem.path.map(e => {
                         return {
                           id: e[0].id,

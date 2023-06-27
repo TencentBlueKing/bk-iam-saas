@@ -627,7 +627,7 @@
     }
     .tree-node-name {
         display: inline-block;
-        line-height: 1;
+        /* line-height: 1; */
         vertical-align: middle;
     }
   }

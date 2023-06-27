@@ -150,7 +150,7 @@
     <bk-sideslider
       :is-show="isShowResourceInstanceSideslider"
       :title="resourceInstanceSidesliderTitle"
-      :width="720"
+      :width="960"
       quick-close
       transfer
       ext-cls="relate-instance-sideslider"

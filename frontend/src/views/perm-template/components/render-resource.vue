@@ -499,7 +499,7 @@
         const MIN_OFFSET_WIDTH = 220;
         const minWidth = MIN_OFFSET_WIDTH;
         const maxWidth = MIN_OFFSET_WIDTH + 120;
-        const offsetX = e.clientX - (document.body.clientWidth - 720);
+        const offsetX = e.clientX - (document.body.clientWidth - 960);
         if (offsetX < minWidth || offsetX >= maxWidth) {
           return;
         }

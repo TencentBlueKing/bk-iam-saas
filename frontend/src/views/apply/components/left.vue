@@ -136,7 +136,7 @@
           this.isScrollLoading = false;
           return;
         }
-        if (event.target.scrollTop + event.target.offsetHeight >= event.target.scrollHeight) {
+        if (event.target.scrollTop + event.target.offsetHeight >= event.target.scrollHeight - 1) {
           this.isScrollLoading = true;
           this.isShowNoDataTips = false;
           this.$emit('on-load');

@@ -2,7 +2,7 @@
   <bk-sideslider
     :is-show="isShow"
     :quick-close="true"
-    :width="890"
+    :width="960"
     ext-cls="iam-add-group-perm-sideslider"
     :title="$t(`m.userGroup['添加组权限']`)"
     @update:isShow="handleCancel">
