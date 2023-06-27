@@ -1535,6 +1535,56 @@ class PolicyOperationBiz:
         if not resource_type:
             raise error_codes.VALIDATE_ERROR.format(_("{}: {} 资源类型不存在").format(resource_system_id, resource_type_id))
 
+        update_policies = []
+        update_policies.append(
+            self._policy_delete_instance(
+                policy, resource_group_id, resource_system_id, resource_type_id, condition_ids, conditions
+            )
+        )
+
+        # 同步删除被关联操作的实例
+        # 查询操作被关联的action ids
+        dependent_action_ids = self.action_svc.list_dependent_action_ids(system_id, policy.action_id)
+
+        # 查询用户已授权的被关联的操作policies
+        dependent_policies = self.query_biz.list_by_subject(system_id, subject, dependent_action_ids)
+
+        for p in dependent_policies:
+            dependent_policy = self._policy_delete_instance(
+                p,
+                resource_group_id,
+                resource_system_id,
+                resource_type_id,
+                condition_ids,
+                conditions,
+                raise_exception=False,
+            )
+            if dependent_policy is not None:
+                update_policies.append(dependent_policy)
+
+        self.svc.alter(system_id, subject, update_policies=[Policy.parse_obj(policy) for policy in update_policies])
+
+        return policy
+
+    def _policy_delete_instance(
+        self,
+        policy: PolicyBean,
+        resource_group_id: str,
+        resource_system_id: str,
+        resource_type_id: str,
+        condition_ids: List[str],
+        conditions: List[ConditionBean],
+        raise_exception: bool = True,
+    ) -> Optional[PolicyBean]:
+        resource_type = policy.get_related_resource_type(resource_group_id, resource_system_id, resource_type_id)
+        if not resource_type:
+            if raise_exception:
+                raise error_codes.VALIDATE_ERROR.format(
+                    _("{}: {} 资源类型不存在").format(resource_system_id, resource_type_id)
+                )
+
+            return None
+
         condition_list = ConditionBeanList(resource_type.condition)
         # 删除condition id对应的condition
         condition_list.remove_by_ids(condition_ids)
@@ -1542,7 +1592,10 @@ class PolicyOperationBiz:
         condition_list.sub(ConditionBeanList(conditions))
 
         if condition_list.is_empty:
-            raise error_codes.INVALID_ARGS.format(_("批量删除实例不能清空所有条件"))
+            if raise_exception:
+                raise error_codes.INVALID_ARGS.format(_("批量删除实例不能清空所有条件"))
+
+            return None
 
         # 更新修改后的条件
         resource_type.condition = condition_list.conditions
@@ -1551,8 +1604,6 @@ class PolicyOperationBiz:
 
         # 如果policy中其它的resource_group能包含删减后的resource_group, 则整体删除
         policy.add_resource_group_list(ResourceGroupBeanList.parse_obj([resource_group]))
-
-        self.svc.alter(system_id, subject, update_policies=[Policy.parse_obj(policy)])
 
         return policy
 
