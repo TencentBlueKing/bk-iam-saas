@@ -864,7 +864,6 @@
 
       async handleSearchUserGroup (isClick = false) {
         if (this.curSelectMenu) {
-          this.searchValue = [];
           let inputText = _.cloneDeep(this.curInputText);
           const curItem = this.initSearchData.find(item => item.id === this.curSelectMenu);
           const isHasName = this.curInputText.indexOf(`${curItem.name}：`) > -1;
@@ -874,6 +873,16 @@
           const textValue = _.isArray(inputText) ? inputText[1] : inputText;
           this.$set(this.searchParams, this.curSelectMenu, textValue);
           this.searchValue.push({
+            id: this.curSelectMenu,
+            name: curItem.name,
+            values: [
+              {
+                id: textValue,
+                name: textValue
+              }
+            ]
+          });
+          this.searchList.push({
             id: this.curSelectMenu,
             name: curItem.name,
             values: [
@@ -1186,6 +1195,8 @@
         this.currentSelectList = [];
         this.searchParams = payload;
         this.searchList = [...result];
+        this.curSelectMenu = '';
+        this.curInputText = '';
         this.emptyData.tipType = 'search';
         this.resetPagination();
         this.handleSearchUserGroup();
