@@ -125,11 +125,14 @@
                 <iam-search-select
                   style="width: calc(100% - 20px)"
                   ref="searchSelectRef"
-                  @on-change="handleSearch"
                   :data="searchData"
                   :value="searchValue"
                   :placeholder="$t(`m.applyEntrance['申请加入用户组搜索提示']`)"
-                  :quick-search-method="quickSearchMethod" />
+                  :quick-search-method="quickSearchMethod"
+                  @on-change="handleSearch"
+                  @on-click-menu="handleClickMenu"
+                  @on-input="handleSearchInput"
+                />
                 <bk-button
                   class="ml20"
                   theme="primary"
@@ -557,7 +560,9 @@
             remoteMethod: this.handleGradeAdmin
           }
         ],
-        enableGroupInstanceSearch: window.ENABLE_GROUP_INSTANCE_SEARCH.toLowerCase() === 'true'
+        enableGroupInstanceSearch: window.ENABLE_GROUP_INSTANCE_SEARCH.toLowerCase() === 'true',
+        curSelectMenu: '',
+        curInputText: ''
       };
     },
     computed: {
@@ -858,25 +863,32 @@
       },
 
       async handleSearchUserGroup (isClick = false) {
-        // 处理直接不选择对应字段直接输入内容情况
-        if (
-          this.$refs.searchSelectRef
-          && this.$refs.searchSelectRef.$refs.searchSelect
-          && this.$refs.searchSelectRef.$refs.searchSelect.localValue
-          && !this.searchParams.name
-        ) {
-          this.searchParams.name = this.$refs.searchSelectRef.$refs.searchSelect.localValue;
+        if (this.curSelectMenu) {
+          this.searchValue = [];
+          let inputText = _.cloneDeep(this.curInputText);
+          const curItem = this.initSearchData.find(item => item.id === this.curSelectMenu);
+          const isHasName = this.curInputText.indexOf(`${curItem.name}：`) > -1;
+          if (isHasName) {
+            inputText = this.curInputText.split(`${curItem.name}：`);
+          }
+          const textValue = _.isArray(inputText) ? inputText[1] : inputText;
+          this.$set(this.searchParams, this.curSelectMenu, textValue);
           this.searchValue.push({
-            id: 'name',
-            name: this.$t(`m.userGroup['用户组名']`),
+            id: this.curSelectMenu,
+            name: curItem.name,
             values: [
               {
-                id: this.searchParams.name,
-                name: this.searchParams.name
+                id: textValue,
+                name: textValue
               }
             ]
           });
-          this.$refs.searchSelectRef.$refs.searchSelect.localValue = '';
+          // 转换为tag标签后,需要清空输入框的值
+          if (this.$refs.searchSelectRef && this.$refs.searchSelectRef.$refs.searchSelect) {
+            this.$refs.searchSelectRef.$refs.searchSelect.localValue = '';
+          }
+          this.curSelectMenu = '';
+          this.curInputText = '';
         }
         if (this.applyGroupData.system_id && this.enableGroupInstanceSearch) {
           if (!this.applyGroupData.system_id) {
@@ -969,6 +981,8 @@
           });
         } finally {
           this.tableLoading = false;
+          this.curSelectMenu = '';
+          this.curInputText = '';
         }
       },
 
@@ -1154,11 +1168,24 @@
               (item) => item.name.toLowerCase().indexOf(val) > -1);
         });
       },
+      
+      handleClickMenu (payload) {
+        console.log(payload);
+        const { menu } = payload;
+        if (menu.id) {
+          this.curSelectMenu = menu.id;
+        }
+      },
+
+      handleSearchInput (payload) {
+        const { text } = payload;
+        this.curInputText = text;
+      },
 
       handleSearch (payload, result) {
         this.currentSelectList = [];
         this.searchParams = payload;
-        this.searchList = result;
+        this.searchList = [...result];
         this.emptyData.tipType = 'search';
         this.resetPagination();
         this.handleSearchUserGroup();

@@ -160,6 +160,15 @@
       curSelectionCondition: {
         type: Array,
         default: () => []
+      },
+      systemParams: {
+        type: Object,
+        default: () => {
+          return {
+            action_id: '',
+            system_id: ''
+          };
+        }
       }
     },
     data () {
@@ -421,13 +430,14 @@
         if (node.level > chainLen - 1) {
           params.system_id = this.curChain[chainLen - 1].system_id;
           params.type = this.curChain[chainLen - 1].id;
-          params.action_system_id = this.curChain[chainLen - 1].system_id;
-          params.action_id = this.curChain[chainLen - 1].id;
+          params.action_system_id = this.systemParams.system_id || '';
+          params.action_id = this.systemParams.action_id || '';
         } else {
           params.system_id = this.curChain[node.level].system_id;
           params.type = this.curChain[node.level].id;
-          params.action_system_id = this.curChain[node.level].system_id;
-          params.action_id = this.curChain[node.level].id;
+          // params.action_system_id = this.curChain[node.level].system_id;
+          params.action_system_id = this.systemParams.system_id || '';
+          params.action_id = this.systemParams.action_id || '';
         }
 
         if (node.parentChain.length) {
@@ -811,8 +821,9 @@
           limit: this.limit,
           offset: 0,
           system_id: this.curChain[0].system_id,
-          action_system_id: this.curChain[0].system_id,
-          action_id: '',
+          // action_system_id: this.curChain[0].system_id,
+          action_system_id: this.systemParams.system_id || '',
+          action_id: this.systemParams.action_id || '',
           type: this.curChain[0].id,
           // parent_type: '',
           // parent_id: '',
@@ -1080,8 +1091,9 @@
         if (node.childType !== '') {
           params.system_id = this.curChain[chainLen - 1].system_id;
           params.type = node.childType;
-          params.action_system_id = this.curChain[chainLen - 1].system_id;
-          params.action_id = '';
+          // params.action_system_id = this.curChain[chainLen - 1].system_id;
+          params.action_system_id = this.systemParams.system_id || '';
+          params.action_id = this.systemParams.action_id || '';
           parentType = this.curChain[chainLen - 1].id;
           placeholder = this.curChain[chainLen - 1].name;
           ancestorItem.system_id = this.curChain[chainLen - 1].system_id;
@@ -1093,8 +1105,9 @@
             : this.curChain[chainLen - 1];
           params.system_id = tempData.system_id;
           params.type = tempData.id;
-          params.action_system_id = tempData.system_id;
-          params.action_id = tempData.id;
+          // params.action_system_id = tempData.system_id;
+          params.action_system_id = this.systemParams.system_id || '';
+          params.action_id = this.systemParams.action_id || '';
           parentType = this.curChain[node.level]
             ? this.curChain[node.level].id
             : this.curChain[chainLen - 1].id;
@@ -1414,13 +1427,15 @@
         if (node.level > chainLen - 1) {
           params.system_id = this.curChain[chainLen - 1].system_id;
           params.type = this.curChain[chainLen - 1].id;
-          params.action_system_id = this.curChain[chainLen - 1].system_id;
-          params.action_id = this.curChain[chainLen - 1].id;
+          // params.action_system_id = this.curChain[chainLen - 1].system_id;
+          params.action_system_id = this.systemParams.system_id || '';
+          params.action_id = this.systemParams.action_id || '';
         } else {
           params.system_id = this.curChain[node.level].system_id;
           params.type = this.curChain[node.level].id;
-          params.action_system_id = this.curChain[node.level].system_id;
-          params.action_id = this.curChain[node.level].id;
+          // params.action_system_id = this.curChain[node.level].system_id;
+          params.action_system_id = this.systemParams.system_id || '';
+          params.action_id = this.systemParams.action_id || '';
         }
         if (node.parentChain.length) {
           const parentData = node.parentChain.reduce((p, e) => {

@@ -46,6 +46,7 @@
                   :tree-value="condition.instance"
                   :select-list="selectList"
                   :select-value="selectValue"
+                  :system-params="params"
                   @on-tree-select="handlePathSelect(...arguments, index)" />
                 <div class="drag-dotted-line" v-if="isDrag" :style="dottedLineStyle"></div>
                 <div class="drag-line"

@@ -45,6 +45,7 @@
                   :limit-value="getLimitInstance(conditionLimitData[index])"
                   :select-list="curSelectList(index)"
                   :select-value="curSelectValue(index)"
+                  :system-params="params"
                   @on-tree-select="handlePathSelect(...arguments, index)" />
                 <div class="drag-dotted-line" v-if="isDrag" :style="dottedLineStyle"></div>
                 <div class="drag-line"
