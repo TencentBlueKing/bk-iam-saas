@@ -901,6 +901,9 @@
           if (!this.searchList.length) {
             // 处理无tag标签，直接输入内容情况
             this.searchParams.name = this.curInputText;
+            if (!this.curInputText) {
+              delete this.searchParams.name;
+            }
           }
         }
       },
