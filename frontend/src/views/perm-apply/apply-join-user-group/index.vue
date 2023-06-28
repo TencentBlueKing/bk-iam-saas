@@ -862,7 +862,8 @@
         this.fetchUserGroupList(false);
       },
 
-      async handleSearchUserGroup (isClick = false) {
+      // 处理手动输入各种场景
+      handleManualInput () {
         if (this.curSelectMenu) {
           let inputText = _.cloneDeep(this.curInputText);
           const curItem = this.initSearchData.find(item => item.id === this.curSelectMenu);
@@ -872,16 +873,6 @@
           }
           const textValue = _.isArray(inputText) ? inputText[1] : inputText;
           this.$set(this.searchParams, this.curSelectMenu, textValue);
-          this.searchValue.push({
-            id: this.curSelectMenu,
-            name: curItem.name,
-            values: [
-              {
-                id: textValue,
-                name: textValue
-              }
-            ]
-          });
           this.searchList.push({
             id: this.curSelectMenu,
             name: curItem.name,
@@ -892,13 +883,33 @@
               }
             ]
           });
+          this.searchValue = _.cloneDeep(this.searchList);
           // 转换为tag标签后,需要清空输入框的值
           if (this.$refs.searchSelectRef && this.$refs.searchSelectRef.$refs.searchSelect) {
             this.$refs.searchSelectRef.$refs.searchSelect.localValue = '';
           }
           this.curSelectMenu = '';
           this.curInputText = '';
+        } else {
+          // 如果当前已有tag，后面如果只输入文字没生成tag自动过滤掉
+          if (this.searchList.length
+            && this.$refs.searchSelectRef
+            && this.$refs.searchSelectRef.$refs.searchSelect
+            && this.curInputText) {
+            this.$refs.searchSelectRef.$refs.searchSelect.localValue = '';
+          }
+          if (!this.searchList.length) {
+            // 处理无tag标签，直接输入内容情况
+            this.searchParams.name = this.curInputText;
+            if (!this.curInputText) {
+              delete this.searchParams.name;
+            }
+          }
         }
+      },
+
+      async handleSearchUserGroup (isClick = false) {
+        this.handleManualInput();
         if (this.applyGroupData.system_id && this.enableGroupInstanceSearch) {
           if (!this.applyGroupData.system_id) {
             this.systemIdError = true;
@@ -1179,7 +1190,6 @@
       },
       
       handleClickMenu (payload) {
-        console.log(payload);
         const { menu } = payload;
         if (menu.id) {
           this.curSelectMenu = menu.id;
