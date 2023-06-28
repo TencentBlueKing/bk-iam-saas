@@ -1,3 +1,16 @@
+<!-- 2023-06-27 -->
+# V1.10.7 ChangeLog
+
+### New Features
+* When deleting an instance with a custom permission, delete the instance that is dependent on the permission at the same time
+
+### Bug Fixes
+* ITSM bill of lading form field internationalization
+* Language switching is set to BK_DOMAIN
+* Hierarchical administrator synchronization permission user group name internationalization
+
+---
+
 <!-- 2023-06-21 -->
 # V1.10.6 ChangeLog
 

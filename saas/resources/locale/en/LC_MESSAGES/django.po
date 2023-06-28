@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-03-28 17:14+0800\n"
+"POT-Creation-Date: 2023-06-27 15:00+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -20,7 +20,7 @@ msgstr ""
 
 #: backend/account/middlewares.py:65
 msgid "用户账号已被冻结, 禁止使用权限中心相关功能"
-msgstr ""
+msgstr "User account has been frozen, and the use of permission center related functions is prohibited."
 
 #: backend/account/models.py:51
 msgid "username"
@@ -92,7 +92,7 @@ msgstr ""
 msgid "user properties"
 msgstr ""
 
-#: backend/account/views.py:75
+#: backend/account/views.py:80
 msgid "您没有该角色权限，无法切换到该角色"
 msgstr "You don’t have permission for this role and cannot switch to this role"
 
@@ -100,21 +100,21 @@ msgstr "You don’t have permission for this role and cannot switch to this role
 #: backend/api/admin/views/subject.py:156
 #: backend/api/admin/views/subject.py:192
 msgid "至少传递一个用户"
-msgstr ""
+msgstr "pass at least one user"
 
 #: backend/api/admin/views/subject.py:132
 msgid "admin用户不允许被冻结"
-msgstr ""
+msgstr "admin is not allowed to be frozen"
 
-#: backend/api/authorization/serializers.py:60 backend/biz/resource.py:146
+#: backend/api/authorization/serializers.py:60 backend/biz/resource.py:152
 msgid "无限制"
 msgstr "unlimited"
 
 #: backend/api/management/v1/serializers.py:192
 msgid "存在同名的用户组:{}"
-msgstr ""
+msgstr "a group with the same name exists"
 
-#: backend/api/management/v2/serializers.py:144
+#: backend/api/management/v2/serializers.py:145
 #, fuzzy
 #| msgid "用户组名称不能与已有的重复"
 msgid "用户组名称{}不能重复"
@@ -137,54 +137,54 @@ msgid "非分级管理员({})的用户组，无权限续期"
 msgstr ""
 "you are not classified administrators ({}) have no permission to modify"
 
-#: backend/apps/group/serializers.py:140 backend/biz/group.py:847
-#: backend/biz/group.py:873
+#: backend/apps/group/serializers.py:154 backend/biz/group.py:852
+#: backend/biz/group.py:878
 msgid "存在同名用户组"
-msgstr ""
+msgstr "a group with the same name exists"
 
-#: backend/apps/group/serializers.py:283
+#: backend/apps/group/serializers.py:297
 msgid "授权的模板有重复"
-msgstr ""
+msgstr "authorized templates are duplicated"
 
-#: backend/apps/group/serializers.py:287
+#: backend/apps/group/serializers.py:301
 msgid "单次授权模板数最多{}个"
-msgstr ""
+msgstr "The maximum number of authorization templates for a single authorization is {}."
 
-#: backend/apps/group/serializers.py:291
+#: backend/apps/group/serializers.py:305
 msgid "授权的自定义权限系统有重复"
-msgstr ""
+msgstr "Duplicate custom permission system for authorization."
 
-#: backend/apps/group/serializers.py:295
+#: backend/apps/group/serializers.py:309
 msgid "单次授权自定义系统数最多{}个"
-msgstr ""
+msgstr "The maximum number of custom permission systems for a single authorization is {}."
 
-#: backend/apps/group/views.py:101 backend/apps/group/views.py:420
+#: backend/apps/group/views.py:104 backend/apps/group/views.py:423
 msgid "只读用户组({})无法进行({})操作！"
-msgstr ""
+msgstr "Read-only group ({}) cannot perform ({}) operation!"
 
-#: backend/apps/group/views.py:295
+#: backend/apps/group/views.py:298
 msgid "用户组({})不在当前用户身份可访问的范围内"
-msgstr ""
+msgstr "The group ({}) is not within the scope accessible by the current user identity"
 
-#: backend/apps/group/views.py:772
+#: backend/apps/group/views.py:780
 msgid "模板: {} 没有操作: {} 的权限"
-msgstr ""
+msgstr "Template: {} does not have permission for action: {}"
 
 #: backend/apps/handover/constants.py:27 backend/apps/handover/constants.py:44
 msgid "正在交接"
-msgstr ""
+msgstr "handing over"
 
 #: backend/apps/handover/constants.py:28 backend/apps/handover/constants.py:45
 msgid "交接成功"
-msgstr ""
+msgstr "handover successful"
 
 #: backend/apps/handover/constants.py:29 backend/apps/handover/constants.py:48
 msgid "交接失败"
-msgstr ""
+msgstr "handover failure"
 
 #: backend/apps/handover/constants.py:30
 msgid "部分失败"
-msgstr ""
+msgstr "partial failure"
 
 #: backend/apps/handover/constants.py:63
 msgid "用户组权限"
@@ -217,7 +217,7 @@ msgstr "Group"
 
 #: backend/apps/mgmt/constants.py:38
 msgid "模板"
-msgstr ""
+msgstr "Template"
 
 #: backend/apps/model_builder/validators.py:252
 #, python-brace-format
@@ -299,7 +299,7 @@ msgstr ""
 
 #: backend/apps/policy/views.py:81 backend/apps/policy/views.py:378
 msgid "请求的system与缓存策略数据的system不一致"
-msgstr ""
+msgstr "The requested system is inconsistent with the system of the cached policy data"
 
 #: backend/apps/role/constants.py:65
 msgid "模板权限"
@@ -309,27 +309,27 @@ msgstr ""
 msgid "资源实例"
 msgstr ""
 
-#: backend/apps/role/views/role.py:245
+#: backend/apps/role/views/role.py:253
 msgid "非分级管理员({})的成员，无权限修改"
 msgstr ""
 "you are not classified administrators ({}) have no permission to modify"
 
-#: backend/apps/role/views/role.py:547
+#: backend/apps/role/views/role.py:555
 msgid "系统{}的常用操作不能超过{}个"
 msgstr "The common actions of the system {} cannot exceed {}"
 
-#: backend/apps/role/views/role.py:551
+#: backend/apps/role/views/role.py:559
 msgid "名称: {} 已存在"
 msgstr "Name: {} already exists"
 
-#: backend/apps/role/views/role.py:653
+#: backend/apps/role/views/role.py:663
 #, fuzzy
 #| msgid "非分级管理员({})的成员，无权限修改"
 msgid "非管理员({})的用户组，无权限续期"
 msgstr ""
 "you are not classified administrators ({}) have no permission to modify"
 
-#: backend/apps/role/views/role.py:882
+#: backend/apps/role/views/role.py:898
 #, fuzzy
 #| msgid "非分级管理员({})的成员，无权限修改"
 msgid "非管理员({})的成员，无权限修改"
@@ -338,33 +338,33 @@ msgstr ""
 
 #: backend/apps/template/managers.py:92
 msgid "更新任务正在运行!"
-msgstr ""
+msgstr "The update task is running!"
 
 #: backend/apps/template/managers.py:101 backend/apps/template/managers.py:107
 msgid "预提交的任务不存在!"
-msgstr ""
+msgstr "The pre-submitted task does not exist!"
 
 #: backend/apps/template/managers.py:112
 msgid "权限模板正在更新, 不能进行下一步操作!"
-msgstr ""
+msgstr "The permission template is being updated, and the next step cannot be performed!"
 
 #: backend/apps/template/views.py:534
 msgid "预提交的任务不存在, 禁止提交!"
-msgstr ""
+msgstr "The pre-submitted task does not exist, submission is prohibited!"
 
-#: backend/apps/user/constants.py:55
+#: backend/apps/user/constants.py:57
 msgid "已创建"
 msgstr ""
 
-#: backend/apps/user/constants.py:56
+#: backend/apps/user/constants.py:58
 msgid "正在清理"
 msgstr ""
 
-#: backend/apps/user/constants.py:57
+#: backend/apps/user/constants.py:59
 msgid "清理成功"
 msgstr ""
 
-#: backend/apps/user/constants.py:58
+#: backend/apps/user/constants.py:60
 msgid "清理失败"
 msgstr ""
 
@@ -373,39 +373,43 @@ msgstr ""
 msgid "名称: {}, 描述: {}"
 msgstr ""
 
-#: backend/biz/application.py:806
+#: backend/biz/application.py:819
 msgid "只有申请人能取消"
-msgstr ""
+msgstr "Only the applicant can cancel"
 
-#: backend/biz/group.py:412
+#: backend/biz/group.py:413
 msgid "用户组正在授权, 不能删除!"
-msgstr ""
+msgstr "Group is authorizing, cannot be deleted!"
 
-#: backend/biz/group.py:504
+#: backend/biz/group.py:505
 msgid "部分权限模板正在更新, 不能授权!"
-msgstr ""
+msgstr "Some permission templates are being updated, cannot be authorized!"
 
-#: backend/biz/group.py:507 backend/biz/template.py:217
+#: backend/biz/group.py:508 backend/biz/template.py:217
 msgid "正在授权中, 请稍后!"
-msgstr ""
+msgstr "Authorization in progress, please wait!"
 
-#: backend/biz/group.py:544
+#: backend/biz/group.py:545
 msgid "系统: {} 模板: {} 校验错误: {}"
-msgstr ""
+msgstr "System: {} Template: {} Validation Error: {}"
 
-#: backend/biz/group.py:555
+#: backend/biz/group.py:556
 msgid "系统: {} 的操作: {} 权限已存在"
-msgstr ""
+msgstr "System: {} Action: {} permission already exists"
 
-#: backend/biz/group.py:835
+#: backend/biz/group.py:655
+msgid "-管理员组"
+msgstr " administrator group"
+
+#: backend/biz/group.py:840
 msgid "超过用户组最大可添加成员数{}"
 msgstr ""
 
-#: backend/biz/group.py:861
+#: backend/biz/group.py:866
 msgid "超过分级管理员最大可创建用户组数{}"
-msgstr ""
+msgstr "Exceeded the maximum number of members that can be added to the user group {}"
 
-#: backend/biz/group.py:892
+#: backend/biz/group.py:897
 #, fuzzy
 #| msgid "申请{}操作权限时只能新增, 不能删除"
 msgid "系统: {} 的操作: {} 权限已存在, 只能新增, 不能修改!"
@@ -415,118 +419,118 @@ msgstr ""
 
 #: backend/biz/open.py:26
 msgid "该申请链接已失效，请重新发起申请。"
-msgstr ""
+msgstr "The application link has expired, please re-initiate the application."
 
 #: backend/biz/policy.py:1502 backend/biz/policy.py:1507
 msgid "资源组不存在"
 msgstr ""
 
-#: backend/biz/policy.py:1536
+#: backend/biz/policy.py:1536 backend/biz/policy.py:1583
 #, fuzzy
 #| msgid "资源类型不存在"
 msgid "{}: {} 资源类型不存在"
 msgstr "{}: {} resource type does not exist"
 
-#: backend/biz/policy.py:1545
+#: backend/biz/policy.py:1596
 msgid "批量删除实例不能清空所有条件"
 msgstr "Deleting instances in bulk cannot clear all conditions"
 
-#: backend/biz/policy.py:1571
+#: backend/biz/policy.py:1622
 msgid "用户组没有{}操作的权限"
 msgstr ""
 
-#: backend/biz/role.py:480 backend/biz/role.py:508
+#: backend/biz/role.py:479 backend/biz/role.py:507
 msgid "名称[{}]已存在，请修改为其他名称"
 msgstr ""
 
-#: backend/biz/role.py:492
+#: backend/biz/role.py:491
 msgid "存在同名分级管理员[{}]或者在处理中的单据，请修改后再提交"
 msgstr ""
 
-#: backend/biz/role.py:524
+#: backend/biz/role.py:523
 msgid "系统: {} 授权范围校验错误: {}"
 msgstr ""
 
-#: backend/biz/role.py:544
+#: backend/biz/role.py:543
 msgid "超过分级管理员最大可添加成员数{}"
 msgstr ""
 
-#: backend/biz/role.py:557
+#: backend/biz/role.py:556
 #, fuzzy
 #| msgid "被授权对象: {} {} 加入的用户组数量已超过最大值 {}"
 msgid "成员({}): 可加入的分级管理员数量已超限 {}"
 msgstr "Group count of subject: {} {} exceeded the maximum {}"
 
-#: backend/biz/role.py:585
+#: backend/biz/role.py:584
 #, fuzzy
 #| msgid "被授权对象: {} {} 加入的用户组数量已超过最大值 {}"
 msgid "系统({}): 可创建的分级管理员数量已超过最大值 {}"
 msgstr "Group count of subject: {} {} exceeded the maximum {}"
 
-#: backend/biz/role.py:858
+#: backend/biz/role.py:888
 msgid "{} 系统不在分级管理员的授权范围内，请先编辑分级管理员授权范围"
 msgstr ""
 
-#: backend/biz/role.py:868
+#: backend/biz/role.py:899
 msgid "{} 操作不在分级管理员的授权范围内，请先编辑分级管理员授权范围"
 msgstr ""
 
-#: backend/biz/role.py:958
+#: backend/biz/role.py:989
 msgid ""
 "{} 操作选择的资源实例不在分级管理员的授权范围内，请编辑分级管理员授权范围"
 msgstr ""
 
-#: backend/biz/role.py:977
+#: backend/biz/role.py:1008
 msgid "{} 操作不在角色的授权范围内"
 msgstr "{} action can not authorize by the role"
 
-#: backend/biz/role.py:1057
+#: backend/biz/role.py:1089
 msgid "部门({})在分级管理员的授权范围内，请编辑分级管理员授权范围"
-msgstr ""
+msgstr "The department ({}) is within the authorization scope of the hierarchical administrator, please edit the authorization scope of the hierarchical administrator"
 
-#: backend/biz/role.py:1068
+#: backend/biz/role.py:1102
 msgid "用户({})在分级管理员的授权范围内，请编辑分级管理员授权范围"
-msgstr ""
+msgstr "The user ({}) is within the authorization scope of the level administrator, please edit the authorization scope of the level administrator"
 
 #: backend/biz/template.py:119
 msgid "该权限模板已被用户组关联, 不能删除!"
-msgstr ""
+msgstr "This permission template has been associated with a user group and cannot be deleted!"
 
 #: backend/biz/template.py:220
 msgid "权限模板未变更, 无需更新!"
-msgstr ""
+msgstr "The permission template has not changed, no update required!"
 
 #: backend/biz/template.py:225
 msgid "任务正在运行中，请稍后!"
-msgstr ""
+msgstr "Task is running, please wait!"
 
 #: backend/biz/template.py:255
 msgid "存在同名权限模板"
-msgstr ""
+msgstr "A permission template with the same name exists"
 
 #: backend/biz/template.py:264
 msgid "模板: {} 不存在"
-msgstr ""
+msgstr "Template: {} does not exist"
 
 #: backend/biz/template.py:268
 msgid "用户组: {} 不能授权已授权的模板: {}"
-msgstr ""
+msgstr "Group: {} Cannot authorize authorized template: {}"
 
 #: backend/biz/template.py:273
 msgid "提交的操作列表与模板: {} 实际的不一致"
-msgstr ""
+msgstr "The submitted action list does not match the actual template: {}"
 
 #: backend/biz/template.py:290
 msgid "提交数据中存在模板未授权的用户组!"
-msgstr ""
+msgstr "There is a template unauthorized group in the submitted data!"
 
 #: backend/biz/template.py:297
 msgid "提交操作数据{}与模板预更新的数据{}不一致!"
-msgstr ""
+msgstr "The submitted operation data {} is inconsistent with the template pre-updated data {}!"
 
 #: backend/biz/template.py:315
 msgid "权限模板授权的用户组更新信息不完整! 缺少以下action: {}"
-msgstr ""
+msgstr "The user group update information authorized by the permission template is incomplete! The following actions are missing: {}"
 
 #: backend/common/error_codes.py:40
 msgid "用户未登录或登录态失效，请使用登录链接重新登录"
@@ -808,7 +812,7 @@ msgstr ""
 msgid "星期六"
 msgstr ""
 
-#: backend/service/role.py:672
+#: backend/service/role.py:627
 #, fuzzy
 #| msgid "权限模板 [{}] 关联了其它用户组, 请移除关系后再转移."
 msgid "权限模板 [{}] 已被用户组关联, 请解除关联后再转移."
@@ -829,7 +833,7 @@ msgid ""
 "维护，更多实例建议您申请范围权限。"
 msgstr ""
 
-#: backend/trans/application.py:249
+#: backend/trans/application.py:253
 msgid ""
 "临时权限操作 [{}] 申请限最大{}条，临时权限过多不利于您后期维护，建议您删除部"
 "分权限再申请。"

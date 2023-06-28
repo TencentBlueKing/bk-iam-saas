@@ -8,7 +8,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from backend.audit.apps import AuditConfig
 from backend.audit.models import get_audit_db
 
 
@@ -18,7 +17,7 @@ class AuditRouter:
     audit application.
     """
 
-    app_label = AuditConfig.name
+    app_label = "audit"
 
     def db_for_read(self, model, **hints):
         """
