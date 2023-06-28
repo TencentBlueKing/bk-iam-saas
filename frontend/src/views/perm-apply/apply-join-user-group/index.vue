@@ -864,6 +864,7 @@
 
       async handleSearchUserGroup (isClick = false) {
         if (this.curSelectMenu) {
+          this.searchValue = [];
           let inputText = _.cloneDeep(this.curInputText);
           const curItem = this.initSearchData.find(item => item.id === this.curSelectMenu);
           const isHasName = this.curInputText.indexOf(`${curItem.name}：`) > -1;
