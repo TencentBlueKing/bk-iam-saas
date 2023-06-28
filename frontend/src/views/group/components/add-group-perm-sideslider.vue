@@ -176,7 +176,7 @@
       },
       permSideWidth: {
         type: Number,
-        default: 890
+        default: 960
       }
     },
     data () {
@@ -396,9 +396,11 @@
           }
           cancelHandler.then(() => {
             this.$emit('update:isShow', false);
+            this.$emit('on-cancel', { customPerm: this.customPerm });
             this.resetData();
           }, _ => _);
         } else {
+          this.$emit('on-cancel', { customPerm: this.customPerm });
           this.$emit('update:isShow', false);
         }
       },

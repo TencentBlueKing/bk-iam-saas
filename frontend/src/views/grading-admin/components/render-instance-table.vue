@@ -148,7 +148,7 @@
     <bk-sideslider
       :is-show="isShowResourceInstanceSideslider"
       :title="resourceInstanceSidesliderTitle"
-      :width="720"
+      :width="960"
       quick-close
       transfer
       ext-cls="relate-instance-sideslider"
@@ -530,11 +530,15 @@
             item.expired_at = PERMANENT_TIMESTAMP;
           });
         }
+        curData.resource_groups = curData.resource_groups.filter(item => item.related_resource_types);
+        const targetPolicies = relatedList.filter(item =>
+          item.resource_groups[this.curGroupIndex].related_resource_types
+          && item.resource_groups[this.curGroupIndex].related_resource_types.length);
         try {
           const res = await this.$store.dispatch('permApply/getRelatedPolicy', {
             source_policy: curData,
             system_id: curData.system_id,
-            target_policies: relatedList
+            target_policies: targetPolicies
           });
           this.handleRelatedAction(res.data);
         } catch (e) {
@@ -979,8 +983,8 @@
           if (payload.data.length === 0) {
             this.tableList.forEach(item => {
               if (!item.isAggregate) {
-                item.resource_groups.forEach(groupItem => {
-                  groupItem.related_resource_types.forEach(resItem => {
+                item.resource_groups && item.resource_groups.forEach(groupItem => {
+                  groupItem.related_resource_types && groupItem.related_resource_types.forEach(resItem => {
                     if (`${resItem.system_id}${resItem.type}` === this.curCopyKey) {
                       resItem.condition = [];
                       resItem.isError = false;
@@ -1000,8 +1004,8 @@
               if (!item.isAggregate) {
                 const curPasteData = payload.data.find(_ => _.id === item.id);
                 if (curPasteData) {
-                  item.resource_groups.forEach(groupItem => {
-                    groupItem.related_resource_types.forEach(resItem => {
+                  item.resource_groups && item.resource_groups.forEach(groupItem => {
+                    groupItem.related_resource_types && groupItem.related_resource_types.forEach(resItem => {
                       if (`${resItem.system_id}${resItem.type}` === `${curPasteData.resource_type.system_id}${curPasteData.resource_type.type}`) {
                         resItem.condition = curPasteData.resource_type.condition.map(conditionItem => new Condition(conditionItem, '', 'add'));
                         resItem.isError = false;
@@ -1061,8 +1065,8 @@
           }
           this.tableList.forEach(item => {
             if (!item.isAggregate) {
-              item.resource_groups.forEach(groupItem => {
-                groupItem.related_resource_types.forEach(subItem => {
+              item.resource_groups && item.resource_groups.forEach(groupItem => {
+                groupItem.related_resource_types && groupItem.related_resource_types.forEach(subItem => {
                   if (`${subItem.system_id}${subItem.type}` === this.curCopyKey) {
                     subItem.condition = _.cloneDeep(tempCurData);
                     subItem.isError = false;
@@ -1147,7 +1151,7 @@
             if (item.resource_groups.length > 0) {
               item.resource_groups.forEach(groupItem => {
                 const relatedResourceTypes = [];
-                if (groupItem.related_resource_types.length > 0) {
+                if (groupItem.related_resource_types && groupItem.related_resource_types.length > 0) {
                   groupItem.related_resource_types.forEach(resItem => {
                     if (resItem.empty) {
                       resItem.isError = true;

@@ -367,6 +367,7 @@
           instance.generatorList();
           this.panelInstance = instance;
         }
+        this.$emit('on-click-menu', { menu: this.menu });
       },
       // 显示 suggest 面板
       _showSuggestMenu (lastPanelInstance) {
@@ -572,7 +573,7 @@
         this.localValue = text;
         this.calcTextareaWidth();
         this.showPopper();
-        this.$emit('input', event);
+        this.$emit('input', { event, text });
       },
 
       keyDelete (event) {

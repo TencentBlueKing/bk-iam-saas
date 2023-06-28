@@ -20,14 +20,24 @@
       v-if="!externalSystemsLayout.myPerm.transfer.hideManagerData"
       @manager-selection-change="handleManagerSelection" />
 
-    <div class="iam-transfer-group-wrapper" :style="{ minHeight: isLoading ? '328px' : 0 }"
+    <div class="iam-transfer-group-wrapper"
+      :style="{
+        minHeight: isLoading ? '328px' : 0,
+        'marginBottom': '68px'
+      }"
       v-bkloading="{ isLoading, opacity: 1 }">
       <div class="transfer-group-content">
         <div class="input-header">
           <label class="title">{{ $t(`m.permTransfer['将以上权限交接给']`) }}</label>
         </div>
         <div class="content">
-          <div class="input-content" ref="formWrapper">
+          <div
+            ref="formWrapper"
+            :class="[
+              'input-content',
+              { 'input-content-lang': !curLanguageIsCn }
+            ]"
+          >
             <bk-form :model="formData" form-type="vertical" :rules="rules" ref="permTransferForm">
               <iam-form-item :label="$t(`m.permTransfer['交接人']`)" required>
                 <bk-user-selector
@@ -465,7 +475,10 @@
         }
     }
     .input-content {
-        padding: 5px 30px 20px 180px;
+        padding: 5px 30px 5px 180px;
+        &-lang {
+          padding: 5px 30px 5px 300px;
+        }
     }
     .name-empty-error {
         font-size: 12px;

@@ -13,31 +13,39 @@
       <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)" min-width="360">
         <template slot-scope="{ row }">
           <template v-if="!row.isEmpty">
-            <div v-for="(_, _index) in row.resource_groups" :key="_.id" class="related-resource-list"
-              :class="row.resource_groups === 1 || _index === row.resource_groups.length - 1
-                ? '' : 'related-resource-list-border'">
-              <p class="related-resource-item"
-                v-for="item in _.related_resource_types"
-                :key="item.type">
+            <div
+              v-for="(_, _index) in row.resource_groups"
+              :key="_.id"
+              class="related-resource-list"
+              :class="
+                row.resource_groups === 1 || _index === row.resource_groups.length - 1
+                  ? ''
+                  : 'related-resource-list-border'
+              "
+            >
+              <p class="related-resource-item" v-for="item in _.related_resource_types" :key="item.type">
                 <render-resource-popover
                   :key="item.type"
                   :data="item.condition"
                   :value="`${item.name}: ${item.value}`"
                   :max-width="380"
-                  @on-view="handleViewResource(_, row)" />
+                  @on-view="handleViewResource(_, row)"
+                />
               </p>
               <Icon
                 v-if="isShowPreview(row)"
                 type="detail-new"
                 class="view-icon"
                 :title="$t(`m.common['详情']`)"
-                @click.stop="handleViewResource(_, row)" />
+                @click.stop="handleViewResource(_, row)"
+              />
               <Icon
                 v-if="isShowPreview(row) && row.resource_groups.length > 2"
                 type="reduce-hollow"
                 :title="$t(`m.common['删除']`)"
                 :class="row.resource_groups.length > 1 ? 'effect-icon' : 'effect-icon-disabled'"
-                @click.stop="handlerReduceInstance(_, row)" />
+                @click.stop="handlerReduceInstance(_, row)"
+              />
             </div>
           </template>
           <template v-else>
@@ -48,21 +56,25 @@
       <bk-table-column :label="$t(`m.common['生效条件']`)" min-width="300">
         <template slot-scope="{ row }">
           <div class="condition-table-cell" v-if="!!row.related_environments.length">
-            <div v-for="(_, groIndex) in row.resource_groups" :key="_.id"
+            <div
+              v-for="(_, groIndex) in row.resource_groups"
+              :key="_.id"
               class="related-condition-list"
-              :class="[row.resource_groups.length > 1 ? 'related-resource-list' : 'environ-group-one',
-                       row.resource_groups === 1 || groIndex === row.resource_groups.length - 1
-                         ? '' : 'related-resource-list-border']">
-              <effect-conditon
-                :value="_.environments"
-                :is-empty="!_.environments.length">
-              </effect-conditon>
+              :class="[
+                row.resource_groups.length > 1 ? 'related-resource-list' : 'environ-group-one',
+                row.resource_groups === 1 || groIndex === row.resource_groups.length - 1
+                  ? ''
+                  : 'related-resource-list-border'
+              ]"
+            >
+              <effect-conditon :value="_.environments" :is-empty="!_.environments.length"> </effect-conditon>
               <Icon
                 type="detail-new"
                 class="effect-detail-icon"
                 :title="$t(`m.common['详情']`)"
                 v-if="isShowPreview(row)"
-                @click.stop="handleEnvironmentsViewResource(_, row)" />
+                @click.stop="handleEnvironmentsViewResource(_, row)"
+              />
             </div>
           </div>
           <div v-else class="condition-table-cell empty-text">{{ $t(`m.common['无生效条件']`) }}</div>
@@ -76,10 +88,10 @@
       </bk-table-column>
       <template slot="empty">
         <ExceptionEmpty
-          :type="emptyData.type"
-          :empty-text="emptyData.text"
-          :tip-text="emptyData.tip"
-          :tip-type="emptyData.tipType"
+          :type="policyEmptyData.type"
+          :empty-text="policyEmptyData.text"
+          :tip-text="policyEmptyData.tip"
+          :tip-type="policyEmptyData.tipType"
           @on-refresh="handleRefreshData"
         />
       </template>
@@ -92,7 +104,8 @@
       :sub-title="deleteDialog.subTitle"
       @on-after-leave="handleAfterDeleteLeave"
       @on-cancel="hideCancelDelete"
-      @on-sumbit="handleSubmitDelete" />
+      @on-sumbit="handleSubmitDelete"
+    />
 
     <bk-sideslider
       :is-show="isShowSideslider"
@@ -100,30 +113,65 @@
       :width="725"
       quick-close
       data-test-id="myPerm_sideslider_resourceInsance"
-      @update:isShow="handleResourceCancel">
+      @update:isShow="handleResourceCancel"
+    >
       <div slot="header" class="iam-my-custom-perm-silder-header">
-        <span>{{ sidesliderTitle}}</span>
+        <span>{{ sidesliderTitle }}</span>
         <div class="action-wrapper" v-if="canOperate">
           <bk-button
             text
             theme="primary"
             size="small"
-            style="padding: 0;"
+            style="padding: 0"
             :disabled="batchDisabled"
             v-if="isBatchDelete"
-            @click="handleBatchDelete">{{ $t(`m.common['批量删除实例权限']`) }}</bk-button>
+            @click="handleBatchDelete"
+          >
+            {{ $t(`m.common['批量删除实例权限']`) }}
+          </bk-button>
           <template v-else>
             <iam-popover-confirm
               :title="$t(`m.info['确定删除实例权限']`)"
               :disabled="disabled"
-              :confirm-handler="handleDeletePerm">
-              <bk-button
-                theme="primary"
-                :disabled="disabled">
+              :is-custom-footer="true"
+              :cancel-text="$t(`m.common['取消-dialog']`)"
+              :confirm-handler="handleDeletePerm"
+            >
+              <div
+                slot="title"
+                class="popover-custom-title">
+                {{ $t(`m.dialog['确认删除内容？']`, { value: $t(`m.dialog['删除实例权限']`) }) }}
+              </div>
+              <!-- 这个地方后台需要增加跟当前操作有关联的操作下的资源实例一起删除的接口，目前暂不展示关联操作内容 -->
+              <!-- <div
+                slot="content"
+                :class="[
+                  'popover-custom-content',
+                  { 'popover-custom-content-hide': !delActionList.length }
+                ]">
+                <div :title="formateDelPathTitle">
+                  {{ $t(`m.info['删除依赖实例产生的影响']`, {
+                    value: formateDelPathTitle.length > 1 ? `${formateDelPathTitle[0]}...` : formateDelPathTitle })
+                  }}
+                </div>
+                <div class="custom-related-instance">
+                  <p
+                    v-for="item in delActionList"
+                    :key="item.id">
+                    <Icon
+                      bk
+                      type="info-circle-shape"
+                      style=" color: #ffb848;"
+                    />
+                    {{ item.name }}
+                  </p>
+                </div>
+              </div> -->
+              <bk-button theme="primary" :disabled="disabled">
                 {{ $t(`m.common['删除']`) }}
               </bk-button>
             </iam-popover-confirm>
-            <bk-button style="margin-left: 10px;" @click="handleCancel">
+            <bk-button style="margin-left: 10px" @click="handleCancel">
               {{ $t(`m.common['取消']`) }}
             </bk-button>
           </template>
@@ -135,7 +183,10 @@
           :can-edit="!isBatchDelete"
           ref="detailComRef"
           @tab-change="handleTabChange"
-          @on-change="handleChange" />
+          @on-change="handleChange"
+          @on-select-all="handleSelectAll"
+        >
+        </render-detail>
       </div>
     </bk-sideslider>
 
@@ -145,7 +196,8 @@
       :width="725"
       quick-close
       @update:isShow="handleResourceCancel"
-      ext-cls="effect-conditon-side">
+      ext-cls="effect-conditon-side"
+    >
       <div slot="content">
         <effect-conditon
           :value="environmentsSidesliderData"
@@ -163,33 +215,31 @@
       :width="725"
       quick-close
       @update:isShow="handleResourceEffectTimeCancel"
-      :ext-cls="'relate-instance-sideslider'">
+      :ext-cls="'relate-instance-sideslider'"
+    >
       <div slot="content" class="sideslider-content">
-        <sideslider-effect-conditon
-          ref="sidesliderRef"
-          :data="environmentsSidesliderData"
-        ></sideslider-effect-conditon>
+        <sideslider-effect-conditon ref="sidesliderRef" :data="environmentsSidesliderData"></sideslider-effect-conditon>
       </div>
-      <div slot="footer" style="margin-left: 25px;">
-        <bk-button theme="primary" :loading="sliderLoading"
-          @click="handleResourceEffectTimeSumit">
-          {{ $t(`m.common['保存']`) }}</bk-button>
-        <bk-button style="margin-left: 10px;"
-          @click="handleResourceEffectTimeCancel">{{ $t(`m.common['取消']`) }}</bk-button>
+      <div slot="footer" style="margin-left: 25px">
+        <bk-button theme="primary" :loading="sliderLoading" @click="handleResourceEffectTimeSumit">
+          {{ $t(`m.common['保存']`) }}</bk-button
+        >
+        <bk-button style="margin-left: 10px" @click="handleResourceEffectTimeCancel">{{
+          $t(`m.common['取消']`)
+        }}</bk-button>
       </div>
     </bk-sideslider>
 
     <delete-action-dialog
       :show.sync="isShowDeleteDialog"
-      :title="$t(`m.dialog['确认删除内容？']`, { value: $t(`m.dialog['删除操作权限']`) } )"
-      :tip="$t(`m.info['删除依赖操作产生的影响']`, { value: currentActionName })"
+      :title="delActionDialogTitle"
+      :tip="delActionDialogTip"
       :name="currentActionName"
       :related-action-list="delActionList"
       @on-after-leave="handleAfterDeleteLeaveAction"
       @on-cancel="handleCancelDelete"
       @on-submit="handleSubmitDelete"
     />
-
   </div>
 </template>
 <script>
@@ -204,9 +254,15 @@
   import EffectConditon from './effect-conditon';
   import SidesliderEffectConditon from './sideslider-effect-condition';
   import DeleteActionDialog from '@/views/group/components/delete-related-action-dialog.vue';
+  import { formatCodeData } from '@/common/util';
 
   export default {
     name: 'CustomPermTable',
+    provide: function () {
+      return {
+        isCustom: () => this.isCustom
+      };
+    },
     components: {
       IamPopoverConfirm,
       RenderDetail,
@@ -250,7 +306,6 @@
           loading: false
         },
         sidesliderTitle: '',
-
         isBatchDelete: true,
         batchDisabled: false,
         disabled: true,
@@ -259,25 +314,50 @@
         environmentsSidesliderTitle: this.$t(`m.common['生效条件']`),
         environmentsSidesliderData: [],
         isShowResourceInstanceEffectTime: false,
-        resourceGrouParams: {},
+        resourceGroupParams: {},
         params: '',
         originalCustomTmplList: [],
+        isCustom: true,
         isShowDeleteDialog: false,
         currentActionName: '',
-        delActionList: []
-
+        currentInstanceGroupName: '',
+        delActionDialogTitle: '',
+        delActionDialogTip: '',
+        delActionList: [],
+        curInstancePaths: [],
+        policyIdList: [],
+        policyEmptyData: {
+          type: '',
+          text: '',
+          tip: '',
+          tipType: ''
+        }
       };
     },
     computed: {
-        ...mapGetters(['user', 'externalSystemId']),
-        loading () {
-            return this.initRequestQueue.length > 0;
-        },
-        isShowPreview () {
-            return (payload) => {
-                return !payload.isEmpty && payload.policy_id !== '';
-            };
-        }
+      ...mapGetters(['user', 'externalSystemId']),
+      loading () {
+        return this.initRequestQueue.length > 0;
+      },
+      isShowPreview () {
+        return (payload) => {
+          return !payload.isEmpty && payload.policy_id !== '';
+        };
+      },
+      formateDelPathTitle () {
+        let tempList = [];
+        tempList
+          = this.curInstancePaths.length
+          && this.curInstancePaths.reduce((prev, next) => {
+            prev.push(
+              ...next.path.map((v) => {
+                return v.length && v.map((sub) => sub.name).join('/');
+              })
+            );
+            return prev;
+          }, []);
+        return tempList || [];
+      }
     },
     watch: {
       systemId: {
@@ -295,6 +375,12 @@
             this.policyList = [];
             this.policyCountMap = {};
           }
+        },
+        immediate: true
+      },
+      emptyData: {
+        handler (value) {
+          this.policyEmptyData = Object.assign({}, value);
         },
         immediate: true
       }
@@ -349,15 +435,17 @@
        */
       async fetchData (params) {
         try {
-          const res = await this.$store.dispatch('permApply/getPolicies', { system_id: params.systemId });
-          this.policyList = res.data.map(item => {
-            // eslint-disable-next-line max-len
+          const { code, data } = await this.$store.dispatch('permApply/getPolicies', { system_id: params.systemId });
+          // this.policyList = policyData[params.systemId].map(item => {
+          this.policyList = data.length && data.map(item => {
             const relatedEnvironments = this.linearActionList.find(sub => sub.id === item.id);
             item.related_environments = relatedEnvironments ? relatedEnvironments.related_environments : [];
             return new PermPolicy(item);
           });
+          this.policyEmptyData = formatCodeData(code, this.policyEmptyData, data.length === 0);
         } catch (e) {
           console.error(e);
+          this.policyEmptyData = formatCodeData(e.code, this.policyEmptyData);
           this.bkMessageInstance = this.$bkMessage({
             limit: 1,
             theme: 'error',
@@ -408,6 +496,18 @@
       handleChange () {
         const data = this.$refs.detailComRef.handleGetValue();
         this.disabled = data.ids.length < 1 && data.condition.length < 1;
+        if (!this.disabled) {
+          this.handleDeleteActionOrInstance(Object.assign(data, { id: this.curId, policy_id: this.curPolicyId }), 'instance');
+        }
+      },
+
+      handleSelectAll (isAll, payload) {
+        if (!isAll) {
+          this.curInstancePaths = [];
+          return;
+        }
+        const { instance } = payload;
+        this.curInstancePaths = [...instance];
       },
 
       async handleDeletePerm (payload) {
@@ -442,6 +542,72 @@
         } finally {
           payload && payload.hide();
         }
+      },
+      
+      // 区分删除操作还是实例
+      handleDeleteActionOrInstance (payload, type) {
+        const { id, name, condition } = payload;
+        let delRelatedActions = [];
+        this.delActionList = [];
+        const policyIdList = this.policyList.map(v => v.id);
+        const linearActionList = this.linearActionList.filter(item => policyIdList.includes(item.id));
+        const curAction = linearActionList.find(item => item.id === id);
+        const hasRelatedActions = curAction && curAction.related_actions && curAction.related_actions.length;
+        linearActionList.forEach(item => {
+          // 如果这里过滤自己还能在其他数据找到相同的related_actions，就代表有其他数据也关联了相同的操作
+          if (hasRelatedActions && item.related_actions && item.related_actions.length && item.id !== id) {
+            delRelatedActions = item.related_actions.filter(v => curAction.related_actions.includes(v));
+          }
+          if (item.related_actions && item.related_actions.includes(id)) {
+            this.delActionList.push(item);
+          }
+        });
+        let policyIds = [payload.policy_id];
+        if (this.delActionList.length) {
+          const list = this.policyList.filter(
+            item => this.delActionList.map(action => action.id).includes(item.id));
+          policyIds = [payload.policy_id].concat(list.map(v => v.policy_id));
+        }
+        this.policyIdList = _.cloneDeep(policyIds);
+        const typeMap = {
+          action: () => {
+            this.currentActionName = name;
+            if (!delRelatedActions.length && hasRelatedActions) {
+              const list = [...this.policyList].filter(v => curAction.related_actions.includes(v.id));
+              if (list.length) {
+                policyIds = policyIds.concat(list.map(v => v.policy_id));
+              }
+            }
+            this.curDeleteIds.splice(0, this.curDeleteIds.length, ...policyIds);
+            this.policyIdList = _.cloneDeep(this.curDeleteIds);
+            this.delActionDialogTitle = this.$t(`m.dialog['确认删除内容？']`, { value: this.$t(`m.dialog['删除操作权限']`) });
+            this.delActionDialogTip = this.$t(`m.info['删除依赖操作产生的影响']`, { value: this.currentActionName });
+            this.isShowDeleteDialog = true;
+          },
+          instance: () => {
+            let curPaths = [];
+            if (condition.length) {
+              curPaths = condition.reduce((prev, next) => {
+                prev.push(
+                  ...next.instances.map(v => {
+                    const paths = { ...v, ...next };
+                    delete paths.instances;
+                    return paths;
+                  })
+                );
+                return prev;
+              }, []);
+              this.curInstancePaths = [...curPaths];
+            }
+          },
+          groupInstance: () => {
+            this.policyIdList = _.cloneDeep(policyIds);
+            this.delActionDialogTitle = this.$t(`m.dialog['确认删除内容？']`, { value: this.$t(`m.dialog['删除一组实例权限']`) });
+            this.delActionDialogTip = this.$t(`m.info['删除组依赖实例产生的影响']`, { value: this.currentActionName });
+            this.isShowDeleteDialog = true;
+          }
+        };
+        typeMap[type]();
       },
 
       handleCancel () {
@@ -513,6 +679,8 @@
         this.currentActionName = '';
         this.delActionList = [];
         this.curDeleteIds = [];
+        this.policyIdList = [];
+        this.resourceGroupParams = {};
       },
 
       handleCancelDelete () {
@@ -533,7 +701,7 @@
             const { name, type, condition } = item;
             params.push({
               name: type,
-              label: `${name} ${this.$t(`m.common['实例']`)}`,
+              label: this.$t(`m.info['tab操作实例']`, { value: name }),
               tabType: 'resource',
               data: condition,
               systemId: item.system_id,
@@ -542,7 +710,6 @@
           });
         }
         this.previewData = _.cloneDeep(params);
-
         if (this.previewData[0].tabType === 'relate') {
           this.canOperate = false;
         }
@@ -568,12 +735,17 @@
        */
       handlerReduceInstance (payload, data) {
         if (data.resource_groups.length < 2) return;
-        this.deleteDialog.subTitle = `${this.$t(`m.dialog['将删除']`)}${this.$t(`m.perm['一组实例权限']`)}`;
-        this.deleteDialog.visible = true;
-        this.resourceGrouParams = {
+        // this.deleteDialog.subTitle = this.$t(`m.dialog['确认删除内容？']`, { value: this.$t(`m.dialog['删除一组实例权限']`) });
+        // this.deleteDialog.visible = true;
+        const { id, related_resource_types: relatedResourceTypes } = payload;
+        this.resourceGroupParams = {
           id: data.policy_id,
-          resourceGroupId: payload.id
+          resourceGroupId: id
         };
+        if (relatedResourceTypes && relatedResourceTypes.length) {
+          this.currentActionName = relatedResourceTypes.map(item => item.name).join();
+        }
+        this.handleDeleteActionOrInstance(data, 'groupInstance');
       },
 
       /**
@@ -588,40 +760,7 @@
        * handleShowDelDialog
        */
       handleShowDelDialog (payload) {
-        const { id, name } = payload;
-        let delRelatedActions = [];
-        this.delActionList = [];
-        this.currentActionName = name;
-        const policyIdList = this.policyList.map(v => v.id);
-        const linearActionList = this.linearActionList.filter(item => policyIdList.includes(item.id));
-        const curAction = linearActionList.find(item => item.id === id);
-        const hasRelatedActions = curAction && curAction.related_actions && curAction.related_actions.length;
-        linearActionList.forEach(item => {
-          // 如果这里过滤自己还能在其他数据找到相同的related_actions，就代表有其他数据也关联了相同的操作
-          if (hasRelatedActions && item.related_actions && item.related_actions.length && item.id !== id) {
-            delRelatedActions = item.related_actions.filter(v => curAction.related_actions.includes(v));
-          }
-          if (item.related_actions && item.related_actions.includes(id)) {
-            this.delActionList.push(item);
-          }
-        });
-        let policyIds = [payload.policy_id];
-        if (this.delActionList.length) {
-          const list = this.policyList.filter(item => this.delActionList.map(action => action.id).includes(item.id));
-          policyIds = [payload.policy_id].concat(list.map(v => v.policy_id));
-        }
-        if (!delRelatedActions.length && hasRelatedActions) {
-          const list = [...this.policyList].filter(v => curAction.related_actions.includes(v.id));
-          if (list.length) {
-            // eslint-disable-next-line camelcase
-            policyIds = policyIds.concat(list.map(v => v.policy_id));
-          }
-        }
-        this.curDeleteIds.splice(0, this.curDeleteIds.length, ...policyIds);
-        // this.deleteDialog.subTitle
-        //   = `${this.$t(`m.dialog['将删除']`)}${this.$t(`m.common['【']`)}${name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的权限']`)}`;
-        // this.deleteDialog.visible = true;
-        this.isShowDeleteDialog = true;
+        this.handleDeleteActionOrInstance(payload, 'action');
       },
 
       /**
@@ -630,10 +769,20 @@
       async handleSubmitDelete () {
         this.deleteDialog.loading = true;
         try {
-          if (this.resourceGrouParams.id && this.resourceGrouParams.resourceGroupId) { // 表示删除的是资源组
-            await this.$store.dispatch('permApply/deleteRosourceGroupPerm', this.resourceGrouParams);
-            this.fetchData(this.params);
-            this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
+          if (this.resourceGroupParams.id && this.resourceGroupParams.resourceGroupId) { // 表示删除的是资源组
+            for (let i = 0; i < this.policyIdList.length; i++) {
+              await this.$store.dispatch(
+                'permApply/deleteRosourceGroupPerm',
+                {
+                  id: this.policyIdList[i],
+                  resourceGroupId: this.resourceGroupParams.resourceGroupId
+                }
+              );
+            }
+            setTimeout(() => {
+              this.fetchData(this.params);
+              this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
+            }, 2000);
           } else {
             await this.$store.dispatch('permApply/deletePerm', {
               policyIds: this.curDeleteIds,
@@ -666,6 +815,7 @@
     }
   };
 </script>
+
 <style lang='postcss'>
     .my-perm-custom-perm-table {
         min-height: 101px;
@@ -788,6 +938,10 @@
                 margin-right: 30px;
                 font-weight: normal;
             }
+            .popover-custom-title {
+              text-align: center;
+              font-size: 24px;
+            }
         }
 
         .effect-conditon-side{
@@ -797,4 +951,36 @@
             }
         }
     }
+</style>
+
+<style lang="postcss" scoped>
+.popover-custom-title {
+  text-align: center;
+  font-size: 18px;
+}
+.popover-custom-content {
+  padding-left: 44px;
+  font-size: 14px;
+  word-break: break-all;
+  max-height: 220px;
+  overflow-y: auto;
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+      background: #dcdee5;
+      border-radius: 3px;
+  }
+  &::-webkit-scrollbar-track {
+      background: transparent;
+      border-radius: 3px;
+  }
+  &-hide {
+    display: none;
+  }
+  .custom-related-instance {
+    padding: 10px 0;
+  }
+}
 </style>

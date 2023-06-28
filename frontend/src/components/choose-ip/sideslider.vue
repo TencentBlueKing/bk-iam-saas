@@ -3,7 +3,7 @@
   <bk-sideslider
     :is-show="show"
     :title="curTitle"
-    :width="720"
+    :width="960"
     quick-close
     transfer
     ext-cls="iam-aggregate-resource-sideslider-cls"
@@ -414,7 +414,7 @@
             justify-self: start;
         }
         .left-content {
-            width: 220px;
+            width: 360px;
             border-top: 1px solid #dcdee5;
             border-bottom: 1px solid #dcdee5;
             border-left: 1px solid #dcdee5;
@@ -443,7 +443,8 @@
                     line-height: 24px;
                     .bk-checkbox-text {
                         font-size: 12px;
-                        max-width: 165px;
+                        /* max-width: 165px; */
+                        max-width: 300px;
                         overflow: hidden;
                         text-overflow: ellipsis;
                         white-space: nowrap;
@@ -465,7 +466,7 @@
         }
         .right-content {
             position: relative;
-            width: 450px;
+            width: 560px;
             border: 1px solid #dcdee5;
             .right-header {
                 position: relative;
@@ -516,7 +517,8 @@
                 font-size: 12px;
                 border-bottom: 1px solid #dcdee5;
                 .name {
-                    max-width: 400px;
+                    /* max-width: 400px; */
+                    max-width: 470px;
                     overflow: hidden;
                     text-overflow: ellipsis;
                     white-space: nowrap;

@@ -2,7 +2,7 @@
   <bk-sideslider
     ext-cls="iam-template-group-perm-slider"
     :is-show.sync="visible"
-    :width="890"
+    :width="960"
     :quick-close="true"
     @update:isShow="handleClose">
     <div slot="header">

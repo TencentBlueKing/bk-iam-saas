@@ -139,7 +139,7 @@
 
         .cancel-renewal-action {
             display: block;
-            width: 120px;
+            /* width: 120px; */
             margin: 10px 0 0 78px;
         }
 

@@ -183,7 +183,7 @@
     <bk-sideslider
       :is-show="isShowResourceInstanceSideslider"
       :title="resourceInstanceSidesliderTitle"
-      :width="720"
+      :width="960"
       quick-close
       transfer
       :ext-cls="'relate-instance-sideslider'"
@@ -382,97 +382,97 @@
       };
     },
     computed: {
-            ...mapGetters(['user']),
-            isSuperManager () {
-                return this.user.role.type === 'super_manager';
-            },
-            sliderWidth () {
-                return this.mode === 'detail' ? 890 : 725;
-            },
-            condition () {
-                if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
-                    return [];
-                }
-                const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-                    .related_resource_types[this.curResIndex];
-                if (!curData) {
-                    return [];
-                }
-                return _.cloneDeep(curData.condition);
-            },
-            originalCondition () {
-                if (this.curIndex === -1
-                    || this.curResIndex === -1
-                    || this.curGroupIndex === -1
-                    || this.originalList.length < 1) {
-                    return [];
-                }
-                const curId = this.tableList[this.curIndex].id;
-                const curType = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-                    .related_resource_types[this.curResIndex].type;
-                if (!this.originalList.some(item => item.id === curId)) {
-                    return [];
-                }
-                const curResTypeData = this.originalList.find(item => item.id === curId);
-                if (!curResTypeData.resource_groups[this.curGroupIndex]
-                    .related_resource_types.some(item => item.type === curType)) {
-                    return [];
-                }
-                const curData = (curResTypeData.resource_groups[this.curGroupIndex]
-                    .related_resource_types || []).find(item => item.type === curType);
-                if (!curData) {
-                    return [];
-                }
-                return _.cloneDeep(curData.condition);
-            },
-            curDisabled () {
-                if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
-                    return false;
-                }
-                const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-                    .related_resource_types[this.curResIndex];
-                return curData.isDefaultLimit;
-            },
-            curFlag () {
-                if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
-                    return 'add';
-                }
-                const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-                    .related_resource_types[this.curResIndex];
-                return curData.flag;
-            },
-            curSelectionMode () {
-                if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
-                    return 'all';
-                }
-                const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-                    .related_resource_types[this.curResIndex];
-                return curData.selectionMode;
-            },
-            isShowPreview () {
-                if (this.curIndex === -1) {
-                    return false;
-                }
-                return this.tableList[this.curIndex].policy_id !== '';
-            },
-            isShowView () {
-                return (payload) => {
-                    return !payload.isEmpty;
-                };
-            },
-            isCreateMode () {
-                return this.mode === 'create';
-            },
-            isUserGroupDetail () {
-                return this.$route.name === 'userGroupDetail';
-            },
-            curSelectionCondition () {
-                if (this.curIndex === -1) {
-                    return false;
-                }
-                const curSelectionCondition = this.tableList[this.curIndex].conditionIds;
-                return curSelectionCondition;
+        ...mapGetters(['user']),
+        isSuperManager () {
+            return this.user.role.type === 'super_manager';
+        },
+        sliderWidth () {
+            return this.mode === 'detail' ? 960 : 640;
+        },
+        condition () {
+            if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
+                return [];
             }
+            const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                .related_resource_types[this.curResIndex];
+            if (!curData) {
+                return [];
+            }
+            return _.cloneDeep(curData.condition);
+        },
+        originalCondition () {
+            if (this.curIndex === -1
+                || this.curResIndex === -1
+                || this.curGroupIndex === -1
+                || this.originalList.length < 1) {
+                return [];
+            }
+            const curId = this.tableList[this.curIndex].id;
+            const curType = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                .related_resource_types[this.curResIndex].type;
+            if (!this.originalList.some(item => item.id === curId)) {
+                return [];
+            }
+            const curResTypeData = this.originalList.find(item => item.id === curId);
+            if (!curResTypeData.resource_groups[this.curGroupIndex]
+                .related_resource_types.some(item => item.type === curType)) {
+                return [];
+            }
+            const curData = (curResTypeData.resource_groups[this.curGroupIndex]
+                .related_resource_types || []).find(item => item.type === curType);
+            if (!curData) {
+                return [];
+            }
+            return _.cloneDeep(curData.condition);
+        },
+        curDisabled () {
+            if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
+                return false;
+            }
+            const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                .related_resource_types[this.curResIndex];
+            return curData.isDefaultLimit;
+        },
+        curFlag () {
+            if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
+                return 'add';
+            }
+            const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                .related_resource_types[this.curResIndex];
+            return curData.flag;
+        },
+        curSelectionMode () {
+            if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
+                return 'all';
+            }
+            const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+                .related_resource_types[this.curResIndex];
+            return curData.selectionMode;
+        },
+        isShowPreview () {
+            if (this.curIndex === -1) {
+                return false;
+            }
+            return this.tableList[this.curIndex].policy_id !== '';
+        },
+        isShowView () {
+            return (payload) => {
+                return !payload.isEmpty;
+            };
+        },
+        isCreateMode () {
+            return this.mode === 'create';
+        },
+        isUserGroupDetail () {
+            return this.$route.name === 'userGroupDetail';
+        },
+        curSelectionCondition () {
+            if (this.curIndex === -1) {
+                return false;
+            }
+            const curSelectionCondition = this.tableList[this.curIndex].conditionIds;
+            return curSelectionCondition;
+        }
     },
     watch: {
       list: {
@@ -645,7 +645,7 @@
                 const { name, type, condition } = item;
                 params.push({
                   name: type,
-                  label: `${name} ${this.$t(`m.common['实例']`)}`,
+                  label: this.$t(`m.info['tab操作实例']`, { value: name }),
                   tabType: 'resource',
                   data: condition
                 });
@@ -988,11 +988,15 @@
             item.expired_at = PERMANENT_TIMESTAMP;
           });
         }
+        curData.resource_groups = curData.resource_groups.filter(item => item.related_resource_types);
+        const targetPolicies = relatedList.filter(item =>
+          item.resource_groups[this.curGroupIndex].related_resource_types
+          && item.resource_groups[this.curGroupIndex].related_resource_types.length);
         try {
           const res = await this.$store.dispatch('permApply/getRelatedPolicy', {
             source_policy: curData,
-            system_id: this.tableList[this.curIndex].detail.system.id,
-            target_policies: relatedList
+            system_id: curData.system_id,
+            target_policies: targetPolicies
           });
           this.handleRelatedAction(res.data);
         } catch (e) {
@@ -1390,8 +1394,8 @@
                       });
                     });
                   } else {
-                    item.resource_groups.forEach(groupItem => {
-                      groupItem.related_resource_types.forEach(resItem => {
+                    item.resource_groups && item.resource_groups.forEach(groupItem => {
+                      groupItem.related_resource_types && groupItem.related_resource_types.forEach(resItem => {
                         if (`${resItem.system_id}${resItem.type}` === `${curPasteData.resource_type.system_id}${curPasteData.resource_type.type}`) {
                           resItem.condition = curPasteData.resource_type.condition.map(conditionItem => new Condition(conditionItem, '', 'add'));
                           resItem.isError = false;
@@ -1401,7 +1405,7 @@
                   }
                 }
               } else {
-                item.aggregateResourceType.forEach(aggregateResourceItem => {
+                item.aggregateResourceType && item.aggregateResourceType.forEach(aggregateResourceItem => {
                   const systemId = this.isSuperManager
                     ? aggregateResourceItem.system_id : item.system_id;
                   if (`${systemId}${aggregateResourceItem.id}` === this.curCopyKey) {

@@ -114,6 +114,7 @@
       :default-data="defaultValue"
       :aggregation="aggregationDataByCustom"
       :authorization="authorizationDataByCustom"
+      @on-cancel="handleSelectCancel"
       @on-submit="handleSelectSubmit" />
 
     <render-template-sideslider
@@ -190,7 +191,7 @@
           id: ''
         },
         curMap: null,
-        permSideWidth: 890
+        permSideWidth: 960
       };
     },
     computed: {
@@ -277,7 +278,7 @@
     watch: {
       isShowAddSideslider (value) {
         if (!value) {
-          this.permSideWidth = 890;
+          this.permSideWidth = 960;
         }
       }
     },
@@ -293,9 +294,17 @@
       /**
        * handleAddCancel
        */
-      handleAddCancel () {
+      handleAddCancel (payload) {
+        const { customPerm } = payload;
+        if (customPerm) {
+          this.hasAddCustomList = [...customPerm];
+          if (!customPerm.length) {
+            this.tableList = [];
+            this.tableListBackup = [];
+          }
+        }
         this.isShowAddSideslider = false;
-        this.permSideWidth = 890;
+        this.permSideWidth = 960;
       },
 
       /**
@@ -303,7 +312,7 @@
        */
       handleAddCustom () {
         if (!this.externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn) {
-          this.permSideWidth = 1090;
+          this.permSideWidth = 1160;
         }
         this.isShowAddActionSideslider = true;
       },
@@ -719,7 +728,7 @@
        */
       handleEditCustom () {
         if (!this.externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn) {
-          this.permSideWidth = 1090;
+          this.permSideWidth = 1160;
         }
         this.curActionValue = this.originalList.map(item => item.$id);
         this.isShowAddActionSideslider = true;
@@ -765,6 +774,10 @@
             );
           }
         }
+      },
+
+      handleSelectCancel () {
+        this.permSideWidth = 960;
       },
 
       /**

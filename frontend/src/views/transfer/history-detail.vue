@@ -2,7 +2,7 @@
   <bk-sideslider
     :is-show.sync="isShowSideslider"
     :title="$t(`m.common['详情']`)"
-    :width="720"
+    :width="640"
     ext-cls="iam-transfer-history-sideslider"
     :quick-close="true"
     @animation-end="handleAnimationEnd">
@@ -88,7 +88,7 @@
                 item.title = this.$t(`m.permTransfer['系统管理员交接：']`);
                 item.info = item.objectDetail.name;
               } else if (item.objectDetail.type === 'rating_manager') {
-                item.title = this.$t(`m.permTransfer['管理空间交接：']`);
+                item.title = this.$t(`m.permTransfer['分级管理员交接：']`);
                 item.info = item.objectDetail.name;
               }
             } else {

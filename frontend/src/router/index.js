@@ -82,9 +82,10 @@ export const beforeEach = async (to, from, next) => {
   canceling = false;
 
   let curRole = store.state.user.role.type;
-  const navIndex = store.state.index || Number(window.localStorage.getItem('index') || 0);
+  let navIndex = store.state.index || Number(window.localStorage.getItem('index') || 0);
   const currentRoleId = String(to.query.current_role_id || '').trim();
   const curRoleId = store.state.curRoleId;
+  const defaultRoute = ['my-perm', 'user-group', 'audit', 'user'];
   // if (curRole === 'staff') {
   //     await store.dispatch('role/updateCurrentRole', { id: 0 });
   // }
@@ -115,12 +116,24 @@ export const beforeEach = async (to, from, next) => {
     // }
   }
 
+  if (['applyCustomPerm', 'myManageSpace', 'myPerm', 'permTransfer', 'permRenewal'].includes(to.name)
+      || (['permRenewal'].includes(to.name) && to.query.source === 'email')) {
+    await store.dispatch('role/updateCurrentRole', { id: 0 });
+    await store.dispatch('userInfo');
+    curRole = 'staff';
+    navIndex = 0;
+    store.commit('updateIndex', 0);
+    window.localStorage.setItem('index', 0);
+  }
+ 
   if (['userGroup', 'permTemplate', 'approvalProcess'].includes(to.name)) {
+    navIndex = 1;
     await store.dispatch('role/updateCurrentRole', { id: curRoleId });
     store.commit('updateIndex', 1);
     window.localStorage.setItem('index', 1);
   }
   if (to.name === 'userGroupDetail') {
+    navIndex = 1;
     store.dispatch('versionLogInfo');
     if (existValue('externalApp') && to.query.hasOwnProperty('role_id')) {
       getExternalRole();
@@ -134,7 +147,7 @@ export const beforeEach = async (to, from, next) => {
           curRole = currentRole.type;
           next();
         } else {
-          next({ path: `${SITE_URL}user-group` });
+          next({ path: `${SITE_URL}${defaultRoute[navIndex]}` });
         }
       } else {
         const noFrom = !from.name;
@@ -143,7 +156,7 @@ export const beforeEach = async (to, from, next) => {
           if (existValue('externalApp')) {
             next();
           } else {
-            next({ path: `${SITE_URL}user-group` });
+            next({ path: `${SITE_URL}${defaultRoute[navIndex]}` });
           }
         } else {
           next();
@@ -165,7 +178,8 @@ export const beforeEach = async (to, from, next) => {
         curRole = currentRole.type;
         next();
       } else {
-        next({ path: `${SITE_URL}user-group` });
+        next({ path: `${SITE_URL}${defaultRoute[navIndex]}` });
+        // next({ path: `${SITE_URL}user-group` });
       }
     } else {
       if (existValue('externalApp')) { // 外部嵌入页面
@@ -191,23 +205,6 @@ export const beforeEach = async (to, from, next) => {
       await store.dispatch('role/updateCurrentRole', { id: +currentRoleId });
       await store.dispatch('userInfo');
       curRole = to.query.role_type;
-    }
-
-    if (to.name === 'permRenewal' && to.query.source === 'email') {
-      await store.dispatch('role/updateCurrentRole', { id: 0 });
-      await store.dispatch('userInfo');
-      curRole = 'staff';
-    }
-
-    if (['applyCustomPerm', 'myManageSpace'].includes(to.name)) {
-      await store.dispatch('role/updateCurrentRole', { id: 0 });
-      await store.dispatch('userInfo');
-      curRole = 'staff';
-    }
-
-    if (curRole === 'staff') {
-      store.commit('updateIndex', 0);
-      window.localStorage.setItem('index', 0);
     }
 
     if (existValue('externalApp') && to.query.hasOwnProperty('role_id')) {
@@ -268,8 +265,7 @@ export const beforeEach = async (to, from, next) => {
             if (existValue('externalApp')) {
               next();
             } else {
-              const initRoute = ['my-perm', 'user-group', 'audit', 'user'];
-              next({ path: `${SITE_URL}${initRoute[navIndex]}` });
+              next({ path: `${SITE_URL}${defaultRoute[navIndex]}` });
             }
             // next({ path: `${SITE_URL}user-group` });
           }
@@ -287,7 +283,7 @@ export const beforeEach = async (to, from, next) => {
             if (existValue('externalApp')) {
               next();
             } else {
-              next({ path: `${SITE_URL}user-group` });
+              next({ path: `${SITE_URL}${defaultRoute[navIndex]}` });
             }
           } else {
             next();
@@ -305,6 +301,8 @@ export const beforeEach = async (to, from, next) => {
             next();
           }
         } else if (['gradingAdminEdit'].includes(to.name)) {
+          next();
+        } else if (['myPerm'].includes(to.name)) {
           next();
         } else {
           next();

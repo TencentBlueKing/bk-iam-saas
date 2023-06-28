@@ -154,6 +154,14 @@
       resourceValue: {
         type: Boolean,
         default: () => false
+      },
+      systemParams: {
+        type: Object,
+        default: () => {
+          return {
+            action_id: ''
+          };
+        }
       }
     },
     data () {
@@ -295,13 +303,15 @@
         if (node.level > chainLen - 1) {
           params.system_id = this.curChain[chainLen - 1].system_id;
           params.type = this.curChain[chainLen - 1].id;
-          params.action_system_id = this.curChain[chainLen - 1].system_id;
-          params.action_id = '';
+          // params.action_system_id = this.curChain[chainLen - 1].system_id;
+          params.action_system_id = this.systemParams.system_id || '';
+          params.action_id = this.systemParams.action_id || '';
         } else {
           params.system_id = this.curChain[node.level].system_id;
           params.type = this.curChain[node.level].id;
-          params.action_system_id = this.curChain[node.level].system_id;
-          params.action_id = '';
+          // params.action_system_id = this.curChain[node.level].system_id;
+          params.action_system_id = this.systemParams.system_id || '';
+          params.action_id = this.systemParams.action_id || '';
         }
         if (node.parentChain.length) {
           const parentData = node.parentChain.reduce((p, e) => {
@@ -586,7 +596,7 @@
           offset: 0,
           system_id: this.curChain[0].system_id,
           action_system_id: this.curChain[0].system_id,
-          action_id: '',
+          action_id: this.systemParams.action_id || '',
           type: this.curChain[0].id,
           // parent_type: '',
           // parent_id: '',
@@ -823,8 +833,9 @@
         if (node.childType !== '') {
           params.system_id = this.curChain[chainLen - 1].system_id;
           params.type = node.childType;
-          params.action_system_id = this.curChain[chainLen - 1].system_id;
-          params.action_id = '';
+          // params.action_system_id = this.curChain[chainLen - 1].system_id;
+          params.action_system_id = this.systemParams.system_id || '';
+          params.action_id = this.systemParams.action_id || '';
           parentType = this.curChain[chainLen - 1].id;
           placeholder = this.curChain[chainLen - 1].name;
                     
@@ -836,16 +847,15 @@
             ? this.curChain[node.level + 1].system_id
             : this.curChain[chainLen - 1].system_id;
           params.system_id = ExistSystemId;
-          params.action_system_id = ExistSystemId;
-          params.action_id = '';
+          // params.action_system_id = ExistSystemId;
+          params.action_system_id = this.systemParams.system_id || '';
+          params.action_id = this.systemParams.action_id || '';
 
           params.type = isExistNextChain
             ? this.curChain[node.level + 1].id
             : this.curChain[chainLen - 1].id;
 
           parentType = this.curChain[node.level].id;
-
-          params.action_system_id = this.curChain[chainLen - 1].system_id;
 
           placeholder = isExistNextChain
             ? this.curChain[node.level + 1].name
@@ -1037,14 +1047,16 @@
         if (node.level > chainLen - 1) {
           params.system_id = this.curChain[chainLen - 1].system_id;
           params.type = this.curChain[chainLen - 1].id;
-          params.action_system_id = this.curChain[chainLen - 1].system_id;
-          params.action_id = this.curChain[chainLen - 1].id;
+          // params.action_system_id = this.curChain[chainLen - 1].system_id;
+          params.action_system_id = this.systemParams.system_id || '';
+          params.action_id = this.systemParams.action_id || '';
           // params.parent_type = this.curChain[chainLen - 1].id || '';
         } else {
           params.system_id = this.curChain[node.level].system_id;
           params.type = this.curChain[node.level].id;
-          params.action_system_id = this.curChain[node.level].system_id;
-          params.action_id = this.curChain[node.level].id;
+          // params.action_system_id = this.curChain[node.level].system_id;
+          params.action_system_id = this.systemParams.system_id || '';
+          params.action_id = this.systemParams.action_id || '';
         }
         if (node.parentChain.length) {
           const parentData = node.parentChain.reduce((p, e) => {

@@ -147,6 +147,9 @@ WHITENOISE_STATIC_PREFIX = "/staticfiles/"
 SESSION_COOKIE_NAME = "bkiam_sessionid"
 SESSION_COOKIE_AGE = 60 * 60 * 24  # 1天
 
+# bk_language domain
+BK_DOMAIN = env.str("BK_DOMAIN", default="")
+
 # cors
 CORS_ALLOW_CREDENTIALS = True  # 在 response 添加 Access-Control-Allow-Credentials, 即允许跨域使用 cookies
 

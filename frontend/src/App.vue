@@ -57,7 +57,7 @@
   import theHeader from '@/components/header/index.vue';
   import theNav from '@/components/nav/index.vue';
   import IamGuide from '@/components/iam-guide/index.vue';
-  import { existValue, getCookie } from '@/common/util';
+  import { existValue, formatI18nKey } from '@/common/util';
   import { bus } from '@/common/bus';
   import { mapGetters } from 'vuex';
   import { afterEach } from '@/router';
@@ -133,7 +133,7 @@
     },
     created () {
       const platform = window.navigator.platform.toLowerCase();
-      window.CUR_LANGUAGE = getCookie('blueking_language') || 'zh-cn';
+      window.CUR_LANGUAGE = formatI18nKey();
       this.$i18n.locale = window.CUR_LANGUAGE;
       if (platform.indexOf('win') === 0) {
         this.systemCls = 'win';

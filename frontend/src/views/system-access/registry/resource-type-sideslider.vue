@@ -2,7 +2,7 @@
   <bk-sideslider
     :is-show="isShow"
     :quick-close="false"
-    :width="720"
+    :width="960"
     ext-cls="resource-type-sideslider"
     :title="$t(`m.access['新增资源类型']`)"
     @update:isShow="hideSideslider">

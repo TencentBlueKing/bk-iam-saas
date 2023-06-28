@@ -64,6 +64,7 @@
       :group-id="$route.params.id"
       :aggregation="aggregationDataByCustom"
       :authorization="authorizationDataByCustom"
+      @on-cancel="handleSelectCancel"
       @on-submit="handleSelectSubmit" />
 
     <render-template-sideslider
@@ -117,7 +118,7 @@
           isShow: false,
           id: ''
         },
-        permSideWidth: 890,
+        permSideWidth: 960,
         curMap: null,
         isShowErrorTips: false
       };
@@ -169,7 +170,7 @@
     watch: {
       isShowAddSideslider (value) {
         if (!value) {
-          this.permSideWidth = 890;
+          this.permSideWidth = 960;
         }
       }
     },
@@ -178,13 +179,21 @@
       next();
     },
     methods: {
-      handleAddCancel () {
+      handleAddCancel (payload) {
+        const { customPerm } = payload;
+        if (customPerm) {
+          this.hasAddCustomList = [...customPerm];
+          if (!customPerm.length) {
+            this.tableList = [];
+            this.tableListBackup = [];
+          }
+        }
         this.isShowAddSideslider = false;
       },
 
       handleAddCustom () {
         if (!this.externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn) {
-          this.permSideWidth = 1090;
+          this.permSideWidth = 1160;
         }
         this.isShowAddActionSideslider = true;
       },
@@ -358,10 +367,11 @@
         if (instances.length > 0) {
           const actions = this.curMap.get(payload.aggregationId);
           actions.forEach(item => {
-            item.resource_groups.forEach(groupItem => {
-              groupItem.related_resource_types.forEach(subItem => {
-                subItem.condition = [new Condition({ instances }, '', 'add')];
-              });
+            item.resource_groups && item.resource_groups.forEach(groupItem => {
+              groupItem.related_resource_types
+                && groupItem.related_resource_types.forEach(subItem => {
+                  subItem.condition = [new Condition({ instances }, '', 'add')];
+                });
             });
           });
         }
@@ -595,6 +605,9 @@
       },
 
       handleEditCustom () {
+        if (!this.externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn) {
+          this.permSideWidth = 1160;
+        }
         this.curActionValue = this.originalList.map(item => item.$id);
         this.isShowAddActionSideslider = true;
       },
@@ -618,13 +631,14 @@
         } else {
           hasAddCustomList.push(...payload);
         }
-
-        this.hasAddCustomList.splice(0, this.hasAddCustomList.length, ...hasAddCustomList);
-
+        if (!payload.length) {
+          this.curActionValue = [];
+        }
         this.originalList = _.cloneDeep(payload);
         this.aggregationDataByCustom = _.cloneDeep(aggregation);
         this.authorizationDataByCustom = _.cloneDeep(authorization);
-        console.log(this.originalList, this.aggregationDataByCustom, this.authorizationDataByCustom, this.hasAddCustomList, '当前数据');
+        this.hasAddCustomList.splice(0, this.hasAddCustomList.length, ...hasAddCustomList);
+        console.log(this.originalList, this.aggregationDataByCustom, this.authorizationDataByCustom, this.hasAddCustomList, this.originalList, '当前数据');
         if (this.externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn) {
           if (this.originalList.length) {
             this.curActionValue = this.originalList.map(item => item.$id);
@@ -642,6 +656,10 @@
             );
           }
         }
+      },
+
+      handleSelectCancel () {
+        this.permSideWidth = 960;
       },
 
       async handleSubmit () {
@@ -732,7 +750,7 @@
           this.isShowAddActionSideslider = true;
         } else {
           this.isShowAddSideslider = true;
-          this.permSideWidth = 1090;
+          this.permSideWidth = 1160;
         }
       }
     }

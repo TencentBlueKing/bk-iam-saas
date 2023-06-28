@@ -1,7 +1,7 @@
 <template>
   <bk-sideslider
     :is-show.sync="isShow"
-    :width="890"
+    :width="960"
     :title="$t(`m.permTemplate['模板详情']`)"
     ext-cls="iam-tempate-detail-sideslider"
     :quick-close="true"

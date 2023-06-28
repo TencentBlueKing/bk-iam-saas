@@ -552,7 +552,7 @@
             this.$router.push({ name: 'permTemplate' });
             return;
           }
-          if (['createUserGroup', 'userGroupDetail'].includes(curRouterName)) {
+          if (['createUserGroup', 'cloneUserGroup', 'userGroupDetail', 'addGroupPerm'].includes(curRouterName)) {
             this.$router.push({ name: 'userGroup' });
             return;
           }

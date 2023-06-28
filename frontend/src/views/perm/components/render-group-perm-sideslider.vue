@@ -25,7 +25,9 @@
     </div>
   </bk-sideslider>
 </template>
+
 <script>
+  import { bus } from '@/common/bus';
   import GroupPermNew from '@/views/group/detail/group-perm-new.vue';
 
   export default {
@@ -60,7 +62,7 @@
         tabActive: 'perm',
         isShowSideslider: false,
         isLoading: true,
-        width: window.innerWidth - 500
+        width: 960
       };
     },
     watch: {
@@ -76,8 +78,17 @@
         immediate: true
       }
     },
+    mounted () {
+      this.$once('hook:beforeDestroy', () => {
+        bus.$off('on-drawer-side');
+      });
+      bus.$on('on-drawer-side', (payload) => {
+        this.width = payload.width;
+      });
+    },
     methods: {
       handleAnimationEnd () {
+        this.width = 960;
         this.$emit('animation-end');
       }
     }

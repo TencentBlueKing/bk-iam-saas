@@ -45,6 +45,7 @@
                   :tree-value="condition.instance"
                   :select-list="selectList"
                   :select-value="selectValue"
+                  :system-params="params"
                   @on-tree-select="handlePathSelect(...arguments, index)" />
                 <div class="drag-dotted-line" v-if="isDrag" :style="dottedLineStyle"></div>
                 <div class="drag-line"
@@ -326,7 +327,7 @@
         const MIN_OFFSET_WIDTH = 220;
         const minWidth = MIN_OFFSET_WIDTH;
         const maxWidth = MIN_OFFSET_WIDTH + 120;
-        const offsetX = e.clientX - (document.body.clientWidth - 720);
+        const offsetX = e.clientX - (document.body.clientWidth - 960);
         if (offsetX < minWidth || offsetX >= maxWidth) {
           return;
         }

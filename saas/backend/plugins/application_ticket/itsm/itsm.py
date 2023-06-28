@@ -99,6 +99,7 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
                         for u in data.content.applicants
                     ]
                 ),
+                "meta": {"language": {"en": "recipient of permissions"}},
             }
         ]
 
@@ -131,6 +132,7 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
                         for u in data.content.applicants
                     ]
                 ),
+                "meta": {"language": {"en": "recipient of permissions"}},
             }
         ]
 

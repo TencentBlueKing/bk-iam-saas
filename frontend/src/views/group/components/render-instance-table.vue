@@ -141,14 +141,16 @@
         <ExceptionEmpty />
       </template>
     </bk-table>
+
     <bk-sideslider
       :is-show="isShowResourceInstanceSideslider"
       :title="resourceInstanceSidesliderTitle"
-      :width="720"
+      :width="960"
       quick-close
       transfer
       :ext-cls="'relate-instance-sideslider'"
-      @update:isShow="handleResourceCancel">
+      @update:isShow="handleResourceCancel"
+    >
       <div slot="content" class="sideslider-content">
         <render-resource
           ref="renderResourceRef"
@@ -224,6 +226,7 @@
 
 <script>
   import _ from 'lodash';
+  import { bus } from '@/common/bus';
   import { mapGetters } from 'vuex';
   import Condition from '@/model/condition';
   import GroupPolicy from '@/model/group-policy';
@@ -370,10 +373,10 @@
           return this.user.role.type === 'super_manager';
       },
       sliderWidth () {
-          if (['myPerm', 'applyJoinUserGroup'].includes(this.$route.name) && ['detail'].includes(this.mode)) {
-              return window.innerWidth - 700;
-          }
-          return this.mode === 'detail' ? 890 : 725;
+          // if (['myPerm', 'applyJoinUserGroup'].includes(this.$route.name) && ['detail'].includes(this.mode)) {
+          //     return 960;
+          // }
+          return this.mode === 'detail' ? 960 : 640;
       },
       condition () {
           if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
@@ -653,7 +656,7 @@
                 const { name, type, condition } = item;
                 params.push({
                   name: type,
-                  label: `${name} ${this.$t(`m.common['实例']`)}`,
+                  label: this.$t(`m.info['tab操作实例']`, { value: name }),
                   tabType: 'resource',
                   data: condition
                 });
@@ -662,17 +665,22 @@
           });
         }
         this.previewData = _.cloneDeep(params);
-        this.sidesliderTitle = this.$t(`m.info['操作侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}` });
+        this.sidesliderTitle = this.$t(`m.info['操作侧边栏操作的资源实例']`, {
+          value: `${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}`
+        });
+        bus.$emit('on-drawer-side', { width: 1160 });
         this.isShowSideslider = true;
       },
       handleAnimationEnd () {
         this.sidesliderTitle = '';
-        this.previewData = [];
         this.curId = '';
+        this.previewData = [];
+        bus.$emit('on-drawer-side', { width: 960 });
       },
       handleAfterDeleteLeave () {
         this.currentActionName = '';
         this.delActionList = [];
+        this.policyIdList = [];
       },
       handleCancelDelete () {
         this.isShowDeleteDialog = false;
@@ -1002,11 +1010,15 @@
             item.expired_at = PERMANENT_TIMESTAMP;
           });
         }
+        curData.resource_groups = curData.resource_groups.filter(item => item.related_resource_types);
+        const targetPolicies = relatedList.filter(item =>
+          item.resource_groups[this.curGroupIndex].related_resource_types
+          && item.resource_groups[this.curGroupIndex].related_resource_types.length);
         try {
           const res = await this.$store.dispatch('permApply/getRelatedPolicy', {
             source_policy: curData,
             system_id: this.tableList[this.curIndex].detail.system.id,
-            target_policies: relatedList
+            target_policies: targetPolicies
           });
           this.handleRelatedAction(res.data);
         } catch (e) {
@@ -1391,8 +1403,8 @@
                       });
                     });
                   } else {
-                    item.resource_groups.forEach(groupItem => {
-                      groupItem.related_resource_types.forEach(resItem => {
+                    item.resource_groups && item.resource_groups.forEach(groupItem => {
+                      groupItem.related_resource_types && groupItem.related_resource_types.forEach(resItem => {
                         if (`${resItem.system_id}${resItem.type}` === `${curPasteData.resource_type.system_id}${curPasteData.resource_type.type}`) {
                           resItem.condition = curPasteData.resource_type.condition.map(conditionItem => new Condition(conditionItem, '', 'add'));
                           resItem.isError = false;
@@ -1402,7 +1414,7 @@
                   }
                 }
               } else {
-                item.aggregateResourceType.forEach(aggregateResourceItem => {
+                item.aggregateResourceType && item.aggregateResourceType.forEach(aggregateResourceItem => {
                   const systemId = this.isSuperManager
                     ? aggregateResourceItem.system_id : item.system_id;
                   if (`${systemId}${aggregateResourceItem.id}` === this.curCopyKey) {
@@ -1453,14 +1465,15 @@
           }
           this.tableList.forEach(item => {
             if (!item.isAggregate) {
-              item.resource_groups.forEach(groupItem => {
-                groupItem.related_resource_types.forEach((subItem, subItemIndex) => {
-                  if (`${subItem.system_id}${subItem.type}` === this.curCopyKey) {
-                    subItem.condition = _.cloneDeep(tempCurData);
-                    subItem.isError = false;
-                    this.$emit('on-resource-select', index, subItemIndex, subItem.condition);
-                  }
-                });
+              item.resource_groups && item.resource_groups.forEach(groupItem => {
+                groupItem.related_resource_types
+                  && groupItem.related_resource_types.forEach((subItem, subItemIndex) => {
+                    if (`${subItem.system_id}${subItem.type}` === this.curCopyKey) {
+                      subItem.condition = _.cloneDeep(tempCurData);
+                      subItem.isError = false;
+                      this.$emit('on-resource-select', index, subItemIndex, subItem.condition);
+                    }
+                  });
               });
             } else {
               if (`${item.aggregateResourceType.system_id}${item.aggregateResourceType.id}` === this.curCopyKey) {
@@ -1531,10 +1544,10 @@
             const groupResourceTypes = [];
             const { type, id, name, environment, description } = item;
             systemId = item.detail.system.id;
-            if (item.resource_groups && item.resource_groups.length > 0) {
+            if (item.resource_groups && item.resource_groups.length) {
               item.resource_groups.forEach(groupItem => {
                 const relatedResourceTypes = [];
-                if (groupItem.related_resource_types && groupItem.related_resource_types.length > 0) {
+                if (groupItem.related_resource_types && groupItem.related_resource_types.length) {
                   groupItem.related_resource_types.forEach(resItem => {
                     if (resItem.empty) {
                       resItem.isError = true;
@@ -1579,11 +1592,11 @@
                       )
                     });
                   });
+                  groupResourceTypes.push({
+                    id: groupItem.id,
+                    related_resource_types: relatedResourceTypes
+                  });
                 }
-                groupResourceTypes.push({
-                  id: groupItem.id,
-                  related_resource_types: relatedResourceTypes
-                });
               });
               // 强制刷新下
               item.resource_groups = _.cloneDeep(item.resource_groups);
@@ -1678,17 +1691,17 @@
             if (item.resource_groups && item.resource_groups.length > 0) {
               item.resource_groups.forEach(groupItem => {
                 const relatedResourceTypes = [];
-                if (groupItem.related_resource_types && groupItem.related_resource_types.length > 0) {
+                if (groupItem.related_resource_types && groupItem.related_resource_types.length) {
                   groupItem.related_resource_types.forEach(resItem => {
                     if (resItem.empty) {
                       resItem.isError = true;
                       flag = true;
                     }
-                    const conditionList = ((resItem.condition && resItem.condition.length > 0)
+                    const conditionList = ((resItem.condition && resItem.condition.length)
                       && !resItem.empty)
                       ? resItem.condition.map(conItem => {
                         const { id, instance, attribute } = conItem;
-                        const attributeList = (attribute && attribute.length > 0)
+                        const attributeList = (attribute && attribute.length)
                           ? attribute.map(({ id, name, values }) => ({ id, name, values }))
                           : [];
                         const instanceList = (instance && instance.length > 0)

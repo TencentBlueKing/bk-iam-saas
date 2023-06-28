@@ -124,11 +124,15 @@
               <div class="group-search-select pb20">
                 <iam-search-select
                   style="width: calc(100% - 20px)"
-                  @on-change="handleSearch"
+                  ref="searchSelectRef"
                   :data="searchData"
                   :value="searchValue"
                   :placeholder="$t(`m.applyEntrance['申请加入用户组搜索提示']`)"
-                  :quick-search-method="quickSearchMethod" />
+                  :quick-search-method="quickSearchMethod"
+                  @on-change="handleSearch"
+                  @on-click-menu="handleClickMenu"
+                  @on-input="handleSearchInput"
+                />
                 <bk-button
                   class="ml20"
                   theme="primary"
@@ -146,6 +150,7 @@
           </render-search>
           <div v-else>
             <iam-search-select
+              ref="searchSelectRef"
               @on-change="handleSearch"
               :data="searchData"
               :value="searchValue"
@@ -338,7 +343,7 @@
     <bk-sideslider
       :is-show="isShowResourceInstanceSideSlider"
       :title="resourceInstanceSideSliderTitle"
-      :width="720"
+      :width="960"
       quick-close
       transfer
       :ext-cls="'relate-instance-sideslider'"
@@ -555,7 +560,9 @@
             remoteMethod: this.handleGradeAdmin
           }
         ],
-        enableGroupInstanceSearch: window.ENABLE_GROUP_INSTANCE_SEARCH.toLowerCase() === 'true'
+        enableGroupInstanceSearch: window.ENABLE_GROUP_INSTANCE_SEARCH.toLowerCase() === 'true',
+        curSelectMenu: '',
+        curInputText: ''
       };
     },
     computed: {
@@ -847,12 +854,62 @@
         this.searchParams = {};
         this.searchValue = [];
         this.emptyData.tipType = '';
+        if (this.$refs.searchSelectRef && this.$refs.searchSelectRef.$refs.searchSelect) {
+          this.$refs.searchSelectRef.$refs.searchSelect.localValue = '';
+        }
         this.resetPagination();
         this.resetSearchParams();
         this.fetchUserGroupList(false);
       },
 
+      // 处理手动输入各种场景
+      handleManualInput () {
+        if (this.curSelectMenu) {
+          let inputText = _.cloneDeep(this.curInputText);
+          const curItem = this.initSearchData.find(item => item.id === this.curSelectMenu);
+          const isHasName = this.curInputText.indexOf(`${curItem.name}：`) > -1;
+          if (isHasName) {
+            inputText = this.curInputText.split(`${curItem.name}：`);
+          }
+          const textValue = _.isArray(inputText) ? inputText[1] : inputText;
+          this.$set(this.searchParams, this.curSelectMenu, textValue);
+          this.searchList.push({
+            id: this.curSelectMenu,
+            name: curItem.name,
+            values: [
+              {
+                id: textValue,
+                name: textValue
+              }
+            ]
+          });
+          this.searchValue = _.cloneDeep(this.searchList);
+          // 转换为tag标签后,需要清空输入框的值
+          if (this.$refs.searchSelectRef && this.$refs.searchSelectRef.$refs.searchSelect) {
+            this.$refs.searchSelectRef.$refs.searchSelect.localValue = '';
+          }
+          this.curSelectMenu = '';
+          this.curInputText = '';
+        } else {
+          // 如果当前已有tag，后面如果只输入文字没生成tag自动过滤掉
+          if (this.searchList.length
+            && this.$refs.searchSelectRef
+            && this.$refs.searchSelectRef.$refs.searchSelect
+            && this.curInputText) {
+            this.$refs.searchSelectRef.$refs.searchSelect.localValue = '';
+          }
+          if (!this.searchList.length) {
+            // 处理无tag标签，直接输入内容情况
+            this.searchParams.name = this.curInputText;
+            if (!this.curInputText) {
+              delete this.searchParams.name;
+            }
+          }
+        }
+      },
+
       async handleSearchUserGroup (isClick = false) {
+        this.handleManualInput();
         if (this.applyGroupData.system_id && this.enableGroupInstanceSearch) {
           if (!this.applyGroupData.system_id) {
             this.systemIdError = true;
@@ -944,6 +1001,8 @@
           });
         } finally {
           this.tableLoading = false;
+          this.curSelectMenu = '';
+          this.curInputText = '';
         }
       },
 
@@ -1129,11 +1188,25 @@
               (item) => item.name.toLowerCase().indexOf(val) > -1);
         });
       },
+      
+      handleClickMenu (payload) {
+        const { menu } = payload;
+        if (menu.id) {
+          this.curSelectMenu = menu.id;
+        }
+      },
+
+      handleSearchInput (payload) {
+        const { text } = payload;
+        this.curInputText = text;
+      },
 
       handleSearch (payload, result) {
         this.currentSelectList = [];
         this.searchParams = payload;
-        this.searchList = result;
+        this.searchList = [...result];
+        this.curSelectMenu = '';
+        this.curInputText = '';
         this.emptyData.tipType = 'search';
         this.resetPagination();
         this.handleSearchUserGroup();
@@ -1157,7 +1230,7 @@
       handleViewDetail (payload) {
         if (payload.role && payload.role.name) {
           this.isShowGradeSlider = true;
-          this.gradeSliderTitle = this.$t(`m.info['管理空间成员侧边栏标题信息']`, { value: `${this.$t(`m.common['【']`)}${payload.role.name}${this.$t(`m.common['']`)}` });
+          this.gradeSliderTitle = this.$t(`m.info['管理空间成员侧边栏标题信息']`, { value: `${this.$t(`m.common['【']`)}${payload.role.name}${this.$t(`m.common['】']`)}` });
           this.fetchRoles(payload.role.id);
         }
       },

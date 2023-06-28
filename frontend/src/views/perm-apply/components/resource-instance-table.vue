@@ -3,8 +3,8 @@
   <div class="resource-instance-table-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
     <bk-table
       v-if="!isLoading"
+      ref="permApplyTableRef"
       :data="tableList"
-      :max-height="tableList.length > 0 ? 500 : 280"
       border
       :row-class-name="handleRowClass"
       :cell-class-name="getCellClass"
@@ -218,7 +218,7 @@
     <bk-sideslider
       :is-show="isShowResourceInstanceSideslider"
       :title="resourceInstanceSidesliderTitle"
-      :width="720"
+      :width="960"
       quick-close
       transfer
       :ext-cls="'relate-instance-sideslider'"
@@ -236,7 +236,7 @@
           @on-init="handleOnInit" />
       </div>
       <div slot="footer" style="margin-left: 25px;">
-        <bk-button theme="primary" :loading="sliderLoading" :disabled="disabled" @click="handleResourceSumit">{{ $t(`m.common['保存']`) }}</bk-button>
+        <bk-button theme="primary" :loading="sliderLoading" :disabled="disabled" @click="handleResourceSubmit">{{ $t(`m.common['保存']`) }}</bk-button>
         <bk-button style="margin-left: 10px;" :disabled="disabled" @click="handleResourcePreview" v-if="isShowPreview">{{ $t(`m.common['预览']`) }}</bk-button>
         <bk-button style="margin-left: 10px;" :disabled="disabled" @click="handleResourceCancel">{{ $t(`m.common['取消']`) }}</bk-button>
       </div>
@@ -244,7 +244,7 @@
 
     <bk-sideslider :is-show="isShowResourceInstanceEffectTime"
       :title="resourceInstanceEffectTimeTitle"
-      :width="720"
+      :width="960"
       quick-close
       @update:isShow="handleResourceEffectTimeCancel"
       :ext-cls="'relate-instance-sideslider'">
@@ -397,7 +397,8 @@
           if (!curData) {
               return [];
           }
-          if (curData.condition.length === 0) curData.condition = ['none'];
+          // 此处为空如果重新赋值，会一直走不到无限制业务代码逻辑
+          // if (curData.condition.length === 0) curData.condition = ['none'];
           return _.cloneDeep(curData.condition);
       },
       originalCondition () {
@@ -495,6 +496,7 @@
             this.tableList = value;
           }
           this.originalList = _.cloneDeep(this.tableList);
+          this.fetchInstanceDefaultCheck(false);
         },
         immediate: true
       },
@@ -519,6 +521,38 @@
       }
     },
     methods: {
+      fetchInstanceDefaultCheck (payload) {
+        if (this.isRecommend) {
+          this.$nextTick(() => {
+            const recommendList = [];
+            this.tableList.forEach((item, index) => {
+              item.resource_groups && item.resource_groups.forEach(resource => {
+                resource.related_resource_types && resource.related_resource_types.forEach(types => {
+                  if (types.condition && types.condition.length) {
+                    if (types.condition.length === 1 && types.condition[0] === 'none') {
+                      types.isError = !!this.resourceSelectData.includes(item.name);
+                      return;
+                    }
+                    if (types.empty) {
+                      types.isError = !!this.resourceSelectData.includes(item.name);
+                    }
+                    // 处理单个操作实例勾选项
+                    if (payload && payload === index) {
+                      this.$refs.permApplyTableRef.toggleRowSelection(this.tableList[index], true);
+                    }
+                    // 处理初始化页面默认勾选有实例的操作和粘贴实例默认勾选
+                    if (!payload) {
+                      this.$refs.permApplyTableRef.toggleRowSelection(item, true);
+                    }
+                    recommendList.push(item.name);
+                  }
+                });
+              });
+            });
+            this.resourceSelectData = Array.from(new Set([...this.resourceSelectData, ...recommendList]));
+          });
+        }
+      },
       handleOpenRenewal (row, index) {
         row.isShowRenewal = false;
         row.customValueBackup = row.customValue;
@@ -693,6 +727,7 @@
         this.curCopyData = ['none'];
         this.$refs[`condition_${index}_aggregateRef`] && this.$refs[`condition_${index}_aggregateRef`].setImmediatelyShow(false);
         this.showMessage(this.$t(`m.info['批量粘贴成功']`));
+        this.fetchInstanceDefaultCheck(false);
       },
 
       // 设置instances
@@ -869,7 +904,7 @@
         if (relatedList.length > 0) {
           relatedList.forEach(item => {
             if (!item.policy_id) {
-              item.expired_at = item.expired_at + this.user.timestamp;
+              item.expired_at = Number(item.expired_at) + this.user.timestamp;
             }
             delete item.policy_id;
             item.resource_groups.forEach(groupItem => {
@@ -939,7 +974,7 @@
             const inOriginalList = !!this.originalList.filter(
               original => String(original.id) === String(item.id)
             ).length;
-            item.expired_at = item.expired_at - this.user.timestamp;
+            item.expired_at = Number(item.expired_at) - this.user.timestamp;
             this.tableList.splice(
               curIndex,
               1,
@@ -949,7 +984,7 @@
         });
       },
 
-      async handleResourceSumit () {
+      async handleResourceSubmit () {
         const conditionData = this.$refs.renderResourceRef.handleGetValue();
         const { isEmpty, data } = conditionData;
         if (isEmpty) {
@@ -964,6 +999,7 @@
         if (isConditionEmpty) {
           resItem.condition = ['none'];
           resItem.isLimitExceeded = false;
+          resItem.isError = true;
         } else {
           const { isMainAction, related_actions } = this.tableList[this.curIndex];
           // 如果为主操作
@@ -999,7 +1035,7 @@
             resItem.isLimitExceeded = false;
           }
         }
-
+        this.fetchInstanceDefaultCheck(this.curIndex);
         this.curIndex = -1;
         this.curResIndex = -1;
         this.curGroupIndex = -1;
@@ -1241,8 +1277,8 @@
               if (!item.isAggregate) {
                 const curPasteData = payload.data.find(_ => _.id === item.id);
                 if (curPasteData) {
-                  item.resource_groups.forEach(groupItem => {
-                    groupItem.related_resource_types.forEach(resItem => {
+                  item.resource_groups && item.resource_groups.forEach(groupItem => {
+                    groupItem.related_resource_types && groupItem.related_resource_types.forEach(resItem => {
                       if (`${resItem.system_id}${resItem.type}` === `${curPasteData.resource_type.system_id}${curPasteData.resource_type.type}`) {
                         resItem.condition = curPasteData.resource_type.condition.map(conditionItem => new Condition(conditionItem, '', 'add'));
                         resItem.isError = false;
@@ -1251,7 +1287,7 @@
                   });
                 }
               } else {
-                item.aggregateResourceType.forEach(aggregateResourceItem => {
+                item.aggregateResourceType && item.aggregateResourceType.forEach(aggregateResourceItem => {
                   if (`${aggregateResourceItem.system_id}${aggregateResourceItem.id}` === this.curCopyKey) {
                     item.instances = _.cloneDeep(tempArrgegateData);
                     this.instanceKey = aggregateResourceItem.id;
@@ -1318,6 +1354,7 @@
         this.$refs[`condition_${index}_${subIndex}_ref`][0] && this.$refs[`condition_${index}_${subIndex}_ref`][0].setImmediatelyShow(false);
         this.curCopyData = ['none'];
         this.showMessage(this.$t(`m.info['批量粘贴成功']`));
+        this.fetchInstanceDefaultCheck(false);
       },
 
       handlePreviewDialogClose () {
@@ -1403,9 +1440,8 @@
             aggregations: []
           };
         }
-        const actionList = [];
+        let actionList = [];
         const aggregations = [];
-
         // 重新赋值
         if (this.isAllExpanded) {
           this.tableList = this.tableList.filter(e =>
@@ -1533,6 +1569,7 @@
           } else {
             const { actions, aggregateResourceType, instances, instancesDisplayData } = item;
             if (instances.length < 1) {
+              actionList = _.cloneDeep(actions);
               item.isError = true;
               flag = true;
             } else {
@@ -1678,5 +1715,5 @@
 </script>
 
 <style>
-    @import './resource-instance-table.css';
+  @import './resource-instance-table.css';
 </style>

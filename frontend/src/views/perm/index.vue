@@ -419,7 +419,7 @@
             background-color: red;
             border-radius: 50%;
             &-lang {
-                right: -312px;
+                right: -340px;
             }
             &.external-redCircle {
                 right: -90px;
@@ -464,7 +464,7 @@
         opacity: 0;
         cursor: no-drop;
         &.info-sys-lang {
-            left: 360px;
+            left: 400px;
         }
     }
 

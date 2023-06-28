@@ -652,12 +652,13 @@ class GroupBiz:
         1. 分级管理员授权范围 -> 用户组的自定义权限
         2. 分级管理员的成员 -> 用户组的成员 (过期时间永久)
         """
+        group_name_suffix = _("-管理员组")
 
         # 创建用户组, 加成员
         with transaction.atomic():
             group = self.group_svc.create(
                 GroupCreation(
-                    name=group_name or role.name + "-管理员组",
+                    name=group_name or role.name + group_name_suffix,
                     description=role.description,
                     source_system_id=role.source_system_id,
                     hidden=role.hidden,

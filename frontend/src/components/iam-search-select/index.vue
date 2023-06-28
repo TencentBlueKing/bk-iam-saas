@@ -9,7 +9,11 @@
     :show-condition="false"
     :popover-zindex="9999"
     :values="searchValue"
-    @change="handleChange" />
+    @change="handleChange"
+    @input="handleInput"
+    @on-click-menu="handleClickMenu"
+    @on-tag-delete="handleTagDelete"
+  />
 </template>
 <script>
   import _ from 'lodash';
@@ -242,6 +246,14 @@
         }
         this.$emit('on-change', result, validValue);
         this.$emit('input', result, validValue);
+      },
+
+      handleInput (payload) {
+        this.$emit('on-input', payload);
+      },
+      handleClickMenu (payload) {
+        this.$emit('on-click-menu', payload);
+        this.$emit('input', payload);
       }
     }
   };
