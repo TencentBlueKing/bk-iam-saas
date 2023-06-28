@@ -324,7 +324,7 @@ export const m = {
         '回调接口必填': 'Callback interface required',
         '系统中文描述必填': 'System Chinese description is required',
         '系统英文描述必填': 'System English description is required',
-        '只允许小写字母开头、包含小写字母、数字、下划线(_)和连接符(-)': 'Only lowercase letters, digits, underscores (_), and hyphens (-) are allowed',
+        '只允许小写字母开头、包含小写字母、数字、下划线(_)和连接符(-)': 'Only lowercase letters, digits, underscore (_), and hyphen (-) are allowed',
         '操作ID已被占用': 'Action ID is already in use',
         '请输入正确的系统回调接口': 'Please enter the correct system callback interface',
         '请输入正确的系统健康检查地址': 'Please enter the correct system health check address',
@@ -377,7 +377,6 @@ export const m = {
         '该组将不再继承该模板的权限': 'The group will no longer inherit the permissions of the template',
         '解除成功': 'Lifted',
         '当前用户将不再继承该模板权限': 'The current user will no longer inherit the template permissions',
-        '解除与权限模板': 'Lift the permission template',
         '退出成功': 'Droped out',
         '将不再继承该组的权限': 'will no longer inherit the permissions of the group',
         '将不再拥有该用户组的权限': 'will no longer inherit the permissions of the group',
@@ -499,7 +498,8 @@ export const m = {
          '删除组依赖实例产生的影响' : "Deleting the '{value}' group instance permission will also delete the group instance permissions corresponding to the dependent operation permissions:",
          '管理空间成员侧边栏标题信息': 'Manage space members {value}',
          '已选数量': '{value} selected',
-         'tab操作实例': '{value} Instance'
+         'tab操作实例': '{value} Instance',
+         '解除与权限模板名称的关联，当前用户将不再继承该模板权限。': 'Disassociate from the permission template {value}, and the current user will no longer inherit the template permissions.'
     },
     // 二次确认弹窗相关
     dialog: {
@@ -724,7 +724,7 @@ export const m = {
         '检查更新': 'Check for update',
         '最新版本': 'Latest',
         '添加用户组': 'Add groups',
-        '变更对比': 'Change Comparison',
+        '变更对比': 'Diff changes',
         '同步权限': 'Permissions Update',
         '同步模板权限': 'Update',
         '模板中新增的内容': 'New added in template',
