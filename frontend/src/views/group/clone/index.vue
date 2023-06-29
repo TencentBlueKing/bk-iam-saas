@@ -63,11 +63,11 @@
       style="margin-bottom: 16px;"
       data-test-id="group_btn_showAddGroupMember"
       @on-click="handleAddMember">
-      <iam-guide
+      <!-- <iam-guide
         type="add_group_member"
         direction="left"
         :style="{ top: '-20px', left: '180px' }"
-        :content="$t(`m.guide['添加组成员']`)" />
+        :content="$t(`m.guide['添加组成员']`)" /> -->
     </render-action>
     <section v-else ref="memberRef">
       <render-member
@@ -1096,7 +1096,7 @@
           };
           try {
             await this.$store.dispatch('userGroup/addUserGroup', params);
-            this.messageSuccess(this.$t(`m.info['新建用户组成功']`), 1000);
+            this.messageSuccess(this.$t(`m.info['克隆用户组成功']`), 1000);
             bus.$emit('show-guide', 'process');
             this.$router.push({
               name: 'userGroup'

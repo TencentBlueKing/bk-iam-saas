@@ -381,7 +381,7 @@
       showQuitTemplates (row) {
         this.deleteDialogConf.visiable = true;
         this.deleteDialogConf.row = Object.assign({}, row);
-        this.deleteDialogConf.msg = `${this.$t(`m.info['解除与权限模板']`)}${this.$t(`m.common['【']`)}${row.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的关联']`)}${this.$t(`m.common['，']`)}${this.$t(`m.info['当前用户将不再继承该模板权限']`)}${this.$t(`m.common['。']`)}`;
+        this.deleteDialogConf.msg = this.$t(`m.info['解除与权限模板名称的关联，当前用户将不再继承该模板权限。']`, { value: `${this.$t(`m.common['【']`)}${row.name}${this.$t(`m.common['】']`)}` });
       },
 
       /**

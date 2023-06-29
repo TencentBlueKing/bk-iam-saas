@@ -143,7 +143,7 @@
                   class="ml20"
                   theme="default"
                   @click="handleEmptyClear">
-                  {{ $t(`m.common['清空']`) }}
+                  {{ $t(`m.common['重置']`) }}
                 </bk-button>
               </div>
             </div>
