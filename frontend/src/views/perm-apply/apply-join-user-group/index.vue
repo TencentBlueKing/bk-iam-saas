@@ -1620,6 +1620,9 @@
         }
         .group-search-select {
             display: flex;
+            .bk-button {
+              padding: 0;
+            }
         }
     }
 </style>
