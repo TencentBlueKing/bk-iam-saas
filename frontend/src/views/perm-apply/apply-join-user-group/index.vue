@@ -865,27 +865,28 @@
       // 处理手动输入各种场景
       handleManualInput () {
         if (this.curSelectMenu) {
-          let inputText = _.cloneDeep(this.curInputText);
-          const curItem = this.initSearchData.find(item => item.id === this.curSelectMenu);
-          const isHasName = this.curInputText.indexOf(`${curItem.name}：`) > -1;
-          if (isHasName) {
-            inputText = this.curInputText.split(`${curItem.name}：`);
-          }
-          const textValue = _.isArray(inputText) ? inputText[1] : inputText;
-          this.$set(this.searchParams, this.curSelectMenu, textValue);
-          this.searchList.push({
-            id: this.curSelectMenu,
-            name: curItem.name,
-            values: [
-              {
-                id: textValue,
-                name: textValue
-              }
-            ]
-          });
-          this.searchValue = _.cloneDeep(this.searchList);
+          // let inputText = _.cloneDeep(this.curInputText);
+          // const curItem = this.initSearchData.find(item => item.id === this.curSelectMenu);
+          // const isHasName = this.curInputText.indexOf(`${curItem.name}：`) > -1;
+          // if (isHasName) {
+          //   inputText = this.curInputText.split(`${curItem.name}：`);
+          // }
+          // const textValue = _.isArray(inputText) ? inputText[1] : inputText;
+          // this.$set(this.searchParams, this.curSelectMenu, textValue);
+          // this.searchList.push({
+          //   id: this.curSelectMenu,
+          //   name: curItem.name,
+          //   values: [
+          //     {
+          //       id: textValue,
+          //       name: textValue
+          //     }
+          //   ]
+          // });
+          // this.searchValue = _.cloneDeep(this.searchList);
           // 转换为tag标签后,需要清空输入框的值
           if (this.$refs.searchSelectRef && this.$refs.searchSelectRef.$refs.searchSelect) {
+            this.$refs.searchSelectRef.$refs.searchSelect.keySubmit();
             this.$refs.searchSelectRef.$refs.searchSelect.localValue = '';
           }
           this.curSelectMenu = '';
