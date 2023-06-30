@@ -76,7 +76,7 @@
                       @on-batch-paste="handlerOnBatchPaste(...arguments, content, $index, contentIndex)"
                       @on-click="showResourceInstance(row, content, contentIndex, groIndex)" />
                   </div>
-                  <p v-if="content.isLimitExceeded" class="is-limit-error">{{ $t(`m.info['实例数量限制提示']`) }}</p>
+                  <p v-if="content.isLimitExceeded" class="is-limit-error">{{ $t(`m.info['单次申请限20个实例，实例权限数过多不利于您后期维护，更多实例建议您申请范围权限']`) }}</p>
                   <Icon v-if="_.related_resource_types.length > 1 || !!row.related_environments.length" class="add-icon" type="add-hollow" @click="handlerAddCondition(_, $index, contentIndex, groIndex)" />
                   <Icon v-if="_.related_resource_types.length > 1 || !!row.related_environments.length" :class="row.resource_groups.length <= 1 || !!_.id ? 'disabled' : ''" type="reduce-hollow" class="reduce-icon"
                     @click="handlerReduceCondition(_, $index, contentIndex, groIndex)" />

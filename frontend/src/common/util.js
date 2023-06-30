@@ -568,7 +568,12 @@ export function getTreeNode (id, list) {
   }
 }
 
-// 处理中英文国际化
+/**
+ *  处理中英文国际化动态文字渲染宽度
+ *
+ * @param {payload} str 模块类型
+ *
+ */
 export function renderLabelWidth (payload) {
   const isCN = ['zh-cn'].includes(window.CUR_LANGUAGE);
   const typeMap = {
@@ -585,7 +590,12 @@ export function renderLabelWidth (payload) {
   return typeMap[payload]();
 }
 
-// 获取cookie
+/**
+ *  获取指定cookie的value
+ *
+ * @param {name} str 名称
+ *
+ */
 export function getCookie (name) {
   const data = document.cookie.split(';');
   const params = {};
@@ -624,4 +634,28 @@ export function jsonpRequest (url, params, callbackName) {
       resolve(data);
     };
   });
+}
+
+/**
+ *  删除url上指定参数
+ *
+ * @param {list} str 需要删除的参数列表
+ *
+ */
+export function delLocationHref (list) {
+  const url = window.location.href;
+  const params = (window.location.search || '?').substring(1).split('&');
+  const prefix = url.substring(0, url.indexOf('?'));
+  let suffix = '';
+  for (let i = params.length - 1; i >= 0; i--) {
+    const param = params[i];
+    const key = param && param.split('=', 2)[0];
+    if (!param || list.includes(key)) {
+      params.splice(i, 1);
+    }
+  }
+  if (params.length) {
+    suffix = `?${params.join('&')}`;
+  }
+  window.history.replaceState({}, '', prefix + suffix);
 }

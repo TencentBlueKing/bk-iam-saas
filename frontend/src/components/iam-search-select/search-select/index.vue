@@ -72,6 +72,7 @@
 <script>
   import Vue from 'vue';
   import _ from 'lodash';
+  import il8n from '@/language';
   import Tippy from 'bk-magic-vue/lib/utils/tippy';
   import {
     popperConfig,
@@ -112,7 +113,7 @@
       },
       explainCode: {
         type: String,
-        default: '：'
+        default: il8n('common', '：')
       },
       placeholder: {
         type: String,

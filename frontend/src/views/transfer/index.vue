@@ -253,7 +253,7 @@
       },
 
       handleValidator () {
-        const maxLength = 32;
+        const maxLength = 100;
         const { reason, members } = this.formData;
         if (reason === '') {
           this.reasonValidateText = this.$t(`m.permTransfer['权限交接理由必填']`);

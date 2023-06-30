@@ -18,8 +18,8 @@
       @click="back">
       <div v-if="!isHide">
         <Icon type="arrows-left" class="breadcrumbs-back" v-if="backRouter" />
-        <h2 v-if="routeName === 'addGroupPerm'" class="breadcrumbs-current">
-          {{ $t(`m.common['用户组']`) }}{{ $t(`m.common['【']`) }}{{userGroupName}}{{ $t(`m.common['】']`) }}{{ $t(`m.common['添加权限']`) }}
+        <h2 v-if="customBreadCrumbTitles.includes(routeName)" class="breadcrumbs-current">
+          {{ $t(`m.info['用户组成员添加权限']`, { value: `${$t(`m.common['【']`)}${userGroupName}${$t(`m.common['】']`)}` }) }}
         </h2>
         <h2 v-else class="breadcrumbs-current">{{ headerTitle }}</h2>
       </div>
@@ -246,7 +246,8 @@
         isShowHeader: false,
         placeholderValue: '',
         userGroupName: '',
-        externalRouter: ['permTransfer', 'permRenewal', 'addGroupPerm'] // 开放内嵌页面需要面包屑的页面
+        externalRouter: ['permTransfer', 'permRenewal', 'addGroupPerm'], // 开放内嵌页面需要面包屑的页面
+        customBreadCrumbTitles: ['addGroupPerm']
       };
     },
     computed: {

@@ -477,7 +477,7 @@
       handleNavMenu (item) {
         this.$nextTick(() => {
           if (item.rkey === 'approval') {
-            const url = `${window.BK_ITSM_APP_URL}/#/ticket/my/approval`;
+            const url = `${window.BK_ITSM_APP_URL}/#/workbench/ticket/approval`;
             window.open(url);
             return;
           }

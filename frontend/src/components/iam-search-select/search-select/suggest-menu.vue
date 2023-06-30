@@ -2,6 +2,7 @@
   import _ from 'lodash';
   import { encodeRegexp } from './helper';
   import Mixin from './mixin';
+  import il8n from '@/language';
 
   export default {
     name: 'BKSearchSuggest',
@@ -171,7 +172,7 @@
                                         key={index}
                                         onClick={() => this.handleClick(item)}>
                                         <td class="search-suggest-item-label">
-                                            { item.keyName }：
+                                            { item.keyName }{il8n('common', '：')}
                                         </td>
                                         <td class="search-suggest-item-value">
                                             <div class="value-text">{ item.valueName }</div>
