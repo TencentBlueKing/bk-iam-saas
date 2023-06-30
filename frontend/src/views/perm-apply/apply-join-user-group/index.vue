@@ -17,7 +17,7 @@
                     :label="$t(`m.common['系统']`)"
                     class="pr20 form-item-resource">
                     <bk-select
-                      :style="defaultFormItemStyle"
+                      :style="{ width: contentWidth }"
                       v-model="applyGroupData.system_id"
                       :clearable="true"
                       :allow-enter="false"
@@ -40,7 +40,7 @@
                     class="pr20"
                   >
                     <bk-select
-                      :style="defaultFormItemStyle"
+                      :style="{ width: contentWidth }"
                       v-model="applyGroupData.action_id"
                       :clearable="false"
                       :allow-enter="false"
@@ -70,7 +70,7 @@
                           :label="$t(`m.permApply['资源类型']`)"
                           class="pr20 form-item-resource">
                           <bk-select
-                            :style="defaultFormItemStyle"
+                            :style="{ width: contentWidth }"
                             v-model="curResourceData.type"
                             :clearable="false"
                             :allow-enter="false"
@@ -90,6 +90,7 @@
                         </iam-form-item>
                       </div>
                       <iam-form-item
+                        :style="{ width: contentWidth }"
                         class="form-item-resource"
                         :label="$t(`m.common['资源实例']`)">
                         <div class="relation-content-item"
@@ -384,7 +385,7 @@
   import Policy from '@/model/policy';
   import { mapGetters } from 'vuex';
   import { buildURLParams } from '@/common/url';
-  import { formatCodeData } from '@/common/util';
+  import { formatCodeData, delLocationHref } from '@/common/util';
   import { PERMANENT_TIMESTAMP } from '@/common/constants';
   import { leaveConfirm } from '@/common/leave-confirm';
   import IamDeadline from '@/components/iam-deadline/horizontal';
@@ -562,7 +563,8 @@
         ],
         enableGroupInstanceSearch: window.ENABLE_GROUP_INSTANCE_SEARCH.toLowerCase() === 'true',
         curSelectMenu: '',
-        curInputText: ''
+        curInputText: '',
+        contentWidth: window.innerWidth <= 1440 ? '200px' : '240px'
       };
     },
     computed: {
@@ -589,11 +591,6 @@
         },
         originalCondition () {
             return _.cloneDeep(this.condition);
-        },
-        defaultFormItemStyle () {
-            return {
-                width: '240px'
-            };
         }
     },
     watch: {
@@ -626,12 +623,13 @@
       };
       const currentQueryCache = await this.getCurrentQueryCache();
       if (currentQueryCache && Object.keys(currentQueryCache).length) {
-        if (currentQueryCache.limit) {
-          this.pagination = Object.assign(
-            this.pagination,
-            { current: Number(currentQueryCache.current), limit: Number(currentQueryCache.limit) }
-          );
-        }
+        this.pagination = Object.assign(
+          this.pagination,
+          {
+            current: currentQueryCache.current ? Number(currentQueryCache.current) : this.pagination.current,
+            limit: currentQueryCache.limit ? Number(currentQueryCache.limit) : this.pagination.limit
+          }
+        );
         for (const key in currentQueryCache) {
           if (key !== 'limit' && key !== 'current') {
             const curData = currentQueryCache[key];
@@ -675,7 +673,16 @@
         }
       }
     },
+    mounted () {
+      window.addEventListener('resize', (this.formatFormItemWidth));
+      this.$once('hook:beforeDestroy', () => {
+        window.removeEventListener('resize', this.formatFormItemWidth);
+      });
+    },
     methods: {
+      formatFormItemWidth () {
+        this.contentWidth = window.innerWidth <= 1440 ? '200px' : '240px';
+      },
       /**
        * 获取页面数据
        */
@@ -843,6 +850,7 @@
 
       handleEmptyRefresh () {
         this.searchParams = {};
+        this.queryParams = {};
         this.searchValue = [];
         this.emptyData.tipType = '';
         this.resetPagination();
@@ -852,6 +860,7 @@
 
       handleEmptyClear () {
         this.searchParams = {};
+        this.queryParams = {};
         this.searchValue = [];
         this.emptyData.tipType = '';
         if (this.$refs.searchSelectRef && this.$refs.searchSelectRef.$refs.searchSelect) {
@@ -1011,6 +1020,8 @@
         this.tableLoading = isTableLoading;
         this.setCurrentQueryCache(this.refreshCurrentQuery());
         const { current, limit } = this.pagination;
+        // 删除接口无用字段
+        delete this.searchParams.current;
         const params = {
             // ...this.applyGroupData,
             ...this.searchParams,
@@ -1138,6 +1149,13 @@
         this.resourceTypeError = false;
         this.isSearchSystem = false;
         this.resourceInstances = [];
+        this.resetLocationHref();
+      },
+
+      resetLocationHref () {
+        // 需要删除的url上的字段
+        const urlFields = [...this.initSearchData.map(item => item.id), ...['current', 'limit']];
+        delLocationHref(urlFields);
       },
 
       pageChange (page) {
@@ -1211,6 +1229,9 @@
         this.emptyData.tipType = 'search';
         this.resetPagination();
         this.handleSearchUserGroup();
+        if (!result.length) {
+          this.resetLocationHref();
+        }
       },
 
       async handleClearSearch () {
@@ -1433,7 +1454,7 @@
         const params = {};
         const queryParams = {
           ...this.searchParams,
-          ...this.$route.query,
+          // ...this.$route.query,
           ...this.queryParams
         };
         if (Object.keys(queryParams).length) {
