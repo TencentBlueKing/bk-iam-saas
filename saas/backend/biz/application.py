@@ -594,7 +594,7 @@ class ApplicationBiz:
         application_templates = []
 
         # 查询自定义权限 涉及的系统
-        system_counter_list = self.policy_biz.list_system_counter_by_subject(subject)
+        system_counter_list = self.policy_biz.list_system_counter_by_subject(subject, hidden=False)
         # 查询自定义权限
         for system_counter in system_counter_list:
             policies = self.policy_biz.list_by_subject(system_counter.id, subject)

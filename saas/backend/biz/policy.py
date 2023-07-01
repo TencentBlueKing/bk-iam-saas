@@ -1363,11 +1363,11 @@ class PolicyQueryBiz:
         pl = TemporaryPolicyBeanList(system_id, parse_obj_as(List[PolicyBean], policies), need_fill_empty_fields=True)
         return pl.policies
 
-    def list_system_counter_by_subject(self, subject: Subject) -> List[SystemCounterBean]:
+    def list_system_counter_by_subject(self, subject: Subject, hidden: bool = True) -> List[SystemCounterBean]:
         """
         查询subject有权限的系统-policy数量信息
         """
-        system_counts = self.svc.list_system_counter_by_subject(subject)
+        system_counts = self.svc.list_system_counter_by_subject(subject, hidden)
         return self._system_counter_to_system_counter_bean(system_counts)
 
     def _system_counter_to_system_counter_bean(self, system_counts: List[SystemCounter]) -> List[SystemCounterBean]:
