@@ -9,64 +9,84 @@
     ext-cls="iam-aggregate-resource-sideslider-cls"
     @update:isShow="handleCancel">
     <div slot="content" class="content" v-bkloading="{ isLoading: loading, opacity: 1 }">
-      <div class="select-wrapper">
-        <div class="left-content">
-          <topology-input
-            ref="topologyInput"
-            :is-filter="isFilter"
-            :placeholder="curPlaceholder"
-            @on-search="handleSearch" />
-          <div class="list-wrapper"
-            v-bkloading="{ isLoading: listLoading, opacity: 1 }"
-            @scroll="handleScroll">
-            <template v-if="!listLoading">
-              <p
-                v-for="item in selectList"
-                :key="item.id"
-                :title="item.id"
-                class="item">
-                <bk-checkbox
-                  :true-value="true"
-                  :false-value="false"
-                  v-model="item.checked"
-                  @change="handleSelected(...arguments, item)">
-                  {{ item.display_name }}
-                </bk-checkbox>
-              </p>
-              <div v-if="isScrollBottom" class="loading-item">
-                <div v-bkloading="{ isLoading: true, size: 'mini' }"></div>
-              </div>
-              <div class="empty-wrapper" v-if="selectList.length < 1 && !listLoading">
-                <ExceptionEmpty
-                  :type="emptyData.type"
-                  :empty-text="emptyData.text"
-                  :tip-text="emptyData.tip"
-                  :tip-type="emptyData.tipType"
-                  @on-clear="handleEmptyClear"
-                  @on-refresh="handleEmptyRefresh"
-                />
-              </div>
-            </template>
-          </div>
+      <div
+        class="no-limited-wrapper flex-between"
+        title="$t(`m.resource['无限制总文案']`)">
+        <div class="no-limited-wrapper-left single-hide">
+          <Icon type="info-new" />
+          <span>{{ $t(`m.resource['无限制文案']`) }}</span>
         </div>
-        <div class="right-content">
-          <div class="right-header">
-            <span :class="['clear-action', { 'disabled': curSelectedList.length < 1 }]" @click.stop="handleClear">{{ $t(`m.common['清空']`) }}</span>
-          </div>
-          <section class="select-list-wrapper">
-            <p
-              v-for="item in curSelectedList"
-              :key="item.id"
-              class="selected-item">
-              <span class="name" :title="item.id">{{ item.display_name }}</span>
-              <span class="action" @click.stop="handleRemove(item)">{{ $t(`m.common['移除']`) }}</span>
-            </p>
-            <div class="empty-wrapper" v-if="curSelectedList.length < 1">
-              <ExceptionEmpty />
-            </div>
-          </section>
+        <div class="no-limited-wrapper-right">
+          <bk-checkbox
+            ext-cls="no-limit-checkbox"
+            v-model="notLimitValue"
+            :disabled="disabled"
+            @change="handleLimitChange">
+            {{ $t(`m.common['无限制']`) }}
+          </bk-checkbox>
         </div>
       </div>
+      {{ value }} {{ data}}
+      <template v-if="!isHide">
+        <div class="select-wrapper">
+          <div class="left-content">
+            <topology-input
+              ref="topologyInput"
+              :is-filter="isFilter"
+              :placeholder="curPlaceholder"
+              @on-search="handleSearch" />
+            <div class="list-wrapper"
+              v-bkloading="{ isLoading: listLoading, opacity: 1 }"
+              @scroll="handleScroll">
+              <template v-if="!listLoading">
+                <p
+                  v-for="item in selectList"
+                  :key="item.id"
+                  :title="item.id"
+                  class="item">
+                  <bk-checkbox
+                    :true-value="true"
+                    :false-value="false"
+                    v-model="item.checked"
+                    @change="handleSelected(...arguments, item)">
+                    {{ item.display_name }}
+                  </bk-checkbox>
+                </p>
+                <div v-if="isScrollBottom" class="loading-item">
+                  <div v-bkloading="{ isLoading: true, size: 'mini' }"></div>
+                </div>
+                <div class="empty-wrapper" v-if="selectList.length < 1 && !listLoading">
+                  <ExceptionEmpty
+                    :type="emptyData.type"
+                    :empty-text="emptyData.text"
+                    :tip-text="emptyData.tip"
+                    :tip-type="emptyData.tipType"
+                    @on-clear="handleEmptyClear"
+                    @on-refresh="handleEmptyRefresh"
+                  />
+                </div>
+              </template>
+            </div>
+          </div>
+          <div class="right-content">
+            <div class="right-header">
+              <span :class="['clear-action', { 'disabled': curSelectedList.length < 1 }]" @click.stop="handleClear">{{ $t(`m.common['清空']`) }}</span>
+            </div>
+            <section class="select-list-wrapper">
+              <p
+                v-for="item in curSelectedList"
+                :key="item.id"
+                class="selected-item">
+                <span class="name" :title="item.id">{{ item.display_name }}</span>
+                <span class="action" @click.stop="handleRemove(item)">{{ $t(`m.common['移除']`) }}</span>
+              </p>
+              <div class="empty-wrapper" v-if="curSelectedList.length < 1">
+                <ExceptionEmpty />
+              </div>
+            </section>
+          </div>
+        </div>
+      </template>
     </div>
     <div slot="footer" style="margin-left: 25px;">
       <bk-button theme="primary" @click="handleSave">{{ $t(`m.common['保存']`) }}</bk-button>
@@ -79,6 +99,7 @@
   import { leaveConfirm } from '@/common/leave-confirm';
   import { formatCodeData } from '@/common/util';
   import TopologyInput from '@/components/choose-ip/topology-input';
+  import Condition from '@/model/condition';
 
   export default {
     name: '',
@@ -91,6 +112,14 @@
         default: false
       },
       value: {
+        type: Array,
+        default: () => []
+      },
+      data: {
+        type: Array,
+        default: () => []
+      },
+      originalData: {
         type: Array,
         default: () => []
       },
@@ -107,6 +136,18 @@
       isSuperManager: {
         type: Boolean,
         default: () => true
+      },
+      flag: {
+        type: String,
+        default: ''
+      },
+      disabled: {
+        type: Boolean,
+        default: false
+      },
+      selectionMode: {
+        type: String,
+        default: 'all'
       }
     },
     data () {
@@ -118,12 +159,16 @@
         },
         selectList: [],
         curSelectedList: [],
+        curSelectedIds: [],
+        conditionData: [],
+        requestQueue: [],
         searchValue: '',
         loading: false,
         isFilter: false,
         listLoading: false,
         isScrollBottom: false,
-        curSelectedIds: [],
+        isHide: false,
+        notLimitValue: false,
         emptyData: {
           type: 'empty',
           text: '暂无数据',
@@ -181,6 +226,61 @@
           }
         },
         immediate: true
+      },
+      params: {
+        handler (value) {
+          if (Object.keys(value).length > 0) {
+            this.$emit('on-init', false);
+          }
+        },
+        immediate: true
+      },
+      data: {
+        handler (val) {
+          const len = val.length;
+          // 此时是无权限状态
+          if (len === 1 && val[0] === 'none') {
+            this.conditionData = [new Condition({ selection_mode: this.selectionMode }, 'init', 'add')];
+            this.conditionData[0].instanceExpanded = true;
+            const selectionMode = this.conditionData[0].selectionMode;
+            if (selectionMode !== 'all') {
+              this.conditionData[0].instanceCanDelete = false;
+            }
+            return;
+          }
+          if (len > 0) {
+            this.conditionData = val;
+            const firstConditionData = this.conditionData[0];
+            if (firstConditionData.instance && firstConditionData.instance.length > 0) {
+              firstConditionData.instanceExpanded = true;
+            }
+            if (firstConditionData.attribute && firstConditionData.attribute.length > 0) {
+              firstConditionData.attributeExpanded = true;
+            }
+            if (len === 1) {
+              const selectionMode = this.conditionData[0].selectionMode;
+              if (selectionMode !== 'all') {
+                this.conditionData[0].instanceCanDelete = false;
+              }
+            }
+            this.notLimitValue = false;
+            this.isHide = false;
+          } else {
+            this.notLimitValue = true;
+            this.isHide = true;
+            this.conditionData = [];
+          }
+        },
+        deep: true,
+        immediate: true
+      },
+      notLimitValue (value) {
+        if (value) {
+          this.conditionData.forEach(item => {
+            item.isInstanceEmpty = false;
+            item.isAttributeEmpty = false;
+          });
+        }
       }
     },
     created () {
@@ -320,6 +420,33 @@
           this.listLoading = false;
         }
       },
+      
+      handleLimitChange (newVal, oldVal) {
+        window.changeAlert = true;
+        this.isHide = newVal;
+        console.log(this.flag, newVal, 55545);
+        if (!newVal) {
+          const isInitializeData = this.originalData.length === 1 && this.originalData[0] === 'none';
+          if (!isInitializeData && this.originalData.length > 0) {
+            this.conditionData = _.cloneDeep(this.originalData);
+            const firstConditionData = this.conditionData[0];
+            if (firstConditionData.instance && firstConditionData.instance.length) {
+              firstConditionData.instanceExpanded = true;
+            }
+            if (firstConditionData.attribute && firstConditionData.attribute.length) {
+              firstConditionData.attributeExpanded = true;
+            }
+            return;
+          }
+          if (this.conditionData.length < 1) {
+            this.conditionData.push(new Condition({ selection_mode: this.selectionMode }, 'init', 'add'));
+            this.conditionData[0].instanceExpanded = true;
+          }
+        }
+        if (!this.flag) {
+          this.$emit('on-limit-change');
+        }
+      },
 
       setSearchData () {
         let templateList = this.defaultList;
@@ -403,133 +530,75 @@
   };
 </script>
 <style lang="postcss">
-    .iam-aggregate-resource-sideslider-cls {
-        .content {
-            padding: 20px 25px;
-            height: calc(100vh - 114px);
+  .iam-aggregate-resource-sideslider-cls {
+    .content {
+        padding: 20px 25px;
+        height: calc(100vh - 114px);
+    }
+    .select-wrapper {
+        height: 480px;
+        display: flex;
+        justify-self: start;
+    }
+    .no-limited-wrapper {
+      width: 100%;
+      height: 42px;
+      line-height: 39px;
+      font-size: 12px;
+      color: #63656e;
+      background-color: #fafbfd;
+      border: 1px solid #dcdee5;
+      padding: 0 21px 0 13px;
+      &-left {
+        max-width: calc(100% - 100px);
+      }
+      &-right {
+        .no-limit-checkbox {
+          .bk-checkbox-text {
+            font-size: 12px;
+          }
         }
-        .select-wrapper {
-            height: 480px;
-            display: flex;
-            justify-self: start;
-        }
-        .left-content {
-            width: 360px;
-            border-top: 1px solid #dcdee5;
-            border-bottom: 1px solid #dcdee5;
-            border-left: 1px solid #dcdee5;
-            .list-wrapper {
-                position: relative;
-                min-height: 446px;
-                padding: 5px 10px;
-                height: calc(100% - 32px);
-                overflow: auto;
-                /*滚动条整体样式*/
-                &::-webkit-scrollbar {
-                    width: 6px; /*竖向滚动条的宽度*/
-                    height: 6px; /*横向滚动条的高度*/
-                }
-                /*滚动条里面的小方块*/
-                &::-webkit-scrollbar-thumb {
-                    background: #dcdee5;
-                    border-radius: 3px;
-                }
-                /*滚动条轨道的样式*/
-                &::-webkit-scrollbar-track {
-                    background: transparent;
-                    border-radius: 3px;
-                }
-                .item {
-                    line-height: 24px;
-                    .bk-checkbox-text {
-                        font-size: 12px;
-                        /* max-width: 165px; */
-                        max-width: 300px;
-                        overflow: hidden;
-                        text-overflow: ellipsis;
-                        white-space: nowrap;
-                    }
-                }
-                .loading-item {
-                    line-height: 20px;
-                }
-                .empty-wrapper {
-                    position: absolute;
-                    left: 50%;
-                    top: 50%;
-                    transform: translate(-50%, -50%);
-                    img {
-                        width: 120px;
-                    }
-                }
-            }
-        }
-        .right-content {
+      }
+    }
+    .left-content {
+        width: 360px;
+        /* border-top: 1px solid #dcdee5; */
+        border-bottom: 1px solid #dcdee5;
+        border-left: 1px solid #dcdee5;
+        .list-wrapper {
             position: relative;
-            width: 560px;
-            border: 1px solid #dcdee5;
-            .right-header {
-                position: relative;
-                padding: 0 10px;
-                height: 32px;
-                line-height: 32px;
-                font-size: 14px;
-                border-bottom: 1px solid #dcdee5;
-                .clear-action {
-                    position: absolute;
-                    right: 10px;
+            min-height: 446px;
+            padding: 5px 10px;
+            height: calc(100% - 32px);
+            overflow: auto;
+            /*滚动条整体样式*/
+            &::-webkit-scrollbar {
+                width: 6px; /*竖向滚动条的宽度*/
+                height: 6px; /*横向滚动条的高度*/
+            }
+            /*滚动条里面的小方块*/
+            &::-webkit-scrollbar-thumb {
+                background: #dcdee5;
+                border-radius: 3px;
+            }
+            /*滚动条轨道的样式*/
+            &::-webkit-scrollbar-track {
+                background: transparent;
+                border-radius: 3px;
+            }
+            .item {
+                line-height: 24px;
+                .bk-checkbox-text {
                     font-size: 12px;
-                    color: #3a84ff;
-                    cursor: pointer;
-                    &:hover {
-                        color: #699df4;
-                    }
-                    &.disabled {
-                        color: #c4c6cc;
-                        cursor: not-allowed;
-                    }
-                }
-            }
-            .select-list-wrapper {
-                height: calc(100% - 32px);
-                overflow: auto;
-                /*滚动条整体样式*/
-                &::-webkit-scrollbar {
-                    width: 6px; /*竖向滚动条的宽度*/
-                    height: 6px; /*横向滚动条的高度*/
-                }
-                /*滚动条里面的小方块*/
-                &::-webkit-scrollbar-thumb {
-                    background: #dcdee5;
-                    border-radius: 3px;
-                }
-                /*滚动条轨道的样式*/
-                &::-webkit-scrollbar-track {
-                    background: transparent;
-                    border-radius: 3px;
-                }
-            }
-            .selected-item {
-                padding: 0 10px;
-                display: flex;
-                justify-content: space-between;
-                line-height: 32px;
-                font-size: 12px;
-                border-bottom: 1px solid #dcdee5;
-                .name {
-                    /* max-width: 400px; */
-                    max-width: 470px;
+                    /* max-width: 165px; */
+                    max-width: 300px;
                     overflow: hidden;
                     text-overflow: ellipsis;
                     white-space: nowrap;
                 }
-                .action {
-                    color: #3a84ff;
-                    cursor: pointer;
-                    &:hover {
-                        color: #699df4;
-                    }
-                }
+            }
+            .loading-item {
+                line-height: 20px;
             }
             .empty-wrapper {
                 position: absolute;
@@ -541,9 +610,88 @@
                 }
             }
         }
-        .bk-sideslider-footer {
-            background-color: #f5f6fa!important;
-            border-color: #dcdee5!important;
+    }
+    .right-content {
+        position: relative;
+        width: 560px;
+        border: 1px solid #dcdee5;
+        border-top: none;
+        .right-header {
+            position: relative;
+            padding: 0 10px;
+            height: 32px;
+            line-height: 32px;
+            font-size: 14px;
+            border-bottom: 1px solid #dcdee5;
+            .clear-action {
+                position: absolute;
+                right: 10px;
+                font-size: 12px;
+                color: #3a84ff;
+                cursor: pointer;
+                &:hover {
+                    color: #699df4;
+                }
+                &.disabled {
+                    color: #c4c6cc;
+                    cursor: not-allowed;
+                }
+            }
+        }
+        .select-list-wrapper {
+            height: calc(100% - 32px);
+            overflow: auto;
+            /*滚动条整体样式*/
+            &::-webkit-scrollbar {
+                width: 6px; /*竖向滚动条的宽度*/
+                height: 6px; /*横向滚动条的高度*/
+            }
+            /*滚动条里面的小方块*/
+            &::-webkit-scrollbar-thumb {
+                background: #dcdee5;
+                border-radius: 3px;
+            }
+            /*滚动条轨道的样式*/
+            &::-webkit-scrollbar-track {
+                background: transparent;
+                border-radius: 3px;
+            }
+        }
+        .selected-item {
+            padding: 0 10px;
+            display: flex;
+            justify-content: space-between;
+            line-height: 32px;
+            font-size: 12px;
+            border-bottom: 1px solid #dcdee5;
+            .name {
+                /* max-width: 400px; */
+                max-width: 470px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            .action {
+                color: #3a84ff;
+                cursor: pointer;
+                &:hover {
+                    color: #699df4;
+                }
+            }
+        }
+        .empty-wrapper {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            img {
+                width: 120px;
+            }
         }
     }
+    .bk-sideslider-footer {
+        background-color: #f5f6fa!important;
+        border-color: #dcdee5!important;
+    }
+  }
 </style>

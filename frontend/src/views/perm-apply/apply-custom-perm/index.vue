@@ -201,7 +201,9 @@
         </form>
       </render-horizontal-block>
       <render-horizontal-block ext-cls="mt16" :label="$t(`m.permApply['关联资源实例']`)">
-        <section ref="instanceTableRef">
+        <section
+          ref="instanceTableRef"
+          class="normal-resource-instance-table">
           <resource-instance-table
             :list="tableData"
             :original-list="tableDataBackup"
@@ -212,14 +214,28 @@
             @on-select="handleResourceSelect"
             @on-realted-change="handleRelatedChange" />
           <div slot="append" class="expanded-action-wrapper">
-            <bk-switcher
-              v-model="isAllExpanded"
-              theme="primary"
-              size="small"
-              :disabled="isAggregateDisabled"
-              @change="handleAggregateActionChange">
-            </bk-switcher>
-            <span class="expanded-text">{{ isAllExpanded ? $t(`m.grading['逐项编辑']`) : $t(`m.grading['批量编辑']`) }}</span>
+            <div class="apply-custom-switch">
+              <div class="apply-custom-switch-item">
+                <bk-switcher
+                  v-model="isAllUnlimited"
+                  theme="primary"
+                  size="small"
+                  :disabled="isUnlimitedDisabled"
+                  @change="handleUnlimitedActionChange">
+                </bk-switcher>
+                <span class="expanded-text">{{ $t(`m.common['批量无限制']`) }}</span>
+              </div>
+              <div class="apply-custom-switch-item">
+                <bk-switcher
+                  v-model="isAllExpanded"
+                  theme="primary"
+                  size="small"
+                  :disabled="isAggregateDisabled"
+                  @change="handleAggregateActionChange">
+                </bk-switcher>
+                <span class="expanded-text">{{ isAllExpanded ? $t(`m.grading['逐项编辑']`) : $t(`m.grading['批量编辑']`) }}</span>
+              </div>
+            </div>
           </div>
         </section>
       </render-horizontal-block>
@@ -634,7 +650,7 @@
     data () {
       return {
         userApi: window.BK_USER_API,
-        systemValue: '',
+        systemValue: 'bk_cmdb',
         systemList: [],
         buttonLoading: false,
         originalCustomTmplList: [],
@@ -733,6 +749,10 @@
             || (this.tableData.length === 1 && !this.tableData[0].isAggregate);
             return isDisabled;
         },
+        isUnlimitedDisabled () {
+          console.log(this.tableData, 555);
+          return this.tableData.length < 1;
+        },
         curSelectActions () {
             const allActionIds = [];
             this.originalCustomTmplList.forEach(payload => {
@@ -752,6 +772,7 @@
                 }
             });
             this.getFilterAggregateAction();
+            console.log(this.tableData, 1545);
             return allActionIds;
         }
     },
@@ -1612,6 +1633,7 @@
       },
 
       handleRelatedChange (payload) {
+        console.log(payload, 4555);
         this.aggregationsTableData = _.cloneDeep(payload);
       },
 
@@ -2615,6 +2637,16 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.apply-custom-switch {
+  display: flex;
+  align-items: center;
+  &-item {
+    &:not(&:last-of-type) {
+      margin-right: 20px;
+    }
+  }
 }
 
 /deep/ .bk-table-header-wrapper {
