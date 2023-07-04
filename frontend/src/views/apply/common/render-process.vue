@@ -1,28 +1,28 @@
 <template>
-    <div class="iam-approval-process-wrapper"
-        @click.stop="handleOpenProcessLink">
-        <Icon type="url" />
-        {{ $t(`m.myApply['查看审批详情']`) }}
-    </div>
+  <div class="iam-approval-process-wrapper"
+    @click.stop="handleOpenProcessLink">
+    <Icon type="url" />
+    {{ $t(`m.myApply['查看审批详情']`) }}
+  </div>
 </template>
 <script>
-    export default {
-        name: '',
-        props: {
-            link: {
-                type: String,
-                default: ''
-            }
-        },
-        data () {
-            return {};
-        },
-        methods: {
-            handleOpenProcessLink () {
-                window.open(this.link);
-            }
-        }
-    };
+  export default {
+    name: '',
+    props: {
+      link: {
+        type: String,
+        default: ''
+      }
+    },
+    data () {
+      return {};
+    },
+    methods: {
+      handleOpenProcessLink () {
+        window.open(this.link);
+      }
+    }
+  };
 </script>
 <style lang='postcss' scoped>
     .iam-approval-process-wrapper {

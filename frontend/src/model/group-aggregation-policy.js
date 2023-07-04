@@ -28,73 +28,73 @@ import _ from 'lodash';
 import il8n from '@/language';
 import { CUSTOM_PERM_TEMPLATE_ID } from '@/common/constants';
 export default class GroupAggregationPolicy {
-    constructor (payload) {
-        this.isError = false;
-        this.actions = payload.actions || [];
-        this.instancesDisplayData = payload.instancesDisplayData || {};
-        this.aggregateResourceType = payload.aggregate_resource_types || [];
-        this.instances = payload.instances || [];
-        this.instancesBackup = _.cloneDeep(this.instances);
-        this.isAggregate = true;
-        this.system_id = payload.actions[0].detail.system.id;
-        this.system_name = payload.actions[0].detail.system.name;
-        this.canPaste = false;
-        this.aggregationId = payload.aggregationId || '';
-        this.selectedIndex = payload.selectedIndex || 0;
-        this.initDetailData(this.actions);
-    }
+  constructor (payload) {
+    this.isError = false;
+    this.actions = payload.actions || [];
+    this.instancesDisplayData = payload.instancesDisplayData || {};
+    this.aggregateResourceType = payload.aggregate_resource_types || [];
+    this.instances = payload.instances || [];
+    this.instancesBackup = _.cloneDeep(this.instances);
+    this.isAggregate = true;
+    this.system_id = payload.actions[0].detail.system.id;
+    this.system_name = payload.actions[0].detail.system.name;
+    this.canPaste = false;
+    this.aggregationId = payload.aggregationId || '';
+    this.selectedIndex = payload.selectedIndex || 0;
+    this.initDetailData(this.actions);
+  }
 
-    initDetailData (payload) {
-        if (payload.length < 1) {
-            this.detail = {};
-            return;
+  initDetailData (payload) {
+    if (payload.length < 1) {
+      this.detail = {};
+      return;
+    }
+    this.detail = payload[0].detail;
+  }
+
+  get isTemplate () {
+    if (this.actions.length > 0) {
+      return this.actions[0].detail.id !== CUSTOM_PERM_TEMPLATE_ID;
+    }
+    return false;
+  }
+
+  get empty () {
+    return this.instances.length < 1;
+  }
+
+  get value () {
+    if (this.empty) {
+      return il8n('verify', '请选择');
+    }
+    let str = '';
+    this.aggregateResourceType.forEach(item => {
+      if (this.instancesDisplayData[item.id] && this.instancesDisplayData[item.id].length === 1) {
+        str = `${str}，${item.name}： ${this.instancesDisplayData[item.id][0].name}`;
+      } else if (this.instancesDisplayData[item.id] && this.instancesDisplayData[item.id].length > 1) {
+        for (const key in this.instancesDisplayData) {
+          if (item.id === key) {
+            str = `${str}，已选择 ${this.instancesDisplayData[item.id].length} 个${item.name}`;
+          }
         }
-        this.detail = payload[0].detail;
-    }
+      }
+    });
+    return str.substring(1, str.length);
+  }
 
-    get isTemplate () {
-        if (this.actions.length > 0) {
-            return this.actions[0].detail.id !== CUSTOM_PERM_TEMPLATE_ID;
-        }
-        return false;
+  get name () {
+    if (this.actions.length < 1) {
+      return '';
     }
+    return this.actions.map(item => item.name).join('，');
+  }
 
-    get empty () {
-        return this.instances.length < 1;
+  get key () {
+    if (this.actions.length < 1) {
+      return '';
     }
+    return this.actions.map(item => item.id).join('');
+  }
 
-    get value () {
-        if (this.empty) {
-            return il8n('verify', '请选择');
-        }
-        let str = '';
-        this.aggregateResourceType.forEach(item => {
-            if (this.instancesDisplayData[item.id] && this.instancesDisplayData[item.id].length === 1) {
-                str = `${str}，${item.name}： ${this.instancesDisplayData[item.id][0].name}`;
-            } else if (this.instancesDisplayData[item.id] && this.instancesDisplayData[item.id].length > 1) {
-                for (const key in this.instancesDisplayData) {
-                    if (item.id === key) {
-                        str = `${str}，已选择 ${this.instancesDisplayData[item.id].length} 个${item.name}`;
-                    }
-                }
-            }
-        });
-        return str.substring(1, str.length);
-    }
-
-    get name () {
-        if (this.actions.length < 1) {
-            return '';
-        }
-        return this.actions.map(item => item.name).join('，');
-    }
-
-    get key () {
-        if (this.actions.length < 1) {
-            return '';
-        }
-        return this.actions.map(item => item.id).join('');
-    }
-
-    // get resource_groups
+  // get resource_groups
 }

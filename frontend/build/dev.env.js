@@ -42,11 +42,11 @@ const NODE_ENV = JSON.stringify('development');
 const VERSION = process.env.VERSION;
 
 export default merge(prodEnv, {
-    staticUrl: '/static',
-    NODE_ENV: NODE_ENV,
-    LOCAL_DEV_URL: JSON.stringify('http://localhost'),
-    LOCAL_DEV_PORT: JSON.stringify('8001'),
-    AJAX_MOCK_PARAM: JSON.stringify('mock-file'),
-    USER_INFO_URL: JSON.stringify('user'),
-    VERSION: JSON.stringify(`${VERSION}`)
+  staticUrl: '/static',
+  NODE_ENV: NODE_ENV,
+  LOCAL_DEV_URL: JSON.stringify('http://localhost'),
+  LOCAL_DEV_PORT: JSON.stringify('8001'),
+  AJAX_MOCK_PARAM: JSON.stringify('mock-file'),
+  USER_INFO_URL: JSON.stringify('user'),
+  VERSION: JSON.stringify(`${VERSION}`)
 });

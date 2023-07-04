@@ -147,6 +147,9 @@ WHITENOISE_STATIC_PREFIX = "/staticfiles/"
 SESSION_COOKIE_NAME = "bkiam_sessionid"
 SESSION_COOKIE_AGE = 60 * 60 * 24  # 1天
 
+# bk_language domain
+BK_DOMAIN = env.str("BK_DOMAIN", default="")
+
 # cors
 CORS_ALLOW_CREDENTIALS = True  # 在 response 添加 Access-Control-Allow-Credentials, 即允许跨域使用 cookies
 
@@ -179,7 +182,7 @@ BROKER_HEARTBEAT = 60
 # CELERY 并发数，默认为 2，可以通过环境变量或者 Procfile 设置
 CELERYD_CONCURRENCY = env.int("BK_CELERYD_CONCURRENCY", default=2)
 # 与周期任务配置的定时相关UTC
-CELERY_ENABLE_UTC = True
+CELERY_ENABLE_UTC = False
 # 周期任务beat生产者来源
 CELERYBEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 # Celery队列名称
@@ -285,6 +288,14 @@ if ENABLE_INIT_GRADE_MANAGER:
         "schedule": crontab(minute="*/2"),  # 每2分钟执行一次
     }
 
+# 是否开启初始化BCS一级/二级管理员
+ENABLE_INIT_BCS_PROJECT_MANAGER = env.bool("BKAPP_ENABLE_INIT_BCS_PROJECT_MANAGER", default=False)
+if ENABLE_INIT_BCS_PROJECT_MANAGER:
+    CELERYBEAT_SCHEDULE["init_bcs_manager"] = {
+        "task": "backend.apps.role.tasks.InitBcsProjectManagerTask",
+        "schedule": crontab(minute="*/2"),  # 每2分钟执行一次
+    }
+
 # 环境变量中有rabbitmq时使用rabbitmq, 没有时使用BK_BROKER_URL
 # V3 Smart可能会配RABBITMQ_HOST或者BK_BROKER_URL
 # V2 Smart只有BK_BROKER_URL
@@ -360,7 +371,7 @@ SUBJECT_AUTHORIZATION_LIMIT = {
     "group_auth_system_once_limit": env.int("BKAPP_GROUP_AUTH_SYSTEM_ONCE_LIMIT", default=10),
     # -------- 分级管理员 ---------
     # 一个分级管理员可创建的用户组个数
-    "grade_manager_group_limit": env.int("BKAPP_GRADE_MANAGER_GROUP_LIMIT", default=100),
+    "grade_manager_group_limit": env.int("BKAPP_GRADE_MANAGER_GROUP_LIMIT", default=10000),
     # 一个分级管理员可添加的成员个数
     "grade_manager_member_limit": env.int("BKAPP_GRADE_MANAGER_MEMBER_LIMIT", default=100),
     # 默认每个系统可创建的分级管理数量
@@ -390,6 +401,7 @@ ENABLE_FRONT_END_FEATURES = {
     "enable_model_build": env.bool("BKAPP_ENABLE_FRONT_END_MODEL_BUILD", default=False),
     "enable_permission_handover": env.bool("BKAPP_ENABLE_FRONT_END_PERMISSION_HANDOVER", default=True),
     "enable_temporary_policy": env.bool("BKAPP_ENABLE_FRONT_END_TEMPORARY_POLICY", default=False),
+    "enable_group_instance_search": env.bool("BKAPP_ENABLE_FRONT_END_GROUP_INSTANCE_SEARCH", default=False),
 }
 
 # Open API接入APIGW后，需要对APIGW请求来源认证，使用公钥解开jwt
@@ -432,3 +444,7 @@ BK_IAM_MIGRATION_JSON_PATH = "resources/iam/"
 
 # IAM metric 接口密码
 BK_IAM_METRIC_TOKEN = env.str("BK_IAM_METRIC_TOKEN", default="")
+
+
+# BCS初始化ROLE网关api配置
+BK_BCS_APIGW_URL = env.str("BK_BCS_APIGW_URL", default="")

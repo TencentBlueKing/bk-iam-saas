@@ -30,94 +30,94 @@ import Attribute from './attribute';
 
 const isCn = language === 'zh-cn';
 export default class Condition {
-    // flag = '' 为默认拉取，flag = 'add' 为新添加的
-    // type 为 init 时初始化
-    // instanceCanDelete: 实例是否可删除
-    // attributeCanDelete: 属性是否可删除
-    // instanceNotDisabled: instance 不允许 disabled
-    constructor (
-        payload, type = '', flag = '', instanceCanDelete = true, attributeCanDelete = true, instanceNotDisabled = false
-    ) {
-        this.instanceExpanded = false;
-        this.instanceLoading = false;
-        this.attributeExpanded = false;
-        this.attributeLoading = false;
-        this.isHovering = false;
-        this.isInstanceEmpty = false;
-        this.isAttributeEmpty = false;
-        this.id = payload.id || '';
-        this.flag = flag;
-        this.selectionMode = payload.selection_mode || 'all';
-        if (this.selectionMode === 'all') {
-            this.initIntance(payload, type, this.flag, instanceCanDelete, instanceNotDisabled);
-            this.initAttribute(payload, type, this.flag, attributeCanDelete);
-        } else if (this.selectionMode === 'instance') {
-            this.initIntance(payload, type, this.flag, false, instanceNotDisabled);
-            this.instanceCanDelete = flag !== '';
-        } else {
-            this.initAttribute(payload, type, this.flag);
-            this.attributeCanDelete = flag !== '';
-        }
+  // flag = '' 为默认拉取，flag = 'add' 为新添加的
+  // type 为 init 时初始化
+  // instanceCanDelete: 实例是否可删除
+  // attributeCanDelete: 属性是否可删除
+  // instanceNotDisabled: instance 不允许 disabled
+  constructor (
+    payload, type = '', flag = '', instanceCanDelete = true, attributeCanDelete = true, instanceNotDisabled = false
+  ) {
+    this.instanceExpanded = false;
+    this.instanceLoading = false;
+    this.attributeExpanded = false;
+    this.attributeLoading = false;
+    this.isHovering = false;
+    this.isInstanceEmpty = false;
+    this.isAttributeEmpty = false;
+    this.id = payload.id || '';
+    this.flag = flag;
+    this.selectionMode = payload.selection_mode || 'all';
+    if (this.selectionMode === 'all') {
+      this.initIntance(payload, type, this.flag, instanceCanDelete, instanceNotDisabled);
+      this.initAttribute(payload, type, this.flag, attributeCanDelete);
+    } else if (this.selectionMode === 'instance') {
+      this.initIntance(payload, type, this.flag, false, instanceNotDisabled);
+      this.instanceCanDelete = flag !== '';
+    } else {
+      this.initAttribute(payload, type, this.flag);
+      this.attributeCanDelete = flag !== '';
     }
-    initIntance (payload, type, flag, instanceCanDelete, instanceNotDisabled) {
-        if (type === 'init') {
-            this.instance = [];
-            this.instanceCanDelete = instanceCanDelete;
-            return;
-        }
-        if (payload.instances && payload.instances.length > 0) {
-            this.instance = payload.instances.map(item => new Instance(item, flag, instanceNotDisabled));
-            this.instanceCanDelete = flag !== '';
-        }
+  }
+  initIntance (payload, type, flag, instanceCanDelete, instanceNotDisabled) {
+    if (type === 'init') {
+      this.instance = [];
+      this.instanceCanDelete = instanceCanDelete;
+      return;
     }
-    initAttribute (payload, type, flag, attributeCanDelete) {
-        if (type === 'init') {
-            this.attribute = [];
-            this.attributeCanDelete = attributeCanDelete;
-            return;
-        }
-        if (payload.attributes && payload.attributes.length > 0) {
-            this.attribute = payload.attributes.map(item => new Attribute(item, flag));
-            this.attributeCanDelete = flag !== '';
-        }
+    if (payload.instances && payload.instances.length > 0) {
+      this.instance = payload.instances.map(item => new Instance(item, flag, instanceNotDisabled));
+      this.instanceCanDelete = flag !== '';
     }
-    get instanceTitle () {
-        if (this.isInstanceEmpty) {
-            return `<span style="color: #ff4d4d;">${il8n('verify', '请选择拓扑实例')}</span>`;
-        }
-        if (this.instance && this.instance.length > 0) {
-            const strList = [];
-            this.instance.forEach(item => {
-                if (item.displayPath.length > 0) {
-                    const str = isCn
-                        ? ` ${item.displayPath.length} 个${item.name}`
-                        : ` ${item.displayPath.length} ${item.name}(s)`;
-                    strList.push(str);
-                }
-            });
-            if (strList.length > 0) {
-                return `${il8n('common', '已选择')} ${strList.join('、')}`;
-            }
-            return il8n('resource', '未选择任何拓扑实例');
-        }
-        return il8n('resource', '未选择任何拓扑实例');
+  }
+  initAttribute (payload, type, flag, attributeCanDelete) {
+    if (type === 'init') {
+      this.attribute = [];
+      this.attributeCanDelete = attributeCanDelete;
+      return;
     }
-    get attributeTitle () {
-        if (this.isAttributeEmpty) {
-            return `<span style="color: #ff4d4d;">${il8n('verify', '请设置属性条件')}</span>`;
-        }
-        if (this.attribute && this.attribute.length > 0) {
-            let len = 0;
-            this.attribute.forEach(item => {
-                if (item.id && item.values.some(val => val.id)) {
-                    ++len;
-                }
-            });
-            if (len > 0) {
-                return `${il8n('resource', '已设置')} ${len} ${il8n('resource', '个属性条件')}`;
-            }
-            return il8n('verify', '未设置任何条件');
-        }
-        return il8n('verify', '未设置任何条件');
+    if (payload.attributes && payload.attributes.length > 0) {
+      this.attribute = payload.attributes.map(item => new Attribute(item, flag));
+      this.attributeCanDelete = flag !== '';
     }
+  }
+  get instanceTitle () {
+    if (this.isInstanceEmpty) {
+      return `<span style="color: #ff4d4d;">${il8n('verify', '请选择拓扑实例')}</span>`;
+    }
+    if (this.instance && this.instance.length > 0) {
+      const strList = [];
+      this.instance.forEach(item => {
+        if (item.displayPath.length > 0) {
+          const str = isCn
+            ? ` ${item.displayPath.length} 个${item.name}`
+            : ` ${item.displayPath.length} ${item.name}(s)`;
+          strList.push(str);
+        }
+      });
+      if (strList.length > 0) {
+        return `${il8n('common', '已选择')} ${strList.join('、')}`;
+      }
+      return il8n('resource', '未选择任何拓扑实例');
+    }
+    return il8n('resource', '未选择任何拓扑实例');
+  }
+  get attributeTitle () {
+    if (this.isAttributeEmpty) {
+      return `<span style="color: #ff4d4d;">${il8n('verify', '请设置属性条件')}</span>`;
+    }
+    if (this.attribute && this.attribute.length > 0) {
+      let len = 0;
+      this.attribute.forEach(item => {
+        if (item.id && item.values.some(val => val.id)) {
+          ++len;
+        }
+      });
+      if (len > 0) {
+        return `${il8n('resource', '已设置')} ${len} ${il8n('resource', '个属性条件')}`;
+      }
+      return il8n('verify', '未设置任何条件');
+    }
+    return il8n('verify', '未设置任何条件');
+  }
 }

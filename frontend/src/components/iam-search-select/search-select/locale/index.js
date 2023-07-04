@@ -23,33 +23,30 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
 */
-
-import Cookie from 'js-cookie';
 import enUS from './en-US';
 import zhCN from './zh-CN';
-
-const BLUEKINNG_LANGUAGE = 'blueking_language';
+import { formatI18nKey } from '@/common/util';
 
 const languageMap = {
-    'zh-CN': zhCN,
-    'en-US': enUS
+  'zh-CN': zhCN,
+  'en-US': enUS
 };
 let localeLanguage = 'zh-CN';
-const bluekingLanguage = Cookie.get(BLUEKINNG_LANGUAGE);
+const bluekingLanguage = formatI18nKey();
 if (bluekingLanguage && bluekingLanguage.toLowerCase() === 'en') {
-    localeLanguage = 'en-US';
+  localeLanguage = 'en-US';
 }
 
 const languagePackage = languageMap[localeLanguage];
 
 export default {
-    t: (key) => {
-        const keys = key.split('.');
-        let i = -1;
-        let value = languagePackage;
-        while (++i < keys.length) {
-            value = value[keys[i]];
-        }
-        return value;
+  t: (key) => {
+    const keys = key.split('.');
+    let i = -1;
+    let value = languagePackage;
+    while (++i < keys.length) {
+      value = value[keys[i]];
     }
+    return value;
+  }
 };

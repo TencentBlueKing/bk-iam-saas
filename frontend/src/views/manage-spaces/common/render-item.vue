@@ -1,53 +1,53 @@
 <template>
-    <div :class="['iam-render-perm', extCls]">
-        <div class="header">
-            <label class="title" v-if="hasTitle">{{ title }}</label>
-            <div :class="['sub-title', { 'set-margin-left': hasTitle }]">{{ subTitle }}</div>
-        </div>
-        <div class="content" v-if="isExpanded">
-            <div class="slot-content">
-                <slot />
-            </div>
-        </div>
+  <div :class="['iam-render-perm', extCls]">
+    <div class="header">
+      <label class="title" v-if="hasTitle">{{ title }}</label>
+      <div :class="['sub-title', { 'set-margin-left': hasTitle }]">{{ subTitle }}</div>
     </div>
+    <div class="content" v-if="isExpanded">
+      <div class="slot-content">
+        <slot />
+      </div>
+    </div>
+  </div>
 </template>
 <script>
-    export default {
-        name: '',
-        props: {
-            expanded: {
-                type: Boolean,
-                default: false
-            },
-            title: {
-                type: String,
-                default: ''
-            },
-            subTitle: {
-                type: String,
-                default: ''
-            },
-            extCls: {
-                type: String,
-                default: ''
-            }
-        },
-        data () {
-            return {
-                isExpanded: this.expanded
-            };
-        },
-        computed: {
-            hasTitle () {
-                return this.title !== '';
-            }
-        },
-        watch: {
-            expanded (value) {
-                this.isExpanded = !!value;
-            }
-        }
-    };
+  export default {
+    name: '',
+    props: {
+      expanded: {
+        type: Boolean,
+        default: false
+      },
+      title: {
+        type: String,
+        default: ''
+      },
+      subTitle: {
+        type: String,
+        default: ''
+      },
+      extCls: {
+        type: String,
+        default: ''
+      }
+    },
+    data () {
+      return {
+        isExpanded: this.expanded
+      };
+    },
+    computed: {
+      hasTitle () {
+        return this.title !== '';
+      }
+    },
+    watch: {
+      expanded (value) {
+        this.isExpanded = !!value;
+      }
+    }
+  };
 </script>
 <style lang="postcss" scoped>
     .iam-render-perm {

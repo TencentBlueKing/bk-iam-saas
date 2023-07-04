@@ -41,7 +41,7 @@ class QueryAuthorizedSubjects(object):
         self.permission_type = data["permission_type"]
         self.limit = data["limit"]
 
-    def _query_by_permission_type(self):
+    def query_by_permission_type(self):
         """
         查询资源的权限成员
         @return subjects: [{
@@ -52,7 +52,7 @@ class QueryAuthorizedSubjects(object):
         """
         # 系统+操作+资源实例
         if self.permission_type == PermissionTypeEnum.RESOURCE_INSTANCE.value:
-            return self._query_by_resource_instance()
+            return self.query_by_resource_instance()
         # 系统+操作+模板权限
         if self.permission_type == PermissionTypeEnum.TEMPLATE.value:
             return self._query_subjects_by_template()
@@ -93,7 +93,7 @@ class QueryAuthorizedSubjects(object):
             for subject_info in subject_info_list
         ]
 
-    def _query_by_resource_instance(self):
+    def query_by_resource_instance(self, subject_type: str = "all"):
         """
         根据系统和操作和资源实例查询有权限的成员
         """
@@ -118,7 +118,7 @@ class QueryAuthorizedSubjects(object):
         # 调用Engine后台API搜索
         query_data = {
             "system": self.system_id,
-            "subject_type": "all",
+            "subject_type": subject_type,
             "action": {"id": self.action_id},
             "resource": resources,
             "limit": self.limit,
@@ -145,7 +145,7 @@ class QueryAuthorizedSubjects(object):
         """
         system_name = SystemService().get(self.system_id).name
         action_name = ActionService().get(self.system_id, self.action_id).name
-        subjects = self._query_by_permission_type()
+        subjects = self.query_by_permission_type()
         export_data = [["系统名", "系统ID", "操作名", "操作ID", "资源实例", "有权限成员", "成员ID", "成员类型"]]
 
         resource_instance_info = (

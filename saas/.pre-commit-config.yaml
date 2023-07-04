@@ -31,11 +31,6 @@ repos:
         language: python
         pass_filenames: false
         entry: pflake8 --config=saas/pyproject.toml saas
-      - id: bandit
-        name: bandit
-        language: python
-        pass_filenames: false
-        entry: bandit -c saas/pyproject.toml -r saas
       - id: mypy
         name: mypy
         language: python

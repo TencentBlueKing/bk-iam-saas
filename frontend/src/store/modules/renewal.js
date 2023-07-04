@@ -30,11 +30,11 @@ import { json2Query } from '@/common/util';
 const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
 
 export default {
-    namespaced: true,
-    state: {},
-    mutations: {},
-    actions: {
-        /**
+  namespaced: true,
+  state: {},
+  mutations: {},
+  actions: {
+    /**
          * 用户组权限续期
          *
          * @param {Function} commit store commit mutation handler
@@ -45,11 +45,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        groupPermRenewal ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/applications/group_renew/`, params, config);
-        },
+    groupPermRenewal ({ commit, state, dispatch }, params, config) {
+      return http.post(`${AJAX_URL_PREFIX}/applications/group_renew/`, params, config);
+    },
 
-        /**
+    /**
          * 自定义权限续期
          *
          * @param {Function} commit store commit mutation handler
@@ -60,11 +60,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        customPermRenewal ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/applications/policy_renew/`, params, config);
-        },
+    customPermRenewal ({ commit, state, dispatch }, params, config) {
+      return http.post(`${AJAX_URL_PREFIX}/applications/policy_renew/`, params, config);
+    },
 
-        /**
+    /**
          * 获取即将过期的自定义权限
          *
          * @param {Function} commit store commit mutation handler
@@ -74,11 +74,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getExpireSoonPerm ({ commit, state, dispatch }, config) {
-            return http.get(`${AJAX_URL_PREFIX}/policies/expire_soon/`, config);
-        },
+    getExpireSoonPerm ({ commit, state, dispatch }, config) {
+      return http.get(`${AJAX_URL_PREFIX}/policies/expire_soon/`, config);
+    },
 
-        /**
+    /**
          * 登录用户即将过期的用户组
          *
          * @param {Function} commit store commit mutation handler
@@ -88,11 +88,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getExpireSoonGroupWithUser ({ commit, state, dispatch }, params = {}, config) {
-            return http.get(`${AJAX_URL_PREFIX}/users/groups_expire_soon/?${json2Query(params)}`, config);
-        },
+    getExpireSoonGroupWithUser ({ commit, state, dispatch }, params = {}, config) {
+      return http.get(`${AJAX_URL_PREFIX}/users/groups_expire_soon/?${json2Query(params)}`, config);
+    },
 
-        /**
+    /**
          * 用户组的成员续期
          *
          * @param {Function} commit store commit mutation handler
@@ -103,14 +103,14 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        groupMemberPermRenewal ({ commit, state, dispatch }, params, config) {
-            const requestParams = Object.assign({}, params);
-            const groupId = requestParams.groupId;
-            delete requestParams.groupId;
-            return http.post(`${AJAX_URL_PREFIX}/groups/${groupId}/members_renew/`, requestParams, config);
-        },
+    groupMemberPermRenewal ({ commit, state, dispatch }, params, config) {
+      const requestParams = Object.assign({}, params);
+      const groupId = requestParams.groupId;
+      delete requestParams.groupId;
+      return http.post(`${AJAX_URL_PREFIX}/groups/${groupId}/members_renew/`, requestParams, config);
+    },
 
-        /**
+    /**
          * 获取角色即将过期的用户组成员
          *
          * @param {Function} commit store commit mutation handler
@@ -121,11 +121,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getExpireSoonGroup ({ commit, state, dispatch }, params, config) {
-            return http.get(`${AJAX_URL_PREFIX}/roles/group_members_renew/?${json2Query(params)}`, config);
-        },
+    getExpireSoonGroup ({ commit, state, dispatch }, params, config) {
+      return http.get(`${AJAX_URL_PREFIX}/roles/group_members_renew/?${json2Query(params)}`, config);
+    },
 
-        /**
+    /**
          * 角色即将过期的用户组成员权限续期
          *
          * @param {Function} commit store commit mutation handler
@@ -136,11 +136,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        roleGroupsRenewal ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/roles/groups_renew/`, params, config);
-        },
+    roleGroupsRenewal ({ commit, state, dispatch }, params, config) {
+      return http.post(`${AJAX_URL_PREFIX}/roles/groups_renew/`, params, config);
+    },
 
-        /**
+    /**
          * 查询角色即将过期的用户组
          *
          * @param {Function} commit store commit mutation handler
@@ -151,11 +151,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getExpiredGroups ({ commit, state, dispatch }, params, config) {
-            return http.get(`${AJAX_URL_PREFIX}/roles/groups_renew/?${json2Query(params)}`, config);
-        },
+    getExpiredGroups ({ commit, state, dispatch }, params, config) {
+      return http.get(`${AJAX_URL_PREFIX}/roles/groups_renew/?${json2Query(params)}`, config);
+    },
 
-        /**
+    /**
          * 获取用户组即将过期成员列表
          *
          * @param {Function} commit store commit mutation handler
@@ -166,13 +166,13 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getExpireSoonGroupMembers ({ commit, state, dispatch }, params, config) {
-            const requestParams = Object.assign({}, params);
-            delete requestParams.id;
-            return http.get(
-                `${AJAX_URL_PREFIX}/roles/groups_renew/${params.id}/members/?${json2Query(requestParams)}`,
-                config
-            );
-        }
+    getExpireSoonGroupMembers ({ commit, state, dispatch }, params, config) {
+      const requestParams = Object.assign({}, params);
+      delete requestParams.id;
+      return http.get(
+        `${AJAX_URL_PREFIX}/roles/groups_renew/${params.id}/members/?${json2Query(requestParams)}`,
+        config
+      );
     }
+  }
 };

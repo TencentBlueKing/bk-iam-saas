@@ -117,7 +117,7 @@ class RoleMember(serializers.Serializer):
 
 
 class GradeMangerBaseInfoSLZ(serializers.Serializer):
-    name = serializers.CharField(label="分级管理员名称", max_length=128)
+    name = serializers.CharField(label="分级管理员名称", max_length=512)
     description = serializers.CharField(label="描述", allow_blank=True)
     members = serializers.ListField(
         label="成员列表",

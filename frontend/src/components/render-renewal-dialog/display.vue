@@ -1,44 +1,44 @@
 <template>
-    <div class="iam-expire-time-wrapper" :style="{ lineHeight: `${lineHeight}` }">
-        <span :class="['cur-text', status]">{{ curDisplay }}</span>
-        <template v-if="ischeck">
-            <Icon type="arrows-left" :style="{ lineHeight: `${lineHeight}` }" />
-            <span class="after-renewal-text">{{ afterRenewalDisplay }}</span>
-        </template>
-    </div>
+  <div class="iam-expire-time-wrapper" :style="{ lineHeight: `${lineHeight}` }">
+    <span :class="['cur-text', status]">{{ curDisplay }}</span>
+    <template v-if="ischeck">
+      <Icon type="arrows-left" :style="{ lineHeight: `${lineHeight}` }" />
+      <span class="after-renewal-text">{{ afterRenewalDisplay }}</span>
+    </template>
+  </div>
 </template>
 <script>
-    import { mapGetters } from 'vuex';
-    import { PERMANENT_TIMESTAMP } from '@/common/constants';
-    // 过期时间的天数区间
-    const EXPIRED_DISTRICT = 15;
-    export default {
-        name: '',
-        props: {
-            // 续期时间戳: 默认6个月的
-            renewalTime: {
-                type: Number,
-                default: 15552000
-            },
-            curTime: {
-                type: Number,
-                default: 0
-            },
-            selected: {
-                type: Boolean,
-                default: false
-            },
-            lineHeight: {
-                type: String,
-                default: '32px'
-            }
-        },
-        data () {
-            return {
-                ischeck: true
-            };
-        },
-        computed: {
+  import { mapGetters } from 'vuex';
+  import { PERMANENT_TIMESTAMP } from '@/common/constants';
+  // 过期时间的天数区间
+  const EXPIRED_DISTRICT = 15;
+  export default {
+    name: '',
+    props: {
+      // 续期时间戳: 默认6个月的
+      renewalTime: {
+        type: Number,
+        default: 15552000
+      },
+      curTime: {
+        type: Number,
+        default: 0
+      },
+      selected: {
+        type: Boolean,
+        default: false
+      },
+      lineHeight: {
+        type: String,
+        default: '32px'
+      }
+    },
+    data () {
+      return {
+        ischeck: true
+      };
+    },
+    computed: {
             ...mapGetters(['user']),
             curRestDays () {
                 const dif = this.curTime - this.user.timestamp;
@@ -72,8 +72,8 @@
                 }
                 return `${days + this.curRestDays}${this.$t(`m.common['天']`)}`;
             }
-        }
-    };
+    }
+  };
 </script>
 <style lang="postcss" scoped>
     .iam-expire-time-wrapper {

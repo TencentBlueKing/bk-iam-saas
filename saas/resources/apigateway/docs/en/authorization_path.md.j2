@@ -20,6 +20,7 @@ Authorization and reclamation interface for individual resource topologies, indi
 | action | string | yes | operation |
 | subject | string | yes | authorization object |
 | resources | array[object] | yes | resource topology, the order of resource types must be the same as when the action was registered |
+| expired_at | int | no | body | Expiration timestamp (in seconds), i.e. the user will not have the relevant permissions after expired_at, where a value of 4102444800 means permanent |
 
 action
 
@@ -80,7 +81,8 @@ resources.path
         }
       ]
     }
-  ]
+  ],
+  "expired_at: 1704042061
 }
 ```
 

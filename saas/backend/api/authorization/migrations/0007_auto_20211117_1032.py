@@ -3,8 +3,8 @@
 from django.db import migrations
 
 from backend.api.authorization.constants import (
+    ALLOW_LIST_OBJECT_OPERATION_STEP,
     AllowListMatchOperationEnum,
-    AllowListObjectOperationSep,
     AuthorizationAPIEnum,
 )
 
@@ -18,9 +18,9 @@ def add_allow_list(apps, schema_editor):
     # 实例授权API 白名单
     system_actions = {
         "bk_cmdb": [
-            "".join([AllowListMatchOperationEnum.STARTS_WITH.value, AllowListObjectOperationSep, "create_comobj"]),
-            "".join([AllowListMatchOperationEnum.STARTS_WITH.value, AllowListObjectOperationSep, "edit_comobj"]),
-            "".join([AllowListMatchOperationEnum.STARTS_WITH.value, AllowListObjectOperationSep, "delete_comobj"]),
+            "".join([AllowListMatchOperationEnum.STARTS_WITH.value, ALLOW_LIST_OBJECT_OPERATION_STEP, "create_comobj"]),
+            "".join([AllowListMatchOperationEnum.STARTS_WITH.value, ALLOW_LIST_OBJECT_OPERATION_STEP, "edit_comobj"]),
+            "".join([AllowListMatchOperationEnum.STARTS_WITH.value, ALLOW_LIST_OBJECT_OPERATION_STEP, "delete_comobj"]),
         ],
     }
     auth_api_allow_list_config = []

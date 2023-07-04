@@ -1,39 +1,39 @@
 <template>
-    <div :class="['bk-spin-loading', `bk-spin-loading-${size}`, `bk-spin-loading-${theme}`, extCls]">
-        <div class="rotate rotate1"></div>
-        <div class="rotate rotate2"></div>
-        <div class="rotate rotate3"></div>
-        <div class="rotate rotate4"></div>
-        <div class="rotate rotate5"></div>
-        <div class="rotate rotate6"></div>
-        <div class="rotate rotate7"></div>
-        <div class="rotate rotate8"></div>
-    </div>
+  <div :class="['bk-spin-loading', `bk-spin-loading-${size}`, `bk-spin-loading-${theme}`, extCls]">
+    <div class="rotate rotate1"></div>
+    <div class="rotate rotate2"></div>
+    <div class="rotate rotate3"></div>
+    <div class="rotate rotate4"></div>
+    <div class="rotate rotate5"></div>
+    <div class="rotate rotate6"></div>
+    <div class="rotate rotate7"></div>
+    <div class="rotate rotate8"></div>
+  </div>
 </template>
 <script>
-    export default {
-        name: '',
-        props: {
-            size: {
-                type: String,
-                default: 'mini',
-                validator: function (value) {
-                    return ['large', 'small', 'mini'].includes(value);
-                }
-            },
-            theme: {
-                type: String,
-                default: 'primary',
-                validator: function (value) {
-                    return ['primary', 'danger', 'success', 'white', 'warning'].includes(value);
-                }
-            },
-            extCls: {
-                type: String,
-                default: ''
-            }
+  export default {
+    name: '',
+    props: {
+      size: {
+        type: String,
+        default: 'mini',
+        validator: function (value) {
+          return ['large', 'small', 'mini'].includes(value);
         }
-    };
+      },
+      theme: {
+        type: String,
+        default: 'primary',
+        validator: function (value) {
+          return ['primary', 'danger', 'success', 'white', 'warning'].includes(value);
+        }
+      },
+      extCls: {
+        type: String,
+        default: ''
+      }
+    }
+  };
 </script>
 <style lang="postcss">
     .bk-spin-loading {

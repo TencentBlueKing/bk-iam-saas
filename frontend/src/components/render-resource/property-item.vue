@@ -1,14 +1,14 @@
 <template functional>
-    <div class="iam-property-content">
-        <div
-            v-for="(item, index) in props.data" :key="index"
-            :class="['iam-property-item', { 'set-margin-bottom': index !== props.data.length - 1 }]">
-            <label class="iam-property-label">{{ item.name + '：' || '--' }}</label>
-            <div class="iam-property-value" :title="item.values.map(val => val.name).join('，')">
-                {{ item.values.map(val => val.name).join('，') || '--' }}
-            </div>
-        </div>
+  <div class="iam-property-content">
+    <div
+      v-for="(item, index) in props.data" :key="index"
+      :class="['iam-property-item', { 'set-margin-bottom': index !== props.data.length - 1 }]">
+      <label class="iam-property-label">{{ item.name + '：' || '--' }}</label>
+      <div class="iam-property-value" :title="item.values.map(val => val.name).join('，')">
+        {{ item.values.map(val => val.name).join('，') || '--' }}
+      </div>
     </div>
+  </div>
 </template>
 <style lang="postcss" scoped>
     .iam-property-content {
