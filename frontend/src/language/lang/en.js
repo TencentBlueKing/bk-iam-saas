@@ -34,6 +34,7 @@ export const m = {
         '取消全选': 'Deselect All',
         '理由': 'Reason',
         '操作': 'Action name',
+        '操作-table': 'Action',
         '申请期限': 'Expiration date',
         '无需关联实例': 'No need to associate instance',
         '无生效条件': 'No effective condition',
@@ -794,7 +795,10 @@ export const m = {
         '用户组名': 'Group name: ',
         '描述': 'Description: ',
         'ID': 'ID: ',
-        '创建时间': 'Created at: '
+        '创建时间': 'Created at: ',
+        '查看实例权限': 'View instance permissions',
+        '删除操作权限': 'Delete Action permissions',
+        '暂无关联实例': 'No associated instance'
     },
     resource: {
         '无限制总文案': 'If the action does not require restricted instances, select unlimited',

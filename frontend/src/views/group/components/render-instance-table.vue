@@ -51,15 +51,17 @@
             <template v-else>
               {{ $t(`m.common['无需关联实例']`) }}
             </template>
-            <Icon
+            <!-- 注释hover出现删除、详情按钮 -->
+            <!-- <Icon
               type="detail-new"
               class="view-icon"
               :title="$t(`m.common['详情']`)"
               v-if="isShowView(row)"
               @click.stop="handleViewResource(row)" />
+
             <template v-if="!isUserGroupDetail ? false : true && row.showDelete && !externalDelete">
               <Icon class="remove-icon" type="close-small" @click.stop="handleShowDelDialog(row)" />
-            </template>
+            </template> -->
           </template>
           <template v-else>
             <div class="relation-content-wrapper" v-if="!!row.isAggregate">
@@ -137,6 +139,34 @@
           </template>
         </template>
       </bk-table-column>
+      <template v-if="isCustomActionButton">
+        <bk-table-column
+          :resizable="true"
+          :label="$t(`m.common['操作-table']`)"
+          :width="curLanguageIsCn ? 200 : 400"
+        >
+          <template slot-scope="{ row }">
+            <bk-button
+              type="primary"
+              text
+              :disabled="row.isEmpty"
+              :title="row.isEmpty ? $t(`m.userGroupDetail['暂无关联实例']`) : ''"
+              @click.stop="handleViewResource(row)"
+            >
+              {{ $t(`m.userGroupDetail['查看实例权限']`) }}
+            </bk-button>
+            <bk-button
+              v-if="!isUserGroupDetail ? false : true && isShowDeleteAction"
+              type="primary"
+              text
+              style="margin-left: 10px;"
+              @click.stop="handleShowDelDialog(row)"
+            >
+              {{ $t(`m.userGroupDetail['删除操作权限']`) }}
+            </bk-button>
+          </template>
+        </bk-table-column>
+      </template>
       <template slot="empty">
         <ExceptionEmpty />
       </template>
@@ -320,6 +350,11 @@
       linearActionList: {
         type: Array,
         default: () => []
+      },
+      // 单独处理需要自定义操作按钮的页面
+      isCustomActionButton: {
+        type: Boolean,
+        default: false
       }
     },
     data () {
@@ -461,6 +496,9 @@
           }
           const curSelectionCondition = this.tableList[this.curIndex].conditionIds;
           return curSelectionCondition;
+      },
+      isShowDeleteAction () {
+        return ['detail'].includes(this.mode) && this.isCustom && this.type !== 'view';
       }
     },
     watch: {

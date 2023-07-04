@@ -68,8 +68,9 @@
                   :group-id="groupId"
                   :template-id="subItem.id"
                   :is-edit="subItem.isEdit"
-                  :external-delete="!!groupAttributes.source_type"
+                  :external-delete="formatOperate"
                   :linear-action-list="linearActionList"
+                  :is-custom-action-button="true"
                   @on-delete="handleSingleDelete(...arguments, item)" />
               </div>
             </render-template-item>
