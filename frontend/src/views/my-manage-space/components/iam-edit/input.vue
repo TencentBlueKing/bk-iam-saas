@@ -166,7 +166,8 @@
       },
       triggerChange () {
         this.isEditable = false;
-        if (!this.newVal) {
+        const reg = new RegExp('^[ ]+$');
+        if (!this.newVal || reg.test(this.newVal)) {
           this.newVal = this.value;
           this.messageError(this.$t(`m.verify['管理空间名称不能为空']`));
           return;
