@@ -34,7 +34,7 @@ export const m = {
         '取消全选': 'Deselect All',
         '理由': 'Reason',
         '操作': 'Action name',
-        '操作-table': 'Action',
+        '操作-table': 'Actions',
         '申请期限': 'Expiration date',
         '无需关联实例': 'No need to associate instance',
         '无生效条件': 'No effective condition',
@@ -520,7 +520,8 @@ export const m = {
         '确认删除内容？': 'Are you sure to delete {value}?',
         '删除操作权限': 'the operation permission',
         '删除实例权限': 'instance permission',
-        '删除一组实例权限': 'a set of instance permissions'
+        '删除一组实例权限': 'a set of instance permissions',
+        '确定要删除系统下的所有操作权限？': 'Confirm to delete all action permissions under the {value} system?'
     },
     nav: {
         '蓝鲸权限中心': 'BlueKing-IAM',
@@ -797,7 +798,7 @@ export const m = {
         'ID': 'ID: ',
         '创建时间': 'Created at: ',
         '查看实例权限': 'View instance permissions',
-        '删除操作权限': 'Delete Action permissions',
+        '删除操作权限': 'Delete action permissions',
         '暂无关联实例': 'No associated instance'
     },
     resource: {

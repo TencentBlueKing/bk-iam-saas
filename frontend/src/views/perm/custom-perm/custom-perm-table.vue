@@ -81,9 +81,19 @@
         </template>
       </bk-table-column>
       <bk-table-column prop="expired_dis" min-width="100" :label="$t(`m.common['有效期']`)"></bk-table-column>
-      <bk-table-column :label="$t(`m.common['操作']`)">
+      <bk-table-column
+        :label="$t(`m.common['操作-table']`)"
+        :width="200"
+      >
         <template slot-scope="{ row }">
-          <bk-button text @click="handleShowDelDialog(row)">{{ $t(`m.common['删除']`) }}</bk-button>
+          <div class="custom-actions-item">
+            <bk-button
+              type="primary"
+              text
+              @click="handleShowDelDialog(row)">
+              {{ $t(`m.userGroupDetail['删除操作权限']`) }}
+            </bk-button>
+          </div>
         </template>
       </bk-table-column>
       <template slot="empty">
