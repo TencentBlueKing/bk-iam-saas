@@ -502,7 +502,8 @@ export const m = {
          '已选数量': '{value} selected',
          'tab操作实例': '{value} Instance',
          '解除与权限模板名称的关联，当前用户将不再继承该模板权限。': 'Disassociate from the permission template {value}, and the current user will no longer inherit the template permissions.',
-         '用户组成员添加权限': 'Add permissions to user group {value}'
+         '用户组成员添加权限': 'Add permissions to user group {value}',
+         '天数': '{value} days'
     },
     // 二次确认弹窗相关
     dialog: {
@@ -711,7 +712,9 @@ export const m = {
         '临时权限申请': 'Apply for temporary permissions',
         '一组实例权限': ' A Set of Instance Permissions',
         '不能删除当前操作': 'Unable to delete current permission',
-        '个操作关联了': ' related actions have been completed '
+        '个操作关联了': ' related actions have been completed ',
+        '查看实例资源权限组': 'View instance resource permission groups',
+        '删除实例资源权限组': 'Delete instance resource permission groups'
     },
     permTemplate: {
         '模板名': 'Template name',
