@@ -650,7 +650,7 @@
     data () {
       return {
         userApi: window.BK_USER_API,
-        systemValue: 'bk_cmdb',
+        systemValue: '',
         systemList: [],
         buttonLoading: false,
         originalCustomTmplList: [],
@@ -750,7 +750,6 @@
             return isDisabled;
         },
         isUnlimitedDisabled () {
-          console.log(this.tableData, 555);
           return this.tableData.length < 1;
         },
         curSelectActions () {
@@ -772,7 +771,6 @@
                 }
             });
             this.getFilterAggregateAction();
-            console.log(this.tableData, 1545);
             return allActionIds;
         }
     },
@@ -1633,7 +1631,6 @@
       },
 
       handleRelatedChange (payload) {
-        console.log(payload, 4555);
         this.aggregationsTableData = _.cloneDeep(payload);
       },
 
