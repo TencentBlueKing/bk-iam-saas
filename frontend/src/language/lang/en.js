@@ -804,7 +804,8 @@ export const m = {
         '查看实例权限': 'View instance permissions',
         '删除操作权限': 'Delete action permissions',
         '暂无关联实例': 'No associated instance',
-        '所属组织架构': 'Organizational structure'
+        '所属组织架构': 'Organizational structure',
+        '请输入至少3个字符的用户/组织，按enter键搜索': 'Please enter user/organization with at least 3 characters and press enter to search'
     },
     resource: {
         '无限制总文案': 'If the action does not require restricted instances, select unlimited',

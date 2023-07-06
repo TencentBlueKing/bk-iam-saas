@@ -1,13 +1,25 @@
 <template>
   <div class="iam-user-group-member">
     <render-search>
-      <bk-button :disabled="readOnly" @click="handleAddMember">{{ $t(`m.userGroup['添加成员']`) }}</bk-button>
-      <bk-button
-        :disabled="isNoBatchDelete()"
-        :title="adminGroupTitle"
-        @click="handleBatchDelete">
-        {{ $t(`m.common['批量移除']`) }}
-      </bk-button>
+      <div class="flex-between group-member-button">
+        <bk-button :disabled="readOnly" @click="handleAddMember">
+          {{ $t(`m.userGroup['添加成员']`) }}
+        </bk-button>
+        <bk-button
+          :disabled="isNoBatchDelete()"
+          :title="adminGroupTitle"
+          @click="handleBatchDelete">
+          {{ $t(`m.common['批量移除']`) }}
+        </bk-button>
+      </div>
+      <div slot="right">
+        <bk-input
+          v-model="keyword"
+          style="width: 300px;"
+          :placeholder="$t(`m.userGroupDetail['请输入至少3个字符的用户/组织，按enter键搜索']`)"
+          @enter="handleKeyWordEnter"
+        />
+      </div>
     </render-search>
     <bk-table
       :data="tableList"
@@ -87,6 +99,7 @@
           :empty-text="emptyData.text"
           :tip-text="emptyData.tip"
           :tip-type="emptyData.tipType"
+          @on-clear="handleEmptyClear"
           @on-refresh="handleEmptyRefresh"
         />
       </template>
@@ -166,7 +179,7 @@
         currentSelectList: [],
         pagination: {
           current: 1,
-          count: 2,
+          count: 0,
           limit: 10
         },
         currentBackup: 1,
@@ -189,7 +202,8 @@
           tip: '',
           tipType: ''
         },
-        adminGroupTitle: ''
+        adminGroupTitle: '',
+        keyword: ''
       };
     },
     computed: {
@@ -248,21 +262,36 @@
         // this.fetchResetData(data);
       },
 
+      getCellClass ({ row, column, rowIndex, columnIndex }) {
+        if (columnIndex === 2) {
+          return 'iam-table-cell-depart-cls';
+        }
+        return '';
+      },
+
+      async handleKeyWordEnter () {
+        this.emptyData.tipType = 'search';
+        this.pagination = Object.assign(this.pagination, { current: 1, limit: 10 });
+        this.fetchMemberList();
+      },
+
       async fetchMemberList () {
         this.tableLoading = true;
         try {
           const params = {
             id: this.id,
             limit: this.pagination.limit,
-            offset: this.pagination.limit * (this.pagination.current - 1)
+            offset: this.pagination.limit * (this.pagination.current - 1),
+            keyword: this.keyword
           };
           const { code, data } = await this.$store.dispatch('userGroup/getUserGroupMemberList', params);
-          this.pagination.count = data.count;
+          this.pagination.count = data.count || 0;
           this.tableList.splice(0, this.tableList.length, ...(data.results || []));
           this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
         } catch (e) {
           console.error(e);
           const { code, data, message, statusText } = e;
+          this.tableList = [];
           this.emptyData = formatCodeData(code, this.emptyData);
           this.bkMessageInstance = this.$bkMessage({
             limit: 1,
@@ -276,18 +305,17 @@
         }
       },
 
-      getCellClass ({ row, column, rowIndex, columnIndex }) {
-        if (columnIndex === 2) {
-          return 'iam-table-cell-depart-cls';
-        }
-        return '';
+      async handleEmptyClear () {
+        this.handleEmptyRefresh();
       },
 
       async handleEmptyRefresh () {
+        this.emptyData.tipType = '';
+        this.keyword = '';
         this.pagination = Object.assign(
           this.pagination,
           {
-            offset: 0,
+            current: 1,
             limit: 10
           });
         await this.fetchMemberList();
@@ -532,6 +560,12 @@
         margin-bottom: 0;
       }
     }
+  }
+}
+
+.group-member-button {
+  .bk-button {
+    margin-right: 10px;
   }
 }
 </style>
