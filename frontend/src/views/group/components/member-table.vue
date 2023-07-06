@@ -13,6 +13,7 @@
       :data="tableList"
       size="small"
       ext-cls="user-group-member-table"
+      :cell-class-name="getCellClass"
       :outer-border="false"
       :header-border="false"
       :pagination="pagination"
@@ -35,6 +36,25 @@
             <span class="name">{{ row.name || '--' }}</span>
             <span class="count" v-if="row.member_count">({{ row.member_count }})</span>
           </div>
+        </template>
+      </bk-table-column>
+      <bk-table-column :label="$t(`m.userGroupDetail['所属组织架构']`)" width="400">
+        <template slot-scope="{ row }">
+          <template v-if="row.user_departments && row.user_departments.length">
+            <div
+              :title="row.user_departments.join(';')"
+              v-for="(item,index) in row.user_departments"
+              :key="index"
+              class="user_departs"
+            >
+              {{ item}}
+            </div>
+          </template>
+          <template v-else>
+            <div>
+              --
+            </div>
+          </template>
         </template>
       </bk-table-column>
       <bk-table-column :label="$t(`m.common['加入时间']`)">
@@ -221,13 +241,13 @@
       // window.addEventListener('message', this.fetchReceiveData);
     },
     methods: {
-            
       // 接收iframe父页面传递的message
       fetchReceiveData (payload) {
         const { data } = payload;
         console.log(data, '接受传递过来的数据');
         // this.fetchResetData(data);
       },
+
       async fetchMemberList () {
         this.tableLoading = true;
         try {
@@ -254,6 +274,14 @@
         } finally {
           this.tableLoading = false;
         }
+      },
+
+      getCellClass ({ row, column, rowIndex, columnIndex }) {
+        console.log(columnIndex, row);
+        if (columnIndex === 2) {
+          return 'iam-table-cell-depart-cls';
+        }
+        return '';
       },
 
       async handleEmptyRefresh () {
@@ -490,4 +518,21 @@
             }
         }
     }
+</style>
+
+<style lang="postcss" scoped>
+/deep/ .iam-table-cell-depart-cls {
+  .cell {
+    padding: 5px 0;
+    -webkit-line-clamp: 100;
+    padding-left: 15px;
+    .user_departs {
+      margin-bottom: 10px;
+      word-break: break-all;
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+}
 </style>
