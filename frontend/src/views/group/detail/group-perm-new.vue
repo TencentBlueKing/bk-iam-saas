@@ -491,6 +491,7 @@
             const linearActionList = this.linearActionList.find(sub => sub.id === row.id);
             // eslint-disable-next-line max-len
             row.related_environments = linearActionList ? linearActionList.related_environments : [];
+            row.related_actions = linearActionList ? linearActionList.related_actions : [];
             return new GroupPolicy(
               row,
               'detail', // 此属性为flag，会在related-resource-types赋值为add
