@@ -11,6 +11,7 @@ specific language governing permissions and limitations under the License.
 import functools
 import logging
 import time
+from collections import defaultdict
 from copy import deepcopy
 from itertools import chain, groupby
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
@@ -1307,6 +1308,7 @@ class ExpiredPolicy(BackendThinPolicy, ExcludeModel):
     system: ThinSystem
     action: ThinAction
     expired_display: str
+    policy: Optional[PolicyBean] = None
 
     def __init__(self, **data: Any):
         if "expired_at" in data and (data["expired_at"] is not None) and ("expired_display" not in data):
@@ -1416,6 +1418,16 @@ class PolicyQueryBiz:
         all_action_id = {p.action_id for p in backend_policies}
         action_id_dict = self.svc.get_action_id_dict(subject, all_action_id)
 
+        # 取策略详情
+        system_ids = defaultdict(list)
+        for k, v in action_id_dict.items():
+            system_ids[k[0]].append(v)
+
+        system_policy_list = {}
+        for system_id, ids in system_ids.items():
+            policy_list = self.query_policy_list_by_policy_ids(system_id, subject, ids)
+            system_policy_list[system_id] = policy_list
+
         # 填充action, system
         expired_policies = []
         for p in backend_policies:
@@ -1428,8 +1440,16 @@ class PolicyQueryBiz:
             if not id:
                 continue
 
+            policy = system_policy_list.get(p.system, {p.action_id: None}).get(p.action_id)
+
             expired_policies.append(
-                ExpiredPolicy(id=id, system=system.dict(), action=action.dict(), **p.dict(exclude={"id", "system"}))
+                ExpiredPolicy(
+                    id=id,
+                    system=system.dict(),
+                    action=action.dict(),
+                    policy=policy,
+                    **p.dict(exclude={"id", "system"}),
+                )
             )
 
         return expired_policies
