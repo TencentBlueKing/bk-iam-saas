@@ -10,6 +10,7 @@
     @update:isShow="handleCancel">
     <div slot="content" class="content" v-bkloading="{ isLoading: loading, opacity: 1 }">
       <div
+        v-if="false"
         class="no-limited-wrapper flex-between"
         title="$t(`m.resource['无限制总文案']`)">
         <div class="no-limited-wrapper-left single-hide">
@@ -26,7 +27,6 @@
           </bk-checkbox>
         </div>
       </div>
-      {{ value }} {{ data}}
       <template v-if="!isHide">
         <div class="select-wrapper">
           <div class="left-content">
@@ -235,45 +235,6 @@
         },
         immediate: true
       },
-      data: {
-        handler (val) {
-          const len = val.length;
-          // 此时是无权限状态
-          if (len === 1 && val[0] === 'none') {
-            this.conditionData = [new Condition({ selection_mode: this.selectionMode }, 'init', 'add')];
-            this.conditionData[0].instanceExpanded = true;
-            const selectionMode = this.conditionData[0].selectionMode;
-            if (selectionMode !== 'all') {
-              this.conditionData[0].instanceCanDelete = false;
-            }
-            return;
-          }
-          if (len > 0) {
-            this.conditionData = val;
-            const firstConditionData = this.conditionData[0];
-            if (firstConditionData.instance && firstConditionData.instance.length > 0) {
-              firstConditionData.instanceExpanded = true;
-            }
-            if (firstConditionData.attribute && firstConditionData.attribute.length > 0) {
-              firstConditionData.attributeExpanded = true;
-            }
-            if (len === 1) {
-              const selectionMode = this.conditionData[0].selectionMode;
-              if (selectionMode !== 'all') {
-                this.conditionData[0].instanceCanDelete = false;
-              }
-            }
-            this.notLimitValue = false;
-            this.isHide = false;
-          } else {
-            this.notLimitValue = true;
-            this.isHide = true;
-            this.conditionData = [];
-          }
-        },
-        deep: true,
-        immediate: true
-      },
       notLimitValue (value) {
         if (value) {
           this.conditionData.forEach(item => {
@@ -424,7 +385,6 @@
       handleLimitChange (newVal, oldVal) {
         window.changeAlert = true;
         this.isHide = newVal;
-        console.log(this.flag, newVal, 55545);
         if (!newVal) {
           const isInitializeData = this.originalData.length === 1 && this.originalData[0] === 'none';
           if (!isInitializeData && this.originalData.length > 0) {
