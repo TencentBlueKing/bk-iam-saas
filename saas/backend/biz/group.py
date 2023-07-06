@@ -433,7 +433,7 @@ class GroupBiz:
 
         # 查询用户的部门
         usernames = [one.id for one in subjects if one.type == SubjectType.USER.value]
-        user_dict = {u.username: u for u in User.objects.filter(username__in=usernames)}
+        user_dict = {u.username: u for u in User.objects.filter(username__in=usernames)} if usernames else {}
 
         # 组合数据结构
         group_member_beans = []
