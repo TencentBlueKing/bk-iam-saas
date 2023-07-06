@@ -277,7 +277,6 @@
       },
 
       getCellClass ({ row, column, rowIndex, columnIndex }) {
-        console.log(columnIndex, row);
         if (columnIndex === 2) {
           return 'iam-table-cell-depart-cls';
         }

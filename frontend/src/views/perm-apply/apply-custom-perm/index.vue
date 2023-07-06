@@ -215,7 +215,7 @@
             @on-realted-change="handleRelatedChange" />
           <div slot="append" class="expanded-action-wrapper">
             <div class="apply-custom-switch">
-              <div class="apply-custom-switch-item">
+              <!-- <div class="apply-custom-switch-item">
                 <bk-switcher
                   v-model="isAllUnlimited"
                   theme="primary"
@@ -224,7 +224,7 @@
                   @change="handleUnlimitedActionChange">
                 </bk-switcher>
                 <span class="expanded-text">{{ $t(`m.common['批量无限制']`) }}</span>
-              </div>
+              </div> -->
               <div class="apply-custom-switch-item">
                 <bk-switcher
                   v-model="isAllExpanded"
