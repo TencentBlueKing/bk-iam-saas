@@ -19,6 +19,7 @@ from django.utils.translation import gettext as _
 from pydantic import BaseModel, parse_obj_as
 
 from backend.apps.group.models import Group, GroupAuthorizeLock
+from backend.apps.organization.models import User
 from backend.apps.policy.models import Policy as PolicyModel
 from backend.apps.role.models import Role, RoleRelatedObject, RoleUser
 from backend.apps.template.models import PermTemplatePolicyAuthorized, PermTemplatePreUpdateLock
@@ -78,6 +79,7 @@ class GroupMemberBean(BaseModel):
     name: str = ""
     full_name: str = ""
     member_count: int = 0
+    user_departments: Optional[List[str]] = None
 
     expired_at: int
     expired_at_display: str
@@ -429,6 +431,10 @@ class GroupBiz:
         subjects = parse_obj_as(List[Subject], relations)
         subject_info_list = SubjectInfoList(subjects)
 
+        # 查询用户的部门
+        usernames = [one.id for one in subjects if one.type == SubjectType.USER.value]
+        user_dict = {u.username: u for u in User.objects.filter(username__in=usernames)} if usernames else {}
+
         # 组合数据结构
         group_member_beans = []
         for subject, relation in zip(subjects, relations):
@@ -436,12 +442,20 @@ class GroupBiz:
             if not subject_info:
                 continue
 
+            # 填充用户所属的部门
+            user_departments = None
+            if subject.type == SubjectType.USER.value:
+                user = user_dict.get(subject.id, None)
+                if user:
+                    user_departments = [d.full_name for d in user.departments]
+
             group_member_bean = GroupMemberBean(
                 expired_at=relation.expired_at,
                 expired_at_display=expired_at_display(relation.expired_at),
                 created_time=utc_string_to_local(relation.created_at),
                 department_id=relation.department_id,
                 department_name=relation.department_name,
+                user_departments=user_departments,
                 **subject_info.dict(),
             )
             group_member_beans.append(group_member_bean)
