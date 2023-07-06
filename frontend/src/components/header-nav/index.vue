@@ -57,7 +57,10 @@
             v-for="item in languageList"
             :key="item.value"
           >
-            {{ item.label }}
+            <div class="lang-flex">
+              <Icon :type="`icon-${item.value}`" />
+              <span class="lang-flex-label">{{ item.label }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -92,7 +95,7 @@
                 :title="$t(`m.nav['退出登录']`)"
                 @click="handleLogout"
               >
-                <Icon type="logout" />
+                <!-- <Icon type="logout" /> -->
                 {{ $t(`m.nav['退出登录']`) }}
               </div>
             </div>

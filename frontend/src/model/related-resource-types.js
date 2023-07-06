@@ -89,7 +89,7 @@ export default class RelateResourceTypes {
       if (type === 'create') {
         return isCn
           ? `请选择在哪些【${this.name}】下【${name}】`
-          : `Please select the 【${this.name}】under which【${name}】`;
+          : `Please select the [${this.name}] under which [${name}]`;
       }
       return isCn ? `请选择${this.name}实例` : `Please select ${this.name} instances`;
     }

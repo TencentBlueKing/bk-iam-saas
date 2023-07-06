@@ -190,7 +190,7 @@
           return;
         }
         setTimeout(() => {
-          this.$refs.textarea.focus();
+          this.$refs.textarea && this.$refs.textarea.focus();
           this.$refs.textarea.selectionStart = this.conditionText.length;
           this.$refs.textarea.selectionEnd = this.localValue.length;
         });

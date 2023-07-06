@@ -1,3 +1,11 @@
+<!-- 2023-07-05 -->
+# V1.10.8 ChangeLog
+
+### Bug Fixes
+* Fixing front-end internationalization issues
+
+---
+
 <!-- 2023-06-27 -->
 # V1.10.7 ChangeLog
 
