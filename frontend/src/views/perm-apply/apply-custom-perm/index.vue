@@ -1748,7 +1748,8 @@
               }
               if (item.tag === 'add') {
                 const conditions = existTableData.map(
-                  subItem => subItem.resource_groups[0].related_resource_types[0].condition
+                  subItem => subItem.resource_groups && subItem.resource_groups.length
+                    ? subItem.resource_groups[0].related_resource_types[0].condition : []
                 );
                 // 是否都选择了实例
                 const isAllHasInstance = conditions.every(subItem => subItem[0] !== 'none'); // 这里可能有bug, 都设置了属性点击批量编辑时数据变了

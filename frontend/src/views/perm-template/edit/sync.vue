@@ -147,7 +147,7 @@
     <bk-sideslider
       :is-show.sync="isShowSideslider"
       :title="sidesliderTitle"
-      :width="725"
+      :width="640"
       :quick-close="true"
       @animation-end="handleAnimationEnd">
       <div slot="content">
