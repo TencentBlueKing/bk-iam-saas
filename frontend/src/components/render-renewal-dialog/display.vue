@@ -60,7 +60,7 @@
                 if (this.status === 'yet') {
                     return this.$t(`m.common['已过期']`);
                 }
-                return `${this.curRestDays}${this.$t(`m.common['天']`)}`;
+                return this.$t(`m.info['天数']`, { value: this.curRestDays });
             },
             afterRenewalDisplay () {
                 if (this.renewalTime === PERMANENT_TIMESTAMP) {
@@ -68,9 +68,9 @@
                 }
                 const days = Math.floor(this.renewalTime / (24 * 60 * 60));
                 if (this.status === 'yet') {
-                    return `${days}${this.$t(`m.common['天']`)}`;
+                    return this.$t(`m.info['天数']`, { value: days });
                 }
-                return `${days + this.curRestDays}${this.$t(`m.common['天']`)}`;
+                return this.$t(`m.info['天数']`, { value: days + this.curRestDays });
             }
     }
   };

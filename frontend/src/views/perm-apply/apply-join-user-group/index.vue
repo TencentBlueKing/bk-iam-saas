@@ -681,7 +681,7 @@
     },
     methods: {
       formatFormItemWidth () {
-        this.contentWidth = window.innerWidth <= 1440 ? '200px' : '240px';
+        this.contentWidth = window.innerWidth <= 1520 ? '200px' : '240px';
       },
       /**
        * 获取页面数据

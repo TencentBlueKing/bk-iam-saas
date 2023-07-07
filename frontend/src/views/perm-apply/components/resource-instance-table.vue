@@ -270,7 +270,14 @@
       :show.sync="isShowAggregateSideslider"
       :params="aggregateResourceParams"
       :value="aggregateValue"
-      @on-selected="handlerSelectAggregateRes" />
+      :original-data="originalCondition"
+      :flag="curFlag"
+      :data="condition"
+      :selection-mode="curSelectionMode"
+      @on-selected="handlerSelectAggregateRes"
+      @on-limit-change="handleLimitChange"
+      @on-init="handleOnInit"
+    />
   </div>
 </template>
 
@@ -394,6 +401,7 @@
           }
           const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
               .related_resource_types[this.curResIndex];
+              console.log(curData, 6666);
           if (!curData) {
               return [];
           }
@@ -772,6 +780,7 @@
             display_name: item.name
           };
         }));
+        console.log(this.aggregateIndex, data, this.tableList[index]);
         this.isShowAggregateSideslider = true;
       },
 
@@ -815,6 +824,7 @@
       },
 
       handleLimitChange () {
+        console.log(this.tableList, '侧边栏');
         const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
           .related_resource_types[this.curResIndex];
         curData.isChange = true;

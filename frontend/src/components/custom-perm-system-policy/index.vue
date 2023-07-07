@@ -8,13 +8,18 @@
         <span class="number">{{ permLength }}</span>
         {{ $t(`m.common['个']`) }}
         {{ $t(`m.perm['操作权限']`) }}
+        <span
+          v-if="isAllDelete"
+          class="del-all-icon">
+          <Icon type="delete-line" @click.stop="handleDeleteAll" />
+        </span>
       </div>
     </div>
     <div class="content" v-if="isExpanded">
       <div class="slot-content">
         <slot />
       </div>
-      <p class="expand-action" @click="handlePackup">
+      <p class="expand-action" @click="handleCollapse">
         <Icon :type="isExpanded ? 'up-angle' : 'down-angle'" />
         {{ $t(`m.common['点击收起']`) }}
       </p>
@@ -44,6 +49,10 @@
       onePerm: {
         type: Number,
         default: 0
+      },
+      isAllDelete: {
+        type: Boolean,
+        default: false
       }
     },
     data () {
@@ -64,7 +73,7 @@
       }
     },
     methods: {
-      handlePackup () {
+      handleCollapse () {
         this.isExpanded = false;
         this.$emit('update:expanded', false);
         this.$emit('on-expanded', false);
@@ -74,6 +83,9 @@
         this.isExpanded = !this.isExpanded;
         this.$emit('update:expanded', true);
         this.$emit('on-expanded', true);
+      },
+      handleDeleteAll () {
+        this.$emit('on-delete-all');
       }
     }
   };
@@ -117,6 +129,10 @@
                 .number {
                     font-weight: 600;
                 }
+            }
+            .del-all-icon {
+              margin-left: 5px;
+              font-size: 14px;
             }
         }
         .content {

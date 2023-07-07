@@ -120,6 +120,10 @@
       externalDelete: {
         type: Boolean,
         default: false
+      },
+      externalHeaderWidth: {
+        type: Number,
+        default: 0
       }
     },
     data () {
@@ -167,11 +171,12 @@
     methods: {
       fetchDynamicStyle () {
         if (this.externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle) {
-          const len = String(this.count).length;
-          const langLen = !['zh-cn'].includes(this.language) ? 80 : this.initDistance;
-          const distance = len > 2 ? (len - 1) * this.initDistance : langLen;
+          // const len = String(this.count).length;
+          // const isCN = ['zh-cn'].includes(this.language);
+          // const langLen = isCN ? this.initDistance : 80;
+          // const distance = len > 2 ? (len - 1) * this.initDistance : langLen;
           const root = document.querySelector(':root');
-          root.style.setProperty('--translate-icon', `translate(${distance}px, -40px)`);
+          root.style.setProperty('--translate-icon', `translate(${this.externalHeaderWidth}px, -40px)`);
         }
       },
       handleExpanded () {

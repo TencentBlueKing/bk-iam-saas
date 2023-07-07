@@ -231,7 +231,7 @@
         }
       },
 
-      handleUpdateMembers (payload, index) {
+      async handleUpdateMembers (payload, index) {
         const { members } = payload;
         const { id } = this.systemUserList[index];
         if (!members.length) {
@@ -247,9 +247,9 @@
             id,
             members: _.cloneDeep(members.map(item => item.username))
           };
-          this.$store.dispatch('role/editSystemManagerMember', params);
+          await this.$store.dispatch('role/editSystemManagerMember', params);
           // this.$set(this.systemUserList[index], 'memberBackup', _.cloneDeep(members));
-          this.fetchSystemManager();
+          await this.fetchSystemManager();
           this.messageSuccess(this.$t(`m.common['操作成功']`));
         } catch (e) {
           console.error(e);
