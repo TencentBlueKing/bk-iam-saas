@@ -504,7 +504,8 @@ export const m = {
          '解除与权限模板名称的关联，当前用户将不再继承该模板权限。': 'Disassociate from the permission template {value}, and the current user will no longer inherit the template permissions.',
          '用户组成员添加权限': 'Add permissions to user group {value}',
          '天数': '{value} days',
-         '第几项实例和属性不能都为空': 'The instance and attribute of item {value} cannot be empty'
+         '第几项实例和属性不能都为空': 'The instance and attribute of item {value} cannot be empty',
+         '权限个数': '{value} permissions'
     },
     // 二次确认弹窗相关
     dialog: {

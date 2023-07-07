@@ -32,7 +32,8 @@
         :policy-count="item.custom_policy_count"
         :template-count="item.template_count"
         :group-system-list-length="groupSystemListLength"
-        @on-expanded="handleExpanded(...arguments, item)">
+        @on-expanded="handleExpanded(...arguments, item)"
+        @on-set-external="handleSetExternal">
         <div style="min-height: 60px;" v-bkloading="{ isLoading: item.loading, opacity: 1 }">
           <div v-if="!item.loading">
             <render-template-item
@@ -48,6 +49,7 @@
               :loading="subItem.editLoading"
               :expanded.sync="subItem.expanded"
               :mode="isEditMode ? 'edit' : 'detail'"
+              :external-header-width="externalHeaderWidth"
               @on-delete="handleDelete(item, subItem)"
               @on-save="handleSave(item, index, subItem, subIndex)"
               @on-edit="handleEdit(subItem)"
@@ -143,7 +145,8 @@
           text: '',
           tip: '',
           tipType: ''
-        }
+        },
+        externalHeaderWidth: 0
       };
     },
     computed: {
@@ -338,6 +341,10 @@
         }
         this.getGroupTemplateList(item);
         this.fetchAuthorizationScopeActions(item.id);
+      },
+
+      handleSetExternal ({ width }) {
+        this.externalHeaderWidth = width;
       },
 
       async fetchAuthorizationScopeActions (id) {
