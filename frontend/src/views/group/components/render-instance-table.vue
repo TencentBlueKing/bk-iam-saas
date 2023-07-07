@@ -1215,7 +1215,10 @@
           const { isMainAction, related_actions } = this.tableList[this.curIndex];
           // 如果为主操作
           if (isMainAction) {
-            const emptyIndex = data.findIndex(item => !item.instance.length && !item.attribute.length);
+            const emptyIndex = data.findIndex(item =>
+              ((item.instance && !item.instance.length)
+                && (item.attribute && !item.attribute.length))
+              || (!item.instance && !item.attribute.length));
             if (emptyIndex > -1) {
               this.messageError(this.$t(`m.info['第几项实例和属性不能都为空']`, { value: emptyIndex + 1 }), 2000);
               return;
