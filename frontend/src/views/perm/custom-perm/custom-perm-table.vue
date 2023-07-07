@@ -36,20 +36,19 @@
                 v-if="isShowPreview(row)"
                 type="detail-new"
                 class="view-icon"
-                :title="$t(`m.common['详情']`)"
+                :title="$t(`m.perm['查看实例资源权限组']`)"
                 @click.stop="handleViewResource(_, row)"
               />
               <Icon
-                v-if="isShowPreview(row) && row.resource_groups.length > 2"
-                type="reduce-hollow"
-                :title="$t(`m.common['删除']`)"
+                type="delete-line"
+                :title="$t(`m.perm['删除实例资源权限组']`)"
                 :class="row.resource_groups.length > 1 ? 'effect-icon' : 'effect-icon-disabled'"
                 @click.stop="handlerReduceInstance(_, row)"
               />
             </div>
           </template>
           <template v-else>
-            <span class="pl20">{{ $t(`m.common['无需关联实例']`) }}</span>
+            <span class="pl20" style="line-height: 62px;">{{ $t(`m.common['无需关联实例']`) }}</span>
           </template>
         </template>
       </bk-table-column>
@@ -81,9 +80,19 @@
         </template>
       </bk-table-column>
       <bk-table-column prop="expired_dis" min-width="100" :label="$t(`m.common['有效期']`)"></bk-table-column>
-      <bk-table-column :label="$t(`m.common['操作']`)">
+      <bk-table-column
+        :label="$t(`m.common['操作-table']`)"
+        :width="200"
+      >
         <template slot-scope="{ row }">
-          <bk-button text @click="handleShowDelDialog(row)">{{ $t(`m.common['删除']`) }}</bk-button>
+          <div class="custom-actions-item">
+            <bk-button
+              type="primary"
+              text
+              @click="handleShowDelDialog(row)">
+              {{ $t(`m.userGroupDetail['删除操作权限']`) }}
+            </bk-button>
+          </div>
         </template>
       </bk-table-column>
       <template slot="empty">

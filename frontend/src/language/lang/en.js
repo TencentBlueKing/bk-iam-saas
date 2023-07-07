@@ -34,6 +34,7 @@ export const m = {
         '取消全选': 'Deselect All',
         '理由': 'Reason',
         '操作': 'Action name',
+        '操作-table': 'Actions',
         '申请期限': 'Expiration date',
         '无需关联实例': 'No need to associate instance',
         '无生效条件': 'No effective condition',
@@ -265,7 +266,8 @@ export const m = {
         '关联到以下用户组': ' will be associated with the following groups',
         '离开': 'LEAVE',
         '更多': 'More',
-        '资源实例': 'Resource instance'
+        '资源实例': 'Resource instance',
+        '批量无限制': 'Unlimited batch size'
     },
     // 校验
     verify: {
@@ -500,7 +502,10 @@ export const m = {
          '已选数量': '{value} selected',
          'tab操作实例': '{value} Instance',
          '解除与权限模板名称的关联，当前用户将不再继承该模板权限。': 'Disassociate from the permission template {value}, and the current user will no longer inherit the template permissions.',
-         '用户组成员添加权限': 'Add permissions to user group {value}'
+         '用户组成员添加权限': 'Add permissions to user group {value}',
+         '天数': '{value} days',
+         '第几项实例和属性不能都为空': 'The instance and attribute of item {value} cannot be empty',
+         '权限个数': '{value} permissions'
     },
     // 二次确认弹窗相关
     dialog: {
@@ -518,7 +523,8 @@ export const m = {
         '确认删除内容？': 'Are you sure to delete {value}?',
         '删除操作权限': 'the operation permission',
         '删除实例权限': 'instance permission',
-        '删除一组实例权限': 'a set of instance permissions'
+        '删除一组实例权限': 'a set of instance permissions',
+        '确定要删除系统下的所有操作权限？': 'Confirm to delete all action permissions under the {value} system?'
     },
     nav: {
         '蓝鲸权限中心': 'BlueKing-IAM',
@@ -708,7 +714,9 @@ export const m = {
         '临时权限申请': 'Apply for temporary permissions',
         '一组实例权限': ' A Set of Instance Permissions',
         '不能删除当前操作': 'Unable to delete current permission',
-        '个操作关联了': ' related actions have been completed '
+        '个操作关联了': ' related actions have been completed ',
+        '查看实例资源权限组': 'View instance resource permission groups',
+        '删除实例资源权限组': 'Delete instance resource permission groups'
     },
     permTemplate: {
         '模板名': 'Template name',
@@ -793,7 +801,12 @@ export const m = {
         '用户组名': 'Group name: ',
         '描述': 'Description: ',
         'ID': 'ID: ',
-        '创建时间': 'Created at: '
+        '创建时间': 'Created at: ',
+        '查看实例权限': 'View instance permissions',
+        '删除操作权限': 'Delete action permissions',
+        '暂无关联实例': 'No associated instance',
+        '所属组织架构': 'Organizational structure',
+        '请输入至少3个字符的用户/组织，按enter键搜索': 'Please enter user/organization with at least 3 characters and press enter to search'
     },
     resource: {
         '无限制总文案': 'If the action does not require restricted instances, select unlimited',

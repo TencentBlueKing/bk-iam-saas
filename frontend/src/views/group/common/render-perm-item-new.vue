@@ -1,6 +1,8 @@
 <template>
   <div :class="['iam-perm-item', extCls]">
-    <div class="header" @click="handleExpanded">
+    <div
+      class="header"
+      @click="handleExpanded">
       <Icon bk class="expanded-icon" :type="isExpanded ? 'down-shape' : 'right-shape'" />
       <template v-if="!externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle">
         <label class="title">{{ title }}</label>
@@ -10,23 +12,28 @@
           {{ $t(`m.common['个']`) }}
           {{ $t(`m.nav['权限模板']`) }}
         </div>
-        <template v-if="templateCount > 0 && policyCount > 0 && !externalCustom">，</template>
+        <template v-if="templateCount > 0 && policyCount > 0 && !externalCustom">{{ $t(`m.common['，']`) }}</template>
         <div :class="['sub-title', { 'no-margin': templateCount }, { 'set-margin': !templateCount }]"
           v-if="policyCount > 0 && !externalCustom">
           <span class="number">{{ policyCount }}</span>
           <span>{{ $t(`m.common['个']`) }}{{ $t(`m.perm['自定义权限']`) }}</span>
         </div>
       </template>
-      <template v-else>
-        <label class="title">{{ templateCount + policyCount }}</label>
-        <span>{{ $t(`m.common['个']`) }}</span>
-        <span :class="
-          [
-            { 'external-perm-text': !['zh-cn'].includes(language) }
-          ]">
-          {{ $t(`m.common['权限']`) }}
-        </span>
-      </template>
+      <div
+        v-else
+        ref="externalCustomContent"
+        class="flex-between"
+      >
+        <span class="title">{{ title }}</span>
+        <div class="external-custom-count">
+          <span :class="
+            [
+              { 'external-perm-text': !['zh-cn'].includes(language) }
+            ]">
+            {{ $t(`m.info['权限个数']`, { value: templateCount + policyCount }) }}
+          </span>
+        </div>
+      </div>
     </div>
     <div class="content" v-if="isExpanded">
       <div class="slot-content">
@@ -109,6 +116,9 @@
         this.isExpanded = !this.isExpanded;
         this.$emit('update:expanded', true); // 更新expanded
         this.$emit('on-expanded', this.isExpanded); // 执行on-expanded
+        if (this.$refs.externalCustomContent) {
+          this.$emit('on-set-external', { width: this.$refs.externalCustomContent.offsetWidth });
+        }
       }
     }
   };
@@ -161,6 +171,10 @@
             }
             .external-perm-text {
                 padding-left: 5px;
+            }
+
+            .external-custom-count {
+              margin-left: 5px;
             }
         }
         .content {

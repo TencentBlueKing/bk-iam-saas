@@ -1,18 +1,31 @@
 <template>
   <div class="iam-user-group-member">
     <render-search>
-      <bk-button :disabled="readOnly" @click="handleAddMember">{{ $t(`m.userGroup['添加成员']`) }}</bk-button>
-      <bk-button
-        :disabled="isNoBatchDelete()"
-        :title="adminGroupTitle"
-        @click="handleBatchDelete">
-        {{ $t(`m.common['批量移除']`) }}
-      </bk-button>
+      <div class="flex-between group-member-button">
+        <bk-button :disabled="readOnly" @click="handleAddMember">
+          {{ $t(`m.userGroup['添加成员']`) }}
+        </bk-button>
+        <bk-button
+          :disabled="isNoBatchDelete()"
+          :title="adminGroupTitle"
+          @click="handleBatchDelete">
+          {{ $t(`m.common['批量移除']`) }}
+        </bk-button>
+      </div>
+      <div slot="right">
+        <bk-input
+          v-model="keyword"
+          style="width: 300px;"
+          :placeholder="$t(`m.userGroupDetail['请输入至少3个字符的用户/组织，按enter键搜索']`)"
+          @enter="handleKeyWordEnter"
+        />
+      </div>
     </render-search>
     <bk-table
       :data="tableList"
       size="small"
       ext-cls="user-group-member-table"
+      :cell-class-name="getCellClass"
       :outer-border="false"
       :header-border="false"
       :pagination="pagination"
@@ -35,6 +48,25 @@
             <span class="name">{{ row.name || '--' }}</span>
             <span class="count" v-if="row.member_count">({{ row.member_count }})</span>
           </div>
+        </template>
+      </bk-table-column>
+      <bk-table-column :label="$t(`m.userGroupDetail['所属组织架构']`)" width="400">
+        <template slot-scope="{ row }">
+          <template v-if="row.user_departments && row.user_departments.length">
+            <div
+              :title="row.user_departments.join(';')"
+              v-for="(item,index) in row.user_departments"
+              :key="index"
+              class="user_departs"
+            >
+              {{ item}}
+            </div>
+          </template>
+          <template v-else>
+            <div>
+              --
+            </div>
+          </template>
         </template>
       </bk-table-column>
       <bk-table-column :label="$t(`m.common['加入时间']`)">
@@ -67,6 +99,7 @@
           :empty-text="emptyData.text"
           :tip-text="emptyData.tip"
           :tip-type="emptyData.tipType"
+          @on-clear="handleEmptyClear"
           @on-refresh="handleEmptyRefresh"
         />
       </template>
@@ -146,7 +179,7 @@
         currentSelectList: [],
         pagination: {
           current: 1,
-          count: 2,
+          count: 0,
           limit: 10
         },
         currentBackup: 1,
@@ -169,7 +202,8 @@
           tip: '',
           tipType: ''
         },
-        adminGroupTitle: ''
+        adminGroupTitle: '',
+        keyword: ''
       };
     },
     computed: {
@@ -221,28 +255,43 @@
       // window.addEventListener('message', this.fetchReceiveData);
     },
     methods: {
-            
       // 接收iframe父页面传递的message
       fetchReceiveData (payload) {
         const { data } = payload;
         console.log(data, '接受传递过来的数据');
         // this.fetchResetData(data);
       },
+
+      getCellClass ({ row, column, rowIndex, columnIndex }) {
+        if (columnIndex === 2) {
+          return 'iam-table-cell-depart-cls';
+        }
+        return '';
+      },
+
+      async handleKeyWordEnter () {
+        this.emptyData.tipType = 'search';
+        this.pagination = Object.assign(this.pagination, { current: 1, limit: 10 });
+        this.fetchMemberList();
+      },
+
       async fetchMemberList () {
         this.tableLoading = true;
         try {
           const params = {
             id: this.id,
             limit: this.pagination.limit,
-            offset: this.pagination.limit * (this.pagination.current - 1)
+            offset: this.pagination.limit * (this.pagination.current - 1),
+            keyword: this.keyword
           };
           const { code, data } = await this.$store.dispatch('userGroup/getUserGroupMemberList', params);
-          this.pagination.count = data.count;
+          this.pagination.count = data.count || 0;
           this.tableList.splice(0, this.tableList.length, ...(data.results || []));
           this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
         } catch (e) {
           console.error(e);
           const { code, data, message, statusText } = e;
+          this.tableList = [];
           this.emptyData = formatCodeData(code, this.emptyData);
           this.bkMessageInstance = this.$bkMessage({
             limit: 1,
@@ -256,11 +305,17 @@
         }
       },
 
+      async handleEmptyClear () {
+        this.handleEmptyRefresh();
+      },
+
       async handleEmptyRefresh () {
+        this.emptyData.tipType = '';
+        this.keyword = '';
         this.pagination = Object.assign(
           this.pagination,
           {
-            offset: 0,
+            current: 1,
             limit: 10
           });
         await this.fetchMemberList();
@@ -490,4 +545,27 @@
             }
         }
     }
+</style>
+
+<style lang="postcss" scoped>
+/deep/ .iam-table-cell-depart-cls {
+  .cell {
+    padding: 5px 0;
+    -webkit-line-clamp: 100;
+    padding-left: 15px;
+    .user_departs {
+      margin-bottom: 10px;
+      word-break: break-all;
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+}
+
+.group-member-button {
+  .bk-button {
+    margin-right: 10px;
+  }
+}
 </style>

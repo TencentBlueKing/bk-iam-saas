@@ -32,7 +32,8 @@
         :policy-count="item.custom_policy_count"
         :template-count="item.template_count"
         :group-system-list-length="groupSystemListLength"
-        @on-expanded="handleExpanded(...arguments, item)">
+        @on-expanded="handleExpanded(...arguments, item)"
+        @on-set-external="handleSetExternal">
         <div style="min-height: 60px;" v-bkloading="{ isLoading: item.loading, opacity: 1 }">
           <div v-if="!item.loading">
             <render-template-item
@@ -48,6 +49,7 @@
               :loading="subItem.editLoading"
               :expanded.sync="subItem.expanded"
               :mode="isEditMode ? 'edit' : 'detail'"
+              :external-header-width="externalHeaderWidth"
               @on-delete="handleDelete(item, subItem)"
               @on-save="handleSave(item, index, subItem, subIndex)"
               @on-edit="handleEdit(subItem)"
@@ -68,8 +70,9 @@
                   :group-id="groupId"
                   :template-id="subItem.id"
                   :is-edit="subItem.isEdit"
-                  :external-delete="!!groupAttributes.source_type"
+                  :external-delete="formatOperate"
                   :linear-action-list="linearActionList"
+                  :is-custom-action-button="true"
                   @on-delete="handleSingleDelete(...arguments, item)" />
               </div>
             </render-template-item>
@@ -142,7 +145,8 @@
           text: '',
           tip: '',
           tipType: ''
-        }
+        },
+        externalHeaderWidth: 0
       };
     },
     computed: {
@@ -315,12 +319,16 @@
           if (!this.externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle) {
             if (res.data.length === 1) {
               this.$nextTick(() => {
-                this.$refs[`rTemplateItem${groupSystem.id}`] && this.$refs[`rTemplateItem${groupSystem.id}`][0].handleExpanded();
+                this.$refs[`rTemplateItem${groupSystem.id}`]
+                  && this.$refs[`rTemplateItem${groupSystem.id}`].length
+                  && this.$refs[`rTemplateItem${groupSystem.id}`][0].handleExpanded();
               });
             }
           } else {
             this.$nextTick(() => {
-              this.$refs[`rTemplateItem${groupSystem.id}`] && this.$refs[`rTemplateItem${groupSystem.id}`][0].handleExpanded();
+              this.$refs[`rTemplateItem${groupSystem.id}`]
+                && this.$refs[`rTemplateItem${groupSystem.id}`].length
+                && this.$refs[`rTemplateItem${groupSystem.id}`][0].handleExpanded();
             });
           }
         }
@@ -333,6 +341,10 @@
         }
         this.getGroupTemplateList(item);
         this.fetchAuthorizationScopeActions(item.id);
+      },
+
+      handleSetExternal ({ width }) {
+        this.externalHeaderWidth = width;
       },
 
       async fetchAuthorizationScopeActions (id) {
@@ -486,6 +498,7 @@
             const linearActionList = this.linearActionList.find(sub => sub.id === row.id);
             // eslint-disable-next-line max-len
             row.related_environments = linearActionList ? linearActionList.related_environments : [];
+            row.related_actions = linearActionList ? linearActionList.related_actions : [];
             return new GroupPolicy(
               row,
               'detail', // 此属性为flag，会在related-resource-types赋值为add
