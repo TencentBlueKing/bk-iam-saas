@@ -274,7 +274,7 @@
         });
 
         console.log('this.hasAddCustomList', this.hasAddCustomList);
-        const addCustomList = this.hasAddCustomList.filter(item => !temps.includes(item.$id));
+        const addCustomList = this.originalList.filter(item => !temps.includes(item.$id));
         // // mock数据
         // addCustomList.forEach((element, index) => {
         //     element.resource_groups = [{
@@ -616,20 +616,16 @@
       handleSelectSubmit (payload, aggregation, authorization) {
         // debugger
         this.isShowErrorTips = false;
-        const hasAddCustomList = [];
+        let hasAddCustomList = [...payload];
         // hasAddCustomList.splice(0, 0, ...this.hasAddCustomList);
-        if (this.originalList.length > 0) {
+        if (this.originalList.length) {
           const intersection = payload.filter(
             item => this.originalList.map(sub => sub.$id).includes(item.$id)
           );
           this.hasDeleteCustomList = this.originalList.filter(
             item => !intersection.map(sub => sub.$id).includes(item.$id)
           );
-          hasAddCustomList.push(
-            ...payload.filter(item => !intersection.map(sub => sub.$id).includes(item.$id))
-          );
-        } else {
-          hasAddCustomList.push(...payload);
+          hasAddCustomList = payload.filter(item => !intersection.map(sub => sub.$id).includes(item.$id));
         }
         if (!payload.length) {
           this.curActionValue = [];
@@ -638,7 +634,7 @@
         this.aggregationDataByCustom = _.cloneDeep(aggregation);
         this.authorizationDataByCustom = _.cloneDeep(authorization);
         this.hasAddCustomList.splice(0, this.hasAddCustomList.length, ...hasAddCustomList);
-        console.log(this.originalList, this.aggregationDataByCustom, this.authorizationDataByCustom, this.hasAddCustomList, this.originalList, '当前数据');
+        console.log(this.hasAddCustomList, this.originalList, '当前数据');
         if (this.externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn) {
           if (this.originalList.length) {
             this.curActionValue = this.originalList.map(item => item.$id);
