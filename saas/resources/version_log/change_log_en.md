@@ -1,3 +1,14 @@
+<!-- 2023-07-07 -->
+# V1.10.9 ChangeLog
+
+### Bug Fixes
+* Fixed the issue that the dependency operation was not synchronizing data when adding attribute conditions for user group permissions.
+* Fixed the issue that the system administrator member editing was abnormal, and the input box of the system administrator member was abnormal.
+* Added the requirement to add or remove all operation instances under a single system for "My Permissions".
+* Adjusted the layout of the module for deleting and viewing user group permissions.
+
+---
+
 <!-- 2023-07-05 -->
 # V1.10.8 ChangeLog
 
