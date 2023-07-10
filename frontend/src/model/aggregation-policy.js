@@ -32,7 +32,7 @@ export default class AggregationPolicy {
     this.isError = false;
     this.actions = payload.actions || [];
     this.instancesDisplayData = payload.instancesDisplayData || {};
-    this.aggregateResourceType = payload.aggregate_resource_types || [];
+    this.aggregateResourceType = payload.aggregate_resource_types || payload.aggregateResourceType || [];
     this.instances = payload.instances || [];
     this.isAggregate = true;
     this.expired_display = payload.expired_display || '';
@@ -42,6 +42,10 @@ export default class AggregationPolicy {
     this.canPaste = false;
     this.instancesBackup = _.cloneDeep(this.instances);
     this.selectedIndex = payload.selectedIndex || 0;
+    // 是否需要展示无限制
+    this.isNeedNoLimited = payload.isNeedNoLimited;
+    // 是否是无限制操作
+    this.isNoLimited = payload.isNoLimited;
     this.initExpiredAt(payload);
   }
 
@@ -54,12 +58,22 @@ export default class AggregationPolicy {
   }
 
   get empty () {
-    return this.instances.length < 1;
+    if (this.isNeedNoLimited) {
+      if (this.instances.length === 1 && this.instances[0] === 'none') {
+        return true;
+      }
+      return false;
+    } else {
+      return this.instances.length < 1;
+    }
   }
 
   get value () {
     if (this.empty) {
       return il8n('verify', '请选择');
+    }
+    if (this.isNeedNoLimited && !this.instances.length) {
+      return il8n('common', '无限制');
     }
     let str = '';
     this.aggregateResourceType.forEach(item => {

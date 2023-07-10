@@ -267,12 +267,12 @@
       @on-after-leave="handlePreviewDialogClose" />
 
     <render-aggregate-sideslider
+      ref="aggregateRef"
       :show.sync="isShowAggregateSideslider"
       :params="aggregateResourceParams"
       :value="aggregateValue"
       :original-data="originalCondition"
       :flag="curFlag"
-      :data="condition"
       :selection-mode="curSelectionMode"
       @on-selected="handlerSelectAggregateRes"
       @on-limit-change="handleLimitChange"
@@ -287,6 +287,7 @@
   import RenderAggregateSideslider from '@/components/choose-ip/sideslider';
   import Condition from '@/model/condition';
   import Policy from '@/model/policy';
+  import AggregationPolicy from '@/model/aggregation-policy';
   import { leaveConfirm } from '@/common/leave-confirm';
   import { PERMANENT_TIMESTAMP } from '@/common/constants';
   import RenderResource from './render-resource';
@@ -366,12 +367,9 @@
         previewResourceParams: {},
         curCopyData: ['none'],
         curCopyType: '',
-
         curId: '',
         isLoading: false,
-
         isShowAggregateSideslider: false,
-
         aggregateResourceParams: {},
         aggregateIndex: -1,
         aggregateValue: [],
@@ -582,27 +580,52 @@
         delete payload.customValueBackup;
       },
 
-      handlerSelectAggregateRes (payload) {
+      async handlerSelectAggregateRes (payload) {
+        console.log(payload, 62656);
         const instances = payload.map(item => {
           return {
             id: item.id,
             name: item.display_name
           };
         });
-        this.tableList[this.aggregateIndex].isError = false;
+        const curAggregateItem = this.tableList[this.aggregateIndex];
+        curAggregateItem.isError = false;
         this.selectedIndex = this.tableList[this.aggregateIndex].selectedIndex;
-        const instanceKey = this.tableList[this.aggregateIndex].aggregateResourceType[this.selectedIndex].id;
-        const instancesDisplayData = _.cloneDeep(this.tableList[this.aggregateIndex].instancesDisplayData);
-        this.tableList[this.aggregateIndex].instancesDisplayData = {
-                    ...instancesDisplayData,
-                    [instanceKey]: instances
+        const instanceKey = curAggregateItem.aggregateResourceType[this.selectedIndex].id;
+        const instancesDisplayData = _.cloneDeep(curAggregateItem.instancesDisplayData);
+        curAggregateItem.instancesDisplayData = {
+          ...instancesDisplayData,
+          [instanceKey]: instances
         };
-        this.tableList[this.aggregateIndex].instances = [];
-
-        for (const key in this.tableList[this.aggregateIndex].instancesDisplayData) {
+        curAggregateItem.instances = [];
+        for (const key in curAggregateItem.instancesDisplayData) {
           // eslint-disable-next-line max-len
-          this.tableList[this.aggregateIndex].instances.push(...this.tableList[this.aggregateIndex].instancesDisplayData[key]);
+          curAggregateItem.instances.push(...curAggregateItem.instancesDisplayData[key]);
         }
+        console.log(this.tableList[this.aggregateIndex], 56454);
+        const conditionData = this.$refs.aggregateRef.handleGetValue();
+        const { isEmpty, data } = conditionData;
+        console.log(isEmpty, data, 5645);
+        if (isEmpty) {
+          return;
+        }
+        const isConditionEmpty = data.length === 1 && data[0] === 'none';
+        if (isConditionEmpty) {
+          curAggregateItem.instances = ['none'];
+          curAggregateItem.isLimitExceeded = false;
+          curAggregateItem.isError = true;
+          curAggregateItem.isNoLimited = false;
+        } else {
+          // 代表是无限制
+          if (!isEmpty && !data.length) {
+            curAggregateItem.instances = data;
+            curAggregateItem.isError = false;
+            curAggregateItem.isNoLimited = true;
+          }
+        }
+        this.tableList[this.aggregateIndex]
+          = new AggregationPolicy({ ...curAggregateItem, ...{ isNeedNoLimited: true } });
+        console.log(this.tableList[this.aggregateIndex], 4444);
         this.$emit('on-select', this.tableList[this.aggregateIndex]);
       },
 
@@ -1577,8 +1600,9 @@
               actionList.push(_.cloneDeep(params));
             }
           } else {
-            const { actions, aggregateResourceType, instances, instancesDisplayData } = item;
-            if (instances.length < 1) {
+            const { actions, aggregateResourceType, instances, instancesDisplayData, isNoLimited } = item;
+            console.log(item, 2232);
+            if (instances.length < 1 && !isNoLimited) {
               actionList = _.cloneDeep(actions);
               item.isError = true;
               flag = true;
