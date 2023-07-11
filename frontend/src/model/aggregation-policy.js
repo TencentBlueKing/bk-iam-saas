@@ -25,7 +25,7 @@
 */
 
 import _ from 'lodash';
-import il8n from '@/language';
+import { language, il8n } from '@/language';
 import { DURATION_LIST } from '@/common/constants';
 export default class AggregationPolicy {
   constructor (payload) {
@@ -72,17 +72,17 @@ export default class AggregationPolicy {
     if (this.empty) {
       return il8n('verify', '请选择');
     }
-    if (this.isNeedNoLimited && !this.instances.length) {
+    if (this.isNoLimited && !this.instances.length) {
       return il8n('common', '无限制');
     }
     let str = '';
     this.aggregateResourceType.forEach(item => {
       if (this.instancesDisplayData[item.id] && this.instancesDisplayData[item.id].length === 1) {
-        str = `${str}，${item.name}: ${this.instancesDisplayData[item.id][0].name}`;
+        str = `${str}${il8n('common', '，')}${item.name}: ${this.instancesDisplayData[item.id][0].name}`;
       } else if (this.instancesDisplayData[item.id] && this.instancesDisplayData[item.id].length > 1) {
         for (const key in this.instancesDisplayData) {
           if (item.id === key) {
-            str = `${str}，已选择 ${this.instancesDisplayData[item.id].length} 个${item.name}`;
+            str = language === 'zh-cn' ? `${str}，已选择${this.instancesDisplayData[item.id].length}个${item.name}` : `${str}, selected ${this.instancesDisplayData[item.id].length} ${item.name}(s)`;
           }
         }
       }

@@ -793,6 +793,9 @@
             });
             this.sysAndtid = false;
           }
+          if (value.query.tab_key) {
+            this.handleTabChange(value.query.tab_key);
+          }
         },
         immediate: true
       },
@@ -2581,14 +2584,27 @@
        * 点击tab
        */
       clickTab (i, key) {
+        this.handleTabChange(key);
         this.tabIndex = i;
-        if (key === 'userGroup') {
-          this.isShowUserGroup = true;
-          this.isShowIndependent = false;
-        } else {
-          this.isShowIndependent = true;
-          this.isShowUserGroup = false;
+      },
+
+      handleTabChange (key) {
+        this.tabIndex = this.tabData.findIndex(item => item.key === key);
+        if (this.tabIndex === -1) {
+          this.tabIndex = 0;
+          key = 'userGroup';
         }
+        const tabMap = {
+          userGroup: () => {
+            this.isShowUserGroup = true;
+            this.isShowIndependent = false;
+          },
+          independent: () => {
+            this.isShowIndependent = true;
+            this.isShowUserGroup = false;
+          }
+        };
+        return tabMap[key]();
       },
 
       fetchResetData () {
