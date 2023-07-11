@@ -17,8 +17,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from backend.apps.organization.models import User
-from backend.apps.role.models import RoleUser
-from backend.biz.role import RoleBiz
+from backend.biz.role import RoleBiz, can_user_manage_role
 from backend.common.error_codes import error_codes
 
 from .role_auth import ROLE_SESSION_KEY
@@ -76,7 +75,7 @@ class RoleViewSet(GenericViewSet):
         role_id = serializer.validated_data["id"]
 
         # 切换为管理员时, 如果不存在对应的关系, 越权
-        if role_id != 0 and not RoleUser.objects.user_role_exists(request.user.username, role_id):
+        if role_id != 0 and not can_user_manage_role(request.user.username, role_id):
             raise error_codes.FORBIDDEN.format(_("您没有该角色权限，无法切换到该角色"), True)
 
         # 修改session

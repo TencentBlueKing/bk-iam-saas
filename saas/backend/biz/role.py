@@ -1227,3 +1227,15 @@ class ActionScopeDiffer:
                 return False  # 循环正常结束, tc不满足sc中的任意一条
 
         return True
+
+
+def can_user_manage_role(username: str, role_id: int) -> bool:
+    """是否用户能管理角色"""
+    if RoleUser.objects.user_role_exists(username, role_id):
+        return True
+
+    relation = RoleRelation.objects.filter(role_id=role_id).first()
+    if not relation:
+        return False
+
+    return RoleUser.objects.user_role_exists(username, relation.parent_id)

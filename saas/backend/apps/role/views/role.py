@@ -924,6 +924,10 @@ class UserSubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         if not subset_manager_ids:
             return Role.objects.none()
 
+        # 如果用户是分级管理员成员返回所有的二级管理员
+        if RoleUser.objects.user_role_exists(self.request.user.username, grade_manager_id):
+            return self.queryset.filter(id__in=subset_manager_ids)
+
         # 筛选出用户加入的子集管理员id
         role_ids = list(
             RoleUser.objects.filter(role_id__in=subset_manager_ids, username=self.request.user.username).values_list(
