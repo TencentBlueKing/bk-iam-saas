@@ -87,6 +87,9 @@
                               :name="related.name">
                             </bk-option>
                           </bk-select>
+                          <p class="error-tips" v-if="resourceTypeError">
+                            {{$t(`m.verify['请选择资源类型']`)}}
+                          </p>
                         </iam-form-item>
                       </div>
                       <iam-form-item
@@ -112,7 +115,7 @@
                                 resourceTypeData,
                                 content, contentIndex, index)"
                             />
-                            <p class="error-tips" v-if="resourceTypeError">
+                            <p class="error-tips" v-if="resourceInstanceError">
                               {{$t(`m.resourcePermiss['请选择资源实例']`)}}
                             </p>
                           </div>
@@ -475,6 +478,7 @@
         actionIdError: false,
         searchTypeError: false,
         resourceTypeError: false,
+        resourceInstanceError: false,
         isShowResourceInstanceSideSlider: false,
         resourceTypeData: {
           resource_groups: [{
@@ -521,6 +525,7 @@
         curResourceData: {
           type: ''
         },
+        curResourceTypeList: [],
         resourceInstanceSideSliderTitle: '',
         params: {},
         curResIndex: -1,
@@ -700,9 +705,11 @@
         this.systemIdError = false;
         this.actionError = false;
         this.resourceTypeError = false;
+        this.resourceInstanceError = false;
         this.resourceActionData = [];
         this.processesList = [];
         this.applyGroupData.action_id = '';
+        this.curResourceData.type = '';
         this.handleResetResourceData();
         if (this.applyGroupData.system_id) {
           try {
@@ -720,6 +727,7 @@
       },
 
       handleResourceTypeChange (index) {
+        this.resourceTypeError = false;
         this.groupIndex = index;
         this.resourceInstances = [];
         if (this.resourceTypeData
@@ -741,9 +749,12 @@
       handleSelectedAction () {
         this.actionIdError = false;
         this.resourceTypeError = false;
+        this.resourceInstanceError = false;
         this.curResourceData.type = '';
         this.resourceInstances = [];
-        this.resourceTypeData = this.processesList.find(e => e.id === this.applyGroupData.action_id);
+        // 处理操作下是否有无关联资源
+        this.curResourceTypeList = [];
+        this.resourceTypeData = _.cloneDeep(this.processesList.find(e => e.id === this.applyGroupData.action_id));
         if (this.resourceTypeData && this.resourceTypeData.resource_groups) {
           if (this.resourceTypeData.resource_groups.length) {
             const resourceGroups = this.resourceTypeData.resource_groups;
@@ -751,6 +762,12 @@
               // 避免切换操作时，把默认数据代入，从而导致下拉框出现空白项
               if (item.related_resource_types.length && item.related_resource_types[0].system_id) {
                 this.$set(item, 'related_resource_types_list', _.cloneDeep(item.related_resource_types));
+                this.curResourceTypeList = _.cloneDeep(item.related_resource_types);
+                // 默认选中只有一条资源类型数据，改变当前索引值
+                if (item.related_resource_types.length === 1) {
+                  this.curResourceData.type = item.related_resource_types[0].type;
+                  this.handleResourceTypeChange(0);
+                }
               }
             });
             if (!this.curResourceData.type) {
@@ -928,6 +945,10 @@
             this.actionError = true;
             return;
           }
+          if (this.curResourceTypeList.length && !this.curResourceData.type) {
+            this.resourceTypeError = true;
+            return;
+          }
           let resourceInstances = _.cloneDeep(this.resourceInstances);
           resourceInstances = resourceInstances.reduce((prev, item) => {
             const { id, resourceInstancesPath } = this.handlePathData(item, item.type);
@@ -944,7 +965,7 @@
             && !resourceInstances.length
             && this.resourceTypeData.resource_groups[this.groupIndex]
               .related_resource_types.some(e => e.empty)) {
-            this.resourceTypeError = true;
+            this.resourceInstanceError = true;
             return;
           }
           this.isSearchSystem = true;
@@ -1146,6 +1167,7 @@
         this.systemIdError = false;
         this.actionError = false;
         this.resourceTypeError = false;
+        this.resourceInstanceError = false;
         this.isSearchSystem = false;
         this.resourceInstances = [];
         this.resetLocationHref();
@@ -1362,7 +1384,7 @@
         this.resourceInstanceSideSliderTitle = '';
         this.isShowResourceInstanceSideSlider = false;
         this.curResIndex = -1;
-        this.resourceTypeError = false;
+        this.resourceInstanceError = false;
       },
 
       async handleSubmit () {

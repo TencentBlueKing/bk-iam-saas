@@ -297,6 +297,7 @@
       async handleScroll (event) {
         if (this.pagination.current > this.pagination.totalPage) {
           // 删除loading项
+          // 这里不能shift, 否则会存在滚动条往上滚动的时候，会删掉之前的数据
           // this.attrValueListMap[this.curOperateData.id].shift();
           return;
         }
