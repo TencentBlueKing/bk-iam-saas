@@ -204,7 +204,6 @@
           <bk-table-column :label="$t(`m.grading['管理空间']`)">
             <template slot-scope="{ row }">
               <span
-                :class="row.role && row.role.name ? 'can-view' : ''"
                 :title="row.role && row.role.name ? row.role.name : ''"
               >
                 {{ row.role ? row.role.name : '--' }}
