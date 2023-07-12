@@ -36,7 +36,7 @@ export default class AggregationPolicy {
     this.instances = payload.instances || [];
     this.isAggregate = true;
     this.expired_display = payload.expired_display || '';
-    this.isShowCustom = false;
+    this.isShowCustom = payload.isShowCustom || false;
     this.customValue = '';
     this.tag = payload.tag || 'add';
     this.canPaste = false;
@@ -72,7 +72,7 @@ export default class AggregationPolicy {
     if (this.empty) {
       return il8n('verify', '请选择');
     }
-    if (this.isNoLimited && !this.instances.length) {
+    if (this.isNoLimited) {
       return il8n('common', '无限制');
     }
     let str = '';

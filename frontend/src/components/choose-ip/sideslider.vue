@@ -10,8 +10,10 @@
     @update:isShow="handleCancel">
     <div slot="content" class="content" v-bkloading="{ isLoading: loading, opacity: 1 }">
       <div
+        v-if="noLimitRoutes.includes($route.name)"
         class="no-limited-wrapper flex-between"
-        title="$t(`m.resource['无限制总文案']`)">
+        :style="{ borderBottom: !isHide ? 0 : '' }"
+        :title="$t(`m.resource['无限制总文案']`)">
         <div class="no-limited-wrapper-left single-hide">
           <Icon type="info-new" />
           <span>{{ $t(`m.resource['无限制文案']`) }}</span>
@@ -168,6 +170,7 @@
         isScrollBottom: false,
         isHide: false,
         notLimitValue: false,
+        noLimitRoutes: [], // 需要展示无限制的页面
         emptyData: {
           type: 'empty',
           text: '暂无数据',
@@ -485,22 +488,14 @@
       },
 
       handleGetValue () {
+        const tempConditionData = _.cloneDeep(this.curSelectedList);
         if (this.notLimitValue) {
           return {
             isEmpty: false,
             data: []
           };
         }
-        if (this.curSelectedList.length < 1) {
-          return {
-            isEmpty: false,
-            data: ['none']
-          };
-        }
-        const tempConditionData = _.cloneDeep(this.curSelectedList);
-        if (!tempConditionData.some(item => {
-          return (item.instances && item.instances.length);
-        })) {
+        if (!tempConditionData.length) {
           return {
             isEmpty: false,
             data: ['none']
@@ -572,6 +567,7 @@
         height: 480px;
         display: flex;
         justify-self: start;
+        border-top: 1px solid #dcdee5;
     }
     .no-limited-wrapper {
       width: 100%;

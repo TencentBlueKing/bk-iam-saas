@@ -177,7 +177,7 @@
                     :id="option.id"
                     :name="option.name">
                   </bk-option>
-                  <div slot="extension" style="cursor: pointer;" @click.stop="handleOpenCustom(row)">
+                  <div slot="extension" style="cursor: pointer;" @click.stop="handleOpenCustom(row, $index)">
                     <template v-if="!row.isShowCustom">
                       {{ $t(`m.common['自定义']`) }}
                     </template>
@@ -275,7 +275,7 @@
       :flag="curFlag"
       :selection-mode="curSelectionMode"
       @on-selected="handlerSelectAggregateRes"
-      @on-limit-change="handleLimitChange"
+      @on-limit-change="handleAggregateLimitChange"
       @on-init="handleOnInit"
     />
   </div>
@@ -399,7 +399,6 @@
           }
           const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
               .related_resource_types[this.curResIndex];
-              console.log(curData, 6666);
           if (!curData) {
               return [];
           }
@@ -581,7 +580,6 @@
       },
 
       async handlerSelectAggregateRes (payload) {
-        console.log(payload, 62656);
         const instances = payload.map(item => {
           return {
             id: item.id,
@@ -599,13 +597,10 @@
         };
         curAggregateItem.instances = [];
         for (const key in curAggregateItem.instancesDisplayData) {
-          // eslint-disable-next-line max-len
           curAggregateItem.instances.push(...curAggregateItem.instancesDisplayData[key]);
         }
-        console.log(this.tableList[this.aggregateIndex], 56454);
         const conditionData = this.$refs.aggregateRef.handleGetValue();
         const { isEmpty, data } = conditionData;
-        console.log(isEmpty, data, 5645);
         if (isEmpty) {
           return;
         }
@@ -616,16 +611,14 @@
           curAggregateItem.isError = true;
           curAggregateItem.isNoLimited = false;
         } else {
-          // 代表是无限制
-          if (!isEmpty && !data.length) {
-            curAggregateItem.instances = data;
-            curAggregateItem.isError = false;
-            curAggregateItem.isNoLimited = true;
-          }
+          // data和isEmpty都为false代表是无限制
+          const isNoLimited = !isEmpty && !data.length;
+          curAggregateItem.instances = data;
+          curAggregateItem.isError = !(isNoLimited || data.length);
+          curAggregateItem.isNoLimited = isNoLimited;
         }
         this.tableList[this.aggregateIndex]
           = new AggregationPolicy({ ...curAggregateItem, ...{ isNeedNoLimited: true } });
-        console.log(this.tableList[this.aggregateIndex], 4444);
         this.$emit('on-select', this.tableList[this.aggregateIndex]);
       },
 
@@ -678,7 +671,7 @@
 
       handlerAggregateOnBatchPaste (payload, index) {
         let tempCurData = ['none'];
-        let tempArrgegateData = [];
+        let tempAggregateData = [];
         if (this.curCopyMode === 'normal') {
           if (this.curCopyData[0] !== 'none') {
             tempCurData = this.curCopyData.map(item => {
@@ -687,7 +680,7 @@
             });
             const instances = this.curCopyData.map(item => item.instance);
             const instanceData = instances[0][0];
-            tempArrgegateData = instanceData.path.map(pathItem => {
+            tempAggregateData = instanceData.path.map(pathItem => {
               return {
                 id: pathItem[0].id,
                 name: pathItem[0].name
@@ -695,7 +688,7 @@
             });
           }
         } else {
-          tempArrgegateData = this.curCopyData;
+          tempAggregateData = this.curCopyData;
           const instances = (() => {
             const arr = [];
             const { id, name, system_id } = this.curAggregateResourceType;
@@ -743,10 +736,10 @@
             item.aggregateResourceType.forEach(aggregateResourceItem => {
               if (`${aggregateResourceItem.system_id}${aggregateResourceItem.id}` === this.curCopyKey) {
                 if (Object.keys(item.instancesDisplayData).length) {
-                  item.instancesDisplayData[this.instanceKey] = _.cloneDeep(tempArrgegateData);
+                  item.instancesDisplayData[this.instanceKey] = _.cloneDeep(tempAggregateData);
                   item.instances = this.setInstanceData(item.instancesDisplayData);
                 } else {
-                  item.instances = _.cloneDeep(tempArrgegateData);
+                  item.instances = _.cloneDeep(tempAggregateData);
                   this.setInstancesDisplayData(item);
                 }
               }
@@ -803,7 +796,6 @@
             display_name: item.name
           };
         }));
-        console.log(this.aggregateIndex, data, this.tableList[index]);
         this.isShowAggregateSideslider = true;
       },
 
@@ -847,9 +839,13 @@
       },
 
       handleLimitChange () {
-        console.log(this.tableList, '侧边栏');
         const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
           .related_resource_types[this.curResIndex];
+        curData.isChange = true;
+      },
+
+      handleAggregateLimitChange () {
+        const curData = this.tableList[this.aggregateIndex];
         curData.isChange = true;
       },
 
@@ -857,8 +853,9 @@
         this.disabled = !payload;
       },
 
-      handleOpenCustom (payload) {
-        payload.isShowCustom = true;
+      handleOpenCustom (row, index) {
+        row.isShowCustom = true;
+        this.$set(this.tableList, index, row);
       },
 
       showResourceInstance (data, resItem, resIndex, groupIndex) {
@@ -1243,7 +1240,7 @@
 
       handlerOnBatchPaste (payload, content, index, subIndex) {
         let tempCurData = ['none'];
-        let tempArrgegateData = [];
+        let tempAggregateData = [];
         if (this.curCopyMode === 'normal') {
           if (!payload.flag) {
             return;
@@ -1277,7 +1274,7 @@
                 });
                 const instances = this.curCopyData.map(item => item.instance);
                 const instanceData = instances[0][0];
-                tempArrgegateData = instanceData.path.map(pathItem => {
+                tempAggregateData = instanceData.path.map(pathItem => {
                   return {
                     id: pathItem[0].id,
                     name: pathItem[0].name
@@ -1299,7 +1296,7 @@
                 });
               } else {
                 if (`${item.aggregateResourceType[item.selectedIndex].system_id}${item.aggregateResourceType[item.selectedIndex].id}` === this.curCopyKey) {
-                  item.instances = _.cloneDeep(tempArrgegateData);
+                  item.instances = _.cloneDeep(tempAggregateData);
                   item.isError = false;
                   this.$emit('on-select', item);
                 }
@@ -1322,7 +1319,7 @@
               } else {
                 item.aggregateResourceType && item.aggregateResourceType.forEach(aggregateResourceItem => {
                   if (`${aggregateResourceItem.system_id}${aggregateResourceItem.id}` === this.curCopyKey) {
-                    item.instances = _.cloneDeep(tempArrgegateData);
+                    item.instances = _.cloneDeep(tempAggregateData);
                     this.instanceKey = aggregateResourceItem.id;
                     this.setNomalInstancesDisplayData(item, this.instanceKey);
                     this.instanceKey = ''; // 重置
@@ -1334,7 +1331,7 @@
             });
           }
         } else {
-          tempArrgegateData = this.curCopyData;
+          tempAggregateData = this.curCopyData;
           const instances = (() => {
             const arr = [];
             const { id, name, system_id } = this.curAggregateResourceType;
@@ -1377,7 +1374,7 @@
               });
             } else {
               if (`${item.aggregateResourceType.system_id}${item.aggregateResourceType.id}` === this.curCopyKey) {
-                item.instances = _.cloneDeep(tempArrgegateData);
+                item.instances = _.cloneDeep(tempAggregateData);
                 item.isError = false;
               }
             }
@@ -1601,8 +1598,7 @@
             }
           } else {
             const { actions, aggregateResourceType, instances, instancesDisplayData, isNoLimited } = item;
-            console.log(item, 2232);
-            if (instances.length < 1 && !isNoLimited) {
+            if (instances.length < 1 || (!isNoLimited && instances.length === 1 && instances[0] === 'none')) {
               actionList = _.cloneDeep(actions);
               item.isError = true;
               flag = true;
