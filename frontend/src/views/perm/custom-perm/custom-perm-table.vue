@@ -40,6 +40,7 @@
                 @click.stop="handleViewResource(_, row)"
               />
               <Icon
+                v-if="isShowPreview(row) && row.resource_groups.length > 1"
                 type="delete-line"
                 :title="$t(`m.perm['删除实例资源权限组']`)"
                 :class="row.resource_groups.length > 1 ? 'effect-icon' : 'effect-icon-disabled'"
