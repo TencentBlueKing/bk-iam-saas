@@ -38,7 +38,7 @@
               <span>{{ option.display_name }}</span>
             </template>
             <template v-else>
-              <div v-bkloading="{ isLoading: true, size: 'mini' }"></div>
+              <div v-bkloading="{ isLoading: pagination.current <= pagination.totalPage, size: 'mini' }"></div>
             </template>
           </bk-option>
         </bk-select>
@@ -277,7 +277,7 @@
         }
       },
 
-      handleAttrValueToggle (val, index, payload) {
+      async handleAttrValueToggle (val, index, payload) {
         if (this.isDisabledMode) {
           return;
         }
@@ -290,12 +290,15 @@
           this.curOperateData = {};
           curOptionDom.removeEventListener('scroll', this.handleScroll);
         }
+        this.pagination = Object.assign(this.pagination, { current: 1, limit: 10, totalPage: 0 });
+        await this.fetchResourceAttrValues(payload);
       },
 
       async handleScroll (event) {
         if (this.pagination.current > this.pagination.totalPage) {
           // 删除loading项
-          this.attrValueListMap[this.curOperateData.id].shift();
+          // 这里不能shift, 否则会存在滚动条往上滚动的时候，会删掉之前的数据
+          // this.attrValueListMap[this.curOperateData.id].shift();
           return;
         }
         if (event.target.scrollTop + event.target.offsetHeight >= event.target.scrollHeight) {
@@ -322,11 +325,11 @@
         const { limit, current } = this.pagination;
         try {
           const res = await this.$store.dispatch('permApply/getResourceAttrValues', {
-                        ...this.params,
-                        limit: limit,
-                        offset: limit * (current - 1),
-                        attribute: payload.id,
-                        keyword
+            ...this.params,
+            limit: limit,
+            offset: limit * (current - 1),
+            attribute: payload.id,
+            keyword
           });
           if (isScrollRemote) {
             const len = this.attrValueListMap[payload.id].length;

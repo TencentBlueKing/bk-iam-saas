@@ -90,7 +90,7 @@
     <bk-sideslider
       :is-show="isShowSideslider"
       :title="sidesliderTitle"
-      :width="725"
+      :width="960"
       quick-close
       data-test-id="myPerm_sideslider_resourceInsance"
       @update:isShow="handleResourceCancel">
@@ -135,7 +135,7 @@
     <bk-sideslider
       :is-show="isShowEnvironmentsSideslider"
       :title="environmentsSidesliderTitle"
-      :width="725"
+      :width="640"
       quick-close
       @update:isShow="handleResourceCancel"
       ext-cls="effect-conditon-side">
@@ -153,7 +153,7 @@
     <bk-sideslider
       :is-show="isShowResourceInstanceEffectTime"
       :title="environmentsSidesliderTitle"
-      :width="725"
+      :width="640"
       quick-close
       @update:isShow="handleResourceEffectTimeCancel"
       :ext-cls="'relate-instance-sideslider'">

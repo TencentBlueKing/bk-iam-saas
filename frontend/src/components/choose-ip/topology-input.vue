@@ -1,5 +1,10 @@
 <template>
-  <div :class="['iam-topology-input', { 'reset-padding': isUsedByTree }]">
+  <div
+    :class="[
+      'iam-topology-input',
+      { 'reset-padding': isUsedByTree }
+    ]"
+    :style="customStyle">
     <bk-input
       ref="input"
       :clearable="false"
@@ -31,6 +36,10 @@
       isFilter: {
         type: Boolean,
         default: false
+      },
+      customStyle: {
+        type: Object,
+        default: () => {}
       }
     },
     data () {
