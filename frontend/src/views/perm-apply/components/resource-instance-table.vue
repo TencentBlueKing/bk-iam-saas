@@ -588,9 +588,9 @@
         });
         const curAggregateItem = this.tableList[this.aggregateIndex];
         curAggregateItem.isError = false;
-        this.selectedIndex = this.tableList[this.aggregateIndex].selectedIndex;
+        this.selectedIndex = curAggregateItem.selectedIndex;
         const instanceKey = curAggregateItem.aggregateResourceType[this.selectedIndex].id;
-        const instancesDisplayData = _.cloneDeep(curAggregateItem.instancesDisplayData);
+        const instancesDisplayData = curAggregateItem.instancesDisplayData;
         curAggregateItem.instancesDisplayData = {
           ...instancesDisplayData,
           [instanceKey]: instances
@@ -617,8 +617,11 @@
           curAggregateItem.isError = !(isNoLimited || data.length);
           curAggregateItem.isNoLimited = isNoLimited;
         }
-        this.tableList[this.aggregateIndex]
-          = new AggregationPolicy({ ...curAggregateItem, ...{ isNeedNoLimited: true } });
+        this.$set(
+          this.tableList,
+          this.aggregateIndex,
+          new AggregationPolicy({ ...curAggregateItem, ...{ isNeedNoLimited: true } })
+        );
         this.$emit('on-select', this.tableList[this.aggregateIndex]);
       },
 
@@ -1598,7 +1601,7 @@
             }
           } else {
             const { actions, aggregateResourceType, instances, instancesDisplayData, isNoLimited } = item;
-            if (instances.length < 1 || (!isNoLimited && instances.length === 1 && instances[0] === 'none')) {
+            if (!isNoLimited && (instances.length < 1 || (instances.length === 1 && instances[0] === 'none'))) {
               actionList = _.cloneDeep(actions);
               item.isError = true;
               flag = true;
