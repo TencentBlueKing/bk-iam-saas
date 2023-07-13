@@ -479,7 +479,9 @@
                 return this.isRatingManager;
             },
             isHierarchicalAdmin () {
-                return this.$store.getters.roleList.find(item => item.id === this.$store.getters.navCurRoleId) || {};
+              const { navCurRoleId, curRoleId, roleList } = this.$store.getters;
+              const roleId = navCurRoleId || curRoleId;
+              return roleList.find(item => item.id === roleId) || {};
             },
             contentHeight () {
                 return getWindowHeight() - 120;
@@ -1413,9 +1415,14 @@
       },
 
       async handleSkip () {
-        bus.$emit('nav-change', { id: this.$store.getters.navCurRoleId }, 0);
-        await this.$store.dispatch('role/updateCurrentRole', { id: 0 });
-        const routeData = this.$router.resolve({ path: `${this.$store.getters.navCurRoleId}/rating-manager-edit`, params: { id: this.$store.getters.navCurRoleId } });
+        // bus.$emit('nav-change', { id: this.$store.getters.navCurRoleId }, 0);
+        // await this.$store.dispatch('role/updateCurrentRole', { id: 0 });
+        // const routeData = this.$router.resolve({ path: `${this.$store.getters.navCurRoleId}/rating-manager-edit`, params: { id: this.$store.getters.navCurRoleId } });
+        // window.open(routeData.href, '_blank');
+        const routeData = this.$router.resolve({
+          name: 'authorBoundaryEditFirstLevel',
+          params: { id: this.$store.getters.curRoleId }
+        });
         window.open(routeData.href, '_blank');
       }
     },

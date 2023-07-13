@@ -53,7 +53,7 @@ export default class GradeAggregationPolicy {
     let str = '';
     this.aggregateResourceType.forEach(item => {
       if (this.instancesDisplayData[item.id] && this.instancesDisplayData[item.id].length === 1) {
-        str = `${str}${il8n('common', '，')}${item.name}{il8n('common', '：')}${this.instancesDisplayData[item.id][0].name}`;
+        str = `${str}${il8n('common', '，')}${item.name}${il8n('common', '：')}${this.instancesDisplayData[item.id][0].name}`;
       } else if (this.instancesDisplayData[item.id] && this.instancesDisplayData[item.id].length > 1) {
         for (const key in this.instancesDisplayData) {
           if (item.id === key) {
