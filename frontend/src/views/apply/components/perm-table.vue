@@ -30,7 +30,7 @@
                   <render-resource-popover
                     :key="item.type"
                     :data="item.condition"
-                    :value="`${item.name}：${item.value}`"
+                    :value="`${item.name}${$t(`m.common['：']`)}${item.value}`"
                     :max-width="380"
                     @on-view="handleViewResource(_, row)" />
                 </p>
@@ -147,7 +147,7 @@
     },
     computed: {
       applyTitle () {
-        return `${this.$t(`m.myApply['申请内容']`)}（${this.system.system_name}）`;
+        return `${this.$t(`m.myApply['申请内容']`)}${this.$t(`m.common['（']`)}${this.system.system_name}}${this.$t(`m.common['）']`)}`;
       },
       isShowPreview () {
         return (payload) => {
