@@ -14,5 +14,6 @@ from . import views
 
 urlpatterns = [
     path("user/", views.UserViewSet.as_view({"get": "retrieve"}), name="account.retrieve_user"),
+    # TODO 等前端替换为我的管理空间相关接口后, 这个list接口下掉
     path("user/roles/", views.RoleViewSet.as_view({"get": "list", "post": "create"}), name="account.user_role"),
 ]
