@@ -231,8 +231,11 @@
       },
       params: {
         handler (value) {
-          if (Object.keys(value).length > 0) {
-            if (value.isNoLimited) {
+          if (Object.keys(value).length) {
+            const { isNoLimited } = value;
+            this.notLimitValue = isNoLimited;
+            this.isHide = isNoLimited;
+            if (isNoLimited) {
               this.handleClear();
             }
             this.$emit('on-init', false);
