@@ -42,6 +42,8 @@ export default class AggregationPolicy {
     this.canPaste = false;
     this.instancesBackup = _.cloneDeep(this.instances);
     this.selectedIndex = payload.selectedIndex || 0;
+    this.isChange = false;
+    this.selectionMode = payload.selection_mode || 'all';
     // 是否需要展示无限制
     this.isNeedNoLimited = payload.isNeedNoLimited;
     // 是否是无限制操作
@@ -55,6 +57,10 @@ export default class AggregationPolicy {
       return;
     }
     this.expired_at = payload.expired_at;
+  }
+
+  get isDefaultLimit () {
+    return !this.flag && this.instances.length < 1 && !this.isChange && this.tag !== 'add';
   }
 
   get empty () {

@@ -232,6 +232,9 @@
       params: {
         handler (value) {
           if (Object.keys(value).length > 0) {
+            if (value.isNoLimited) {
+              this.handleClear();
+            }
             this.$emit('on-init', false);
           }
         },
