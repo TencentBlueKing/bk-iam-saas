@@ -220,7 +220,7 @@
         }
 
         .all-item {
-            font-size: 14px;
+            font-size: 12px;
             margin-left: 10px;
             color: #979ba5;
         }
