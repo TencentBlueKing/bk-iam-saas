@@ -29,7 +29,7 @@ import { language, il8n } from '@/language';
 import { DURATION_LIST } from '@/common/constants';
 export default class AggregationPolicy {
   constructor (payload) {
-    this.isError = false;
+    this.isError = payload.isError || false;
     this.actions = payload.actions || [];
     this.instancesDisplayData = payload.instancesDisplayData || {};
     this.aggregateResourceType = payload.aggregate_resource_types || payload.aggregateResourceType || [];
@@ -78,7 +78,7 @@ export default class AggregationPolicy {
     if (this.empty) {
       return il8n('verify', '请选择');
     }
-    if (this.isNoLimited) {
+    if (this.isNoLimited || (!this.instances.length && !['add'].includes(this.tag))) {
       return il8n('common', '无限制');
     }
     let str = '';

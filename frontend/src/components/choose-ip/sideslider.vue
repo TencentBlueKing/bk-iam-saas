@@ -170,7 +170,7 @@
         isScrollBottom: false,
         isHide: false,
         notLimitValue: false,
-        noLimitRoutes: [], // 需要展示无限制的页面
+        noLimitRoutes: ['applyCustomPerm'], // 需要展示无限制的页面
         emptyData: {
           type: 'empty',
           text: '暂无数据',
@@ -243,46 +243,6 @@
         },
         immediate: true
       },
-      // data: {
-      //   handler (val) {
-      //     console.log(val, 4555);
-      //     const len = val.length;
-      //     // 此时是无权限状态
-      //     if (len === 1 && val[0] === 'none') {
-      //       this.conditionData = [new Condition({ selection_mode: this.selectionMode }, 'init', 'add')];
-      //       this.conditionData[0].instanceExpanded = true;
-      //       const selectionMode = this.conditionData[0].selectionMode;
-      //       if (selectionMode !== 'all') {
-      //         this.conditionData[0].instanceCanDelete = false;
-      //       }
-      //       return;
-      //     }
-      //     if (len > 0) {
-      //       this.conditionData = val;
-      //       const firstConditionData = this.conditionData[0];
-      //       if (firstConditionData.instance && firstConditionData.instance.length > 0) {
-      //         firstConditionData.instanceExpanded = true;
-      //       }
-      //       if (firstConditionData.attribute && firstConditionData.attribute.length > 0) {
-      //         firstConditionData.attributeExpanded = true;
-      //       }
-      //       if (len === 1) {
-      //         const selectionMode = this.conditionData[0].selectionMode;
-      //         if (selectionMode !== 'all') {
-      //           this.conditionData[0].instanceCanDelete = false;
-      //         }
-      //       }
-      //       this.notLimitValue = false;
-      //       this.isHide = false;
-      //     } else {
-      //       this.notLimitValue = true;
-      //       this.isHide = true;
-      //       this.conditionData = [];
-      //     }
-      //   },
-      //   deep: true,
-      //   immediate: true
-      // },
       notLimitValue (value) {
         if (value) {
           this.conditionData.forEach(item => {

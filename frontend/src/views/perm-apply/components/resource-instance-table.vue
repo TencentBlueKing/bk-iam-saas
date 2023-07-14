@@ -1334,7 +1334,6 @@
                 if (`${item.aggregateResourceType[item.selectedIndex].system_id}${item.aggregateResourceType[item.selectedIndex].id}` === this.curCopyKey) {
                   item.instances = _.cloneDeep(tempAggregateData);
                   item.isError = false;
-                  console.log(this.tableList, 4545);
                   if (!item.instances.length) {
                     item.isNeedNoLimited = true;
                     item.isNoLimited = true;
@@ -1410,7 +1409,6 @@
           }
           this.tableList.forEach(item => {
             if (!item.isAggregate) {
-              console.log(item, 44545);
               // item.related_resource_types && item.related_resource_types.forEach(subItem => {
               //   if (`${subItem.system_id}${subItem.type}` === this.curCopyKey) {
               //     subItem.condition = _.cloneDeep(tempCurData);
@@ -1685,6 +1683,7 @@
             }
           }
         });
+        console.log(aggregations, 45455);
         return {
           flag,
           actions: actionList,
