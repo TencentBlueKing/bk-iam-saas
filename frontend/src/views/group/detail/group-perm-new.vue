@@ -207,6 +207,9 @@
             item.loading = false;
             item.templates = []; // 在getGroupTemplateList方法赋值
           });
+          if (data.length) {
+            data.sort((curr, next) => curr.name.localeCompare(next.name));
+          }
           this.groupSystemList = data; // groupSystemList会通过handleExpanded调用其他方法做属性的添加
           this.groupSystemListLength = data.length;
           this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
