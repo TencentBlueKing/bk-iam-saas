@@ -16,7 +16,7 @@ from typing import Dict, List, Optional, Set
 from blue_krill.web.std_error import APIError
 from django.conf import settings
 from django.db import connection
-from django.db.models import Q
+from django.db.models import Case, Q, Value, When
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
 from pydantic import BaseModel, parse_obj_as
@@ -781,13 +781,28 @@ class RoleListQuery:
         mgr_ids = self._list_authorization_scope_include_user_role_ids()
         return self.role_svc.list_by_ids(mgr_ids, with_hidden=False)
 
-    def query_grade_manager(self):
+    def query_grade_manager(self, with_super: bool = False):
         """
         查询分级管理员列表
         """
+        queryset = Role.objects.filter(type=RoleType.GRADE_MANAGER.value).order_by("-updated_time")
+        if with_super:
+            type_order = Case(
+                When(type=RoleType.SUPER_MANAGER.value, then=Value(1)),
+                When(type=RoleType.SYSTEM_MANAGER.value, then=Value(2)),
+                When(type=RoleType.GRADE_MANAGER.value, then=Value(3)),
+            )
+            queryset = (
+                Role.objects.filter(
+                    type__in=[RoleType.SUPER_MANAGER, RoleType.SYSTEM_MANAGER, RoleType.GRADE_MANAGER.value]
+                )
+                .alias(type_order=type_order)
+                .order_by("type_order", "-updated_time")
+            )
+
         # 作为超级管理员时，可以管理所有分级管理员
         if self.role.type == RoleType.SUPER_MANAGER.value:
-            return Role.objects.filter(type=RoleType.GRADE_MANAGER.value).order_by("-updated_time")
+            return queryset
 
         # 作为个人时，只能管理加入的的分级管理员
         assert self.user
@@ -799,7 +814,7 @@ class RoleListQuery:
         grade_manager_ids = list(RoleRelation.objects.filter(role_id__in=role_ids).values_list("parent_id", flat=True))
         role_ids.extend(grade_manager_ids)
 
-        return Role.objects.filter(type=RoleType.GRADE_MANAGER.value, id__in=role_ids).order_by("-updated_time")
+        return queryset.filter(id__in=role_ids)
 
     def query_subset_manager(self):
         """
@@ -1231,11 +1246,14 @@ class ActionScopeDiffer:
 
 def can_user_manage_role(username: str, role_id: int) -> bool:
     """是否用户能管理角色"""
-    if RoleUser.objects.user_role_exists(username, role_id):
-        return True
+    role_ids = [role_id]
 
     relation = RoleRelation.objects.filter(role_id=role_id).first()
-    if not relation:
-        return False
+    if relation:
+        role_ids.append(relation.parent_id)
 
-    return RoleUser.objects.user_role_exists(username, relation.parent_id)
+    super_manager = Role.objects.filter(type=RoleType.SUPER_MANAGER.value).first()
+    if super_manager:
+        role_ids.append(super_manager.id)
+
+    return RoleUser.objects.filter(role_id__in=role_ids, username=username).exists()

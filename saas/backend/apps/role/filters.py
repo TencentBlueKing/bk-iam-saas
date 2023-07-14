@@ -17,6 +17,7 @@ from backend.common.filters import InitialFilterSet
 class GradeMangerFilter(InitialFilterSet):
     name = filters.CharFilter(lookup_expr="icontains", label="名称")
     hidden = filters.BooleanFilter(method="hidden_filter", initial=True)
+    with_super = filters.BooleanFilter(method="with_super_filter", initial=False)
 
     class Meta:
         model = Role
@@ -25,6 +26,9 @@ class GradeMangerFilter(InitialFilterSet):
     def hidden_filter(self, queryset, name, value):
         if value:
             return queryset.filter(hidden=False)
+        return queryset
+
+    def with_super_filter(self, queryset, name, value):
         return queryset
 
 
