@@ -76,7 +76,7 @@
     <bk-sideslider
       :is-show.sync="isShowSideslider"
       :title="sidesliderTitle"
-      :width="725"
+      :width="960"
       :quick-close="true"
       @animation-end="handleAnimationEnd">
       <div slot="content">
@@ -86,7 +86,7 @@
     <bk-sideslider
       :is-show="isShowEnvironmentsSideslider"
       :title="environmentsSidesliderTitle"
-      :width="725"
+      :width="960"
       quick-close
       @update:isShow="handleResourceCancel"
       ext-cls="effect-conditon-side">

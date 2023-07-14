@@ -11,7 +11,7 @@ specific language governing permissions and limitations under the License.
 主要是将API请求里的操作或操作组合等权限数据，转换为PolicyBean或List[PolicyBean]，便于进行下一步处理
 """
 from collections import defaultdict
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from pydantic.tools import parse_obj_as
 
@@ -34,7 +34,9 @@ class PolicyTrans:
     action_biz = ActionBiz()
     action_check_biz = ActionCheckBiz()
 
-    def _gen_instance_condition_by_aggregate_resources(self, aggregate_resource_types: List[Dict]) -> ConditionBean:
+    def _gen_instance_condition_by_aggregate_resources(
+        self, aggregate_resource_types: List[Dict]
+    ) -> Optional[ConditionBean]:
         """
         将操作聚合里选择的资源实例转换为Policy里资源的Condition
         [{
@@ -46,6 +48,9 @@ class PolicyTrans:
             ]
         }]
         """
+        if not aggregate_resource_types:
+            return None
+
         instance_beans: List[InstanceBean] = []
         for aggregate_resource_type in aggregate_resource_types:
             system_id, resource_type_id, instances = (
@@ -67,7 +72,7 @@ class PolicyTrans:
         return ConditionBean(instances=instance_beans, attributes=[])
 
     def _gen_policy_by_action_and_condition(
-        self, action: ActionBean, condition: ConditionBean, expired_at: int
+        self, action: ActionBean, condition: Optional[ConditionBean], expired_at: int
     ) -> PolicyBean:
         """通过操作模型和选择里实例的Condition生成对应策略"""
         return PolicyBean(
@@ -76,7 +81,9 @@ class PolicyTrans:
                 ResourceGroup(
                     id=gen_uuid(),
                     related_resource_types=[
-                        RelatedResourceBean(system_id=rrt.system_id, type=rrt.id, condition=[condition])
+                        RelatedResourceBean(
+                            system_id=rrt.system_id, type=rrt.id, condition=[condition] if condition else []
+                        )
                         for rrt in action.related_resource_types
                     ],
                 )
