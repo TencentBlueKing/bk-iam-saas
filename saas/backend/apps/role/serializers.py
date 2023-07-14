@@ -222,6 +222,7 @@ class GradeManagerListSLZ(BaseGradeMangerSLZ):
         model = Role
         fields = (
             "id",
+            "type",
             "name",
             "description",
             "creator",
