@@ -114,7 +114,9 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
     def get_queryset(self):
         request = self.request
-        return RoleListQuery(request.role, request.user).query_grade_manager()
+        return RoleListQuery(request.role, request.user).query_grade_manager(
+            with_super=bool(request.query_params.get("with_super", False))
+        )
 
     @swagger_auto_schema(
         operation_description="创建分级管理员",
