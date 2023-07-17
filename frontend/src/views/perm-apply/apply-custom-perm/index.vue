@@ -751,7 +751,7 @@
         },
         isUnlimitedDisabled () {
           const isDisabled = this.tableData.every(item =>
-          (!item.instances || (item.instances && !item.instances.length))
+          (item.instances && item.instances.length === 1 && item.instances[0] === 'none')
           && (!item.resource_groups || (item.resource_groups && !item.resource_groups.length))
            );
            if (isDisabled) {
@@ -2495,30 +2495,29 @@
           reason: this.reason,
           usernames: this.permMembers
         };
-        console.log(params, 5665);
-        // this.buttonLoading = true;
-        // try {
-        //   await this.$store.dispatch('permApply/permApply', params);
-        //   this.messageSuccess(this.$t(`m.info['申请已提交']`), 1000);
-        //   this.$router.push({
-        //     name: 'apply'
-        //   });
-        // } catch (e) {
-        //   console.error(e);
-        //   if (['admin'].includes(this.user.username)) {
-        //     this.isShowConfirmDialog = true;
-        //   } else {
-        //     this.bkMessageInstance = this.$bkMessage({
-        //       limit: 1,
-        //       theme: 'error',
-        //       message: e.message || e.data.msg || e.statusText,
-        //       ellipsisLine: 2,
-        //       ellipsisCopy: true
-        //     });
-        //   }
-        // } finally {
-        //   this.buttonLoading = false;
-        // }
+        this.buttonLoading = true;
+        try {
+          await this.$store.dispatch('permApply/permApply', params);
+          this.messageSuccess(this.$t(`m.info['申请已提交']`), 1000);
+          this.$router.push({
+            name: 'apply'
+          });
+        } catch (e) {
+          console.error(e);
+          if (['admin'].includes(this.user.username)) {
+            this.isShowConfirmDialog = true;
+          } else {
+            this.bkMessageInstance = this.$bkMessage({
+              limit: 1,
+              theme: 'error',
+              message: e.message || e.data.msg || e.statusText,
+              ellipsisLine: 2,
+              ellipsisCopy: true
+            });
+          }
+        } finally {
+          this.buttonLoading = false;
+        }
       },
 
       handleSystemEnter (id) {
@@ -2666,6 +2665,7 @@
 
       fetchResetData () {
         this.isAllExpanded = false;
+        this.isAllUnlimited = false;
         this.sysAndtid = false;
         this.aggregationMap = [];
         this.aggregations = [];
