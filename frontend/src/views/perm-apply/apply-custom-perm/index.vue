@@ -650,7 +650,7 @@
     data () {
       return {
         userApi: window.BK_USER_API,
-        systemValue: 'bk_cmdb',
+        systemValue: '',
         systemList: [],
         buttonLoading: false,
         originalCustomTmplList: [],
