@@ -665,6 +665,7 @@
         linearActionList: [],
         requestQueue: ['action', 'policy', 'aggregate', 'commonAction'],
         isAllExpanded: false,
+        isAllUnlimited: false,
         aggregationMap: [],
         aggregations: [],
         aggregationsBackup: [],
@@ -1647,7 +1648,8 @@
       },
 
       handleUnlimitedActionChange (payload) {
-        this.tableData.forEach((item, index) => {
+        const tableData = _.cloneDeep(this.tableData);
+        tableData.forEach((item, index) => {
           if (!item.isAggregate) {
             if (item.resource_groups && item.resource_groups.length) {
               item.resource_groups.forEach(groupItem => {
@@ -1662,31 +1664,30 @@
                 });
               });
             } else {
-              console.log(item, '没有时间');
-            }
-          } else {
-            if (item.instances) {
-              item.isError = !(item.instances.length || (!item.instances.length && item.isNoLimited));
-              if (item.instances.length && !payload) {
-                item.isNoLimited = false;
-              }
-              if ((!item.instances.length && !payload && item.isNoLimited) || (!item.instances.length && payload)) {
-                item.isNoLimited = true;
-              }
-              this.$set(
-                this.tableData,
-                index,
-                new AggregationPolicy({
-                   ...item,
-                   ...{
-                    instances: [],
-                    isNeedNoLimited: true
-                  }
-                })
-              );
+              item.name = item.name.split('，')[0];
             }
           }
+          if (item.instances && item.isAggregate) {
+            item.isNoLimited = false;
+            item.isError = !(item.instances.length || (!item.instances.length && item.isNoLimited));
+            item.isNeedNoLimited = true;
+            if (!payload || item.instances.length) {
+              item.isNoLimited = false;
+              item.isError = false;
+            }
+            if ((!item.instances.length && !payload && item.isNoLimited) || payload) {
+              item.isNoLimited = true;
+              item.isError = false;
+              item.instances = [];
+            }
+            return this.$set(
+              tableData,
+              index,
+              new AggregationPolicy(item)
+            );
+          }
         });
+        this.tableData = _.cloneDeep(tableData);
       },
 
       handleRelatedChange (payload) {

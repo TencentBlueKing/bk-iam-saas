@@ -518,7 +518,10 @@
             }
           } else {
             value.forEach(e => {
-              e.name = e.name.split('，')[0];
+              if (!e.isAggregate) {
+                // 防止切换的时候修改只读name
+                e.name = e.name.split('，')[0];
+              }
             });
             this.emptyResourceGroupsList = []; // 重置变量
             this.tableList = value;
