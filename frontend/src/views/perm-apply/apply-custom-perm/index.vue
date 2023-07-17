@@ -752,8 +752,7 @@
         },
         isUnlimitedDisabled () {
           const isDisabled = this.tableData.every(item =>
-          (item.instances && item.instances.length === 1 && item.instances[0] === 'none')
-          && (!item.resource_groups || (item.resource_groups && !item.resource_groups.length))
+           ((!item.resource_groups || (item.resource_groups && !item.resource_groups.length)) && !item.instances)
            );
            if (isDisabled) {
             this.isAllUnlimited = false;
