@@ -12,7 +12,7 @@ from copy import copy
 from itertools import groupby
 from typing import List
 
-from django.db.models import Q
+from django.db.models import Case, Q, Value, When
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
 from drf_yasg.utils import swagger_auto_schema
@@ -984,13 +984,22 @@ class RoleSearchViewSet(mixins.ListModelMixin, GenericViewSet):
     filterset_class = RoleSearchFilter
 
     def get_queryset(self):
+        queryset = self.queryset
+        if bool(self.request.query_params.get("with_super", False)):
+            type_order = Case(
+                When(type=RoleType.SUPER_MANAGER.value, then=Value(1)),
+                When(type=RoleType.SYSTEM_MANAGER.value, then=Value(2)),
+                default=Value(3),
+            )
+            queryset = Role.objects.alias(type_order=type_order).order_by("type_order", "-updated_time")
+
         # 作为超级管理员时，可以管理所有分级管理员
         if self.request.role.type == RoleType.SUPER_MANAGER.value:
-            return self.queryset
+            return queryset
 
         # 普通用户只能查询到自己加入的管理员
         role_ids = list(RoleUser.objects.filter(username=self.request.user.username).values_list("role_id", flat=True))
-        return self.queryset.filter(id__in=role_ids)
+        return queryset.filter(id__in=role_ids)
 
     @swagger_auto_schema(
         operation_description="管理员搜索",
