@@ -42,6 +42,7 @@ class RoleCommonActionFilter(filters.FilterSet):
 
 class RoleSearchFilter(GradeMangerFilter):
     member = filters.CharFilter(label="成员", method="member_filter")
+    with_super = filters.BooleanFilter(method="with_super_filter", initial=False)
 
     class Meta:
         model = Role
@@ -50,3 +51,6 @@ class RoleSearchFilter(GradeMangerFilter):
     def member_filter(self, queryset, name, value):
         role_ids = list(RoleUser.objects.filter(username=value).values_list("role_id", flat=True))
         return queryset.filter(id__in=role_ids)
+
+    def with_super_filter(self, queryset, name, value):
+        return queryset
