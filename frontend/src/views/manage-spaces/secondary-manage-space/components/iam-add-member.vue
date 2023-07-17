@@ -268,7 +268,7 @@
   import dialogInfiniteList from '@/components/dialog-infinite-list';
   import IamDeadline from '@/components/iam-deadline/horizontal';
   import { guid, formatCodeData } from '@/common/util';
-  import { bus } from '@/common/bus';
+  // import { bus } from '@/common/bus';
 
   // 去除()以及之间的字符
   const getUsername = (str) => {
@@ -473,7 +473,9 @@
         return this.isRatingManager;
       },
       isHierarchicalAdmin () {
-        return this.$store.getters.roleList.find(item => item.id === this.$store.getters.navCurRoleId) || {};
+        const { navCurRoleId, curRoleId, roleList } = this.$store.getters;
+        const roleId = navCurRoleId || curRoleId;
+        return roleList.find(item => item.id === roleId) || {};
       },
       nameType () {
         return (payload) => {
@@ -1282,16 +1284,21 @@
       },
             
       async handleSkip () {
-        bus.$emit('nav-change', { id: this.$store.getters.navCurRoleId }, 0);
-        await this.$store.dispatch('role/updateCurrentRole', { id: 0 });
-        const routeData = this.$router.resolve({ path: `${this.$store.getters.navCurRoleId}/rating-manager-edit`, params: { id: this.$store.getters.navCurRoleId } });
-        window.open(routeData.href, '_blank');
+        // bus.$emit('nav-change', { id: this.$store.getters.navCurRoleId }, 0);
+        // await this.$store.dispatch('role/updateCurrentRole', { id: 0 });
+        // const routeData = this.$router.resolve({ path: `${this.$store.getters.navCurRoleId}/rating-manager-edit`, params: { id: this.$store.getters.navCurRoleId } });
+        // window.open(routeData.href, '_blank');
         // this.$router.push({
         //     name: 'gradingAdminEdit',
         //     params: {
         //         id: this.$store.getters.navCurRoleId
         //     }
         // });
+        const routeData = this.$router.resolve({
+          name: 'authorBoundaryEditFirstLevel',
+          params: { id: this.$store.getters.curRoleId }
+        });
+        window.open(routeData.href, '_blank');
       }
     }
   };

@@ -369,13 +369,16 @@
                 return getWindowHeight() - 185;
             },
             disabledPerm () {
-                return (payload) => {
-                    const result = payload.members
-                    .map((item) => item.username)
-                    .includes(this.user.username);
-                    return !result;
-                };
-            },
+              return (payload) => {
+                const { type, members } = payload;
+                if (['subset_manager'].includes(type)) {
+                  return false;
+                } else {
+                  const result = members.map((item) => item.username).includes(this.user.username);
+                  return !result;
+                }
+              };
+          },
             isStaff () {
                 return this.user.role.type === 'staff';
             },

@@ -215,7 +215,7 @@
             @on-realted-change="handleRelatedChange" />
           <div slot="append" class="expanded-action-wrapper">
             <div class="apply-custom-switch">
-              <!-- <div class="apply-custom-switch-item">
+              <div class="apply-custom-switch-item">
                 <bk-switcher
                   v-model="isAllUnlimited"
                   theme="primary"
@@ -224,7 +224,7 @@
                   @change="handleUnlimitedActionChange">
                 </bk-switcher>
                 <span class="expanded-text">{{ $t(`m.common['批量无限制']`) }}</span>
-              </div> -->
+              </div>
               <div class="apply-custom-switch-item">
                 <bk-switcher
                   v-model="isAllExpanded"
@@ -650,7 +650,7 @@
     data () {
       return {
         userApi: window.BK_USER_API,
-        systemValue: '',
+        systemValue: 'bk_cmdb',
         systemList: [],
         buttonLoading: false,
         originalCustomTmplList: [],
@@ -750,7 +750,14 @@
             return isDisabled;
         },
         isUnlimitedDisabled () {
-          return this.tableData.length < 1;
+          const isDisabled = this.tableData.every(item =>
+          (!item.instances || (item.instances && !item.instances.length))
+          && (!item.resource_groups || (item.resource_groups && !item.resource_groups.length))
+           );
+           if (isDisabled) {
+            this.isAllUnlimited = false;
+           }
+          return isDisabled;
         },
         curSelectActions () {
             const allActionIds = [];
@@ -770,7 +777,9 @@
                     });
                 }
             });
+            // 监听新增或移除的操作，重新组装数据
             this.getFilterAggregateAction();
+            this.handleUnlimitedActionChange(this.isAllUnlimited);
             return allActionIds;
         }
     },
@@ -810,6 +819,9 @@
           this.tagActionList = value.map(e => e.id);
           if (value.filter(item => item.isAggregate).length < 1) {
             this.isAllExpanded = false;
+          }
+          if (this.isDisabled && this.isAllUnlimited) {
+            this.isAllUnlimited = false;
           }
         },
         deep: true
@@ -1631,6 +1643,50 @@
       handleAggregateActionChange (payload) {
         this.getFilterAggregateAction();
         this.handleAggregateAction(payload);
+        this.handleUnlimitedActionChange(this.isAllUnlimited);
+      },
+
+      handleUnlimitedActionChange (payload) {
+        this.tableData.forEach((item, index) => {
+          if (!item.isAggregate) {
+            if (item.resource_groups && item.resource_groups.length) {
+              item.resource_groups.forEach(groupItem => {
+                groupItem.related_resource_types && groupItem.related_resource_types.forEach(types => {
+                  if (!payload && (types.condition.length && types.condition[0] !== 'none')) {
+                    return;
+                  }
+                  types.condition = payload ? [] : ['none'];
+                  if (payload) {
+                    types.isError = false;
+                  }
+                });
+              });
+            } else {
+              console.log(item, '没有时间');
+            }
+          } else {
+            if (item.instances) {
+              item.isError = !(item.instances.length || (!item.instances.length && item.isNoLimited));
+              if (item.instances.length && !payload) {
+                item.isNoLimited = false;
+              }
+              if ((!item.instances.length && !payload && item.isNoLimited) || (!item.instances.length && payload)) {
+                item.isNoLimited = true;
+              }
+              this.$set(
+                this.tableData,
+                index,
+                new AggregationPolicy({
+                   ...item,
+                   ...{
+                    instances: [],
+                    isNeedNoLimited: true
+                  }
+                })
+              );
+            }
+          }
+        });
       },
 
       handleRelatedChange (payload) {
@@ -2439,29 +2495,30 @@
           reason: this.reason,
           usernames: this.permMembers
         };
-        this.buttonLoading = true;
-        try {
-          await this.$store.dispatch('permApply/permApply', params);
-          this.messageSuccess(this.$t(`m.info['申请已提交']`), 1000);
-          this.$router.push({
-            name: 'apply'
-          });
-        } catch (e) {
-          console.error(e);
-          if (['admin'].includes(this.user.username)) {
-            this.isShowConfirmDialog = true;
-          } else {
-            this.bkMessageInstance = this.$bkMessage({
-              limit: 1,
-              theme: 'error',
-              message: e.message || e.data.msg || e.statusText,
-              ellipsisLine: 2,
-              ellipsisCopy: true
-            });
-          }
-        } finally {
-          this.buttonLoading = false;
-        }
+        console.log(params, 5665);
+        // this.buttonLoading = true;
+        // try {
+        //   await this.$store.dispatch('permApply/permApply', params);
+        //   this.messageSuccess(this.$t(`m.info['申请已提交']`), 1000);
+        //   this.$router.push({
+        //     name: 'apply'
+        //   });
+        // } catch (e) {
+        //   console.error(e);
+        //   if (['admin'].includes(this.user.username)) {
+        //     this.isShowConfirmDialog = true;
+        //   } else {
+        //     this.bkMessageInstance = this.$bkMessage({
+        //       limit: 1,
+        //       theme: 'error',
+        //       message: e.message || e.data.msg || e.statusText,
+        //       ellipsisLine: 2,
+        //       ellipsisCopy: true
+        //     });
+        //   }
+        // } finally {
+        //   this.buttonLoading = false;
+        // }
       },
 
       handleSystemEnter (id) {

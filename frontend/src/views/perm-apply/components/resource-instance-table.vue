@@ -272,8 +272,9 @@
       :params="aggregateResourceParams"
       :value="aggregateValue"
       :original-data="originalCondition"
-      :flag="curFlag"
-      :selection-mode="curSelectionMode"
+      :disabled="curAggregateDisabled"
+      :flag="curAggregateFlag"
+      :selection-mode="curAggregateSelectionMode"
       @on-selected="handlerSelectAggregateRes"
       @on-limit-change="handleAggregateLimitChange"
       @on-init="handleOnInit"
@@ -377,6 +378,7 @@
         curCopyMode: 'normal',
         curAggregateResourceType: {},
         curCopyParams: {},
+        curCopyNoLimited: false,
         sliderLoading: false,
         needEmitFlag: false,
         isShowResourceInstanceEffectTime: false,
@@ -468,6 +470,27 @@
               .related_resource_types[this.curResIndex];
           return curData.selectionMode;
       },
+      curAggregateDisabled () {
+          if (this.aggregateIndex === -1) {
+              return false;
+          }
+          const curData = this.tableList[this.aggregateIndex];
+          return curData.isDefaultLimit;
+      },
+      curAggregateFlag () {
+          if (this.aggregateIndex === -1) {
+              return 'add';
+          }
+          const curData = this.tableList[this.aggregateIndex];
+          return curData.flag;
+      },
+      curAggregateSelectionMode () {
+          if (this.aggregateIndex === -1) {
+              return 'all';
+          }
+          const curData = this.tableList[this.aggregateIndex];
+          return curData.selectionMode;
+      },
       isShowPreview () {
           if (this.curIndex === -1) {
               return false;
@@ -520,6 +543,7 @@
             this.curCopyParams = {};
             this.curAggregateResourceType = {};
             this.needEmitFlag = false;
+            this.curCopyNoLimited = false;
           }
         },
         immediate: true
@@ -644,6 +668,7 @@
         this.curAggregateResourceType = payload.aggregateResourceType[payload.selectedIndex];
         this.curCopyData = _.cloneDeep(payload.instancesDisplayData[this.instanceKey]);
         this.curCopyMode = 'aggregate';
+        this.curCopyNoLimited = payload.isNoLimited;
         this.showMessage(this.$t(`m.info['实例复制']`));
         this.$refs[`condition_${index}_aggregateRef`] && this.$refs[`condition_${index}_aggregateRef`].setImmediatelyShow(true);
       },
@@ -673,6 +698,7 @@
       },
 
       handlerAggregateOnBatchPaste (payload, index) {
+        console.log(666, this.curCopyMode, this.curCopyData, payload, index);
         let tempCurData = ['none'];
         let tempAggregateData = [];
         if (this.curCopyMode === 'normal') {
@@ -730,7 +756,7 @@
             item.resource_groups.forEach(groupItem => {
               groupItem.related_resource_types && groupItem.related_resource_types.forEach(subItem => {
                 if (`${subItem.system_id}${subItem.type}` === this.curCopyKey) {
-                  subItem.condition = _.cloneDeep(tempCurData);
+                  subItem.condition = this.curCopyNoLimited ? [] : _.cloneDeep(tempCurData);
                   subItem.isError = false;
                 }
               });
@@ -788,7 +814,11 @@
       },
 
       showAggregateResourceInstance (data, index) {
-        this.aggregateResourceParams = _.cloneDeep(data.aggregateResourceType[data.selectedIndex]);
+        const aggregateResourceParams = {
+          ...data.aggregateResourceType[data.selectedIndex],
+          isNoLimited: data.isNoLimited || false
+        };
+        this.aggregateResourceParams = _.cloneDeep(aggregateResourceParams);
         this.aggregateIndex = index;
         const instanceKey = data.aggregateResourceType[data.selectedIndex].id;
         this.instanceKey = instanceKey;
@@ -1242,6 +1272,7 @@
       },
 
       handlerOnBatchPaste (payload, content, index, subIndex) {
+        console.log(payload, this.curCopyMode, this.curCopyData, this.curCopyKey, 454455);
         let tempCurData = ['none'];
         let tempAggregateData = [];
         if (this.curCopyMode === 'normal') {
@@ -1249,8 +1280,8 @@
             return;
           }
           // 预计算是否存在 聚合后的数据 可以粘贴
-          // const flag = this.tableList.some(item => !!item.isAggregate
-          //     && `${item.aggregateResourceType[item.selectedIndex].system_id}${item.aggregateResourceType[item.selectedIndex].id}` === this.curCopyKey);
+          // const aggregateFlag = this.tableList.some(item => !!item.isAggregate
+          //   && `${item.aggregateResourceType[item.selectedIndex].system_id}${item.aggregateResourceType[item.selectedIndex].id}` === this.curCopyKey);
           const flag = this.tableList.some(item => {
             return !!item.isAggregate
               && item.aggregateResourceType.some(e => `${e.system_id}${e.id}` === this.curCopyKey);
@@ -1289,18 +1320,24 @@
           if (payload.data.length === 0) {
             this.tableList.forEach(item => {
               if (!item.isAggregate) {
-                item.resource_groups.forEach(groupItem => {
-                  groupItem.related_resource_types.forEach(resItem => {
-                    if (`${resItem.system_id}${resItem.type}` === this.curCopyKey) {
-                      resItem.condition = [];
-                      resItem.isError = false;
-                    }
+                if (item.resource_groups) {
+                  item.resource_groups.forEach(groupItem => {
+                    groupItem.related_resource_types.forEach(resItem => {
+                      if (`${resItem.system_id}${resItem.type}` === this.curCopyKey) {
+                        resItem.condition = [];
+                        resItem.isError = false;
+                      }
+                    });
                   });
-                });
+                }
               } else {
                 if (`${item.aggregateResourceType[item.selectedIndex].system_id}${item.aggregateResourceType[item.selectedIndex].id}` === this.curCopyKey) {
                   item.instances = _.cloneDeep(tempAggregateData);
                   item.isError = false;
+                  if (!item.instances.length) {
+                    item.isNeedNoLimited = true;
+                    item.isNoLimited = true;
+                  }
                   this.$emit('on-select', item);
                 }
               }
@@ -1326,7 +1363,10 @@
                     this.instanceKey = aggregateResourceItem.id;
                     this.setNomalInstancesDisplayData(item, this.instanceKey);
                     this.instanceKey = ''; // 重置
+                    item.isNeedNoLimited = true;
+                    this.$set(item, 'isNoLimited', false);
                     item.isError = false;
+                    console.log(556656, item);
                   }
                 });
                 this.$emit('on-select', item);
@@ -1369,11 +1409,21 @@
           }
           this.tableList.forEach(item => {
             if (!item.isAggregate) {
-              item.related_resource_types.forEach(subItem => {
-                if (`${subItem.system_id}${subItem.type}` === this.curCopyKey) {
-                  subItem.condition = _.cloneDeep(tempCurData);
-                  subItem.isError = false;
-                }
+              // item.related_resource_types && item.related_resource_types.forEach(subItem => {
+              //   if (`${subItem.system_id}${subItem.type}` === this.curCopyKey) {
+              //     subItem.condition = _.cloneDeep(tempCurData);
+              //     subItem.isError = false;
+              //   }
+              // });
+              item.resource_groups && item.resource_groups.forEach(groupItem => {
+                groupItem.related_resource_types
+                  && groupItem.related_resource_types.forEach((subItem, subItemIndex) => {
+                    if (`${subItem.system_id}${subItem.type}` === this.curCopyKey) {
+                      console.log(tempCurData);
+                      subItem.condition = _.cloneDeep(tempCurData);
+                      subItem.isError = false;
+                    }
+                  });
               });
             } else {
               if (`${item.aggregateResourceType.system_id}${item.aggregateResourceType.id}` === this.curCopyKey) {
@@ -1383,8 +1433,13 @@
             }
           });
         }
-        content.isError = false;
-        this.$refs[`condition_${index}_${subIndex}_ref`][0] && this.$refs[`condition_${index}_${subIndex}_ref`][0].setImmediatelyShow(false);
+        console.log(payload, content, this.curCopyKey, tempCurData, '内容');
+        if (content.hasOwnProperty('isError')) {
+          content.isError = false;
+        }
+        this.$refs[`condition_${index}_${subIndex}_ref`]
+          && this.$refs[`condition_${index}_${subIndex}_ref`][0]
+          && this.$refs[`condition_${index}_${subIndex}_ref`][0].setImmediatelyShow(false);
         this.curCopyData = ['none'];
         this.showMessage(this.$t(`m.info['批量粘贴成功']`));
         this.fetchInstanceDefaultCheck(false);
@@ -1628,6 +1683,7 @@
             }
           }
         });
+        console.log(aggregations, 45455);
         return {
           flag,
           actions: actionList,

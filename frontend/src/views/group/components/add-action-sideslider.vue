@@ -503,6 +503,9 @@
             params.hidden = false;
           }
           const { code, data } = await this.$store.dispatch('system/getSystems', params);
+          if (data.length) {
+            data.sort((curr, next) => curr.name.localeCompare(next.name));
+          }
           this.systemList = _.cloneDeep(data);
           this.curSystemList = _.cloneDeep(data);
           this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
