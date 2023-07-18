@@ -33,13 +33,13 @@
         :placeholder="$t(`m.common['选择管理空间']`)"
         :search-placeholder="$t(`m.common['搜索管理空间']`)"
         :searchable="true"
-        :allow-enter="false"
         :prefix-icon="user.role && ['subset_manager'].includes(user.role.type) ?
           'icon iam-icon iamcenter-level-two-manage-space' : 'icon iam-icon iamcenter-level-one-manage-space'"
         :remote-method="handleRemoteTree"
         :ext-popover-cls="selectCls"
         ext-cls="iam-nav-select-cls"
-        @toggle="handleToggle">
+        @toggle="handleToggle"
+      >
         <bk-big-tree
           ref="selectTree"
           size="small"
@@ -48,18 +48,26 @@
           :use-default-empty="true"
           :show-checkbox="false"
           :show-link-line="false"
-          :default-expanded-nodes="[navCurRoleId || curRoleId]"
+          :default-is-expanded-nodes="[navCurRoleId || curRoleId]"
           :default-selected-node="navCurRoleId || curRoleId"
-          @expand-on-click="handleExpandClick"
-          @select-change="handleSelectNode">
+          @expand-change="handleExpandNode"
+          @select-change="handleSelectNode"
+        >
           <div slot-scope="{ node,data }">
-            <div
+            <!-- <div
               class="single-hide"
               :style="[
                 { 'max-width': '220px' },
                 { opacity: data.is_member ? '1' : '0.4' }
               ]"
+              :title="data.name"> -->
+            <div
+              class="single-hide"
+              :style="[
+                { 'max-width': '220px' }
+              ]"
               :title="data.name">
+  
               <Icon :type="node.level === 0 ? 'level-one-manage-space' : 'level-two-manage-space'" :style="{ color: formatColor(node) }" />
               <span>{{data.name}}</span>
             </div>
@@ -68,6 +76,16 @@
                                 :rate="node.id === curRoleId" :max-stars="1" /> -->
           </div>
         </bk-big-tree>
+        <div
+          v-if="curRoleList.length < roleCount"
+          class="tree-load-more">
+          <bk-button
+            :text="true"
+            size="small"
+            @click="handleLoadMore">
+            {{ $t(`m.common['查看更多']`) }}
+          </bk-button>
+        </div>
         <div slot="extension" @click="handleToGradingAdmin" style="cursor: pointer">
           <i class="bk-icon icon-cog-shape mr10"></i>{{ $t(`m.nav['我的管理空间']`) }}
         </div>
@@ -159,7 +177,7 @@
 <script>
   import { mapGetters } from 'vuex';
   import { bus } from '@/common/bus';
-  import { getTreeNode } from '@/common/util';
+  // import { getTreeNode } from '@/common/util';
   import { getRouterDiff } from '@/common/router-handle';
   import { NEED_CONFIRM_DIALOG_ROUTER } from '@/common/constants';
   import { leavePageConfirm } from '@/common/leave-page-confirm';
@@ -252,31 +270,42 @@
         curRoleId: 0,
         hoverId: -1,
         selectValue: '',
-        isEmpty: false
+        isEmpty: false,
+        pagination: {
+          current: 1,
+          count: 1,
+          limit: 20
+        },
+        subPagination: {
+          current: 1,
+          count: 0,
+          limit: 20
+        }
       };
     },
     computed: {
-            ...mapGetters([
-                'user',
-                'navStick',
-                'navFold',
-                'currentNav',
-                'routerDiff',
-                'roleList',
-                'navData',
-                'index',
-                'navCurRoleId'
-            ]),
-            unfold () {
-                return this.navStick || !this.navFold;
-            },
-            isShowRouterGroup () {
-                return (payload) => {
-                    const allRouter = getRouterDiff('all');
-                    const curRouter = allRouter.filter((item) => !this.routerDiff.includes(item));
-                    return curRouter.filter((item) => payload.children.map((_) => _.rkey).includes(item)).length > 0;
-                };
-            }
+      ...mapGetters([
+          'user',
+          'navStick',
+          'navFold',
+          'currentNav',
+          'routerDiff',
+          'roleList',
+          'roleCount',
+          'navData',
+          'index',
+          'navCurRoleId'
+      ]),
+      unfold () {
+          return this.navStick || !this.navFold;
+      },
+      isShowRouterGroup () {
+          return (payload) => {
+              const allRouter = getRouterDiff('all');
+              const curRouter = allRouter.filter((item) => !this.routerDiff.includes(item));
+              return curRouter.filter((item) => payload.children.map((_) => _.rkey).includes(item)).length > 0;
+          };
+      }
     },
     watch: {
       $route: {
@@ -295,14 +324,17 @@
       },
       roleList: {
         handler (value) {
-          if (value.length) {
+          if (value.length && this.pagination.current === 1) {
             value = value.map((e) => {
               e.level = 0;
-              if (e.sub_roles.length) {
-                e.sub_roles.forEach(sub => {
-                  sub.level = 1;
-                });
-                e.children = e.sub_roles;
+              // if (e.sub_roles && e.sub_roles.length) {
+              //   e.sub_roles.forEach(sub => {
+              //     sub.level = 1;
+              //   });
+              //   e.children = e.sub_roles;
+              // }
+              if (e.has_subset_manager) {
+                this.$set(e, 'children', [{ name: '' }]);
               }
               return e;
             });
@@ -318,7 +350,7 @@
         immediate: true
       }
     },
-    created () {
+    async created () {
       this.fetchRoleUpdate(this.user);
       this.isUnfold = this.navStick || !this.navFold;
       this.$once('hook:beforeDestroy', () => {
@@ -338,6 +370,84 @@
       });
     },
     methods: {
+      async fetchSubManagerList (row) {
+        this.subLoading = true;
+        // const curRoles = this.curRoleList[row.index];
+        try {
+          const { data } = await this.$store.dispatch(
+            'spaceManage/getStaffSubManagerList',
+            {
+              limit: this.subPagination.limit,
+              offset: (this.subPagination.current - 1) * this.subPagination.limit,
+              id: row.id
+            }
+          );
+          data && data.results.forEach(item => {
+            item.level = 1;
+            item.type = 'subset_manager';
+          });
+          this.subPagination.count = data.count || 0;
+          row.children = [...row.children, ...data.results];
+          console.log(row, '数据');
+        } catch (e) {
+          console.error(e);
+          const { data, message, statusText } = e;
+          row.children = [];
+          this.bkMessageInstance = this.$bkMessage({
+            limit: 1,
+            theme: 'error',
+            message: message || data.msg || statusText,
+            ellipsisLine: 2,
+            ellipsisCopy: true
+          });
+        } finally {
+          this.curData = row;
+          this.subLoading = false;
+        }
+      },
+
+      async fetchSearchManageList (isTableLoading = false) {
+        this.tableLoading = isTableLoading;
+        const { current, limit } = this.pagination;
+        const params = {
+          page_size: limit,
+          page: current,
+          name: this.searchValue || '',
+          member: this.searchMember || ''
+        };
+        if (this.externalSystemId) {
+          params.hidden = false;
+        }
+        try {
+          const { data } = await this.$store.dispatch('spaceManage/getSearchManagerList', params);
+          this.pagination.count = data.count || 0;
+          this.curRoleList.splice(0, this.curRoleList.length, ...(data.results || []));
+          // this.emptyData = formatCodeData(
+          //   code,
+          //   this.emptyData,
+          //   this.tableList.length === 0
+          // );
+        } catch (e) {
+          console.error(e);
+          const { data, message, statusText } = e;
+          this.curRoleList = [];
+          this.bkMessageInstance = this.$bkMessage({
+            limit: 1,
+            theme: 'error',
+            message: message || data.msg || statusText,
+            ellipsisLine: 2,
+            ellipsisCopy: true
+          });
+        } finally {
+          this.tableLoading = false;
+        }
+      },
+
+      async handleExpandNode (payload) {
+        console.log(payload, 44545);
+        this.resetSubPagination();
+        await this.fetchSubManagerList(payload.data);
+      },
       // 监听当前已选中的角色是否有变更
       fetchRoleUpdate ({ role }) {
         const { id, type } = role;
@@ -415,6 +525,9 @@
       // 从其他菜单进入管理空间选择角色
       handleSwitchPerm ({ id, entry }) {
         if (entry && this.$refs.selectTree) {
+          const { role } = this.user;
+          console.log(566, this.user.role);
+          this.handleRemoteTree(role.name);
           this.$refs.selectTree.selected = Number(id);
         }
       },
@@ -439,14 +552,16 @@
       },
 
       handleSelectNode (node) {
-        if (!node.data.is_member) return;
+        // if (!node.data.is_member) return;
         this.$refs.select.close();
         this.handleToggle(false);
-        this.handleSwitchRole(node.id);
+        // this.handleSwitchRole(node.id);
+        this.handleSwitchRole(node.data);
       },
 
       handleRemoteTree  (value) {
-        this.$refs.selectTree && this.$refs.selectTree.filter(value);
+        console.log(value, 4545);
+        // this.$refs.selectTree && this.$refs.selectTree.filter(value);
       },
 
       // 切换导航展开固定
@@ -496,13 +611,55 @@
         });
       },
 
-      handleToggle (value) {
-        this.selectCls = value ? 'iam-nav-select-dropdown-content' : 'hide-iam-nav-select-cls';
+      async handleToggle (value) {
+        this.selectCls = 'hide-iam-nav-select-cls';
+        if (value) {
+          this.selectCls = 'iam-nav-select-dropdown-content';
+          this.resetPagination();
+          this.resetSubPagination();
+          const { role } = this.user;
+          console.log(role, 454);
+          // if (['rating_manager'].includes(role.type)) {
+          //   this.fetchSubManagerList({ id: role.id, children: [] });
+          // }
+        }
+      },
+
+      async handleLoadMore () {
+        if (this.curRoleList.length < this.roleCount) {
+          this.pagination.current++;
+          const { current, limit } = this.pagination;
+          const params = {
+            limit,
+            offset: (current - 1) * limit
+          };
+          this.pagination = Object.assign(this.pagination, params);
+          const result = await this.$store.dispatch('roleList', params);
+          result.forEach(item => {
+            if (item.has_subset_manager) {
+              this.$set(item, 'children', [{ name: '' }]);
+            }
+          });
+          this.curRoleList = [...this.curRoleList, ...result];
+        }
+        console.log(this.curRoleList, this.roleCount);
+      },
+
+      async handleSubLoadMore (payload) {
+        if (payload !== this.subPagination.count) {
+          const params = {
+            current: ++this.subPagination.current,
+            limit: 20
+          };
+          this.subPagination = Object.assign(this.subPagination, params);
+          this.fetchSubManagerList(this.curData);
+        }
       },
 
       // 切换身份
-      async handleSwitchRole (id) {
-        const { type, name } = getTreeNode(id, this.curRoleList);
+      async handleSwitchRole ({ id, type, name }) {
+        console.log(id, type, name);
+        // const { type, name } = getTreeNode(id, this.curRoleList);
         [this.curRoleId, this.curRole] = [id, type];
         try {
           await this.$store.dispatch('role/updateCurrentRole', { id });
@@ -594,6 +751,28 @@
           }
         }
         // }
+      },
+
+      resetPagination () {
+        this.pagination = Object.assign(
+          {},
+          {
+            current: 1,
+            count: 0,
+            limit: 20
+          }
+        );
+      },
+
+      resetSubPagination () {
+        this.subPagination = Object.assign(
+          {},
+          {
+            current: 1,
+            count: 0,
+            limit: 20
+          }
+        );
       }
     }
   };
@@ -609,7 +788,7 @@
 }
 
 .iam-nav-select-dropdown-content
- .bk-big-tree {
+  .bk-big-tree {
     &-node {
         padding: 0 16px;
         .node-options {
@@ -626,29 +805,34 @@
         color: #fff !important;
         opacity: .6;
     }
-}
+  }
 
-.space-popconfirm {
-    .content-header {
-        display: flex;
-        align-items: center;
-        margin-bottom: 10px;
-        .content-title {
-            font-size: 15px;
-            margin-right: 5px;
-        }
-    }
-    .content-desc {
-        margin-bottom: 10px;
-        word-break: break-all;
-    }
-    .tippy-tooltip.light-border-theme {
-        box-shadow: 0 0 2px 0 #dcdee5;
-    }
-    /* .tippy-arrow {
-        top: 120px !important;
-    } */
- }
+  .space-popconfirm {
+      .content-header {
+          display: flex;
+          align-items: center;
+          margin-bottom: 10px;
+          .content-title {
+              font-size: 15px;
+              margin-right: 5px;
+          }
+      }
+      .content-desc {
+          margin-bottom: 10px;
+          word-break: break-all;
+      }
+      .tippy-tooltip.light-border-theme {
+          box-shadow: 0 0 2px 0 #dcdee5;
+      }
+      /* .tippy-arrow {
+          top: 120px !important;
+      } */
+  }
+
+  .tree-load-more {
+    color: red;
+    text-align: center;
+  }
 </style>
 
 <style lang="postcss" scoped>
