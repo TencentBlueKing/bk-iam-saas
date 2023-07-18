@@ -206,7 +206,7 @@ class BaseGradeMangerSLZ(serializers.ModelSerializer):
 
     class Meta:
         model = Role
-        fields = ("id", "name", "description", "creator", "created_time", "updated_time", "updater", "members")
+        fields = ("id", "type", "name", "description", "creator", "created_time", "updated_time", "updater", "members")
 
     def get_members(self, obj):
         return [
