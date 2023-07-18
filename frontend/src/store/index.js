@@ -411,7 +411,7 @@ const store = new Vuex.Store({
       // 设置项目最大可授权范围
       addMemberBoundary: {
         customFooterClass: false, // 设置项目最大可授权范围, 底部插槽自定义样式
-        hideInfiniteTreeCount: true // 隐藏设置项目最大可授权范围左边拓扑树显示成员个数
+        hideInfiniteTreeCount: false // 隐藏设置项目最大可授权范围左边拓扑树显示成员个数
       }
     }
   },
