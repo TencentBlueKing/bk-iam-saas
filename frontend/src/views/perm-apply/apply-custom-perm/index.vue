@@ -650,7 +650,7 @@
     data () {
       return {
         userApi: window.BK_USER_API,
-        systemValue: 'bk_cmdb',
+        systemValue: '',
         systemList: [],
         buttonLoading: false,
         originalCustomTmplList: [],
@@ -665,6 +665,7 @@
         linearActionList: [],
         requestQueue: ['action', 'policy', 'aggregate', 'commonAction'],
         isAllExpanded: false,
+        isAllUnlimited: false,
         aggregationMap: [],
         aggregations: [],
         aggregationsBackup: [],
@@ -751,8 +752,7 @@
         },
         isUnlimitedDisabled () {
           const isDisabled = this.tableData.every(item =>
-          (!item.instances || (item.instances && !item.instances.length))
-          && (!item.resource_groups || (item.resource_groups && !item.resource_groups.length))
+           ((!item.resource_groups || (item.resource_groups && !item.resource_groups.length)) && !item.instances)
            );
            if (isDisabled) {
             this.isAllUnlimited = false;
@@ -1647,7 +1647,8 @@
       },
 
       handleUnlimitedActionChange (payload) {
-        this.tableData.forEach((item, index) => {
+        const tableData = _.cloneDeep(this.tableData);
+        tableData.forEach((item, index) => {
           if (!item.isAggregate) {
             if (item.resource_groups && item.resource_groups.length) {
               item.resource_groups.forEach(groupItem => {
@@ -1662,31 +1663,30 @@
                 });
               });
             } else {
-              console.log(item, '没有时间');
-            }
-          } else {
-            if (item.instances) {
-              item.isError = !(item.instances.length || (!item.instances.length && item.isNoLimited));
-              if (item.instances.length && !payload) {
-                item.isNoLimited = false;
-              }
-              if ((!item.instances.length && !payload && item.isNoLimited) || (!item.instances.length && payload)) {
-                item.isNoLimited = true;
-              }
-              this.$set(
-                this.tableData,
-                index,
-                new AggregationPolicy({
-                   ...item,
-                   ...{
-                    instances: [],
-                    isNeedNoLimited: true
-                  }
-                })
-              );
+              item.name = item.name.split('，')[0];
             }
           }
+          if (item.instances && item.isAggregate) {
+            item.isNoLimited = false;
+            item.isError = !(item.instances.length || (!item.instances.length && item.isNoLimited));
+            item.isNeedNoLimited = true;
+            if (!payload || item.instances.length) {
+              item.isNoLimited = false;
+              item.isError = false;
+            }
+            if ((!item.instances.length && !payload && item.isNoLimited) || payload) {
+              item.isNoLimited = true;
+              item.isError = false;
+              item.instances = [];
+            }
+            return this.$set(
+              tableData,
+              index,
+              new AggregationPolicy(item)
+            );
+          }
         });
+        this.tableData = _.cloneDeep(tableData);
       },
 
       handleRelatedChange (payload) {
@@ -2495,30 +2495,29 @@
           reason: this.reason,
           usernames: this.permMembers
         };
-        console.log(params, 5665);
-        // this.buttonLoading = true;
-        // try {
-        //   await this.$store.dispatch('permApply/permApply', params);
-        //   this.messageSuccess(this.$t(`m.info['申请已提交']`), 1000);
-        //   this.$router.push({
-        //     name: 'apply'
-        //   });
-        // } catch (e) {
-        //   console.error(e);
-        //   if (['admin'].includes(this.user.username)) {
-        //     this.isShowConfirmDialog = true;
-        //   } else {
-        //     this.bkMessageInstance = this.$bkMessage({
-        //       limit: 1,
-        //       theme: 'error',
-        //       message: e.message || e.data.msg || e.statusText,
-        //       ellipsisLine: 2,
-        //       ellipsisCopy: true
-        //     });
-        //   }
-        // } finally {
-        //   this.buttonLoading = false;
-        // }
+        this.buttonLoading = true;
+        try {
+          await this.$store.dispatch('permApply/permApply', params);
+          this.messageSuccess(this.$t(`m.info['申请已提交']`), 1000);
+          this.$router.push({
+            name: 'apply'
+          });
+        } catch (e) {
+          console.error(e);
+          if (['admin'].includes(this.user.username)) {
+            this.isShowConfirmDialog = true;
+          } else {
+            this.bkMessageInstance = this.$bkMessage({
+              limit: 1,
+              theme: 'error',
+              message: e.message || e.data.msg || e.statusText,
+              ellipsisLine: 2,
+              ellipsisCopy: true
+            });
+          }
+        } finally {
+          this.buttonLoading = false;
+        }
       },
 
       handleSystemEnter (id) {
@@ -2666,6 +2665,7 @@
 
       fetchResetData () {
         this.isAllExpanded = false;
+        this.isAllUnlimited = false;
         this.sysAndtid = false;
         this.aggregationMap = [];
         this.aggregations = [];

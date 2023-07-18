@@ -17,7 +17,7 @@
             :title="nameType(item)">
             {{ item.name }}
           </span>
-          <span class="user-count" v-if="item.showCount">
+          <span class="user-count" v-if="item.showCount && !externalSystemsLayout.addMemberBoundary.hideInfiniteTreeCount">
             {{ '(' + item.count + ')' }}
           </span>
           <div class="organization-checkbox" v-if="item.showRadio">
@@ -107,7 +107,7 @@
       };
     },
     computed: {
-            ...mapGetters(['user']),
+            ...mapGetters(['user', 'externalSystemsLayout']),
             ghostStyle () {
                 return {
                     height: this.allData.length * this.itemHeight + 'px'

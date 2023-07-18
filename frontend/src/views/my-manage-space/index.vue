@@ -127,8 +127,7 @@
                   <bk-button
                     theme="primary"
                     text
-                    :disabled="disabledPerm(child.row)"
-                    :title="disabledPerm(child.row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
+                    :disabled="disabledPerm(child.row, 'subset_manager')"
                     @click.stop="handleSubView(child.row, 'detail')"
                   >
                     {{ $t(`m.levelSpace['进入空间']`) }}
@@ -136,8 +135,7 @@
                   <bk-button
                     theme="primary"
                     text
-                    :disabled="disabledPerm(child.row)"
-                    :title="disabledPerm(child.row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
+                    :disabled="disabledPerm(child.row, 'subset_manager')"
                     @click.stop="handleSubView(child.row, 'auth')"
                   >
                     {{ $t(`m.nav['授权边界']`) }}
@@ -369,9 +367,9 @@
                 return getWindowHeight() - 185;
             },
             disabledPerm () {
-              return (payload) => {
+              return (payload, roleType) => {
                 const { type, members } = payload;
-                if (['subset_manager'].includes(type)) {
+                if (['subset_manager'].includes(type) || roleType) {
                   return false;
                 } else {
                   const result = members.map((item) => item.username).includes(this.user.username);
