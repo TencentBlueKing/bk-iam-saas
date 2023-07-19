@@ -76,7 +76,7 @@
                   color: formatColor(data)
                 }"
               />
-              <span>{{data.name}}-{{ subRoleList.length }}-{{subPagination.count }}</span>
+              <span>{{data.name}}</span>
             </div>
             <div
               v-if="node.level > 0 && subRoleList.length < subPagination.count"
@@ -361,7 +361,6 @@
       roleList: {
         handler (value) {
           // 如果不是搜索或者首次调用才获取公共接口数据
-          console.log(value.length, this.pagination.current === 1, this.isSearch);
           if (value.length && this.pagination.current === 1 && !this.isSearch) {
             value.forEach((e) => {
               e.level = 0;
@@ -425,7 +424,6 @@
           this.subPagination.count = data.count || 0;
           row.children = [...row.children, ...data.results].filter(item => item.name);
           this.subRoleList = [...row.children];
-          console.log(row.children);
         } catch (e) {
           console.error(e);
           const { data, message, statusText } = e;
@@ -592,7 +590,6 @@
           // 处理刷新后选中角色不在当前分页里，默认回显
           this.$nextTick(() => {
             const curRoles = this.roleList.find(item => item.id === id);
-            console.log((!curRoles || ['subset_manager'].includes(type)) && this.$refs.select);
             if ((!curRoles || ['subset_manager'].includes(type))) {
               this.isSearch = true;
               if (this.$refs.select) {
@@ -673,7 +670,6 @@
           const hasRole = this.curRoleList.find(item => item.id === Number(id));
           this.isSearch = !hasRole;
           this.resetRoleList();
-          console.log(this.curRoleList);
           // this.handleRemoteTree(role.name);
         }
       },
@@ -706,7 +702,6 @@
       },
 
       async handleRemoteTree  (value) {
-        console.log(111);
         this.keyWord = value;
         if (this.$refs.select) {
           this.$refs.select.searchValue = value;
