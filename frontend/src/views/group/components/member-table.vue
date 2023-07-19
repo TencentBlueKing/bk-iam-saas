@@ -46,7 +46,7 @@
           <div class="depart" v-else :title="row.full_name">
             <Icon type="organization-fill" />
             <span class="name">{{ row.name || '--' }}</span>
-            <span class="count" v-if="row.member_count">({{ row.member_count }})</span>
+            <span class="count" v-if="row.member_count && enableOrganizationCount">({{ row.member_count }})</span>
           </div>
         </template>
       </bk-table-column>
@@ -208,7 +208,8 @@
           tipType: ''
         },
         adminGroupTitle: '',
-        keyword: ''
+        keyword: '',
+        enableOrganizationCount: window.ENABLE_ORGANIZATION_COUNT.toLowerCase() === 'true'
       };
     },
     computed: {
