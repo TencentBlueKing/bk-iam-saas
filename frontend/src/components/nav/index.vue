@@ -300,7 +300,7 @@
         subPagination: {
           current: 1,
           count: 0,
-          limit: 5
+          limit: 100
         }
       };
     },
@@ -857,7 +857,7 @@
           {
             current: 1,
             count: 0,
-            limit: 20
+            limit: 100
           }
         );
       }
