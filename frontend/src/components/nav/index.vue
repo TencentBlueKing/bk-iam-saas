@@ -30,11 +30,11 @@
         :value="navCurRoleId || curRoleId"
         :clearable="false"
         :multiple="false"
+        :allow-enter="false"
         :placeholder="$t(`m.common['选择管理空间']`)"
         :search-placeholder="$t(`m.common['搜索管理空间']`)"
         :searchable="true"
-        :prefix-icon="user.role && ['subset_manager'].includes(user.role.type) ?
-          'icon iam-icon iamcenter-level-two-manage-space' : 'icon iam-icon iamcenter-level-one-manage-space'"
+        :prefix-icon="formatRoleIcon"
         :remote-method="handleRemoteTree"
         :ext-popover-cls="selectCls"
         ext-cls="iam-nav-select-cls"
@@ -62,14 +62,31 @@
               ]"
               :title="data.name"> -->
             <div
-              class="single-hide"
+              :class="[
+                'single-hide',
+                { 'iam-search-data': isSearch }
+              ]"
               :style="[
                 { 'max-width': '220px' }
               ]"
               :title="data.name">
-  
-              <Icon :type="node.level === 0 ? 'level-one-manage-space' : 'level-two-manage-space'" :style="{ color: formatColor(node) }" />
-              <span>{{data.name}}</span>
+              <Icon
+                :type="data.level > 0 ? 'level-two-manage-space' : 'level-one-manage-space'"
+                :style="{
+                  color: formatColor(data)
+                }"
+              />
+              <span>{{data.name}}-{{ subRoleList.length }}-{{subPagination.count }}</span>
+            </div>
+            <div
+              v-if="node.level > 0 && subRoleList.length < subPagination.count"
+              class="tree-load-more">
+              <bk-button
+                :text="true"
+                size="small"
+                @click="handleSubLoadMore">
+                {{ $t(`m.common['查看更多']`) }}
+              </bk-button>
             </div>
             <!-- <bk-star
                                 v-if="(node.children && node.level > 0) || (node.children.length === 0 && node.level === 0)"
@@ -77,7 +94,7 @@
           </div>
         </bk-big-tree>
         <div
-          v-if="curRoleList.length < roleCount"
+          v-if="isSearch ? curRoleList.length < pagination.count : curRoleList.length < roleCount"
           class="tree-load-more">
           <bk-button
             :text="true"
@@ -267,10 +284,14 @@
         isUnfold: true,
         routerMap: routerMap,
         curRoleList: [],
+        subRoleList: [],
         curRoleId: 0,
         hoverId: -1,
         selectValue: '',
+        keyWord: '',
         isEmpty: false,
+        isSearch: false,
+        curRoleData: {},
         pagination: {
           current: 1,
           count: 1,
@@ -279,7 +300,7 @@
         subPagination: {
           current: 1,
           count: 0,
-          limit: 20
+          limit: 5
         }
       };
     },
@@ -305,6 +326,15 @@
               const curRouter = allRouter.filter((item) => !this.routerDiff.includes(item));
               return curRouter.filter((item) => payload.children.map((_) => _.rkey).includes(item)).length > 0;
           };
+      },
+      formatRoleIcon () {
+          const { role } = this.user;
+          const levelIcon = 'icon iam-icon';
+          if (role && ['subset_manager'].includes(role.type)) {
+            return `${levelIcon} iamcenter-level-two-manage-space`;
+          } else {
+            return `${levelIcon} iamcenter-level-one-manage-space`;
+          }
       }
     },
     watch: {
@@ -319,13 +349,21 @@
             this.reload();
             this.curRoleId = newValue.role.id;
           }
+          if (this.index === 1) {
+            const hasRole = this.roleList.find(item => item.id === newValue.role.id);
+            if (hasRole) {
+              this.isSearch = false;
+            }
+          }
         },
         deep: true
       },
       roleList: {
         handler (value) {
-          if (value.length && this.pagination.current === 1) {
-            value = value.map((e) => {
+          // 如果不是搜索或者首次调用才获取公共接口数据
+          console.log(value.length, this.pagination.current === 1, this.isSearch);
+          if (value.length && this.pagination.current === 1 && !this.isSearch) {
+            value.forEach((e) => {
               e.level = 0;
               // if (e.sub_roles && e.sub_roles.length) {
               //   e.sub_roles.forEach(sub => {
@@ -336,7 +374,6 @@
               if (e.has_subset_manager) {
                 this.$set(e, 'children', [{ name: '' }]);
               }
-              return e;
             });
             this.curRoleList.splice(0, this.curRoleList.length, ...value);
           }
@@ -350,7 +387,7 @@
         immediate: true
       }
     },
-    async created () {
+    created () {
       this.fetchRoleUpdate(this.user);
       this.isUnfold = this.navStick || !this.navFold;
       this.$once('hook:beforeDestroy', () => {
@@ -371,15 +408,14 @@
     },
     methods: {
       async fetchSubManagerList (row) {
-        this.subLoading = true;
-        // const curRoles = this.curRoleList[row.index];
         try {
           const { data } = await this.$store.dispatch(
             'spaceManage/getStaffSubManagerList',
             {
               limit: this.subPagination.limit,
               offset: (this.subPagination.current - 1) * this.subPagination.limit,
-              id: row.id
+              id: row.id,
+              with_super: true
             }
           );
           data && data.results.forEach(item => {
@@ -387,12 +423,14 @@
             item.type = 'subset_manager';
           });
           this.subPagination.count = data.count || 0;
-          row.children = [...row.children, ...data.results];
-          console.log(row, '数据');
+          row.children = [...row.children, ...data.results].filter(item => item.name);
+          this.subRoleList = [...row.children];
+          console.log(row.children);
         } catch (e) {
           console.error(e);
           const { data, message, statusText } = e;
           row.children = [];
+          this.subRoleList = [];
           this.bkMessageInstance = this.$bkMessage({
             limit: 1,
             theme: 'error',
@@ -400,33 +438,26 @@
             ellipsisLine: 2,
             ellipsisCopy: true
           });
-        } finally {
-          this.curData = row;
-          this.subLoading = false;
         }
       },
 
-      async fetchSearchManageList (isTableLoading = false) {
-        this.tableLoading = isTableLoading;
+      async fetchSearchManageList () {
         const { current, limit } = this.pagination;
         const params = {
           page_size: limit,
           page: current,
-          name: this.searchValue || '',
-          member: this.searchMember || ''
+          name: this.keyWord,
+          with_super: true
         };
-        if (this.externalSystemId) {
-          params.hidden = false;
-        }
         try {
           const { data } = await this.$store.dispatch('spaceManage/getSearchManagerList', params);
-          this.pagination.count = data.count || 0;
-          this.curRoleList.splice(0, this.curRoleList.length, ...(data.results || []));
-          // this.emptyData = formatCodeData(
-          //   code,
-          //   this.emptyData,
-          //   this.tableList.length === 0
-          // );
+          const { count, results } = data;
+          this.pagination.count = count || 0;
+          this.$store.commit('updateRoleListTotal', count);
+          results && results.forEach(item => {
+            item.level = !['subset_manager'].includes(item.type) ? 0 : 1;
+          });
+          this.curRoleList = [...this.curRoleList, ...results];
         } catch (e) {
           console.error(e);
           const { data, message, statusText } = e;
@@ -438,25 +469,138 @@
             ellipsisLine: 2,
             ellipsisCopy: true
           });
-        } finally {
-          this.tableLoading = false;
         }
       },
 
       async handleExpandNode (payload) {
-        console.log(payload, 44545);
-        this.resetSubPagination();
-        await this.fetchSubManagerList(payload.data);
+        if (payload.state.expanded) {
+          this.resetSubPagination();
+          this.subRoleList = [];
+          this.curRoleData = payload;
+          payload.data = Object.assign(payload.data, { children: [] });
+          await this.fetchSubManagerList(payload.data);
+          if (this.$refs.selectTree) {
+            this.$refs.selectTree.setData(this.curRoleList);
+            this.$refs.selectTree.setExpanded(payload.id);
+          }
+        }
       },
+
+      async handleToggle (value) {
+        this.selectCls = 'hide-iam-nav-select-cls';
+        if (value) {
+          this.selectCls = 'iam-nav-select-dropdown-content';
+          this.resetPagination();
+          this.resetSubPagination();
+          await this.resetRoleList();
+        }
+      },
+
+      async handleLoadMore () {
+        if (this.isSearch) {
+          if (this.curRoleList.length < this.pagination.count) {
+            this.pagination.current++;
+            this.fetchSearchManageList();
+          }
+        } else {
+          if (this.curRoleList.length < this.roleCount) {
+            this.pagination.current++;
+            const { current, limit } = this.pagination;
+            const params = {
+              limit,
+              offset: (current - 1) * limit
+            };
+            const result = await this.$store.dispatch('roleList', params);
+            result.forEach(item => {
+              this.$set(item, 'level', 0);
+              if (item.has_subset_manager) {
+                this.$set(item, 'children', [{ name: '' }]);
+              }
+            });
+            this.curRoleList = [...this.curRoleList, ...result];
+          }
+        }
+      },
+
+      async handleSubLoadMore () {
+        if (this.subRoleList.length < this.subPagination.count) {
+          const params = {
+            current: ++this.subPagination.current,
+            limit: this.subPagination.limit
+          };
+          this.subPagination = Object.assign(this.subPagination, params);
+          this.fetchSubManagerList(this.curData);
+        }
+      },
+
+      // 切换身份
+      async handleSwitchRole ({ id, type, name }) {
+        // const { type, name } = getTreeNode(id, this.curRoleList);
+        [this.curRoleId, this.curRole] = [id, type];
+        try {
+          await this.$store.dispatch('role/updateCurrentRole', { id });
+          this.$store.commit('updateCurRoleId', id);
+          this.$store.commit('updateIdentity', { id, type, name });
+          this.$store.commit('updateNavId', id);
+          this.updateRouter(type);
+          this.resetLocalStorage();
+        } catch (e) {
+          console.error(e);
+          this.bkMessageInstance = this.$bkMessage({
+            limit: 1,
+            theme: 'error',
+            message: e.message || e.data.msg || e.statusText,
+            ellipsisLine: 2,
+            ellipsisCopy: true
+          });
+        }
+      },
+
+      // 刷新二级管理员列表和设置当前页捕获不到的数据
+      async resetRoleList () {
+        const { role } = this.user;
+        if (this.$refs.selectTree) {
+          const curNode = this.$refs.selectTree.getNodeById(role.id);
+          if (!curNode && this.$refs.select && this.isSearch) {
+            this.$refs.select.searchValue = role.name;
+            this.resetPagination();
+            return;
+          }
+          if (!this.isSearch && this.$refs.select) {
+            this.$refs.select.searchValue = '';
+          }
+          if (this.curRoleData.id && ['subset_manager'].includes(role.type)) {
+            this.$refs.selectTree.setExpanded(this.curRoleData.id);
+          }
+          if ((curNode && curNode.data && curNode.data.has_subset_manager)) {
+            await this.handleExpandNode(curNode || this.curRoleData);
+          }
+        }
+      },
+      
       // 监听当前已选中的角色是否有变更
       fetchRoleUpdate ({ role }) {
-        const { id, type } = role;
+        const { id, name, type } = role;
         // console.log(role, '变更');
         this.curRole = type;
         this.curRoleId = this.navCurRoleId || id;
         this.$store.commit('updateCurRoleId', this.curRoleId);
-        if (this.index === 1 && this.$refs.selectTree) {
-          this.$refs.selectTree.selected = this.curRoleId;
+        if (this.index === 1) {
+          if (this.$refs.selectTree) {
+            this.$refs.selectTree.selected = this.curRoleId;
+          }
+          // 处理刷新后选中角色不在当前分页里，默认回显
+          this.$nextTick(() => {
+            const curRoles = this.roleList.find(item => item.id === id);
+            console.log((!curRoles || ['subset_manager'].includes(type)) && this.$refs.select);
+            if ((!curRoles || ['subset_manager'].includes(type))) {
+              this.isSearch = true;
+              if (this.$refs.select) {
+                this.$refs.select.searchValue = name;
+              }
+              this.resetRoleList();
+            }
+          });
         }
       },
       fetchSpaceUpdateGuide () {
@@ -525,10 +669,12 @@
       // 从其他菜单进入管理空间选择角色
       handleSwitchPerm ({ id, entry }) {
         if (entry && this.$refs.selectTree) {
-          const { role } = this.user;
-          console.log(566, this.user.role);
-          this.handleRemoteTree(role.name);
           this.$refs.selectTree.selected = Number(id);
+          const hasRole = this.curRoleList.find(item => item.id === Number(id));
+          this.isSearch = !hasRole;
+          this.resetRoleList();
+          console.log(this.curRoleList);
+          // this.handleRemoteTree(role.name);
         }
       },
 
@@ -553,15 +699,33 @@
 
       handleSelectNode (node) {
         // if (!node.data.is_member) return;
-        this.$refs.select.close();
         this.handleToggle(false);
+        this.$refs.select.close();
         // this.handleSwitchRole(node.id);
         this.handleSwitchRole(node.data);
       },
 
-      handleRemoteTree  (value) {
-        console.log(value, 4545);
-        // this.$refs.selectTree && this.$refs.selectTree.filter(value);
+      async handleRemoteTree  (value) {
+        console.log(111);
+        this.keyWord = value;
+        if (this.$refs.select) {
+          this.$refs.select.searchValue = value;
+        }
+        this.curRoleList = [];
+        this.resetPagination();
+        this.resetSubPagination();
+        if (value) {
+          this.isSearch = true;
+          await this.fetchSearchManageList(value);
+        } else {
+          this.isSearch = false;
+          if (this.$refs.select) {
+            this.$refs.select.searchValue = '';
+          }
+          await this.$store.dispatch('roleList');
+          await this.resetRoleList();
+        }
+        this.$refs.selectTree && this.$refs.selectTree.filter(value);
       },
 
       // 切换导航展开固定
@@ -609,75 +773,6 @@
           }
           this.openedItem = item.id === this.openedItem ? '' : item.id;
         });
-      },
-
-      async handleToggle (value) {
-        this.selectCls = 'hide-iam-nav-select-cls';
-        if (value) {
-          this.selectCls = 'iam-nav-select-dropdown-content';
-          this.resetPagination();
-          this.resetSubPagination();
-          const { role } = this.user;
-          console.log(role, 454);
-          // if (['rating_manager'].includes(role.type)) {
-          //   this.fetchSubManagerList({ id: role.id, children: [] });
-          // }
-        }
-      },
-
-      async handleLoadMore () {
-        if (this.curRoleList.length < this.roleCount) {
-          this.pagination.current++;
-          const { current, limit } = this.pagination;
-          const params = {
-            limit,
-            offset: (current - 1) * limit
-          };
-          this.pagination = Object.assign(this.pagination, params);
-          const result = await this.$store.dispatch('roleList', params);
-          result.forEach(item => {
-            if (item.has_subset_manager) {
-              this.$set(item, 'children', [{ name: '' }]);
-            }
-          });
-          this.curRoleList = [...this.curRoleList, ...result];
-        }
-        console.log(this.curRoleList, this.roleCount);
-      },
-
-      async handleSubLoadMore (payload) {
-        if (payload !== this.subPagination.count) {
-          const params = {
-            current: ++this.subPagination.current,
-            limit: 20
-          };
-          this.subPagination = Object.assign(this.subPagination, params);
-          this.fetchSubManagerList(this.curData);
-        }
-      },
-
-      // 切换身份
-      async handleSwitchRole ({ id, type, name }) {
-        console.log(id, type, name);
-        // const { type, name } = getTreeNode(id, this.curRoleList);
-        [this.curRoleId, this.curRole] = [id, type];
-        try {
-          await this.$store.dispatch('role/updateCurrentRole', { id });
-          this.$store.commit('updateCurRoleId', id);
-          this.$store.commit('updateIdentity', { id, type, name });
-          this.$store.commit('updateNavId', id);
-          this.updateRouter(type);
-          this.resetLocalStorage();
-        } catch (e) {
-          console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
-        }
       },
 
       // 更新路由
@@ -800,10 +895,16 @@
         .iamcenter-level-two-manage-space {
             margin-left: 15px;
         }
+        .iam-search-data {
+          .iamcenter-level-two-manage-space {
+            margin-left: 0;
+          }
+        }
     }
     &-empty {
         color: #fff !important;
         opacity: .6;
+        font-size: 12px;
     }
   }
 
@@ -830,7 +931,6 @@
   }
 
   .tree-load-more {
-    color: red;
     text-align: center;
   }
 </style>
