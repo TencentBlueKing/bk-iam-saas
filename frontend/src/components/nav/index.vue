@@ -567,9 +567,6 @@
           if (!this.isSearch && this.$refs.select) {
             this.$refs.select.searchValue = '';
           }
-          if (this.curRoleData.id && ['subset_manager'].includes(role.type)) {
-            this.$refs.selectTree.setExpanded(this.curRoleData.id);
-          }
           if ((curNode && curNode.data && curNode.data.has_subset_manager)) {
             await this.handleExpandNode(curNode || this.curRoleData);
           }
