@@ -25,19 +25,8 @@ from rest_framework import serializers
 from backend.apps.application.models import Application
 from backend.apps.group.models import Group
 from backend.apps.organization.models import Department, DepartmentMember, User
-from backend.apps.role.models import Role, RoleRelatedObject, RoleRelation, RoleSource, RoleUser
+from backend.apps.role.models import Role, RoleRelatedObject, RoleRelation, RoleResourceLabel, RoleSource, RoleUser
 from backend.apps.template.models import PermTemplate
-from backend.biz.policy import (
-    ConditionBean,
-    InstanceBean,
-    PathNodeBean,
-    PathNodeBeanList,
-    PolicyBean,
-    PolicyBeanList,
-    RelatedResourceBean,
-    ResourceGroupBean,
-    ThinSystem,
-)
 from backend.common.error_codes import error_codes
 from backend.service.constants import (
     ACTION_ALL,
@@ -54,6 +43,19 @@ from backend.service.constants import (
 from backend.service.models import Attribute, Subject, System
 from backend.service.role import AuthScopeAction, AuthScopeSystem, CommonAction, RoleInfo, RoleService, UserRole
 from backend.service.system import SystemService
+
+from .policy import (
+    ConditionBean,
+    InstanceBean,
+    PathNodeBean,
+    PathNodeBeanList,
+    PolicyBean,
+    PolicyBeanList,
+    RelatedResourceBean,
+    ResourceGroupBean,
+    ThinSystem,
+)
+from .resource import ResourceNodeBean
 
 logger = logging.getLogger("app")
 
@@ -193,7 +195,9 @@ class RoleBiz:
         """
         创建分级管理员
         """
-        return self.svc.create(info, creator)
+        role = self.svc.create(info, creator)
+        RoleResourceLabelHelper(role).handle()
+        return role
 
     def update(self, role: Role, info: RoleInfoBean, updater: str):
         """
@@ -209,11 +213,15 @@ class RoleBiz:
             for subset_manager in Role.objects.filter(id__in=subset_manager_ids, inherit_subject_scope=True):
                 self.svc.update_role_subject_scope(subset_manager.id, subject_scopes)
 
+        RoleResourceLabelHelper(role).handle()
+
     def create_subset_manager(self, grade_manager: Role, info: RoleInfoBean, creator: str) -> Role:
         """
         创建子集管理员
         """
-        return self.svc.create_subset_manager(grade_manager, info, creator)
+        role = self.svc.create_subset_manager(grade_manager, info, creator)
+        RoleResourceLabelHelper(role).handle()
+        return role
 
     def modify_system_manager_members(self, role_id: int, members: List[str]):
         """修改系统管理员的成员"""
@@ -1257,3 +1265,52 @@ def can_user_manage_role(username: str, role_id: int) -> bool:
         role_ids.append(super_manager.id)
 
     return RoleUser.objects.filter(role_id__in=role_ids, username=username).exists()
+
+
+class RoleResourceLabelHelper:
+    """分析变更角色的资源标签"""
+
+    svc = RoleService()
+
+    def __init__(self, role: Role) -> None:
+        self.role = role
+
+    def handle(self):
+        resource_nodes: Set[ResourceNodeBean] = set()
+
+        # 遍历角色的所有资源范围, 分析出资源标签, 并创建数据
+        auth_systems = self.svc.list_auth_scope(self.role.id)
+        for system_actions in auth_systems:
+            for action in system_actions.actions:
+                policy = PolicyBean.parse_obj(action)
+                if len(policy.list_thin_resource_type()) != 1:
+                    continue
+
+                for rg in policy.resource_groups:
+                    rrt: RelatedResourceBean = rg.related_resource_types[0]  # type: ignore
+                    for condition in rrt.condition:
+                        # 忽略有属性的condition
+                        if not condition.has_no_attributes():
+                            continue
+
+                        # 遍历所有的实例路径, 筛选出有查询有实例审批人的实例
+                        for instance in condition.instances:
+                            for path in instance.path:
+                                first_node = path[0]
+                                if (first_node.system_id, first_node.type) not in self.label_resource_type:
+                                    continue
+
+                                resource_nodes.add(ResourceNodeBean.parse_obj(first_node))
+
+        RoleResourceLabel.objects.filter(role_id=self.role.id).delete()
+
+        if not resource_nodes:
+            return
+
+        labels = [
+            RoleResourceLabel(
+                role_id=self.role.id, system_id=node.system_id, resource_type_id=node.type, resource_id=node.id
+            )
+            for node in resource_nodes
+        ]
+        RoleResourceLabel.objects.bulk_create(labels, ignore_conflicts=True)

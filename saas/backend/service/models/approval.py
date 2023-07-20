@@ -120,9 +120,9 @@ class ApprovalProcessWithNodeProcessor(ApprovalProcessWithNode):
     def __eq__(self, other):
         return self.id == other.id and self.nodes == other.nodes
 
-    def set_instance_approver(self, approver: List[str]):
+    def set_node_approver(self, node_type: str, approver: List[str]):
         for node in self.nodes:
-            if node.is_iam_source() and node.processor_type == ProcessorNodeType.INSTANCE_APPROVER.value:
+            if node.is_iam_source() and node.processor_type == node_type:
                 node.processors = approver
 
     def has_instance_approver_node(self, judge_empty=False) -> bool:
@@ -137,5 +137,14 @@ class ApprovalProcessWithNodeProcessor(ApprovalProcessWithNode):
                 if judge_empty and len(node.processors) == 0:
                     return False
 
+                return True
+        return False
+
+    def has_grade_manager_node(self) -> bool:
+        """
+        是否包含分级管理员节点
+        """
+        for node in self.nodes:
+            if node.is_iam_source() and node.processor_type == ProcessorNodeType.GRADE_MANAGER.value:
                 return True
         return False

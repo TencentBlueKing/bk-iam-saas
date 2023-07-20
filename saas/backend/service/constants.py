@@ -229,6 +229,7 @@ APPLICATION_SUPPORT_PROCESSOR_ROLE_MAP = {
         ProcessorNodeType.SUPER_MANAGER.value,
         ProcessorNodeType.SYSTEM_MANAGER.value,
         ProcessorNodeType.INSTANCE_APPROVER.value,
+        ProcessorNodeType.GRADE_MANAGER.value,
     ),
     ApplicationType.JOIN_GROUP.value: (
         ProcessorNodeType.SUPER_MANAGER.value,

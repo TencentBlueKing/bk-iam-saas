@@ -11,7 +11,7 @@ specific language governing permissions and limitations under the License.
 import logging
 from collections import defaultdict
 from itertools import groupby
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Type
 
 from django.db import transaction
 from django.utils.translation import gettext as _
@@ -65,7 +65,12 @@ from backend.service.models import (
 from backend.service.role import RoleService
 from backend.service.system import SystemService
 
-from .application_process import InstanceApproverHandler, PolicyProcess, PolicyProcessHandler
+from .application_process import (
+    GradeManagerApproverHandler,
+    InstanceApproverHandler,
+    PolicyProcess,
+    PolicyProcessHandler,
+)
 from .group import GroupBiz, GroupMemberExpiredAtBean
 from .policy import PolicyBean, PolicyBeanList, PolicyOperationBiz, PolicyQueryBiz
 from .role import RoleBiz, RoleInfo, RoleInfoBean
@@ -419,9 +424,11 @@ class ApplicationBiz:
             elif node.processor_type == RoleType.SYSTEM_MANAGER.value:
                 processors = self.approval_processor_biz.get_system_manager_members(system_id=kwargs["system_id"])
             elif node.processor_type == RoleType.GRADE_MANAGER.value:
-                processors = self.approval_processor_biz.get_grade_manager_members_by_group_id(
-                    group_id=kwargs["group_id"]
-                )
+                # 如果是自定义权限, 需要后续流程中填充审批人
+                if "group_id" in kwargs:
+                    processors = self.approval_processor_biz.get_grade_manager_members_by_group_id(
+                        group_id=kwargs["group_id"]
+                    )
             # NOTE: 由于资源实例审批人节点的逻辑涉及到复杂的拆分, 合并逻辑, 不在这里处理
 
             node_with_processor.processors = processors
@@ -489,9 +496,12 @@ class ApplicationBiz:
             policy_process_list.append(PolicyProcess(policy=policy, process=process))
 
         # 5. 通过管道填充可能的资源实例审批人/分级管理员审批节点的审批人
-        pipeline: List[PolicyProcessHandler] = [InstanceApproverHandler()]  # NOTE: 未来需要实现分级管理员审批handler
+        pipeline: List[Type[PolicyProcessHandler]] = [
+            InstanceApproverHandler,
+            GradeManagerApproverHandler,
+        ]
         for pipe in pipeline:
-            policy_process_list = pipe.handle(policy_process_list)
+            policy_process_list = pipe(system_id).handle(policy_process_list)
 
         # 6. 依据审批流程合并策略
         policy_list_process = self._merge_policies_by_approval_process(system_id, policy_process_list)
