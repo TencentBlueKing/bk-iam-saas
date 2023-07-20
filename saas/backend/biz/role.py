@@ -11,7 +11,7 @@ specific language governing permissions and limitations under the License.
 import logging
 from collections import defaultdict
 from textwrap import dedent
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional, Set, Tuple
 
 from blue_krill.web.std_error import APIError
 from django.conf import settings
@@ -1314,3 +1314,7 @@ class RoleResourceLabelHelper:
             for node in resource_nodes
         ]
         RoleResourceLabel.objects.bulk_create(labels, ignore_conflicts=True)
+
+    @cached_property
+    def label_resource_type(self) -> Set[Tuple[str, str]]:
+        return {(item["system_id"], item["type"]) for item in settings.ROLE_RESOURCE_LABEL_TYPE}
