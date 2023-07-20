@@ -994,7 +994,7 @@ class RoleSearchViewSet(mixins.ListModelMixin, GenericViewSet):
             queryset = Role.objects.alias(type_order=type_order).order_by("type_order", "-updated_time")
 
         # 作为超级管理员时，可以管理所有分级管理员
-        if RoleListQuery(self.request.role, self.request.user).is_super_manager(self.request.user):
+        if RoleListQuery(self.request.role, self.request.user).is_user_super_manager(self.request.user):
             return queryset
 
         # 普通用户只能查询到自己加入的管理员
