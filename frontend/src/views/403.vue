@@ -12,7 +12,7 @@
 </template>
 
 <script>
-  import { formatCodeData } from '@/common/util';
+  import { formatCodeData, delLocationHref } from '@/common/util';
   /**
    * 403 component
    */
@@ -29,13 +29,17 @@
     },
     mounted () {
       const { message } = this.$route.query;
+      if (message) {
+        window.sessionStorage.setItem('errorMessage', message);
+      }
       const params = {
         ...this.emptyData,
         ...{
-          message: message || ''
+          message: message || window.sessionStorage.getItem('errorMessage') || ''
         }
       };
       this.emptyData = formatCodeData(1302403, params);
+      delLocationHref(['message']);
     }
   };
 </script>

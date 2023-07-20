@@ -138,10 +138,10 @@
       }
     }
     .page-text {
-      font-size: 14px;
+      font-size: 16px;
     }
     .page-img {
-      width: auto !important;
+      width: 400px !important;
       margin-top: 150px;
       height: 100%;
     }
