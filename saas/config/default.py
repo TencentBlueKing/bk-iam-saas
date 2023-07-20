@@ -431,14 +431,16 @@ INIT_GRADE_MANAGER_SYSTEM_LIST = env.list(
 HIDDEN_SYSTEM_LIST = env.list("BKAPP_HIDDEN_SYSTEM_LIST", default=["bk_iam", "bk_ci_rbac"])
 
 
-# role resource label type 用于自定期权限申请的权限审批
-ROLE_RESOURCE_LABEL_TYPE = [
+# role resource relation type 用于自定期权限申请的权限审批
+ROLE_RESOURCE_RELATION_TYPE = [
     {"system_id": "bk_cmdb", "type": "biz"},
     {"system_id": "bk_sops", "type": "project"},
     {"system_id": "bk_bcs_app", "type": "project"},
     {"system_id": "bk_monitorv3", "type": "space"},
     {"system_id": "bk_paas3", "type": "application"},
 ]
+
+ROLE_RESOURCE_RELATION_TYPE_SET = {(item["system_id"], item["type"]) for item in ROLE_RESOURCE_RELATION_TYPE}
 
 
 # 对接审计中心相关配置, 包括注册权限模型到权限中心后台的配置

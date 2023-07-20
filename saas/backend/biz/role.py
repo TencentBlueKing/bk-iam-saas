@@ -11,7 +11,7 @@ specific language governing permissions and limitations under the License.
 import logging
 from collections import defaultdict
 from textwrap import dedent
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Set
 
 from blue_krill.web.std_error import APIError
 from django.conf import settings
@@ -25,7 +25,7 @@ from rest_framework import serializers
 from backend.apps.application.models import Application
 from backend.apps.group.models import Group
 from backend.apps.organization.models import Department, DepartmentMember, User
-from backend.apps.role.models import Role, RoleRelatedObject, RoleRelation, RoleResourceLabel, RoleSource, RoleUser
+from backend.apps.role.models import Role, RoleRelatedObject, RoleRelation, RoleResourceRelation, RoleSource, RoleUser
 from backend.apps.template.models import PermTemplate
 from backend.common.error_codes import error_codes
 from backend.service.constants import (
@@ -197,7 +197,7 @@ class RoleBiz:
         创建分级管理员
         """
         role = self.svc.create(info, creator)
-        RoleResourceLabelHelper(role).handle()
+        RoleResourceRelationHelper(role).handle()
         return role
 
     def update(self, role: Role, info: RoleInfoBean, updater: str):
@@ -214,14 +214,14 @@ class RoleBiz:
             for subset_manager in Role.objects.filter(id__in=subset_manager_ids, inherit_subject_scope=True):
                 self.svc.update_role_subject_scope(subset_manager.id, subject_scopes)
 
-        RoleResourceLabelHelper(role).handle()
+        RoleResourceRelationHelper(role).handle()
 
     def create_subset_manager(self, grade_manager: Role, info: RoleInfoBean, creator: str) -> Role:
         """
         创建子集管理员
         """
         role = self.svc.create_subset_manager(grade_manager, info, creator)
-        RoleResourceLabelHelper(role).handle()
+        RoleResourceRelationHelper(role).handle()
         return role
 
     def modify_system_manager_members(self, role_id: int, members: List[str]):
@@ -1268,8 +1268,8 @@ def can_user_manage_role(username: str, role_id: int) -> bool:
     return RoleUser.objects.filter(role_id__in=role_ids, username=username).exists()
 
 
-class RoleResourceLabelHelper:
-    """分析变更角色的资源标签"""
+class RoleResourceRelationHelper:
+    """分析变更角色的资源关系"""
 
     svc = RoleService()
 
@@ -1298,25 +1298,24 @@ class RoleResourceLabelHelper:
                         for instance in condition.instances:
                             for path in instance.path:
                                 first_node = path[0]
-                                if (first_node.system_id, first_node.type) not in self.label_resource_type:
+                                if (
+                                    first_node.system_id,
+                                    first_node.type,
+                                ) not in settings.ROLE_RESOURCE_RELATION_TYPE_SET:
                                     continue
 
                                 if len(path) == 1 or (len(path) == 2 and path[1].id == ANY_ID):
                                     resource_nodes.add(ResourceNodeBean.parse_obj(first_node))
 
-        RoleResourceLabel.objects.filter(role_id=self.role.id).delete()
+        RoleResourceRelation.objects.filter(role_id=self.role.id).delete()
 
         if not resource_nodes:
             return
 
         labels = [
-            RoleResourceLabel(
+            RoleResourceRelation(
                 role_id=self.role.id, system_id=node.system_id, resource_type_id=node.type, resource_id=node.id
             )
             for node in resource_nodes
         ]
-        RoleResourceLabel.objects.bulk_create(labels, ignore_conflicts=True)
-
-    @cached_property
-    def label_resource_type(self) -> Set[Tuple[str, str]]:
-        return {(item["system_id"], item["type"]) for item in settings.ROLE_RESOURCE_LABEL_TYPE}
+        RoleResourceRelation.objects.bulk_create(labels, ignore_conflicts=True)

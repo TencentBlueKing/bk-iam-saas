@@ -12,7 +12,7 @@ from django.core.management.base import BaseCommand
 from django.core.paginator import Paginator
 
 from backend.apps.role.models import Role
-from backend.biz.role import RoleResourceLabelHelper
+from backend.biz.role import RoleResourceRelationHelper
 
 
 class Command(BaseCommand):
@@ -25,4 +25,4 @@ class Command(BaseCommand):
 
         for i in paginator.page_range:
             for role in paginator.page(i):
-                RoleResourceLabelHelper(role).handle()
+                RoleResourceRelationHelper(role).handle()

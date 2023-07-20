@@ -10,14 +10,14 @@ specific language governing permissions and limitations under the License.
 """
 from abc import ABC, abstractmethod
 from copy import deepcopy
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any, Dict, List
 
 from blue_krill.web.std_error import APIError
 from django.conf import settings
 from django.utils.functional import cached_property
 from pydantic import BaseModel
 
-from backend.apps.role.models import Role, RoleResourceLabel, RoleUser
+from backend.apps.role.models import Role, RoleResourceRelation, RoleUser
 from backend.service.constants import ANY_ID, ProcessorNodeType, RoleType
 from backend.service.models.approval import ApprovalProcessWithNodeProcessor
 from backend.util.uuid import gen_uuid
@@ -306,7 +306,7 @@ class GradeManagerApproverHandler(PolicyProcessHandler):
         self, system_id: str, resource_node: ResourceNodeBean, part_policy: PolicyBean
     ) -> List[int]:
         """查询满足授权范围的分级管理员"""
-        role_ids = self._list_label_resource_role_ids(resource_node)
+        role_ids = self._list_related_resource_role_ids(resource_node)
 
         if not role_ids:
             return role_ids
@@ -334,10 +334,10 @@ class GradeManagerApproverHandler(PolicyProcessHandler):
 
         return [self._role_id_checker[_id] for _id in role_ids if _id in self._role_id_checker]
 
-    def _list_label_resource_role_ids(self, resource_node: ResourceNodeBean):
+    def _list_related_resource_role_ids(self, resource_node: ResourceNodeBean):
         if resource_node not in self._resource_role_ids:
             role_ids = list(
-                RoleResourceLabel.objects.filter(
+                RoleResourceRelation.objects.filter(
                     system_id=resource_node.system_id,
                     resource_type_id=resource_node.type,
                     resource_id=resource_node.id,
@@ -367,7 +367,7 @@ class GradeManagerApproverHandler(PolicyProcessHandler):
                 for instance in condition.instances:
                     for path in instance.path:
                         first_node = path[0]
-                        if (first_node.system_id, first_node.type) not in self.label_resource_type:
+                        if (first_node.system_id, first_node.type) not in settings.ROLE_RESOURCE_RELATION_TYPE_SET:
                             continue
 
                         node = ResourceNodeBean.parse_obj(first_node)
@@ -390,7 +390,3 @@ class GradeManagerApproverHandler(PolicyProcessHandler):
                             )
 
         return resource_node_policy
-
-    @cached_property
-    def label_resource_type(self) -> Set[Tuple[str, str]]:
-        return {(item["system_id"], item["type"]) for item in settings.ROLE_RESOURCE_LABEL_TYPE}

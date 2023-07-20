@@ -5,13 +5,13 @@ from django.db import migrations
 
 
 def run_migrate_role_resource_label(apps, schema_editor):
-    call_command("migrate_role_resource_label")
+    call_command("migrate_role_resource_relation")
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("role", "0015_roleresourcelabel"),
+        ("role", "0015_roleresourcerelation"),
     ]
 
     operations = [migrations.RunPython(run_migrate_role_resource_label)]

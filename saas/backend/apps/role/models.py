@@ -301,7 +301,7 @@ class RoleSource(BaseModel):
             return row[0]
 
 
-class RoleResourceLabel(BaseModel):
+class RoleResourceRelation(BaseModel):
     """
     角色资源标签
 
@@ -314,8 +314,8 @@ class RoleResourceLabel(BaseModel):
     resource_id = models.CharField("资源ID", max_length=36)
 
     class Meta:
-        verbose_name = "角色资源标签"
-        verbose_name_plural = "角色资源标签"
+        verbose_name = "角色资源关系"
+        verbose_name_plural = "角色资源关系"
         unique_together = ["resource_id", "resource_type_id", "system_id", "role_id"]
 
 
