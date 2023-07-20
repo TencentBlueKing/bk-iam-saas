@@ -189,6 +189,9 @@ const PermTransferHistory = () => import(/* webpackChunkName: 'perm-transfer' */
 // no-perm
 const NoPerm = () => import(/* webpackChunkName: 'no-perm' */ '../views/no-perm');
 
+// 403
+const NotAccessPermPage = () => import(/* webpackChunkName: 'none' */ '../views/403');
+
 // 404
 const NotFound = () => import(/* webpackChunkName: 'none' */ '../views/404');
 
@@ -670,6 +673,11 @@ export const routes = [
         component: PermTransferHistory
       }
     ]
+  },
+  {
+    path: '403',
+    name: '403',
+    component: NotAccessPermPage
   },
   {
     path: '*',
