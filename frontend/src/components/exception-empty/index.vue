@@ -20,7 +20,7 @@
         type: String,
         default: ''
       },
-      message: {
+      errorMessage: {
         type: String,
         default: ''
       }
@@ -33,7 +33,6 @@
     methods: {
       searchTipStyles () {
         this.$nextTick(() => {
-          console.log(this.$parent);
           if (this.$parent.tableId) {
             this.searchTipWidth = !['zh-cn'].includes(window.CUR_LANGUAGE) ? 400 : 230;
           }
@@ -72,7 +71,7 @@
             return (
                 <div class="tip-wrap">
                     <div class="tip-message">
-                        {this.message}
+                        {this.errorMessage}
                     </div>
                 </div>
             );
@@ -131,13 +130,20 @@
 }
 /deep/ .bk-exception {
     width: 100%;
-}
-
-/deep/ .bk-exception-img {
-  width: 200px !important;
-  .exception-image {
-    width: 100% !important;
-    height: 100% !important;
-  }
+    &-img {
+      width: 200px !important;
+      .exception-image {
+        width: 100% !important;
+        height: 100% !important;
+      }
+    }
+    .page-text {
+      font-size: 14px;
+    }
+    .page-img {
+      width: auto !important;
+      margin-top: 150px;
+      height: 100%;
+    }
 }
 </style>
