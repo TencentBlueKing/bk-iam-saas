@@ -809,12 +809,12 @@ class RoleListQuery:
                 .order_by("type_order", "-updated_time")
             )
 
-        # 作为超级管理员时，可以管理所有分级管理员
-        if self.role.type == RoleType.SUPER_MANAGER.value:
-            return queryset
-
         # 作为个人时，只能管理加入的的分级管理员
         assert self.user
+
+        # 只要用户是超级管理员, 就可以管理所有分级管理员
+        if self.is_user_super_manager(self.user):
+            return queryset
 
         # 查询用户加入的角色id
         role_ids = list(RoleUser.objects.filter(username=self.user.username).values_list("role_id", flat=True))
@@ -824,6 +824,22 @@ class RoleListQuery:
         role_ids.extend(grade_manager_ids)
 
         return queryset.filter(id__in=role_ids)
+
+    def is_user_super_manager(self, user: User):
+        sql = dedent(
+            """SELECT
+            1
+            FROM
+            role_roleuser a
+            LEFT JOIN role_role b ON a.role_id = b.id
+            WHERE
+            b.type = %s
+            AND a.username = %s"""
+        )
+
+        with connection.cursor() as cursor:
+            cursor.execute(sql, (RoleType.SUPER_MANAGER.value, self.user.username))
+            return bool(cursor.fetchone())
 
     def query_subset_manager(self):
         """

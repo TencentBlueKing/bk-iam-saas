@@ -109,7 +109,7 @@ class ErrorCodes:
     )
 
     # [特殊处理透传LOGIN的错误码 1302403]
-    LOGIN_FORBIDDEN = ErrorCode("login forbidden", code_num=1302403, status_code=status.HTTP_200_OK)
+    LOGIN_FORBIDDEN = ErrorCode("login forbidden", code_num=1302403, status_code=status.HTTP_403_FORBIDDEN)
 
 
 error_codes = ErrorCodes()
