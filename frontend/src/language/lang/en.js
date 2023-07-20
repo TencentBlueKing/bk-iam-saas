@@ -262,6 +262,8 @@ export const m = {
         '“': " '",
         '”': "' ",
         '：': ':',
+        '（': '(',
+        '）': ')',
         '将': 'The ',
         '关联到以下用户组': ' will be associated with the following groups',
         '离开': 'LEAVE',

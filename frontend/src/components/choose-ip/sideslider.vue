@@ -10,9 +10,10 @@
     @update:isShow="handleCancel">
     <div slot="content" class="content" v-bkloading="{ isLoading: loading, opacity: 1 }">
       <div
-        v-if="false"
+        v-if="noLimitRoutes.includes($route.name)"
         class="no-limited-wrapper flex-between"
-        title="$t(`m.resource['无限制总文案']`)">
+        :style="{ borderBottom: !isHide ? 0 : '' }"
+        :title="$t(`m.resource['无限制总文案']`)">
         <div class="no-limited-wrapper-left single-hide">
           <Icon type="info-new" />
           <span>{{ $t(`m.resource['无限制文案']`) }}</span>
@@ -34,6 +35,7 @@
               ref="topologyInput"
               :is-filter="isFilter"
               :placeholder="curPlaceholder"
+              :custom-style="{ padding: 0 }"
               @on-search="handleSearch" />
             <div class="list-wrapper"
               v-bkloading="{ isLoading: listLoading, opacity: 1 }"
@@ -99,7 +101,6 @@
   import { leaveConfirm } from '@/common/leave-confirm';
   import { formatCodeData } from '@/common/util';
   import TopologyInput from '@/components/choose-ip/topology-input';
-  import Condition from '@/model/condition';
 
   export default {
     name: '',
@@ -169,6 +170,7 @@
         isScrollBottom: false,
         isHide: false,
         notLimitValue: false,
+        noLimitRoutes: ['applyCustomPerm'], // 需要展示无限制的页面
         emptyData: {
           type: 'empty',
           text: '暂无数据',
@@ -229,7 +231,13 @@
       },
       params: {
         handler (value) {
-          if (Object.keys(value).length > 0) {
+          if (Object.keys(value).length) {
+            const { isNoLimited } = value;
+            this.notLimitValue = isNoLimited;
+            this.isHide = isNoLimited;
+            if (isNoLimited) {
+              this.handleClear();
+            }
             this.$emit('on-init', false);
           }
         },
@@ -385,24 +393,24 @@
       handleLimitChange (newVal, oldVal) {
         window.changeAlert = true;
         this.isHide = newVal;
-        if (!newVal) {
-          const isInitializeData = this.originalData.length === 1 && this.originalData[0] === 'none';
-          if (!isInitializeData && this.originalData.length > 0) {
-            this.conditionData = _.cloneDeep(this.originalData);
-            const firstConditionData = this.conditionData[0];
-            if (firstConditionData.instance && firstConditionData.instance.length) {
-              firstConditionData.instanceExpanded = true;
-            }
-            if (firstConditionData.attribute && firstConditionData.attribute.length) {
-              firstConditionData.attributeExpanded = true;
-            }
-            return;
-          }
-          if (this.conditionData.length < 1) {
-            this.conditionData.push(new Condition({ selection_mode: this.selectionMode }, 'init', 'add'));
-            this.conditionData[0].instanceExpanded = true;
-          }
-        }
+        // if (!newVal) {
+        //   const isInitializeData = this.originalData.length === 1 && this.originalData[0] === 'none';
+        //   if (!isInitializeData && this.originalData.length > 0) {
+        //     this.conditionData = _.cloneDeep(this.originalData);
+        //     const firstConditionData = this.conditionData[0];
+        //     if (firstConditionData.instance && firstConditionData.instance.length) {
+        //       firstConditionData.instanceExpanded = true;
+        //     }
+        //     if (firstConditionData.attribute && firstConditionData.attribute.length) {
+        //       firstConditionData.attributeExpanded = true;
+        //     }
+        //     return;
+        //   }
+        //   if (!this.curSelectedList.length) {
+        //     this.curSelectedList.push(new Condition({ selection_mode: this.selectionMode }, 'init', 'add'));
+        //   }
+        // }
+
         if (!this.flag) {
           this.$emit('on-limit-change');
         }
@@ -445,6 +453,26 @@
         }
       },
 
+      handleGetValue () {
+        const tempConditionData = _.cloneDeep(this.curSelectedList);
+        if (this.notLimitValue) {
+          return {
+            isEmpty: false,
+            data: []
+          };
+        }
+        if (!tempConditionData.length) {
+          return {
+            isEmpty: false,
+            data: ['none']
+          };
+        }
+        return {
+          isEmpty: false,
+          data: tempConditionData
+        };
+      },
+
       handleEmptyClear () {
         this.$refs.topologyInput.value = '';
         this.emptyData.tipType = '';
@@ -471,6 +499,12 @@
 
       handleSave () {
         window.changeAlert = false;
+        if (this.notLimitValue) {
+          this.curSelectedList = [];
+          this.selectList.forEach(item => {
+            item.checked = false;
+          });
+        }
         this.$emit('update:show', false);
         this.$emit('on-selected', _.cloneDeep(this.curSelectedList));
         this.resetData();
@@ -499,6 +533,7 @@
         height: 480px;
         display: flex;
         justify-self: start;
+        border-top: 1px solid #dcdee5;
     }
     .no-limited-wrapper {
       width: 100%;

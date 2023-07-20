@@ -35,7 +35,7 @@ class AggActionSLZ(serializers.Serializer):
 class BaseAggActionListSLZ(serializers.Serializer):
     actions = serializers.ListField(label="操作策略", child=AggActionSLZ(label="策略"), allow_empty=False)
     aggregate_resource_types = serializers.ListField(
-        label="聚合资源类型列表", child=AggResourceTypeSLZ(label="聚合资源类型"), allow_empty=False
+        label="聚合资源类型列表", child=AggResourceTypeSLZ(label="聚合资源类型"), allow_empty=True
     )
 
 

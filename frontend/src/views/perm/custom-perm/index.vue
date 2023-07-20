@@ -79,6 +79,7 @@
         handler (v) {
           const systemPolicyList = v.map(item => new PermSystem(item));
           this.systemPolicyList.splice(0, this.systemPolicyList.length, ...systemPolicyList);
+          this.systemPolicyList.sort((curr, next) => curr.name.localeCompare(next.name));
           this.onePerm = systemPolicyList.length;
         },
         immediate: true,

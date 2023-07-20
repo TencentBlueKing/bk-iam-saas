@@ -32,7 +32,8 @@ import http from '@/api';
 // import il8n from '@/language';
 import preload from '@/common/preload';
 import { bus } from '@/common/bus';
-import { existValue, getParamsValue, getTreeNode } from '@/common/util';
+// import { existValue, getParamsValue, getTreeNode } from '@/common/util';
+import { existValue, getParamsValue } from '@/common/util';
 import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
 import { messageError } from '@/common/bkmagic';
 
@@ -89,15 +90,16 @@ export const beforeEach = async (to, from, next) => {
   // if (curRole === 'staff') {
   //     await store.dispatch('role/updateCurrentRole', { id: 0 });
   // }
-  const roleList = await store.dispatch('roleList', {
-    cancelWhenRouteChange: false,
-    cancelPrevious: false
-  });
+  // 递归改成分级展开
+  // const roleList = await store.dispatch('roleList', {
+  //   cancelWhenRouteChange: false,
+  //   cancelPrevious: false
+  // });
 
   async function getExternalRole () {
     const { role_id: externalRoleId } = to.query;
     try {
-      await store.dispatch('role/updateCurrentRole', { id: +externalRoleId });
+      await store.dispatch('role/updateCurrentRole', { id: Number(externalRoleId) });
       await store.dispatch('userInfo');
       next();
     } catch (error) {
@@ -114,6 +116,16 @@ export const beforeEach = async (to, from, next) => {
     // } else {
     //     messageError(il8n('common', '您没有该角色权限，无法切换到该角色'));
     // }
+  }
+
+  async function getManagerInfo () {
+    const { code } = await store.dispatch('role/updateCurrentRole', { id: Number(currentRoleId) });
+    if (code === 0) {
+      const { role } = await store.dispatch('userInfo');
+      curRole = role.type;
+    } else {
+      next({ path: `${SITE_URL}${defaultRoute[navIndex]}` });
+    }
   }
 
   if (['applyCustomPerm', 'myManageSpace', 'myPerm', 'permTransfer', 'permRenewal'].includes(to.name)
@@ -140,15 +152,9 @@ export const beforeEach = async (to, from, next) => {
     } else {
       if (currentRoleId) {
         // const currentRole = roleList.find((item) => String(item.id) === currentRoleId);
-        const currentRole = getTreeNode(+currentRoleId, roleList);
-        if (currentRole) {
-          await store.dispatch('role/updateCurrentRole', { id: +currentRoleId });
-          await store.dispatch('userInfo');
-          curRole = currentRole.type;
-          next();
-        } else {
-          next({ path: `${SITE_URL}${defaultRoute[navIndex]}` });
-        }
+        // 从之前的拓扑接口更换成一级、二级接口
+        // const currentRole = getTreeNode(+currentRoleId, roleList);
+        await getManagerInfo();
       } else {
         const noFrom = !from.name;
         // 说明是刷新页面
@@ -171,16 +177,9 @@ export const beforeEach = async (to, from, next) => {
       //     cancelPrevious: false
       // });
       // const currentRole = roleList.find((item) => String(item.id) === currentRoleId);
-      const currentRole = getTreeNode(+currentRoleId, roleList);
-      if (currentRole) {
-        await store.dispatch('role/updateCurrentRole', { id: +currentRoleId });
-        await store.dispatch('userInfo');
-        curRole = currentRole.type;
-        next();
-      } else {
-        next({ path: `${SITE_URL}${defaultRoute[navIndex]}` });
-        // next({ path: `${SITE_URL}user-group` });
-      }
+      // const currentRole = getTreeNode(currentRoleId, roleList);
+      // await getExternalRole();
+      await getManagerInfo();
     } else {
       if (existValue('externalApp')) { // 外部嵌入页面
         next();

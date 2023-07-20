@@ -12,7 +12,7 @@ from copy import copy
 from itertools import groupby
 from typing import List
 
-from django.db.models import Q
+from django.db.models import Case, Q, Value, When
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
 from drf_yasg.utils import swagger_auto_schema
@@ -114,7 +114,9 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
     def get_queryset(self):
         request = self.request
-        return RoleListQuery(request.role, request.user).query_grade_manager()
+        return RoleListQuery(request.role, request.user).query_grade_manager(
+            with_super=bool(request.query_params.get("with_super", False))
+        )
 
     @swagger_auto_schema(
         operation_description="创建分级管理员",
@@ -924,6 +926,10 @@ class UserSubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         if not subset_manager_ids:
             return Role.objects.none()
 
+        # 如果用户是分级管理员成员返回所有的二级管理员
+        if RoleUser.objects.user_role_exists(self.request.user.username, grade_manager_id):
+            return self.queryset.filter(id__in=subset_manager_ids)
+
         # 筛选出用户加入的子集管理员id
         role_ids = list(
             RoleUser.objects.filter(role_id__in=subset_manager_ids, username=self.request.user.username).values_list(
@@ -978,13 +984,22 @@ class RoleSearchViewSet(mixins.ListModelMixin, GenericViewSet):
     filterset_class = RoleSearchFilter
 
     def get_queryset(self):
+        queryset = self.queryset
+        if bool(self.request.query_params.get("with_super", False)):
+            type_order = Case(
+                When(type=RoleType.SUPER_MANAGER.value, then=Value(1)),
+                When(type=RoleType.SYSTEM_MANAGER.value, then=Value(2)),
+                default=Value(3),
+            )
+            queryset = Role.objects.alias(type_order=type_order).order_by("type_order", "-updated_time")
+
         # 作为超级管理员时，可以管理所有分级管理员
-        if self.request.role.type == RoleType.SUPER_MANAGER.value:
-            return self.queryset
+        if RoleListQuery(self.request.role, self.request.user).is_user_super_manager(self.request.user):
+            return queryset
 
         # 普通用户只能查询到自己加入的管理员
         role_ids = list(RoleUser.objects.filter(username=self.request.user.username).values_list("role_id", flat=True))
-        return self.queryset.filter(id__in=role_ids)
+        return queryset.filter(id__in=role_ids)
 
     @swagger_auto_schema(
         operation_description="管理员搜索",

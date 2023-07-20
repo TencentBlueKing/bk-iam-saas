@@ -25,23 +25,29 @@
 */
 
 import _ from 'lodash';
-import il8n from '@/language';
+import { language, il8n } from '@/language';
 import { DURATION_LIST } from '@/common/constants';
 export default class AggregationPolicy {
   constructor (payload) {
-    this.isError = false;
+    this.isError = payload.isError || false;
     this.actions = payload.actions || [];
     this.instancesDisplayData = payload.instancesDisplayData || {};
-    this.aggregateResourceType = payload.aggregate_resource_types || [];
+    this.aggregateResourceType = payload.aggregate_resource_types || payload.aggregateResourceType || [];
     this.instances = payload.instances || [];
     this.isAggregate = true;
     this.expired_display = payload.expired_display || '';
-    this.isShowCustom = false;
+    this.isShowCustom = payload.isShowCustom || false;
     this.customValue = '';
     this.tag = payload.tag || 'add';
     this.canPaste = false;
     this.instancesBackup = _.cloneDeep(this.instances);
     this.selectedIndex = payload.selectedIndex || 0;
+    this.isChange = false;
+    this.selectionMode = payload.selection_mode || 'all';
+    // 是否需要展示无限制
+    this.isNeedNoLimited = payload.isNeedNoLimited;
+    // 是否是无限制操作
+    this.isNoLimited = payload.isNoLimited;
     this.initExpiredAt(payload);
   }
 
@@ -53,22 +59,36 @@ export default class AggregationPolicy {
     this.expired_at = payload.expired_at;
   }
 
+  get isDefaultLimit () {
+    return !this.flag && this.instances.length < 1 && !this.isChange && this.tag !== 'add';
+  }
+
   get empty () {
-    return this.instances.length < 1;
+    if (this.isNeedNoLimited) {
+      if (this.instances.length === 1 && this.instances[0] === 'none') {
+        return true;
+      }
+      return false;
+    } else {
+      return this.instances.length < 1;
+    }
   }
 
   get value () {
     if (this.empty) {
       return il8n('verify', '请选择');
     }
+    if (this.isNoLimited || (!this.instances.length && !['add'].includes(this.tag))) {
+      return il8n('common', '无限制');
+    }
     let str = '';
     this.aggregateResourceType.forEach(item => {
       if (this.instancesDisplayData[item.id] && this.instancesDisplayData[item.id].length === 1) {
-        str = `${str}，${item.name}: ${this.instancesDisplayData[item.id][0].name}`;
+        str = `${str}${il8n('common', '，')}${item.name}: ${this.instancesDisplayData[item.id][0].name}`;
       } else if (this.instancesDisplayData[item.id] && this.instancesDisplayData[item.id].length > 1) {
         for (const key in this.instancesDisplayData) {
           if (item.id === key) {
-            str = `${str}，已选择 ${this.instancesDisplayData[item.id].length} 个${item.name}`;
+            str = language === 'zh-cn' ? `${str}，已选择${this.instancesDisplayData[item.id].length}个${item.name}` : `${str}, selected ${this.instancesDisplayData[item.id].length} ${item.name}(s)`;
           }
         }
       }

@@ -35,7 +35,10 @@
           <template v-if="item.type === 'user' && item.name !== ''">({{ item.name }})</template>
         </span>
         <span class="red-dot" v-if="item.isNewMember"></span>
-        <span class="node-user-count" v-if="item.showCount && !externalSystemsLayout.addMemberBoundary.hideInfiniteTreeCount">
+        <span
+          v-if="item.showCount && !externalSystemsLayout.addMemberBoundary.hideInfiniteTreeCount && enableOrganizationCount"
+          class="node-user-count"
+        >
           {{ '(' + item.count + `)` }}
         </span>
         <spin-loading ext-cls="loading" v-if="item.loading" />
@@ -128,7 +131,8 @@
       return {
         startIndex: 0,
         endIndex: 0,
-        clickTriggerTypeBat: this.clickTriggerType
+        clickTriggerTypeBat: this.clickTriggerType,
+        enableOrganizationCount: window.ENABLE_ORGANIZATION_COUNT.toLowerCase() === 'true'
       };
     },
     computed: {

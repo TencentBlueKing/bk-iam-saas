@@ -206,7 +206,7 @@ class BaseGradeMangerSLZ(serializers.ModelSerializer):
 
     class Meta:
         model = Role
-        fields = ("id", "name", "description", "creator", "created_time", "updated_time", "updater", "members")
+        fields = ("id", "type", "name", "description", "creator", "created_time", "updated_time", "updater", "members")
 
     def get_members(self, obj):
         return [
@@ -222,6 +222,7 @@ class GradeManagerListSLZ(BaseGradeMangerSLZ):
         model = Role
         fields = (
             "id",
+            "type",
             "name",
             "description",
             "creator",
@@ -266,8 +267,7 @@ class GradeManagerListSLZ(BaseGradeMangerSLZ):
         if not subset_manager_ids:
             return False
 
-        # 查询子集管理员中是否有当前用户
-        return bool(set(subset_manager_ids) & set(self.user_role_ids))
+        return self.get_is_member(obj)  # 如果是成员, 可以看到所有二级管理员
 
 
 class GradeMangerDetailSLZ(BaseGradeMangerSLZ):

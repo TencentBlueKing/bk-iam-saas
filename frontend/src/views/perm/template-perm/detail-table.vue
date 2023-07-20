@@ -43,7 +43,7 @@
     <bk-sideslider
       :is-show.sync="isShowSideslider"
       :title="sidesliderTitle"
-      :width="725"
+      :width="960"
       :quick-close="true"
       @animation-end="handleAnimationEnd">
       <!-- style="padding: 0 35px 17px 35px;" -->
