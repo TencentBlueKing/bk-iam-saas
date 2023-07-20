@@ -196,17 +196,38 @@ def copy_policy_by_instance_path(policy, resource_group, rrt, instance, path):
                             condition=[
                                 ConditionBean(
                                     attributes=[],
-                                    instances=[InstanceBean(path=[path], **instance.dict(exclude={"path"}))],
+                                    instances=[
+                                        InstanceBean(
+                                            path=[path],
+                                            type=instance.type,
+                                            name=instance.name,
+                                            name_en=instance.name_en,
+                                        )
+                                    ],
                                 )
                             ],
-                            **rrt.dict(exclude={"condition"}),
+                            name=rrt.name,
+                            name_en=rrt.name_en,
+                            selection_mode=rrt.selection_mode,
+                            system_id=rrt.system_id,
+                            type=rrt.type,
                         )
                     ],
                     environments=resource_group.environments,
                 )
             ]
         ),
-        **policy.dict(exclude={"resource_groups"}),
+        policy_id=policy.policy_id,
+        expired_at=policy.expired_at,
+        type=policy.type,
+        name=policy.name,
+        name_en=policy.name_en,
+        description=policy.description,
+        description_en=policy.description_en,
+        expired_display=policy.expired_display,
+        action_id=policy.action_id,
+        backend_policy_id=policy.backend_policy_id,
+        auth_type=policy.auth_type,
     )
 
 
