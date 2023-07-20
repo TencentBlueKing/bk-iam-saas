@@ -378,7 +378,16 @@ class GradeManagerApproverHandler(PolicyProcessHandler):
                             # 合并到已有的policy中
                             resource_node_policy[node].resource_groups[0].related_resource_types[0].condition[
                                 0
-                            ].add_instances([InstanceBean(path=[path], **instance.dict(exclude={"path"}))])
+                            ].add_instances(
+                                [
+                                    InstanceBean(
+                                        path=[path],
+                                        type=instance.type,
+                                        name=instance.name,
+                                        name_en=instance.name_en,
+                                    )
+                                ]
+                            )
 
         return resource_node_policy
 
