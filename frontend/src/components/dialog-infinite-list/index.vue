@@ -17,7 +17,10 @@
             :title="nameType(item)">
             {{ item.name }}
           </span>
-          <span class="user-count" v-if="item.showCount && !externalSystemsLayout.addMemberBoundary.hideInfiniteTreeCount">
+          <span
+            v-if="item.showCount && !externalSystemsLayout.addMemberBoundary.hideInfiniteTreeCount && enableOrganizationCount"
+            class="user-count"
+          >
             {{ '(' + item.count + ')' }}
           </span>
           <div class="organization-checkbox" v-if="item.showRadio">
@@ -98,12 +101,10 @@
       return {
         startIndex: 0,
         endIndex: 0,
-
         currentFocusIndex: this.focusIndex,
-
         organizationIndex: -1,
-
-        userIndex: -1
+        userIndex: -1,
+        enableOrganizationCount: window.ENABLE_ORGANIZATION_COUNT.toLowerCase() === 'true'
       };
     },
     computed: {
