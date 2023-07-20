@@ -30,6 +30,7 @@ from backend.apps.template.models import PermTemplate
 from backend.common.error_codes import error_codes
 from backend.service.constants import (
     ACTION_ALL,
+    ANY_ID,
     SUBJECT_ALL,
     SUBJECT_TYPE_ALL,
     SYSTEM_ALL,
@@ -1300,7 +1301,8 @@ class RoleResourceLabelHelper:
                                 if (first_node.system_id, first_node.type) not in self.label_resource_type:
                                     continue
 
-                                resource_nodes.add(ResourceNodeBean.parse_obj(first_node))
+                                if len(path) == 1 or (len(path) == 2 and path[1].id == ANY_ID):
+                                    resource_nodes.add(ResourceNodeBean.parse_obj(first_node))
 
         RoleResourceLabel.objects.filter(role_id=self.role.id).delete()
 
