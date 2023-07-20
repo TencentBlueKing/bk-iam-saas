@@ -207,8 +207,9 @@
                       </span>
                       <span
                         class="user-count"
-                        v-if="item.count &&
-                          !externalSystemsLayout.addMemberBoundary.hideInfiniteTreeCount"
+                        v-if="item.count
+                          && !externalSystemsLayout.addMemberBoundary.hideInfiniteTreeCount
+                          && enableOrganizationCount"
                       >
                         {{ '(' + item.count + `)`}}
                       </span>
@@ -409,6 +410,7 @@
         users: [],
         departments: [],
         subject_scopes: [],
+        enableOrganizationCount: window.ENABLE_ORGANIZATION_COUNT.toLowerCase() === 'true',
         emptyData: {
           type: '',
           text: '',
