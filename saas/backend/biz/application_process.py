@@ -278,7 +278,7 @@ class GradeManagerApproverHandler(PolicyProcessHandler):
                     ProcessorNodeType.GRADE_MANAGER.value,
                     approvers,
                 )
-                policy_process_list.append(PolicyProcess(policy=part_policy, process=copied_process))
+                policy_process_results.append(PolicyProcess(policy=part_policy, process=copied_process))
 
                 # 原始的policy移除已经处理的部份
                 try:
@@ -294,7 +294,7 @@ class GradeManagerApproverHandler(PolicyProcessHandler):
                 ProcessorNodeType.GRADE_MANAGER.value,
                 self.system_manager_approver,
             )
-            policy_process_list.append(policy_process)
+            policy_process_results.append(policy_process)
 
         return policy_process_results
 
