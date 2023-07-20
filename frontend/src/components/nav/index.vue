@@ -469,6 +469,9 @@
           results && results.forEach(item => {
             item.level = !['subset_manager'].includes(item.type) ? 0 : 1;
           });
+          if (current === 1) {
+            this.curRoleList = [];
+          }
           this.curRoleList = [...this.curRoleList, ...results];
         } catch (e) {
           console.error(e);
