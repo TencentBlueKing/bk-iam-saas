@@ -212,7 +212,7 @@
                 <div class="organization-item" v-for="item in hasSelectedDepartments" :key="item.id">
                   <Icon type="file-close" class="folder-icon" />
                   <span class="organization-name" :title="nameType(item)">{{ item.name }}</span>
-                  <span class="user-count" v-if="item.showCount">{{ '(' + item.count + `)` }}</span>
+                  <span class="user-count" v-if="item.showCount && enableOrganizationCount">{{ '(' + item.count + `)` }}</span>
                   <Icon bk type="close-circle-shape" class="delete-depart-icon" @click="handleDelete(item, 'organization')" />
                 </div>
               </div>
@@ -389,6 +389,7 @@
         isAll: false,
         isAllFlag: false,
         externalSource: '',
+        enableOrganizationCount: window.ENABLE_ORGANIZATION_COUNT.toLowerCase() === 'true',
         emptyData: {
           type: '',
           text: '',

@@ -349,12 +349,6 @@
             this.reload();
             this.curRoleId = newValue.role.id;
           }
-          if (this.index === 1) {
-            const hasRole = this.roleList.find(item => item.id === newValue.role.id);
-            if (hasRole) {
-              this.isSearch = false;
-            }
-          }
         },
         deep: true
       },
@@ -387,6 +381,7 @@
       }
     },
     created () {
+      this.index = this.index || Number(window.localStorage.getItem('index') || 0);
       this.fetchRoleUpdate(this.user);
       this.isUnfold = this.navStick || !this.navFold;
       this.$once('hook:beforeDestroy', () => {
@@ -395,7 +390,6 @@
       });
     },
     mounted () {
-      this.index = this.index || Number(window.localStorage.getItem('index') || 0);
       bus.$on('theme-change', (payload) => {
         this.curRole = payload;
       });
@@ -406,6 +400,26 @@
       });
     },
     methods: {
+      async fetchDefaultInterface (payload) {
+        this.handleSwitchPerm(payload);
+        this.fetchSpaceUpdateGuide();
+        this.fetchFirstRoleList();
+      },
+      async fetchFirstRoleList () {
+        if (this.index === 1) {
+          // 处理刷新后选中角色不在当前分页里，默认回显
+          const { id, name, type } = this.user.role;
+          const roleData = this.curRoleList.length ? this.curRoleList : await this.$store.dispatch('roleList');
+          const hasRole = roleData.find(item => item.id === id);
+          if (!hasRole || ['subset_manager'].includes(type)) {
+            if (this.$refs.select) {
+              this.isSearch = true;
+              this.$refs.select.searchValue = name;
+            }
+            this.resetRoleList();
+          }
+        }
+      },
       async fetchSubManagerList (row) {
         try {
           const { data } = await this.$store.dispatch(
@@ -575,7 +589,7 @@
       
       // 监听当前已选中的角色是否有变更
       fetchRoleUpdate ({ role }) {
-        const { id, name, type } = role;
+        const { id, type } = role;
         // console.log(role, '变更');
         this.curRole = type;
         this.curRoleId = this.navCurRoleId || id;
@@ -584,17 +598,6 @@
           if (this.$refs.selectTree) {
             this.$refs.selectTree.selected = this.curRoleId;
           }
-          // 处理刷新后选中角色不在当前分页里，默认回显
-          this.$nextTick(() => {
-            const curRoles = this.roleList.find(item => item.id === id);
-            if ((!curRoles || ['subset_manager'].includes(type))) {
-              this.isSearch = true;
-              if (this.$refs.select) {
-                this.$refs.select.searchValue = name;
-              }
-              this.resetRoleList();
-            }
-          });
         }
       },
       fetchSpaceUpdateGuide () {
@@ -630,8 +633,7 @@
       routeChangeHandler (to, from) {
         const { params, name } = to;
         const pathName = name;
-        this.handleSwitchPerm(params);
-        this.fetchSpaceUpdateGuide();
+        this.fetchDefaultInterface(params);
         for (const [key, value] of this.routerMap.entries()) {
           if (key.includes(pathName)) {
             this.openedItem = value;
