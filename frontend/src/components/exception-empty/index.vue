@@ -19,6 +19,10 @@
       tipType: {
         type: String,
         default: ''
+      },
+      message: {
+        type: String,
+        default: ''
       }
     },
     data () {
@@ -29,6 +33,7 @@
     methods: {
       searchTipStyles () {
         this.$nextTick(() => {
+          console.log(this.$parent);
           if (this.$parent.tableId) {
             this.searchTipWidth = !['zh-cn'].includes(window.CUR_LANGUAGE) ? 400 : 230;
           }
@@ -41,26 +46,35 @@
         const defaultOperation = {
           search: () => {
             return (
-                            <div
-                                class="tip-wrap exception-search-tip"
-                                // style={ this.searchTipStyles() }
-                            >
-                                <span class="text-btn">{this.$t(`m.common['可以尝试']`)}</span>
-                                <span> {this.$t(`m.common['调整关键词']`)}</span>
-                                <span> {this.$t(`m.common['或']`)} </span>
-                                <span class="tip-click" onClick={() => this.handleClear()}>
-                                    {this.$t(`m.common['清空筛选条件']`)}
-                                </span>
-                            </div>
+              <div
+                  class="tip-wrap exception-search-tip"
+                  // style={ this.searchTipStyles() }
+              >
+                  <span class="text-btn">{this.$t(`m.common['可以尝试']`)}</span>
+                  <span> {this.$t(`m.common['调整关键词']`)}</span>
+                  <span> {this.$t(`m.common['或']`)} </span>
+                  <span class="tip-click" onClick={() => this.handleClear()}>
+                      {this.$t(`m.common['清空筛选条件']`)}
+                  </span>
+              </div>
             );
           },
           refresh: () => {
             return (
-                            <div class="tip-wrap">
-                                <div class="tip-click" onClick={() => this.handleRefresh()}>
-                                    {this.$t(`m.common['刷新']`)}
-                                </div>
-                            </div>
+              <div class="tip-wrap">
+                  <div class="tip-click" onClick={() => this.handleRefresh()}>
+                      {this.$t(`m.common['刷新']`)}
+                  </div>
+              </div>
+            );
+          },
+          noPerm: () => {
+            return (
+                <div class="tip-wrap">
+                    <div class="tip-message">
+                        {this.message}
+                    </div>
+                </div>
             );
           }
         };
@@ -102,6 +116,10 @@
   .tip-click {
     color: #3a84ff;
     cursor: pointer;
+  }
+  .tip-message {
+    color: #979ba5;
+    font-size: 12px;
   }
   .tip-wrap {
     margin-top: 10px;
