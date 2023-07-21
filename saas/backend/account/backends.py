@@ -129,7 +129,7 @@ class TokenBackend(ModelBackend):
             self._handle_exception(e)
             return False, None
 
-        return True, data["username"]
+        return True, data["bk_username"]
 
     def _handler_exception(self, e):
         """处理登录特殊异常, 需要前端响应给用户"""
