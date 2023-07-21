@@ -2,7 +2,7 @@
   <div class="iam-grading-admin-basic-info-wrapper">
     <detail-layout mode="see">
       <render-layout>
-        <detail-item :label="`${$t(`m.levelSpace['名称']`)}：`">
+        <detail-item :label="`${$t(`m.levelSpace['名称']`)}${$t(`m.common['：']`)}`">
           <iam-edit-input
             field="name"
             :mode="mode"
@@ -11,14 +11,14 @@
             :value="formData.name"
             :remote-hander="handleUpdateRatingManager" />
         </detail-item>
-        <detail-item :label="`${$t(`m.levelSpace['管理员']`)}：`">
+        <detail-item :label="`${$t(`m.levelSpace['管理员']`)}${$t(`m.common['：']`)}`">
           <iam-edit-member
             field="members"
             :value="formData.members"
             @on-change="handleUpdateMembers"
             :remote-hander="handleUpdateRatingManager" />
         </detail-item>
-        <detail-item :label="`${$t(`m.common['描述']`)}：`">
+        <detail-item :label="`${$t(`m.common['描述']`)}${$t(`m.common['：']`)}`">
           <iam-edit-textarea
             field="description"
             :mode="mode"
