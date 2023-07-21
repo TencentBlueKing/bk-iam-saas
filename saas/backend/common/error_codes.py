@@ -108,8 +108,5 @@ class ErrorCodes:
         _("ITSM流程里存在IAM不支持的流程处理者"), code_num=1902602, status_code=status.HTTP_200_OK
     )
 
-    # [特殊处理透传LOGIN的错误码 1302403]
-    LOGIN_FORBIDDEN = ErrorCode("login forbidden", code_num=1302403, status_code=status.HTTP_403_FORBIDDEN)
-
 
 error_codes = ErrorCodes()

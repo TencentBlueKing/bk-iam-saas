@@ -14,14 +14,21 @@ import traceback
 from blue_krill.web.std_error import APIError
 from django.contrib.auth.backends import ModelBackend
 from django.db import IntegrityError
+from rest_framework import status
 
 from backend.account import get_user_model
-from backend.common.error_codes import error_codes
 from backend.component import login
 
 logger = logging.getLogger("app")
 
 ROLE_TYPE_ADMIN = "1"
+
+
+class PermissionForbidden(Exception):
+    def __init__(self, message):
+        self.status_code = status.HTTP_403_FORBIDDEN
+        self.code = 1302403
+        self.message = message
 
 
 class TokenBackend(ModelBackend):
@@ -61,6 +68,8 @@ class TokenBackend(ModelBackend):
                 user.save()
             return user
 
+        except PermissionForbidden as e:
+            raise e
         except IntegrityError:
             logger.exception(traceback.format_exc())
             logger.exception("get_or_create UserModel fail or update_or_create UserProperty")
@@ -129,10 +138,13 @@ class TokenBackend(ModelBackend):
             self._handle_exception(e)
             return False, None
 
-        return True, data["username"]
+        return True, data["bk_username"]
 
-    def _handler_exception(self, e):
+    def _handle_exception(self, e):
         """处理登录特殊异常, 需要前端响应给用户"""
-        if isinstance(e, APIError):
-            if "1302403" in e.message:
-                raise error_codes.LOGIN_FORBIDDEN
+        if isinstance(e, APIError) and "1302403" in e.message:
+            msg_prefix = "message="
+            idx = e.message.rfind(msg_prefix)
+            message = e.message[idx + len(msg_prefix) : -1]
+
+            raise PermissionForbidden(message)

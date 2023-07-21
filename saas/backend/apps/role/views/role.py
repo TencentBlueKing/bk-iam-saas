@@ -79,6 +79,7 @@ from backend.biz.role import (
     RoleListQuery,
     RoleObjectRelationChecker,
     RoleSubjectScopeChecker,
+    can_user_manage_role,
 )
 from backend.biz.subject import SubjectInfoList
 from backend.common.error_codes import error_codes
@@ -247,11 +248,7 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
             # subject加入的分级管理员数量不能超过最大值
             self.role_check_biz.check_subject_grade_manager_limit(Subject.from_username(member["username"]))
 
-        # 非超级管理员 且 并非分级管理员成员，则无法更新基本信息
-        if (
-            request.role.type != RoleType.SUPER_MANAGER.value
-            and not RoleUser.objects.filter(role_id=role.id, username=user_id).exists()
-        ):
+        if not can_user_manage_role(user_id, role.id):
             raise error_codes.FORBIDDEN.format(message=_("非分级管理员({})的成员，无权限修改").format(role.name), replace=True)
 
         with gen_role_upsert_lock(data["name"]):
@@ -896,7 +893,7 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         self.role_check_biz.check_member_count(role.id, len(data["members"]))
 
         # 非分级管理员/子集管理员成员，则无法更新基本信息
-        if not RoleUser.objects.filter(role_id__in=[role.id, grade_manager.id], username=user_id).exists():
+        if not can_user_manage_role(user_id, role.id):
             raise error_codes.FORBIDDEN.format(message=_("非管理员({})的成员，无权限修改").format(role.name), replace=True)
 
         self.biz.update(role, RoleInfoBean.from_partial_data(data), user_id)
@@ -999,7 +996,10 @@ class RoleSearchViewSet(mixins.ListModelMixin, GenericViewSet):
 
         # 普通用户只能查询到自己加入的管理员
         role_ids = list(RoleUser.objects.filter(username=self.request.user.username).values_list("role_id", flat=True))
-        return queryset.filter(id__in=role_ids)
+        subset_manager_ids = list(
+            RoleRelation.objects.filter(parent_id__in=role_ids).values_list("role_id", flat=True)
+        )
+        return queryset.filter(id__in=set(subset_manager_ids + role_ids))
 
     @swagger_auto_schema(
         operation_description="管理员搜索",

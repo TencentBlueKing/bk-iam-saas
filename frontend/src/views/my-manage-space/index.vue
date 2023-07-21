@@ -127,7 +127,6 @@
                   <bk-button
                     theme="primary"
                     text
-                    :disabled="disabledPerm(child.row, 'subset_manager')"
                     @click.stop="handleSubView(child.row, 'detail')"
                   >
                     {{ $t(`m.levelSpace['进入空间']`) }}
@@ -135,7 +134,6 @@
                   <bk-button
                     theme="primary"
                     text
-                    :disabled="disabledPerm(child.row, 'subset_manager')"
                     @click.stop="handleSubView(child.row, 'auth')"
                   >
                     {{ $t(`m.nav['授权边界']`) }}
@@ -238,8 +236,6 @@
             <bk-button
               theme="primary"
               text
-              :disabled="disabledPerm(row)"
-              :title="disabledPerm(row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
               @click="handleView(row, 'detail')"
             >
               {{ $t(`m.levelSpace['进入空间']`) }}
@@ -247,19 +243,25 @@
             <bk-button
               theme="primary"
               text
-              :disabled="disabledPerm(row)"
-              :title="disabledPerm(row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
               @click.stop="handleView(row, 'auth')"
             >
               {{ $t(`m.nav['授权边界']`) }}
             </bk-button>
-            <bk-button
+            <!-- <bk-button
               v-if="!['subset_manager'].includes(row.type)"
               theme="primary"
               text
               @click="handleView(row, 'clone')"
               :title="disabledPerm(row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
               :disabled="disabledPerm(row)"
+            >
+              {{ $t(`m.levelSpace['克隆']`) }}
+            </bk-button> -->
+            <bk-button
+              v-if="!['subset_manager'].includes(row.type)"
+              theme="primary"
+              text
+              @click="handleView(row, 'clone')"
             >
               {{ $t(`m.levelSpace['克隆']`) }}
             </bk-button>
@@ -382,7 +384,8 @@
             },
             formatMode () {
                 return (payload) => {
-                    return payload.is_member || this.isFilter ? 'edit' : 'detail';
+                    // return payload.is_member || this.isFilter ? 'edit' : 'detail';
+                    return 'edit';
                 };
             }
     },
@@ -405,9 +408,9 @@
       },
 
       getCellClass ({ row, column, rowIndex, columnIndex }) {
-        if (!row.is_member) {
-          return !this.isFilter ? 'iam-tag-table-cell-cls iam-tag-table-cell-opacity-cls' : 'iam-tag-table-cell-cls';
-        }
+        // if (row.is_member) {
+        //   return !this.isFilter ? 'iam-tag-table-cell-cls iam-tag-table-cell-opacity-cls' : 'iam-tag-table-cell-cls';
+        // }
         if (!row.has_subset_manager) {
           return 'iam-tag-table-cell-cls iam-tag-table-cell-subset-cls';
         }
@@ -986,7 +989,7 @@
     }
   }
 
-  /deep/ .iam-tag-table-cell-opacity-cls {
+  /* /deep/ .iam-tag-table-cell-opacity-cls {
     opacity: 0.6;
     .cell {
       padding-left: 0;
@@ -998,7 +1001,7 @@
             }
         }
     }
-  }
+  } */
 
   /deep/ .iam-tag-table-cell-subset-cls {
     .cell {
