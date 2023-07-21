@@ -996,7 +996,10 @@ class RoleSearchViewSet(mixins.ListModelMixin, GenericViewSet):
 
         # 普通用户只能查询到自己加入的管理员
         role_ids = list(RoleUser.objects.filter(username=self.request.user.username).values_list("role_id", flat=True))
-        return queryset.filter(id__in=role_ids)
+        subset_manager_ids = list(
+            RoleRelation.objects.filter(parent_id__in=role_ids).values_list("role_id", flat=True)
+        )
+        return queryset.filter(id__in=set(subset_manager_ids + role_ids))
 
     @swagger_auto_schema(
         operation_description="管理员搜索",
