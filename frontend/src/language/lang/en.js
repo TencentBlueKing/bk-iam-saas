@@ -262,12 +262,15 @@ export const m = {
         '“': " '",
         '”': "' ",
         '：': ':',
+        '（': '(',
+        '）': ')',
         '将': 'The ',
         '关联到以下用户组': ' will be associated with the following groups',
         '离开': 'LEAVE',
         '更多': 'More',
         '资源实例': 'Resource instance',
-        '批量无限制': 'Unlimited batch size'
+        '批量无限制': 'Unlimited batch size',
+        '无该应用访问权限': 'No access permissions for this application'
     },
     // 校验
     verify: {

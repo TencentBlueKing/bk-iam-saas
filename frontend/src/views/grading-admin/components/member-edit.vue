@@ -179,7 +179,8 @@
             this.newPayload = -1;
             console.log(editValue, this.value, this.deleteList);
             if (this.deleteList.length) {
-              this.isShowDialog = true;
+              // this.isShowDialog = true;
+              this.dropOut();
             } else {
               this.triggerChange();
             }
@@ -212,7 +213,8 @@
         // 超级管理员操作
         if (this.isShowRole) {
           this.deleteList = [this.newVal[payload]];
-          this.isShowDialog = true;
+          // this.isShowDialog = true;
+          this.dropOut();
         } else {
           this.newVal.splice(payload, 1);
           this.triggerChange();
@@ -255,7 +257,7 @@
           try {
             await this.$store.dispatch('role/deleteRatingManager', { id: this.$route.params.id });
             await this.$store.dispatch('roleList');
-            this.messageSuccess(this.$t(`m.info['退出成功']`), 2000);
+            this.messageSuccess(this.$t(`m.info['编辑成功']`), 2000);
           } catch (e) {
             console.error(e);
             this.bkMessageInstance = this.$bkMessage({

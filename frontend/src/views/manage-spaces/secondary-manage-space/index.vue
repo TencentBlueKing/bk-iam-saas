@@ -56,7 +56,7 @@
               theme="primary"
               text
               @click="handleView(row, 'role')"
-              :disabled="disabledPerm(row)">
+            >
               {{ $t(`m.levelSpace['进入空间']`) }}
             </bk-button>
             <bk-button
@@ -64,7 +64,7 @@
               text
               style="margin-left: 10px;"
               @click="handleView(row, 'create')"
-              :disabled="disabledPerm(row)">
+            >
               {{ $t(`m.levelSpace['克隆']`) }}
             </bk-button>
           </section>

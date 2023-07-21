@@ -46,26 +46,31 @@
           <div class="depart" v-else :title="row.full_name">
             <Icon type="organization-fill" />
             <span class="name">{{ row.name || '--' }}</span>
-            <span class="count" v-if="row.member_count">({{ row.member_count }})</span>
+            <span class="count" v-if="row.member_count && enableOrganizationCount">({{ row.member_count }})</span>
           </div>
         </template>
       </bk-table-column>
       <bk-table-column :label="$t(`m.userGroupDetail['所属组织架构']`)" width="400">
         <template slot-scope="{ row }">
-          <template v-if="row.user_departments && row.user_departments.length">
-            <div
-              :title="row.user_departments.join(';')"
-              v-for="(item,index) in row.user_departments"
-              :key="index"
-              class="user_departs"
-            >
-              {{ item}}
-            </div>
+          <template v-if="row.type === 'user'">
+            <template v-if="row.user_departments && row.user_departments.length">
+              <div
+                :title="row.user_departments.join(';')"
+                v-for="(item,index) in row.user_departments"
+                :key="index"
+                class="user_departs"
+              >
+                {{ item}}
+              </div>
+            </template>
+            <template v-else>
+              <div>
+                --
+              </div>
+            </template>
           </template>
           <template v-else>
-            <div>
-              --
-            </div>
+            {{ row.full_name }}
           </template>
         </template>
       </bk-table-column>
@@ -203,7 +208,8 @@
           tipType: ''
         },
         adminGroupTitle: '',
-        keyword: ''
+        keyword: '',
+        enableOrganizationCount: window.ENABLE_ORGANIZATION_COUNT.toLowerCase() === 'true'
       };
     },
     computed: {

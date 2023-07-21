@@ -1,3 +1,14 @@
+<!-- 2023-07-17 -->
+# V1.10.10 ChangeLog
+
+### New Features
+* Add department display to user group member list
+* Add permission details to expired permission list
+* Allow optional selection for aggregated operations
+* Allow level 1 administrators to directly access level 2 administrators
+
+---
+
 <!-- 2023-07-07 -->
 # V1.10.9 ChangeLog
 

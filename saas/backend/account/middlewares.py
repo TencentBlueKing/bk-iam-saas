@@ -14,8 +14,9 @@ import logging
 import pytz
 from django import forms
 from django.contrib import auth
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, JsonResponse
 from django.utils import timezone
+from django.utils.deprecation import MiddlewareMixin
 from django.utils.translation import gettext as _
 
 from backend.biz.subject import SubjectBiz
@@ -23,6 +24,7 @@ from backend.common.cache import cached
 from backend.service.constants import SubjectType
 
 from . import role_auth
+from .backends import PermissionForbidden
 
 logger = logging.getLogger("app")
 
@@ -46,19 +48,22 @@ def is_in_blacklist(username: str) -> bool:
     return False
 
 
-class LoginMiddleware(object):
-    def __init__(self, get_response):
-        self.get_response = get_response
+class LoginMiddleware(MiddlewareMixin):
+    def process_view(self, request, view, *args, **kwargs):
+        if getattr(view, "login_exempt", False):
+            return None
 
-    def __call__(self, request):
-        """
-        Login paas when User has logged in calling auth.login
-        """
         form = AuthenticationForm(request.COOKIES)
 
         if form.is_valid():
             bk_token = form.cleaned_data["bk_token"]
-            user = auth.authenticate(request=request, bk_token=bk_token)
+            try:
+                user = auth.authenticate(request=request, bk_token=bk_token)
+            except PermissionForbidden as e:
+                return JsonResponse(
+                    {"result": False, "code": e.code, "message": e.message, "data": None}, status=e.status_code
+                )
+
             if user:
                 # NOTE: block the user in blacklist
                 if is_in_blacklist(request.user.username):
@@ -71,7 +76,11 @@ class LoginMiddleware(object):
                 auth.logout(request)
         else:
             auth.logout(request)
-        return self.get_response(request)
+
+        return None
+
+    def process_response(self, request, response):
+        return response
 
 
 class RoleAuthenticationMiddleware(object):

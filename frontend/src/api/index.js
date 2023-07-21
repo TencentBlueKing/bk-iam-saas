@@ -28,6 +28,7 @@ import Vue from 'vue';
 import axios from 'axios';
 import cookie from 'cookie';
 import { bus } from '@/common/bus';
+import il8n from '@/language';
 
 import CachedPromise from './cached-promise';
 import RequestQueue from './request-queue';
@@ -205,7 +206,6 @@ function handleReject (error, config) {
   }
 
   http.queue.delete(config.requestId);
-
   if (config.globalError && error.response) {
     const { status, data } = error.response;
     const nextError = { message: error.message, response: error.response };
@@ -214,8 +214,10 @@ function handleReject (error, config) {
       nextError.message = error.response.data.message;
       bus.$emit('show-login-modal', loginPlainUrl);
       // window.location = LOGIN_SERVICE_URL + '/?c_url=' + window.location.href
+    } else if ([403].includes(status) && [130243].includes(data.code)) {
+      window.open(`${window.SITE_URL}403?message=${data.detail || data.message}`, '_self');
     } else if (status === 500) {
-      nextError.message = '系统出现异常';
+      nextError.message = il8n('common', '系统出现异常');
     } else if (data && data.message) {
       nextError.message = data.message;
     }

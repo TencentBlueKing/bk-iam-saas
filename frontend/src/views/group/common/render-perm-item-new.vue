@@ -116,9 +116,11 @@
         this.isExpanded = !this.isExpanded;
         this.$emit('update:expanded', true); // 更新expanded
         this.$emit('on-expanded', this.isExpanded); // 执行on-expanded
-        if (this.$refs.externalCustomContent) {
-          this.$emit('on-set-external', { width: this.$refs.externalCustomContent.offsetWidth });
-        }
+        this.$nextTick(() => {
+          if (this.$refs.externalCustomContent) {
+            this.$emit('on-set-external', { width: this.$refs.externalCustomContent.offsetWidth });
+          }
+        });
       }
     }
   };

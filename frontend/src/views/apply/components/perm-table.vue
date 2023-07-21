@@ -30,7 +30,7 @@
                   <render-resource-popover
                     :key="item.type"
                     :data="item.condition"
-                    :value="`${item.name}：${item.value}`"
+                    :value="`${item.name}${$t(`m.common['：']`)}${item.value}`"
                     :max-width="380"
                     @on-view="handleViewResource(_, row)" />
                 </p>
@@ -76,7 +76,7 @@
     <bk-sideslider
       :is-show.sync="isShowSideslider"
       :title="sidesliderTitle"
-      :width="725"
+      :width="960"
       :quick-close="true"
       @animation-end="handleAnimationEnd">
       <div slot="content">
@@ -86,7 +86,7 @@
     <bk-sideslider
       :is-show="isShowEnvironmentsSideslider"
       :title="environmentsSidesliderTitle"
-      :width="725"
+      :width="960"
       quick-close
       @update:isShow="handleResourceCancel"
       ext-cls="effect-conditon-side">
@@ -147,7 +147,7 @@
     },
     computed: {
       applyTitle () {
-        return `${this.$t(`m.myApply['申请内容']`)}（${this.system.system_name}）`;
+        return `${this.$t(`m.myApply['申请内容']`)}${this.$t(`m.common['（']`)}${this.system.system_name}}${this.$t(`m.common['）']`)}`;
       },
       isShowPreview () {
         return (payload) => {

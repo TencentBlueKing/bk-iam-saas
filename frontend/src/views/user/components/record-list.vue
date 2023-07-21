@@ -75,7 +75,7 @@
     <bk-sideslider
       :is-show.sync="isShowLogDetails"
       :title="$t(`m.user['日志详情']`)"
-      :width="725"
+      :width="640"
       :quick-close="true"
       @animation-end="handleAnimationEnd">
       <div slot="content" v-bkloading="{ isLoading: logDetailLoading, opacity: 1 }">

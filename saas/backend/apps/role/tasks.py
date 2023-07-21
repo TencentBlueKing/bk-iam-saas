@@ -837,5 +837,28 @@ class InitBcsProjectManagerTask(InitBizGradeManagerTask):
 
         return auth_scopes
 
+    def _create_groups(self, role, role_info, maintainers, viewers, project_name):
+        expired_at = int(time.time()) + 6 * 30 * DAY_SECONDS  # 过期时间半年
+
+        authorization_scopes = role_info.dict()["authorization_scopes"]
+        for name_suffix in [ManagementGroupNameSuffixEnum.OPS.value, ManagementGroupNameSuffixEnum.READ.value]:
+            description = "包含{}项目的容器、监控、日志系统的运维权限".format(project_name)
+            if name_suffix == ManagementGroupNameSuffixEnum.READ.value:
+                description = "仅包含{}项目的容器、监控、日志系统的只读权限".format(project_name)
+
+            members = maintainers if name_suffix == ManagementGroupNameSuffixEnum.OPS.value else viewers
+            users = User.objects.filter(username__in=members)  # 筛选出已同步存在的用户
+            group = self.group_biz.create_and_add_members(
+                role,
+                "BCS-{}-{}".format(project_name, name_suffix),
+                description=description,
+                creator=ADMIN_USER,
+                subjects=[Subject.from_username(u.username) for u in users],
+                expired_at=expired_at,  # 过期时间半年
+            )
+
+            templates = self._init_group_auth_info(authorization_scopes, name_suffix)
+            self.group_biz.grant(role, group, templates, need_check=False)
+
 
 current_app.tasks.register(InitBcsProjectManagerTask())

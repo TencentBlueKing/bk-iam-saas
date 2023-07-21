@@ -68,7 +68,7 @@
     <bk-sideslider
       :is-show.sync="isShowSideslider"
       :title="sidesliderTitle"
-      :width="725"
+      :width="960"
       :quick-close="true"
       @animation-end="handleAnimationEnd">
       <div slot="header" class="iam-my-custom-perm-silder-header">

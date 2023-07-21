@@ -215,7 +215,7 @@
             @on-realted-change="handleRelatedChange" />
           <div slot="append" class="expanded-action-wrapper">
             <div class="apply-custom-switch">
-              <!-- <div class="apply-custom-switch-item">
+              <div class="apply-custom-switch-item">
                 <bk-switcher
                   v-model="isAllUnlimited"
                   theme="primary"
@@ -224,7 +224,7 @@
                   @change="handleUnlimitedActionChange">
                 </bk-switcher>
                 <span class="expanded-text">{{ $t(`m.common['批量无限制']`) }}</span>
-              </div> -->
+              </div>
               <div class="apply-custom-switch-item">
                 <bk-switcher
                   v-model="isAllExpanded"
@@ -665,6 +665,7 @@
         linearActionList: [],
         requestQueue: ['action', 'policy', 'aggregate', 'commonAction'],
         isAllExpanded: false,
+        isAllUnlimited: false,
         aggregationMap: [],
         aggregations: [],
         aggregationsBackup: [],
@@ -750,7 +751,13 @@
             return isDisabled;
         },
         isUnlimitedDisabled () {
-          return this.tableData.length < 1;
+          const isDisabled = this.tableData.every(item =>
+           ((!item.resource_groups || (item.resource_groups && !item.resource_groups.length)) && !item.instances)
+           );
+           if (isDisabled) {
+            this.isAllUnlimited = false;
+           }
+          return isDisabled;
         },
         curSelectActions () {
             const allActionIds = [];
@@ -770,7 +777,9 @@
                     });
                 }
             });
+            // 监听新增或移除的操作，重新组装数据
             this.getFilterAggregateAction();
+            this.handleUnlimitedActionChange(this.isAllUnlimited);
             return allActionIds;
         }
     },
@@ -793,6 +802,9 @@
             });
             this.sysAndtid = false;
           }
+          if (value.query.tab_key) {
+            this.handleTabChange(value.query.tab_key);
+          }
         },
         immediate: true
       },
@@ -807,6 +819,9 @@
           this.tagActionList = value.map(e => e.id);
           if (value.filter(item => item.isAggregate).length < 1) {
             this.isAllExpanded = false;
+          }
+          if (this.isDisabled && this.isAllUnlimited) {
+            this.isAllUnlimited = false;
           }
         },
         deep: true
@@ -1628,6 +1643,50 @@
       handleAggregateActionChange (payload) {
         this.getFilterAggregateAction();
         this.handleAggregateAction(payload);
+        this.handleUnlimitedActionChange(this.isAllUnlimited);
+      },
+
+      handleUnlimitedActionChange (payload) {
+        const tableData = _.cloneDeep(this.tableData);
+        tableData.forEach((item, index) => {
+          if (!item.isAggregate) {
+            if (item.resource_groups && item.resource_groups.length) {
+              item.resource_groups.forEach(groupItem => {
+                groupItem.related_resource_types && groupItem.related_resource_types.forEach(types => {
+                  if (!payload && (types.condition.length && types.condition[0] !== 'none')) {
+                    return;
+                  }
+                  types.condition = payload ? [] : ['none'];
+                  if (payload) {
+                    types.isError = false;
+                  }
+                });
+              });
+            } else {
+              item.name = item.name.split('，')[0];
+            }
+          }
+          if (item.instances && item.isAggregate) {
+            item.isNoLimited = false;
+            item.isError = !(item.instances.length || (!item.instances.length && item.isNoLimited));
+            item.isNeedNoLimited = true;
+            if (!payload || item.instances.length) {
+              item.isNoLimited = false;
+              item.isError = false;
+            }
+            if ((!item.instances.length && !payload && item.isNoLimited) || payload) {
+              item.isNoLimited = true;
+              item.isError = false;
+              item.instances = [];
+            }
+            return this.$set(
+              tableData,
+              index,
+              new AggregationPolicy(item)
+            );
+          }
+        });
+        this.tableData = _.cloneDeep(tableData);
       },
 
       handleRelatedChange (payload) {
@@ -1748,7 +1807,8 @@
               }
               if (item.tag === 'add') {
                 const conditions = existTableData.map(
-                  subItem => subItem.resource_groups[0].related_resource_types[0].condition
+                  subItem => subItem.resource_groups && subItem.resource_groups.length
+                    ? subItem.resource_groups[0].related_resource_types[0].condition : []
                 );
                 // 是否都选择了实例
                 const isAllHasInstance = conditions.every(subItem => subItem[0] !== 'none'); // 这里可能有bug, 都设置了属性点击批量编辑时数据变了
@@ -2580,18 +2640,32 @@
        * 点击tab
        */
       clickTab (i, key) {
+        this.handleTabChange(key);
         this.tabIndex = i;
-        if (key === 'userGroup') {
-          this.isShowUserGroup = true;
-          this.isShowIndependent = false;
-        } else {
-          this.isShowIndependent = true;
-          this.isShowUserGroup = false;
+      },
+
+      handleTabChange (key) {
+        this.tabIndex = this.tabData.findIndex(item => item.key === key);
+        if (this.tabIndex === -1) {
+          this.tabIndex = 0;
+          key = 'userGroup';
         }
+        const tabMap = {
+          userGroup: () => {
+            this.isShowUserGroup = true;
+            this.isShowIndependent = false;
+          },
+          independent: () => {
+            this.isShowIndependent = true;
+            this.isShowUserGroup = false;
+          }
+        };
+        return tabMap[key]();
       },
 
       fetchResetData () {
         this.isAllExpanded = false;
+        this.isAllUnlimited = false;
         this.sysAndtid = false;
         this.aggregationMap = [];
         this.aggregations = [];

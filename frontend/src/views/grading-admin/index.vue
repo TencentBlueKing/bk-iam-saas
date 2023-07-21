@@ -109,12 +109,19 @@
               <template slot-scope="child">
                 <div class="operate_btn">
                   <span>
-                    <bk-button
+                    <!-- <bk-button
                       theme="primary"
                       text
                       @click.stop="handleSubView(child.row, 'role')"
                       :title="disabledPerm(child.row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
                       :disabled="disabledPerm(child.row)">
+                      {{ $t(`m.levelSpace['进入空间']`) }}
+                    </bk-button> -->
+                    <bk-button
+                      theme="primary"
+                      text
+                      @click.stop="handleSubView(child.row, 'role')"
+                    >
                       {{ $t(`m.levelSpace['进入空间']`) }}
                     </bk-button>
                   </span>
@@ -122,8 +129,7 @@
                     theme="primary"
                     text
                     @click.stop="handleSubView(child.row, 'auth')"
-                    :title="disabledPerm(child.row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
-                    :disabled="disabledPerm(child.row)">
+                  >
                     {{ $t(`m.nav['授权边界']`) }}
                   </bk-button>
                   <!--<bk-button theme="primary" text @click.stop="handleSubView(child.row, 'clone')">
@@ -232,15 +238,12 @@
               theme="primary"
               text
               @click="handleView(row, 'role')"
-              :title="disabledPerm(row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
-              :disabled="disabledPerm(row)">
+            >
               {{ $t(`m.levelSpace['进入空间']`) }}
             </bk-button>
             <bk-button
               theme="primary"
               text
-              :title="disabledPerm(row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
-              :disabled="disabledPerm(row)"
               @click.stop="handleView(row, 'auth')"
             >
               {{ $t(`m.nav['授权边界']`) }}
@@ -1022,13 +1025,13 @@
         }
     }
 
-    /deep/ .iam-tag-table-cell-opacity-cls {
+    /* /deep/ .iam-tag-table-cell-opacity-cls {
         opacity: 0.4;
         .cell {
             padding-left: 0;
             color:#575961;
         }
-    }
+    } */
 
      /deep/ .iam-table-cell-1-cls, .iam-tag-table-cell-subset-cls  {
         .cell {

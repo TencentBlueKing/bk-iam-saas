@@ -9,7 +9,8 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 
-from backend.apps.role.models import AnonymousRole, Role, RoleUser
+from backend.apps.role.models import AnonymousRole, Role
+from backend.biz.role import can_user_manage_role
 
 ROLE_SESSION_KEY = "_auth_role_id"
 
@@ -24,7 +25,7 @@ def authenticate(request=None, role_id=0):
         return AnonymousRole()
 
     # 2. 用户的角色不存在, 返回staff
-    if role_id == 0 or not RoleUser.objects.user_role_exists(request.user.username, role_id):
+    if role_id == 0 or not can_user_manage_role(request.user.username, role_id):
         return AnonymousRole()
 
     # 3. 对于用户与角色关系认证通过的，返回对应的分级管理员(超级管理员和系统管理员是两类特殊的分级管理员)

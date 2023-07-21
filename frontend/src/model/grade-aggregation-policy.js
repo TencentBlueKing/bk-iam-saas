@@ -25,7 +25,7 @@
 */
 
 import _ from 'lodash';
-import il8n from '@/language';
+import { il8n, language } from '@/language';
 export default class GradeAggregationPolicy {
   constructor (payload) {
     this.isError = false;
@@ -53,11 +53,11 @@ export default class GradeAggregationPolicy {
     let str = '';
     this.aggregateResourceType.forEach(item => {
       if (this.instancesDisplayData[item.id] && this.instancesDisplayData[item.id].length === 1) {
-        str = `${str}，${item.name}： ${this.instancesDisplayData[item.id][0].name}`;
+        str = `${str}${il8n('common', '，')}${item.name}${il8n('common', '：')}${this.instancesDisplayData[item.id][0].name}`;
       } else if (this.instancesDisplayData[item.id] && this.instancesDisplayData[item.id].length > 1) {
         for (const key in this.instancesDisplayData) {
           if (item.id === key) {
-            str = `${str}，已选择 ${this.instancesDisplayData[item.id].length} 个${item.name}`;
+            str = language === 'zh-cn' ? `${str}，已选择${this.instancesDisplayData[item.id].length}个${item.name}` : `${str}, selected ${this.instancesDisplayData[item.id].length} ${item.name}(s)`;
           }
         }
       }

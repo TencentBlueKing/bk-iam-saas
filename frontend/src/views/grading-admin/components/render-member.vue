@@ -207,7 +207,7 @@
         background: #f5f6fa;
         border: 1px solid #dcdee5;
         border-radius: 2px;
-        font-size: 14px;
+        font-size: 12px;
         &:hover {
             .remove-icon {
                 display: block;

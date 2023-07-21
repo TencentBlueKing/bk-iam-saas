@@ -12,7 +12,7 @@ from copy import copy
 from itertools import groupby
 from typing import List
 
-from django.db.models import Q
+from django.db.models import Case, Q, Value, When
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
 from drf_yasg.utils import swagger_auto_schema
@@ -79,6 +79,7 @@ from backend.biz.role import (
     RoleListQuery,
     RoleObjectRelationChecker,
     RoleSubjectScopeChecker,
+    can_user_manage_role,
 )
 from backend.biz.subject import SubjectInfoList
 from backend.common.error_codes import error_codes
@@ -114,7 +115,9 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
 
     def get_queryset(self):
         request = self.request
-        return RoleListQuery(request.role, request.user).query_grade_manager()
+        return RoleListQuery(request.role, request.user).query_grade_manager(
+            with_super=bool(request.query_params.get("with_super", False))
+        )
 
     @swagger_auto_schema(
         operation_description="创建分级管理员",
@@ -245,11 +248,7 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
             # subject加入的分级管理员数量不能超过最大值
             self.role_check_biz.check_subject_grade_manager_limit(Subject.from_username(member["username"]))
 
-        # 非超级管理员 且 并非分级管理员成员，则无法更新基本信息
-        if (
-            request.role.type != RoleType.SUPER_MANAGER.value
-            and not RoleUser.objects.filter(role_id=role.id, username=user_id).exists()
-        ):
+        if not can_user_manage_role(user_id, role.id):
             raise error_codes.FORBIDDEN.format(message=_("非分级管理员({})的成员，无权限修改").format(role.name), replace=True)
 
         with gen_role_upsert_lock(data["name"]):
@@ -766,6 +765,29 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         data = serializer.data
         return Response(data)
 
+    def get_object(self):
+        queryset = Role.objects.filter(type=RoleType.SUBSET_MANAGER.value)
+
+        # Perform the lookup filtering.
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+
+        assert lookup_url_kwarg in self.kwargs, (
+            "Expected view %s to be called with a URL keyword argument "
+            'named "%s". Fix your URL conf, or set the `.lookup_field` '
+            "attribute on the view correctly." % (self.__class__.__name__, lookup_url_kwarg)
+        )
+
+        if not can_user_manage_role(self.request.user.username, int(self.kwargs[lookup_url_kwarg])):
+            queryset = queryset.none()
+
+        filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
+        obj = get_object_or_404(queryset, **filter_kwargs)
+
+        # May raise a permission denied
+        self.check_object_permissions(self.request, obj)
+
+        return obj
+
     @swagger_auto_schema(
         operation_description="创建子集管理员",
         request_body=SubsetMangerCreateSLZ(label="创建子集管理员"),
@@ -894,7 +916,7 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         self.role_check_biz.check_member_count(role.id, len(data["members"]))
 
         # 非分级管理员/子集管理员成员，则无法更新基本信息
-        if not RoleUser.objects.filter(role_id__in=[role.id, grade_manager.id], username=user_id).exists():
+        if not can_user_manage_role(user_id, role.id):
             raise error_codes.FORBIDDEN.format(message=_("非管理员({})的成员，无权限修改").format(role.name), replace=True)
 
         self.biz.update(role, RoleInfoBean.from_partial_data(data), user_id)
@@ -923,6 +945,10 @@ class UserSubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         )
         if not subset_manager_ids:
             return Role.objects.none()
+
+        # 如果用户是分级管理员成员返回所有的二级管理员
+        if RoleUser.objects.user_role_exists(self.request.user.username, grade_manager_id):
+            return self.queryset.filter(id__in=subset_manager_ids)
 
         # 筛选出用户加入的子集管理员id
         role_ids = list(
@@ -978,13 +1004,25 @@ class RoleSearchViewSet(mixins.ListModelMixin, GenericViewSet):
     filterset_class = RoleSearchFilter
 
     def get_queryset(self):
+        queryset = self.queryset
+        if bool(self.request.query_params.get("with_super", False)):
+            type_order = Case(
+                When(type=RoleType.SUPER_MANAGER.value, then=Value(1)),
+                When(type=RoleType.SYSTEM_MANAGER.value, then=Value(2)),
+                default=Value(3),
+            )
+            queryset = Role.objects.alias(type_order=type_order).order_by("type_order", "-updated_time")
+
         # 作为超级管理员时，可以管理所有分级管理员
-        if self.request.role.type == RoleType.SUPER_MANAGER.value:
-            return self.queryset
+        if RoleListQuery(self.request.role, self.request.user).is_user_super_manager(self.request.user):
+            return queryset
 
         # 普通用户只能查询到自己加入的管理员
         role_ids = list(RoleUser.objects.filter(username=self.request.user.username).values_list("role_id", flat=True))
-        return self.queryset.filter(id__in=role_ids)
+        subset_manager_ids = list(
+            RoleRelation.objects.filter(parent_id__in=role_ids).values_list("role_id", flat=True)
+        )
+        return queryset.filter(id__in=set(subset_manager_ids + role_ids))
 
     @swagger_auto_schema(
         operation_description="管理员搜索",

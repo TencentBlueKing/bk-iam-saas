@@ -30,16 +30,16 @@
         :value="navCurRoleId || curRoleId"
         :clearable="false"
         :multiple="false"
+        :allow-enter="false"
         :placeholder="$t(`m.common['选择管理空间']`)"
         :search-placeholder="$t(`m.common['搜索管理空间']`)"
         :searchable="true"
-        :allow-enter="false"
-        :prefix-icon="user.role && ['subset_manager'].includes(user.role.type) ?
-          'icon iam-icon iamcenter-level-two-manage-space' : 'icon iam-icon iamcenter-level-one-manage-space'"
+        :prefix-icon="formatRoleIcon"
         :remote-method="handleRemoteTree"
         :ext-popover-cls="selectCls"
         ext-cls="iam-nav-select-cls"
-        @toggle="handleToggle">
+        @toggle="handleToggle"
+      >
         <bk-big-tree
           ref="selectTree"
           size="small"
@@ -48,26 +48,61 @@
           :use-default-empty="true"
           :show-checkbox="false"
           :show-link-line="false"
-          :default-expanded-nodes="[navCurRoleId || curRoleId]"
+          :default-is-expanded-nodes="[navCurRoleId || curRoleId]"
           :default-selected-node="navCurRoleId || curRoleId"
-          @expand-on-click="handleExpandClick"
-          @select-change="handleSelectNode">
+          @expand-change="handleExpandNode"
+          @select-change="handleSelectNode"
+        >
           <div slot-scope="{ node,data }">
-            <div
+            <!-- <div
               class="single-hide"
               :style="[
                 { 'max-width': '220px' },
                 { opacity: data.is_member ? '1' : '0.4' }
               ]"
+              :title="data.name"> -->
+            <div
+              :class="[
+                'single-hide',
+                { 'iam-search-data': isSearch }
+              ]"
+              :style="[
+                { 'max-width': '220px' }
+              ]"
               :title="data.name">
-              <Icon :type="node.level === 0 ? 'level-one-manage-space' : 'level-two-manage-space'" :style="{ color: formatColor(node) }" />
+              <Icon
+                :type="data.level > 0 ? 'level-two-manage-space' : 'level-one-manage-space'"
+                :style="{
+                  color: formatColor(data)
+                }"
+              />
               <span>{{data.name}}</span>
+            </div>
+            <div
+              v-if="node.level > 0 && subRoleList.length < subPagination.count"
+              class="tree-load-more">
+              <bk-button
+                :text="true"
+                size="small"
+                @click="handleSubLoadMore">
+                {{ $t(`m.common['查看更多']`) }}
+              </bk-button>
             </div>
             <!-- <bk-star
                                 v-if="(node.children && node.level > 0) || (node.children.length === 0 && node.level === 0)"
                                 :rate="node.id === curRoleId" :max-stars="1" /> -->
           </div>
         </bk-big-tree>
+        <div
+          v-if="isSearch ? curRoleList.length < pagination.count : curRoleList.length < roleCount"
+          class="tree-load-more">
+          <bk-button
+            :text="true"
+            size="small"
+            @click="handleLoadMore">
+            {{ $t(`m.common['查看更多']`) }}
+          </bk-button>
+        </div>
         <div slot="extension" @click="handleToGradingAdmin" style="cursor: pointer">
           <i class="bk-icon icon-cog-shape mr10"></i>{{ $t(`m.nav['我的管理空间']`) }}
         </div>
@@ -159,7 +194,7 @@
 <script>
   import { mapGetters } from 'vuex';
   import { bus } from '@/common/bus';
-  import { getTreeNode } from '@/common/util';
+  // import { getTreeNode } from '@/common/util';
   import { getRouterDiff } from '@/common/router-handle';
   import { NEED_CONFIRM_DIALOG_ROUTER } from '@/common/constants';
   import { leavePageConfirm } from '@/common/leave-page-confirm';
@@ -249,34 +284,58 @@
         isUnfold: true,
         routerMap: routerMap,
         curRoleList: [],
+        subRoleList: [],
         curRoleId: 0,
         hoverId: -1,
         selectValue: '',
-        isEmpty: false
+        keyWord: '',
+        isEmpty: false,
+        isSearch: false,
+        curRoleData: {},
+        pagination: {
+          current: 1,
+          count: 1,
+          limit: 20
+        },
+        subPagination: {
+          current: 1,
+          count: 0,
+          limit: 100
+        }
       };
     },
     computed: {
-            ...mapGetters([
-                'user',
-                'navStick',
-                'navFold',
-                'currentNav',
-                'routerDiff',
-                'roleList',
-                'navData',
-                'index',
-                'navCurRoleId'
-            ]),
-            unfold () {
-                return this.navStick || !this.navFold;
-            },
-            isShowRouterGroup () {
-                return (payload) => {
-                    const allRouter = getRouterDiff('all');
-                    const curRouter = allRouter.filter((item) => !this.routerDiff.includes(item));
-                    return curRouter.filter((item) => payload.children.map((_) => _.rkey).includes(item)).length > 0;
-                };
-            }
+      ...mapGetters([
+          'user',
+          'navStick',
+          'navFold',
+          'currentNav',
+          'routerDiff',
+          'roleList',
+          'roleCount',
+          'navData',
+          'index',
+          'navCurRoleId'
+      ]),
+      unfold () {
+          return this.navStick || !this.navFold;
+      },
+      isShowRouterGroup () {
+          return (payload) => {
+              const allRouter = getRouterDiff('all');
+              const curRouter = allRouter.filter((item) => !this.routerDiff.includes(item));
+              return curRouter.filter((item) => payload.children.map((_) => _.rkey).includes(item)).length > 0;
+          };
+      },
+      formatRoleIcon () {
+          const { role } = this.user;
+          const levelIcon = 'icon iam-icon';
+          if (role && ['subset_manager'].includes(role.type)) {
+            return `${levelIcon} iamcenter-level-two-manage-space`;
+          } else {
+            return `${levelIcon} iamcenter-level-one-manage-space`;
+          }
+      }
     },
     watch: {
       $route: {
@@ -295,16 +354,19 @@
       },
       roleList: {
         handler (value) {
-          if (value.length) {
-            value = value.map((e) => {
+          // 如果不是搜索或者首次调用才获取公共接口数据
+          if (value.length && this.pagination.current === 1 && !this.isSearch) {
+            value.forEach((e) => {
               e.level = 0;
-              if (e.sub_roles.length) {
-                e.sub_roles.forEach(sub => {
-                  sub.level = 1;
-                });
-                e.children = e.sub_roles;
+              // if (e.sub_roles && e.sub_roles.length) {
+              //   e.sub_roles.forEach(sub => {
+              //     sub.level = 1;
+              //   });
+              //   e.children = e.sub_roles;
+              // }
+              if (e.has_subset_manager) {
+                this.$set(e, 'children', [{ name: '' }]);
               }
-              return e;
             });
             this.curRoleList.splice(0, this.curRoleList.length, ...value);
           }
@@ -319,6 +381,7 @@
       }
     },
     created () {
+      this.index = this.index || Number(window.localStorage.getItem('index') || 0);
       this.fetchRoleUpdate(this.user);
       this.isUnfold = this.navStick || !this.navFold;
       this.$once('hook:beforeDestroy', () => {
@@ -327,7 +390,6 @@
       });
     },
     mounted () {
-      this.index = this.index || Number(window.localStorage.getItem('index') || 0);
       bus.$on('theme-change', (payload) => {
         this.curRole = payload;
       });
@@ -338,6 +400,205 @@
       });
     },
     methods: {
+      async fetchDefaultInterface (payload) {
+        this.handleSwitchPerm(payload);
+        this.fetchSpaceUpdateGuide();
+        this.fetchFirstRoleList();
+      },
+      async fetchFirstRoleList () {
+        if (this.index === 1) {
+          // 处理刷新后选中角色不在当前分页里，默认回显
+          const { id, name, type } = this.user.role;
+          const roleData = this.curRoleList.length ? this.curRoleList : await this.$store.dispatch('roleList');
+          const hasRole = roleData.find(item => item.id === id);
+          if (!hasRole || ['subset_manager'].includes(type)) {
+            if (this.$refs.select) {
+              this.isSearch = true;
+              this.$refs.select.searchValue = name;
+            }
+            this.resetRoleList();
+          }
+        }
+      },
+      async fetchSubManagerList (row) {
+        try {
+          const { data } = await this.$store.dispatch(
+            'spaceManage/getStaffSubManagerList',
+            {
+              limit: this.subPagination.limit,
+              offset: (this.subPagination.current - 1) * this.subPagination.limit,
+              id: row.id,
+              with_super: true
+            }
+          );
+          data && data.results.forEach(item => {
+            item.level = 1;
+            item.type = 'subset_manager';
+          });
+          this.subPagination.count = data.count || 0;
+          row.children = [...row.children, ...data.results].filter(item => item.name);
+          this.subRoleList = [...row.children];
+        } catch (e) {
+          console.error(e);
+          const { data, message, statusText } = e;
+          row.children = [];
+          this.subRoleList = [];
+          this.bkMessageInstance = this.$bkMessage({
+            limit: 1,
+            theme: 'error',
+            message: message || data.msg || statusText,
+            ellipsisLine: 2,
+            ellipsisCopy: true
+          });
+        }
+      },
+
+      async fetchSearchManageList () {
+        const { current, limit } = this.pagination;
+        const params = {
+          page_size: limit,
+          page: current,
+          name: this.keyWord,
+          with_super: true
+        };
+        try {
+          const { data } = await this.$store.dispatch('spaceManage/getSearchManagerList', params);
+          const { count, results } = data;
+          this.pagination.count = count || 0;
+          this.$store.commit('updateRoleListTotal', count);
+          results && results.forEach(item => {
+            item.level = !['subset_manager'].includes(item.type) ? 0 : 1;
+          });
+          if (current === 1) {
+            this.curRoleList = [];
+          }
+          this.curRoleList = [...this.curRoleList, ...results];
+        } catch (e) {
+          console.error(e);
+          const { data, message, statusText } = e;
+          this.curRoleList = [];
+          this.bkMessageInstance = this.$bkMessage({
+            limit: 1,
+            theme: 'error',
+            message: message || data.msg || statusText,
+            ellipsisLine: 2,
+            ellipsisCopy: true
+          });
+        }
+      },
+
+      async handleExpandNode (payload) {
+        if (payload.state.expanded) {
+          this.resetSubPagination();
+          this.subRoleList = [];
+          this.curRoleData = payload;
+          payload.data = Object.assign(payload.data, { children: [] });
+          await this.fetchSubManagerList(payload.data);
+          if (this.$refs.selectTree) {
+            this.$refs.selectTree.setData(this.curRoleList);
+            this.$refs.selectTree.setExpanded(payload.id);
+          }
+        }
+      },
+
+      async handleToggle (value) {
+        this.selectCls = 'hide-iam-nav-select-cls';
+        if (value) {
+          this.selectCls = 'iam-nav-select-dropdown-content';
+          this.resetPagination();
+          this.resetSubPagination();
+          await this.resetRoleList();
+        }
+      },
+
+      async handleLoadMore () {
+        if (this.isSearch) {
+          if (this.curRoleList.length < this.pagination.count) {
+            this.pagination.current++;
+            this.fetchSearchManageList();
+          }
+        } else {
+          if (this.curRoleList.length < this.roleCount) {
+            this.pagination.current++;
+            const { current, limit } = this.pagination;
+            const params = {
+              limit,
+              offset: (current - 1) * limit
+            };
+            const result = await this.$store.dispatch('roleList', params);
+            result.forEach(item => {
+              this.$set(item, 'level', 0);
+              if (item.has_subset_manager) {
+                this.$set(item, 'children', [{ name: '' }]);
+              }
+            });
+            this.curRoleList = [...this.curRoleList, ...result];
+            this.$nextTick(() => {
+              if (this.$refs.selectTree) {
+                const { id } = this.user.role;
+                const curNode = this.$refs.selectTree.getNodeById(id);
+                if ((curNode && curNode.data && curNode.data.has_subset_manager)) {
+                  this.handleExpandNode(curNode || this.curRoleData);
+                }
+              }
+            });
+          }
+        }
+      },
+
+      async handleSubLoadMore () {
+        if (this.subRoleList.length < this.subPagination.count) {
+          const params = {
+            current: ++this.subPagination.current,
+            limit: this.subPagination.limit
+          };
+          this.subPagination = Object.assign(this.subPagination, params);
+          this.fetchSubManagerList(this.curData);
+        }
+      },
+
+      // 切换身份
+      async handleSwitchRole ({ id, type, name }) {
+        // const { type, name } = getTreeNode(id, this.curRoleList);
+        [this.curRoleId, this.curRole] = [id, type];
+        try {
+          await this.$store.dispatch('role/updateCurrentRole', { id });
+          this.$store.commit('updateCurRoleId', id);
+          this.$store.commit('updateIdentity', { id, type, name });
+          this.$store.commit('updateNavId', id);
+          this.updateRouter(type);
+          this.resetLocalStorage();
+        } catch (e) {
+          console.error(e);
+          this.bkMessageInstance = this.$bkMessage({
+            limit: 1,
+            theme: 'error',
+            message: e.message || e.data.msg || e.statusText,
+            ellipsisLine: 2,
+            ellipsisCopy: true
+          });
+        }
+      },
+
+      // 刷新二级管理员列表和设置当前页捕获不到的数据
+      async resetRoleList () {
+        const { role } = this.user;
+        if (this.$refs.selectTree) {
+          const curNode = this.$refs.selectTree.getNodeById(role.id);
+          if (!curNode && this.$refs.select && this.isSearch) {
+            this.$refs.select.searchValue = role.name;
+            this.resetPagination();
+            return;
+          }
+          if (!this.isSearch && this.$refs.select) {
+            this.$refs.select.searchValue = '';
+          }
+          if ((curNode && curNode.data && curNode.data.has_subset_manager)) {
+            await this.handleExpandNode(curNode || this.curRoleData);
+          }
+        }
+      },
+      
       // 监听当前已选中的角色是否有变更
       fetchRoleUpdate ({ role }) {
         const { id, type } = role;
@@ -345,8 +606,10 @@
         this.curRole = type;
         this.curRoleId = this.navCurRoleId || id;
         this.$store.commit('updateCurRoleId', this.curRoleId);
-        if (this.index === 1 && this.$refs.selectTree) {
-          this.$refs.selectTree.selected = this.curRoleId;
+        if (this.index === 1) {
+          if (this.$refs.selectTree) {
+            this.$refs.selectTree.selected = this.curRoleId;
+          }
         }
       },
       fetchSpaceUpdateGuide () {
@@ -382,8 +645,7 @@
       routeChangeHandler (to, from) {
         const { params, name } = to;
         const pathName = name;
-        this.handleSwitchPerm(params);
-        this.fetchSpaceUpdateGuide();
+        this.fetchDefaultInterface(params);
         for (const [key, value] of this.routerMap.entries()) {
           if (key.includes(pathName)) {
             this.openedItem = value;
@@ -416,6 +678,10 @@
       handleSwitchPerm ({ id, entry }) {
         if (entry && this.$refs.selectTree) {
           this.$refs.selectTree.selected = Number(id);
+          const hasRole = this.curRoleList.find(item => item.id === Number(id));
+          this.isSearch = !hasRole;
+          this.resetRoleList();
+          // this.handleRemoteTree(role.name);
         }
       },
 
@@ -439,13 +705,32 @@
       },
 
       handleSelectNode (node) {
-        if (!node.data.is_member) return;
-        this.$refs.select.close();
+        // if (!node.data.is_member) return;
         this.handleToggle(false);
-        this.handleSwitchRole(node.id);
+        this.$refs.select.close();
+        // this.handleSwitchRole(node.id);
+        this.handleSwitchRole(node.data);
       },
 
-      handleRemoteTree  (value) {
+      async handleRemoteTree  (value) {
+        this.keyWord = value;
+        if (this.$refs.select) {
+          this.$refs.select.searchValue = value;
+        }
+        this.curRoleList = [];
+        this.resetPagination();
+        this.resetSubPagination();
+        if (value) {
+          this.isSearch = true;
+          await this.fetchSearchManageList(value);
+        } else {
+          this.isSearch = false;
+          if (this.$refs.select) {
+            this.$refs.select.searchValue = '';
+          }
+          await this.$store.dispatch('roleList');
+          await this.resetRoleList();
+        }
         this.$refs.selectTree && this.$refs.selectTree.filter(value);
       },
 
@@ -494,33 +779,6 @@
           }
           this.openedItem = item.id === this.openedItem ? '' : item.id;
         });
-      },
-
-      handleToggle (value) {
-        this.selectCls = value ? 'iam-nav-select-dropdown-content' : 'hide-iam-nav-select-cls';
-      },
-
-      // 切换身份
-      async handleSwitchRole (id) {
-        const { type, name } = getTreeNode(id, this.curRoleList);
-        [this.curRoleId, this.curRole] = [id, type];
-        try {
-          await this.$store.dispatch('role/updateCurrentRole', { id });
-          this.$store.commit('updateCurRoleId', id);
-          this.$store.commit('updateIdentity', { id, type, name });
-          this.$store.commit('updateNavId', id);
-          this.updateRouter(type);
-          this.resetLocalStorage();
-        } catch (e) {
-          console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
-        }
       },
 
       // 更新路由
@@ -594,6 +852,28 @@
           }
         }
         // }
+      },
+
+      resetPagination () {
+        this.pagination = Object.assign(
+          {},
+          {
+            current: 1,
+            count: 0,
+            limit: 20
+          }
+        );
+      },
+
+      resetSubPagination () {
+        this.subPagination = Object.assign(
+          {},
+          {
+            current: 1,
+            count: 0,
+            limit: 100
+          }
+        );
       }
     }
   };
@@ -609,7 +889,7 @@
 }
 
 .iam-nav-select-dropdown-content
- .bk-big-tree {
+  .bk-big-tree {
     &-node {
         padding: 0 16px;
         .node-options {
@@ -621,34 +901,44 @@
         .iamcenter-level-two-manage-space {
             margin-left: 15px;
         }
+        .iam-search-data {
+          .iamcenter-level-two-manage-space {
+            margin-left: 0;
+          }
+        }
     }
     &-empty {
         color: #fff !important;
         opacity: .6;
+        font-size: 12px;
     }
-}
+  }
 
-.space-popconfirm {
-    .content-header {
-        display: flex;
-        align-items: center;
-        margin-bottom: 10px;
-        .content-title {
-            font-size: 15px;
-            margin-right: 5px;
-        }
-    }
-    .content-desc {
-        margin-bottom: 10px;
-        word-break: break-all;
-    }
-    .tippy-tooltip.light-border-theme {
-        box-shadow: 0 0 2px 0 #dcdee5;
-    }
-    /* .tippy-arrow {
-        top: 120px !important;
-    } */
- }
+  .space-popconfirm {
+      .content-header {
+          display: flex;
+          align-items: center;
+          margin-bottom: 10px;
+          .content-title {
+              font-size: 15px;
+              margin-right: 5px;
+          }
+      }
+      .content-desc {
+          margin-bottom: 10px;
+          word-break: break-all;
+      }
+      .tippy-tooltip.light-border-theme {
+          box-shadow: 0 0 2px 0 #dcdee5;
+      }
+      /* .tippy-arrow {
+          top: 120px !important;
+      } */
+  }
+
+  .tree-load-more {
+    text-align: center;
+  }
 </style>
 
 <style lang="postcss" scoped>

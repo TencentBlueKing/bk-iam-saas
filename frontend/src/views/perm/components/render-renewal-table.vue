@@ -30,29 +30,77 @@
             </span>
           </template>
         </bk-table-column>
-        <bk-table-column
-          v-else-if="item.prop === 'action'"
-          :key="item.prop"
-          :label="item.label"
-          :prop="item.prop">
-          <template slot-scope="{ row }">
-            <span>{{ row.action ? row.action.name || '' : '' }}</span>
-          </template>
-        </bk-table-column>
-        <bk-table-column
-          v-else
-          :key="item.prop"
-          :label="item.label"
-          :prop="item.prop">
-          <template slot-scope="{ row }">
-            <render-expire-display
-              v-if="item.prop === 'expired_at'"
-              :selected="currentSelectList.map(v => v.id).includes(row.id)"
-              :renewal-time="renewalTime"
-              :cur-time="row.expired_at" />
-            <span v-else>{{ row[item.prop] }}</span>
-          </template>
-        </bk-table-column>
+        <template v-else-if="item.prop === 'action'">
+          <bk-table-column
+            :key="item.prop"
+            :label="item.label"
+            :prop="item.prop">
+            <template slot-scope="{ row }">
+              <span>{{ row.action ? row.action.name || '' : '' }}</span>
+            </template>
+          </bk-table-column>
+        </template>
+        <template v-else-if="item.prop === 'policy'">
+          <bk-table-column
+            :key="item.prop"
+            :label="item.label"
+            :prop="item.prop"
+          >
+            <template slot-scope="{ row }">
+              <template v-if="row.policy.resource_groups && row.policy.resource_groups.length">
+                <div
+                  v-for="(_, _index) in row.policy.resource_groups"
+                  :key="_.id"
+                  class="related-resource-perm"
+                  :class="
+                    row.policy.resource_groups === 1 || _index === row.policy.resource_groups.length - 1
+                      ? ''
+                      : 'related-resource-perm-border'
+                  "
+                >
+                  <p
+                    class="related-resource-perm-item"
+                    v-for="related in _.related_resource_types"
+                    :key="related.type"
+                  >
+                    <render-resource-popover
+                      :key="related.type"
+                      :data="related.condition"
+                      :value="`${related.name}: ${related.value}`"
+                      :max-width="380"
+                      @on-view="handleViewResource(_, row.policy)"
+                    />
+                  </p>
+                  <Icon
+                    v-if="isShowPreview(row.policy)"
+                    type="detail-new"
+                    class="view-icon"
+                    :title="$t(`m.perm['查看实例资源权限组']`)"
+                    @click.stop="handleViewResource(_, row.policy)"
+                  />
+                </div>
+              </template>
+              <template v-else>
+                <span>{{ $t(`m.common['无需关联实例']`) }}{{ policyIndex}}</span>
+              </template>
+            </template>
+          </bk-table-column>
+        </template>
+        <template v-else>
+          <bk-table-column
+            :key="item.prop"
+            :label="item.label"
+            :prop="item.prop">
+            <template slot-scope="{ row }">
+              <render-expire-display
+                v-if="item.prop === 'expired_at'"
+                :selected="currentSelectList.map(v => v.id).includes(row.id)"
+                :renewal-time="renewalTime"
+                :cur-time="row.expired_at" />
+              <span v-else>{{ row[item.prop] }}</span>
+            </template>
+          </bk-table-column>
+        </template>
       </template>
       <template slot="empty">
         <ExceptionEmpty
@@ -64,12 +112,32 @@
         />
       </template>
     </bk-table>
+
+    <bk-sideslider
+      :is-show.sync="isShowSideSlider"
+      :width="sliderWidth"
+      :quick-close="true"
+      @animation-end="handleAnimationEnd">
+      >
+      <div slot="header" class="iam-my-custom-perm-silder-header">
+        <span>{{ sideSliderTitle }}</span>
+      </div>
+      <div slot="content">
+        <RenderDetail
+          ref="detailComRef"
+          :data="previewData"
+        />
+      </div>
+    </bk-sideslider>
   </div>
 </template>
 <script>
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
-  import renderExpireDisplay from '@/components/render-renewal-dialog/display';
+  import RenderExpireDisplay from '@/components/render-renewal-dialog/display';
+  import RenderResourcePopover from '../components/prem-view-resource-popover';
+  import RenderDetail from './render-detail';
+  import PermPolicy from '@/model/my-perm-policy';
   import { PERMANENT_TIMESTAMP } from '@/common/constants';
   import { formatCodeData } from '@/common/util';
 
@@ -79,7 +147,9 @@
   export default {
     name: '',
     components: {
-      renderExpireDisplay
+      RenderExpireDisplay,
+      RenderDetail,
+      RenderResourcePopover
     },
     props: {
       type: {
@@ -133,11 +203,20 @@
           text: '',
           tip: '',
           tipType: ''
-        }
+        },
+        isShowSideSlider: false,
+        sideSliderTitle: '',
+        previewData: [],
+        sliderWidth: 960
       };
     },
     computed: {
-            ...mapGetters(['user', 'externalSystemId'])
+      ...mapGetters(['user', 'externalSystemId']),
+      isShowPreview () {
+        return (payload) => {
+          return payload.policy_id;
+        };
+      }
     },
     watch: {
       'pagination.current' (value) {
@@ -168,8 +247,8 @@
           };
           const templateList = value.map(item => {
             return {
-                            ...item,
-                            expired_at: getTimestamp(item.expired_at)
+              ...item,
+              expired_at: getTimestamp(item.expired_at)
             };
           });
           this.$emit('on-select', this.type, templateList);
@@ -239,6 +318,7 @@
                     this.$refs.permTableRef
                       && this.$refs.permTableRef.toggleRowSelection(item, true);
                   }
+                  item.policy = new PermPolicy(item.policy);
                 });
               }
             };
@@ -282,6 +362,7 @@
         }
         return [
           { label: this.$t(`m.common['操作']`), prop: 'action' },
+          { label: this.$t(`m.common['资源实例']`), prop: 'policy' },
           { label: this.$t(`m.common['所属系统']`), prop: 'system' },
           { label: this.$t(`m.common['有效期']`), prop: 'expired_at' }
         ];
@@ -332,6 +413,32 @@
 
       handlerChange (selection, row) {
         this.currentSelectList = [...selection];
+      },
+
+      handleViewResource (groupItem, payload) {
+        const params = [];
+        if (groupItem.related_resource_types.length) {
+          groupItem.related_resource_types.forEach(item => {
+            const { name, type, condition } = item;
+            params.push({
+              name: type,
+              label: this.$t(`m.info['tab操作实例']`, { value: name }),
+              tabType: 'resource',
+              data: condition,
+              systemId: item.system_id,
+              resource_group_id: groupItem.id
+            });
+          });
+        }
+        this.previewData = _.cloneDeep(params);
+        this.sideSliderTitle = this.$t(`m.info['操作侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}` });
+        window.changeAlert = 'iamSidesider';
+        this.isShowSideSlider = true;
+      },
+
+      handleAnimationEnd () {
+        this.sideSliderTitle = '';
+        this.previewData = [];
       },
 
       getCurPageData (page = 1) {
@@ -408,6 +515,60 @@
         .perm-renewal-table {
             margin-top: 16px;
             border: none;
+        }
+        .related-resource-perm {
+            position: relative;
+            &-item {
+                padding: 20px 0;
+            }
+            .view-icon {
+                display: none;
+                position: absolute;
+                top: 50%;
+                right: 40px;
+                transform: translate(0, -50%);
+                font-size: 18px;
+                cursor: pointer;
+            }
+            &:hover {
+                .view-icon {
+                    display: inline-block;
+                    color: #3a84ff;
+                }
+            }
+            .effect-icon {
+                display: none;
+                position: absolute;
+                top: 50%;
+                right: 10px;
+                transform: translate(0, -50%);
+                font-size: 18px;
+                cursor: pointer;
+            }
+            &:hover {
+                .effect-icon {
+                    display: inline-block;
+                    color: #3a84ff;
+                }
+            }
+            .effect-icon-disabled{
+                display: none;
+                position: absolute;
+                top: 50%;
+                right: 10px;
+                transform: translate(0, -50%);
+                font-size: 18px;
+                cursor: pointer;
+            }
+            &:hover {
+                .effect-icon-disabled {
+                    display: inline-block;
+                    color: #dcdee5;
+                }
+            }
+            &-border{
+              border-bottom: 1px solid #dfe0e5;
+            }
         }
     }
 </style>

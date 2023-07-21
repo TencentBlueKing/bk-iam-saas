@@ -19,6 +19,10 @@
       tipType: {
         type: String,
         default: ''
+      },
+      errorMessage: {
+        type: String,
+        default: ''
       }
     },
     data () {
@@ -41,26 +45,35 @@
         const defaultOperation = {
           search: () => {
             return (
-                            <div
-                                class="tip-wrap exception-search-tip"
-                                // style={ this.searchTipStyles() }
-                            >
-                                <span class="text-btn">{this.$t(`m.common['可以尝试']`)}</span>
-                                <span> {this.$t(`m.common['调整关键词']`)}</span>
-                                <span> {this.$t(`m.common['或']`)} </span>
-                                <span class="tip-click" onClick={() => this.handleClear()}>
-                                    {this.$t(`m.common['清空筛选条件']`)}
-                                </span>
-                            </div>
+              <div
+                  class="tip-wrap exception-search-tip"
+                  // style={ this.searchTipStyles() }
+              >
+                  <span class="text-btn">{this.$t(`m.common['可以尝试']`)}</span>
+                  <span> {this.$t(`m.common['调整关键词']`)}</span>
+                  <span> {this.$t(`m.common['或']`)} </span>
+                  <span class="tip-click" onClick={() => this.handleClear()}>
+                      {this.$t(`m.common['清空筛选条件']`)}
+                  </span>
+              </div>
             );
           },
           refresh: () => {
             return (
-                            <div class="tip-wrap">
-                                <div class="tip-click" onClick={() => this.handleRefresh()}>
-                                    {this.$t(`m.common['刷新']`)}
-                                </div>
-                            </div>
+              <div class="tip-wrap">
+                  <div class="tip-click" onClick={() => this.handleRefresh()}>
+                      {this.$t(`m.common['刷新']`)}
+                  </div>
+              </div>
+            );
+          },
+          noPerm: () => {
+            return (
+                <div class="tip-wrap">
+                    <div class="tip-message">
+                        {this.errorMessage}
+                    </div>
+                </div>
             );
           }
         };
@@ -103,6 +116,10 @@
     color: #3a84ff;
     cursor: pointer;
   }
+  .tip-message {
+    color: #979ba5;
+    font-size: 12px;
+  }
   .tip-wrap {
     margin-top: 10px;
   }
@@ -113,13 +130,20 @@
 }
 /deep/ .bk-exception {
     width: 100%;
-}
-
-/deep/ .bk-exception-img {
-  width: 200px !important;
-  .exception-image {
-    width: 100% !important;
-    height: 100% !important;
-  }
+    &-img {
+      width: 200px !important;
+      .exception-image {
+        width: 100% !important;
+        height: 100% !important;
+      }
+    }
+    .page-text {
+      font-size: 16px;
+    }
+    .page-img {
+      width: 400px !important;
+      margin-top: 150px;
+      height: 100%;
+    }
 }
 </style>
