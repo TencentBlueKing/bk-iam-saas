@@ -133,6 +133,9 @@ class TokenBackend(ModelBackend):
 
     def _handler_exception(self, e):
         """处理登录特殊异常, 需要前端响应给用户"""
-        if isinstance(e, APIError):
-            if "1302403" in e.message:
-                raise error_codes.LOGIN_FORBIDDEN
+        if isinstance(e, APIError) and "1302403" in e.message:
+            msg_prefix = "message="
+            idx = e.message.rfind(msg_prefix)
+            message = e.message[idx + len(msg_prefix) : -1]
+
+            raise error_codes.LOGIN_FORBIDDEN.format(message, True)
