@@ -214,7 +214,7 @@ function handleReject (error, config) {
       nextError.message = error.response.data.message;
       bus.$emit('show-login-modal', loginPlainUrl);
       // window.location = LOGIN_SERVICE_URL + '/?c_url=' + window.location.href
-    } else if ([403].includes(status) && [130243].includes(data.code)) {
+    } else if ([403].includes(status) && [1302403].includes(data.code)) {
       window.open(`${window.SITE_URL}403?message=${data.detail || data.message}`, '_self');
     } else if (status === 500) {
       nextError.message = il8n('common', '系统出现异常');
