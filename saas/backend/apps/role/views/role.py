@@ -765,6 +765,29 @@ class SubsetManagerViewSet(mixins.ListModelMixin, GenericViewSet):
         data = serializer.data
         return Response(data)
 
+    def get_object(self):
+        queryset = Role.objects.filter(type=RoleType.SUBSET_MANAGER.value)
+
+        # Perform the lookup filtering.
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+
+        assert lookup_url_kwarg in self.kwargs, (
+            "Expected view %s to be called with a URL keyword argument "
+            'named "%s". Fix your URL conf, or set the `.lookup_field` '
+            "attribute on the view correctly." % (self.__class__.__name__, lookup_url_kwarg)
+        )
+
+        if not can_user_manage_role(self.request.user.username, int(self.kwargs[lookup_url_kwarg])):
+            queryset = queryset.none()
+
+        filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
+        obj = get_object_or_404(queryset, **filter_kwargs)
+
+        # May raise a permission denied
+        self.check_object_permissions(self.request, obj)
+
+        return obj
+
     @swagger_auto_schema(
         operation_description="创建子集管理员",
         request_body=SubsetMangerCreateSLZ(label="创建子集管理员"),
