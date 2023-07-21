@@ -116,7 +116,8 @@
     methods: {
       handleUpdateRatingManager (payload) {
         const { name, members, description, sync_perm } = this.formData;
-        const { type, id } = this.user.role;
+        // const { type, id } = this.user.role;
+        const { type } = this.user.role;
         const params = {
           name,
           description,
@@ -142,10 +143,10 @@
             const headerTitle = params.name;
             this.$store.commit('setHeaderTitle', headerTitle);
             await this.$store.dispatch('roleList');
-            const ExitManager = this.roleList.find(item => !item.is_member && item.id === id);
-            if (ExitManager) {
-              this.handleExitPermManage();
-            }
+            // const ExitManager = this.roleList.find(item => !item.is_member && item.id === id);
+            // if (ExitManager) {
+            //   this.handleExitPermManage();
+            // }
           }, async (e) => {
             console.warn('error');
             const { code, response } = e;
