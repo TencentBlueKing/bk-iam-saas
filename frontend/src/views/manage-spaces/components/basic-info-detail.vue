@@ -2,7 +2,7 @@
   <div class="iam-grading-admin-basic-info-wrapper">
     <detail-layout mode="see">
       <render-layout>
-        <detail-item :label="`${$t(`m.levelSpace['名称']`)}：`">
+        <detail-item :label="`${$t(`m.levelSpace['名称']`)}${$t(`m.common['：']`)}`">
           <iam-edit-input
             field="name"
             :mode="mode"
@@ -11,14 +11,14 @@
             :value="formData.name"
             :remote-hander="handleUpdateRatingManager" />
         </detail-item>
-        <detail-item :label="`${$t(`m.levelSpace['管理员']`)}：`">
+        <detail-item :label="`${$t(`m.levelSpace['管理员']`)}${$t(`m.common['：']`)}`">
           <iam-edit-member
             field="members"
             :value="formData.members"
             @on-change="handleUpdateMembers"
             :remote-hander="handleUpdateRatingManager" />
         </detail-item>
-        <detail-item :label="`${$t(`m.common['描述']`)}：`">
+        <detail-item :label="`${$t(`m.common['描述']`)}${$t(`m.common['：']`)}`">
           <iam-edit-textarea
             field="description"
             :mode="mode"
@@ -116,7 +116,8 @@
     methods: {
       handleUpdateRatingManager (payload) {
         const { name, members, description, sync_perm } = this.formData;
-        const { type, id } = this.user.role;
+        // const { type, id } = this.user.role;
+        const { type } = this.user.role;
         const params = {
           name,
           description,
@@ -142,10 +143,10 @@
             const headerTitle = params.name;
             this.$store.commit('setHeaderTitle', headerTitle);
             await this.$store.dispatch('roleList');
-            const ExitManager = this.roleList.find(item => !item.is_member && item.id === id);
-            if (ExitManager) {
-              this.handleExitPermManage();
-            }
+            // const ExitManager = this.roleList.find(item => !item.is_member && item.id === id);
+            // if (ExitManager) {
+            //   this.handleExitPermManage();
+            // }
           }, async (e) => {
             console.warn('error');
             const { code, response } = e;

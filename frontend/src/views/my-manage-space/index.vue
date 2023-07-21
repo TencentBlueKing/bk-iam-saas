@@ -382,7 +382,8 @@
             },
             formatMode () {
                 return (payload) => {
-                    return payload.is_member || this.isFilter ? 'edit' : 'detail';
+                    // return payload.is_member || this.isFilter ? 'edit' : 'detail';
+                    return 'edit';
                 };
             }
     },
@@ -405,9 +406,9 @@
       },
 
       getCellClass ({ row, column, rowIndex, columnIndex }) {
-        if (!row.is_member) {
-          return !this.isFilter ? 'iam-tag-table-cell-cls iam-tag-table-cell-opacity-cls' : 'iam-tag-table-cell-cls';
-        }
+        // if (row.is_member) {
+        //   return !this.isFilter ? 'iam-tag-table-cell-cls iam-tag-table-cell-opacity-cls' : 'iam-tag-table-cell-cls';
+        // }
         if (!row.has_subset_manager) {
           return 'iam-tag-table-cell-cls iam-tag-table-cell-subset-cls';
         }
@@ -986,7 +987,7 @@
     }
   }
 
-  /deep/ .iam-tag-table-cell-opacity-cls {
+  /* /deep/ .iam-tag-table-cell-opacity-cls {
     opacity: 0.6;
     .cell {
       padding-left: 0;
@@ -998,7 +999,7 @@
             }
         }
     }
-  }
+  } */
 
   /deep/ .iam-tag-table-cell-subset-cls {
     .cell {
