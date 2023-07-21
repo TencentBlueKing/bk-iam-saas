@@ -131,7 +131,7 @@ class TokenBackend(ModelBackend):
 
         return True, data["bk_username"]
 
-    def _handler_exception(self, e):
+    def _handle_exception(self, e):
         """处理登录特殊异常, 需要前端响应给用户"""
         if isinstance(e, APIError) and "1302403" in e.message:
             msg_prefix = "message="
