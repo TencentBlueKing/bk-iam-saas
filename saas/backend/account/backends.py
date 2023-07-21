@@ -148,4 +148,3 @@ class TokenBackend(ModelBackend):
             message = e.message[idx + len(msg_prefix) : -1]
 
             raise PermissionForbidden(message)
-
