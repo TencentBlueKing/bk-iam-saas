@@ -14,7 +14,7 @@ import logging
 import pytz
 from django import forms
 from django.contrib import auth
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, JsonResponse
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
@@ -23,6 +23,7 @@ from backend.common.cache import cached
 from backend.service.constants import SubjectType
 
 from . import role_auth
+from .backends import PermissionForbidden
 
 logger = logging.getLogger("app")
 
@@ -58,7 +59,13 @@ class LoginMiddleware(object):
 
         if form.is_valid():
             bk_token = form.cleaned_data["bk_token"]
-            user = auth.authenticate(request=request, bk_token=bk_token)
+            try:
+                user = auth.authenticate(request=request, bk_token=bk_token)
+            except PermissionForbidden as e:
+                return JsonResponse(
+                    {"result": False, "code": e.code, "message": e.message, "data": None}, status=e.status_code
+                )
+
             if user:
                 # NOTE: block the user in blacklist
                 if is_in_blacklist(request.user.username):
