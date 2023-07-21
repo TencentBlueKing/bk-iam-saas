@@ -127,7 +127,6 @@
                   <bk-button
                     theme="primary"
                     text
-                    :disabled="disabledPerm(child.row, 'subset_manager')"
                     @click.stop="handleSubView(child.row, 'detail')"
                   >
                     {{ $t(`m.levelSpace['进入空间']`) }}
@@ -135,7 +134,6 @@
                   <bk-button
                     theme="primary"
                     text
-                    :disabled="disabledPerm(child.row, 'subset_manager')"
                     @click.stop="handleSubView(child.row, 'auth')"
                   >
                     {{ $t(`m.nav['授权边界']`) }}
@@ -238,8 +236,6 @@
             <bk-button
               theme="primary"
               text
-              :disabled="disabledPerm(row)"
-              :title="disabledPerm(row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
               @click="handleView(row, 'detail')"
             >
               {{ $t(`m.levelSpace['进入空间']`) }}
@@ -247,19 +243,25 @@
             <bk-button
               theme="primary"
               text
-              :disabled="disabledPerm(row)"
-              :title="disabledPerm(row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
               @click.stop="handleView(row, 'auth')"
             >
               {{ $t(`m.nav['授权边界']`) }}
             </bk-button>
-            <bk-button
+            <!-- <bk-button
               v-if="!['subset_manager'].includes(row.type)"
               theme="primary"
               text
               @click="handleView(row, 'clone')"
               :title="disabledPerm(row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
               :disabled="disabledPerm(row)"
+            >
+              {{ $t(`m.levelSpace['克隆']`) }}
+            </bk-button> -->
+            <bk-button
+              v-if="!['subset_manager'].includes(row.type)"
+              theme="primary"
+              text
+              @click="handleView(row, 'clone')"
             >
               {{ $t(`m.levelSpace['克隆']`) }}
             </bk-button>
