@@ -158,7 +158,7 @@ auth.requestCurrentUser().then(user => {
     message = il8nNew('info', '无法连接到后端服务');
   }
 
-  const errCode = err.data.code || err.code;
+  const errCode = err.code || err.data.code;
 
   const divStyle = ''
         + 'text-align: center;'
