@@ -3,7 +3,8 @@
     :class="[
       systemCls,
       { 'external-system-layout': externalSystemsLayout.userGroup.groupDetail.setMainLayoutHeight },
-      { 'external-app-layout': $route.name === 'addMemberBoundary' }
+      { 'external-app-layout': $route.name === 'addMemberBoundary' },
+      { 'no-perm-app-layout': ['403'].includes(routeName) }
     ]">
     <!-- <iam-guide
             v-if="groupGuideShow"
@@ -12,31 +13,34 @@
             :style="groupGuideStyle"
             :flag="groupGuideShow"
             :content="$t(`m.guide['创建用户组']`)" /> -->
-    <iam-guide
-      v-if="processGuideShow"
-      type="set_group_approval_process"
-      direction="left"
-      :style="processGuideStyle"
-      :flag="processGuideShow"
-      :content="$t(`m.guide['创建审批流程']`)" />
-    <header-nav
-      v-if="!externalSystemsLayout.hideIamHeader"
-      @reload-page="handleRefreshPage"
-      :route-name="routeName"
-      :user-group-id="userGroupId">
-    </header-nav>
-    <the-header @reload-page="handleRefreshPage"
-      :route-name="routeName"
-      :user-group-id="userGroupId"
-    />
-    <the-nav class="nav-layout"
-      @reload-page="reloadCurPage"
-      v-if="!externalSystemsLayout.hideIamSlider" />
+    <template v-if="!['403'].includes(routeName)">
+      <iam-guide
+        v-if="processGuideShow"
+        type="set_group_approval_process"
+        direction="left"
+        :style="processGuideStyle"
+        :flag="processGuideShow"
+        :content="$t(`m.guide['创建审批流程']`)" />
+      <header-nav
+        v-if="!externalSystemsLayout.hideIamHeader"
+        @reload-page="handleRefreshPage"
+        :route-name="routeName"
+        :user-group-id="userGroupId">
+      </header-nav>
+      <the-header @reload-page="handleRefreshPage"
+        :route-name="routeName"
+        :user-group-id="userGroupId"
+      />
+      <the-nav class="nav-layout"
+        @reload-page="reloadCurPage"
+        v-if="!externalSystemsLayout.hideIamSlider" />
+    </template>
     <main
       :class="[
         'main-layout',
         layoutCls,
-        { 'external-main-layout': externalSystemsLayout.userGroup.groupDetail.setMainLayoutHeight }
+        { 'external-main-layout': externalSystemsLayout.userGroup.groupDetail.setMainLayoutHeight },
+        { 'no-perm-main-layout': ['403'].includes(routeName) }
       ]"
       v-bkloading="{ isLoading: mainContentLoading, opacity: 1, zIndex: 1000 }">
       <div ref="mainScroller"
@@ -380,6 +384,14 @@
         align-items: center;
         justify-content: space-between;
 
+    }
+
+    .no-perm {
+      &-app-layout,
+      &-main-layout {
+        height: 100% !important;
+        background-color: #ffffff;
+      }
     }
 
 </style>

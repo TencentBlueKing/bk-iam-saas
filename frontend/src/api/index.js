@@ -206,7 +206,6 @@ function handleReject (error, config) {
   }
 
   http.queue.delete(config.requestId);
-
   if (config.globalError && error.response) {
     const { status, data } = error.response;
     const nextError = { message: error.message, response: error.response };
@@ -216,7 +215,7 @@ function handleReject (error, config) {
       bus.$emit('show-login-modal', loginPlainUrl);
       // window.location = LOGIN_SERVICE_URL + '/?c_url=' + window.location.href
     } else if ([403].includes(status) && [130243].includes(data.code)) {
-      window.open(`${window.SITE_URL}403?message=${data.message || data.detail}`, '_self');
+      window.open(`${window.SITE_URL}403?message=${data.detail || data.message}`, '_self');
     } else if (status === 500) {
       nextError.message = il8n('common', '系统出现异常');
     } else if (data && data.message) {
