@@ -189,8 +189,9 @@
           return;
         }
         this.roleIndex = index;
-        this.isShowDialog = true;
+        // this.isShowDialog = true;
         this.deleteList = [this.displayValue[index].username];
+        this.handleDeleteRole();
       },
 
       async handleDeleteRole () {
@@ -265,7 +266,8 @@
             !this.editValue.includes(item.username) && !item.readonly).map(v => v.username);
           this.roleIndex = -1;
           if (this.deleteList.length) {
-            this.isShowDialog = true;
+            this.handleDeleteRole();
+            // this.isShowDialog = true;
           } else {
             this.$emit('on-change', {
               [this.field]: this.displayValue

@@ -987,7 +987,7 @@
     }
   }
 
-  /deep/ .iam-tag-table-cell-opacity-cls {
+  /* /deep/ .iam-tag-table-cell-opacity-cls {
     opacity: 0.6;
     .cell {
       padding-left: 0;
@@ -999,7 +999,7 @@
             }
         }
     }
-  }
+  } */
 
   /deep/ .iam-tag-table-cell-subset-cls {
     .cell {
