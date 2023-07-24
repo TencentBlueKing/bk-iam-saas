@@ -509,7 +509,8 @@ export const m = {
          '用户组成员添加权限': 'Add permissions to user group {value}',
          '天数': '{value} days',
          '第几项实例和属性不能都为空': 'The instance and attribute of item {value} cannot be empty',
-         '权限个数': '{value} permissions'
+         '权限个数': '{value} permissions',
+         '已经复制到粘贴板，可在其他用户组添加成员时粘贴到手动输入框': 'Has been copied to the clipboard and can be pasted into the manual input box when adding members to other user groups'
     },
     // 二次确认弹窗相关
     dialog: {

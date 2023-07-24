@@ -375,8 +375,8 @@
               return;
             }
             const clipboard = new ClipboardJS('.copy-selected-members');
-            clipboard.on('success', (e) => {
-              this.messageSuccess(this.$t(`m.info['复制成功']`), 2000);
+            clipboard.on('success', () => {
+              this.messageSuccess(this.$t(`m.info['已经复制到粘贴板，可在其他用户组添加成员时粘贴到手动输入框']`), 2000, 2);
               // 调用后销毁，避免多次执行
               if (clipboard) {
                 clipboard.destroy();

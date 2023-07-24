@@ -48,13 +48,14 @@ export const messageError = (message, delay = 3000) => {
   });
 };
 
-export const messageSuccess = (message, delay = 3000) => {
+export const messageSuccess = (message, delay = 3000, ellipsisLine = 1) => {
   messageInstance && messageInstance.close();
   messageInstance = Message({
     limit: 1,
     message,
     delay,
-    theme: 'success'
+    theme: 'success',
+    ellipsisLine
   });
 };
 
