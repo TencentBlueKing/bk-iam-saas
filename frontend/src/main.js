@@ -150,17 +150,16 @@ auth.requestCurrentUser().then(user => {
   }
 }, err => {
   let message;
-  if (err.status === 403) {
+  const { response } = err;
+  if (response && response.status === 403) {
     message = il8nNew('common', '权限不足');
-    if (err.data && err.data.msg) {
-      message = err.data.msg;
+    if (err.data) {
+      message = err.data.message || err.data.msg;
     }
   } else {
     message = il8nNew('info', '无法连接到后端服务');
   }
-
-  const errCode = err.code || err.data.code;
-
+  const errCode = response && response.data ? response.data.code : err.code;
   const divStyle = ''
         + 'text-align: center;'
         + 'width: 400px;'
@@ -170,20 +169,18 @@ auth.requestCurrentUser().then(user => {
         + 'left: 50%;'
         + 'transform: translate(-50%, -50%);';
 
-  const h2Style = 'font-size: 20px;color: #979797; margin: 32px 0;font-weight: normal';
+  const h2Style = 'font-size: 20px;color: #979797; margin: 32px 0;font-weight: normal;';
+  const h2NoPermStyle = 'margin: 20px 0;';
   const messageStyle = 'font-size: 14px;color: #979797;';
-
   const content = ``
         + `<div class="bk-exception bk-exception-center" style="${divStyle}">`
         + `<img src="${Img403}"><h2 class="exception-text" style="${h2Style}">${message}</h2>`
         + `</div>`;
-
   const noPermContent = ``
         + `<div class="bk-exception bk-exception-center" style="${divStyle}">`
-        + `<img src="${Svg403}"><h2 class="exception-text" style="${h2Style}">${il8nNew('common', '无该应用访问权限')}</h2>`
-        + `<div style="${messageStyle}">${err.message || err.data.message}</div>`
+        + `<img src="${Svg403}"><h2 class="exception-text" style="${h2Style}${h2NoPermStyle}">${il8nNew('common', '无该应用访问权限')}</h2>`
+        + `<div style="${messageStyle}">${message}</div>`
         + `</div>`;
-
-  const renderHtml = [403].includes(err.status) && [1302403].includes(errCode) ? noPermContent : content;
+  const renderHtml = [403].includes(response.status) && [1302403].includes(errCode) ? noPermContent : content;
   document.write(renderHtml);
 });
