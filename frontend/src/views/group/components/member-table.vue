@@ -11,6 +11,47 @@
           @click="handleBatchDelete">
           {{ $t(`m.common['批量移除']`) }}
         </bk-button>
+        <div>
+          <bk-dropdown-menu
+            ref="dropdown"
+            :disabled="readOnly"
+            @show="handleDropdownShow"
+            @hide="handleDropdownHide"
+          >
+            <div
+              class="group-dropdown-trigger-btn"
+              style="padding-left: 19px;"
+              slot="dropdown-trigger"
+            >
+              <span>{{ $t(`m.userGroup['复制成员']`) }}</span>
+              <i
+                :class="[
+                  'bk-icon icon-angle-down',
+                  { 'icon-flip': isDropdownShow }
+                ]"
+              />
+            </div>
+            <ul class="bk-dropdown-list" slot="dropdown-content">
+              <li>
+                <a
+                  href="javascript:;"
+                  class="copy-selected-members"
+                  :data-clipboard-text="formatCopyMembers"
+                  @click="handleTriggerHandler('selected')"
+                >
+                  {{ $t(`m.userGroup['复制已选成员']`) }}
+                </a>
+              </li>
+              <!-- <li>
+                <a
+                  href="javascript:;"
+                  @click="handleTriggerHandler('all')">
+                  {{ $t(`m.userGroup['复制所有成员']`) }}
+                </a>
+              </li> -->
+            </ul>
+          </bk-dropdown-menu>
+        </div>
       </div>
       <div slot="right">
         <bk-input
@@ -140,6 +181,7 @@
 </template>
 <script>
   import _ from 'lodash';
+  import ClipboardJS from 'clipboard';
   import { mapGetters } from 'vuex';
   import { PERMANENT_TIMESTAMP } from '@/common/constants';
   import { formatCodeData } from '@/common/util';
@@ -209,7 +251,8 @@
         },
         adminGroupTitle: '',
         keyword: '',
-        enableOrganizationCount: window.ENABLE_ORGANIZATION_COUNT.toLowerCase() === 'true'
+        enableOrganizationCount: window.ENABLE_ORGANIZATION_COUNT.toLowerCase() === 'true',
+        isDropdownShow: false
       };
     },
     computed: {
@@ -236,6 +279,10 @@
                     return this.getGroupAttributes && this.getGroupAttributes().source_from_role
                     && this.pagination.count === 1;
                 };
+            },
+            formatCopyMembers () {
+              const results = this.currentSelectList.filter(item => item.type === 'user');
+              return results.length ? results.map(v => v.id).join('\n') : '';
             }
     },
     watch: {
@@ -309,6 +356,42 @@
         } finally {
           this.tableLoading = false;
         }
+      },
+
+      handleDropdownShow () {
+        this.isDropdownShow = true;
+      },
+
+      handleDropdownHide () {
+        this.isDropdownShow = false;
+      },
+
+      handleTriggerHandler (payload) {
+        const typeMap = {
+          selected: () => {
+            const haveUser = this.currentSelectList.find(item => ['user'].includes(item.type));
+            if (!this.currentSelectList.length || !haveUser) {
+              this.messageError(this.$t(`m.verify['请选择用户成员']`), 2000);
+              return;
+            }
+            const clipboard = new ClipboardJS('.copy-selected-members');
+            clipboard.on('success', (e) => {
+              this.messageSuccess(this.$t(`m.info['复制成功']`), 2000);
+              // 调用后销毁，避免多次执行
+              if (clipboard) {
+                clipboard.destroy();
+              }
+            });
+            clipboard.on('error', (e) => {
+              console.error('复制失败', e);
+            });
+          },
+          all: () => {
+
+          }
+        };
+        typeMap[payload]();
+        this.$refs.dropdown.hide();
       },
 
       async handleEmptyClear () {
@@ -573,5 +656,24 @@
   .bk-button {
     margin-right: 10px;
   }
+}
+
+.group-dropdown-trigger-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #c4c6cc;
+    height: 32px;
+    min-width: 68px;
+    border-radius: 2px;
+    padding: 0 15px;
+    color: #63656E;
+    &:hover {
+      cursor: pointer;
+      border-color: #979ba5;
+    }
+    .bk-icon {
+      font-size: 22px;
+    }
 }
 </style>
