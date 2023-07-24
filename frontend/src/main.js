@@ -158,6 +158,8 @@ auth.requestCurrentUser().then(user => {
     message = il8nNew('info', '无法连接到后端服务');
   }
 
+  const errCode = err.code || err.data.code;
+
   const divStyle = ''
         + 'text-align: center;'
         + 'width: 400px;'
@@ -174,5 +176,7 @@ auth.requestCurrentUser().then(user => {
         + `<img src="${Img403}"><h2 class="exception-text" style="${h2Style}">${message}</h2>`
         + `</div>`;
 
-  document.write(content);
+  [403].includes(err.status) && [1302403].includes(errCode)
+    ? window.open(`${window.SITE_URL}403?message=${err.data.message || err.message}`, '_self')
+    : document.write(content);
 });
