@@ -32,6 +32,7 @@ import store from './store';
 import { injectCSRFTokenToHeaders } from './api';
 import auth from './common/auth';
 import Img403 from './images/403.png';
+import Svg403 from './images/403.svg';
 import Exception from './components/exception/index.vue';
 import { bus } from './common/bus';
 import AuthComponent from './components/auth/index.vue';
@@ -170,13 +171,19 @@ auth.requestCurrentUser().then(user => {
         + 'transform: translate(-50%, -50%);';
 
   const h2Style = 'font-size: 20px;color: #979797; margin: 32px 0;font-weight: normal';
+  const messageStyle = 'font-size: 14px;color: #979797;';
 
   const content = ``
         + `<div class="bk-exception bk-exception-center" style="${divStyle}">`
         + `<img src="${Img403}"><h2 class="exception-text" style="${h2Style}">${message}</h2>`
         + `</div>`;
 
-  [403].includes(err.status) && [1302403].includes(errCode)
-    ? window.open(`${window.SITE_URL}403?message=${err.data.message || err.message}`, '_self')
-    : document.write(content);
+  const noPermContent = ``
+        + `<div class="bk-exception bk-exception-center" style="${divStyle}">`
+        + `<img src="${Svg403}"><h2 class="exception-text" style="${h2Style}">${il8nNew('common', '无该应用访问权限')}</h2>`
+        + `<div style="${messageStyle}">${err.message || err.data.message}</div>`
+        + `</div>`;
+
+  const renderHtml = [403].includes(err.status) && [1302403].includes(errCode) ? noPermContent : content;
+  document.write(renderHtml);
 });
