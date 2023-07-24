@@ -162,7 +162,7 @@ auth.requestCurrentUser().then(user => {
   const errCode = response && response.data ? response.data.code : err.code;
   const divStyle = ''
         + 'text-align: center;'
-        + 'width: 400px;'
+        + 'width: 700px;'
         + 'margin: auto;'
         + 'position: absolute;'
         + 'top: 50%;'
@@ -178,7 +178,7 @@ auth.requestCurrentUser().then(user => {
         + `</div>`;
   const noPermContent = ``
         + `<div class="bk-exception bk-exception-center" style="${divStyle}">`
-        + `<img src="${Svg403}"><h2 class="exception-text" style="${h2Style}${h2NoPermStyle}">${il8nNew('common', '无该应用访问权限')}</h2>`
+        + `<img src="${Svg403}" width=400><h2 class="exception-text" style="${h2Style}${h2NoPermStyle}">${il8nNew('common', '无该应用访问权限')}</h2>`
         + `<div style="${messageStyle}">${message}</div>`
         + `</div>`;
   const renderHtml = [403].includes(response.status) && [1302403].includes(errCode) ? noPermContent : content;
