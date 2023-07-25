@@ -505,6 +505,12 @@
           const { code, data } = await this.$store.dispatch('system/getSystems', params);
           if (data.length) {
             data.sort((curr, next) => curr.name.localeCompare(next.name));
+            if (this.externalSystemId) {
+              const externalSystemIndex = data.findIndex(item => item.id === this.externalSystemId);
+              if (externalSystemIndex > -1) {
+                data.splice(externalSystemIndex, 1, ...data.splice(0, 1, data[externalSystemIndex]));
+              }
+            }
           }
           this.systemList = _.cloneDeep(data);
           this.curSystemList = _.cloneDeep(data);

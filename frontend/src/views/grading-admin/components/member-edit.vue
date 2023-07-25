@@ -164,7 +164,8 @@
         });
       },
       handleBlur () {
-        if (!this.isEditable || this.newVal.length < 1) {
+        this.isEditable = false;
+        if (!this.isEditable && this.newVal.length < 1) {
           this.newVal = [...this.value].map(e => e.username);
           this.messageError(this.$t(`m.verify['管理员不能为空']`), 2000);
           return;
@@ -282,7 +283,7 @@
             }
           }
         }
-        this.isEditable = false;
+        // this.isEditable = false;
       },
       triggerChange () {
         this.isEditable = false;

@@ -211,7 +211,7 @@
       },
 
       hideEdit (event) {
-        this.isEditable = false;
+        // this.isEditable = false;
         if (this.displayValue.length < 1) {
           return;
         }
@@ -254,9 +254,9 @@
       },
 
       handleRtxBlur () {
+        this.isEditable = false;
         this.deleteList = [];
         if (JSON.stringify(this.displayValue) !== JSON.stringify(this.value)) {
-          this.isEditable = false;
           if (this.displayValue.length < 1) {
             this.handleDefaultData(this.value);
             this.messageError(this.$t(`m.verify['管理员不能为空']`), 2000);
