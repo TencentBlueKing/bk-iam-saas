@@ -335,7 +335,6 @@
               });
             }
           });
-          console.log(list, value, 555);
           this.originalList = _.cloneDeep(list);
         },
         deep: true
