@@ -211,7 +211,7 @@
                     return item.aggregationId !== '' ? counter.concat(item.aggregationId) : counter;
                 }, []);
                 const temps = [];
-                console.log('aggregationIds', this.tableList, aggregationIds);
+                // console.log('aggregationIds', this.tableList, aggregationIds);
                 aggregationIds.forEach(item => {
                     if (!temps.some(sub => sub.includes(item))) {
                         temps.push([item]);
@@ -291,6 +291,54 @@
         if (!value) {
           this.permSideWidth = 960;
         }
+      },
+      tableList: {
+        handler (value) {
+          const list = [];
+          value.forEach(item => {
+            if (item.isAggregate) {
+              item.actions && item.actions.forEach(act => {
+                const tempResource = _.cloneDeep(act.resource_groups);
+                tempResource.forEach(groupItem => {
+                  groupItem.related_resource_types
+                    && groupItem.related_resource_types.forEach(subItem => {
+                      subItem.condition = null;
+                    });
+                });
+                list.push({
+                  description: act.description,
+                  expired_at: act.expired_at,
+                  id: act.id,
+                  name: act.name,
+                  system_id: item.detail ? item.detail.system.id : item.system.id,
+                  system_name: item.detail ? item.detail.system.name : item.system.name,
+                  $id: `${item.detail ? item.detail.system.id : item.system.id}&${act.id}`,
+                  tag: act.tag,
+                  type: act.type,
+                  related_actions: act.related_actions,
+                  resource_groups: tempResource
+                });
+              });
+            } else {
+              list.push({
+                description: item.description,
+                expired_at: item.expired_at,
+                id: item.id,
+                name: item.name,
+                system_id: item.detail ? item.detail.system.id : item.system.id,
+                system_name: item.detail ? item.detail.system.name : item.system.name,
+                $id: `${item.detail ? item.detail.system.id : item.system.id}&${item.id}`,
+                tag: item.tag,
+                type: item.type,
+                related_actions: item.related_actions,
+                resource_groups: item.resource_groups
+              });
+            }
+          });
+          console.log(list, value, 555);
+          this.originalList = _.cloneDeep(list);
+        },
+        deep: true
       }
     },
     async mounted () {
@@ -588,10 +636,10 @@
         const { customPerm } = payload;
         if (customPerm) {
           this.hasAddCustomList = [...customPerm];
-          if (!customPerm.length) {
-            this.tableList = [];
-            this.tableListBackup = [];
-          }
+          // if (!customPerm.length) {
+          //   this.tableList = [];
+          //   this.tableListBackup = [];
+          // }
         }
         this.isShowAddSideslider = false;
         this.permSideWidth = 960;
