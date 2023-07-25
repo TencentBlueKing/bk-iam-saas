@@ -11,6 +11,7 @@ specific language governing permissions and limitations under the License.
 from typing import Dict
 
 from django.conf import settings
+from django.utils import translation
 
 from backend.common.local import local
 from backend.util.url import url_join
@@ -25,6 +26,7 @@ def _call_esb_api(http_func, url_path, data, timeout=30):
     headers = {
         "Content-Type": "application/json",
         "X-Request-Id": local.request_id,
+        "blueking-language": translation.get_language(),
     }
 
     # Note: 目前企业版ESB调用的鉴权信息都是与接口的参数一起的，并非在header头里
