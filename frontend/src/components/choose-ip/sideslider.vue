@@ -10,7 +10,7 @@
     @update:isShow="handleCancel">
     <div slot="content" class="content" v-bkloading="{ isLoading: loading, opacity: 1 }">
       <div
-        v-if="noLimitRoutes.includes($route.name)"
+        v-if="isShowUnlimited"
         class="no-limited-wrapper flex-between"
         :style="{ borderBottom: !isHide ? 0 : '' }"
         :title="$t(`m.resource['无限制总文案']`)">
@@ -98,6 +98,7 @@
 </template>
 <script>
   import _ from 'lodash';
+  import { mapGetters } from 'vuex';
   import { leaveConfirm } from '@/common/leave-confirm';
   import { formatCodeData } from '@/common/util';
   import TopologyInput from '@/components/choose-ip/topology-input';
@@ -170,7 +171,7 @@
         isScrollBottom: false,
         isHide: false,
         notLimitValue: false,
-        noLimitRoutes: ['applyCustomPerm'], // 需要展示无限制的页面
+        noLimitRoutes: ['createUserGroup', 'cloneUserGroup', 'addGroupPerm'], // 需要展示无限制的页面
         emptyData: {
           type: 'empty',
           text: '暂无数据',
@@ -180,6 +181,7 @@
       };
     },
     computed: {
+      ...mapGetters(['user']),
       curPlaceholder () {
         if (this.params.name) {
           return `${this.$t(`m.common['搜索']`)} ${this.params.name}`;
@@ -194,6 +196,12 @@
       },
       isHasDefaultData () {
         return this.defaultList.length > 0;
+      },
+      isShowUnlimited () {
+        const result = ['applyCustomPerm'].includes(this.$route.name)
+        || (['super_manager', 'system_manager'].includes(this.user.role.type)
+         && this.noLimitRoutes.includes(this.$route.name));
+        return result;
       }
     },
     watch: {
