@@ -353,7 +353,8 @@ export const m = {
         '请选择系统': 'Please select system',
         '请选择操作': 'Please select the actions',
         '请选择资源类型': 'Please select resource type',
-        '管理空间名称不能为空': 'Management space name cannot be empty'
+        '管理空间名称不能为空': 'Management space name cannot be empty',
+        '请选择用户成员': 'Please select user member'
     },
     info: {
         '加入用户组申请成功': 'Apply to join the group successfully',
@@ -508,7 +509,8 @@ export const m = {
          '用户组成员添加权限': 'Add permissions to user group {value}',
          '天数': '{value} days',
          '第几项实例和属性不能都为空': 'The instance and attribute of item {value} cannot be empty',
-         '权限个数': '{value} permissions'
+         '权限个数': '{value} permissions',
+         '已经复制到粘贴板，可在其他用户组添加成员时粘贴到手动输入框': 'Has been copied to the clipboard and can be pasted into the manual input box when adding members to other user groups'
     },
     // 二次确认弹窗相关
     dialog: {
@@ -770,8 +772,8 @@ export const m = {
         '用户组': 'Group',
         '用户组名': 'Group name',
         '用户/组织': 'User / Org',
-        '添加成员': 'Add Members',
-        '添加权限': 'Add Permissions',
+        '添加成员': 'Add members',
+        '添加权限': 'Add permissions',
         '新建用户组': 'New User Group',
         '用户组克隆': 'Clone User Group',
         '添加组成员': 'Add members',
@@ -798,7 +800,10 @@ export const m = {
         '不可被申请': 'Unavailable for Application',
         '设置不可被申请': 'Set as Unavailable for Application',
         '该组织能管理员主动授权，用户无法主动申请': 'The organization can be actively authorized by administrators, but users cannot actively apply',
-        '勾选后，该用户组只能通过管理员主动授权': 'After checking, the user group can only be actively authorized by the administrator'
+        '勾选后，该用户组只能通过管理员主动授权': 'After checking, the user group can only be actively authorized by the administrator',
+        '复制成员': 'Copy members',
+        '复制已选成员': 'Copy selected members',
+        '复制所有成员': 'Copy all members'
     },
     userGroupDetail: {
         '用户组名': 'Group name: ',

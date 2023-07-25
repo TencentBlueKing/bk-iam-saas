@@ -209,6 +209,12 @@
           });
           if (data.length) {
             data.sort((curr, next) => curr.name.localeCompare(next.name));
+            if (this.externalSystemId) {
+              const externalSystemIndex = data.findIndex(item => item.id === this.externalSystemId);
+              if (externalSystemIndex > -1) {
+                data.splice(externalSystemIndex, 1, ...data.splice(0, 1, data[externalSystemIndex]));
+              }
+            }
           }
           this.groupSystemList = data; // groupSystemList会通过handleExpanded调用其他方法做属性的添加
           this.groupSystemListLength = data.length;
