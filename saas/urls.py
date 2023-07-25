@@ -17,6 +17,7 @@ from rest_framework import permissions
 
 # Monkey Patch: rest_framework.serializers.Serializer
 import backend.util.serializer_patch  # noqa
+from backend.common.views import login_exempt
 from backend.common.vue import LoginSuccessView, VueTemplateView
 
 schema_view = get_schema_view(
@@ -86,5 +87,5 @@ if settings.IS_LOCAL:
 # static file
 urlpatterns += [
     url(r"^login_success/", never_cache(LoginSuccessView.as_view())),
-    url(r"^.*$", never_cache(VueTemplateView.as_view())),
+    url(r"^.*$", never_cache(login_exempt(VueTemplateView.as_view()))),
 ]

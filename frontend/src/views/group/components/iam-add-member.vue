@@ -653,11 +653,17 @@
           }
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: this.$t(`m.verify['用户名输入格式错误]`)
-          });
+          const { response } = e;
+          // 处理如果是前端校验为空导致的报错，使用前端自定义提示
+          if (response && [400].includes(response.status)) {
+            this.messageError(this.$t(`m.verify['用户名输入格式错误']`), 2000);
+          } else {
+            this.bkMessageInstance = this.$bkMessage({
+              limit: 1,
+              theme: 'error',
+              message: e.message || e.data.msg || e.statusText
+            });
+          }
         } finally {
           this.manualAddLoading = false;
         }

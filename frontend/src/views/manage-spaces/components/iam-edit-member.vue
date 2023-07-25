@@ -189,8 +189,9 @@
           return;
         }
         this.roleIndex = index;
-        this.isShowDialog = true;
+        // this.isShowDialog = true;
         this.deleteList = [this.displayValue[index].username];
+        this.handleDeleteRole();
       },
 
       async handleDeleteRole () {
@@ -210,7 +211,7 @@
       },
 
       hideEdit (event) {
-        this.isEditable = false;
+        // this.isEditable = false;
         if (this.displayValue.length < 1) {
           return;
         }
@@ -253,9 +254,9 @@
       },
 
       handleRtxBlur () {
+        this.isEditable = false;
         this.deleteList = [];
         if (JSON.stringify(this.displayValue) !== JSON.stringify(this.value)) {
-          this.isEditable = false;
           if (this.displayValue.length < 1) {
             this.handleDefaultData(this.value);
             this.messageError(this.$t(`m.verify['管理员不能为空']`), 2000);
@@ -265,7 +266,8 @@
             !this.editValue.includes(item.username) && !item.readonly).map(v => v.username);
           this.roleIndex = -1;
           if (this.deleteList.length) {
-            this.isShowDialog = true;
+            this.handleDeleteRole();
+            // this.isShowDialog = true;
           } else {
             this.$emit('on-change', {
               [this.field]: this.displayValue

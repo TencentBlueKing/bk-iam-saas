@@ -544,6 +544,9 @@ export function formatCodeData (type, payload, isEmpty = true) {
     },
     1902222: () => {
       return Object.assign(payload, { type: 500, text: '搜索结果太多', tipType: 'refresh' });
+    },
+    1302403: () => {
+      return Object.assign(payload, { type: 403, text: '无该应用访问权限', tipType: 'noPerm', message: payload.message || '' });
     }
   };
   return codeData[type] ? codeData[type]() : codeData[500]();
