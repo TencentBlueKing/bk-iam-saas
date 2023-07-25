@@ -128,7 +128,7 @@ export const beforeEach = async (to, from, next) => {
     }
   }
 
-  if (['applyCustomPerm', 'myManageSpace', 'myPerm', 'permTransfer', 'permRenewal'].includes(to.name)
+  if (['applyJoinUserGroup', 'applyCustomPerm', 'myManageSpace', 'myPerm', 'permTransfer', 'permRenewal'].includes(to.name)
       || (['permRenewal'].includes(to.name) && to.query.source === 'email')) {
     await store.dispatch('role/updateCurrentRole', { id: 0 });
     await store.dispatch('userInfo');

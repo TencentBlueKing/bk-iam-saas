@@ -649,11 +649,16 @@
           }
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: this.$t(`m.verify['用户名输入格式错误]`)
-          });
+          const { response } = e;
+          if (response && [400].includes(response.status)) {
+            this.messageError(this.$t(`m.verify['用户名输入格式错误']`), 2000);
+          } else {
+            this.bkMessageInstance = this.$bkMessage({
+              limit: 1,
+              theme: 'error',
+              message: e.message || e.data.msg || e.statusText
+            });
+          }
         } finally {
           this.manualAddLoading = false;
         }

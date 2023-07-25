@@ -80,6 +80,16 @@
           const systemPolicyList = v.map(item => new PermSystem(item));
           this.systemPolicyList.splice(0, this.systemPolicyList.length, ...systemPolicyList);
           this.systemPolicyList.sort((curr, next) => curr.name.localeCompare(next.name));
+          if (this.externalSystemId && this.systemPolicyList.length > 1) {
+            const externalSystemIndex = this.systemPolicyList.findIndex(item => item.id === this.externalSystemId);
+            if (externalSystemIndex > -1) {
+              this.systemPolicyList.splice(
+                externalSystemIndex,
+                1,
+                ...this.systemPolicyList.splice(0, 1, this.systemPolicyList[externalSystemIndex])
+              );
+            }
+          }
           this.onePerm = systemPolicyList.length;
         },
         immediate: true,
