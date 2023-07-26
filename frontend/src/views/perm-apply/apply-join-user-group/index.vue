@@ -248,7 +248,7 @@
         <bk-table
           size="small"
           ext-cls="user-group-table user-group-table-selected"
-          :data="curSelectTableData"
+          :data="currentSelectedGroups"
         >
           <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
             <template slot-scope="{ row }">
@@ -488,7 +488,8 @@
         tableList: [],
         currentSelectList: [],
         curUserGroup: [],
-        curSelectTableData: [],
+        currentSelectedGroups: [],
+        defaultSelectTableData: [],
         searchParams: {},
         searchList: [],
         searchValue: [],
@@ -989,7 +990,6 @@
       },
 
       async handleSearchUserGroup (isClick = false) {
-        console.log(this.currentSelectList, 4545);
         this.handleManualInput();
         if (this.applyGroupData.system_id && this.enableGroupInstanceSearch) {
           if (!this.applyGroupData.system_id) {
@@ -1056,6 +1056,8 @@
           this.tableList.splice(0, this.tableList.length, ...(results || []));
           this.emptyData.tipType = 'search';
           this.$nextTick(() => {
+            const selectAllGroups = this.currentSelectedGroups.length
+              && this.currentSelectedGroups.map(item => item.id.toString());
             this.tableList.forEach((item) => {
               if (item.role_members && item.role_members.length) {
                 item.role_members = item.role_members.map(v => {
@@ -1065,7 +1067,7 @@
                   };
                 });
               }
-              if (this.curUserGroup.includes(item.id.toString())) {
+              if (selectAllGroups.includes(item.id.toString())) {
                 this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
                 this.currentSelectList.push(item);
               }
@@ -1109,6 +1111,8 @@
           this.pagination.count = count || 0;
           this.tableList.splice(0, this.tableList.length, ...(results || []));
           this.$nextTick(() => {
+            const selectAllGroups = this.currentSelectedGroups.length
+              && this.currentSelectedGroups.map(item => item.id.toString());
             this.tableList.forEach((item) => {
               if (item.role_members && item.role_members.length) {
                 item.role_members = item.role_members.map(v => {
@@ -1118,7 +1122,7 @@
                   };
                 });
               }
-              if (this.curUserGroup.includes(item.id.toString())) {
+              if (selectAllGroups.includes(item.id.toString())) {
                 this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
                 this.currentSelectList.push(item);
               }
@@ -1201,6 +1205,7 @@
 
       resetPagination () {
         this.currentSelectList = [];
+        this.currentSelectedGroups = _.cloneDeep(this.defaultSelectTableData);
         this.pagination = Object.assign(
           {},
           {
@@ -1339,20 +1344,36 @@
         this.isShowPermSideSlider = false;
       },
 
-      handlerAllChange (selection) {
-        this.currentSelectList = selection.filter(item => !this.curUserGroup.includes(item.id.toString()));
+      fetchSelectedGroups (type, payload, row) {
         this.isShowGroupError = false;
+        const typeMap = {
+          multiple: () => {
+            const isChecked = payload.length && payload.indexOf(row) !== -1;
+            if (isChecked) {
+              this.currentSelectedGroups.push(row);
+            } else {
+              this.currentSelectedGroups = this.currentSelectedGroups.filter(
+                (item) => item.id.toString() !== row.id.toString()
+              );
+            }
+          },
+          all: () => {
+            const list = payload.filter(item => !this.curUserGroup.includes(item.id.toString()));
+            this.currentSelectList = _.cloneDeep(list);
+            const selectGroups
+              = this.currentSelectedGroups.filter(item => this.curUserGroup.includes(item.id.toString()));
+            this.currentSelectedGroups = [...selectGroups, ...list];
+          }
+        };
+        return typeMap[type]();
+      },
+
+      handlerAllChange (selection) {
+        this.fetchSelectedGroups('all', selection);
       },
 
       handlerChange (selection, row) {
-        const selectionIds = selection.map(item => item.id.toString());
-        const list = selection.filter(item => !this.curUserGroup.includes(item.id.toString()));
-        this.currentSelectList = _.cloneDeep(list);
-        const curSelectTableData = _.cloneDeep(
-          this.curSelectTableData.filter(item => !selectionIds.includes(item.id)));
-        this.curSelectTableData = _.cloneDeep(curSelectTableData);
-        console.log(curSelectTableData, 45454);
-        this.isShowGroupError = false;
+        this.fetchSelectedGroups('multiple', selection, row);
       },
 
       async fetchCurUserGroup () {
@@ -1361,28 +1382,33 @@
             page_size: 10000,
             page: 1
           });
-          const groupIdList = [];
-          const tableData = data.results && data.results.filter(
-            (item) => item.department_id === 0);
-          tableData.forEach((item) => {
-            groupIdList.push(item.id);
-            if (item.role_members && item.role_members.length) {
-              item.role_members = item.role_members.map(v => {
-                return {
-                  username: v,
-                  readonly: false
-                };
-              });
-            }
-          });
-          this.curUserGroup = _.cloneDeep(groupIdList);
-          this.curSelectTableData = _.cloneDeep(tableData || []);
+          if (data.results && data.results.length) {
+            const groupIdList = [];
+            const tableData = data.results.filter((item) => item.department_id === 0);
+            tableData.forEach((item) => {
+              groupIdList.push(item.id);
+              if (item.role_members && item.role_members.length) {
+                item.role_members = item.role_members.map((v) => {
+                  return {
+                    username: v,
+                    readonly: false
+                  };
+                });
+              }
+            });
+            this.curUserGroup = _.cloneDeep(groupIdList);
+            this.currentSelectedGroups = _.cloneDeep(tableData || []);
+            // 处理异常情况下重置分页，需要展示默认数据
+            this.defaultSelectTableData = _.cloneDeep(tableData || []);
+          }
           this.emptyData = formatCodeData(code, this.emptyData, this.curUserGroup.length === 0);
         } catch (e) {
           this.$emit('toggle-loading', false);
           this.emptyData = formatCodeData(e.code, this.emptyData);
           console.error(e);
           this.curUserGroup = [];
+          this.currentSelectedGroups = [];
+          this.defaultSelectTableData = [];
           this.bkMessageInstance = this.$bkMessage({
             limit: 1,
             theme: 'error',
@@ -1508,7 +1534,7 @@
         const params = {
           expired_at: this.expiredAtUse,
           reason: this.reason,
-          groups: this.currentSelectList.map(({ id, name, description }) => ({ id, name, description })),
+          groups: this.currentSelectedGroups.map(({ id, name, description }) => ({ id, name, description })),
           applicants: subjects
         };
         try {
