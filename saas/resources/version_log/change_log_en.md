@@ -1,3 +1,11 @@
+<!-- 2023-07-26 -->
+# V1.10.11 ChangeLog
+
+### New Features
+* Switching ESB interface login, supporting ESB authentication for application permissions.
+
+---
+
 <!-- 2023-07-17 -->
 # V1.10.10 ChangeLog
 

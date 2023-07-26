@@ -153,8 +153,8 @@ auth.requestCurrentUser().then(user => {
   const { response } = err;
   if (response && response.status === 403) {
     message = il8nNew('common', '权限不足');
-    if (err.data) {
-      message = err.data.message || err.data.msg;
+    if (response && response.data) {
+      message = response.data.message || response.data.msg;
     }
   } else {
     message = il8nNew('info', '无法连接到后端服务');
