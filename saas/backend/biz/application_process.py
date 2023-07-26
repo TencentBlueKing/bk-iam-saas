@@ -10,12 +10,15 @@ specific language governing permissions and limitations under the License.
 """
 from abc import ABC, abstractmethod
 from copy import deepcopy
-from typing import List
+from typing import Any, Dict, List
 
+from blue_krill.web.std_error import APIError
+from django.conf import settings
+from django.utils.functional import cached_property
 from pydantic import BaseModel
 
-from backend.biz.resource import ResourceBiz, ResourceNodeAttributeDictBean, ResourceNodeBean
-from backend.service.constants import ANY_ID
+from backend.apps.role.models import Role, RoleResourceRelation, RoleUser
+from backend.service.constants import ANY_ID, ProcessorNodeType, RoleType
 from backend.service.models.approval import ApprovalProcessWithNodeProcessor
 from backend.util.uuid import gen_uuid
 
@@ -28,6 +31,8 @@ from .policy import (
     ResourceGroupBean,
     ResourceGroupBeanList,
 )
+from .resource import ResourceBiz, ResourceNodeAttributeDictBean, ResourceNodeBean
+from .role import RoleAuthorizationScopeChecker
 
 
 class PolicyProcess(BaseModel):
@@ -45,6 +50,9 @@ class PolicyProcessHandler(ABC):
     """
     处理policy - process的管道
     """
+
+    def __init__(self, system_id: str) -> None:
+        self.system_id = system_id
 
     @abstractmethod
     def handle(self, policy_process_list: List[PolicyProcess]) -> List[PolicyProcess]:
@@ -129,11 +137,14 @@ class InstanceApproverHandler(PolicyProcessHandler):
                             continue
 
                         # 复制出单实例的policy
-                        copied_policy = self._copy_policy_by_instance_path(policy, rg, rrt, instance, path)
+                        copied_policy = copy_policy_by_instance_path(policy, rg, rrt, instance, path)
 
                         # 复制出新的审批流程, 并填充实例审批人
                         copied_process = deepcopy(process)
-                        copied_process.set_instance_approver(resource_approver_dict.get_attribute(resource_node))
+                        copied_process.set_node_approver(
+                            ProcessorNodeType.INSTANCE_APPROVER.value,
+                            resource_approver_dict.get_attribute(resource_node),
+                        )
 
                         policy_process_list.append(PolicyProcess(policy=copied_policy, process=copied_process))
 
@@ -153,32 +164,6 @@ class InstanceApproverHandler(PolicyProcessHandler):
         policy_process_list.append(policy_process)
         return policy_process_list
 
-    def _copy_policy_by_instance_path(self, policy, resource_group, rrt, instance, path):
-        # 复制出单实例的policy
-        copied_policy = PolicyBean(
-            resource_groups=ResourceGroupBeanList.parse_obj(
-                [
-                    ResourceGroupBean(
-                        id=gen_uuid(),
-                        related_resource_types=[
-                            RelatedResourceBean(
-                                condition=[
-                                    ConditionBean(
-                                        attributes=[],
-                                        instances=[InstanceBean(path=[path], **instance.dict(exclude={"path"}))],
-                                    )
-                                ],
-                                **rrt.dict(exclude={"condition"}),
-                            )
-                        ],
-                        environments=resource_group.environments,
-                    )
-                ]
-            ),
-            **policy.dict(exclude={"resource_groups"}),
-        )
-        return copied_policy
-
     def _list_approver_resource_node_by_policy(self, policy: PolicyBean) -> List[ResourceNodeBean]:
         """列出policies中所有资源的节点"""
         # 需要查询资源实例审批人的节点集合
@@ -197,3 +182,211 @@ class InstanceApproverHandler(PolicyProcessHandler):
                     last_node = path[-2]
                 resource_node_set.add(ResourceNodeBean.parse_obj(last_node))
         return list(resource_node_set)
+
+
+def copy_policy_by_instance_path(policy, resource_group, rrt, instance, path):
+    # 复制出单实例的policy
+    return PolicyBean(
+        resource_groups=ResourceGroupBeanList.parse_obj(
+            [
+                ResourceGroupBean(
+                    id=gen_uuid(),
+                    related_resource_types=[
+                        RelatedResourceBean(
+                            condition=[
+                                ConditionBean(
+                                    attributes=[],
+                                    instances=[
+                                        InstanceBean(
+                                            path=[path],
+                                            type=instance.type,
+                                            name=instance.name,
+                                            name_en=instance.name_en,
+                                        )
+                                    ],
+                                )
+                            ],
+                            name=rrt.name,
+                            name_en=rrt.name_en,
+                            selection_mode=rrt.selection_mode,
+                            system_id=rrt.system_id,
+                            type=rrt.type,
+                        )
+                    ],
+                    environments=resource_group.environments,
+                )
+            ]
+        ),
+        policy_id=policy.policy_id,
+        expired_at=policy.expired_at,
+        type=policy.type,
+        name=policy.name,
+        name_en=policy.name_en,
+        description=policy.description,
+        description_en=policy.description_en,
+        expired_display=policy.expired_display,
+        action_id=policy.action_id,
+        backend_policy_id=policy.backend_policy_id,
+        auth_type=policy.auth_type,
+    )
+
+
+class GradeManagerApproverHandler(PolicyProcessHandler):
+    """分级管理员审批人"""
+
+    def __init__(self, system_id: str) -> None:
+        super().__init__(system_id)
+
+        # for cache
+        self._resource_role_ids: Dict[ResourceNodeBean, List[int]] = {}
+        self._role_id_checker: Dict[int, RoleAuthorizationScopeChecker] = {}
+
+    def handle(self, policy_process_list: List[PolicyProcess]) -> List[PolicyProcess]:
+        # 返回的结果
+        policy_process_results = []
+
+        for policy_process in policy_process_list:
+            # 没有实例审批人节点不需要处理
+            if not policy_process.process.has_grade_manager_node():
+                policy_process_results.append(policy_process)
+                continue
+
+            # 查找策略中需要查询分级管理员的资源实例
+            label_resource_policy = self._split_label_resource_policy(policy_process.policy)
+
+            if not label_resource_policy:
+                # 填充系统管理员
+                policy_process.process.set_node_approver(
+                    ProcessorNodeType.GRADE_MANAGER.value,
+                    self.system_manager_approver,
+                )
+
+                policy_process_results.append(policy_process)
+                continue
+
+            origin_policy_empty = False
+            for resource_node, part_policy in label_resource_policy.items():
+                # 查询资源实例范围的分级管理员
+                role_ids = self._query_grade_manager_role_ids(self.system_id, resource_node, part_policy)
+                if not role_ids:
+                    continue
+
+                # 查询分级管理员的成员作为审批人
+                approvers = list(set(RoleUser.objects.filter(role_id__in=role_ids).values_list("username", flat=True)))
+                copied_process = deepcopy(policy_process.process)
+                copied_process.set_node_approver(
+                    ProcessorNodeType.GRADE_MANAGER.value,
+                    approvers,
+                )
+                policy_process_results.append(PolicyProcess(policy=part_policy, process=copied_process))
+
+                # 原始的policy移除已经处理的部份
+                try:
+                    policy_process.policy.remove_resource_group_list(part_policy.resource_groups)
+                except PolicyEmptyException:
+                    origin_policy_empty = True
+
+            if origin_policy_empty:
+                continue
+
+            # 原始拆分后剩余的部分填充系统管理员
+            policy_process.process.set_node_approver(
+                ProcessorNodeType.GRADE_MANAGER.value,
+                self.system_manager_approver,
+            )
+            policy_process_results.append(policy_process)
+
+        return policy_process_results
+
+    @cached_property
+    def system_manager_approver(self) -> List[str]:
+        return Role.objects.get(type=RoleType.SYSTEM_MANAGER.value, code=self.system_id).members
+
+    def _query_grade_manager_role_ids(
+        self, system_id: str, resource_node: ResourceNodeBean, part_policy: PolicyBean
+    ) -> List[int]:
+        """查询满足授权范围的分级管理员"""
+        role_ids = self._list_related_resource_role_ids(resource_node)
+
+        if not role_ids:
+            return role_ids
+
+        role_result = []
+        # 交验满足授权范围的分级管理员
+        for checker in self._list_role_scope_checker(role_ids):
+            try:
+                checker.check_policies(system_id, [part_policy])
+                role_result.append(checker.role.id)
+            except APIError:
+                pass
+
+        return role_result
+
+    def _list_role_scope_checker(self, role_ids: List[int]) -> List[RoleAuthorizationScopeChecker]:
+        miss_role_ids = []
+        for role_id in role_ids:
+            if role_id not in self._role_id_checker:
+                miss_role_ids.append(role_id)
+
+        if miss_role_ids:
+            for role in Role.objects.filter(id__in=miss_role_ids):
+                self._role_id_checker[role.id] = RoleAuthorizationScopeChecker(role)
+
+        return [self._role_id_checker[_id] for _id in role_ids if _id in self._role_id_checker]
+
+    def _list_related_resource_role_ids(self, resource_node: ResourceNodeBean):
+        if resource_node not in self._resource_role_ids:
+            role_ids = list(
+                RoleResourceRelation.objects.filter(
+                    system_id=resource_node.system_id,
+                    resource_type_id=resource_node.type,
+                    resource_id=resource_node.id,
+                ).values_list("role_id", flat=True)
+            )
+
+            self._resource_role_ids[resource_node] = role_ids
+
+        return self._resource_role_ids[resource_node]
+
+    def _split_label_resource_policy(self, policy: PolicyBean) -> Dict[Any, PolicyBean]:
+        """分离出需要查询分级管理员的节点与部分策略"""
+        # label resource -> part policy
+        resource_node_policy: Dict[ResourceNodeBean, PolicyBean] = {}
+        # 只支持关联1个资源类型的操作查询资源审批人
+        if len(policy.list_thin_resource_type()) != 1:
+            return resource_node_policy
+
+        for rg in policy.resource_groups:
+            rrt: RelatedResourceBean = rg.related_resource_types[0]  # type: ignore
+            for condition in rrt.condition:
+                # 忽略有属性的condition
+                if not condition.has_no_attributes():
+                    continue
+
+                # 遍历所有的实例路径, 筛选出有查询有实例审批人的实例
+                for instance in condition.instances:
+                    for path in instance.path:
+                        first_node = path[0]
+                        if (first_node.system_id, first_node.type) not in settings.ROLE_RESOURCE_RELATION_TYPE_SET:
+                            continue
+
+                        node = ResourceNodeBean.parse_obj(first_node)
+                        if node not in resource_node_policy:
+                            # copy part policy
+                            resource_node_policy[node] = copy_policy_by_instance_path(policy, rg, rrt, instance, path)
+                        else:
+                            # 合并到已有的policy中
+                            resource_node_policy[node].resource_groups[0].related_resource_types[0].condition[
+                                0
+                            ].add_instances(
+                                [
+                                    InstanceBean(
+                                        path=[path],
+                                        type=instance.type,
+                                        name=instance.name,
+                                        name_en=instance.name_en,
+                                    )
+                                ]
+                            )
+
+        return resource_node_policy
