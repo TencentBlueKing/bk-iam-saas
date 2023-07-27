@@ -488,6 +488,7 @@
         currentSelectList: [],
         curUserGroup: [],
         currentSelectedGroups: [],
+        defaultSelectedGroups: [],
         searchParams: {},
         searchList: [],
         searchValue: [],
@@ -1396,7 +1397,7 @@
               }
             });
             this.curUserGroup = _.cloneDeep(groupIdList);
-            // this.currentSelectedGroups = _.cloneDeep(tableData || []);
+            this.defaultSelectedGroups = _.cloneDeep(tableData || []);
           }
           this.emptyData = formatCodeData(code, this.emptyData, this.curUserGroup.length === 0);
         } catch (e) {
@@ -1405,6 +1406,7 @@
           console.error(e);
           this.curUserGroup = [];
           this.currentSelectedGroups = [];
+          this.defaultSelectedGroups = [];
           this.bkMessageInstance = this.$bkMessage({
             limit: 1,
             theme: 'error',
@@ -1485,7 +1487,7 @@
       },
 
       async handleSubmit () {
-        if (this.currentSelectedGroups.length < 1) {
+        if (this.currentSelectList.length < 1) {
           this.isShowGroupError = true;
           this.scrollToLocation(this.$refs.selectTableRef);
           return;
@@ -1524,10 +1526,11 @@
           });
         });
         // }
+        const groupsList = [...this.defaultSelectedGroups, ...this.currentSelectedGroups];
         const params = {
           expired_at: this.expiredAtUse,
           reason: this.reason,
-          groups: this.currentSelectedGroups.map(({ id, name, description }) => ({ id, name, description })),
+          groups: groupsList.map(({ id, name, description }) => ({ id, name, description })),
           applicants: subjects
         };
         try {
