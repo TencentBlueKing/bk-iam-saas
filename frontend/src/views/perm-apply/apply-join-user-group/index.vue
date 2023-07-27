@@ -1112,11 +1112,11 @@
           const { count, results } = data;
           this.pagination.count = count || 0;
           this.tableList.splice(0, this.tableList.length, ...(results || []));
-          let selectAllGroups = [];
-          if (this.currentSelectedGroups.length) {
-            selectAllGroups = this.currentSelectedGroups.map(item => item.id.toString());
-          }
           this.$nextTick(() => {
+            let selectAllGroups = [];
+            if (this.currentSelectedGroups.length) {
+              selectAllGroups = this.currentSelectedGroups.map(item => item.id.toString());
+            }
             this.tableList.forEach((item) => {
               if (item.role_members && item.role_members.length) {
                 item.role_members = item.role_members.map(v => {
