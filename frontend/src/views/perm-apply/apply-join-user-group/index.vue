@@ -1,7 +1,7 @@
 <template>
   <smart-action class="iam-join-user-group-wrapper">
     <render-horizontal-block :label="$t(`m.permApply['选择用户组']`)" :required="true">
-      <div>
+      <div ref="selectTableRef">
         <div class="search-wrapper">
           <render-search v-if="enableGroupInstanceSearch">
             <div
@@ -290,7 +290,6 @@
             <ExceptionEmpty />
           </template>
         </bk-table>
-        <p class="user-group-error" v-if="isShowGroupError">{{ $t(`m.permApply['请选择用户组']`) }}</p>
       </section>
     </render-horizontal-block>
     <section>
@@ -1055,10 +1054,8 @@
           this.tableList.splice(0, this.tableList.length, ...(results || []));
           this.emptyData.tipType = 'search';
           this.$nextTick(() => {
-            let selectAllGroups = [];
-            if (this.currentSelectedGroups.length) {
-              selectAllGroups = this.currentSelectedGroups.map(item => item.id.toString());
-            }
+            const currentSelectedGroups = this.currentSelectedGroups.length
+              ? this.currentSelectedGroups.map(item => item.id.toString()) : [];
             this.tableList.forEach((item) => {
               if (item.role_members && item.role_members.length) {
                 item.role_members = item.role_members.map(v => {
@@ -1068,7 +1065,8 @@
                   };
                 });
               }
-              if (selectAllGroups.includes(item.id.toString())) {
+              if (currentSelectedGroups.includes(item.id.toString())
+                || this.curUserGroup.includes(item.id.toString())) {
                 this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
                 this.currentSelectList.push(item);
               }
@@ -1112,10 +1110,8 @@
           this.pagination.count = count || 0;
           this.tableList.splice(0, this.tableList.length, ...(results || []));
           this.$nextTick(() => {
-            let selectAllGroups = [];
-            if (this.currentSelectedGroups.length) {
-              selectAllGroups = this.currentSelectedGroups.map(item => item.id.toString());
-            }
+            const currentSelectedGroups = this.currentSelectedGroups.length
+              ? this.currentSelectedGroups.map(item => item.id.toString()) : [];
             this.tableList.forEach((item) => {
               if (item.role_members && item.role_members.length) {
                 item.role_members = item.role_members.map(v => {
@@ -1125,7 +1121,8 @@
                   };
                 });
               }
-              if (selectAllGroups.includes(item.id.toString())) {
+              if (currentSelectedGroups.includes(item.id.toString())
+                || this.curUserGroup.includes(item.id.toString())) {
                 this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
                 this.currentSelectList.push(item);
               }
@@ -1399,7 +1396,7 @@
               }
             });
             this.curUserGroup = _.cloneDeep(groupIdList);
-            this.currentSelectedGroups = _.cloneDeep(tableData || []);
+            // this.currentSelectedGroups = _.cloneDeep(tableData || []);
           }
           this.emptyData = formatCodeData(code, this.emptyData, this.curUserGroup.length === 0);
         } catch (e) {
@@ -1488,22 +1485,19 @@
       },
 
       async handleSubmit () {
-        let validateFlag = true;
+        if (this.currentSelectedGroups.length < 1) {
+          this.isShowGroupError = true;
+          this.scrollToLocation(this.$refs.selectTableRef);
+          return;
+        }
         if (!this.reason) {
           this.isShowReasonError = true;
-          validateFlag = false;
           this.scrollToLocation(this.$refs.reasonRef);
+          return;
         }
         if (this.expiredAtUse === 0) {
           this.isShowExpiredError = true;
-          validateFlag = false;
           this.scrollToLocation(this.$refs.expiredAtRef);
-        }
-        if (this.currentSelectList.length < 1) {
-          this.isShowGroupError = true;
-          validateFlag = false;
-        }
-        if (!validateFlag) {
           return;
         }
         this.submitLoading = true;
