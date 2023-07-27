@@ -489,7 +489,6 @@
         currentSelectList: [],
         curUserGroup: [],
         currentSelectedGroups: [],
-        defaultSelectTableData: [],
         searchParams: {},
         searchList: [],
         searchValue: [],
@@ -1209,7 +1208,6 @@
 
       resetPagination () {
         this.currentSelectList = [];
-        this.currentSelectedGroups = _.cloneDeep(this.defaultSelectTableData);
         this.pagination = Object.assign(
           {},
           {
@@ -1402,8 +1400,6 @@
             });
             this.curUserGroup = _.cloneDeep(groupIdList);
             this.currentSelectedGroups = _.cloneDeep(tableData || []);
-            // 处理异常情况下重置分页，需要展示默认数据
-            this.defaultSelectTableData = _.cloneDeep(tableData || []);
           }
           this.emptyData = formatCodeData(code, this.emptyData, this.curUserGroup.length === 0);
         } catch (e) {
@@ -1412,7 +1408,6 @@
           console.error(e);
           this.curUserGroup = [];
           this.currentSelectedGroups = [];
-          this.defaultSelectTableData = [];
           this.bkMessageInstance = this.$bkMessage({
             limit: 1,
             theme: 'error',
