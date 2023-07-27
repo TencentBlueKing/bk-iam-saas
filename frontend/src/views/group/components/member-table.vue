@@ -283,7 +283,7 @@
       },
       formatCopyMembers () {
         return this.currentSelectList.length
-        ? this.currentSelectList.map(v => v.type === 'user' ? v.id : `{${v.id}}${v.name}`).join('\n') : '';
+        ? this.currentSelectList.map(v => v.type === 'user' ? v.id : `{${v.id}}${v.name}&full_name=${v.full_name}&count=${v.member_count}*`).join('\n') : '';
       }
     },
     watch: {
@@ -401,7 +401,7 @@
                 return;
               }
               const clipboard = new ClipboardJS(event.target, {
-                text: () => data.results.map(v => v.type === 'user' ? v.id : `{${v.id}}${v.name}`).join('\n')
+                text: () => data.results.map(v => v.type === 'user' ? v.id : `{${v.id}}${v.name}&full_name=${v.full_name}&count=${v.member_count}*`).join('\n')
               });
               clipboard.on('success', () => {
                 this.messageSuccess(this.$t(`m.info['已经复制到粘贴板，可在其他用户组添加成员时粘贴到手动输入框']`), 2000, 2);
