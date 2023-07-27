@@ -211,6 +211,7 @@
               <bk-button theme="primary" text :disabled="!isShowSelectedText || isAll" @click="handleDeleteAll">{{ $t(`m.common['清空']`) }}</bk-button>
             </div>
             <div class="content">
+              {{ hasSelectedDepartments }}
               <div class="organization-content" v-if="isDepartSelectedEmpty">
                 <div class="organization-item" v-for="item in hasSelectedDepartments" :key="item.id">
                   <Icon type="file-close" class="folder-icon" />
@@ -390,6 +391,8 @@
         manualAddLoading: false,
         manualInputError: false,
         manualValueBackup: [],
+        filterUserList: [],
+        filterDepartList: [],
         isAll: false,
         isAllFlag: false,
         externalSource: '',
@@ -593,9 +596,10 @@
         if (this.tabActive === 'manual'
           && this.hasSelectedUsers.length > 0
           && this.manualValue !== '') {
+          this.fetchRegOrgData();
           const templateArr = [];
           const usernameList = this.hasSelectedUsers.map(item => item.username);
-          const manualValueBackup = this.manualValueActual.split(';').filter(item => item !== '');
+          const manualValueBackup = this.filterUserList.split(';').filter(item => item !== '');
           manualValueBackup.forEach(item => {
             const name = getUsername(item);
             if (!usernameList.includes(name)) {
@@ -610,12 +614,26 @@
         this.manualInputError = false;
       },
 
+      fetchRegOrgData () {
+        const manualList = this.manualValueActual.split(';').filter(item => item !== '');
+        this.filterDepartList = manualList.filter(item => {
+          if (item.indexOf('{') > -1 && item.indexOf('}') > -1) {
+            const str = item.slice(item.indexOf('{') + 1, item.indexOf('}'));
+            if (/^[+-]?\d*(\.\d*)?(e[+-]?\d+)?$/.test(str)) {
+              return item;
+            }
+          }
+        });
+        this.filterUserList = manualList.filter(item => !this.filterDepartList.includes(item));
+      },
+
       async handleAddManualUser () {
+        this.fetchRegOrgData();
         this.manualAddLoading = true;
         try {
           const url = this.isRatingManager ? 'role/queryRolesUsers' : 'organization/verifyManualUser';
           const res = await this.$store.dispatch(url, {
-            usernames: this.manualValueActual.split(';').filter(item => item !== '').map(item => {
+            usernames: this.filterUserList.map(item => {
               return getUsername(item);
             })
           });
@@ -626,7 +644,7 @@
             }
           );
           this.hasSelectedUsers.push(...temps);
-          if (res.data.length > 0) {
+          if (res.data.length) {
             const usernameList = res.data.map(item => item.username);
             // 分号拼接
             // const templateArr = [];
@@ -645,8 +663,17 @@
               formatStr = formatStr.replace(this.evil('/' + item + '(;\\n|\\s\\n|;|\\s|\\n|)/g'), '');
             });
             this.manualValue = formatStr;
-            if (this.manualValue !== '') {
-              this.manualInputError = true;
+            if (this.manualValue) {
+              // 校验查验失败的数据是不是属于部门
+              const departData = _.cloneDeep(formatStr.split(/;|\n|\s| /));
+              const departGroups = this.filterDepartList.filter(item => departData.includes(item));
+              if (departGroups.length) {
+                console.log(departData, formatStr, departGroups, 444554);
+                // const list = departData.map(item => {
+                //   if()
+                // })
+              }
+              this.manualInputError = departGroups.length !== this.filterDepartList;
             }
           } else {
             this.manualInputError = true;

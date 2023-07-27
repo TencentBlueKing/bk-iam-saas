@@ -37,18 +37,19 @@
                   href="javascript:;"
                   class="copy-selected-members"
                   :data-clipboard-text="formatCopyMembers"
-                  @click="handleTriggerHandler('selected')"
+                  @click="handleTriggerCopy(...arguments, 'selected')"
                 >
                   {{ $t(`m.userGroup['复制已选成员']`) }}
                 </a>
               </li>
-              <!-- <li>
+              <li>
                 <a
                   href="javascript:;"
-                  @click="handleTriggerHandler('all')">
+                  class="copy-selected-members-all"
+                  @click="handleTriggerCopy(...arguments, 'all')">
                   {{ $t(`m.userGroup['复制所有成员']`) }}
                 </a>
-              </li> -->
+              </li>
             </ul>
           </bk-dropdown-menu>
         </div>
@@ -256,34 +257,34 @@
       };
     },
     computed: {
-            ...mapGetters(['user']),
-            isNoBatchDelete () {
-                return () => {
-                    const hasData = this.tableList.length && this.currentSelectList.length;
-                    if (this.getGroupAttributes && this.getGroupAttributes().source_from_role) {
-                        const isAll = hasData && this.currentSelectList.length === this.pagination.count;
-                        this.adminGroupTitle = isAll ? this.$t(`m.userGroup['管理员组至少保留一条数据']`) : '';
-                        return isAll;
-                    }
-                    return !hasData;
-                };
-            },
-            isRatingManager () {
-                return ['rating_manager', 'subset_manager'].includes(this.user.role.type);
-            },
-            curType () {
-                return this.curData.type || 'department';
-            },
-            disabledGroup () {
-                return () => {
-                    return this.getGroupAttributes && this.getGroupAttributes().source_from_role
-                    && this.pagination.count === 1;
-                };
-            },
-            formatCopyMembers () {
-              const results = this.currentSelectList.filter(item => item.type === 'user');
-              return results.length ? results.map(v => v.id).join('\n') : '';
+      ...mapGetters(['user']),
+      isNoBatchDelete () {
+        return () => {
+            const hasData = this.tableList.length && this.currentSelectList.length;
+            if (this.getGroupAttributes && this.getGroupAttributes().source_from_role) {
+                const isAll = hasData && this.currentSelectList.length === this.pagination.count;
+                this.adminGroupTitle = isAll ? this.$t(`m.userGroup['管理员组至少保留一条数据']`) : '';
+                return isAll;
             }
+            return !hasData;
+        };
+      },
+      isRatingManager () {
+          return ['rating_manager', 'subset_manager'].includes(this.user.role.type);
+      },
+      curType () {
+          return this.curData.type || 'department';
+      },
+      disabledGroup () {
+          return () => {
+              return this.getGroupAttributes && this.getGroupAttributes().source_from_role
+              && this.pagination.count === 1;
+          };
+      },
+      formatCopyMembers () {
+        return this.currentSelectList.length
+        ? this.currentSelectList.map(v => v.type === 'user' ? v.id : `{${v.id}}${v.name}`).join('\n') : '';
+      }
     },
     watch: {
       'pagination.current' (value) {
@@ -366,12 +367,13 @@
         this.isDropdownShow = false;
       },
 
-      handleTriggerHandler (payload) {
+      async handleTriggerCopy (event, payload) {
+        // 需先保存currentTarget，因为此方法为异步方法，同步代码执行完成后，浏览器会将event事件对象的currentTarget值重置为空
+        const currentTarget = event.currentTarget;
         const typeMap = {
           selected: () => {
-            const haveUser = this.currentSelectList.find(item => ['user'].includes(item.type));
-            if (!this.currentSelectList.length || !haveUser) {
-              this.messageError(this.$t(`m.verify['请选择用户成员']`), 2000);
+            if (!this.currentSelectList.length) {
+              this.messageError(this.$t(`m.verify['请选择用户或组织成员']`), 2000);
               return;
             }
             const clipboard = new ClipboardJS('.copy-selected-members');
@@ -386,8 +388,33 @@
               console.error('复制失败', e);
             });
           },
-          all: () => {
-
+          all: async () => {
+            const params = {
+              id: this.id,
+              offset: 0,
+              limit: 1000
+            };
+            const { data } = await this.$store.dispatch('userGroup/getUserGroupMemberList', params);
+            if (data && data.results) {
+              if (!data.results.length) {
+                this.messageError(this.$t(`m.common['暂无可复制内容']`), 2000);
+                return;
+              }
+              const clipboard = new ClipboardJS(event.target, {
+                text: () => data.results.map(v => v.type === 'user' ? v.id : `{${v.id}}${v.name}`).join('\n')
+              });
+              clipboard.on('success', () => {
+                this.messageSuccess(this.$t(`m.info['已经复制到粘贴板，可在其他用户组添加成员时粘贴到手动输入框']`), 2000, 2);
+              });
+              clipboard.on('error', (e) => {
+                console.error('复制失败', e);
+              });
+              clipboard.onClick({ currentTarget });
+              // 调用后销毁，避免多次执行
+              if (clipboard) {
+                clipboard.destroy();
+              }
+            }
           }
         };
         typeMap[payload]();
