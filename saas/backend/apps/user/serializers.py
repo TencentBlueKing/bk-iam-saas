@@ -10,6 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 from rest_framework import serializers
 
+from backend.apps.role.models import RoleUser
 from backend.apps.subject.serializers import SubjectGroupSLZ
 from backend.biz.group import GroupBiz
 
@@ -27,6 +28,7 @@ class UserNewbieUpdateSLZ(serializers.Serializer):
 
 class GroupSLZ(SubjectGroupSLZ):
     role = serializers.SerializerMethodField()
+    role_members = serializers.SerializerMethodField()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -44,6 +46,15 @@ class GroupSLZ(SubjectGroupSLZ):
             return {}
 
         return role.dict()
+
+    def get_role_members(self, obj):
+        if not self.group_role_dict:
+            return []
+        role = self.group_role_dict.get(obj.id)
+        if not role:
+            return []
+
+        return list(RoleUser.objects.filter(role_id=role.id).values_list("username", flat=True))
 
 
 class QueryRoleSLZ(serializers.Serializer):
