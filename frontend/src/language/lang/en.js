@@ -271,7 +271,8 @@ export const m = {
         '资源实例': 'Resource instance',
         '批量无限制': 'Unlimited batch size',
         '无该应用访问权限': 'No access permissions for this application',
-        '暂无可复制内容': 'There is currently no replicable content'
+        '暂无可复制内容': 'There is currently no replicable content',
+        '管理员组不能添加部门': 'The administrator group cannot add department'
     },
     // 校验
     verify: {
