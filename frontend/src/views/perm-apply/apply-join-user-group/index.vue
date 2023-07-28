@@ -240,7 +240,8 @@
       </div>
       <p class="user-group-error" v-if="isShowGroupError">{{ $t(`m.permApply['请选择用户组']`) }}</p>
     </render-horizontal-block>
-    <render-horizontal-block
+    <!-- 先注释，待提供新的设计稿 -->
+    <!-- <render-horizontal-block
       :label="$t(`m.common['已选用户组']`)"
       :required="false"
     >
@@ -291,7 +292,7 @@
           </template>
         </bk-table>
       </section>
-    </render-horizontal-block>
+    </render-horizontal-block> -->
     <section>
       <!-- <template v-if="isShowMemberAdd">
                     <render-action
@@ -1526,11 +1527,12 @@
           });
         });
         // }
-        const groupsList = [...this.defaultSelectedGroups, ...this.currentSelectedGroups];
+        // const groupsList = [...this.defaultSelectedGroups, ...this.currentSelectedGroups];
         const params = {
           expired_at: this.expiredAtUse,
           reason: this.reason,
-          groups: groupsList.map(({ id, name, description }) => ({ id, name, description })),
+          // groups: groupsList.map(({ id, name, description }) => ({ id, name, description })),
+          groups: this.currentSelectList.map(({ id, name, description }) => ({ id, name, description })),
           applicants: subjects
         };
         try {
