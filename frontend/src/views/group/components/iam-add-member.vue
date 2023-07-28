@@ -291,6 +291,7 @@
 
   export default {
     name: '',
+    inject: ['getGroupAttributes'],
     components: {
       InfiniteTree,
       dialogInfiniteList,
@@ -713,7 +714,12 @@
           // 校验查验失败的数据是不是属于部门
           const departData = _.cloneDeep(this.manualValue.split(/;|\n|\s| /));
           const departGroups = this.filterDepartList.filter(item => departData.includes(item));
-          if (departGroups.length) {
+          if (departGroups.length && this.getGroupAttributes) {
+            if (this.getGroupAttributes().source_from_role) {
+              this.messageError(this.$t(`m.common['管理员组不能添加部门']`), 2000);
+              this.manualInputError = true;
+              return;
+            }
             // 重新组装粘贴的部门数据
             const list = this.manualOrgList.map(item => {
               return {
