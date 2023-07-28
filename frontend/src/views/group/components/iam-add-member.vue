@@ -111,6 +111,7 @@
                     :key="infiniteTreeKey"
                     :is-disabled="isAll"
                     :empty-data="emptyData"
+                    :has-selected-departments="hasSelectedDepartments"
                     @async-load-nodes="handleRemoteLoadNode"
                     @expand-node="handleExpanded"
                     @on-select="handleOnSelected"
@@ -155,16 +156,20 @@
                 </div>
               </template>
             </div>
-            <div class="manual-wrapper" v-if="!isOrganization">
+            <div
+              v-if="!isOrganization"
+              class="manual-wrapper"
+            >
               <bk-input
-                :placeholder="$t(`m.common['手动输入提示']`)"
-                data-test-id="group_addGroupMemberDialog_input_manualUser"
+                ref="manualInputRef"
                 type="textarea"
-                :rows="14"
                 v-model="manualValue"
+                data-test-id="group_addGroupMemberDialog_input_manualUser"
+                :placeholder="$t(`m.common['手动输入提示']`)"
+                :rows="14"
                 :disabled="isAll"
-                @input="handleManualInput">
-              </bk-input>
+                @input="handleManualInput"
+              />
               <p class="manual-error-text" v-if="isManualInputOverLimit">{{ $t(`m.common['手动输入提示1']`) }}</p>
               <p class="manual-error-text pr10" v-if="manualInputError">
                 {{ $t(`m.common['手动输入提示2']`) }}
@@ -211,7 +216,6 @@
               <bk-button theme="primary" text :disabled="!isShowSelectedText || isAll" @click="handleDeleteAll">{{ $t(`m.common['清空']`) }}</bk-button>
             </div>
             <div class="content">
-              {{ hasSelectedDepartments }}
               <div class="organization-content" v-if="isDepartSelectedEmpty">
                 <div class="organization-item" v-for="item in hasSelectedDepartments" :key="item.id">
                   <Icon type="file-close" class="folder-icon" />
@@ -391,6 +395,7 @@
         manualAddLoading: false,
         manualInputError: false,
         manualValueBackup: [],
+        manualOrgList: [],
         filterUserList: [],
         filterDepartList: [],
         isAll: false,
@@ -599,7 +604,7 @@
           this.fetchRegOrgData();
           const templateArr = [];
           const usernameList = this.hasSelectedUsers.map(item => item.username);
-          const manualValueBackup = this.filterUserList.split(';').filter(item => item !== '');
+          const manualValueBackup = this.filterUserList.filter(item => item !== '');
           manualValueBackup.forEach(item => {
             const name = getUsername(item);
             if (!usernameList.includes(name)) {
@@ -610,7 +615,24 @@
         }
       },
 
-      handleManualInput () {
+      handleManualInput (value) {
+        this.manualOrgList = [];
+        if (value) {
+          const inputValue = _.cloneDeep(value.split()[0]);
+          if (inputValue.indexOf('&full_name=') > -1 && inputValue.indexOf('&count=') > -1) {
+            const splitValue = value.split(/\n/).map(item => {
+              if (value.indexOf('&full_name=') > -1 && item.indexOf('&count=') > -1) {
+                this.manualOrgList.push(item);
+                item = item.substring(item.indexOf('{'), item.indexOf('&'));
+              }
+              return item;
+            });
+            if (this.$refs.manualInputRef) {
+              this.manualValue = splitValue.join('\n');
+              this.$refs.manualInputRef.curValue = splitValue.join('\n');
+            }
+          }
+        }
         this.manualInputError = false;
       },
 
@@ -663,20 +685,9 @@
               formatStr = formatStr.replace(this.evil('/' + item + '(;\\n|\\s\\n|;|\\s|\\n|)/g'), '');
             });
             this.manualValue = formatStr;
-            if (this.manualValue) {
-              // 校验查验失败的数据是不是属于部门
-              const departData = _.cloneDeep(formatStr.split(/;|\n|\s| /));
-              const departGroups = this.filterDepartList.filter(item => departData.includes(item));
-              if (departGroups.length) {
-                console.log(departData, formatStr, departGroups, 444554);
-                // const list = departData.map(item => {
-                //   if()
-                // })
-              }
-              this.manualInputError = departGroups.length !== this.filterDepartList;
-            }
+            this.formatOrgAndUser();
           } else {
-            this.manualInputError = true;
+            this.formatOrgAndUser();
           }
         } catch (e) {
           console.error(e);
@@ -693,6 +704,36 @@
           }
         } finally {
           this.manualAddLoading = false;
+        }
+      },
+
+      // 处理只复制部门或者部门和用户一起复制情况
+      formatOrgAndUser () {
+        if (this.manualValue) {
+          // 校验查验失败的数据是不是属于部门
+          const departData = _.cloneDeep(this.manualValue.split(/;|\n|\s| /));
+          const departGroups = this.filterDepartList.filter(item => departData.includes(item));
+          if (departGroups.length) {
+            // 重新组装粘贴的部门数据
+            const list = this.manualOrgList.map(item => {
+              return {
+                id: Number(item.slice(item.indexOf('{') + 1, item.indexOf('}'))),
+                name: item.slice(item.indexOf('}') + 1, item.indexOf('&')),
+                count: item.slice(item.indexOf('&count=') + 7, item.length - 1),
+                full_name: item.slice(item.indexOf('&full_name=') + 11, item.indexOf('&count=')),
+                type: 'depart',
+                showCount: true
+              };
+            });
+            const departTemp = list.filter(item => {
+              return !this.hasSelectedDepartments.map(subItem => subItem.id.toString()).includes(item.id.toString());
+            });
+            this.hasSelectedDepartments.push(...departTemp);
+            this.manualValue = '';
+            this.manualInputError = departGroups.length !== this.filterDepartList.length;
+          } else {
+            this.manualInputError = true;
+          }
         }
       },
 
@@ -921,7 +962,7 @@
                 child.parentNodeId = item.id;
                 child.full_name = `${item.name}：${child.name}`;
 
-                if (this.hasSelectedDepartments.length > 0) {
+                if (this.hasSelectedDepartments.length) {
                   child.is_selected = this.hasSelectedDepartments.map(
                     item => item.id
                   ).includes(child.id);
@@ -1194,9 +1235,9 @@
 
               // parentNodeId + username 组合成id
               child.id = `${child.parentNodeId}${child.username}`;
-
               if (this.hasSelectedUsers.length > 0) {
-                child.is_selected = this.hasSelectedUsers.map(item => item.id).includes(child.id);
+                child.is_selected = this.hasSelectedUsers.map(item => item.id).includes(child.id)
+                  || this.hasSelectedUsers.map(item => `${child.parentNodeId}${item.username}`).includes(child.id);
               } else {
                 child.is_selected = false;
               }
