@@ -1,7 +1,7 @@
 <template>
   <smart-action class="iam-join-user-group-wrapper">
     <render-horizontal-block :label="$t(`m.permApply['选择用户组']`)" :required="true">
-      <div class="user-group-table">
+      <div ref="selectTableRef">
         <div class="search-wrapper">
           <render-search v-if="enableGroupInstanceSearch">
             <div
@@ -240,6 +240,58 @@
       </div>
       <p class="user-group-error" v-if="isShowGroupError">{{ $t(`m.permApply['请选择用户组']`) }}</p>
     </render-horizontal-block>
+    <render-horizontal-block
+      :label="$t(`m.common['已选用户组']`)"
+      :required="false"
+    >
+      <section>
+        <bk-table
+          size="small"
+          ext-cls="user-group-table user-group-table-selected"
+          :data="currentSelectedGroups"
+        >
+          <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
+            <template slot-scope="{ row }">
+              <span class="user-group-name" :title="row.name" @click="handleView(row)">
+                {{ row.name }}
+              </span>
+            </template>
+          </bk-table-column>
+          <bk-table-column :label="$t(`m.common['描述']`)">
+            <template slot-scope="{ row }">
+              <span :title="row.description || ''">
+                {{ row.description || '--' }}
+              </span>
+            </template>
+          </bk-table-column>
+          <bk-table-column :label="$t(`m.grading['管理空间']`)">
+            <template slot-scope="{ row }">
+              <span
+                :title="row.role && row.role.name ? row.role.name : ''"
+              >
+                {{ row.role ? row.role.name : '--' }}
+              </span>
+            </template>
+          </bk-table-column>
+          <bk-table-column :label="$t(`m.levelSpace['管理员']`)">
+            <template slot-scope="{ row, $index }">
+              <iam-edit-member-selector
+                mode="detail"
+                field="members"
+                width="200"
+                :placeholder="$t(`m.verify['请输入']`)"
+                :value="row.role_members"
+                :index="$index"
+                @on-change="handleUpdateMembers"
+              />
+            </template>
+          </bk-table-column>
+          <template slot="empty">
+            <ExceptionEmpty />
+          </template>
+        </bk-table>
+      </section>
+    </render-horizontal-block>
     <section>
       <!-- <template v-if="isShowMemberAdd">
                     <render-action
@@ -435,6 +487,8 @@
         tableList: [],
         currentSelectList: [],
         curUserGroup: [],
+        currentSelectedGroups: [],
+        defaultSelectedGroups: [],
         searchParams: {},
         searchList: [],
         searchValue: [],
@@ -1001,6 +1055,8 @@
           this.tableList.splice(0, this.tableList.length, ...(results || []));
           this.emptyData.tipType = 'search';
           this.$nextTick(() => {
+            const currentSelectedGroups = this.currentSelectedGroups.length
+              ? this.currentSelectedGroups.map(item => item.id.toString()) : [];
             this.tableList.forEach((item) => {
               if (item.role_members && item.role_members.length) {
                 item.role_members = item.role_members.map(v => {
@@ -1010,7 +1066,8 @@
                   };
                 });
               }
-              if (this.curUserGroup.includes(item.id.toString())) {
+              if (currentSelectedGroups.includes(item.id.toString())
+                || this.curUserGroup.includes(item.id.toString())) {
                 this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
                 this.currentSelectList.push(item);
               }
@@ -1054,6 +1111,8 @@
           this.pagination.count = count || 0;
           this.tableList.splice(0, this.tableList.length, ...(results || []));
           this.$nextTick(() => {
+            const currentSelectedGroups = this.currentSelectedGroups.length
+              ? this.currentSelectedGroups.map(item => item.id.toString()) : [];
             this.tableList.forEach((item) => {
               if (item.role_members && item.role_members.length) {
                 item.role_members = item.role_members.map(v => {
@@ -1063,7 +1122,8 @@
                   };
                 });
               }
-              if (this.curUserGroup.includes(item.id.toString())) {
+              if (currentSelectedGroups.includes(item.id.toString())
+                || this.curUserGroup.includes(item.id.toString())) {
                 this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
                 this.currentSelectList.push(item);
               }
@@ -1284,30 +1344,69 @@
         this.isShowPermSideSlider = false;
       },
 
-      handlerAllChange (selection) {
-        this.currentSelectList = selection.filter(item => !this.curUserGroup.includes(item.id.toString()));
+      fetchSelectedGroups (type, payload, row) {
         this.isShowGroupError = false;
+        const typeMap = {
+          multiple: () => {
+            const isChecked = payload.length && payload.indexOf(row) !== -1;
+            if (isChecked) {
+              this.currentSelectedGroups.push(row);
+            } else {
+              this.currentSelectedGroups = this.currentSelectedGroups.filter(
+                (item) => item.id.toString() !== row.id.toString()
+              );
+            }
+          },
+          all: () => {
+            const list = payload.filter(item => !this.curUserGroup.includes(item.id.toString()));
+            this.currentSelectList = _.cloneDeep(list);
+            const selectGroups
+              = this.currentSelectedGroups.filter(item => this.curUserGroup.includes(item.id.toString()));
+            this.currentSelectedGroups = [...selectGroups, ...list];
+          }
+        };
+        return typeMap[type]();
+      },
+
+      handlerAllChange (selection) {
+        this.fetchSelectedGroups('all', selection);
       },
 
       handlerChange (selection, row) {
-        this.currentSelectList = selection.filter(item => !this.curUserGroup.includes(item.id.toString()));
-        this.isShowGroupError = false;
+        this.fetchSelectedGroups('multiple', selection, row);
       },
 
       async fetchCurUserGroup () {
         try {
           const { data, code } = await this.$store.dispatch('perm/getPersonalGroups', {
-            page_size: 100,
+            page_size: 10000,
             page: 1
           });
-          this.curUserGroup = data.results && data.results.filter(
-            (item) => item.department_id === 0).map((item) => item.id);
+          if (data.results && data.results.length) {
+            const groupIdList = [];
+            const tableData = data.results.filter((item) => item.department_id === 0);
+            tableData.forEach((item) => {
+              groupIdList.push(item.id);
+              if (item.role_members && item.role_members.length) {
+                item.role_members = item.role_members.map((v) => {
+                  return {
+                    username: v,
+                    readonly: false
+                  };
+                });
+              }
+            });
+            this.curUserGroup = _.cloneDeep(groupIdList);
+            this.defaultSelectedGroups = _.cloneDeep(tableData || []);
+          }
           this.emptyData = formatCodeData(code, this.emptyData, this.curUserGroup.length === 0);
         } catch (e) {
           this.$emit('toggle-loading', false);
           this.emptyData = formatCodeData(e.code, this.emptyData);
           console.error(e);
           this.curUserGroup = [];
+          this.currentSelectedGroups = [];
+          this.defaultSelectedGroups = [];
           this.bkMessageInstance = this.$bkMessage({
             limit: 1,
             theme: 'error',
@@ -1388,22 +1487,19 @@
       },
 
       async handleSubmit () {
-        let validateFlag = true;
+        if (this.currentSelectList.length < 1) {
+          this.isShowGroupError = true;
+          this.scrollToLocation(this.$refs.selectTableRef);
+          return;
+        }
         if (!this.reason) {
           this.isShowReasonError = true;
-          validateFlag = false;
           this.scrollToLocation(this.$refs.reasonRef);
+          return;
         }
         if (this.expiredAtUse === 0) {
           this.isShowExpiredError = true;
-          validateFlag = false;
           this.scrollToLocation(this.$refs.expiredAtRef);
-        }
-        if (this.currentSelectList.length < 1) {
-          this.isShowGroupError = true;
-          validateFlag = false;
-        }
-        if (!validateFlag) {
           return;
         }
         this.submitLoading = true;
@@ -1430,10 +1526,11 @@
           });
         });
         // }
+        const groupsList = [...this.defaultSelectedGroups, ...this.currentSelectedGroups];
         const params = {
           expired_at: this.expiredAtUse,
           reason: this.reason,
-          groups: this.currentSelectList.map(({ id, name, description }) => ({ id, name, description })),
+          groups: groupsList.map(({ id, name, description }) => ({ id, name, description })),
           applicants: subjects
         };
         try {
@@ -1535,61 +1632,62 @@
 </script>
 <style lang="postcss">
     .iam-join-user-group-wrapper {
-        .user-group-table {
-            .user-group-table {
-                margin-top: 10px;
-                border-right: none;
-                border-bottom: none;
-                &.set-border {
-                    border-right: 1px solid #dfe0e5;
-                    border-bottom: 1px solid #dfe0e5;
-                }
-                .user-group-name {
-                    color: #3a84ff;
-                    cursor: pointer;
-                    &:hover {
-                        color: #699df4;
-                    }
-                }
-            }
-            /* .can-view {
-                color: #3a84ff;
-                cursor: pointer;
-                &:hover {
-                    color: #699df4;
-                }
-            } */
-        }
-        .search-wrapper {
-            .info {
-                line-height: 30px;
-                font-size: 12px;
-            }
-        }
-        .expired-at-wrapper {
-            margin-top: 16px;
-        }
-        .reason-wrapper {
-            margin-top: 16px;
-            .join-reason-error {
-                .bk-textarea-wrapper {
-                    border-color: #ff5656;
-                }
-            }
-        }
-        .user-group-error,
-        .perm-recipient-error,
-        .expired-at-error,
-        .reason-empty-wrapper {
-            margin-top: 5px;
-            font-size: 12px;
-            color: #ff4d4d;
-        }
-        .is-member-empty-cls {
-            .user-selector-container {
-                border-color: #ff4d4d;
-            }
-        }
+      .user-group-table {
+          margin-top: 10px;
+          border-right: none;
+          border-bottom: none;
+          &-selected {
+            margin-top: 0;
+          }
+          &.set-border {
+              border-right: 1px solid #dfe0e5;
+              border-bottom: 1px solid #dfe0e5;
+          }
+          .user-group-name {
+              color: #3a84ff;
+              cursor: pointer;
+              &:hover {
+                  color: #699df4;
+              }
+          }
+      }
+      /* .can-view {
+          color: #3a84ff;
+          cursor: pointer;
+          &:hover {
+              color: #699df4;
+          }
+      } */
+      .search-wrapper {
+          .info {
+              line-height: 30px;
+              font-size: 12px;
+          }
+      }
+      .expired-at-wrapper {
+          margin-top: 16px;
+      }
+      .reason-wrapper {
+          margin-top: 16px;
+          .join-reason-error {
+              .bk-textarea-wrapper {
+                  border-color: #ff5656;
+              }
+          }
+      }
+      .user-group-error,
+      .perm-recipient-error,
+      .expired-at-error,
+      .reason-empty-wrapper {
+          margin-top: 5px;
+          font-size: 12px;
+          color: #ff4d4d;
+      }
+      .is-member-empty-cls {
+          .user-selector-container {
+              border-color: #ff4d4d;
+          }
+      }
     }
     .grade-members-content {
         padding: 20px;

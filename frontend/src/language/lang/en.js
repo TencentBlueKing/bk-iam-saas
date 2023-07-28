@@ -270,7 +270,8 @@ export const m = {
         '更多': 'More',
         '资源实例': 'Resource instance',
         '批量无限制': 'Unlimited batch size',
-        '无该应用访问权限': 'No access permissions for this application'
+        '无该应用访问权限': 'No access permissions for this application',
+        '暂无可复制内容': 'There is currently no replicable content'
     },
     // 校验
     verify: {
@@ -354,7 +355,7 @@ export const m = {
         '请选择操作': 'Please select the actions',
         '请选择资源类型': 'Please select resource type',
         '管理空间名称不能为空': 'Management space name cannot be empty',
-        '请选择用户成员': 'Please select user member'
+        '请选择用户或组织成员': 'Please select user or organization member'
     },
     info: {
         '加入用户组申请成功': 'Apply to join the group successfully',

@@ -46,7 +46,7 @@
           <span class="node-checkbox"
             :class="{
               'is-disabled': disabledNode(item),
-              'is-checked': item.is_selected,
+              'is-checked': selectedNode(item),
               'is-indeterminate': item.indeterminate
             }"
             @click.stop="handleNodeClick(item)">
@@ -125,6 +125,10 @@
             tipType: ''
           };
         }
+      },
+      hasSelectedDepartments: {
+        type: Array,
+        default: () => []
       }
     },
     data () {
@@ -199,6 +203,15 @@
                 return (payload) => {
                     const isDisabled = payload.disabled || this.isDisabled;
                     return this.getGroupAttributes ? isDisabled || (this.getGroupAttributes().source_from_role && payload.type === 'depart') : isDisabled;
+                };
+            },
+            selectedNode () {
+                return (payload) => {
+                    if (this.hasSelectedDepartments.length) {
+                      payload.is_selected = this.hasSelectedDepartments.map(
+                        item => item.id.toString()).includes(payload.id.toString());
+                    }
+                    return payload.is_selected;
                 };
             }
     },
