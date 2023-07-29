@@ -734,6 +734,12 @@
             const departTemp = list.filter(item => {
               return !this.hasSelectedDepartments.map(subItem => subItem.id.toString()).includes(item.id.toString());
             });
+            // 如果departTemp为空，代表添加的都是已有的部门
+            if (!departTemp.length) {
+              this.manualValue = '';
+              this.manualInputError = false;
+              return;
+            }
             const result = await this.fetchSubjectScopeCheck(departTemp);
             if (result && result.length) {
               this.hasSelectedDepartments.push(...result);
