@@ -709,7 +709,7 @@
       },
 
       // 处理只复制部门或者部门和用户一起复制情况
-      formatOrgAndUser () {
+      async formatOrgAndUser () {
         if (this.manualValue) {
           // 校验查验失败的数据是不是属于部门
           const departData = _.cloneDeep(this.manualValue.split(/;|\n|\s| /));
@@ -734,12 +734,49 @@
             const departTemp = list.filter(item => {
               return !this.hasSelectedDepartments.map(subItem => subItem.id.toString()).includes(item.id.toString());
             });
-            this.hasSelectedDepartments.push(...departTemp);
-            this.manualValue = '';
+            const result = await this.fetchSubjectScopeCheck(departTemp);
+            if (result && result.length) {
+              this.hasSelectedDepartments.push(...result);
+              this.manualValue = '';
+            } else {
+              this.messageError(this.$t(`m.verify['当前剪贴板里的内容不在授权范围内']`));
+            }
             this.manualInputError = departGroups.length !== this.filterDepartList.length;
           } else {
             this.manualInputError = true;
           }
+        }
+      },
+
+      // 校验部门/用户范围是否满足条件
+      async fetchSubjectScopeCheck (payload) {
+        const subjects = payload.map(item => {
+          const { id, type, username } = item;
+          const typeMap = {
+            depart: () => {
+              return {
+                type: 'department',
+                id
+              };
+            },
+            user: () => {
+              return {
+                type: 'user',
+                id: username
+              };
+            }
+          };
+          return typeMap[type]();
+        });
+        const { code, data } = await this.$store.dispatch('organization/getSubjectScopeCheck', { subjects });
+        if (code === 0 && data) {
+          const result = payload.filter(item => {
+            if (item.type === 'depart') {
+              item.type = 'department';
+            }
+            return data.map(v => v.type).includes(item.type) && data.map(v => v.id).includes(String(item.id));
+          });
+          return result;
         }
       },
 

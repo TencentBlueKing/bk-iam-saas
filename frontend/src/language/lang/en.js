@@ -345,6 +345,7 @@ export const m = {
         '可授权人员边界不可为空': 'The Scope of authorized personnel cannot be empty',
         '用户名输入格式错误': 'User name input format error',
         '当前选择项不在授权范围内': 'The current selection is not within the scope of authorization',
+        '当前剪贴板里的内容不在授权范围内': 'The content in the current clipboard is not within the authorized scope',
         '请选择管理空间': 'Please select management space',
         '请选择日期': 'Please select date',
         '请选择时区': 'Please select time zone',
