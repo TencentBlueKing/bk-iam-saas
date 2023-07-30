@@ -603,7 +603,8 @@
         this.tabActive = name;
         // 已选择的需要从输入框中去掉
         if (this.tabActive === 'manual'
-          && this.hasSelectedUsers.length > 0
+          && (this.hasSelectedUsers.length > 0
+            || this.hasSelectedDepartments.length > 0)
           && this.manualValue !== '') {
           this.fetchRegOrgData();
           const templateArr = [];
@@ -615,7 +616,9 @@
               templateArr.push(item);
             }
           });
-          this.manualValue = templateArr.join(';');
+          // 处理切换tab后按原有的格式回显
+          const hasSelectedData = this.manualValueActual.split(';').filter(item => templateArr.includes(item) || this.filterDepartList.includes(item));
+          this.manualValue = hasSelectedData.join('\n');
         }
       },
 
