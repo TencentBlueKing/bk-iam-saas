@@ -620,11 +620,12 @@
         this.manualOrgList = [];
         if (value) {
           const inputValue = _.cloneDeep(value.split()[0]);
-          if (inputValue.indexOf('&full_name=') > -1 && inputValue.indexOf('&count=') > -1) {
+          if (inputValue.indexOf('{') > -1 && inputValue.indexOf('}') > -1) {
             const splitValue = value.split(/\n/).map(item => {
-              if (value.indexOf('&full_name=') > -1 && item.indexOf('&count=') > -1) {
+              const str = item.slice(item.indexOf('{') + 1, item.indexOf('}'));
+              if (/^[+-]?\d*(\.\d*)?(e[+-]?\d+)?$/.test(str)) {
                 this.manualOrgList.push(item);
-                item = item.substring(item.indexOf('{'), item.indexOf('&'));
+                item = item.substring(item.indexOf('{'), item.indexOf('&') > -1 ? item.indexOf('&') : item.length);
               }
               return item;
             });
@@ -724,25 +725,19 @@
             const list = this.manualOrgList.map(item => {
               return {
                 id: Number(item.slice(item.indexOf('{') + 1, item.indexOf('}'))),
-                name: item.slice(item.indexOf('}') + 1, item.indexOf('&')),
+                name: item.slice(item.indexOf('}') + 1, item.indexOf('&') > -1 ? item.indexOf('&') : item.length),
                 count: item.slice(item.indexOf('&count=') + 7, item.length - 1),
                 full_name: item.slice(item.indexOf('&full_name=') + 11, item.indexOf('&count=')),
                 type: 'depart',
                 showCount: true
               };
             });
-            const departTemp = list.filter(item => {
-              return !this.hasSelectedDepartments.map(subItem => subItem.id.toString()).includes(item.id.toString());
-            });
-            // 如果departTemp为空，代表添加的都是已有的部门
-            if (!departTemp.length) {
-              this.manualValue = '';
-              this.manualInputError = false;
-              return;
-            }
-            const result = await this.fetchSubjectScopeCheck(departTemp);
+            const result = await this.fetchSubjectScopeCheck(list);
             if (result && result.length) {
-              this.hasSelectedDepartments.push(...result);
+              const departTemp = result.filter(item => {
+                return !this.hasSelectedDepartments.map(subItem => subItem.id.toString()).includes(item.id.toString());
+              });
+              this.hasSelectedDepartments.push(...departTemp);
               this.manualValue = '';
             } else {
               this.messageError(this.$t(`m.verify['当前剪贴板里的内容不在授权范围内']`));
