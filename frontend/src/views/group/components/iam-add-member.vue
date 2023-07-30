@@ -399,6 +399,7 @@
         manualOrgList: [],
         filterUserList: [],
         filterDepartList: [],
+        usernameList: [],
         isAll: false,
         isAllFlag: false,
         externalSource: '',
@@ -669,7 +670,7 @@
           );
           this.hasSelectedUsers.push(...temps);
           if (res.data.length) {
-            const usernameList = res.data.map(item => item.username);
+            this.usernameList = res.data.map(item => item.username);
             // 分号拼接
             // const templateArr = [];
             // this.manualValueBackup = this.manualValueActual.split(';').filter(item => item !== '');
@@ -683,7 +684,7 @@
 
             // 保存原有格式
             let formatStr = this.manualValue;
-            usernameList.forEach(item => {
+            this.usernameList.forEach(item => {
               formatStr = formatStr.replace(this.evil('/' + item + '(;\\n|\\s\\n|;|\\s|\\n|)/g'), '');
             });
             this.manualValue = formatStr;
@@ -738,11 +739,22 @@
                 return !this.hasSelectedDepartments.map(subItem => subItem.id.toString()).includes(item.id.toString());
               });
               this.hasSelectedDepartments.push(...departTemp);
-              this.manualValue = '';
+              // 备份一份粘贴板里的内容，清除组织的数据，在过滤掉组织的数据
+              let clipboardValue = _.cloneDeep(this.manualValue);
+              this.manualOrgList.forEach(item => {
+                const displayValue = item.slice(item.indexOf('{'), item.indexOf('&') > -1 ? item.indexOf('&') : item.length);
+                if (clipboardValue.split(/;|\n|\s/).includes(displayValue)) {
+                  clipboardValue = clipboardValue.replace(displayValue, '');
+                }
+              });
+              // 处理不相连的数据之间存在特殊符号的情况
+              clipboardValue = clipboardValue.split(/;|\n|\s/).filter(item => item !== '').join('\n');
+              this.manualValue = _.cloneDeep(clipboardValue);
+              this.manualInputError = !!this.manualValue.length;
             } else {
+              this.manualInputError = true;
               this.messageError(this.$t(`m.verify['当前剪贴板里的内容不在授权范围内']`));
             }
-            this.manualInputError = departGroups.length !== this.filterDepartList.length;
           } else {
             this.manualInputError = true;
           }
