@@ -172,7 +172,7 @@
               </p>
               <bk-button
                 theme="primary"
-                :style="{ width: '100%', marginTop: '35px' }"
+                :style="{ width: '100%', marginTop: '10px' }"
                 :loading="manualAddLoading"
                 :disabled="isManualDisabled || isAll"
                 data-test-id="group_addGroupMemberDialog_btn_addManualUser"
@@ -268,6 +268,7 @@
   import dialogInfiniteList from '@/components/dialog-infinite-list';
   import IamDeadline from '@/components/iam-deadline/horizontal';
   import { guid, formatCodeData } from '@/common/util';
+  import { mapGetters } from 'vuex';
   // import { bus } from '@/common/bus';
 
   // 去除()以及之间的字符
@@ -399,6 +400,7 @@
       };
     },
     computed: {
+      ...mapGetters(['user']),
       isLoading () {
         return this.requestQueue.length > 0;
       },
@@ -474,9 +476,10 @@
         return this.isRatingManager;
       },
       isHierarchicalAdmin () {
-        const { navCurRoleId, curRoleId, roleList } = this.$store.getters;
-        const roleId = navCurRoleId || curRoleId;
-        return roleList.find(item => item.id === roleId) || {};
+        // const { navCurRoleId, curRoleId, roleList } = this.$store.getters;
+        // const roleId = navCurRoleId || curRoleId;
+        // return roleList.find(item => item.id === roleId) || {};
+        return this.user.role || {};
       },
       nameType () {
         return (payload) => {
@@ -1473,9 +1476,8 @@
                 .manual-wrapper {
                     padding-right: 10px;
                     .manual-error-text {
-                        position: absolute;
+                        /* position: absolute; */
                         width: 320px;
-                        line-height: 1;
                         margin-top: 4px;
                         font-size: 12px;
                         color: #ff4d4d;

@@ -146,7 +146,7 @@
                   </template>
                 </p>
                 <bk-button theme="primary"
-                  :style="{ width: '100%', marginTop: '35px' }"
+                  :style="{ width: '100%', marginTop: '10px' }"
                   :loading="manualAddLoading" :disabled="isManualDisabled || isAll"
                   data-test-id="group_addGroupMemberDialog_btn_addManualUser"
                   @click="handleAddManualUser">
@@ -420,7 +420,7 @@
       };
     },
     computed: {
-            ...mapGetters(['externalSystemsLayout']),
+            ...mapGetters(['user', 'externalSystemsLayout']),
             isLoading () {
                 return this.requestQueue.length > 0;
             },
@@ -481,9 +481,10 @@
                 return this.isRatingManager;
             },
             isHierarchicalAdmin () {
-              const { navCurRoleId, curRoleId, roleList } = this.$store.getters;
-              const roleId = navCurRoleId || curRoleId;
-              return roleList.find(item => item.id === roleId) || {};
+              // const { navCurRoleId, curRoleId, roleList } = this.$store.getters;
+              // const roleId = navCurRoleId || curRoleId;
+              // return roleList.find(item => item.id === roleId) || {};
+              return this.user.role || {};
             },
             contentHeight () {
                 return getWindowHeight() - 120;
@@ -1656,9 +1657,8 @@
                 padding-right: 10px;
 
                 .manual-error-text {
-                    position: absolute;
+                    /* position: absolute; */
                     width: 400px;
-                    line-height: 1;
                     margin-top: 4px;
                     font-size: 12px;
                     color: #ff4d4d;

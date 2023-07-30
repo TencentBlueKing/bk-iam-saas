@@ -241,7 +241,7 @@
       };
     },
     computed: {
-            ...mapGetters(['externalSystemId']),
+            ...mapGetters(['user', 'externalSystemId']),
             isLoading () {
                 return this.initRequestQueue.length > 0;
             },
@@ -265,7 +265,8 @@
                 return this.initRequestQueue.length > 0 || !flag;
             },
             isHierarchicalAdmin () {
-                return this.$store.getters.roleList.find(item => item.id === this.$store.getters.navCurRoleId) || {};
+                // return this.$store.getters.roleList.find(item => item.id === this.$store.getters.navCurRoleId) || {};
+                return this.user.role || {};
             }
     },
     watch: {
