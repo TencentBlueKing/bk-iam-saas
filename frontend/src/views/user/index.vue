@@ -69,6 +69,8 @@
             :style="contentStyle"
             :is-sync="isSync"
             :empty-data="emptyData"
+            :has-selected-users="hasSelectedUsers"
+            :has-selected-departments="hasSelectedDepartments"
             location="page"
             @async-load-nodes="handleRemoteLoadNode"
             @expand-node="handleExpanded"

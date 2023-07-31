@@ -706,7 +706,6 @@ const store = new Vuex.Store({
         const results = data.results || [];
         results.forEach((item) => {
           if (item.type === 'system_manager') {
-            console.log(window.CUR_LANGUAGE, 444);
             const langManager = ['zh-cn'].includes(window.CUR_LANGUAGE) ? '系统管理员' : ' system administrator';
             item.name = `${item.name}${langManager}`;
           }

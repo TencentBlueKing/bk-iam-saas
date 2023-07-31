@@ -106,6 +106,8 @@
                     data-test-id="group_addGroupMemberDialog_tree_member"
                     :all-data="treeList"
                     :empty-data="emptyData"
+                    :has-selected-users="hasSelectedUsers"
+                    :has-selected-departments="hasSelectedDepartments"
                     style="height: 309px;"
                     :is-rating-manager="curIsRatingManager"
                     :key="infiniteTreeKey"
