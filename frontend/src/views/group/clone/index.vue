@@ -157,6 +157,11 @@
 
   export default {
     name: '',
+    provide: function () {
+      return {
+        getGroupAttributes: () => this.groupAttributes
+      };
+    },
     components: {
       AddMemberDialog,
       basicInfo,
@@ -210,7 +215,11 @@
         groupSystemListLength: 0,
         groupId: '',
         cloneLoading: true,
-        permSideWidth: 960
+        permSideWidth: 960,
+        groupAttributes: {
+          source_type: '',
+          source_from_role: false
+        }
       };
     },
     computed: {
@@ -385,7 +394,8 @@
             params.hidden = false;
           }
           const { data } = await this.$store.dispatch('userGroup/getUserGroupDetail', params);
-          const { name, description } = data;
+          const { name, description, attributes } = data;
+          this.groupAttributes = Object.assign(this.groupAttributes, attributes);
           this.formData = Object.assign(this.formData, {
             name: `${name}_${this.$t(`m.grading['克隆']`)}`,
             description
@@ -499,8 +509,6 @@
           this.tableList.push(..._.cloneDeep(tableData));
           this.tableListBackup = _.cloneDeep(this.tableList);
           // this.$set(item, 'tableDataBackup', tableDataBackup);
-
-          console.log('res', res);
         } catch (e) {
           console.error(e);
           this.bkMessageInstance = this.$bkMessage({

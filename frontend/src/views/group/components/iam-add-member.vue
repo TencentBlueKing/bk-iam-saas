@@ -179,7 +179,7 @@
               </p>
               <bk-button
                 theme="primary"
-                :style="{ width: '100%', marginTop: '35px' }"
+                :style="{ width: '100%', marginTop: '10px' }"
                 :loading="manualAddLoading"
                 :disabled="isManualDisabled || isAll"
                 data-test-id="group_addGroupMemberDialog_btn_addManualUser"
@@ -277,6 +277,7 @@
   import dialogInfiniteList from '@/components/dialog-infinite-list';
   import IamDeadline from '@/components/iam-deadline/horizontal';
   import { guid, formatCodeData } from '@/common/util';
+  import { mapGetters } from 'vuex';
   // import { bus } from '@/common/bus';
 
   // 去除()以及之间的字符
@@ -399,6 +400,7 @@
         manualOrgList: [],
         filterUserList: [],
         filterDepartList: [],
+        usernameList: [],
         isAll: false,
         isAllFlag: false,
         externalSource: '',
@@ -412,6 +414,7 @@
       };
     },
     computed: {
+      ...mapGetters(['user']),
       isLoading () {
         return this.requestQueue.length > 0;
       },
@@ -487,9 +490,9 @@
         return this.isRatingManager;
       },
       isHierarchicalAdmin () {
-        const { navCurRoleId, curRoleId, roleList } = this.$store.getters;
-        const roleId = navCurRoleId || curRoleId;
-        return roleList.find(item => item.id === roleId) || {};
+        // const { navCurRoleId, curRoleId, roleList } = this.$store.getters;
+        // const roleId = navCurRoleId || curRoleId;
+        return this.user.role || {};
       },
       nameType () {
         return (payload) => {
@@ -600,7 +603,8 @@
         this.tabActive = name;
         // 已选择的需要从输入框中去掉
         if (this.tabActive === 'manual'
-          && this.hasSelectedUsers.length > 0
+          && (this.hasSelectedUsers.length > 0
+            || this.hasSelectedDepartments.length > 0)
           && this.manualValue !== '') {
           this.fetchRegOrgData();
           const templateArr = [];
@@ -612,7 +616,9 @@
               templateArr.push(item);
             }
           });
-          this.manualValue = templateArr.join(';');
+          // 处理切换tab后按原有的格式回显
+          const hasSelectedData = this.manualValueActual.split(';').filter(item => templateArr.includes(item) || this.filterDepartList.includes(item));
+          this.manualValue = hasSelectedData.join('\n');
         }
       },
 
@@ -620,11 +626,12 @@
         this.manualOrgList = [];
         if (value) {
           const inputValue = _.cloneDeep(value.split()[0]);
-          if (inputValue.indexOf('&full_name=') > -1 && inputValue.indexOf('&count=') > -1) {
+          if (inputValue.indexOf('{') > -1 && inputValue.indexOf('}') > -1) {
             const splitValue = value.split(/\n/).map(item => {
-              if (value.indexOf('&full_name=') > -1 && item.indexOf('&count=') > -1) {
+              const str = item.slice(item.indexOf('{') + 1, item.indexOf('}'));
+              if (/^[+-]?\d*(\.\d*)?(e[+-]?\d+)?$/.test(str)) {
                 this.manualOrgList.push(item);
-                item = item.substring(item.indexOf('{'), item.indexOf('&'));
+                item = item.substring(item.indexOf('{'), item.indexOf('&') > -1 ? item.indexOf('&') : item.length);
               }
               return item;
             });
@@ -668,7 +675,7 @@
           );
           this.hasSelectedUsers.push(...temps);
           if (res.data.length) {
-            const usernameList = res.data.map(item => item.username);
+            this.usernameList = res.data.map(item => item.username);
             // 分号拼接
             // const templateArr = [];
             // this.manualValueBackup = this.manualValueActual.split(';').filter(item => item !== '');
@@ -682,7 +689,7 @@
 
             // 保存原有格式
             let formatStr = this.manualValue;
-            usernameList.forEach(item => {
+            this.usernameList.forEach(item => {
               formatStr = formatStr.replace(this.evil('/' + item + '(;\\n|\\s\\n|;|\\s|\\n|)/g'), '');
             });
             this.manualValue = formatStr;
@@ -709,7 +716,7 @@
       },
 
       // 处理只复制部门或者部门和用户一起复制情况
-      formatOrgAndUser () {
+      async formatOrgAndUser () {
         if (this.manualValue) {
           // 校验查验失败的数据是不是属于部门
           const departData = _.cloneDeep(this.manualValue.split(/;|\n|\s| /));
@@ -724,22 +731,70 @@
             const list = this.manualOrgList.map(item => {
               return {
                 id: Number(item.slice(item.indexOf('{') + 1, item.indexOf('}'))),
-                name: item.slice(item.indexOf('}') + 1, item.indexOf('&')),
+                name: item.slice(item.indexOf('}') + 1, item.indexOf('&') > -1 ? item.indexOf('&') : item.length),
                 count: item.slice(item.indexOf('&count=') + 7, item.length - 1),
                 full_name: item.slice(item.indexOf('&full_name=') + 11, item.indexOf('&count=')),
                 type: 'depart',
                 showCount: true
               };
             });
-            const departTemp = list.filter(item => {
-              return !this.hasSelectedDepartments.map(subItem => subItem.id.toString()).includes(item.id.toString());
-            });
-            this.hasSelectedDepartments.push(...departTemp);
-            this.manualValue = '';
-            this.manualInputError = departGroups.length !== this.filterDepartList.length;
+            const result = await this.fetchSubjectScopeCheck(list);
+            if (result && result.length) {
+              const departTemp = result.filter(item => {
+                return !this.hasSelectedDepartments.map(subItem => subItem.id.toString()).includes(item.id.toString());
+              });
+              this.hasSelectedDepartments.push(...departTemp);
+              // 备份一份粘贴板里的内容，清除组织的数据，在过滤掉组织的数据
+              let clipboardValue = _.cloneDeep(this.manualValue);
+              this.manualOrgList.forEach(item => {
+                const displayValue = item.slice(item.indexOf('{'), item.indexOf('&') > -1 ? item.indexOf('&') : item.length);
+                const isScopeOrg = result.map(depart => String(depart.id)).includes(item.slice(item.indexOf('{') + 1, item.indexOf('}')));
+                if (clipboardValue.split(/;|\n|\s/).includes(displayValue) && isScopeOrg) {
+                  clipboardValue = clipboardValue.replace(displayValue, '');
+                }
+              });
+              // 处理不相连的数据之间存在特殊符号的情况
+              clipboardValue = clipboardValue.split(/;|\n|\s/).filter(item => item !== '').join('\n');
+              this.manualValue = _.cloneDeep(clipboardValue);
+              this.manualInputError = !!this.manualValue.length;
+            } else {
+              this.manualInputError = true;
+            }
           } else {
             this.manualInputError = true;
           }
+        }
+      },
+
+      // 校验部门/用户范围是否满足条件
+      async fetchSubjectScopeCheck (payload) {
+        const subjects = payload.map(item => {
+          const { id, type, username } = item;
+          const typeMap = {
+            depart: () => {
+              return {
+                type: 'department',
+                id
+              };
+            },
+            user: () => {
+              return {
+                type: 'user',
+                id: username
+              };
+            }
+          };
+          return typeMap[type]();
+        });
+        const { code, data } = await this.$store.dispatch('organization/getSubjectScopeCheck', { subjects });
+        if (code === 0 && data) {
+          const result = payload.filter(item => {
+            if (item.type === 'depart') {
+              item.type = 'department';
+            }
+            return data.map(v => v.type).includes(item.type) && data.map(v => v.id).includes(String(item.id));
+          });
+          return result;
         }
       },
 
@@ -1580,9 +1635,8 @@
                 .manual-wrapper {
                     padding-right: 10px;
                     .manual-error-text {
-                        position: absolute;
+                        /* position: absolute; */
                         width: 320px;
-                        line-height: 1;
                         margin-top: 4px;
                         font-size: 12px;
                         color: #ff4d4d;

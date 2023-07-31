@@ -161,7 +161,7 @@ export const m = {
         '的详情': 'Detail',
         '手动输入': 'Input',
         '手动输入提示1': 'You can only add up to 100 people at a time',
-        '手动输入提示2': 'Username entered incorrectly or does not exist',
+        '手动输入提示2': 'User name or department name input error or does not exist within the scope of authorized personnel',
         '请尝试': 'Please try ',
         '修改授权人员范围': 'to modify the authorized personnel range',
         '添加到已选列表': 'Add to selected list',
@@ -512,7 +512,8 @@ export const m = {
          '天数': '{value} days',
          '第几项实例和属性不能都为空': 'The instance and attribute of item {value} cannot be empty',
          '权限个数': '{value} permissions',
-         '已经复制到粘贴板，可在其他用户组添加成员时粘贴到手动输入框': 'Has been copied to the clipboard and can be pasted into the manual input box when adding members to other user groups'
+         '已经复制到粘贴板，可在其他用户组添加成员时粘贴到手动输入框': 'Has been copied to the clipboard and can be pasted into the manual input box when adding members to other user groups',
+         '用户组为管理员组，不能添加部门': 'The {value} is administrator group and cannot add departments'
     },
     // 二次确认弹窗相关
     dialog: {

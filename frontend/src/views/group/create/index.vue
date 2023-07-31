@@ -156,6 +156,11 @@
 
   export default {
     name: '',
+    provide: function () {
+      return {
+        getGroupAttributes: () => this.groupAttributes
+      };
+    },
     components: {
       AddMemberDialog,
       basicInfo,
@@ -203,7 +208,11 @@
           id: ''
         },
         curMap: null,
-        permSideWidth: 960
+        permSideWidth: 960,
+        groupAttributes: {
+          source_type: '',
+          source_from_role: false
+        }
       };
     },
     computed: {
