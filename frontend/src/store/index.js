@@ -660,7 +660,8 @@ const store = new Vuex.Store({
       return http.get(`${AJAX_URL_PREFIX}/accounts/user/`, config).then((response) => {
         const data = response ? response.data : {};
         if (data.role.type === 'system_manager') {
-          data.role.name = `${data.role.name}${il8n('nav', '系统管理员')}`;
+          const langManager = ['zh-cn'].includes(window.CUR_LANGUAGE) ? '系统管理员' : ' system administrator';
+          data.role.name = `${data.role.name}${langManager}`;
         }
         commit('updateUser', data);
 
@@ -705,7 +706,9 @@ const store = new Vuex.Store({
         const results = data.results || [];
         results.forEach((item) => {
           if (item.type === 'system_manager') {
-            item.name = `${item.name}${il8n('nav', '系统管理员')}`;
+            console.log(window.CUR_LANGUAGE, 444);
+            const langManager = ['zh-cn'].includes(window.CUR_LANGUAGE) ? '系统管理员' : ' system administrator';
+            item.name = `${item.name}${langManager}`;
           }
         });
         commit('updateRoleListTotal', data.count || 0);
