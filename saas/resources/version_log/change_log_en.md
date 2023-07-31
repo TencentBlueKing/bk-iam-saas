@@ -1,3 +1,16 @@
+<!-- 2023-07-31 -->
+# V1.10.12 ChangeLog
+
+### New Features
+* Custom permissions can be configured to allow multi-level administrator approval.
+* Batch unlimited permissions have been added to user group creation, cloning, and permission addition.
+* Batch copying of users and organization members has been added to user group management.
+
+### Bug Fixes
+Fixed an issue where clicking on "synchronize" in the user module->user type would result in a third-party interface exception.
+
+---
+
 <!-- 2023-07-26 -->
 # V1.10.11 ChangeLog
 
