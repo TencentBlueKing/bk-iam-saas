@@ -129,6 +129,10 @@
       hasSelectedDepartments: {
         type: Array,
         default: () => []
+      },
+      hasSelectedUsers: {
+        type: Array,
+        default: () => []
       }
     },
     data () {
@@ -210,6 +214,10 @@
                     if (this.hasSelectedDepartments.length) {
                       payload.is_selected = this.hasSelectedDepartments.map(
                         item => item.id.toString()).includes(payload.id.toString());
+                    }
+                    if (this.hasSelectedUsers.length) {
+                      payload.is_selected = this.hasSelectedUsers.map(
+                        item => item.username).includes(payload.username);
                     }
                     return payload.is_selected;
                 };
