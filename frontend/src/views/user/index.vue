@@ -69,8 +69,7 @@
             :style="contentStyle"
             :is-sync="isSync"
             :empty-data="emptyData"
-            :has-selected-users="hasSelectedUsers"
-            :has-selected-departments="hasSelectedDepartments"
+            :has-selected-departments="hasSelectedDeparts"
             location="page"
             @async-load-nodes="handleRemoteLoadNode"
             @expand-node="handleExpanded"
@@ -86,6 +85,7 @@
               <dialog-infinite-list
                 :all-data="searchedResult"
                 :style="contentStyle"
+                :has-selected-departments="hasSelectedDeparts"
                 @on-checked="handleSearchSelected"
                 @on-click="handleSearchClick">
               </dialog-infinite-list>
