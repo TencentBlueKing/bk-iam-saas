@@ -38,11 +38,35 @@
         </template>
       </bk-table-column>
       <bk-table-column prop="expired_dis" :label="$t(`m.common['有效期']`)"></bk-table-column>
-      <bk-table-column :label="$t(`m.common['操作']`)">
+      <!-- <bk-table-column :label="$t(`m.common['操作']`)">
         <template slot-scope="{ row }">
           <bk-button text @click="handleDelete(row)">{{ $t(`m.common['删除']`) }}</bk-button>
         </template>
+      </bk-table-column> -->
+      <bk-table-column
+        :label="$t(`m.common['操作-table']`)"
+        :width="200"
+      >
+        <template slot-scope="{ row }">
+          <div class="custom-actions-item">
+            <bk-button
+              type="primary"
+              text
+              @click="handleShowDelDialog(row)">
+              {{ $t(`m.userGroupDetail['删除操作权限']`) }}
+            </bk-button>
+          </div>
+        </template>
       </bk-table-column>
+      <template slot="empty">
+        <ExceptionEmpty
+          :type="policyEmptyData.type"
+          :empty-text="policyEmptyData.text"
+          :tip-text="policyEmptyData.tip"
+          :tip-type="policyEmptyData.tipType"
+          @on-refresh="handleRefreshData"
+        />
+      </template>
     </bk-table>
 
     <delete-dialog
@@ -52,7 +76,7 @@
       :sub-title="deleteDialog.subTitle"
       @on-after-leave="handleAfterDeleteLeave"
       @on-cancel="hideCancelDelete"
-      @on-sumbit="handleSumbitDelete" />
+      @on-sumbit="handleSubmitDelete" />
 
     <!-- <bk-sideslider
             :is-show.sync="isShowSideslider"
@@ -106,6 +130,17 @@
           @on-change="handleChange" />
       </div>
     </bk-sideslider>
+
+    <delete-action-dialog
+      :show.sync="isShowDeleteDialog"
+      :title="delActionDialogTitle"
+      :tip="delActionDialogTip"
+      :name="currentActionName"
+      :related-action-list="delActionList"
+      @on-after-leave="handleAfterDeleteLeaveAction"
+      @on-cancel="handleCancelDelete"
+      @on-submit="handleSubmitDelete"
+    />
   </div>
 </template>
 <script>
@@ -114,13 +149,17 @@
   import DeleteDialog from '@/components/iam-confirm-dialog/index.vue';
   import RenderDetail from '../../perm/components/render-detail-edit';
   import PermPolicy from '@/model/my-perm-policy';
+  import DeleteActionDialog from '@/views/group/components/delete-related-action-dialog.vue';
+  import { formatCodeData } from '@/common/util';
+  import { mapGetters } from 'vuex';
 
   export default {
     name: '',
     components: {
       RenderDetail,
       RenderResourcePopover,
-      DeleteDialog
+      DeleteDialog,
+      DeleteActionDialog
     },
     props: {
       systemId: {
@@ -138,6 +177,17 @@
         default: () => {
           return {};
         }
+      },
+      emptyData: {
+        type: Object,
+        default: () => {
+          return {
+            type: '',
+            text: '',
+            tip: '',
+            tipType: ''
+          };
+        }
       }
     },
     data () {
@@ -151,7 +201,6 @@
         renderDetailCom: 'RenderDetail',
         isShowSideslider: false,
         curDeleteIds: [],
-
         deleteDialog: {
           visible: false,
           title: this.$t(`m.dialog['确认删除']`),
@@ -159,15 +208,31 @@
           loading: false
         },
         sidesliderTitle: '',
-
         isBatchDelete: true,
         batchDisabled: false,
         deleteLoading: false,
         disabled: true,
-        canOperate: true
+        canOperate: true,
+        isShowDeleteDialog: false,
+        currentActionName: '',
+        currentInstanceGroupName: '',
+        delActionDialogTitle: '',
+        delActionDialogTip: '',
+        delActionList: [],
+        curInstancePaths: [],
+        policyIdList: [],
+        originalCustomTmplList: [],
+        linearActionList: [],
+        policyEmptyData: {
+          type: '',
+          text: '',
+          tip: '',
+          tipType: ''
+        }
       };
     },
     computed: {
+      ...mapGetters(['user', 'externalSystemId']),
       loading () {
         return this.initRequestQueue.length > 0;
       },
@@ -179,7 +244,7 @@
     },
     watch: {
       systemId: {
-        handler (value) {
+        async handler (value) {
           if (value !== '') {
             this.initRequestQueue = ['permTable'];
             const params = {
@@ -187,6 +252,7 @@
               subjectId: this.params.username,
               systemId: value
             };
+            await this.fetchActions(value);
             this.fetchData(params);
           } else {
             this.renderDetailCom = 'RenderDetail';
@@ -194,6 +260,12 @@
             this.tableList = [];
             this.policyCountMap = {};
           }
+        },
+        immediate: true
+      },
+      emptyData: {
+        handler (value) {
+          this.policyEmptyData = Object.assign({}, value);
         },
         immediate: true
       }
@@ -204,10 +276,12 @@
        */
       async fetchData (params) {
         try {
-          const res = await this.$store.dispatch('perm/getPersonalPolicy', { ...params });
-          this.tableList = res.data.map(item => new PermPolicy(item));
+          const { code, data } = await this.$store.dispatch('perm/getPersonalPolicy', { ...params });
+          this.tableList = data && data.map(item => new PermPolicy(item));
+          this.policyEmptyData = formatCodeData(code, this.policyEmptyData, data.length === 0);
         } catch (e) {
           console.error(e);
+          this.policyEmptyData = formatCodeData(e.code, this.policyEmptyData);
           this.bkMessageInstance = this.$bkMessage({
             limit: 1,
             theme: 'error',
@@ -218,6 +292,52 @@
         } finally {
           this.initRequestQueue.shift();
         }
+      },
+
+      /**
+       * 获取系统对应的自定义操作
+       *
+       * @param {String} systemId 系统id
+       * 执行handleActionLinearData方法
+       */
+      async fetchActions (systemId) {
+        const params = {
+          system_id: systemId,
+          user_id: this.user.username
+        };
+        if (this.externalSystemId) {
+          params.system_id = this.externalSystemId;
+        }
+        try {
+          const { data } = await this.$store.dispatch('permApply/getActions', params);
+          this.originalCustomTmplList = _.cloneDeep(data || []);
+          this.handleActionLinearData();
+        } catch (e) {
+          console.error(e);
+          this.bkMessageInstance = this.$bkMessage({
+            limit: 1,
+            theme: 'error',
+            message: e.message || e.data.msg || e.statusText,
+            ellipsisLine: 2,
+            ellipsisCopy: true
+          });
+        }
+      },
+
+      handleActionLinearData () {
+        const linearActions = [];
+        this.originalCustomTmplList.forEach((item, index) => {
+          item.actions.forEach(act => {
+            linearActions.push(act);
+          })
+          ;(item.sub_groups || []).forEach(sub => {
+            sub.actions.forEach(act => {
+              linearActions.push(act);
+            });
+          });
+        });
+
+        this.linearActionList = _.cloneDeep(linearActions);
       },
 
       /**
@@ -374,33 +494,44 @@
         this.isShowSideslider = true;
       },
 
-      /**
-       * handleDelete
-       */
-      handleDelete (payload) {
-        this.curDeleteIds.splice(0, this.curDeleteIds.length, ...[payload.policy_id]);
-        this.deleteDialog.subTitle = `${this.$t(`m.dialog['将删除']`)}${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的权限']`)}`;
-        this.deleteDialog.visible = true;
+      handleShowDelDialog (payload) {
+        this.handleDeleteActionOrInstance(payload, 'action');
       },
 
       /**
-       * handleSumbitDelete
+       * handleDelete
        */
-      async handleSumbitDelete () {
+      // handleDelete (payload) {
+      //   this.curDeleteIds.splice(0, this.curDeleteIds.length, ...[payload.policy_id]);
+      //   this.deleteDialog.subTitle = `${this.$t(`m.dialog['将删除']`)}${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['的权限']`)}`;
+      //   this.deleteDialog.visible = true;
+      // },
+
+      /**
+       * handleSubmitDelete
+       */
+      async handleSubmitDelete () {
         this.deleteDialog.loading = true;
         const { type } = this.data;
         try {
-          await this.$store.dispatch('permApply/deleteSubjectPerm', {
-            policyIds: this.curDeleteIds,
+          const params = {
             systemId: this.systemId,
             subjectType: type === 'user' ? type : 'department',
             subjectId: type === 'user' ? this.data.username : this.data.id
+          };
+          await this.$store.dispatch('permApply/deleteSubjectPerm', {
+            ...params,
+            ...{
+              policyIds: this.curDeleteIds
+            }
           });
           const index = this.tableList.findIndex(item => item.policy_id === this.curDeleteIds[0]);
           if (index > -1) {
             this.tableList.splice(index, 1);
           }
           this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
+          await this.fetchActions(this.systemId);
+          await this.fetchData(params);
           this.$emit('after-delete', this.tableList.length);
         } catch (e) {
           console.error(e);
@@ -414,7 +545,81 @@
         } finally {
           this.deleteDialog.loading = false;
           this.deleteDialog.visible = false;
+          this.isShowDeleteDialog = false;
         }
+      },
+
+      // 区分删除操作还是实例
+      handleDeleteActionOrInstance (payload, type) {
+        const { id, name, condition } = payload;
+        let delRelatedActions = [];
+        this.delActionList = [];
+        const policyIdList = this.tableList.map(v => v.id);
+        const linearActionList = this.linearActionList.filter(item => policyIdList.includes(item.id));
+        const curAction = linearActionList.find(item => item.id === id);
+        const hasRelatedActions = curAction && curAction.related_actions && curAction.related_actions.length;
+        linearActionList.forEach(item => {
+          // 如果这里过滤自己还能在其他数据找到相同的related_actions，就代表有其他数据也关联了相同的操作
+          if (hasRelatedActions && item.related_actions && item.related_actions.length && item.id !== id) {
+            delRelatedActions = item.related_actions.filter(v => curAction.related_actions.includes(v));
+          }
+          if (item.related_actions && item.related_actions.includes(id)) {
+            this.delActionList.push(item);
+          }
+        });
+        let policyIds = [payload.policy_id];
+        if (this.delActionList.length) {
+          const list = this.tableList.filter(
+            item => this.delActionList.map(action => action.id).includes(item.id));
+          policyIds = [payload.policy_id].concat(list.map(v => v.policy_id));
+        }
+        this.policyIdList = _.cloneDeep(policyIds);
+        const typeMap = {
+          action: () => {
+            this.currentActionName = name;
+            if (!delRelatedActions.length && hasRelatedActions) {
+              const list = [...this.tableList].filter(v => curAction.related_actions.includes(v.id));
+              if (list.length) {
+                policyIds = policyIds.concat(list.map(v => v.policy_id));
+              }
+            }
+            this.curDeleteIds.splice(0, this.curDeleteIds.length, ...policyIds);
+            this.policyIdList = _.cloneDeep(this.curDeleteIds);
+            this.delActionDialogTitle = this.$t(`m.dialog['确认删除内容？']`, { value: this.$t(`m.dialog['删除操作权限']`) });
+            this.delActionDialogTip = this.$t(`m.info['删除依赖操作产生的影响']`, { value: this.currentActionName });
+            this.isShowDeleteDialog = true;
+          },
+          instance: () => {
+            let curPaths = [];
+            if (condition.length) {
+              curPaths = condition.reduce((prev, next) => {
+                prev.push(
+                  ...next.instances.map(v => {
+                    const paths = { ...v, ...next };
+                    delete paths.instances;
+                    return paths;
+                  })
+                );
+                return prev;
+              }, []);
+              this.curInstancePaths = [...curPaths];
+            }
+          }
+        };
+        typeMap[type]();
+      },
+
+      handleCancelDelete () {
+        this.isShowDeleteDialog = false;
+        this.curDeleteIds = [];
+      },
+
+      handleAfterDeleteLeaveAction () {
+        this.currentActionName = '';
+        this.delActionList = [];
+        this.curDeleteIds = [];
+        this.policyIdList = [];
+        this.resourceGroupParams = {};
       }
     }
   };
