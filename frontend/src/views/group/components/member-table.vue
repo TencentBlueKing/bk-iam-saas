@@ -20,10 +20,9 @@
           >
             <div
               class="group-dropdown-trigger-btn"
-              style="padding-left: 19px;"
               slot="dropdown-trigger"
             >
-              <span>{{ $t(`m.userGroup['复制成员']`) }}</span>
+              <span class="group-dropdown-text">{{ $t(`m.userGroup['复制成员']`) }}</span>
               <i
                 :class="[
                   'bk-icon icon-angle-down',
@@ -698,6 +697,9 @@
     &:hover {
       cursor: pointer;
       border-color: #979ba5;
+    }
+    .group-dropdown-text {
+      font-size: 14px;
     }
     .bk-icon {
       font-size: 22px;
