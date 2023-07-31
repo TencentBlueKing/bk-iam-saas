@@ -111,6 +111,7 @@
                     :key="infiniteTreeKey"
                     :is-disabled="isAll"
                     :empty-data="emptyData"
+                    :has-selected-users="hasSelectedUsers"
                     :has-selected-departments="hasSelectedDepartments"
                     @async-load-nodes="handleRemoteLoadNode"
                     @expand-node="handleExpanded"
