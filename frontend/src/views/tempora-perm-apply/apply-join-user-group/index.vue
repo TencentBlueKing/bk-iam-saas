@@ -11,7 +11,7 @@
             :quick-search-method="quickSearchMethod"
           />
           <div class="info">
-            {{ $t(`m.info['如果以下用户组不满足您的权限需求']`) }}，
+            {{ $t(`m.info['如果以下用户组不满足您的权限需求']`) }}{{ $t(`m.common['，']`) }}
             {{ $t(`m.common['可以']`) }}
             <bk-button text theme="primary" style="font-size: 12px" @click="handleToCustomApply">
               {{ $t(`m.applyEntrance['申请自定义权限']`) }}
@@ -42,7 +42,7 @@
           </bk-table-column>
           <bk-table-column :label="$t(`m.common['描述']`)">
             <template slot-scope="{ row }">
-              <span :title="row.description !== '' ? row.description : ''">
+              <span :title="row.description || ''">
                 {{ row.description || '--' }}
               </span>
             </template>
