@@ -530,7 +530,6 @@
             this.tableList.splice(index, 1);
           }
           this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
-          await this.fetchActions(this.systemId);
           await this.fetchData(params);
           this.$emit('after-delete', this.tableList.length);
         } catch (e) {
