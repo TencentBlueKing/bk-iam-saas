@@ -90,7 +90,7 @@
       :title="gradeSliderTitle"
       :quick-close="true"
       @animation-end="gradeSliderTitle === ''">
-      <div slot="content" class="grade-memebers-content" v-bkloading="{ isLoading: sliderLoading, opacity: 1 }"
+      <div slot="content" class="grade-members-content" v-bkloading="{ isLoading: sliderLoading, opacity: 1 }"
         data-test-id="myPerm_sideslider_gradeMemebersContent">
         <template v-if="!sliderLoading">
           <div v-for="(item, index) in gradeMembers" :key="index" class="member-item">
