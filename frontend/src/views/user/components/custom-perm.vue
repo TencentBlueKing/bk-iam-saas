@@ -8,13 +8,18 @@
         :ext-cls="sysIndex > 0 ? 'iam-perm-ext-cls' : ''"
         :title="sys.name"
         :one-perm="onePerm"
-        :perm-length="sys.count">
+        :perm-length="sys.count"
+        :is-all-delete="true"
+        @on-delete-all="handleDeleteAll(sys, sysIndex)"
+      >
         <perm-table
           :key="sys.id"
           :system-id="sys.id"
           :params="data"
           :data="data"
-          @after-delete="handleAfterDelete(...arguments, sysIndex)" />
+          :empty-data="emptyData"
+          @after-delete="handleAfterDelete(...arguments, sysIndex)"
+        />
       </custom-perm-system-policy>
     </template>
     <template v-if="isEmpty">
@@ -61,7 +66,7 @@
         onePerm: '',
         pageLoading: false,
         emptyData: {
-          type: '',
+          type: 'empty',
           text: '',
           tip: '',
           tipType: ''
@@ -100,6 +105,7 @@
           });
           this.systemList = (data || []).map(item => new PermSystem(item));
           this.onePerm = this.systemList.length;
+          this.systemList.sort((curr, next) => curr.name.localeCompare(next.name));
           this.emptyData = formatCodeData(code, this.emptyData, this.onePerm === 0);
         } catch (e) {
           console.error(e);
@@ -120,11 +126,62 @@
       /**
        * handleAfterDelete
        */
-      handleAfterDelete (payload, sysIndex) {
-        --this.systemList[sysIndex].count;
+      handleAfterDelete (policyListLen, sysIndex) {
+        this.$set(this.systemList[sysIndex], 'count', policyListLen);
         if (this.systemList[sysIndex].count < 1) {
           this.systemList.splice(sysIndex, 1);
         }
+      },
+
+      async handleDeleteAll (payload, sysIndex) {
+        const { name, id } = payload;
+        const { id: subjectId, type, username } = this.data;
+        this.$bkInfo({
+          subHeader: (
+            <div class="del-actions-warn-info">
+              <bk-icon type="info-circle-shape" class="warn" />
+              <span>{ this.$t(`m.dialog['确定要删除系统下的所有操作权限？']`, { value: name }) }</span>
+            </div>
+          ),
+          width: this.curLanguageIsCn ? 500 : 700,
+          maskClose: true,
+          closeIcon: false,
+          confirmLoading: true,
+          extCls: 'custom-perm-del-info',
+          confirmFn: async () => {
+            try {
+              const personalParams = {
+                systemId: id,
+                subjectType: type,
+                subjectId: username
+              };
+              const { code: personalCode, data } = await this.$store.dispatch('perm/getPersonalPolicy', personalParams);
+              if (personalCode === 0) {
+                const policyIdList = data.map(item => item.policy_id);
+                const deleParams = {
+                  policyIds: policyIdList,
+                  systemId: id,
+                  subjectType: type === 'user' ? type : 'department',
+                  subjectId: type === 'user' ? username : subjectId
+                };
+                const { code } = await this.$store.dispatch('permApply/deleteSubjectPerm', deleParams);
+                if (code === 0) {
+                  this.systemList.splice(sysIndex, 1);
+                  this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
+                  return true;
+                }
+              }
+            } catch (e) {
+              console.error(e);
+              this.bkMessageInstance = this.$bkMessage({
+                limit: 1,
+                theme: 'error',
+                message: e.message || e.data.msg || e.statusText
+              });
+              return false;
+            }
+          }
+        });
       },
 
       handleEmptyRefresh () {
@@ -134,19 +191,11 @@
   };
 </script>
 <style lang="postcss">
-    .iam-custom-perm-wrapper {
-        height: calc(100vh - 204px);
-        .iam-perm-ext-cls {
-            margin-top: 10px;
-        }
-        .iam-custom-perm-empty-wrapper {
-            img {
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                width: 120px;
-            }
-        }
+  @import '@/css/mixins/custom-delete-action.css';
+  .iam-custom-perm-wrapper {
+    height: calc(100vh - 204px);
+    .iam-perm-ext-cls {
+        margin-top: 10px;
     }
+  }
 </style>

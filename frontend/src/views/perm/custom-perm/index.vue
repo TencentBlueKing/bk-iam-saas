@@ -159,18 +159,5 @@
 </script>
 <style lang="postcss">
   @import './index.css';
-  .custom-perm-del-info {
-    .del-actions-warn-info {
-      display: flex;
-      align-items: center;
-      word-break: break-all;
-      .warn {
-        color: #ffb848;
-        margin-right: 10px;
-      }
-    }
-    .bk-dialog-footer {
-      padding: 12px 24px !important;
-    }
-  }
+  @import '@/css/mixins/custom-delete-action.css';
 </style>

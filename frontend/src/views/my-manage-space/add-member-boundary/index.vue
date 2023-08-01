@@ -102,10 +102,15 @@
                 <template v-if="isShowSearchResult">
                   <div class="search-content">
                     <template v-if="isHasSearchResult">
-                      <dialog-infinite-list ref="searchedResultsRef"
+                      <dialog-infinite-list
+                        ref="searchedResultsRef"
                         data-test-id="group_addGroupMemberDialog_list_searchResult"
-                        :all-data="searchedResult" :focus-index.sync="focusItemIndex"
-                        :is-disabled="isAll" style="height: 309px;"
+                        style="height: 309px;"
+                        :all-data="searchedResult"
+                        :focus-index.sync="focusItemIndex"
+                        :is-disabled="isAll"
+                        :has-selected-users="hasSelectedUsers"
+                        :has-selected-departments="hasSelectedDepartments"
                         @on-checked="handleSearchResultSelected">
                       </dialog-infinite-list>
                     </template>

@@ -130,6 +130,8 @@
                       :all-data="searchedResult"
                       :focus-index.sync="focusItemIndex"
                       :is-disabled="isAll"
+                      :has-selected-users="hasSelectedUsers"
+                      :has-selected-departments="hasSelectedDepartments"
                       style="height: 309px;"
                       @on-checked="handleSearchResultSelected">
                     </dialog-infinite-list>
