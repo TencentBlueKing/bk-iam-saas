@@ -18,8 +18,9 @@
     <bk-table
       :data="tableList"
       size="small"
-      :class="{ 'set-border': tableLoading }"
       ext-cls="system-access-table"
+      :class="{ 'set-border': tableLoading }"
+      :max-height="tableHeight"
       :pagination="pagination"
       @page-change="handlePageChange"
       @page-limit-change="handleLimitChange"
@@ -101,7 +102,7 @@
 </template>
 
 <script>
-  import { formatCodeData, timestampToTime } from '@/common/util';
+  import { formatCodeData, timestampToTime, getWindowHeight } from '@/common/util';
   import RenderStatus from './render-status';
   import moment from 'moment';
 
@@ -178,6 +179,11 @@
           tipType: ''
         }
       };
+    },
+    computed: {
+      tableHeight () {
+        return getWindowHeight() - 185;
+      }
     },
     watch: {
       'pagination.current' (value) {
@@ -317,8 +323,10 @@
                 color: #fe9c00;
             }
         }
-        .link-btn{
-            margin: 10px 0 10px 600px;
+        .link-btn {
+            margin: 10px;
+            text-align: right;
+            word-break: break-all;
         }
         .msg-content{
             background: #555555;
@@ -339,6 +347,9 @@
             text-align: center;
             font-size: 24px;
             color: #3c96ff;
+        }
+        .bk-table-pagination-wrapper {
+          background-color: #ffffff;
         }
     }
 </style>
