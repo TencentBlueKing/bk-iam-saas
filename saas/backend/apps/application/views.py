@@ -20,7 +20,7 @@ from rest_framework.viewsets import GenericViewSet, views
 
 from backend.apps.application.models import Application
 from backend.apps.organization.models import User as UserModel
-from backend.apps.role.models import Role, RoleUser
+from backend.apps.role.models import Role
 from backend.biz.application import (
     ApplicationBiz,
     ApplicationGroupInfoBean,
@@ -31,7 +31,7 @@ from backend.biz.application import (
 from backend.biz.group import GroupBiz
 from backend.biz.policy import PolicyBean, PolicyBeanList, PolicyQueryBiz
 from backend.biz.policy_tag import ConditionTagBean, ConditionTagBiz
-from backend.biz.role import RoleBiz, RoleCheckBiz
+from backend.biz.role import RoleBiz, RoleCheckBiz, can_user_manage_role
 from backend.biz.subject import SubjectInfoList
 from backend.common.error_codes import error_codes
 from backend.common.lock import gen_role_upsert_lock
@@ -308,7 +308,7 @@ class ApplicationByGradeManagerUpdatedView(views.APIView):
         role = Role.objects.get(type=RoleType.GRADE_MANAGER.value, id=data["id"])
 
         # 必须是分级管理员的成员才可以申请修改
-        if not RoleUser.objects.user_role_exists(user_id=user_id, role_id=role.id):
+        if not can_user_manage_role(user_id, role.id):
             raise error_codes.FORBIDDEN.format(message=_("非分级管理员({})的成员，无权限申请修改").format(role.name), replace=True)
 
         # 查询已有的策略范围
