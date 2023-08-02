@@ -189,7 +189,7 @@
           @select-all="handlerAllChange"
           v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
         >
-          <bk-table-column type="selection" align="center" :selectable="setDefaultSelect"></bk-table-column>
+          <bk-table-column type="selection" align="center" :selectable="setDefaultSelect" />
           <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
             <template slot-scope="{ row }">
               <span class="user-group-name" :title="row.name" @click="handleView(row)">
@@ -237,78 +237,35 @@
             />
           </template>
         </bk-table>
+        <div class="apply-selected-groups">
+          <div
+            v-if="currentSelectedGroups.length"
+            class="apply-selected-groups-header"
+          >
+            <span>{{ $t(`m.common['已选择']`) }}</span>
+            <span class="apply-selected-groups-header-count">{{ currentSelectedGroups.length }}</span>
+            <span>{{ $t(`m.common['个用户组#']`) }}</span>
+            <span>{{ $t(`m.common['，']`) }}</span>
+            <span
+              class="apply-selected-groups-header-clear"
+              @click.stop="handleClearGroups">
+              {{ $t(`m.permApply['清空选择']`) }}:
+            </span>
+          </div>
+          <bk-tag
+            class="group-tag-close"
+            v-for="item in currentSelectedGroups"
+            :key="item.id"
+            :closable="true"
+            @close="handleCloseTag(item)"
+          >
+            {{ item.name }}
+          </bk-tag>
+        </div>
       </div>
       <p class="user-group-error" v-if="isShowGroupError">{{ $t(`m.permApply['请选择用户组']`) }}</p>
     </render-horizontal-block>
-    <!-- 先注释，待提供新的设计稿 -->
-    <!-- <render-horizontal-block
-      :label="$t(`m.common['已选用户组']`)"
-      :required="false"
-    >
-      <section>
-        <bk-table
-          size="small"
-          ext-cls="user-group-table user-group-table-selected"
-          :data="currentSelectedGroups"
-        >
-          <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
-            <template slot-scope="{ row }">
-              <span class="user-group-name" :title="row.name" @click="handleView(row)">
-                {{ row.name }}
-              </span>
-            </template>
-          </bk-table-column>
-          <bk-table-column :label="$t(`m.common['描述']`)">
-            <template slot-scope="{ row }">
-              <span :title="row.description || ''">
-                {{ row.description || '--' }}
-              </span>
-            </template>
-          </bk-table-column>
-          <bk-table-column :label="$t(`m.grading['管理空间']`)">
-            <template slot-scope="{ row }">
-              <span
-                :title="row.role && row.role.name ? row.role.name : ''"
-              >
-                {{ row.role ? row.role.name : '--' }}
-              </span>
-            </template>
-          </bk-table-column>
-          <bk-table-column :label="$t(`m.levelSpace['管理员']`)">
-            <template slot-scope="{ row, $index }">
-              <iam-edit-member-selector
-                mode="detail"
-                field="members"
-                width="200"
-                :placeholder="$t(`m.verify['请输入']`)"
-                :value="row.role_members"
-                :index="$index"
-                @on-change="handleUpdateMembers"
-              />
-            </template>
-          </bk-table-column>
-          <template slot="empty">
-            <ExceptionEmpty />
-          </template>
-        </bk-table>
-      </section>
-    </render-horizontal-block> -->
     <section>
-      <!-- <template v-if="isShowMemberAdd">
-                    <render-action
-                        ref="memberRef"
-                        :title="addMemberText"
-                        :tips="addMemberTips"
-                        @on-click="handleAddMember"
-                        style="margin-bottom: 16px;">
-                        <iam-guide
-                            type="rating_manager_authorization_scope"
-                            direction="left"
-                            :style="{ top: '-25px', left: '440px' }"
-                            :content="$t(`m.guide['授权人员范围']`)" />
-                    </render-action>
-                </template> -->
-      <!-- <template v-else> -->
       <render-member
         :required="false"
         :users="users"
@@ -1361,8 +1318,9 @@
           all: () => {
             const list = payload.filter(item => !this.curUserGroup.includes(item.id.toString()));
             this.currentSelectList = _.cloneDeep(list);
-            const selectGroups
-              = this.currentSelectedGroups.filter(item => this.curUserGroup.includes(item.id.toString()));
+            const tableList = _.cloneDeep(this.tableList);
+            const selectGroups = this.currentSelectedGroups.filter(item =>
+              !tableList.map(v => v.id.toString()).includes(item.id.toString()));
             this.currentSelectedGroups = [...selectGroups, ...list];
           }
         };
@@ -1375,6 +1333,20 @@
 
       handlerChange (selection, row) {
         this.fetchSelectedGroups('multiple', selection, row);
+      },
+
+      handleClearGroups () {
+        this.currentSelectedGroups.forEach((item) => {
+          this.$refs.groupTableRef
+            && this.$refs.groupTableRef.toggleRowSelection(item, false);
+        });
+        this.currentSelectedGroups = [];
+      },
+
+      handleCloseTag (payload) {
+        const index = this.currentSelectedGroups.findIndex(item => item.id === payload.id);
+        this.currentSelectedGroups.splice(index, 1);
+        this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(payload, false);
       },
 
       async fetchCurUserGroup () {
@@ -1527,12 +1499,12 @@
           });
         });
         // }
-        // const groupsList = [...this.defaultSelectedGroups, ...this.currentSelectedGroups];
+        const groupsList = [...this.defaultSelectedGroups, ...this.currentSelectedGroups];
         const params = {
           expired_at: this.expiredAtUse,
           reason: this.reason,
-          // groups: groupsList.map(({ id, name, description }) => ({ id, name, description })),
-          groups: this.currentSelectList.map(({ id, name, description }) => ({ id, name, description })),
+          groups: groupsList.map(({ id, name, description }) => ({ id, name, description })),
+          // groups: this.currentSelectList.map(({ id, name, description }) => ({ id, name, description })),
           applicants: subjects
         };
         try {
