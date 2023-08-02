@@ -11,6 +11,12 @@
 |system_id |string |是 |path |系统 ID |
 |check_existence |boolean |否 |query |默认会检查 id 存在, 不存在将导致删除失败, 设置 false 不检查 id 是否存在, 直接走删除( `delete from table where id in []` ) |
 
+#### Parameters
+
+| 字段 |  类型 |是否必须  | 描述  |
+|:---|:---|:---|:---|
+| id | string | 是 | 操作 id |
+
 #### Request
 
 ```json
