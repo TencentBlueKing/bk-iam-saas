@@ -71,7 +71,7 @@
             <template v-if="deType.includes(row.detail.type)">
               <section v-if="!row.loading">
                 <p class="description">{{ row.detail.description }}</p>
-                <p>{{ $t(`m.audit['版本号']`) }}：{{ row.detail.extra_info.version }}</p>
+                <p>{{ $t(`m.audit['版本号']`) }}: {{ row.detail.extra_info.version }}</p>
               </section>
             </template>
             <template v-if="dsType.includes(row.detail.type)">
@@ -138,11 +138,11 @@
                 <render-detail-table :actions="row.detail.extra_info.policies" />
               </template>
               <template v-if="row.detail.type === 'template.version.sync'">
-                <p>{{ $t(`m.audit['版本号']`) }}：{{ row.detail.extra_info.version }}</p>
+                <p>{{ $t(`m.audit['版本号']`) }}{{ $t(`m.common['：']`) }}{{ row.detail.extra_info.version }}</p>
               </template>
             </template>
             <template v-if="onlyRoleType.includes(row.detail.type)">
-              <p>{{ $t(`m.audit['管理空间']`) }}：{{ row.detail.role_name }}</p>
+              <p>{{ $t(`m.audit['管理空间']`) }}{{ $t(`m.common['：']`) }}{{ row.detail.role_name }}</p>
             </template>
           </section>
         </template>
@@ -159,8 +159,8 @@
       </bk-table-column>
       <bk-table-column :label="$t(`m.audit['对象及类型']`)">
         <template slot-scope="{ row }">
-          <span :title="`${objectMap[row.object_type] || row.object_type}：${row.object_name}`">
-            {{ objectMap[row.object_type] || row.object_type }}：{{ row.object_name }}
+          <span :title="`${objectMap[row.object_type] || row.object_type}${$t(`m.common['：']`)}${row.object_name}`">
+            {{ objectMap[row.object_type] || row.object_type }}{{ $t(`m.common['：']`) }}{{ row.object_name }}
           </span>
         </template>
       </bk-table-column>
@@ -262,6 +262,11 @@
     'user.policy.delete',
     'user.policy.create',
     'user.policy.update',
+    'user.temporary.policy.create',
+    'user.temporary.policy.delete',
+    'user.blacklist.member.create',
+    'user.blacklist.member.delete',
+    'user.permission.clean',
     'role.group.renew',
     'template.version.sync'
   ];
@@ -327,6 +332,11 @@
           'user.policy.delete': this.$t(`m.audit['用户权限删除']`),
           'user.group.delete': this.$t(`m.audit['用户退出用户组']`),
           'user.role.delete': this.$t(`m.audit['用户退出管理员']`),
+          'user.temporary.policy.create': this.$t(`m.audit['用户临时权限增加']`),
+          'user.temporary.policy.delete': this.$t(`m.audit['用户临时权限删除']`),
+          'user.blacklist.member.create': this.$t(`m.audit['用户黑名单成员增加']`),
+          'user.blacklist.member.delete': this.$t(`m.audit['用户黑名单成员删除']`),
+          'user.permission.clean': this.$t(`m.audit['用户权限清理']`),
           'group.create': this.$t(`m.audit['用户组创建']`),
           'group.update': this.$t(`m.audit['用户组修改']`),
           'group.delete': this.$t(`m.audit['用户组删除']`),
@@ -356,6 +366,7 @@
           'role.member.policy.create': this.$t(`m.audit['管理员成员开启业务权限']`),
           'role.member.policy.delete': this.$t(`m.audit['管理员成员关闭业务权限']`),
           'role.update': this.$t(`m.audit['管理员更新']`),
+          'role.delete': this.$t(`m.audit['管理员退出']`),
           'role.group.renew': this.$t(`m.audit['管理员用户组成员续期']`),
           'role.commonaction.create': this.$t(`m.audit['管理员常用操作新建']`),
           'role.commonaction.delete': this.$t(`m.audit['管理员常用操作删除']`),
@@ -364,7 +375,7 @@
           'approval.group.update': this.$t(`m.audit['修改用户组审批流程']`),
           'approval.action.update': this.$t(`m.audit['修改操作审批流程']`),
           'department.update': this.$t(`m.audit['组织架构同步']`),
-          'department.group.delete': this.$t(`m.audit['删除组织用户组权限']`),
+          // 'department.group.delete': this.$t(`m.audit['删除组织用户组权限']`),
           'admin.api.allow.list.config.create': this.$t(`m.audit['ADMIN-API白名单创建']`),
           'admin.api.allow.list.config.delete': this.$t(`m.audit['ADMIN-API白名单删除']`),
           'authorization.api.allow.list.config.create': this.$t(`m.audit['授权类API白名单创建']`),
@@ -623,8 +634,13 @@
           { id: 'user.policy.create', name: this.$t(`m.audit['用户权限增加']`) },
           { id: 'user.policy.update', name: this.$t(`m.audit['用户权限更新']`) },
           { id: 'user.policy.delete', name: this.$t(`m.audit['用户权限删除']`) },
-          { id: 'user.group.delete', name: this.$t(`m.audit['用户退出用户组']`) },
-          { id: 'user.role.delete', name: this.$t(`m.audit['用户退出管理员']`) },
+          // { id: 'user.group.delete', name: this.$t(`m.audit['用户退出用户组']`) },
+          // { id: 'user.role.delete', name: this.$t(`m.audit['用户退出管理员']`) },
+          { id: 'user.temporary.policy.create', name: this.$t(`m.audit['用户临时权限增加']`) },
+          { id: 'user.temporary.policy.delete', name: this.$t(`m.audit['用户临时权限删除']`) },
+          { id: 'user.blacklist.member.create', name: this.$t(`m.audit['用户黑名单成员增加']`) },
+          { id: 'user.blacklist.member.delete', name: this.$t(`m.audit['用户黑名单成员删除']`) },
+          { id: 'user.permission.clean', name: this.$t(`m.audit['用户权限清理']`) },
           { id: 'group.create', name: this.$t(`m.audit['用户组创建']`) },
           { id: 'group.update', name: this.$t(`m.audit['用户组修改']`) },
           { id: 'group.delete', name: this.$t(`m.audit['用户组删除']`) },
@@ -636,6 +652,7 @@
           { id: 'group.policy.delete', name: this.$t(`m.audit['用户组权限删除']`) },
           { id: 'group.template.create', name: this.$t(`m.audit['用户组添加权限模板']`) },
           { id: 'group.template.delete', name: this.$t(`m.audit['用户组删除权限模板']`) },
+          { id: 'group.transfer', name: this.$t(`m.audit['用户组权限交接']`) },
           { id: 'template.create', name: this.$t(`m.audit['权限模板创建']`) },
           { id: 'template.update', name: this.$t(`m.audit['权限模板修改']`) },
           { id: 'template.delete', name: this.$t(`m.audit['权限模板删除']`) },
@@ -648,12 +665,13 @@
           { id: 'template.version.update', name: this.$t(`m.audit['权限模板更新同步']`) },
           { id: 'template.update.commit', name: this.$t(`m.audit['权限模板更新提交']`) },
           { id: 'role.create', name: this.$t(`m.audit['管理员创建']`) },
+          { id: 'role.update', name: this.$t(`m.audit['管理员更新']`) },
+          { id: 'role.delete', name: this.$t(`m.audit['管理员退出']`) },
           { id: 'role.member.create', name: this.$t(`m.audit['管理员成员增加']`) },
           { id: 'role.member.delete', name: this.$t(`m.audit['管理员成员删除']`) },
           { id: 'role.member.update', name: this.$t(`m.audit['管理员成员修改']`) },
           { id: 'role.member.policy.create', name: this.$t(`m.audit['管理员成员开启业务权限']`) },
           { id: 'role.member.policy.delete', name: this.$t(`m.audit['管理员成员关闭业务权限']`) },
-          { id: 'role.update', name: this.$t(`m.audit['管理员更新']`) },
           { id: 'role.group.renew', name: this.$t(`m.audit['管理员用户组成员续期']`) },
           { id: 'role.commonaction.create', name: this.$t(`m.audit['管理员常用操作新建']`) },
           { id: 'role.commonaction.delete', name: this.$t(`m.audit['管理员常用操作删除']`) },
@@ -662,14 +680,13 @@
           { id: 'approval.group.update', name: this.$t(`m.audit['修改用户组审批流程']`) },
           { id: 'approval.action.update', name: this.$t(`m.audit['修改操作审批流程']`) },
           { id: 'department.update', name: this.$t(`m.audit['组织架构同步']`) },
-          { id: 'department.group.delete', name: this.$t(`m.audit['删除组织用户组权限']`) },
+          // { id: 'department.group.delete', name: this.$t(`m.audit['删除组织用户组权限']`) },
           { id: 'admin.api.allow.list.config.create', name: this.$t(`m.audit['ADMIN-API白名单创建']`) },
           { id: 'admin.api.allow.list.config.delete', name: this.$t(`m.audit['ADMIN-API白名单删除']`) },
           { id: 'authorization.api.allow.list.config.create', name: this.$t(`m.audit['授权类API白名单创建']`) },
           { id: 'authorization.api.allow.list.config.delete', name: this.$t(`m.audit['授权类API白名单删除']`) },
           { id: 'management.api.allow.list.config.create', name: this.$t(`m.audit['管理类API白名单创建']`) },
-          { id: 'management.api.allow.list.config.delete', name: this.$t(`m.audit['管理类API白名单删除']`) },
-          { id: 'group.transfer', name: this.$t(`m.audit['用户组权限交接']`) }
+          { id: 'management.api.allow.list.config.delete', name: this.$t(`m.audit['管理类API白名单删除']`) }
         ];
         if (value === '') {
           return Promise.resolve(list);

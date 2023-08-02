@@ -11,7 +11,7 @@
             :quick-search-method="quickSearchMethod"
           />
           <div class="info">
-            {{ $t(`m.info['如果以下用户组不满足您的权限需求']`) }}，
+            {{ $t(`m.info['如果以下用户组不满足您的权限需求']`) }}{{ $t(`m.common['，']`) }}
             {{ $t(`m.common['可以']`) }}
             <bk-button text theme="primary" style="font-size: 12px" @click="handleToCustomApply">
               {{ $t(`m.applyEntrance['申请自定义权限']`) }}
@@ -42,7 +42,7 @@
           </bk-table-column>
           <bk-table-column :label="$t(`m.common['描述']`)">
             <template slot-scope="{ row }">
-              <span :title="row.description !== '' ? row.description : ''">
+              <span :title="row.description || ''">
                 {{ row.description || '--' }}
               </span>
             </template>
@@ -114,7 +114,7 @@
       :quick-close="true"
       @animation-end="gradeSliderTitle === ''"
     >
-      <div class="grade-memebers-content" slot="content" v-bkloading="{ isLoading: sliderLoading, opacity: 1 }">
+      <div class="grade-members-content" slot="content" v-bkloading="{ isLoading: sliderLoading, opacity: 1 }">
         <template v-if="!sliderLoading">
           <div v-for="(item, index) in gradeMembers" :key="index" class="member-item">
             <span class="member-name">
@@ -613,6 +613,7 @@
   };
 </script>
 <style lang="postcss">
+@import '@/css/mixins/manage-members-detail-slidesider.css';
 .iam-join-user-group-wrapper {
   .user-group-table {
     .user-group-table {
@@ -662,38 +663,6 @@
     margin-top: 5px;
     font-size: 12px;
     color: #ff4d4d;
-  }
-}
-.grade-memebers-content {
-  padding: 20px;
-  height: calc(100vh - 61px);
-  .member-item {
-    position: relative;
-    display: inline-block;
-    margin: 0 6px 6px 0;
-    padding: 0 10px;
-    line-height: 22px;
-    background: #f5f6fa;
-    border: 1px solid #dcdee5;
-    border-radius: 2px;
-    font-size: 12px;
-    .member-name {
-      display: inline-block;
-      max-width: 200px;
-      line-height: 17px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      vertical-align: text-top;
-      .count {
-        color: #c4c6cc;
-      }
-    }
-  }
-  .info {
-    margin-top: 5px;
-    color: #c4c6cc;
-    font-size: 14px;
   }
 }
 </style>

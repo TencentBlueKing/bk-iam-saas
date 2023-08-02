@@ -189,7 +189,7 @@
           @select-all="handlerAllChange"
           v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
         >
-          <bk-table-column type="selection" align="center" :selectable="setDefaultSelect"></bk-table-column>
+          <bk-table-column type="selection" align="center" :selectable="setDefaultSelect" />
           <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
             <template slot-scope="{ row }">
               <span class="user-group-name" :title="row.name" @click="handleView(row)">
@@ -237,78 +237,35 @@
             />
           </template>
         </bk-table>
+        <div class="apply-selected-groups">
+          <div
+            v-if="currentSelectedGroups.length"
+            class="apply-selected-groups-header"
+          >
+            <span>{{ $t(`m.common['已选择']`) }}</span>
+            <span class="apply-selected-groups-header-count">{{ currentSelectedGroups.length }}</span>
+            <span>{{ $t(`m.common['个用户组#']`) }}</span>
+            <span>{{ $t(`m.common['，']`) }}</span>
+            <span
+              class="apply-selected-groups-header-clear"
+              @click.stop="handleClearGroups">
+              {{ $t(`m.permApply['清空选择']`) }}:
+            </span>
+          </div>
+          <bk-tag
+            class="group-tag-close"
+            v-for="item in currentSelectedGroups"
+            :key="item.id"
+            :closable="true"
+            @close="handleCloseTag(item)"
+          >
+            {{ item.name }}
+          </bk-tag>
+        </div>
       </div>
       <p class="user-group-error" v-if="isShowGroupError">{{ $t(`m.permApply['请选择用户组']`) }}</p>
     </render-horizontal-block>
-    <!-- 先注释，待提供新的设计稿 -->
-    <!-- <render-horizontal-block
-      :label="$t(`m.common['已选用户组']`)"
-      :required="false"
-    >
-      <section>
-        <bk-table
-          size="small"
-          ext-cls="user-group-table user-group-table-selected"
-          :data="currentSelectedGroups"
-        >
-          <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
-            <template slot-scope="{ row }">
-              <span class="user-group-name" :title="row.name" @click="handleView(row)">
-                {{ row.name }}
-              </span>
-            </template>
-          </bk-table-column>
-          <bk-table-column :label="$t(`m.common['描述']`)">
-            <template slot-scope="{ row }">
-              <span :title="row.description || ''">
-                {{ row.description || '--' }}
-              </span>
-            </template>
-          </bk-table-column>
-          <bk-table-column :label="$t(`m.grading['管理空间']`)">
-            <template slot-scope="{ row }">
-              <span
-                :title="row.role && row.role.name ? row.role.name : ''"
-              >
-                {{ row.role ? row.role.name : '--' }}
-              </span>
-            </template>
-          </bk-table-column>
-          <bk-table-column :label="$t(`m.levelSpace['管理员']`)">
-            <template slot-scope="{ row, $index }">
-              <iam-edit-member-selector
-                mode="detail"
-                field="members"
-                width="200"
-                :placeholder="$t(`m.verify['请输入']`)"
-                :value="row.role_members"
-                :index="$index"
-                @on-change="handleUpdateMembers"
-              />
-            </template>
-          </bk-table-column>
-          <template slot="empty">
-            <ExceptionEmpty />
-          </template>
-        </bk-table>
-      </section>
-    </render-horizontal-block> -->
     <section>
-      <!-- <template v-if="isShowMemberAdd">
-                    <render-action
-                        ref="memberRef"
-                        :title="addMemberText"
-                        :tips="addMemberTips"
-                        @on-click="handleAddMember"
-                        style="margin-bottom: 16px;">
-                        <iam-guide
-                            type="rating_manager_authorization_scope"
-                            direction="left"
-                            :style="{ top: '-25px', left: '440px' }"
-                            :content="$t(`m.guide['授权人员范围']`)" />
-                    </render-action>
-                </template> -->
-      <!-- <template v-else> -->
       <render-member
         :required="false"
         :users="users"
@@ -1361,8 +1318,9 @@
           all: () => {
             const list = payload.filter(item => !this.curUserGroup.includes(item.id.toString()));
             this.currentSelectList = _.cloneDeep(list);
-            const selectGroups
-              = this.currentSelectedGroups.filter(item => this.curUserGroup.includes(item.id.toString()));
+            const tableList = _.cloneDeep(this.tableList);
+            const selectGroups = this.currentSelectedGroups.filter(item =>
+              !tableList.map(v => v.id.toString()).includes(item.id.toString()));
             this.currentSelectedGroups = [...selectGroups, ...list];
           }
         };
@@ -1375,6 +1333,20 @@
 
       handlerChange (selection, row) {
         this.fetchSelectedGroups('multiple', selection, row);
+      },
+
+      handleClearGroups () {
+        this.currentSelectedGroups.forEach((item) => {
+          this.$refs.groupTableRef
+            && this.$refs.groupTableRef.toggleRowSelection(item, false);
+        });
+        this.currentSelectedGroups = [];
+      },
+
+      handleCloseTag (payload) {
+        const index = this.currentSelectedGroups.findIndex(item => item.id === payload.id);
+        this.currentSelectedGroups.splice(index, 1);
+        this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(payload, false);
       },
 
       async fetchCurUserGroup () {
@@ -1527,12 +1499,12 @@
           });
         });
         // }
-        // const groupsList = [...this.defaultSelectedGroups, ...this.currentSelectedGroups];
+        const groupsList = [...this.defaultSelectedGroups, ...this.currentSelectedGroups];
         const params = {
           expired_at: this.expiredAtUse,
           reason: this.reason,
-          // groups: groupsList.map(({ id, name, description }) => ({ id, name, description })),
-          groups: this.currentSelectList.map(({ id, name, description }) => ({ id, name, description })),
+          groups: groupsList.map(({ id, name, description }) => ({ id, name, description })),
+          // groups: this.currentSelectList.map(({ id, name, description }) => ({ id, name, description })),
           applicants: subjects
         };
         try {
@@ -1633,139 +1605,126 @@
   };
 </script>
 <style lang="postcss">
-    .iam-join-user-group-wrapper {
-      .user-group-table {
-          margin-top: 10px;
-          border-right: none;
-          border-bottom: none;
-          &-selected {
-            margin-top: 0;
-          }
-          &.set-border {
-              border-right: 1px solid #dfe0e5;
-              border-bottom: 1px solid #dfe0e5;
-          }
-          .user-group-name {
-              color: #3a84ff;
-              cursor: pointer;
-              &:hover {
-                  color: #699df4;
-              }
-          }
-      }
-      /* .can-view {
+  @import '@/css/mixins/manage-members-detail-slidesider.css';
+  .iam-join-user-group-wrapper {
+    .user-group-table {
+        margin-top: 10px;
+        border-right: none;
+        border-bottom: none;
+        &-selected {
+          margin-top: 0;
+        }
+        &.set-border {
+            border-right: 1px solid #dfe0e5;
+            border-bottom: 1px solid #dfe0e5;
+        }
+        .user-group-name {
+            color: #3a84ff;
+            cursor: pointer;
+            &:hover {
+                color: #699df4;
+            }
+        }
+    }
+    .apply-selected-groups {
+      padding: 10px 0;
+      &-header {
+        font-size: 12px;
+        &-count {
+          color: #3a84ff;
+        }
+        &-clear {
           color: #3a84ff;
           cursor: pointer;
-          &:hover {
-              color: #699df4;
-          }
-      } */
-      .search-wrapper {
-          .info {
-              line-height: 30px;
-              font-size: 12px;
-          }
+        }
       }
-      .expired-at-wrapper {
-          margin-top: 16px;
-      }
-      .reason-wrapper {
-          margin-top: 16px;
-          .join-reason-error {
-              .bk-textarea-wrapper {
-                  border-color: #ff5656;
-              }
-          }
-      }
-      .user-group-error,
-      .perm-recipient-error,
-      .expired-at-error,
-      .reason-empty-wrapper {
-          margin-top: 5px;
-          font-size: 12px;
-          color: #ff4d4d;
-      }
-      .is-member-empty-cls {
-          .user-selector-container {
-              border-color: #ff4d4d;
-          }
+      .group-tag-close {
+        margin: 10px 6px 0 0;
+        background: #f5f6fa;
+        border: 1px solid #dcdee5;
       }
     }
-    .grade-members-content {
-        padding: 20px;
-        height: calc(100vh - 61px);
-        .member-item {
-            position: relative;
-            display: inline-block;
-            margin: 0 6px 6px 0;
-            padding: 0 10px;
-            line-height: 22px;
-            background: #f5f6fa;
-            border: 1px solid #dcdee5;
-            border-radius: 2px;
-            font-size: 12px;
-            .member-name {
-                display: inline-block;
-                max-width: 200px;
-                line-height: 17px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                vertical-align: text-top;
-                .count {
-                    color: #c4c6cc;
-                }
-            }
+    /* .can-view {
+        color: #3a84ff;
+        cursor: pointer;
+        &:hover {
+            color: #699df4;
         }
-        .info {
-            margin-top: 5px;
-            color: #c4c6cc;
-            font-size: 14px;
-        }
-    }
-    .resource-group-container {
-        display: flex;
-        justify-content: space-between;
-        .relation-content-item{
-            display: flex;
-            /* width: 220px; */
-            .content-name{
-                font-size: 14px;
-                padding-right: 10px;
-            }
-            .content{
-                width: 300px;
-            }
-        }
-
-        .relation-content-item:nth-child(2){
-            margin-left: 32px;
-        }
-    }
+    } */
     .search-wrapper {
-        .error-tips {
-            line-height: 22px;
+        .info {
+            line-height: 30px;
+            font-size: 12px;
         }
     }
-    .join-user-group-form {
-        margin-top: -5px;
-        &-lang {
-            .bk-form.bk-inline-form .bk-form-item .bk-label {
-                min-width: 100px;
-                text-align: left;
-            }
-        }
-        .resource-action-form {
-            display: flex;
-            .bk-form-item+.bk-form-item {
-                margin-top: 0;
-            }
-        }
-        .group-search-select {
-            display: flex;
-            .bk-button {
-              padding: 0;
+    .expired-at-wrapper {
+        margin-top: 16px;
+    }
+    .reason-wrapper {
+        margin-top: 16px;
+        .join-reason-error {
+            .bk-textarea-wrapper {
+                border-color: #ff5656;
             }
         }
     }
+    .user-group-error,
+    .perm-recipient-error,
+    .expired-at-error,
+    .reason-empty-wrapper {
+        margin-top: 5px;
+        font-size: 12px;
+        color: #ff4d4d;
+    }
+    .is-member-empty-cls {
+        .user-selector-container {
+            border-color: #ff4d4d;
+        }
+    }
+  }
+  .resource-group-container {
+      display: flex;
+      justify-content: space-between;
+      .relation-content-item{
+          display: flex;
+          /* width: 220px; */
+          .content-name{
+              font-size: 14px;
+              padding-right: 10px;
+          }
+          .content{
+              width: 300px;
+          }
+      }
+
+      .relation-content-item:nth-child(2){
+          margin-left: 32px;
+      }
+  }
+  .search-wrapper {
+      .error-tips {
+          line-height: 22px;
+      }
+  }
+  .join-user-group-form {
+      margin-top: -5px;
+      &-lang {
+          .bk-form.bk-inline-form .bk-form-item .bk-label {
+              min-width: 100px;
+              text-align: left;
+          }
+      }
+      .resource-action-form {
+          display: flex;
+          .bk-form-item+.bk-form-item {
+              margin-top: 0;
+          }
+      }
+      .group-search-select {
+          display: flex;
+          .bk-button {
+            padding: 0;
+          }
+      }
+  }
 </style>

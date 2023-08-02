@@ -132,7 +132,7 @@
       :title="gradeSliderTitle"
       :quick-close="true"
       @animation-end="gradeSliderTitle === ''">
-      <div class="grade-memebers-content"
+      <div class="grade-members-content"
         slot="content"
         v-bkloading="{ isLoading: sliderLoading, opacity: 1 }">
         <template v-if="!sliderLoading">
@@ -742,25 +742,18 @@
   };
 </script>
 <style lang="postcss">
-    .iam-join-user-group-wrapper {
+@import '@/css/mixins/manage-members-detail-slidesider.css';
+.iam-join-user-group-wrapper {
+    .user-group-table {
         .user-group-table {
-            .user-group-table {
-                margin-top: 10px;
-                border-right: none;
-                border-bottom: none;
-                &.set-border {
-                    border-right: 1px solid #dfe0e5;
-                    border-bottom: 1px solid #dfe0e5;
-                }
-                .user-group-name {
-                    color: #3a84ff;
-                    cursor: pointer;
-                    &:hover {
-                        color: #699df4;
-                    }
-                }
+            margin-top: 10px;
+            border-right: none;
+            border-bottom: none;
+            &.set-border {
+                border-right: 1px solid #dfe0e5;
+                border-bottom: 1px solid #dfe0e5;
             }
-            .can-view {
+            .user-group-name {
                 color: #3a84ff;
                 cursor: pointer;
                 &:hover {
@@ -768,61 +761,37 @@
                 }
             }
         }
-        .search-wrapper {
-            .info {
-                line-height: 30px;
-                font-size: 12px;
+        .can-view {
+            color: #3a84ff;
+            cursor: pointer;
+            &:hover {
+                color: #699df4;
             }
-        }
-        .expired-at-wrapper {
-            margin-top: 16px;
-        }
-        .reason-wrapper {
-            margin-top: 16px;
-            .join-reason-error {
-                .bk-textarea-wrapper {
-                    border-color: #ff5656;
-                }
-            }
-        }
-        .user-group-error,
-        .expired-at-error,
-        .reason-empty-wrapper {
-            margin-top: 5px;
-            font-size: 12px;
-            color: #ff4d4d;
         }
     }
-    .grade-memebers-content {
-        padding: 20px;
-        height: calc(100vh - 61px);
-        .member-item {
-            position: relative;
-            display: inline-block;
-            margin: 0 6px 6px 0;
-            padding: 0 10px;
-            line-height: 22px;
-            background: #f5f6fa;
-            border: 1px solid #dcdee5;
-            border-radius: 2px;
-            font-size: 12px;
-            .member-name {
-                display: inline-block;
-                max-width: 200px;
-                line-height: 17px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                vertical-align: text-top;
-                .count {
-                    color: #c4c6cc;
-                }
-            }
-        }
+    .search-wrapper {
         .info {
-            margin-top: 5px;
-            color: #c4c6cc;
-            font-size: 14px;
+            line-height: 30px;
+            font-size: 12px;
         }
     }
+    .expired-at-wrapper {
+        margin-top: 16px;
+    }
+    .reason-wrapper {
+        margin-top: 16px;
+        .join-reason-error {
+            .bk-textarea-wrapper {
+                border-color: #ff5656;
+            }
+        }
+    }
+    .user-group-error,
+    .expired-at-error,
+    .reason-empty-wrapper {
+        margin-top: 5px;
+        font-size: 12px;
+        color: #ff4d4d;
+    }
+}
 </style>
