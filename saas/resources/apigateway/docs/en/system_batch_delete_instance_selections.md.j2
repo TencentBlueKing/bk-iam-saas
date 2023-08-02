@@ -11,6 +11,12 @@
 | system_id | string | yes | path | system_id |
 |check_existence |boolean |no |query |default will check if id exists, if it doesn't, the delete will fail, set false to not check if id exists, go straight to delete ( `delete from table where id in []` ) |
 
+#### parameters
+
+| field | type   | required | description |
+|-------|--------|----------|-------------|
+| id    | string | yes      | instanceSelection id |
+
 #### Request
 
 ```json
