@@ -1,7 +1,30 @@
 ### 修改资源类型
 
 ----------
-{% include '_api_v1_model_resource_types.md.j2'%}包括'_api_v1_model_resource_types.md.j2'%。
+#### parameters
+
+| field | type |required | description |
+|:---|:---|:---|:---|
+| name |string | yes | the name of the resource type, which must be unique under the system |
+| name_en | string | yes | the English name of the resource type, which will be displayed when the system switches to the English version for internationalization |
+| description |string | no | the description of the resource type |
+| description_en | string | no | the English description of the resource type, which will be displayed when the system switches to the English version for internationalization |
+| parents | Array[Object] | no | the direct superior of the resource type, which can have multiple direct superiors, and can be the resource type of the self-system or other systems. It can be an empty list and cannot be repeated. The data is only used for display on the permission center product |
+| provider_config | Object | yes | the configuration file for the permission center to call the query resource instance interface, which is used in conjunction with system.provider_config.host |
+| version | int | no | the version number, which can be empty, and is only used as a reminder for updates in New on the permission center |
+
+Explanation of elements in parents
+
+| field | type |required | description |
+|:---|:---|:---|:---|
+| system_id | string | yes | the source system ID of the direct superior resource type |
+| id |string | yes | the ID of the direct superior resource type |
+
+Explanation of elements in provider_config
+
+| field | type |required | description |
+|:---|:---|:---|:---|
+| path | string | yes | the PATH of the URL that the permission center calls to query the resource instance, which is used in conjunction with system.provider_config.host |
 ----------
 
 #### 参数

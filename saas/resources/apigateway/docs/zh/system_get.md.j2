@@ -10,6 +10,24 @@
 
 #### Response
 
+| 字段 |  类型 | 描述  |
+|:---|:---|:---|
+| id | string | 系统 id |
+| name |string | 系统名称 |
+| name_en | string | 系统英文名 |
+| description |string | 系统描述 |
+| description_en | string | 系统描述英文 |
+| clients | string | 有权限调用的客户端，即有权限调用的 app_code 列表，多个使用英文逗号分隔，注册系统时会校验 Header 头里的 app_code 必须在列表里 |
+| provider_config | Object | 权限中心回调接入系统的配置文件 |
+
+provider_config 内元素 参数：
+
+| 字段 |  类型  | 描述  |
+|:---|:---|:---|
+| host | string | 权限中心调用查询资源实例接口的 HOST，格式：scheme://netloc，与 resource_type.provider_config.path 配合使用 |
+| auth | string | 权限中心调用查询资源实例接口的鉴权方式, 当前可选: `none`/`basic`|
+| healthz | string | 权限中心调用接入系统的 healthz 检查系统是否健康; 与 provider_config.host 配合使用, `例如system.provider_config.host=http://cmdb.consul, provider_config.healthz=/healthz/`, 那么将调用`http://cmdb.consul/healthz/`检查系统是否健康.   |
+
 ```json
 {
   "code": 0,

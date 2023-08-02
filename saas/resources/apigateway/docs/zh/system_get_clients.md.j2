@@ -8,6 +8,10 @@
 
 #### Response
 
+| 字段 |  类型 | 描述  |
+|:---|:---|:---|
+| clients | string | 有权限调用的客户端，即有权限调用的 app_code 列表，多个使用英文逗号分隔，注册系统时会校验 Header 头里的 app_code 必须在列表里 |
+
 ```json
 {
     "code": 0,
