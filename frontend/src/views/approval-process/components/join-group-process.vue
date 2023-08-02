@@ -119,6 +119,7 @@
 
 <script>
   import il8n from '@/language';
+  import { bus } from '@/common/bus';
   import { mapGetters } from 'vuex';
   import { buildURLParams } from '@/common/url';
   import editProcessDialog from './edit-process-dialog';
@@ -232,6 +233,18 @@
         }
       }
       this.fetchGroupProcessesList();
+      this.$once('hook:beforeDestroy', () => {
+        bus.$off('update-join-group-list');
+      });
+    },
+    mounted () {
+      bus.$on('update-join-group-list', (payload) => {
+        this.pagination = Object.assign(this.pagination, {
+          current: 1,
+          limit: 10
+        });
+        this.fetchGroupProcessesList(true);
+      });
     },
     methods: {
       refreshCurrentQuery () {
