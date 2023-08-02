@@ -1336,9 +1336,11 @@
       },
 
       handleClearGroups () {
-        this.currentSelectedGroups.forEach((item) => {
-          this.$refs.groupTableRef
-            && this.$refs.groupTableRef.toggleRowSelection(item, false);
+        this.tableList.forEach((item) => {
+          if (!this.curUserGroup.includes(item.id.toString())) {
+            this.$refs.groupTableRef
+              && this.$refs.groupTableRef.toggleRowSelection(item, false);
+          }
         });
         this.currentSelectedGroups = [];
       },
