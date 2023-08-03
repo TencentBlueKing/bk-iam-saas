@@ -1,7 +1,45 @@
 ### 2. modify action
 
 ----------
-{% include '_api_v1_model_actions.md.j2' %}
+#### parameters
+
+| field | type |required | description |
+|:---|:---|:---|:---|
+| name |string | yes | the name of the operation, which must be unique under the system |
+| name_en | string | yes | the English name of the operation, which will be displayed when the system switches to the English version for internationalization |
+| description |string | no | the description of the operation |
+| description_en | string | no | the English description of the operation, which will be displayed when the system switches to the English version for internationalization |
+| auth_type | string | no | the authorization type of the operation, with the enumeration values of `abac\rbac`. If not filled in, the default is `abac` |
+| type | string | no | the type of the operation, with the enumeration values of `create\delete\view\edit\list\manage\execute\use`. For example, if it is a create operation, it needs to be marked as "create". If it cannot be classified, it can be an empty string |
+| related_resource_types | Array(Object) | no | the object of the operation, which is a list of resource types. The order of the list must be consistent with the order of `product display` and `authorization verification`. `If the operation does not need to be associated with resource instances, leave this field empty.` **Note that this is an ordered list!**: |
+| related_actions | Array(string) | no | the dependent operations of the operation, which is a list of strings composed of operation IDs, used to create dependent permissions when applying for permissions |
+| version | int | no | the version number, which can be empty, and is only used as a reminder for updates in New on the permission center |
+
+Elements in related_resource_types
+
+| field | type |required | description |
+|:---|:---|:---|:---|
+| system_id | string | yes | the source system of the resource type, which can be the self-system or other systems |
+| id | string | yes | the ID of the resource type. When the operation is associated with multiple resource types, `the same id cannot be repeated in the related_resource_types` |
+| name_alias | string | no | the alias of the resource type name. Different actions of the same resource type can have their own display names |
+| name_alias_en | string | no | the English alias of the resource type name |
+| selection_mode | string | no | the selection type, that is, the scope of the resource when configuring permissions on the permission center product, which can be selected: `instance`/`attribute`/`all`. If not set, the default is `instance` |
+| related_instance_selections | Array(Object) | no | the associated instance view, that is, the selection method of the resource when configuring permissions on the permission center product; you can configure the instance view of this system or the instance view of other systems (if `selection_mode=attribute`, this field does not need to be configured; if `selection_mode` is not set or `selection_mode=instance/all`, this field cannot be empty) |
+
+Elements in related_instance_selections
+
+| field | type |required | description |
+|:---|:---|:---|:---|
+| system_id | string | yes | the source system ID of the instance view |
+| id |string | yes | the ID of the instance view |
+|  ignore_iam_path | bool | no | whether to ignore the path of the configured permission, `default is false` |
+
+After registration, the logic for pulling resources when configuring permissions in IAM
+
+**Important note:**
+- The resource type associated with the action must be registered in the permission center, otherwise the action will fail to register
+- If the associated resource type is from the self-system, the resource type needs to be registered first
+- If the associated resource type depends on other systems, the resource type can only be registered after the dependent system registers the resource type
 ----------
 
 **Highlights:**

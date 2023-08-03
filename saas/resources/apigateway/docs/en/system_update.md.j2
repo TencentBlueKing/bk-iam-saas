@@ -8,7 +8,24 @@ Note:
 
 -------
 
-{% include '_api_v1_model_system.md.j2' %}
+#### parameters
+
+| field | type |required | description |
+|:---|:---|:---|:---|
+| name |string | yes | the name of the system, which must be unique globally |
+| name_en | string | yes | the english name of the system, which will be displayed when the system switches to the english version for internationalization |
+| description |string | no | the description of the system, which must be unique globally |
+| description_en | string | no | the english description of the system, which will be displayed when the system switches to the english version for internationalization |
+| clients | string | yes | the clients that have permission to call the system, which is a list of app_code with permissions separated by commas. when registering the system, the header in the request must contain the app_code which is in this list |
+| provider_config | object | yes | the configuration file for the callback of the permission center to the access system |
+
+Elements in provider_config:
+
+| field | type |required | description |
+|:---|:---|:---|:---|
+| host | string | yes | the host of the permission center for calling the query resource instance interface, in the format of scheme://netloc, which is used in conjunction with resource_type.provider_config.path |
+| auth | string | yes | the authentication method for the permission center to call the query resource instance interface, which is currently optional: `none`/`basic` |
+| healthz | string | no | the permission center calls the access system's healthz to check if the system is healthy; used in conjunction with provider_config.host. for example, if `system.provider_config.host=http://cmdb.consul` and `provider_config.healthz=/healthz/`, then `http://cmdb.consul/healthz/` will be called to check if the system is healthy |
 
 #### Parameters
 
