@@ -18,6 +18,7 @@ from backend.apps.group.audit import GroupMemberDeleteAuditProvider
 from backend.apps.group.filters import GroupFilter
 from backend.apps.group.models import Group
 from backend.apps.group.serializers import GroupSearchSLZ
+from backend.apps.role.constants import PermissionTypeEnum
 from backend.apps.role.serializers import RoleCommonActionSLZ
 from backend.apps.subject.serializers import SubjectGroupSLZ, UserRelationSLZ
 from backend.apps.user.models import UserProfile
@@ -29,7 +30,7 @@ from backend.common.pagination import CustomPageNumberPagination
 from backend.common.serializers import SystemQuerySLZ
 from backend.common.time import get_soon_expire_ts
 from backend.component.iam import list_all_subject_groups
-from backend.service.constants import PermissionCodeEnum, SubjectRelationType
+from backend.service.constants import SubjectRelationType
 from backend.service.group import SubjectGroup
 from backend.service.models import Subject
 
@@ -254,7 +255,7 @@ class UserGroupSearchViewSet(mixins.ListModelMixin, GenericViewSet):
 
         if data["system_id"] and data["action_id"]:
             # 通过实例或操作查询用户组
-            data["permission_type"] = PermissionCodeEnum.RESOURCE_INSTANCE.value
+            data["permission_type"] = PermissionTypeEnum.RESOURCE_INSTANCE.value
             data["limit"] = 1000
             subjects = QueryAuthorizedSubjects(data).query_by_resource_instance(subject_type="group")
             subject_id_set = {int(s["id"]) for s in subjects}
@@ -270,7 +271,7 @@ class UserGroupSearchViewSet(mixins.ListModelMixin, GenericViewSet):
         page = self.paginate_queryset(queryset)
         if page is not None:
             group_dict = {int(one["id"]): one for one in groups}
-            relations = [SubjectGroup(**group_dict[one["id"]]) for one in page]
+            relations = [SubjectGroup(**group_dict[one.id]) for one in page]
             results = self.biz._convert_to_subject_group_beans(relations)
 
             slz = GroupSLZ(instance=results, many=True)
