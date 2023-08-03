@@ -257,7 +257,7 @@
        */
       rootScroll: _.throttle(function () {
         this.updateRenderData(this.$el.scrollTop);
-      }, 0),
+      }, 100),
 
       /**
        * 更新可视区渲染的数据列表
