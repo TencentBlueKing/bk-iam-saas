@@ -725,7 +725,8 @@ export const m = {
         '不能删除当前操作': 'Unable to delete current permission',
         '个操作关联了': ' related actions have been completed ',
         '查看实例资源权限组': 'View instance resource permission groups',
-        '删除实例资源权限组': 'Delete instance resource permission groups'
+        '删除实例资源权限组': 'Delete instance resource permission groups',
+        '管理员组只有一个管理员时，不可退出': 'Cannot exit when there is only one administrator in the administrator group'
     },
     permTemplate: {
         '模板名': 'Template name',
