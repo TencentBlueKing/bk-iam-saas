@@ -29,6 +29,7 @@
   </div>
 </template>
 <script>
+  import { bus } from '@/common/bus';
   import { mapGetters } from 'vuex';
   import RenderSetItem from './common/render-process-item';
   import JoinRateManagerProcess from './components/join-rate-manager-process';
@@ -237,13 +238,16 @@
        */
       async handleSelected (payload, item, index) {
         try {
-          await this.$store.dispatch('approvalProcess/updateDefaultProcesses', {
+          const { code } = await this.$store.dispatch('approvalProcess/updateDefaultProcesses', {
             type: item.type,
             process_id: payload
           });
           item.process_id = payload;
           this.$refs[`${index}SetRef`][0] && this.$refs[`${index}SetRef`][0].setValue(item.process_id);
-          this.messageSuccess(this.$t(`m.common['操作成功']`));
+          if (code === 0) {
+            bus.$emit('update-tab-table-list', { type: this.active, process_id: payload });
+            this.messageSuccess(this.$t(`m.common['操作成功']`));
+          }
         } catch (e) {
           console.error(e);
           this.bkMessageInstance = this.$bkMessage({

@@ -201,43 +201,6 @@
       @on-submit="handleSelectSubmit"
       @on-cancel="handleSelectCancel"
       @animation-end="handleAnimationEnd" />
-
-    <bk-dialog
-      v-model="isShowReasonDialog"
-      :loading="dialogLoading"
-      header-position="left"
-      :width="480"
-      :mask-close="false"
-      ext-cls="iam-edit-rate-manager-reason-dialog"
-      @after-leave="reason = ''">
-      <section class="content-wrapper">
-        <label>
-          {{ $t(`m.common['理由']`) }}
-          <span>*</span>
-        </label>
-        <bk-input
-          type="textarea"
-          :rows="5"
-          v-model="reason"
-          @input="handleReasonInput"
-          @blur="handleReasonBlur"
-          style="margin-bottom: 15px;">
-        </bk-input>
-      </section>
-      <section slot="footer">
-        <bk-button theme="primary"
-          :disabled="reason === ''"
-          :loading="dialogLoading"
-          @click="handleSubmitWithReason">
-          {{ $t(`m.common['确定']`) }}
-        </bk-button>
-        <bk-button
-          style="margin-left: 6px;"
-          @click="handleDialogCancel">
-          {{ $t(`m.common['取消']`) }}
-        </bk-button>
-      </section>
-    </bk-dialog>
   </smart-action>
 </template>
 <script>
@@ -892,7 +855,7 @@
 
       async handleSubmitWithReason () {
         window.changeDialog = false;
-        this.dialogLoading = true;
+        this.submitLoading = true;
         const data = this.$refs.resourceInstanceRef.handleGetValue().actions;
         const subjects = [];
         if (this.isAll) {
@@ -930,7 +893,6 @@
           await this.$store.dispatch('role/editRatingManagerWithGeneral', params);
           await this.$store.dispatch('role/updateCurrentRole', { id: 0 });
           await this.$store.dispatch('roleList');
-          this.isShowReasonDialog = false;
           this.messageSuccess(this.$t(`m.info['申请已提交']`), 1000);
           this.$router.push({
             name: 'apply'
@@ -945,7 +907,7 @@
             ellipsisCopy: true
           });
         } finally {
-          this.dialogLoading = false;
+          this.submitLoading = false;
         }
       },
 
@@ -976,7 +938,6 @@
             this.scrollToLocation(this.$refs.reasonRef);
             return;
           }
-          this.submitLoading = true;
           this.handleSubmitWithReason();
           // this.isShowReasonDialog = true;
           return;
@@ -1011,12 +972,12 @@
           authorization_scopes: data,
           id: this.$route.params.id
         };
-        this.submitLoading = true;
         window.changeDialog = false;
         console.log('params', params);
                 
         const dispatchMethod = this.isRatingManager ? 'editRatingManagerWithGeneral' : 'editRatingManager';
         try {
+          this.submitLoading = true;
           await this.$store.dispatch(`role/${dispatchMethod}`, params);
           await this.$store.dispatch('roleList');
           this.messageSuccess(this.$t(`m.info['编辑管理空间成功']`), 1000);
@@ -1028,6 +989,7 @@
           });
         } catch (e) {
           console.error(e);
+          this.submitLoading = false;
           this.bkMessageInstance = this.$bkMessage({
             limit: 1,
             theme: 'error',

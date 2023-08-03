@@ -513,7 +513,8 @@ export const m = {
          '第几项实例和属性不能都为空': 'The instance and attribute of item {value} cannot be empty',
          '权限个数': '{value} permissions',
          '已经复制到粘贴板，可在其他用户组添加成员时粘贴到手动输入框': 'Has been copied to the clipboard and can be pasted into the manual input box when adding members to other user groups',
-         '用户组为管理员组，不能添加部门': 'The {value} is administrator group and cannot add departments'
+         '用户组为管理员组，不能添加部门': 'The {value} is administrator group and cannot add departments',
+         '用户组为只读用户组不能添加成员': '{value} is read-only user groups and cannot add members'
     },
     // 二次确认弹窗相关
     dialog: {
@@ -724,7 +725,8 @@ export const m = {
         '不能删除当前操作': 'Unable to delete current permission',
         '个操作关联了': ' related actions have been completed ',
         '查看实例资源权限组': 'View instance resource permission groups',
-        '删除实例资源权限组': 'Delete instance resource permission groups'
+        '删除实例资源权限组': 'Delete instance resource permission groups',
+        '管理员组只有一个管理员时，不可退出': 'Cannot exit when there is only one administrator in the administrator group'
     },
     permTemplate: {
         '模板名': 'Template name',

@@ -1336,9 +1336,11 @@
       },
 
       handleClearGroups () {
-        this.currentSelectedGroups.forEach((item) => {
-          this.$refs.groupTableRef
-            && this.$refs.groupTableRef.toggleRowSelection(item, false);
+        this.tableList.forEach((item) => {
+          if (!this.curUserGroup.includes(item.id.toString())) {
+            this.$refs.groupTableRef
+              && this.$refs.groupTableRef.toggleRowSelection(item, false);
+          }
         });
         this.currentSelectedGroups = [];
       },
@@ -1460,7 +1462,8 @@
       },
 
       async handleSubmit () {
-        if (this.currentSelectList.length < 1) {
+        const groupsList = [...this.defaultSelectedGroups, ...this.currentSelectedGroups];
+        if (!groupsList.length) {
           this.isShowGroupError = true;
           this.scrollToLocation(this.$refs.selectTableRef);
           return;
@@ -1499,7 +1502,6 @@
           });
         });
         // }
-        const groupsList = [...this.defaultSelectedGroups, ...this.currentSelectedGroups];
         const params = {
           expired_at: this.expiredAtUse,
           reason: this.reason,

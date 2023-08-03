@@ -31,7 +31,7 @@
           {{ $t(`m.userGroup['转出']`) }}
         </bk-button>
         <bk-button
-          :disabled="currentSelectList.length < 1"
+          :disabled="isBatchDisabled"
           @click="handleBatchAddMember"
           data-test-id="group_btn_create"
         >
@@ -352,6 +352,9 @@
             },
             tableHeight () {
                 return getWindowHeight() - 185;
+            },
+            isBatchDisabled () {
+              return this.currentSelectList.length < 1 || this.currentSelectList.every(item => item.disabled);
             }
     },
     watch: {
@@ -842,6 +845,12 @@
       handleAfterEditLeave () { },
 
       handleBatchAddMember () {
+        const hasDisabledData = this.currentSelectList.filter(item => item.disabled);
+        if (hasDisabledData.length) {
+          const disabledNames = hasDisabledData.map(item => item.name);
+          this.messageError(`m.info['用户组为只读用户组不能添加成员']`, { value: `${this.$t(`m.common['【']`)}${disabledNames}${this.$t(`m.common['】']`)}` });
+          return;
+        }
         this.isBatch = true;
         this.isShowAddMemberDialog = true;
       },
