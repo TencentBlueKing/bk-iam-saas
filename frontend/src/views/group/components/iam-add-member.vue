@@ -628,11 +628,11 @@
       handleManualInput (value) {
         this.manualOrgList = [];
         if (value) {
-          const inputValue = _.cloneDeep(value.split()[0]);
+          const inputValue = value.split()[0];
           if (inputValue.indexOf('{') > -1 && inputValue.indexOf('}') > -1) {
             const splitValue = value.split(/\n/).map(item => {
               const str = item.slice(item.indexOf('{') + 1, item.indexOf('}'));
-              if (/^[+-]?\d*(\.\d*)?(e[+-]?\d+)?$/.test(str)) {
+              if (item.indexOf('{') > -1 && item.indexOf('}') > -1 && /^[+-]?\d*(\.\d*)?(e[+-]?\d+)?$/.test(str)) {
                 this.manualOrgList.push(item);
                 item = item.substring(item.indexOf('{'), item.indexOf('&') > -1 ? item.indexOf('&') : item.length);
               }
@@ -691,11 +691,19 @@
             // this.manualValue = templateArr.join(';');
 
             // 保存原有格式
-            let formatStr = this.manualValue;
+            let formatStr = _.cloneDeep(this.manualValue);
             this.usernameList.forEach(item => {
-              formatStr = formatStr.replace(this.evil('/' + item + '(;\\n|\\s\\n|;|\\s|\\n|)/g'), '');
+              // 去掉之前有查全局的写法， 如果username有多个重复的item, 比如shengjieliu03@shengjietest.com、shengjieliu05的时候/g就会有问题
+              // formatStr = formatStr.replace(this.evil('/' + item + '(;\\n|\\s\\n|)/g'), '');
+
+              // 处理既有部门又有用户且不连续相同类型的展示数据
+              formatStr = formatStr.replace(this.evil('/' + item + '(;\\n|\\s\\n|)/'), '').replace('\n\n', '\n').replace('\s\s', '\s').replace(';;', '');
             });
-            this.manualValue = formatStr;
+            // 处理只选择全部符合条件的用户，还存在特殊符号的情况
+            if (formatStr === '\n' || formatStr === '\s' || formatStr === ';') {
+              formatStr = '';
+            }
+            this.manualValue = _.cloneDeep(formatStr);
             this.formatOrgAndUser();
           } else {
             this.formatOrgAndUser();
@@ -722,7 +730,7 @@
       async formatOrgAndUser () {
         if (this.manualValue) {
           // 校验查验失败的数据是不是属于部门
-          const departData = _.cloneDeep(this.manualValue.split(/;|\n|\s| /));
+          const departData = _.cloneDeep(this.manualValue.split(/;|\n|\s/));
           const departGroups = this.filterDepartList.filter(item => departData.includes(item));
           if (departGroups.length && this.getGroupAttributes) {
             if (this.getGroupAttributes().source_from_role) {
@@ -789,15 +797,24 @@
           };
           return typeMap[type]();
         });
-        const { code, data } = await this.$store.dispatch('organization/getSubjectScopeCheck', { subjects });
-        if (code === 0 && data) {
-          const result = payload.filter(item => {
-            if (item.type === 'depart') {
-              item.type = 'department';
-            }
-            return data.map(v => v.type).includes(item.type) && data.map(v => v.id).includes(String(item.id));
+        try {
+          const { code, data } = await this.$store.dispatch('organization/getSubjectScopeCheck', { subjects });
+          if (code === 0 && data) {
+            const result = payload.filter(item => {
+              if (item.type === 'depart') {
+                item.type = 'department';
+              }
+              return data.map(v => v.type).includes(item.type) && data.map(v => v.id).includes(String(item.id));
+            });
+            return result;
+          }
+        } catch (e) {
+          this.bkMessageInstance = this.$bkMessage({
+            limit: 2,
+            theme: 'error',
+            ellipsisLine: 10,
+            message: e.message || e.data.msg || e.statusText
           });
-          return result;
         }
       },
 

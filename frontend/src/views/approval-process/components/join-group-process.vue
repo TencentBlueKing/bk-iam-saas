@@ -69,7 +69,7 @@
                   :id="option.id"
                   :name="option.name">
                   <span style="display: block; line-height: 32px;"
-                    :title="`${$t(`m.approvalProcess['审批节点']`)}：${option.node_names.join(' -> ')}`">
+                    :title="`${$t(`m.approvalProcess['审批节点']`)}: ${option.node_names.join(' -> ')}`">
                     {{ option.name }}
                   </span>
                 </bk-option>
@@ -192,7 +192,7 @@
           return payload => {
               if (this.list.length > 0 && payload.process_id !== '') {
                   if (this.list.find(item => item.id === payload.process_id)) {
-                      return `${this.$t(`m.approvalProcess['审批节点']`)}：${this.list.find(item => item.id === payload.process_id).node_names.join(' -> ')}`;
+                      return `${this.$t(`m.approvalProcess['审批节点']`)}: ${this.list.find(item => item.id === payload.process_id).node_names.join(' -> ')}`;
                   } else {
                       return '';
                   }
