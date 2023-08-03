@@ -9,23 +9,28 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import serializers, status
+from rest_framework import mixins, serializers, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from backend.account.serializers import AccountRoleSLZ
 from backend.apps.group.audit import GroupMemberDeleteAuditProvider
+from backend.apps.group.filters import GroupFilter
 from backend.apps.group.models import Group
+from backend.apps.group.serializers import GroupSearchSLZ
 from backend.apps.role.serializers import RoleCommonActionSLZ
 from backend.apps.subject.serializers import SubjectGroupSLZ, UserRelationSLZ
 from backend.apps.user.models import UserProfile
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.group import GroupBiz
+from backend.biz.permission_audit import QueryAuthorizedSubjects
 from backend.biz.role import RoleBiz
 from backend.common.pagination import CustomPageNumberPagination
 from backend.common.serializers import SystemQuerySLZ
 from backend.common.time import get_soon_expire_ts
-from backend.service.constants import SubjectRelationType
+from backend.component.iam import list_all_subject_groups
+from backend.service.constants import PermissionCodeEnum, SubjectRelationType
+from backend.service.group import SubjectGroup
 from backend.service.models import Subject
 
 from .serializers import GroupSLZ, QueryGroupSLZ, QueryRoleSLZ, UserNewbieSLZ, UserNewbieUpdateSLZ
@@ -214,3 +219,61 @@ class RoleViewSet(GenericViewSet):
 
         user_roles = self.biz.list_user_role(request.user.username, with_perm, with_hidden=False)
         return Response([one.dict() for one in user_roles])
+
+
+class UserGroupSearchViewSet(mixins.ListModelMixin, GenericViewSet):
+
+    queryset = Group.objects.all()
+    serializer_class = GroupSLZ
+
+    biz = GroupBiz()
+
+    @swagger_auto_schema(
+        operation_description="搜索用户用户组列表",
+        request_body=GroupSearchSLZ(label="用户组搜索"),
+        responses={status.HTTP_200_OK: SubjectGroupSLZ(label="用户组", many=True)},
+        tags=["user"],
+    )
+    def search(self, request, *args, **kwargs):
+        slz = GroupSearchSLZ(data=request.data)
+        slz.is_valid(raise_exception=True)
+
+        data = slz.validated_data
+
+        # 筛选
+        f = GroupFilter(
+            data={k: v for k, v in data.items() if k in ["id", "name", "description"] and v},
+            queryset=self.get_queryset(),
+        )
+        queryset = f.qs
+
+        subject = Subject.from_username(request.user.username)
+        # 查询用户加入的所有用户组
+        groups = list_all_subject_groups(subject.type, subject.id)
+        ids = sorted([int(g["id"]) for g in groups])
+
+        if data["system_id"] and data["action_id"]:
+            # 通过实例或操作查询用户组
+            data["permission_type"] = PermissionCodeEnum.RESOURCE_INSTANCE.value
+            data["limit"] = 1000
+            subjects = QueryAuthorizedSubjects(data).query_by_resource_instance(subject_type="group")
+            subject_id_set = {int(s["id"]) for s in subjects}
+
+            # 筛选同时有权限并且用户加入的用户组
+            ids = [_id for _id in ids if _id in subject_id_set]
+
+        if not ids:
+            return Response({"count": 0, "results": []})
+
+        queryset = queryset.filter(id__in=ids)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            group_dict = {int(one["id"]): one for one in groups}
+            relations = [SubjectGroup(**group_dict[one["id"]]) for one in page]
+            results = self.biz._convert_to_subject_group_beans(relations)
+
+            slz = GroupSLZ(instance=results, many=True)
+            return Response({"count": queryset.count(), "results": slz.data})
+
+        return Response({"count": 0, "results": []})
