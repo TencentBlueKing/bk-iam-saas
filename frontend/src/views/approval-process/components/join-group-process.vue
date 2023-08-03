@@ -234,16 +234,18 @@
       }
       this.fetchGroupProcessesList();
       this.$once('hook:beforeDestroy', () => {
-        bus.$off('update-join-group-list');
+        bus.$off('update-tab-table-list');
       });
     },
     mounted () {
-      bus.$on('update-join-group-list', (payload) => {
-        this.pagination = Object.assign(this.pagination, {
-          current: 1,
-          limit: 10
-        });
-        this.fetchGroupProcessesList(true);
+      bus.$on('update-tab-table-list', ({ type }) => {
+        if (['JoinGroupProcess'].includes(type)) {
+          this.pagination = Object.assign(this.pagination, {
+            current: 1,
+            limit: 10
+          });
+          this.fetchGroupProcessesList(true);
+        }
       });
     },
     methods: {

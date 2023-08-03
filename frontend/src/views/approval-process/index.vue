@@ -245,7 +245,7 @@
           item.process_id = payload;
           this.$refs[`${index}SetRef`][0] && this.$refs[`${index}SetRef`][0].setValue(item.process_id);
           if (code === 0) {
-            bus.$emit('update-join-group-list', { process_id: payload });
+            bus.$emit('update-tab-table-list', { type: this.active, process_id: payload });
             this.messageSuccess(this.$t(`m.common['操作成功']`));
           }
         } catch (e) {
