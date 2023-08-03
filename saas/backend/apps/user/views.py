@@ -30,11 +30,7 @@ from backend.common.pagination import CustomPageNumberPagination
 from backend.common.serializers import SystemQuerySLZ
 from backend.common.time import get_soon_expire_ts
 from backend.component.iam import list_all_subject_groups
-<<<<<<< HEAD
 from backend.service.constants import SubjectRelationType
-=======
-from backend.service.constants import PermissionCodeEnum, SubjectRelationType
->>>>>>> upstream/develop
 from backend.service.group import SubjectGroup
 from backend.service.models import Subject
 
@@ -275,11 +271,7 @@ class UserGroupSearchViewSet(mixins.ListModelMixin, GenericViewSet):
         page = self.paginate_queryset(queryset)
         if page is not None:
             group_dict = {int(one["id"]): one for one in groups}
-<<<<<<< HEAD
             relations = [SubjectGroup(**group_dict[one.id]) for one in page]
-=======
-            relations = [SubjectGroup(**group_dict[one["id"]]) for one in page]
->>>>>>> upstream/develop
             results = self.biz._convert_to_subject_group_beans(relations)
 
             slz = GroupSLZ(instance=results, many=True)
