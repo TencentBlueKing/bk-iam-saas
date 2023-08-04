@@ -50,7 +50,7 @@
         return this.type === 'user' ? this.$t(`m.common['用户']`) : this.$t(`m.common['组织']`);
       },
       isDepartment () {
-        return this.type === 'department';
+        return this.type === 'department' && window.ENABLE_ORGANIZATION_COUNT.toLowerCase() === 'true';
       },
       isEdit () {
         return this.mode === 'edit';
