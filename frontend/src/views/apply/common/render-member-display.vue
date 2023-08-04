@@ -63,7 +63,7 @@
        * isDepartment
        */
       isDepartment () {
-        return this.type === 'department';
+        return this.type === 'department' && window.ENABLE_ORGANIZATION_COUNT.toLowerCase() === 'true';
       },
 
       /**
