@@ -128,24 +128,27 @@ export const beforeEach = async (to, from, next) => {
     }
   }
 
+  // 根据不同权限处理不同的导航栏索引
+  function navDiffMenuIndex (index) {
+    navIndex = index;
+    store.commit('updateIndex', index);
+    window.localStorage.setItem('index', index);
+  }
+
   if (['applyJoinUserGroup', 'applyCustomPerm', 'myManageSpace', 'myPerm', 'permTransfer', 'permRenewal'].includes(to.name)
       || (['permRenewal'].includes(to.name) && to.query.source === 'email')) {
     await store.dispatch('role/updateCurrentRole', { id: 0 });
     await store.dispatch('userInfo');
     curRole = 'staff';
-    navIndex = 0;
-    store.commit('updateIndex', 0);
-    window.localStorage.setItem('index', 0);
+    navDiffMenuIndex(0);
   }
  
   if (['userGroup', 'permTemplate', 'approvalProcess'].includes(to.name)) {
-    navIndex = 1;
     await store.dispatch('role/updateCurrentRole', { id: curRoleId });
-    store.commit('updateIndex', 1);
-    window.localStorage.setItem('index', 1);
+    navDiffMenuIndex(1);
   }
   if (to.name === 'userGroupDetail') {
-    navIndex = 1;
+    navDiffMenuIndex(1);
     store.dispatch('versionLogInfo');
     if (existValue('externalApp') && to.query.hasOwnProperty('role_id')) {
       getExternalRole();
@@ -201,15 +204,16 @@ export const beforeEach = async (to, from, next) => {
   } else {
     // 邮件点击续期跳转过来的链接需要做身份的前置判断
     if (to.name === 'groupPermRenewal' && to.query.source === 'email' && currentRoleId) {
-      await store.dispatch('role/updateCurrentRole', { id: +currentRoleId });
-      await store.dispatch('userInfo');
-      curRole = to.query.role_type;
+      // await store.dispatch('role/updateCurrentRole', { id: +currentRoleId });
+      // const { role } = await store.dispatch('userInfo');
+      // curRole = role.type;
+      await getManagerInfo();
+      navDiffMenuIndex(1);
     }
 
     if (existValue('externalApp') && to.query.hasOwnProperty('role_id')) {
       if (['groupPermRenewal', 'userGroup', 'userGroupDetail', 'createUserGroup', 'userGroupPermDetail'].includes(to.name)) {
-        store.commit('updateIndex', 1);
-        window.localStorage.setItem('index', 1);
+        navDiffMenuIndex(1);
       }
       getExternalRole();
     }
