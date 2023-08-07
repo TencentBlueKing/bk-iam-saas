@@ -1,0 +1,47 @@
+.iam-search-resource-form {
+    .resource-group-container {
+        display: flex;
+        justify-content: space-between;
+        .relation-content-item{
+            display: flex;
+            /* width: 220px; */
+            .content-name{
+                font-size: 14px;
+                padding-right: 10px;
+            }
+            .content{
+                width: 300px;
+            }
+        }
+    
+        .relation-content-item:nth-child(2){
+            margin-left: 32px;
+        }
+    }
+    .search-wrapper {
+        .error-tips {
+            line-height: 22px;
+        }
+    }
+    .join-user-group-form {
+        margin-top: -5px;
+        &-lang {
+            .bk-form.bk-inline-form .bk-form-item .bk-label {
+                min-width: 100px;
+                text-align: left;
+            }
+        }
+        .resource-action-form {
+            display: flex;
+            .bk-form-item+.bk-form-item {
+                margin-top: 0;
+            }
+        }
+        .group-search-select {
+            display: flex;
+            .bk-button {
+              padding: 0;
+            }
+        }
+    }
+}

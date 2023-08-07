@@ -1,7 +1,9 @@
 <template>
   <smart-action class="iam-join-user-group-wrapper">
     <render-horizontal-block :label="$t(`m.permApply['选择用户组']`)" :required="true">
-      <div ref="selectTableRef">
+      <div
+        ref="selectTableRef"
+        class="iam-search-resource-form">
         <div class="search-wrapper">
           <render-search v-if="enableGroupInstanceSearch">
             <div
@@ -584,30 +586,30 @@
       };
     },
     computed: {
-        ...mapGetters(['user', 'externalSystemId']),
-        condition () {
-            if (this.curResIndex === -1 || this.groupIndex === -1) {
-                return [];
-            }
-            this.curResourceData = this.resourceTypeData.resource_groups[this.groupIndex]
-                .related_resource_types[this.curResIndex];
-            if (!this.curResourceData) {
-                return [];
-            }
-            if (this.curResourceData.condition.length === 0) this.curResourceData.condition = ['none'];
-            return _.cloneDeep(this.curResourceData.condition);
-        },
-        curSelectionMode () {
-            if (this.curResIndex === -1 || this.groupIndex === -1) {
-                return 'all';
-            }
-            this.curResourceData = this.resourceTypeData.resource_groups[this.groupIndex]
-                .related_resource_types[this.curResIndex];
-            return this.curResourceData.selectionMode;
-        },
-        originalCondition () {
-            return _.cloneDeep(this.condition);
-        }
+      ...mapGetters(['user', 'externalSystemId']),
+      condition () {
+          if (this.curResIndex === -1 || this.groupIndex === -1) {
+              return [];
+          }
+          this.curResourceData = this.resourceTypeData.resource_groups[this.groupIndex]
+              .related_resource_types[this.curResIndex];
+          if (!this.curResourceData) {
+              return [];
+          }
+          if (this.curResourceData.condition.length === 0) this.curResourceData.condition = ['none'];
+          return _.cloneDeep(this.curResourceData.condition);
+      },
+      curSelectionMode () {
+          if (this.curResIndex === -1 || this.groupIndex === -1) {
+              return 'all';
+          }
+          this.curResourceData = this.resourceTypeData.resource_groups[this.groupIndex]
+              .related_resource_types[this.curResIndex];
+          return this.curResourceData.selectionMode;
+      },
+      originalCondition () {
+          return _.cloneDeep(this.condition);
+      }
     },
     watch: {
       reason () {
@@ -1347,8 +1349,10 @@
 
       handleCloseTag (payload) {
         const index = this.currentSelectedGroups.findIndex(item => item.id === payload.id);
+        const tableIndex = this.tableList.findIndex(item => item.id === payload.id);
+        this.$refs.groupTableRef
+          && this.$refs.groupTableRef.toggleRowSelection(this.tableList[tableIndex], false);
         this.currentSelectedGroups.splice(index, 1);
-        this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(payload, false);
       },
 
       async fetchCurUserGroup () {
@@ -1608,6 +1612,7 @@
 </script>
 <style lang="postcss">
   @import '@/css/mixins/manage-members-detail-slidesider.css';
+  @import '@/css/mixins/apply-join-group-search.css';
   .iam-join-user-group-wrapper {
     .user-group-table {
         margin-top: 10px;
@@ -1683,50 +1688,5 @@
             border-color: #ff4d4d;
         }
     }
-  }
-  .resource-group-container {
-      display: flex;
-      justify-content: space-between;
-      .relation-content-item{
-          display: flex;
-          /* width: 220px; */
-          .content-name{
-              font-size: 14px;
-              padding-right: 10px;
-          }
-          .content{
-              width: 300px;
-          }
-      }
-
-      .relation-content-item:nth-child(2){
-          margin-left: 32px;
-      }
-  }
-  .search-wrapper {
-      .error-tips {
-          line-height: 22px;
-      }
-  }
-  .join-user-group-form {
-      margin-top: -5px;
-      &-lang {
-          .bk-form.bk-inline-form .bk-form-item .bk-label {
-              min-width: 100px;
-              text-align: left;
-          }
-      }
-      .resource-action-form {
-          display: flex;
-          .bk-form-item+.bk-form-item {
-              margin-top: 0;
-          }
-      }
-      .group-search-select {
-          display: flex;
-          .bk-button {
-            padding: 0;
-          }
-      }
   }
 </style>
