@@ -34,7 +34,7 @@ urlpatterns = [
     ),
     path(
         "departments/-/groups/search/",
-        views.UserDepartmentGroupSearchViewSet.as_view({"get": "list"}),
+        views.UserDepartmentGroupSearchViewSet.as_view({"post": "search"}),
         name="user.department.group.search",
     ),
 ]
