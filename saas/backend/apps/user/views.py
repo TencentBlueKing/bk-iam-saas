@@ -331,9 +331,8 @@ class UserDepartmentGroupSearchViewSet(mixins.ListModelMixin, GenericViewSet):
         if page is not None:
             group_dict = {one.id: one for one in groups}
             relations = [group_dict[one.id] for one in page]
-            results = self.biz._convert_to_subject_group_beans(relations)
 
-            slz = GroupSLZ(instance=results, many=True)
+            slz = GroupSLZ(instance=relations, many=True)
             return Response({"count": queryset.count(), "results": slz.data})
 
         return Response({"count": 0, "results": []})
