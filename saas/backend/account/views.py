@@ -21,7 +21,7 @@ from backend.biz.role import RoleBiz, can_user_manage_role
 from backend.common.error_codes import error_codes
 
 from .role_auth import ROLE_SESSION_KEY
-from .serializers import AccountRoleSLZ, AccountRoleSwitchSLZ, AccountUserSLZ
+from .serializers import AccountRoleSwitchSLZ, AccountUserSLZ
 
 
 class UserViewSet(GenericViewSet):
@@ -49,19 +49,7 @@ class UserViewSet(GenericViewSet):
 
 
 class RoleViewSet(GenericViewSet):
-
-    pagination_class = None  # 去掉swagger中的limit offset参数
-
     role_biz = RoleBiz()
-
-    @swagger_auto_schema(
-        operation_description="用户角色列表",
-        responses={status.HTTP_200_OK: AccountRoleSLZ(label="角色信息", many=True)},
-        tags=["account"],
-    )
-    def list(self, request, *args, **kwargs):
-        data = self.role_biz.list_role_tree_by_user(request.user.username)
-        return Response([one.dict() for one in data])
 
     @swagger_auto_schema(
         operation_description="用户角色切换",
