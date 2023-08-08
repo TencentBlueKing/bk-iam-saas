@@ -1151,8 +1151,8 @@
         this.disabled = !payload;
       },
       handleDelInstance (payload) {
-        const { path } = payload;
-        this.delPathList = [...this.delPathList, ...path];
+        // const { path } = payload;
+        // this.delPathList = [...this.delPathList, ...path];
       },
       // 请求资源实例数据
       async handleMainActionSubmit (payload, relatedActions) {
