@@ -247,6 +247,7 @@
       :title="sidesliderTitle"
       :width="sliderWidth"
       :quick-close="true"
+      :before-close="handleBeforeClose"
       @animation-end="handleAnimationEnd">
       <div slot="content">
         <component :is="'RenderDetail'" :data="previewData" />
@@ -862,11 +863,14 @@
         bus.$emit('on-drawer-side', { width: 1160 });
         this.isShowSideslider = true;
       },
+      handleBeforeClose () {
+        bus.$emit('on-drawer-side', { width: 960 });
+        return true;
+      },
       handleAnimationEnd () {
         this.sidesliderTitle = '';
         this.curId = '';
         this.previewData = [];
-        bus.$emit('on-drawer-side', { width: 960 });
       },
       handleAfterDeleteLeave () {
         this.currentActionName = '';
@@ -1099,6 +1103,7 @@
       showAggregateResourceInstance (data, index) {
         const aggregateResourceParams = {
           ...data.aggregateResourceType[data.selectedIndex],
+          curAggregateSystemId: data.system_id,
           isNoLimited: data.isNoLimited || false
         };
         this.selectedIndex = data.selectedIndex;
@@ -1150,8 +1155,8 @@
         this.disabled = !payload;
       },
       handleDelInstance (payload) {
-        const { path } = payload;
-        this.delPathList = [...this.delPathList, ...path];
+        // const { path } = payload;
+        // this.delPathList = [...this.delPathList, ...path];
       },
       // 请求资源实例数据
       async handleMainActionSubmit (payload, relatedActions) {

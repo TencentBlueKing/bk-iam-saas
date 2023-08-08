@@ -819,6 +819,7 @@
       showAggregateResourceInstance (data, index) {
         const aggregateResourceParams = {
           ...data.aggregateResourceType[data.selectedIndex],
+          curAggregateSystemId: this.systemId,
           isNoLimited: data.isNoLimited || false
         };
         this.aggregateResourceParams = _.cloneDeep(aggregateResourceParams);

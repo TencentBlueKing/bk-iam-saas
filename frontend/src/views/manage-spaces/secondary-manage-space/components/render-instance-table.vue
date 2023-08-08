@@ -882,9 +882,13 @@
       },
 
       showAggregateResourceInstance (data, index) {
-        this.selectedIndex = data.selectedIndex;
         window.changeDialog = true;
-        this.aggregateResourceParams = _.cloneDeep(data.aggregateResourceType[data.selectedIndex]);
+        const aggregateResourceParams = {
+          ...data.aggregateResourceType[data.selectedIndex],
+          curAggregateSystemId: data.system_id
+        };
+        this.selectedIndex = data.selectedIndex;
+        this.aggregateResourceParams = _.cloneDeep(aggregateResourceParams);
         this.aggregateIndex = index;
         const instanceKey = data.aggregateResourceType[data.selectedIndex].id;
         this.instanceKey = instanceKey;

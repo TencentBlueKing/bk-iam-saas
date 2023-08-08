@@ -675,7 +675,7 @@
             margin-top: 10px;
         }
         .iam-perm-ext-reset-cls {
-            margin-bottom: 20px;
+            margin-bottom: 50px;
         }
         .empty-wrapper {
             position: absolute;

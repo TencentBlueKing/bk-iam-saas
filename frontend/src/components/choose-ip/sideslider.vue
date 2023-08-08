@@ -177,7 +177,8 @@
           text: '暂无数据',
           tip: '',
           tipType: ''
-        }
+        },
+        isAny: false
       };
     },
     computed: {
@@ -206,11 +207,15 @@
     },
     watch: {
       show: {
-        handler (value) {
+        async handler (value) {
           if (value) {
             this.pageChangeAlertMemo = window.changeAlert;
             window.changeAlert = 'iamSidesider';
-            if (this.isSuperManager && !this.isHasDefaultData) {
+            // 为了减少组件之间数据传递的代码量，这里再重新调用一次接口做任意类型数据的处理
+            if (this.params.curAggregateSystemId) {
+              await this.fetchAuthorizationScopeActions(this.params.curAggregateSystemId);
+            }
+            if ((this.isSuperManager && !this.isHasDefaultData) || this.isAny) {
               this.fetchData(true);
             } else {
               this.setSelectList(this.defaultList);
@@ -300,6 +305,26 @@
         } finally {
           this.loading = false;
           this.listLoading = false;
+        }
+      },
+
+      async fetchAuthorizationScopeActions (id) {
+        try {
+          const { data } = await this.$store.dispatch(
+            'permTemplate/getAuthorizationScopeActions',
+            { systemId: id }
+          );
+          // 判断是否是任意
+          this.isAny = data && data.some(item => item.id === '*');
+        } catch (e) {
+          console.error(e);
+          this.bkMessageInstance = this.$bkMessage({
+            limit: 1,
+            theme: 'error',
+            message: e.message || e.data.msg || e.statusText,
+            ellipsisLine: 2,
+            ellipsisCopy: true
+          });
         }
       },
 
