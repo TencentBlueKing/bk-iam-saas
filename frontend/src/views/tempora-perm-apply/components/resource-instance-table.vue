@@ -706,7 +706,11 @@
       },
 
       showAggregateResourceInstance (data, index) {
-        this.aggregateResourceParams = _.cloneDeep(data.aggregateResourceType[this.selectedIndex]);
+        const aggregateResourceParams = {
+          ...data.aggregateResourceType[data.selectedIndex],
+          curAggregateSystemId: this.systemId
+        };
+        this.aggregateResourceParams = _.cloneDeep(aggregateResourceParams);
         this.aggregateIndex = index;
         const instanceKey = data.aggregateResourceType[this.selectedIndex].id;
         this.instanceKey = instanceKey;
