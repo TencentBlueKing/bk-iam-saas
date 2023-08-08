@@ -278,3 +278,62 @@ class UserGroupSearchViewSet(mixins.ListModelMixin, GenericViewSet):
             return Response({"count": queryset.count(), "results": slz.data})
 
         return Response({"count": 0, "results": []})
+
+
+class UserDepartmentGroupSearchViewSet(mixins.ListModelMixin, GenericViewSet):
+
+    queryset = Group.objects.all()
+    serializer_class = GroupSLZ
+
+    biz = GroupBiz()
+
+    @swagger_auto_schema(
+        operation_description="搜索用户部门用户组列表",
+        request_body=GroupSearchSLZ(label="用户组搜索"),
+        responses={status.HTTP_200_OK: SubjectGroupSLZ(label="用户组", many=True)},
+        tags=["user"],
+    )
+    def search(self, request, *args, **kwargs):
+        slz = GroupSearchSLZ(data=request.data)
+        slz.is_valid(raise_exception=True)
+
+        data = slz.validated_data
+
+        # 筛选
+        f = GroupFilter(
+            data={k: v for k, v in data.items() if k in ["id", "name", "description"] and v},
+            queryset=self.get_queryset(),
+        )
+        queryset = f.qs
+
+        subject = Subject.from_username(request.user.username)
+        groups = self.biz.list_all_user_department_group(subject)
+
+        # 查询用户加入的所有用户组
+        ids = sorted([g.id for g in groups])
+
+        if data["system_id"] and data["action_id"]:
+            # 通过实例或操作查询用户组
+            data["permission_type"] = PermissionTypeEnum.RESOURCE_INSTANCE.value
+            data["limit"] = 1000
+            subjects = QueryAuthorizedSubjects(data).query_by_resource_instance(subject_type="group")
+            subject_id_set = {int(s["id"]) for s in subjects}
+
+            # 筛选同时有权限并且用户加入的用户组
+            ids = [_id for _id in ids if _id in subject_id_set]
+
+        if not ids:
+            return Response({"count": 0, "results": []})
+
+        queryset = queryset.filter(id__in=ids)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            group_dict = {one.id: one for one in groups}
+            relations = [group_dict[one.id] for one in page]
+            results = self.biz._convert_to_subject_group_beans(relations)
+
+            slz = GroupSLZ(instance=results, many=True)
+            return Response({"count": queryset.count(), "results": slz.data})
+
+        return Response({"count": 0, "results": []})

@@ -131,52 +131,6 @@ class RoleBiz:
 
     transfer_groups_role = RoleService.__dict__["transfer_groups_role"]
 
-    def list_role_tree_by_user(self, user_id: str) -> List[UserRoleNode]:
-        """
-        查询用户的角色关系树
-        """
-        tree: List[UserRoleNode] = []
-        grade_manager_dict: Dict[int, UserRoleNode] = {}
-        subset_manager_dict: Dict[int, UserRoleNode] = {}
-
-        # 查询用户直接加入的role
-        roles = self.list_user_role(user_id, with_hidden=False)
-        for role in roles:
-            node = UserRoleNode.parse_obj(role)
-
-            if node.type != RoleType.SUBSET_MANAGER.value:
-                tree.append(node)
-                if node.type == RoleType.GRADE_MANAGER.value:
-                    grade_manager_dict[node.id] = node
-            else:
-                subset_manager_dict[node.id] = node
-
-        if not subset_manager_dict:
-            return tree
-
-        relations = RoleRelation.objects.filter(role_id__in=list(subset_manager_dict.keys()))
-        relation_dict = {r.role_id: r.parent_id for r in relations}
-
-        # 查询子集管理员所属的分级管理员, 不包含用户已加入的分级管理员
-        out_roles = Role.objects.filter(id__in=[id for id in relation_dict.values() if id not in grade_manager_dict])
-        for role in out_roles:
-            node = UserRoleNode(
-                id=role.id,
-                type=role.type,
-                name=role.name,
-                name_en=role.name_en,
-                description=role.description,
-                is_member=False,
-            )
-
-            tree.append(node)
-            grade_manager_dict[node.id] = node
-
-        for role_id, parent_id in relation_dict.items():
-            grade_manager_dict[parent_id].sub_roles.append(subset_manager_dict[role_id])
-
-        return tree
-
     def get_role_scope_include_user(self, role_id: int, username: str) -> Optional[Role]:
         """
         查询授权范围包含用户的角色
