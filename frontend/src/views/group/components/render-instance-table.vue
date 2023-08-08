@@ -1099,6 +1099,7 @@
       showAggregateResourceInstance (data, index) {
         const aggregateResourceParams = {
           ...data.aggregateResourceType[data.selectedIndex],
+          curAggregateSystemId: data.system_id,
           isNoLimited: data.isNoLimited || false
         };
         this.selectedIndex = data.selectedIndex;
