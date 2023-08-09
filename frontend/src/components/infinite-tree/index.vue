@@ -211,15 +211,13 @@
             },
             selectedNode () {
                 return (payload) => {
-                    if (this.hasSelectedDepartments.length) {
+                    if (this.hasSelectedDepartments.length || this.hasSelectedUsers.length) {
                       payload.is_selected = this.hasSelectedDepartments.map(
-                        item => item.id.toString()).includes(payload.id.toString());
-                    }
-                    if (this.hasSelectedUsers.length) {
-                      payload.is_selected = this.hasSelectedUsers.map(
+                        item => item.id.toString()).includes(payload.id.toString())
+                        || this.hasSelectedUsers.map(
                         item => item.username).includes(payload.username);
+                        return payload.is_selected;
                     }
-                    return payload.is_selected;
                 };
             }
     },
