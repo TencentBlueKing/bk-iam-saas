@@ -622,6 +622,7 @@
             }
             let allChecked = true;
             let allDisabled = true;
+            item.actions = item.actions.filter(v => !v.hidden);
             item.actions.forEach(act => {
               act.$id = `${payload}&${act.id}`;
               act.related_resource_types.forEach(v => {
@@ -640,6 +641,7 @@
               this.linearAction.push(act);
             });
             item.sub_groups.forEach(act => {
+              act.actions = act.actions.filter(v => !v.hidden);
               (act.actions || []).forEach(v => {
                 v.$id = `${payload}&${v.id}`;
                 v.related_resource_types.forEach(subItem => {

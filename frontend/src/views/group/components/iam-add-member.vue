@@ -197,9 +197,9 @@
                 <template v-if="curLanguageIsCn">
                   {{ $t(`m.common['已选择']`) }}
                   <template v-if="isShowSelectedText">
-                    <span class="organization-count">{{ hasSelectedDepartments.length }}</span>
-                    {{ $t(`m.common['个']`) }} {{ $t(`m.common['组织']`) }}{{ $t(`m.common['，']`) }}
-                    <span class="user-count">{{ hasSelectedUsers.length }}</span>{{ $t(`m.common['个']`) }} {{ $t(`m.common['用户']`) }}
+                    <span class="organization-count">{{ hasSelectedDepartments.length }}</span>{{ $t(`m.common['个']`) }}{{ $t(`m.common['组织']`) }}
+                    {{ $t(`m.common['，']`) }}
+                    <span class="user-count">{{ hasSelectedUsers.length }}</span>{{ $t(`m.common['个']`) }}{{ $t(`m.common['用户']`) }}
                   </template>
                   <template v-else>
                     <span class="user-count">0</span>
