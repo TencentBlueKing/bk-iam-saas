@@ -37,4 +37,9 @@ urlpatterns = [
         views.UserDepartmentGroupSearchViewSet.as_view({"post": "search"}),
         name="user.department.group.search",
     ),
+    path(
+        "policies/search/",
+        views.UserPolicySearchViewSet.as_view({"post": "search"}),
+        name="user.policy.group.search",
+    ),
 ]
