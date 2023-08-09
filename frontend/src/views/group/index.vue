@@ -165,7 +165,7 @@
               text
               theme="primary"
               style="margin-left: 10px"
-              :disabled="row.attributes && row.attributes.source_from_role"
+              :disabled="(row.attributes && row.attributes.source_from_role) || row.readonly"
               @click="handleAddPerm(row)">
               {{ $t(`m.common['添加权限']`) }}
             </bk-button>
@@ -640,6 +640,7 @@
         this.searchParams = payload;
         this.searchList = result;
         this.emptyData.tipType = 'search';
+        this.queryParams = Object.assign(this.queryParams, { current: 1, limit: 10 });
         this.resetPagination();
         this.fetchUserGroupList(true);
       },
