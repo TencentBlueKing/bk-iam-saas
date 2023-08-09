@@ -510,6 +510,7 @@
           if (!item.actions) {
             this.$set(item, 'actions', []);
           }
+          item.actions = item.actions.filter(v => !v.hidden);
           item.actions.forEach(act => {
             this.$set(act, 'checked', ['checked', 'readonly', 'delete'].includes(act.tag));
             this.$set(act, 'disabled', act.tag === 'readonly');
@@ -523,13 +524,14 @@
               }
             }
           });
-          allCount = allCount + item.actions.length
-          ;(item.sub_groups || []).forEach(sub => {
+          allCount = allCount + item.actions.length;
+          (item.sub_groups || []).forEach(sub => {
             this.$set(sub, 'expanded', false);
             this.$set(sub, 'actionsAllChecked', false);
             if (!sub.actions) {
               this.$set(sub, 'actions', []);
             }
+            sub.actions = sub.actions.filter(v => !v.hidden);
             sub.actions.forEach(act => {
               this.$set(act, 'checked', ['checked', 'readonly', 'delete'].includes(act.tag));
               this.$set(act, 'disabled', act.tag === 'readonly');
