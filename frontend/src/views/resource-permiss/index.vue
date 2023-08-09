@@ -2,7 +2,8 @@
   <!-- eslint-disable max-len -->
   <div class="iam-system-access-wrapper">
     <render-search>
-      <div>
+      <!-- 注释掉查询类型，保留默认查询为实例权限 -->
+      <!-- <div>
         <bk-form form-type="inline" class="pb10">
           <iam-form-item :label="$t(`m.common['查询类型']`)" class="pb20 form-item-resource">
             <bk-select
@@ -20,7 +21,7 @@
             <p class="error-tips" v-if="searchTypeError">{{$t(`m.resourcePermiss['请选择查询类型']`)}}</p>
           </iam-form-item>
         </bk-form>
-      </div>
+      </div> -->
       <div>
         <bk-form form-type="inline" class="pb10">
           <iam-form-item :label="$t(`m.permApply['选择系统']`)" class="pb20 pr20 form-item-resource">
@@ -250,7 +251,7 @@
         params: {},
         resourceInstances: [],
         searchTypeList: [{ name: this.$t(`m.resourcePermiss['实例权限']`), value: 'resource_instance' }, { name: this.$t(`m.resourcePermiss['操作权限']`), value: 'operate' }],
-        searchType: '',
+        searchType: 'resource_instance',
         searchValue: '',
         systemIdError: false,
         actionIdError: false,
@@ -619,8 +620,11 @@
       },
 
       handleEmptyClear () {
+        if (!this.searchValue) {
+          this.handleReset();
+          this.resourceTypeData = Object.assign({}, { isEmpty: true });
+        }
         this.searchValue = '';
-        this.handleReset();
         this.emptyData = formatCodeData(0, Object.assign(this.emptyData, { type: 'empty', text: '', tipType: '' }));
       },
 
