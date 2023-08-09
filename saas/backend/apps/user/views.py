@@ -8,6 +8,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from copy import copy
+
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, serializers, status
 from rest_framework.response import Response
@@ -18,6 +20,7 @@ from backend.apps.group.audit import GroupMemberDeleteAuditProvider
 from backend.apps.group.filters import GroupFilter
 from backend.apps.group.models import Group
 from backend.apps.group.serializers import GroupSearchSLZ
+from backend.apps.policy.serializers import PolicySLZ
 from backend.apps.role.constants import PermissionTypeEnum
 from backend.apps.role.serializers import RoleCommonActionSLZ
 from backend.apps.subject.serializers import SubjectGroupSLZ, UserRelationSLZ
@@ -25,7 +28,8 @@ from backend.apps.user.models import UserProfile
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.group import GroupBiz
 from backend.biz.permission_audit import QueryAuthorizedSubjects
-from backend.biz.role import RoleBiz
+from backend.biz.policy import ConditionBean, InstanceBean, PathNodeBeanList, PolicyOperationBiz, PolicyQueryBiz
+from backend.biz.role import ActionScopeDiffer, RoleBiz
 from backend.common.pagination import CustomPageNumberPagination
 from backend.common.serializers import SystemQuerySLZ
 from backend.common.time import get_soon_expire_ts
@@ -34,7 +38,7 @@ from backend.service.constants import SubjectRelationType
 from backend.service.group import SubjectGroup
 from backend.service.models import Subject
 
-from .serializers import GroupSLZ, QueryGroupSLZ, QueryRoleSLZ, UserNewbieSLZ, UserNewbieUpdateSLZ
+from .serializers import GroupSLZ, QueryGroupSLZ, QueryRoleSLZ, UserNewbieSLZ, UserNewbieUpdateSLZ, UserPolicySearchSLZ
 
 
 class UserGroupViewSet(GenericViewSet):
@@ -336,3 +340,63 @@ class UserDepartmentGroupSearchViewSet(mixins.ListModelMixin, GenericViewSet):
             return Response({"count": queryset.count(), "results": slz.data})
 
         return Response({"count": 0, "results": []})
+
+
+class UserPolicySearchViewSet(mixins.ListModelMixin, GenericViewSet):
+
+    pagination_class = None  # 去掉swagger中的limit offset参数
+
+    policy_query_biz = PolicyQueryBiz()
+    policy_operation_biz = PolicyOperationBiz()
+
+    @swagger_auto_schema(
+        operation_description="搜索用户权限策略列表",
+        request_body=UserPolicySearchSLZ(label="用户组搜索"),
+        responses={status.HTTP_200_OK: PolicySLZ(label="策略", many=True)},
+        tags=["user"],
+    )
+    def search(self, request, *args, **kwargs):
+        slz = UserPolicySearchSLZ(data=request.data)
+        slz.is_valid(raise_exception=True)
+
+        data = slz.validated_data
+        system_id = data["system_id"]
+
+        subject = Subject.from_username(request.user.username)
+        policies = self.policy_query_biz.list_by_subject(system_id, subject)
+
+        # ResourceNameAutoUpdate
+        policies = self.policy_operation_biz.update_due_to_renamed_resource(system_id, subject, policies)
+
+        if not data["action_id"]:
+            return Response([p.dict() for p in policies])
+
+        for p in policies:
+            if p.action_id == data["action_id"]:
+                for ri in data["resource_instances"]:
+                    # 判断操作是否有实例的权限
+                    for rg in p.resource_groups:
+                        rrt = rg.get_related_resource_type(ri["system_id"], ri["type"])
+                        if not rrt:
+                            return Response([])
+
+                        path = copy(ri["path"])
+                        path.append({"type": ri["type"], "id": ri["id"], "name": ri["name"]})
+
+                        conditions = [
+                            ConditionBean(
+                                instances=[InstanceBean(type=ri["type"], path=[PathNodeBeanList.parse_obj(path)])],
+                                attributes=[],
+                            )
+                        ]
+
+                        if ActionScopeDiffer(None, None)._diff_conditions(conditions, rrt.condition):
+                            break
+                    else:
+                        # 没有匹配的策略
+                        return Response([])
+
+                return Response([p.dict()])
+
+        # no action_id policy
+        return Response([])
