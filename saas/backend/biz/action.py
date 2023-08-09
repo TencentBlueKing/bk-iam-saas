@@ -110,7 +110,7 @@ class ActionBiz:
 
         # 隐藏的操作不显示
         if hidden:
-            action_list = ActionList(action_list.list_not_hidden())
+            action_list = ActionBeanList(action_list.list_not_hidden())
 
         scope_action_ids = RoleListQuery(role).list_scope_action_id(system_id)
 
