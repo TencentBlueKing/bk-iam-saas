@@ -1466,7 +1466,26 @@
       },
 
       async handleSubmit () {
-        const groupsList = [...this.defaultSelectedGroups, ...this.currentSelectedGroups];
+        const subjects = [];
+        let groupsList = [...this.currentSelectedGroups];
+        this.users.forEach(item => {
+          subjects.push({
+            type: 'user',
+            id: item.username
+          });
+        });
+        this.departments.forEach(item => {
+          subjects.push({
+            type: 'department',
+            id: item.id
+          });
+        });
+        if (subjects.length) {
+          const isOther = subjects.filter(item => item.id !== this.user.username);
+          if (isOther.length) {
+            groupsList = [...this.defaultSelectedGroups, ...this.currentSelectedGroups];
+          }
+        }
         if (!groupsList.length) {
           this.isShowGroupError = true;
           this.scrollToLocation(this.$refs.selectTableRef);
@@ -1486,26 +1505,6 @@
         if (this.expiredAtUse === 15552000) {
           this.expiredAtUse = this.handleExpiredAt();
         }
-        const subjects = [];
-        // if (this.isAll) {
-        //     subjects.push({
-        //         id: '*',
-        //         type: '*'
-        //     });
-        // } else {
-        this.users.forEach(item => {
-          subjects.push({
-            type: 'user',
-            id: item.username
-          });
-        });
-        this.departments.forEach(item => {
-          subjects.push({
-            type: 'department',
-            id: item.id
-          });
-        });
-        // }
         const params = {
           expired_at: this.expiredAtUse,
           reason: this.reason,
