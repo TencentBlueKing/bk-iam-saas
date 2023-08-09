@@ -1689,3 +1689,13 @@
     }
   }
 </style>
+
+<style lang="postcss" scoped>
+/deep/ .bk-page.bk-page-align-right {
+  div {
+    &:nth-of-type(3) {
+      display: none;
+    }
+  }
+}
+</style>
