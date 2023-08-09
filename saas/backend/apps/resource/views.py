@@ -46,16 +46,11 @@ class ResourceViewSet(ViewSet):
         # TODO：通过这个接口这样就把所有接入系统的资源拉取到？那么相当于用户访问iam saas就可以访问到接入系统所有资源，是否合理？如何鉴权？
         # 是否有keyword，如果有，则是搜索
         if keyword:
-            parent_type, parent_id = "", ""
-            if ancestors:
-                parent_type, parent_id = ancestors[-1]["type"], ancestors[-1]["id"]
-
             count, results = self.biz.search_instance_for_topology(
                 system_id,
                 resource_type_id,
                 keyword,
-                parent_type,
-                parent_id,
+                ancestors,
                 limit,
                 offset,
                 action_system_id,

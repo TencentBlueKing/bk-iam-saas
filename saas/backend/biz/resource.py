@@ -124,8 +124,7 @@ class ResourceBiz:
         system_id: str,
         resource_type_id: str,
         keyword: str,
-        parent_type: str = "",
-        parent_id: str = "",
+        ancestors: List[Dict[str, str]],
         limit: int = 10,
         offset: int = 0,
         action_system_id: str = "",
@@ -133,9 +132,7 @@ class ResourceBiz:
     ) -> Tuple[int, List[ResourceInstanceBaseInfo]]:
         """拓扑树的场景下，根据上级资源和Keyword搜索某个资源实例列表"""
         rp = self.new_resource_provider(system_id, resource_type_id)
-        count, results = rp.search_instance(
-            keyword, parent_type, parent_id, limit, offset, action_system_id, action_id
-        )
+        count, results = rp.search_instance(keyword, ancestors, limit, offset, action_system_id, action_id)
         return count, parse_obj_as(List[ResourceInstanceBaseInfoBean], results)
 
     def fetch_resource_name(
