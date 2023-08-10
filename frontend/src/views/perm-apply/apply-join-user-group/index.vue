@@ -449,6 +449,7 @@
         curUserGroup: [],
         currentSelectedGroups: [],
         defaultSelectedGroups: [],
+        defaultSelectedIds: [],
         searchParams: {},
         searchList: [],
         searchValue: [],
@@ -1147,6 +1148,7 @@
         window.changeDialog = true;
         type === 'user' ? this.users.splice(payload, 1) : this.departments.splice(payload, 1);
         // this.isShowMemberAdd = this.users.length < 1 && this.departments.length < 1;
+        this.formatCheckedUserGroup();
       },
 
       handleSubmitAdd (payload) {
@@ -1158,6 +1160,33 @@
         // this.isShowMemberAdd = false;
         this.isShowAddMemberDialog = false;
         this.isShowMemberEmptyError = false;
+        this.formatCheckedUserGroup();
+      },
+
+      // 处理权限获得者是非空并且不包含自己，不勾选个人已申请的用户组
+      formatCheckedUserGroup () {
+        const allList = [...this.users, ...this.departments];
+        const isMine = allList.find(item => item.username === this.user.username);
+        const currentSelectedGroups = this.currentSelectedGroups.map(item => item.id.toString());
+        this.curUserGroup = _.cloneDeep(this.defaultSelectedIds);
+        this.tableList.forEach(item => {
+          if (isMine || !allList.length) {
+            this.currentSelectedGroups = this.currentSelectedGroups.filter(
+              v => !this.curUserGroup.includes(v.id.toString()));
+            if (currentSelectedGroups.includes(item.id.toString())
+              || this.curUserGroup.includes(item.id.toString())) {
+              this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
+            }
+          } else {
+            if (this.curUserGroup.includes(item.id.toString())) {
+              this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, false);
+            }
+          }
+        });
+        // 处理有选择权限获得者并不包含自己的情况
+        if (!isMine && allList.length) {
+          this.curUserGroup = [];
+        }
       },
 
       setDefaultSelect (payload) {
@@ -1376,6 +1405,7 @@
               }
             });
             this.curUserGroup = _.cloneDeep(groupIdList);
+            this.defaultSelectedIds = _.cloneDeep(groupIdList);
             this.defaultSelectedGroups = _.cloneDeep(tableData || []);
           }
           this.emptyData = formatCodeData(code, this.emptyData, this.curUserGroup.length === 0);
@@ -1483,7 +1513,17 @@
         if (subjects.length) {
           const isOther = subjects.filter(item => item.id !== this.user.username);
           if (isOther.length) {
-            groupsList = [...this.defaultSelectedGroups, ...this.currentSelectedGroups];
+            // 如果权限获得者既包含了自己也包含了他人，就提交已申请过的加上勾选的
+            const isMine = subjects.find(item => item.id === this.user.username);
+            if (isMine) {
+              // 这里需要产品优化既包含了自己也包含了他人，单独提交已申请过了的用户组会报错，所以这里还需要判断下有没有勾选
+              if (!this.currentSelectedGroups.length) {
+                this.isShowGroupError = true;
+                this.scrollToLocation(this.$refs.selectTableRef);
+                return;
+              }
+              groupsList = [...this.defaultSelectedGroups, ...this.currentSelectedGroups];
+            }
           }
         }
         if (!groupsList.length) {
