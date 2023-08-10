@@ -1689,3 +1689,11 @@
     }
   }
 </style>
+
+<style lang="postcss" scoped>
+/deep/ .bk-page.bk-page-align-right {
+  .bk-page-selection-count-left {
+    display: none;
+  }
+}
+</style>

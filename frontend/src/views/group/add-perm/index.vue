@@ -132,7 +132,12 @@
         },
         permSideWidth: 960,
         curMap: null,
-        isShowErrorTips: false
+        isShowErrorTips: false,
+        readonly: false,
+        groupAttributes: {
+          source_type: '',
+          source_from_role: false
+        }
       };
     },
     computed: {
@@ -199,7 +204,25 @@
       window.FROM_ROUTER_NAME = from.name;
       next();
     },
+    async created () {
+      await this.fetchDetail();
+    },
     methods: {
+      async fetchDetail () {
+        const params = {
+          id: this.$route.params.id
+        };
+        if (this.externalSystemId) {
+          params.hidden = false;
+        }
+        const { data } = await this.$store.dispatch('userGroup/getUserGroupDetail', params);
+        const { attributes, readonly } = data;
+        this.readonly = readonly;
+        if (Object.keys(attributes).length) {
+          this.groupAttributes = Object.assign(this.groupAttributes, attributes);
+        }
+      },
+
       handleAddCancel (payload) {
         const { customPerm } = payload;
         if (customPerm) {
@@ -809,6 +832,14 @@
       },
 
       handleAddPerm () {
+        if (this.groupAttributes.source_from_role) {
+          this.messageError(this.$t(`m.info['管理员组不能添加权限']`), 2000);
+          return;
+        }
+        if (this.readonly) {
+          this.messageError(this.$t(`m.info['只读用户组不能添加权限']`), 2000);
+          return;
+        }
         if (this.externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn) {
           this.isShowAddActionSideslider = true;
         } else {
