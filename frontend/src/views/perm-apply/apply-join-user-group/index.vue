@@ -1148,7 +1148,8 @@
         window.changeDialog = true;
         type === 'user' ? this.users.splice(payload, 1) : this.departments.splice(payload, 1);
         // this.isShowMemberAdd = this.users.length < 1 && this.departments.length < 1;
-        this.formatCheckedUserGroup();
+        // 先注释掉此方法，新版交互用得到
+        // this.formatCheckedUserGroup();
       },
 
       handleSubmitAdd (payload) {
@@ -1160,7 +1161,7 @@
         // this.isShowMemberAdd = false;
         this.isShowAddMemberDialog = false;
         this.isShowMemberEmptyError = false;
-        this.formatCheckedUserGroup();
+        // this.formatCheckedUserGroup();
       },
 
       // 处理权限获得者是非空并且不包含自己，不勾选个人已申请的用户组
@@ -1497,7 +1498,7 @@
 
       async handleSubmit () {
         const subjects = [];
-        let groupsList = [...this.currentSelectedGroups];
+        const groupsList = [...this.currentSelectedGroups];
         this.users.forEach(item => {
           subjects.push({
             type: 'user',
@@ -1510,22 +1511,23 @@
             id: item.id
           });
         });
-        if (subjects.length) {
-          const isOther = subjects.filter(item => item.id !== this.user.username);
-          if (isOther.length) {
-            // 如果权限获得者既包含了自己也包含了他人，就提交已申请过的加上勾选的
-            const isMine = subjects.find(item => item.id === this.user.username);
-            if (isMine) {
-              // 这里需要产品优化既包含了自己也包含了他人，单独提交已申请过了的用户组会报错，所以这里还需要判断下有没有勾选
-              if (!this.currentSelectedGroups.length) {
-                this.isShowGroupError = true;
-                this.scrollToLocation(this.$refs.selectTableRef);
-                return;
-              }
-              groupsList = [...this.defaultSelectedGroups, ...this.currentSelectedGroups];
-            }
-          }
-        }
+        // 新版交互前，先采取只提交手动勾选的数据的临时方案
+        // if (subjects.length) {
+        //   const isOther = subjects.filter(item => item.id !== this.user.username);
+        //   if (isOther.length) {
+        //     // 如果权限获得者既包含了自己也包含了他人，就提交已申请过的加上勾选的
+        //     const isMine = subjects.find(item => item.id === this.user.username);
+        //     if (isMine) {
+        //       // 这里需要产品优化既包含了自己也包含了他人，单独提交已申请过了的用户组会报错，所以这里还需要判断下有没有勾选
+        //       if (!this.currentSelectedGroups.length) {
+        //         this.isShowGroupError = true;
+        //         this.scrollToLocation(this.$refs.selectTableRef);
+        //         return;
+        //       }
+        //       groupsList = [...this.defaultSelectedGroups, ...this.currentSelectedGroups];
+        //     }
+        //   }
+        // }
         if (!groupsList.length) {
           this.isShowGroupError = true;
           this.scrollToLocation(this.$refs.selectTableRef);
