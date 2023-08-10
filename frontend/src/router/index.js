@@ -303,9 +303,7 @@ export const beforeEach = async (to, from, next) => {
           } else {
             next();
           }
-        } else if (['gradingAdminEdit'].includes(to.name)) {
-          next();
-        } else if (['myPerm'].includes(to.name)) {
+        } else if (['gradingAdminEdit', 'myPerm'].includes(to.name)) {
           next();
         } else {
           next();

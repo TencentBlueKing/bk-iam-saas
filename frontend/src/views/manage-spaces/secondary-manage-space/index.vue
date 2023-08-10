@@ -91,7 +91,7 @@
   import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
 
   export default {
-    name: 'firstManageSpace',
+    name: 'secondaryManageSpace',
     components: {
       IamEditMemberSelector
     },

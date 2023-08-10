@@ -57,7 +57,7 @@
             class="mr10"
             theme="primary"
             text
-            :title="isAdminGroup(props.row) ? $t(`m.perm['管理员组只有一个管理员时，不可退出']`) : ''"
+            :title="isAdminGroup(props.row) ? $t(`m.perm['唯一管理员不可退出']`) : ''"
             :disabled="isAdminGroup(props.row)"
             @click="showQuitTemplates(props.row)">
             {{ $t(`m.common['退出']`) }}
