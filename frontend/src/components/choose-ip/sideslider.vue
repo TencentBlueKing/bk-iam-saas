@@ -167,7 +167,7 @@
         searchValue: '',
         loading: false,
         isFilter: false,
-        listLoading: false,
+        listLoading: true,
         isScrollBottom: false,
         isHide: false,
         notLimitValue: false,
@@ -216,7 +216,7 @@
               await this.fetchAuthorizationScopeActions(this.params.curAggregateSystemId);
             }
             if ((this.isSuperManager && !this.isHasDefaultData) || this.isAny) {
-              this.fetchData(true);
+              this.fetchData(false, true);
             } else {
               this.setSelectList(this.defaultList);
             }
