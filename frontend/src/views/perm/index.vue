@@ -17,13 +17,14 @@
         @click="handleBatchRenewal">
         {{ $t(`m.renewal['权限续期']`) }}
       </bk-button>
-      <div :class="[
-             'info-renewal',
-             {
-               'external-info-renewal': externalSystemsLayout.myPerm.hideApplyBtn,
-               'info-renewal-lang': !['zh-cn'].includes(CUR_LANGUAGE)
-             }
-           ]"
+      <div
+        :class="[
+          'info-renewal',
+          {
+            'external-info-renewal': externalSystemsLayout.myPerm.hideApplyBtn,
+            'info-renewal-lang': !['zh-cn'].includes(CUR_LANGUAGE)
+          }
+        ]"
         style="background: #000"
         v-bk-tooltips="$t(`m.renewal['没有需要续期的权限']`)"
         v-if="externalSystemsLayout.myPerm.hideApplyBtn ? isNoExternalRenewal : (isEmpty || isNoRenewal)"
@@ -80,44 +81,54 @@
           />
         </div>
       </template>
-      <bk-tab
-        v-else
-        :active="active"
-        type="unborder-card"
-        ext-cls="iam-my-perm-tab-cls"
-        @tab-change="handleTabChange">
-        <bk-tab-panel
-          v-for="(panel, index) in panels"
-          :data-test-id="`myPerm_tabPanel_${panel.name}`"
-          v-bind="panel"
-          :key="index">
-          <div class="content-wrapper" v-bkloading="{ isLoading: componentLoading, opacity: 1 }">
-            <component
-              v-if="!componentLoading && active === panel.name"
-              :is="active"
-              :personal-group-list="personalGroupList"
-              :system-list="systemList"
-              :tep-system-list="teporarySystemList"
-              :department-group-list="departmentGroupList"
-              :ref="panel.name"
-              :empty-data="curEmptyData"
-              @refresh="fetchData"
-            ></component>
-          </div>
-        </bk-tab-panel>
-      </bk-tab>
+      <template v-else>
+        <div>
+          <IamResourceCascadeSearch
+            :active="active"
+            @refresh-table="fetchRefreshTable"
+          />
+        </div>
+        <bk-tab
+          :active="active"
+          type="unborder-card"
+          ext-cls="iam-my-perm-tab-cls"
+          @tab-change="handleTabChange">
+          <bk-tab-panel
+            v-for="(panel, index) in panels"
+            :data-test-id="`myPerm_tabPanel_${panel.name}`"
+            v-bind="panel"
+            :key="index">
+            <div class="content-wrapper" v-bkloading="{ isLoading: componentLoading, opacity: 1 }">
+              <component
+                v-if="!componentLoading && active === panel.name"
+                :is="active"
+                :personal-group-list="personalGroupList"
+                :system-list="systemList"
+                :tep-system-list="teporarySystemList"
+                :department-group-list="departmentGroupList"
+                :ref="panel.name"
+                :empty-data="curEmptyData"
+                @refresh="fetchData"
+                @on-clear="handleEmptyClear"
+                @on-refresh="handleEmptyRefresh"
+              ></component>
+            </div>
+          </bk-tab-panel>
+        </bk-tab>
+      </template>
     </template>
   </div>
 </template>
 <script>
   import _ from 'lodash';
+  import { mapGetters } from 'vuex';
   import { buildURLParams } from '@/common/url';
   import { formatCodeData } from '@/common/util';
   import CustomPerm from './custom-perm/index.vue';
   import TeporaryCustomPerm from './teporary-custom-perm/index.vue';
   import GroupPerm from './group-perm/index.vue';
-  import { mapGetters } from 'vuex';
   import DepartmentGroupPerm from './department-group-perm/index.vue';
+  import IamResourceCascadeSearch from '@/components/iam-resource-cascade-search';
 
   export default {
     name: 'MyPerm',
@@ -125,7 +136,8 @@
       CustomPerm,
       TeporaryCustomPerm,
       GroupPerm,
-      DepartmentGroupPerm
+      DepartmentGroupPerm,
+      IamResourceCascadeSearch
     },
     data () {
       return {
@@ -174,11 +186,106 @@
           tipType: ''
         },
         enableTemporaryPolicy: window.ENABLE_TEMPORARY_POLICY,
-        CUR_LANGUAGE: window.CUR_LANGUAGE
+        enableGroupInstanceSearch: window.ENABLE_GROUP_INSTANCE_SEARCH.toLowerCase() === 'true',
+        CUR_LANGUAGE: window.CUR_LANGUAGE,
+        applyGroupData: {
+          system_id: '',
+          action_id: ''
+        },
+        curSelectMenu: '',
+        curInputText: '',
+        resourceTypeData: {
+          resource_groups: [{
+            'related_resource_types': [{
+              'type': '',
+              'system_id': '',
+              'name': '',
+              'canPaste': false,
+              'action': {
+                'name': '',
+                'type': ''
+              },
+              'isError': false,
+              'tag': '',
+              'flag': '',
+              'isChange': false,
+              'isNew': true,
+              'selectionMode': '',
+              'condition': [],
+              'conditionBackup': []
+            }],
+            'related_resource_types_list': []
+          }],
+          isEmpty: true
+        },
+        defaultResourceTypeList: [{
+          'type': '',
+          'system_id': '',
+          'name': '',
+          'canPaste': false,
+          'action': {
+            'name': '',
+            'type': ''
+          },
+          'isError': false,
+          'tag': '',
+          'flag': '',
+          'isChange': false,
+          'isNew': true,
+          'selectionMode': '',
+          'condition': [],
+          'conditionBackup': []
+        }],
+        initSearchData: [
+          {
+            id: 'name',
+            name: this.$t(`m.userGroup['用户组名']`),
+            default: true
+          },
+          {
+            id: 'id',
+            name: 'ID',
+            default: true
+          },
+          {
+            id: 'description',
+            name: this.$t(`m.common['描述']`),
+            disabled: true
+          },
+          {
+            id: 'system_id',
+            name: this.$t(`m.common['系统包含']`),
+            remoteMethod: this.handleRemoteSystem
+          },
+          {
+            id: 'role_id',
+            name: this.$t(`m.grading['管理空间']`),
+            remoteMethod: this.handleGradeAdmin
+          }
+        ],
+        searchList: [],
+        searchValue: [],
+        curResourceTypeList: [],
+        curResourceData: {
+          type: ''
+        },
+        searchParams: {},
+        systemSelectList: [],
+        processesList: [],
+        resourceInstances: [],
+        isShowConfirmDialog: false,
+        confirmDialogTitle: this.$t(`m.verify['admin无需申请权限']`),
+        actionIdError: false,
+        searchTypeError: false,
+        resourceTypeError: false,
+        resourceInstanceError: false,
+        isShowResourceInstanceSideSlider: false,
+        resourceInstanceSideSliderTitle: '',
+        contentWidth: window.innerWidth <= 1440 ? '200px' : '240px'
       };
     },
     computed: {
-            ...mapGetters(['externalSystemsLayout', 'externalSystemId'])
+      ...mapGetters(['externalSystemsLayout', 'externalSystemId'])
     },
     watch: {
       externalSystemsLayout: {
@@ -209,26 +316,16 @@
       if (query.tab) {
         this.active = query.tab;
       }
-      if (this.enableTemporaryPolicy.toLowerCase() === 'true') {
-        this.panels.push({
-          name: 'TeporaryCustomPerm',
-          label: this.$t(`m.myApply['临时权限']`)
-        });
-      }
+      // if (this.enableTemporaryPolicy.toLowerCase() === 'true') {
+      //   this.panels.push({
+      //     name: 'TeporaryCustomPerm',
+      //     label: this.$t(`m.myApply['临时权限']`)
+      //   });
+      // }
     },
     methods: {
       async fetchPageData () {
         await this.fetchData();
-      },
-
-      async handleTabChange (tabName) {
-        this.active = tabName;
-        await this.fetchData();
-        const searchParams = {
-                    ...this.$route.query,
-                    tab: tabName
-        };
-        window.history.replaceState({}, '', `?${buildURLParams(searchParams)}`);
       },
 
       async fetchData () {
@@ -326,6 +423,46 @@
           this.departmentGroupList.splice(0, this.departmentGroupList.length, ...departmentGroupList);
         }
       },
+
+      async fetchRefreshTable () {
+        const typeMap = {
+          GroupPerm: () => {
+
+          },
+          DepartmentGroupPerm: () => {
+
+          },
+          CustomPerm: () => {
+            
+          }
+        };
+        typeMap[this.active] ? typeMap[this.active]() : typeMap['GroupPerm']();
+      },
+
+      async handleTabChange (tabName) {
+        this.active = tabName;
+        await this.fetchData();
+        const searchParams = {
+          ...this.$route.query,
+          tab: tabName
+        };
+        window.history.replaceState({}, '', `?${buildURLParams(searchParams)}`);
+      },
+
+      // 显示资源实例
+      handleShowResourceInstance (data, resItem, resIndex, groupIndex) {
+        this.params = {
+          system_id: this.applyGroupData.system_id,
+          action_id: data.id,
+          resource_type_system: resItem.system_id,
+          resource_type_id: resItem.type
+        };
+        this.curResIndex = resIndex;
+        this.groupIndex = groupIndex;
+        this.resourceInstanceSidesliderTitle = this.$t(`m.info['关联侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}` });
+        window.changeAlert = 'iamSidesider';
+        this.isShowResourceInstanceSideSlider = true;
+      },
       // fetchSoonGroupWithUser () {
       //     return this.$store.dispatch('renewal/getExpireSoonGroupWithUser')
       // },
@@ -370,16 +507,39 @@
           });
         }
       },
+
       // 权限交接
       handleGoPermTransfer () {
         this.$router.push({
           name: 'permTransfer'
         });
       },
+
       handleGoApplyProvisionPerm () {
         this.$router.push({
           name: 'applyProvisionPerm'
         });
+      },
+
+      formatFormItemWidth () {
+        this.contentWidth = window.innerWidth <= 1520 ? '200px' : '240px';
+      },
+      
+      handleEmptyRefresh () {
+        this.searchParams = {};
+        this.queryParams = {};
+        this.searchValue = [];
+        this.emptyData.tipType = '';
+      },
+
+      handleEmptyClear () {
+        this.searchParams = {};
+        this.queryParams = {};
+        this.searchValue = [];
+        this.emptyData.tipType = '';
+        if (this.$refs.searchSelectRef && this.$refs.searchSelectRef.$refs.searchSelect) {
+          this.$refs.searchSelectRef.$refs.searchSelect.localValue = '';
+        }
       }
     }
   };

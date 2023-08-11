@@ -70,6 +70,7 @@
           :empty-text="groupPermEmptyData.text"
           :tip-text="groupPermEmptyData.tip"
           :tip-type="groupPermEmptyData.tipType"
+          @on-clear="handleEmptyClear"
           @on-refresh="handleEmptyRefresh"
         />
       </template>
@@ -316,6 +317,13 @@
       handleEmptyRefresh () {
         this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10 });
         this.getDataByPage();
+        this.$emit('on-refresh');
+      },
+
+      handleEmptyClear () {
+        this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10 });
+        this.getDataByPage();
+        this.$emit('on-clear');
       },
 
       /**
