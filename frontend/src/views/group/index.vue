@@ -354,7 +354,12 @@
                 return getWindowHeight() - 185;
             },
             isBatchDisabled () {
-              return this.currentSelectList.length < 1 || this.currentSelectList.every(item => item.disabled);
+              if (this.currentSelectList.length) {
+                const isDisabled = this.currentSelectList.every(item => item.readonly);
+                return isDisabled;
+              } else {
+                return true;
+              }
             }
     },
     watch: {
@@ -846,7 +851,7 @@
       handleAfterEditLeave () { },
 
       handleBatchAddMember () {
-        const hasDisabledData = this.currentSelectList.filter(item => item.disabled);
+        const hasDisabledData = this.currentSelectList.filter(item => item.readonly);
         if (hasDisabledData.length) {
           const disabledNames = hasDisabledData.map(item => item.name);
           this.messageError(`m.info['用户组为只读用户组不能添加成员']`, { value: `${this.$t(`m.common['【']`)}${disabledNames}${this.$t(`m.common['】']`)}` });
