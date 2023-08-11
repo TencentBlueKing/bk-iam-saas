@@ -1088,7 +1088,7 @@ class TestPolicyBeanListMixin:
             ),
             (
                 ResourceNodeAttributeDictBean(data={}),
-                True,
+                False,
             ),
         ],
     )

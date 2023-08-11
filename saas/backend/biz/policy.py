@@ -1062,8 +1062,13 @@ class PolicyBeanListMixin:
             # 任意需要特殊判断：只要包含无限制即可
             if node.id == ANY_ID and real_name.lower() in node.name.lower():
                 continue
+
+            # NOTE: 如果查不到, 跳过, 避免报错
+            if not real_name:
+                continue
+
             # 接入系统查询不到 或者 名称不一致则需要报错提示
-            if not real_name or real_name != node.name:
+            if real_name != node.name:
                 raise error_codes.INVALID_ARGS.format(
                     "resource(system_id:{}, type:{}, id:{}, name:{}, real_name: {}) name not match".format(
                         node.system_id, node.type, node.id, node.name, real_name
