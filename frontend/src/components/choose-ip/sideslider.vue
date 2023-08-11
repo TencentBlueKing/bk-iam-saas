@@ -633,9 +633,9 @@
                 left: 50%;
                 top: 50%;
                 transform: translate(-50%, -50%);
-                img {
+                /* img {
                     width: 120px;
-                }
+                } */
             }
         }
     }
