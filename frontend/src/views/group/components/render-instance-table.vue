@@ -72,13 +72,14 @@
                 <bk-button v-for="(item, index) in row.aggregateResourceType"
                   :key="item.id" @click="selectResourceType(row, index)"
                   :class="row.selectedIndex === index ? 'is-selected' : ''" size="small">{{item.name}}
-                  <span v-if="row.instancesDisplayData[item.id] && row.instancesDisplayData[item.id].length">({{row.instancesDisplayData[item.id].length}})</span>
+                  <span v-if="!row.isNoLimited && row.instancesDisplayData[item.id] && row.instancesDisplayData[item.id].length">({{row.instancesDisplayData[item.id].length}})</span>
                 </bk-button>
               </div>
               <div class="content">
+                {{ formatDisplayValue(row)}}
                 <render-condition
                   :ref="`condition_${$index}_aggregateRef`"
-                  :value="row.value"
+                  :value="formatDisplayValue(row)"
                   :is-empty="row.empty"
                   :can-view="false"
                   :can-paste="row.canPaste"
@@ -529,6 +530,20 @@
       },
       isShowDeleteAction () {
         return ['detail'].includes(this.mode) && this.isCustom && this.type !== 'view' && !this.externalDelete;
+      },
+      // 处理无限制和聚合后多个tab数据结构不兼容情况
+      formatDisplayValue () {
+        return (payload) => {
+          const { isNoLimited, empty, value, aggregateResourceType, selectedIndex } = payload;
+          if (value && aggregateResourceType[selectedIndex]) {
+            let displayValue = aggregateResourceType[selectedIndex].displayValue;
+            if (isNoLimited || empty) {
+              console.log(isNoLimited, empty);
+              displayValue = value;
+            }
+            return displayValue;
+          }
+        };
       }
     },
     watch: {
@@ -1049,6 +1064,7 @@
                 if (Object.keys(item.instancesDisplayData).length) {
                   item.instancesDisplayData[this.instanceKey] = _.cloneDeep(tempArrgegateData);
                   item.instances = this.setInstanceData(item.instancesDisplayData);
+                  console.log(item, this.curCopyKey, 5555);
                 } else {
                   item.instances = _.cloneDeep(tempArrgegateData);
                   this.setInstancesDisplayData(item);
