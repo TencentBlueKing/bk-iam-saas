@@ -24,11 +24,12 @@
  * IN THE SOFTWARE.
 */
 
+import Vue from 'vue';
 import _ from 'lodash';
 import { il8n, language } from '@/language';
 export default class GradeAggregationPolicy {
   constructor (payload) {
-    this.isError = false;
+    this.isError = payload.isError || false;
     this.actions = payload.actions || [];
     this.instancesDisplayData = payload.instancesDisplayData || {};
     this.aggregateResourceType = payload.aggregate_resource_types || [];
@@ -51,18 +52,41 @@ export default class GradeAggregationPolicy {
       return il8n('verify', '请选择');
     }
     let str = '';
-    this.aggregateResourceType.forEach(item => {
-      if (this.instancesDisplayData[item.id] && this.instancesDisplayData[item.id].length === 1) {
-        str = `${str}${il8n('common', '，')}${item.name}${il8n('common', '：')}${this.instancesDisplayData[item.id][0].name}`;
-      } else if (this.instancesDisplayData[item.id] && this.instancesDisplayData[item.id].length > 1) {
-        for (const key in this.instancesDisplayData) {
-          if (item.id === key) {
-            str = language === 'zh-cn' ? `${str}，已选择${this.instancesDisplayData[item.id].length}个${item.name}` : `${str}, selected ${this.instancesDisplayData[item.id].length} ${item.name}(s)`;
+    this.aggregateResourceType.length && this.aggregateResourceType.forEach(item => {
+      if (this.instancesDisplayData[item.id]) {
+        if (this.instancesDisplayData[item.id].length > 1) {
+          for (const key in this.instancesDisplayData) {
+            if (item.id === key) {
+              str = language === 'zh-cn' ? `${str}，已选择${this.instancesDisplayData[item.id].length}个${item.name}` : `${str}, selected ${this.instancesDisplayData[item.id].length} ${item.name}(s)`;
+              Vue.set(item, 'displayValue', str.substring(1, str.length));
+              str = '';
+            }
           }
+        } else {
+          // 这里防止切换tab下存在空数据，需要重新判断下
+          if (this.instancesDisplayData[item.id] && this.instancesDisplayData[item.id].length === 1) {
+            str = `${str}${il8n('common', '，')}${item.name}${il8n('common', '：')}${this.instancesDisplayData[item.id][0].name}`;
+          }
+          Vue.set(item, 'displayValue', str.substring(1, str.length));
+          str = '';
         }
+      } else {
+        this.instancesDisplayData[item.id] = [];
+        Vue.set(item, 'displayValue', '');
+        str = '';
       }
+      // if (this.instancesDisplayData[item.id] && this.instancesDisplayData[item.id].length === 1) {
+      // } else if (this.instancesDisplayData[item.id] && this.instancesDisplayData[item.id].length > 1) {
+      //   for (const key in this.instancesDisplayData) {
+      //     if (item.id === key) {
+      //       str = language === 'zh-cn' ? `${str}，已选择${this.instancesDisplayData[item.id].length}个${item.name}` : `${str}, selected ${this.instancesDisplayData[item.id].length} ${item.name}(s)`;
+      //     }
+      //   }
+      // }
     });
-    return str.substring(1, str.length);
+    // return str.substring(1, str.length);
+    const aggregateResourceType = _.cloneDeep(this.aggregateResourceType.map(item => item.displayValue));
+    return aggregateResourceType.join();
   }
 
   get name () {

@@ -691,6 +691,57 @@ export default {
         {},
         config
       );
+    },
+
+    /**
+       *  用户组权限搜索
+       *
+       * @param {Function} commit store commit mutation handler
+       * @param {Object} state store state
+       * @param {Function} dispatch store dispatch action handler
+       * @param {Object?} config http config
+       *
+       * @return {Promise} promise 对象
+   */
+    getUserGroupSearch ({ commit, state, dispatch }, params, config) {
+      const { offset, limit } = params;
+      const queryParams = Object.assign({}, { offset, limit });
+      return http.post(`${AJAX_URL_PREFIX}/users/groups/search/?${json2Query(queryParams)}`, params, config);
+    },
+    
+    /**
+       *  所属部门组织权限搜索
+       *
+       * @param {Function} commit store commit mutation handler
+       * @param {Object} state store state
+       * @param {Function} dispatch store dispatch action handler
+       * @param {Object?} config http config
+       *
+       * @return {Promise} promise 对象
+   */
+    getDepartGroupSearch ({ commit, state, dispatch }, params, config) {
+      const { offset, limit } = params;
+      const queryParams = Object.assign({}, { offset, limit });
+      return http.post(`${AJAX_URL_PREFIX}/users/departments/-/groups/search/?${json2Query(queryParams)}`, params, config);
+    },
+
+    /**
+       *  自定义权限搜索
+       *
+       * @param {Function} commit store commit mutation handler
+       * @param {Object} state store state
+       * @param {Function} dispatch store dispatch action handler
+       * @param {Object?} config http config
+       *
+       * @return {Promise} promise 对象
+   */
+    getPoliciesSearch ({ commit, state, dispatch }, params, config) {
+      delete params.offset;
+      delete params.limit;
+      delete params.id;
+      delete params.description;
+      delete params.name;
+      return http.post(`${AJAX_URL_PREFIX}/users/policies/search`, params, config);
     }
   }
 };

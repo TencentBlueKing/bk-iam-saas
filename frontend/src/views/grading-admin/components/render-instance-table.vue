@@ -71,7 +71,7 @@
               </div>
               <render-condition
                 :ref="`condition_${$index}_aggregateRef`"
-                :value="row.value"
+                :value="formatDisplayValue(row)"
                 :is-empty="row.empty"
                 :can-view="false"
                 :can-paste="row.canPaste"
@@ -327,6 +327,19 @@
               return false;
           }
           return this.tableList[this.curIndex].policy_id !== '';
+      },
+      // 处理无限制和聚合后多个tab数据结构不兼容情况
+      formatDisplayValue () {
+        return (payload) => {
+          const { isNoLimited, empty, value, aggregateResourceType, selectedIndex } = payload;
+          if (value && aggregateResourceType[selectedIndex]) {
+            let displayValue = aggregateResourceType[selectedIndex].displayValue;
+            if (isNoLimited || empty) {
+              displayValue = value;
+            }
+            return displayValue;
+          }
+        };
       }
     },
     watch: {

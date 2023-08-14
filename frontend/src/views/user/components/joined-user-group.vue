@@ -47,7 +47,13 @@
             <bk-button disabled text v-if="props.row.department_id !== 0">
               <span :title="$t(`m.perm['通过组织加入的组无法退出']`)">{{ $t(`m.common['退出']`) }}</span>
             </bk-button>
-            <bk-button v-else theme="primary" text @click="showQuitTemplates(props.row)">
+            <bk-button
+              v-else
+              theme="primary"
+              text
+              :title="isAdminGroup(props.row) ? $t(`m.perm['唯一管理员不可退出']`) : ''"
+              :disabled="isAdminGroup(props.row)"
+              @click="showQuitTemplates(props.row)">
               {{ $t(`m.common['退出']`) }}
             </bk-button>
           </template>
@@ -239,13 +245,24 @@
       };
     },
     computed: {
-            ...mapGetters(['user']),
-            curSelectIds () {
-                return this.currentSelectList.map(item => item.id);
-            },
-            tableHeight () {
-                return getWindowHeight() - 290;
+      ...mapGetters(['user']),
+      curSelectIds () {
+          return this.currentSelectList.map(item => item.id);
+      },
+      tableHeight () {
+          return getWindowHeight() - 290;
+      },
+      isAdminGroup () {
+        return (payload) => {
+          if (payload) {
+            const { attributes, role_members } = payload;
+            if (attributes && attributes.source_from_role && role_members.length === 1) {
+              return true;
             }
+            return false;
+          }
+        };
+      }
     },
     watch: {
       'pagination.current' (value) {
