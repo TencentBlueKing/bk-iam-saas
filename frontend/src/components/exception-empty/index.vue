@@ -90,7 +90,10 @@
       return (
                 <div>
                     <bk-exception
-                        ext-cls={['exception-wrap']}
+                        ext-cls={[
+                          'exception-wrap',
+                          { 'exception-no-wrap': !this.type }
+                        ]}
                         type={this.type}
                         scene={this.scene}
                         v-bind="$attrs"
@@ -144,6 +147,12 @@
       width: 400px !important;
       margin-top: 150px;
       height: 100%;
+    }
+}
+
+/deep/ .exception-no-wrap {
+    .bk-exception-img {
+      width: 0 !important;
     }
 }
 </style>
