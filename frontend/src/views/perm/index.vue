@@ -84,8 +84,10 @@
       <template v-else>
         <div>
           <IamResourceCascadeSearch
+            ref="iamResourceSearchRef"
             :active="active"
-            @refresh-table="fetchRefreshTable"
+            @on-remote-table="handleRemoteTable"
+            @on-refresh-table="handleRefreshTable"
           />
         </div>
         <bk-tab
@@ -108,6 +110,8 @@
                 :department-group-list="departmentGroupList"
                 :ref="panel.name"
                 :empty-data="curEmptyData"
+                :cur-search-params="curSearchParams"
+                :cur-search-pagination="curSearchPagination"
                 @refresh="fetchData"
                 @on-clear="handleEmptyClear"
                 @on-refresh="handleEmptyRefresh"
@@ -151,12 +155,12 @@
           {
             name: 'DepartmentGroupPerm',
             label: this.$t(`m.perm['所属组织用户组权限']`),
-            empty: 'emptyData6'
+            empty: 'emptyDepartmentGroupData'
           },
           {
             name: 'CustomPerm',
             label: this.$t(`m.approvalProcess['自定义权限']`),
-            empty: 'emptyData2'
+            empty: 'emptyCustomData'
           }
           // {
           //     name: 'TeporaryCustomPerm', label: this.$t(`m.myApply['临时权限']`)
@@ -173,12 +177,19 @@
         teporarySystemList: [],
         departmentGroupList: [],
         enablePermissionHandover: window.ENABLE_PERMISSION_HANDOVER,
+        curSearchParams: {},
+        curSearchPagination: {
+          current: 1,
+          count: 0,
+          limit: 10
+        },
         emptyData: {
           type: '',
           text: '',
           tip: '',
           tipType: ''
         },
+        emptyDepartmentGroupData: {},
         curEmptyData: {
           type: 'empty',
           text: '暂无数据',
@@ -188,91 +199,6 @@
         enableTemporaryPolicy: window.ENABLE_TEMPORARY_POLICY,
         enableGroupInstanceSearch: window.ENABLE_GROUP_INSTANCE_SEARCH.toLowerCase() === 'true',
         CUR_LANGUAGE: window.CUR_LANGUAGE,
-        applyGroupData: {
-          system_id: '',
-          action_id: ''
-        },
-        curSelectMenu: '',
-        curInputText: '',
-        resourceTypeData: {
-          resource_groups: [{
-            'related_resource_types': [{
-              'type': '',
-              'system_id': '',
-              'name': '',
-              'canPaste': false,
-              'action': {
-                'name': '',
-                'type': ''
-              },
-              'isError': false,
-              'tag': '',
-              'flag': '',
-              'isChange': false,
-              'isNew': true,
-              'selectionMode': '',
-              'condition': [],
-              'conditionBackup': []
-            }],
-            'related_resource_types_list': []
-          }],
-          isEmpty: true
-        },
-        defaultResourceTypeList: [{
-          'type': '',
-          'system_id': '',
-          'name': '',
-          'canPaste': false,
-          'action': {
-            'name': '',
-            'type': ''
-          },
-          'isError': false,
-          'tag': '',
-          'flag': '',
-          'isChange': false,
-          'isNew': true,
-          'selectionMode': '',
-          'condition': [],
-          'conditionBackup': []
-        }],
-        initSearchData: [
-          {
-            id: 'name',
-            name: this.$t(`m.userGroup['用户组名']`),
-            default: true
-          },
-          {
-            id: 'id',
-            name: 'ID',
-            default: true
-          },
-          {
-            id: 'description',
-            name: this.$t(`m.common['描述']`),
-            disabled: true
-          },
-          {
-            id: 'system_id',
-            name: this.$t(`m.common['系统包含']`),
-            remoteMethod: this.handleRemoteSystem
-          },
-          {
-            id: 'role_id',
-            name: this.$t(`m.grading['管理空间']`),
-            remoteMethod: this.handleGradeAdmin
-          }
-        ],
-        searchList: [],
-        searchValue: [],
-        curResourceTypeList: [],
-        curResourceData: {
-          type: ''
-        },
-        searchParams: {},
-        systemSelectList: [],
-        processesList: [],
-        resourceInstances: [],
         isShowConfirmDialog: false,
         confirmDialogTitle: this.$t(`m.verify['admin无需申请权限']`),
         actionIdError: false,
@@ -309,9 +235,9 @@
       }
     },
     created () {
-      this.emptyData2 = _.cloneDeep(this.emptyData);
-      this.emptyData5 = _.cloneDeep(this.emptyData);
-      this.emptyData6 = _.cloneDeep(this.emptyData);
+      this.emptyCustomData = _.cloneDeep(this.emptyData);
+      this.emptyTemporarySystemData = _.cloneDeep(this.emptyData);
+      this.emptyDepartmentGroupData = _.cloneDeep(this.emptyData);
       const query = this.$route.query;
       if (query.tab) {
         this.active = query.tab;
@@ -352,31 +278,33 @@
         ];
         try {
           const [
-            { code: code1, data: data1 },
-            { code: code2, data: data2 },
+            { code: personalGroupCode, data: personalGroupData },
+            { code: emptyCustomCode, data: customData },
             { data: data3 },
             { data: data4 },
-            { code: code5, data: data5 },
-            { code: code6, data: data6 }
+            { code: teporarySystemCode, data: teporarySystemData },
+            { code: departmentGroupCode, data: departmentGroupData }
           ] = await Promise.all(requestList);
                     
-          const personalGroupList = data1.results || [];
+          const personalGroupList = personalGroupData.results || [];
           this.personalGroupList.splice(0, this.personalGroupList.length, ...personalGroupList);
-          this.emptyData = formatCodeData(code1, this.emptyData, this.personalGroupList.length === 0);
+          this.emptyData = formatCodeData(personalGroupCode, this.emptyData, this.personalGroupList.length === 0);
                     
-          const systemList = data2 || [];
+          const systemList = customData || [];
           this.systemList.splice(0, this.systemList.length, ...systemList);
-          this.emptyData2 = formatCodeData(code2, this.emptyData2, this.systemList.length === 0);
+          this.emptyCustomData = formatCodeData(emptyCustomCode, this.emptyCustomData, this.systemList.length === 0);
 
-          const teporarySystemList = data5 || [];
+          const teporarySystemList = teporarySystemData || [];
           this.teporarySystemList.splice(0, this.teporarySystemList.length, ...teporarySystemList);
-          this.emptyData5 = formatCodeData(code5, this.emptyData5, this.teporarySystemList.length === 0);
+          this.emptyTemporarySystemData
+            = formatCodeData(teporarySystemCode, this.emptyTemporarySystemData, this.teporarySystemList.length === 0);
 
-          const departmentGroupList = data6 || [];
+          const departmentGroupList = departmentGroupData || [];
           this.departmentGroupList.splice(0, this.departmentGroupList.length, ...departmentGroupList);
-          this.emptyData6 = formatCodeData(code6, this.emptyData6, this.departmentGroupList.length === 0);
+          this.emptyDepartmentGroupData
+            = formatCodeData(departmentGroupCode, this.emptyDepartmentGroupData, this.departmentGroupList.length === 0);
 
-          this.isEmpty = personalGroupList.length < 1 && systemList.length < 1
+          this.isEmpty = personalGroupData.results.length < 1 && customData.length < 1
             && teporarySystemList.length < 1 && departmentGroupList.length < 1;
           this.soonGroupLength = data3.results.length;
           this.soonPermLength = data4.length;
@@ -424,19 +352,31 @@
         }
       },
 
-      async fetchRefreshTable () {
+      async handleRemoteTable (payload) {
+        const { emptyData, pagination, searchParams } = payload;
+        this.curSearchParams = _.cloneDeep(searchParams);
+        this.curSearchPagination = _.cloneDeep(pagination);
         const typeMap = {
           GroupPerm: () => {
-
+            this.personalGroupList = [];
+            this.emptyData = _.cloneDeep(emptyData);
           },
           DepartmentGroupPerm: () => {
-
+            this.departmentGroupList = [];
+            this.emptyDepartmentGroupData = _.cloneDeep(emptyData);
           },
           CustomPerm: () => {
-            
+            this.emptyCustomData = _.cloneDeep(emptyData);
           }
         };
+        this.curEmptyData = _.cloneDeep(emptyData);
         typeMap[this.active] ? typeMap[this.active]() : typeMap['GroupPerm']();
+      },
+
+      async handleRefreshTable () {
+        this.curEmptyData.tipType = '';
+        this.curSearchParams = {};
+        this.fetchData();
       },
 
       async handleTabChange (tabName) {
@@ -526,20 +466,13 @@
       },
       
       handleEmptyRefresh () {
-        this.searchParams = {};
-        this.queryParams = {};
-        this.searchValue = [];
-        this.emptyData.tipType = '';
+        // 调用子组件的刷新方法
+        this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyClear();
       },
 
       handleEmptyClear () {
-        this.searchParams = {};
-        this.queryParams = {};
-        this.searchValue = [];
-        this.emptyData.tipType = '';
-        if (this.$refs.searchSelectRef && this.$refs.searchSelectRef.$refs.searchSelect) {
-          this.$refs.searchSelectRef.$refs.searchSelect.localValue = '';
-        }
+        // 调用子组件的刷新方法
+        this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyClear();
       }
     }
   };

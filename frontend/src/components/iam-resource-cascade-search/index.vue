@@ -203,7 +203,7 @@
   import IamSearchSelect from '@/components/iam-search-select';
   import { mapGetters } from 'vuex';
   import { leaveConfirm } from '@/common/leave-confirm';
-  import { delLocationHref, formatCodeData } from '@/common/util';
+  import { delLocationHref } from '@/common/util';
   
   export default {
     components: {
@@ -317,6 +317,7 @@
         resourceInstances: [],
         isShowConfirmDialog: false,
         confirmDialogTitle: this.$t(`m.verify['admin无需申请权限']`),
+        systemIdError: false,
         actionIdError: false,
         searchTypeError: false,
         resourceTypeError: false,
@@ -325,6 +326,7 @@
         isSearchSystem: false,
         groupIndex: -1,
         curResIndex: -1,
+        queryParams: {},
         searchUserGroupList: [],
         searchDepartGroupList: [],
         searchSystemPolicyList: [],
@@ -385,7 +387,8 @@
     methods: {
       async fetchPermData () {
         this.fetchSystemList();
-        if (this.applyGroupData.system_id) {
+        const isSearch = this.applyGroupData.system_id || Object.keys(this.searchParams).length > 0;
+        if (isSearch) {
           await this.handleSearchUserGroup();
         }
       },
@@ -412,9 +415,13 @@
 
       async handleSearchUserGroup (isClick = false) {
         this.handleManualInput();
-        const { id, name, description } = this.searchParams;
-        const isSearch = this.applyGroupData.system_id || id || name || description;
+        const isSearch = this.applyGroupData.system_id || Object.keys(this.searchParams).length > 0;
         if (isSearch) {
+          this.systemIdError = false;
+          if (!this.applyGroupData.system_id && ['CustomPerm'].includes(this.active)) {
+            this.systemIdError = true;
+            return;
+          }
           let resourceInstances = _.cloneDeep(this.resourceInstances);
           if (this.applyGroupData.system_id) {
             if (!this.applyGroupData.action_id) {
@@ -448,16 +455,16 @@
           if (isClick) {
             this.resetPagination();
           }
-          await this.fetchSearchUserGroup(resourceInstances, true);
+          await this.fetchSearchUserGroup(resourceInstances);
         } else {
+          // 如果没有搜索参数，重置数据
           this.isSearchSystem = false;
-          // 调用当前索引的列表
-          this.$emit('refresh-table');
+          this.emptyData.tipType = '';
+          this.$emit('on-refresh-table');
         }
       },
 
-      async fetchSearchUserGroup (resourceInstances, isTableLoading = true) {
-        this.tableLoading = isTableLoading;
+      async fetchSearchUserGroup (resourceInstances) {
         const { current, limit } = this.pagination;
         if (this.searchParams.hasOwnProperty('id')) {
           if (!isNaN(Number(this.searchParams.id))) {
@@ -471,60 +478,13 @@
             offset: limit * (current - 1),
             resource_instances: resourceInstances || []
         };
-        try {
-          this.emptyData.tipType = 'search';
-          const tabMap = {
-            GroupPerm: async () => {
-              const { code, data } = await this.$store.dispatch('perm/getUserGroupSearch', params);
-              const { count, results } = data;
-              this.searchUserGroupList.splice(0, this.searchUserGroupList.length, ...(results || []));
-              this.pagination.count = count || 0;
-              this.emptyData = formatCodeData(code, this.emptyData, this.searchUserGroupList.length === 0);
-              this.$emit('on-remote-table', {
-                tableList: this.searchUserGroupList,
-                pagination: this.pagination,
-                emptyData: this.emptyData
-              });
-            },
-            DepartmentGroupPerm: async () => {
-              const { code, data } = await this.$store.dispatch('perm/getDepartGroupSearch', params);
-              const { count, results } = data;
-              this.searchDepartGroupList.splice(0, this.searchDepartGroupList.length, ...(results || []));
-              this.pagination.count = count || 0;
-              this.emptyData = formatCodeData(code, this.emptyData, this.searchDepartGroupList.length === 0);
-              this.$emit('on-remote-table', {
-                tableList: this.searchUserGroupList,
-                pagination: this.pagination
-              });
-            },
-            CustomPerm: async () => {
-              const { code, data } = await this.$store.dispatch('perm/getPoliciesSearch', params);
-              this.searchSystemPolicyList.splice(0, this.searchDepartGroupList.length, ...(data || []));
-              this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
-              this.$emit('on-remote-table', {
-                tableList: this.searchUserGroupList,
-                pagination: this.pagination
-              });
-            }
-          };
-          return tabMap[this.active]();
-        } catch (e) {
-          console.error(e);
-          const { code, data, message, statusText } = e;
-          this.tableList = [];
-          this.emptyData = formatCodeData(code, this.emptyData);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: message || data.msg || statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
-        } finally {
-          this.tableLoading = false;
-          this.curSelectMenu = '';
-          this.curInputText = '';
-        }
+        this.$emit('on-remote-table', {
+          searchParams: params,
+          pagination: this.pagination,
+          emptyData: { ...this.emptyData, ...{ tipType: 'search' } }
+        });
+        this.curSelectMenu = '';
+        this.curInputText = '';
       },
 
       async handleCascadeChange () {
@@ -565,17 +525,38 @@
       },
 
       handleSearch (payload, result) {
-        console.log(5556);
         this.searchParams = payload;
         this.searchList = [...result];
         this.curSelectMenu = '';
         this.curInputText = '';
         this.emptyData.tipType = 'search';
         this.resetPagination();
-        this.handleSearchUserGroup();
         if (!result.length) {
           this.resetLocationHref();
         }
+        this.handleSearchUserGroup();
+      },
+
+      handleEmptyClear () {
+        this.searchParams = {};
+        this.queryParams = {};
+        this.searchValue = [];
+        this.emptyData.tipType = '';
+        if (this.$refs.searchSelectRef && this.$refs.searchSelectRef.$refs.searchSelect) {
+          this.$refs.searchSelectRef.$refs.searchSelect.localValue = '';
+        }
+        this.resetPagination();
+        this.resetSearchParams();
+        this.handleSearchUserGroup();
+      },
+
+      async handleClearSearch () {
+        this.applyGroupData.action_id = '';
+        this.curResourceData.type = '';
+        this.emptyData.tipType = '';
+        this.resourceInstances = [];
+        this.resetPagination();
+        this.handleSearchUserGroup();
       },
 
       handleResourceTypeChange (index) {
@@ -733,7 +714,7 @@
         };
         this.curResIndex = resIndex;
         this.groupIndex = groupIndex;
-        this.resourceInstanceSidesliderTitle = this.$t(`m.info['关联侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}` });
+        this.resourceInstanceSideSliderTitle = this.$t(`m.info['关联侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}` });
         window.changeAlert = 'iamSidesider';
         this.isShowResourceInstanceSideSlider = true;
       },
@@ -791,6 +772,10 @@
           this.isShowResourceInstanceSideSlider = false;
           this.resetDataAfterClose();
         }, _ => _);
+      },
+
+      formatFormItemWidth () {
+        this.contentWidth = window.innerWidth <= 1520 ? '200px' : '240px';
       },
 
       handleQuickSearchMethod (value) {

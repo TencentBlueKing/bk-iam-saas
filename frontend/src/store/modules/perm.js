@@ -736,6 +736,11 @@ export default {
        * @return {Promise} promise 对象
    */
     getPoliciesSearch ({ commit, state, dispatch }, params, config) {
+      delete params.offset;
+      delete params.limit;
+      delete params.id;
+      delete params.description;
+      delete params.name;
       return http.post(`${AJAX_URL_PREFIX}/users/policies/search`, params, config);
     }
   }

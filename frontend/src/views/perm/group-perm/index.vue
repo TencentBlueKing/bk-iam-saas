@@ -140,6 +140,19 @@
             tipType: ''
           };
         }
+      },
+      curSearchParams: {
+        type: Object
+      },
+      curSearchPagination: {
+        type: Object,
+        default: () => {
+          return {
+            current: 1,
+            count: 0,
+            limit: 10
+          };
+        }
       }
     },
     data () {
@@ -192,18 +205,18 @@
     watch: {
       personalGroupList: {
         handler (v) {
-          if (v.length) {
-            // this.dataList.splice(0, this.dataList.length, ...v);
-            // this.initPageConf();
-            // this.curPageData = this.getDataByPage(this.pageConf.current);
-            this.getDataByPage();
-          }
+          // if (v.length) {
+          //   this.dataList.splice(0, this.dataList.length, ...v);
+          //   this.initPageConf();
+          //   this.curPageData = this.getDataByPage(this.pageConf.current);
+          // }
+          this.getDataByPage();
         },
         immediate: true
       },
       emptyData: {
         handler (value) {
-          this.groupPermEmptyData = value;
+          this.groupPermEmptyData = Object.assign({}, value);
         },
         immediate: true
       }
@@ -249,7 +262,7 @@
        */
       handlePageChange (page = 1) {
         this.pageConf.current = page;
-        this.getDataByPage(page);
+        this.getDataByPage();
       },
 
       /**
@@ -262,18 +275,32 @@
       async getDataByPage () {
         this.isLoading = true;
         try {
-          const params = {
-            page_size: this.pageConf.limit,
-            page: this.pageConf.current
-          };
+          let url = '';
+          let params = {};
+          const { current, limit } = this.pageConf;
+          if (this.emptyData.tipType === 'search') {
+            url = 'perm/getUserGroupSearch';
+            params = {
+              ...this.curSearchParams,
+              limit,
+              offset: limit * (current - 1)
+            };
+          } else {
+            url = 'perm/getPersonalGroups';
+            params = {
+              page_size: limit,
+              page: current
+            };
+          }
           if (this.externalSystemId) {
             params.system_id = this.externalSystemId;
           }
-          const { code, data } = await this.$store.dispatch('perm/getPersonalGroups', params);
+          const { code, data } = await this.$store.dispatch(url, params);
           this.pageConf.count = data.count;
           this.curPageData.splice(0, this.curPageData.length, ...(data.results || []));
           this.groupPermEmptyData
             = formatCodeData(code, this.groupPermEmptyData, data.count === 0);
+          console.log(this.groupPermEmptyData, 45455);
         } catch (e) {
           console.error(e);
           const { code, data, message, statusText } = e;
