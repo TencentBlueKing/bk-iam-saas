@@ -167,7 +167,7 @@
         searchValue: '',
         loading: false,
         isFilter: false,
-        listLoading: false,
+        listLoading: true,
         isScrollBottom: false,
         isHide: false,
         notLimitValue: false,
@@ -209,6 +209,7 @@
       show: {
         async handler (value) {
           if (value) {
+            this.listLoading = true;
             this.pageChangeAlertMemo = window.changeAlert;
             window.changeAlert = 'iamSidesider';
             // 为了减少组件之间数据传递的代码量，这里再重新调用一次接口做任意类型数据的处理
@@ -216,7 +217,7 @@
               await this.fetchAuthorizationScopeActions(this.params.curAggregateSystemId);
             }
             if ((this.isSuperManager && !this.isHasDefaultData) || this.isAny) {
-              this.fetchData(true);
+              this.fetchData(false, true);
             } else {
               this.setSelectList(this.defaultList);
             }
@@ -633,9 +634,9 @@
                 left: 50%;
                 top: 50%;
                 transform: translate(-50%, -50%);
-                img {
+                /* img {
                     width: 120px;
-                }
+                } */
             }
         }
     }

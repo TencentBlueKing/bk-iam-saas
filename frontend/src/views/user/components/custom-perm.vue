@@ -67,7 +67,7 @@
         pageLoading: false,
         emptyData: {
           type: 'empty',
-          text: '',
+          text: '暂无数据',
           tip: '',
           tipType: ''
         }
@@ -131,6 +131,9 @@
         if (this.systemList[sysIndex].count < 1) {
           this.systemList.splice(sysIndex, 1);
         }
+        if (!this.systemList.length) {
+          this.emptyData = formatCodeData(0, this.emptyData, true);
+        }
       },
 
       async handleDeleteAll (payload, sysIndex) {
@@ -168,6 +171,9 @@
                 if (code === 0) {
                   this.systemList.splice(sysIndex, 1);
                   this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
+                  if (!this.systemList.length) {
+                    this.emptyData = formatCodeData(0, this.emptyData, true);
+                  }
                   return true;
                 }
               }
