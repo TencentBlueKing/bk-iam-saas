@@ -18,17 +18,17 @@
           ref="customPermTable"
           :key="sys.id"
           :system-id="sys.id"
-          :empty-data="emptyData"
+          :empty-data="emptyPolicyData"
           @after-delete="handleAfterDelete(...arguments, sysIndex)" />
       </custom-perm-system-policy>
     </template>
     <template v-else>
       <div class="my-perm-custom-perm-empty-wrapper">
         <ExceptionEmpty
-          :type="emptyData.type"
-          :empty-text="emptyData.text"
-          :tip-text="emptyData.tip"
-          :tip-type="emptyData.tipType"
+          :type="emptyPolicyData.type"
+          :empty-text="emptyPolicyData.text"
+          :tip-text="emptyPolicyData.tip"
+          :tip-type="emptyPolicyData.tipType"
           @on-refresh="handleEmptyRefresh"
         />
       </div>
@@ -36,6 +36,7 @@
   </div>
 </template>
 <script>
+  import { formatCodeData } from '@/common/util';
   import CustomPermSystemPolicy from '@/components/custom-perm-system-policy/index.vue';
   import PermSystem from '@/model/my-perm-system';
   import CustomPermTable from './custom-perm-table.vue';
@@ -55,8 +56,8 @@
         type: Object,
         default: () => {
           return {
-            type: '',
-            text: '',
+            type: 'empty',
+            text: '暂无数据',
             tip: '',
             tipType: ''
           };
@@ -66,7 +67,13 @@
     data () {
       return {
         onePerm: 0,
-        systemPolicyList: []
+        systemPolicyList: [],
+        emptyPolicyData: {
+          type: 'empty',
+          text: '暂无数据',
+          tip: '',
+          tipType: ''
+        }
       };
     },
     computed: {
@@ -94,6 +101,12 @@
         },
         immediate: true,
         deep: true
+      },
+      emptyData: {
+        handler (value) {
+          this.emptyPolicyData = Object.assign({}, value);
+        },
+        immediate: true
       }
     },
     created () {
@@ -112,6 +125,9 @@
         this.$set(this.systemPolicyList[sysIndex], 'count', policyListLen);
         if (this.systemPolicyList[sysIndex].count < 1) {
           this.systemPolicyList.splice(sysIndex, 1);
+        }
+        if (!this.systemPolicyList.length) {
+          this.emptyPolicyData = formatCodeData(0, this.emptyPolicyData, true);
         }
       },
 
@@ -140,6 +156,9 @@
               if (code === 0) {
                 this.systemPolicyList.splice(sysIndex, 1);
                 this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
+                if (!this.systemPolicyList.length) {
+                  this.emptyPolicyData = formatCodeData(0, this.emptyPolicyData, true);
+                }
                 return true;
               }
             } catch (e) {
