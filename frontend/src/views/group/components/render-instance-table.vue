@@ -76,7 +76,6 @@
                 </bk-button>
               </div>
               <div class="content">
-                {{ formatDisplayValue(row)}}
                 <render-condition
                   :ref="`condition_${$index}_aggregateRef`"
                   :value="formatDisplayValue(row)"
@@ -1063,10 +1062,21 @@
               if (`${systemId}${aggregateResourceItem.id}` === this.curCopyKey && this.curCopyDataId !== item.aggregationId) {
                 if (Object.keys(item.instancesDisplayData).length) {
                   item.instancesDisplayData[this.instanceKey] = _.cloneDeep(tempArrgegateData);
-                  item.instances = this.setInstanceData(item.instancesDisplayData);
-                  console.log(item, this.curCopyKey, 5555);
+                  if (this.curCopyNoLimited) {
+                    item.instances = [];
+                    item.isNoLimited = true;
+                  } else {
+                    item.isNoLimited = false;
+                    item.instances = this.setInstanceData(item.instancesDisplayData);
+                  }
                 } else {
-                  item.instances = _.cloneDeep(tempArrgegateData);
+                  if (this.curCopyNoLimited) {
+                    item.instances = [];
+                    item.isNoLimited = true;
+                  } else {
+                    item.isNoLimited = false;
+                    item.instances = _.cloneDeep(tempArrgegateData);
+                  }
                   this.setInstancesDisplayData(item);
                 }
               }
