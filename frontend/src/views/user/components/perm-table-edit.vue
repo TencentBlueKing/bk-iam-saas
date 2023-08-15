@@ -327,10 +327,12 @@
       handleActionLinearData () {
         const linearActions = [];
         this.originalCustomTmplList.forEach((item, index) => {
+          item.actions = item.actions.filter(v => !v.hidden);
           item.actions.forEach(act => {
             linearActions.push(act);
-          })
-          ;(item.sub_groups || []).forEach(sub => {
+          });
+          (item.sub_groups || []).forEach(sub => {
+            sub.actions = sub.actions.filter(v => !v.hidden);
             sub.actions.forEach(act => {
               linearActions.push(act);
             });
