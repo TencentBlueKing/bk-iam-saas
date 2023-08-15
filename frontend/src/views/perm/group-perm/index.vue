@@ -52,7 +52,14 @@
           <bk-button disabled text v-if="props.row.department_id !== 0">
             <span :title="$t(`m.perm['通过组织加入的组无法退出']`)">{{ $t(`m.common['退出']`) }}</span>
           </bk-button>
-          <bk-button v-else class="mr10" theme="primary" text @click="showQuitTemplates(props.row)">
+          <bk-button
+            v-else
+            class="mr10"
+            theme="primary"
+            text
+            :title="isAdminGroup(props.row) ? $t(`m.perm['唯一管理员不可退出']`) : ''"
+            :disabled="isAdminGroup(props.row)"
+            @click="showQuitTemplates(props.row)">
             {{ $t(`m.common['退出']`) }}
           </bk-button>
         </template>
@@ -63,6 +70,7 @@
           :empty-text="groupPermEmptyData.text"
           :tip-text="groupPermEmptyData.tip"
           :tip-type="groupPermEmptyData.tipType"
+          @on-clear="handleEmptyClear"
           @on-refresh="handleEmptyRefresh"
         />
       </template>
@@ -90,7 +98,7 @@
       :quick-close="true"
       @animation-end="gradeSliderTitle === ''">
       <div slot="header" class="single-hide" :title="gradeSliderTitle">{{ gradeSliderTitle }}</div>
-      <div slot="content" class="grade-memebers-content" v-bkloading="{ isLoading: sliderLoading, opacity: 1 }"
+      <div slot="content" class="grade-members-content" v-bkloading="{ isLoading: sliderLoading, opacity: 1 }"
         data-test-id="myPerm_sideslider_gradeMemebersContent">
         <template v-if="!sliderLoading">
           <div v-for="(item, index) in gradeMembers" :key="index" class="member-item">
@@ -132,6 +140,19 @@
             tipType: ''
           };
         }
+      },
+      curSearchParams: {
+        type: Object
+      },
+      curSearchPagination: {
+        type: Object,
+        default: () => {
+          return {
+            current: 1,
+            count: 0,
+            limit: 10
+          };
+        }
       }
     },
     data () {
@@ -168,23 +189,34 @@
       };
     },
     computed: {
-            ...mapGetters(['user', 'externalSystemId'])
+      ...mapGetters(['user', 'externalSystemId']),
+      isAdminGroup () {
+        return (payload) => {
+          if (payload) {
+            const { attributes, role_members } = payload;
+            if (attributes && attributes.source_from_role && role_members.length === 1) {
+              return true;
+            }
+            return false;
+          }
+        };
+      }
     },
     watch: {
       personalGroupList: {
         handler (v) {
-          if (v.length) {
-            // this.dataList.splice(0, this.dataList.length, ...v);
-            // this.initPageConf();
-            // this.curPageData = this.getDataByPage(this.pageConf.current);
-            this.getDataByPage();
-          }
+          // if (v.length) {
+          //   this.dataList.splice(0, this.dataList.length, ...v);
+          //   this.initPageConf();
+          //   this.curPageData = this.getDataByPage(this.pageConf.current);
+          // }
+          this.getDataByPage();
         },
         immediate: true
       },
       emptyData: {
         handler (value) {
-          this.groupPermEmptyData = value;
+          this.groupPermEmptyData = Object.assign({}, value);
         },
         immediate: true
       }
@@ -230,7 +262,7 @@
        */
       handlePageChange (page = 1) {
         this.pageConf.current = page;
-        this.getDataByPage(page);
+        this.getDataByPage();
       },
 
       /**
@@ -243,18 +275,32 @@
       async getDataByPage () {
         this.isLoading = true;
         try {
-          const params = {
-            page_size: this.pageConf.limit,
-            page: this.pageConf.current
-          };
+          let url = '';
+          let params = {};
+          const { current, limit } = this.pageConf;
+          if (this.emptyData.tipType === 'search') {
+            url = 'perm/getUserGroupSearch';
+            params = {
+              ...this.curSearchParams,
+              limit,
+              offset: limit * (current - 1)
+            };
+          } else {
+            url = 'perm/getPersonalGroups';
+            params = {
+              page_size: limit,
+              page: current
+            };
+          }
           if (this.externalSystemId) {
             params.system_id = this.externalSystemId;
           }
-          const { code, data } = await this.$store.dispatch('perm/getPersonalGroups', params);
+          const { code, data } = await this.$store.dispatch(url, params);
           this.pageConf.count = data.count;
           this.curPageData.splice(0, this.curPageData.length, ...(data.results || []));
           this.groupPermEmptyData
             = formatCodeData(code, this.groupPermEmptyData, data.count === 0);
+          console.log(this.groupPermEmptyData, 45455);
         } catch (e) {
           console.error(e);
           const { code, data, message, statusText } = e;
@@ -298,6 +344,13 @@
       handleEmptyRefresh () {
         this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10 });
         this.getDataByPage();
+        this.$emit('on-refresh');
+      },
+
+      handleEmptyClear () {
+        this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10 });
+        this.getDataByPage();
+        this.$emit('on-clear');
       },
 
       /**

@@ -112,6 +112,7 @@
   import { buildURLParams } from '@/common/url';
   import { formatCodeData } from '@/common/util';
   import { mapGetters } from 'vuex';
+  import { bus } from '@/common/bus';
   export default {
     name: '',
     components: {
@@ -221,6 +222,20 @@
         }
       }
       this.fetchSystemList();
+      this.$once('hook:beforeDestroy', () => {
+        bus.$off('update-tab-table-list');
+      });
+    },
+    mounted () {
+      bus.$on('update-tab-table-list', ({ type }) => {
+        if (['CustomPermProcess'].includes(type)) {
+          this.pagination = Object.assign(this.pagination, {
+            current: 1,
+            limit: 10
+          });
+          this.fetchActionProcessesList();
+        }
+      });
     },
     methods: {
       async fetchSystemList () {

@@ -69,6 +69,7 @@
             :style="contentStyle"
             :is-sync="isSync"
             :empty-data="emptyData"
+            :has-selected-departments="hasSelectedDeparts"
             location="page"
             @async-load-nodes="handleRemoteLoadNode"
             @expand-node="handleExpanded"
@@ -84,6 +85,7 @@
               <dialog-infinite-list
                 :all-data="searchedResult"
                 :style="contentStyle"
+                :has-selected-departments="hasSelectedDeparts"
                 @on-checked="handleSearchSelected"
                 @on-click="handleSearchClick">
               </dialog-infinite-list>
@@ -607,7 +609,7 @@
           return;
         }
         this.$store.commit('updateSync', true);
-        this.curSelectedData.type = 'depart';
+        // this.curSelectedData.type = 'depart';
         try {
           const res = await this.$store.dispatch('organization/organizationsSyncTask');
           if (res.result) {

@@ -1,6 +1,6 @@
 <template>
   <div class="iam-user-group-perm-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
-    <template v-if="!groupAttributes.source_from_role">
+    <template v-if="!groupAttributes.source_from_role || !readonly">
       <template v-if="externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle">
         <bk-button
           v-if="!isLoading && isEditMode && !groupAttributes.source_type"
@@ -146,7 +146,8 @@
           tip: '',
           tipType: ''
         },
-        externalHeaderWidth: 0
+        externalHeaderWidth: 0,
+        readonly: false
       };
     },
     computed: {
@@ -239,7 +240,8 @@
       async fetchDetail (payload) {
         if (this.$parent.fetchDetail) {
           const { data } = await this.$parent.fetchDetail(payload);
-          const { attributes } = data;
+          const { attributes, readonly } = data;
+          this.readonly = readonly;
           if (Object.keys(attributes).length) {
             this.groupAttributes = Object.assign(this.groupAttributes, attributes);
           }
@@ -428,10 +430,12 @@
       handleActionLinearData () {
         const linearActions = [];
         this.originalCustomTmplList.forEach((item, index) => {
+          item.actions = item.actions.filter(v => !v.hidden);
           item.actions.forEach(act => {
             linearActions.push(act);
           });
           (item.sub_groups || []).forEach(sub => {
+            sub.actions = sub.actions.filter(v => !v.hidden);
             sub.actions.forEach(act => {
               linearActions.push(act);
             });
@@ -675,7 +679,7 @@
             margin-top: 10px;
         }
         .iam-perm-ext-reset-cls {
-            margin-bottom: 20px;
+            margin-bottom: 50px;
         }
         .empty-wrapper {
             position: absolute;

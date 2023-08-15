@@ -69,7 +69,7 @@
                   :id="option.id"
                   :name="option.name">
                   <span style="display: block; line-height: 32px;"
-                    :title="`${$t(`m.approvalProcess['审批节点']`)}：${option.node_names.join(' -> ')}`">
+                    :title="`${$t(`m.approvalProcess['审批节点']`)}: ${option.node_names.join(' -> ')}`">
                     {{ option.name }}
                   </span>
                 </bk-option>
@@ -119,6 +119,7 @@
 
 <script>
   import il8n from '@/language';
+  import { bus } from '@/common/bus';
   import { mapGetters } from 'vuex';
   import { buildURLParams } from '@/common/url';
   import editProcessDialog from './edit-process-dialog';
@@ -191,7 +192,7 @@
           return payload => {
               if (this.list.length > 0 && payload.process_id !== '') {
                   if (this.list.find(item => item.id === payload.process_id)) {
-                      return `${this.$t(`m.approvalProcess['审批节点']`)}：${this.list.find(item => item.id === payload.process_id).node_names.join(' -> ')}`;
+                      return `${this.$t(`m.approvalProcess['审批节点']`)}: ${this.list.find(item => item.id === payload.process_id).node_names.join(' -> ')}`;
                   } else {
                       return '';
                   }
@@ -232,6 +233,20 @@
         }
       }
       this.fetchGroupProcessesList();
+      this.$once('hook:beforeDestroy', () => {
+        bus.$off('update-tab-table-list');
+      });
+    },
+    mounted () {
+      bus.$on('update-tab-table-list', ({ type }) => {
+        if (['JoinGroupProcess'].includes(type)) {
+          this.pagination = Object.assign(this.pagination, {
+            current: 1,
+            limit: 10
+          });
+          this.fetchGroupProcessesList(true);
+        }
+      });
     },
     methods: {
       refreshCurrentQuery () {

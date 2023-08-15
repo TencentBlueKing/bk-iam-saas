@@ -46,7 +46,7 @@
           <span class="node-checkbox"
             :class="{
               'is-disabled': disabledNode(item),
-              'is-checked': item.is_selected,
+              'is-checked': selectedNode(item),
               'is-indeterminate': item.indeterminate
             }"
             @click.stop="handleNodeClick(item)">
@@ -125,6 +125,14 @@
             tipType: ''
           };
         }
+      },
+      hasSelectedDepartments: {
+        type: Array,
+        default: () => []
+      },
+      hasSelectedUsers: {
+        type: Array,
+        default: () => []
       }
     },
     data () {
@@ -200,6 +208,17 @@
                     const isDisabled = payload.disabled || this.isDisabled;
                     return this.getGroupAttributes ? isDisabled || (this.getGroupAttributes().source_from_role && payload.type === 'depart') : isDisabled;
                 };
+            },
+            selectedNode () {
+                return (payload) => {
+                    if (this.hasSelectedDepartments.length || this.hasSelectedUsers.length) {
+                      payload.is_selected = this.hasSelectedDepartments.map(
+                        item => item.id.toString()).includes(payload.id.toString())
+                        || this.hasSelectedUsers.map(
+                        item => item.username).includes(payload.username);
+                        return payload.is_selected;
+                    }
+                };
             }
     },
     watch: {
@@ -236,7 +255,7 @@
        */
       rootScroll: _.throttle(function () {
         this.updateRenderData(this.$el.scrollTop);
-      }, 0),
+      }, 100),
 
       /**
        * 更新可视区渲染的数据列表

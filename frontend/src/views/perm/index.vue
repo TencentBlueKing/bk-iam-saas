@@ -17,13 +17,14 @@
         @click="handleBatchRenewal">
         {{ $t(`m.renewal['权限续期']`) }}
       </bk-button>
-      <div :class="[
-             'info-renewal',
-             {
-               'external-info-renewal': externalSystemsLayout.myPerm.hideApplyBtn,
-               'info-renewal-lang': !['zh-cn'].includes(CUR_LANGUAGE)
-             }
-           ]"
+      <div
+        :class="[
+          'info-renewal',
+          {
+            'external-info-renewal': externalSystemsLayout.myPerm.hideApplyBtn,
+            'info-renewal-lang': !['zh-cn'].includes(CUR_LANGUAGE)
+          }
+        ]"
         style="background: #000"
         v-bk-tooltips="$t(`m.renewal['没有需要续期的权限']`)"
         v-if="externalSystemsLayout.myPerm.hideApplyBtn ? isNoExternalRenewal : (isEmpty || isNoRenewal)"
@@ -80,44 +81,60 @@
           />
         </div>
       </template>
-      <bk-tab
-        v-else
-        :active="active"
-        type="unborder-card"
-        ext-cls="iam-my-perm-tab-cls"
-        @tab-change="handleTabChange">
-        <bk-tab-panel
-          v-for="(panel, index) in panels"
-          :data-test-id="`myPerm_tabPanel_${panel.name}`"
-          v-bind="panel"
-          :key="index">
-          <div class="content-wrapper" v-bkloading="{ isLoading: componentLoading, opacity: 1 }">
-            <component
-              v-if="!componentLoading && active === panel.name"
-              :is="active"
-              :personal-group-list="personalGroupList"
-              :system-list="systemList"
-              :tep-system-list="teporarySystemList"
-              :department-group-list="departmentGroupList"
-              :ref="panel.name"
-              :empty-data="curEmptyData"
-              @refresh="fetchData"
-            ></component>
-          </div>
-        </bk-tab-panel>
-      </bk-tab>
+      <template v-else>
+        <!-- 这个版本先不上，暂时隐藏 -->
+        <div>
+          <IamResourceCascadeSearch
+            v-if="false"
+            ref="iamResourceSearchRef"
+            :active="active"
+            @on-remote-table="handleRemoteTable"
+            @on-refresh-table="handleRefreshTable"
+          />
+        </div>
+        <bk-tab
+          :active="active"
+          type="unborder-card"
+          ext-cls="iam-my-perm-tab-cls"
+          @tab-change="handleTabChange">
+          <bk-tab-panel
+            v-for="(panel, index) in panels"
+            :data-test-id="`myPerm_tabPanel_${panel.name}`"
+            v-bind="panel"
+            :key="index">
+            <div class="content-wrapper" v-bkloading="{ isLoading: componentLoading, opacity: 1 }">
+              <component
+                v-if="!componentLoading && active === panel.name"
+                :is="active"
+                :personal-group-list="personalGroupList"
+                :system-list="systemList"
+                :tep-system-list="teporarySystemList"
+                :department-group-list="departmentGroupList"
+                :ref="panel.name"
+                :empty-data="curEmptyData"
+                :cur-search-params="curSearchParams"
+                :cur-search-pagination="curSearchPagination"
+                @refresh="fetchData"
+                @on-clear="handleEmptyClear"
+                @on-refresh="handleEmptyRefresh"
+              ></component>
+            </div>
+          </bk-tab-panel>
+        </bk-tab>
+      </template>
     </template>
   </div>
 </template>
 <script>
   import _ from 'lodash';
+  import { mapGetters } from 'vuex';
   import { buildURLParams } from '@/common/url';
   import { formatCodeData } from '@/common/util';
   import CustomPerm from './custom-perm/index.vue';
   import TeporaryCustomPerm from './teporary-custom-perm/index.vue';
   import GroupPerm from './group-perm/index.vue';
-  import { mapGetters } from 'vuex';
   import DepartmentGroupPerm from './department-group-perm/index.vue';
+  import IamResourceCascadeSearch from '@/components/iam-resource-cascade-search';
 
   export default {
     name: 'MyPerm',
@@ -125,7 +142,8 @@
       CustomPerm,
       TeporaryCustomPerm,
       GroupPerm,
-      DepartmentGroupPerm
+      DepartmentGroupPerm,
+      IamResourceCascadeSearch
     },
     data () {
       return {
@@ -139,12 +157,12 @@
           {
             name: 'DepartmentGroupPerm',
             label: this.$t(`m.perm['所属组织用户组权限']`),
-            empty: 'emptyData6'
+            empty: 'emptyDepartmentGroupData'
           },
           {
             name: 'CustomPerm',
             label: this.$t(`m.approvalProcess['自定义权限']`),
-            empty: 'emptyData2'
+            empty: 'emptyCustomData'
           }
           // {
           //     name: 'TeporaryCustomPerm', label: this.$t(`m.myApply['临时权限']`)
@@ -161,12 +179,19 @@
         teporarySystemList: [],
         departmentGroupList: [],
         enablePermissionHandover: window.ENABLE_PERMISSION_HANDOVER,
+        curSearchParams: {},
+        curSearchPagination: {
+          current: 1,
+          count: 0,
+          limit: 10
+        },
         emptyData: {
           type: '',
           text: '',
           tip: '',
           tipType: ''
         },
+        emptyDepartmentGroupData: {},
         curEmptyData: {
           type: 'empty',
           text: '暂无数据',
@@ -174,11 +199,21 @@
           tipType: ''
         },
         enableTemporaryPolicy: window.ENABLE_TEMPORARY_POLICY,
-        CUR_LANGUAGE: window.CUR_LANGUAGE
+        enableGroupInstanceSearch: window.ENABLE_GROUP_INSTANCE_SEARCH.toLowerCase() === 'true',
+        CUR_LANGUAGE: window.CUR_LANGUAGE,
+        isShowConfirmDialog: false,
+        confirmDialogTitle: this.$t(`m.verify['admin无需申请权限']`),
+        actionIdError: false,
+        searchTypeError: false,
+        resourceTypeError: false,
+        resourceInstanceError: false,
+        isShowResourceInstanceSideSlider: false,
+        resourceInstanceSideSliderTitle: '',
+        contentWidth: window.innerWidth <= 1440 ? '200px' : '240px'
       };
     },
     computed: {
-            ...mapGetters(['externalSystemsLayout', 'externalSystemId'])
+      ...mapGetters(['externalSystemsLayout', 'externalSystemId'])
     },
     watch: {
       externalSystemsLayout: {
@@ -202,33 +237,23 @@
       }
     },
     created () {
-      this.emptyData2 = _.cloneDeep(this.emptyData);
-      this.emptyData5 = _.cloneDeep(this.emptyData);
-      this.emptyData6 = _.cloneDeep(this.emptyData);
+      this.emptyCustomData = _.cloneDeep(this.emptyData);
+      this.emptyTemporarySystemData = _.cloneDeep(this.emptyData);
+      this.emptyDepartmentGroupData = _.cloneDeep(this.emptyData);
       const query = this.$route.query;
       if (query.tab) {
         this.active = query.tab;
       }
-      if (this.enableTemporaryPolicy.toLowerCase() === 'true') {
-        this.panels.push({
-          name: 'TeporaryCustomPerm',
-          label: this.$t(`m.myApply['临时权限']`)
-        });
-      }
+      // if (this.enableTemporaryPolicy.toLowerCase() === 'true') {
+      //   this.panels.push({
+      //     name: 'TeporaryCustomPerm',
+      //     label: this.$t(`m.myApply['临时权限']`)
+      //   });
+      // }
     },
     methods: {
       async fetchPageData () {
         await this.fetchData();
-      },
-
-      async handleTabChange (tabName) {
-        this.active = tabName;
-        await this.fetchData();
-        const searchParams = {
-                    ...this.$route.query,
-                    tab: tabName
-        };
-        window.history.replaceState({}, '', `?${buildURLParams(searchParams)}`);
       },
 
       async fetchData () {
@@ -255,31 +280,33 @@
         ];
         try {
           const [
-            { code: code1, data: data1 },
-            { code: code2, data: data2 },
+            { code: personalGroupCode, data: personalGroupData },
+            { code: emptyCustomCode, data: customData },
             { data: data3 },
             { data: data4 },
-            { code: code5, data: data5 },
-            { code: code6, data: data6 }
+            { code: teporarySystemCode, data: teporarySystemData },
+            { code: departmentGroupCode, data: departmentGroupData }
           ] = await Promise.all(requestList);
                     
-          const personalGroupList = data1.results || [];
+          const personalGroupList = personalGroupData.results || [];
           this.personalGroupList.splice(0, this.personalGroupList.length, ...personalGroupList);
-          this.emptyData = formatCodeData(code1, this.emptyData, this.personalGroupList.length === 0);
+          this.emptyData = formatCodeData(personalGroupCode, this.emptyData, this.personalGroupList.length === 0);
                     
-          const systemList = data2 || [];
+          const systemList = customData || [];
           this.systemList.splice(0, this.systemList.length, ...systemList);
-          this.emptyData2 = formatCodeData(code2, this.emptyData2, this.systemList.length === 0);
+          this.emptyCustomData = formatCodeData(emptyCustomCode, this.emptyCustomData, this.systemList.length === 0);
 
-          const teporarySystemList = data5 || [];
+          const teporarySystemList = teporarySystemData || [];
           this.teporarySystemList.splice(0, this.teporarySystemList.length, ...teporarySystemList);
-          this.emptyData5 = formatCodeData(code5, this.emptyData5, this.teporarySystemList.length === 0);
+          this.emptyTemporarySystemData
+            = formatCodeData(teporarySystemCode, this.emptyTemporarySystemData, this.teporarySystemList.length === 0);
 
-          const departmentGroupList = data6 || [];
+          const departmentGroupList = departmentGroupData || [];
           this.departmentGroupList.splice(0, this.departmentGroupList.length, ...departmentGroupList);
-          this.emptyData6 = formatCodeData(code6, this.emptyData6, this.departmentGroupList.length === 0);
+          this.emptyDepartmentGroupData
+            = formatCodeData(departmentGroupCode, this.emptyDepartmentGroupData, this.departmentGroupList.length === 0);
 
-          this.isEmpty = personalGroupList.length < 1 && systemList.length < 1
+          this.isEmpty = personalGroupData.results.length < 1 && customData.length < 1
             && teporarySystemList.length < 1 && departmentGroupList.length < 1;
           this.soonGroupLength = data3.results.length;
           this.soonPermLength = data4.length;
@@ -326,6 +353,58 @@
           this.departmentGroupList.splice(0, this.departmentGroupList.length, ...departmentGroupList);
         }
       },
+
+      async handleRemoteTable (payload) {
+        const { emptyData, pagination, searchParams } = payload;
+        this.curSearchParams = _.cloneDeep(searchParams);
+        this.curSearchPagination = _.cloneDeep(pagination);
+        const typeMap = {
+          GroupPerm: () => {
+            this.personalGroupList = [];
+            this.emptyData = _.cloneDeep(emptyData);
+          },
+          DepartmentGroupPerm: () => {
+            this.departmentGroupList = [];
+            this.emptyDepartmentGroupData = _.cloneDeep(emptyData);
+          },
+          CustomPerm: () => {
+            this.emptyCustomData = _.cloneDeep(emptyData);
+          }
+        };
+        this.curEmptyData = _.cloneDeep(emptyData);
+        typeMap[this.active] ? typeMap[this.active]() : typeMap['GroupPerm']();
+      },
+
+      async handleRefreshTable () {
+        this.curEmptyData.tipType = '';
+        this.curSearchParams = {};
+        this.fetchData();
+      },
+
+      async handleTabChange (tabName) {
+        this.active = tabName;
+        await this.fetchData();
+        const searchParams = {
+          ...this.$route.query,
+          tab: tabName
+        };
+        window.history.replaceState({}, '', `?${buildURLParams(searchParams)}`);
+      },
+
+      // 显示资源实例
+      handleShowResourceInstance (data, resItem, resIndex, groupIndex) {
+        this.params = {
+          system_id: this.applyGroupData.system_id,
+          action_id: data.id,
+          resource_type_system: resItem.system_id,
+          resource_type_id: resItem.type
+        };
+        this.curResIndex = resIndex;
+        this.groupIndex = groupIndex;
+        this.resourceInstanceSidesliderTitle = this.$t(`m.info['关联侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}` });
+        window.changeAlert = 'iamSidesider';
+        this.isShowResourceInstanceSideSlider = true;
+      },
       // fetchSoonGroupWithUser () {
       //     return this.$store.dispatch('renewal/getExpireSoonGroupWithUser')
       // },
@@ -370,16 +449,32 @@
           });
         }
       },
+
       // 权限交接
       handleGoPermTransfer () {
         this.$router.push({
           name: 'permTransfer'
         });
       },
+
       handleGoApplyProvisionPerm () {
         this.$router.push({
           name: 'applyProvisionPerm'
         });
+      },
+
+      formatFormItemWidth () {
+        this.contentWidth = window.innerWidth <= 1520 ? '200px' : '240px';
+      },
+      
+      handleEmptyRefresh () {
+        // 调用子组件的刷新方法
+        this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyClear();
+      },
+
+      handleEmptyClear () {
+        // 调用子组件的刷新方法
+        this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyClear();
       }
     }
   };

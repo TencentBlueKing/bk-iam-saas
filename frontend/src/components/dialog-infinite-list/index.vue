@@ -27,7 +27,7 @@
             <span class="node-checkbox"
               :class="{
                 'is-disabled': disabledNode(item),
-                'is-checked': item.is_selected,
+                'is-checked': selectedNode(item),
                 'is-indeterminate': item.indeterminate
               }"
               @click.stop="handleNodeClick(item)">
@@ -56,7 +56,7 @@
             <span class="node-checkbox"
               :class="{
                 'is-disabled': disabledNode(item),
-                'is-checked': item.is_selected,
+                'is-checked': selectedNode(item),
                 'is-indeterminate': item.indeterminate
               }"
               @click.stop="handleNodeClick(item)">
@@ -95,6 +95,14 @@
       isDisabled: {
         type: Boolean,
         default: false
+      },
+      hasSelectedDepartments: {
+        type: Array,
+        default: () => []
+      },
+      hasSelectedUsers: {
+        type: Array,
+        default: () => []
       }
     },
     data () {
@@ -150,6 +158,17 @@
                         }
                     };
                     return typeMap[type] ? typeMap[type]() : typeMap['user']();
+                };
+            },
+            selectedNode () {
+                return (payload) => {
+                    if (this.hasSelectedDepartments.length || this.hasSelectedUsers.length) {
+                      payload.is_selected = this.hasSelectedDepartments.map(
+                        item => item.id.toString()).includes(payload.id.toString())
+                        || this.hasSelectedUsers.map(
+                        item => item.username).includes(payload.username);
+                        return payload.is_selected;
+                    }
                 };
             }
     },

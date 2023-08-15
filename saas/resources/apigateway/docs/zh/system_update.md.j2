@@ -8,7 +8,25 @@
 
 -------
 
-{% include '_api_v1_model_system.md.j2' %}
+#### Parameters
+
+| 字段 |  类型 |是否必须  | 描述  |
+|:---|:---|:---|:---|
+| name |string | 是 | 系统名称，全局唯一 |
+| name_en | string | 是 | 系统英文名，国际化时切换到英文版本显示 |
+| description |string | 否 | 系统描述，全局唯一 |
+| description_en | string | 否 | 系统描述英文，国际化时切换到英文版本显示 |
+| clients | string | 是 | 有权限调用的客户端，即有权限调用的 app_code 列表，多个使用英文逗号分隔，注册系统时会校验 Header 头里的 app_code 必须在列表里 |
+| provider_config | Object | 是 | 权限中心回调接入系统的配置文件 |
+
+provider_config 内元素 参数：
+
+| 字段 |  类型 |是否必须  | 描述  |
+|:---|:---|:---|:---|
+| host | string | 是 | 权限中心调用查询资源实例接口的 HOST，格式：scheme://netloc，与 resource_type.provider_config.path 配合使用 |
+| auth | string | 是 | 权限中心调用查询资源实例接口的鉴权方式, 当前可选: `none`/`basic`|
+| healthz | string | 否 | 权限中心调用接入系统的 healthz 检查系统是否健康; 与 provider_config.host 配合使用, `例如system.provider_config.host=http://cmdb.consul, provider_config.healthz=/healthz/`, 那么将调用`http://cmdb.consul/healthz/`检查系统是否健康.   |
+
 
 #### Parameters
 

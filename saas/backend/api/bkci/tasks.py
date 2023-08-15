@@ -288,14 +288,15 @@ class BKCILegacyMigrateTask(Task):
         project_uuid = project.id
 
         # 2. 从services表查询出需要排除的service_id
-        exclude_service_ids = list(
-            Services.objects.using("bkci")
-            .filter(
-                service_code__in=["artifactory", "bcs", "gs-apk", "job", "vs", "wetest", "xinghai"],
-                deleted_at__isnull=True,
-            )
-            .values_list("id", flat=True)
-        )
+        # exclude_service_ids = list(
+        #     Services.objects.using("bkci")
+        #     .filter(
+        #         service_code__in=["artifactory", "bcs", "gs-apk", "job", "vs", "wetest", "xinghai"],
+        #         deleted_at__isnull=True,
+        #     )
+        #     .values_list("id", flat=True)
+        # )
+        exclude_service_ids = [0]  # 暂时不排除
 
         # 3. 从policies表中查询出所有的操作id与操作名生成map
         policies = (

@@ -1,7 +1,9 @@
 <template>
   <smart-action class="iam-join-user-group-wrapper">
     <render-horizontal-block :label="$t(`m.permApply['选择用户组']`)" :required="true">
-      <div class="user-group-table">
+      <div
+        ref="selectTableRef"
+        class="iam-search-resource-form">
         <div class="search-wrapper">
           <render-search v-if="enableGroupInstanceSearch">
             <div
@@ -189,7 +191,7 @@
           @select-all="handlerAllChange"
           v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
         >
-          <bk-table-column type="selection" align="center" :selectable="setDefaultSelect"></bk-table-column>
+          <bk-table-column type="selection" align="center" :selectable="setDefaultSelect" />
           <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
             <template slot-scope="{ row }">
               <span class="user-group-name" :title="row.name" @click="handleView(row)">
@@ -237,25 +239,35 @@
             />
           </template>
         </bk-table>
+        <div class="apply-selected-groups">
+          <div
+            v-if="currentSelectedGroups.length"
+            class="apply-selected-groups-header"
+          >
+            <span>{{ $t(`m.common['已选择']`) }}</span>
+            <span class="apply-selected-groups-header-count">{{ currentSelectedGroups.length }}</span>
+            <span>{{ $t(`m.common['个用户组#']`) }}</span>
+            <span>{{ $t(`m.common['，']`) }}</span>
+            <span
+              class="apply-selected-groups-header-clear"
+              @click.stop="handleClearGroups">
+              {{ $t(`m.permApply['清空选择']`) }}:
+            </span>
+          </div>
+          <bk-tag
+            class="group-tag-close"
+            v-for="item in currentSelectedGroups"
+            :key="item.id"
+            :closable="true"
+            @close="handleCloseTag(item)"
+          >
+            {{ item.name }}
+          </bk-tag>
+        </div>
       </div>
       <p class="user-group-error" v-if="isShowGroupError">{{ $t(`m.permApply['请选择用户组']`) }}</p>
     </render-horizontal-block>
     <section>
-      <!-- <template v-if="isShowMemberAdd">
-                    <render-action
-                        ref="memberRef"
-                        :title="addMemberText"
-                        :tips="addMemberTips"
-                        @on-click="handleAddMember"
-                        style="margin-bottom: 16px;">
-                        <iam-guide
-                            type="rating_manager_authorization_scope"
-                            direction="left"
-                            :style="{ top: '-25px', left: '440px' }"
-                            :content="$t(`m.guide['授权人员范围']`)" />
-                    </render-action>
-                </template> -->
-      <!-- <template v-else> -->
       <render-member
         :required="false"
         :users="users"
@@ -435,6 +447,9 @@
         tableList: [],
         currentSelectList: [],
         curUserGroup: [],
+        currentSelectedGroups: [],
+        defaultSelectedGroups: [],
+        defaultSelectedIds: [],
         searchParams: {},
         searchList: [],
         searchValue: [],
@@ -572,30 +587,30 @@
       };
     },
     computed: {
-        ...mapGetters(['user', 'externalSystemId']),
-        condition () {
-            if (this.curResIndex === -1 || this.groupIndex === -1) {
-                return [];
-            }
-            this.curResourceData = this.resourceTypeData.resource_groups[this.groupIndex]
-                .related_resource_types[this.curResIndex];
-            if (!this.curResourceData) {
-                return [];
-            }
-            if (this.curResourceData.condition.length === 0) this.curResourceData.condition = ['none'];
-            return _.cloneDeep(this.curResourceData.condition);
-        },
-        curSelectionMode () {
-            if (this.curResIndex === -1 || this.groupIndex === -1) {
-                return 'all';
-            }
-            this.curResourceData = this.resourceTypeData.resource_groups[this.groupIndex]
-                .related_resource_types[this.curResIndex];
-            return this.curResourceData.selectionMode;
-        },
-        originalCondition () {
-            return _.cloneDeep(this.condition);
-        }
+      ...mapGetters(['user', 'externalSystemId']),
+      condition () {
+          if (this.curResIndex === -1 || this.groupIndex === -1) {
+              return [];
+          }
+          this.curResourceData = this.resourceTypeData.resource_groups[this.groupIndex]
+              .related_resource_types[this.curResIndex];
+          if (!this.curResourceData) {
+              return [];
+          }
+          if (this.curResourceData.condition.length === 0) this.curResourceData.condition = ['none'];
+          return _.cloneDeep(this.curResourceData.condition);
+      },
+      curSelectionMode () {
+          if (this.curResIndex === -1 || this.groupIndex === -1) {
+              return 'all';
+          }
+          this.curResourceData = this.resourceTypeData.resource_groups[this.groupIndex]
+              .related_resource_types[this.curResIndex];
+          return this.curResourceData.selectionMode;
+      },
+      originalCondition () {
+          return _.cloneDeep(this.condition);
+      }
     },
     watch: {
       reason () {
@@ -1001,6 +1016,8 @@
           this.tableList.splice(0, this.tableList.length, ...(results || []));
           this.emptyData.tipType = 'search';
           this.$nextTick(() => {
+            const currentSelectedGroups = this.currentSelectedGroups.length
+              ? this.currentSelectedGroups.map(item => item.id.toString()) : [];
             this.tableList.forEach((item) => {
               if (item.role_members && item.role_members.length) {
                 item.role_members = item.role_members.map(v => {
@@ -1010,7 +1027,8 @@
                   };
                 });
               }
-              if (this.curUserGroup.includes(item.id.toString())) {
+              if (currentSelectedGroups.includes(item.id.toString())
+                || this.curUserGroup.includes(item.id.toString())) {
                 this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
                 this.currentSelectList.push(item);
               }
@@ -1054,6 +1072,8 @@
           this.pagination.count = count || 0;
           this.tableList.splice(0, this.tableList.length, ...(results || []));
           this.$nextTick(() => {
+            const currentSelectedGroups = this.currentSelectedGroups.length
+              ? this.currentSelectedGroups.map(item => item.id.toString()) : [];
             this.tableList.forEach((item) => {
               if (item.role_members && item.role_members.length) {
                 item.role_members = item.role_members.map(v => {
@@ -1063,7 +1083,8 @@
                   };
                 });
               }
-              if (this.curUserGroup.includes(item.id.toString())) {
+              if (currentSelectedGroups.includes(item.id.toString())
+                || this.curUserGroup.includes(item.id.toString())) {
                 this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
                 this.currentSelectList.push(item);
               }
@@ -1127,6 +1148,8 @@
         window.changeDialog = true;
         type === 'user' ? this.users.splice(payload, 1) : this.departments.splice(payload, 1);
         // this.isShowMemberAdd = this.users.length < 1 && this.departments.length < 1;
+        // 先注释掉此方法，新版交互用得到
+        // this.formatCheckedUserGroup();
       },
 
       handleSubmitAdd (payload) {
@@ -1138,6 +1161,33 @@
         // this.isShowMemberAdd = false;
         this.isShowAddMemberDialog = false;
         this.isShowMemberEmptyError = false;
+        // this.formatCheckedUserGroup();
+      },
+
+      // 处理权限获得者是非空并且不包含自己，不勾选个人已申请的用户组
+      formatCheckedUserGroup () {
+        const allList = [...this.users, ...this.departments];
+        const isMine = allList.find(item => item.username === this.user.username);
+        const currentSelectedGroups = this.currentSelectedGroups.map(item => item.id.toString());
+        this.curUserGroup = _.cloneDeep(this.defaultSelectedIds);
+        this.tableList.forEach(item => {
+          if (isMine || !allList.length) {
+            this.currentSelectedGroups = this.currentSelectedGroups.filter(
+              v => !this.curUserGroup.includes(v.id.toString()));
+            if (currentSelectedGroups.includes(item.id.toString())
+              || this.curUserGroup.includes(item.id.toString())) {
+              this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
+            }
+          } else {
+            if (this.curUserGroup.includes(item.id.toString())) {
+              this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, false);
+            }
+          }
+        });
+        // 处理有选择权限获得者并不包含自己的情况
+        if (!isMine && allList.length) {
+          this.curUserGroup = [];
+        }
       },
 
       setDefaultSelect (payload) {
@@ -1284,30 +1334,89 @@
         this.isShowPermSideSlider = false;
       },
 
-      handlerAllChange (selection) {
-        this.currentSelectList = selection.filter(item => !this.curUserGroup.includes(item.id.toString()));
+      fetchSelectedGroups (type, payload, row) {
         this.isShowGroupError = false;
+        const typeMap = {
+          multiple: () => {
+            const isChecked = payload.length && payload.indexOf(row) !== -1;
+            if (isChecked) {
+              this.currentSelectedGroups.push(row);
+            } else {
+              this.currentSelectedGroups = this.currentSelectedGroups.filter(
+                (item) => item.id.toString() !== row.id.toString()
+              );
+            }
+          },
+          all: () => {
+            const list = payload.filter(item => !this.curUserGroup.includes(item.id.toString()));
+            this.currentSelectList = _.cloneDeep(list);
+            const tableList = _.cloneDeep(this.tableList);
+            const selectGroups = this.currentSelectedGroups.filter(item =>
+              !tableList.map(v => v.id.toString()).includes(item.id.toString()));
+            this.currentSelectedGroups = [...selectGroups, ...list];
+          }
+        };
+        return typeMap[type]();
+      },
+
+      handlerAllChange (selection) {
+        this.fetchSelectedGroups('all', selection);
       },
 
       handlerChange (selection, row) {
-        this.currentSelectList = selection.filter(item => !this.curUserGroup.includes(item.id.toString()));
-        this.isShowGroupError = false;
+        this.fetchSelectedGroups('multiple', selection, row);
+      },
+
+      handleClearGroups () {
+        this.tableList.forEach((item) => {
+          if (!this.curUserGroup.includes(item.id.toString())) {
+            this.$refs.groupTableRef
+              && this.$refs.groupTableRef.toggleRowSelection(item, false);
+          }
+        });
+        this.currentSelectedGroups = [];
+      },
+
+      handleCloseTag (payload) {
+        const index = this.currentSelectedGroups.findIndex(item => item.id === payload.id);
+        const tableIndex = this.tableList.findIndex(item => item.id === payload.id);
+        this.$refs.groupTableRef
+          && this.$refs.groupTableRef.toggleRowSelection(this.tableList[tableIndex], false);
+        this.currentSelectedGroups.splice(index, 1);
       },
 
       async fetchCurUserGroup () {
         try {
           const { data, code } = await this.$store.dispatch('perm/getPersonalGroups', {
-            page_size: 100,
+            page_size: 10000,
             page: 1
           });
-          this.curUserGroup = data.results && data.results.filter(
-            (item) => item.department_id === 0).map((item) => item.id);
+          if (data.results && data.results.length) {
+            const groupIdList = [];
+            const tableData = data.results.filter((item) => item.department_id === 0);
+            tableData.forEach((item) => {
+              groupIdList.push(item.id);
+              if (item.role_members && item.role_members.length) {
+                item.role_members = item.role_members.map((v) => {
+                  return {
+                    username: v,
+                    readonly: false
+                  };
+                });
+              }
+            });
+            this.curUserGroup = _.cloneDeep(groupIdList);
+            this.defaultSelectedIds = _.cloneDeep(groupIdList);
+            this.defaultSelectedGroups = _.cloneDeep(tableData || []);
+          }
           this.emptyData = formatCodeData(code, this.emptyData, this.curUserGroup.length === 0);
         } catch (e) {
           this.$emit('toggle-loading', false);
           this.emptyData = formatCodeData(e.code, this.emptyData);
           console.error(e);
           this.curUserGroup = [];
+          this.currentSelectedGroups = [];
+          this.defaultSelectedGroups = [];
           this.bkMessageInstance = this.$bkMessage({
             limit: 1,
             theme: 'error',
@@ -1388,35 +1497,8 @@
       },
 
       async handleSubmit () {
-        let validateFlag = true;
-        if (!this.reason) {
-          this.isShowReasonError = true;
-          validateFlag = false;
-          this.scrollToLocation(this.$refs.reasonRef);
-        }
-        if (this.expiredAtUse === 0) {
-          this.isShowExpiredError = true;
-          validateFlag = false;
-          this.scrollToLocation(this.$refs.expiredAtRef);
-        }
-        if (this.currentSelectList.length < 1) {
-          this.isShowGroupError = true;
-          validateFlag = false;
-        }
-        if (!validateFlag) {
-          return;
-        }
-        this.submitLoading = true;
-        if (this.expiredAtUse === 15552000) {
-          this.expiredAtUse = this.handleExpiredAt();
-        }
         const subjects = [];
-        // if (this.isAll) {
-        //     subjects.push({
-        //         id: '*',
-        //         type: '*'
-        //     });
-        // } else {
+        const groupsList = [...this.currentSelectedGroups];
         this.users.forEach(item => {
           subjects.push({
             type: 'user',
@@ -1429,11 +1511,47 @@
             id: item.id
           });
         });
+        // 新版交互前，先采取只提交手动勾选的数据的临时方案
+        // if (subjects.length) {
+        //   const isOther = subjects.filter(item => item.id !== this.user.username);
+        //   if (isOther.length) {
+        //     // 如果权限获得者既包含了自己也包含了他人，就提交已申请过的加上勾选的
+        //     const isMine = subjects.find(item => item.id === this.user.username);
+        //     if (isMine) {
+        //       // 这里需要产品优化既包含了自己也包含了他人，单独提交已申请过了的用户组会报错，所以这里还需要判断下有没有勾选
+        //       if (!this.currentSelectedGroups.length) {
+        //         this.isShowGroupError = true;
+        //         this.scrollToLocation(this.$refs.selectTableRef);
+        //         return;
+        //       }
+        //       groupsList = [...this.defaultSelectedGroups, ...this.currentSelectedGroups];
+        //     }
+        //   }
         // }
+        if (!groupsList.length) {
+          this.isShowGroupError = true;
+          this.scrollToLocation(this.$refs.selectTableRef);
+          return;
+        }
+        if (!this.reason) {
+          this.isShowReasonError = true;
+          this.scrollToLocation(this.$refs.reasonRef);
+          return;
+        }
+        if (this.expiredAtUse === 0) {
+          this.isShowExpiredError = true;
+          this.scrollToLocation(this.$refs.expiredAtRef);
+          return;
+        }
+        this.submitLoading = true;
+        if (this.expiredAtUse === 15552000) {
+          this.expiredAtUse = this.handleExpiredAt();
+        }
         const params = {
           expired_at: this.expiredAtUse,
           reason: this.reason,
-          groups: this.currentSelectList.map(({ id, name, description }) => ({ id, name, description })),
+          groups: groupsList.map(({ id, name, description }) => ({ id, name, description })),
+          // groups: this.currentSelectList.map(({ id, name, description }) => ({ id, name, description })),
           applicants: subjects
         };
         try {
@@ -1534,138 +1652,90 @@
   };
 </script>
 <style lang="postcss">
-    .iam-join-user-group-wrapper {
-        .user-group-table {
-            .user-group-table {
-                margin-top: 10px;
-                border-right: none;
-                border-bottom: none;
-                &.set-border {
-                    border-right: 1px solid #dfe0e5;
-                    border-bottom: 1px solid #dfe0e5;
-                }
-                .user-group-name {
-                    color: #3a84ff;
-                    cursor: pointer;
-                    &:hover {
-                        color: #699df4;
-                    }
-                }
-            }
-            /* .can-view {
-                color: #3a84ff;
-                cursor: pointer;
-                &:hover {
-                    color: #699df4;
-                }
-            } */
+  @import '@/css/mixins/manage-members-detail-slidesider.css';
+  @import '@/css/mixins/apply-join-group-search.css';
+  .iam-join-user-group-wrapper {
+    .user-group-table {
+        margin-top: 10px;
+        border-right: none;
+        border-bottom: none;
+        &-selected {
+          margin-top: 0;
         }
-        .search-wrapper {
-            .info {
-                line-height: 30px;
-                font-size: 12px;
-            }
+        &.set-border {
+            border-right: 1px solid #dfe0e5;
+            border-bottom: 1px solid #dfe0e5;
         }
-        .expired-at-wrapper {
-            margin-top: 16px;
-        }
-        .reason-wrapper {
-            margin-top: 16px;
-            .join-reason-error {
-                .bk-textarea-wrapper {
-                    border-color: #ff5656;
-                }
-            }
-        }
-        .user-group-error,
-        .perm-recipient-error,
-        .expired-at-error,
-        .reason-empty-wrapper {
-            margin-top: 5px;
-            font-size: 12px;
-            color: #ff4d4d;
-        }
-        .is-member-empty-cls {
-            .user-selector-container {
-                border-color: #ff4d4d;
+        .user-group-name {
+            color: #3a84ff;
+            cursor: pointer;
+            &:hover {
+                color: #699df4;
             }
         }
     }
-    .grade-members-content {
-        padding: 20px;
-        height: calc(100vh - 61px);
-        .member-item {
-            position: relative;
-            display: inline-block;
-            margin: 0 6px 6px 0;
-            padding: 0 10px;
-            line-height: 22px;
-            background: #f5f6fa;
-            border: 1px solid #dcdee5;
-            border-radius: 2px;
-            font-size: 12px;
-            .member-name {
-                display: inline-block;
-                max-width: 200px;
-                line-height: 17px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                vertical-align: text-top;
-                .count {
-                    color: #c4c6cc;
-                }
-            }
+    .apply-selected-groups {
+      padding: 10px 0;
+      &-header {
+        font-size: 12px;
+        &-count {
+          color: #3a84ff;
         }
-        .info {
-            margin-top: 5px;
-            color: #c4c6cc;
-            font-size: 14px;
+        &-clear {
+          color: #3a84ff;
+          cursor: pointer;
         }
+      }
+      .group-tag-close {
+        margin: 10px 6px 0 0;
+        background: #f5f6fa;
+        border: 1px solid #dcdee5;
+      }
     }
-    .resource-group-container {
-        display: flex;
-        justify-content: space-between;
-        .relation-content-item{
-            display: flex;
-            /* width: 220px; */
-            .content-name{
-                font-size: 14px;
-                padding-right: 10px;
-            }
-            .content{
-                width: 300px;
-            }
+    /* .can-view {
+        color: #3a84ff;
+        cursor: pointer;
+        &:hover {
+            color: #699df4;
         }
-
-        .relation-content-item:nth-child(2){
-            margin-left: 32px;
-        }
-    }
+    } */
     .search-wrapper {
-        .error-tips {
-            line-height: 22px;
+        .info {
+            line-height: 30px;
+            font-size: 12px;
         }
     }
-    .join-user-group-form {
-        margin-top: -5px;
-        &-lang {
-            .bk-form.bk-inline-form .bk-form-item .bk-label {
-                min-width: 100px;
-                text-align: left;
-            }
-        }
-        .resource-action-form {
-            display: flex;
-            .bk-form-item+.bk-form-item {
-                margin-top: 0;
-            }
-        }
-        .group-search-select {
-            display: flex;
-            .bk-button {
-              padding: 0;
+    .expired-at-wrapper {
+        margin-top: 16px;
+    }
+    .reason-wrapper {
+        margin-top: 16px;
+        .join-reason-error {
+            .bk-textarea-wrapper {
+                border-color: #ff5656;
             }
         }
     }
+    .user-group-error,
+    .perm-recipient-error,
+    .expired-at-error,
+    .reason-empty-wrapper {
+        margin-top: 5px;
+        font-size: 12px;
+        color: #ff4d4d;
+    }
+    .is-member-empty-cls {
+        .user-selector-container {
+            border-color: #ff4d4d;
+        }
+    }
+  }
+</style>
+
+<style lang="postcss" scoped>
+/deep/ .bk-page.bk-page-align-right {
+  .bk-page-selection-count-left {
+    display: none;
+  }
+}
 </style>

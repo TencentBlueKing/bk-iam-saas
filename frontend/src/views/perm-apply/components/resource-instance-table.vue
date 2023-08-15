@@ -37,14 +37,14 @@
               <bk-button v-for="(item, index) in row.aggregateResourceType"
                 :key="item.id" @click="selectResourceType(row, index)"
                 :class="row.selectedIndex === index ? 'is-selected' : ''" size="small">{{item.name}}
-                <span v-if="row.instancesDisplayData[item.id] && row.instancesDisplayData[item.id].length">
+                <span v-if="!row.isNoLimited && row.instancesDisplayData[item.id] && row.instancesDisplayData[item.id].length">
                   ({{row.instancesDisplayData[item.id].length}})</span>
               </bk-button>
             </div>
             <div class="group-container">
               <render-condition
                 :ref="`condition_${$index}_aggregateRef`"
-                :value="row.value"
+                :value="formatDisplayValue(row)"
                 :is-empty="row.empty"
                 :can-view="false"
                 :can-paste="row.canPaste"
@@ -496,6 +496,19 @@
               return false;
           }
           return this.tableList[this.curIndex].policy_id !== '';
+      },
+      // 处理无限制和聚合后多个tab数据结构不兼容情况
+      formatDisplayValue () {
+        return (payload) => {
+          const { isNoLimited, empty, value, aggregateResourceType, selectedIndex } = payload;
+          if (value && aggregateResourceType[selectedIndex]) {
+            let displayValue = aggregateResourceType[selectedIndex].displayValue;
+            if (isNoLimited || empty) {
+              displayValue = value;
+            }
+            return displayValue;
+          }
+        };
       }
     },
     watch: {
@@ -768,10 +781,21 @@
             item.aggregateResourceType.forEach(aggregateResourceItem => {
               if (`${aggregateResourceItem.system_id}${aggregateResourceItem.id}` === this.curCopyKey) {
                 if (Object.keys(item.instancesDisplayData).length) {
-                  item.instancesDisplayData[this.instanceKey] = _.cloneDeep(tempAggregateData);
-                  item.instances = this.setInstanceData(item.instancesDisplayData);
+                  if (this.curCopyNoLimited) {
+                    item.instances = [];
+                    item.isNoLimited = true;
+                  } else {
+                    item.isNoLimited = false;
+                    item.instances = this.setInstanceData(item.instancesDisplayData);
+                  }
                 } else {
-                  item.instances = _.cloneDeep(tempAggregateData);
+                  if (this.curCopyNoLimited) {
+                    item.instances = [];
+                    item.isNoLimited = true;
+                  } else {
+                    item.isNoLimited = false;
+                    item.instances = _.cloneDeep(tempAggregateData);
+                  }
                   this.setInstancesDisplayData(item);
                 }
               }
@@ -819,6 +843,7 @@
       showAggregateResourceInstance (data, index) {
         const aggregateResourceParams = {
           ...data.aggregateResourceType[data.selectedIndex],
+          curAggregateSystemId: this.systemId,
           isNoLimited: data.isNoLimited || false
         };
         this.aggregateResourceParams = _.cloneDeep(aggregateResourceParams);

@@ -301,6 +301,24 @@ class RoleSource(BaseModel):
             return row[0]
 
 
+class RoleResourceRelation(BaseModel):
+    """
+    角色资源标签
+
+    用于自定义申请权限查询管理员审批人
+    """
+
+    role_id = models.IntegerField("角色ID")
+    system_id = models.CharField("资源系统", max_length=32)
+    resource_type_id = models.CharField("资源类型", max_length=32)
+    resource_id = models.CharField("资源ID", max_length=36)
+
+    class Meta:
+        verbose_name = "角色资源关系"
+        verbose_name_plural = "角色资源关系"
+        unique_together = ["resource_id", "resource_type_id", "system_id", "role_id"]
+
+
 class AnonymousRole:
     id = 0
     pk = 0

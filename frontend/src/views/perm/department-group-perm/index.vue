@@ -6,7 +6,8 @@
       :size="'small'"
       :pagination="pageConf"
       @page-change="handlePageChange"
-      @page-limit-change="handlePageLimitChange">
+      @page-limit-change="handlePageLimitChange"
+      v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
       <!-- 用户组名 -->
       <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
         <template slot-scope="{ row }">
@@ -59,10 +60,11 @@
       </bk-table-column>
       <template slot="empty">
         <ExceptionEmpty
-          :type="emptyData.type"
-          :empty-text="emptyData.text"
-          :tip-text="emptyData.tip"
-          :tip-type="emptyData.tipType"
+          :type="groupPermDepartEmptyData.type"
+          :empty-text="groupPermDepartEmptyData.text"
+          :tip-text="groupPermDepartEmptyData.tip"
+          :tip-type="groupPermDepartEmptyData.tipType"
+          @on-clear="handleEmptyClear"
           @on-refresh="handleEmptyRefresh"
         />
       </template>
@@ -90,7 +92,7 @@
       :title="gradeSliderTitle"
       :quick-close="true"
       @animation-end="gradeSliderTitle === ''">
-      <div slot="content" class="grade-memebers-content" v-bkloading="{ isLoading: sliderLoading, opacity: 1 }"
+      <div slot="content" class="grade-members-content" v-bkloading="{ isLoading: sliderLoading, opacity: 1 }"
         data-test-id="myPerm_sideslider_gradeMemebersContent">
         <template v-if="!sliderLoading">
           <div v-for="(item, index) in gradeMembers" :key="index" class="member-item">
@@ -106,6 +108,7 @@
 </template>
 <script>
   import { mapGetters } from 'vuex';
+  import { formatCodeData } from '@/common/util';
   import DeleteDialog from '@/components/iam-confirm-dialog/index.vue';
   import RenderGroupPermSideslider from '../components/render-group-perm-sideslider';
 
@@ -128,6 +131,19 @@
             text: '',
             tip: '',
             tipType: ''
+          };
+        }
+      },
+      curSearchParams: {
+        type: Object
+      },
+      curSearchPagination: {
+        type: Object,
+        default: () => {
+          return {
+            current: 1,
+            count: 0,
+            limit: 10
           };
         }
       }
@@ -154,27 +170,70 @@
         // 控制侧边弹出层显示
         isShowGradeSlider: false,
         sliderLoading: false,
-        gradeSliderTitle: ''
+        tableLoading: false,
+        gradeSliderTitle: '',
+        groupPermDepartEmptyData: {
+          type: '',
+          text: '',
+          tip: '',
+          tipType: ''
+        }
       };
     },
     computed: {
-            ...mapGetters(['user', 'externalSystemId'])
+      ...mapGetters(['user', 'externalSystemId'])
     },
     watch: {
       departmentGroupList: {
         handler (v) {
-          if (v.length) {
-            this.dataList.splice(0, this.dataList.length, ...v);
-            this.initPageConf();
-            this.curPageData = this.getDataByPage(this.pageConf.current);
+          if (this.emptyData.tipType === 'search') {
+            this.fetchSearchDepart();
+          } else {
+            if (v.length) {
+              this.dataList.splice(0, this.dataList.length, ...v);
+              this.initPageConf();
+              this.curPageData = this.getDataByPage(this.pageConf.current);
+            }
           }
+        },
+        immediate: true
+      },
+      emptyData: {
+        handler (value) {
+          this.groupPermDepartEmptyData = Object.assign({}, value);
         },
         immediate: true
       }
     },
-    async created () {
-    },
     methods: {
+      async fetchSearchDepart () {
+        const { current, limit } = this.pageConf;
+        const params = {
+          ...this.curSearchParams,
+          limit,
+          offset: limit * (current - 1)
+        };
+        try {
+          this.tableLoading = true;
+          const { code, data } = await this.$store.dispatch('perm/getDepartGroupSearch', params);
+          const { count, results } = data;
+          this.curPageData.splice(0, this.curPageData.length, ...results || []);
+          this.pageConf.count = count || 0;
+          this.groupPermDepartEmptyData = formatCodeData(code, this.groupPermDepartEmptyData, results.length === 0);
+        } catch (e) {
+          const { code, data, message, statusText } = e;
+          this.groupPermDepartEmptyData = formatCodeData(code, this.groupPermDepartEmptyData);
+          this.bkMessageInstance = this.$bkMessage({
+            limit: 1,
+            theme: 'error',
+            message: message || data.msg || statusText,
+            ellipsisLine: 2,
+            ellipsisCopy: true
+          });
+        } finally {
+          this.tableLoading = false;
+        }
+      },
       /**
        * 获取 user 信息
        */
@@ -215,8 +274,12 @@
        */
       handlePageChange (page = 1) {
         this.pageConf.current = page;
-        const data = this.getDataByPage(page);
-        this.curPageData.splice(0, this.curPageData.length, ...data);
+        if (this.emptyData.tipType === 'search') {
+          this.fetchSearchDepart();
+        } else {
+          const data = this.getDataByPage(page);
+          this.curPageData.splice(0, this.curPageData.length, ...data);
+        }
       },
 
       /**
@@ -358,6 +421,13 @@
         this.$store.dispatch('perm/getDepartMentsPersonalGroups', this.externalSystemId ? { system_id: this.externalSystemId } : '');
         this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10 });
         this.handlePageChange(1);
+        this.$emit('on-refresh');
+      },
+
+      handleEmptyClear () {
+        this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10 });
+        this.getDataByPage();
+        this.$emit('on-clear');
       }
     }
   };

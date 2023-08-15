@@ -18,17 +18,18 @@
           ref="customPermTable"
           :key="sys.id"
           :system-id="sys.id"
-          :empty-data="emptyData"
+          :empty-data="emptyPolicyData"
           @after-delete="handleAfterDelete(...arguments, sysIndex)" />
       </custom-perm-system-policy>
     </template>
     <template v-else>
       <div class="my-perm-custom-perm-empty-wrapper">
         <ExceptionEmpty
-          :type="emptyData.type"
-          :empty-text="emptyData.text"
-          :tip-text="emptyData.tip"
-          :tip-type="emptyData.tipType"
+          :type="emptyPolicyData.type"
+          :empty-text="emptyPolicyData.text"
+          :tip-text="emptyPolicyData.tip"
+          :tip-type="emptyPolicyData.tipType"
+          @on-clear="handleEmptyClear"
           @on-refresh="handleEmptyRefresh"
         />
       </div>
@@ -36,9 +37,11 @@
   </div>
 </template>
 <script>
+  import { formatCodeData } from '@/common/util';
   import CustomPermSystemPolicy from '@/components/custom-perm-system-policy/index.vue';
   import PermSystem from '@/model/my-perm-system';
   import CustomPermTable from './custom-perm-table.vue';
+  import { mapGetters } from 'vuex';
 
   export default {
     name: 'CustomPerm',
@@ -55,10 +58,23 @@
         type: Object,
         default: () => {
           return {
-            type: '',
-            text: '',
+            type: 'empty',
+            text: '暂无数据',
             tip: '',
             tipType: ''
+          };
+        }
+      },
+      curSearchParams: {
+        type: Object
+      },
+      curSearchPagination: {
+        type: Object,
+        default: () => {
+          return {
+            current: 1,
+            count: 0,
+            limit: 10
           };
         }
       }
@@ -66,10 +82,17 @@
     data () {
       return {
         onePerm: 0,
-        systemPolicyList: []
+        systemPolicyList: [],
+        emptyPolicyData: {
+          type: 'empty',
+          text: '暂无数据',
+          tip: '',
+          tipType: ''
+        }
       };
     },
     computed: {
+      ...mapGetters(['externalSystemId']),
       hasPerm () {
         return this.systemPolicyList.length > 0;
       }
@@ -77,28 +100,51 @@
     watch: {
       systemList: {
         handler (v) {
-          const systemPolicyList = v.map(item => new PermSystem(item));
-          this.systemPolicyList.splice(0, this.systemPolicyList.length, ...systemPolicyList);
-          this.systemPolicyList.sort((curr, next) => curr.name.localeCompare(next.name));
-          if (this.externalSystemId && this.systemPolicyList.length > 1) {
-            const externalSystemIndex = this.systemPolicyList.findIndex(item => item.id === this.externalSystemId);
-            if (externalSystemIndex > -1) {
-              this.systemPolicyList.splice(
-                externalSystemIndex,
-                1,
-                ...this.systemPolicyList.splice(0, 1, this.systemPolicyList[externalSystemIndex])
-              );
-            }
-          }
-          this.onePerm = systemPolicyList.length;
+          this.formatSystemData(v);
         },
         immediate: true,
         deep: true
+      },
+      emptyData: {
+        handler (value) {
+          this.emptyPolicyData = Object.assign({}, value);
+        },
+        immediate: true
+      },
+      curSearchParams: {
+        handler (value) {
+          if (Object.keys(value).length) {
+            this.fetchPoliciesSearch();
+          }
+        },
+        immediate: true
       }
     },
     created () {
     },
     methods: {
+      // 搜索自定义权限
+      async fetchPoliciesSearch () {
+        try {
+          this.tableLoading = true;
+          const { code, data } = await this.$store.dispatch('perm/getPoliciesSearch', this.curSearchParams);
+          this.formatSystemData(data || []);
+          this.emptyPolicyData = formatCodeData(code, this.emptyPolicyData, data.length === 0);
+        } catch (e) {
+          const { code, data, message, statusText } = e;
+          this.emptyPolicyData = formatCodeData(code, this.emptyPolicyData);
+          this.bkMessageInstance = this.$bkMessage({
+            limit: 1,
+            theme: 'error',
+            message: message || data.msg || statusText,
+            ellipsisLine: 2,
+            ellipsisCopy: true
+          });
+        } finally {
+          this.tableLoading = false;
+        }
+      },
+
       /**
        * 展开/收起 系统下的权限列表
        *
@@ -112,6 +158,9 @@
         this.$set(this.systemPolicyList[sysIndex], 'count', policyListLen);
         if (this.systemPolicyList[sysIndex].count < 1) {
           this.systemPolicyList.splice(sysIndex, 1);
+        }
+        if (!this.systemPolicyList.length) {
+          this.emptyPolicyData = formatCodeData(0, this.emptyPolicyData, true);
         }
       },
 
@@ -140,6 +189,9 @@
               if (code === 0) {
                 this.systemPolicyList.splice(sysIndex, 1);
                 this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
+                if (!this.systemPolicyList.length) {
+                  this.emptyPolicyData = formatCodeData(0, this.emptyPolicyData, true);
+                }
                 return true;
               }
             } catch (e) {
@@ -153,24 +205,49 @@
             }
           }
         });
+      },
+
+      // 格式化系统列表数据
+      formatSystemData (payload) {
+        const systemPolicyList = payload.map(item => new PermSystem(item));
+        this.systemPolicyList.splice(0, this.systemPolicyList.length, ...systemPolicyList);
+        this.systemPolicyList.sort((curr, next) => curr.name.localeCompare(next.name));
+        if (this.externalSystemId && this.systemPolicyList.length > 1) {
+          const externalSystemIndex = this.systemPolicyList.findIndex(item => item.id === this.externalSystemId);
+          if (externalSystemIndex > -1) {
+            this.systemPolicyList.splice(
+              externalSystemIndex,
+              1,
+              ...this.systemPolicyList.splice(0, 1, this.systemPolicyList[externalSystemIndex])
+            );
+          }
+        }
+        this.onePerm = systemPolicyList.length;
+      },
+
+      async handleRefreshSystem () {
+        const externalParams = {};
+        if (this.externalSystemId) {
+          externalParams.system_id = this.externalSystemId;
+        }
+        const { code, data } = await this.$store.dispatch('permApply/getHasPermSystem', externalParams);
+        this.formatSystemData(data || []);
+        this.emptyPolicyData = formatCodeData(code, this.emptyPolicyData, data.length === 0);
+      },
+      
+      async handleEmptyClear () {
+        await this.handleRefreshSystem();
+        this.$emit('on-clear');
+      },
+
+      async handleEmptyRefresh () {
+        await this.handleRefreshSystem();
+        this.$emit('on-refresh');
       }
     }
   };
 </script>
 <style lang="postcss">
   @import './index.css';
-  .custom-perm-del-info {
-    .del-actions-warn-info {
-      display: flex;
-      align-items: center;
-      word-break: break-all;
-      .warn {
-        color: #ffb848;
-        margin-right: 10px;
-      }
-    }
-    .bk-dialog-footer {
-      padding: 12px 24px !important;
-    }
-  }
+  @import '@/css/mixins/custom-delete-action.css';
 </style>

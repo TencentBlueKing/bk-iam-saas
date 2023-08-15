@@ -161,7 +161,7 @@ export const m = {
         '的详情': 'Detail',
         '手动输入': 'Input',
         '手动输入提示1': 'You can only add up to 100 people at a time',
-        '手动输入提示2': 'Username entered incorrectly or does not exist',
+        '手动输入提示2': 'User name or department name input error or does not exist within the scope of authorized personnel',
         '请尝试': 'Please try ',
         '修改授权人员范围': 'to modify the authorized personnel range',
         '添加到已选列表': 'Add to selected list',
@@ -270,7 +270,9 @@ export const m = {
         '更多': 'More',
         '资源实例': 'Resource instance',
         '批量无限制': 'Unlimited batch size',
-        '无该应用访问权限': 'No access permissions for this application'
+        '无该应用访问权限': 'No access permissions for this application',
+        '暂无可复制内容': 'There is currently no replicable content',
+        '管理员组不能添加部门': 'The administrator group cannot add department'
     },
     // 校验
     verify: {
@@ -354,7 +356,7 @@ export const m = {
         '请选择操作': 'Please select the actions',
         '请选择资源类型': 'Please select resource type',
         '管理空间名称不能为空': 'Management space name cannot be empty',
-        '请选择用户成员': 'Please select user member'
+        '请选择用户或组织成员': 'Please select user or organization member'
     },
     info: {
         '加入用户组申请成功': 'Apply to join the group successfully',
@@ -510,7 +512,11 @@ export const m = {
          '天数': '{value} days',
          '第几项实例和属性不能都为空': 'The instance and attribute of item {value} cannot be empty',
          '权限个数': '{value} permissions',
-         '已经复制到粘贴板，可在其他用户组添加成员时粘贴到手动输入框': 'Has been copied to the clipboard and can be pasted into the manual input box when adding members to other user groups'
+         '已经复制到粘贴板，可在其他用户组添加成员时粘贴到手动输入框': 'Has been copied to the clipboard and can be pasted into the manual input box when adding members to other user groups',
+         '用户组为管理员组，不能添加部门': 'The {value} is administrator group and cannot add departments',
+         '用户组为只读用户组不能添加成员': '{value} is read-only user groups and cannot add members',
+         '管理员组不能添加权限': 'Administrators group cannot add permissions',
+         '只读用户组不能添加权限': 'Read only user groups cannot add permissions'
     },
     // 二次确认弹窗相关
     dialog: {
@@ -721,7 +727,8 @@ export const m = {
         '不能删除当前操作': 'Unable to delete current permission',
         '个操作关联了': ' related actions have been completed ',
         '查看实例资源权限组': 'View instance resource permission groups',
-        '删除实例资源权限组': 'Delete instance resource permission groups'
+        '删除实例资源权限组': 'Delete instance resource permission groups',
+        '唯一管理员不可退出': 'The only administrator cannot quit'
     },
     permTemplate: {
         '模板名': 'Template name',
@@ -1036,8 +1043,13 @@ export const m = {
         '用户组添加权限模板': 'Add permission template to group',
         '用户组删除权限模板': 'Delete permission template from group',
         '用户权限删除': 'Deletion of user permissions',
-        '用户权限更新': 'Updating user permissions',
-        '用户权限增加': 'Adding user permissions',
+        '用户权限更新': 'Update user permissions',
+        '用户权限增加': 'Add user permissions',
+        '用户临时权限增加': 'Add user temporary permissions',
+        '用户临时权限删除': 'Deletion of user temporary permissions',
+        '用户黑名单成员增加': 'Add user blacklist members',
+        '用户黑名单成员删除': 'Deletion of user blacklist members',
+        '用户权限清理': 'User permissions clean',
         '用户退出用户组': 'User quit group',
         '用户退出管理员': 'User quit admin',
         '权限模板创建': 'Create permission template',
@@ -1063,6 +1075,7 @@ export const m = {
         '管理员成员开启业务权限': 'Administrator members open business permissions',
         '管理员成员关闭业务权限': 'Administrator members turn off business permissions',
         '管理员更新': 'Administrator update',
+        '管理员退出': 'Administrator quit',
         '管理员用户组成员续期': 'Admin User Group Membership Renewal',
         '管理员常用操作新建': 'Common actions for administrators',
         '管理员常用操作删除': 'Administrator common actions delete',

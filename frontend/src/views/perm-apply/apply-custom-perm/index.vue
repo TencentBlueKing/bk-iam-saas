@@ -595,7 +595,7 @@
       :title="gradeSliderTitle"
       :quick-close="true"
       @animation-end="gradeSliderTitle === ''">
-      <div class="grade-memebers-content"
+      <div class="grade-members-content"
         slot="content"
         v-bkloading="{ isLoading: sliderLoading, opacity: 1 }">
         <template v-if="!sliderLoading">
@@ -2157,6 +2157,7 @@
           if (!item.actions) {
             this.$set(item, 'actions', []);
           }
+          item.actions = item.actions.filter(v => !v.hidden);
           item.actions.forEach(act => {
             this.$set(act, 'checked', ['checked', 'readonly'].includes(act.tag) || hasCheckedList.includes(act.id));
             this.$set(act, 'disabled', act.tag === 'readonly');
@@ -2165,13 +2166,14 @@
               ++count;
             }
           });
-          allCount = allCount + item.actions.length
-          ;(item.sub_groups || []).forEach(sub => {
+          allCount = allCount + item.actions.length;
+          (item.sub_groups || []).forEach(sub => {
             this.$set(sub, 'expanded', false);
             this.$set(sub, 'actionsAllChecked', false);
             if (!sub.actions) {
               this.$set(sub, 'actions', []);
             }
+            sub.actions = sub.actions.filter(v => !v.hidden);
             sub.actions.forEach(act => {
               this.$set(act, 'checked', ['checked', 'readonly'].includes(act.tag) || hasCheckedList.includes(act.id));
               this.$set(act, 'disabled', act.tag === 'readonly');
@@ -2677,10 +2679,9 @@
     }
   };
 </script>
-<style>
-    @import './index.css';
-</style>
 <style lang="postcss" scoped>
+@import './index.css';
+@import '@/css/mixins/manage-members-detail-slidesider.css';
 .action-hover {
     color: #3a84ff;
 }

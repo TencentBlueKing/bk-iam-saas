@@ -11,6 +11,7 @@ specific language governing permissions and limitations under the License.
 from typing import Any, Optional
 
 from aenum import LowerStrEnum, auto
+from redis.exceptions import LockNotOwnedError
 
 from .cache import Cache, CacheEnum, CacheKeyPrefixEnum
 
@@ -61,7 +62,10 @@ class RedisLock:
         return self._lock.acquire(blocking=self._blocking)
 
     def release(self):
-        self._lock.release()
+        try:
+            self._lock.release()
+        except LockNotOwnedError:
+            pass
 
 
 def gen_permission_handover_lock(key: str) -> RedisLock:

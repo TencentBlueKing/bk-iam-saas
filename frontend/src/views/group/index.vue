@@ -31,7 +31,7 @@
           {{ $t(`m.userGroup['转出']`) }}
         </bk-button>
         <bk-button
-          :disabled="currentSelectList.length < 1"
+          :disabled="isBatchDisabled"
           @click="handleBatchAddMember"
           data-test-id="group_btn_create"
         >
@@ -153,14 +153,19 @@
       <bk-table-column :label="$t(`m.common['操作']`)" width="320">
         <template slot-scope="{ row }">
           <div>
-            <bk-button theme="primary" text @click="handleAddMember(row)">
+            <bk-button
+              theme="primary"
+              text
+              :disabled="row.readonly"
+              @click="handleAddMember(row)"
+            >
               {{ $t(`m.common['添加成员']`) }}
             </bk-button>
             <bk-button
               text
               theme="primary"
               style="margin-left: 10px"
-              :disabled="row.attributes && row.attributes.source_from_role"
+              :disabled="(row.attributes && row.attributes.source_from_role) || row.readonly"
               @click="handleAddPerm(row)">
               {{ $t(`m.common['添加权限']`) }}
             </bk-button>
@@ -211,7 +216,7 @@
       :is-rating-manager="isRatingManager"
       show-expired-at
       @on-cancel="handleCancelAdd"
-      @on-sumbit="handleSumbitAdd"
+      @on-sumbit="handleSubmitAdd"
       @on-after-leave="handleAddAfterClose"
     />
 
@@ -249,6 +254,11 @@
 
   export default {
     name: '',
+    provide: function () {
+      return {
+        getGroupAttributes: () => this.groupAttributes
+      };
+    },
     components: {
       DeleteDialog,
       AddMemberDialog,
@@ -314,6 +324,10 @@
         ],
         distributeDetail: null,
         queryParams: {},
+        groupAttributes: {
+          source_type: '',
+          source_from_role: false
+        },
         emptyData: {
           type: '',
           text: '',
@@ -338,6 +352,14 @@
             },
             tableHeight () {
                 return getWindowHeight() - 185;
+            },
+            isBatchDisabled () {
+              if (this.currentSelectList.length) {
+                const isDisabled = this.currentSelectList.every(item => item.readonly);
+                return isDisabled;
+              } else {
+                return true;
+              }
             }
     },
     watch: {
@@ -623,6 +645,7 @@
         this.searchParams = payload;
         this.searchList = result;
         this.emptyData.tipType = 'search';
+        this.queryParams = Object.assign(this.queryParams, { current: 1, limit: 10 });
         this.resetPagination();
         this.fetchUserGroupList(true);
       },
@@ -644,8 +667,10 @@
       },
 
       handleAddMember (payload) {
-        this.curName = payload.name;
-        this.curId = payload.id;
+        const { id, name, attributes } = payload;
+        this.curName = name;
+        this.curId = id;
+        this.groupAttributes = Object.assign(this.groupAttributes, attributes);
         this.isShowAddMemberDialog = true;
       },
 
@@ -663,9 +688,19 @@
         this.isShowAddMemberDialog = false;
       },
 
-      async handleSumbitAdd (payload) {
-        this.loading = true;
+      async handleSubmitAdd (payload) {
         const { users, departments, expiredAt } = payload;
+        // 判断批量选择的用户组里是否包含管理员组
+        const hasAdminGroups = this.currentSelectList.filter(item =>
+          item.attributes && item.attributes.source_from_role && departments.length > 0);
+        if (hasAdminGroups.length) {
+          const adminGroupNames = hasAdminGroups.map(item => item.name).join();
+          this.messageError(
+            this.$t(`m.info['用户组为管理员组，不能添加部门']`,
+                    { value: `${this.$t(`m.common['【']`)}${adminGroupNames}${this.$t(`m.common['】']`)}` }), 2000
+          );
+          return;
+        }
         let expired = payload.policy_expired_at;
         // 4102444800：非永久时需加上当前时间
         if (expiredAt !== 4102444800) {
@@ -709,6 +744,7 @@
         }
         console.log('params', params);
         try {
+          this.loading = true;
           await this.$store.dispatch(fetchUrl, params);
           this.isShowAddMemberDialog = false;
           this.messageSuccess(this.$t(`m.info['添加成员成功']`), 2000);
@@ -815,6 +851,12 @@
       handleAfterEditLeave () { },
 
       handleBatchAddMember () {
+        const hasDisabledData = this.currentSelectList.filter(item => item.readonly);
+        if (hasDisabledData.length) {
+          const disabledNames = hasDisabledData.map(item => item.name);
+          this.messageError(`m.info['用户组为只读用户组不能添加成员']`, { value: `${this.$t(`m.common['【']`)}${disabledNames}${this.$t(`m.common['】']`)}` });
+          return;
+        }
         this.isBatch = true;
         this.isShowAddMemberDialog = true;
       },

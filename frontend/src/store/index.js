@@ -659,9 +659,11 @@ const store = new Vuex.Store({
       const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
       return http.get(`${AJAX_URL_PREFIX}/accounts/user/`, config).then((response) => {
         const data = response ? response.data : {};
-        if (data.role.type === 'system_manager') {
-          data.role.name = `${data.role.name}${il8n('nav', '系统管理员')}`;
-        }
+        // 由于现有搜索改成后端接口搜索，去掉之前前端自定义的内容
+        // if (data.role.type === 'system_manager') {
+        //   const langManager = ['zh-cn'].includes(window.CUR_LANGUAGE) ? '系统管理员' : ' system administrator';
+        //   data.role.name = `${data.role.name}${langManager}`;
+        // }
         commit('updateUser', data);
 
         if (Object.keys(data).length > 0) {
@@ -703,11 +705,12 @@ const store = new Vuex.Store({
       };
       return http.get(`${AJAX_URL_PREFIX}/roles/grade_managers/?${json2Query(queryParams)}`).then(({ data }) => {
         const results = data.results || [];
-        results.forEach((item) => {
-          if (item.type === 'system_manager') {
-            item.name = `${item.name}${il8n('nav', '系统管理员')}`;
-          }
-        });
+        // results.forEach((item) => {
+        //   if (item.type === 'system_manager') {
+        //     const langManager = ['zh-cn'].includes(window.CUR_LANGUAGE) ? '系统管理员' : ' system administrator';
+        //     item.name = `${item.name}${langManager}`;
+        //   }
+        // });
         commit('updateRoleListTotal', data.count || 0);
         commit('updateRoleList', results);
         return results;

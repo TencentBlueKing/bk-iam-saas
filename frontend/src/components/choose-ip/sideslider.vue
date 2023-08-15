@@ -10,7 +10,7 @@
     @update:isShow="handleCancel">
     <div slot="content" class="content" v-bkloading="{ isLoading: loading, opacity: 1 }">
       <div
-        v-if="noLimitRoutes.includes($route.name)"
+        v-if="isShowUnlimited"
         class="no-limited-wrapper flex-between"
         :style="{ borderBottom: !isHide ? 0 : '' }"
         :title="$t(`m.resource['无限制总文案']`)">
@@ -98,6 +98,7 @@
 </template>
 <script>
   import _ from 'lodash';
+  import { mapGetters } from 'vuex';
   import { leaveConfirm } from '@/common/leave-confirm';
   import { formatCodeData } from '@/common/util';
   import TopologyInput from '@/components/choose-ip/topology-input';
@@ -166,20 +167,22 @@
         searchValue: '',
         loading: false,
         isFilter: false,
-        listLoading: false,
+        listLoading: true,
         isScrollBottom: false,
         isHide: false,
         notLimitValue: false,
-        noLimitRoutes: ['applyCustomPerm'], // 需要展示无限制的页面
+        noLimitRoutes: ['createUserGroup', 'cloneUserGroup', 'addGroupPerm'], // 需要展示无限制的页面
         emptyData: {
           type: 'empty',
           text: '暂无数据',
           tip: '',
           tipType: ''
-        }
+        },
+        isAny: false
       };
     },
     computed: {
+      ...mapGetters(['user']),
       curPlaceholder () {
         if (this.params.name) {
           return `${this.$t(`m.common['搜索']`)} ${this.params.name}`;
@@ -194,16 +197,27 @@
       },
       isHasDefaultData () {
         return this.defaultList.length > 0;
+      },
+      isShowUnlimited () {
+        const result = ['applyCustomPerm'].includes(this.$route.name)
+        || (['super_manager', 'system_manager'].includes(this.user.role.type)
+         && this.noLimitRoutes.includes(this.$route.name));
+        return result;
       }
     },
     watch: {
       show: {
-        handler (value) {
+        async handler (value) {
           if (value) {
+            this.listLoading = true;
             this.pageChangeAlertMemo = window.changeAlert;
             window.changeAlert = 'iamSidesider';
-            if (this.isSuperManager && !this.isHasDefaultData) {
-              this.fetchData(true);
+            // 为了减少组件之间数据传递的代码量，这里再重新调用一次接口做任意类型数据的处理
+            if (this.params.curAggregateSystemId) {
+              await this.fetchAuthorizationScopeActions(this.params.curAggregateSystemId);
+            }
+            if ((this.isSuperManager && !this.isHasDefaultData) || this.isAny) {
+              this.fetchData(false, true);
             } else {
               this.setSelectList(this.defaultList);
             }
@@ -292,6 +306,26 @@
         } finally {
           this.loading = false;
           this.listLoading = false;
+        }
+      },
+
+      async fetchAuthorizationScopeActions (id) {
+        try {
+          const { data } = await this.$store.dispatch(
+            'permTemplate/getAuthorizationScopeActions',
+            { systemId: id }
+          );
+          // 判断是否是任意
+          this.isAny = data && data.some(item => item.id === '*');
+        } catch (e) {
+          console.error(e);
+          this.bkMessageInstance = this.$bkMessage({
+            limit: 1,
+            theme: 'error',
+            message: e.message || e.data.msg || e.statusText,
+            ellipsisLine: 2,
+            ellipsisCopy: true
+          });
         }
       },
 
@@ -600,9 +634,9 @@
                 left: 50%;
                 top: 50%;
                 transform: translate(-50%, -50%);
-                img {
+                /* img {
                     width: 120px;
-                }
+                } */
             }
         }
     }

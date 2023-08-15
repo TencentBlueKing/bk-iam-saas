@@ -241,7 +241,7 @@
       };
     },
     computed: {
-            ...mapGetters(['externalSystemId']),
+            ...mapGetters(['user', 'externalSystemId']),
             isLoading () {
                 return this.initRequestQueue.length > 0;
             },
@@ -265,7 +265,8 @@
                 return this.initRequestQueue.length > 0 || !flag;
             },
             isHierarchicalAdmin () {
-                return this.$store.getters.roleList.find(item => item.id === this.$store.getters.navCurRoleId) || {};
+                // return this.$store.getters.roleList.find(item => item.id === this.$store.getters.navCurRoleId) || {};
+                return this.user.role || {};
             }
     },
     watch: {
@@ -599,6 +600,7 @@
             item.sub_groups = [];
           }
           let allChecked = true;
+          item.actions = item.actions.filter(v => !v.hidden);
           item.actions.forEach(act => {
             act.$id = `${payload}&${act.id}`;
             act.related_resource_types.forEach(v => {
@@ -614,6 +616,7 @@
             this.linearAction.push(act);
           });
           item.sub_groups.forEach(act => {
+            act.actions = act.actions.filter(v => !v.hidden);
             (act.actions || []).forEach(v => {
               v.$id = `${payload}&${v.id}`;
               v.related_resource_types.forEach(subItem => {

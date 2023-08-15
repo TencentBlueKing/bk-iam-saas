@@ -37,7 +37,7 @@
               <bk-table-column type="selection" align="center" :selectable="getIsSelect" />
               <bk-table-column :label="$t(`m.renewal['即将过期的用户/组织']`)">
                 <template slot-scope="{ row }">
-                  <span>{{ row.name }}({{ row.id }})</span>
+                  <span>{{ row.id }}({{ row.name }})</span>
                 </template>
               </bk-table-column>
               <bk-table-column :label="$t(`m.common['有效期']`)">
@@ -361,7 +361,8 @@
           return payload + this.expiredAt;
         };
         this.currentSelectList.forEach((item) => {
-          item.expired_at = getTimestamp(item.expired_at);
+          // 因默认全选导致当前时间戳累加，这里重新命名一个变量，避免跟其他交互冲突
+          item.expired_at_new = getTimestamp(item.expired_at);
         });
       },
 
@@ -391,12 +392,12 @@
         }
         this.submitLoading = true;
         const params = {
-          members: this.currentSelectList.map(({ type, id, parent_type, parent_id, expired_at }) => ({
+          members: this.currentSelectList.map(({ type, id, parent_type, parent_id, expired_at_new }) => ({
             type,
             id,
             parent_type,
             parent_id,
-            expired_at
+            expired_at: expired_at_new
           }))
         };
         try {

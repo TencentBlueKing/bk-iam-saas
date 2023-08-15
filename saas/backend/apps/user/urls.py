@@ -27,4 +27,19 @@ urlpatterns = [
     ),
     path("common_actions/", views.UserCommonActionViewSet.as_view({"get": "list"}), name="user.common_action"),
     path("roles/", views.RoleViewSet.as_view({"get": "list"}), name="user.role"),
+    path(
+        "groups/search/",
+        views.UserGroupSearchViewSet.as_view({"post": "search"}),
+        name="user.group.search",
+    ),
+    path(
+        "departments/-/groups/search/",
+        views.UserDepartmentGroupSearchViewSet.as_view({"post": "search"}),
+        name="user.department.group.search",
+    ),
+    path(
+        "policies/search/",
+        views.UserPolicySearchViewSet.as_view({"post": "search"}),
+        name="user.policy.group.search",
+    ),
 ]
