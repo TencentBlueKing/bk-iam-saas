@@ -82,7 +82,6 @@
         </div>
       </template>
       <template v-else>
-        <!-- 这个版本先不上，暂时隐藏 -->
         <div>
           <IamResourceCascadeSearch
             ref="iamResourceSearchRef"
@@ -382,7 +381,9 @@
 
       async handleTabChange (tabName) {
         this.active = tabName;
-        await this.fetchData();
+        if (!this.curEmptyData.tipType) {
+          await this.fetchData();
+        }
         const searchParams = {
           ...this.$route.query,
           tab: tabName
