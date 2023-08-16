@@ -34,7 +34,8 @@
         :cell-class-name="getCellClass"
         :empty-text="$t(`m.verify['请选择操作']`)"
         @row-mouse-enter="handlerRowMouseEnter"
-        @row-mouse-leave="handlerRowMouseLeave">
+        @row-mouse-leave="handlerRowMouseLeave"
+        @filter-change="handleFilterChange">
         <bk-table-column :resizable="false" :label="$t(`m.common['操作']`)" width="280">
           <template slot-scope="{ row }">
             <div :class="!!row.isAggregate ? 'set-padding' : ''">
@@ -49,6 +50,7 @@
           :filter-method="systemFilterMethod"
           :filter-multiple="false"
           prop="system_id"
+          column-key="filterTag"
           width="240">
           <template slot-scope="{ row }">
             <span :title="row.system_name">{{ row.system_name }}</span>
@@ -196,6 +198,7 @@
   import RenderCondition from '../../perm-apply/components/render-condition';
   import PreviewResourceDialog from '../../perm-apply/components/preview-resource-dialog';
   import GradePolicy from '@/model/grade-policy';
+  import GradeAggregationPolicy from '@/model/grade-aggregation-policy';
   import { PERMANENT_TIMESTAMP } from '@/common/constants';
 
   export default {
@@ -268,7 +271,8 @@
         curCopyDataId: '',
         emptyResourceGroupsList: [],
         emptyResourceGroupsName: [],
-        isExpandTable: false
+        isExpandTable: false,
+        curFilterSystem: ''
       };
     },
     computed: {
@@ -396,7 +400,17 @@
       // 过滤方法
       systemFilterMethod (value, row, column) {
         const property = column.property;
+        if (row.isAggregate && value === row.system_id) {
+          this.curFilterSystem = `${value}-${row.$id}`;
+        }
         return row[property] === value;
+      },
+
+      handleFilterChange (payload) {
+        const { filterTag } = payload;
+        if (!filterTag.length) {
+          this.curFilterSystem = '';
+        }
       },
 
       handleRemove (row, payload) {
@@ -457,7 +471,7 @@
           curAggregateSystemId: data.system_id
         };
         this.aggregateResourceParams = _.cloneDeep(aggregateResourceParams);
-        this.aggregateIndex = index;
+        this.aggregateIndex = !this.curFilterSystem ? index : this.tableList.findIndex(item => `${item.system_id}-${item.$id}` === this.curFilterSystem);
         const instanceKey = data.aggregateResourceType[data.selectedIndex].id;
         this.instanceKey = instanceKey;
         if (!data.instancesDisplayData[instanceKey]) data.instancesDisplayData[instanceKey] = [];
@@ -492,6 +506,11 @@
           // eslint-disable-next-line max-len
           this.tableList[this.aggregateIndex].instances.push(...this.tableList[this.aggregateIndex].instancesDisplayData[key]);
         }
+        this.$set(
+          this.tableList,
+          this.aggregateIndex,
+          new GradeAggregationPolicy(this.tableList[this.aggregateIndex])
+        );
         this.$emit('on-select', this.tableList[this.aggregateIndex]);
       },
 
