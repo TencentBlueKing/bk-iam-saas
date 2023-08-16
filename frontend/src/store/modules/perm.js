@@ -741,7 +741,7 @@ export default {
       delete params.id;
       delete params.description;
       delete params.name;
-      return http.post(`${AJAX_URL_PREFIX}/users/policies/search`, params, config);
+      return http.post(`${AJAX_URL_PREFIX}/users/policies/search/`, params, config);
     }
   }
 };
