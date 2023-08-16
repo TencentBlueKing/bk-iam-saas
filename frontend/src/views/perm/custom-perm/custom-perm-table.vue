@@ -287,6 +287,10 @@
         type: String,
         default: ''
       },
+      searchType: {
+        type: String,
+        default: ''
+      },
       emptyData: {
         type: Object,
         default: () => {
@@ -297,6 +301,9 @@
             tipType: ''
           };
         }
+      },
+      curSearchParams: {
+        type: Object
       }
     },
     data () {
@@ -341,7 +348,8 @@
           text: '',
           tip: '',
           tipType: ''
-        }
+        },
+        searchParams: {}
       };
     },
     computed: {
@@ -393,6 +401,12 @@
           this.policyEmptyData = Object.assign({}, value);
         },
         immediate: true
+      },
+      curSearchParams: {
+        handler (value) {
+          this.searchParams = Object.assign({}, value);
+        },
+        immediate: true
       }
     },
     methods: {
@@ -404,11 +418,13 @@
        */
       async fetchActions (systemId) {
         const params = {
-          system_id: systemId,
           user_id: this.user.username
         };
         if (this.externalSystemId) {
           params.system_id = this.externalSystemId;
+        }
+        if (systemId) {
+          params.system_id = systemId;
         }
         try {
           const res = await this.$store.dispatch('permApply/getActions', params);
@@ -425,29 +441,26 @@
           });
         }
       },
-      handleActionLinearData () {
-        const linearActions = [];
-        this.originalCustomTmplList.forEach((item, index) => {
-          item.actions = item.actions.filter(v => !v.hidden);
-          item.actions.forEach(act => {
-            linearActions.push(act);
-          });
-          (item.sub_groups || []).forEach(sub => {
-            sub.actions = sub.actions.filter(v => !v.hidden);
-            sub.actions.forEach(act => {
-              linearActions.push(act);
-            });
-          });
-        });
 
-        this.linearActionList = _.cloneDeep(linearActions);
-      },
       /**
        * fetchData
        */
       async fetchData (params) {
         try {
-          const { code, data } = await this.$store.dispatch('permApply/getPolicies', { system_id: params.systemId });
+          let url = '';
+          let queryParams = {};
+          if (['search'].includes(this.searchType)) {
+            url = 'perm/getPoliciesSearch';
+            queryParams = {
+              ...this.searchParams
+            };
+          } else {
+            url = 'permApply/getPolicies';
+            queryParams = {
+              system_id: params.systemId
+            };
+          }
+          const { code, data } = await this.$store.dispatch(url, queryParams);
           // this.policyList = policyData[params.systemId].map(item => {
           this.policyList = data.length && data.map(item => {
             const relatedEnvironments = this.linearActionList.find(sub => sub.id === item.id);
@@ -468,6 +481,41 @@
         } finally {
           this.initRequestQueue.shift();
         }
+      },
+
+      // 搜索自定义权限
+      async fetchPoliciesSearch () {
+        try {
+          const { code, data } = await this.$store.dispatch('perm/getPoliciesSearch', this.curSearchParams);
+          this.policyEmptyData = formatCodeData(code, this.policyEmptyData, data.length === 0);
+        } catch (e) {
+          const { code, data, message, statusText } = e;
+          this.emptyPolicyData = formatCodeData(code, this.emptyPolicyData);
+          this.bkMessageInstance = this.$bkMessage({
+            limit: 1,
+            theme: 'error',
+            message: message || data.msg || statusText,
+            ellipsisLine: 2,
+            ellipsisCopy: true
+          });
+        }
+      },
+
+      handleActionLinearData () {
+        const linearActions = [];
+        this.originalCustomTmplList.forEach((item, index) => {
+          item.actions = item.actions.filter(v => !v.hidden);
+          item.actions.forEach(act => {
+            linearActions.push(act);
+          });
+          (item.sub_groups || []).forEach(sub => {
+            sub.actions = sub.actions.filter(v => !v.hidden);
+            sub.actions.forEach(act => {
+              linearActions.push(act);
+            });
+          });
+        });
+        this.linearActionList = _.cloneDeep(linearActions);
       },
 
       /**

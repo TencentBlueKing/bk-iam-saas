@@ -176,7 +176,6 @@
         systemList: [],
         teporarySystemList: [],
         departmentGroupList: [],
-        enablePermissionHandover: window.ENABLE_PERMISSION_HANDOVER,
         curSearchParams: {},
         curSearchPagination: {
           current: 1,
@@ -196,6 +195,7 @@
           tip: '',
           tipType: ''
         },
+        enablePermissionHandover: window.ENABLE_PERMISSION_HANDOVER,
         enableTemporaryPolicy: window.ENABLE_TEMPORARY_POLICY,
         enableGroupInstanceSearch: window.ENABLE_GROUP_INSTANCE_SEARCH.toLowerCase() === 'true',
         CUR_LANGUAGE: window.CUR_LANGUAGE,
@@ -381,9 +381,6 @@
 
       async handleTabChange (tabName) {
         this.active = tabName;
-        if (!this.curEmptyData.tipType) {
-          await this.fetchData();
-        }
         const searchParams = {
           ...this.$route.query,
           tab: tabName
