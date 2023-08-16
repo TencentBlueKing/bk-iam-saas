@@ -88,7 +88,7 @@
         newVal: this.value,
         isEditable: false,
         isLoading: false,
-        isShowError: '',
+        isShowError: false,
         errorTips: ''
       };
     },
@@ -153,6 +153,7 @@
         if (!this.isEditable) return;
         this.handleValidate();
         if (this.isShowError) return;
+        this.isEditable = false;
         this.triggerChange();
       },
       handleEnter (value, event) {
@@ -171,8 +172,6 @@
           }
         }
         this.handleValidate();
-        if (this.isShowError) return;
-        this.isEditable = false;
       },
       triggerChange () {
         this.isEditable = false;
