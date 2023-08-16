@@ -1013,7 +1013,9 @@
           const { code, data } = await this.$store.dispatch('permApply/getJoinGroupSearch', params);
           const { count, results } = data;
           this.pagination.count = count || 0;
-          this.tableList.splice(0, this.tableList.length, ...(results || []));
+          // 过滤不可被申请的用户组
+          const applyUserGroups = results && results.filter(item => !item.hide_apply_disable);
+          this.tableList.splice(0, this.tableList.length, ...(applyUserGroups || []));
           this.emptyData.tipType = 'search';
           this.$nextTick(() => {
             const currentSelectedGroups = this.currentSelectedGroups.length
@@ -1070,7 +1072,9 @@
           const { code, data } = await this.$store.dispatch('userGroup/getUserGroupList', params);
           const { count, results } = data;
           this.pagination.count = count || 0;
-          this.tableList.splice(0, this.tableList.length, ...(results || []));
+          // 过滤不可被申请的用户组
+          const applyUserGroups = results && results.filter(item => !item.hide_apply_disable);
+          this.tableList.splice(0, this.tableList.length, ...(applyUserGroups || []));
           this.$nextTick(() => {
             const currentSelectedGroups = this.currentSelectedGroups.length
               ? this.currentSelectedGroups.map(item => item.id.toString()) : [];
@@ -1587,6 +1591,13 @@
           this.isShowResourceInstanceSideSlider = false;
           this.resetDataAfterClose();
         }, _ => _);
+      },
+
+      resetDataAfterClose () {
+        this.curResIndex = -1;
+        this.groupIndex = -1;
+        this.params = {};
+        this.resourceInstanceSideSliderTitle = '';
       },
             
       refreshCurrentQuery () {

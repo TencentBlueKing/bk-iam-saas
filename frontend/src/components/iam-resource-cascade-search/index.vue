@@ -785,6 +785,13 @@
           values: [value]
         };
       },
+      
+      resetDataAfterClose () {
+        this.curResIndex = -1;
+        this.groupIndex = -1;
+        this.params = {};
+        this.resourceInstanceSideSliderTitle = '';
+      },
 
       resetLocationHref () {
         // 需要删除的url上的字段
