@@ -8,38 +8,38 @@
   >
     <div class="title">{{ $t(`m.common['基本信息']`) }}</div>
     <div class="item">
-      <label class="label">{{ $t(`m.myApply['申请单号']`) }}：</label>
+      <label class="label">{{ $t(`m.myApply['申请单号']`) }}{{$t(`m.common['：']`)}}</label>
       <div class="content">{{ data.sn }}</div>
     </div>
     <div class="item">
-      <label class="label">{{ $t(`m.myApply['申请类型']`) }}：</label>
+      <label class="label">{{ $t(`m.myApply['申请类型']`) }}{{$t(`m.common['：']`)}}</label>
       <div class="content">{{ getApplyTypeDisplay(data.type) }}</div>
     </div>
     <div class="item">
-      <label class="label">{{ $t(`m.myApply['申请人']`) }}：</label>
+      <label class="label">{{ $t(`m.myApply['申请人']`) }}{{$t(`m.common['：']`)}}</label>
       <div class="content">{{ data.applicant }}</div>
     </div>
     <div class="item" v-if="!['create_rating_manager', 'update_rating_manager'].includes(data.type)">
-      <label class="label">{{ $t(`m.myApply['权限获得者']`) }}：</label>
+      <label class="label">{{ $t(`m.myApply['权限获得者']`) }}{{$t(`m.common['：']`)}}</label>
       <div class="content">
         {{
           data.applicants && data.applicants.length > 0
             ? data.applicants.map((item) => ['user'].includes(item.type) ?
-              `${item.display_name}(${item.id})`
+              `${item.id}(${item.display_name})`
               : item.display_name).join(';') : ''
         }}
       </div>
     </div>
     <div class="item" v-if="isShowExpired">
-      <label class="label">{{ $t(`m.common['申请期限']`) }}：</label>
+      <label class="label">{{ $t(`m.common['申请期限']`) }}{{$t(`m.common['：']`)}}</label>
       <div class="content">{{ data.expiredDisplay }}</div>
     </div>
     <div class="item">
-      <label class="label">{{ $t(`m.myApply['申请时间']`) }}：</label>
+      <label class="label">{{ $t(`m.myApply['申请时间']`) }}{{$t(`m.common['：']`)}}</label>
       <div class="content">{{ data.created_time }}</div>
     </div>
     <div class="item">
-      <label class="label">{{ $t(`m.myApply['所在组织']`) }}：</label>
+      <label class="label">{{ $t(`m.myApply['所在组织']`) }}{{$t(`m.common['：']`)}}</label>
       <div class="content">
         <template v-if="isHasOrg">
           <p v-for="(org, orgIndex) in data.organizations" :key="orgIndex">

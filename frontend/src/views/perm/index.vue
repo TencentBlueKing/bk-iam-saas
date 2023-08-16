@@ -85,7 +85,6 @@
         <!-- 这个版本先不上，暂时隐藏 -->
         <div>
           <IamResourceCascadeSearch
-            v-if="false"
             ref="iamResourceSearchRef"
             :active="active"
             @on-remote-table="handleRemoteTable"

@@ -32,7 +32,7 @@ export default class GradeAggregationPolicy {
     this.isError = payload.isError || false;
     this.actions = payload.actions || [];
     this.instancesDisplayData = payload.instancesDisplayData || {};
-    this.aggregateResourceType = payload.aggregate_resource_types || [];
+    this.aggregateResourceType = payload.aggregate_resource_types || payload.aggregateResourceType || [];
     this.instances = payload.instances || [];
     this.instancesBackup = _.cloneDeep(this.instances);
     this.isAggregate = true;
