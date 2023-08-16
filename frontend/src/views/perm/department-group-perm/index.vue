@@ -355,6 +355,12 @@
           });
           this.cancelDelete();
           this.messageSuccess(this.$t(`m.info['退出成功']`), 2000);
+          this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10 });
+          if (!this.groupPermEmptyData.tipType) {
+            this.$emit('refresh');
+          } else {
+            this.fetchSearchDepart();
+          }
           this.$emit('refresh');
         } catch (e) {
           this.deleteDialogConf.loading = false;

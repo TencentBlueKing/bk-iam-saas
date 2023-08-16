@@ -18,7 +18,9 @@
           ref="customPermTable"
           :key="sys.id"
           :system-id="sys.id"
+          :cur-search-params="curSearchParams"
           :empty-data="emptyPolicyData"
+          :search-type="searchType"
           @after-delete="handleAfterDelete(...arguments, sysIndex)" />
       </custom-perm-system-policy>
     </template>
@@ -88,7 +90,8 @@
           text: '暂无数据',
           tip: '',
           tipType: ''
-        }
+        },
+        searchType: ''
       };
     },
     computed: {
@@ -107,14 +110,15 @@
       },
       emptyData: {
         handler (value) {
+          this.searchType = value.tipType;
           this.emptyPolicyData = Object.assign({}, value);
         },
         immediate: true
       },
       curSearchParams: {
         handler (value) {
-          if (Object.keys(value).length) {
-            this.fetchPoliciesSearch();
+          if (Object.keys(value).length && value.system_id) {
+            this.fetchSystemSearch();
           }
         },
         immediate: true
@@ -124,25 +128,10 @@
     },
     methods: {
       // 搜索自定义权限
-      async fetchPoliciesSearch () {
-        try {
-          this.tableLoading = true;
-          const { code, data } = await this.$store.dispatch('perm/getPoliciesSearch', this.curSearchParams);
-          this.formatSystemData(data || []);
-          this.emptyPolicyData = formatCodeData(code, this.emptyPolicyData, data.length === 0);
-        } catch (e) {
-          const { code, data, message, statusText } = e;
-          this.emptyPolicyData = formatCodeData(code, this.emptyPolicyData);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: message || data.msg || statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
-        } finally {
-          this.tableLoading = false;
-        }
+      async fetchSystemSearch () {
+        // 筛选搜索的系统id
+        const curSystemList = this.systemList.filter(item => item.id === this.curSearchParams.system_id);
+        this.formatSystemData(curSystemList || []);
       },
 
       /**
@@ -223,6 +212,7 @@
           }
         }
         this.onePerm = systemPolicyList.length;
+        this.emptyPolicyData = formatCodeData(0, this.emptyPolicyData, this.onePerm === 0);
       },
 
       async handleRefreshSystem () {

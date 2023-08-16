@@ -300,7 +300,6 @@
           this.curPageData.splice(0, this.curPageData.length, ...(data.results || []));
           this.groupPermEmptyData
             = formatCodeData(code, this.groupPermEmptyData, data.count === 0);
-          console.log(this.groupPermEmptyData, 45455);
         } catch (e) {
           console.error(e);
           const { code, data, message, statusText } = e;
@@ -342,14 +341,12 @@
       },
 
       handleEmptyRefresh () {
-        this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10 });
-        this.getDataByPage();
+        this.resetPagination();
         this.$emit('on-refresh');
       },
 
       handleEmptyClear () {
-        this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10 });
-        this.getDataByPage();
+        this.resetPagination();
         this.$emit('on-clear');
       },
 
@@ -392,7 +389,11 @@
           });
           this.cancelDelete();
           this.messageSuccess(this.$t(`m.info['退出成功']`), 2000);
-          this.$emit('refresh');
+          if (!this.groupPermEmptyData.tipType) {
+            this.$emit('refresh');
+          } else {
+            this.resetPagination();
+          }
         } catch (e) {
           this.deleteDialogConf.loading = false;
           console.error(e);
@@ -452,6 +453,11 @@
           this.gradeSliderTitle = this.$t(`m.info['管理空间成员侧边栏标题信息']`, { value: `${this.$t(`m.common['【']`)}${payload.role.name}${this.$t(`m.common['】']`)}` });
           this.fetchRoles(payload.role.id);
         }
+      },
+
+      resetPagination () {
+        this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10 });
+        this.getDataByPage();
       }
     }
   };
