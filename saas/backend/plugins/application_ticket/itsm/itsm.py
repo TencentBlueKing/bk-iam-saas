@@ -117,8 +117,11 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
             if data.type == ApplicationType.JOIN_GROUP
             else f"申请续期 {len(data.content.groups)} 个用户组"
         )
-        params["title"] = "{}：{}".format(title_prefix, "、".join([one.name for one in data.content.groups]))
+        title = "{}：{}".format(title_prefix, "、".join([one.name for one in data.content.groups]))
+        if len(title) > 64:
+            title = title[:64] + "..."
 
+        params["title"] = title
         params["content"] = {"schemes": FORM_SCHEMES, "form_data": [GroupTable.from_application(data.content).dict()]}
 
         # 在params中加上权限获得者
