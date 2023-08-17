@@ -91,7 +91,7 @@
           />
         </div>
         <bk-tab
-          :active="active"
+          :active.sync="active"
           type="unborder-card"
           ext-cls="iam-my-perm-tab-cls"
           @tab-change="handleTabChange">
@@ -99,6 +99,7 @@
             v-for="(panel, index) in panels"
             :data-test-id="`myPerm_tabPanel_${panel.name}`"
             v-bind="panel"
+            :label="['search'].includes(curEmptyData.tipType) ? `${panel.label}(${panel.count})` : panel.label "
             :key="index">
             <div class="content-wrapper" v-bkloading="{ isLoading: componentLoading, opacity: 1 }">
               <component
@@ -112,6 +113,7 @@
                 :empty-data="curEmptyData"
                 :cur-search-params="curSearchParams"
                 :cur-search-pagination="curSearchPagination"
+                @on-tab-count="handleTabCount"
                 @refresh="fetchData"
                 @on-clear="handleEmptyClear"
                 @on-refresh="handleEmptyRefresh"
@@ -150,17 +152,20 @@
           {
             name: 'GroupPerm',
             label: this.$t(`m.perm['用户组权限']`),
-            empty: 'emptyData'
+            empty: 'emptyData',
+            count: 0
           },
           {
             name: 'DepartmentGroupPerm',
             label: this.$t(`m.perm['所属组织用户组权限']`),
-            empty: 'emptyDepartmentGroupData'
+            empty: 'emptyDepartmentGroupData',
+            count: 0
           },
           {
             name: 'CustomPerm',
             label: this.$t(`m.approvalProcess['自定义权限']`),
-            empty: 'emptyCustomData'
+            empty: 'emptyCustomData',
+            count: 0
           }
           // {
           //     name: 'TeporaryCustomPerm', label: this.$t(`m.myApply['临时权限']`)
@@ -228,7 +233,7 @@
           // 因为同时调了很多接口，所以需要对应的空配置内容
           const emptyField = this.panels.find(item => item.name === value);
           if (emptyField) {
-            this.curEmptyData = this[emptyField.empty];
+            this.curEmptyData = _.cloneDeep(this[emptyField.empty]);
           }
         },
         immediate: true
@@ -352,21 +357,106 @@
         }
       },
 
+      // 获取搜索的个人用户组
+      async fetchUserGroupSearch () {
+        try {
+          const { current, limit } = this.curSearchPagination;
+          const params = {
+            ...this.curSearchParams,
+            limit,
+            offset: limit * (current - 1)
+          };
+          if (this.externalSystemId) {
+            params.system_id = this.externalSystemId;
+          }
+          const { code, data } = await this.$store.dispatch('perm/getUserGroupSearch', params);
+          this.$set(this.panels[0], 'count', data.count || 0);
+          this.emptyData
+            = formatCodeData(code, this.emptyData, data.count === 0);
+        } catch (e) {
+          console.error(e);
+          const { code, data, message, statusText } = e;
+          this.emptyData = formatCodeData(code, this.emptyData);
+          this.bkMessageInstance = this.$bkMessage({
+            limit: 1,
+            theme: 'error',
+            message: message || data.msg || statusText,
+            ellipsisLine: 2,
+            ellipsisCopy: true
+          });
+        }
+      },
+
+      // 获取所属组织用户组
+      async fetchDepartSearch () {
+        const { current, limit } = this.curSearchPagination;
+        const params = {
+          ...this.curSearchParams,
+          limit,
+          offset: limit * (current - 1)
+        };
+        try {
+          const { code, data } = await this.$store.dispatch('perm/getDepartGroupSearch', params);
+          const { count, results } = data;
+          this.$set(this.panels[1], 'count', count || 0);
+          console.log(this.panels, 555);
+          this.emptyDepartmentGroupData = formatCodeData(code, this.emptyDepartmentGroupData, results.length === 0);
+        } catch (e) {
+          const { code, data, message, statusText } = e;
+          this.emptyDepartmentGroupData = formatCodeData(code, this.emptyDepartmentGroupData);
+          this.bkMessageInstance = this.$bkMessage({
+            limit: 1,
+            theme: 'error',
+            message: message || data.msg || statusText,
+            ellipsisLine: 2,
+            ellipsisCopy: true
+          });
+        }
+      },
+
+      // 获取policy
+      async fetchPolicySearch () {
+        try {
+          const { code, data } = await this.$store.dispatch('perm/getPoliciesSearch', this.curSearchParams);
+          const customIndex = this.panels.findIndex(item => item.name === 'CustomPerm');
+          if (customIndex > -1) {
+            this.$set(this.panels[customIndex], 'count', data.length || 0);
+          }
+          this.emptyCustomData = formatCodeData(code, this.emptyCustomData, data.length === 0);
+        } catch (e) {
+          console.error(e);
+          this.emptyCustomData = formatCodeData(e.code, this.emptyCustomData);
+          this.bkMessageInstance = this.$bkMessage({
+            limit: 1,
+            theme: 'error',
+            message: e.message || e.data.msg || e.statusText,
+            ellipsisLine: 2,
+            ellipsisCopy: true
+          });
+        }
+      },
+
       async handleRemoteTable (payload) {
         const { emptyData, pagination, searchParams } = payload;
         this.curSearchParams = _.cloneDeep(searchParams);
         this.curSearchPagination = _.cloneDeep(pagination);
         const typeMap = {
-          GroupPerm: () => {
+          GroupPerm: async () => {
             this.personalGroupList = [];
             this.emptyData = _.cloneDeep(emptyData);
+            await this.fetchDepartSearch();
+            await this.fetchPolicySearch();
           },
-          DepartmentGroupPerm: () => {
+          DepartmentGroupPerm: async () => {
             this.departmentGroupList = [];
             this.emptyDepartmentGroupData = _.cloneDeep(emptyData);
+            await this.fetchUserGroupSearch();
+            await this.fetchPolicySearch();
           },
-          CustomPerm: () => {
+          CustomPerm: async () => {
             this.emptyCustomData = _.cloneDeep(emptyData);
+            await this.fetchUserGroupSearch();
+            await this.fetchDepartSearch();
           }
         };
         this.curEmptyData = _.cloneDeep(emptyData);
@@ -386,6 +476,14 @@
           tab: tabName
         };
         window.history.replaceState({}, '', `?${buildURLParams(searchParams)}`);
+      },
+
+      handleTabCount (payload) {
+        const { active, count } = payload;
+        const panelIndex = this.panels.findIndex(item => item.name === active);
+        if (panelIndex > -1) {
+          this.$set(this.panels[panelIndex], 'count', count);
+        }
       },
 
       // 显示资源实例
@@ -522,7 +620,8 @@
         }
     }
     .iam-my-perm-tab-cls {
-        background: #fff;
+        background: #ffffff;
+        margin-bottom: 50px;
     }
     .icon-info-renewal {
         position: absolute;
