@@ -7,6 +7,7 @@
     :placeholder="placeholder"
     :data="data"
     :show-condition="false"
+    :clearable="clearable"
     :popover-zindex="9999"
     :values="searchValue"
     @change="handleChange"
@@ -70,6 +71,10 @@
       appendValue: {
         type: Array,
         default: () => []
+      },
+      clearable: {
+        type: Boolean,
+        default: true
       }
     },
     data () {

@@ -164,6 +164,10 @@
                     background: #fff !important;
                     color: #3c96ff;
                 }
+                &:hover {
+                    color: #3c96ff;
+                    cursor: pointer;
+                }
             }
         }
         &::-webkit-scrollbar {

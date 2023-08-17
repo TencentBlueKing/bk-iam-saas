@@ -187,7 +187,7 @@
       departmentGroupList: {
         handler (v) {
           if (this.emptyData.tipType === 'search') {
-            this.fetchSearchDepart();
+            this.fetchDepartSearch();
           } else {
             if (v.length) {
               this.dataList.splice(0, this.dataList.length, ...v);
@@ -206,7 +206,7 @@
       }
     },
     methods: {
-      async fetchSearchDepart () {
+      async fetchDepartSearch () {
         const { current, limit } = this.pageConf;
         const params = {
           ...this.curSearchParams,
@@ -232,6 +232,7 @@
           });
         } finally {
           this.tableLoading = false;
+          this.$emit('on-tab-count', { active: 'DepartmentGroupPerm', count: this.pageConf.count });
         }
       },
       /**
@@ -275,7 +276,7 @@
       handlePageChange (page = 1) {
         this.pageConf.current = page;
         if (this.emptyData.tipType === 'search') {
-          this.fetchSearchDepart();
+          this.fetchDepartSearch();
         } else {
           const data = this.getDataByPage(page);
           this.curPageData.splice(0, this.curPageData.length, ...data);
@@ -359,7 +360,7 @@
           if (!this.groupPermEmptyData.tipType) {
             this.$emit('refresh');
           } else {
-            this.fetchSearchDepart();
+            this.fetchDepartSearch();
           }
           this.$emit('refresh');
         } catch (e) {

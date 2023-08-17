@@ -480,24 +480,7 @@
           });
         } finally {
           this.initRequestQueue.shift();
-        }
-      },
-
-      // 搜索自定义权限
-      async fetchPoliciesSearch () {
-        try {
-          const { code, data } = await this.$store.dispatch('perm/getPoliciesSearch', this.curSearchParams);
-          this.policyEmptyData = formatCodeData(code, this.policyEmptyData, data.length === 0);
-        } catch (e) {
-          const { code, data, message, statusText } = e;
-          this.emptyPolicyData = formatCodeData(code, this.emptyPolicyData);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: message || data.msg || statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.$emit('on-tab-count', { active: 'CustomPerm', count: this.policyList.length || 0 });
         }
       },
 

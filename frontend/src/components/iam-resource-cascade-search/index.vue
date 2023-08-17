@@ -415,9 +415,9 @@
 
       async handleSearchUserGroup (isClick = false) {
         this.handleManualInput();
+        this.systemIdError = false;
         const isSearch = this.applyGroupData.system_id || Object.keys(this.searchParams).length > 0;
         if (isSearch) {
-          this.systemIdError = false;
           if (!this.applyGroupData.system_id && ['CustomPerm'].includes(this.active)) {
             this.systemIdError = true;
             return;
@@ -784,6 +784,13 @@
           id: 'keyword',
           values: [value]
         };
+      },
+      
+      resetDataAfterClose () {
+        this.curResIndex = -1;
+        this.groupIndex = -1;
+        this.params = {};
+        this.resourceInstanceSideSliderTitle = '';
       },
 
       resetLocationHref () {

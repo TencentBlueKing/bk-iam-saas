@@ -296,7 +296,7 @@
             params.system_id = this.externalSystemId;
           }
           const { code, data } = await this.$store.dispatch(url, params);
-          this.pageConf.count = data.count;
+          this.pageConf.count = data.count || 0;
           this.curPageData.splice(0, this.curPageData.length, ...(data.results || []));
           this.groupPermEmptyData
             = formatCodeData(code, this.groupPermEmptyData, data.count === 0);
@@ -313,6 +313,7 @@
           });
         } finally {
           this.isLoading = false;
+          this.$emit('on-tab-count', { active: 'GroupPerm', count: this.pageConf.count });
         }
         // if (!page) {
         //     this.pageConf.current = page = 1;
