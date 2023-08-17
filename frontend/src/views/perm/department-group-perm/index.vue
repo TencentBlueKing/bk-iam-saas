@@ -109,6 +109,7 @@
 <script>
   import { mapGetters } from 'vuex';
   import { formatCodeData } from '@/common/util';
+  import { bus } from '@/common/bus';
   import DeleteDialog from '@/components/iam-confirm-dialog/index.vue';
   import RenderGroupPermSideslider from '../components/render-group-perm-sideslider';
 
@@ -232,7 +233,7 @@
           });
         } finally {
           this.tableLoading = false;
-          this.$emit('on-tab-count', { active: 'DepartmentGroupPerm', count: this.pageConf.count });
+          bus.$emit('on-perm-tab-count', { active: 'DepartmentGroupPerm', count: this.pageConf.count });
         }
       },
       /**

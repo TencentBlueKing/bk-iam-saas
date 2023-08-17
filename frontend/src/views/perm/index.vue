@@ -113,7 +113,6 @@
                 :empty-data="curEmptyData"
                 :cur-search-params="curSearchParams"
                 :cur-search-pagination="curSearchPagination"
-                @on-tab-count="handleTabCount"
                 @refresh="fetchData"
                 @on-clear="handleEmptyClear"
                 @on-refresh="handleEmptyRefresh"
@@ -130,6 +129,7 @@
   import { mapGetters } from 'vuex';
   import { buildURLParams } from '@/common/url';
   import { formatCodeData } from '@/common/util';
+  import { bus } from '@/common/bus';
   import CustomPerm from './custom-perm/index.vue';
   import TeporaryCustomPerm from './teporary-custom-perm/index.vue';
   import GroupPerm from './group-perm/index.vue';
@@ -253,6 +253,18 @@
       //     label: this.$t(`m.myApply['临时权限']`)
       //   });
       // }
+    },
+    mounted () {
+      this.$once('hook:beforeDestroy', () => {
+        bus.$off('on-perm-tab-count');
+      });
+      bus.$on('on-perm-tab-count', (payload) => {
+        const { active, count } = payload;
+        const panelIndex = this.panels.findIndex(item => item.name === active);
+        if (panelIndex > -1) {
+          this.$set(this.panels[panelIndex], 'count', count);
+        }
+      });
     },
     methods: {
       async fetchPageData () {
@@ -399,7 +411,6 @@
           const { code, data } = await this.$store.dispatch('perm/getDepartGroupSearch', params);
           const { count, results } = data;
           this.$set(this.panels[1], 'count', count || 0);
-          console.log(this.panels, 555);
           this.emptyDepartmentGroupData = formatCodeData(code, this.emptyDepartmentGroupData, results.length === 0);
         } catch (e) {
           const { code, data, message, statusText } = e;
@@ -476,14 +487,6 @@
           tab: tabName
         };
         window.history.replaceState({}, '', `?${buildURLParams(searchParams)}`);
-      },
-
-      handleTabCount (payload) {
-        const { active, count } = payload;
-        const panelIndex = this.panels.findIndex(item => item.name === active);
-        if (panelIndex > -1) {
-          this.$set(this.panels[panelIndex], 'count', count);
-        }
       },
 
       // 显示资源实例
