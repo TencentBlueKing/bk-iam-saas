@@ -31,7 +31,7 @@ class Role(BaseModel, BaseSystemHiddenModel):
     name = models.CharField("名称", max_length=512)
     name_en = models.CharField("英文名", max_length=512, default="")
     description = models.CharField("描述", max_length=255, default="")
-    type = models.CharField("类型", max_length=32, choices=RoleType.get_choices())
+    type = models.CharField("类型", max_length=32, choices=RoleType.get_choices(), db_index=True)
     code = models.CharField("标志", max_length=64, default="")
     inherit_subject_scope = models.BooleanField("继承人员管理范围", default=False)
     sync_perm = models.BooleanField("同步角色权限", default=False)
@@ -61,7 +61,7 @@ class RoleUser(BaseModel):
     """
 
     role_id = models.IntegerField("角色ID")
-    username = models.CharField("用户id", max_length=64)
+    username = models.CharField("用户id", max_length=64, db_index=True)
     readonly = models.BooleanField("只读标识", default=False)  # 增加可读标识
 
     objects = RoleUserManager()
@@ -70,7 +70,7 @@ class RoleUser(BaseModel):
         verbose_name = "角色的用户"
         verbose_name_plural = "角色的用户"
         ordering = ["id"]
-        index_together = ["role_id"]
+        index_together = [("role_id", "username")]
 
 
 class RoleUserSystemPermission(BaseModel):
