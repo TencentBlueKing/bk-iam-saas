@@ -99,7 +99,7 @@
             v-for="(panel, index) in panels"
             :data-test-id="`myPerm_tabPanel_${panel.name}`"
             v-bind="panel"
-            :label="['search'].includes(curEmptyData.tipType) ? `${panel.label}(${panel.count})` : panel.label "
+            :label="Object.keys(curSearchParams).length ? `${panel.label}(${panel.count})` : panel.label "
             :key="index">
             <div class="content-wrapper" v-bkloading="{ isLoading: componentLoading, opacity: 1 }">
               <component
