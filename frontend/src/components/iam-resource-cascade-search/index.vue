@@ -418,10 +418,10 @@
         this.systemIdError = false;
         const isSearch = this.applyGroupData.system_id || Object.keys(this.searchParams).length > 0;
         if (isSearch) {
-          if (!this.applyGroupData.system_id && ['CustomPerm'].includes(this.active)) {
-            this.systemIdError = true;
-            return;
-          }
+          // if (!this.applyGroupData.system_id && ['CustomPerm'].includes(this.active)) {
+          //   this.systemIdError = true;
+          //   return;
+          // }
           let resourceInstances = _.cloneDeep(this.resourceInstances);
           if (this.applyGroupData.system_id) {
             if (!this.applyGroupData.action_id) {

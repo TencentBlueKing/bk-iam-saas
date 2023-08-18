@@ -91,16 +91,24 @@
           />
         </div>
         <bk-tab
-          :active.sync="active"
           type="unborder-card"
           ext-cls="iam-my-perm-tab-cls"
+          :key="tabKey"
+          :active.sync="active"
           @tab-change="handleTabChange">
           <bk-tab-panel
             v-for="(panel, index) in panels"
-            :data-test-id="`myPerm_tabPanel_${panel.name}`"
             v-bind="panel"
-            :label="Object.keys(curSearchParams).length ? `${panel.label}(${panel.count})` : panel.label "
+            :data-test-id="`myPerm_tabPanel_${panel.name}`"
             :key="index">
+            <template slot="label">
+              <span class="panel-name">
+                <span>{{ panel.label }}</span>
+                <span style="color:##3a84ff;" v-if="Object.keys(curSearchParams).length">
+                  ({{panel.count}})
+                </span>
+              </span>
+            </template>
             <div class="content-wrapper" v-bkloading="{ isLoading: componentLoading, opacity: 1 }">
               <component
                 v-if="!componentLoading && active === panel.name"
@@ -212,6 +220,7 @@
         resourceInstanceError: false,
         isShowResourceInstanceSideSlider: false,
         resourceInstanceSideSliderTitle: '',
+        tabKey: 'tab-key',
         contentWidth: window.innerWidth <= 1440 ? '200px' : '240px'
       };
     },
@@ -344,6 +353,7 @@
             this[emptyField.empty] = formatCodeData(code, this[emptyField.empty]);
           }
         } finally {
+          this.tabKey = +new Date();
           this.componentLoading = false;
         }
       },
@@ -465,12 +475,14 @@
             await this.fetchPolicySearch();
           },
           CustomPerm: async () => {
+            this.systemList = [];
             this.emptyCustomData = _.cloneDeep(emptyData);
             await this.fetchUserGroupSearch();
             await this.fetchDepartSearch();
           }
         };
         this.curEmptyData = _.cloneDeep(emptyData);
+        this.tabKey = +new Date();
         typeMap[this.active] ? typeMap[this.active]() : typeMap['GroupPerm']();
       },
 
@@ -486,6 +498,11 @@
           ...this.$route.query,
           tab: tabName
         };
+        this.$nextTick(() => {
+          this.$refs.tabRef
+            && this.$refs.tabRef.$refs.tabLabel
+            && this.$refs.tabRef.$refs.tabLabel.forEach(label => label.$forceUpdate());
+        });
         window.history.replaceState({}, '', `?${buildURLParams(searchParams)}`);
       },
 
