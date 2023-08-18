@@ -2,7 +2,7 @@
 
 #### parameters
 
-| field | type |required | description |
+| Field | Type |Required | Description |
 |:---|:---|:---|:---|
 |system|string|yes|system id|
 |actions|array|yes|actions that require permission|
@@ -12,14 +12,14 @@
 
 actions
 
-| field | type |required | description |
+| Field | Type |Required | Description |
 |:---|:---|:---|:---|
 |id|string|yes|operation id|
 |related_resource_types|array|yes|resource types associated with the operation, `the order of resource types must be consistent with the order of registration when the operation was registered`|
 
 related_resource_types
 
-| field | type |required | description |
+| Field | Type |Required | Description |
 |:---|:---|:---|:---|
 |system|string|yes|system id of the resource type|
 |type|string|yes|resource type|
@@ -28,14 +28,14 @@ related_resource_types
 
 related_resource_types.instances
 
-| field | type |required | description |
+| Field | Type |Required | Description |
 |:---|:---|:---|:---|
 |type|string|yes|resource type|
 |id|string|yes|resource instance id|
 
 related_resource_types.attributes
 
-| field | type |required | description |
+| Field | Type |Required | Description |
 |:---|:---|:---|:---|
 |id|string|yes|property key|
 |name|string|yes|property key name|
@@ -43,7 +43,7 @@ related_resource_types.attributes
 
 related_resource_types.attributes.values
 
-| field | type |required | description |
+| Field | Type |Required | Description |
 |:---|:---|:---|:---|
 |id|string|yes|property value|
 |name|string|yes|property value name|
@@ -178,7 +178,7 @@ the `execute_job` operation of the `bk_job` system is associated with the `job` 
 
 > Status: 200 OK
 
-| field | type | description |
+| Field | Type | Description |
 |-----------|-----------|-----------|
 | id   | int     | application id |
 | sn   | string     | itsm sn |

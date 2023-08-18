@@ -8,7 +8,7 @@
 | Field | Type | Location | Required | Description |
 |--|--|--|--|--|--|--|
 | system_id | string | path | Yes | Access to system unique identifier |
-| user_id | string | user ID |
+| user_id | string | path | Yes | user ID |
 | group_ids | string | body | Yes | List of user group IDs, multiple separated by commas |
 | inherit | bool | body | no | For users, whether to include their inherited departments, the default is false, i.e. the default is to query only the directly related ones, not the inherited ones |
 

@@ -1,0 +1,84 @@
+### Policy Authentication by Actions
+
+Authentication scenario: Check whether a `user` has `view`/`edit`/`delete` permissions for `resource A`.
+
+Limitations: Up to 10 actions can be passed.
+
+#### Parameters
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| subject | string | Yes | The subject |
+| actions | Array(action) | Yes | The actions |
+| resources | Array(resource_node) | Yes | The resource instance. The order of resource types must be consistent with the order in which the operations were registered. |
+
+action
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| id | string | Yes | The operation ID. |
+
+subject
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| Type | string | Yes | The authorization object Type. Currently, only `user` is supported. |
+| id | string | Yes | The authorization object ID. |
+
+resource_node
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| system | string | Yes | The resource system ID. |
+| Type | string | Yes | The resource type ID. |
+| id | string | Yes | The resource instance ID. |
+| attribute | object | Yes | The resource attribute. |
+
+#### Request
+
+```json
+{
+	"subject": {
+		"Type": "user",
+		"id": "admin"
+	},
+	"actions": [{
+		"id": "execute"
+	}, {
+		"id": "view"
+	}],
+	"resources": [{   // 资源类型的顺序必须操作注册时的顺序一致, 否则会导致鉴权失败!
+		"system": "bk_job",
+		"Type": "job",
+		"id": "ping",
+		"attribute": {  // 资源的属性值可能有多个, 目前支持string/int/boolean, 以及路径stringList
+			"os": "linux",
+			"_bk_iam_path_": ["/biz,1/set,2/"],
+			"is_ready": true,
+			"area_id": 200
+		}
+	}, {
+		"system": "bk_cmdb",
+		"Type": "host",
+		"id": "192.168.1.1",
+		"attribute": {}  // 外部资源的属性由iam负责查询属性, 接入方不需要传入
+	}]
+}
+```
+
+#### Response
+
+Explanation: The result corresponds to the authentication result for each `action_id`.
+
+```json
+{
+    "code": 0,
+    "message": "ok",
+    "data": {
+        "execute": true,
+        "view": false
+    }
+}
+```
+
+{% include '_api_v2_status_code.md.j2' %}

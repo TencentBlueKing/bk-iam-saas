@@ -13,7 +13,7 @@
 
 subject_scopes
 
-| field | type | required | location | description |
+| Field | Type | Required | Location | Description |
 | -----------|------------|--------|------------|------------|
 | type | string | yes | body | Authorized object type, currently only supports user and department |
 | id | string | yes | body | The authorization object ID, i.e. user name or department ID |
@@ -22,7 +22,7 @@ Description: If you want to set the `All Staff` authorization scope, type = *, i
 
 authorization_scopes
 
-| field | type | required | location | description |
+| Field | Type | Required | Location | Description |
 | -----------|------------|--------|------------|------------|
 | system | string | yes | body | system id |
 | actions | array[object] | yes | body | actions |
@@ -30,13 +30,13 @@ authorization_scopes
 
 actions
 
-| field | type | required | location | description |
+| Field | Type | Required | Location | Description |
 | -----------|------------|--------|------------|------------|
 | id | string | yes | body | action ID |
 
 resources
 
-| field | type | required | location | description |
+| Field | Type | Required | Location | Description |
 | -----------|------------|--------|------------|------------|
 | system | string | yes | body | resource system ID |
 | type | string | yes | body | resource type ID |
@@ -44,7 +44,7 @@ resources
 
 paths
 
-| field | type | required | location | description |
+| Field | Type | Required | Location | Description |
 | -----------|------------|--------|------------|------------|
 | system | string | yes | body | System ID of the topology node type |
 | type | string | yes | body | topology node type ID |
