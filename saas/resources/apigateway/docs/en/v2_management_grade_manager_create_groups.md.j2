@@ -5,7 +5,7 @@
 | Field | Type | Location | Required | Description |
 |--|--|--|--|--|--|--|
 | system_id | string | path | Yes | Access to system unique identifier |
-| grade_manager_id | int or "-" | path | Yes | The grade administrator ID, `for which grade_manager_id is not provided in the URL (the value is a horizontal bar "-"), it means that the user group is created under the system administrator corresponding to {system_id}` |
+| id | int or "-" | path | Yes | The grade administrator ID, `for which grade_manager_id is not provided in the URL (the value is a horizontal bar "-"), it means that the user group is created under the system administrator corresponding to {system_id}` |
 | groups | array | body | yes | list of user groups to be created |
 
 groups
