@@ -27,6 +27,7 @@ from backend.apps.group.models import Group
 from backend.apps.organization.models import Department, DepartmentMember, User
 from backend.apps.role.models import Role, RoleRelatedObject, RoleRelation, RoleResourceRelation, RoleSource, RoleUser
 from backend.apps.template.models import PermTemplate
+from backend.common.cache import cached
 from backend.common.error_codes import error_codes
 from backend.service.constants import (
     ACTION_ALL,
@@ -779,21 +780,10 @@ class RoleListQuery:
 
         return queryset.filter(id__in=role_ids)
 
+    @cached(timeout=5 * 60, key_function=lambda _, user: str(user.id))
     def is_user_super_manager(self, user: User):
-        sql = dedent(
-            """SELECT
-            1
-            FROM
-            role_roleuser a
-            LEFT JOIN role_role b ON a.role_id = b.id
-            WHERE
-            b.type = %s
-            AND a.username = %s"""
-        )
-
-        with connection.cursor() as cursor:
-            cursor.execute(sql, (RoleType.SUPER_MANAGER.value, self.user.username))
-            return bool(cursor.fetchone())
+        super_manager = get_super_manager()
+        return RoleUser.objects.filter(username=user.username, role_id=super_manager.id).exists()
 
     def query_subset_manager(self):
         """
@@ -1223,6 +1213,11 @@ class ActionScopeDiffer:
         return True
 
 
+@cached(timeout=60 * 60)  # 1 hour
+def get_super_manager() -> Role:
+    return Role.objects.filter(type=RoleType.SUPER_MANAGER.value).first()
+
+
 def can_user_manage_role(username: str, role_id: int) -> bool:
     """是否用户能管理角色"""
     role_ids = [role_id]
@@ -1231,7 +1226,7 @@ def can_user_manage_role(username: str, role_id: int) -> bool:
     if relation:
         role_ids.append(relation.parent_id)
 
-    super_manager = Role.objects.filter(type=RoleType.SUPER_MANAGER.value).first()
+    super_manager = get_super_manager()
     if super_manager:
         role_ids.append(super_manager.id)
 
