@@ -128,9 +128,12 @@
     },
     methods: {
       // 搜索自定义权限
-      async fetchSystemSearch () {
+      fetchSystemSearch () {
+        // 过滤掉搜索框的参数, 处理既有筛选系统也有输入名字、描述等仍要展示为空的情况
+        const noValue = !this.curSearchParams.id && !this.curSearchParams.name && !this.curSearchParams.description;
         // 筛选搜索的系统id
-        const curSystemList = this.systemList.filter(item => item.id === this.curSearchParams.system_id);
+        const curSystemList
+          = this.systemPolicyList.filter(item => item.id === this.curSearchParams.system_id && noValue);
         this.formatSystemData(curSystemList || []);
       },
 
