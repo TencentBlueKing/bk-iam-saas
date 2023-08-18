@@ -277,6 +277,9 @@
             this.tabKey = +new Date();
           }
           this.$set(this.panels[panelIndex], 'count', count);
+          if (['CustomPerm'].includes(active) && count < 1) {
+            this.systemList = [];
+          }
         }
       });
     },
@@ -453,6 +456,7 @@
           try {
             const { code, data } = await this.$store.dispatch('perm/getPoliciesSearch', this.curSearchParams);
             this.$set(this.panels[customIndex], 'count', data.length || 0);
+            this.systemList = data || [];
             this.emptyCustomData = formatCodeData(code, this.emptyCustomData, data.length === 0);
           } catch (e) {
             console.error(e);
