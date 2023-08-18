@@ -5,7 +5,7 @@ Restriction: resources_list can pass up to 100 resources
 
 #### Parameters
 
-| field | type | mandatory | description |
+| Field | Type | Required | Description |
 |:---|:---|:---|:---|
 | system |string | yes | system unique identifier |
 | subject | string | yes | subject |
@@ -14,26 +14,26 @@ Restriction: resources_list can pass up to 100 resources
 
 action
 
-| field | type | mandatory | description |
+| Field | Type | Required | Description |
 |:---|:---|:---|:---|
 | id | string | yes | action ID |
 
 subject
 
-| field | type |required | description |
+| Field | Type |Required | Description |
 |:---|:---|:---|:---|
 | type | string | yes | Authorize object type, currently only user | is supported
 | id | string | yes | authorization object ID |
 
 resources
 
-| field | type | mandatory | description |
+| Field | Type | Required | Description |
 |:---|:---|:---|:---|
 | resources | Array(resource_node) | Yes | A resource |
 
 resource_node
 
-| field | type | mandatory | description |
+| Field | Type | Required | Description |
 |:---|:---|:---|:---|
 | system | string | yes | resource_system_id |
 | type | string | yes | resource type ID |
@@ -90,6 +90,8 @@ resource_node
 ```
 
 #### Response
+
+Note: The result is the authentication result corresponding to each resource.
 
 ```json
 {

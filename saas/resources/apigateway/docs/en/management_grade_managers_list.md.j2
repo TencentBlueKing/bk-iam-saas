@@ -4,7 +4,7 @@
 
 | Field | Type | Required | Location | Description |
 | --------|--------|--------|--------|--------|--------|--------|
-| system | int | yes | path | Access to system unique identifier |
+| system | int | yes | query | Access to system unique identifier |
 
 #### Request
 
@@ -14,13 +14,13 @@ GET /api/v1/open/management/grade_managers/?system=bk_cmdb
 
 #### Response
 
-| field | type | description |
+| Field | Type | Description |
 | -----------|-----------|-----------|
 | count | int | total number |
 | results | array[object] | paginated query to results |
 
 results
-| field | type | description |
+| Field | Type | Description |
 | -----------|-----------|-----------|
 | id | int | hierarchy_administrator_id |
 | name | string | Name of the administrator |
@@ -30,6 +30,15 @@ results
 {
   "code": 0,
   "message": "ok",
-  "data": {}
+  "data": {
+    "count": 1,
+    "results": [
+      {
+        "id": 1,
+        "name": "测试管理员",
+        "description": ""
+      }
+    ]
+  }
 }
 ```

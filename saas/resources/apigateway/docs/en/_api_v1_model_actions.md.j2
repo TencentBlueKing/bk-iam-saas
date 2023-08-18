@@ -1,6 +1,6 @@
 #### Parameters
 
-| field | type | mandatory | description |
+| Field | Type | Required | Description |
 |:---|:---|:---|:---|
 | id | string | Yes | Operation id, unique under the system, only lowercase letters, lowercase letters, numbers, underscores (_) and ligatures (-) are allowed. The maximum length is 32 characters. |name
 | name |string | is the name of the operation, unique in the system.
@@ -15,7 +15,7 @@
 
 Elements in related_resource_types
 
-| field | type | mandatory | description |
+| Field | Type | Required | Description |
 |:---|:---|:---|:---|
 | system_id | string | Yes | The source system of the resource type, either its own system or another system |
 | id | string | Yes | The resource type ID, the id cannot be duplicated in the same related_resource_types when the operation is associated with multiple resource types.
@@ -26,7 +26,7 @@ Elements in related_resource_types
 
 Elements in related_instance_selections
 
-| field | type | mandatory | description |
+| Field | Type | Required | Description |
 |:---|:---|:---|:---|
 | system_id | string | Yes | The source system ID of the instance view |
 | id |string | Yes | The ID of the instance view |

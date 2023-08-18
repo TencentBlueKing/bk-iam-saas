@@ -1,0 +1,115 @@
+### Batch Fetching of Permission Policies for a Batch of Operations
+
+Scenario: An access system needs to authenticate multiple operations on a batch of resource instances of the same resource type, such as displaying multiple operations on a resource instance list page.
+
+Constraints:
+
+1. The resource type of a batch of resources must be the same.
+2. If an action depends on a CMDB resource, the dependent CMDB resource instance must be the same.
+
+SDK implementation:
+
+1. Batch fetching of permission policies for a batch of operations.
+2. Locally traverse and calculate whether resource instances have permission.
+
+#### Parameters
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| subject | string | Yes | The subject |
+| actions | Array(action) | Yes | The operation list |
+| resources | Array(resource_node) | Yes | The resource instance. The order of resource types must be consistent with the order in which the operations were registered. |
+
+action
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| id | string | Yes | The operation ID. |
+
+subject
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| Type | string | Yes | The authorization object Type. Currently, only `user` is supported. |
+| id | string | Yes | The authorization object ID. |
+
+resource_node
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| system | string | Yes | The resource system ID. |
+| Type | string | Yes | The resource type ID. |
+| id | string | Yes | The resource instance ID. |
+| attribute | object | Yes | The resource attribute. |
+
+##### No CMDB Dependency
+
+#### Request
+
+```json
+{
+	"subject": {
+		"Type": "user",
+		"id": "admin"
+	},
+	"actions": [{
+		"id": "edit"
+	}, {
+		"id": "view"
+	}],
+	"resources": [{
+		"system": "bk_cmdb",
+		"Type": "host",
+		"id": "192.168.1.1",
+		"attribute": {}
+	}, {
+		"system": "bk_cmdb",
+		"Type": "host",
+		"id": "192.168.1.2",
+		"attribute": {}
+	}, {
+		"system": "bk_cmdb",
+		"Type": "host",
+		"id": "192.168.1.3",
+		"attribute": {}
+	}]
+}
+```
+
+#### Response
+
+| Field | Type | Description |
+|-------|------|-------------|
+| action | Object | The operation, with only the `id` Field. |
+| condition | Object | The condition expression. |
+
+```json
+{
+    "code": 0,
+    "message": "ok",
+    "data": [ // The order of actions is consistent with that in the request.
+        {
+            "action":{
+                "id":"edit"
+            },
+            "condition": {  // The condition expression
+                "Field": "host.id",
+                "op": "any",
+                "value": []
+            }
+        },
+        {
+            "action":{
+                "id":"view"
+            },
+            "condition": {  // The condition expression
+                "Field": "host.id",
+                "op": "any",
+                "value": []
+            }
+        }
+    ]
+}
+```
+
+{% include '_api_v2_status_code.md.j2' %}

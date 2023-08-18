@@ -8,7 +8,7 @@
 | 字段 | 类型 | 位置 | 必须 | 描述 |
 |---|---|---|---|---|
 | system_id | string | path | 是 | 接入系统唯一标识 |
-| user_id | string | 用户 ID |
+| user_id | string | path | 是 | 用户 ID |
 | group_ids | string | body | 是 | 用户组ID 列表，多个以英文逗号分隔 |
 
 #### Request
@@ -19,13 +19,11 @@ GET /api/v2/open/management/systems/demo/users/test_user1/groups/belong/?group_i
 
 #### Response
 
-#### Response
-
 > Status: 200 OK
 
 | 字段 | 类型 | 描述 |
 |---|---|---|
-| belong| bool | 是否属于用户组 | 
+| belong| bool | 是否属于用户组 |
 | expired_at| int | 过期时间戳 |
 | created_at | string | 创建时间, UTC时间 |
 

@@ -2,7 +2,7 @@
 
 #### Parameters
 
-| field | type | mandatory | description |
+| Field | Type | Required | Description |
 |:---|:---|:---|:---|
 | system |string | yes | system unique identifier |
 | subject | string | yes | subject |
@@ -11,20 +11,20 @@
 
 action
 
-| field | type | mandatory | description |
+| Field | Type | Required | Description |
 |:---|:---|:---|:---|
 | id | string | yes | action ID |
 
 subject
 
-| field | type |required | description |
+| Field | Type |Required | Description |
 |:---|:---|:---|:---|
 | type | string | yes | Authorize object type, currently only user | is supported
 | id | string | yes | authorization_id |
 
 resource_node
 
-| field | type | mandatory | description |
+| Field | Type | Required | Description |
 |:---|:---|:---|:---|
 | system | string | yes | resource_system_id |
 | type | string | yes | resource type ID |
@@ -63,6 +63,10 @@ resource_node
 ```
 
 ### Response
+
+| Field | Type | Description |
+|-------|------|-------------|
+| allowed | bool | The authentication result. |
 
 ```json
 {

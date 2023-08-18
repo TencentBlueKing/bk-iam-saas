@@ -1,0 +1,203 @@
+### create a custom permission request form
+
+#### parameters
+
+| Field | Type |Required | Description |
+|:---|:---|:---|:---|
+|system|string|yes|system id|
+|actions|array|yes|actions that require permission|
+|applicant|string|yes|body|applicant's username|
+|reason|string|yes|body|reason for application|
+|expired_at|int|no|body|expiration timestamp (in seconds), after which the user will no longer have the permission|
+
+actions
+
+| Field | Type |Required | Description |
+|:---|:---|:---|:---|
+|id|string|yes|operation id|
+|related_resource_types|array|yes|resource types associated with the operation, `the order of resource types must be consistent with the order of registration when the operation was registered`|
+
+related_resource_types
+
+| Field | Type |Required | Description |
+|:---|:---|:---|:---|
+|system|string|yes|system id of the resource type|
+|type|string|yes|resource type|
+|instances|array[array]|no|resource instances, optional|
+|attributes|array|no|instance attributes, optional|
+
+related_resource_types.instances
+
+| Field | Type |Required | Description |
+|:---|:---|:---|:---|
+|type|string|yes|resource type|
+|id|string|yes|resource instance id|
+
+related_resource_types.attributes
+
+| Field | Type |Required | Description |
+|:---|:---|:---|:---|
+|id|string|yes|property key|
+|name|string|yes|property key name|
+|values|array|yes|optional values for the property|
+
+related_resource_types.attributes.values
+
+| Field | Type |Required | Description |
+|:---|:---|:---|:---|
+|id|string|yes|property value|
+|name|string|yes|property value name|
+
+#### request
+
+1. example of an operation with no associated resource type:
+
+the `create_job` operation of the `bk_job` system is not associated with any resource type.
+
+```json
+{
+  "system": "bk_job",  # system of the permission
+  "actions": [
+    {
+      "id": "create_job",  # operation id
+      "related_resource_types": []  # an empty array indicates that the operation is not associated with any resource type
+    }
+  ],
+  "applicant": "user001",
+  "reason": "for grant policies",
+  "expired_at: 1704042061
+}
+```
+
+2. example of an operation with a resource topology path:
+
+the `view_job` operation of the `bk_job` system is associated with the `job` resource type, and an instance view `business (biz)`-`job (job)` has been registered for this resource type. this instance view has a topology path of 2 layers.
+
+```json
+{
+  "system": "bk_job",  # system of the permission
+  "actions": [
+    {
+      "id": "view_job",  # operation id
+      "related_resource_types": [
+        {
+          "system": "bk_job",  # system id of the resource type
+          "type": "job",  # resource type
+          "instances": [
+            [  # an array represents a topology path of an instance, and the topology path must be consistent with the resource link of the instance view, business (biz)-job (job)
+              {
+                "type": "biz",  # the first layer of resources in the instance view
+                "id": "biz1",
+              },
+              {
+                "type": "job",  # the second layer of the resource topology path in the instance view
+                "id": "job1",
+              }
+            ]
+          ]
+        }
+      ]
+    }
+  ],
+  "applicant": "user001",
+  "reason": "for grant policies",
+  "expired_at: 1704042061
+}
+```
+
+3. example of an operation associated with multiple resource types:
+
+the `execute_job` operation of the `bk_job` system is associated with the `job` resource type of the `bk_job` system and the `host` resource type of the `bk_cmdb` system. the `job` resource type has registered an instance view `business (biz)`-`job (job)`, which has a topology path of 2 layers. the `host` resource type of the `bk_cmdb` system has registered an instance view `business (biz)`-`cluster (set)`-`module (module)`-`host (host)`, which has a topology path of 4 layers.
+
+```json
+{
+  "system": "bk_job",  # 权限的系统
+  "actions": [
+    {
+      "id": "execute_job",  # 操作id
+      "related_resource_types": [  # 关联几个资源类型, 这里就必须传几个item, 并且资源类型的顺序必须与注册操作时资源类型的顺序一致
+        {
+          "system": "bk_job",
+          "type": "job",
+          "instances": [
+            [  # 业务(biz)-作业(job)
+              {
+                "type": "biz",
+                "id": "biz1",
+              },
+              {
+                "type": "job",
+                "id": "job1",
+              }
+            ]
+          ]
+        },
+        {
+          "system": "bk_cmdb",  # 资源类型所属的系统id
+          "type": "host",  # 操作依赖的另外一个资源类型
+          "instances": [
+            [  # 4层的拓扑路径, 必须与实例视图的资源链路一致: 业务(biz)-集群(set)-模块(module)-主机(host)
+              {
+                "type": "biz",
+                "id": "biz1",
+              }, {
+                "type": "set",
+                "id": "set1",
+              }, {
+                "type": "module",
+                "id": "module1",
+              }, {
+                "type": "host",
+                "id": "host1",
+              }
+            ]
+          ],
+          "attributes": [  # 支持配置实例的属性值, attributes与instances的组合关系为AND
+            {
+              "id": "os",  # 属性的key
+              "name": "操作系统",
+              "values": [
+                {
+                  "id": "linux",  # 属性的value, 可以有多个
+                  "name": "linux"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "applicant": "user001",
+  "reason": "for grant policies",
+  "expired_at: 1704042061
+}
+```
+
+#### Response
+
+> Status: 200 OK
+
+| Field | Type | Description |
+|-----------|-----------|-----------|
+| id   | int     | application id |
+| sn   | string     | itsm sn |
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {
+    "id": 1,
+    "sn": ""
+  }
+}
+```
+
+response error:
+
+When the permission center needs to call back the access system to obtain the resource instance name, the following error situations may occur:
+
+1. If the access system does not provide the relevant query interface, an error code `1902204` will be returned.
+2. If the resource instance name cannot be found in the query or the corresponding resource instance does not exist in the access system, or the user already has permission to access the resource, an error code `1902416` will be returned.
+3. When verifying the associated resource types of the `related_resource_types` operation, if the order of the resource types is inconsistent, an error code `1902417` will be returned. When registering the operation, the order of the resource types must be consistent with the order in the permission request form.
