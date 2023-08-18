@@ -117,7 +117,7 @@
       },
       curSearchParams: {
         handler (value) {
-          if (Object.keys(value).length && value.system_id) {
+          if (Object.keys(value).length) {
             this.fetchSystemSearch();
           }
         },

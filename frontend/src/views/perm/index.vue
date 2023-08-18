@@ -91,16 +91,24 @@
           />
         </div>
         <bk-tab
-          :active.sync="active"
           type="unborder-card"
           ext-cls="iam-my-perm-tab-cls"
+          :key="tabKey"
+          :active.sync="active"
           @tab-change="handleTabChange">
           <bk-tab-panel
             v-for="(panel, index) in panels"
-            :data-test-id="`myPerm_tabPanel_${panel.name}`"
             v-bind="panel"
-            :label="['search'].includes(curEmptyData.tipType) ? `${panel.label}(${panel.count})` : panel.label "
+            :data-test-id="`myPerm_tabPanel_${panel.name}`"
             :key="index">
+            <template slot="label">
+              <span class="panel-name">
+                <span>{{ panel.label }}</span>
+                <span style="color:##3a84ff;" v-if="Object.keys(curSearchParams).length">
+                  ({{panel.count}})
+                </span>
+              </span>
+            </template>
             <div class="content-wrapper" v-bkloading="{ isLoading: componentLoading, opacity: 1 }">
               <component
                 v-if="!componentLoading && active === panel.name"
@@ -113,7 +121,6 @@
                 :empty-data="curEmptyData"
                 :cur-search-params="curSearchParams"
                 :cur-search-pagination="curSearchPagination"
-                @on-tab-count="handleTabCount"
                 @refresh="fetchData"
                 @on-clear="handleEmptyClear"
                 @on-refresh="handleEmptyRefresh"
@@ -130,6 +137,7 @@
   import { mapGetters } from 'vuex';
   import { buildURLParams } from '@/common/url';
   import { formatCodeData } from '@/common/util';
+  import { bus } from '@/common/bus';
   import CustomPerm from './custom-perm/index.vue';
   import TeporaryCustomPerm from './teporary-custom-perm/index.vue';
   import GroupPerm from './group-perm/index.vue';
@@ -212,6 +220,7 @@
         resourceInstanceError: false,
         isShowResourceInstanceSideSlider: false,
         resourceInstanceSideSliderTitle: '',
+        tabKey: 'tab-key',
         contentWidth: window.innerWidth <= 1440 ? '200px' : '240px'
       };
     },
@@ -253,6 +262,18 @@
       //     label: this.$t(`m.myApply['临时权限']`)
       //   });
       // }
+    },
+    mounted () {
+      this.$once('hook:beforeDestroy', () => {
+        bus.$off('on-perm-tab-count');
+      });
+      bus.$on('on-perm-tab-count', (payload) => {
+        const { active, count } = payload;
+        const panelIndex = this.panels.findIndex(item => item.name === active);
+        if (panelIndex > -1) {
+          this.$set(this.panels[panelIndex], 'count', count);
+        }
+      });
     },
     methods: {
       async fetchPageData () {
@@ -332,6 +353,7 @@
             this[emptyField.empty] = formatCodeData(code, this[emptyField.empty]);
           }
         } finally {
+          this.tabKey = +new Date();
           this.componentLoading = false;
         }
       },
@@ -399,7 +421,6 @@
           const { code, data } = await this.$store.dispatch('perm/getDepartGroupSearch', params);
           const { count, results } = data;
           this.$set(this.panels[1], 'count', count || 0);
-          console.log(this.panels, 555);
           this.emptyDepartmentGroupData = formatCodeData(code, this.emptyDepartmentGroupData, results.length === 0);
         } catch (e) {
           const { code, data, message, statusText } = e;
@@ -416,23 +437,23 @@
 
       // 获取policy
       async fetchPolicySearch () {
-        try {
-          const { code, data } = await this.$store.dispatch('perm/getPoliciesSearch', this.curSearchParams);
-          const customIndex = this.panels.findIndex(item => item.name === 'CustomPerm');
-          if (customIndex > -1) {
+        const customIndex = this.panels.findIndex(item => item.name === 'CustomPerm');
+        if (customIndex > -1 && this.curSearchParams.system_id) {
+          try {
+            const { code, data } = await this.$store.dispatch('perm/getPoliciesSearch', this.curSearchParams);
             this.$set(this.panels[customIndex], 'count', data.length || 0);
+            this.emptyCustomData = formatCodeData(code, this.emptyCustomData, data.length === 0);
+          } catch (e) {
+            console.error(e);
+            this.emptyCustomData = formatCodeData(e.code, this.emptyCustomData);
+            this.bkMessageInstance = this.$bkMessage({
+              limit: 1,
+              theme: 'error',
+              message: e.message || e.data.msg || e.statusText,
+              ellipsisLine: 2,
+              ellipsisCopy: true
+            });
           }
-          this.emptyCustomData = formatCodeData(code, this.emptyCustomData, data.length === 0);
-        } catch (e) {
-          console.error(e);
-          this.emptyCustomData = formatCodeData(e.code, this.emptyCustomData);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
         }
       },
 
@@ -454,12 +475,14 @@
             await this.fetchPolicySearch();
           },
           CustomPerm: async () => {
+            this.systemList = [];
             this.emptyCustomData = _.cloneDeep(emptyData);
             await this.fetchUserGroupSearch();
             await this.fetchDepartSearch();
           }
         };
         this.curEmptyData = _.cloneDeep(emptyData);
+        this.tabKey = +new Date();
         typeMap[this.active] ? typeMap[this.active]() : typeMap['GroupPerm']();
       },
 
@@ -475,15 +498,12 @@
           ...this.$route.query,
           tab: tabName
         };
+        this.$nextTick(() => {
+          this.$refs.tabRef
+            && this.$refs.tabRef.$refs.tabLabel
+            && this.$refs.tabRef.$refs.tabLabel.forEach(label => label.$forceUpdate());
+        });
         window.history.replaceState({}, '', `?${buildURLParams(searchParams)}`);
-      },
-
-      handleTabCount (payload) {
-        const { active, count } = payload;
-        const panelIndex = this.panels.findIndex(item => item.name === active);
-        if (panelIndex > -1) {
-          this.$set(this.panels[panelIndex], 'count', count);
-        }
       },
 
       // 显示资源实例

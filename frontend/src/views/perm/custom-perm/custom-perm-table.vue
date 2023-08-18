@@ -255,6 +255,8 @@
 <script>
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
+  import { bus } from '@/common/bus';
+  import { formatCodeData } from '@/common/util';
   import IamPopoverConfirm from '@/components/iam-popover-confirm';
   import DeleteDialog from '@/components/iam-confirm-dialog/index.vue';
   import RenderResourcePopover from '../components/prem-view-resource-popover';
@@ -264,7 +266,6 @@
   import EffectConditon from './effect-conditon';
   import SidesliderEffectConditon from './sideslider-effect-condition';
   import DeleteActionDialog from '@/views/group/components/delete-related-action-dialog.vue';
-  import { formatCodeData } from '@/common/util';
 
   export default {
     name: 'CustomPermTable',
@@ -480,7 +481,7 @@
           });
         } finally {
           this.initRequestQueue.shift();
-          this.$emit('on-tab-count', { active: 'CustomPerm', count: this.policyList.length || 0 });
+          bus.$emit('on-perm-tab-count', { active: 'CustomPerm', count: this.policyList.length || 0 });
         }
       },
 
