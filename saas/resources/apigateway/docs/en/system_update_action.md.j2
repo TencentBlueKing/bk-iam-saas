@@ -3,7 +3,7 @@
 ----------
 #### parameters
 
-| field | type |required | description |
+| Field | Type |Required | Description |
 |:---|:---|:---|:---|
 | name |string | yes | the name of the operation, which must be unique under the system |
 | name_en | string | yes | the English name of the operation, which will be displayed when the system switches to the English version for internationalization |
@@ -17,7 +17,7 @@
 
 Elements in related_resource_types
 
-| field | type |required | description |
+| Field | Type |Required | Description |
 |:---|:---|:---|:---|
 | system_id | string | yes | the source system of the resource type, which can be the self-system or other systems |
 | id | string | yes | the ID of the resource type. When the operation is associated with multiple resource types, `the same id cannot be repeated in the related_resource_types` |
@@ -28,7 +28,7 @@ Elements in related_resource_types
 
 Elements in related_instance_selections
 
-| field | type |required | description |
+| Field | Type |Required | Description |
 |:---|:---|:---|:---|
 | system_id | string | yes | the source system ID of the instance view |
 | id |string | yes | the ID of the instance view |
@@ -48,7 +48,7 @@ After registration, the logic for pulling resources when configuring permissions
 
 #### Parameters
 
-| field | type | mandatory | location | description |
+| Field | Type | Required | Location | Description |
 | :--- | :--- | :--- |:--- |:--- |
 | system_id | string | yes | path | system ID |
 | action_id | string | yes | path | action_id |
@@ -73,7 +73,7 @@ After registration, the logic for pulling resources when configuring permissions
                         "system_id": "bk_cmdb".
                         "id": "free_host".
                         "ignore_iam_path": false.
-                    }. 
+                    }.
                     {
                         "system_id": "bk_cmdb".
                         "id": "biz_topology".

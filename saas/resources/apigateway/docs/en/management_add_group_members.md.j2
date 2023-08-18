@@ -10,7 +10,7 @@
 
 members
 
-| field | type | mandatory | location | description |
+| Field | Type | Required | Location | Description |
 |--------|--------|--------|--------|--------|--------|--------|
 | type | string | yes | body | member type, user for user, department for department |
 | id | string | yes | body | User or department ID |
@@ -35,13 +35,13 @@ members
 
 #### Response
 
-| field | type | description |
+| Field | Type | Description |
 | -----------|-----------|-----------|
 | count | int | total number |
 | results | array[object] | paginated query to results |
 
 results
-| field | type | description |
+| Field | Type | Description |
 | -----------|-----------|-----------|
 | type | string | Member type, user means user, department means department
 | id | string | User or department ID |
@@ -52,6 +52,16 @@ results
 {
   "code": 0,
   "message": "ok",
-  "data": {}
+  "data": {
+    "count": 1,
+    "results": [
+      {
+        "type": "user",
+        "id": "admin",
+        "name": "管理员",
+        "expired_at": 4102444800
+      }
+    ]
+  }
 }
 ```

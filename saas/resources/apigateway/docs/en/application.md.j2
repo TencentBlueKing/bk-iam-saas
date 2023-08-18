@@ -2,21 +2,21 @@
 
 #### Parameters
 
-| field | type | mandatory | description |
+| Field | Type | Required | Description |
 |:---|:---|:---|:---|
 |system|string|Yes|system id|
 |actions|array|is|the|action|to|apply|permission|to
 
 actions
 
-|fields |type |required |description |
+|Field |Type |Required |Description |
 |:---|:---|:---|:---|
 |id|string|yes|action id|
 |related_resource_types|array|is|the|operation's associated resource type, ``the order of the resource types must be the same as the order in which the operation is registered'||
 
 related_resource_types
 
-|field |type |must |description |
+|Field |Type |Required |Description |
 |:---|:---|:---|:---|
 |system|string|is|the|system id of the resource type|
 |type|string|is|the|resource|type|
@@ -25,14 +25,14 @@ related_resource_types
 
 related_resource_types.instances
 
-|field |type |required |description |
+|Field |Type |Required |Description |
 |:---|:---|:---|:---|
 |type|String|Yes|Resource type|
 |id|String|Yes|Resource_Instance id|
 
 related_resource_types.attributes
 
-|field |type |must |description |
+|Field |Type |Required |Description |
 |:---|:---|:---|:---|
 |id|String|Yes|attribute key|
 |name|string|is|the|attribute key name|
@@ -40,7 +40,7 @@ related_resource_types.attributes
 
 related_resource_types.attributes.values
 
-|field |type |required |description |
+|Field |Type |Required |Description |
 |:---|:---|:---|:---|
 |id|String|Yes|property value|
 |name|string|yes|property value name|
@@ -180,7 +180,7 @@ The `execute_job` operation of system `bk_job` associates resource type `job` wi
 
 data
 
-| field | type | description |
+| Field | Type | Description |
 |:---|:---|:---|
 |url| string| permission request redirect URL|
 

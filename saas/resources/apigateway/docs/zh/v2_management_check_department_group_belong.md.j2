@@ -8,7 +8,7 @@
 | 字段 | 类型 | 位置 | 必须 | 描述 |
 |---|---|---|---|---|
 | system_id | string | path | 是 | 接入系统唯一标识 |
-| department_id | string | 部门 ID |
+| department_id | string | path | 是 | 部门 ID |
 | group_ids | string | body | 是 | 用户组ID 列表，多个以英文逗号分隔 |
 
 
@@ -24,7 +24,7 @@ GET /api/v2/open/management/systems/demo/departments/1/groups/belong/?group_ids=
 
 | 字段 | 类型 | 描述 |
 |---|---|---|
-| belong| bool | 是否属于用户组 | 
+| belong| bool | 是否属于用户组 |
 | expired_at| int | 过期时间戳 |
 | created_at | string | 创建时间, UTC时间 |
 

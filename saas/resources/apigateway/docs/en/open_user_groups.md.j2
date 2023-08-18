@@ -9,14 +9,12 @@ A user group can contain: users and departments, and users belong to certain dep
 
 #### Parameters
 
-| field | type | required | location | description |
+| Field | Type | Required | Location | Description |
 | :--- | :--- | :--- |:---|:--- |
 | user_id | string | yes | path | user_id |
 | inherit | bool | no | query | Whether to query for inherited groups, if false, return only directly joined groups, if true, return directly joined + indirectly inherited groups |
 
 Example: `inherit=true`
-
-#### Request
 
 #### Response
 

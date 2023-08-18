@@ -9,7 +9,7 @@ Authorization and recovery interface for multiple resource topologies, multiple 
 #### Parameters
 
 
-| field | type | mandatory | description |
+| Field | Type | Required | Description |
 |:---|:---|:---|:---|
 | asynchronous | boolean | yes | whether to call asynchronously, default no, only synchronous is currently supported
 | operate | string | yes | grant or revoke |
@@ -21,20 +21,20 @@ Authorization and recovery interface for multiple resource topologies, multiple 
 
 actions
 
-| field | type | mandatory | description |
+| Field | Type | Required | Description |
 |:---|:---|:---|:---|
 | id | string | yes | action ID |
 
 subject
 
-| field | type |required | description |
+| Field | Type |Required | Description |
 |:---|:---|:---|:---|
 | type | string | yes | Authorized object type, currently only user | is supported
 | id | string | yes | authorization object ID |
 
 resources
 
-| field | type | mandatory | description |
+| Field | Type | Required | Description |
 |:---|:---|:---|:---|
 | system | string | yes | resource system ID |
 | type | string | yes | resource type ID |
@@ -42,7 +42,7 @@ resources
 
 resources.paths
 
-| field | type | is required | description |
+| Field | Type | Required | Description |
 |:---|:---|:---|:---|
 | type | string | yes | topology node type ID |
 | id | string | yes | topology node instance ID |

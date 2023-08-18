@@ -8,13 +8,13 @@ Path Parameters
 
 Parameters
 
-| field | type | mandatory | description |
+| Field | Type | Required | Description |
 |:---|:---|:---|:---|
 | config | array(object) | Yes | A new associated configuration file containing the Action that can be authorized to the creator at creation for each resource type |
 
 A description of the fields in each element of the config:
 
-| field | type | mandatory | description |
+| Field | Type | Required | Description |
 |:---|:---|:---|:---|
 | id | string | Yes | A unique identifier for the resource type |
 | actions | array(object) | yes | A list of actions that can be authorized to the creator when the resource is created |
@@ -22,7 +22,7 @@ A description of the fields in each element of the config:
 
 The field descriptions for each element in actions.
 
-| field | type | mandatory | description |
+| Field | Type | Required | Description |
 |:---|:---|:---|:---|
 | id | string | is | the unique identifier of the Action |
 | required | bool | Yes | Whether the Action is required, i.e., whether the Action can be unselected when the Permission Center supports enterprise and user modification of creator empowerment |
