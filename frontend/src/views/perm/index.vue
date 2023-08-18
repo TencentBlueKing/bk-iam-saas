@@ -427,23 +427,23 @@
 
       // 获取policy
       async fetchPolicySearch () {
-        try {
-          const { code, data } = await this.$store.dispatch('perm/getPoliciesSearch', this.curSearchParams);
-          const customIndex = this.panels.findIndex(item => item.name === 'CustomPerm');
-          if (customIndex > -1) {
+        const customIndex = this.panels.findIndex(item => item.name === 'CustomPerm');
+        if (customIndex > -1 && this.curSearchParams.system_id) {
+          try {
+            const { code, data } = await this.$store.dispatch('perm/getPoliciesSearch', this.curSearchParams);
             this.$set(this.panels[customIndex], 'count', data.length || 0);
+            this.emptyCustomData = formatCodeData(code, this.emptyCustomData, data.length === 0);
+          } catch (e) {
+            console.error(e);
+            this.emptyCustomData = formatCodeData(e.code, this.emptyCustomData);
+            this.bkMessageInstance = this.$bkMessage({
+              limit: 1,
+              theme: 'error',
+              message: e.message || e.data.msg || e.statusText,
+              ellipsisLine: 2,
+              ellipsisCopy: true
+            });
           }
-          this.emptyCustomData = formatCodeData(code, this.emptyCustomData, data.length === 0);
-        } catch (e) {
-          console.error(e);
-          this.emptyCustomData = formatCodeData(e.code, this.emptyCustomData);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
         }
       },
 

@@ -137,16 +137,6 @@
       },
       curSearchParams: {
         type: Object
-      },
-      curSearchPagination: {
-        type: Object,
-        default: () => {
-          return {
-            current: 1,
-            count: 0,
-            limit: 10
-          };
-        }
       }
     },
     data () {
