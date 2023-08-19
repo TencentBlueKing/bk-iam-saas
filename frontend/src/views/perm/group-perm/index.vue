@@ -304,7 +304,9 @@
           });
         } finally {
           this.isLoading = false;
-          bus.$emit('on-perm-tab-count', { active: 'GroupPerm', count: this.pageConf.count });
+          if (this.emptyData.tipType === 'search') {
+            bus.$emit('on-perm-tab-count', { active: 'GroupPerm', count: this.pageConf.count });
+          }
         }
         // if (!page) {
         //     this.pageConf.current = page = 1;

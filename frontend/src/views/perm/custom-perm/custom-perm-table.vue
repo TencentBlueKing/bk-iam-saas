@@ -481,7 +481,9 @@
           });
         } finally {
           this.initRequestQueue.shift();
-          bus.$emit('on-perm-tab-count', { active: 'CustomPerm', count: this.policyList.length || 0 });
+          if (['search'].includes(this.searchType)) {
+            bus.$emit('on-perm-tab-count', { active: 'CustomPerm', count: this.policyList.length || 0 });
+          }
         }
       },
 
