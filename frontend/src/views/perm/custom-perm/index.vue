@@ -20,7 +20,7 @@
           :system-id="sys.id"
           :cur-search-params="curSearchParams"
           :empty-data="emptyPolicyData"
-          :search-type="searchType"
+          :is-search-perm="isSearchPerm"
           @after-delete="handleAfterDelete(...arguments, sysIndex)" />
       </custom-perm-system-policy>
     </template>
@@ -79,6 +79,10 @@
             limit: 10
           };
         }
+      },
+      isSearchPerm: {
+        type: Boolean,
+        default: false
       }
     },
     data () {
@@ -90,8 +94,7 @@
           text: '暂无数据',
           tip: '',
           tipType: ''
-        },
-        searchType: ''
+        }
       };
     },
     computed: {
@@ -110,7 +113,6 @@
       },
       emptyData: {
         handler (value) {
-          this.searchType = value.tipType;
           this.emptyPolicyData = Object.assign({}, value);
         },
         immediate: true
@@ -128,9 +130,12 @@
     },
     methods: {
       // 搜索自定义权限
-      async fetchSystemSearch () {
+      fetchSystemSearch () {
+        // 过滤掉搜索框的参数, 处理既有筛选系统也有输入名字、描述等仍要展示为空的情况
+        const noValue = !this.curSearchParams.id && !this.curSearchParams.name && !this.curSearchParams.description;
         // 筛选搜索的系统id
-        const curSystemList = this.systemList.filter(item => item.id === this.curSearchParams.system_id);
+        const curSystemList
+          = this.systemList.filter(item => item.id === this.curSearchParams.system_id && noValue);
         this.formatSystemData(curSystemList || []);
       },
 

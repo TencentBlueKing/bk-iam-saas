@@ -32,7 +32,7 @@
       </div>
       <bk-button
         v-if="enablePermissionHandover.toLowerCase() === 'true'"
-        :disabled="!systemList.length && !teporarySystemList.length"
+        :disabled="isNoTransfer"
         data-test-id="myPerm_btn_transferPerm"
         type="button"
         style="margin-bottom: 16px;"
@@ -40,7 +40,7 @@
         {{ $t(`m.permTransfer['权限交接']`) }}
       </bk-button>
       <div
-        v-if="!systemList.length && !teporarySystemList.length"
+        v-if="isNoTransfer"
         :class="[
           'info-sys',
           {
@@ -88,6 +88,7 @@
             :active="active"
             @on-remote-table="handleRemoteTable"
             @on-refresh-table="handleRefreshTable"
+            @on-input-value="handleInputValue"
           />
         </div>
         <bk-tab
@@ -121,6 +122,7 @@
                 :empty-data="curEmptyData"
                 :cur-search-params="curSearchParams"
                 :cur-search-pagination="curSearchPagination"
+                :is-search-perm="isSearchPerm"
                 @refresh="fetchData"
                 @on-clear="handleEmptyClear"
                 @on-refresh="handleEmptyRefresh"
@@ -183,6 +185,7 @@
         isEmpty: false,
         isNoRenewal: false,
         isNoExternalRenewal: false,
+        isNoTransfer: false,
         soonGroupLength: 0,
         soonPermLength: 0,
         personalGroupList: [],
@@ -214,6 +217,7 @@
         CUR_LANGUAGE: window.CUR_LANGUAGE,
         isShowConfirmDialog: false,
         confirmDialogTitle: this.$t(`m.verify['admin无需申请权限']`),
+        isSearchPerm: false,
         actionIdError: false,
         searchTypeError: false,
         resourceTypeError: false,
@@ -271,7 +275,13 @@
         const { active, count } = payload;
         const panelIndex = this.panels.findIndex(item => item.name === active);
         if (panelIndex > -1) {
+          if (active === this.active && count !== this.panels[panelIndex].count) {
+            this.tabKey = +new Date();
+          }
           this.$set(this.panels[panelIndex], 'count', count);
+          if (['CustomPerm'].includes(active) && count < 1) {
+            this.systemList = [];
+          }
         }
       });
     },
@@ -336,6 +346,7 @@
           this.soonPermLength = data4.length;
           this.isNoRenewal = this.soonGroupLength < 1 && this.soonPermLength < 1;
           this.isNoExternalRenewal = this.soonGroupLength < 1;
+          this.isNoTransfer = !systemList.length && !teporarySystemList.length;
         } catch (e) {
           console.error(e);
           const { code, data, message, statusText } = e;
@@ -353,7 +364,6 @@
             this[emptyField.empty] = formatCodeData(code, this[emptyField.empty]);
           }
         } finally {
-          this.tabKey = +new Date();
           this.componentLoading = false;
         }
       },
@@ -392,12 +402,14 @@
             params.system_id = this.externalSystemId;
           }
           const { code, data } = await this.$store.dispatch('perm/getUserGroupSearch', params);
+          this.personalGroupList.splice(0, this.personalGroupList.length, ...(data.results || []));
           this.$set(this.panels[0], 'count', data.count || 0);
           this.emptyData
             = formatCodeData(code, this.emptyData, data.count === 0);
         } catch (e) {
           console.error(e);
           const { code, data, message, statusText } = e;
+          this.personalGroupList = [];
           this.emptyData = formatCodeData(code, this.emptyData);
           this.bkMessageInstance = this.$bkMessage({
             limit: 1,
@@ -406,6 +418,8 @@
             ellipsisLine: 2,
             ellipsisCopy: true
           });
+        } finally {
+          this.tabKey = +new Date();
         }
       },
 
@@ -420,11 +434,13 @@
         try {
           const { code, data } = await this.$store.dispatch('perm/getDepartGroupSearch', params);
           const { count, results } = data;
+          this.departmentGroupList.splice(0, this.departmentGroupList.length, ...(data.results || []));
           this.$set(this.panels[1], 'count', count || 0);
           this.emptyDepartmentGroupData = formatCodeData(code, this.emptyDepartmentGroupData, results.length === 0);
         } catch (e) {
           const { code, data, message, statusText } = e;
           this.emptyDepartmentGroupData = formatCodeData(code, this.emptyDepartmentGroupData);
+          this.departmentGroupList = [];
           this.bkMessageInstance = this.$bkMessage({
             limit: 1,
             theme: 'error',
@@ -432,6 +448,8 @@
             ellipsisLine: 2,
             ellipsisCopy: true
           });
+        } finally {
+          this.tabKey = +new Date();
         }
       },
 
@@ -446,6 +464,7 @@
           } catch (e) {
             console.error(e);
             this.emptyCustomData = formatCodeData(e.code, this.emptyCustomData);
+            this.systemList = [];
             this.bkMessageInstance = this.$bkMessage({
               limit: 1,
               theme: 'error',
@@ -453,6 +472,8 @@
               ellipsisLine: 2,
               ellipsisCopy: true
             });
+          } finally {
+            this.tabKey = +new Date();
           }
         }
       },
@@ -461,48 +482,68 @@
         const { emptyData, pagination, searchParams } = payload;
         this.curSearchParams = _.cloneDeep(searchParams);
         this.curSearchPagination = _.cloneDeep(pagination);
+        this.isSearchPerm = emptyData.tipType === 'search';
+        // 这里需要拿到所有tab项的total，所以需要调所有接口, 且需要在当前页动态加载tab的label
         const typeMap = {
           GroupPerm: async () => {
             this.personalGroupList = [];
             this.emptyData = _.cloneDeep(emptyData);
-            await this.fetchDepartSearch();
-            await this.fetchPolicySearch();
+            await Promise.all([this.fetchDepartSearch(), this.fetchPolicySearch()]);
           },
           DepartmentGroupPerm: async () => {
             this.departmentGroupList = [];
             this.emptyDepartmentGroupData = _.cloneDeep(emptyData);
-            await this.fetchUserGroupSearch();
-            await this.fetchPolicySearch();
+            await Promise.all([this.fetchUserGroupSearch(), this.fetchPolicySearch()]);
           },
           CustomPerm: async () => {
             this.systemList = [];
             this.emptyCustomData = _.cloneDeep(emptyData);
-            await this.fetchUserGroupSearch();
-            await this.fetchDepartSearch();
+            await Promise.all([this.fetchUserGroupSearch(), this.fetchDepartSearch()]);
           }
         };
         this.curEmptyData = _.cloneDeep(emptyData);
-        this.tabKey = +new Date();
         typeMap[this.active] ? typeMap[this.active]() : typeMap['GroupPerm']();
+      },
+
+      // 处理只输入纯文本，不生成tag情况
+      handleInputValue (payload) {
+        this.curEmptyData.tipType = payload ? 'search' : '';
+        if (payload) {
+          this.curSearchParams.name = payload;
+          const typeMap = {
+            GroupPerm: async () => {
+              this.personalGroupList = [];
+              await this.fetchUserGroupSearch();
+            },
+            DepartmentGroupPerm: async () => {
+              this.departmentGroupList = [];
+              await this.fetchDepartSearch();
+            },
+            CustomPerm: async () => {
+              this.systemList = [];
+              await this.fetchPolicySearch();
+            }
+          };
+          typeMap[this.active] ? typeMap[this.active]() : typeMap['GroupPerm']();
+        }
       },
 
       async handleRefreshTable () {
         this.curEmptyData.tipType = '';
+        this.isSearchPerm = false;
         this.curSearchParams = {};
+        // 重置搜索参数需要去掉tab上的数量
+        this.tabKey = +new Date();
         this.fetchData();
       },
 
       async handleTabChange (tabName) {
         this.active = tabName;
+        // 如果active是同一项目
         const searchParams = {
           ...this.$route.query,
           tab: tabName
         };
-        this.$nextTick(() => {
-          this.$refs.tabRef
-            && this.$refs.tabRef.$refs.tabLabel
-            && this.$refs.tabRef.$refs.tabLabel.forEach(label => label.$forceUpdate());
-        });
         window.history.replaceState({}, '', `?${buildURLParams(searchParams)}`);
       },
 
@@ -583,11 +624,13 @@
       },
       
       handleEmptyRefresh () {
+        this.isSearchPerm = false;
         // 调用子组件的刷新方法
         this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyClear();
       },
 
       handleEmptyClear () {
+        this.isSearchPerm = false;
         // 调用子组件的刷新方法
         this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyClear();
       }

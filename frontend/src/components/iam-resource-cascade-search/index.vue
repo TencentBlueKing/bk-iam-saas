@@ -292,17 +292,7 @@
           {
             id: 'description',
             name: this.$t(`m.common['描述']`),
-            disabled: true
-          },
-          {
-            id: 'system_id',
-            name: this.$t(`m.common['系统包含']`),
-            remoteMethod: this.handleRemoteSystem
-          },
-          {
-            id: 'role_id',
-            name: this.$t(`m.grading['管理空间']`),
-            remoteMethod: this.handleGradeAdmin
+            default: true
           }
         ],
         curResourceData: {
@@ -451,14 +441,12 @@
               return;
             }
           }
-          this.isSearchSystem = true;
           if (isClick) {
             this.resetPagination();
           }
           await this.fetchSearchUserGroup(resourceInstances);
         } else {
           // 如果没有搜索参数，重置数据
-          this.isSearchSystem = false;
           this.emptyData.tipType = '';
           this.$emit('on-refresh-table');
         }
@@ -700,6 +688,15 @@
             if (!this.curInputText) {
               delete this.searchParams.name;
             }
+            this.$nextTick(() => {
+              const localValue = this.$refs.searchSelectRef.$refs.searchSelect.localValue;
+              this.searchParams.name = localValue;
+              if (!localValue) {
+                delete this.searchParams.name;
+              }
+              // 处理切换tab，只输入内容
+              this.$emit('on-input-value', this.searchParams.name);
+            });
           }
         }
       },
@@ -822,7 +819,6 @@
         this.actionError = false;
         this.resourceTypeError = false;
         this.resourceInstanceError = false;
-        this.isSearchSystem = false;
         this.resourceInstances = [];
         this.resetLocationHref();
       }

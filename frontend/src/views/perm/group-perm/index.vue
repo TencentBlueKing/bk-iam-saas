@@ -144,6 +144,10 @@
       },
       curSearchParams: {
         type: Object
+      },
+      isSearchPerm: {
+        type: Boolean,
+        default: false
       }
     },
     data () {
@@ -269,7 +273,7 @@
           let url = '';
           let params = {};
           const { current, limit } = this.pageConf;
-          if (this.emptyData.tipType === 'search') {
+          if (this.isSearchPerm) {
             url = 'perm/getUserGroupSearch';
             params = {
               ...this.curSearchParams,
@@ -304,7 +308,9 @@
           });
         } finally {
           this.isLoading = false;
-          bus.$emit('on-perm-tab-count', { active: 'GroupPerm', count: this.pageConf.count });
+          if (this.emptyData.tipType === 'search') {
+            bus.$emit('on-perm-tab-count', { active: 'GroupPerm', count: this.pageConf.count });
+          }
         }
         // if (!page) {
         //     this.pageConf.current = page = 1;

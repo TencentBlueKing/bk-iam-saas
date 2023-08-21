@@ -154,5 +154,8 @@
     .bk-exception-img {
       width: 0 !important;
     }
+    .bk-exception-text {
+      display: none;
+    }
 }
 </style>

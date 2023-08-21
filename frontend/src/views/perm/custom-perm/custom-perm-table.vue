@@ -288,9 +288,9 @@
         type: String,
         default: ''
       },
-      searchType: {
-        type: String,
-        default: ''
+      isSearchPerm: {
+        type: Boolean,
+        default: false
       },
       emptyData: {
         type: Object,
@@ -450,7 +450,7 @@
         try {
           let url = '';
           let queryParams = {};
-          if (['search'].includes(this.searchType)) {
+          if (this.isSearchPerm) {
             url = 'perm/getPoliciesSearch';
             queryParams = {
               ...this.searchParams
@@ -481,7 +481,9 @@
           });
         } finally {
           this.initRequestQueue.shift();
-          bus.$emit('on-perm-tab-count', { active: 'CustomPerm', count: this.policyList.length || 0 });
+          if (this.isSearchPerm) {
+            bus.$emit('on-perm-tab-count', { active: 'CustomPerm', count: this.policyList.length || 0 });
+          }
         }
       },
 

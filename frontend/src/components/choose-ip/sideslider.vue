@@ -630,6 +630,7 @@
                 line-height: 20px;
             }
             .empty-wrapper {
+                width: 300px;
                 position: absolute;
                 left: 50%;
                 top: 50%;
