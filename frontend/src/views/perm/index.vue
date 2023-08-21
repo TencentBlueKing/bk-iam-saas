@@ -496,7 +496,6 @@
             await Promise.all([this.fetchUserGroupSearch(), this.fetchPolicySearch()]);
           },
           CustomPerm: async () => {
-            this.systemList = [];
             this.emptyCustomData = _.cloneDeep(emptyData);
             await Promise.all([this.fetchUserGroupSearch(), this.fetchDepartSearch()]);
           }
