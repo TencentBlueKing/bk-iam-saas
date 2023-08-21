@@ -135,7 +135,7 @@
         const noValue = !this.curSearchParams.id && !this.curSearchParams.name && !this.curSearchParams.description;
         // 筛选搜索的系统id
         const curSystemList
-          = this.systemPolicyList.filter(item => item.id === this.curSearchParams.system_id && noValue);
+          = this.systemList.filter(item => item.id === this.curSearchParams.system_id && noValue);
         this.formatSystemData(curSystemList || []);
       },
 
