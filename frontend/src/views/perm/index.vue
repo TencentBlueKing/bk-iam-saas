@@ -488,20 +488,17 @@
           GroupPerm: async () => {
             this.personalGroupList = [];
             this.emptyData = _.cloneDeep(emptyData);
-            await this.fetchDepartSearch();
-            await this.fetchPolicySearch();
+            await Promise.all([this.fetchDepartSearch(), this.fetchPolicySearch()]);
           },
           DepartmentGroupPerm: async () => {
             this.departmentGroupList = [];
             this.emptyDepartmentGroupData = _.cloneDeep(emptyData);
-            await this.fetchUserGroupSearch();
-            await this.fetchPolicySearch();
+            await Promise.all([this.fetchUserGroupSearch(), this.fetchPolicySearch()]);
           },
           CustomPerm: async () => {
             this.systemList = [];
             this.emptyCustomData = _.cloneDeep(emptyData);
-            await this.fetchUserGroupSearch();
-            await this.fetchDepartSearch();
+            await Promise.all([this.fetchUserGroupSearch(), this.fetchDepartSearch()]);
           }
         };
         this.curEmptyData = _.cloneDeep(emptyData);
