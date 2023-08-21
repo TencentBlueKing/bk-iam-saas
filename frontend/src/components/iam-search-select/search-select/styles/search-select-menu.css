@@ -2,7 +2,6 @@
 
 .iam-bk-search-list {
     position: relative;
-    
     min-width: 230px;
     padding: 6px 0;
     margin: -0.3rem -0.6rem;
@@ -187,5 +186,6 @@
     &.bk-search-select-theme-theme {
         box-shadow: 0 3px 9px 0 rgba(0, 0, 0, .1);
         border-radius: 2px;
+        left: -6px;
     }
 }

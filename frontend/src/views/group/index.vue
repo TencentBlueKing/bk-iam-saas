@@ -387,16 +387,17 @@
       this.curRole = this.user.role.type || 'staff';
       this.searchData = [
         {
+          id: 'name',
+          name: this.$t(`m.userGroup['用户组名']`),
+          default: true
+        },
+        {
           id: 'id',
-          name: 'ID'
+          name: 'ID',
           // validate (values, item) {
           //     const validate = (values || []).every(_ => /^(\d*)$/.test(_.name))
           //     return !validate ? '' : true
           // }
-        },
-        {
-          id: 'name',
-          name: this.$t(`m.userGroup['用户组名']`),
           default: true
         },
         {
