@@ -144,6 +144,10 @@
       },
       curSearchParams: {
         type: Object
+      },
+      isSearchPerm: {
+        type: Boolean,
+        default: false
       }
     },
     data () {
@@ -269,7 +273,7 @@
           let url = '';
           let params = {};
           const { current, limit } = this.pageConf;
-          if (this.emptyData.tipType === 'search') {
+          if (this.isSearchPerm) {
             url = 'perm/getUserGroupSearch';
             params = {
               ...this.curSearchParams,

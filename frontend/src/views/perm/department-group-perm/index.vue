@@ -137,6 +137,10 @@
       },
       curSearchParams: {
         type: Object
+      },
+      isSearchPerm: {
+        type: Boolean,
+        default: false
       }
     },
     data () {
@@ -177,7 +181,7 @@
     watch: {
       departmentGroupList: {
         handler (v) {
-          if (this.emptyData.tipType === 'search') {
+          if (this.isSearchPerm) {
             this.fetchDepartSearch();
           } else {
             if (v.length) {

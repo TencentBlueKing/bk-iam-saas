@@ -20,7 +20,7 @@
           :system-id="sys.id"
           :cur-search-params="curSearchParams"
           :empty-data="emptyPolicyData"
-          :search-type="searchType"
+          :is-search-perm="isSearchPerm"
           @after-delete="handleAfterDelete(...arguments, sysIndex)" />
       </custom-perm-system-policy>
     </template>
@@ -79,6 +79,10 @@
             limit: 10
           };
         }
+      },
+      isSearchPerm: {
+        type: Boolean,
+        default: false
       }
     },
     data () {
@@ -90,8 +94,7 @@
           text: '暂无数据',
           tip: '',
           tipType: ''
-        },
-        searchType: ''
+        }
       };
     },
     computed: {
@@ -110,7 +113,6 @@
       },
       emptyData: {
         handler (value) {
-          this.searchType = value.tipType;
           this.emptyPolicyData = Object.assign({}, value);
         },
         immediate: true

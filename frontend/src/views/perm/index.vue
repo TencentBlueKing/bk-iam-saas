@@ -122,6 +122,7 @@
                 :empty-data="curEmptyData"
                 :cur-search-params="curSearchParams"
                 :cur-search-pagination="curSearchPagination"
+                :is-search-perm="isSearchPerm"
                 @refresh="fetchData"
                 @on-clear="handleEmptyClear"
                 @on-refresh="handleEmptyRefresh"
@@ -216,6 +217,7 @@
         CUR_LANGUAGE: window.CUR_LANGUAGE,
         isShowConfirmDialog: false,
         confirmDialogTitle: this.$t(`m.verify['admin无需申请权限']`),
+        isSearchPerm: false,
         actionIdError: false,
         searchTypeError: false,
         resourceTypeError: false,
@@ -407,6 +409,7 @@
         } catch (e) {
           console.error(e);
           const { code, data, message, statusText } = e;
+          this.personalGroupList = [];
           this.emptyData = formatCodeData(code, this.emptyData);
           this.bkMessageInstance = this.$bkMessage({
             limit: 1,
@@ -437,6 +440,7 @@
         } catch (e) {
           const { code, data, message, statusText } = e;
           this.emptyDepartmentGroupData = formatCodeData(code, this.emptyDepartmentGroupData);
+          this.departmentGroupList = [];
           this.bkMessageInstance = this.$bkMessage({
             limit: 1,
             theme: 'error',
@@ -456,11 +460,11 @@
           try {
             const { code, data } = await this.$store.dispatch('perm/getPoliciesSearch', this.curSearchParams);
             this.$set(this.panels[customIndex], 'count', data.length || 0);
-            this.systemList = data || [];
             this.emptyCustomData = formatCodeData(code, this.emptyCustomData, data.length === 0);
           } catch (e) {
             console.error(e);
             this.emptyCustomData = formatCodeData(e.code, this.emptyCustomData);
+            this.systemList = [];
             this.bkMessageInstance = this.$bkMessage({
               limit: 1,
               theme: 'error',
@@ -478,6 +482,7 @@
         const { emptyData, pagination, searchParams } = payload;
         this.curSearchParams = _.cloneDeep(searchParams);
         this.curSearchPagination = _.cloneDeep(pagination);
+        this.isSearchPerm = emptyData.tipType === 'search';
         // 这里需要拿到所有tab项的total，所以需要调所有接口, 且需要在当前页动态加载tab的label
         const typeMap = {
           GroupPerm: async () => {
@@ -528,6 +533,7 @@
 
       async handleRefreshTable () {
         this.curEmptyData.tipType = '';
+        this.isSearchPerm = false;
         this.curSearchParams = {};
         // 重置搜索参数需要去掉tab上的数量
         this.tabKey = +new Date();
@@ -621,11 +627,13 @@
       },
       
       handleEmptyRefresh () {
+        this.isSearchPerm = false;
         // 调用子组件的刷新方法
         this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyClear();
       },
 
       handleEmptyClear () {
+        this.isSearchPerm = false;
         // 调用子组件的刷新方法
         this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyClear();
       }
