@@ -99,7 +99,7 @@ class BaseSystemHiddenModel(models.Model):
     """
 
     source_system_id = models.CharField(max_length=32, default="")
-    hidden = models.BooleanField(default=False)
+    hidden = models.BooleanField(default=False, db_index=True)
 
     class Meta:
         abstract = True

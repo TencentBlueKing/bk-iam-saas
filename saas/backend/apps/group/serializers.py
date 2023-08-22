@@ -21,7 +21,7 @@ from backend.apps.application.base_serializers import BaseAggActionListSLZ, vali
 from backend.apps.application.serializers import ExpiredAtSLZ, SystemInfoSLZ
 from backend.apps.group.models import Group
 from backend.apps.policy.serializers import BasePolicyActionSLZ, ResourceTypeSLZ
-from backend.apps.role.models import Role, RoleRelatedObject, RoleRelation, RoleUser
+from backend.apps.role.models import Role, RoleRelatedObject, RoleRelation
 from backend.apps.role.serializers import ResourceInstancesSLZ
 from backend.apps.template.models import PermTemplatePolicyAuthorized
 from backend.biz.group import GroupBiz
@@ -106,10 +106,10 @@ class GroupSLZ(serializers.ModelSerializer):
         if not self.group_role_dict:
             return []
         role = self.group_role_dict.get(obj.id)
-        if not role:
+        if not role or not role.members:
             return []
 
-        return list(RoleUser.objects.filter(role_id=role.id).values_list("username", flat=True))
+        return role.members
 
 
 class MemberSLZ(serializers.Serializer):
