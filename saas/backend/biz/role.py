@@ -653,6 +653,9 @@ class RoleListQuery:
         """
         查询用户组列表
         """
+        if self.role.type == RoleType.STAFF.value:
+            return Group.objects.filter(hidden=False)
+
         group_ids = self._get_role_related_object_ids(RoleRelatedObjectType.GROUP.value, inherit=inherit)
         return Group.objects.filter(id__in=group_ids)
 
