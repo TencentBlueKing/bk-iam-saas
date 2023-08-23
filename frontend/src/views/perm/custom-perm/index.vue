@@ -68,7 +68,8 @@
         }
       },
       curSearchParams: {
-        type: Object
+        type: Object,
+        default: () => {}
       },
       curSearchPagination: {
         type: Object,
@@ -114,19 +115,12 @@
       emptyData: {
         handler (value) {
           this.emptyPolicyData = Object.assign({}, value);
-        },
-        immediate: true
-      },
-      curSearchParams: {
-        handler (value) {
-          if (Object.keys(value).length) {
+          if (this.isSearchPerm || ['search'].includes(value.tipType)) {
             this.fetchSystemSearch();
           }
         },
         immediate: true
       }
-    },
-    created () {
     },
     methods: {
       // 搜索自定义权限

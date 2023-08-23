@@ -523,9 +523,7 @@
         if (this.readonly) {
           return;
         }
-
         this.focused = true;
-
         this.$refs.textarea.focus();
         this.showPopper();
         this.$emit('focus');
@@ -715,6 +713,7 @@
             return;
           }
           this.keySubmit(event);
+          this.handleInputFocus();
         }
       },
 

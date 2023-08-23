@@ -691,6 +691,7 @@
           }
         }
       }
+      this.fetchDefaultData();
     },
     mounted () {
       window.addEventListener('resize', (this.formatFormItemWidth));
@@ -705,7 +706,7 @@
       /**
        * 获取页面数据
        */
-      async fetchPageData () {
+      async fetchDefaultData () {
         this.fetchSystemList();
         await this.fetchCurUserGroup();
         await this.fetchUserGroupList();

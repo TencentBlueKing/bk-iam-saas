@@ -12,7 +12,7 @@
           {{ $t(`m.common['批量移除']`) }}
         </bk-button>
         <div>
-          <bk-dropdown-menu
+          <!-- <bk-dropdown-menu
             ref="dropdown"
             :disabled="readOnly"
             @show="handleDropdownShow"
@@ -50,7 +50,29 @@
                 </a>
               </li>
             </ul>
-          </bk-dropdown-menu>
+          </bk-dropdown-menu> -->
+          <bk-cascade
+            ref="copyCascade"
+            v-model="copyValue"
+            :list="COPY_KEYS_ENUM"
+            :clearable="false"
+            :ext-popover-cls="[
+              'copy-user-group-cls',
+              { 'copy-user-group-cls-lang': !curLanguageIsCn }
+            ]"
+            :disabled="readOnly"
+            :placeholder="$t(`m.verify['请选择用户组成员复制']`)"
+            :style="{ width: curLanguageIsCn ? '220px' : '320px' }"
+          >
+            <template slot="option" slot-scope="{ node }">
+              <div
+                @click="handleTriggerCopy(...arguments, node)"
+              >
+                <span class="mr5" v-if="node.children"></span>
+                <span>{{ node.name }}</span>
+              </div>
+            </template>
+          </bk-cascade>
         </div>
       </div>
       <div slot="right">
@@ -183,7 +205,7 @@
   import _ from 'lodash';
   import ClipboardJS from 'clipboard';
   import { mapGetters } from 'vuex';
-  import { PERMANENT_TIMESTAMP } from '@/common/constants';
+  import { PERMANENT_TIMESTAMP, COPY_KEYS_ENUM } from '@/common/constants';
   import { formatCodeData } from '@/common/util';
   import renderRenewalDialog from '@/components/render-renewal-dialog';
   import DeleteDialog from '../common/iam-confirm-dialog';
@@ -252,7 +274,10 @@
         adminGroupTitle: '',
         keyword: '',
         enableOrganizationCount: window.ENABLE_ORGANIZATION_COUNT.toLowerCase() === 'true',
-        isDropdownShow: false
+        isDropdownShow: false,
+        copyValue: [],
+        curCopyCascade: {},
+        COPY_KEYS_ENUM
       };
     },
     computed: {
@@ -279,14 +304,14 @@
               return this.getGroupAttributes && this.getGroupAttributes().source_from_role
               && this.pagination.count === 1;
           };
-      },
-      formatCopyMembers () {
-        return this.currentSelectList.length
-        ? this.currentSelectList.map(v => v.type === 'user'
-         ? v.id
-         : (this.enableOrganizationCount ? `{${v.id}}${v.name}&full_name=${v.full_name}&count=${v.member_count}*`
-         : `{${v.id}}${v.name}&full_name=${v.full_name}*`)).join('\n') : '';
       }
+    // formatCopyMembers () {
+    //   return this.currentSelectList.length
+    //   ? this.currentSelectList.map(v => v.type === 'user'
+    //    ? v.id
+    //    : (this.enableOrganizationCount ? `{${v.id}}${v.name}&full_name=${v.full_name}&count=${v.member_count}*`
+    //    : `{${v.id}}${v.name}&full_name=${v.full_name}*`)).join('\n') : '';
+    // }
     },
     watch: {
       'pagination.current' (value) {
@@ -370,63 +395,127 @@
       },
 
       async handleTriggerCopy (event, payload) {
+        if (payload.children) {
+          this.curCopyCascade = Object.assign({}, payload);
+        }
         // 需先保存currentTarget，因为此方法为异步方法，同步代码执行完成后，浏览器会将event事件对象的currentTarget值重置为空
         const currentTarget = event.currentTarget;
         const typeMap = {
-          selected: () => {
-            if (!this.currentSelectList.length) {
-              this.messageError(this.$t(`m.verify['请选择用户或组织成员']`), 2000);
-              return;
+          'copy-checked': () => {
+            const childItem = this.curCopyCascade.children.find(item => item.id === payload.id);
+            if (childItem) {
+              if (!this.currentSelectList.length) {
+                this.messageError(this.$t(`m.verify['请选择用户或组织成员']`), 3000);
+                this.handleResetCascade();
+              } else {
+                const childTypeMap = {
+                  user: () => {
+                    const copyUserList = this.currentSelectList.filter(item => item.type === 'user');
+                    if (!copyUserList.length) {
+                      this.messageError(this.$t(`m.verify['请选择用户']`), 3000);
+                      this.handleResetCascade();
+                      return;
+                    }
+                    const copyValue = copyUserList.map(v =>
+                      `{${v.id}}${v.name}&full_name=${v.user_departments && v.user_departments.length ? v.user_departments : ''}&type=${v.type}*`)
+                      .join('\n');
+                    this.formatCopyValue(copyValue, event, currentTarget);
+                  },
+                  userAndOrg: () => {
+                    const copyValue = this.currentSelectList.map(v => v.type === 'user'
+                      ? `{${v.id}}${v.name}&full_name=${v.user_departments && v.user_departments.length ? v.user_departments : ''}&type=${v.type}*`
+                      : (this.enableOrganizationCount
+                        ? `{${v.id}}${v.name}&full_name=${v.full_name}&count=${v.member_count}&type=${v.type}*`
+                        : `{${v.id}}${v.name}&full_name=${v.full_name}&type=${v.type}*`
+                      ))
+                      .join('\n');
+                    this.formatCopyValue(copyValue, event, currentTarget);
+                  }
+                };
+                return childTypeMap[childItem.id]();
+              }
             }
-            const clipboard = new ClipboardJS('.copy-selected-members');
-            clipboard.on('success', () => {
-              this.messageSuccess(this.$t(`m.info['已经复制到粘贴板，可在其他用户组添加成员时粘贴到手动输入框']`), 2000, 2);
-              // 调用后销毁，避免多次执行
-              if (clipboard) {
-                clipboard.destroy();
-              }
-            });
-            clipboard.on('error', (e) => {
-              console.error('复制失败', e);
-            });
           },
-          all: async () => {
-            const params = {
-              id: this.id,
-              offset: 0,
-              limit: 1000
-            };
-            const { data } = await this.$store.dispatch('userGroup/getUserGroupMemberList', params);
-            if (data && data.results) {
-              if (!data.results.length) {
-                this.messageError(this.$t(`m.common['暂无可复制内容']`), 2000);
-                return;
-              }
-              const clipboard = new ClipboardJS(event.target, {
-                text: () => data.results.map(v => v.type === 'user'
-                  ? v.id
-                  : (this.enableOrganizationCount
-                    ? `{${v.id}}${v.name}&full_name=${v.full_name}&count=${v.member_count}*`
-                    : `{${v.id}}${v.name}&full_name=${v.full_name}*`
-                  ))
-                  .join('\n')
-              });
-              clipboard.on('success', () => {
-                this.messageSuccess(this.$t(`m.info['已经复制到粘贴板，可在其他用户组添加成员时粘贴到手动输入框']`), 2000, 2);
-              });
-              clipboard.on('error', (e) => {
-                console.error('复制失败', e);
-              });
-              clipboard.onClick({ currentTarget });
-              // 调用后销毁，避免多次执行
-              if (clipboard) {
-                clipboard.destroy();
-              }
+          'copy-all': async () => {
+            const childItem = this.curCopyCascade.children.find(item => item.id === payload.id);
+            if (childItem) {
+              const params = {
+                id: this.id,
+                offset: 0,
+                limit: 1000
+              };
+              const childTypeMap = {
+                user: async () => {
+                  const { data } = await this.$store.dispatch('userGroup/getUserGroupMemberList', params);
+                  if (data && data.results && data.results.length) {
+                    const copyUserList = data.results.filter(item => item.type === 'user');
+                    if (!copyUserList.length) {
+                      this.messageError(this.$t(`m.verify['暂无可复制用户']`), 3000);
+                      this.handleResetCascade();
+                    } else {
+                      const copyValue = copyUserList.map(v =>
+                        `{${v.id}}${v.name}&full_name=${v.user_departments && v.user_departments.length ? v.user_departments : ''}&type=${v.type}*`)
+                        .join('\n');
+                      this.formatCopyValue(copyValue, event, currentTarget);
+                    }
+                  } else {
+                    this.messageError(this.$t(`m.common['暂无可复制内容']`), 3000);
+                    this.handleResetCascade();
+                  }
+                },
+                userAndOrg: async () => {
+                  const { data } = await this.$store.dispatch('userGroup/getUserGroupMemberList', params);
+                  if (data && data.results && data.results.length) {
+                    const copyValue = data.results.map(v => v.type === 'user'
+                      ? `{${v.id}}${v.name}&full_name=${v.user_departments && v.user_departments.length ? v.user_departments : ''}&type=${v.type}*`
+                      : (this.enableOrganizationCount
+                        ? `{${v.id}}${v.name}&full_name=${v.full_name}&count=${v.member_count}&type=${v.type}*`
+                        : `{${v.id}}${v.name}&full_name=${v.full_name}&type=${v.type}*`
+                      ))
+                      .join('\n');
+                    this.formatCopyValue(copyValue, event, currentTarget);
+                  } else {
+                    this.messageError(this.$t(`m.common['暂无可复制内容']`), 3000);
+                    this.handleResetCascade();
+                  }
+                }
+              };
+              return childTypeMap[childItem.id]();
             }
           }
         };
-        typeMap[payload]();
-        this.$refs.dropdown.hide();
+        if (this.curCopyCascade.id) {
+          typeMap[this.curCopyCascade.id]();
+        }
+        // this.$refs.dropdown.hide();
+      },
+
+      // 处理不同操作的复制
+      formatCopyValue (payload, event, currentTarget) {
+        const clipboard = new ClipboardJS(event.target, {
+          text: () => payload
+        });
+        clipboard.on('success', () => {
+          this.messageSuccess(this.$t(`m.info['已经复制到粘贴板，可在其他用户组添加成员时粘贴到手动输入框']`), 3000, 2);
+        });
+        clipboard.on('error', (e) => {
+          console.error('复制失败', e);
+        });
+        clipboard.onClick({ currentTarget });
+        // 调用后销毁，避免多次执行
+        if (clipboard) {
+          clipboard.destroy();
+        }
+      },
+
+      // 重置级联数据
+      handleResetCascade () {
+        this.$nextTick(() => {
+          this.copyValue = [];
+          if (this.$refs.copyCascade) {
+            this.$refs.copyCascade.value = [];
+          }
+        });
       },
 
       async handleEmptyClear () {
@@ -638,37 +727,54 @@
   };
 </script>
 <style lang="postcss">
-    .iam-user-group-member {
-        .user-group-member-table {
-            margin-top: 16px;
-            border: none;
-            tr:hover {
-                .user,
-                .depart {
-                    background: #fff;
-                }
-            }
-            .user,
-            .depart {
-                padding: 4px 6px;
-                background: #f0f1f5;
-                width: max-content;
-                border-radius: 2px;
-                i {
-                    font-size: 14px;
-                    color: #c4c6cc;
-                }
-                .name {
-                    display: inline-block;
-                    max-width: 350px;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    white-space: nowrap;
-                    vertical-align: bottom;
-                }
-            }
-        }
+  .iam-user-group-member {
+      .user-group-member-table {
+          margin-top: 16px;
+          border: none;
+          tr:hover {
+              .user,
+              .depart {
+                  background: #fff;
+              }
+          }
+          .user,
+          .depart {
+              padding: 4px 6px;
+              background: #f0f1f5;
+              width: max-content;
+              border-radius: 2px;
+              i {
+                  font-size: 14px;
+                  color: #c4c6cc;
+              }
+              .name {
+                  display: inline-block;
+                  max-width: 350px;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  white-space: nowrap;
+                  vertical-align: bottom;
+              }
+          }
+      }
+  }
+  .copy-user-group-cls {
+    width: auto !important;
+    .bk-cascade-panel-ul {
+      width: 120px !important;
     }
+    .bk-cascade-options {
+      height: 70px !important;
+    }
+    &-lang {
+      .bk-cascade-panel-ul {
+        width: 182px !important;
+      }
+      .bk-cascade-border  {
+        width: 140px !important;
+      }
+    }
+  }
 </style>
 
 <style lang="postcss" scoped>
@@ -713,5 +819,9 @@
     .bk-icon {
       font-size: 22px;
     }
+}
+
+/deep/ .bk-cascade {
+  font-size: 14px;
 }
 </style>

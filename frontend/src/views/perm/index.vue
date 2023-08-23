@@ -480,27 +480,29 @@
 
       async handleRemoteTable (payload) {
         const { emptyData, pagination, searchParams } = payload;
+        this.isSearchPerm = emptyData.tipType === 'search';
         this.curSearchParams = _.cloneDeep(searchParams);
         this.curSearchPagination = _.cloneDeep(pagination);
-        this.isSearchPerm = emptyData.tipType === 'search';
         // 这里需要拿到所有tab项的total，所以需要调所有接口, 且需要在当前页动态加载tab的label
         const typeMap = {
           GroupPerm: async () => {
             this.personalGroupList = [];
             this.emptyData = _.cloneDeep(emptyData);
             await Promise.all([this.fetchDepartSearch(), this.fetchPolicySearch()]);
+            this.curEmptyData = Object.assign({}, this.emptyData);
           },
           DepartmentGroupPerm: async () => {
             this.departmentGroupList = [];
             this.emptyDepartmentGroupData = _.cloneDeep(emptyData);
             await Promise.all([this.fetchUserGroupSearch(), this.fetchPolicySearch()]);
+            this.curEmptyData = Object.assign({}, this.emptyDepartmentGroupData);
           },
           CustomPerm: async () => {
             this.emptyCustomData = _.cloneDeep(emptyData);
             await Promise.all([this.fetchUserGroupSearch(), this.fetchDepartSearch()]);
+            this.curEmptyData = Object.assign({}, this.emptyCustomData);
           }
         };
-        this.curEmptyData = _.cloneDeep(emptyData);
         typeMap[this.active] ? typeMap[this.active]() : typeMap['GroupPerm']();
       },
 

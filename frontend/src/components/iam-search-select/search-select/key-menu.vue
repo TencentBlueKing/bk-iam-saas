@@ -9,14 +9,15 @@
       return {
         condition: {},
         list: [],
-        activeIndex: -1
+        activeIndex: 0
       };
     },
         
     computed: {
       needRender () {
         // 没有选中key，且输入框中没有输入值
-        if (!this.searchSelect.menu.id && this.searchSelect.localValue === '') {
+        const { menu, localValue } = this.searchSelect;
+        if (!menu.id && !localValue) {
           return true;
         }
         return false;

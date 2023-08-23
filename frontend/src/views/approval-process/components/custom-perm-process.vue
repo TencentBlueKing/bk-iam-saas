@@ -250,7 +250,9 @@
             if (this.cacheSystemId) {
               this.searchValue = [this.cacheSystemId];
             } else {
-              this.searchValue = [this.systemList[0].id];
+              if (this.systemList.length) {
+                this.searchValue = [this.systemList[0].id];
+              }
             }
             this.fetchActionProcessesList();
           });
@@ -269,6 +271,10 @@
       },
 
       async fetchActionProcessesList () {
+        if (!this.searchValue.length) {
+          this.requestQueue.shift();
+          return;
+        }
         this.setCurrentQueryCache(this.refreshCurrentQuery());
         const systemId = this.searchValue[0];
         let actionGroupId = '';
