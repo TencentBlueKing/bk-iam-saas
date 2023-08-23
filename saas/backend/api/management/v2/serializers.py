@@ -215,6 +215,26 @@ class ManagementGroupIDsSLZ(serializers.Serializer):
 
 class ManagementGroupApplicationCreateSLZ(ManagementGroupIDsSLZ, ExpiredAtSLZ, ReasonSLZ):
     applicant = serializers.CharField(label="申请者的用户名", max_length=32)
+    content_template = serializers.DictField(label="审批单内容模板", required=False, allow_empty=True, default=dict)
+    group_content = serializers.DictField(label="审批单内容", required=False, allow_empty=True, default=dict)
+    title_prefix = serializers.CharField(label="审批单标题前缀", required=False, allow_blank=True, default="")
+
+    def validate(self, data):
+        if data["content_template"] and data["group_content"]:
+            if "schemes" not in data["content_template"] or "form_data" not in data["content_template"]:
+                raise serializers.ValidationError({"content_template": ["content_template中必须包含schemes和form_data"]})
+            if (
+                not isinstance(data["content_template"]["form_data"], list)
+                or len(data["content_template"]["form_data"]) != 0
+            ):
+                raise serializers.ValidationError({"content_template": ["content_template中必须包含form_data且为空数组"]})
+
+            if set(map(data["group_ids"], str)) != set(data["group_content"].keys()):
+                raise serializers.ValidationError({"group_content": ["group_content中的key必须与group_ids一致"]})
+        else:
+            data["content_template"] = None
+            data["group_content"] = None
+        return data
 
 
 class ManagementApplicationIDSLZ(serializers.Serializer):
