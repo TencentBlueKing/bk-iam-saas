@@ -663,7 +663,13 @@ class ApplicationBiz:
         return GroupApplicationContent(groups=group_infos, applicants=applicants)
 
     def create_for_group(
-        self, application_type: ApplicationType, data: GroupApplicationDataBean, source_system_id: str = ""
+        self,
+        application_type: ApplicationType,
+        data: GroupApplicationDataBean,
+        source_system_id: str = "",
+        content_template: Optional[Dict[str, Any]] = None,
+        group_content: Optional[Dict[str, Any]] = None,
+        title_prefix: str = "",
     ) -> List[Application]:
         """申请加入用户组"""
         # 1. 查询申请者信息
@@ -695,12 +701,27 @@ class ApplicationBiz:
                     [g for g in data.groups if g.id in group_ids], data.applicants
                 ),
             )
-            new_data_list.append((application_data, process))
+
+            # 组装外部传入的itsm单据数据
+            content: Optional[Dict[str, Any]] = None
+            if content_template and group_content:
+                content = {
+                    "schemes": content_template["schemes"],
+                    "form_data": [group_content[str(_id)] for _id in group_ids],
+                }
+
+            new_data_list.append((application_data, process, content))
 
         # 7. 循环创建申请单
         applications = []
-        for _data, _process in new_data_list:
-            application = self.svc.create_for_group(_data, _process, source_system_id=source_system_id)
+        for _data, _process, _content in new_data_list:
+            application = self.svc.create_for_group(
+                _data,
+                _process,
+                source_system_id=source_system_id,
+                approval_content=_content,
+                approval_title_prefix=title_prefix,
+            )
             applications.append(application)
 
         return applications
