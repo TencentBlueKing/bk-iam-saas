@@ -11,7 +11,6 @@ specific language governing permissions and limitations under the License.
 from rest_framework import serializers
 
 from backend.apps.group.models import Group
-from backend.apps.role.models import RoleUser
 from backend.apps.role.serializers import ResourceInstancesSLZ
 from backend.apps.subject.serializers import SubjectGroupSLZ
 from backend.biz.group import GroupBiz
@@ -69,10 +68,10 @@ class GroupSLZ(SubjectGroupSLZ):
         if not self.group_role_dict:
             return []
         role = self.group_role_dict.get(obj.id)
-        if not role:
+        if not role or not role.members:
             return []
 
-        return list(RoleUser.objects.filter(role_id=role.id).values_list("username", flat=True))
+        return role.members
 
 
 class QueryRoleSLZ(serializers.Serializer):

@@ -204,6 +204,7 @@ class ScopeSubject(models.Model):
     class Meta:
         verbose_name = "subject限制"
         verbose_name_plural = "subject限制"
+        index_together = [("subject_id", "subject_type", "role_id")]
 
 
 class RoleRelatedObject(BaseModel):
