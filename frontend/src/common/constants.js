@@ -146,6 +146,7 @@ export const USER_GROUP_PROPERTIES = [
   }
 ];
 
+// 用户组成员复制属性枚举
 export const COPY_KEYS_ENUM = [
   {
     id: 'copy-checked',
