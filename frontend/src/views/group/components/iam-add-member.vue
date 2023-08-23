@@ -401,6 +401,7 @@
         manualInputError: false,
         manualValueBackup: [],
         manualOrgList: [],
+        manualUserList: [],
         filterUserList: [],
         filterDepartList: [],
         usernameList: [],
@@ -627,14 +628,19 @@
 
       handleManualInput (value) {
         this.manualOrgList = [];
+        this.manualUserList = [];
         if (value) {
           const inputValue = value.split()[0];
           if (inputValue.indexOf('{') > -1 && inputValue.indexOf('}') > -1) {
             const splitValue = value.split(/\n/).map(item => {
               const str = item.slice(item.indexOf('{') + 1, item.indexOf('}'));
-              if (item.indexOf('{') > -1 && item.indexOf('}') > -1 && /^[+-]?\d*(\.\d*)?(e[+-]?\d+)?$/.test(str)) {
+              if (item.indexOf('{') > -1 && item.indexOf('}') > -1 && /^[+-]?\d*(\.\d*)?(e[+-]?\d+)?$/.test(str) && item.includes('type=department')) {
                 this.manualOrgList.push(item);
                 item = item.substring(item.indexOf('{'), item.indexOf('&') > -1 ? item.indexOf('&') : item.length);
+              }
+              if (item.indexOf('{') > -1 && item.indexOf('}') > -1 && item.includes('type=user')) {
+                this.manualUserList.push(item);
+                item = item.substring(item.indexOf('{') + 1, item.indexOf('}'));
               }
               return item;
             });
@@ -697,7 +703,13 @@
               // formatStr = formatStr.replace(this.evil('/' + item + '(;\\n|\\s\\n|)/g'), '');
 
               // 处理既有部门又有用户且不连续相同类型的展示数据
-              formatStr = formatStr.replace(this.evil('/' + item + '(;\\n|\\s\\n|)/'), '').replace('\n\n', '\n').replace('\s\s', '\s').replace(';;', '');
+              formatStr = formatStr
+                .replace(this.evil('/' + item + '(;\\n|\\s\\n|)/'), '')
+                .replace('\n\n', '\n')
+                .replace('\s\s', '\s')
+                .replace(';;', '');
+              // 处理复制全部用户不相连的两个不在授权范围内的用户存在空字符
+              formatStr = formatStr.split(/;|\n|\s/).filter(item => item !== '').join('\n');
             });
             // 处理只选择全部符合条件的用户，还存在特殊符号的情况
             if (formatStr === '\n' || formatStr === '\s' || formatStr === ';') {
@@ -743,7 +755,7 @@
               return {
                 id: Number(item.slice(item.indexOf('{') + 1, item.indexOf('}'))),
                 name: item.slice(item.indexOf('}') + 1, item.indexOf('&') > -1 ? item.indexOf('&') : item.length),
-                count: item.slice(item.indexOf('&count=') + 7, item.length - 1),
+                count: item.slice(item.indexOf('&count=') + 7, item.indexOf('&type=')),
                 full_name: item.slice(item.indexOf('&full_name=') + 11, item.indexOf('&count=')),
                 type: 'depart',
                 showCount: true
