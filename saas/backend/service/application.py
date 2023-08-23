@@ -89,12 +89,24 @@ class ApplicationService:
         return self._create(data, lambda callback_url: self.provider.create_for_policy(data, process, callback_url))
 
     def create_for_group(
-        self, data: GroupApplicationData, process: ApprovalProcessWithNodeProcessor, source_system_id: str = ""
+        self,
+        data: GroupApplicationData,
+        process: ApprovalProcessWithNodeProcessor,
+        source_system_id: str = "",
+        approval_title_prefix: str = "",
+        approval_content: Optional[Dict] = None,
     ) -> Application:
         """创建加入或续期用户组申请单"""
         return self._create(
             data,
-            lambda callback_url: self.provider.create_for_group(data, process, callback_url, tag=source_system_id),
+            lambda callback_url: self.provider.create_for_group(
+                data,
+                process,
+                callback_url,
+                tag=source_system_id,
+                approval_title_prefix=approval_title_prefix,
+                approval_content=approval_content,
+            ),
             source_system_id=source_system_id,
         )
 

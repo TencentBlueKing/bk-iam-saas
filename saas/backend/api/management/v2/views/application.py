@@ -97,6 +97,9 @@ class ManagementGroupApplicationViewSet(GenericViewSet):
                 applicants=[Applicant(type=SubjectType.USER.value, id=user.username, display_name=user.display_name)],
             ),
             source_system_id=source_system_id,
+            content_template=data["content_template"],
+            group_content=data["group_content"],
+            title_prefix=data["title_prefix"],
         )
 
         return Response({"ids": [a.id for a in applications]})
