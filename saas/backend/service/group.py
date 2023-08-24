@@ -55,6 +55,7 @@ class GroupCreation(BaseModel):
     # NOTE: 只在group创建时有用
     source_system_id: str = ""
     hidden: bool = False
+    apply_disable: bool = False
 
 
 class GroupMemberExpiredAt(Subject):
@@ -73,6 +74,7 @@ class GroupService:
             creator=creator,
             source_system_id=info.source_system_id,
             hidden=info.hidden,
+            apply_disable=info.apply_disable,
         )
         group.save(force_insert=True)
 
@@ -104,13 +106,14 @@ class GroupService:
 
         return groups
 
-    def update(self, group: Group, name: str, description: str, updater: str) -> Group:
+    def update(self, group: Group, name: str, description: str, apply_disable: bool, updater: str) -> Group:
         """
         更新用户组信息
         """
         group.name = name
         group.description = description
         group.updater = updater
+        group.apply_disable = apply_disable
 
         with transaction.atomic():
             group.save()

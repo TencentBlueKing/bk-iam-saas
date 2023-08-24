@@ -378,7 +378,7 @@ SUBJECT_AUTHORIZATION_LIMIT = {
     "default_grade_manager_of_system_limit": env.int("BKAPP_DEFAULT_GRADE_MANAGER_OF_SYSTEM_LIMIT", default=500),
     # 可配置单独指定某些系统可创建的分级管理员数量 其值的格式为：system_id1:number1,system_id2:number2,...
     "grade_manager_of_specified_systems_limit": env.str(
-        "BKAPP_GRADE_MANAGER_OF_SPECIFIED_SYSTEMS_LIMIT", default="bk_ci_rbac:30000"
+        "BKAPP_GRADE_MANAGER_OF_SPECIFIED_SYSTEMS_LIMIT", default="bk_ci_rbac:30000,bk_lesscode:5000"
     ),
 }
 # 授权的实例最大数量限制
