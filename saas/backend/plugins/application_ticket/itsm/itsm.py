@@ -89,38 +89,71 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
             params["has_instance_approver"] = int(process.has_instance_approver_node(judge_empty=True))
 
         # 在params中加上权限获得者
-        params["applicants"] = ", ".join(
-            [
-                "{}: {}({})".format("用户" if u.type == SubjectType.USER.value else "部门", u.display_name, u.id)
-                for u in data.content.applicants
-            ]
-        )
+        params["dynamic_fields"] = [
+            {
+                "name": "权限获得者",
+                "type": "STRING",
+                "value": ", ".join(
+                    [
+                        "{}: {}({})".format("用户" if u.type == SubjectType.USER.value else "部门", u.display_name, u.id)
+                        for u in data.content.applicants
+                    ]
+                ),
+                "meta": {"language": {"en": "recipient of permissions"}},
+            }
+        ]
 
         ticket = itsm.create_ticket(**params)
         return ticket["sn"]
 
     def create_for_group(
-        self, data: GroupApplicationData, process: ApprovalProcessWithNodeProcessor, callback_url: str, tag: str = ""
+        self,
+        data: GroupApplicationData,
+        process: ApprovalProcessWithNodeProcessor,
+        callback_url: str,
+        tag: str = "",
+        approval_title_prefix: str = "",
+        approval_content: Optional[Dict] = None,
     ) -> str:
         """创建 - 申请加入或续期用户组单据"""
         params = self._generate_ticket_common_params(data, process, callback_url)
 
-        title_prefix = (
-            f"申请加入 {len(data.content.groups)} 个用户组"
-            if data.type == ApplicationType.JOIN_GROUP
-            else f"申请续期 {len(data.content.groups)} 个用户组"
-        )
-        params["title"] = "{}：{}".format(title_prefix, "、".join([one.name for one in data.content.groups]))
+        if approval_title_prefix:
+            title_prefix = approval_title_prefix + f" {len(data.content.groups)} 个用户组"
+        else:
+            title_prefix = (
+                f"申请加入 {len(data.content.groups)} 个用户组"
+                if data.type == ApplicationType.JOIN_GROUP
+                else f"申请续期 {len(data.content.groups)} 个用户组"
+            )
+        title = "{}：{}".format(title_prefix, "、".join([one.name for one in data.content.groups]))
+        if len(title) > 64:
+            title = title[:64] + "..."
 
-        params["content"] = {"schemes": FORM_SCHEMES, "form_data": [GroupTable.from_application(data.content).dict()]}
+        params["title"] = title
+
+        if approval_content:
+            params["content"] = approval_content
+        else:
+            params["content"] = {
+                "schemes": FORM_SCHEMES,
+                "form_data": [GroupTable.from_application(data.content).dict()],
+            }
 
         # 在params中加上权限获得者
-        params["applicants"] = ", ".join(
-            [
-                "{}: {}({})".format("用户" if u.type == SubjectType.USER.value else "部门", u.display_name, u.id)
-                for u in data.content.applicants
-            ]
-        )
+        params["dynamic_fields"] = [
+            {
+                "name": "权限获得者",
+                "type": "STRING",
+                "value": ", ".join(
+                    [
+                        "{}: {}({})".format("用户" if u.type == SubjectType.USER.value else "部门", u.display_name, u.id)
+                        for u in data.content.applicants
+                    ]
+                ),
+                "meta": {"language": {"en": "recipient of permissions"}},
+            }
+        ]
 
         params["tag"] = tag
         ticket = itsm.create_ticket(**params)
@@ -141,7 +174,7 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
         if approval_title:
             params["title"] = approval_title
         else:
-            title_prefix = "申请创建分级管理员" if data.type == ApplicationType.CREATE_GRADE_MANAGER.value else "申请编辑分级管理员"
+            title_prefix = "申请创建管理空间" if data.type == ApplicationType.CREATE_GRADE_MANAGER.value else "申请编辑管理空间"
             params["title"] = f"{title_prefix}：{data.content.name}"
 
         if approval_content:

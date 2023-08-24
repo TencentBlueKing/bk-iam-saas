@@ -207,9 +207,9 @@ class ApplicationType(ChoicesEnum, LowerStrEnum):
             (RENEW_ACTION, "自定义权限续期"),
             (JOIN_GROUP, "加入用户组"),
             (RENEW_GROUP, "用户组续期"),
-            (JOIN_GRADE_MANAGER, "加入分级管理员"),
-            (CREATE_GRADE_MANAGER, "创建分级管理员"),
-            (UPDATE_GRADE_MANAGER, "修改分级管理员"),
+            (JOIN_GRADE_MANAGER, "加入管理空间"),
+            (CREATE_GRADE_MANAGER, "创建管理空间"),
+            (UPDATE_GRADE_MANAGER, "修改管理空间"),
             (GRANT_TEMPORARY_ACTION, "临时权限申请"),
         )
     )
@@ -229,6 +229,7 @@ APPLICATION_SUPPORT_PROCESSOR_ROLE_MAP = {
         ProcessorNodeType.SUPER_MANAGER.value,
         ProcessorNodeType.SYSTEM_MANAGER.value,
         ProcessorNodeType.INSTANCE_APPROVER.value,
+        ProcessorNodeType.GRADE_MANAGER.value,
     ),
     ApplicationType.JOIN_GROUP.value: (
         ProcessorNodeType.SUPER_MANAGER.value,

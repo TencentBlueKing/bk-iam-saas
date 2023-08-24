@@ -109,6 +109,13 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
                     right: 30px;
                 }
             }
+            .lang-flex {
+                display: flex;
+                align-items: center;
+                &-label {
+                    margin-left: 5px;
+                }
+            }
         }
         .dropdown-panel {
             position: absolute;
@@ -135,6 +142,12 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
                 border-right: 1px solid #dcdee5;
                 transform: rotateZ(-45deg);
             }
+            &.lang-dropdown-panel {
+                width: 120px;
+                &:before {
+                    right: 60px;
+                }
+            }
             .item {
                 height: 32px;
                 padding: 0 16px;
@@ -153,6 +166,7 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
             align-items: center;
             &:hover {
                 .dropdown-panel {
+                    width: 90px;
                     opacity: 1;
                     visibility: visible;
                     z-index: 9999;
@@ -481,6 +495,7 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
         color: #fff;
         border-bottom: 1px solid rgba(255, 255, 255, 0.06);
         overflow: hidden;
+        cursor: pointer;
         &.dark-theme {
             background: #1b1b1b;
         }

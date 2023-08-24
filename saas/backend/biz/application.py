@@ -11,7 +11,7 @@ specific language governing permissions and limitations under the License.
 import logging
 from collections import defaultdict
 from itertools import groupby
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Type
 
 from django.db import transaction
 from django.utils.translation import gettext as _
@@ -65,7 +65,12 @@ from backend.service.models import (
 from backend.service.role import RoleService
 from backend.service.system import SystemService
 
-from .application_process import InstanceApproverHandler, PolicyProcess, PolicyProcessHandler
+from .application_process import (
+    GradeManagerApproverHandler,
+    InstanceApproverHandler,
+    PolicyProcess,
+    PolicyProcessHandler,
+)
 from .group import GroupBiz, GroupMemberExpiredAtBean
 from .policy import PolicyBean, PolicyBeanList, PolicyOperationBiz, PolicyQueryBiz
 from .role import RoleBiz, RoleInfo, RoleInfoBean
@@ -311,12 +316,11 @@ class ApprovedPassApplicationBiz:
 
             # 创建同步权限用户组
             if info.sync_perm:
-                attrs = None
+                attrs = {
+                    GroupSaaSAttributeEnum.SOURCE_FROM_ROLE.value: True,
+                }
                 if application.source_system_id:
-                    attrs = {
-                        GroupSaaSAttributeEnum.SOURCE_TYPE.value: AuditSourceType.OPENAPI.value,
-                        GroupSaaSAttributeEnum.SOURCE_FROM_ROLE.value: True,
-                    }
+                    attrs[GroupSaaSAttributeEnum.SOURCE_TYPE.value] = AuditSourceType.OPENAPI.value
 
                 self.group_biz.create_sync_perm_group_by_role(
                     role, application.applicant, group_name=application.data.get("group_name", ""), attrs=attrs
@@ -420,9 +424,11 @@ class ApplicationBiz:
             elif node.processor_type == RoleType.SYSTEM_MANAGER.value:
                 processors = self.approval_processor_biz.get_system_manager_members(system_id=kwargs["system_id"])
             elif node.processor_type == RoleType.GRADE_MANAGER.value:
-                processors = self.approval_processor_biz.get_grade_manager_members_by_group_id(
-                    group_id=kwargs["group_id"]
-                )
+                # 如果是自定义权限, 需要后续流程中填充审批人
+                if "group_id" in kwargs:
+                    processors = self.approval_processor_biz.get_grade_manager_members_by_group_id(
+                        group_id=kwargs["group_id"]
+                    )
             # NOTE: 由于资源实例审批人节点的逻辑涉及到复杂的拆分, 合并逻辑, 不在这里处理
 
             node_with_processor.processors = processors
@@ -490,9 +496,12 @@ class ApplicationBiz:
             policy_process_list.append(PolicyProcess(policy=policy, process=process))
 
         # 5. 通过管道填充可能的资源实例审批人/分级管理员审批节点的审批人
-        pipeline: List[PolicyProcessHandler] = [InstanceApproverHandler()]  # NOTE: 未来需要实现分级管理员审批handler
+        pipeline: List[Type[PolicyProcessHandler]] = [
+            InstanceApproverHandler,
+            GradeManagerApproverHandler,
+        ]
         for pipe in pipeline:
-            policy_process_list = pipe.handle(policy_process_list)
+            policy_process_list = pipe(system_id).handle(policy_process_list)
 
         # 6. 依据审批流程合并策略
         policy_list_process = self._merge_policies_by_approval_process(system_id, policy_process_list)
@@ -595,7 +604,7 @@ class ApplicationBiz:
         application_templates = []
 
         # 查询自定义权限 涉及的系统
-        system_counter_list = self.policy_biz.list_system_counter_by_subject(subject)
+        system_counter_list = self.policy_biz.list_system_counter_by_subject(subject, hidden=False)
         # 查询自定义权限
         for system_counter in system_counter_list:
             policies = self.policy_biz.list_by_subject(system_counter.id, subject)
@@ -654,7 +663,13 @@ class ApplicationBiz:
         return GroupApplicationContent(groups=group_infos, applicants=applicants)
 
     def create_for_group(
-        self, application_type: ApplicationType, data: GroupApplicationDataBean, source_system_id: str = ""
+        self,
+        application_type: ApplicationType,
+        data: GroupApplicationDataBean,
+        source_system_id: str = "",
+        content_template: Optional[Dict[str, Any]] = None,
+        group_content: Optional[Dict[str, Any]] = None,
+        title_prefix: str = "",
     ) -> List[Application]:
         """申请加入用户组"""
         # 1. 查询申请者信息
@@ -686,12 +701,27 @@ class ApplicationBiz:
                     [g for g in data.groups if g.id in group_ids], data.applicants
                 ),
             )
-            new_data_list.append((application_data, process))
+
+            # 组装外部传入的itsm单据数据
+            content: Optional[Dict[str, Any]] = None
+            if content_template and group_content:
+                content = {
+                    "schemes": content_template["schemes"],
+                    "form_data": [group_content[str(_id)] for _id in group_ids],
+                }
+
+            new_data_list.append((application_data, process, content))
 
         # 7. 循环创建申请单
         applications = []
-        for _data, _process in new_data_list:
-            application = self.svc.create_for_group(_data, _process, source_system_id=source_system_id)
+        for _data, _process, _content in new_data_list:
+            application = self.svc.create_for_group(
+                _data,
+                _process,
+                source_system_id=source_system_id,
+                approval_content=_content,
+                approval_title_prefix=title_prefix,
+            )
             applications.append(application)
 
         return applications

@@ -453,7 +453,7 @@ class GradeManagerForm(BaseModel):
     def from_application(cls, application_data: GradeManagerApplicationContent):
         form_data = [
             # 基本信息
-            BaseText(label="【分级管理员名称】", value=application_data.name),
+            BaseText(label="【管理空间名称】", value=application_data.name),
             BaseText(label="【描述】", value=application_data.description if application_data.description else "--"),
             BaseText(label="【成员列表】", value=";".join([f"{m.id}({m.name})" for m in application_data.members])),
             BaseText(label="【操作和实例范围】"),

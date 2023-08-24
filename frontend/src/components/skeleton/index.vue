@@ -1,59 +1,59 @@
 <template>
-    <transition name="skeleton">
-        <div v-if="visiable" ref="wraper" class="iam-view-skeleton">
-            <component
-                :is="realCom"
-                :max-width="width"
-                :speed="2"
-                primary-color="#EBECF3"
-                secondary-color="#F6F7FB" />
-        </div>
-    </transition>
+  <transition name="skeleton">
+    <div v-if="visiable" ref="wraper" class="iam-view-skeleton">
+      <component
+        :is="realCom"
+        :max-width="width"
+        :speed="2"
+        primary-color="#EBECF3"
+        secondary-color="#F6F7FB" />
+    </div>
+  </transition>
 </template>
 <script>
-    import List from './list';
-    const comMap = {
-        list: List
-    };
+  import List from './list';
+  const comMap = {
+    list: List
+  };
 
-    export default {
-        name: '',
-        props: {
-            type: String,
-            visiable: {
-                type: Boolean,
-                default: false
-            }
-        },
-        data () {
-            return {
-                width: 0
-            };
-        },
-        computed: {
-            realCom () {
-                if (!comMap.hasOwnProperty(this.type)) {
-                    return 'div';
-                }
-                return comMap[this.type];
-            }
-        },
-        mounted () {
-            this.init();
-            window.addEventListener('resize', this.init);
-            this.$once('hook:beforeDestroy', () => {
-                window.removeEventListener('resize', this.init);
-            });
-        },
-        methods: {
-            init () {
-                if (!this.$refs.wraper) {
-                    return;
-                }
-                this.width = this.$refs.wraper.getBoundingClientRect().width;
-            }
+  export default {
+    name: '',
+    props: {
+      type: String,
+      visiable: {
+        type: Boolean,
+        default: false
+      }
+    },
+    data () {
+      return {
+        width: 0
+      };
+    },
+    computed: {
+      realCom () {
+        if (!comMap.hasOwnProperty(this.type)) {
+          return 'div';
         }
-    };
+        return comMap[this.type];
+      }
+    },
+    mounted () {
+      this.init();
+      window.addEventListener('resize', this.init);
+      this.$once('hook:beforeDestroy', () => {
+        window.removeEventListener('resize', this.init);
+      });
+    },
+    methods: {
+      init () {
+        if (!this.$refs.wraper) {
+          return;
+        }
+        this.width = this.$refs.wraper.getBoundingClientRect().width;
+      }
+    }
+  };
 </script>
 <style lang='postcss' scoped>
     .iam-view-skeleton {

@@ -62,7 +62,7 @@ REDIS_SENTINEL_ADDR_STR = env.str("REDIS_SENTINEL_ADDR", "")
 REDIS_SENTINEL_ADDR_LIST = []
 try:
     REDIS_SENTINEL_ADDR_LIST = [tuple(addr.split(":")) for addr in REDIS_SENTINEL_ADDR_STR.split(",") if addr]
-except Exception as e:
+except Exception as e:  # pylint: disable=broad-except
     print(f"REDIS_SENTINEL_ADDR {REDIS_SENTINEL_ADDR_STR} is invalid: {e}")
 
 CACHES = {
@@ -247,6 +247,7 @@ LOGGING = {
     "formatters": {
         "verbose": _LOGGING_FORMAT,
         "simple": {"format": "%(levelname)s %(message)s"},
+        "bk_audit": {"format": "%(message)s"},
     },
     "handlers": {
         "null": {
@@ -296,11 +297,10 @@ LOGGING = {
         },
         "bk_audit": {
             "class": _LOG_CLASS,
-            "formatter": "verbose",
+            "formatter": "bk_audit",
             "filename": os.path.join(_LOG_DIR, "%s-audit.log" % _LOG_NAME_PREFIX),
             "maxBytes": 1024 * 1024 * 10,
             "backupCount": 5,
-            "filters": ["request_id_filter"],
         },
     },
     "loggers": {

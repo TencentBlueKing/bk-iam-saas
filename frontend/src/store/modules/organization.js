@@ -30,39 +30,39 @@ import { json2Query } from '@/common/util';
 const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
 
 export default {
-    namespaced: true,
-    state: {
-        // 右侧整块的 loading
-        rightLoading: false,
-        // 右侧切换 tab 的 loading
-        toggleTabLoading: false
-    },
-    getters: {
-        rightLoading: state => state.rightLoading,
-        toggleTabLoading: state => state.toggleTabLoading
-    },
-    mutations: {
-        /**
+  namespaced: true,
+  state: {
+    // 右侧整块的 loading
+    rightLoading: false,
+    // 右侧切换 tab 的 loading
+    toggleTabLoading: false
+  },
+  getters: {
+    rightLoading: state => state.rightLoading,
+    toggleTabLoading: state => state.toggleTabLoading
+  },
+  mutations: {
+    /**
          * 更新 store.rightLoading
          *
          * @param {Object} state store state
          * @param {Boolean} rightLoading rightLoading 值
          */
-        updateRightLoading (state, rightLoading) {
-            state.rightLoading = rightLoading;
-        },
-        /**
+    updateRightLoading (state, rightLoading) {
+      state.rightLoading = rightLoading;
+    },
+    /**
          * 更新 store.toggleTabLoading
          *
          * @param {Object} state store state
          * @param {Boolean} toggleTabLoading toggleTabLoading 值
          */
-        updateToggleTabLoading (state, toggleTabLoading) {
-            state.toggleTabLoading = toggleTabLoading;
-        }
-    },
-    actions: {
-        /**
+    updateToggleTabLoading (state, toggleTabLoading) {
+      state.toggleTabLoading = toggleTabLoading;
+    }
+  },
+  actions: {
+    /**
          * 获取目录列表
          *
          * @param {Function} commit store commit mutation handler
@@ -73,11 +73,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getCategories ({ commit, state, dispatch }, config = {}) {
-            return http.get(`${AJAX_URL_PREFIX}/organizations/categories/`, {}, config);
-        },
+    getCategories ({ commit, state, dispatch }, config = {}) {
+      return http.get(`${AJAX_URL_PREFIX}/organizations/categories/`, {}, config);
+    },
 
-        /**
+    /**
          * 获取组织架构
          *
          * @param {Function} commit store commit mutation handler
@@ -88,11 +88,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getOrganizations ({ commit, state, dispatch }, { departmentId }, config = {}) {
-            return http.get(`${AJAX_URL_PREFIX}/organizations/departments/${departmentId}/`, {}, config);
-        },
+    getOrganizations ({ commit, state, dispatch }, { departmentId }, config = {}) {
+      return http.get(`${AJAX_URL_PREFIX}/organizations/departments/${departmentId}/`, {}, config);
+    },
 
-        /**
+    /**
          * 组织架构搜索
          *
          * @param {Function} commit store commit mutation handler
@@ -103,11 +103,11 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-        getSearchOrganizations ({ commit, state, dispatch }, params, config = {}) {
-            return http.get(`${AJAX_URL_PREFIX}/organizations/search/?${json2Query(params)}`, {}, config);
-        },
+    getSearchOrganizations ({ commit, state, dispatch }, params, config = {}) {
+      return http.get(`${AJAX_URL_PREFIX}/organizations/search/?${json2Query(params)}`, {}, config);
+    },
 
-        /**
+    /**
          * 获取subject有权限的所有系统列表
          *
          * @param {Function} commit store commit mutation handler
@@ -116,13 +116,13 @@ export default {
          * @param {Object} params 请求参数
          * @return {Promise} promise 对象
          */
-        getSubjectHasPermSystem ({ commit, state, dispatch }, params, config) {
-            const subjectType = params.subjectType;
-            const subjectId = params.subjectId;
-            return http.get(`${AJAX_URL_PREFIX}/subjects/${subjectType}/${subjectId}/systems/`, config);
-        },
+    getSubjectHasPermSystem ({ commit, state, dispatch }, params, config) {
+      const subjectType = params.subjectType;
+      const subjectId = params.subjectId;
+      return http.get(`${AJAX_URL_PREFIX}/subjects/${subjectType}/${subjectId}/systems/`, config);
+    },
 
-        /**
+    /**
          * 获取subject有临时权限的所有系统列表
          *
          * @param {Function} commit store commit mutation handler
@@ -131,13 +131,13 @@ export default {
          * @param {Object} params 请求参数
          * @return {Promise} promise 对象
          */
-        getSubjectTemporaryHasPermSystem ({ commit, state, dispatch }, params, config) {
-            const subjectType = params.subjectType;
-            const subjectId = params.subjectId;
-            return http.get(`${AJAX_URL_PREFIX}/subjects/${subjectType}/${subjectId}/temporary_policies/systems/`, config);
-        },
+    getSubjectTemporaryHasPermSystem ({ commit, state, dispatch }, params, config) {
+      const subjectType = params.subjectType;
+      const subjectId = params.subjectId;
+      return http.get(`${AJAX_URL_PREFIX}/subjects/${subjectType}/${subjectId}/temporary_policies/systems/`, config);
+    },
 
-        /**
+    /**
          * 组织架构执行同步任务
          *
          * @param {Function} commit store commit mutation handler
@@ -145,11 +145,11 @@ export default {
          * @param {Function} dispatch store dispatch action handler
          * @return {Promise} promise 对象
          */
-        organizationsSyncTask ({ commit, state, dispatch }, config) {
-            return http.post(`${AJAX_URL_PREFIX}/organizations/sync_task/`, config);
-        },
+    organizationsSyncTask ({ commit, state, dispatch }, config) {
+      return http.post(`${AJAX_URL_PREFIX}/organizations/sync_task/`, config);
+    },
 
-        /**
+    /**
          * 组织架构同步状态查询
          *
          * @param {Function} commit store commit mutation handler
@@ -157,11 +157,11 @@ export default {
          * @param {Function} dispatch store dispatch action handler
          * @return {Promise} promise 对象
          */
-        getOrganizationsSyncTask ({ commit, state, dispatch }, config) {
-            return http.get(`${AJAX_URL_PREFIX}/organizations/sync_task/`, config);
-        },
+    getOrganizationsSyncTask ({ commit, state, dispatch }, config) {
+      return http.get(`${AJAX_URL_PREFIX}/organizations/sync_task/`, config);
+    },
 
-        /**
+    /**
          * 自动输入用户进行校验
          *
          * @param {Function} commit store commit mutation handler
@@ -170,11 +170,11 @@ export default {
          * @param {Object} params 请求参数
          * @return {Promise} promise 对象
          */
-        verifyManualUser ({ commit, state, dispatch }, params, config) {
-            return http.post(`${AJAX_URL_PREFIX}/organizations/users/query/`, params, config);
-        },
+    verifyManualUser ({ commit, state, dispatch }, params, config) {
+      return http.post(`${AJAX_URL_PREFIX}/organizations/users/query/`, params, config);
+    },
 
-        /**
+    /**
          * 获取同步记录
          *
          * @param {Function} commit store commit mutation handler
@@ -183,10 +183,10 @@ export default {
          * @param {Object} params 请求参数
          * @return {Promise} promise 对象
          */
-        getRecordsList ({ commit, state, dispatch }, params, config = {}) {
-            return http.get(`${AJAX_URL_PREFIX}/organizations/sync_records/?${json2Query(params)}`, {}, config);
-        },
-        /**
+    getRecordsList ({ commit, state, dispatch }, params, config = {}) {
+      return http.get(`${AJAX_URL_PREFIX}/organizations/sync_records/?${json2Query(params)}`, {}, config);
+    },
+    /**
          * 获取日志详情
          *
          * @param {Function} commit store commit mutation handler
@@ -195,10 +195,10 @@ export default {
          * @param {Object} params 请求参数
          * @return {Promise} promise 对象
          */
-        getRecordsLog ({ commit, state, dispatch }, id, config) {
-            return http.get(`${AJAX_URL_PREFIX}/organizations/sync_records/${id}/logs/`, config);
-        },
-        /**
+    getRecordsLog ({ commit, state, dispatch }, id, config) {
+      return http.get(`${AJAX_URL_PREFIX}/organizations/sync_records/${id}/logs/`, config);
+    },
+    /**
          * 校验组织架构选择器部门/用户范围是否满足条件
          *
          * @param {Function} commit store commit mutation handler
@@ -207,8 +207,8 @@ export default {
          * @param {Object} params 请求参数
          * @return {Promise} promise 对象
          */
-        getSubjectScopeCheck ({ commit, state, dispatch }, config) {
-            return http.post(`${AJAX_URL_PREFIX}/roles/subject_scope_check/`, config);
-        }
+    getSubjectScopeCheck ({ commit, state, dispatch }, config) {
+      return http.post(`${AJAX_URL_PREFIX}/roles/subject_scope_check/`, config);
     }
+  }
 };

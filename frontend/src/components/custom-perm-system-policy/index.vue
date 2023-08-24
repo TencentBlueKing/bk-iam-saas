@@ -1,82 +1,94 @@
 <template>
-    <div :class="['iam-perm-item', extCls]">
-        <div class="header" @click="handleExpanded">
-            <Icon bk class="expanded-icon" :type="isExpanded ? 'down-shape' : 'right-shape'" />
-            <label class="title">{{ title }}</label>
-            <div class="sub-title" v-if="permLength > 0">
-                {{ $t(`m.common['共']`) }}
-                <span class="number">{{ permLength }}</span>
-                {{ $t(`m.common['个']`) }}
-                {{ $t(`m.perm['操作权限']`) }}
-            </div>
-        </div>
-        <div class="content" v-if="isExpanded">
-            <div class="slot-content">
-                <slot />
-            </div>
-            <p class="expand-action" @click="handlePackup">
-                <Icon :type="isExpanded ? 'up-angle' : 'down-angle'" />
-                {{ $t(`m.common['点击收起']`) }}
-            </p>
-        </div>
+  <div :class="['iam-perm-item', extCls]">
+    <div class="header" @click="handleExpanded">
+      <Icon bk class="expanded-icon" :type="isExpanded ? 'down-shape' : 'right-shape'" />
+      <label class="title">{{ title }}</label>
+      <div class="sub-title" v-if="permLength > 0">
+        {{ $t(`m.common['共']`) }}
+        <span class="number">{{ permLength }}</span>
+        {{ $t(`m.common['个']`) }}
+        {{ $t(`m.perm['操作权限']`) }}
+        <span
+          v-if="isAllDelete"
+          class="del-all-icon">
+          <Icon type="delete-line" @click.stop="handleDeleteAll" />
+        </span>
+      </div>
     </div>
+    <div class="content" v-if="isExpanded">
+      <div class="slot-content">
+        <slot />
+      </div>
+      <p class="expand-action" @click="handleCollapse">
+        <Icon :type="isExpanded ? 'up-angle' : 'down-angle'" />
+        {{ $t(`m.common['点击收起']`) }}
+      </p>
+    </div>
+  </div>
 </template>
 <script>
-    export default {
-        name: 'CustomPermSystemPolicy',
-        props: {
-            expanded: {
-                type: Boolean,
-                default: false
-            },
-            title: {
-                type: String,
-                default: ''
-            },
-            permLength: {
-                type: Number,
-                default: 0
-            },
-            extCls: {
-                type: String,
-                default: ''
-            },
-            onePerm: {
-                type: Number,
-                default: 0
-            }
-        },
-        data () {
-            return {
-                isExpanded: this.expanded
-            };
-        },
-        watch: {
-            expanded (value) {
-                this.isExpanded = !!value;
-            }
-        },
-        created () {
-            if (this.onePerm === 1) {
-                this.$nextTick(() => {
-                    this.handleExpanded();
-                });
-            }
-        },
-        methods: {
-            handlePackup () {
-                this.isExpanded = false;
-                this.$emit('update:expanded', false);
-                this.$emit('on-expanded', false);
-            },
+  export default {
+    name: 'CustomPermSystemPolicy',
+    props: {
+      expanded: {
+        type: Boolean,
+        default: false
+      },
+      title: {
+        type: String,
+        default: ''
+      },
+      permLength: {
+        type: Number,
+        default: 0
+      },
+      extCls: {
+        type: String,
+        default: ''
+      },
+      onePerm: {
+        type: Number,
+        default: 0
+      },
+      isAllDelete: {
+        type: Boolean,
+        default: false
+      }
+    },
+    data () {
+      return {
+        isExpanded: this.expanded
+      };
+    },
+    watch: {
+      expanded (value) {
+        this.isExpanded = !!value;
+      }
+    },
+    created () {
+      if (this.onePerm === 1) {
+        this.$nextTick(() => {
+          this.handleExpanded();
+        });
+      }
+    },
+    methods: {
+      handleCollapse () {
+        this.isExpanded = false;
+        this.$emit('update:expanded', false);
+        this.$emit('on-expanded', false);
+      },
 
-            handleExpanded () {
-                this.isExpanded = !this.isExpanded;
-                this.$emit('update:expanded', true);
-                this.$emit('on-expanded', true);
-            }
-        }
-    };
+      handleExpanded () {
+        this.isExpanded = !this.isExpanded;
+        this.$emit('update:expanded', true);
+        this.$emit('on-expanded', true);
+      },
+      handleDeleteAll () {
+        this.$emit('on-delete-all');
+      }
+    }
+  };
 </script>
 <style lang="postcss" scoped>
     .iam-perm-item {
@@ -117,6 +129,10 @@
                 .number {
                     font-weight: 600;
                 }
+            }
+            .del-all-icon {
+              margin-left: 5px;
+              font-size: 14px;
             }
         }
         .content {

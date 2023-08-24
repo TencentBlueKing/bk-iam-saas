@@ -32,6 +32,7 @@ import store from './store';
 import { injectCSRFTokenToHeaders } from './api';
 import auth from './common/auth';
 import Img403 from './images/403.png';
+import Svg403 from './images/403.svg';
 import Exception from './components/exception/index.vue';
 import { bus } from './common/bus';
 import AuthComponent from './components/auth/index.vue';
@@ -65,14 +66,14 @@ Vue.component('Icon', Icon);
 Vue.component('ExceptionEmpty', ExceptionEmpty);
 
 Vue.prototype.scrollToLocation = function ($ref) {
-    const distance = ($ref && $ref.getBoundingClientRect().top) || 0;
-    const $dom = document.getElementsByClassName('main-scroller')[0];
-    $dom.scrollTo(0, distance);
+  const distance = ($ref && $ref.getBoundingClientRect().top) || 0;
+  const $dom = document.getElementsByClassName('main-scroller')[0];
+  $dom.scrollTo(0, distance);
 };
 
 Vue.use(VueI18n);
 Vue.use(magicbox, {
-    i18n: (key, args) => i18n.t(key, args)
+  i18n: (key, args) => i18n.t(key, args)
 });
 
 console.log('start');
@@ -84,30 +85,30 @@ const en = require('./language/lang/en');
 const { lang, locale } = magicbox;
 
 const messages = {
-    'zh-cn': {
-        ...lang.zhCN,
-        ...cn
-    },
-    en: {
-        ...lang.enUS,
-        ...en
-    }
+  'zh-cn': {
+    ...lang.zhCN,
+    ...cn
+  },
+  en: {
+    ...lang.enUS,
+    ...en
+  }
 };
 
 window.changeAlert = false;
 window.changeDialog = false;
 
 const i18n = new VueI18n({
-    // 语言标识
-    locale: language,
-    fallbackLocale: language,
-    // this.$i18n.locale 通过切换locale的值来实现语言切换
-    messages,
-    silentTranslationWarn: true,
-    missing (locale, path) {
-        const parsedPath = i18n._path.parsePath(path);
-        return parsedPath[parsedPath.length - 1];
-    }
+  // 语言标识
+  locale: language,
+  fallbackLocale: language,
+  // this.$i18n.locale 通过切换locale的值来实现语言切换
+  messages,
+  silentTranslationWarn: true,
+  missing (locale, path) {
+    const parsedPath = i18n._path.parsePath(path);
+    return parsedPath[parsedPath.length - 1];
+  }
 });
 
 // if (language === 'zh-cn') {
@@ -124,55 +125,62 @@ Vue.prototype.curLanguageIsCn = language === 'zh-cn';
 Vue.mixin(locale.mixin);
 
 if (NODE_ENV === 'development') {
-    Vue.config.devtools = true;
+  Vue.config.devtools = true;
 }
 
 auth.requestCurrentUser().then(user => {
-    injectCSRFTokenToHeaders();
-    if (!user.isAuthenticated) {
-        auth.redirectToLogin();
-    } else {
-        global.bus = bus;
-        global.mainComponent = new Vue({
-            el: '#app',
-            i18n,
-            router,
-            store,
-            components: {
-                App
-            },
-            template: '<App/>'
-        });
-        if (NODE_ENV === 'development') {
-            window.__VUE_DEVTOOLS_GLOBAL_HOOK__.Vue = global.mainComponent.constructor;
-        }
+  injectCSRFTokenToHeaders();
+  if (!user.isAuthenticated) {
+    auth.redirectToLogin();
+  } else {
+    global.bus = bus;
+    global.mainComponent = new Vue({
+      el: '#app',
+      i18n,
+      router,
+      store,
+      components: {
+        App
+      },
+      template: '<App/>'
+    });
+    if (NODE_ENV === 'development') {
+      window.__VUE_DEVTOOLS_GLOBAL_HOOK__.Vue = global.mainComponent.constructor;
     }
+  }
 }, err => {
-    let message;
-    if (err.status === 403) {
-        message = il8nNew('common', '权限不足');
-        if (err.data && err.data.msg) {
-            message = err.data.msg;
-        }
-    } else {
-        message = il8nNew('info', '无法连接到后端服务');
+  let message;
+  const { response } = err;
+  if (response && response.status === 403) {
+    message = il8nNew('common', '权限不足');
+    if (response && response.data) {
+      message = response.data.message || response.data.msg;
     }
-
-    const divStyle = ''
+  } else {
+    message = il8nNew('info', '无法连接到后端服务');
+  }
+  const errCode = response && response.data ? response.data.code : err.code;
+  const divStyle = ''
         + 'text-align: center;'
-        + 'width: 400px;'
+        + 'width: 700px;'
         + 'margin: auto;'
         + 'position: absolute;'
         + 'top: 50%;'
         + 'left: 50%;'
         + 'transform: translate(-50%, -50%);';
 
-    const h2Style = 'font-size: 20px;color: #979797; margin: 32px 0;font-weight: normal';
-
-    const content = ``
+  const h2Style = 'font-size: 20px;color: #979797; margin: 32px 0;font-weight: normal;';
+  const h2NoPermStyle = 'margin: 20px 0;';
+  const messageStyle = 'font-size: 14px;color: #979797;';
+  const content = ``
         + `<div class="bk-exception bk-exception-center" style="${divStyle}">`
         + `<img src="${Img403}"><h2 class="exception-text" style="${h2Style}">${message}</h2>`
         + `</div>`;
-
-    document.write(content);
+  const noPermContent = ``
+        + `<div class="bk-exception bk-exception-center" style="${divStyle}">`
+        + `<img src="${Svg403}" width=400><h2 class="exception-text" style="${h2Style}${h2NoPermStyle}">${il8nNew('common', '无该应用访问权限')}</h2>`
+        + `<div style="${messageStyle}">${message}</div>`
+        + `</div>`;
+  const renderHtml = [403].includes(response.status) && [1302403].includes(errCode) ? noPermContent : content;
+  document.write(renderHtml);
 });

@@ -43,7 +43,7 @@ members
 results
 | 字段      | 类型      | 描述      |
 |-----------|-----------|-----------|
-| type | string | 成员类型，user表示用户，department表示部门
+| type | string | 成员类型，user表示用户，department表示部门 |
 | id   | string     | 用户或部门ID |
 | name | string | 用户或部门名称 |
 | expired_at | int | 过期时间戳(单位秒)，即用户或部门在expired_at后将不具有该用户组的相关权限，其中值为4102444800表示永久 |
@@ -52,7 +52,16 @@ results
 {
   "code": 0,
   "message": "ok",
-  "data": {}
+  "data": {
+    "count": 1,
+    "results": [
+      {
+        "type": "user",
+        "id": "admin",
+        "name": "管理员",
+        "expired_at": 4102444800
+      }
+    ]
+  }
 }
 ```
-

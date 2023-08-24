@@ -1,3 +1,141 @@
+<!-- 2023-07-31 -->
+# V1.10.12 ChangeLog
+
+### New Features
+* Custom permissions can be configured to allow multi-level administrator approval.
+* Batch unlimited permissions have been added to user group creation, cloning, and permission addition.
+* Batch copying of users and organization members has been added to user group management.
+
+### Bug Fixes
+Fixed an issue where clicking on "synchronize" in the user module->user type would result in a third-party interface exception.
+
+---
+
+<!-- 2023-07-26 -->
+# V1.10.11 ChangeLog
+
+### New Features
+* Switching ESB interface login, supporting ESB authentication for application permissions.
+
+---
+
+<!-- 2023-07-17 -->
+# V1.10.10 ChangeLog
+
+### New Features
+* Add department display to user group member list
+* Add permission details to expired permission list
+* Allow optional selection for aggregated operations
+* Allow level 1 administrators to directly access level 2 administrators
+
+---
+
+<!-- 2023-07-07 -->
+# V1.10.9 ChangeLog
+
+### Bug Fixes
+* Fixed the issue that the dependency operation was not synchronizing data when adding attribute conditions for user group permissions.
+* Fixed the issue that the system administrator member editing was abnormal, and the input box of the system administrator member was abnormal.
+* Added the requirement to add or remove all operation instances under a single system for "My Permissions".
+* Adjusted the layout of the module for deleting and viewing user group permissions.
+
+---
+
+<!-- 2023-07-05 -->
+# V1.10.8 ChangeLog
+
+### Bug Fixes
+* Fixing front-end internationalization issues
+
+---
+
+<!-- 2023-06-27 -->
+# V1.10.7 ChangeLog
+
+### New Features
+* When deleting an instance with a custom permission, delete the instance that is dependent on the permission at the same time
+
+### Bug Fixes
+* ITSM bill of lading form field internationalization
+* Language switching is set to BK_DOMAIN
+* Hierarchical administrator synchronization permission user group name internationalization
+
+---
+
+<!-- 2023-06-21 -->
+# V1.10.6 ChangeLog
+
+### Bug Fixes
+* Fixed the issue where the default workflow for the graded administrator was empty
+* Fixed the issue with the audit log record table create name
+
+---
+
+<!-- 2023-06-07 -->
+# V1.10.5 ChangeLog
+
+### New Features
+* Applying for user group permissions can be done by operating and searching user groups in the instances
+
+### Optimization Updates
+* Optimize the associated permission deletion logic
+
+---
+
+<!-- 2023-06-02 -->
+# V1.10.4 ChangeLog
+
+### New Features
+* Added BCS automatic initialization of administrator user group, making it easier for administrators to set up the system.
+
+### Bug Fixes
+* Fixed a bug in the user list query list to improve normal system operation efficiency.
+* Added max request number parameter for gunicorn to optimize system performance.
+
+---
+
+<!-- 2023-05-29 -->
+# V1.10.3 ChangeLog
+
+### Optimization Updates
+* Optimize the method of creating dynamic fields in permission application approval form
+
+---
+
+<!-- 2023-05-25 -->
+# V1.10.2 ChangeLog
+
+### Optimization Updates
+* Optimize the bkci permission migration function
+
+---
+
+<!-- 2023-05-18 -->
+# V1.10.1 ChangeLog
+
+### Bug Fixes
+* The open api creation permission application form increases the expiration time
+* Fix the unprocessed permission removal when submitting a custom permission application
+
+---
+
+<!-- 2023-05-10 -->
+# V1.10.0 ChangeLog
+
+### New Features
+* Support secondary management space feature
+
+---
+
+<!-- 2023-03-28 -->
+# V1.9.10 ChangeLog
+
+### New Features
+* Add temporary permission switch
+* Modify the maximum number of tiered administrators that can be created in the api to 500
+
+---
+
 <!-- 2023-02-20 -->
 # V1.9.9 ChangeLog
 

@@ -8,7 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from .esb import _call_esb_api
 from .http import http_get, http_post
@@ -41,6 +41,7 @@ def create_ticket(
     reason: str,
     content: Dict,
     tag: str = "",
+    dynamic_fields: Optional[List] = None,
     **kwargs,
 ) -> Dict:
     """获取审批流程，并根据单据创建者判断是否实例化审批节点"""
@@ -50,13 +51,20 @@ def create_ticket(
         "creator": creator,
         "meta": {"callback_url": callback_url, "state_processors": node_processors},
         "fields": [
-            {"key": "title", "value": title},
-            {"key": "application_type", "value": application_type_display},
-            {"key": "organization", "value": organization_names},
-            {"key": "reason", "value": reason},
-            {"key": "content", "value": content},
+            {"key": "title", "value": title, "meta": {"language": {"en": "title"}}},
+            {
+                "key": "application_type",
+                "value": application_type_display,
+                "meta": {"language": {"en": "application type"}},
+            },
+            {"key": "organization", "value": organization_names, "meta": {"language": {"en": "organization"}}},
+            {"key": "reason", "value": reason, "meta": {"language": {"en": "reason"}}},
+            {"key": "content", "value": content, "meta": {"language": {"en": "content"}}},
         ],
     }
+
+    if dynamic_fields:
+        data["dynamic_fields"] = dynamic_fields
 
     if tag:
         data["tag"] = tag  # NOTE: 用于ITSM审批单列表api筛选过滤字段

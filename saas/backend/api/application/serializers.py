@@ -9,6 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import logging
+import time
 from typing import Any, MutableMapping, Union
 
 from django.conf import settings
@@ -16,6 +17,7 @@ from rest_framework import serializers
 from rest_framework.serializers import empty
 
 from backend.apps.policy.serializers import AttributeSLZ
+from backend.common.time import PERMANENT_SECONDS
 
 logger = logging.getLogger("app")
 
@@ -105,6 +107,17 @@ class AccessSystemApplicationCustomPolicySLZ(AccessSystemApplicationSLZ):
 
     applicant = serializers.CharField(label="申请者的用户名", max_length=32)
     reason = serializers.CharField(label="申请理由", max_length=255)
+    expired_at = serializers.IntegerField(
+        label="过期时间", required=False, default=0, min_value=0, max_value=PERMANENT_SECONDS
+    )
+
+    def validate_expired_at(self, value):
+        """
+        验证过期时间
+        """
+        if 0 < value <= (time.time()):
+            raise serializers.ValidationError("greater than now timestamp")
+        return value
 
 
 class AccessSystemApplicationCustomPolicyResultSLZ(serializers.Serializer):

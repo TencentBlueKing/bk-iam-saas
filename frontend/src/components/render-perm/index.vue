@@ -1,112 +1,112 @@
 <template>
-    <div :class="['iam-render-perm', extCls]">
-        <div class="header" @click="handleExpanded">
-            <label class="title">{{ title }}</label>
-            <template v-if="['action'].includes(mode)">
-                <div class="sub-title" v-if="permLength > 0">
-                    {{ $t(`m.common['共']`) }}
-                    <span class="number">{{ permLength }}</span>
-                    {{ $t(`m.common['个']`) }}{{ $t(`m.perm['操作权限']`) }}
-                </div>
-            </template>
-            <template v-if="['member'].includes(mode)">
-                <template v-if="userLength > 0 || departLength > 0">
-                    <div class="sub-title" v-if="userLength > 0">
-                        {{ $t(`m.common['共']`) }}
-                        <span class="number">{{ userLength }}</span>
-                        {{ $t(`m.common['个用户']`) }}，
-                    </div>
-                    <div class="sub-title" v-if="departLength > 0">
-                        {{ $t(`m.common['共']`) }}
-                        <span class="number">{{ departLength }}</span>
-                        {{ $t(`m.common['个组织']`) }}
-                    </div>
-                </template>
-                <div class="sub-title" v-else>{{ $t(`m.common['全员']`) }}(All)</div>
-            </template>
+  <div :class="['iam-render-perm', extCls]">
+    <div class="header" @click="handleExpanded">
+      <label class="title">{{ title }}</label>
+      <template v-if="['action'].includes(mode)">
+        <div class="sub-title" v-if="permLength > 0">
+          {{ $t(`m.common['共']`) }}
+          <span class="number">{{ permLength }}</span>
+          {{ $t(`m.common['个']`) }}{{ $t(`m.perm['操作权限']`) }}
         </div>
-        <div class="content" v-if="isExpanded">
-            <div class="slot-content">
-                <slot />
-            </div>
-            <p class="expand-action" @click="handlePackup">
-                <Icon :type="isExpanded ? 'up-angle' : 'down-angle'" />
-                {{ $t(`m.common['点击收起']`) }}
-            </p>
-        </div>
-        <Icon type="dustbin" class="action" v-if="isShowDelete" @click.stop="handleDelete" />
+      </template>
+      <template v-if="['member'].includes(mode)">
+        <template v-if="userLength > 0 || departLength > 0">
+          <div class="sub-title" v-if="userLength > 0">
+            {{ $t(`m.common['共']`) }}
+            <span class="number">{{ userLength }}</span>
+            {{ $t(`m.common['个用户']`) }}，
+          </div>
+          <div class="sub-title" v-if="departLength > 0">
+            {{ $t(`m.common['共']`) }}
+            <span class="number">{{ departLength }}</span>
+            {{ $t(`m.common['个组织']`) }}
+          </div>
+        </template>
+        <div class="sub-title" v-else>{{ $t(`m.common['全员']`) }}(All)</div>
+      </template>
     </div>
+    <div class="content" v-if="isExpanded">
+      <div class="slot-content">
+        <slot />
+      </div>
+      <p class="expand-action" @click="handlePackup">
+        <Icon :type="isExpanded ? 'up-angle' : 'down-angle'" />
+        {{ $t(`m.common['点击收起']`) }}
+      </p>
+    </div>
+    <Icon type="dustbin" class="action" v-if="isShowDelete" @click.stop="handleDelete" />
+  </div>
 </template>
 <script>
-    export default {
-        name: '',
-        props: {
-            mode: {
-                type: String,
-                default: 'action'
-            },
-            expanded: {
-                type: Boolean,
-                default: false
-            },
-            title: {
-                type: String,
-                default: ''
-            },
-            permLength: {
-                type: Number,
-                default: 0
-            },
-            userLength: {
-                type: Number,
-                default: 0
-            },
-            departLength: {
-                type: Number,
-                default: 0
-            },
-            extCls: {
-                type: String,
-                default: ''
-            },
-            canDelete: {
-                type: Boolean,
-                default: false
-            }
-        },
-        data () {
-            return {
-                isExpanded: this.expanded
-            };
-        },
-        computed: {
-            isShowDelete () {
-                return this.canDelete && !this.isExpanded;
-            }
-        },
-        watch: {
-            expanded (value) {
-                this.isExpanded = !!value;
-            }
-        },
-        methods: {
-            handlePackup () {
-                this.isExpanded = false;
-                this.$emit('update:expanded', false);
-                this.$emit('on-expanded', false);
-            },
+  export default {
+    name: '',
+    props: {
+      mode: {
+        type: String,
+        default: 'action'
+      },
+      expanded: {
+        type: Boolean,
+        default: false
+      },
+      title: {
+        type: String,
+        default: ''
+      },
+      permLength: {
+        type: Number,
+        default: 0
+      },
+      userLength: {
+        type: Number,
+        default: 0
+      },
+      departLength: {
+        type: Number,
+        default: 0
+      },
+      extCls: {
+        type: String,
+        default: ''
+      },
+      canDelete: {
+        type: Boolean,
+        default: false
+      }
+    },
+    data () {
+      return {
+        isExpanded: this.expanded
+      };
+    },
+    computed: {
+      isShowDelete () {
+        return this.canDelete && !this.isExpanded;
+      }
+    },
+    watch: {
+      expanded (value) {
+        this.isExpanded = !!value;
+      }
+    },
+    methods: {
+      handlePackup () {
+        this.isExpanded = false;
+        this.$emit('update:expanded', false);
+        this.$emit('on-expanded', false);
+      },
 
-            handleDelete () {
-                this.$emit('on-delete');
-            },
+      handleDelete () {
+        this.$emit('on-delete');
+      },
 
-            handleExpanded () {
-                this.isExpanded = !this.isExpanded;
-                this.$emit('update:expanded', true);
-                this.$emit('on-expanded', true);
-            }
-        }
-    };
+      handleExpanded () {
+        this.isExpanded = !this.isExpanded;
+        this.$emit('update:expanded', true);
+        this.$emit('on-expanded', true);
+      }
+    }
+  };
 </script>
 <style lang="postcss" scoped>
     .iam-render-perm {

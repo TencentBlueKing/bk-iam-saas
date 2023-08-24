@@ -16,12 +16,12 @@ from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from backend.apps.role.models import RoleUser
-from backend.biz.role import RoleBiz
+from backend.apps.organization.models import User
+from backend.biz.role import RoleBiz, can_user_manage_role
 from backend.common.error_codes import error_codes
 
 from .role_auth import ROLE_SESSION_KEY
-from .serializers import AccountRoleSLZ, AccountRoleSwitchSLZ, AccountUserSLZ
+from .serializers import AccountRoleSwitchSLZ, AccountUserSLZ
 
 
 class UserViewSet(GenericViewSet):
@@ -34,30 +34,22 @@ class UserViewSet(GenericViewSet):
         user = request.user
         role = request.role
         timestamp = int(time.time())
+
+        u = User.objects.filter(username=user.username).only("display_name").first()
+
         return Response(
             {
                 "timestamp": timestamp,
                 "username": user.username,
                 "role": {"type": role.type, "id": role.id, "name": role.name},
                 "timezone": user.get_property("time_zone"),
+                "name": u.display_name,
             }
         )
 
 
 class RoleViewSet(GenericViewSet):
-
-    pagination_class = None  # 去掉swagger中的limit offset参数
-
     role_biz = RoleBiz()
-
-    @swagger_auto_schema(
-        operation_description="用户角色列表",
-        responses={status.HTTP_200_OK: AccountRoleSLZ(label="角色信息", many=True)},
-        tags=["account"],
-    )
-    def list(self, request, *args, **kwargs):
-        data = self.role_biz.list_role_tree_by_user(request.user.username)
-        return Response([one.dict() for one in data])
 
     @swagger_auto_schema(
         operation_description="用户角色切换",
@@ -71,7 +63,7 @@ class RoleViewSet(GenericViewSet):
         role_id = serializer.validated_data["id"]
 
         # 切换为管理员时, 如果不存在对应的关系, 越权
-        if role_id != 0 and not RoleUser.objects.user_role_exists(request.user.username, role_id):
+        if role_id != 0 and not can_user_manage_role(request.user.username, role_id):
             raise error_codes.FORBIDDEN.format(_("您没有该角色权限，无法切换到该角色"), True)
 
         # 修改session

@@ -1,0 +1,40 @@
+### Query grade manager details
+
+#### Parameters
+
+| Field | Type | Required | Location | Description |
+|-------|------|----------|----------|-------------|
+| system_id | string | Yes | path | The unique identifier of the access system |
+| id | int | Yes | path | The ID of the hierarchical administrator |
+
+#### Response
+
+| Field | Type | Description |
+|-------|------|-------------|
+| id | int | The ID of the hierarchical administrator |
+| name | string | The name of the hierarchical administrator, which is unique in the permission center |
+| Description | string | The Description of the hierarchical administrator, which can be an empty string |
+| members | array[string] | The list of members of the hierarchical administrator |
+| sync_perm | bool | Whether to create a synchronized permission user group |
+| updated_time | string | The time when the hierarchical administrator was last updated |
+
+```json
+{
+    "data": {
+        "id": 13,
+        "name": "分级管理员7",
+        "Description": "",
+        "updated_time": "2022-11-22 17:57:14",
+        "creator": "admin",
+        "members": [
+            "admin"
+        ],
+        "sync_perm": true
+    },
+    "result": true,
+    "code": 0,
+    "message": "OK"
+}
+```
+
+{% include '_api_v2_status_code.md.j2' %}

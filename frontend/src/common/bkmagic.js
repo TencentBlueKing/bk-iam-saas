@@ -39,44 +39,45 @@ const Message = Vue.prototype.$bkMessage;
 let messageInstance = null;
 
 export const messageError = (message, delay = 3000) => {
-    messageInstance && messageInstance.close();
-    messageInstance = Message({
-        limit: 1,
-        message,
-        delay,
-        theme: 'error'
-    });
+  messageInstance && messageInstance.close();
+  messageInstance = Message({
+    limit: 1,
+    message,
+    delay,
+    theme: 'error'
+  });
 };
 
-export const messageSuccess = (message, delay = 3000) => {
-    messageInstance && messageInstance.close();
-    messageInstance = Message({
-        limit: 1,
-        message,
-        delay,
-        theme: 'success'
-    });
+export const messageSuccess = (message, delay = 3000, ellipsisLine = 1) => {
+  messageInstance && messageInstance.close();
+  messageInstance = Message({
+    limit: 1,
+    message,
+    delay,
+    theme: 'success',
+    ellipsisLine
+  });
 };
 
 export const messageInfo = (message, delay = 3000) => {
-    messageInstance && messageInstance.close();
-    messageInstance = Message({
-        limit: 1,
-        message,
-        delay,
-        theme: 'primary'
-    });
+  messageInstance && messageInstance.close();
+  messageInstance = Message({
+    limit: 1,
+    message,
+    delay,
+    theme: 'primary'
+  });
 };
 
 export const messageWarn = (message, delay = 3000) => {
-    messageInstance && messageInstance.close();
-    messageInstance = Message({
-        limit: 1,
-        message,
-        delay,
-        theme: 'warning',
-        hasCloseIcon: true
-    });
+  messageInstance && messageInstance.close();
+  messageInstance = Message({
+    limit: 1,
+    message,
+    delay,
+    theme: 'warning',
+    hasCloseIcon: true
+  });
 };
 
 Vue.prototype.messageError = messageError;

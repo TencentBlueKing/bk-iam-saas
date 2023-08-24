@@ -1,7 +1,7 @@
 <template functional>
-    <div class="iam-resource-order-number-wrapper">
-        <span class="number">{{ props.number || 0 }}</span>
-    </div>
+  <div class="iam-resource-order-number-wrapper">
+    <span class="number">{{ props.number || 0 }}</span>
+  </div>
 </template>
 <style lang="postcss">
     .iam-resource-order-number-wrapper {

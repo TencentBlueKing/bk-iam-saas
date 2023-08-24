@@ -18,3 +18,4 @@ class ComponentEnum(LowerStrEnum):
     ESB = auto()
     IAM = auto()
     LOGIN = auto()
+    APIGW = auto()

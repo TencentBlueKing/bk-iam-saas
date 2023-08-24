@@ -10,11 +10,13 @@ specific language governing permissions and limitations under the License.
 """
 import logging
 from collections import defaultdict
+from textwrap import dedent
 from typing import Dict, List, Optional, Set
 
 from blue_krill.web.std_error import APIError
 from django.conf import settings
-from django.db.models import Q
+from django.db import connection
+from django.db.models import Case, Q, Value, When
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
 from pydantic import BaseModel, parse_obj_as
@@ -23,9 +25,28 @@ from rest_framework import serializers
 from backend.apps.application.models import Application
 from backend.apps.group.models import Group
 from backend.apps.organization.models import Department, DepartmentMember, User
-from backend.apps.role.models import Role, RoleRelatedObject, RoleRelation, RoleSource, RoleUser, ScopeSubject
+from backend.apps.role.models import Role, RoleRelatedObject, RoleRelation, RoleResourceRelation, RoleSource, RoleUser
 from backend.apps.template.models import PermTemplate
-from backend.biz.policy import (
+from backend.common.cache import cached
+from backend.common.error_codes import error_codes
+from backend.service.constants import (
+    ACTION_ALL,
+    ANY_ID,
+    SUBJECT_ALL,
+    SUBJECT_TYPE_ALL,
+    SYSTEM_ALL,
+    ApplicationStatus,
+    ApplicationType,
+    RoleRelatedObjectType,
+    RoleSourceType,
+    RoleType,
+    SubjectType,
+)
+from backend.service.models import Attribute, Subject, System
+from backend.service.role import AuthScopeAction, AuthScopeSystem, CommonAction, RoleInfo, RoleService, UserRole
+from backend.service.system import SystemService
+
+from .policy import (
     ConditionBean,
     InstanceBean,
     PathNodeBean,
@@ -36,23 +57,7 @@ from backend.biz.policy import (
     ResourceGroupBean,
     ThinSystem,
 )
-from backend.common.error_codes import error_codes
-from backend.service.constants import (
-    ACTION_ALL,
-    SUBJECT_ALL,
-    SUBJECT_TYPE_ALL,
-    SYSTEM_ALL,
-    ApplicationStatus,
-    ApplicationType,
-    RoleRelatedObjectType,
-    RoleScopeSubjectType,
-    RoleSourceType,
-    RoleType,
-    SubjectType,
-)
-from backend.service.models import Attribute, Subject, System
-from backend.service.role import AuthScopeAction, AuthScopeSystem, CommonAction, RoleInfo, RoleService, UserRole
-from backend.service.system import SystemService
+from .resource import ResourceNodeBean
 
 logger = logging.getLogger("app")
 
@@ -127,52 +132,6 @@ class RoleBiz:
 
     transfer_groups_role = RoleService.__dict__["transfer_groups_role"]
 
-    def list_role_tree_by_user(self, user_id: str) -> List[UserRoleNode]:
-        """
-        查询用户的角色关系树
-        """
-        tree: List[UserRoleNode] = []
-        grade_manager_dict: Dict[int, UserRoleNode] = {}
-        subset_manager_dict: Dict[int, UserRoleNode] = {}
-
-        # 查询用户直接加入的role
-        roles = self.list_user_role(user_id, with_hidden=False)
-        for role in roles:
-            node = UserRoleNode.parse_obj(role)
-
-            if node.type != RoleType.SUBSET_MANAGER.value:
-                tree.append(node)
-                if node.type == RoleType.GRADE_MANAGER.value:
-                    grade_manager_dict[node.id] = node
-            else:
-                subset_manager_dict[node.id] = node
-
-        if not subset_manager_dict:
-            return tree
-
-        relations = RoleRelation.objects.filter(role_id__in=list(subset_manager_dict.keys()))
-        relation_dict = {r.role_id: r.parent_id for r in relations}
-
-        # 查询子集管理员所属的分级管理员, 不包含用户已加入的分级管理员
-        out_roles = Role.objects.filter(id__in=[id for id in relation_dict.values() if id not in grade_manager_dict])
-        for role in out_roles:
-            node = UserRoleNode(
-                id=role.id,
-                type=role.type,
-                name=role.name,
-                name_en=role.name_en,
-                description=role.description,
-                is_member=False,
-            )
-
-            tree.append(node)
-            grade_manager_dict[node.id] = node
-
-        for role_id, parent_id in relation_dict.items():
-            grade_manager_dict[parent_id].sub_roles.append(subset_manager_dict[role_id])
-
-        return tree
-
     def get_role_scope_include_user(self, role_id: int, username: str) -> Optional[Role]:
         """
         查询授权范围包含用户的角色
@@ -192,7 +151,9 @@ class RoleBiz:
         """
         创建分级管理员
         """
-        return self.svc.create(info, creator)
+        role = self.svc.create(info, creator)
+        RoleResourceRelationHelper(role).handle()
+        return role
 
     def update(self, role: Role, info: RoleInfoBean, updater: str):
         """
@@ -208,11 +169,15 @@ class RoleBiz:
             for subset_manager in Role.objects.filter(id__in=subset_manager_ids, inherit_subject_scope=True):
                 self.svc.update_role_subject_scope(subset_manager.id, subject_scopes)
 
+        RoleResourceRelationHelper(role).handle()
+
     def create_subset_manager(self, grade_manager: Role, info: RoleInfoBean, creator: str) -> Role:
         """
         创建子集管理员
         """
-        return self.svc.create_subset_manager(grade_manager, info, creator)
+        role = self.svc.create_subset_manager(grade_manager, info, creator)
+        RoleResourceRelationHelper(role).handle()
+        return role
 
     def modify_system_manager_members(self, role_id: int, members: List[str]):
         """修改系统管理员的成员"""
@@ -568,7 +533,7 @@ class RoleCheckBiz:
             for one_system_limit in split_system_limits:
                 system_limit = one_system_limit.split(":")
                 system_limits[system_limit[0].strip()] = int(system_limit[1].strip())
-        except Exception as error:
+        except Exception as error:  # pylint: disable=broad-except noqa
             logger.error(
                 f"parse grade_manager_of_specified_systems_limit from setting failed, value:{value}, error: {error}"
             )
@@ -576,9 +541,9 @@ class RoleCheckBiz:
 
         limit = system_limits[system_id] if system_id in system_limits else default_limit
 
-        exists_count = RoleSource.objects.filter(
-            source_type=RoleSourceType.API.value, source_system_id=system_id
-        ).count()
+        exists_count = RoleSource.get_role_count(
+            RoleType.GRADE_MANAGER.value, system_id, source_type=RoleSourceType.API.value
+        )
         if exists_count >= limit:
             raise serializers.ValidationError(_("系统({}): 可创建的分级管理员数量已超过最大值 {}").format(system_id, limit))
 
@@ -688,6 +653,9 @@ class RoleListQuery:
         """
         查询用户组列表
         """
+        if self.role.type == RoleType.STAFF.value:
+            return Group.objects.filter(hidden=False)
+
         group_ids = self._get_role_related_object_ids(RoleRelatedObjectType.GROUP.value, inherit=inherit)
         return Group.objects.filter(id__in=group_ids)
 
@@ -727,14 +695,42 @@ class RoleListQuery:
         授权范围包含用户的角色id列表
         """
         # 1. 查询普通用户所在的部门id
-        department_ids = self.user.ancestor_department_ids
+        department_ids = self.user.ancestor_department_ids or [0]
 
         # 2. 查询 subjects 相关的分级管理员
-        grade_mgr_ids = ScopeSubject.objects.filter(
-            Q(subject_type=RoleScopeSubjectType.DEPARTMENT.value, subject_id__in=department_ids)
-            | Q(subject_type=RoleScopeSubjectType.USER.value, subject_id=self.user.username)  # noqa
-            | Q(subject_type=SUBJECT_TYPE_ALL, subject_id=SUBJECT_ALL)  # noqa
-        ).values_list("role_id", flat=True)
+        # grade_mgr_ids = ScopeSubject.objects.filter(
+        #     Q(subject_type=RoleScopeSubjectType.DEPARTMENT.value, subject_id__in=department_ids)
+        #     | Q(subject_type=RoleScopeSubjectType.USER.value, subject_id=self.user.username)  # noqa
+        #     | Q(subject_type=SUBJECT_TYPE_ALL, subject_id=SUBJECT_ALL)  # noqa
+        # ).values_list("role_id", flat=True)
+
+        sql = dedent(
+            """SELECT
+            a.id
+            FROM
+            role_role a
+            LEFT JOIN role_scopesubject b ON a.id = b.role_id
+            WHERE
+            a.hidden = 0
+            AND (
+                (
+                b.subject_id IN %s
+                AND b.`subject_type` = 'department'
+                )
+                OR (
+                b.subject_id = %s
+                AND b.`subject_type` = 'user'
+                )
+                OR (
+                b.`subject_id` = '*'
+                AND b.`subject_type` = '*'
+                )
+            )"""
+        )
+
+        with connection.cursor() as cursor:
+            cursor.execute(sql, (tuple(department_ids), self.user.username))
+            grade_mgr_ids = [row[0] for row in cursor.fetchall()]
 
         # 3. 查询 超级管理员 + 系统管理员的 ids
         super_ids = Role.objects.filter(
@@ -752,16 +748,31 @@ class RoleListQuery:
         mgr_ids = self._list_authorization_scope_include_user_role_ids()
         return self.role_svc.list_by_ids(mgr_ids, with_hidden=False)
 
-    def query_grade_manager(self):
+    def query_grade_manager(self, with_super: bool = False):
         """
         查询分级管理员列表
         """
-        # 作为超级管理员时，可以管理所有分级管理员
-        if self.role.type == RoleType.SUPER_MANAGER.value:
-            return Role.objects.filter(type=RoleType.GRADE_MANAGER.value).order_by("-updated_time")
+        queryset = Role.objects.filter(type=RoleType.GRADE_MANAGER.value).order_by("-updated_time")
+        if with_super:
+            type_order = Case(
+                When(type=RoleType.SUPER_MANAGER.value, then=Value(1)),
+                When(type=RoleType.SYSTEM_MANAGER.value, then=Value(2)),
+                When(type=RoleType.GRADE_MANAGER.value, then=Value(3)),
+            )
+            queryset = (
+                Role.objects.filter(
+                    type__in=[RoleType.SUPER_MANAGER, RoleType.SYSTEM_MANAGER, RoleType.GRADE_MANAGER.value]
+                )
+                .alias(type_order=type_order)
+                .order_by("type_order", "-updated_time")
+            )
 
         # 作为个人时，只能管理加入的的分级管理员
         assert self.user
+
+        # 只要用户是超级管理员, 就可以管理所有分级管理员
+        if self.is_user_super_manager(self.user):
+            return queryset
 
         # 查询用户加入的角色id
         role_ids = list(RoleUser.objects.filter(username=self.user.username).values_list("role_id", flat=True))
@@ -770,7 +781,12 @@ class RoleListQuery:
         grade_manager_ids = list(RoleRelation.objects.filter(role_id__in=role_ids).values_list("parent_id", flat=True))
         role_ids.extend(grade_manager_ids)
 
-        return Role.objects.filter(type=RoleType.GRADE_MANAGER.value, id__in=role_ids).order_by("-updated_time")
+        return queryset.filter(id__in=role_ids)
+
+    @cached(timeout=5 * 60, key_function=lambda _, user: str(user.id))
+    def is_user_super_manager(self, user: User):
+        super_manager = get_super_manager()
+        return RoleUser.objects.filter(username=user.username, role_id=super_manager.id).exists()
 
     def query_subset_manager(self):
         """
@@ -1198,3 +1214,76 @@ class ActionScopeDiffer:
                 return False  # 循环正常结束, tc不满足sc中的任意一条
 
         return True
+
+
+@cached(timeout=60 * 60)  # 1 hour
+def get_super_manager() -> Role:
+    return Role.objects.filter(type=RoleType.SUPER_MANAGER.value).first()
+
+
+def can_user_manage_role(username: str, role_id: int) -> bool:
+    """是否用户能管理角色"""
+    role_ids = [role_id]
+
+    relation = RoleRelation.objects.filter(role_id=role_id).first()
+    if relation:
+        role_ids.append(relation.parent_id)
+
+    super_manager = get_super_manager()
+    if super_manager:
+        role_ids.append(super_manager.id)
+
+    return RoleUser.objects.filter(role_id__in=role_ids, username=username).exists()
+
+
+class RoleResourceRelationHelper:
+    """分析变更角色的资源关系"""
+
+    svc = RoleService()
+
+    def __init__(self, role: Role) -> None:
+        self.role = role
+
+    def handle(self):
+        resource_nodes: Set[ResourceNodeBean] = set()
+
+        # 遍历角色的所有资源范围, 分析出资源标签, 并创建数据
+        auth_systems = self.svc.list_auth_scope(self.role.id)
+        for system_actions in auth_systems:
+            for action in system_actions.actions:
+                policy = PolicyBean.parse_obj(action)
+                if len(policy.list_thin_resource_type()) != 1:
+                    continue
+
+                for rg in policy.resource_groups:
+                    rrt: RelatedResourceBean = rg.related_resource_types[0]  # type: ignore
+                    for condition in rrt.condition:
+                        # 忽略有属性的condition
+                        if not condition.has_no_attributes():
+                            continue
+
+                        # 遍历所有的实例路径, 筛选出有查询有实例审批人的实例
+                        for instance in condition.instances:
+                            for path in instance.path:
+                                first_node = path[0]
+                                if (
+                                    first_node.system_id,
+                                    first_node.type,
+                                ) not in settings.ROLE_RESOURCE_RELATION_TYPE_SET:
+                                    continue
+
+                                if len(path) == 1 or (len(path) == 2 and path[1].id == ANY_ID):
+                                    resource_nodes.add(ResourceNodeBean.parse_obj(first_node))
+
+        RoleResourceRelation.objects.filter(role_id=self.role.id).delete()
+
+        if not resource_nodes:
+            return
+
+        labels = [
+            RoleResourceRelation(
+                role_id=self.role.id, system_id=node.system_id, resource_type_id=node.type, resource_id=node.id
+            )
+            for node in resource_nodes
+        ]
+        RoleResourceRelation.objects.bulk_create(labels, ignore_conflicts=True)

@@ -10,8 +10,11 @@ specific language governing permissions and limitations under the License.
 """
 from rest_framework import serializers
 
+from backend.apps.group.models import Group
+from backend.apps.role.serializers import ResourceInstancesSLZ
 from backend.apps.subject.serializers import SubjectGroupSLZ
 from backend.biz.group import GroupBiz
+from backend.service.group_saas_attribute import GroupAttributeService
 
 from .constants import NewbieSceneEnum
 
@@ -27,14 +30,21 @@ class UserNewbieUpdateSLZ(serializers.Serializer):
 
 class GroupSLZ(SubjectGroupSLZ):
     role = serializers.SerializerMethodField()
+    role_members = serializers.SerializerMethodField()
+    attributes = serializers.SerializerMethodField()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.group_role_dict = None
+        self.group_attrs_dict = None
         if isinstance(self.instance, list) and self.instance:
             group_ids = [int(group.id) for group in self.instance]
 
             self.group_role_dict = GroupBiz().get_group_role_dict_by_ids(group_ids)
+            # 查询涉及到的用户组的属性
+            self.group_attrs_dict = GroupAttributeService().batch_get_attributes(group_ids)
+        elif isinstance(self.instance, Group):
+            self.group_attrs_dict = GroupAttributeService().batch_get_attributes([self.instance.id])
 
     def get_role(self, obj):
         if not self.group_role_dict:
@@ -45,6 +55,24 @@ class GroupSLZ(SubjectGroupSLZ):
 
         return role.dict()
 
+    def get_attributes(self, obj):
+        if not self.group_attrs_dict:
+            return {}
+
+        group_attributes = self.group_attrs_dict.get(obj.id)
+        if group_attributes:
+            return group_attributes.get_attributes()
+        return {}
+
+    def get_role_members(self, obj):
+        if not self.group_role_dict:
+            return []
+        role = self.group_role_dict.get(obj.id)
+        if not role or not role.members:
+            return []
+
+        return role.members
+
 
 class QueryRoleSLZ(serializers.Serializer):
     with_perm = serializers.BooleanField(label="角色是否带权限")
@@ -52,3 +80,11 @@ class QueryRoleSLZ(serializers.Serializer):
 
 class QueryGroupSLZ(serializers.Serializer):
     system_id = serializers.CharField(label="系统id", required=False, allow_blank=True, default="")
+
+
+class UserPolicySearchSLZ(serializers.Serializer):
+    system_id = serializers.CharField(label="系统ID")
+    action_id = serializers.CharField(label="操作ID", required=False, default="", allow_blank=True)
+    resource_instances = serializers.ListField(
+        label="资源实例", required=False, child=ResourceInstancesSLZ(label="资源实例信息"), default=list
+    )

@@ -32,11 +32,11 @@ import store from '@/store';
  * @return {Promise} promise 对象
  */
 function getUser () {
-    return store.dispatch('userInfo', {
-        cancelWhenRouteChange: false
-        // fromCache: true
-        // cancelPrevious: false
-    });
+  return store.dispatch('userInfo', {
+    cancelWhenRouteChange: false
+    // fromCache: true
+    // cancelPrevious: false
+  });
 }
 
 /**
@@ -45,11 +45,11 @@ function getUser () {
  * @return {Promise} promise 对象
  */
 function getRoleList () {
-    return store.dispatch('roleList', {
-        cancelWhenRouteChange: false
-        // fromCache: true
-        // cancelPrevious: false
-    });
+  return store.dispatch('roleList', {
+    cancelWhenRouteChange: false
+    // fromCache: true
+    // cancelPrevious: false
+  });
 }
 
 /**
@@ -58,17 +58,17 @@ function getRoleList () {
  * @return {Promise} promise 对象
  */
 function getNoviceGuide () {
-    return store.dispatch('getNoviceGuide', {
-        cancelWhenRouteChange: false
-        // fromCache: true
-        // cancelPrevious: false
-    });
+  return store.dispatch('getNoviceGuide', {
+    cancelWhenRouteChange: false
+    // fromCache: true
+    // cancelPrevious: false
+  });
 }
 
 export default function () {
-    Promise.all([
-        getUser(),
-        getNoviceGuide(),
-        getRoleList()
-    ]);
+  Promise.all([
+    getUser(),
+    getNoviceGuide(),
+    getRoleList()
+  ]);
 }

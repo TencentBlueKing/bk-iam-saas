@@ -1,12 +1,12 @@
 <template functional>
-    <div class="iam-render-common-layout">
-        <div class="left">
-            <slot />
-        </div>
-        <div class="right">
-            <slot name="right" />
-        </div>
+  <div class="iam-render-common-layout">
+    <div class="left">
+      <slot />
     </div>
+    <div class="right">
+      <slot name="right" />
+    </div>
+  </div>
 </template>
 <style lang="postcss" scoped>
     .iam-render-common-layout {

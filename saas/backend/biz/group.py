@@ -19,6 +19,7 @@ from django.utils.translation import gettext as _
 from pydantic import BaseModel, parse_obj_as
 
 from backend.apps.group.models import Group, GroupAuthorizeLock
+from backend.apps.organization.models import User
 from backend.apps.policy.models import Policy as PolicyModel
 from backend.apps.role.models import Role, RoleRelatedObject, RoleUser
 from backend.apps.template.models import PermTemplatePolicyAuthorized, PermTemplatePreUpdateLock
@@ -33,7 +34,7 @@ from backend.long_task.constants import TaskType
 from backend.long_task.models import TaskDetail
 from backend.long_task.tasks import TaskFactory
 from backend.service.action import ActionService
-from backend.service.constants import RoleRelatedObjectType, RoleType, SubjectType
+from backend.service.constants import GroupSaaSAttributeEnum, RoleRelatedObjectType, RoleType, SubjectType
 from backend.service.engine import EngineService
 from backend.service.group import GroupCreation, GroupMemberExpiredAt, GroupService, SubjectGroup
 from backend.service.group_saas_attribute import GroupAttributeService
@@ -78,6 +79,7 @@ class GroupMemberBean(BaseModel):
     name: str = ""
     full_name: str = ""
     member_count: int = 0
+    user_departments: Optional[List[str]] = None
 
     expired_at: int
     expired_at_display: str
@@ -440,6 +442,10 @@ class GroupBiz:
         subjects = parse_obj_as(List[Subject], relations)
         subject_info_list = SubjectInfoList(subjects)
 
+        # 查询用户的部门
+        usernames = [one.id for one in subjects if one.type == SubjectType.USER.value]
+        user_dict = {u.username: u for u in User.objects.filter(username__in=usernames)} if usernames else {}
+
         # 组合数据结构
         group_member_beans = []
         for subject, relation in zip(subjects, relations):
@@ -447,12 +453,20 @@ class GroupBiz:
             if not subject_info:
                 continue
 
+            # 填充用户所属的部门
+            user_departments = None
+            if subject.type == SubjectType.USER.value:
+                user = user_dict.get(subject.id, None)
+                if user:
+                    user_departments = [d.full_name for d in user.departments]
+
             group_member_bean = GroupMemberBean(
                 expired_at=relation.expired_at,
                 expired_at_display=expired_at_display(relation.expired_at),
                 created_time=utc_string_to_local(relation.created_at),
                 department_id=relation.department_id,
                 department_name=relation.department_name,
+                user_departments=user_departments,
                 **subject_info.dict(),
             )
             group_member_beans.append(group_member_bean)
@@ -663,12 +677,13 @@ class GroupBiz:
         1. 分级管理员授权范围 -> 用户组的自定义权限
         2. 分级管理员的成员 -> 用户组的成员 (过期时间永久)
         """
+        group_name_suffix = _("-管理员组")
 
         # 创建用户组, 加成员
         with transaction.atomic():
             group = self.group_svc.create(
                 GroupCreation(
-                    name=group_name or role.name + "-管理员组",
+                    name=group_name or role.name + group_name_suffix,
                     description=role.description,
                     source_system_id=role.source_system_id,
                     hidden=role.hidden,
@@ -720,7 +735,10 @@ class GroupBiz:
 
         # 2. 如果role sync_perm 被修改为True, 同时不存在同步权限用户组, 需要创建同步权限用户组
         if not relation and role.sync_perm:
-            self.create_sync_perm_group_by_role(role, user_id, group_name=group_name)
+            attrs = {
+                GroupSaaSAttributeEnum.SOURCE_FROM_ROLE.value: True,
+            }
+            self.create_sync_perm_group_by_role(role, user_id, group_name=group_name, attrs=attrs)
             return
 
         # 3. 不存在同步权限用户组, 不需要处理
@@ -828,7 +846,7 @@ class GroupBiz:
             # 需要删除的成员
         del_subjects = list(group_subjects - role_subjects)
         if del_subjects:
-            self.group_svc.remove_members(group_id, del_subjects)
+            self.group_svc.remove_members(str(group_id), del_subjects)
 
 
 class GroupCheckBiz:

@@ -8,27 +8,37 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from copy import copy
+
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import serializers, status
+from rest_framework import mixins, serializers, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from backend.account.serializers import AccountRoleSLZ
 from backend.apps.group.audit import GroupMemberDeleteAuditProvider
+from backend.apps.group.filters import GroupFilter
 from backend.apps.group.models import Group
+from backend.apps.group.serializers import GroupSearchSLZ
+from backend.apps.policy.serializers import PolicySLZ
+from backend.apps.role.constants import PermissionTypeEnum
 from backend.apps.role.serializers import RoleCommonActionSLZ
 from backend.apps.subject.serializers import SubjectGroupSLZ, UserRelationSLZ
 from backend.apps.user.models import UserProfile
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.group import GroupBiz
-from backend.biz.role import RoleBiz
+from backend.biz.permission_audit import QueryAuthorizedSubjects
+from backend.biz.policy import ConditionBean, InstanceBean, PathNodeBeanList, PolicyOperationBiz, PolicyQueryBiz
+from backend.biz.role import ActionScopeDiffer, RoleBiz
 from backend.common.pagination import CustomPageNumberPagination
 from backend.common.serializers import SystemQuerySLZ
 from backend.common.time import get_soon_expire_ts
+from backend.component.iam import list_all_subject_groups
 from backend.service.constants import SubjectRelationType
+from backend.service.group import SubjectGroup
 from backend.service.models import Subject
 
-from .serializers import GroupSLZ, QueryGroupSLZ, QueryRoleSLZ, UserNewbieSLZ, UserNewbieUpdateSLZ
+from .serializers import GroupSLZ, QueryGroupSLZ, QueryRoleSLZ, UserNewbieSLZ, UserNewbieUpdateSLZ, UserPolicySearchSLZ
 
 
 class UserGroupViewSet(GenericViewSet):
@@ -214,3 +224,179 @@ class RoleViewSet(GenericViewSet):
 
         user_roles = self.biz.list_user_role(request.user.username, with_perm, with_hidden=False)
         return Response([one.dict() for one in user_roles])
+
+
+class UserGroupSearchViewSet(mixins.ListModelMixin, GenericViewSet):
+
+    queryset = Group.objects.all()
+    serializer_class = GroupSLZ
+
+    biz = GroupBiz()
+
+    @swagger_auto_schema(
+        operation_description="搜索用户用户组列表",
+        request_body=GroupSearchSLZ(label="用户组搜索"),
+        responses={status.HTTP_200_OK: SubjectGroupSLZ(label="用户组", many=True)},
+        tags=["user"],
+    )
+    def search(self, request, *args, **kwargs):
+        slz = GroupSearchSLZ(data=request.data)
+        slz.is_valid(raise_exception=True)
+
+        data = slz.validated_data
+
+        # 筛选
+        f = GroupFilter(
+            data={k: v for k, v in data.items() if k in ["id", "name", "description"] and v},
+            queryset=self.get_queryset(),
+        )
+        queryset = f.qs
+
+        subject = Subject.from_username(request.user.username)
+        # 查询用户加入的所有用户组
+        groups = list_all_subject_groups(subject.type, subject.id)
+        ids = sorted([int(g["id"]) for g in groups])
+
+        if data["system_id"] and data["action_id"]:
+            # 通过实例或操作查询用户组
+            data["permission_type"] = PermissionTypeEnum.RESOURCE_INSTANCE.value
+            data["limit"] = 1000
+            subjects = QueryAuthorizedSubjects(data).query_by_resource_instance(subject_type="group")
+            subject_id_set = {int(s["id"]) for s in subjects}
+
+            # 筛选同时有权限并且用户加入的用户组
+            ids = [_id for _id in ids if _id in subject_id_set]
+
+        if not ids:
+            return Response({"count": 0, "results": []})
+
+        queryset = queryset.filter(id__in=ids)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            group_dict = {int(one["id"]): one for one in groups}
+            relations = [SubjectGroup(**group_dict[one.id]) for one in page]
+            results = self.biz._convert_to_subject_group_beans(relations)
+
+            slz = GroupSLZ(instance=results, many=True)
+            return Response({"count": queryset.count(), "results": slz.data})
+
+        return Response({"count": 0, "results": []})
+
+
+class UserDepartmentGroupSearchViewSet(mixins.ListModelMixin, GenericViewSet):
+
+    queryset = Group.objects.all()
+    serializer_class = GroupSLZ
+
+    biz = GroupBiz()
+
+    @swagger_auto_schema(
+        operation_description="搜索用户部门用户组列表",
+        request_body=GroupSearchSLZ(label="用户组搜索"),
+        responses={status.HTTP_200_OK: SubjectGroupSLZ(label="用户组", many=True)},
+        tags=["user"],
+    )
+    def search(self, request, *args, **kwargs):
+        slz = GroupSearchSLZ(data=request.data)
+        slz.is_valid(raise_exception=True)
+
+        data = slz.validated_data
+
+        # 筛选
+        f = GroupFilter(
+            data={k: v for k, v in data.items() if k in ["id", "name", "description"] and v},
+            queryset=self.get_queryset(),
+        )
+        queryset = f.qs
+
+        subject = Subject.from_username(request.user.username)
+        groups = self.biz.list_all_user_department_group(subject)
+
+        # 查询用户加入的所有用户组
+        ids = sorted([g.id for g in groups])
+
+        if data["system_id"] and data["action_id"]:
+            # 通过实例或操作查询用户组
+            data["permission_type"] = PermissionTypeEnum.RESOURCE_INSTANCE.value
+            data["limit"] = 1000
+            subjects = QueryAuthorizedSubjects(data).query_by_resource_instance(subject_type="group")
+            subject_id_set = {int(s["id"]) for s in subjects}
+
+            # 筛选同时有权限并且用户加入的用户组
+            ids = [_id for _id in ids if _id in subject_id_set]
+
+        if not ids:
+            return Response({"count": 0, "results": []})
+
+        queryset = queryset.filter(id__in=ids)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            group_dict = {one.id: one for one in groups}
+            relations = [group_dict[one.id] for one in page]
+
+            slz = GroupSLZ(instance=relations, many=True)
+            return Response({"count": queryset.count(), "results": slz.data})
+
+        return Response({"count": 0, "results": []})
+
+
+class UserPolicySearchViewSet(mixins.ListModelMixin, GenericViewSet):
+
+    pagination_class = None  # 去掉swagger中的limit offset参数
+
+    policy_query_biz = PolicyQueryBiz()
+    policy_operation_biz = PolicyOperationBiz()
+
+    @swagger_auto_schema(
+        operation_description="搜索用户权限策略列表",
+        request_body=UserPolicySearchSLZ(label="用户组搜索"),
+        responses={status.HTTP_200_OK: PolicySLZ(label="策略", many=True)},
+        tags=["user"],
+    )
+    def search(self, request, *args, **kwargs):
+        slz = UserPolicySearchSLZ(data=request.data)
+        slz.is_valid(raise_exception=True)
+
+        data = slz.validated_data
+        system_id = data["system_id"]
+
+        subject = Subject.from_username(request.user.username)
+        policies = self.policy_query_biz.list_by_subject(system_id, subject)
+
+        # ResourceNameAutoUpdate
+        policies = self.policy_operation_biz.update_due_to_renamed_resource(system_id, subject, policies)
+
+        if not data["action_id"]:
+            return Response([p.dict() for p in policies])
+
+        for p in policies:
+            if p.action_id == data["action_id"]:
+                for ri in data["resource_instances"]:
+                    # 判断操作是否有实例的权限
+                    for rg in p.resource_groups:
+                        rrt = rg.get_related_resource_type(ri["system_id"], ri["type"])
+                        if not rrt:
+                            return Response([])
+
+                        path = copy(ri["path"])
+                        path.append({"type": ri["type"], "id": ri["id"], "name": ri["name"]})
+
+                        conditions = [
+                            ConditionBean(
+                                instances=[InstanceBean(type=ri["type"], path=[PathNodeBeanList.parse_obj(path)])],
+                                attributes=[],
+                            )
+                        ]
+
+                        if ActionScopeDiffer(None, None)._diff_conditions(conditions, rrt.condition):
+                            break
+                    else:
+                        # 没有匹配的策略
+                        return Response([])
+
+                return Response([p.dict()])
+
+        # no action_id policy
+        return Response([])

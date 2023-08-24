@@ -8,7 +8,7 @@ Path Parameters
 
 Parameters
 
-| field | type | mandatory | description |
+| Field | Type | Required | Description |
 |:---|:---|:---|:---|
 | name |string | yes | operation group name |
 | name_en | string | Yes | The English name of the action group, switch to the English version when internationalizing |
@@ -17,7 +17,7 @@ Parameters
 
 Note: 1:
 
-1. at most `2-levels` action groups (i.e. the action group under the first level `sub_gropus` cannot have the next level `sub_groups`), if nested more than 2 levels, it will return the error `1901400(more than 2-levels action_group, current only support 2- levels)` 2. 
+1. at most `2-levels` action groups (i.e. the action group under the first level `sub_gropus` cannot have the next level `sub_groups`), if nested more than 2 levels, it will return the error `1901400(more than 2-levels action_group, current only support 2- levels)` 2.
 2. `actions` and `sub_groups` of the same action group cannot be empty at the same time `1901400(actions and sub_groups can't be empty at the same time)`
-3. action can be attached to a level 1 or level 2 `action group`, however, the same action can only be attached to a `level 1 action group`/ `level 2 action group`; i.e., action_id is unique within the global json; `1901400(one action can belong only one group)` 
+3. action can be attached to a level 1 or level 2 `action group`, however, the same action can only be attached to a `level 1 action group`/ `level 2 action group`; i.e., action_id is unique within the global json; `1901400(one action can belong only one group)`
 4. each `action_id` will be checked; it must be a legal `action_id` registered by the system; so when using interface call registration or migration registration, the action corresponding to `action_id` must be registered first, and then `action_groups` must be updated

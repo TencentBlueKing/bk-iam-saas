@@ -107,7 +107,7 @@ class ResourceIDNameCache:
         # 缓存有问题，不影响正常逻辑
         try:
             self.cache.set_many(data, timeout=5 * 60)
-        except Exception:  # noqa
+        except Exception:  # pylint: disable=broad-except noqa
             logger.exception("set resource id:name cache fail")
 
     def get(self, ids: List[str]) -> Dict[str, Optional[str]]:
@@ -120,7 +120,7 @@ class ResourceIDNameCache:
         # 缓存有问题，不影响正常逻辑
         try:
             results = self.cache.get_many(list(map_keys.keys()))
-        except Exception:  # noqa
+        except Exception:  # pylint: disable=broad-except noqa
             logger.exception("get resource id:name cache fail")
             results = {}
 
@@ -209,8 +209,7 @@ class ResourceProvider:
     def search_instance(
         self,
         keyword: str,
-        parent_type: str = "",
-        parent_id: str = "",
+        ancestors: List[Dict[str, str]],
         limit: int = 10,
         offset: int = 0,
         action_system_id: str = "",
@@ -219,8 +218,9 @@ class ResourceProvider:
         """根据上级资源和Keyword搜索某个资源实例列表"""
         # Note: 虽然与list_instance很相似，但在制定回调接口协议时特意分开为两个API，这样方便后续搜索的扩展
         filter_condition: Dict = {"keyword": keyword}
-        if parent_type and parent_id:
-            filter_condition["parent"] = {"type": parent_type, "id": parent_id}
+        if ancestors:
+            filter_condition["ancestors"] = ancestors
+            filter_condition["parent"] = {"type": ancestors[-1]["type"], "id": ancestors[-1]["id"]}
         if action_system_id and action_id:
             filter_condition["action"] = {"system": action_system_id, "id": action_id}
         page = self._get_page_params(limit, offset)

@@ -1,58 +1,58 @@
 <template>
-    <div class="iam-perm-apply-entrance-wrapper">
-        <div class="apply-way-wrapper">
-            <div v-for="(item, index) in applyList"
-                :key="index"
-                :class="['apply-way-item', { 'set-margin-left': index !== 0 }]">
-                <p class="way-item-title">{{ item.title }}</p>
-                <p class="way-item-sub-title">{{ item.subTitle }}</p>
-                <div class="way-item-action">
-                    <bk-button theme="primary" @click="handleToApply(item.router)">
-                        {{ $t(`m.applyEntrance['立刻申请']`) }}
-                    </bk-button>
-                </div>
-                <div class="way-separator"></div>
-                <label class="way-label">{{ $t(`m.applyEntrance['场景应用']`) }}：</label>
-                <div class="way-tips-wrapper">
-                    <p
-                        v-for="(tip, tipIndex) in item.tips"
-                        :key="tip">
-                        {{ (tipIndex + 1) + '. ' + tip }}
-                    </p>
-                </div>
-            </div>
+  <div class="iam-perm-apply-entrance-wrapper">
+    <div class="apply-way-wrapper">
+      <div v-for="(item, index) in applyList"
+        :key="index"
+        :class="['apply-way-item', { 'set-margin-left': index !== 0 }]">
+        <p class="way-item-title">{{ item.title }}</p>
+        <p class="way-item-sub-title">{{ item.subTitle }}</p>
+        <div class="way-item-action">
+          <bk-button theme="primary" @click="handleToApply(item.router)">
+            {{ $t(`m.applyEntrance['立刻申请']`) }}
+          </bk-button>
         </div>
+        <div class="way-separator"></div>
+        <label class="way-label">{{ $t(`m.applyEntrance['场景应用']`) }}：</label>
+        <div class="way-tips-wrapper">
+          <p
+            v-for="(tip, tipIndex) in item.tips"
+            :key="tip">
+            {{ (tipIndex + 1) + '. ' + tip }}
+          </p>
+        </div>
+      </div>
     </div>
+  </div>
 </template>
 <script>
-    export default {
-        name: '',
-        data () {
-            return {
-                applyList: [
-                    {
-                        router: 'applyJoinUserGroup',
-                        title: this.$t(`m.applyEntrance['申请加入用户组']`),
-                        subTitle: this.$t(`m.applyEntrance['申请加入用户组标题']`),
-                        tips: [this.$t(`m.applyEntrance['申请加入用户组场景1']`), this.$t(`m.applyEntrance['申请加入用户组场景2']`)]
-                    },
-                    {
-                        router: 'applyCustomPerm',
-                        title: this.$t(`m.applyEntrance['申请自定义权限']`),
-                        subTitle: this.$t(`m.applyEntrance['申请自定义权限标题']`),
-                        tips: [this.$t(`m.applyEntrance['申请自定义权限场景1']`), this.$t(`m.applyEntrance['申请自定义权限场景2']`)]
-                    }
-                ]
-            };
-        },
-        methods: {
-            handleToApply (payload) {
-                this.$router.push({
-                    name: payload
-                });
-            }
-        }
-    };
+  export default {
+    name: '',
+    data () {
+      return {
+        applyList: [
+          {
+            router: 'applyJoinUserGroup',
+            title: this.$t(`m.applyEntrance['申请加入用户组']`),
+            subTitle: this.$t(`m.applyEntrance['申请加入用户组标题']`),
+            tips: [this.$t(`m.applyEntrance['申请加入用户组场景1']`), this.$t(`m.applyEntrance['申请加入用户组场景2']`)]
+          },
+          {
+            router: 'applyCustomPerm',
+            title: this.$t(`m.applyEntrance['申请自定义权限']`),
+            subTitle: this.$t(`m.applyEntrance['申请自定义权限标题']`),
+            tips: [this.$t(`m.applyEntrance['申请自定义权限场景1']`), this.$t(`m.applyEntrance['申请自定义权限场景2']`)]
+          }
+        ]
+      };
+    },
+    methods: {
+      handleToApply (payload) {
+        this.$router.push({
+          name: payload
+        });
+      }
+    }
+  };
 </script>
 <style lang="postcss" scoped>
     .iam-perm-apply-entrance-wrapper {

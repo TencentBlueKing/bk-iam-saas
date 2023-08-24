@@ -1,7 +1,30 @@
 ### 修改 resourceType
 
 ----------
-{% include '_api_v1_model_resource_types.md.j2' %}
+#### Parameters
+
+| 字段 |  类型 |是否必须  | 描述  |
+|:---|:---|:---|:---|
+| name |string | 是 | 资源类型名称，系统下唯一 |
+| name_en | string | 是 | 资源类型英文名，国际化时切换到英文版本显示 |
+| description |string | 否 | 资源类型名称，系统下唯一 |
+| description_en | string | 否 | 资源类型英文名，国际化时切换到英文版本显示 |
+| parents | Array[Object] | 否 | 资源类型的直接上级，可多个直接上级，可以是自身系统的资源类型或其他系统的资源类型, 可为空列表，不允许重复，数据仅用于权限中心产品上显示|
+| provider_config | Object | 是 | 权限中心调用查询资源实例接口的配置文件，与 system.provider_config.host 配合使用 |
+| version | int | 否 |  版本号，允许为空，仅仅作为在权限中心上进行 New 的更新提醒 |
+
+parents 元素参数说明
+
+| 字段 |  类型 |是否必须  | 描述  |
+|:---|:---|:---|:---|
+| system_id | string | 是 | 直接上级资源类型的来源系统 ID |
+| id |string | 是 | 直接上级资源类型 ID |
+
+provider_config 内元素 参数：
+
+| 字段 |  类型 |是否必须  | 描述  |
+|:---|:---|:---|:---|
+| path | string | 是 | 权限中心调用查询资源实例接口的 URL 的 PATH，与 system.provider_config.host 配合使用 |
 ----------
 
 #### Parameters

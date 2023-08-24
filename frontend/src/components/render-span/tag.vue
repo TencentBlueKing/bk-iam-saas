@@ -1,21 +1,21 @@
 <template functional>
-    <div :class="[
-        'iam-render-tag',
-        { add: props.status === 'add' },
-        { checked: props.status === 'checked' || props.status === 'unchecked' },
-        { checked: props.status === 'delete' }
-    ]">
-        <span
-            :class="['status-dot', { add: props.status === 'add' }, { delete: props.status === 'delete' }]"
-            v-if="props.status === 'add' || props.status === 'delete'">
-        </span>
-        <template v-if="props.status === 'add' || props.status === 'checked' || props.status === 'unchecked'">
-            <span style="display: inline-block; color: #979ba5; vertical-align: middle;">{{ props.content }}</span>
-        </template>
-        <template v-else>
-            <s style="display: inline-block; color: #c4c6cc; vertical-align: middle;">{{ props.content }}</s>
-        </template>
-    </div>
+  <div :class="[
+    'iam-render-tag',
+    { add: props.status === 'add' },
+    { checked: props.status === 'checked' || props.status === 'unchecked' },
+    { checked: props.status === 'delete' }
+  ]">
+    <span
+      :class="['status-dot', { add: props.status === 'add' }, { delete: props.status === 'delete' }]"
+      v-if="props.status === 'add' || props.status === 'delete'">
+    </span>
+    <template v-if="props.status === 'add' || props.status === 'checked' || props.status === 'unchecked'">
+      <span style="display: inline-block; color: #979ba5; vertical-align: middle;">{{ props.content }}</span>
+    </template>
+    <template v-else>
+      <s style="display: inline-block; color: #c4c6cc; vertical-align: middle;">{{ props.content }}</s>
+    </template>
+  </div>
 </template>
 <style lang="postcss" scoped>
     .iam-render-tag {
