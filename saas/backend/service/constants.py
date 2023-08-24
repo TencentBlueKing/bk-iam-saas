@@ -129,6 +129,12 @@ class RoleScopeType(ChoicesEnum, LowerStrEnum):
     _choices_labels = skip(((AUTHORIZATION, "系统操作"), (SUBJECT, "授权对象")))
 
 
+class RoleConfigType(ChoicesEnum, LowerStrEnum):
+    GROUP_APPLY_DISABLE = auto()
+
+    _choices_labels = skip(((GROUP_APPLY_DISABLE, "用户组不允许申请"),))
+
+
 class RoleRelatedObjectType(ChoicesEnum, LowerStrEnum):
     TEMPLATE = auto()
     GROUP = auto()

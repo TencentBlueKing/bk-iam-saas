@@ -16,7 +16,14 @@ from django.db import connection, models
 from django.utils.functional import cached_property
 
 from backend.common.models import BaseModel, BaseSystemHiddenModel
-from backend.service.constants import RoleRelatedObjectType, RoleScopeType, RoleSourceType, RoleType, SubjectType
+from backend.service.constants import (
+    RoleConfigType,
+    RoleRelatedObjectType,
+    RoleScopeType,
+    RoleSourceType,
+    RoleType,
+    SubjectType,
+)
 from backend.util.json import json_dumps
 
 from .constants import DEFAULT_ROLE_PERMISSIONS
@@ -323,6 +330,29 @@ class RoleResourceRelation(BaseModel):
         verbose_name = "角色资源关系"
         verbose_name_plural = "角色资源关系"
         unique_together = ["resource_id", "resource_type_id", "system_id", "role_id"]
+
+
+class RoleConfig(BaseModel):
+    """
+    角色配置
+    """
+
+    role_id = models.IntegerField("角色ID")
+    type = models.CharField("限制类型", max_length=32, choices=RoleConfigType.get_choices())
+    _config = models.TextField("配置", db_column="config", default="{}")
+
+    class Meta:
+        verbose_name = "角色配置"
+        verbose_name_plural = "角色配置"
+        index_together = ["role_id", "type"]
+
+    @property
+    def config(self):
+        return json.loads(self._config)
+
+    @config.setter
+    def config(self, config):
+        self._config = json_dumps(config)
 
 
 class AnonymousRole:

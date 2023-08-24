@@ -155,7 +155,7 @@ class GroupBiz:
         creator: str,
         subjects: List[Subject],
         expired_at: int,
-        apply_able: bool = True,
+        apply_disable: bool = False,
     ) -> Group:
         """
         创建用户组
@@ -167,7 +167,7 @@ class GroupBiz:
                     description=description,
                     source_system_id=role.source_system_id,
                     hidden=role.hidden,
-                    apply_able=apply_able,
+                    apply_disable=apply_disable,
                 ),
                 creator,
             )

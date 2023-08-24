@@ -38,7 +38,7 @@ class GroupFilter(InitialFilterSet):
     role_id = filters.NumberFilter(method="role_id_filter", label="角色ID")
     cache_id = filters.CharFilter(label="cache_id", method="cache_id_filter")
     hidden = filters.BooleanFilter(method="hidden_filter", initial=True)
-    hide_apply_disable = filters.BooleanFilter(method="hide_apply_disable_filter", initial=False)
+    apply_disable = filters.BooleanFilter(label="不可被申请")
 
     class Meta:
         model = Group
@@ -52,7 +52,7 @@ class GroupFilter(InitialFilterSet):
             "description",
             "role_id",
             "hidden",
-            "hide_apply_disable",
+            "apply_disable",
         ]
 
     def system_id_filter(self, queryset, name, value):
@@ -90,11 +90,6 @@ class GroupFilter(InitialFilterSet):
     def hidden_filter(self, queryset, name, value):
         if value:
             return queryset.filter(hidden=False)
-        return queryset
-
-    def hide_apply_disable_filter(self, queryset, name, value):
-        if value:
-            return queryset.filter(apply_able=True)
         return queryset
 
 

@@ -181,7 +181,7 @@ class GroupViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericView
                 user_id,
                 members,
                 data["expired_at"],
-                apply_able=data["apply_able"],
+                apply_disable=data["apply_disable"],
             )
 
         # 使用长时任务触发多个模板同时授权
@@ -248,7 +248,7 @@ class GroupViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericView
             # 用户组名称在角色内唯一
             self.group_check_biz.check_role_group_name_unique(request.role.id, data["name"], group.id)
 
-            group = self.group_biz.update(group, data["name"], data["description"], user_id)
+            group = self.group_biz.update(group, data["name"], data["description"], data["apply_disable"], user_id)
 
         # 写入审计上下文
         audit_context_setter(group=group)
