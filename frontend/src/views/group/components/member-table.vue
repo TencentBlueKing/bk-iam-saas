@@ -780,12 +780,6 @@
           }
         }
       }
-        /* .bk-cascade-border {
-          width: 140px !important;
-          .bk-cascade-panel-ul {
-            width: 180px !important;
-          }
-        } */
     }
   }
 </style>

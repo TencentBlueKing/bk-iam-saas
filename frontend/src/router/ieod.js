@@ -168,6 +168,9 @@ const Setting = () => import(/* webpackChunkName: 'set' */ '../views/set');
 // 审批流程设置
 const ApprovalProcess = () => import(/* webpackChunkName: 'approvalProcess' */ '../views/approval-process');
 
+// 用户组设置
+const UserGroupSetting = () => import(/* webpackChunkName: 'userGroupSetting' */ '../views/user-group-setting');
+
 // 权限续期
 const PermRenewal = () => import(/* webpackChunkName: 'PermRenewal' */ '../views/perm/perm-renewal');
 
@@ -645,6 +648,14 @@ export const routes = [
           headerTitle: il8n('myApply', '审批流程')
         },
         component: ApprovalProcess
+      },
+      {
+        path: 'user-group-setting',
+        name: 'userGroupSetting',
+        meta: {
+          headerTitle: il8n('nav', '用户组设置')
+        },
+        component: UserGroupSetting
       },
       {
         path: 'no-perm',

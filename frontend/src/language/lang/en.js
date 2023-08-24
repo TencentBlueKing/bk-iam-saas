@@ -272,6 +272,7 @@ export const m = {
         '批量无限制': 'Unlimited batch size',
         '无该应用访问权限': 'No access permissions for this application',
         '暂无可复制内容': 'There is currently no replicable content',
+        '暂无可复制用户': 'There are currently no replicable users',
         '管理员组不能添加部门': 'The administrator group cannot add department'
     },
     // 校验
@@ -356,7 +357,8 @@ export const m = {
         '请选择操作': 'Please select the actions',
         '请选择资源类型': 'Please select resource type',
         '管理空间名称不能为空': 'Management space name cannot be empty',
-        '请选择用户或组织成员': 'Please select user or organization member'
+        '请选择用户或组织成员': 'Please select user or organization member',
+        '请选择用户组成员复制': 'Please select user group member copy'
     },
     info: {
         '加入用户组申请成功': 'Apply to join the group successfully',
@@ -515,6 +517,7 @@ export const m = {
          '已经复制到粘贴板，可在其他用户组添加成员时粘贴到手动输入框': 'Has been copied to the clipboard and can be pasted into the manual input box when adding members to other user groups',
          '用户组为管理员组，不能添加部门': 'The {value} is administrator group and cannot add departments',
          '用户组为只读用户组不能添加成员': '{value} is read-only user groups and cannot add members',
+         '用户组属性为只读属性': '{value} is read-only user group attribute',
          '管理员组不能添加权限': 'Administrators group cannot add permissions',
          '只读用户组不能添加权限': 'Read only user groups cannot add permissions'
     },
@@ -590,7 +593,8 @@ export const m = {
         '新建管理空间': 'Create Management Space',
         '新建二级管理空间': 'New Secondary Management Space',
         '克隆管理空间': 'Clone Management Space',
-        '克隆二级管理空间': 'Clone Secondary management space'
+        '克隆二级管理空间': 'Clone Secondary management space',
+        '用户组设置': 'User Group Setting'
     },
     applyEntrance: {
         '立刻申请': 'Apply now',
@@ -798,6 +802,7 @@ export const m = {
         '所属系统': 'System',
         '管理空间': 'Management Space',
         '所属管理空间': 'Management space',
+        '用户组属性': 'User group attributes',
         '分配': 'Assign',
         '分配至': 'Assign to',
         '分配 (二级管理空间)': 'Assign (secondary management space)',
@@ -809,8 +814,14 @@ export const m = {
         '该组织能管理员主动授权，用户无法主动申请': 'The organization can be actively authorized by administrators, but users cannot actively apply',
         '勾选后，该用户组只能通过管理员主动授权': 'After checking, the user group can only be actively authorized by the administrator',
         '复制成员': 'Copy members',
-        '复制已选成员': 'Copy selected members',
-        '复制所有成员': 'Copy all members'
+        '复制已选': 'Copy selected',
+        '复制所有': 'Copy all',
+        '成员': 'Members',
+        '成员和组织': 'Members and organizations',
+        '不可被申请': 'Not applicable',
+        '该组只能管理员主动授权，用户无法主动申请': 'This group can only be actively authorized by administrators, and users cannot actively apply',
+        '设置不可被申请，则无法申请加入此用户组': 'If the setting cannot be applied for, you cannot apply to join this user group',
+        '管理员已设置空间下所有用户组不可被申请': 'The administrator has set that all user groups in the space cannot be applied for'
     },
     userGroupDetail: {
         '用户组名': 'Group name: ',
@@ -1326,6 +1337,10 @@ export const m = {
         '操作权限': 'Action permissions',
         '自定义权限': 'Custom permissions',
         '模板权限': 'Template permissions'
+    },
+    userGroupSetting: {
+        '所有用户组不可被申请': 'All user groups cannot be applied for',
+        '编辑用户组配置成功': ' User group configuration edited'
     }
 }
 export default {
