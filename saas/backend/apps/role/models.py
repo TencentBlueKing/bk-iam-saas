@@ -78,7 +78,7 @@ class RoleUserSystemPermission(BaseModel):
     角色里的用户是否拥有对应接入系统的超级权限
     """
 
-    role_id = models.IntegerField("角色ID")
+    role_id = models.IntegerField("角色ID", db_index=True)
     content = models.TextField("限制内容", default='{"enabled_users": [], "global_enabled": false}')
 
     @cached_property
@@ -280,6 +280,11 @@ class RoleSource(BaseModel):
     role_id = models.IntegerField("角色ID", unique=True)
     source_type = models.CharField("来源类型", max_length=32, choices=RoleSourceType.get_choices())
     source_system_id = models.CharField("来源系统", max_length=32, default="")
+
+    class Meta:
+        verbose_name = "角色创建来源"
+        verbose_name_plural = "角色创建来源"
+        index_together = ["source_system_id", "source_type"]
 
     @classmethod
     def get_role_count(cls, role_type: str, system_id: str, source_type: str = RoleSourceType.API.value):
