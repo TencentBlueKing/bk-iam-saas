@@ -17,8 +17,10 @@ from rest_framework.viewsets import GenericViewSet
 
 from backend.api.authentication import ESBAuthentication
 from backend.api.management.constants import ManagementAPIEnum, VerifyApiParamLocationEnum
+from backend.api.management.v2.filters import GradeManagerFilter
 from backend.api.management.v2.permissions import ManagementAPIPermission
 from backend.api.management.v2.serializers import (
+    ManagementGradeManagerBasicInfoSLZ,
     ManagementGradeManagerBasicSLZ,
     ManagementGradeMangerDetailSLZ,
     ManagementSubsetMangerCreateSLZ,
@@ -34,7 +36,7 @@ from backend.service.constants import GroupSaaSAttributeEnum, RoleSourceType, Ro
 from backend.trans.open_management import GradeManagerTrans
 
 
-class ManagementSubsetManagerCreateViewSet(GenericViewSet):
+class ManagementSubsetManagerCreateListViewSet(GenericViewSet):
     """二级管理员创建"""
 
     authentication_classes = [ESBAuthentication]
@@ -44,9 +46,16 @@ class ManagementSubsetManagerCreateViewSet(GenericViewSet):
             VerifyApiParamLocationEnum.ROLE_IN_PATH.value,
             ManagementAPIEnum.V2_SUBSET_MANAGER_CREATE.value,
         ),
+        "list": (
+            VerifyApiParamLocationEnum.ROLE_IN_PATH.value,
+            ManagementAPIEnum.V2_SUBSET_MANAGER_LIST.value,
+        ),
     }
 
     lookup_field = "id"
+    queryset = Role.objects.filter(type=RoleType.SUBSET_MANAGER.value).order_by("-updated_time")
+    filterset_class = GradeManagerFilter
+
     biz = RoleBiz()
     group_biz = GroupBiz()
     role_check_biz = RoleCheckBiz()
@@ -115,6 +124,25 @@ class ManagementSubsetManagerCreateViewSet(GenericViewSet):
         audit_context_setter(role=role)
 
         return Response({"id": role.id})
+
+    @swagger_auto_schema(
+        operation_description="二级管理员列表",
+        responses={status.HTTP_200_OK: ManagementGradeManagerBasicInfoSLZ(many=True)},
+        tags=["management.subset_manager"],
+    )
+    def list(self, request, *args, **kwargs):
+        role_ids = RoleRelation.objects.list_sub_id(kwargs["id"])
+
+        queryset = self.queryset.filter(id__in=role_ids)
+        queryset = self.filter_queryset(queryset)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = ManagementGradeManagerBasicInfoSLZ(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = ManagementGradeManagerBasicInfoSLZ(queryset, many=True)
+        return Response(serializer.data)
 
 
 class ManagementSubsetManagerViewSet(GenericViewSet):

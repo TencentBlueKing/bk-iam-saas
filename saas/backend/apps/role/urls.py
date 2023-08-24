@@ -104,4 +104,5 @@ urlpatterns = [
     ),
     path("subject_scope_check/", views.RoleSubjectScopCheckView.as_view(), name="role.subject_scope_check"),
     path("search/", views.RoleSearchViewSet.as_view({"get": "list"}), name="role.role_search"),
+    path("group_config/", views.RoleGroupConfigView.as_view(), name="role.group_config"),
 ]

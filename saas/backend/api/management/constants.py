@@ -75,6 +75,7 @@ class ManagementAPIEnum(BaseAPIEnum):
     V2_GRADE_MANAGER_APPLICATION_UPDATE = auto()
     # 子集管理员
     V2_SUBSET_MANAGER_CREATE = auto()
+    V2_SUBSET_MANAGER_LIST = auto()
     V2_SUBSET_MANAGER_DETAIL = auto()
     V2_SUBSET_MANAGER_UPDATE = auto()
     V2_SUBSET_MANAGER_DELETE = auto()
@@ -139,6 +140,7 @@ class ManagementAPIEnum(BaseAPIEnum):
             (V2_GRADE_MANAGER_APPLICATION_UPDATE, "[V2]创建分级管理员更新申请单"),
             # 子集管理员
             (V2_SUBSET_MANAGER_CREATE, "[V2]创建子集管理员"),
+            (V2_SUBSET_MANAGER_LIST, "[V2]子集管理员列表"),
             # 审批
             (V2_APPLICATION_APPROVAL, "[V2]申请单审批通知"),
             # 申请单取消

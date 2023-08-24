@@ -68,6 +68,7 @@ class GroupSLZ(serializers.ModelSerializer):
             "role",
             "attributes",
             "readonly",
+            "apply_disable",
             "role_members",
         )
 
@@ -144,6 +145,7 @@ class GroupsAddMemberSLZ(GroupAddMemberSLZ):
 class GroupUpdateSLZ(serializers.Serializer):
     name = serializers.CharField(label="用户组名称", min_length=2, max_length=128)
     description = serializers.CharField(label="描述", allow_blank=True)
+    apply_disable = serializers.BooleanField(label="是否不可申请", default=False)
 
     def validate(self, data):
         """
@@ -315,6 +317,7 @@ class GroupCreateSLZ(serializers.Serializer):
     members = serializers.ListField(label="成员列表", child=GroupMemberSLZ(label="成员"))
     expired_at = serializers.IntegerField(label="过期时间", max_value=PERMANENT_SECONDS)
     templates = serializers.ListField(label="授权信息", child=TemplateAuthorizationSLZ(label="模板授权"), allow_empty=True)
+    apply_disable = serializers.BooleanField(label="是否不可申请", default=False)
 
     def validate(self, data):
         """
