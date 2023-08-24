@@ -375,6 +375,7 @@
           this.sliderLoading = false;
         }
       },
+      
       /**
        * 点击管理空间中的项弹出侧边框且显示数据
        */
@@ -390,25 +391,6 @@
     }
   };
 </script>
-<style lang="postcss">
-    .iam-group-perm-wrapper {
-        height: calc(100vh - 204px);
-        .iam-perm-ext-cls {
-            margin-top: 10px;
-        }
-        .bk-table {
-            border-right: none;
-            border-bottom: none;
-            &.is-be-loading {
-                border-bottom: 1px solid #dfe0e5;
-            }
-            .user-group-name {
-                color: #3a84ff;
-                cursor: pointer;
-                &:hover {
-                    color: #699df4;
-                }
-            }
-        }
-    }
+<style lang="postcss" scoped>
+  @import '@/views/perm/department-group-perm/index.css';
 </style>

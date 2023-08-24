@@ -1,5 +1,5 @@
 <template>
-  <div class="iam-group-perm-wrapper" v-bkloading="{ isLoading: pageLoading, opacity: 1 }">
+  <div class="my-perm-group-perm iam-group-perm-wrapper" v-bkloading="{ isLoading: pageLoading, opacity: 1 }">
     <bk-button
       class="mb20"
       theme="primary" @click="handleBatchAddUserGroup" data-test-id="group_btn_create">
@@ -26,6 +26,13 @@
           </template>
         </bk-table-column>
         <bk-table-column :label="$t(`m.common['有效期']`)" prop="expired_at_display"></bk-table-column>
+        <bk-table-column :label="$t(`m.audit['所属管理空间']`)">
+          <template slot-scope="{ row }">
+            <span :class="row.role && row.role.name ? 'can-view' : ''"
+              :title="row.role && row.role.name ? row.role.name : ''"
+              @click.stop="handleViewDetail(row)">{{ row.role ? row.role.name : '--' }}</span>
+          </template>
+        </bk-table-column>
         <bk-table-column :label="$t(`m.perm['加入用户组的时间']`)">
           <template slot-scope="{ row }">
             <span :title="row.created_time">{{ row.created_time.replace(/T/, ' ') }}</span>
@@ -42,7 +49,7 @@
           <template slot-scope="props">
             <span v-if="props.row.department_id === 0">{{ $t(`m.perm['直接加入']`) }}</span>
             <span v-else :title="`${$t(`m.perm['通过组织加入']`)}：${props.row.department_name}`">
-              {{ $t(`m.perm['通过组织加入']`) }}：{{ props.row.department_name }}
+              {{ $t(`m.perm['通过组织加入']`) }}: {{ props.row.department_name }}
             </span>
           </template>
         </bk-table-column>
@@ -85,7 +92,7 @@
       <div class="attach-action-preview-content-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
         <template v-if="!isLoading">
           <div class="user-group-table">
-            <div class="serch-wrapper mb20">
+            <div class="search-wrapper mb20">
               <iam-search-select
                 @on-change="handleSearch"
                 :data="searchData"
@@ -170,6 +177,36 @@
       :name="curGroupName"
       :group-id="curGroupId"
       @animation-end="handleAnimationEnd" />
+
+    <!-- 管理空间 成员 侧边弹出框 -->
+    <bk-sideslider
+      :is-show.sync="isShowGradeSlider"
+      :width="640"
+      :title="gradeSliderTitle"
+      :quick-close="true"
+      @animation-end="gradeSliderTitle === ''">
+      <div slot="content" class="grade-members-content" v-bkloading="{ isLoading: sliderLoading, opacity: 1 }"
+        data-test-id="myPerm_sideslider_gradeMemebersContent">
+        <template v-if="!sliderLoading">
+          <div v-for="(item, index) in gradeMembers" :key="index" class="member-item">
+            <span class="member-name">
+              {{ item }}
+            </span>
+          </div>
+          <p class="info">{{ $t(`m.info['管理空间成员提示']`) }}</p>
+        </template>
+        <div v-if="!gradeMembers.length">
+          <ExceptionEmpty
+            :type="emptySliderData.type"
+            :empty-text="emptySliderData.text"
+            :tip-text="emptySliderData.tip"
+            :tip-type="emptySliderData.tipType"
+            @on-refresh="handleEmptySliderRefresh"
+          />
+        </div>
+      </div>
+    </bk-sideslider>
+
   </div>
 </template>
 <script>
@@ -212,22 +249,25 @@
           row: {},
           msg: ''
         },
-
-        isShowPermSidesilder: false,
+        curRoleId: -1,
         curGroupName: '',
         curGroupId: '',
-
+        gradeSliderTitle: '',
+        isShowPermSidesilder: false,
         pageLoading: false,
         tableLoading: false,
+        sliderLoading: false,
         isShowUserGroupDialog: false,
+        isShowGradeSlider: false,
         isLoading: false,
+        isShowExpiredError: false,
+        tableDialogLoading: false,
         searchValue: [],
         tableList: [],
-        tableDialogLoading: false,
-        expiredAt: 15552000,
-        isShowExpiredError: false,
-        expiredAtUse: 15552000,
         currentSelectList: [],
+        gradeMembers: [],
+        expiredAt: 15552000,
+        expiredAtUse: 15552000,
         pagination: {
           current: 1,
           count: 0,
@@ -241,6 +281,11 @@
         },
         emptyDialogData: {
           type: '',
+          text: '',
+          tip: '',
+          tipType: ''
+        },
+        emptySliderData: {
           text: '',
           tip: '',
           tipType: ''
@@ -583,36 +628,69 @@
 
       handleBatchUserGroupCancel () {
         this.isShowUserGroupDialog = false;
+      },
+
+      /**
+       * 调用接口获取管理空间各项数据
+       */
+      async fetchRoles (id) {
+        this.sliderLoading = true;
+        try {
+          const { code, data } = await this.$store.dispatch('role/getGradeMembers', { id });
+          this.gradeMembers = [...data];
+          this.emptySliderData = formatCodeData(code, this.emptySliderData, data.length === 0);
+        } catch (e) {
+          console.error(e);
+          const { code, data, message, statusText } = e;
+          this.emptySliderData = formatCodeData(code, this.emptySliderData);
+          this.bkMessageInstance = this.$bkMessage({
+            limit: 1,
+            theme: 'error',
+            message: message || data.msg || statusText,
+            ellipsisLine: 2,
+            ellipsisCopy: true
+          });
+        } finally {
+          this.sliderLoading = false;
+        }
+      },
+
+      /**
+       * 点击管理空间中的项弹出侧边框且显示数据
+       */
+      handleViewDetail (payload) {
+        if (payload.role && payload.role.name) {
+          const { name, id } = payload.role;
+          this.isShowGradeSlider = true;
+          this.gradeSliderTitle = this.$t(`m.info['管理空间成员侧边栏标题信息']`, { value: `${this.$t(`m.common['【']`)}${name}${this.$t(`m.common['】']`)}` });
+          this.curRoleId = id;
+          this.fetchRoles(id);
+        }
+      },
+
+      handleEmptySliderRefresh () {
+        this.fetchRoles(this.curRoleId);
       }
     }
   };
 </script>
+
 <style lang="postcss">
-    .iam-group-perm-wrapper {
-        height: calc(100vh - 204px);
-        .iam-perm-ext-cls {
-            margin-top: 10px;
-        }
-        .bk-table {
-            border-right: none;
-            border-bottom: none;
-            &.is-be-loading {
-                border-bottom: 1px solid #dfe0e5;
-            }
-            .user-group-name {
-                color: #3a84ff;
-                cursor: pointer;
-                &:hover {
-                    color: #699df4;
-                }
-            }
-        }
+  .iam-group-perm-wrapper {
+      height: calc(100vh - 204px);
+      .iam-perm-ext-cls {
+          margin-top: 10px;
+      }
     }
-    .button-warp{
-        margin-top: 30px;
-        text-align: center;
-    }
-    .serch-wrapper{
-        width: 500px;
-    }
+</style>
+
+<style lang="postcss" scoped>
+  @import '@/views/perm/group-perm/index.css';
+  .search-wrapper {
+    width: 500px;
+  }
+  .button-warp {
+    margin-top: 30px;
+    text-align: center;
+  }
 </style>

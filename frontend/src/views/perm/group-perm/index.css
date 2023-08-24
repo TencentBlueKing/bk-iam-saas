@@ -15,15 +15,6 @@
             }
         }
     }
-    .my-perm-group-perm-empty-wrapper {
-        img {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 100px;
-        }
-    }
     .can-view {
         color: #3a84ff;
         cursor: pointer;
