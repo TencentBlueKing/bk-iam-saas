@@ -42,7 +42,7 @@ from backend.apps.role.audit import (
     RoleUpdateAuditProvider,
 )
 from backend.apps.role.filters import GradeMangerFilter, RoleCommonActionFilter, RoleSearchFilter
-from backend.apps.role.models import Role, RoleCommonAction, RoleRelatedObject, RoleRelation, RoleUser
+from backend.apps.role.models import Role, RoleCommonAction, RoleConfig, RoleRelatedObject, RoleRelation, RoleUser
 from backend.apps.role.serializers import (
     BaseGradeMangerSchemaSLZ,
     BaseGradeMangerSLZ,
@@ -56,6 +56,7 @@ from backend.apps.role.serializers import (
     MemberSystemPermissionUpdateSLZ,
     RoleCommonActionSLZ,
     RoleCommonCreateSLZ,
+    RoleGroupConfigSLZ,
     RoleGroupMembersRenewSLZ,
     RoleIdSLZ,
     RoleScopeSubjectSLZ,
@@ -86,7 +87,13 @@ from backend.common.error_codes import error_codes
 from backend.common.lock import gen_role_upsert_lock
 from backend.common.serializers import SystemQuerySLZ
 from backend.common.time import get_soon_expire_ts
-from backend.service.constants import GroupSaaSAttributeEnum, PermissionCodeEnum, RoleRelatedObjectType, RoleType
+from backend.service.constants import (
+    GroupSaaSAttributeEnum,
+    PermissionCodeEnum,
+    RoleConfigType,
+    RoleRelatedObjectType,
+    RoleType,
+)
 from backend.service.models import Subject
 from backend.trans.role import RoleTrans
 
@@ -1031,3 +1038,46 @@ class RoleSearchViewSet(mixins.ListModelMixin, GenericViewSet):
     )
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
+
+
+class RoleGroupConfigView(views.APIView):
+    """分级管理员的用户组配置"""
+
+    @swagger_auto_schema(
+        operation_description="分级管理员的用户组配置",
+        responses={status.HTTP_200_OK: RoleGroupConfigSLZ(label="用户组配置")},
+        tags=["role"],
+    )
+    def get(self, request, *args, **kwargs):
+        if self.role.type != RoleType.GRADE_MANAGER.value:
+            raise error_codes.FORBIDDEN
+
+        role_config = RoleConfig.objects.filter(role_id=self.role.id, type=RoleConfigType.GROUP.value).first()
+        data = role_config.config if role_config else {"apply_disable": False}
+        return Response(data)
+
+    @swagger_auto_schema(
+        operation_description="分级管理员的用户组配置",
+        request_body=RoleGroupConfigSLZ(label="查询条件"),
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["role"],
+    )
+    def post(self, request, *args, **kwargs):
+        if self.role.type != RoleType.GRADE_MANAGER.value:
+            raise error_codes.FORBIDDEN
+
+        serializer = RoleGroupConfigSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        data = serializer.validated_data
+
+        role_config = RoleConfig.objects.filter(role_id=self.role.id, type=RoleConfigType.GROUP.value).first()
+        if not role_config:
+            role_config = RoleConfig(role_id=self.role.id, type=RoleConfigType.GROUP.value)
+        role_config.config = data
+        role_config.save()
+
+        # 更新同步权限用户组信息
+        RoleListQuery(request.role, request.user).query_group().update(apply_disable=data["apply_disable"])
+
+        return Response({})
