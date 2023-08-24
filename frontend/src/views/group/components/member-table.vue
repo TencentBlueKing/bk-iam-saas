@@ -61,8 +61,8 @@
               { 'copy-user-group-cls-lang': !curLanguageIsCn }
             ]"
             :disabled="readOnly"
-            :placeholder="$t(`m.verify['请选择用户组成员复制']`)"
-            :style="{ width: curLanguageIsCn ? '220px' : '320px' }"
+            :placeholder="$t(`m.userGroup['复制成员']`)"
+            :style="{ width: curLanguageIsCn ? '100px' : '140px' }"
           >
             <template slot="option" slot-scope="{ node }">
               <div
@@ -404,36 +404,40 @@
           'copy-checked': () => {
             const childItem = this.curCopyCascade.children.find(item => item.id === payload.id);
             if (childItem) {
-              if (!this.currentSelectList.length) {
-                this.messageError(this.$t(`m.verify['请选择用户或组织成员']`), 3000);
-                this.handleResetCascade();
-              } else {
-                const childTypeMap = {
-                  user: () => {
-                    const copyUserList = this.currentSelectList.filter(item => item.type === 'user');
-                    if (!copyUserList.length) {
-                      this.messageError(this.$t(`m.verify['请选择用户']`), 3000);
-                      this.handleResetCascade();
-                      return;
-                    }
-                    const copyValue = copyUserList.map(v =>
-                      `{${v.id}}${v.name}&full_name=${v.user_departments && v.user_departments.length ? v.user_departments : ''}&type=${v.type}*`)
-                      .join('\n');
-                    this.formatCopyValue(copyValue, event, currentTarget);
-                  },
-                  userAndOrg: () => {
-                    const copyValue = this.currentSelectList.map(v => v.type === 'user'
-                      ? `{${v.id}}${v.name}&full_name=${v.user_departments && v.user_departments.length ? v.user_departments : ''}&type=${v.type}*`
-                      : (this.enableOrganizationCount
-                        ? `{${v.id}}${v.name}&full_name=${v.full_name}&count=${v.member_count}&type=${v.type}*`
-                        : `{${v.id}}${v.name}&full_name=${v.full_name}&type=${v.type}*`
-                      ))
-                      .join('\n');
-                    this.formatCopyValue(copyValue, event, currentTarget);
+              const childTypeMap = {
+                user: () => {
+                  this.handleResetCascade();
+                  if (!this.currentSelectList.length) {
+                    this.messageWarn(this.$t(`m.verify['请选择用户或组织成员']`), 3000);
+                    return;
                   }
-                };
-                return childTypeMap[childItem.id]();
-              }
+                  const copyUserList = this.currentSelectList.filter(item => item.type === 'user');
+                  if (!copyUserList.length) {
+                    this.messageWarn(this.$t(`m.verify['请选择用户']`), 3000);
+                    return;
+                  }
+                  const copyValue = copyUserList.map(v =>
+                    `{${v.id}}${v.name}&full_name=${v.user_departments && v.user_departments.length ? v.user_departments : ''}&type=${v.type}*`)
+                    .join('\n');
+                  this.formatCopyValue(copyValue, event, currentTarget);
+                },
+                userAndOrg: () => {
+                  this.handleResetCascade();
+                  if (!this.currentSelectList.length) {
+                    this.messageWarn(this.$t(`m.verify['请选择用户或组织成员']`), 3000);
+                    return;
+                  }
+                  const copyValue = this.currentSelectList.map(v => v.type === 'user'
+                    ? `{${v.id}}${v.name}&full_name=${v.user_departments && v.user_departments.length ? v.user_departments : ''}&type=${v.type}*`
+                    : (this.enableOrganizationCount
+                      ? `{${v.id}}${v.name}&full_name=${v.full_name}&count=${v.member_count}&type=${v.type}*`
+                      : `{${v.id}}${v.name}&full_name=${v.full_name}&type=${v.type}*`
+                    ))
+                    .join('\n');
+                  this.formatCopyValue(copyValue, event, currentTarget);
+                }
+              };
+              return childTypeMap[childItem.id]();
             }
           },
           'copy-all': async () => {
@@ -446,12 +450,12 @@
               };
               const childTypeMap = {
                 user: async () => {
+                  this.handleResetCascade();
                   const { data } = await this.$store.dispatch('userGroup/getUserGroupMemberList', params);
                   if (data && data.results && data.results.length) {
                     const copyUserList = data.results.filter(item => item.type === 'user');
                     if (!copyUserList.length) {
-                      this.messageError(this.$t(`m.verify['暂无可复制用户']`), 3000);
-                      this.handleResetCascade();
+                      this.messageWarn(this.$t(`m.verify['暂无可复制用户']`), 3000);
                     } else {
                       const copyValue = copyUserList.map(v =>
                         `{${v.id}}${v.name}&full_name=${v.user_departments && v.user_departments.length ? v.user_departments : ''}&type=${v.type}*`)
@@ -459,11 +463,11 @@
                       this.formatCopyValue(copyValue, event, currentTarget);
                     }
                   } else {
-                    this.messageError(this.$t(`m.common['暂无可复制内容']`), 3000);
-                    this.handleResetCascade();
+                    this.messageWarn(this.$t(`m.common['暂无可复制内容']`), 3000);
                   }
                 },
                 userAndOrg: async () => {
+                  this.handleResetCascade();
                   const { data } = await this.$store.dispatch('userGroup/getUserGroupMemberList', params);
                   if (data && data.results && data.results.length) {
                     const copyValue = data.results.map(v => v.type === 'user'
@@ -475,8 +479,7 @@
                       .join('\n');
                     this.formatCopyValue(copyValue, event, currentTarget);
                   } else {
-                    this.messageError(this.$t(`m.common['暂无可复制内容']`), 3000);
-                    this.handleResetCascade();
+                    this.messageWarn(this.$t(`m.common['暂无可复制内容']`), 3000);
                   }
                 }
               };
@@ -487,7 +490,6 @@
         if (this.curCopyCascade.id) {
           typeMap[this.curCopyCascade.id]();
         }
-        // this.$refs.dropdown.hide();
       },
 
       // 处理不同操作的复制
@@ -506,6 +508,7 @@
         if (clipboard) {
           clipboard.destroy();
         }
+        this.handleResetCascade();
       },
 
       // 重置级联数据
@@ -670,8 +673,8 @@
           const { code, data } = await this.$store.dispatch('userGroup/deleteUserGroupMember', params);
           if (code === 0 && data) {
             const externalParams = {
-                            ...params,
-                            count: params.members.length
+              ...params,
+              count: params.members.length
             };
             window.parent.postMessage({ type: 'IAM', data: externalParams, code: 'remove_user_confirm' }, '*');
             this.messageSuccess(this.$t(`m.info['移除成功']`), 2000);
@@ -761,18 +764,28 @@
   .copy-user-group-cls {
     width: auto !important;
     .bk-cascade-panel-ul {
-      width: 120px !important;
+      width: 100px !important;
     }
     .bk-cascade-options {
       height: 70px !important;
     }
     &-lang {
-      .bk-cascade-panel-ul {
-        width: 182px !important;
+      .bk-cascade-panel {
+        .bk-cascade-panel-ul {
+          width: 140px !important;
+        }
+        .bk-cascade-panel {
+          .bk-cascade-panel-ul {
+            width: 182px !important;
+          }
+        }
       }
-      .bk-cascade-border  {
-        width: 140px !important;
-      }
+        /* .bk-cascade-border {
+          width: 140px !important;
+          .bk-cascade-panel-ul {
+            width: 180px !important;
+          }
+        } */
     }
   }
 </style>
@@ -823,5 +836,8 @@
 
 /deep/ .bk-cascade {
   font-size: 14px;
+  &.is-default-trigger.is-unselected:before {
+    color: #63656e;
+  }
 }
 </style>
