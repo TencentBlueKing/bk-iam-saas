@@ -36,7 +36,7 @@ from backend.service.constants import GroupSaaSAttributeEnum, RoleSourceType, Ro
 from backend.trans.open_management import GradeManagerTrans
 
 
-class ManagementSubsetManagerCreateViewSet(GenericViewSet):
+class ManagementSubsetManagerCreateListViewSet(GenericViewSet):
     """二级管理员创建"""
 
     authentication_classes = [ESBAuthentication]

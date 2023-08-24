@@ -129,7 +129,7 @@ urlpatterns = [
     # 创建二级管理员
     path(
         "grade_managers/<int:id>/subset_managers/",
-        views.ManagementSubsetManagerCreateViewSet.as_view({"post": "create"}),
+        views.ManagementSubsetManagerCreateListViewSet.as_view({"post": "create", "get": "list"}),
         name="open.management.v2.grade_manager_create_subset_manager",
     ),
     # 二级管理员下用户组
