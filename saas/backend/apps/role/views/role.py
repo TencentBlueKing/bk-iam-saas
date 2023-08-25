@@ -1049,7 +1049,7 @@ class RoleGroupConfigView(views.APIView):
         tags=["role"],
     )
     def get(self, request, *args, **kwargs):
-        if request.role.type != RoleType.GRADE_MANAGER.value:
+        if request.role.type in [RoleType.STAFF.value, RoleType.SUBSET_MANAGER.value]:
             raise error_codes.FORBIDDEN
 
         role_config = RoleConfig.objects.filter(role_id=request.role.id, type=RoleConfigType.GROUP.value).first()
@@ -1063,7 +1063,7 @@ class RoleGroupConfigView(views.APIView):
         tags=["role"],
     )
     def post(self, request, *args, **kwargs):
-        if request.role.type != RoleType.GRADE_MANAGER.value:
+        if request.role.type in [RoleType.STAFF.value, RoleType.SUBSET_MANAGER.value]:
             raise error_codes.FORBIDDEN
 
         serializer = RoleGroupConfigSLZ(data=request.data)
