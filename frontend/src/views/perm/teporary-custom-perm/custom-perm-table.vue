@@ -393,7 +393,7 @@
           window.changeAlert = false;
           this.isShowSideslider = false;
           this.resetDataAfterClose();
-          this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
+          this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
           this.handleRefreshData();
         } catch (e) {
           console.error(e);
@@ -556,7 +556,7 @@
           if (this.resourceGrouParams.id && this.resourceGrouParams.resourceGroupId) { // 表示删除的是资源组
             await this.$store.dispatch('permApply/deleteRosourceGroupPerm', this.resourceGrouParams);
             this.fetchData(this.params);
-            this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
+            this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
           } else {
             await this.$store.dispatch('permApply/deleteTemporaryPerm', {
               policyIds: this.curDeleteIds,
@@ -566,7 +566,7 @@
             if (index > -1) {
               this.policyList.splice(index, 1);
             }
-            this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
+            this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
             this.$emit('after-delete', this.policyList.length);
           }
         } catch (e) {

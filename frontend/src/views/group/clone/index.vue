@@ -1233,7 +1233,7 @@
           };
           try {
             await this.$store.dispatch('userGroup/addUserGroup', params);
-            this.messageSuccess(this.$t(`m.info['克隆用户组成功']`), 1000);
+            this.messageSuccess(this.$t(`m.info['克隆用户组成功']`), 3000);
             bus.$emit('show-guide', 'process');
             this.$router.push({
               name: 'userGroup'

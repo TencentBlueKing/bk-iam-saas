@@ -1304,7 +1304,7 @@
                 && (item.attribute && !item.attribute.length))
               || (!item.instance && !item.attribute.length));
             if (emptyIndex > -1) {
-              this.messageError(this.$t(`m.info['第几项实例和属性不能都为空']`, { value: emptyIndex + 1 }), 2000);
+              this.messageWarn(this.$t(`m.info['第几项实例和属性不能都为空']`, { value: emptyIndex + 1 }), 3000);
               return;
             }
             await this.handleMainActionSubmit(data, related_actions);

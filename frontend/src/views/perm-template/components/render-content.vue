@@ -848,7 +848,7 @@
         this.saveLoading = true;
         try {
           await this.$store.dispatch('permTemplate/createTemplate', params);
-          this.messageSuccess(this.$t(`m.info['新建权限模板成功']`), 1000);
+          this.messageSuccess(this.$t(`m.info['新建权限模板成功']`), 3000);
           bus.$emit('show-guide', 'group');
           window.changeDialog = false;
           this.$router.push({

@@ -216,7 +216,7 @@
         };
         await this.$store.dispatch('spaceManage/updateSecondManagerManager', params);
         this.resetPagination();
-        this.messageSuccess(this.$t(`m.info['编辑成功']`), 2000);
+        this.messageSuccess(this.$t(`m.info['编辑成功']`), 3000);
         await this.fetchGradingAdmin(true);
       },
 

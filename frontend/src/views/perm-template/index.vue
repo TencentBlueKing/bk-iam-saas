@@ -352,7 +352,7 @@
           confirmFn: async () => {
             try {
               await this.$store.dispatch('permTemplate/deleteTemplate', { id });
-              this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
+              this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
               this.resetPagination();
               this.fetchTemplateList(true);
               return true;
@@ -412,7 +412,7 @@
         this.addGroupLoading = true;
         try {
           await this.$store.dispatch('permTemplate/addTemplateMember', params);
-          this.messageSuccess(this.$t(`m.info['关联用户组成功']`), 2000);
+          this.messageSuccess(this.$t(`m.info['关联用户组成功']`), 3000);
           this.handleCancelSelect();
           this.fetchTemplateList(true);
         } catch (e) {

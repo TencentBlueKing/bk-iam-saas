@@ -317,7 +317,7 @@
         const dispatchMethod = isGroup ? 'groupPermRenewal' : 'customPermRenewal';
         try {
           await this.$store.dispatch(`renewal/${dispatchMethod}`, params);
-          this.messageSuccess(this.$t(`m.renewal['批量申请提交成功']`), 1000);
+          this.messageSuccess(this.$t(`m.renewal['批量申请提交成功']`), 3000);
           this.$router.push({
             name: 'apply'
           });

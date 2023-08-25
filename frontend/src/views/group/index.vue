@@ -620,7 +620,7 @@
         };
         const { code } = await this.$store.dispatch('userGroup/editUserGroup', params);
         if (code === 0) {
-          this.messageSuccess(this.$t(`m.info['编辑成功']`), 2000);
+          this.messageSuccess(this.$t(`m.info['编辑成功']`), 3000);
           this.resetPagination();
           await this.fetchUserGroupList(true);
         }
@@ -751,10 +751,7 @@
           item.attributes && item.attributes.source_from_role && departments.length > 0);
         if (hasAdminGroups.length) {
           const adminGroupNames = hasAdminGroups.map(item => item.name).join();
-          this.messageError(
-            this.$t(`m.info['用户组为管理员组，不能添加部门']`,
-                    { value: `${this.$t(`m.common['【']`)}${adminGroupNames}${this.$t(`m.common['】']`)}` }), 2000
-          );
+          this.messageWarn(this.$t(`m.info['用户组为管理员组，不能添加部门']`, { value: `${this.$t(`m.common['【']`)}${adminGroupNames}${this.$t(`m.common['】']`)}` }), 3000);
           return;
         }
         let expired = payload.policy_expired_at;
@@ -803,7 +800,7 @@
           this.loading = true;
           await this.$store.dispatch(fetchUrl, params);
           this.isShowAddMemberDialog = false;
-          this.messageSuccess(this.$t(`m.info['添加成员成功']`), 2000);
+          this.messageSuccess(this.$t(`m.info['添加成员成功']`), 3000);
           this.fetchUserGroupList(true);
         } catch (e) {
           console.error(e);
@@ -870,7 +867,7 @@
           await this.$store.dispatch('userGroup/deleteUserGroup', {
             id: this.currentUserGroup.id
           });
-          this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
+          this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
           this.isShowDeleteDialog = false;
           this.resetPagination();
           this.fetchUserGroupList(true);
@@ -910,7 +907,7 @@
         const hasDisabledData = this.currentSelectList.filter(item => item.readonly);
         if (hasDisabledData.length) {
           const disabledNames = hasDisabledData.map(item => item.name);
-          this.messageError(`m.info['用户组为只读用户组不能添加成员']`, { value: `${this.$t(`m.common['【']`)}${disabledNames}${this.$t(`m.common['】']`)}` });
+          this.messageWarn(this.$t(`m.info['用户组为只读用户组不能添加成员']`, { value: `${this.$t(`m.common['【']`)}${disabledNames}${this.$t(`m.common['】']`)}` }), 3000);
           return;
         }
         this.isBatch = true;

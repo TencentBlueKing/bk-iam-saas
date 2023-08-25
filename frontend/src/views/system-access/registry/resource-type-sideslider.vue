@@ -252,7 +252,7 @@
               item.title = item.name;
               item.isEdit = false;
               item.isNewAdd = false;
-              this.messageSuccess(this.$t(`m.access['保存资源类型成功']`), 1000);
+              this.messageSuccess(this.$t(`m.access['保存资源类型成功']`), 3000);
               this.$emit('on-refresh-system-list', 'resourceType');
               this.addValidatorRules();
             } catch (e) {
