@@ -1049,10 +1049,15 @@ class RoleGroupConfigView(views.APIView):
         tags=["role"],
     )
     def get(self, request, *args, **kwargs):
-        if request.role.type != RoleType.GRADE_MANAGER.value:
+        if request.role.type == RoleType.STAFF.value:
             raise error_codes.FORBIDDEN
 
-        role_config = RoleConfig.objects.filter(role_id=self.role.id, type=RoleConfigType.GROUP.value).first()
+        role = request.role
+        if role.type == RoleType.SUBSET_MANAGER.value:
+            relation = RoleRelation.objects.filter(role_id=role.id).only("parent_id").first()
+            role = Role.objects.get(id=relation.parent_id)
+
+        role_config = RoleConfig.objects.filter(role_id=role.id, type=RoleConfigType.GROUP.value).first()
         data = role_config.config if role_config else {"apply_disable": False}
         return Response(data)
 
@@ -1063,7 +1068,7 @@ class RoleGroupConfigView(views.APIView):
         tags=["role"],
     )
     def post(self, request, *args, **kwargs):
-        if request.role.type != RoleType.GRADE_MANAGER.value:
+        if request.role.type in [RoleType.STAFF.value, RoleType.SUBSET_MANAGER.value]:
             raise error_codes.FORBIDDEN
 
         serializer = RoleGroupConfigSLZ(data=request.data)
@@ -1071,9 +1076,9 @@ class RoleGroupConfigView(views.APIView):
 
         data = serializer.validated_data
 
-        role_config = RoleConfig.objects.filter(role_id=self.role.id, type=RoleConfigType.GROUP.value).first()
+        role_config = RoleConfig.objects.filter(role_id=request.role.id, type=RoleConfigType.GROUP.value).first()
         if not role_config:
-            role_config = RoleConfig(role_id=self.role.id, type=RoleConfigType.GROUP.value)
+            role_config = RoleConfig(role_id=request.role.id, type=RoleConfigType.GROUP.value)
         role_config.config = data
         role_config.save()
 
