@@ -133,6 +133,12 @@
         immediate: true
       }
     },
+    mounted () {
+      window.addEventListener('keydown', this.handleKeydown);
+    },
+    beforeUnmount () {
+      window.removeEventListener('keydown', this.handleKeydown);
+    },
     methods: {
       handleToggle (payload) {
         if (!payload) {
@@ -151,7 +157,12 @@
           this.multipleValue = this.multipleValue.concat([...list.map((item) => item.id)]);
           const nameList = list.map((item) => this.$t(`m.userGroup['${item.name}']`));
           const textValue = this.$t(`m.info['用户组属性为只读属性']`, { value: nameList });
-          this.messageError(textValue, 3000);
+          this.messageWarn(textValue, 3000);
+        }
+      },
+      handleKeydown (event) {
+        if (event.keyCode === 13 && this.isEditable) {
+          this.handleToggle(false);
         }
       },
       handleEdit () {
