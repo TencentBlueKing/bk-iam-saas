@@ -136,7 +136,7 @@
     mounted () {
       window.addEventListener('keydown', this.handleKeydown);
     },
-    beforeUnmount () {
+    beforeDestroy () {
       window.removeEventListener('keydown', this.handleKeydown);
     },
     methods: {

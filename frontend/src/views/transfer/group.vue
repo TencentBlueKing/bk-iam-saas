@@ -53,8 +53,8 @@
                   <span :style="{ color: row.canNotTransfer ? '#c4c6cc' : '' }"
                     v-if="row.department_id === 0">{{ $t(`m.perm['直接加入']`) }}</span>
                   <span :style="{ color: row.canNotTransfer ? '#c4c6cc' : '' }"
-                    v-else :title="`${$t(`m.perm['通过组织加入']`)}：${row.department_name}`">
-                    {{ $t(`m.perm['通过组织加入']`) }}：{{ row.department_name }}
+                    v-else :title="`${$t(`m.perm['通过组织加入']`)}${$t(`m.common['：']`)}${row.department_name}`">
+                    {{ $t(`m.perm['通过组织加入']`) }}: {{ row.department_name }}
                   </span>
                 </template>
               </bk-table-column>

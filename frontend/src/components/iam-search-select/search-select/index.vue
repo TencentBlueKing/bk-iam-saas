@@ -299,10 +299,11 @@
       this.calcTextareaWidth = _.throttle(this._calcTextareaWidth, 30);
       this.showPopper = _.throttle(this._showMenu, 50);
       this.remoteExecuteImmediate();
-      if (this.$store.state.fromRouteName === 'myPerm') {
-        this.chipList = [];
-        this.triggerChange();
-      }
+      // 不注释掉会导致从myPerm页面跳转到其他引入了这个子组件的页面会调用change方法
+      // if (this.$store.state.fromRouteName === 'myPerm') {
+      //   this.chipList = [];
+      //   this.triggerChange();
+      // }
     },
 
     beforeDestroy () {
