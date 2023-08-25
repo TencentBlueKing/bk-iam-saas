@@ -1049,7 +1049,7 @@ class RoleGroupConfigView(views.APIView):
         tags=["role"],
     )
     def get(self, request, *args, **kwargs):
-        if request.role.type in [RoleType.STAFF.value]:
+        if request.role.type == RoleType.STAFF.value:
             raise error_codes.FORBIDDEN
 
         role = request.role
