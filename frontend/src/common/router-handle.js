@@ -53,7 +53,8 @@ export const getRouterDiff = (payload) => {
       'ratingManager',
       'secondaryManageSpace',
       'authorBoundary',
-      'secondaryManageSpaceCreate'
+      'secondaryManageSpaceCreate',
+      'userGroupSetting'
     ];
   }
   if (payload === 'super_manager') {
@@ -184,7 +185,8 @@ export const getRouterDiff = (payload) => {
       'secondaryManageSpaceDetail',
       'firstManageSpace',
       'myManageSpace',
-      'permTemplate'
+      'permTemplate',
+      'userGroupSetting'
     ];
   }
   // payload其它取值默认返回全部菜单
@@ -256,7 +258,8 @@ export const getNavRouterDiff = (navIndex) => {
       'firstManageSpace',
       'ratingManager',
       'authorBoundary',
-      'secondaryManageSpace'
+      'secondaryManageSpace',
+      'userGroupSetting'
     ];
   }
 
@@ -303,7 +306,8 @@ export const getNavRouterDiff = (navIndex) => {
       'secondaryManageSpace',
       'myManageSpace',
       'secondaryManageSpaceCreate',
-      'secondaryManageSpaceDetail'
+      'secondaryManageSpaceDetail',
+      'userGroupSetting'
     ];
   }
 
@@ -338,7 +342,8 @@ export const getNavRouterDiff = (navIndex) => {
       'secondaryManageSpace',
       'myManageSpace',
       'secondaryManageSpaceCreate',
-      'secondaryManageSpaceDetail'
+      'secondaryManageSpaceDetail',
+      'userGroupSetting'
     ];
   }
 };

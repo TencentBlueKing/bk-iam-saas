@@ -633,9 +633,11 @@ export function jsonpRequest (url, params, callbackName) {
     const arr = Object.keys(params).map(key => `${key}=${params[key]}`);
     script.src = `${url}?${arr.join('&')}`;
     document.body.appendChild(script);
-    window[callbackName] = (data) => {
-      resolve(data);
-    };
+    if (callbackName) {
+      window[callbackName] = (data) => {
+        resolve(data);
+      };
+    }
   });
 }
 

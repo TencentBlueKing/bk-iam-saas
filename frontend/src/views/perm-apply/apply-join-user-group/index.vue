@@ -1015,7 +1015,7 @@
           const { count, results } = data;
           this.pagination.count = count || 0;
           // 过滤不可被申请的用户组
-          const applyUserGroups = results && results.filter(item => !item.hide_apply_disable);
+          const applyUserGroups = results && results.filter(item => !item.apply_disable);
           this.tableList.splice(0, this.tableList.length, ...(applyUserGroups || []));
           this.emptyData.tipType = 'search';
           this.$nextTick(() => {
@@ -1074,7 +1074,7 @@
           const { count, results } = data;
           this.pagination.count = count || 0;
           // 过滤不可被申请的用户组
-          const applyUserGroups = results && results.filter(item => !item.hide_apply_disable);
+          const applyUserGroups = results && results.filter(item => !item.apply_disable);
           this.tableList.splice(0, this.tableList.length, ...(applyUserGroups || []));
           this.$nextTick(() => {
             const currentSelectedGroups = this.currentSelectedGroups.length

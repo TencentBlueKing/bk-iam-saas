@@ -90,7 +90,8 @@
           name: '',
           id: '',
           created_time: '',
-          description: ''
+          description: '',
+          apply_disable: false
         },
         pagination: {
           current: 1,
@@ -171,12 +172,14 @@
         if (this.$parent.fetchDetail) {
           try {
             const { data } = await this.$parent.fetchDetail(payload);
-            const { id, name, created_time, description, readonly, attributes } = data;
+            const { id, name, created_time, description, readonly, attributes, apply_disable } = data;
             this.basicInfo = Object.assign({}, {
               id,
               name,
               created_time,
-              description
+              description,
+              // eslint-disable-next-line camelcase
+              apply_disable: apply_disable || false
             });
             this.readOnly = readonly;
             this.groupAttributes = Object.assign(this.groupAttributes, attributes);
@@ -211,18 +214,22 @@
       },
 
       handleUpdateGroup (payload) {
-        const { name, description } = this.basicInfo;
+        const { name, description, apply_disable } = this.basicInfo;
         const params = {
           name: name.trim(),
           description,
                     ...payload,
-          id: this.groupId
+          id: this.groupId,
+          apply_disable
         };
         return this.$store.dispatch('userGroup/editUserGroup', params)
           .then(() => {
             this.messageSuccess(this.$t(`m.info['编辑成功']`), 2000);
-            this.basicInfo.name = params.name;
-            this.basicInfo.description = params.description;
+            this.basicInfo = Object.assign(this.basicInfo, {
+              name: params.name,
+              description: params.description,
+              apply_disable: params.apply_disable
+            });
             const headerTitle = `${this.basicInfo.name}(#${this.id})`;
             window.localStorage.setItem('iam-header-title-cache', headerTitle);
             this.$store.commit('setHeaderTitle', headerTitle);

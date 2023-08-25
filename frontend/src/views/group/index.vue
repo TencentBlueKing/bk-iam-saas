@@ -87,12 +87,12 @@
       @page-limit-change="limitChange" @select="handlerChange" @select-all="handlerAllChange"
       v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
       <bk-table-column type="selection" align="center" :selectable="getIsSelect" reserve-selection />
-      <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
+      <bk-table-column :label="$t(`m.userGroup['用户组名']`)" width="200">
         <template slot-scope="{ row }">
           <span class="user-group-name" :title="row.name" @click="handleView(row)">{{ row.name }}</span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.userGroup['用户/组织']`)">
+      <bk-table-column :label="$t(`m.userGroup['用户/组织']`)" width="150">
         <template slot-scope="{ row }">
           <div class="member-wrapper">
             <span class="user">
@@ -127,7 +127,19 @@
           </template>
         </bk-table-column>
       </template>
-      <bk-table-column :label="$t(`m.userGroup['创建人']`)">
+      <bk-table-column :label="$t(`m.userGroup['用户组属性']`)" width="300">
+        <template slot-scope="{ row, $index }">
+          <IamGroupAttribute
+            style="width: 260px"
+            :value="row.apply_disable ? ['apply_disable'] : []"
+            :list="userGroupAttributesList"
+            :attributes="userGroupAttributes"
+            :index="$index"
+            @on-change="handleChangeAttributes"
+          />
+        </template>
+      </bk-table-column>
+      <bk-table-column :label="$t(`m.userGroup['创建人']`)" width="100">
         <template slot-scope="{ row }">
           <span>{{ row.creator || '--' }}</span>
         </template>
@@ -140,17 +152,17 @@
                     </span>
                 </template>
             </bk-table-column> -->
-      <bk-table-column :label="$t(`m.common['创建时间']`)" width="240">>
+      <bk-table-column :label="$t(`m.common['创建时间']`)" width="240">
         <template slot-scope="{ row }">
           <span :title="row.created_time">{{ row.created_time }}</span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.common['描述']`)">
+      <bk-table-column :label="$t(`m.common['描述']`)" width="240">
         <template slot-scope="{ row }">
-          <span :title="row.description !== '' ? row.description : ''">{{ row.description || '--' }}</span>
+          <span :title="row.description || ''">{{ row.description || '--' }}</span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.common['操作']`)" width="320">
+      <bk-table-column :label="$t(`m.common['操作']`)" width="320" fixed="right">
         <template slot-scope="{ row }">
           <div>
             <bk-button
@@ -241,9 +253,10 @@
   import { mapGetters } from 'vuex';
   import { il8n } from '@/language';
   import { getWindowHeight, formatCodeData } from '@/common/util';
-  import IamSearchSelect from '@/components/iam-search-select';
   import { fuzzyRtxSearch } from '@/common/rtx';
   import { buildURLParams } from '@/common/url';
+  import { USER_GROUP_ATTRIBUTES } from '@/common/constants';
+  import IamSearchSelect from '@/components/iam-search-select';
   import DeleteDialog from './components/delete-user-group-dialog';
   import AddMemberDialog from './components/iam-add-member';
   import EditProcessDialog from './components/edit-process-dialog';
@@ -251,6 +264,7 @@
   import DistributeToDialog from './components/distribute-to-dialog';
   // import NoviceGuide from '@/components/iam-novice-guide';
   import IamEditInput from '@/components/iam-edit/input';
+  import IamGroupAttribute from './components/iam-group-attribute.vue';
 
   export default {
     name: '',
@@ -267,7 +281,8 @@
       DistributeToDialog,
       IamSearchSelect,
       // NoviceGuide,
-      IamEditInput
+      IamEditInput,
+      IamGroupAttribute
     },
     data () {
       return {
@@ -333,7 +348,11 @@
           text: '',
           tip: '',
           tipType: ''
-        }
+        },
+        userGroupAttributes: {
+          apply_disable: false
+        },
+        userGroupAttributesList: USER_GROUP_ATTRIBUTES
       };
     },
     computed: {
@@ -472,6 +491,7 @@
           }
         }
       }
+      await this.fetchUserGroupSet();
     },
     methods: {
       /**
@@ -479,6 +499,25 @@
        */
       async fetchPageData () {
         await this.fetchUserGroupList();
+      },
+
+      // 获取分级管理员用户组配置
+      async fetchUserGroupSet () {
+        try {
+          const { data } = await this.$store.dispatch('userGroupSetting/getUserGroupSetConfig');
+          if (data) {
+            this.userGroupAttributes = Object.assign({}, { apply_disable: data.apply_disable });
+          }
+        } catch (e) {
+          console.error(e);
+          this.bkMessageInstance = this.$bkMessage({
+            limit: 1,
+            theme: 'error',
+            message: e.message || e.data.msg || e.statusText,
+            ellipsisLine: 2,
+            ellipsisCopy: true
+          });
+        }
       },
 
       getIsSelect () {
@@ -514,7 +553,7 @@
           { current: queryParams.current || 1, limit: queryParams.limit || 10 }
         );
         return {
-                    ...queryParams
+            ...queryParams
         };
       },
 
@@ -538,9 +577,9 @@
         this.tableLoading = isLoading;
         this.setCurrentQueryCache(this.refreshCurrentQuery());
         const params = {
-                    ...this.searchParams,
-                    limit: this.pagination.limit,
-                    offset: this.pagination.limit * (this.pagination.current - 1)
+          ...this.searchParams,
+          limit: this.pagination.limit,
+          offset: this.pagination.limit * (this.pagination.current - 1)
         };
         delete params.current;
         try {
@@ -568,6 +607,22 @@
           });
         } finally {
           this.tableLoading = false;
+        }
+      },
+
+      async handleChangeAttributes (payload, index) {
+        const { id, name, description } = this.tableList[index];
+        const params = {
+          id,
+          name,
+          description,
+          apply_disable: !!payload.includes('apply_disable')
+        };
+        const { code } = await this.$store.dispatch('userGroup/editUserGroup', params);
+        if (code === 0) {
+          this.messageSuccess(this.$t(`m.info['编辑成功']`), 2000);
+          this.resetPagination();
+          await this.fetchUserGroupList(true);
         }
       },
 
@@ -893,8 +948,11 @@
 <style lang="postcss">
 .iam-user-group-wrapper {
     .search_left {
-        display: flex;
-        align-items: center;
+      display: flex;
+      align-items: center;
+      .bk-button {
+        margin-right: 6px;
+      }
     }
 
     .select-custom {
@@ -978,16 +1036,14 @@
             text-overflow: ellipsis;
             white-space: nowrap;
         }
-    }
-}
 
-.bk-table-pagination-wrapper {
-    background-color: #ffffff;
-}
+        .bk-table-pagination-wrapper {
+            background-color: #ffffff;
+        }
 
-.search_left {
-    .bk-button {
-        margin-right: 6px;
+        .bk-table-fixed, .bk-table-fixed-right {
+            border-bottom: 0;
+        }
     }
 }
 </style>

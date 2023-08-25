@@ -133,16 +133,11 @@ export const NEED_CONFIRM_DIALOG_ROUTER = [
 ];
 
 // 用户组属性枚举
-export const USER_GROUP_PROPERTIES = [
+export const USER_GROUP_ATTRIBUTES = [
   {
-    id: 'apply_able',
+    id: 'apply_disable',
     name: '不可被申请',
     disabled: false
-  },
-  {
-    id: 'apply_ables',
-    name: '脱敏属性',
-    disabled: true
   }
 ];
 
