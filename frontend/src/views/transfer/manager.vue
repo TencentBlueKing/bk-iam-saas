@@ -18,8 +18,11 @@
               v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
               :header-cell-class-name="getCellClass"
               :cell-class-name="getCellClass"
+              :pagination="pagination"
               @select="handleSelect"
-              @select-all="handleSelectAll">
+              @select-all="handleSelectAll"
+              @page-change="handlePageChange"
+              @page-limit-change="handleLimitChange">
               <bk-table-column type="selection" align="center">
               </bk-table-column>
               <bk-table-column :label="$t(`m.permTransfer['管理员名称']`)" width="300">
@@ -75,6 +78,7 @@
 </template>
 <script>
   import { formatCodeData } from '@/common/util';
+  import { mapGetters } from 'vuex';
   export default {
     name: '',
     components: {
@@ -89,6 +93,11 @@
         isSelectAllChecked: false,
         managerSelectData: [],
         pageContainer: null,
+        pagination: {
+          current: 1,
+          limit: 20,
+          count: 0
+        },
         emptyData: {
           type: '',
           text: '',
@@ -96,6 +105,9 @@
           tipType: ''
         }
       };
+    },
+    computed: {
+      ...mapGetters(['roleCount'])
     },
     mounted () {
       this.pageContainer = document.querySelector('.main-scroller');
@@ -105,7 +117,13 @@
       async fetchData () {
         this.isLoading = true;
         try {
-          const res = await this.$store.dispatch('roleList');
+          const { current, limit } = this.pagination;
+          const params = {
+            limit,
+            offset: (current - 1) * limit
+          };
+          const res = await this.$store.dispatch('roleList', params);
+          this.pagination.count = this.roleCount || 0;
           const managerList = res || [];
           this.managerList.splice(0, this.managerList.length, ...managerList);
           this.isEmpty = managerList.length < 1;
@@ -168,6 +186,21 @@
         this.managerSelectData.splice(0, this.managerSelectData.length, ...selection);
 
         this.$emit('manager-selection-change', this.managerSelectData);
+      },
+
+      handlePageChange (page) {
+        this.pagination = Object.assign(this.pagination, { current: page });
+        this.fetchData();
+      },
+
+      handleLimitChange (currentLimit, prevLimit) {
+        this.pagination = Object.assign(this.pagination, { current: 1, limit: currentLimit });
+        this.fetchData();
+      },
+
+      handleEmptyRefresh () {
+        this.pagination = Object.assign(this.pagination, { current: 1, limit: 20 });
+        this.fetchData();
       },
 
       /**

@@ -229,7 +229,7 @@
       };
     },
     computed: {
-      ...mapGetters(['externalSystemsLayout', 'externalSystemId'])
+      ...mapGetters(['externalSystemsLayout', 'externalSystemId', 'roleList'])
     },
     watch: {
       externalSystemsLayout: {
@@ -346,7 +346,7 @@
           this.soonPermLength = data4.length;
           this.isNoRenewal = this.soonGroupLength < 1 && this.soonPermLength < 1;
           this.isNoExternalRenewal = this.soonGroupLength < 1;
-          this.isNoTransfer = !systemList.length && !teporarySystemList.length;
+          this.isNoTransfer = !systemList.length && !personalGroupList.length && !this.roleList.length;
         } catch (e) {
           console.error(e);
           const { code, data, message, statusText } = e;
