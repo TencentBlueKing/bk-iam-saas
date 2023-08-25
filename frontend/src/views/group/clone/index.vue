@@ -9,6 +9,7 @@
         <bk-checkbox
           class="select-wrap-checkbox"
           v-model="formData.apply_disable"
+          :disabled="userGroupAttributes.apply_disable"
           @change="handleCheckboxChange">
           <span
             class="checkbox-sync-perm"
@@ -231,6 +232,9 @@
         groupAttributes: {
           source_type: '',
           source_from_role: false
+        },
+        userGroupAttributes: {
+          apply_disable: false
         }
       };
     },
@@ -392,8 +396,30 @@
     methods: {
       async handleInit () {
         if (this.groupId) {
-          this.fetchDetail();
-          this.fetchGroupSystem();
+          await this.fetchDetail();
+          await this.fetchUserGroupSet();
+          await this.fetchGroupSystem();
+        }
+      },
+
+      // 获取分级管理员用户组配置
+      async fetchUserGroupSet () {
+        if (!['subset_manager'].includes(this.user.role.type)) {
+          try {
+            const { data } = await this.$store.dispatch('userGroupSetting/getUserGroupSetConfig');
+            if (data) {
+              this.userGroupAttributes = Object.assign({}, { apply_disable: data.apply_disable });
+            }
+          } catch (e) {
+            console.error(e);
+            this.bkMessageInstance = this.$bkMessage({
+              limit: 1,
+              theme: 'error',
+              message: e.message || e.data.msg || e.statusText,
+              ellipsisLine: 2,
+              ellipsisCopy: true
+            });
+          }
         }
       },
 

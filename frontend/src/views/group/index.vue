@@ -503,20 +503,22 @@
 
       // 获取分级管理员用户组配置
       async fetchUserGroupSet () {
-        try {
-          const { data } = await this.$store.dispatch('userGroupSetting/getUserGroupSetConfig');
-          if (data) {
-            this.userGroupAttributes = Object.assign({}, { apply_disable: data.apply_disable });
+        if (!['subset_manager'].includes(this.curRole)) {
+          try {
+            const { data } = await this.$store.dispatch('userGroupSetting/getUserGroupSetConfig');
+            if (data) {
+              this.userGroupAttributes = Object.assign({}, { apply_disable: data.apply_disable });
+            }
+          } catch (e) {
+            console.error(e);
+            this.bkMessageInstance = this.$bkMessage({
+              limit: 1,
+              theme: 'error',
+              message: e.message || e.data.msg || e.statusText,
+              ellipsisLine: 2,
+              ellipsisCopy: true
+            });
           }
-        } catch (e) {
-          console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
         }
       },
 
