@@ -1052,7 +1052,7 @@ class RoleGroupConfigView(views.APIView):
         if request.role.type != RoleType.GRADE_MANAGER.value:
             raise error_codes.FORBIDDEN
 
-        role_config = RoleConfig.objects.filter(role_id=self.role.id, type=RoleConfigType.GROUP.value).first()
+        role_config = RoleConfig.objects.filter(role_id=request.role.id, type=RoleConfigType.GROUP.value).first()
         data = role_config.config if role_config else {"apply_disable": False}
         return Response(data)
 
@@ -1071,9 +1071,9 @@ class RoleGroupConfigView(views.APIView):
 
         data = serializer.validated_data
 
-        role_config = RoleConfig.objects.filter(role_id=self.role.id, type=RoleConfigType.GROUP.value).first()
+        role_config = RoleConfig.objects.filter(role_id=request.role.id, type=RoleConfigType.GROUP.value).first()
         if not role_config:
-            role_config = RoleConfig(role_id=self.role.id, type=RoleConfigType.GROUP.value)
+            role_config = RoleConfig(role_id=request.role.id, type=RoleConfigType.GROUP.value)
         role_config.config = data
         role_config.save()
 
