@@ -223,6 +223,7 @@ function handleReject (error, config) {
     // console.error(nextError.message)
     return Promise.reject(nextError);
   }
+  console.log(555, config.globalError, error.response);
   // messageError(error.message)
   // console.error(error.message)
   return Promise.reject(error);

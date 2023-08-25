@@ -266,7 +266,9 @@
     // 用户
     [['user'], 'userNav'],
     // 审计
-    [['audit'], 'auditNav']
+    [['audit'], 'auditNav'],
+    // 用户组设置
+    [['userGroupSetting'], 'userGroupSettingNav']
   ]);
 
   export default {

@@ -282,6 +282,7 @@
   import { mapGetters } from 'vuex';
   import Condition from '@/model/condition';
   import GroupPolicy from '@/model/group-policy';
+  import GroupAggregationPolicy from '@/model/group-aggregation-policy';
   import RenderAggregateSideslider from '@/components/choose-ip/sideslider';
   import { leaveConfirm } from '@/common/leave-confirm';
   import { CUSTOM_PERM_TEMPLATE_ID, PERMANENT_TIMESTAMP } from '@/common/constants';
@@ -291,7 +292,6 @@
   import RenderResourcePopover from '@/components/iam-view-resource-popover';
   import RenderDetail from '../common/render-detail';
   import DeleteActionDialog from '@/views/group/components/delete-related-action-dialog.vue';
-  import GroupAggregationPolicy from '../../../model/group-aggregation-policy';
 
   // import store from '@/store'
   export default {
