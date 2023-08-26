@@ -301,25 +301,17 @@
           userGroupParams.system_id = this.externalSystemId;
         }
         const externalParams = userGroupParams.system_id ? { system_id: userGroupParams.system_id } : '';
-        let requestList = [];
+        const requestList = [
+          this.$store.dispatch('perm/getPersonalGroups', userGroupParams),
+          this.$store.dispatch('permApply/getHasPermSystem', externalParams),
+          this.$store.dispatch('renewal/getExpireSoonGroupWithUser', userGroupParams),
+          this.$store.dispatch('renewal/getExpireSoonPerm', externalParams),
+          this.$store.dispatch('permApply/getTeporHasPermSystem', externalParams),
+          this.$store.dispatch('perm/getDepartMentsPersonalGroups', externalParams)
+        ];
         if (hideApplyBtn) {
-          requestList = [
-            this.$store.dispatch('perm/getPersonalGroups', userGroupParams),
-            {},
-            this.$store.dispatch('renewal/getExpireSoonGroupWithUser', userGroupParams),
-            this.$store.dispatch('renewal/getExpireSoonPerm', externalParams),
-            {},
-            this.$store.dispatch('perm/getDepartMentsPersonalGroups', externalParams)
-          ];
-        } else {
-          requestList = [
-            this.$store.dispatch('perm/getPersonalGroups', userGroupParams),
-            this.$store.dispatch('permApply/getHasPermSystem', externalParams),
-            this.$store.dispatch('renewal/getExpireSoonGroupWithUser', userGroupParams),
-            this.$store.dispatch('renewal/getExpireSoonPerm', externalParams),
-            this.$store.dispatch('permApply/getTeporHasPermSystem', externalParams),
-            this.$store.dispatch('perm/getDepartMentsPersonalGroups', externalParams)
-          ];
+          requestList[1] = {};
+          requestList[4] = {};
         }
         try {
           const [
