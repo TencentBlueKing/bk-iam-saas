@@ -292,6 +292,7 @@
 
       async fetchData () {
         this.componentLoading = true;
+        const hideApplyBtn = this.externalSystemsLayout.myPerm.hideApplyBtn;
         const userGroupParams = {
           page_size: 10,
           page: 1
@@ -300,18 +301,26 @@
           userGroupParams.system_id = this.externalSystemId;
         }
         const externalParams = userGroupParams.system_id ? { system_id: userGroupParams.system_id } : '';
-        const requestList = [
-          this.$store.dispatch('perm/getPersonalGroups', userGroupParams),
-          this.$store.dispatch('permApply/getHasPermSystem', externalParams),
-          this.$store.dispatch('renewal/getExpireSoonGroupWithUser', userGroupParams),
-          this.$store.dispatch('renewal/getExpireSoonPerm', externalParams),
-          this.$store.dispatch('permApply/getTeporHasPermSystem', externalParams),
-          this.$store.dispatch('perm/getDepartMentsPersonalGroups', externalParams)
-          // this.fetchPermGroups(),
-          // this.fetchSystems(),
-          // this.fetchSoonGroupWithUser(),
-          // this.fetchSoonPerm()
-        ];
+        let requestList = [];
+        if (hideApplyBtn) {
+          requestList = [
+            this.$store.dispatch('perm/getPersonalGroups', userGroupParams),
+            {},
+            this.$store.dispatch('renewal/getExpireSoonGroupWithUser', userGroupParams),
+            this.$store.dispatch('renewal/getExpireSoonPerm', externalParams),
+            {},
+            this.$store.dispatch('perm/getDepartMentsPersonalGroups', externalParams)
+          ];
+        } else {
+          requestList = [
+            this.$store.dispatch('perm/getPersonalGroups', userGroupParams),
+            this.$store.dispatch('permApply/getHasPermSystem', externalParams),
+            this.$store.dispatch('renewal/getExpireSoonGroupWithUser', userGroupParams),
+            this.$store.dispatch('renewal/getExpireSoonPerm', externalParams),
+            this.$store.dispatch('permApply/getTeporHasPermSystem', externalParams),
+            this.$store.dispatch('perm/getDepartMentsPersonalGroups', externalParams)
+          ];
+        }
         try {
           const [
             { code: personalGroupCode, data: personalGroupData },
@@ -340,13 +349,14 @@
           this.emptyDepartmentGroupData
             = formatCodeData(departmentGroupCode, this.emptyDepartmentGroupData, this.departmentGroupList.length === 0);
 
-          this.isEmpty = personalGroupData.results.length < 1 && customData.length < 1
+          this.isEmpty = personalGroupList.length < 1 && customData.length < 1
             && teporarySystemList.length < 1 && departmentGroupList.length < 1;
           this.soonGroupLength = data3.results.length;
           this.soonPermLength = data4.length;
           this.isNoRenewal = this.soonGroupLength < 1 && this.soonPermLength < 1;
           this.isNoExternalRenewal = this.soonGroupLength < 1;
-          this.isNoTransfer = !systemList.length && !personalGroupList.length && !this.roleList.length;
+          this.isNoTransfer = hideApplyBtn ? !personalGroupList.length
+            : (!personalGroupList.length && !systemList.length && !this.roleList.length);
         } catch (e) {
           console.error(e);
           const { code, data, message, statusText } = e;
