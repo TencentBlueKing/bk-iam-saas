@@ -250,7 +250,8 @@
         position: relative;
         min-height: calc(100vh - 210px);
         .user-group-member {
-            margin-bottom: 0 !important;
+            /* margin-bottom: 0 !important; */
+            margin-bottom: 50px;
         }
         .basic-info-wrapper {
             .content {
