@@ -386,7 +386,7 @@
             id: this.deleteDialogConf.row.id
           });
           this.cancelDelete();
-          this.messageSuccess(this.$t(`m.info['退出成功']`), 2000);
+          this.messageSuccess(this.$t(`m.info['退出成功']`), 3000);
           if (!this.groupPermEmptyData.tipType) {
             this.$emit('refresh');
           } else {

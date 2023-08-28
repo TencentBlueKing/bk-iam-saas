@@ -740,7 +740,7 @@
           console.error(e);
           const { response } = e;
           if (response && [400].includes(response.status)) {
-            this.messageError(this.$t(`m.verify['用户名输入格式错误']`), 2000);
+            this.messageWarn(this.$t(`m.verify['用户名输入格式错误']`), 3000);
           } else {
             this.bkMessageInstance = this.$bkMessage({
               limit: 1,

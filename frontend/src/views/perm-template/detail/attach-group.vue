@@ -167,7 +167,7 @@
         try {
           await this.$store.dispatch('permTemplate/deleteTemplateMember', params);
           this.isShowRemoveDialog = false;
-          this.messageSuccess(this.$t(`m.info['移除成功']`), 2000);
+          this.messageSuccess(this.$t(`m.info['移除成功']`), 3000);
           this.fetchData(false, true);
         } catch (e) {
           console.error(e);

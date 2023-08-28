@@ -279,7 +279,7 @@
               node.is_selected = !node.is_selected;
               this.$emit('on-checked', node.is_selected, !node.is_selected, node.is_selected, node);
             } else {
-              this.messageError(this.$t(`m.verify['当前选择项不在授权范围内']`));
+              this.messageWarn(this.$t(`m.verify['当前选择项不在授权范围内']`), 3000);
             }
           }
         }
@@ -297,7 +297,7 @@
               node.is_selected = !node.is_selected;
               this.$emit('on-checked', node.is_selected, !node.is_selected, true, node);
             } else {
-              this.messageError(this.$t(`m.verify['当前选择项不在授权范围内']`));
+              this.messageWarn(this.$t(`m.verify['当前选择项不在授权范围内']`), 3000);
             }
           }
         }

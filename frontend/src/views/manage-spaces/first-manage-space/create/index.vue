@@ -748,7 +748,7 @@
           await this.$store.dispatch('role/addRatingManagerWithGeneral', params);
           await this.$store.dispatch('roleList');
           this.isShowReasonDialog = false;
-          this.messageSuccess(this.$t(`m.info['申请已提交']`), 1000);
+          this.messageSuccess(this.$t(`m.info['申请已提交']`), 3000);
           this.$router.push({
             name: 'apply'
           });

@@ -224,7 +224,7 @@
         };
         return this.$store.dispatch('userGroup/editUserGroup', params)
           .then(() => {
-            this.messageSuccess(this.$t(`m.info['编辑成功']`), 2000);
+            this.messageSuccess(this.$t(`m.info['编辑成功']`), 3000);
             this.basicInfo = Object.assign(this.basicInfo, {
               name: params.name,
               description: params.description,
@@ -250,7 +250,8 @@
         position: relative;
         min-height: calc(100vh - 210px);
         .user-group-member {
-            margin-bottom: 0 !important;
+            /* margin-bottom: 0 !important; */
+            margin-bottom: 50px;
         }
         .basic-info-wrapper {
             .content {

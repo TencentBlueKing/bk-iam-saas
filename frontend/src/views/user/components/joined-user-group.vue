@@ -431,7 +431,7 @@
             id: this.deleteDialogConf.row.id
           });
           this.cancelDelete();
-          this.messageSuccess(this.$t(`m.info['退出成功']`), 2000);
+          this.messageSuccess(this.$t(`m.info['退出成功']`), 3000);
           await this.fetchPermGroups(true);
         } catch (e) {
           this.deleteDialogConf.loading = false;
@@ -613,7 +613,7 @@
         try {
           await this.$store.dispatch('userGroup/batchAddUserGroupMember', params);
           this.isShowUserGroupDialog = false;
-          this.messageSuccess(this.$t(`m.info['添加用户组成功']`), 2000);
+          this.messageSuccess(this.$t(`m.info['添加用户组成功']`), 3000);
           await this.fetchPermGroups(true);
         } catch (e) {
           console.error(e);

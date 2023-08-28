@@ -118,7 +118,7 @@
         };
         return this.$store.dispatch('role/updateRatingManager', params)
           .then(async () => {
-            this.messageSuccess(this.$t(`m.info['编辑成功']`), 2000);
+            this.messageSuccess(this.$t(`m.info['编辑成功']`), 3000);
             this.formData.name = params.name;
             this.formData.description = params.description;
             this.formData.members = [...params.members];

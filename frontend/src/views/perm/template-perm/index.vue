@@ -329,7 +329,7 @@
             id: this.deleteDialogConf.row.id
           });
           this.cancelDelete();
-          this.messageSuccess(this.$t(`m.info['解除成功']`), 2000);
+          this.messageSuccess(this.$t(`m.info['解除成功']`), 3000);
           this.$emit('toggle-loading', true);
           await this.fetchPermTemplates();
         } catch (e) {

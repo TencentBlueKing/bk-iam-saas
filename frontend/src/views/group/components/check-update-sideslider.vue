@@ -165,7 +165,7 @@
         const { id, type, templateId } = this.params;
         try {
           await this.$store.dispatch('permTemplate/templateAuthObjectSync', { id, type, templateId });
-          this.messageSuccess(this.$t(`m.permTemplate['同步成功']`), 2000);
+          this.messageSuccess(this.$t(`m.permTemplate['同步成功']`), 3000);
           this.isVisible = false;
           this.$emit('animation-end');
           this.$emit('on-sync');

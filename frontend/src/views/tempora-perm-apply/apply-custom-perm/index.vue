@@ -1909,7 +1909,7 @@
         this.buttonLoading = true;
         try {
           await this.$store.dispatch('applyProvisionPerm/permTemporaryApply', params);
-          this.messageSuccess(this.$t(`m.info['申请已提交']`), 1000);
+          this.messageSuccess(this.$t(`m.info['申请已提交']`), 3000);
           this.$router.push({
             name: 'apply'
           });
@@ -1984,7 +1984,7 @@
         };
         try {
           await this.$store.dispatch('permApply/applyJoinGroup', params);
-          this.messageSuccess(this.$t(`m.info['申请已提交']`), 1000);
+          this.messageSuccess(this.$t(`m.info['申请已提交']`), 3000);
           this.$router.push({
             name: 'apply'
           });

@@ -214,7 +214,7 @@
         try {
           this.loading = true;
           await this.$store.dispatch('userGroup/userGroupDistribute', params);
-          this.messageSuccess(this.$t(`m.info['分配成功']`), 1000);
+          this.messageSuccess(this.$t(`m.info['分配成功']`), 3000);
           this.$emit('on-success');
         } catch (e) {
           console.error(e);

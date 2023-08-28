@@ -611,7 +611,7 @@
         };
         try {
           await this.$store.dispatch(url, params);
-          this.messageSuccess(this.$t(`m.info['编辑成功']`), 2000);
+          this.messageSuccess(this.$t(`m.info['编辑成功']`), 3000);
           if (name || members) {
             const typeMap = {
               'rating_manager': async () => {
@@ -797,7 +797,7 @@
         try {
           await this.$store.dispatch('role/deleteRatingManager', { id: this.curId });
           await this.$store.dispatch('roleList');
-          this.messageSuccess(this.$t(`m.info['退出成功']`), 2000);
+          this.messageSuccess(this.$t(`m.info['退出成功']`), 3000);
           this.isShowConfirmDialog = false;
           this.resetPagination();
           this.fetchGradingAdmin(true);

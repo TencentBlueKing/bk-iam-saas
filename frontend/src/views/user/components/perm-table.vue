@@ -288,7 +288,7 @@
           if (index > -1) {
             this.tableList.splice(index, 1);
           }
-          this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
+          this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
           this.$emit('after-delete', this.tableList.length);
         } catch (e) {
           console.error(e);

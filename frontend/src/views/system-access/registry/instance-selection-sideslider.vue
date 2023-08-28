@@ -277,7 +277,7 @@
           return;
         }
         if (item.resource_type_chain.length === 1) {
-          this.messageError(this.$t(`m.access['至少要有一个资源实例层级']`), 1000);
+          this.messageWarn(this.$t(`m.access['至少要有一个资源实例层级']`), 1000);
           return;
         }
 
@@ -474,7 +474,7 @@
               item.title = item.name;
               item.isEdit = false;
               item.isNewAdd = false;
-              this.messageSuccess(this.$t(`m.access['保存实例视图成功']`), 1000);
+              this.messageSuccess(this.$t(`m.access['保存实例视图成功']`), 3000);
               this.$emit('on-refresh-system-list', 'instanceSelection');
               this.addValidatorRules(); // 保存成功重新添加规则
             } catch (e) {

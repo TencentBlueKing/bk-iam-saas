@@ -440,7 +440,7 @@
               return childTypeMap[childItem.id]();
             }
           },
-          'copy-all': async () => {
+          'copy-all': () => {
             const childItem = this.curCopyCascade.children.find(item => item.id === payload.id);
             if (childItem) {
               const params = {
@@ -593,7 +593,7 @@
           if (code === 0 && data) {
             window.parent.postMessage({ type: 'IAM', data: externalPayload, code: 'add_user_confirm' }, '*');
             this.isShowAddMemberDialog = false;
-            this.messageSuccess(this.$t(`m.info['添加成员成功']`), 2000);
+            this.messageSuccess(this.$t(`m.info['添加成员成功']`), 3000);
             this.fetchMemberList();
           }
         } catch (e) {
@@ -677,7 +677,7 @@
               count: params.members.length
             };
             window.parent.postMessage({ type: 'IAM', data: externalParams, code: 'remove_user_confirm' }, '*');
-            this.messageSuccess(this.$t(`m.info['移除成功']`), 2000);
+            this.messageSuccess(this.$t(`m.info['移除成功']`), 3000);
             this.currentSelectList = [];
             this.pagination.current = 1;
             this.fetchMemberList();
@@ -710,7 +710,7 @@
         };
         try {
           await this.$store.dispatch('renewal/groupMemberPermRenewal', params);
-          this.messageSuccess(this.$t(`m.renewal['续期成功']`), 2000);
+          this.messageSuccess(this.$t(`m.renewal['续期成功']`), 3000);
           this.isShowRenewalDialog = false;
           this.fetchMemberList();
         } catch (e) {

@@ -759,7 +759,7 @@
           await this.$store.dispatch('role/editRatingManagerWithGeneral', params);
           await this.$store.dispatch('roleList');
           this.isShowReasonDialog = false;
-          this.messageSuccess(this.$t(`m.info['申请已提交']`), 1000);
+          this.messageSuccess(this.$t(`m.info['申请已提交']`), 3000);
           this.$router.push({
             name: 'apply'
           });
@@ -842,7 +842,7 @@
         try {
           await this.$store.dispatch(`role/${dispatchMethod}`, params);
           await this.$store.dispatch('roleList');
-          this.messageSuccess(this.$t(`m.info['编辑二级管理空间成功']`), 1000);
+          this.messageSuccess(this.$t(`m.info['编辑二级管理空间成功']`), 3000);
           this.$router.push({
             name: 'gradingAdminDetail',
             params: {

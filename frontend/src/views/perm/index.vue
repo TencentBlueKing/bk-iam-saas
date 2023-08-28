@@ -229,7 +229,7 @@
       };
     },
     computed: {
-      ...mapGetters(['externalSystemsLayout', 'externalSystemId'])
+      ...mapGetters(['externalSystemsLayout', 'externalSystemId', 'roleList'])
     },
     watch: {
       externalSystemsLayout: {
@@ -292,6 +292,7 @@
 
       async fetchData () {
         this.componentLoading = true;
+        const hideApplyBtn = this.externalSystemsLayout.myPerm.hideApplyBtn;
         const userGroupParams = {
           page_size: 10,
           page: 1
@@ -307,11 +308,11 @@
           this.$store.dispatch('renewal/getExpireSoonPerm', externalParams),
           this.$store.dispatch('permApply/getTeporHasPermSystem', externalParams),
           this.$store.dispatch('perm/getDepartMentsPersonalGroups', externalParams)
-          // this.fetchPermGroups(),
-          // this.fetchSystems(),
-          // this.fetchSoonGroupWithUser(),
-          // this.fetchSoonPerm()
         ];
+        if (hideApplyBtn) {
+          requestList[1] = {};
+          requestList[4] = {};
+        }
         try {
           const [
             { code: personalGroupCode, data: personalGroupData },
@@ -340,13 +341,14 @@
           this.emptyDepartmentGroupData
             = formatCodeData(departmentGroupCode, this.emptyDepartmentGroupData, this.departmentGroupList.length === 0);
 
-          this.isEmpty = personalGroupData.results.length < 1 && customData.length < 1
+          this.isEmpty = personalGroupList.length < 1 && customData.length < 1
             && teporarySystemList.length < 1 && departmentGroupList.length < 1;
           this.soonGroupLength = data3.results.length;
           this.soonPermLength = data4.length;
           this.isNoRenewal = this.soonGroupLength < 1 && this.soonPermLength < 1;
           this.isNoExternalRenewal = this.soonGroupLength < 1;
-          this.isNoTransfer = !systemList.length && !teporarySystemList.length;
+          this.isNoTransfer = hideApplyBtn ? !personalGroupList.length
+            : (!personalGroupList.length && !systemList.length && !this.roleList.length);
         } catch (e) {
           console.error(e);
           const { code, data, message, statusText } = e;

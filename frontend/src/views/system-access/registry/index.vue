@@ -833,7 +833,7 @@
                     
           // 依赖实例时才需要校验
           if (item.related_resource_types.filter(t => t.selection_mode && !t.id).length) {
-            this.messageError(this.$t(`m.access['资源实例选择方式至少选择一个']`), 1000);
+            this.messageWarn(this.$t(`m.access['资源实例选择方式至少选择一个']`), 3000);
             return;
           }
 
@@ -847,7 +847,7 @@
           ).length;
 
           if (invalidLength) {
-            this.messageError(this.$t(`m.access['通过拓扑选择时必须要选择实例视图']`), 1000);
+            this.messageWarn(this.$t(`m.access['通过拓扑选择时必须要选择实例视图']`), 3000);
             return;
           }
 
@@ -901,7 +901,7 @@
             item.title = item.name;
             item.isEdit = false;
             item.isNewAdd = false;
-            this.messageSuccess(this.$t(`m.access['保存操作成功']`), 1000);
+            this.messageSuccess(this.$t(`m.access['保存操作成功']`), 3000);
           } catch (e) {
             console.error(e);
             this.bkMessageInstance = this.$bkMessage({
@@ -1010,7 +1010,7 @@
        */
       async handleSubmit (routerName) {
         if (!this.actionList.length) {
-          this.messageError(this.$t(`m.access['至少要注册一个操作']`), 1000);
+          this.messageWarn(this.$t(`m.access['至少要注册一个操作']`), 3000);
           return;
         }
 
