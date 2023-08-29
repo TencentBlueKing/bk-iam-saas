@@ -763,11 +763,18 @@
   }
   .copy-user-group-cls {
     width: auto !important;
-    .bk-cascade-panel-ul {
-      width: 100px !important;
-    }
     .bk-cascade-options {
       height: 70px !important;
+    }
+    .bk-cascade-panel {
+      .bk-cascade-panel-ul {
+        width: 100px !important;
+      }
+      .bk-cascade-panel {
+        .bk-cascade-panel-ul {
+          width: 110px !important;
+        }
+      }
     }
     &-lang {
       .bk-cascade-panel {
@@ -776,7 +783,7 @@
         }
         .bk-cascade-panel {
           .bk-cascade-panel-ul {
-            width: 182px !important;
+            width: 240px !important;
           }
         }
       }

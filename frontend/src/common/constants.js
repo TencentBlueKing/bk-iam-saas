@@ -153,7 +153,7 @@ export const COPY_KEYS_ENUM = [
       },
       {
         id: 'userAndOrg',
-        name: il8n('userGroup', '成员和组织')
+        name: il8n('userGroup', '成员和组织架构')
       }
     ]
   },
@@ -167,7 +167,7 @@ export const COPY_KEYS_ENUM = [
       },
       {
         id: 'userAndOrg',
-        name: il8n('userGroup', '成员和组织')
+        name: il8n('userGroup', '成员和组织架构')
       }
     ]
   }

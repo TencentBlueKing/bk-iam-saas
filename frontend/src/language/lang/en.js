@@ -817,7 +817,7 @@ export const m = {
         '复制已选': 'Copy selected',
         '复制所有': 'Copy all',
         '成员': 'Members',
-        '成员和组织': 'Members and organizations',
+        '成员和组织架构': 'Members and organizational structure',
         '不可被申请': 'Not applicable',
         '该组只能管理员主动授权，用户无法主动申请': 'This group can only be actively authorized by administrators, and users cannot actively apply',
         '设置不可被申请，则无法申请加入此用户组': 'If the setting cannot be applied for, you cannot apply to join this user group',
