@@ -232,6 +232,7 @@ export const m = {
         '查询': 'Search',
         '生效条件': 'Effective condition',
         '批量添加成员': 'Multi-add members',
+        '我的管理空间': 'My management space',
         '选择管理空间': 'Select management space',
         '管理我的管理空间': 'Manage my management space',
         '搜索管理空间': 'Search management space',
@@ -357,6 +358,7 @@ export const m = {
         '请选择操作': 'Please select the actions',
         '请选择资源类型': 'Please select resource type',
         '管理空间名称不能为空': 'Management space name cannot be empty',
+        '请选择用户': 'Please select user',
         '请选择用户或组织成员': 'Please select user or organization member',
         '请选择用户组成员复制': 'Please select user group member copy'
     },
@@ -879,7 +881,7 @@ export const m = {
         '最近30天': 'Last 30 days'
     },
     grading: {
-        '管理空间': 'Management Space',
+        '管理空间': 'Management space',
         '创建人': 'Created by',
         '管理空间名称': 'Management Space Name',
         '系统管理员名称': 'System Manager Name',

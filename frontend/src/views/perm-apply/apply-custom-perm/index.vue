@@ -352,11 +352,25 @@
                         <span :title="row.description !== '' ? row.description : ''">{{ row.description || '--' }}</span>
                       </template>
                     </bk-table-column>
-                    <bk-table-column :label="$t(`m.userGroup['所属管理空间']`)">
+                    <bk-table-column :label="$t(`m.grading['管理空间']`)">
                       <template slot-scope="{ row }">
-                        <span :class="row.role && row.role.name ? 'can-view' : ''"
+                        <span
                           :title="row.role && row.role.name ? row.role.name : ''"
-                          @click.stop="handleViewDetail(row)">{{ row.role ? row.role.name : '--' }}</span>
+                        >
+                          {{ row.role ? row.role.name : '--' }}
+                        </span>
+                      </template>
+                    </bk-table-column>
+                    <bk-table-column :label="$t(`m.levelSpace['管理员']`)" width="300">
+                      <template slot-scope="{ row, $index }">
+                        <iam-edit-member-selector
+                          mode="detail"
+                          field="role_members"
+                          width="300"
+                          :placeholder="$t(`m.verify['请输入']`)"
+                          :value="row.role_members"
+                          :index="$index"
+                        />
                       </template>
                     </bk-table-column>
                     <template slot="empty">
@@ -589,27 +603,6 @@
       :group-id="curGroupId"
       :show-member="false"
       @animation-end="handleAnimationEnd" />
-    <bk-sideslider
-      :is-show.sync="isShowGradeSlider"
-      :width="640"
-      :title="gradeSliderTitle"
-      :quick-close="true"
-      @animation-end="gradeSliderTitle === ''">
-      <div class="grade-members-content"
-        slot="content"
-        v-bkloading="{ isLoading: sliderLoading, opacity: 1 }">
-        <template v-if="!sliderLoading">
-          <div v-for="(item, index) in gradeMembers"
-            :key="index"
-            class="member-item">
-            <span class="member-name">
-              {{ item }}
-            </span>
-          </div>
-          <p class="info">{{ $t(`m.info['管理空间成员提示']`) }}</p>
-        </template>
-      </div>
-    </bk-sideslider>
 
     <confirmDialog
       :width="600"
@@ -636,6 +629,7 @@
   import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider';
   import BkUserSelector from '@blueking/user-selector';
   import ConfirmDialog from '@/components/iam-confirm-dialog/index';
+  import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
 
   export default {
     name: '',
@@ -645,7 +639,8 @@
       IamDeadline,
       RenderPermSideslider,
       BkUserSelector,
-      ConfirmDialog
+      ConfirmDialog,
+      IamEditMemberSelector
     },
     data () {
       return {
@@ -675,8 +670,6 @@
         // 用户组列表数据
         tableList: [],
         isShowPermSidesilder: false,
-        isShowGradeSlider: false,
-        gradeSliderTitle: '',
         curGroupName: '',
         curGroupId: '',
         isShowUserGroup: true,
@@ -863,13 +856,6 @@
         this.curGroupId = '';
         this.isShowPermSidesilder = false;
       },
-      handleViewDetail (payload) {
-        if (payload.role && payload.role.name) {
-          this.isShowGradeSlider = true;
-          this.gradeSliderTitle = this.$t(`m.info['管理空间成员侧边栏标题信息']`, { value: `${this.$t(`m.common['【']`)}${payload.role.name}${this.$t(`m.common['】']`)}` });
-          this.fetchRoles(payload.role.id);
-        }
-      },
       handleToUserGroup () {
         this.$router.push({
           name: 'applyJoinUserGroup'
@@ -928,6 +914,14 @@
           this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
           this.$nextTick(() => {
             this.tableList.forEach(item => {
+              if (item.role_members && item.role_members.length) {
+                item.role_members = item.role_members.map(v => {
+                  return {
+                    username: v,
+                    readonly: false
+                  };
+                });
+              }
               this.personalUserGroup.forEach(v => {
                 if (String(item.id) === v.id) {
                   this.$set(item, 'expired_at', v.expired_at);
@@ -970,24 +964,6 @@
             ellipsisLine: 2,
             ellipsisCopy: true
           });
-        }
-      },
-      async fetchRoles (id) {
-        this.sliderLoading = true;
-        try {
-          const res = await this.$store.dispatch('role/getGradeMembers', { id });
-          this.gradeMembers = [...res.data];
-        } catch (e) {
-          console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
-        } finally {
-          this.sliderLoading = false;
         }
       },
       /**

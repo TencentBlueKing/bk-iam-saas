@@ -104,7 +104,7 @@
           </bk-button>
         </div>
         <div slot="extension" @click="handleToGradingAdmin" style="cursor: pointer">
-          <i class="bk-icon icon-cog-shape mr10"></i>{{ $t(`m.nav['我的管理空间']`) }}
+          <i class="bk-icon icon-cog-shape mr10"></i>{{ $t(`m.common['我的管理空间']`) }}
         </div>
       </bk-select>
       <div class="nav-slider-list">

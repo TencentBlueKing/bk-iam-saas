@@ -224,7 +224,6 @@
                 :placeholder="$t(`m.verify['请输入']`)"
                 :value="row.role_members"
                 :index="$index"
-                @on-change="handleUpdateMembers"
               />
             </template>
           </bk-table-column>
@@ -334,28 +333,6 @@
       @on-sumbit="handleSubmitAdd" />
 
     <bk-sideslider
-      :is-show.sync="isShowGradeSlider"
-      :width="640"
-      :title="gradeSliderTitle"
-      :quick-close="true"
-      @animation-end="gradeSliderTitle === ''">
-      <div class="grade-members-content"
-        slot="content"
-        v-bkloading="{ isLoading: sliderLoading, opacity: 1 }">
-        <template v-if="!sliderLoading">
-          <div v-for="(item, index) in gradeMembers"
-            :key="index"
-            class="member-item">
-            <span class="member-name">
-              {{ item }}
-            </span>
-          </div>
-          <p class="info">{{ $t(`m.info['管理空间成员提示']`) }}</p>
-        </template>
-      </div>
-    </bk-sideslider>
-
-    <bk-sideslider
       :is-show="isShowResourceInstanceSideSlider"
       :title="resourceInstanceSideSliderTitle"
       :width="960"
@@ -463,10 +440,7 @@
         isShowPermSideSlider: false,
         curGroupName: '',
         curGroupId: '',
-        isShowGradeSlider: false,
         sliderLoading: false,
-        gradeMembers: [],
-        gradeSliderTitle: '',
         curRole: '',
         users: [],
         departments: [],
@@ -1110,25 +1084,6 @@
         }
       },
 
-      async fetchRoles (id) {
-        this.sliderLoading = true;
-        try {
-          const res = await this.$store.dispatch('role/getGradeMembers', { id });
-          this.gradeMembers = [...res.data];
-        } catch (e) {
-          console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
-        } finally {
-          this.sliderLoading = false;
-        }
-      },
-
       handleCellAttributes ({ rowIndex, cellIndex, row, column }) {
         if (cellIndex === 0) {
           if (this.curUserGroup.includes(row.id.toString())) {
@@ -1324,15 +1279,7 @@
         this.curGroupId = payload.id;
         this.isShowPermSideSlider = true;
       },
-
-      handleViewDetail (payload) {
-        if (payload.role && payload.role.name) {
-          this.isShowGradeSlider = true;
-          this.gradeSliderTitle = this.$t(`m.info['管理空间成员侧边栏标题信息']`, { value: `${this.$t(`m.common['【']`)}${payload.role.name}${this.$t(`m.common['】']`)}` });
-          this.fetchRoles(payload.role.id);
-        }
-      },
-
+      
       handleAnimationEnd () {
         this.curGroupName = '';
         this.curGroupId = '';

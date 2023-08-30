@@ -22,11 +22,25 @@
           </template>
         </bk-table-column>
         <bk-table-column :label="$t(`m.common['有效期']`)" prop="expired_at_display"></bk-table-column>
-        <bk-table-column :label="$t(`m.audit['所属管理空间']`)">
+        <bk-table-column :label="$t(`m.grading['管理空间']`)">
           <template slot-scope="{ row }">
-            <span :class="row.role && row.role.name ? 'can-view' : ''"
+            <span
               :title="row.role && row.role.name ? row.role.name : ''"
-              @click.stop="handleViewDetail(row)">{{ row.role ? row.role.name : '--' }}</span>
+            >
+              {{ row.role ? row.role.name : '--' }}
+            </span>
+          </template>
+        </bk-table-column>
+        <bk-table-column :label="$t(`m.levelSpace['管理员']`)" width="300">
+          <template slot-scope="{ row, $index }">
+            <iam-edit-member-selector
+              mode="detail"
+              field="role_members"
+              width="300"
+              :placeholder="$t(`m.verify['请输入']`)"
+              :value="row.role_members"
+              :index="$index"
+            />
           </template>
         </bk-table-column>
         <bk-table-column :label="$t(`m.perm['加入用户组的时间']`)">
@@ -44,8 +58,8 @@
         <bk-table-column :label="$t(`m.perm['加入方式']`)">
           <template slot-scope="props">
             <span v-if="props.row.department_id === 0">{{ $t(`m.perm['直接加入']`) }}</span>
-            <span v-else :title="`${$t(`m.perm['通过组织加入']`)}：${props.row.department_name}`">
-              {{ $t(`m.perm['通过组织加入']`) }}：{{ props.row.department_name }}
+            <span v-else :title="`${$t(`m.perm['通过组织加入']`)}: ${props.row.department_name}`">
+              {{ $t(`m.perm['通过组织加入']`) }}: {{ props.row.department_name }}
             </span>
           </template>
         </bk-table-column>
@@ -171,35 +185,6 @@
       :name="curGroupName"
       :group-id="curGroupId"
       @animation-end="handleAnimationEnd" />
-
-    <!-- 管理空间 成员 侧边弹出框 -->
-    <bk-sideslider
-      :is-show.sync="isShowGradeSlider"
-      :width="640"
-      :title="gradeSliderTitle"
-      :quick-close="true"
-      @animation-end="gradeSliderTitle === ''">
-      <div slot="content" class="grade-members-content" v-bkloading="{ isLoading: sliderLoading, opacity: 1 }"
-        data-test-id="myPerm_sideslider_gradeMemebersContent">
-        <template v-if="!sliderLoading">
-          <div v-for="(item, index) in gradeMembers" :key="index" class="member-item">
-            <span class="member-name">
-              {{ item }}
-            </span>
-          </div>
-          <p class="info">{{ $t(`m.info['管理空间成员提示']`) }}</p>
-        </template>
-        <div v-if="!gradeMembers.length">
-          <ExceptionEmpty
-            :type="emptySliderData.type"
-            :empty-text="emptySliderData.text"
-            :tip-text="emptySliderData.tip"
-            :tip-type="emptySliderData.tipType"
-            @on-refresh="handleEmptySliderRefresh"
-          />
-        </div>
-      </div>
-    </bk-sideslider>
   </div>
 </template>
 <script>
@@ -210,6 +195,7 @@
   import IamSearchSelect from '@/components/iam-search-select';
   import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider';
   import IamDeadline from '@/components/iam-deadline/horizontal';
+  import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
 
   export default {
     name: '',
@@ -217,7 +203,8 @@
       IamSearchSelect,
       IamDeadline,
       DeleteDialog,
-      RenderPermSideslider
+      RenderPermSideslider,
+      IamEditMemberSelector
     },
     props: {
       data: {
@@ -248,7 +235,6 @@
         gradeSliderTitle: '',
         sliderLoading: false,
         tableLoading: false,
-        isShowGradeSlider: false,
         isShowPermSidesilder: false,
         pageLoading: false,
         isShowUserGroupDialog: false,
@@ -276,12 +262,6 @@
           tipType: ''
         },
         emptyDialogData: {
-          type: '',
-          text: '',
-          tip: '',
-          tipType: ''
-        },
-        emptySliderData: {
           type: '',
           text: '',
           tip: '',
@@ -356,6 +336,16 @@
           this.pageConf.count = data.count || 0;
           this.dataList.splice(0, this.dataList.length, ...(data.results || []));
           this.curPageData = [...this.dataList];
+          this.curPageData.forEach(item => {
+            if (item.role_members && item.role_members.length) {
+              item.role_members = item.role_members.map(v => {
+                return {
+                  username: v,
+                  readonly: false
+                };
+              });
+            }
+          });
           this.emptyData = formatCodeData(code, this.emptyData, this.curPageData.length === 0);
         } catch (e) {
           console.error(e);
@@ -631,44 +621,6 @@
 
       handleBatchUserGroupCancel () {
         this.isShowUserGroupDialog = false;
-      },
-
-      /**
-       * 调用接口获取管理空间各项数据
-       */
-      async fetchRoles (id) {
-        this.sliderLoading = true;
-        try {
-          const { code, data } = await this.$store.dispatch('role/getGradeMembers', { id });
-          this.gradeMembers = [...data];
-          this.emptySliderData = formatCodeData(code, this.emptySliderData, data.length === 0);
-        } catch (e) {
-          console.error(e);
-          const { code, data, message, statusText } = e;
-          this.emptySliderData = formatCodeData(code, this.emptySliderData);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: message || data.msg || statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
-        } finally {
-          this.sliderLoading = false;
-        }
-      },
-
-      /**
-       * 点击管理空间中的项弹出侧边框且显示数据
-       */
-      handleViewDetail (payload) {
-        if (payload.role && payload.role.name) {
-          const { name, id } = payload.role;
-          this.isShowGradeSlider = true;
-          this.gradeSliderTitle = this.$t(`m.info['管理空间成员侧边栏标题信息']`, { value: `${this.$t(`m.common['【']`)}${name}${this.$t(`m.common['】']`)}` });
-          this.curRoleId = id;
-          this.fetchRoles(id);
-        }
       }
 
     }
