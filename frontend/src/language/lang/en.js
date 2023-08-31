@@ -274,7 +274,8 @@ export const m = {
         '无该应用访问权限': 'No access permissions for this application',
         '暂无可复制内容': 'There is currently no replicable content',
         '暂无可复制用户': 'There are currently no replicable users',
-        '管理员组不能添加部门': 'The administrator group cannot add department'
+        '管理员组不能添加部门': 'The administrator group cannot add department',
+        '批量退出': 'Multi-quit'
     },
     // 校验
     verify: {
@@ -540,7 +541,8 @@ export const m = {
         '删除操作权限': 'the operation permission',
         '删除实例权限': 'instance permission',
         '删除一组实例权限': 'a set of instance permissions',
-        '确定要删除系统下的所有操作权限？': 'Confirm to delete all action permissions under the {value} system?'
+        '确定要删除系统下的所有操作权限？': 'Confirm to delete all action permissions under the {value} system?',
+        '确认批量退出所选的用户组吗？': 'Are you sure to batch quit the selected user groups?'
     },
     nav: {
         '蓝鲸权限中心': 'BlueKing-IAM',
@@ -734,7 +736,9 @@ export const m = {
         '个操作关联了': ' related actions have been completed ',
         '查看实例资源权限组': 'View instance resource permission groups',
         '删除实例资源权限组': 'Delete instance resource permission groups',
-        '唯一管理员不可退出': 'The only administrator cannot quit'
+        '唯一管理员不可退出': 'The only administrator cannot quit',
+        '存在用户组不可退出（唯一管理员不能退出）': 'There is user group that cannot be logged out (the only administrator cannot log out)',
+        '当前勾选项都为不可退出的用户组（唯一管理员不能退出）': 'The current checked options are all user groups that cannot be logged out (the only administrator cannot log out)'
     },
     permTemplate: {
         '模板名': 'Template name',

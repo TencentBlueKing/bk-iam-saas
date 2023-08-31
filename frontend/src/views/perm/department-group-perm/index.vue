@@ -173,6 +173,7 @@
       departmentGroupList: {
         handler (v) {
           if (this.isSearchPerm) {
+            this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10 });
             this.fetchDepartSearch();
           } else {
             if (v.length) {

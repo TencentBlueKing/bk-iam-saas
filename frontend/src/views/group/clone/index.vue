@@ -395,9 +395,9 @@
     },
     methods: {
       async handleInit () {
+        this.fetchUserGroupSet();
         if (this.groupId) {
           await this.fetchDetail();
-          await this.fetchUserGroupSet();
           await this.fetchGroupSystem();
         }
       },

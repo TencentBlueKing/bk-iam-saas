@@ -1,12 +1,25 @@
 <template>
-  <div class="my-perm-group-perm" v-bkloading="{ isLoading, opacity: 1 }">
+  <div class="my-perm-group-perm">
+    <div class="my-perm-group-perm-header">
+      <bk-button
+        :disabled="!currentSelectGroupList.length"
+        @click="handleBatchQuit">
+        {{ $t(`m.common['批量退出']`) }}
+      </bk-button>
+    </div>
     <bk-table
+      ref="groupPermTableRef"
       data-test-id="myPerm_table_group"
       :data="curPageData"
       :size="'small'"
       :pagination="pageConf"
       @page-change="handlePageChange"
-      @page-limit-change="handlePageLimitChange">
+      @page-limit-change="handlePageLimitChange"
+      @select="handleSelectChange"
+      @select-all="handleSelectAllChange"
+      v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
+    >
+      <bk-table-column type="selection" align="center" :selectable="setDefaultSelect" />
       <!-- 用户组名 -->
       <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
         <template slot-scope="{ row }">
@@ -103,14 +116,27 @@
       :name="curGroupName"
       :group-id="curGroupId"
       @animation-end="handleAnimationEnd" />
+
+    <delete-action-dialog
+      :show.sync="isShowDeleteDialog"
+      :title="delActionDialogTitle"
+      :tip="delActionDialogTip"
+      :name="currentActionName"
+      :related-action-list="delActionList"
+      @on-after-leave="handleAfterDeleteLeaveAction"
+      @on-cancel="handleCancelDelete"
+      @on-submit="handleSubmitDelete"
+    />
   </div>
 </template>
 
 <script>
+  import _ from 'lodash';
   import { mapGetters } from 'vuex';
   import { formatCodeData } from '@/common/util';
   import { bus } from '@/common/bus';
   import DeleteDialog from '@/components/iam-confirm-dialog/index.vue';
+  import DeleteActionDialog from '@/views/group/components/delete-related-action-dialog.vue';
   import RenderGroupPermSideslider from '../components/render-group-perm-sideslider';
   import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
 
@@ -118,6 +144,7 @@
     name: '',
     components: {
       DeleteDialog,
+      DeleteActionDialog,
       RenderGroupPermSideslider,
       IamEditMemberSelector
     },
@@ -143,18 +170,23 @@
       isSearchPerm: {
         type: Boolean,
         default: false
+      },
+      checkGroupList: {
+        type: Array,
+        default: () => []
       }
     },
     data () {
       return {
         dataList: [],
+        curPageData: [],
+        currentSelectGroupList: [],
         pageConf: {
           current: 1,
           count: 0,
           limit: 10
           // limitList: [5, 10, 20, 50]
         },
-        curPageData: [],
         deleteDialogConf: {
           visiable: false,
           loading: false,
@@ -165,13 +197,18 @@
         curGroupName: '',
         curGroupId: '',
         sliderLoading: false,
-        isLoading: false,
+        tableLoading: false,
         groupPermEmptyData: {
           type: '',
           text: '',
           tip: '',
           tipType: ''
-        }
+        },
+        isShowDeleteDialog: false,
+        delActionDialogTitle: '',
+        delActionDialogTip: '',
+        currentActionName: '',
+        delActionList: []
       };
     },
     computed: {
@@ -196,7 +233,7 @@
           //   this.initPageConf();
           //   this.curPageData = this.getDataByPage(this.pageConf.current);
           // }
-          this.getDataByPage();
+          this.resetPagination();
         },
         immediate: true
       },
@@ -205,12 +242,24 @@
           this.groupPermEmptyData = Object.assign({}, value);
         },
         immediate: true
+      },
+      checkGroupList: {
+        handler (value) {
+          const list = value.filter(item =>
+            !this.currentSelectGroupList.map(v => v.id.toString()).includes(item.id.toString()));
+          this.currentSelectGroupList = [...this.currentSelectGroupList, ...list];
+        },
+        immediate: true
       }
     },
     methods: {
+      setDefaultSelect () {
+        return this.curPageData.length > 0;
+      },
+
       /**
        * 获取 user 信息
-       */
+      */
       async fetchUser () {
         try {
           await this.$store.dispatch('userInfo');
@@ -259,7 +308,7 @@
        * @return {Array} 当前页数据
        */
       async getDataByPage () {
-        this.isLoading = true;
+        this.tableLoading = true;
         try {
           let url = '';
           let params = {};
@@ -283,21 +332,28 @@
           }
           const { code, data } = await this.$store.dispatch(url, params);
           this.pageConf.count = data.count || 0;
+          const currentSelectGroupList = this.currentSelectGroupList.map(item => item.id.toString());
           this.curPageData.splice(0, this.curPageData.length, ...(data.results || []));
-          this.curPageData.forEach(item => {
-            if (item.role_members && item.role_members.length) {
-              item.role_members = item.role_members.map(v => {
-                return {
-                  username: v,
-                  readonly: false
-                };
-              });
-            }
+          this.$nextTick(() => {
+            this.curPageData.forEach(item => {
+              if (item.role_members && item.role_members.length) {
+                item.role_members = item.role_members.map(v => {
+                  return {
+                    username: v,
+                    readonly: false
+                  };
+                });
+              }
+              if (currentSelectGroupList.includes(item.id.toString())) {
+                this.$refs.groupPermTableRef && this.$refs.groupPermTableRef.toggleRowSelection(item, true);
+              }
+            });
           });
           this.groupPermEmptyData = formatCodeData(code, this.groupPermEmptyData, data.count === 0);
         } catch (e) {
           console.error(e);
           const { code, data, message, statusText } = e;
+          this.currentSelectGroupList = [];
           this.groupPermEmptyData = formatCodeData(code, this.groupPermEmptyData);
           this.bkMessageInstance = this.$bkMessage({
             limit: 1,
@@ -307,7 +363,7 @@
             ellipsisCopy: true
           });
         } finally {
-          this.isLoading = false;
+          this.tableLoading = false;
           if (this.emptyData.tipType === 'search') {
             bus.$emit('on-perm-tab-count', { active: 'GroupPerm', count: this.pageConf.count });
           }
@@ -325,6 +381,42 @@
         // }
         // return this.dataList.slice(startIndex, endIndex);
       },
+      
+      fetchSelectedGroups (type, payload, row) {
+        const typeMap = {
+          multiple: () => {
+            const isChecked = payload.length && payload.indexOf(row) !== -1;
+            if (isChecked) {
+              this.currentSelectGroupList.push(row);
+            } else {
+              this.currentSelectGroupList = this.currentSelectGroupList.filter(
+                (item) => item.id.toString() !== row.id.toString()
+              );
+            }
+            if (this.$refs.groupPermTableRef) {
+              this.$refs.groupPermTableRef.selection = [...this.currentSelectGroupList];
+              this.$refs.groupPermTableRef.showSelectionCount = false;
+              console.log(this.$refs.groupPermTableRef, this.$refs.groupPermTableRef.selection, 4444);
+            }
+            this.$emit('on-select-group', this.currentSelectGroupList);
+          },
+          all: () => {
+            const list = payload.filter(item => !this.currentSelectGroupList.includes(item.id.toString()));
+            const tableList = _.cloneDeep(this.curPageData);
+            const selectGroups = this.currentSelectGroupList.filter(item =>
+              !tableList.map(v => v.id.toString()).includes(item.id.toString()));
+            this.currentSelectGroupList = [...selectGroups, ...list];
+            this.$nextTick(() => {
+              if (this.$refs.groupPermTableRef) {
+                console.log(this.$refs.groupPermTableRef, 4444);
+                this.$refs.groupPermTableRef.selection = [...this.currentSelectGroupList];
+              }
+            });
+            this.$emit('on-select-group', this.currentSelectGroupList);
+          }
+        };
+        return typeMap[type]();
+      },
 
       /**
        * 每页显示多少条变化的回调
@@ -336,6 +428,18 @@
         this.pageConf.limit = currentLimit;
         this.pageConf.current = 1;
         this.handlePageChange(this.pageConf.current);
+      },
+
+      handleSelectAllChange (selection) {
+        this.fetchSelectedGroups('all', selection);
+      },
+
+      handleSelectChange (selection, row) {
+        this.fetchSelectedGroups('multiple', selection, row);
+      },
+
+      handleBatchQuit () {
+        this.handleDeleteActions('quit');
       },
 
       handleEmptyRefresh () {
@@ -405,6 +509,70 @@
         }
       },
 
+      // 批量操作对应操作项
+      handleDeleteActions (type) {
+        const typeMap = {
+          quit: () => {
+            this.isShowDeleteDialog = true;
+            this.delActionDialogTitle = this.$t(`m.dialog['确认批量退出所选的用户组吗？']`);
+            const adminGroups = this.currentSelectGroupList.filter(item =>
+              item.attributes && item.attributes.source_from_role && item.role_members.length === 1);
+            if (adminGroups.length) {
+              this.delActionDialogTip = this.$t(`m.perm['存在用户组不可退出（唯一管理员不能退出）']`);
+              this.delActionList = adminGroups;
+            }
+          }
+        };
+        return typeMap[type]();
+      },
+
+      async handleSubmitDelete () {
+        const selectGroups = this.currentSelectGroupList.filter(item =>
+          !this.delActionList.map(v => v.id.toString()).includes(item.id.toString()));
+        if (!selectGroups.length) {
+          this.messageWarn(this.$t(`m.perm['当前勾选项都为不可退出的用户组（唯一管理员不能退出）']`), 3000);
+          return;
+        }
+        try {
+          for (let i = 0; i < selectGroups.length; i++) {
+            await this.$store.dispatch('perm/quitGroupPerm', {
+              type: 'group',
+              id: selectGroups[i].id
+            });
+          }
+          this.isShowDeleteDialog = false;
+          this.currentSelectGroupList = [];
+          this.messageSuccess(this.$t(`m.info['退出成功']`), 3000);
+          setTimeout(() => {
+            if (!this.groupPermEmptyData.tipType) {
+              this.$emit('refresh');
+            } else {
+              this.resetPagination();
+            }
+          }, 1000);
+        } catch (e) {
+          console.error(e);
+          this.bkMessageInstance = this.$bkMessage({
+            limit: 1,
+            theme: 'error',
+            message: e.message || e.data.msg || e.statusText,
+            ellipsisLine: 2,
+            ellipsisCopy: true
+          });
+        }
+      },
+
+      handleCancelDelete () {
+        this.isShowDeleteDialog = false;
+        this.delActionList = [];
+      },
+
+      handleAfterDeleteLeaveAction () {
+        this.currentActionName = '';
+        this.delActionDialogTitle = '';
+        this.delActionDialogTip = '';
+        this.delActionList = [];
+      },
       /**
        * 脱离模板取消函数
        */
