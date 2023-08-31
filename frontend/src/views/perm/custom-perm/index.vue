@@ -176,7 +176,7 @@
               });
               if (code === 0) {
                 this.systemPolicyList.splice(sysIndex, 1);
-                this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
+                this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
                 if (!this.systemPolicyList.length) {
                   this.emptyPolicyData = formatCodeData(0, this.emptyPolicyData, true);
                 }

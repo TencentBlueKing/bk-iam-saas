@@ -530,7 +530,7 @@
         };
         try {
           await this.$store.dispatch(url, params);
-          this.messageSuccess(this.$t(`m.info['编辑成功']`), 2000);
+          this.messageSuccess(this.$t(`m.info['编辑成功']`), 3000);
           this.formData = Object.assign(this.formData, {
             name: params.name,
             description: params.description,
@@ -545,7 +545,7 @@
           const { code, response } = e;
           if ((response && response.status && [401, 404].includes(response.status))
             || [1902000].includes(code)) {
-            this.messageSuccess(this.$t(`m.info['您已退出当前管理员授权范围']`), 2000);
+            this.messageSuccess(this.$t(`m.info['您已退出当前管理员授权范围']`), 3000);
           } else {
             this.bkMessageInstance = this.$bkMessage({
               limit: 1,

@@ -168,7 +168,7 @@
               data: condition
             });
           } else {
-            this.messageError(this.$t(`m.info['暂无可批量复制的资源实例']`), 1000);
+            this.messageWarn(this.$t(`m.info['暂无可批量复制的资源实例']`), 3000);
           }
         } catch (e) {
           this.$emit('on-paste', {

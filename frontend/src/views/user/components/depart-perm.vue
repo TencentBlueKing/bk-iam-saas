@@ -244,7 +244,7 @@
             expired_at: expiredAt
           });
           this.isShowPermTemplateDialog = false;
-          this.messageSuccess(this.$t(`m.info['添加权限成功']`), 2000);
+          this.messageSuccess(this.$t(`m.info['添加权限成功']`), 3000);
           await this.fetchPermTemplates(true);
         } catch (e) {
           console.error(e);
@@ -397,7 +397,7 @@
             id: this.deleteDialogConf.row.id
           });
           this.cancelDelete();
-          this.messageSuccess(this.$t(`m.info['解除成功']`), 2000);
+          this.messageSuccess(this.$t(`m.info['解除成功']`), 3000);
           await this.fetchPermTemplates(true);
         } catch (e) {
           this.deleteDialogConf.loading = false;

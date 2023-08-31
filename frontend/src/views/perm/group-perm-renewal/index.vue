@@ -242,7 +242,7 @@
           };
           const { code } = await this.$store.dispatch('userGroup/deleteUserGroupMember', params);
           if (code === 0) {
-            this.messageSuccess(this.$t(`m.info['移除成功']`), 2000);
+            this.messageSuccess(this.$t(`m.info['移除成功']`), 3000);
             this.currentSelectList = [];
             this.tableList[this.tableIndex].checkList = [];
             this.pagination.current = 1;
@@ -402,7 +402,7 @@
         };
         try {
           await this.$store.dispatch('renewal/roleGroupsRenewal', params);
-          this.messageSuccess(this.$t(`m.renewal['批量申请提交成功']`), 1000);
+          this.messageSuccess(this.$t(`m.renewal['批量申请提交成功']`), 3000);
           this.$router.push({
             name: 'userGroup'
           });

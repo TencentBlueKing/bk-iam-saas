@@ -232,7 +232,7 @@
       handleEmptyChange () {
         if (this.displayValue.length < 1 && !this.allowEmpty) {
           this.displayValue = [...this.value];
-          this.messageError(this.$t(`m.verify['管理员不能为空']`), 2000);
+          this.messageWarn(this.$t(`m.verify['管理员不能为空']`), 3000);
           return;
         }
         this.triggerChange();

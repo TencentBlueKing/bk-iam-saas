@@ -24,8 +24,11 @@
               v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
               :header-cell-class-name="getCellClass"
               :cell-class-name="getCellClass"
+              :pagination="pagination"
               @select="handleSelect"
-              @select-all="handleSelectAll">
+              @select-all="handleSelectAll"
+              @page-change="handlePageChange"
+              @page-limit-change="handleLimitChange">
               <bk-table-column type="selection" align="center" :selectable="row => !row.canNotTransfer">
               </bk-table-column>
               <bk-table-column :label="$t(`m.userGroup['用户组名']`)" width="300">
@@ -50,8 +53,8 @@
                   <span :style="{ color: row.canNotTransfer ? '#c4c6cc' : '' }"
                     v-if="row.department_id === 0">{{ $t(`m.perm['直接加入']`) }}</span>
                   <span :style="{ color: row.canNotTransfer ? '#c4c6cc' : '' }"
-                    v-else :title="`${$t(`m.perm['通过组织加入']`)}：${row.department_name}`">
-                    {{ $t(`m.perm['通过组织加入']`) }}：{{ row.department_name }}
+                    v-else :title="`${$t(`m.perm['通过组织加入']`)}${$t(`m.common['：']`)}${row.department_name}`">
+                    {{ $t(`m.perm['通过组织加入']`) }}: {{ row.department_name }}
                   </span>
                 </template>
               </bk-table-column>
@@ -104,6 +107,11 @@
         isSelectAllChecked: false,
         groupSelectData: [],
         pageContainer: null,
+        pagination: {
+          current: 1,
+          limit: 10,
+          count: 0
+        },
         emptyData: {
           type: '',
           text: '',
@@ -123,15 +131,17 @@
       async fetchData () {
         this.isLoading = true;
         try {
+          const { current, limit } = this.pagination;
           const userGroupParams = {
-            page_size: 10,
-            page: 1
+            page_size: limit,
+            page: current
           };
           if (this.externalSystemId) {
             userGroupParams.system_id = this.externalSystemId;
           }
           const { code, data } = await this.$store.dispatch('perm/getPersonalGroups', userGroupParams);
           const groupList = data.results || [];
+          this.pagination.count = data.count || 0;
           groupList.forEach(item => {
             if (String(item.department_id) !== '0' || item.expired_at < this.user.timestamp) {
               this.groupNotTransferCount += 1;
@@ -157,6 +167,7 @@
       },
 
       handleEmptyRefresh () {
+        this.pagination = Object.assign(this.pagination, { current: 1, limit: 10 });
         this.fetchData();
       },
 
@@ -203,6 +214,17 @@
         this.isSelectAllChecked = selection.length === validGroupList.length;
         this.groupSelectData.splice(0, this.groupSelectData.length, ...selection);
         this.$emit('group-selection-change', this.groupSelectData);
+      },
+
+      handlePageChange (page) {
+        this.pagination = Object.assign(this.pagination, { current: page });
+        this.fetchData();
+      },
+
+      handleLimitChange (currentLimit, prevLimit) {
+        this.pagination = Object.assign(this.pagination, { current: 1, limit: currentLimit });
+        this.fetchData();
+        // this.isSearchSystem ? this.fetchSearchUserGroup() : this.fetchUserGroupList(true);
       },
 
       /**

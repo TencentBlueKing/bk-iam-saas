@@ -630,23 +630,34 @@
         this.manualOrgList = [];
         this.manualUserList = [];
         if (value) {
-          const inputValue = value.split()[0];
-          if (inputValue.indexOf('{') > -1 && inputValue.indexOf('}') > -1) {
+          const inputValue = _.cloneDeep(value.split()[0]);
+          if (inputValue.indexOf('{') > -1
+            && inputValue.indexOf('}') > -1
+            && (inputValue.includes('&type=department')
+              || inputValue.includes('&type=user'))) {
+            this.$nextTick(() => {
+              this.manualValue = '';
+              this.$refs.manualInputRef.curValue = '';
+            });
             const splitValue = value.split(/\n/).map(item => {
               const str = item.slice(item.indexOf('{') + 1, item.indexOf('}'));
-              if (item.indexOf('{') > -1 && item.indexOf('}') > -1 && /^[+-]?\d*(\.\d*)?(e[+-]?\d+)?$/.test(str) && item.includes('type=department')) {
-                this.manualOrgList.push(item);
-                item = item.substring(item.indexOf('{'), item.indexOf('&') > -1 ? item.indexOf('&') : item.length);
-              }
-              if (item.indexOf('{') > -1 && item.indexOf('}') > -1 && item.includes('type=user')) {
-                this.manualUserList.push(item);
-                item = item.substring(item.indexOf('{') + 1, item.indexOf('}'));
+              if (item.indexOf('{') > -1 && item.indexOf('}') > -1) {
+                if (item.includes('&type=user')) {
+                  this.manualUserList.push(item);
+                  item = item.substring(item.indexOf('{') + 1, item.indexOf('}'));
+                }
+                if (/^[+-]?\d*(\.\d*)?(e[+-]?\d+)?$/.test(str) && item.includes('type=department')) {
+                  this.manualOrgList.push(item);
+                  item = item.substring(item.indexOf('{'), item.indexOf('&') > -1 ? item.indexOf('&') : item.length);
+                }
               }
               return item;
             });
             if (this.$refs.manualInputRef) {
-              this.manualValue = splitValue.join('\n');
-              this.$refs.manualInputRef.curValue = splitValue.join('\n');
+              setTimeout(() => {
+                this.manualValue = _.cloneDeep(splitValue.join('\n'));
+                this.$refs.manualInputRef.curValue = _.cloneDeep(splitValue.join('\n'));
+              }, 200);
             }
           }
         }
@@ -725,7 +736,7 @@
           const { response } = e;
           // 处理如果是前端校验为空导致的报错，使用前端自定义提示
           if (response && [400].includes(response.status)) {
-            this.messageError(this.$t(`m.verify['用户名输入格式错误']`), 2000);
+            this.messageWarn(this.$t(`m.verify['用户名输入格式错误']`), 3000);
           } else {
             this.bkMessageInstance = this.$bkMessage({
               limit: 1,
@@ -746,7 +757,7 @@
           const departGroups = this.filterDepartList.filter(item => departData.includes(item));
           if (departGroups.length && this.getGroupAttributes) {
             if (this.getGroupAttributes().source_from_role) {
-              this.messageError(this.$t(`m.common['管理员组不能添加部门']`), 2000);
+              this.messageWarn(this.$t(`m.common['管理员组不能添加部门']`), 3000);
               this.manualInputError = true;
               return;
             }

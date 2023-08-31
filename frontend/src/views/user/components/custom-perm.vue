@@ -170,7 +170,7 @@
                 const { code } = await this.$store.dispatch('permApply/deleteSubjectPerm', deleParams);
                 if (code === 0) {
                   this.systemList.splice(sysIndex, 1);
-                  this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
+                  this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
                   if (!this.systemList.length) {
                     this.emptyData = formatCodeData(0, this.emptyData, true);
                   }

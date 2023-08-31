@@ -9,6 +9,7 @@
         <bk-checkbox
           class="select-wrap-checkbox"
           v-model="formData.apply_disable"
+          :disabled="userGroupAttributes.apply_disable"
           @change="handleCheckboxChange">
           <span
             class="checkbox-sync-perm"
@@ -224,6 +225,9 @@
         groupAttributes: {
           source_type: '',
           source_from_role: false
+        },
+        userGroupAttributes: {
+          apply_disable: false
         }
       };
     },
@@ -323,7 +327,32 @@
         }
       }
     },
+    async created () {
+      await this.fetchUserGroupSet();
+    },
     methods: {
+      // 获取分级管理员用户组配置
+      async fetchUserGroupSet () {
+        if (!['subset_manager'].includes(this.curRole)) {
+          try {
+            const { data } = await this.$store.dispatch('userGroupSetting/getUserGroupSetConfig');
+            if (data) {
+              this.formData = Object.assign(this.formData, { apply_disable: data.apply_disable });
+              this.userGroupAttributes = Object.assign({}, { apply_disable: data.apply_disable });
+            }
+          } catch (e) {
+            console.error(e);
+            this.bkMessageInstance = this.$bkMessage({
+              limit: 1,
+              theme: 'error',
+              message: e.message || e.data.msg || e.statusText,
+              ellipsisLine: 2,
+              ellipsisCopy: true
+            });
+          }
+        }
+      },
+      
       /**
        * handleBasicInfoChange
        */
@@ -907,7 +936,7 @@
           try {
             const { code, data } = await this.$store.dispatch('userGroup/addUserGroup', params);
             if (code === 0 && data) {
-              this.messageSuccess(this.$t(`m.info['新建用户组成功']`), 1000);
+              this.messageSuccess(this.$t(`m.info['新建用户组成功']`), 3000);
               if (this.externalSystemId) { // 如果用户组新建成功需要发送一个postmessage给外部页面
                 window.parent.postMessage({ type: 'IAM', data, code: 'create_user_group_submit' }, '*');
               } else {

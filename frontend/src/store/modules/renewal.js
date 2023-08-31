@@ -74,8 +74,9 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-    getExpireSoonPerm ({ commit, state, dispatch }, config) {
-      return http.get(`${AJAX_URL_PREFIX}/policies/expire_soon/`, config);
+    getExpireSoonPerm ({ commit, state, dispatch }, params = {}, config) {
+      const queryParams = Object.keys(params).length ? `/?${json2Query(params)}` : '/';
+      return http.get(`${AJAX_URL_PREFIX}/policies/expire_soon${queryParams}`, config);
     },
 
     /**

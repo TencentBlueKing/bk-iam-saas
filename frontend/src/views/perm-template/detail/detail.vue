@@ -401,7 +401,7 @@
         };
         return this.$store.dispatch('permTemplate/updateTemplate', params)
           .then(() => {
-            this.messageSuccess(this.$t(`m.info['编辑成功']`), 2000);
+            this.messageSuccess(this.$t(`m.info['编辑成功']`), 3000);
             this.basicInfo.name = params.name;
             this.basicInfo.description = params.description;
             window.localStorage.setItem('iam-header-title-cache', this.basicInfo.name);

@@ -119,13 +119,13 @@
             }
           });
           if (res.code) {
-            this.messageError(this.$t(`m.access['下载权限模型配置失败']`), 1000);
+            this.messageWarn(this.$t(`m.access['下载权限模型配置失败']`), 3000);
             return;
           }
           const content = JSON.stringify(res.data, null, 2);
           const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
           saveAs(blob, 'config.json');
-          this.messageSuccess(this.$t(`m.access['下载权限模型配置成功']`), 1000);
+          this.messageSuccess(this.$t(`m.access['下载权限模型配置成功']`), 3000);
         } catch (e) {
           console.error(e);
           this.bkMessageInstance = this.$bkMessage({

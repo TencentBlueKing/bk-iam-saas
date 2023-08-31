@@ -221,7 +221,7 @@
             group_ids: this.groupIds,
             role_id: this.curGradeManager
           });
-          this.messageSuccess(this.$t(`m.info['转出成功']`), 1000);
+          this.messageSuccess(this.$t(`m.info['转出成功']`), 3000);
           this.$emit('on-success');
         } catch (e) {
           console.error(e);
