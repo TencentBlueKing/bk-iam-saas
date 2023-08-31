@@ -145,7 +145,9 @@ class UserGroupRenewViewSet(GenericViewSet):
             count, relations = self.group_biz.list_paging_subject_group_before_expired_at(
                 subject, expired_at=expired_at, limit=limit, offset=offset
             )
-        return Response({"count": count, "results": [one.dict() for one in relations]})
+
+        slz = GroupSLZ(instance=relations, many=True)
+        return Response({"count": count, "results": slz.data})
 
 
 class UserProfileNewbieViewSet(GenericViewSet):
