@@ -69,6 +69,7 @@ from backend.apps.role.serializers import (
     SystemManagerMemberUpdateSLZ,
     SystemManagerSLZ,
 )
+from backend.apps.role.tasks import sync_subset_manager_subject_scope
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.group import GroupBiz, GroupMemberExpiredAtBean
 from backend.biz.helper import RoleWithPermGroupBiz
@@ -220,6 +221,9 @@ class GradeManagerViewSet(mixins.ListModelMixin, GenericViewSet):
             self.role_check_biz.check_grade_manager_unique_name(data["name"], role.name)
 
             self.biz.update(role, info, user_id)
+
+        if role.type == RoleType.GRADE_MANAGER.value and "subject_scopes" in info.get_partial_fields():
+            sync_subset_manager_subject_scope.delay(role.id)
 
         # 更新同步权限用户组信息
         self.group_biz.update_sync_perm_group_by_role(self.get_object(), user_id, sync_members=True, sync_prem=True)

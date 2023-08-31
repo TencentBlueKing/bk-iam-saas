@@ -862,3 +862,8 @@ class InitBcsProjectManagerTask(InitBizGradeManagerTask):
 
 
 current_app.tasks.register(InitBcsProjectManagerTask())
+
+
+@shared_task(ignore_result=True)
+def sync_subset_manager_subject_scope(role_id: int):
+    RoleBiz().sync_subset_manager_subject_scope(role_id)
