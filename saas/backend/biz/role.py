@@ -161,15 +161,14 @@ class RoleBiz:
         """
         self.svc.update(role, info, updater)
 
-        # 同步更新自动跟随的子集管理员的人员选择范围
-        if role.type == RoleType.GRADE_MANAGER.value and "subject_scopes" in info.get_partial_fields():
-            subject_scopes = self.svc.list_subject_scope(role.id)
-
-            subset_manager_ids = list(RoleRelation.objects.filter(parent_id=role.id).values_list("role_id", flat=True))
-            for subset_manager in Role.objects.filter(id__in=subset_manager_ids, inherit_subject_scope=True):
-                self.svc.update_role_subject_scope(subset_manager.id, subject_scopes)
-
         RoleResourceRelationHelper(role).handle()
+
+    def sync_subset_manager_subject_scope(self, role_id: int):
+        subject_scopes = self.svc.list_subject_scope(role_id)
+
+        subset_manager_ids = list(RoleRelation.objects.filter(parent_id=role_id).values_list("role_id", flat=True))
+        for subset_manager in Role.objects.filter(id__in=subset_manager_ids, inherit_subject_scope=True):
+            self.svc.update_role_subject_scope(subset_manager.id, subject_scopes)
 
     def create_subset_manager(self, grade_manager: Role, info: RoleInfoBean, creator: str) -> Role:
         """
