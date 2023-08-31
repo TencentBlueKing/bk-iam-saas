@@ -25,6 +25,7 @@ from backend.apps.organization.constants import StaffStatus
 from backend.apps.organization.models import User as UserModel
 from backend.apps.policy.models import Policy
 from backend.apps.role.models import Role, RoleSource
+from backend.apps.role.tasks import sync_subset_manager_subject_scope
 from backend.apps.template.models import PermTemplatePolicyAuthorized
 from backend.audit.audit import log_group_event, log_role_event, log_user_event
 from backend.audit.constants import AuditSourceType, AuditType
@@ -343,6 +344,9 @@ class ApprovedPassApplicationBiz:
         role = Role.objects.get(type=RoleType.GRADE_MANAGER.value, id=application.data["id"])
         info = self._gen_role_info_bean(application.data)
         self.role_biz.update(role, info, subject.id)
+
+        if role.type == RoleType.GRADE_MANAGER.value and "subject_scopes" in info.get_partial_fields():
+            sync_subset_manager_subject_scope.delay(role.id)
 
         role = Role.objects.get(id=role.id)
         # 更新同步权限用户组信息
