@@ -445,13 +445,7 @@
       },
 
       fetchErrorMsg (payload) {
-        this.bkMessageInstance = this.$bkMessage({
-          limit: 1,
-          theme: 'error',
-          message: payload.message || payload.data.msg || payload.statusText,
-          ellipsisLine: 2,
-          ellipsisCopy: true
-        });
+        this.messageAdvancedError(payload);
       },
 
       handleCancel () {

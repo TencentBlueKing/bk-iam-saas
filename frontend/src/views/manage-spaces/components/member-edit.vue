@@ -127,13 +127,7 @@
           this.userInfo = await this.$store.dispatch('userInfo');
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
       handleEdit () {
@@ -202,11 +196,7 @@
             this.messageSuccess(this.$t(`m.info['退出成功']`), 3000);
           } catch (e) {
             console.error(e);
-            this.bkMessageInstance = this.$bkMessage({
-              limit: 1,
-              theme: 'error',
-              message: e.message || e.data.msg || e.statusText
-            });
+            this.messageAdvancedError(e);
           } finally {
             this.isLoading = false;
           }

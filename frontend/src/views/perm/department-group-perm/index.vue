@@ -228,15 +228,9 @@
           this.pageConf.count = count || 0;
           this.groupPermDepartEmptyData = formatCodeData(code, this.groupPermDepartEmptyData, results.length === 0);
         } catch (e) {
-          const { code, data, message, statusText } = e;
+          const { code } = e;
           this.groupPermDepartEmptyData = formatCodeData(code, this.groupPermDepartEmptyData);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: message || data.msg || statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.tableLoading = false;
           bus.$emit('on-perm-tab-count', { active: 'DepartmentGroupPerm', count: this.pageConf.count });
@@ -250,13 +244,7 @@
           await this.$store.dispatch('userInfo');
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -373,13 +361,7 @@
         } catch (e) {
           this.deleteDialogConf.loading = false;
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 

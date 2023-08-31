@@ -102,15 +102,9 @@
           this.onePerm = this.systemList.length;
           this.emptyData = formatCodeData(code, this.emptyData, this.onePerm === 0);
         } catch (e) {
-          const { code, data, message, statusText } = e;
+          const { code } = e;
           this.emptyData = formatCodeData(code, this.emptyData);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: message || data.msg || statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.pageLoading = false;
         }

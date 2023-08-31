@@ -769,7 +769,8 @@ export const m = {
         '个模板': 'templates',
         '删除权限模版不会影响已授权用户，可以放心删除。': 'Deleting permission templates will not affect users who have already been granted permission, you can safely delete them.',
         '该模板无法选择的原因是：管理空间缩小了授权范围，但是没有同步删除模板里的操作，如需选择请重新编辑模板或者创建新的模板。': 'The reason this template cannot be selected is: the management space has narrowed the scope of authorization, but the actions in the template have not been deleted synchronously. If you need to select, please edit the template again or create a new one.',
-        '未分组操作': 'Ungrouped actions'
+        '未分组操作': 'Ungrouped actions',
+        '由于分级管理员的授权范围没有包含此操作，如需使用该模板进行新的授权必须先删除该操作。': 'Due to the fact that the authorization scope of the hierarchical administrator does not include this operation, to use this template for new authorization, the operation must be deleted first.'
     },
     permTemplateDetail: {
         '模板名称': 'Template Name',

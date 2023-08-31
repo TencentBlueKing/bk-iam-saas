@@ -359,14 +359,8 @@
             : (!personalGroupList.length && !systemList.length && !this.roleList.length);
         } catch (e) {
           console.error(e);
-          const { code, data, message, statusText } = e;
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: message || data.msg || statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          const { code } = e;
+          this.messageAdvancedError(e);
           // 获取非阻塞且未报错列表接口信息
           await this.fetchAsyncTable(requestList);
           const emptyField = this.panels.find(item => item.name === this.active);
@@ -418,16 +412,10 @@
             = formatCodeData(code, this.emptyData, data.count === 0);
         } catch (e) {
           console.error(e);
-          const { code, data, message, statusText } = e;
+          const { code } = e;
           this.personalGroupList = [];
           this.emptyData = formatCodeData(code, this.emptyData);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: message || data.msg || statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.tabKey = +new Date();
         }
@@ -448,16 +436,10 @@
           this.$set(this.panels[1], 'count', count || 0);
           this.emptyDepartmentGroupData = formatCodeData(code, this.emptyDepartmentGroupData, results.length === 0);
         } catch (e) {
-          const { code, data, message, statusText } = e;
+          const { code } = e;
           this.emptyDepartmentGroupData = formatCodeData(code, this.emptyDepartmentGroupData);
           this.departmentGroupList = [];
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: message || data.msg || statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.tabKey = +new Date();
         }
@@ -475,13 +457,7 @@
             console.error(e);
             this.emptyCustomData = formatCodeData(e.code, this.emptyCustomData);
             this.systemList = [];
-            this.bkMessageInstance = this.$bkMessage({
-              limit: 1,
-              theme: 'error',
-              message: e.message || e.data.msg || e.statusText,
-              ellipsisLine: 2,
-              ellipsisCopy: true
-            });
+            this.messageAdvancedError(e);
           } finally {
             this.tabKey = +new Date();
           }

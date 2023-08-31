@@ -707,11 +707,7 @@
             this.handleFormatRecursion(data || []);
           } catch (e) {
             console.error(e);
-            this.bkMessageInstance = this.$bkMessage({
-              limit: 1,
-              theme: 'error',
-              message: e.message || e.data.msg || e.statusText
-            });
+            this.messageAdvancedError(e);
           }
         }
       },
@@ -1014,16 +1010,10 @@
           this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
         } catch (e) {
           console.error(e);
-          const { code, data, message, statusText } = e;
+          const { code } = e;
           this.tableList = [];
           this.emptyData = formatCodeData(code, this.emptyData);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: message || data.msg || statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.tableLoading = false;
           this.curSelectMenu = '';
@@ -1074,11 +1064,7 @@
           console.error(e);
           this.emptyData = formatCodeData(e.code, this.emptyData);
           this.tableList = [];
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'primary',
-            message: e.message || e.data.msg || e.statusText
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.tableLoading = false;
         }
@@ -1216,13 +1202,7 @@
           this.systemList = data || [];
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           // this.requestQueue.shift()
         }
@@ -1369,13 +1349,7 @@
           this.curUserGroup = [];
           this.currentSelectedGroups = [];
           this.defaultSelectedGroups = [];
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -1517,13 +1491,7 @@
           if (['admin'].includes(this.user.username)) {
             this.isShowConfirmDialog = true;
           } else {
-            this.bkMessageInstance = this.$bkMessage({
-              limit: 1,
-              theme: 'error',
-              message: e.message || e.data.msg || e.statusText,
-              ellipsisLine: 2,
-              ellipsisCopy: true
-            });
+            this.messageAdvancedError(e);
           }
         } finally {
           this.submitLoading = false;
