@@ -17,7 +17,7 @@
           <template slot="label">
             <span class="panel-name">
               <span>{{ panel.label }}</span>
-              <span :style="{ 'color': active === panel.name ? '#3a84ff' : '#c4c6cc' }">({{panel.total}})</span>
+              <span :style="{ 'color': active === panel.name ? '#3a84ff' : '' }">({{panel.total}})</span>
             </span>
             <!-- <bk-badge :val="panel.count" :theme="curBadgeTheme(panel.name)" /> -->
           </template>
