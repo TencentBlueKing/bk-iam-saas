@@ -229,7 +229,7 @@ class ManagementGroupApplicationCreateSLZ(ManagementGroupIDsSLZ, ExpiredAtSLZ, R
             ):
                 raise serializers.ValidationError({"content_template": ["content_template中必须包含form_data且为空数组"]})
 
-            if set(map(data["group_ids"], str)) != set(data["group_content"].keys()):
+            if set(map(str, data["group_ids"])) != set(data["group_content"].keys()):
                 raise serializers.ValidationError({"group_content": ["group_content中的key必须与group_ids一致"]})
         else:
             data["content_template"] = None
