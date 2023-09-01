@@ -135,10 +135,7 @@
           }
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.selectLoading = false;
         }
@@ -223,11 +220,7 @@
             this.isShowWarnMessage = true;
             this.warnMessage = message;
           } else {
-            this.bkMessageInstance = this.$bkMessage({
-              limit: 1,
-              theme: 'error',
-              message
-            });
+            this.messageAdvancedError(e);
           }
         } finally {
           this.loading = false;

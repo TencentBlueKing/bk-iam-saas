@@ -293,16 +293,10 @@
           this.emptyData = formatCodeData(code, this.emptyData, data.results.length === 0);
         } catch (e) {
           console.error(e);
-          const { code, data, message, statusText } = e;
+          const { code } = e;
           this.emptyData = formatCodeData(code, this.emptyData);
           this.resetData();
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: message || data.msg || statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.loading = false;
           this.listLoading = false;
@@ -319,13 +313,7 @@
           this.isAny = data && data.some(item => item.id === '*');
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -357,13 +345,7 @@
               this.selectList.push(...res.data.results || []);
             } catch (e) {
               console.error(e);
-              this.bkMessageInstance = this.$bkMessage({
-                limit: 1,
-                theme: 'error',
-                message: e.message || e.data.msg || e.statusText,
-                ellipsisLine: 2,
-                ellipsisCopy: true
-              });
+              this.messageAdvancedError(e);
             } finally {
               this.isScrollBottom = false;
               event.target.scrollTo(0, event.target.scrollTop - 1);
@@ -412,13 +394,7 @@
           });
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.listLoading = false;
         }
