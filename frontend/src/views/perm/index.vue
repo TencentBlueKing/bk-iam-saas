@@ -110,11 +110,14 @@
                 </span>
               </span>
             </template>
-            <div class="content-wrapper">
+            <div
+              class="content-wrapper"
+              v-bkloading="{ isLoading: componentLoading, opacity: 1 }">
               <component
                 v-if="active === panel.name"
                 ref="childPermRef"
                 :is="active"
+                :total-count="panel.count"
                 :personal-group-list="personalGroupList"
                 :system-list="systemList"
                 :tep-system-list="teporarySystemList"
@@ -219,8 +222,9 @@
         enableTemporaryPolicy: window.ENABLE_TEMPORARY_POLICY,
         enableGroupInstanceSearch: window.ENABLE_GROUP_INSTANCE_SEARCH.toLowerCase() === 'true',
         CUR_LANGUAGE: window.CUR_LANGUAGE,
-        isShowConfirmDialog: false,
         confirmDialogTitle: this.$t(`m.verify['admin无需申请权限']`),
+        isShowConfirmDialog: false,
+        componentLoading: false,
         isSearchPerm: false,
         actionIdError: false,
         searchTypeError: false,
@@ -294,7 +298,8 @@
         await this.fetchData();
       },
 
-      async fetchData () {
+      async fetchData (isLoading = false) {
+        this.componentLoading = isLoading;
         const hideApplyBtn = this.externalSystemsLayout.myPerm.hideApplyBtn;
         const userGroupParams = {
           page_size: 10,
@@ -328,6 +333,7 @@
                     
           const personalGroupList = personalGroupData.results || [];
           this.personalGroupList.splice(0, this.personalGroupList.length, ...personalGroupList);
+          this.$set(this.panels[0], 'count', personalGroupData.count || 0);
           if (personalGroupList.length) {
             this.formatCheckGroups();
           }
@@ -365,6 +371,8 @@
           if (emptyField) {
             this[emptyField.empty] = formatCodeData(code, this[emptyField.empty]);
           }
+        } finally {
+          this.componentLoading = false;
         }
       },
             
@@ -404,8 +412,8 @@
           const { code, data } = await this.$store.dispatch('perm/getUserGroupSearch', params);
           this.personalGroupList.splice(0, this.personalGroupList.length, ...(data.results || []));
           this.$set(this.panels[0], 'count', data.count || 0);
-          this.emptyData
-            = formatCodeData(code, this.emptyData, data.count === 0);
+          this.emptyData = formatCodeData(code, this.emptyData, data.count === 0);
+          this.formatCheckGroups();
         } catch (e) {
           console.error(e);
           const { code } = e;
@@ -413,6 +421,7 @@
           this.emptyData = formatCodeData(code, this.emptyData);
           this.messageAdvancedError(e);
         } finally {
+          this.componentLoading = false;
           this.tabKey = +new Date();
         }
       },
@@ -468,9 +477,10 @@
         // 这里需要拿到所有tab项的total，所以需要调所有接口, 且需要在当前页动态加载tab的label
         const typeMap = {
           GroupPerm: async () => {
+            this.componentLoading = true;
             this.personalGroupList = [];
             this.emptyData = _.cloneDeep(emptyData);
-            await Promise.all([this.fetchDepartSearch(), this.fetchPolicySearch()]);
+            await Promise.all([this.fetchUserGroupSearch(), this.fetchDepartSearch(), this.fetchPolicySearch()]);
             this.curEmptyData = Object.assign({}, this.emptyData);
           },
           DepartmentGroupPerm: async () => {
@@ -485,7 +495,7 @@
             this.curEmptyData = Object.assign({}, this.emptyCustomData);
           }
         };
-        typeMap[this.active] ? typeMap[this.active]() : typeMap['GroupPerm']();
+        return typeMap[this.active] ? typeMap[this.active]() : typeMap['GroupPerm']();
       },
 
       async handleRefreshTable () {
@@ -494,7 +504,7 @@
         this.curSearchParams = {};
         // 重置搜索参数需要去掉tab上的数量
         this.tabKey = +new Date();
-        this.fetchData();
+        this.fetchData(true);
       },
 
       async handleTabChange (tabName) {
@@ -512,7 +522,7 @@
       
       formatCheckGroups () {
         const selectList = this.panels[0].selectList.map(item => item.id.toString());
-        this.$nextTick(() => {
+        setTimeout(() => {
           this.personalGroupList.forEach(item => {
             if (item.role_members && item.role_members.length) {
               item.role_members = item.role_members.map(v => {
@@ -522,13 +532,12 @@
                 };
               });
             }
-            if (selectList.includes(item.id.toString()
+            if (selectList.includes(item.id.toString())
               && this.$refs.childPermRef
-              && this.$refs.childPermRef.length)) {
-              console.log(this.$refs.childPermRef, selectList, 444);
+              && this.$refs.childPermRef.length) {
               this.$refs.childPermRef[0].$refs.groupPermTableRef.toggleRowSelection(item, true);
             }
-          });
+          }, 0);
         });
       },
 
