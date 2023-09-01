@@ -30,6 +30,57 @@
             </span>
           </template>
         </bk-table-column>
+        <template v-else-if="item.prop === 'name'">
+          <bk-table-column
+            :key="item.prop"
+            :label="item.label"
+            :prop="item.prop">
+            <template slot-scope="{ row }">
+              <span
+                class="renewal-user-group-name"
+                :title="row.name"
+                @click="handleViewDetail(row)"
+              >
+                {{ row.name || '--' }}
+              </span>
+            </template>
+          </bk-table-column>
+        </template>
+        <template v-else-if="item.prop === 'role.name'">
+          <bk-table-column
+            :key="item.prop"
+            :label="item.label"
+            :prop="item.prop">
+            <template slot-scope="{ row }">
+              <span
+                :title="row.role && row.role.name ? row.role.name : ''"
+              >
+                {{ row.role ? row.role.name : '--' }}
+              </span>
+            </template>
+          </bk-table-column>
+        </template>
+        <template v-else-if="item.prop === 'role_members'">
+          <bk-table-column
+            :key="item.prop"
+            :label="item.label"
+            :prop="item.prop"
+            :width="300">
+            <template slot-scope="{ row, $index }">
+              <template v-if="row.role_members && row.role_members.length">
+                <iam-edit-member-selector
+                  mode="detail"
+                  field="members"
+                  width="200"
+                  :placeholder="$t(`m.verify['请输入']`)"
+                  :value="row.role_members"
+                  :index="$index"
+                />
+              </template>
+              <template v-else>--</template>
+            </template>
+          </bk-table-column>
+        </template>
         <template v-else-if="item.prop === 'action'">
           <bk-table-column
             :key="item.prop"
@@ -97,7 +148,7 @@
                 :selected="currentSelectList.map(v => v.id).includes(row.id)"
                 :renewal-time="renewalTime"
                 :cur-time="row.expired_at" />
-              <span v-else>{{ row[item.prop] }}</span>
+              <span v-else :title="row[item.prop] || ''">{{ row[item.prop] || '--'}}</span>
             </template>
           </bk-table-column>
         </template>
@@ -129,6 +180,14 @@
         />
       </div>
     </bk-sideslider>
+
+    <render-perm-side-slider
+      :show="isShowPermSideSlider"
+      :name="curGroupName"
+      :group-id="curGroupId"
+      :show-member="false"
+      @animation-end="handleDetailAnimationEnd"
+    />
   </div>
 </template>
 <script>
@@ -137,6 +196,8 @@
   import RenderExpireDisplay from '@/components/render-renewal-dialog/display';
   import RenderResourcePopover from '../components/prem-view-resource-popover';
   import RenderDetail from './render-detail';
+  import RenderPermSideSlider from '@/views/perm/components/render-group-perm-sideslider';
+  import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
   import PermPolicy from '@/model/my-perm-policy';
   import { PERMANENT_TIMESTAMP } from '@/common/constants';
   import { formatCodeData } from '@/common/util';
@@ -149,7 +210,9 @@
     components: {
       RenderExpireDisplay,
       RenderDetail,
-      RenderResourcePopover
+      RenderResourcePopover,
+      RenderPermSideSlider,
+      IamEditMemberSelector
     },
     props: {
       type: {
@@ -205,7 +268,10 @@
           tipType: ''
         },
         isShowSideSlider: false,
+        isShowPermSideSlider: false,
         sideSliderTitle: '',
+        curGroupName: '',
+        curGroupId: -1,
         previewData: [],
         sliderWidth: 960
       };
@@ -268,8 +334,8 @@
         };
         const templateList = this.currentSelectList.map(item => {
           return {
-                        ...item,
-                        expired_at: getTimestamp(item.expired_at)
+            ...item,
+            expired_at: getTimestamp(item.expired_at)
           };
         });
         this.$emit('on-select', this.type, templateList);
@@ -277,7 +343,7 @@
       data: {
         handler (value) {
           this.allData = _.cloneDeep(value);
-          this.pagination = Object.assign(this.pagination, { count: value.length });
+          this.pagination = Object.assign(this.pagination, { count: this.count });
           const data = this.getCurPageData();
           this.tableList.splice(0, this.tableList.length, ...data);
           // this.currentSelectList = this.tableList.filter(item =>
@@ -298,6 +364,14 @@
                 this.currentSelectList = this.tableList.filter(item =>
                   this.getDays(item.expired_at) < EXPIRED_DISTRICT);
                 this.tableList.forEach(item => {
+                  if (item.role_members && item.role_members.length) {
+                    item.role_members = item.role_members.map(v => {
+                      return {
+                        username: v,
+                        readonly: false
+                      };
+                    });
+                  }
                   if (this.currentSelectList.map(_ => _.id).includes(item.id)) {
                     this.$refs.permTableRef
                       && this.$refs.permTableRef.toggleRowSelection(item, true);
@@ -357,6 +431,9 @@
         if (payload === 'group') {
           return [
             { label: this.$t(`m.userGroup['用户组名']`), prop: 'name' },
+            { label: this.$t(`m.common['描述']`), prop: 'description' },
+            { label: this.$t(`m.grading['管理空间']`), prop: 'role.name' },
+            { label: this.$t(`m.levelSpace['管理员']`), prop: 'role_members' },
             { label: this.$t(`m.common['有效期']`), prop: 'expired_at' }
           ];
         }
@@ -374,7 +451,12 @@
       },
 
       pageChange (page = 1) {
-        this.pagination.current = page;
+        this.pagination = Object.assign(
+          this.pagination,
+          {
+            current: page
+          }
+        );
         this.fetchTableData();
       },
 
@@ -386,7 +468,7 @@
             limit: currentLimit
           }
         );
-        this.pageChange();
+        this.fetchTableData();
       },
 
       handlerAllChange (selection) {
@@ -413,6 +495,12 @@
 
       handlerChange (selection, row) {
         this.currentSelectList = [...selection];
+      },
+
+      handleViewDetail (payload) {
+        this.curGroupName = payload.name;
+        this.curGroupId = payload.id;
+        this.isShowPermSideSlider = true;
       },
 
       handleViewResource (groupItem, payload) {
@@ -468,7 +556,17 @@
               }
               const { code, data } = await this.$store.dispatch('renewal/getExpireSoonGroupWithUser', userGroupParams);
               this.tableList = data.results || [];
-              this.pagination.count = data.count;
+              this.tableList.forEach(item => {
+                if (item.role_members && item.role_members.length) {
+                  item.role_members = item.role_members.map(v => {
+                    return {
+                      username: v,
+                      readonly: false
+                    };
+                  });
+                }
+              });
+              this.pagination = Object.assign(this.pagination, { count: data.count });
               this.emptyRenewalData
                 = formatCodeData(code, this.emptyRenewalData, this.tableList.length === 0);
             },
@@ -487,18 +585,18 @@
           return tabItem[this.type]();
         } catch (e) {
           console.error(e);
-          const { code, data, message, statusText } = e;
+          const { code } = e;
           this.emptyRenewalData = formatCodeData(code, this.emptyRenewalData);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: message || data.msg || statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.isLoading = false;
         }
+      },
+
+      handleDetailAnimationEnd () {
+        this.curGroupName = '';
+        this.curGroupId = '';
+        this.isShowPermSideSlider = false;
       },
 
       handleEmptyRefresh () {
@@ -568,6 +666,14 @@
             }
             &-border{
               border-bottom: 1px solid #dfe0e5;
+            }
+        }
+
+        .renewal-user-group-name {
+            color: #3a84ff;
+            cursor: pointer;
+            &:hover {
+                color: #699df4;
             }
         }
     }

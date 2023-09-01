@@ -148,12 +148,12 @@ export const COPY_KEYS_ENUM = [
     name: il8n('userGroup', '复制已选'),
     children: [
       {
-        id: 'user',
+        id: 'user-selected',
         name: il8n('userGroup', '成员')
       },
       {
-        id: 'userAndOrg',
-        name: il8n('userGroup', '成员和组织')
+        id: 'userAndOrg-selected',
+        name: il8n('userGroup', '成员和组织架构')
       }
     ]
   },
@@ -162,12 +162,12 @@ export const COPY_KEYS_ENUM = [
     name: il8n('userGroup', '复制所有'),
     children: [
       {
-        id: 'user',
+        id: 'user-all',
         name: il8n('userGroup', '成员')
       },
       {
-        id: 'userAndOrg',
-        name: il8n('userGroup', '成员和组织')
+        id: 'userAndOrg-all',
+        name: il8n('userGroup', '成员和组织架构')
       }
     ]
   }

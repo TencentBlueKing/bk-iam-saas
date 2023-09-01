@@ -104,7 +104,7 @@
           </bk-button>
         </div>
         <div slot="extension" @click="handleToGradingAdmin" style="cursor: pointer">
-          <i class="bk-icon icon-cog-shape mr10"></i>{{ $t(`m.nav['我的管理空间']`) }}
+          <i class="bk-icon icon-cog-shape mr10"></i>{{ $t(`m.common['我的管理空间']`) }}
         </div>
       </bk-select>
       <div class="nav-slider-list">
@@ -442,16 +442,9 @@
           this.subRoleList = [...row.children];
         } catch (e) {
           console.error(e);
-          const { data, message, statusText } = e;
           row.children = [];
           this.subRoleList = [];
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: message || data.msg || statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -477,15 +470,8 @@
           this.curRoleList = [...this.curRoleList, ...results];
         } catch (e) {
           console.error(e);
-          const { data, message, statusText } = e;
           this.curRoleList = [];
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: message || data.msg || statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -572,13 +558,7 @@
           this.resetLocalStorage();
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 

@@ -38,13 +38,15 @@ const Message = Vue.prototype.$bkMessage;
 
 let messageInstance = null;
 
-export const messageError = (message, delay = 3000) => {
+export const messageError = (message, delay = 3000, ellipsisLine = 1) => {
   messageInstance && messageInstance.close();
   messageInstance = Message({
     limit: 1,
     message,
     delay,
-    theme: 'error'
+    theme: 'error',
+    ellipsisLine,
+    ellipsisCopy: true
   });
 };
 
@@ -69,14 +71,45 @@ export const messageInfo = (message, delay = 3000) => {
   });
 };
 
-export const messageWarn = (message, delay = 3000) => {
+export const messageWarn = (message, delay = 3000, ellipsisLine = 3) => {
   messageInstance && messageInstance.close();
   messageInstance = Message({
     limit: 1,
     message,
     delay,
     theme: 'warning',
-    hasCloseIcon: true
+    hasCloseIcon: true,
+    ellipsisLine
+  });
+};
+
+// message高阶用法
+
+export const messageAdvancedError = (details, delay = 8000, ellipsisLine = 3) => {
+  const { code, data, message, statusText, response } = details;
+  let errCode = null;
+  const errMsg = message || data.msg || statusText;
+  if (code) {
+    errCode = code;
+  }
+  if (response && response.data) {
+    errCode = response.data.code;
+  }
+  const messageDetail = {
+    code: errCode,
+    overview: errMsg,
+    suggestion: '',
+    details: errMsg,
+    assistant: 'wxwork://message/?username=BK助手'
+  };
+  messageInstance && messageInstance.close();
+  messageInstance = Message({
+    limit: 1,
+    message: messageDetail,
+    delay,
+    theme: 'error',
+    ellipsisCopy: true,
+    ellipsisLine
   });
 };
 
@@ -84,3 +117,4 @@ Vue.prototype.messageError = messageError;
 Vue.prototype.messageSuccess = messageSuccess;
 Vue.prototype.messageInfo = messageInfo;
 Vue.prototype.messageWarn = messageWarn;
+Vue.prototype.messageAdvancedError = messageAdvancedError;

@@ -224,11 +224,7 @@
               ]);
             } catch (e) {
               console.error(e);
-              this.bkMessageInstance = this.$bkMessage({
-                limit: 1,
-                theme: 'error',
-                message: e.message || e.data.msg || e.statusText
-              });
+              this.messageAdvancedError(e);
             } finally {
               this.isLoading = false;
             }
@@ -309,13 +305,7 @@
           this.systemList.splice(0, this.systemList.length, ...systemList);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -346,13 +336,7 @@
           resolve(sys);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -429,13 +413,7 @@
           this.instanceSelectionListBackup = JSON.parse(JSON.stringify(instanceSelectionList));
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -479,11 +457,7 @@
               this.addValidatorRules(); // 保存成功重新添加规则
             } catch (e) {
               console.error(e);
-              this.bkMessageInstance = this.$bkMessage({
-                limit: 1,
-                theme: 'error',
-                message: e.message || e.data.msg || e.statusText
-              });
+              this.messageAdvancedError(e);
             } finally {
               item.submitLoading = false;
               this.instanceSelectionListBackup = JSON.parse(JSON.stringify(this.instanceSelectionList));
@@ -539,11 +513,7 @@
               return true;
             } catch (e) {
               console.error(e);
-              me.bkMessageInstance = me.$bkMessage({
-                limit: 1,
-                theme: 'error',
-                message: e.message || e.data.msg || e.statusText
-              });
+              me.messageAdvancedError(e);
               return false;
             } finally {
               item.submitLoading = false;

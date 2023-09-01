@@ -97,22 +97,16 @@
             subjectType: 'department'
           });
           (data || []).forEach(item => {
-            item.displayName = `${item.name}（${item.system.name}）`;
+            item.displayName = `${item.name}(${item.system.name})`;
             item.expanded = false;
           });
           this.orgTemplateList.splice(0, this.orgTemplateList.length, ...data);
           this.emptyData = formatCodeData(code, this.emptyData, this.orgTemplateList.length === 0);
         } catch (e) {
           console.error(e);
-          const { code, data, message, statusText } = e;
+          const { code } = e;
           this.emptyData = formatCodeData(code, this.emptyData);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: message || data.msg || statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.requestQueue.shift();
         }

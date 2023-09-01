@@ -190,13 +190,7 @@
             this.$store.commit('setHeaderTitle', name);
           } catch (e) {
             console.error(e);
-            this.bkMessageInstance = this.$bkMessage({
-              limit: 1,
-              theme: 'error',
-              message: e.message || e.data.msg || e.statusText,
-              ellipsisLine: 2,
-              ellipsisCopy: true
-            });
+            this.messageAdvancedError(e);
           } finally {
             this.isLoading = false;
             this.$emit('on-init', false);
@@ -235,11 +229,7 @@
             this.$store.commit('setHeaderTitle', headerTitle);
           }, (e) => {
             console.warn('error');
-            this.bkMessageInstance = this.$bkMessage({
-              limit: 1,
-              theme: 'error',
-              message: e.message || e.data.msg || e.statusText
-            });
+            this.messageAdvancedError(e);
           });
       }
     }

@@ -1,6 +1,9 @@
 @import '@/css/mixins/manage-members-detail-slidesider.css';
 .my-perm-group-perm {
     height: 100%;
+    &-header {
+        margin-bottom: 16px;
+    }
     .iam-perm-ext-cls {
         margin-top: 1px;
     }

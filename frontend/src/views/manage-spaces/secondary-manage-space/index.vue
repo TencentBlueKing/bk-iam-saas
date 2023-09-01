@@ -187,16 +187,10 @@
           this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
         } catch (e) {
           console.error(e);
-          const { code, data, message, statusText } = e;
-          this.emptyData = formatCodeData(code, this.emptyData);
+          const { code } = e;
           this.tableList = [];
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: message || data.msg || statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.emptyData = formatCodeData(code, this.emptyData);
+          this.messageAdvancedError(e);
         } finally {
           this.tableLoading = false;
         }

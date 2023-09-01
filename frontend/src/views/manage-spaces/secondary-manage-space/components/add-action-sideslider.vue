@@ -937,15 +937,9 @@
 
       fetchErrorMsg (payload) {
         console.error(payload);
-        const { code, data, message, statusText } = payload;
+        const { code } = payload;
         this.emptyData = formatCodeData(code, this.emptyData);
-        this.bkMessageInstance = this.$bkMessage({
-          limit: 1,
-          theme: 'error',
-          message: message || data.msg || statusText,
-          ellipsisLine: 2,
-          ellipsisCopy: true
-        });
+        this.messageAdvancedError(payload);
       },
 
       handleCancel () {

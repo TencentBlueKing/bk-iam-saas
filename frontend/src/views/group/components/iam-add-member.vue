@@ -738,11 +738,7 @@
           if (response && [400].includes(response.status)) {
             this.messageWarn(this.$t(`m.verify['用户名输入格式错误']`), 3000);
           } else {
-            this.bkMessageInstance = this.$bkMessage({
-              limit: 1,
-              theme: 'error',
-              message: e.message || e.data.msg || e.statusText
-            });
+            this.messageAdvancedError(e);
           }
         } finally {
           this.manualAddLoading = false;
@@ -832,12 +828,7 @@
             return result;
           }
         } catch (e) {
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 2,
-            theme: 'error',
-            ellipsisLine: 10,
-            message: e.message || e.data.msg || e.statusText
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -891,13 +882,7 @@
           }
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.requestQueue.shift();
         }
@@ -912,13 +897,7 @@
           }
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.requestQueue.shift();
         }
@@ -1010,15 +989,9 @@
           this.treeList = _.cloneDeep(departments);
         } catch (e) {
           console.error(e);
-          const { code, data, message, statusText } = e;
+          const { code } = e;
           this.emptyData = formatCodeData(code, this.emptyData);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: message || data.msg || statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.treeLoading = false;
           if (isDialogLoading) {
@@ -1087,12 +1060,9 @@
           this.treeList = _.cloneDeep(categories);
         } catch (e) {
           console.error(e);
-          const { code, data, message, statusText } = e;
+          const { code } = e;
           this.emptyData = formatCodeData(code, this.emptyData);
-          this.bkMessageInstance = this.$bkMessage({
-            theme: 'error',
-            message: message || data.msg || statusText
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.treeLoading = false;
           if (isDialogLoading) {
@@ -1236,12 +1206,9 @@
           this.emptyData = formatCodeData(code, this.emptyData, isEmpty);
         } catch (e) {
           console.error(e);
-          const { code, data, message, statusText } = e;
+          const { code } = e;
           this.emptyData = formatCodeData(code, this.emptyData);
-          this.bkMessageInstance = this.$bkMessage({
-            theme: 'error',
-            message: message || data.msg || statusText
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.treeLoading = false;
         }
@@ -1374,10 +1341,7 @@
           payload.children.splice(0, payload.children.length, ...loadChildren);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText
-          });
+          this.messageAdvancedError(e);
         } finally {
           setTimeout(() => {
             payload.loading = false;
