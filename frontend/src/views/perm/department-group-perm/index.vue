@@ -101,7 +101,7 @@
 </template>
 <script>
   import { mapGetters } from 'vuex';
-  import { formatCodeData } from '@/common/util';
+  import { formatCodeData, sleep } from '@/common/util';
   import { bus } from '@/common/bus';
   import DeleteDialog from '@/components/iam-confirm-dialog/index.vue';
   import RenderGroupPermSideslider from '../components/render-group-perm-sideslider';
@@ -167,15 +167,18 @@
       };
     },
     computed: {
-      ...mapGetters(['user', 'externalSystemId'])
+      ...mapGetters(['user', 'externalSystemId', 'mainContentLoading'])
     },
     watch: {
       departmentGroupList: {
-        handler (v) {
+        async handler (v) {
           if (this.isSearchPerm) {
             this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10 });
-            this.fetchDepartSearch();
+            await this.fetchDepartSearch();
           } else {
+            if (!this.mainContentLoading) {
+              this.tableLoading = true;
+            }
             if (v.length) {
               v.forEach(item => {
                 if (item.role_members && item.role_members.length) {
@@ -190,6 +193,8 @@
               this.dataList.splice(0, this.dataList.length, ...v);
               this.initPageConf();
               this.curPageData = this.getDataByPage(this.pageConf.current);
+              await sleep(1000);
+              this.tableLoading = false;
             }
           }
         },
@@ -211,7 +216,9 @@
           offset: limit * (current - 1)
         };
         try {
-          this.tableLoading = true;
+          if (!this.mainContentLoading) {
+            this.tableLoading = true;
+          }
           const { code, data } = await this.$store.dispatch('perm/getDepartGroupSearch', params);
           const { count, results } = data;
           this.curPageData.splice(0, this.curPageData.length, ...results || []);

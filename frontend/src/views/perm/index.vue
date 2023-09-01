@@ -110,9 +110,9 @@
                 </span>
               </span>
             </template>
-            <div class="content-wrapper" v-bkloading="{ isLoading: componentLoading, opacity: 1 }">
+            <div class="content-wrapper">
               <component
-                v-if="!componentLoading && active === panel.name"
+                v-if="active === panel.name"
                 ref="childPermRef"
                 :is="active"
                 :personal-group-list="personalGroupList"
@@ -159,7 +159,6 @@
     },
     data () {
       return {
-        componentLoading: true,
         panels: [
           {
             name: 'GroupPerm',
@@ -296,7 +295,6 @@
       },
 
       async fetchData () {
-        this.componentLoading = true;
         const hideApplyBtn = this.externalSystemsLayout.myPerm.hideApplyBtn;
         const userGroupParams = {
           page_size: 10,
@@ -367,8 +365,6 @@
           if (emptyField) {
             this[emptyField.empty] = formatCodeData(code, this[emptyField.empty]);
           }
-        } finally {
-          this.componentLoading = false;
         }
       },
             

@@ -174,6 +174,9 @@
       checkGroupList: {
         type: Array,
         default: () => []
+      },
+      totalCount: {
+        type: Number
       }
     },
     data () {
@@ -212,7 +215,7 @@
       };
     },
     computed: {
-      ...mapGetters(['user', 'externalSystemId']),
+      ...mapGetters(['user', 'externalSystemId', 'mainContentLoading']),
       isAdminGroup () {
         return (payload) => {
           if (payload) {
@@ -233,6 +236,11 @@
           //   this.initPageConf();
           //   this.curPageData = this.getDataByPage(this.pageConf.current);
           // }
+          if (this.pageConf.current === 1) {
+            this.pageConf = Object.assign(this.pageConf, { count: this.totalCount });
+            this.curPageData = [...v];
+            return;
+          }
           this.resetPagination();
         },
         immediate: true
@@ -302,11 +310,13 @@
        * @return {Array} 当前页数据
        */
       async getDataByPage () {
-        this.tableLoading = true;
         try {
           let url = '';
           let params = {};
           const { current, limit } = this.pageConf;
+          if (!this.mainContentLoading) {
+            this.tableLoading = true;
+          }
           if (this.isSearchPerm) {
             url = 'perm/getUserGroupSearch';
             params = {
