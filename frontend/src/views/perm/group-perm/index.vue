@@ -393,6 +393,12 @@
                 (item) => item.id.toString() !== row.id.toString()
               );
             }
+            this.$nextTick(() => {
+              const selectionCount = document.getElementsByClassName('bk-page-selection-count');
+              if (this.$refs.groupPermTableRef && selectionCount) {
+                selectionCount[0].children[0].innerHTML = this.currentSelectGroupList.length;
+              }
+            });
             this.$emit('on-select-group', this.currentSelectGroupList);
           },
           all: () => {
@@ -400,6 +406,12 @@
             const selectGroups = this.currentSelectGroupList.filter(item =>
               !tableList.map(v => v.id.toString()).includes(item.id.toString()));
             this.currentSelectGroupList = [...selectGroups, ...payload];
+            this.$nextTick(() => {
+              const selectionCount = document.getElementsByClassName('bk-page-selection-count');
+              if (this.$refs.groupPermTableRef && selectionCount) {
+                selectionCount[0].children[0].innerHTML = this.currentSelectGroupList.length;
+              }
+            });
             this.$emit('on-select-group', this.currentSelectGroupList);
           }
         };
