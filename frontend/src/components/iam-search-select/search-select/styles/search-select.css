@@ -82,6 +82,7 @@
             line-height: 22px;
             &:hover {
                 background: #dcdee5;
+                cursor: pointer;
                 .tag-clear {
                     color: #63656e;
                 }
