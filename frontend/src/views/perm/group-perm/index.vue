@@ -122,6 +122,7 @@
       :title="delActionDialogTitle"
       :tip="delActionDialogTip"
       :name="currentActionName"
+      :loading="batchQuitLoading"
       :related-action-list="delActionList"
       @on-after-leave="handleAfterDeleteLeaveAction"
       @on-cancel="handleCancelDelete"
@@ -201,6 +202,7 @@
         curGroupId: '',
         sliderLoading: false,
         tableLoading: false,
+        batchQuitLoading: false,
         groupPermEmptyData: {
           type: '',
           text: '',
@@ -362,7 +364,7 @@
           this.messageAdvancedError(e);
         } finally {
           this.tableLoading = false;
-          if (this.emptyData.tipType === 'search') {
+          if (this.isSearchPerm) {
             bus.$emit('on-perm-tab-count', { active: 'GroupPerm', count: this.pageConf.count });
           }
         }
@@ -391,25 +393,13 @@
                 (item) => item.id.toString() !== row.id.toString()
               );
             }
-            if (this.$refs.groupPermTableRef) {
-              this.$refs.groupPermTableRef.selection = [...this.currentSelectGroupList];
-              this.$refs.groupPermTableRef.showSelectionCount = false;
-              console.log(this.$refs.groupPermTableRef, this.$refs.groupPermTableRef.selection, 4444);
-            }
             this.$emit('on-select-group', this.currentSelectGroupList);
           },
           all: () => {
-            const list = payload.filter(item => !this.currentSelectGroupList.includes(item.id.toString()));
             const tableList = _.cloneDeep(this.curPageData);
             const selectGroups = this.currentSelectGroupList.filter(item =>
               !tableList.map(v => v.id.toString()).includes(item.id.toString()));
-            this.currentSelectGroupList = [...selectGroups, ...list];
-            this.$nextTick(() => {
-              if (this.$refs.groupPermTableRef) {
-                console.log(this.$refs.groupPermTableRef, 4444);
-                this.$refs.groupPermTableRef.selection = [...this.currentSelectGroupList];
-              }
-            });
+            this.currentSelectGroupList = [...selectGroups, ...payload];
             this.$emit('on-select-group', this.currentSelectGroupList);
           }
         };
@@ -489,11 +479,7 @@
           });
           this.cancelDelete();
           this.messageSuccess(this.$t(`m.info['退出成功']`), 3000);
-          if (!this.groupPermEmptyData.tipType) {
-            this.$emit('refresh');
-          } else {
-            this.resetPagination();
-          }
+          this.refreshTableData();
         } catch (e) {
           this.deleteDialogConf.loading = false;
           console.error(e);
@@ -525,6 +511,7 @@
           this.messageWarn(this.$t(`m.perm['当前勾选项都为不可退出的用户组（唯一管理员不能退出）']`), 3000);
           return;
         }
+        this.batchQuitLoading = true;
         try {
           for (let i = 0; i < selectGroups.length; i++) {
             await this.$store.dispatch('perm/quitGroupPerm', {
@@ -535,16 +522,12 @@
           this.isShowDeleteDialog = false;
           this.currentSelectGroupList = [];
           this.messageSuccess(this.$t(`m.info['退出成功']`), 3000);
-          setTimeout(() => {
-            if (!this.groupPermEmptyData.tipType) {
-              this.$emit('refresh');
-            } else {
-              this.resetPagination();
-            }
-          }, 1000);
+          this.refreshTableData();
         } catch (e) {
           console.error(e);
           this.messageAdvancedError(e);
+        } finally {
+          this.batchQuitLoading = false;
         }
       },
 
@@ -578,6 +561,10 @@
       resetPagination () {
         this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10 });
         this.getDataByPage();
+      },
+
+      refreshTableData () {
+        this.isSearchPerm ? this.resetPagination() : this.$emit('refresh');
       }
     }
   };

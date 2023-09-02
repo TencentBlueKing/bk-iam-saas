@@ -237,7 +237,7 @@
       };
     },
     computed: {
-      ...mapGetters(['externalSystemsLayout', 'externalSystemId', 'roleList'])
+      ...mapGetters(['externalSystemsLayout', 'externalSystemId', 'roleList', 'mainContentLoading'])
     },
     watch: {
       externalSystemsLayout: {
@@ -334,9 +334,6 @@
           const personalGroupList = personalGroupData.results || [];
           this.personalGroupList.splice(0, this.personalGroupList.length, ...personalGroupList);
           this.$set(this.panels[0], 'count', personalGroupData.count || 0);
-          if (personalGroupList.length) {
-            this.formatCheckGroups();
-          }
           this.emptyData = formatCodeData(personalGroupCode, this.emptyData, this.personalGroupList.length === 0);
                     
           const systemList = customData || [];
@@ -352,6 +349,8 @@
           this.departmentGroupList.splice(0, this.departmentGroupList.length, ...departmentGroupList);
           this.emptyDepartmentGroupData
             = formatCodeData(departmentGroupCode, this.emptyDepartmentGroupData, this.departmentGroupList.length === 0);
+
+          this.formatCheckGroups();
 
           this.isEmpty = personalGroupList.length < 1 && customData.length < 1
             && teporarySystemList.length < 1 && departmentGroupList.length < 1;
@@ -410,10 +409,9 @@
             params.system_id = this.externalSystemId;
           }
           const { code, data } = await this.$store.dispatch('perm/getUserGroupSearch', params);
-          this.personalGroupList.splice(0, this.personalGroupList.length, ...(data.results || []));
+          this.personalGroupList = data.results || [];
           this.$set(this.panels[0], 'count', data.count || 0);
           this.emptyData = formatCodeData(code, this.emptyData, data.count === 0);
-          this.formatCheckGroups();
         } catch (e) {
           console.error(e);
           const { code } = e;
@@ -422,7 +420,6 @@
           this.messageAdvancedError(e);
         } finally {
           this.componentLoading = false;
-          this.tabKey = +new Date();
         }
       },
 
@@ -437,7 +434,7 @@
         try {
           const { code, data } = await this.$store.dispatch('perm/getDepartGroupSearch', params);
           const { count, results } = data;
-          this.departmentGroupList.splice(0, this.departmentGroupList.length, ...(data.results || []));
+          this.departmentGroupList = results || [];
           this.$set(this.panels[1], 'count', count || 0);
           this.emptyDepartmentGroupData = formatCodeData(code, this.emptyDepartmentGroupData, results.length === 0);
         } catch (e) {
@@ -446,7 +443,7 @@
           this.departmentGroupList = [];
           this.messageAdvancedError(e);
         } finally {
-          this.tabKey = +new Date();
+          this.componentLoading = false;
         }
       },
 
@@ -463,39 +460,72 @@
             this.emptyCustomData = formatCodeData(e.code, this.emptyCustomData);
             this.systemList = [];
             this.messageAdvancedError(e);
-          } finally {
-            this.tabKey = +new Date();
           }
         }
       },
 
-      async handleRemoteTable (payload) {
-        const { emptyData, pagination, searchParams } = payload;
-        this.isSearchPerm = emptyData.tipType === 'search';
-        this.curSearchParams = _.cloneDeep(searchParams);
-        this.curSearchPagination = _.cloneDeep(pagination);
+      async fetchRemoteTable () {
         // 这里需要拿到所有tab项的total，所以需要调所有接口, 且需要在当前页动态加载tab的label
+        const { tab } = this.$route.query;
         const typeMap = {
           GroupPerm: async () => {
-            this.componentLoading = true;
-            this.personalGroupList = [];
-            this.emptyData = _.cloneDeep(emptyData);
-            await Promise.all([this.fetchUserGroupSearch(), this.fetchDepartSearch(), this.fetchPolicySearch()]);
+            this.emptyData = _.cloneDeep(this.curEmptyData);
+            await Promise.all([
+              this.fetchUserGroupSearch(),
+              this.fetchDepartSearch(),
+              this.fetchPolicySearch()
+            ]);
             this.curEmptyData = Object.assign({}, this.emptyData);
+            if ([tab, 'GroupPerm'].includes(this.active)) {
+              this.tabKey = +new Date();
+            }
           },
           DepartmentGroupPerm: async () => {
-            this.departmentGroupList = [];
-            this.emptyDepartmentGroupData = _.cloneDeep(emptyData);
-            await Promise.all([this.fetchUserGroupSearch(), this.fetchPolicySearch()]);
+            this.emptyDepartmentGroupData = _.cloneDeep(this.curEmptyData);
+            await Promise.all([
+              this.fetchDepartSearch(),
+              this.fetchUserGroupSearch(),
+              this.fetchPolicySearch()
+            ]);
             this.curEmptyData = Object.assign({}, this.emptyDepartmentGroupData);
+            if ([tab].includes(this.active)) {
+              this.tabKey = +new Date();
+            }
           },
           CustomPerm: async () => {
-            this.emptyCustomData = _.cloneDeep(emptyData);
+            this.emptyCustomData = _.cloneDeep(this.curEmptyData);
             await Promise.all([this.fetchUserGroupSearch(), this.fetchDepartSearch()]);
             this.curEmptyData = Object.assign({}, this.emptyCustomData);
+            if ([tab].includes(this.active)) {
+              this.tabKey = +new Date();
+            }
           }
         };
         return typeMap[this.active] ? typeMap[this.active]() : typeMap['GroupPerm']();
+      },
+
+      async handleRemoteTable (payload) {
+        if (!this.mainContentLoading) {
+          this.componentLoading = true;
+        }
+        const { emptyData, pagination, searchParams } = payload;
+        this.isSearchPerm = emptyData.tipType === 'search';
+        this.curEmptyData = _.cloneDeep(emptyData);
+        this.curSearchParams = _.cloneDeep(searchParams);
+        this.curSearchPagination = _.cloneDeep(pagination);
+        await this.fetchRemoteTable();
+        this.formatCheckGroups();
+      },
+
+      // 处理只输入纯文本，不生成tag情况
+      async handleInputValue (payload) {
+        this.curEmptyData.tipType = payload ? 'search' : '';
+        if (payload) {
+          this.isSearchPerm = true;
+          this.$set(this.curSearchParams, 'name', payload);
+          await this.fetchRemoteTable();
+          this.formatCheckGroups();
+        }
       },
 
       async handleRefreshTable () {
@@ -523,7 +553,7 @@
       formatCheckGroups () {
         const selectList = this.panels[0].selectList.map(item => item.id.toString());
         setTimeout(() => {
-          this.personalGroupList.forEach(item => {
+          this.personalGroupList.length && this.personalGroupList.forEach(item => {
             if (item.role_members && item.role_members.length) {
               item.role_members = item.role_members.map(v => {
                 return {
@@ -537,35 +567,22 @@
               && this.$refs.childPermRef.length) {
               this.$refs.childPermRef[0].$refs.groupPermTableRef.toggleRowSelection(item, true);
             }
-          }, 0);
-        });
+          });
+          this.departmentGroupList.length && this.departmentGroupList.forEach(item => {
+            if (item.role_members && item.role_members.length) {
+              item.role_members = item.role_members.map(v => {
+                return {
+                  username: v,
+                  readonly: false
+                };
+              });
+            }
+          });
+        }, 0);
       },
 
       handleSelectGroup (payload) {
         this.$set(this.panels[0], 'selectList', payload);
-      },
-
-      // 处理只输入纯文本，不生成tag情况
-      handleInputValue (payload) {
-        this.curEmptyData.tipType = payload ? 'search' : '';
-        if (payload) {
-          this.curSearchParams.name = payload;
-          const typeMap = {
-            GroupPerm: async () => {
-              this.personalGroupList = [];
-              await this.fetchUserGroupSearch();
-            },
-            DepartmentGroupPerm: async () => {
-              this.departmentGroupList = [];
-              await this.fetchDepartSearch();
-            },
-            CustomPerm: async () => {
-              this.systemList = [];
-              await this.fetchPolicySearch();
-            }
-          };
-          typeMap[this.active] ? typeMap[this.active]() : typeMap['GroupPerm']();
-        }
       },
 
       // 显示资源实例

@@ -101,7 +101,7 @@
 </template>
 <script>
   import { mapGetters } from 'vuex';
-  import { formatCodeData, sleep } from '@/common/util';
+  import { formatCodeData } from '@/common/util';
   import { bus } from '@/common/bus';
   import DeleteDialog from '@/components/iam-confirm-dialog/index.vue';
   import RenderGroupPermSideslider from '../components/render-group-perm-sideslider';
@@ -136,6 +136,9 @@
       isSearchPerm: {
         type: Boolean,
         default: false
+      },
+      totalCount: {
+        type: Number
       }
     },
     data () {
@@ -173,30 +176,11 @@
       departmentGroupList: {
         async handler (v) {
           if (this.isSearchPerm) {
-            this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10 });
-            await this.fetchDepartSearch();
-          } else {
-            if (!this.mainContentLoading) {
-              this.tableLoading = true;
-            }
-            if (v.length) {
-              v.forEach(item => {
-                if (item.role_members && item.role_members.length) {
-                  item.role_members = item.role_members.map(v => {
-                    return {
-                      username: v,
-                      readonly: false
-                    };
-                  });
-                }
-              });
-              this.dataList.splice(0, this.dataList.length, ...v);
-              this.initPageConf();
-              this.curPageData = this.getDataByPage(this.pageConf.current);
-              await sleep(1000);
-              this.tableLoading = false;
-            }
+            this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10, count: this.totalCount });
           }
+          this.dataList.splice(0, this.dataList.length, ...v);
+          this.initPageConf();
+          this.curPageData = this.getDataByPage(this.pageConf.current);
         },
         immediate: true
       },
@@ -208,8 +192,8 @@
       }
     },
     methods: {
-      async fetchDepartSearch () {
-        const { current, limit } = this.pageConf;
+      async fetchDepartSearch (pagination) {
+        const { current, limit } = pagination || this.pageConf;
         const params = {
           ...this.curSearchParams,
           limit,
@@ -221,6 +205,7 @@
           }
           const { code, data } = await this.$store.dispatch('perm/getDepartGroupSearch', params);
           const { count, results } = data;
+          this.pageConf.count = count || 0;
           this.curPageData.splice(0, this.curPageData.length, ...results || []);
           this.curPageData.forEach(item => {
             if (item.role_members && item.role_members.length) {
@@ -232,7 +217,6 @@
               });
             }
           });
-          this.pageConf.count = count || 0;
           this.groupPermDepartEmptyData = formatCodeData(code, this.groupPermDepartEmptyData, results.length === 0);
         } catch (e) {
           const { code } = e;
@@ -277,7 +261,7 @@
        */
       handlePageChange (page = 1) {
         this.pageConf.current = page;
-        if (this.emptyData.tipType === 'search') {
+        if (this.isSearchPerm) {
           this.fetchDepartSearch();
         } else {
           const data = this.getDataByPage(page);
@@ -359,12 +343,7 @@
           this.cancelDelete();
           this.messageSuccess(this.$t(`m.info['退出成功']`), 3000);
           this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10 });
-          if (!this.groupPermEmptyData.tipType) {
-            this.$emit('refresh');
-          } else {
-            this.fetchDepartSearch();
-          }
-          this.$emit('refresh');
+          this.refreshTableData();
         } catch (e) {
           this.deleteDialogConf.loading = false;
           console.error(e);
@@ -386,6 +365,10 @@
         this.deleteDialogConf.row = Object.assign({}, {});
         this.deleteDialogConf.msg = '';
         this.deleteDialogConf.loading = false;
+      },
+
+      refreshTableData () {
+        this.isSearchPerm ? this.fetchDepartSearch() : this.$emit('refresh');
       },
 
       handleEmptyRefresh () {
