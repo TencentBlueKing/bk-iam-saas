@@ -92,10 +92,11 @@
           />
         </div>
         <bk-tab
+          ref="tabRef"
           type="unborder-card"
           ext-cls="iam-my-perm-tab-cls"
-          :key="tabKey"
           :active.sync="active"
+          :key="tabKey"
           @tab-change="handleTabChange">
           <bk-tab-panel
             v-for="(panel, index) in panels"
@@ -240,6 +241,15 @@
       ...mapGetters(['externalSystemsLayout', 'externalSystemId', 'roleList', 'mainContentLoading'])
     },
     watch: {
+      '$route': {
+        handler (value) {
+          const { tab } = value.query;
+          if (tab) {
+            this.active = tab;
+          }
+        },
+        immediate: true
+      },
       externalSystemsLayout: {
         handler (value) {
           if (value.myPerm.hideCustomTab) {
@@ -264,10 +274,6 @@
       this.emptyCustomData = _.cloneDeep(this.emptyData);
       this.emptyTemporarySystemData = _.cloneDeep(this.emptyData);
       this.emptyDepartmentGroupData = _.cloneDeep(this.emptyData);
-      const query = this.$route.query;
-      if (query.tab) {
-        this.active = query.tab;
-      }
       // if (this.enableTemporaryPolicy.toLowerCase() === 'true') {
       //   this.panels.push({
       //     name: 'TeporaryCustomPerm',
@@ -476,9 +482,7 @@
               this.fetchPolicySearch()
             ]);
             this.curEmptyData = Object.assign({}, this.emptyData);
-            if ([tab, 'GroupPerm'].includes(this.active)) {
-              this.tabKey = +new Date();
-            }
+            this.tabKey = +new Date();
           },
           DepartmentGroupPerm: async () => {
             this.emptyDepartmentGroupData = _.cloneDeep(this.curEmptyData);
@@ -488,17 +492,13 @@
               this.fetchPolicySearch()
             ]);
             this.curEmptyData = Object.assign({}, this.emptyDepartmentGroupData);
-            if ([tab].includes(this.active)) {
-              this.tabKey = +new Date();
-            }
+            this.tabKey = +new Date();
           },
           CustomPerm: async () => {
             this.emptyCustomData = _.cloneDeep(this.curEmptyData);
             await Promise.all([this.fetchUserGroupSearch(), this.fetchDepartSearch()]);
             this.curEmptyData = Object.assign({}, this.emptyCustomData);
-            if ([tab].includes(this.active)) {
-              this.tabKey = +new Date();
-            }
+            this.tabKey = +new Date();
           }
         };
         return typeMap[this.active] ? typeMap[this.active]() : typeMap['GroupPerm']();
