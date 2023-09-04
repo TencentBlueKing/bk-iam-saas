@@ -265,8 +265,8 @@
       ...mapGetters(['user']),
       isNoBatchDelete () {
         return () => {
-            const hasData = this.tableList.length && this.currentSelectList.length;
-            if (this.getGroupAttributes && this.getGroupAttributes().source_from_role) {
+            const hasData = this.tableList.length > 0 && this.currentSelectList.length > 0;
+            if (hasData && this.getGroupAttributes && this.getGroupAttributes().source_from_role) {
                 const isAll = hasData && this.currentSelectList.length === this.pagination.count;
                 this.adminGroupTitle = isAll ? this.$t(`m.userGroup['管理员组至少保留一条数据']`) : '';
                 return isAll;
