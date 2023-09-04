@@ -84,7 +84,7 @@
                 _.related_resource_types" :key="contentIndex">
                 <div class="content">
                   <render-condition
-                    :ref="`condition_${$index}_${contentIndex}_ref`"
+                    :ref="`condition_${_index}_${contentIndex}_ref`"
                     :value="content.value"
                     :is-empty="content.empty"
                     :params="curCopyParams"
@@ -185,15 +185,13 @@
           ref="renderResourceRef"
           :data="condition"
           :original-data="originalCondition"
-          :flag="curFlag"
           :selection-mode="curSelectionMode"
           :params="params"
-          @on-limit-change="handleLimitChange"
         />
       </div>
       <div slot="footer" style="margin-left: 25px;">
-        <bk-button theme="primary" :loading="sliderLoading" :disabled="disabled" @click="handleResourceSumit">{{ $t(`m.common['保存']`) }}</bk-button>
-        <bk-button style="margin-left: 10px;" :disabled="disabled" @click="handleResourceCancel">{{ $t(`m.common['取消']`) }}</bk-button>
+        <bk-button theme="primary" :loading="sliderLoading" @click="handleResourceSumit">{{ $t(`m.common['保存']`) }}</bk-button>
+        <bk-button style="margin-left: 10px;" @click="handleResourceCancel">{{ $t(`m.common['取消']`) }}</bk-button>
       </div>
     </bk-sideslider>
   </div>
@@ -226,6 +224,7 @@
         tableListClone: [],
         tableLoading: false,
         instanceLoading: false,
+        sliderLoading: false,
         systemList: [],
         resourceList: [],
         systemId: '',
@@ -243,12 +242,14 @@
         hasMore: false,
         resourceType: '',
         parentId: '',
+        resourceInstanceSidesliderTitle: '',
         resourceListChilder: [],
         resourceTypeData: { isEmpty: true },
         isShowResourceInstanceSideslider: false,
         curResIndex: -1,
         groupIndex: -1,
         params: {},
+        curCopyParams: {},
         resourceInstances: [],
         searchTypeList: [{ name: this.$t(`m.resourcePermiss['实例权限']`), value: 'resource_instance' }, { name: this.$t(`m.resourcePermiss['操作权限']`), value: 'operate' }],
         searchType: 'resource_instance',

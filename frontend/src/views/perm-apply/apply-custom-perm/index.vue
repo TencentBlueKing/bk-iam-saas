@@ -98,9 +98,9 @@
                           :false-value="false"
                           v-model="act.checked"
                           :disabled="act.disabled"
-                          :ext-cls="['iam-action-cls', { 'iam-action-hover': hoverActionData.actions.includes(act.id) }]"
+                          :ext-cls="hoverActionData.actions.includes(act.id) ? 'iam-action-cls iam-action-hover' : 'iam-action-cls'"
                           @change="handleActionChecked(...arguments, act, item)">
-                          <bk-popover placement="top" :delay="[300, 0]" ext-cls="iam-tooltips-cls">
+                          <bk-popover placement="top" :delay="300" ext-cls="iam-tooltips-cls">
                             <template v-if="act.disabled">
                               <span class="text" @click.stop="handleDisabledClick(act)">{{ act.name }}</span>
                             </template>
@@ -144,9 +144,9 @@
                                 :false-value="false"
                                 v-model="act.checked"
                                 :disabled="act.disabled"
-                                :ext-cls="['iam-action-cls', { 'iam-action-hover': hoverActionData.actions.includes(act.id) }]"
+                                :ext-cls="hoverActionData.actions.includes(act.id) ? 'iam-action-cls iam-action-hover' : 'iam-action-cls'"
                                 @change="handleSubActionChecked(...arguments, act, subAct, item)">
-                                <bk-popover placement="top" :delay="[300, 0]" ext-cls="iam-tooltips-cls">
+                                <bk-popover placement="top" :delay="300" ext-cls="iam-tooltips-cls">
                                   <template v-if="act.disabled">
                                     <span class="text" @click.stop="handleDisabledClick(act)">{{ act.name }}</span>
                                   </template>
@@ -206,7 +206,7 @@
           class="normal-resource-instance-table">
           <resource-instance-table
             :list="tableData"
-            :original-list="tableDataBackup"
+            :original-table-list="tableDataBackup"
             :system-id="systemValue"
             :button-loading="buttonLoading"
             :is-all-expanded="isAllExpanded"
@@ -448,7 +448,7 @@
                 >
                   <resource-instance-table
                     :list="newTableList"
-                    :original-list="tableDataBackup"
+                    :original-table-list="tableDataBackup"
                     :system-id="systemValue"
                     ref="resInstanceTableRef"
                     @on-select="handleResourceSelect"
@@ -464,7 +464,7 @@
                     :is-recommend="isRecommend"
                     :cache-id="routerQuery.cache_id"
                     :list="newRecommendTableList"
-                    :original-list="tableRecommendDataBackup"
+                    :original-table-list="tableRecommendDataBackup"
                     :system-id="systemValue"
                     ref="resInstanceRecommendTableRef"
                     @on-select="handleResourceSelect"
@@ -544,7 +544,7 @@
           <resource-instance-table
             :cache-id="routerQuery.cache_id"
             :list="newTableList"
-            :original-list="tableDataBackup"
+            :original-table-list="tableDataBackup"
             :system-id="systemValue"
             ref="resInstanceTableRef"
             @on-select="handleResourceSelect"
@@ -560,7 +560,7 @@
             :is-recommend="isRecommend"
             :cache-id="routerQuery.cache_id"
             :list="newRecommendTableList"
-            :original-list="tableRecommendDataBackup"
+            :original-table-list="tableRecommendDataBackup"
             :system-id="systemValue"
             ref="resInstanceRecommendTableRef"
             @on-select="handleResourceSelect"

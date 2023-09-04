@@ -72,7 +72,7 @@
         <iam-guide
           type="rating_manager_authorization_scope"
           direction="left"
-          :style="{ top: '-25px', left: '440px' }"
+          :cur-style="{ top: '-25px', left: '440px' }"
           :content="$t(`m.guide['授权人员范围']`)" />
       </render-action>
     </section>

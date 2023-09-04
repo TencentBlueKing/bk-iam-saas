@@ -348,7 +348,6 @@
           :original-data="originalCondition"
           :selection-mode="curSelectionMode"
           :params="params"
-          @on-limit-change="handleLimitChange"
         />
       </div>
       <div slot="footer" style="margin-left: 25px;">
@@ -421,6 +420,7 @@
         isShowGroupError: false,
         isShowMemberError: false,
         isShowMemberAdd: false,
+        isShowMemberEmptyError: false,
         tableList: [],
         currentSelectList: [],
         curUserGroup: [],
@@ -448,6 +448,7 @@
         addMemberTitle: this.$t(`m.myApply['权限获得者']`),
         addMemberText: this.$t(`m.permApply['选择权限获得者']`),
         addMemberTips: this.$t(`m.permApply['可代他人申请加入用户组获取权限']`),
+        curCopyParams: {},
         queryParams: {},
         emptyData: {
           type: '',

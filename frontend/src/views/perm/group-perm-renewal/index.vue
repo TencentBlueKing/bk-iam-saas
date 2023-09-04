@@ -49,7 +49,7 @@
                   />
                 </template>
               </bk-table-column>
-              <bk-table-column resizable="false" :label="$t(`m.common['操作']`)">
+              <bk-table-column :resizable="false" :label="$t(`m.common['操作']`)">
                 <template slot-scope="{ row }">
                   <bk-button theme="primary" @click.stop="handleDelete(row, index)" text>
                     {{ $t(`m.common['删除']`) }}

@@ -40,7 +40,7 @@
         type: String,
         default: 'default'
       },
-      style: {
+      curStyle: {
         type: Object,
         default: () => {
           return {};
@@ -105,7 +105,7 @@
             styles () {
                 if (!['component'].includes(this.popoverType)) {
                     return {
-                        ...this.style,
+                        ...this.curStyle,
                         'position': 'relative'
                     };
                 }

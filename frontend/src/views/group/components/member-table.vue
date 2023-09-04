@@ -18,10 +18,7 @@
             data-test="no-leave"
             :list="COPY_KEYS_ENUM"
             :clearable="false"
-            :ext-popover-cls="[
-              'copy-user-group-cls',
-              { 'copy-user-group-cls-lang': !curLanguageIsCn }
-            ]"
+            :ext-popover-cls="!curLanguageIsCn ? 'copy-user-group-cls copy-user-group-cls-lang' : 'copy-user-group-cls'"
             :disabled="readOnly"
             :placeholder="$t(`m.userGroup['复制成员']`)"
             :trigger="'hover'"
@@ -194,7 +191,9 @@
 
   export default {
     name: '',
-    inject: ['getGroupAttributes'],
+    inject: {
+      getGroupAttributes: { value: 'getGroupAttributes', default: null }
+    },
     components: {
       DeleteDialog,
       AddMemberDialog,

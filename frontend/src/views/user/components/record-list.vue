@@ -276,8 +276,11 @@
 
       handleBackClick () {
         this.$emit('handleBack');
+      },
+
+      handleEmptyRefresh () {
+        this.fetchModelingList(true);
       }
-            
     }
   };
 </script>

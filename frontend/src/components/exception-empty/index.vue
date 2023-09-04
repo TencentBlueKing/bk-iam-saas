@@ -5,7 +5,7 @@
     name: 'ExceptionEmpty',
     props: {
       type: {
-        type: String,
+        type: [String, Number],
         default: 'empty'
       },
       scene: {
@@ -90,11 +90,8 @@
       return (
                 <div>
                     <bk-exception
-                        ext-cls={[
-                          'exception-wrap',
-                          { 'exception-no-wrap': !this.type }
-                        ]}
-                        type={this.type}
+                        ext-cls={!this.type ? 'exception-wrap exception-no-wrap' : 'exception-wrap'}
+                        type={this.type || 'empty'}
                         scene={this.scene}
                         v-bind="$attrs"
                         v-on="$listeners"
@@ -134,7 +131,7 @@
 /deep/ .bk-exception {
     width: 100%;
     &-img {
-      width: 200px !important;
+      width: 180px !important;
       .exception-image {
         width: 100% !important;
         height: 100% !important;

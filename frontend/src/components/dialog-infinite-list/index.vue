@@ -74,7 +74,9 @@
 
   export default {
     name: 'dialog-infinite-list',
-    inject: ['getGroupAttributes'],
+    inject: {
+      getGroupAttributes: { value: 'getGroupAttributes', default: null }
+    },
     props: {
       // 所有数据
       allData: {

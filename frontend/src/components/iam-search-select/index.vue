@@ -13,7 +13,6 @@
     @change="handleChange"
     @input="handleInput"
     @on-click-menu="handleClickMenu"
-    @on-tag-delete="handleTagDelete"
   />
 </template>
 <script>
@@ -85,6 +84,7 @@
     watch: {
       value: {
         handler (val) {
+          console.log(val, 4545545);
           let oldSearchComponentValue = [];
           if (this.$refs.searchSelect) {
             // eslint-disable-next-line max-len

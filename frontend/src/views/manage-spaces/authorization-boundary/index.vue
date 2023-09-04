@@ -90,7 +90,6 @@
         :perm-length="policyList.length"
         :user-length="users.length"
         :depart-length="departments.length"
-        @on-expanded="handleExpanded"
         ext-cls="iam-grade-detail-panel-cls"
       >
         <div
@@ -142,6 +141,11 @@
     },
     data () {
       return {
+        formData: {
+          name: '',
+          description: '',
+          members: []
+        },
         users: [],
         departments: [],
         policyList: [],

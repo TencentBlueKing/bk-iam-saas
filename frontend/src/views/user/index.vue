@@ -7,7 +7,7 @@
         <div class="icon-content">
           <iam-popover-confirm
             :title="$t(`m.common['确定同步']`)"
-            :confirm-handler="() => handleSyncDepartment(row, $index)">
+            :confirm-handler="() => handleSyncDepartment()">
             <div :class="['action-wrapper', { 'is-disabled': isSync }]"
               :title="isSync ? $t(`m.user['正在同步中']`) : $t(`m.user['同步组织']`)"
             >

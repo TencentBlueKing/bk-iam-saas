@@ -204,7 +204,7 @@
         default: ''
       },
       userGroupId: {
-        type: String
+        type: [String, Number]
       }
     },
     data () {

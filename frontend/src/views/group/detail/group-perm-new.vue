@@ -128,6 +128,7 @@
       return {
         groupId: '',
         isLoading: false,
+        linearActionList: [],
         groupSystemList: [],
         authorizationData: {},
         groupSystemListLength: '',
@@ -613,6 +614,11 @@
             ids: data.ids ? data.ids.join(',') : data.policy_id
           }
         }, item, {}, false);
+      },
+      
+      handleEmptyRefresh () {
+        this.handleInit();
+        this.fetchDetail(this.groupId);
       }
     }
   };

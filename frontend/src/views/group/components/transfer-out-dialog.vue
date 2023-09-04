@@ -21,7 +21,7 @@
         :loading="selectLoading"
         searchable
         :remote-method="handleRemoteValue"
-        @toggle="handleToggle(...arguments, $index, row)">
+        @toggle="handleToggle(...arguments)">
         <bk-option v-for="option in gradeManagerList"
           :key="option.id"
           :id="option.id"
@@ -92,7 +92,7 @@
         default: false
       },
       groupIds: {
-        type: Number,
+        type: Array,
         default: () => []
       }
     },
@@ -157,7 +157,7 @@
         }
       },
 
-      handleToggle (val, index, payload) {
+      handleToggle (val) {
         const curOptionDom = this.$refs.gradeManagerSelectRef.$refs.optionList;
         curOptionDom.addEventListener('scroll', this.handleScroll);
         if (!val) {

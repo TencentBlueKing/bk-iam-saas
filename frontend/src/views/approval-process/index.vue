@@ -3,7 +3,7 @@
     <section class="iam-approval-process-set-item-wrapper" v-if="isSuperManager">
       <render-set-item
         v-for="(item, index) in processSetList"
-        :key="item.process_id"
+        :key="index"
         :ref="`${index}SetRef`"
         :class="index > 0 ? 'set-margin-left' : ''"
         :cur-value="item.process_id"

@@ -34,7 +34,7 @@
             ext-cls="iam-action-cls"
             data-test-id="permTemplate_checkbox_action"
             @change="handleActionChecked(...arguments, act, item)">
-            <bk-popover placement="top" :delay="[300, 0]" ext-cls="iam-tooltips-cls">
+            <bk-popover placement="top" :delay="300" ext-cls="iam-tooltips-cls">
               <template v-if="act.disabled">
                 <span class="text" :class="{ 'text-through': act.tag === 'delete' && mode === 'detail' }">{{ act.name }}</span>
               </template>
@@ -55,7 +55,7 @@
               </div>
             </bk-popover>
 
-            <bk-popover placement="top" :delay="[300, 0]" ext-cls="iam-tooltips-cls">
+            <bk-popover placement="top" :delay="300" ext-cls="iam-tooltips-cls">
               <template v-if="act.tag === 'delete'">
                 <Icon type="error-fill" class="error-icon" />
               </template>
@@ -101,7 +101,7 @@
                   ext-cls="iam-action-cls"
                   data-test-id="permTemplate_checkbox_action"
                   @change="handleSubActionChecked(...arguments, act, subAct, item)">
-                  <bk-popover placement="top" :delay="[300, 0]" ext-cls="iam-tooltips-cls">
+                  <bk-popover placement="top" :delay="300" ext-cls="iam-tooltips-cls">
                     <template v-if="act.disabled">
                       <span class="text" :class="{ 'text-through': act.tag === 'delete' && mode === 'detail' }">{{ act.name }}</span>
                     </template>
@@ -121,7 +121,7 @@
                       </div>
                     </div>
                   </bk-popover>
-                  <bk-popover placement="top" :delay="[300, 0]" ext-cls="iam-tooltips-cls">
+                  <bk-popover placement="top" :delay="300" ext-cls="iam-tooltips-cls">
                     <template v-if="act.tag === 'delete'">
                       <Icon type="error-fill" class="error-icon" />
                     </template>
@@ -179,6 +179,7 @@
     },
     data () {
       return {
+        isCompare: false,
         originalCustomTmplList: []
       };
     },

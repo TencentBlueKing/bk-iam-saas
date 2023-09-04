@@ -7,10 +7,9 @@
     :close-icon="false"
     header-position="center"
     :show-footer="false"
-    :ext-cls="[
-      'iam-delete-related-action-dialog',
-      { 'no-padding-dialog': !relatedActionList.length }
-    ]"
+    :ext-cls="!relatedActionList.length
+      ? 'iam-delete-related-action-dialog no-padding-dialog'
+      : 'iam-delete-related-action-dialog'"
     @after-leave="handleAfterDeleteLeave">
     <div class="delete-content-wrapper">
       <div

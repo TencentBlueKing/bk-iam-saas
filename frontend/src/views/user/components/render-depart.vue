@@ -15,7 +15,7 @@
         :active.sync="active"
         type="unborder-card"
         ext-cls="iam-user-tab-cls"
-        @tab-change="handleTabChange">
+      >
         <bk-tab-panel
           v-for="(panel, index) in panels"
           v-bind="panel"

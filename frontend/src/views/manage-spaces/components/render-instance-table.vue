@@ -34,8 +34,6 @@
         :header-border="false"
         :cell-class-name="getCellClass"
         :empty-text="$t(`m.verify['请选择操作']`)"
-        @row-mouse-enter="handlerRowMouseEnter"
-        @row-mouse-leave="handlerRowMouseLeave"
         @filter-change="handleFilterChange">
         <bk-table-column :resizable="false" :label="$t(`m.common['操作']`)" width="400">
           <template slot-scope="{ row }">

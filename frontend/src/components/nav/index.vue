@@ -383,7 +383,6 @@
       }
     },
     created () {
-      this.index = this.index || Number(window.localStorage.getItem('index') || 0);
       this.fetchRoleUpdate(this.user);
       this.isUnfold = this.navStick || !this.navFold;
       this.$once('hook:beforeDestroy', () => {

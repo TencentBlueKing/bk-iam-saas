@@ -57,7 +57,7 @@
             <bk-table-column type="selection" align="center" :selectable="getIsSelect"></bk-table-column>
             <bk-table-column :label="$t(`m.permTemplate['模板名']`)">
               <template slot-scope="{ row }">
-                <bk-popover placement="top" :delay="[300, 0]" ext-cls="iam-tooltips-cls">
+                <bk-popover placement="top" :delay="300" ext-cls="iam-tooltips-cls">
                   <template>
                     <Icon v-if="row.need_to_update" type="error-fill" class="error-icon" />
                   </template>
@@ -65,7 +65,6 @@
                     {{ $t(`m.permTemplate['该模板无法选择的原因是：管理空间缩小了授权范围，但是没有同步删除模板里的操作，如需选择请重新编辑模板或者创建新的模板。']`) }}
                     <bk-button
                       text
-                      :loading="editLoading"
                       @click="handleEdit(row)">
                       {{ $t(`m.common['去编辑']`) }}
                     </bk-button>

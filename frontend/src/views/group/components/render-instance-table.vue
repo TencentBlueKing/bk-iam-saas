@@ -345,7 +345,7 @@
         default: 'action'
       },
       groupId: {
-        type: String,
+        type: [String, Number],
         default: ''
       },
       authorization: {

@@ -295,7 +295,9 @@
 
   export default {
     name: '',
-    inject: ['getGroupAttributes'],
+    inject: {
+      getGroupAttributes: { value: 'getGroupAttributes', default: null }
+    },
     components: {
       InfiniteTree,
       dialogInfiniteList,
