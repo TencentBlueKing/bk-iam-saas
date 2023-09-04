@@ -472,7 +472,6 @@
 
       async fetchRemoteTable () {
         // 这里需要拿到所有tab项的total，所以需要调所有接口, 且需要在当前页动态加载tab的label
-        const { tab } = this.$route.query;
         const typeMap = {
           GroupPerm: async () => {
             this.emptyData = _.cloneDeep(this.curEmptyData);
