@@ -307,12 +307,12 @@
       //   this.triggerChange();
       // }
     },
-
+    
     mounted () {
       if (this.$parent) {
         setTimeout(() => {
           let totalWidth = 0;
-          const searchSelectWidth = this.$refs.searchSelect.offsetWidth || 0;
+          const { width: searchSelectWidth } = this.$refs.searchSelect.getBoundingClientRect();
           const tagList = this.$refs.tag;
           if (tagList && tagList.length && searchSelectWidth > 0) {
             for (let i = 0; i < tagList.length; i++) {
