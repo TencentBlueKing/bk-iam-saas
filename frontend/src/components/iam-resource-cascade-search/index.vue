@@ -139,7 +139,7 @@
             <bk-button
               class="ml20"
               theme="primary"
-              @click="handleSearchUserGroup(true)">
+              @click="handleSearchUserGroup(true, true)">
               {{ $t(`m.common['查询']`) }}
             </bk-button>
             <bk-button
@@ -356,7 +356,9 @@
       active: {
         async handler (newValue, oldValue) {
           if (oldValue && oldValue !== newValue) {
-            await this.handleSearchUserGroup(true);
+            if (this.searchList.length) {
+              await this.handleSearchUserGroup(true, false);
+            }
           }
         },
         immediate: true
@@ -379,7 +381,7 @@
         this.fetchSystemList();
         const isSearch = this.applyGroupData.system_id || Object.keys(this.searchParams).length > 0;
         if (isSearch) {
-          await this.handleSearchUserGroup();
+          await this.handleSearchUserGroup(false, false);
         }
       },
 
@@ -397,9 +399,10 @@
         }
       },
 
-      async handleSearchUserGroup (isClick = false) {
-        this.handleManualInput();
+      async handleSearchUserGroup (isClick = false, isTagInput = false) {
+        // isTagInput是处理未生成tag的内容
         this.systemIdError = false;
+        this.handleManualInput(isTagInput);
         const isSearch = this.applyGroupData.system_id || Object.keys(this.searchParams).length > 0;
         if (isSearch) {
           // if (!this.applyGroupData.system_id && ['CustomPerm'].includes(this.active)) {
@@ -508,11 +511,11 @@
         this.curSelectMenu = '';
         this.curInputText = '';
         this.emptyData.tipType = 'search';
-        this.resetPagination();
         if (!result.length) {
+          this.resetPagination();
           this.resetLocationHref();
         }
-        this.handleSearchUserGroup();
+        this.handleSearchUserGroup(true, false);
       },
 
       handleEmptyClear () {
@@ -525,7 +528,7 @@
         }
         this.resetPagination();
         this.resetSearchParams();
-        this.handleSearchUserGroup();
+        this.handleSearchUserGroup(false, false);
       },
 
       async handleClearSearch () {
@@ -534,7 +537,7 @@
         this.emptyData.tipType = '';
         this.resourceInstances = [];
         this.resetPagination();
-        this.handleSearchUserGroup();
+        this.handleSearchUserGroup(false, false);
       },
 
       handleResourceTypeChange (index) {
@@ -655,7 +658,7 @@
       },
 
       // 处理手动输入各种场景
-      handleManualInput () {
+      handleManualInput (isTagInput) {
         if (this.curSelectMenu) {
           // 转换为tag标签后,需要清空输入框的值
           if (this.$refs.searchSelectRef && this.$refs.searchSelectRef.$refs.searchSelect) {
@@ -672,7 +675,7 @@
             && this.curInputText) {
             this.$refs.searchSelectRef.$refs.searchSelect.localValue = '';
           }
-          if (!this.searchList.length) {
+          if (!this.searchList.length && isTagInput) {
             // 处理无tag标签，直接输入内容情况
             this.searchParams.name = this.curInputText;
             if (!this.curInputText) {
@@ -685,7 +688,7 @@
                 delete this.searchParams.name;
               }
               // 处理切换tab，只输入内容
-              this.$emit('on-input-value', this.searchParams.name);
+              this.$emit('on-input-value', localValue);
             });
           }
         }

@@ -21,12 +21,14 @@
           @delete="handleTagDelete"
           @focus="handleInputFocus"
           @change="handleTagChange" />
-        <div v-if="isTagMultLine" class="mult-tag-placeholder" key="multPlaceholder">...</div>
+        <div v-if="isTagMultLine" class="mult-tag-placeholder" key="multPlaceholder">
+          +{{chipList.length - maxRenderTagNums}}
+        </div>
         <div class="search-input-box" ref="input" key="input" :style="searchInputBoxStyles" @click.stop="">
           <div style="position: absolute; top: -9999px; left: -9999px;">
             <pre ref="realInputContent" style="display: block; visibility: hidden; font: inherit;">
-                            {{ localValue }}
-                        </pre>
+              {{ localValue }}
+              </pre>
           </div>
           <div style="min-height: 22px; white-space: normal; word-break: break-all; visibility: hidden;">
             {{ localValue }}
@@ -51,7 +53,7 @@
       </div>
       <div class="search-nextfix">
         <i
-          v-if="isClearable"
+          v-if="isClearable && focused"
           class="search-clear bk-icon icon-close-circle-shape"
           @click.self="handleClearAll" />
         <slot name="nextfix">
@@ -706,6 +708,10 @@
         }
         if (['Backspace'].includes(event.code)) {
           this.keyDelete(event);
+          return;
+        }
+        if (['Delete'].includes(event.code)) {
+          this.handleClearAll();
           return;
         }
         if (['Enter', 'NumpadEnter'].includes(event.code) && !event.isComposing) {
