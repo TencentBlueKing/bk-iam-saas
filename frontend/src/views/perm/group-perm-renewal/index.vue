@@ -254,7 +254,8 @@
               ? [this.curDelMember]
               : checkList.map(({ id, type }) => ({ id, type }))
           };
-          if (this.externalSystemId) {
+          const { current_role_id: currentRoleId, source } = this.$route.query;
+          if (currentRoleId && source === 'email') {
             params.hidden = false;
           }
           const { code } = await this.$store.dispatch('userGroup/deleteUserGroupMember', params);
@@ -283,7 +284,8 @@
             offset: item.pagination.limit * (item.pagination.current - 1),
             id: item.id
           };
-          if (this.externalSystemId) {
+          const { current_role_id: currentRoleId, source } = this.$route.query;
+          if (currentRoleId && source === 'email') {
             params.hidden = false;
           }
           const { data } = await this.$store.dispatch('renewal/getExpireSoonGroupMembers', params);
@@ -311,7 +313,8 @@
             limit: this.pagination.limit,
             offset: this.pagination.limit * (this.pagination.current - 1)
           };
-          if (this.externalSystemId) {
+          const { current_role_id: currentRoleId, source } = this.$route.query;
+          if (currentRoleId && source === 'email') {
             params.hidden = false;
           }
           const { code, data } = await this.$store.dispatch('renewal/getExpiredGroups', params);
@@ -427,7 +430,8 @@
             expired_at: expired_at_new
           }))
         };
-        if (this.externalSystemId) {
+        const { current_role_id: currentRoleId, source } = this.$route.query;
+        if (currentRoleId && source === 'email') {
           params.hidden = false;
         }
         try {
