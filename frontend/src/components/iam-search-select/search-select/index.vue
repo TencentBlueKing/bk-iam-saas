@@ -243,7 +243,7 @@
         return {
           'width': `calc(100% - 50px)`,
           'max-height': this.focused ? '320px' : '30px',
-          'white-space': this.focused ? 'initial' : 'normal'
+          'white-space': this.focused ? 'initial' : 'nowrap'
         };
       },
 
