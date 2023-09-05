@@ -63,6 +63,8 @@ class SendUserExpireRemindMailTask(Task):
         groups = self.group_biz.list_all_subject_group_before_expired_at(subject, expired_at)
 
         policies = self.policy_biz.list_expired(subject, expired_at)
+        # NOTE 针对蓝盾权限的特殊处理, 等蓝盾迁移半年后删除数据
+        policies = [p for p in policies if p.system.id != "bk_ci"]
 
         if not groups and not policies:
             return
