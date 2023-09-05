@@ -71,7 +71,7 @@
         default: false
       },
       groupIds: {
-        type: Number,
+        type: Array,
         default: () => []
       },
       distributeDetail: {

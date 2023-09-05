@@ -6,12 +6,14 @@
         :controllable="controllableSteps.controllable"
         :cur-step.sync="controllableSteps.curStep"
         :before-change="beforeStepChanged"
-        @step-changed="stepChanged">
+      >
       </bk-steps>
       <smart-action class="base-info-wrapper">
         <render-horizontal-block :label="$t(`m.access['基础信息']`)">
           <section ref="basicInfoContentRef">
-            <basic-info :info-data="modelingSystemData" ref="basicInfoRef"
+            <basic-info
+              ref="basicInfoRef"
+              :info-data="modelingSystemData"
               @on-change="handleBasicInfoChange" />
           </section>
         </render-horizontal-block>

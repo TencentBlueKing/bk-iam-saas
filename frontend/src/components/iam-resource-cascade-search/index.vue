@@ -55,7 +55,7 @@
                     :name="`${option.name} (${option.id})`">
                   </bk-option>
                 </bk-select>
-                <p class="error-tips" v-if="actionError">
+                <p class="error-tips" v-if="actionIdError">
                   {{$t(`m.verify['请选择操作']`)}}
                 </p>
               </iam-form-item>
@@ -180,7 +180,6 @@
           :original-data="originalCondition"
           :selection-mode="curSelectionMode"
           :params="params"
-          @on-limit-change="handleLimitChange"
         />
       </div>
       <div slot="footer" style="margin-left: 25px;">
@@ -316,6 +315,8 @@
         isSearchSystem: false,
         groupIndex: -1,
         curResIndex: -1,
+        curCopyParams: {},
+        params: {},
         queryParams: {},
         searchUserGroupList: [],
         searchDepartGroupList: [],
@@ -412,7 +413,7 @@
           let resourceInstances = _.cloneDeep(this.resourceInstances);
           if (this.applyGroupData.system_id) {
             if (!this.applyGroupData.action_id) {
-              this.actionError = true;
+              this.actionIdError = true;
               return;
             }
             if (this.curResourceTypeList.length && !this.curResourceData.type) {
@@ -474,7 +475,7 @@
 
       async handleCascadeChange () {
         this.systemIdError = false;
-        this.actionError = false;
+        this.actionIdError = false;
         this.resourceTypeError = false;
         this.resourceInstanceError = false;
         this.resourceActionData = [];
@@ -809,7 +810,7 @@
           type: ''
         });
         this.systemIdError = false;
-        this.actionError = false;
+        this.actionIdError = false;
         this.resourceTypeError = false;
         this.resourceInstanceError = false;
         this.resourceInstances = [];

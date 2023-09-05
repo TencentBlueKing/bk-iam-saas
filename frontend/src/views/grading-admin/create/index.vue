@@ -132,7 +132,7 @@
                 type="rating_manager_merge_action"
                 direction="right"
                 :loading="isLoading"
-                :style="renderLabelWidth('rating_manager_merge_action_guide')"
+                :cur-style="renderLabelWidth('rating_manager_merge_action_guide')"
                 :content="$t(`m.guide['聚合操作']`)" />
               <div
                 v-for="item in AGGREGATION_EDIT_ENUM"

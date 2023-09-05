@@ -78,9 +78,9 @@
                           :false-value="false"
                           v-model="act.checked"
                           :disabled="act.disabled"
-                          :ext-cls="['iam-action-cls', { 'iam-action-hover': hoverActionData.actions.includes(act.id) }]"
+                          :ext-cls="hoverActionData.actions.includes(act.id) ? 'iam-action-cls iam-action-hover' : 'iam-action-cls'"
                           @change="handleActionChecked(...arguments, act, item)">
-                          <bk-popover placement="top" :delay="[300, 0]" ext-cls="iam-tooltips-cls">
+                          <bk-popover placement="top" :delay="300" ext-cls="iam-tooltips-cls">
                             <template v-if="act.disabled">
                               <span class="text" @click.stop="handleDisabledClick(act)">{{ act.name }}</span>
                             </template>
@@ -124,12 +124,9 @@
                                 :false-value="false"
                                 v-model="act.checked"
                                 :disabled="act.disabled"
-                                :ext-cls="[
-                                  'iam-action-cls',
-                                  { 'iam-action-hover': hoverActionData.actions.includes(act.id) }
-                                ]"
+                                :ext-cls="hoverActionData.actions.includes(act.id) ? 'iam-action-cls iam-action-hover' : 'iam-action-cls'"
                                 @change="handleSubActionChecked(...arguments, act, subAct, item)">
-                                <bk-popover placement="top" :delay="[300, 0]" ext-cls="iam-tooltips-cls">
+                                <bk-popover placement="top" :delay="300" ext-cls="iam-tooltips-cls">
                                   <template v-if="act.disabled">
                                     <span class="text" @click.stop="handleDisabledClick(act)">{{ act.name }}</span>
                                   </template>
@@ -187,7 +184,7 @@
         <section ref="instanceTableRef">
           <resource-instance-table
             :list="tableData"
-            :original-list="tableDataBackup"
+            :original-table-list="tableDataBackup"
             :system-id="systemValue"
             :is-all-expanded="isAllExpanded"
             ref="resInstanceTableRef"

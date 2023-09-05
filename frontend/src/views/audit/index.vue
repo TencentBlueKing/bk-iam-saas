@@ -11,7 +11,7 @@
       <div class="audit-search-select">
         <iam-search-select
           ref="iamSearchSelect"
-          style="width: 380px;"
+          style="width: 500px;"
           :data="searchData"
           :value="searchValue"
           @on-change="handleSearch" />

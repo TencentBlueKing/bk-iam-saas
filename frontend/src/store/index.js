@@ -635,6 +635,10 @@ const store = new Vuex.Store({
 
     updateSystemId (state, payload) {
       state.externalSystemId = payload;
+    },
+
+    setGuideShowByField (state, payload) {
+
     }
   },
   actions: {

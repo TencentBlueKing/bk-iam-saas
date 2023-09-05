@@ -1,8 +1,7 @@
 <template>
   <div class="template-resource-instance-table-wrapper">
     <div :class="[
-           'iam-resource-expand',
-           extCls
+           'iam-resource-expand'
          ]"
       @click.stop="handleExpanded">
       <div class="iam-resource-header flex-between">

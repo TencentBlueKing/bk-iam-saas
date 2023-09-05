@@ -140,6 +140,10 @@
       searchValue: {
         type: Array,
         default: []
+      },
+      isBorder: {
+        type: Boolean,
+        default: false
       }
     },
     data () {

@@ -4,7 +4,7 @@
       <iam-guide
         type="create_perm_template"
         direction="left"
-        :style="{ top: curLanguageIsCn ? '-20px' : '-32px', left: '80px' }"
+        :cur-style="{ top: curLanguageIsCn ? '-20px' : '-32px', left: '80px' }"
         :content="$t(`m.guide['创建模板']`)"
       />
       <bk-button theme="primary" @click="handleCreate" data-test-id="permTemplate_btn_create">
@@ -17,7 +17,7 @@
         <iam-search-select
           style="width: 420px"
           :data="searchData"
-          :value="searchValue"
+          :value="searchValue || []"
           :quick-search-method="quickSearchMethod"
           @on-change="handleSearch"
         />
@@ -155,6 +155,28 @@
         },
         currentBackup: 1,
         searchParams: {},
+        searchData: [
+          {
+            id: 'name',
+            name: this.$t(`m.permTemplate['模板名']`),
+            default: true
+          },
+          {
+            id: 'system_id',
+            name: this.$t(`m.common['所属系统']`),
+            remoteMethod: this.handleRemoteSystem
+          },
+          {
+            id: 'creator',
+            name: this.$t(`m.grading['创建人']`),
+            remoteMethod: this.handleRemoteRtx
+          },
+          {
+            id: 'description',
+            name: this.$t(`m.common['描述']`),
+            disabled: true
+          }
+        ],
         searchList: [],
         searchValue: [],
         currentSelectList: [],
@@ -200,28 +222,6 @@
       }
     },
     async created () {
-      this.searchData = [
-        {
-          id: 'name',
-          name: this.$t(`m.permTemplate['模板名']`),
-          default: true
-        },
-        {
-          id: 'system_id',
-          name: this.$t(`m.common['所属系统']`),
-          remoteMethod: this.handleRemoteSystem
-        },
-        {
-          id: 'creator',
-          name: this.$t(`m.grading['创建人']`),
-          remoteMethod: this.handleRemoteRtx
-        },
-        {
-          id: 'description',
-          name: this.$t(`m.common['描述']`),
-          disabled: true
-        }
-      ];
       this.searchParams = this.$route.query;
       this.setCurrentQueryCache(this.refreshCurrentQuery());
       const isObject = (payload) => {
@@ -269,6 +269,7 @@
           }
         }
       }
+      console.log(this.searchValue, 454);
     },
     methods: {
       async fetchPageData () {
@@ -465,6 +466,7 @@
         this.emptyData.tipType = 'search';
         this.resetPagination();
         this.fetchTemplateList(true);
+        console.log(this.searchValue);
       },
 
       handleRelateGroup (payload) {

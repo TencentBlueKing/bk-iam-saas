@@ -318,7 +318,7 @@
         type: Array,
         default: () => []
       },
-      originalList: {
+      originalTableList: {
         type: Array,
         default: () => []
       },
@@ -357,6 +357,7 @@
         ],
         isShowResourceInstanceSideslider: false,
         resourceInstanceSidesliderTitle: '',
+        resourceInstanceEffectTimeTitle: '',
         // 查询参数
         params: {},
         disabled: false,
@@ -390,7 +391,8 @@
         instanceKey: '',
         resourceSelectData: [],
         emptyResourceGroupsList: [],
-        emptyResourceGroupsName: []
+        emptyResourceGroupsName: [],
+        originalList: []
       };
     },
     computed: {
@@ -434,7 +436,6 @@
           return _.cloneDeep(curData.condition);
       },
       environmentsData () {
-          console.log(this.curIndex, this.curGroupIndex);
           if (this.curIndex === -1 || this.curGroupIndex === -1) {
               return [];
           }
@@ -561,6 +562,12 @@
             this.needEmitFlag = false;
             this.curCopyNoLimited = false;
           }
+        },
+        immediate: true
+      },
+      originalTableList: {
+        handler (value) {
+          this.originalList = [...value];
         },
         immediate: true
       }

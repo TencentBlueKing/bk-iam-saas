@@ -6,7 +6,7 @@
         :controllable="controllableSteps.controllable"
         :cur-step.sync="controllableSteps.curStep"
         :before-change="beforeStepChanged"
-        @step-changed="stepChanged">
+      >
       </bk-steps>
       <smart-action class="content-wrapper">
         <render-horizontal-block :label="$t(`m.access['操作分组']`)">

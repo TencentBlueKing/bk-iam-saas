@@ -18,11 +18,8 @@
             data-test="no-leave"
             :list="COPY_KEYS_ENUM"
             :clearable="false"
-            :ext-popover-cls="[
-              'copy-user-group-cls',
-              { 'copy-user-group-cls-lang': !curLanguageIsCn }
-            ]"
-            :disabled="readOnly"
+            :ext-popover-cls="!curLanguageIsCn ? 'copy-user-group-cls copy-user-group-cls-lang' : 'copy-user-group-cls'"
+            :disabled="isCopyDisabled"
             :placeholder="$t(`m.userGroup['复制成员']`)"
             :trigger="'hover'"
             :style="{ width: curLanguageIsCn ? '100px' : '140px' }"
@@ -194,7 +191,9 @@
 
   export default {
     name: '',
-    inject: ['getGroupAttributes'],
+    inject: {
+      getGroupAttributes: { value: 'getGroupAttributes', default: null }
+    },
     components: {
       DeleteDialog,
       AddMemberDialog,
@@ -266,8 +265,8 @@
       ...mapGetters(['user']),
       isNoBatchDelete () {
         return () => {
-            const hasData = this.tableList.length && this.currentSelectList.length;
-            if (this.getGroupAttributes && this.getGroupAttributes().source_from_role) {
+            const hasData = this.tableList.length > 0 && this.currentSelectList.length > 0;
+            if (hasData && this.getGroupAttributes && this.getGroupAttributes().source_from_role) {
                 const isAll = hasData && this.currentSelectList.length === this.pagination.count;
                 this.adminGroupTitle = isAll ? this.$t(`m.userGroup['管理员组至少保留一条数据']`) : '';
                 return isAll;
@@ -286,14 +285,10 @@
               return this.getGroupAttributes && this.getGroupAttributes().source_from_role
               && this.pagination.count === 1;
           };
+      },
+      isCopyDisabled () {
+        return this.readOnly || !this.tableList.length;
       }
-    // formatCopyMembers () {
-    //   return this.currentSelectList.length
-    //   ? this.currentSelectList.map(v => v.type === 'user'
-    //    ? v.id
-    //    : (this.enableOrganizationCount ? `{${v.id}}${v.name}&full_name=${v.full_name}&count=${v.member_count}*`
-    //    : `{${v.id}}${v.name}&full_name=${v.full_name}*`)).join('\n') : '';
-    // }
     },
     watch: {
       'pagination.current' (value) {

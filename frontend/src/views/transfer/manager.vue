@@ -14,8 +14,7 @@
               border
               :data="managerList"
               size="small"
-              :class="{ 'set-border': tableLoading }"
-              v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
+              :class="{ 'set-border': isLoading }"
               :header-cell-class-name="getCellClass"
               :cell-class-name="getCellClass"
               :pagination="pagination"

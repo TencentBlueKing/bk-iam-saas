@@ -41,7 +41,7 @@
         required: true
       },
       value: {
-        type: String,
+        type: [Number, String],
         default: ''
       },
       width: {

@@ -10,7 +10,7 @@
           class="select-wrap-checkbox"
           v-model="formData.apply_disable"
           :disabled="userGroupAttributes.apply_disable"
-          @change="handleCheckboxChange">
+        >
           <span
             class="checkbox-sync-perm"
             v-bk-tooltips="$t(`m.userGroup['设置不可被申请，则无法申请加入此用户组']`)">

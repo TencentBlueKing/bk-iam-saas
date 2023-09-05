@@ -39,8 +39,10 @@
       },
       position: {
         type: Object,
-        default: {
-          top: 50
+        default: () => {
+          return {
+            top: 50
+          };
         }
       },
       showFooter: {

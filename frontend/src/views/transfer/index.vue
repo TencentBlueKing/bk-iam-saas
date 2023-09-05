@@ -38,7 +38,7 @@
               { 'input-content-lang': !curLanguageIsCn }
             ]"
           >
-            <bk-form :model="formData" form-type="vertical" :rules="rules" ref="permTransferForm">
+            <bk-form :model="formData" form-type="vertical" ref="permTransferForm">
               <iam-form-item :label="$t(`m.permTransfer['交接人']`)" required>
                 <bk-user-selector
                   :multiple="false"
@@ -125,7 +125,8 @@
         pageContainer: null,
         submitLoading: false,
         enablePermissionHandover: window.ENABLE_PERMISSION_HANDOVER,
-        isPermissionsPrompt: false
+        isPermissionsPrompt: false,
+        isLoading: false
       };
     },
     computed: {

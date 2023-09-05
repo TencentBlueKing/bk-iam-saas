@@ -74,6 +74,7 @@
           description: '',
           description_en: ''
         },
+        rules: {},
         isEdit: false
       };
     },
