@@ -132,7 +132,6 @@
               :max-height="400"
               :class="{ 'set-border': tableLoading }"
               :pagination="pagination"
-              :cell-attributes="handleCellAttributes"
               @page-change="pageChange"
               @page-limit-change="limitChange"
               @select="handlerChange"
@@ -270,6 +269,18 @@
         isLoading: false,
         isShowExpiredError: false,
         tableDialogLoading: false,
+        searchData: [
+          {
+            id: 'name',
+            name: this.$t(`m.userGroup['用户组名']`),
+            default: true
+          },
+          {
+            id: 'description',
+            name: this.$t(`m.common['描述']`),
+            disabled: true
+          }
+        ],
         searchValue: [],
         tableList: [],
         currentSelectList: [],
@@ -292,6 +303,7 @@
           tip: '',
           tipType: ''
         },
+        isShowGroupError: false,
         isShowDeleteDialog: false,
         delActionDialogTitle: '',
         delActionDialogTip: '',
@@ -318,6 +330,9 @@
             return false;
           }
         };
+      },
+      curRole () {
+        return this.user.role.type;
       }
     },
     watch: {
@@ -327,18 +342,6 @@
     },
     async created () {
       await this.fetchPermGroups(false, true);
-      this.searchData = [
-        {
-          id: 'name',
-          name: this.$t(`m.userGroup['用户组名']`),
-          default: true
-        },
-        {
-          id: 'description',
-          name: this.$t(`m.common['描述']`),
-          disabled: true
-        }
-      ];
     },
     methods: {
       setDefaultSelect () {
@@ -502,13 +505,24 @@
                 (item) => item.id.toString() !== row.id.toString()
               );
             }
+            this.$nextTick(() => {
+              const selectionCount = document.getElementsByClassName('bk-page-selection-count');
+              if (this.$refs.groupPermTableRef && selectionCount) {
+                selectionCount[0].children[0].innerHTML = this.currentSelectGroupList.length;
+              }
+            });
           },
           all: () => {
-            const list = payload.filter(item => !this.currentSelectGroupList.includes(item.id.toString()));
             const tableList = _.cloneDeep(this.curPageData);
             const selectGroups = this.currentSelectGroupList.filter(item =>
               !tableList.map(v => v.id.toString()).includes(item.id.toString()));
-            this.currentSelectGroupList = [...selectGroups, ...list];
+            this.currentSelectGroupList = [...selectGroups, ...payload];
+            this.$nextTick(() => {
+              const selectionCount = document.getElementsByClassName('bk-page-selection-count');
+              if (this.$refs.groupPermTableRef && selectionCount) {
+                selectionCount[0].children[0].innerHTML = this.currentSelectGroupList.length;
+              }
+            });
           }
         };
         return typeMap[type]();
@@ -673,6 +687,11 @@
       // 选择checkbox
       handlerChange (selection, row) {
         this.currentSelectList = selection;
+        this.isShowGroupError = false;
+      },
+
+      handlerAllChange (selection) {
+        this.currentSelectList = [...selection];
         this.isShowGroupError = false;
       },
 

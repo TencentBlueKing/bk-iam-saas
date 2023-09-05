@@ -13,7 +13,6 @@
     @change="handleChange"
     @input="handleInput"
     @on-click-menu="handleClickMenu"
-    @on-tag-delete="handleTagDelete"
   />
 </template>
 <script>
@@ -60,7 +59,7 @@
         default: il8n('verify', '请输入')
       },
       value: {
-        type: Array,
+        type: [Array, Object],
         default: () => []
       },
       parseUrl: {

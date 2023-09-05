@@ -211,7 +211,7 @@
         default: ''
       },
       defaultData: {
-        type: Object,
+        type: Array,
         default: () => []
       }
     },
@@ -524,7 +524,6 @@
               this.$set(this.systemData[item.id], 'list', []);
               console.log('this.defaultData', this.defaultData);
               const isExistSys = this.defaultData.find(sys => sys.system_id === item.id);
-              console.log(isExistSys);
               if (isExistSys) {
                 isExistSys.list.forEach(act => {
                   this.$set(act, 'checked', this.defaultValue.includes(act.$id));

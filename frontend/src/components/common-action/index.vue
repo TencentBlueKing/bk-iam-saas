@@ -58,7 +58,7 @@
     props: {
       curSelectActions: {
         type: Array,
-        default: []
+        default: () => []
       },
       systemId: {
         type: String,

@@ -18,7 +18,7 @@
         v-if="processGuideShow"
         type="set_group_approval_process"
         direction="left"
-        :style="processGuideStyle"
+        :cur-style="processGuideStyle"
         :flag="processGuideShow"
         :content="$t(`m.guide['创建审批流程']`)" />
       <header-nav

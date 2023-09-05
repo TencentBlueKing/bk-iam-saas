@@ -122,6 +122,7 @@
       :title="delActionDialogTitle"
       :tip="delActionDialogTip"
       :name="currentActionName"
+      :loading="batchQuitLoading"
       :related-action-list="delActionList"
       @on-after-leave="handleAfterDeleteLeaveAction"
       @on-cancel="handleCancelDelete"
@@ -174,6 +175,9 @@
       checkGroupList: {
         type: Array,
         default: () => []
+      },
+      totalCount: {
+        type: Number
       }
     },
     data () {
@@ -198,6 +202,7 @@
         curGroupId: '',
         sliderLoading: false,
         tableLoading: false,
+        batchQuitLoading: false,
         groupPermEmptyData: {
           type: '',
           text: '',
@@ -212,7 +217,7 @@
       };
     },
     computed: {
-      ...mapGetters(['user', 'externalSystemId']),
+      ...mapGetters(['user', 'externalSystemId', 'mainContentLoading']),
       isAdminGroup () {
         return (payload) => {
           if (payload) {
@@ -233,6 +238,11 @@
           //   this.initPageConf();
           //   this.curPageData = this.getDataByPage(this.pageConf.current);
           // }
+          if (this.pageConf.current === 1) {
+            this.pageConf = Object.assign(this.pageConf, { count: this.totalCount });
+            this.curPageData = [...v];
+            return;
+          }
           this.resetPagination();
         },
         immediate: true
@@ -302,11 +312,13 @@
        * @return {Array} 当前页数据
        */
       async getDataByPage () {
-        this.tableLoading = true;
         try {
           let url = '';
           let params = {};
           const { current, limit } = this.pageConf;
+          if (!this.mainContentLoading) {
+            this.tableLoading = true;
+          }
           if (this.isSearchPerm) {
             url = 'perm/getUserGroupSearch';
             params = {
@@ -352,7 +364,7 @@
           this.messageAdvancedError(e);
         } finally {
           this.tableLoading = false;
-          if (this.emptyData.tipType === 'search') {
+          if (this.isSearchPerm) {
             bus.$emit('on-perm-tab-count', { active: 'GroupPerm', count: this.pageConf.count });
           }
         }
@@ -381,23 +393,23 @@
                 (item) => item.id.toString() !== row.id.toString()
               );
             }
-            if (this.$refs.groupPermTableRef) {
-              this.$refs.groupPermTableRef.selection = [...this.currentSelectGroupList];
-              this.$refs.groupPermTableRef.showSelectionCount = false;
-              console.log(this.$refs.groupPermTableRef, this.$refs.groupPermTableRef.selection, 4444);
-            }
+            this.$nextTick(() => {
+              const selectionCount = document.getElementsByClassName('bk-page-selection-count');
+              if (this.$refs.groupPermTableRef && selectionCount) {
+                selectionCount[0].children[0].innerHTML = this.currentSelectGroupList.length;
+              }
+            });
             this.$emit('on-select-group', this.currentSelectGroupList);
           },
           all: () => {
-            const list = payload.filter(item => !this.currentSelectGroupList.includes(item.id.toString()));
             const tableList = _.cloneDeep(this.curPageData);
             const selectGroups = this.currentSelectGroupList.filter(item =>
               !tableList.map(v => v.id.toString()).includes(item.id.toString()));
-            this.currentSelectGroupList = [...selectGroups, ...list];
+            this.currentSelectGroupList = [...selectGroups, ...payload];
             this.$nextTick(() => {
-              if (this.$refs.groupPermTableRef) {
-                console.log(this.$refs.groupPermTableRef, 4444);
-                this.$refs.groupPermTableRef.selection = [...this.currentSelectGroupList];
+              const selectionCount = document.getElementsByClassName('bk-page-selection-count');
+              if (this.$refs.groupPermTableRef && selectionCount) {
+                selectionCount[0].children[0].innerHTML = this.currentSelectGroupList.length;
               }
             });
             this.$emit('on-select-group', this.currentSelectGroupList);
@@ -479,11 +491,7 @@
           });
           this.cancelDelete();
           this.messageSuccess(this.$t(`m.info['退出成功']`), 3000);
-          if (!this.groupPermEmptyData.tipType) {
-            this.$emit('refresh');
-          } else {
-            this.resetPagination();
-          }
+          this.refreshTableData();
         } catch (e) {
           this.deleteDialogConf.loading = false;
           console.error(e);
@@ -515,6 +523,7 @@
           this.messageWarn(this.$t(`m.perm['当前勾选项都为不可退出的用户组（唯一管理员不能退出）']`), 3000);
           return;
         }
+        this.batchQuitLoading = true;
         try {
           for (let i = 0; i < selectGroups.length; i++) {
             await this.$store.dispatch('perm/quitGroupPerm', {
@@ -525,16 +534,12 @@
           this.isShowDeleteDialog = false;
           this.currentSelectGroupList = [];
           this.messageSuccess(this.$t(`m.info['退出成功']`), 3000);
-          setTimeout(() => {
-            if (!this.groupPermEmptyData.tipType) {
-              this.$emit('refresh');
-            } else {
-              this.resetPagination();
-            }
-          }, 1000);
+          this.refreshTableData();
         } catch (e) {
           console.error(e);
           this.messageAdvancedError(e);
+        } finally {
+          this.batchQuitLoading = false;
         }
       },
 
@@ -568,6 +573,10 @@
       resetPagination () {
         this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10 });
         this.getDataByPage();
+      },
+
+      refreshTableData () {
+        this.isSearchPerm ? this.resetPagination() : this.$emit('refresh');
       }
     }
   };

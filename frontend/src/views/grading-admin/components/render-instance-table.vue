@@ -1,8 +1,7 @@
 <template>
   <div class="iam-grade-split-wrapper">
     <div :class="[
-           'iam-resource-expand',
-           extCls
+           'iam-resource-expand'
          ]"
       @click.stop="handleExpanded">
       <div class="iam-resource-header flex-between">
@@ -33,8 +32,6 @@
         :header-border="false"
         :cell-class-name="getCellClass"
         :empty-text="$t(`m.verify['请选择操作']`)"
-        @row-mouse-enter="handlerRowMouseEnter"
-        @row-mouse-leave="handlerRowMouseLeave"
         @filter-change="handleFilterChange">
         <bk-table-column :resizable="false" :label="$t(`m.common['操作']`)" width="280">
           <template slot-scope="{ row }">

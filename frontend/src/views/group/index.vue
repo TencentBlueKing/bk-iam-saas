@@ -298,6 +298,47 @@
         searchParams: {},
         searchList: [],
         searchValue: [],
+        searchData: [
+          {
+            id: 'name',
+            name: this.$t(`m.userGroup['用户组名']`),
+            default: true
+          },
+          {
+            id: 'id',
+            name: 'ID',
+            // validate (values, item) {
+            //     const validate = (values || []).every(_ => /^(\d*)$/.test(_.name))
+            //     return !validate ? '' : true
+            // }
+            default: true
+          },
+          {
+            id: 'description',
+            name: this.$t(`m.common['描述']`),
+            disabled: true
+          },
+          {
+            id: 'creator',
+            name: this.$t(`m.grading['创建人']`),
+            remoteMethod: this.handleRemoteRtx
+          },
+          {
+            id: 'system_id',
+            name: this.$t(`m.common['系统包含']`),
+            remoteMethod: this.handleRemoteSystem
+          },
+          {
+            id: 'username',
+            name: this.$t(`m.common['用户包含']`),
+            remoteMethod: this.handleRemoteRtx
+          },
+          {
+            id: 'department_id',
+            name: this.$t(`m.common['组织ID包含']`),
+            disabled: true
+          }
+        ],
         currentSelectList: [],
         isShowDeleteDialog: false,
         deleteLoading: false,
@@ -404,47 +445,6 @@
     },
     async created () {
       this.curRole = this.user.role.type || 'staff';
-      this.searchData = [
-        {
-          id: 'name',
-          name: this.$t(`m.userGroup['用户组名']`),
-          default: true
-        },
-        {
-          id: 'id',
-          name: 'ID',
-          // validate (values, item) {
-          //     const validate = (values || []).every(_ => /^(\d*)$/.test(_.name))
-          //     return !validate ? '' : true
-          // }
-          default: true
-        },
-        {
-          id: 'description',
-          name: this.$t(`m.common['描述']`),
-          disabled: true
-        },
-        {
-          id: 'creator',
-          name: this.$t(`m.grading['创建人']`),
-          remoteMethod: this.handleRemoteRtx
-        },
-        {
-          id: 'system_id',
-          name: this.$t(`m.common['系统包含']`),
-          remoteMethod: this.handleRemoteSystem
-        },
-        {
-          id: 'username',
-          name: this.$t(`m.common['用户包含']`),
-          remoteMethod: this.handleRemoteRtx
-        },
-        {
-          id: 'department_id',
-          name: this.$t(`m.common['组织ID包含']`),
-          disabled: true
-        }
-      ];
       this.searchParams = this.$route.query;
       this.setCurrentQueryCache(this.refreshCurrentQuery());
       const isObject = (payload) => {

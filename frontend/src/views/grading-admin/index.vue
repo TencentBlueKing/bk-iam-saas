@@ -28,17 +28,13 @@
           :value="searchList"
           :placeholder="$t(`m.levelSpace['输入空间名称、管理员名称进行搜索']`)"
           style="width: 500px"
-          :quick-search-method="quickSearchMethod"
         />
       </div>
     </render-search>
     <bk-table
       ref="spaceTable"
       size="small"
-      :ext-cls="[
-        'grading-admin-table',
-        { 'search-manage-table': isFilter }
-      ]"
+      :ext-cls="isFilter ? 'grading-admin-table search-manage-table' : 'grading-admin-table'"
       :data="tableList"
       :max-height="tableHeight"
       :class="{ 'set-border': tableLoading }"

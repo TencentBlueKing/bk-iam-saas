@@ -170,7 +170,6 @@
           :rows="5"
           :ext-cls="isShowReasonError ? 'join-reason-error' : ''"
           v-model="reason"
-          @input="checkReason"
         />
       </section>
       <p class="reason-empty-error" v-if="isShowReasonError">{{ $t(`m.verify['理由不可为空']`) }}</p>

@@ -45,10 +45,7 @@
     <bk-table
       ref="spaceTable"
       size="small"
-      :ext-cls="[
-        'level-manage-table',
-        { 'search-manage-table': isFilter }
-      ]"
+      :ext-cls="isFilter ? 'level-manage-table search-manage-table' : 'level-manage-table'"
       :data="tableList"
       :max-height="tableHeight"
       :cell-class-name="getCellClass"

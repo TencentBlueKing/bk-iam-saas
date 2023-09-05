@@ -75,7 +75,6 @@
             :empty-text="emptyData.text"
             :tip-text="emptyData.tip"
             :tip-type="emptyData.tipType"
-            @on-clear="handleEmptyClear"
             @on-refresh="handleEmptyRefresh"
           />
         </template>
@@ -264,6 +263,10 @@
           console.error(e);
           this.messageAdvancedError(e);
         }
+      },
+
+      handleEmptyRefresh () {
+        this.fetchSystemManager();
       }
     }
   };

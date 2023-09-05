@@ -12,7 +12,7 @@
     <section
       :class="['process-select-wrapper', { 'is-focus': isToggle }]"
       @click.stop="handleToogleSelect">
-      <span class="title">{{ $t(`m.approvalProcess['默认审批流程']`) + '：' }}</span>
+      <span class="title">{{ $t(`m.approvalProcess['默认审批流程']`) + ': ' }}</span>
       <!-- eslint-disable max-len -->
       <bk-select
         :value="value"
@@ -52,7 +52,7 @@
         default: ''
       },
       curValue: {
-        type: Number,
+        type: [Number, String],
         default: -1
       },
       isOpen: {
