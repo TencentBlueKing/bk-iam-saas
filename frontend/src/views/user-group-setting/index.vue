@@ -15,6 +15,7 @@
         <bk-button
           size="small"
           theme="primary"
+          :loading="submitLoading"
           @click="handleSaveSet"
         >
           {{ $t(`m.common['保存']`) }}
@@ -31,7 +32,8 @@
       return {
         formData: {
           apply_disable: false
-        }
+        },
+        submitLoading: false
       };
     },
     async created () {
@@ -51,6 +53,7 @@
       },
       
       async handleSaveSet () {
+        this.submitLoading = true;
         try {
           const { code } = await this.$store.dispatch('userGroupSetting/editUserGroupSetConfig', this.formData);
           if (code === 0) {
@@ -59,6 +62,8 @@
         } catch (e) {
           console.error(e);
           this.messageAdvancedError(e);
+        } finally {
+          this.submitLoading = false;
         }
       }
     }
