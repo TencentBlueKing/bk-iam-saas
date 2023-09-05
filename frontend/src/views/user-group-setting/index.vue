@@ -80,7 +80,8 @@
         box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, .1);
         font-size: 14px;
         &-title {
-          padding-bottom: 10px;
+          padding-bottom: 20px;
+          font-size: 15px;
         }
         &-button {
           margin-top: 30px;
