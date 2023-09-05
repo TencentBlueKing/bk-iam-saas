@@ -10,6 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 import logging
 from collections import defaultdict
+from copy import deepcopy
 from itertools import groupby
 from typing import Any, Dict, List, Optional, Tuple, Type
 
@@ -709,10 +710,8 @@ class ApplicationBiz:
             # 组装外部传入的itsm单据数据
             content: Optional[Dict[str, Any]] = None
             if content_template and group_content:
-                content = {
-                    "schemes": content_template["schemes"],
-                    "form_data": [group_content[str(_id)] for _id in group_ids],
-                }
+                content = deepcopy(content_template)
+                content["form_data"][0]["value"] = [group_content[str(_id)] for _id in group_ids]
 
             new_data_list.append((application_data, process, content))
 
