@@ -17,7 +17,7 @@
         <iam-search-select
           style="width: 420px"
           :data="searchData"
-          :value="searchValue || []"
+          :values="searchValue"
           :quick-search-method="quickSearchMethod"
           @on-change="handleSearch"
         />
@@ -269,7 +269,6 @@
           }
         }
       }
-      console.log(this.searchValue, 454);
     },
     methods: {
       async fetchPageData () {
@@ -466,7 +465,6 @@
         this.emptyData.tipType = 'search';
         this.resetPagination();
         this.fetchTemplateList(true);
-        console.log(this.searchValue);
       },
 
       handleRelateGroup (payload) {

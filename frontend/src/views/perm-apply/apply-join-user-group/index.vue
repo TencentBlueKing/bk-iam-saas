@@ -979,15 +979,14 @@
             ...this.searchParams,
             limit,
             offset: limit * (current - 1),
-            resource_instances: resourceInstances || []
+            resource_instances: resourceInstances || [],
+            apply_disable: false
         };
         try {
           const { code, data } = await this.$store.dispatch('permApply/getJoinGroupSearch', params);
           const { count, results } = data;
           this.pagination.count = count || 0;
-          // 过滤不可被申请的用户组
-          const applyUserGroups = results && results.filter(item => !item.apply_disable);
-          this.tableList.splice(0, this.tableList.length, ...(applyUserGroups || []));
+          this.tableList.splice(0, this.tableList.length, ...(results || []));
           this.emptyData.tipType = 'search';
           this.$nextTick(() => {
             const currentSelectedGroups = this.currentSelectedGroups.length
@@ -1029,18 +1028,16 @@
         // 删除接口无用字段
         delete this.searchParams.current;
         const params = {
-            // ...this.applyGroupData,
             ...this.searchParams,
             limit,
-            offset: limit * (current - 1)
+            offset: limit * (current - 1),
+            apply_disable: false
         };
         try {
           const { code, data } = await this.$store.dispatch('userGroup/getUserGroupList', params);
           const { count, results } = data;
           this.pagination.count = count || 0;
-          // 过滤不可被申请的用户组
-          const applyUserGroups = results && results.filter(item => !item.apply_disable);
-          this.tableList.splice(0, this.tableList.length, ...(applyUserGroups || []));
+          this.tableList.splice(0, this.tableList.length, ...(results || []));
           this.$nextTick(() => {
             const currentSelectedGroups = this.currentSelectedGroups.length
               ? this.currentSelectedGroups.map(item => item.id.toString()) : [];
