@@ -225,7 +225,9 @@ class ManagementGroupApplicationCreateSLZ(ManagementGroupIDsSLZ, ExpiredAtSLZ, R
                 raise serializers.ValidationError({"content_template": ["content_template中必须包含schemes和form_data"]})
             if (
                 not isinstance(data["content_template"]["form_data"], list)
-                or len(data["content_template"]["form_data"]) != 0
+                or len(data["content_template"]["form_data"]) != 1
+                or "value" not in data["content_template"]["form_data"][0]
+                or not isinstance(data["content_template"]["form_data"][0]["value"], list)
             ):
                 raise serializers.ValidationError({"content_template": ["content_template中必须包含form_data且为空数组"]})
 
