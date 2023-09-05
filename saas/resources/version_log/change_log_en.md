@@ -1,3 +1,26 @@
+<!-- 2023-09-05 -->
+# V1.10.13 Version Update Log
+
+### New Features
+* Added "not available for application" attribute setting to user groups
+
+### Optimization Updates
+* Synchronized the latest message specification and searchSelect specification across all platforms
+* Users can now exit multiple user groups at once
+* User group permission renewal page now displays description, administrator, and management space data
+* Added member addition, member copying, and organizational structure functions to user groups
+* Added search function to "My Permissions" page
+* Removed query type filter from resource permission management, default query type is now instance permission
+
+### Bug Fixes
+* Fixed issue where clicking on renewal email link for Blue Shield project administrators resulted in blank webpage content
+* Fixed issue where user group member renewal effective time stamp calculation was incorrect
+* Fixed issue where Blue Shield permission transfer check for "disabled" was incorrect, added pagination to user group permission transfer and administrator transfer
+* Fixed issue where modifying project name still resulted in timeout
+* Fixed issue where user application for multiple groups resulted in error due to long title.
+
+---
+
 <!-- 2023-07-31 -->
 # V1.10.12 ChangeLog
 
