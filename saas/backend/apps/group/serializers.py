@@ -359,3 +359,4 @@ class GroupSearchSLZ(serializers.Serializer):
     resource_instances = serializers.ListField(
         label="资源实例", required=False, child=ResourceInstancesSLZ(label="资源实例信息"), default=list
     )
+    apply_disable = serializers.BooleanField(label="是否不可申请", required=False)
