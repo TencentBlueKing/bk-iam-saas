@@ -2,7 +2,7 @@
   <div class="iam-user-group-set-wrapper">
     <div class="iam-user-group-set-item">
       <div class="iam-user-group-set-item-title">
-        {{ $t(`m.userGroupSetting['用户组属性']`) }}
+        {{ $t(`m.userGroup['用户组属性']`) }}
       </div>
       <div class="iam-user-group-set-item-checkbox">
         <bk-checkbox
