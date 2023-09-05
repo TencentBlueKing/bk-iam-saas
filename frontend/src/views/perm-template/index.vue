@@ -4,7 +4,7 @@
       <iam-guide
         type="create_perm_template"
         direction="left"
-        :style="{ top: curLanguageIsCn ? '-20px' : '-32px', left: '80px' }"
+        :cur-style="{ top: curLanguageIsCn ? '-20px' : '-32px', left: '80px' }"
         :content="$t(`m.guide['创建模板']`)"
       />
       <bk-button theme="primary" @click="handleCreate" data-test-id="permTemplate_btn_create">
@@ -17,7 +17,7 @@
         <iam-search-select
           style="width: 420px"
           :data="searchData"
-          :value="searchValue"
+          :values="searchValue"
           :quick-search-method="quickSearchMethod"
           @on-change="handleSearch"
         />
@@ -155,6 +155,28 @@
         },
         currentBackup: 1,
         searchParams: {},
+        searchData: [
+          {
+            id: 'name',
+            name: this.$t(`m.permTemplate['模板名']`),
+            default: true
+          },
+          {
+            id: 'system_id',
+            name: this.$t(`m.common['所属系统']`),
+            remoteMethod: this.handleRemoteSystem
+          },
+          {
+            id: 'creator',
+            name: this.$t(`m.grading['创建人']`),
+            remoteMethod: this.handleRemoteRtx
+          },
+          {
+            id: 'description',
+            name: this.$t(`m.common['描述']`),
+            disabled: true
+          }
+        ],
         searchList: [],
         searchValue: [],
         currentSelectList: [],
@@ -200,28 +222,6 @@
       }
     },
     async created () {
-      this.searchData = [
-        {
-          id: 'name',
-          name: this.$t(`m.permTemplate['模板名']`),
-          default: true
-        },
-        {
-          id: 'system_id',
-          name: this.$t(`m.common['所属系统']`),
-          remoteMethod: this.handleRemoteSystem
-        },
-        {
-          id: 'creator',
-          name: this.$t(`m.grading['创建人']`),
-          remoteMethod: this.handleRemoteRtx
-        },
-        {
-          id: 'description',
-          name: this.$t(`m.common['描述']`),
-          disabled: true
-        }
-      ];
       this.searchParams = this.$route.query;
       this.setCurrentQueryCache(this.refreshCurrentQuery());
       const isObject = (payload) => {
@@ -352,7 +352,7 @@
           confirmFn: async () => {
             try {
               await this.$store.dispatch('permTemplate/deleteTemplate', { id });
-              this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
+              this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
               this.resetPagination();
               this.fetchTemplateList(true);
               return true;
@@ -383,15 +383,9 @@
         } catch (e) {
           console.error(e);
           this.tableList = [];
-          const { code, data, message, statusText } = e;
+          const { code } = e;
           this.emptyData = formatCodeData(code, this.emptyData);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: message || data.msg || statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.tableLoading = false;
         }
@@ -412,18 +406,12 @@
         this.addGroupLoading = true;
         try {
           await this.$store.dispatch('permTemplate/addTemplateMember', params);
-          this.messageSuccess(this.$t(`m.info['关联用户组成功']`), 2000);
+          this.messageSuccess(this.$t(`m.info['关联用户组成功']`), 3000);
           this.handleCancelSelect();
           this.fetchTemplateList(true);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.addGroupLoading = false;
         }

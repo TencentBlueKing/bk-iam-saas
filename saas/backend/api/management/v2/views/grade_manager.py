@@ -22,6 +22,7 @@ from backend.api.management.v2.serializers import ManagementGradeManagerCreateSL
 from backend.apps.role.audit import RoleCreateAuditProvider, RoleDeleteAuditProvider, RoleUpdateAuditProvider
 from backend.apps.role.models import Role, RoleSource
 from backend.apps.role.serializers import RoleIdSLZ
+from backend.apps.role.tasks import sync_subset_manager_subject_scope
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.audit.constants import AuditSourceType
 from backend.biz.group import GroupBiz
@@ -147,6 +148,9 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
 
             # 更新
             self.biz.update(role, role_info, request.user.username)
+
+        if role.type == RoleType.GRADE_MANAGER.value and "subject_scopes" in role_info.get_partial_fields():
+            sync_subset_manager_subject_scope.delay(role.id)
 
         # 更新同步权限用户组信息
         self.group_biz.update_sync_perm_group_by_role(

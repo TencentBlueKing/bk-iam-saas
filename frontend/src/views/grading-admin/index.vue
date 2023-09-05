@@ -28,17 +28,13 @@
           :value="searchList"
           :placeholder="$t(`m.levelSpace['输入空间名称、管理员名称进行搜索']`)"
           style="width: 500px"
-          :quick-search-method="quickSearchMethod"
         />
       </div>
     </render-search>
     <bk-table
       ref="spaceTable"
       size="small"
-      :ext-cls="[
-        'grading-admin-table',
-        { 'search-manage-table': isFilter }
-      ]"
+      :ext-cls="isFilter ? 'grading-admin-table search-manage-table' : 'grading-admin-table'"
       :data="tableList"
       :max-height="tableHeight"
       :class="{ 'set-border': tableLoading }"
@@ -517,15 +513,9 @@
           this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
         } catch (e) {
           console.error(e);
-          const { code, data, message, statusText } = e;
+          const { code } = e;
           this.emptyData = formatCodeData(code, this.emptyData);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: message || data.msg || statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.tableLoading = false;
         }
@@ -546,17 +536,11 @@
           this.emptyData = formatCodeData(code, this.emptyData, this.subTableList.length === 0);
         } catch (e) {
           console.error(e);
-          const { code, data, message, statusText } = e;
+          const { code } = e;
           row.children = [];
           this.subTableList = [];
           this.emptyData = formatCodeData(code, this.emptyData);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: message || data.msg || statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.curData = row;
           this.subLoading = false;
@@ -586,16 +570,10 @@
           );
         } catch (e) {
           console.error(e);
-          const { code, data, message, statusText } = e;
+          const { code } = e;
           this.emptyData = formatCodeData(code, this.emptyData);
           this.tableList = [];
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: message || data.msg || statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.tableLoading = false;
         }
@@ -611,7 +589,7 @@
         };
         try {
           await this.$store.dispatch(url, params);
-          this.messageSuccess(this.$t(`m.info['编辑成功']`), 2000);
+          this.messageSuccess(this.$t(`m.info['编辑成功']`), 3000);
           if (name || members) {
             const typeMap = {
               'rating_manager': async () => {
@@ -635,12 +613,7 @@
           });
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
             
@@ -797,19 +770,13 @@
         try {
           await this.$store.dispatch('role/deleteRatingManager', { id: this.curId });
           await this.$store.dispatch('roleList');
-          this.messageSuccess(this.$t(`m.info['退出成功']`), 2000);
+          this.messageSuccess(this.$t(`m.info['退出成功']`), 3000);
           this.isShowConfirmDialog = false;
           this.resetPagination();
           this.fetchGradingAdmin(true);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.confirmLoading = false;
         }

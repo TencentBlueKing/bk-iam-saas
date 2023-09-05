@@ -109,15 +109,9 @@
           this.emptyData = formatCodeData(code, this.emptyData, this.onePerm === 0);
         } catch (e) {
           console.error(e);
-          const { code, data, message, statusText } = e;
+          const { code } = e;
           this.emptyData = formatCodeData(code, this.emptyData);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: message || data.msg || statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.pageLoading = false;
         }
@@ -170,7 +164,7 @@
                 const { code } = await this.$store.dispatch('permApply/deleteSubjectPerm', deleParams);
                 if (code === 0) {
                   this.systemList.splice(sysIndex, 1);
-                  this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
+                  this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
                   if (!this.systemList.length) {
                     this.emptyData = formatCodeData(0, this.emptyData, true);
                   }
@@ -179,11 +173,7 @@
               }
             } catch (e) {
               console.error(e);
-              this.bkMessageInstance = this.$bkMessage({
-                limit: 1,
-                theme: 'error',
-                message: e.message || e.data.msg || e.statusText
-              });
+              this.messageAdvancedError(e);
               return false;
             }
           }

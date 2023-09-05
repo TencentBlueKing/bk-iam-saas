@@ -298,7 +298,7 @@
         type: Array,
         default: () => []
       },
-      originalList: {
+      originalTableList: {
         type: Array,
         default: () => []
       },
@@ -360,7 +360,9 @@
           html: `<p>${this.$t("m.info['添加多组实例可以实现分批鉴权的需求']")}</p><p>${this.$t("m.info['比如，root账号只能登陆主机1，user账号只能登陆主机2，root账号不能登陆主机2，user账号不能登陆主机1']")}</p><p>${this.$t("m.info['这时可以添加两组实例，第一组实例为[root，主机1]，第二组实例为[user，主机2]来实现']")}</p>`
         },
         selectedIndex: 0,
-        instanceKey: ''
+        instanceKey: '',
+        resourceInstanceEffectTimeTitle: '',
+        originalList: []
       };
     },
     computed: {
@@ -506,6 +508,12 @@
             this.curAggregateResourceType = {};
             this.needEmitFlag = false;
           }
+        },
+        immediate: true
+      },
+      originalTableList: {
+        handler (value) {
+          this.originalList = [...value];
         },
         immediate: true
       }
@@ -897,13 +905,7 @@
           this.handleRelatedAction(res.data);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.sliderLoading = false;
         }

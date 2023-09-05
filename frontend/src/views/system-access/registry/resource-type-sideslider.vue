@@ -193,13 +193,7 @@
           this.resourceTypeListBackup = JSON.parse(JSON.stringify(resourceTypeList));
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.isLoading = false;
         }
@@ -252,16 +246,12 @@
               item.title = item.name;
               item.isEdit = false;
               item.isNewAdd = false;
-              this.messageSuccess(this.$t(`m.access['保存资源类型成功']`), 1000);
+              this.messageSuccess(this.$t(`m.access['保存资源类型成功']`), 3000);
               this.$emit('on-refresh-system-list', 'resourceType');
               this.addValidatorRules();
             } catch (e) {
               console.error(e);
-              this.bkMessageInstance = this.$bkMessage({
-                limit: 1,
-                theme: 'error',
-                message: e.message || e.data.msg || e.statusText
-              });
+              this.messageAdvancedError(e);
             } finally {
               item.submitLoading = false;
               this.resourceTypeListBackup = JSON.parse(JSON.stringify(this.resourceTypeList));
@@ -313,11 +303,7 @@
               return true;
             } catch (e) {
               console.error(e);
-              me.bkMessageInstance = me.$bkMessage({
-                limit: 1,
-                theme: 'error',
-                message: e.message || e.data.msg || e.statusText
-              });
+              me.messageAdvancedError(e);
               return false;
             } finally {
               item.submitLoading = false;

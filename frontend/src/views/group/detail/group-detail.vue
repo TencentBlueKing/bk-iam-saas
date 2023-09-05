@@ -90,7 +90,8 @@
           name: '',
           id: '',
           created_time: '',
-          description: ''
+          description: '',
+          apply_disable: false
         },
         pagination: {
           current: 1,
@@ -171,12 +172,14 @@
         if (this.$parent.fetchDetail) {
           try {
             const { data } = await this.$parent.fetchDetail(payload);
-            const { id, name, created_time, description, readonly, attributes } = data;
+            const { id, name, created_time, description, readonly, attributes, apply_disable } = data;
             this.basicInfo = Object.assign({}, {
               id,
               name,
               created_time,
-              description
+              description,
+              // eslint-disable-next-line camelcase
+              apply_disable: apply_disable || false
             });
             this.readOnly = readonly;
             this.groupAttributes = Object.assign(this.groupAttributes, attributes);
@@ -187,13 +190,7 @@
             this.$store.commit('setHeaderTitle', name);
           } catch (e) {
             console.error(e);
-            this.bkMessageInstance = this.$bkMessage({
-              limit: 1,
-              theme: 'error',
-              message: e.message || e.data.msg || e.statusText,
-              ellipsisLine: 2,
-              ellipsisCopy: true
-            });
+            this.messageAdvancedError(e);
           } finally {
             this.isLoading = false;
             this.$emit('on-init', false);
@@ -211,28 +208,28 @@
       },
 
       handleUpdateGroup (payload) {
-        const { name, description } = this.basicInfo;
+        const { name, description, apply_disable } = this.basicInfo;
         const params = {
           name: name.trim(),
           description,
                     ...payload,
-          id: this.groupId
+          id: this.groupId,
+          apply_disable
         };
         return this.$store.dispatch('userGroup/editUserGroup', params)
           .then(() => {
-            this.messageSuccess(this.$t(`m.info['编辑成功']`), 2000);
-            this.basicInfo.name = params.name;
-            this.basicInfo.description = params.description;
+            this.messageSuccess(this.$t(`m.info['编辑成功']`), 3000);
+            this.basicInfo = Object.assign(this.basicInfo, {
+              name: params.name,
+              description: params.description,
+              apply_disable: params.apply_disable
+            });
             const headerTitle = `${this.basicInfo.name}(#${this.id})`;
             window.localStorage.setItem('iam-header-title-cache', headerTitle);
             this.$store.commit('setHeaderTitle', headerTitle);
           }, (e) => {
             console.warn('error');
-            this.bkMessageInstance = this.$bkMessage({
-              limit: 1,
-              theme: 'error',
-              message: e.message || e.data.msg || e.statusText
-            });
+            this.messageAdvancedError(e);
           });
       }
     }
@@ -243,7 +240,8 @@
         position: relative;
         min-height: calc(100vh - 210px);
         .user-group-member {
-            margin-bottom: 0 !important;
+            /* margin-bottom: 0 !important; */
+            margin-bottom: 50px;
         }
         .basic-info-wrapper {
             .content {

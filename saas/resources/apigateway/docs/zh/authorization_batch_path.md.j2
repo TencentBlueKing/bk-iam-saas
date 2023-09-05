@@ -12,41 +12,41 @@
 | 字段 |  类型 |是否必须  | 描述  |
 |:---|:---|:---|:---|
 | asynchronous |  布尔  | 是   | 是否异步调用, 默认 否, 当前只支持同步 |
-| operate |  字符串   | 是   | grant 或 revoke |
-| system |  字符串  | 是   | 系统 id |
-| actions |  数组[对象]   | 是   | 操作 |
-| subject |  字符串   | 是   | 授权对象 |
-| resources |  数组[对象]   | 是   | 资源拓扑, 资源类型的顺序必须操作注册时的顺序一致|
+| operate |  string   | 是   | grant 或 revoke |
+| system |  string  | 是   | 系统 id |
+| actions |  Arrary[Object]   | 是   | 操作 |
+| subject |  Object   | 是   | 授权对象 |
+| resources |  Arrary[Object]   | 是   | 资源拓扑, 资源类型的顺序必须操作注册时的顺序一致|
 | expired_at | int | 否 | body | 过期时间戳(单位秒)，即用户在 expired_at 后将不具有该权限 |
 
 actions
 
 | 字段 |  类型 |是否必须  | 描述  |
 |:---|:---|:---|:---|
-| id    |  字符串  | 是   | 操作 ID |
+| id    |  string  | 是   | 操作 ID |
 
 subject
 
 | 字段 |  类型 |是否必须  | 描述  |
 |:---|:---|:---|:---|
-| type    |  字符串  | 是   | 授权对象类型, 当前只支持 user |
-| id    |  字符串  | 是   | 授权对象 ID |
+| type    |  string  | 是   | 授权对象类型, 当前只支持 user |
+| id    |  string  | 是   | 授权对象 ID |
 
 resources
 
 | 字段 |  类型 |是否必须  | 描述  |
 |:---|:---|:---|:---|
-| system |  字符串  | 是   | 资源系统 ID |
-| type |  字符串  | 是   | 资源类型 ID |
-| paths | 数组[[对象]] | 是 | 批量资源拓扑，`最多1000个` |
+| system |  string  | 是   | 资源系统 ID |
+| type |  string  | 是   | 资源类型 ID |
+| paths | Arrary[[Object]] | 是 | 批量资源拓扑，`最多1000个` |
 
 resources.paths
 
 | 字段 |  类型 |是否必须  | 描述  |
 |:---|:---|:---|:---|
-| type |  字符串  | 是   | 拓扑节点类型 ID |
-| id | 字符串 | 是 | 拓扑节点实例 ID |
-| name | 字符串 | 是 | 拓扑节点实例名称 |
+| type |  string  | 是   | 拓扑节点类型 ID |
+| id | string | 是 | 拓扑节点实例 ID |
+| name | string | 是 | 拓扑节点实例名称 |
 
 #### Request
 
@@ -92,8 +92,8 @@ resources.paths
 
 | 字段      | 类型      | 描述      |
 |:---|:---|:---|
-| policy_id   | 数值     | 权限策略 id |
-| action   | 对象     | 操作 |
+| policy_id   | int     | 权限策略 id |
+| action   | Object     | 操作 |
 
 ```json
 {

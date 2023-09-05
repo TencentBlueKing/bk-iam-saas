@@ -7,7 +7,7 @@
         :controllable="controllableSteps.controllable"
         :cur-step.sync="controllableSteps.curStep"
         :before-change="beforeStepChanged"
-        @step-changed="stepChanged">
+      >
       </bk-steps>
       <smart-action class="content-wrapper">
         <template v-if="actionList.length">
@@ -414,13 +414,7 @@
           }
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -547,13 +541,7 @@
           this.actionListBackup = JSON.parse(JSON.stringify(actionList));
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -702,13 +690,7 @@
           }
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -751,13 +733,7 @@
           }
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -833,7 +809,7 @@
                     
           // 依赖实例时才需要校验
           if (item.related_resource_types.filter(t => t.selection_mode && !t.id).length) {
-            this.messageError(this.$t(`m.access['资源实例选择方式至少选择一个']`), 1000);
+            this.messageWarn(this.$t(`m.access['资源实例选择方式至少选择一个']`), 3000);
             return;
           }
 
@@ -847,7 +823,7 @@
           ).length;
 
           if (invalidLength) {
-            this.messageError(this.$t(`m.access['通过拓扑选择时必须要选择实例视图']`), 1000);
+            this.messageWarn(this.$t(`m.access['通过拓扑选择时必须要选择实例视图']`), 3000);
             return;
           }
 
@@ -901,14 +877,10 @@
             item.title = item.name;
             item.isEdit = false;
             item.isNewAdd = false;
-            this.messageSuccess(this.$t(`m.access['保存操作成功']`), 1000);
+            this.messageSuccess(this.$t(`m.access['保存操作成功']`), 3000);
           } catch (e) {
             console.error(e);
-            this.bkMessageInstance = this.$bkMessage({
-              limit: 1,
-              theme: 'error',
-              message: e.message || e.data.msg || e.statusText
-            });
+            this.messageAdvancedError(e);
           } finally {
             item.loading = false;
           }
@@ -978,16 +950,11 @@
               actionList.splice(0, 0, ...me.actionList);
               actionList.splice(index, 1);
               me.actionList.splice(0, me.actionList.length, ...actionList);
-
               me.messageSuccess(me.$t(`m.access['删除操作成功']`), 1000);
               return true;
             } catch (e) {
               console.error(e);
-              me.bkMessageInstance = me.$bkMessage({
-                limit: 1,
-                theme: 'error',
-                message: e.message || e.data.msg || e.statusText
-              });
+              me.messageAdvancedError(e);
               return false;
             } finally {
               item.loading = false;
@@ -1010,7 +977,7 @@
        */
       async handleSubmit (routerName) {
         if (!this.actionList.length) {
-          this.messageError(this.$t(`m.access['至少要注册一个操作']`), 1000);
+          this.messageWarn(this.$t(`m.access['至少要注册一个操作']`), 3000);
           return;
         }
 

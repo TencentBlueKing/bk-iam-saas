@@ -21,7 +21,7 @@
         :loading="selectLoading"
         searchable
         :remote-method="handleRemoteValue"
-        @toggle="handleToggle(...arguments, $index, row)">
+        @toggle="handleToggle(...arguments)">
         <bk-option v-for="option in gradeManagerList"
           :key="option.id"
           :id="option.id"
@@ -92,7 +92,7 @@
         default: false
       },
       groupIds: {
-        type: Number,
+        type: Array,
         default: () => []
       }
     },
@@ -151,16 +151,13 @@
           }
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.selectLoading = false;
         }
       },
 
-      handleToggle (val, index, payload) {
+      handleToggle (val) {
         const curOptionDom = this.$refs.gradeManagerSelectRef.$refs.optionList;
         curOptionDom.addEventListener('scroll', this.handleScroll);
         if (!val) {
@@ -221,7 +218,7 @@
             group_ids: this.groupIds,
             role_id: this.curGradeManager
           });
-          this.messageSuccess(this.$t(`m.info['转出成功']`), 1000);
+          this.messageSuccess(this.$t(`m.info['转出成功']`), 3000);
           this.$emit('on-success');
         } catch (e) {
           console.error(e);
@@ -230,11 +227,7 @@
             this.isShowWarnMessage = true;
             this.warnMessage = message;
           } else {
-            this.bkMessageInstance = this.$bkMessage({
-              limit: 1,
-              theme: 'error',
-              message
-            });
+            this.messageAdvancedError(e);
           }
         } finally {
           this.loading = false;

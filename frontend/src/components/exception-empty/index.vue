@@ -5,7 +5,7 @@
     name: 'ExceptionEmpty',
     props: {
       type: {
-        type: String,
+        type: [String, Number],
         default: 'empty'
       },
       scene: {
@@ -87,22 +87,26 @@
       }
     },
     render () {
+      const props = {
+        ...this.$attrs
+      };
+      const on = {
+        ...this.$listeners
+      };
       return (
-                <div>
-                    <bk-exception
-                        ext-cls={[
-                          'exception-wrap',
-                          { 'exception-no-wrap': !this.type }
-                        ]}
-                        type={this.type}
-                        scene={this.scene}
-                        v-bind="$attrs"
-                        v-on="$listeners"
-                    >
-                        <span>{ il8n('common', this.emptyText) }</span>
-                        {this.fetchDefaultOperation(this.tipType)}
-                    </bk-exception>
-                </div>
+        <div>
+            <bk-exception
+                ext-cls={!this.type ? 'exception-wrap exception-no-wrap' : 'exception-wrap'}
+                type={this.type || 'empty'}
+                scene={this.scene}
+                { ...{ props }}
+                { ...{ on }}
+                
+            >
+                <span>{ il8n('common', this.emptyText) }</span>
+                {this.fetchDefaultOperation(this.tipType)}
+            </bk-exception>
+        </div>
       );
     }
   };
@@ -134,7 +138,7 @@
 /deep/ .bk-exception {
     width: 100%;
     &-img {
-      width: 200px !important;
+      width: 180px !important;
       .exception-image {
         width: 100% !important;
         height: 100% !important;
@@ -153,6 +157,9 @@
 /deep/ .exception-no-wrap {
     .bk-exception-img {
       width: 0 !important;
+    }
+    .bk-exception-text {
+      display: none;
     }
 }
 </style>

@@ -128,6 +128,7 @@
       return {
         groupId: '',
         isLoading: false,
+        linearActionList: [],
         groupSystemList: [],
         authorizationData: {},
         groupSystemListLength: '',
@@ -222,15 +223,9 @@
           this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
         } catch (e) {
           console.error(e);
-          const { code, data, message, statusText } = e;
+          const { code } = e;
           this.emptyData = formatCodeData(code, this.emptyData);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: message || data.msg || statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.isLoading = false;
           this.$emit('on-init', false);
@@ -318,13 +313,7 @@
           }
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           groupSystem.loading = false;
           if (!this.externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle) {
@@ -367,13 +356,7 @@
           this.authorizationData[id] = res.data.filter(item => item.id !== '*');
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -417,13 +400,7 @@
           this.handleActionLinearData();
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -488,13 +465,7 @@
           this.$set(item, 'tableDataBackup', tableDataBackup);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           item.loading = false;
         }
@@ -525,13 +496,7 @@
           console.log('itemTableData', item);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           item.loading = false;
         }
@@ -561,13 +526,7 @@
           subItem.isEdit = false;
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           subItem.editLoading = false;
         }
@@ -613,13 +572,7 @@
           }
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           subItem.deleteLoading = false;
         }
@@ -644,13 +597,7 @@
           this.handleInit();
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           if (flag) {
             subItem.deleteLoading = false;
@@ -667,6 +614,11 @@
             ids: data.ids ? data.ids.join(',') : data.policy_id
           }
         }, item, {}, false);
+      },
+      
+      handleEmptyRefresh () {
+        this.handleInit();
+        this.fetchDetail(this.groupId);
       }
     }
   };

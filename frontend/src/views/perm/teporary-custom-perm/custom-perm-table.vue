@@ -323,13 +323,7 @@
           });
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.initRequestQueue.shift();
         }
@@ -393,17 +387,11 @@
           window.changeAlert = false;
           this.isShowSideslider = false;
           this.resetDataAfterClose();
-          this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
+          this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
           this.handleRefreshData();
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           payload && payload.hide();
         }
@@ -556,7 +544,7 @@
           if (this.resourceGrouParams.id && this.resourceGrouParams.resourceGroupId) { // 表示删除的是资源组
             await this.$store.dispatch('permApply/deleteRosourceGroupPerm', this.resourceGrouParams);
             this.fetchData(this.params);
-            this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
+            this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
           } else {
             await this.$store.dispatch('permApply/deleteTemporaryPerm', {
               policyIds: this.curDeleteIds,
@@ -566,18 +554,12 @@
             if (index > -1) {
               this.policyList.splice(index, 1);
             }
-            this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
+            this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
             this.$emit('after-delete', this.policyList.length);
           }
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.deleteDialog.loading = false;
           this.deleteDialog.visible = false;

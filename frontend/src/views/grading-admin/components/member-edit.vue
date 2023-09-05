@@ -132,13 +132,7 @@
           this.userInfo = await this.$store.dispatch('userInfo');
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
       // 设置只读
@@ -167,7 +161,7 @@
         this.isEditable = false;
         if (!this.isEditable && this.newVal.length < 1) {
           this.newVal = [...this.value].map(e => e.username);
-          this.messageError(this.$t(`m.verify['管理员不能为空']`), 2000);
+          this.messageWarn(this.$t(`m.verify['管理员不能为空']`), 3000);
           return;
         }
         this.deleteList = [];
@@ -196,7 +190,7 @@
           if (this.newVal.length < 1) {
             this.isEditable = false;
             this.newVal = [...this.value].map(e => e.username);
-            this.messageError(this.$t(`m.verify['管理员不能为空']`), 2000);
+            this.messageWarn(this.$t(`m.verify['管理员不能为空']`), 3000);
             return;
           }
           this.triggerChange();
@@ -207,7 +201,7 @@
       },
       handleDelete (payload) {
         if (this.newVal.length === 1) {
-          this.messageError(this.$t(`m.verify['管理员不能为空']`), 2000);
+          this.messageWarn(this.$t(`m.verify['管理员不能为空']`), 3000);
           return;
         }
         this.newPayload = payload;
@@ -258,14 +252,10 @@
           try {
             await this.$store.dispatch('role/deleteRatingManager', { id: this.$route.params.id });
             await this.$store.dispatch('roleList');
-            this.messageSuccess(this.$t(`m.info['编辑成功']`), 2000);
+            this.messageSuccess(this.$t(`m.info['编辑成功']`), 3000);
           } catch (e) {
             console.error(e);
-            this.bkMessageInstance = this.$bkMessage({
-              limit: 1,
-              theme: 'error',
-              message: e.message || e.data.msg || e.statusText
-            });
+            this.messageAdvancedError(e);
           } finally {
             this.isLoading = false;
           }
@@ -330,11 +320,11 @@
             align-items: center;
             min-height: 34px;
             line-height: 34px;
-            &:hover {
-                .edit-action {
-                    /* display: block; */
-                }
-            }
+            /* &:hover {
+                    .edit-action {
+                        display: block;
+                    }
+            } */
         }
         .edit-content {
             flex: 0 0 auto;

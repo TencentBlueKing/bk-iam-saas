@@ -87,12 +87,12 @@
       @page-limit-change="limitChange" @select="handlerChange" @select-all="handlerAllChange"
       v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
       <bk-table-column type="selection" align="center" :selectable="getIsSelect" reserve-selection />
-      <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
+      <bk-table-column :label="$t(`m.userGroup['用户组名']`)" width="200">
         <template slot-scope="{ row }">
           <span class="user-group-name" :title="row.name" @click="handleView(row)">{{ row.name }}</span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.userGroup['用户/组织']`)">
+      <bk-table-column :label="$t(`m.userGroup['用户/组织']`)" width="150">
         <template slot-scope="{ row }">
           <div class="member-wrapper">
             <span class="user">
@@ -127,7 +127,19 @@
           </template>
         </bk-table-column>
       </template>
-      <bk-table-column :label="$t(`m.userGroup['创建人']`)">
+      <bk-table-column :label="$t(`m.userGroup['用户组属性']`)" width="300">
+        <template slot-scope="{ row, $index }">
+          <IamGroupAttribute
+            style="width: 260px"
+            :value="row.apply_disable ? ['apply_disable'] : []"
+            :list="userGroupAttributesList"
+            :attributes="userGroupAttributes"
+            :index="$index"
+            @on-change="handleChangeAttributes"
+          />
+        </template>
+      </bk-table-column>
+      <bk-table-column :label="$t(`m.userGroup['创建人']`)" width="100">
         <template slot-scope="{ row }">
           <span>{{ row.creator || '--' }}</span>
         </template>
@@ -140,17 +152,17 @@
                     </span>
                 </template>
             </bk-table-column> -->
-      <bk-table-column :label="$t(`m.common['创建时间']`)" width="240">>
+      <bk-table-column :label="$t(`m.common['创建时间']`)" width="240">
         <template slot-scope="{ row }">
           <span :title="row.created_time">{{ row.created_time }}</span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.common['描述']`)">
+      <bk-table-column :label="$t(`m.common['描述']`)" width="240">
         <template slot-scope="{ row }">
-          <span :title="row.description !== '' ? row.description : ''">{{ row.description || '--' }}</span>
+          <span :title="row.description || ''">{{ row.description || '--' }}</span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.common['操作']`)" width="320">
+      <bk-table-column :label="$t(`m.common['操作']`)" width="320" fixed="right">
         <template slot-scope="{ row }">
           <div>
             <bk-button
@@ -241,9 +253,10 @@
   import { mapGetters } from 'vuex';
   import { il8n } from '@/language';
   import { getWindowHeight, formatCodeData } from '@/common/util';
-  import IamSearchSelect from '@/components/iam-search-select';
   import { fuzzyRtxSearch } from '@/common/rtx';
   import { buildURLParams } from '@/common/url';
+  import { USER_GROUP_ATTRIBUTES } from '@/common/constants';
+  import IamSearchSelect from '@/components/iam-search-select';
   import DeleteDialog from './components/delete-user-group-dialog';
   import AddMemberDialog from './components/iam-add-member';
   import EditProcessDialog from './components/edit-process-dialog';
@@ -251,6 +264,7 @@
   import DistributeToDialog from './components/distribute-to-dialog';
   // import NoviceGuide from '@/components/iam-novice-guide';
   import IamEditInput from '@/components/iam-edit/input';
+  import IamGroupAttribute from './components/iam-group-attribute.vue';
 
   export default {
     name: '',
@@ -267,7 +281,8 @@
       DistributeToDialog,
       IamSearchSelect,
       // NoviceGuide,
-      IamEditInput
+      IamEditInput,
+      IamGroupAttribute
     },
     data () {
       return {
@@ -283,6 +298,47 @@
         searchParams: {},
         searchList: [],
         searchValue: [],
+        searchData: [
+          {
+            id: 'name',
+            name: this.$t(`m.userGroup['用户组名']`),
+            default: true
+          },
+          {
+            id: 'id',
+            name: 'ID',
+            // validate (values, item) {
+            //     const validate = (values || []).every(_ => /^(\d*)$/.test(_.name))
+            //     return !validate ? '' : true
+            // }
+            default: true
+          },
+          {
+            id: 'description',
+            name: this.$t(`m.common['描述']`),
+            disabled: true
+          },
+          {
+            id: 'creator',
+            name: this.$t(`m.grading['创建人']`),
+            remoteMethod: this.handleRemoteRtx
+          },
+          {
+            id: 'system_id',
+            name: this.$t(`m.common['系统包含']`),
+            remoteMethod: this.handleRemoteSystem
+          },
+          {
+            id: 'username',
+            name: this.$t(`m.common['用户包含']`),
+            remoteMethod: this.handleRemoteRtx
+          },
+          {
+            id: 'department_id',
+            name: this.$t(`m.common['组织ID包含']`),
+            disabled: true
+          }
+        ],
         currentSelectList: [],
         isShowDeleteDialog: false,
         deleteLoading: false,
@@ -333,7 +389,11 @@
           text: '',
           tip: '',
           tipType: ''
-        }
+        },
+        userGroupAttributes: {
+          apply_disable: false
+        },
+        userGroupAttributesList: USER_GROUP_ATTRIBUTES
       };
     },
     computed: {
@@ -385,46 +445,6 @@
     },
     async created () {
       this.curRole = this.user.role.type || 'staff';
-      this.searchData = [
-        {
-          id: 'id',
-          name: 'ID'
-          // validate (values, item) {
-          //     const validate = (values || []).every(_ => /^(\d*)$/.test(_.name))
-          //     return !validate ? '' : true
-          // }
-        },
-        {
-          id: 'name',
-          name: this.$t(`m.userGroup['用户组名']`),
-          default: true
-        },
-        {
-          id: 'description',
-          name: this.$t(`m.common['描述']`),
-          disabled: true
-        },
-        {
-          id: 'creator',
-          name: this.$t(`m.grading['创建人']`),
-          remoteMethod: this.handleRemoteRtx
-        },
-        {
-          id: 'system_id',
-          name: this.$t(`m.common['系统包含']`),
-          remoteMethod: this.handleRemoteSystem
-        },
-        {
-          id: 'username',
-          name: this.$t(`m.common['用户包含']`),
-          remoteMethod: this.handleRemoteRtx
-        },
-        {
-          id: 'department_id',
-          name: this.$t(`m.common['组织ID包含']`),
-          disabled: true
-        }
-      ];
       this.searchParams = this.$route.query;
       this.setCurrentQueryCache(this.refreshCurrentQuery());
       const isObject = (payload) => {
@@ -471,6 +491,7 @@
           }
         }
       }
+      await this.fetchUserGroupSet();
     },
     methods: {
       /**
@@ -478,6 +499,21 @@
        */
       async fetchPageData () {
         await this.fetchUserGroupList();
+      },
+
+      // 获取分级管理员用户组配置
+      async fetchUserGroupSet () {
+        if (!['subset_manager'].includes(this.curRole)) {
+          try {
+            const { data } = await this.$store.dispatch('userGroupSetting/getUserGroupSetConfig');
+            if (data) {
+              this.userGroupAttributes = Object.assign({}, { apply_disable: data.apply_disable });
+            }
+          } catch (e) {
+            console.error(e);
+            this.messageAdvancedError(e);
+          }
+        }
       },
 
       getIsSelect () {
@@ -513,7 +549,7 @@
           { current: queryParams.current || 1, limit: queryParams.limit || 10 }
         );
         return {
-                    ...queryParams
+            ...queryParams
         };
       },
 
@@ -537,9 +573,9 @@
         this.tableLoading = isLoading;
         this.setCurrentQueryCache(this.refreshCurrentQuery());
         const params = {
-                    ...this.searchParams,
-                    limit: this.pagination.limit,
-                    offset: this.pagination.limit * (this.pagination.current - 1)
+          ...this.searchParams,
+          limit: this.pagination.limit,
+          offset: this.pagination.limit * (this.pagination.current - 1)
         };
         delete params.current;
         try {
@@ -555,18 +591,28 @@
           this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
         } catch (e) {
           console.error(e);
-          const { code, data, message, statusText } = e;
+          const { code } = e;
           this.emptyData = formatCodeData(code, this.emptyData);
           this.tableList = [];
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: message || data.msg || statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.tableLoading = false;
+        }
+      },
+
+      async handleChangeAttributes (payload, index) {
+        const { id, name, description } = this.tableList[index];
+        const params = {
+          id,
+          name,
+          description,
+          apply_disable: !!payload.includes('apply_disable')
+        };
+        const { code } = await this.$store.dispatch('userGroup/editUserGroup', params);
+        if (code === 0) {
+          this.messageSuccess(this.$t(`m.info['编辑成功']`), 3000);
+          this.resetPagination();
+          await this.fetchUserGroupList(true);
         }
       },
 
@@ -695,10 +741,7 @@
           item.attributes && item.attributes.source_from_role && departments.length > 0);
         if (hasAdminGroups.length) {
           const adminGroupNames = hasAdminGroups.map(item => item.name).join();
-          this.messageError(
-            this.$t(`m.info['用户组为管理员组，不能添加部门']`,
-                    { value: `${this.$t(`m.common['【']`)}${adminGroupNames}${this.$t(`m.common['】']`)}` }), 2000
-          );
+          this.messageWarn(this.$t(`m.info['用户组为管理员组，不能添加部门']`, { value: `${this.$t(`m.common['【']`)}${adminGroupNames}${this.$t(`m.common['】']`)}` }), 3000);
           return;
         }
         let expired = payload.policy_expired_at;
@@ -747,17 +790,11 @@
           this.loading = true;
           await this.$store.dispatch(fetchUrl, params);
           this.isShowAddMemberDialog = false;
-          this.messageSuccess(this.$t(`m.info['添加成员成功']`), 2000);
+          this.messageSuccess(this.$t(`m.info['添加成员成功']`), 3000);
           this.fetchUserGroupList(true);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.loading = false;
         }
@@ -814,19 +851,13 @@
           await this.$store.dispatch('userGroup/deleteUserGroup', {
             id: this.currentUserGroup.id
           });
-          this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
+          this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
           this.isShowDeleteDialog = false;
           this.resetPagination();
           this.fetchUserGroupList(true);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.deleteLoading = false;
         }
@@ -854,7 +885,7 @@
         const hasDisabledData = this.currentSelectList.filter(item => item.readonly);
         if (hasDisabledData.length) {
           const disabledNames = hasDisabledData.map(item => item.name);
-          this.messageError(`m.info['用户组为只读用户组不能添加成员']`, { value: `${this.$t(`m.common['【']`)}${disabledNames}${this.$t(`m.common['】']`)}` });
+          this.messageWarn(this.$t(`m.info['用户组为只读用户组不能添加成员']`, { value: `${this.$t(`m.common['【']`)}${disabledNames}${this.$t(`m.common['】']`)}` }), 3000);
           return;
         }
         this.isBatch = true;
@@ -892,8 +923,11 @@
 <style lang="postcss">
 .iam-user-group-wrapper {
     .search_left {
-        display: flex;
-        align-items: center;
+      display: flex;
+      align-items: center;
+      .bk-button {
+        margin-right: 6px;
+      }
     }
 
     .select-custom {
@@ -977,16 +1011,14 @@
             text-overflow: ellipsis;
             white-space: nowrap;
         }
-    }
-}
 
-.bk-table-pagination-wrapper {
-    background-color: #ffffff;
-}
+        .bk-table-pagination-wrapper {
+            background-color: #ffffff;
+        }
 
-.search_left {
-    .bk-button {
-        margin-right: 6px;
+        .bk-table-fixed, .bk-table-fixed-right {
+            border-bottom: 0;
+        }
     }
 }
 </style>

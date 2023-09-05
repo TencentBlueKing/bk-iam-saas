@@ -1,6 +1,6 @@
 #### Parameters
 
-| field | type | mandatory | description |
+| Field | Type | Required | Description |
 |:---|:---|:---|:---|
 | id | string | Yes | Resource type id, unique under the system, only lowercase letters, lowercase letters, numbers, underscores (_) and ligatures (-) are allowed, maximum 32 characters. |Name
 | name |string | Yes | The name of the resource type, unique in the system.
@@ -13,13 +13,13 @@
 
 parents element parameter description
 
-| field | type | mandatory | description |
+| Field | Type | Required | Description |
 |:---|:---|:---|:---|
 | system_id | string | Yes | The source system ID of the direct parent resource type |
 | id |string | Yes | The ID of the direct parent resource type |
 
 provider_config inner element Parameters.
 
-| field | type | whether required | description |
+| Field | Type | Required | Description |
 |:---|:---|:---|:---|
 | path | string | Yes | The PATH of the URL of the IAM (Identity and Access Management) call query resource instance interface, used in conjunction with system.provider_config.host |

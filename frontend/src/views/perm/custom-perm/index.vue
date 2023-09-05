@@ -18,7 +18,9 @@
           ref="customPermTable"
           :key="sys.id"
           :system-id="sys.id"
+          :cur-search-params="curSearchParams"
           :empty-data="emptyPolicyData"
+          :is-search-perm="isSearchPerm"
           @after-delete="handleAfterDelete(...arguments, sysIndex)" />
       </custom-perm-system-policy>
     </template>
@@ -66,7 +68,8 @@
         }
       },
       curSearchParams: {
-        type: Object
+        type: Object,
+        default: () => {}
       },
       curSearchPagination: {
         type: Object,
@@ -77,6 +80,10 @@
             limit: 10
           };
         }
+      },
+      isSearchPerm: {
+        type: Boolean,
+        default: false
       }
     },
     data () {
@@ -108,41 +115,22 @@
       emptyData: {
         handler (value) {
           this.emptyPolicyData = Object.assign({}, value);
-        },
-        immediate: true
-      },
-      curSearchParams: {
-        handler (value) {
-          if (Object.keys(value).length) {
-            this.fetchPoliciesSearch();
+          if (this.isSearchPerm || ['search'].includes(value.tipType)) {
+            this.fetchSystemSearch();
           }
         },
         immediate: true
       }
     },
-    created () {
-    },
     methods: {
       // 搜索自定义权限
-      async fetchPoliciesSearch () {
-        try {
-          this.tableLoading = true;
-          const { code, data } = await this.$store.dispatch('perm/getPoliciesSearch', this.curSearchParams);
-          this.formatSystemData(data || []);
-          this.emptyPolicyData = formatCodeData(code, this.emptyPolicyData, data.length === 0);
-        } catch (e) {
-          const { code, data, message, statusText } = e;
-          this.emptyPolicyData = formatCodeData(code, this.emptyPolicyData);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: message || data.msg || statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
-        } finally {
-          this.tableLoading = false;
-        }
+      fetchSystemSearch () {
+        // 过滤掉搜索框的参数, 处理既有筛选系统也有输入名字、描述等仍要展示为空的情况
+        const noValue = !this.curSearchParams.id && !this.curSearchParams.name && !this.curSearchParams.description;
+        // 筛选搜索的系统id
+        const curSystemList
+          = this.systemList.filter(item => item.id === this.curSearchParams.system_id && noValue);
+        this.formatSystemData(curSystemList || []);
       },
 
       /**
@@ -188,7 +176,7 @@
               });
               if (code === 0) {
                 this.systemPolicyList.splice(sysIndex, 1);
-                this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
+                this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
                 if (!this.systemPolicyList.length) {
                   this.emptyPolicyData = formatCodeData(0, this.emptyPolicyData, true);
                 }
@@ -196,11 +184,7 @@
               }
             } catch (e) {
               console.error(e);
-              this.bkMessageInstance = this.$bkMessage({
-                limit: 1,
-                theme: 'error',
-                message: e.message || e.data.msg || e.statusText
-              });
+              this.messageAdvancedError(e);
               return false;
             }
           }
@@ -223,6 +207,7 @@
           }
         }
         this.onePerm = systemPolicyList.length;
+        this.emptyPolicyData = formatCodeData(0, this.emptyPolicyData, this.onePerm === 0);
       },
 
       async handleRefreshSystem () {

@@ -658,13 +658,9 @@
           console.error(e);
           const { response } = e;
           if (response && [400].includes(response.status)) {
-            this.messageError(this.$t(`m.verify['用户名输入格式错误']`), 2000);
+            this.messageWarn(this.$t(`m.verify['用户名输入格式错误']`), 3000);
           } else {
-            this.bkMessageInstance = this.$bkMessage({
-              limit: 1,
-              theme: 'error',
-              message: e.message || e.data.msg || e.statusText
-            });
+            this.messageAdvancedError(e);
           }
         } finally {
           this.manualAddLoading = false;
@@ -721,13 +717,7 @@
           }
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.requestQueue.shift();
         }
@@ -742,13 +732,7 @@
           }
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.requestQueue.shift();
         }
@@ -811,15 +795,9 @@
           this.treeList = _.cloneDeep(departments);
         } catch (e) {
           console.error(e);
-          const { code, data, message, statusText } = e;
+          const { code } = e;
           this.emptyData = formatCodeData(code, this.emptyData);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: message || data.msg || statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.treeLoading = false;
           if (isDialogLoading) {
@@ -888,12 +866,9 @@
           this.treeList = _.cloneDeep(categories);
         } catch (e) {
           console.error(e);
-          const { code, data, message, statusText } = e;
+          const { code } = e;
           this.emptyData = formatCodeData(code, this.emptyData);
-          this.bkMessageInstance = this.$bkMessage({
-            theme: 'error',
-            message: message || data.msg || statusText
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.treeLoading = false;
           if (isDialogLoading) {
@@ -1039,10 +1014,7 @@
         } catch (e) {
           console.error(e);
           this.emptyData = formatCodeData(e.code, this.emptyData);
-          this.bkMessageInstance = this.$bkMessage({
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.treeLoading = false;
         }
@@ -1175,10 +1147,7 @@
           payload.children.splice(0, payload.children.length, ...loadChildren);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText
-          });
+          this.messageAdvancedError(e);
         } finally {
           setTimeout(() => {
             payload.loading = false;

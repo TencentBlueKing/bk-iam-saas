@@ -22,12 +22,25 @@
           </span>
         </template>
       </bk-table-column>
-      <!-- 所属管理空间 -->
-      <bk-table-column :label="$t(`m.audit['所属管理空间']`)">
+      <bk-table-column :label="$t(`m.grading['管理空间']`)">
         <template slot-scope="{ row }">
-          <span :class="row.role && row.role.name ? 'can-view' : ''"
+          <span
             :title="row.role && row.role.name ? row.role.name : ''"
-            @click.stop="handleViewDetail(row)">{{ row.role ? row.role.name : '--' }}</span>
+          >
+            {{ row.role ? row.role.name : '--' }}
+          </span>
+        </template>
+      </bk-table-column>
+      <bk-table-column :label="$t(`m.levelSpace['管理员']`)" width="300">
+        <template slot-scope="{ row, $index }">
+          <iam-edit-member-selector
+            mode="detail"
+            field="role_members"
+            width="300"
+            :placeholder="$t(`m.verify['请输入']`)"
+            :value="row.role_members"
+            :index="$index"
+          />
         </template>
       </bk-table-column>
       <!-- 加入用户组时间 -->
@@ -41,7 +54,7 @@
         <template slot-scope="props">
           <span v-if="props.row.department_id === 0">{{ $t(`m.perm['直接加入']`) }}</span>
           <span v-else :title="`${$t(`m.perm['通过组织加入']`)}：${props.row.department_name}`">
-            {{ $t(`m.perm['通过组织加入']`) }}：{{ props.row.department_name }}
+            {{ $t(`m.perm['通过组织加入']`) }}: {{ props.row.department_name }}
           </span>
         </template>
       </bk-table-column>
@@ -84,39 +97,22 @@
       :name="curGroupName"
       :group-id="curGroupId"
       @animation-end="handleAnimationEnd" />
-
-    <!-- 管理空间 成员 侧边弹出框 -->
-    <bk-sideslider
-      :is-show.sync="isShowGradeSlider"
-      :width="640"
-      :title="gradeSliderTitle"
-      :quick-close="true"
-      @animation-end="gradeSliderTitle === ''">
-      <div slot="content" class="grade-members-content" v-bkloading="{ isLoading: sliderLoading, opacity: 1 }"
-        data-test-id="myPerm_sideslider_gradeMemebersContent">
-        <template v-if="!sliderLoading">
-          <div v-for="(item, index) in gradeMembers" :key="index" class="member-item">
-            <span class="member-name">
-              {{ item }}
-            </span>
-          </div>
-          <p class="info">{{ $t(`m.info['管理空间成员提示']`) }}</p>
-        </template>
-      </div>
-    </bk-sideslider>
   </div>
 </template>
 <script>
   import { mapGetters } from 'vuex';
   import { formatCodeData } from '@/common/util';
+  import { bus } from '@/common/bus';
   import DeleteDialog from '@/components/iam-confirm-dialog/index.vue';
   import RenderGroupPermSideslider from '../components/render-group-perm-sideslider';
+  import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
 
   export default {
     name: '',
     components: {
       DeleteDialog,
-      RenderGroupPermSideslider
+      RenderGroupPermSideslider,
+      IamEditMemberSelector
     },
     props: {
       departmentGroupList: {
@@ -137,15 +133,12 @@
       curSearchParams: {
         type: Object
       },
-      curSearchPagination: {
-        type: Object,
-        default: () => {
-          return {
-            current: 1,
-            count: 0,
-            limit: 10
-          };
-        }
+      isSearchPerm: {
+        type: Boolean,
+        default: false
+      },
+      totalCount: {
+        type: Number
       }
     },
     data () {
@@ -163,15 +156,11 @@
           row: {},
           msg: ''
         },
-
         isShowPermSidesilder: false,
         curGroupName: '',
         curGroupId: '',
-        // 控制侧边弹出层显示
-        isShowGradeSlider: false,
         sliderLoading: false,
         tableLoading: false,
-        gradeSliderTitle: '',
         groupPermDepartEmptyData: {
           type: '',
           text: '',
@@ -181,20 +170,17 @@
       };
     },
     computed: {
-      ...mapGetters(['user', 'externalSystemId'])
+      ...mapGetters(['user', 'externalSystemId', 'mainContentLoading'])
     },
     watch: {
       departmentGroupList: {
-        handler (v) {
-          if (this.emptyData.tipType === 'search') {
-            this.fetchSearchDepart();
-          } else {
-            if (v.length) {
-              this.dataList.splice(0, this.dataList.length, ...v);
-              this.initPageConf();
-              this.curPageData = this.getDataByPage(this.pageConf.current);
-            }
+        async handler (v) {
+          if (this.isSearchPerm) {
+            this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10, count: this.totalCount });
           }
+          this.dataList.splice(0, this.dataList.length, ...v);
+          this.initPageConf();
+          this.curPageData = this.getDataByPage(this.pageConf.current);
         },
         immediate: true
       },
@@ -206,32 +192,39 @@
       }
     },
     methods: {
-      async fetchSearchDepart () {
-        const { current, limit } = this.pageConf;
+      async fetchDepartSearch (pagination) {
+        const { current, limit } = pagination || this.pageConf;
         const params = {
           ...this.curSearchParams,
           limit,
           offset: limit * (current - 1)
         };
         try {
-          this.tableLoading = true;
+          if (!this.mainContentLoading) {
+            this.tableLoading = true;
+          }
           const { code, data } = await this.$store.dispatch('perm/getDepartGroupSearch', params);
           const { count, results } = data;
-          this.curPageData.splice(0, this.curPageData.length, ...results || []);
           this.pageConf.count = count || 0;
+          this.curPageData.splice(0, this.curPageData.length, ...results || []);
+          this.curPageData.forEach(item => {
+            if (item.role_members && item.role_members.length) {
+              item.role_members = item.role_members.map(v => {
+                return {
+                  username: v,
+                  readonly: false
+                };
+              });
+            }
+          });
           this.groupPermDepartEmptyData = formatCodeData(code, this.groupPermDepartEmptyData, results.length === 0);
         } catch (e) {
-          const { code, data, message, statusText } = e;
+          const { code } = e;
           this.groupPermDepartEmptyData = formatCodeData(code, this.groupPermDepartEmptyData);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: message || data.msg || statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.tableLoading = false;
+          bus.$emit('on-perm-tab-count', { active: 'DepartmentGroupPerm', count: this.pageConf.count });
         }
       },
       /**
@@ -242,13 +235,7 @@
           await this.$store.dispatch('userInfo');
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -274,8 +261,8 @@
        */
       handlePageChange (page = 1) {
         this.pageConf.current = page;
-        if (this.emptyData.tipType === 'search') {
-          this.fetchSearchDepart();
+        if (this.isSearchPerm) {
+          this.fetchDepartSearch();
         } else {
           const data = this.getDataByPage(page);
           this.curPageData.splice(0, this.curPageData.length, ...data);
@@ -354,18 +341,13 @@
             id: this.deleteDialogConf.row.id
           });
           this.cancelDelete();
-          this.messageSuccess(this.$t(`m.info['退出成功']`), 2000);
-          this.$emit('refresh');
+          this.messageSuccess(this.$t(`m.info['退出成功']`), 3000);
+          this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10 });
+          this.refreshTableData();
         } catch (e) {
           this.deleteDialogConf.loading = false;
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -385,36 +367,8 @@
         this.deleteDialogConf.loading = false;
       },
 
-      /**
-       * 调用接口获取管理空间各项数据
-       */
-      async fetchRoles (id) {
-        this.sliderLoading = true;
-        try {
-          const res = await this.$store.dispatch('role/getGradeMembers', { id });
-          this.gradeMembers = [...res.data];
-        } catch (e) {
-          console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
-        } finally {
-          this.sliderLoading = false;
-        }
-      },
-      /**
-       * 点击管理空间中的项弹出侧边框且显示数据
-       */
-      handleViewDetail (payload) {
-        if (payload.role && payload.role.name) {
-          this.isShowGradeSlider = true;
-          this.gradeSliderTitle = this.$t(`m.info['管理空间成员侧边栏标题信息']`, { value: `${this.$t(`m.common['【']`)}${payload.role.name}${this.$t(`m.common['】']`)}` });
-          this.fetchRoles(payload.role.id);
-        }
+      refreshTableData () {
+        this.isSearchPerm ? this.fetchDepartSearch() : this.$emit('refresh');
       },
 
       handleEmptyRefresh () {

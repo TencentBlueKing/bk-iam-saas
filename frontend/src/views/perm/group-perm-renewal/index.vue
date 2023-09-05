@@ -49,7 +49,7 @@
                   />
                 </template>
               </bk-table-column>
-              <bk-table-column resizable="false" :label="$t(`m.common['操作']`)">
+              <bk-table-column :resizable="false" :label="$t(`m.common['操作']`)">
                 <template slot-scope="{ row }">
                   <bk-button theme="primary" @click.stop="handleDelete(row, index)" text>
                     {{ $t(`m.common['删除']`) }}
@@ -62,7 +62,14 @@
       </template>
       <template v-if="tableList.length < 1 && !tableLoading">
         <div class="empty-wrapper">
-          <img src="@/images/empty-display.svg" alt="" />
+          <!-- <img src="@/images/empty-display.svg" alt="" /> -->
+          <ExceptionEmpty
+            :type="emptyData.type"
+            :empty-text="emptyData.text"
+            :tip-text="emptyData.tip"
+            :tip-type="emptyData.tipType"
+            @on-refresh="handleEmptyRefresh"
+          />
         </div>
       </template>
     </div>
@@ -120,6 +127,7 @@
   import renderExpireDisplay from '@/components/render-renewal-dialog/display';
   import renderPerm from '@/components/render-perm';
   import DeleteDialog from '@/views/perm/components/iam-confirm-dialog';
+  import { formatCodeData } from '@/common/util';
 
   export default {
     name: '',
@@ -151,14 +159,20 @@
           loading: false
         },
         tableIndex: -1,
-        curDelMember: {}
+        curDelMember: {},
+        emptyData: {
+          type: '',
+          text: '',
+          tip: '',
+          tipType: ''
+        }
       };
     },
     computed: {
-            ...mapGetters(['user']),
-            isEmpty () {
-                return this.tableList.length < 1;
-            }
+      ...mapGetters(['user', 'externalSystemId']),
+      isEmpty () {
+          return this.tableList.length < 1;
+      }
     },
     watch: {
       'pagination.current' (value) {
@@ -240,9 +254,13 @@
               ? [this.curDelMember]
               : checkList.map(({ id, type }) => ({ id, type }))
           };
+          const { current_role_id: currentRoleId, source } = this.$route.query;
+          if (currentRoleId && source === 'email') {
+            params.hidden = false;
+          }
           const { code } = await this.$store.dispatch('userGroup/deleteUserGroupMember', params);
           if (code === 0) {
-            this.messageSuccess(this.$t(`m.info['移除成功']`), 2000);
+            this.messageSuccess(this.$t(`m.info['移除成功']`), 3000);
             this.currentSelectList = [];
             this.tableList[this.tableIndex].checkList = [];
             this.pagination.current = 1;
@@ -261,14 +279,19 @@
       async fetchMembers (item) {
         item.loading = true;
         try {
-          const res = await this.$store.dispatch('renewal/getExpireSoonGroupMembers', {
+          const params = {
             limit: item.pagination.limit,
             offset: item.pagination.limit * (item.pagination.current - 1),
             id: item.id
-          });
+          };
+          const { current_role_id: currentRoleId, source } = this.$route.query;
+          if (currentRoleId && source === 'email') {
+            params.hidden = false;
+          }
+          const { data } = await this.$store.dispatch('renewal/getExpireSoonGroupMembers', params);
           this.$set(item, 'children', []);
-          item.pagination.count = Math.ceil(res.data.count / item.pagination.limit);
-          item.children.splice(0, item.children.length, ...(res.data.results || []));
+          item.pagination.count = data.count || 0;
+          item.children.splice(0, item.children.length, ...(data.results || []));
           item.children.forEach((sub) => {
             sub.$id = `${item.id}${sub.type}${sub.id}`;
             sub.parent = item;
@@ -286,12 +309,19 @@
       async fetchData (isLoading = false) {
         this.tableLoading = isLoading;
         try {
-          const res = await this.$store.dispatch('renewal/getExpiredGroups', {
+          const params = {
             limit: this.pagination.limit,
             offset: this.pagination.limit * (this.pagination.current - 1)
-          });
-          this.pagination.count = Math.ceil(res.data.count / this.pagination.limit);
-          this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
+          };
+          const { current_role_id: currentRoleId, source } = this.$route.query;
+          if (currentRoleId && source === 'email') {
+            params.hidden = false;
+          }
+          const { code, data } = await this.$store.dispatch('renewal/getExpiredGroups', params);
+          const total = data.count || 0;
+          this.pagination.count = Math.ceil(total / this.pagination.limit);
+          this.emptyData = formatCodeData(code, this.emptyData, total === 0);
+          this.tableList.splice(0, this.tableList.length, ...(data.results || []));
           this.tableList.forEach(async (item, index) => {
             this.$set(item, 'checkList', []);
             this.$set(item, 'children', []);
@@ -400,9 +430,13 @@
             expired_at: expired_at_new
           }))
         };
+        const { current_role_id: currentRoleId, source } = this.$route.query;
+        if (currentRoleId && source === 'email') {
+          params.hidden = false;
+        }
         try {
           await this.$store.dispatch('renewal/roleGroupsRenewal', params);
-          this.messageSuccess(this.$t(`m.renewal['批量申请提交成功']`), 1000);
+          this.messageSuccess(this.$t(`m.renewal['批量申请提交成功']`), 3000);
           this.$router.push({
             name: 'userGroup'
           });
@@ -415,19 +449,18 @@
       },
 
       fetchErrorMsg (payload) {
-        this.bkMessageInstance = this.$bkMessage({
-          limit: 1,
-          theme: 'error',
-          message: payload.message || payload.data.msg || payload.statusText,
-          ellipsisLine: 2,
-          ellipsisCopy: true
-        });
+        this.messageAdvancedError(payload);
       },
 
       handleCancel () {
         this.$router.push({
           name: 'userGroup'
         });
+      },
+
+      handleEmptyRefresh () {
+        this.pagination = Object.assign(this.pagination, { current: 1, limit: 10 });
+        this.fetchData(true);
       }
     }
   };
@@ -436,15 +469,13 @@
 .iam-role-group-perm-renewal-wrapper {
   .group-content-wrapper {
     position: relative;
-    min-height: 100px;
+    min-height: 150px;
     .empty-wrapper {
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      img {
-        width: 60px;
-      }
+      
     }
   }
   .group-perm-renewal-ext-cls {

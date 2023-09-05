@@ -21,12 +21,14 @@
           @delete="handleTagDelete"
           @focus="handleInputFocus"
           @change="handleTagChange" />
-        <div v-if="isTagMultLine" class="mult-tag-placeholder" key="multPlaceholder">...</div>
+        <div v-if="isTagMultLine" class="mult-tag-placeholder" key="multPlaceholder">
+          +{{chipList.length - maxRenderTagNums}}
+        </div>
         <div class="search-input-box" ref="input" key="input" :style="searchInputBoxStyles" @click.stop="">
           <div style="position: absolute; top: -9999px; left: -9999px;">
             <pre ref="realInputContent" style="display: block; visibility: hidden; font: inherit;">
-                            {{ localValue }}
-                        </pre>
+              {{ localValue }}
+              </pre>
           </div>
           <div style="min-height: 22px; white-space: normal; word-break: break-all; visibility: hidden;">
             {{ localValue }}
@@ -51,7 +53,7 @@
       </div>
       <div class="search-nextfix">
         <i
-          v-if="isClearable"
+          v-if="isClearable && focused"
           class="search-clear bk-icon icon-close-circle-shape"
           @click.self="handleClearAll" />
         <slot name="nextfix">
@@ -299,9 +301,30 @@
       this.calcTextareaWidth = _.throttle(this._calcTextareaWidth, 30);
       this.showPopper = _.throttle(this._showMenu, 50);
       this.remoteExecuteImmediate();
-      if (this.$store.state.fromRouteName === 'myPerm') {
-        this.chipList = [];
-        this.triggerChange();
+      // 不注释掉会导致从myPerm页面跳转到其他引入了这个子组件的页面会调用change方法
+      // if (this.$store.state.fromRouteName === 'myPerm') {
+      //   this.chipList = [];
+      //   this.triggerChange();
+      // }
+    },
+    
+    mounted () {
+      if (this.$parent) {
+        setTimeout(() => {
+          let totalWidth = 0;
+          const { width: searchSelectWidth } = this.$refs.searchSelect.getBoundingClientRect();
+          const tagList = this.$refs.tag;
+          if (tagList && tagList.length && searchSelectWidth > 0) {
+            for (let i = 0; i < tagList.length; i++) {
+              if (totalWidth + tagList[i].$el.offsetWidth + 50 < searchSelectWidth) {
+                totalWidth = totalWidth + tagList[i].$el.offsetWidth + 6;
+              } else {
+                this.maxRenderTagNums = i;
+                break;
+              }
+            }
+          }
+        }, 200);
       }
     },
 
@@ -523,9 +546,7 @@
         if (this.readonly) {
           return;
         }
-
         this.focused = true;
-
         this.$refs.textarea.focus();
         this.showPopper();
         this.$emit('focus');
@@ -709,12 +730,17 @@
           this.keyDelete(event);
           return;
         }
+        if (['Delete'].includes(event.code)) {
+          this.handleClearAll();
+          return;
+        }
         if (['Enter', 'NumpadEnter'].includes(event.code) && !event.isComposing) {
           event.preventDefault();
           if (this.popperInstance && this.popperInstance.state.isVisible) {
             return;
           }
           this.keySubmit(event);
+          this.handleInputFocus();
         }
       },
 

@@ -6,6 +6,18 @@
           :data="formData"
           ref="basicInfoRef"
           @on-change="handleBasicInfoChange" />
+        <bk-checkbox
+          class="select-wrap-checkbox"
+          v-model="formData.apply_disable"
+          :disabled="userGroupAttributes.apply_disable"
+        >
+          <span
+            class="checkbox-sync-perm"
+            v-bk-tooltips="$t(`m.userGroup['设置不可被申请，则无法申请加入此用户组']`)">
+            {{ $t(`m.userGroup['不可被申请']`) }}
+          </span>
+          <span>({{ $t(`m.userGroup['该组只能管理员主动授权，用户无法主动申请']`) }})</span>
+        </bk-checkbox>
       </section>
     </render-horizontal-block>
     <render-action
@@ -23,7 +35,7 @@
     <render-horizontal-block
       :label="$t(`m.grading['操作和资源范围']`)"
       v-if="isHasPermTemplate">
-      <div class="grade-admin-select-wrapper">
+      <div class="user-group-select-wrapper">
         <div class="action">
           <section class="action-wrapper" @click.stop="handleAddPerm">
             <Icon bk type="plus-circle-shape" />
@@ -177,7 +189,8 @@
         formData: {
           name: '',
           approval_process_id: 1,
-          description: ''
+          description: '',
+          apply_disable: false
         },
         isShowAddMemberDialog: false,
         isShowMemberAdd: true,
@@ -212,6 +225,9 @@
         groupAttributes: {
           source_type: '',
           source_from_role: false
+        },
+        userGroupAttributes: {
+          apply_disable: false
         }
       };
     },
@@ -311,7 +327,26 @@
         }
       }
     },
+    async created () {
+      await this.fetchUserGroupSet();
+    },
     methods: {
+      // 获取分级管理员用户组配置
+      async fetchUserGroupSet () {
+        if (!['subset_manager'].includes(this.curRole)) {
+          try {
+            const { data } = await this.$store.dispatch('userGroupSetting/getUserGroupSetConfig');
+            if (data) {
+              this.formData = Object.assign(this.formData, { apply_disable: data.apply_disable });
+              this.userGroupAttributes = Object.assign({}, { apply_disable: data.apply_disable });
+            }
+          } catch (e) {
+            console.error(e);
+            this.messageAdvancedError(e);
+          }
+        }
+      },
+      
       /**
        * handleBasicInfoChange
        */
@@ -887,15 +922,15 @@
           this.submitLoading = true;
           window.changeDialog = false;
           const params = {
-                        ...this.formData,
-                        members: this.members,
-                        expired_at: this.expired_at,
-                        templates
+            ...this.formData,
+            members: this.members,
+            expired_at: this.expired_at,
+            templates
           };
           try {
             const { code, data } = await this.$store.dispatch('userGroup/addUserGroup', params);
             if (code === 0 && data) {
-              this.messageSuccess(this.$t(`m.info['新建用户组成功']`), 1000);
+              this.messageSuccess(this.$t(`m.info['新建用户组成功']`), 3000);
               if (this.externalSystemId) { // 如果用户组新建成功需要发送一个postmessage给外部页面
                 window.parent.postMessage({ type: 'IAM', data, code: 'create_user_group_submit' }, '*');
               } else {
@@ -907,13 +942,7 @@
             }
           } catch (e) {
             console.error(e);
-            this.bkMessageInstance = this.$bkMessage({
-              limit: 1,
-              theme: 'error',
-              message: e.message || e.data.msg || e.statusText,
-              ellipsisLine: 2,
-              ellipsisCopy: true
-            });
+            this.messageAdvancedError(e);
           } finally {
             this.submitLoading = false;
           }
@@ -1024,52 +1053,7 @@
     }
   };
 </script>
+
 <style lang="postcss" scoped>
-    .iam-create-user-group-wrapper {
-        padding-bottom: 50px;
-        .add-perm-action {
-            margin: 16px 0 20px 0;
-        }
-    }
-    .grade-admin-select-wrapper {
-        .action {
-            position: relative;
-            display: flex;
-            justify-content: flex-start;
-            .action-wrapper {
-                font-size: 14px;
-                color: #3a84ff;
-                cursor: pointer;
-                &:hover {
-                    color: #699df4;
-                }
-                i {
-                    position: relative;
-                    top: -1px;
-                    left: 2px;
-                }
-            }
-            .info-icon {
-                margin: 2px 0 0 2px;
-                color: #c4c6cc;
-                &:hover {
-                    color: #3a84ff;
-                }
-            }
-        }
-        .info-wrapper {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 16px;
-            line-height: 24px;
-            .tips,
-            .text {
-                line-height: 20px;
-                font-size: 12px;
-                &:not(&:last-child) {
-                  margin-right: 20px;
-                }
-            }
-        }
-    }
+@import '@/css/mixins/create-user-group.css';
 </style>

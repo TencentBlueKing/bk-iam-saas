@@ -10,6 +10,7 @@ specific language governing permissions and limitations under the License.
 from django_filters import rest_framework as filters
 
 from backend.apps.group.models import Group
+from backend.apps.role.models import Role
 
 
 class GroupFilter(filters.FilterSet):
@@ -23,4 +24,14 @@ class GroupFilter(filters.FilterSet):
             "name",
             "id",
             "description",
+        ]
+
+
+class GradeManagerFilter(filters.FilterSet):
+    name = filters.CharFilter(label="名字", lookup_expr="icontains")
+
+    class Meta:
+        model = Role
+        fields = [
+            "name",
         ]

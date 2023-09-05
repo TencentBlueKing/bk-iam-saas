@@ -688,13 +688,7 @@
         } catch (e) {
           console.error(e);
           if (!ERROR_CODE_LIST.includes(e.code)) {
-            this.bkMessageInstance = this.$bkMessage({
-              limit: 1,
-              theme: 'error',
-              message: e.message || e.data.msg || e.statusText,
-              ellipsisLine: 2,
-              ellipsisCopy: true
-            });
+            this.messageAdvancedError(e);
           }
           const message = e.code !== 1902206 ? RESULT_TIP[e.code] : e.message;
           const searchEmptyItem = {
@@ -889,16 +883,10 @@
           this.emptyData = formatCodeData(code, this.emptyData, this.treeData.length === 0);
         } catch (e) {
           console.error(e);
-          const { code, data, message, statusText } = e;
+          const { code } = e;
           this.emptyData = formatCodeData(code, this.emptyData);
           this.treeData = [];
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: message || data.msg || statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.isLoading = false;
         }
@@ -1386,16 +1374,10 @@
           this.removeAsyncNode();
         } catch (e) {
           console.error(e);
-          const { code, data, message, statusText } = e;
+          const { code } = e;
           this.removeAsyncNode();
           this.emptyData = formatCodeData(code, this.emptyData);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: message || data.msg || statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -1547,13 +1529,7 @@
         } catch (e) {
           console.error(e);
           this.emptyData = formatCodeData(e.code, this.emptyData);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           node.loadingMore = false;
         }

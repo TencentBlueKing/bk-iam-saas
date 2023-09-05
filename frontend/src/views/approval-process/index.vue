@@ -3,7 +3,7 @@
     <section class="iam-approval-process-set-item-wrapper" v-if="isSuperManager">
       <render-set-item
         v-for="(item, index) in processSetList"
-        :key="item.process_id"
+        :key="index"
         :ref="`${index}SetRef`"
         :class="index > 0 ? 'set-margin-left' : ''"
         :cur-value="item.process_id"
@@ -166,15 +166,9 @@
           this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
         } catch (e) {
           console.error(e);
-          const { code, data, message, statusText } = e;
+          const { code } = e;
           this.emptyData = formatCodeData(code, this.emptyData);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: message || data.msg || statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -200,15 +194,9 @@
           this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
         } catch (e) {
           console.error(e);
-          const { code, data, message, statusText } = e;
+          const { code } = e;
           this.emptyData = formatCodeData(code, this.emptyData);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: message || data.msg || statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -250,13 +238,7 @@
           }
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       }
     }

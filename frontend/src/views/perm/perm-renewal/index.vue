@@ -16,7 +16,8 @@
           :key="index">
           <template slot="label">
             <span class="panel-name">
-              {{ panel.label }}<span style="color:#c4c6cc">({{panel.total}})</span>
+              <span>{{ panel.label }}</span>
+              <span :style="{ 'color': active === panel.name ? '#3a84ff' : '' }">({{panel.total}})</span>
             </span>
             <!-- <bk-badge :val="panel.count" :theme="curBadgeTheme(panel.name)" /> -->
           </template>
@@ -26,6 +27,7 @@
         :renewal-time="expiredAt"
         :type="active"
         :data="getTableList"
+        :count="formatCount"
         :loading="tableLoading"
         :empty-data="curEmptyData"
         @on-select="handleSelected" />
@@ -128,6 +130,7 @@
       };
     },
     computed: {
+      ...mapGetters(['externalSystemsLayout', 'externalSystemId']),
       getTableList () {
         const panelData = this.panels.find(item => item.name === this.active);
         if (panelData) {
@@ -141,7 +144,13 @@
           return payload === this.active ? '#e1ecff' : '#f0f1f5';
         };
       },
-            ...mapGetters(['externalSystemsLayout', 'externalSystemId'])
+      formatCount () {
+        const panel = this.panels.find(item => item.name === this.active);
+        if (panel) {
+          return panel.total;
+        }
+        return this.panels[0].total;
+      }
     },
     watch: {
       panels: {
@@ -204,13 +213,9 @@
           this.fetchActiveTabData(this.panels);
         } catch (e) {
           console.error(e);
-          const { code, data, message, statusText } = e;
+          const { code } = e;
           this.curEmptyData = formatCodeData(code, this.curEmptyData);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: message || data.msg || statusText
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -317,19 +322,13 @@
         const dispatchMethod = isGroup ? 'groupPermRenewal' : 'customPermRenewal';
         try {
           await this.$store.dispatch(`renewal/${dispatchMethod}`, params);
-          this.messageSuccess(this.$t(`m.renewal['批量申请提交成功']`), 1000);
+          this.messageSuccess(this.$t(`m.renewal['批量申请提交成功']`), 3000);
           this.$router.push({
             name: 'apply'
           });
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.submitLoading = false;
         }

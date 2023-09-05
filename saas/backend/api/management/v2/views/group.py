@@ -95,7 +95,10 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
         tags=["management.role.group"],
     )
     def create(self, request, *args, **kwargs):
-        role = get_object_or_404(self.queryset, id=kwargs["id"])
+        if "id" not in kwargs:
+            role = get_object_or_404(Role, type=RoleType.SYSTEM_MANAGER.value, code=kwargs["system_id"])
+        else:
+            role = get_object_or_404(self.queryset, id=kwargs["id"])
 
         serializer = ManagementGradeManagerGroupCreateSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -289,7 +292,7 @@ class ManagementGroupViewSet(GenericViewSet):
             self.group_check_biz.check_role_group_name_unique(role.id, name, group.id)
 
             # 更新
-            group = self.biz.update(group, name, description, user_id)
+            group = self.biz.update(group, name, description, group.apply_disable, user_id)
 
         # 写入审计上下文
         audit_context_setter(group=group)

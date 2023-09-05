@@ -148,7 +148,14 @@ class GroupBiz:
     list_rbac_group_by_resource = GroupService.__dict__["list_rbac_group_by_resource"]
 
     def create_and_add_members(
-        self, role: Role, name: str, description: str, creator: str, subjects: List[Subject], expired_at: int
+        self,
+        role: Role,
+        name: str,
+        description: str,
+        creator: str,
+        subjects: List[Subject],
+        expired_at: int,
+        apply_disable: bool = False,
     ) -> Group:
         """
         创建用户组
@@ -156,7 +163,11 @@ class GroupBiz:
         with transaction.atomic():
             group = self.group_svc.create(
                 GroupCreation(
-                    name=name, description=description, source_system_id=role.source_system_id, hidden=role.hidden
+                    name=name,
+                    description=description,
+                    source_system_id=role.source_system_id,
+                    hidden=role.hidden,
+                    apply_disable=apply_disable,
                 ),
                 creator,
             )

@@ -9,7 +9,8 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import json
-from typing import Any, List, Tuple
+from collections import defaultdict
+from typing import Any, List, Optional, Tuple
 
 from django.db import transaction
 from django.utils.translation import gettext as _
@@ -79,14 +80,17 @@ class UserRole(BaseModel):
     name_en: str
     description: str
 
+    members: Optional[List[str]] = None
+
     @classmethod
-    def convert_from_role(cls, role):
+    def convert_from_role(cls, role, members: Optional[List[str]] = None):
         return cls(
             id=role.id,
             type=role.type,
             name=role.name,
             name_en=role.name_en,
             description=role.description,
+            members=members,
         )
 
 
@@ -183,7 +187,13 @@ class RoleService:
         if not with_hidden:
             roles = roles.filter(hidden=False)
 
-        data = [UserRole.convert_from_role(role) for role in roles]
+        # 填充role的成员
+        ids = [role.id for role in roles]
+        role_members = defaultdict(list)
+        for role_user in RoleUser.objects.filter(role_id__in=ids).only("role_id", "username"):
+            role_members[role_user.role_id].append(role_user.username)
+
+        data = [UserRole.convert_from_role(role, role_members.get(role.id, None)) for role in roles]
 
         # 按超级管理员 - 系统管理员 - 分级管理员排序
         sort_index = [

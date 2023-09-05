@@ -766,18 +766,12 @@
         console.log('params', params);
         try {
           await this.$store.dispatch('userGroup/addUserGroupPolicy', params);
-          this.messageSuccess(this.$t(`m.info['用户组添加权限成功']`), 1000);
+          this.messageSuccess(this.$t(`m.info['用户组添加权限成功']`), 3000);
           window.parent.postMessage({ type: 'IAM', data: params, code: 'submit_add_group_perm' }, '*');
           this.setBackRouter();
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.submitLoading = false;
         }
@@ -833,11 +827,11 @@
 
       handleAddPerm () {
         if (this.groupAttributes.source_from_role) {
-          this.messageError(this.$t(`m.info['管理员组不能添加权限']`), 2000);
+          this.messageWarn(this.$t(`m.info['管理员组不能添加权限']`), 3000);
           return;
         }
         if (this.readonly) {
-          this.messageError(this.$t(`m.info['只读用户组不能添加权限']`), 2000);
+          this.messageWarn(this.$t(`m.info['只读用户组不能添加权限']`), 3000);
           return;
         }
         if (this.externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn) {

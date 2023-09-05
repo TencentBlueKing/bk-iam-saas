@@ -162,13 +162,7 @@
           this.handleActionData();
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.requestQueue.shift();
         }
@@ -350,13 +344,7 @@
           }
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.editRequestQueue.shift();
         }
@@ -373,13 +361,7 @@
           this.$store.commit('permTemplate/updateCloneActions', res.data);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.editRequestQueue.shift();
         }
@@ -401,18 +383,14 @@
         };
         return this.$store.dispatch('permTemplate/updateTemplate', params)
           .then(() => {
-            this.messageSuccess(this.$t(`m.info['编辑成功']`), 2000);
+            this.messageSuccess(this.$t(`m.info['编辑成功']`), 3000);
             this.basicInfo.name = params.name;
             this.basicInfo.description = params.description;
             window.localStorage.setItem('iam-header-title-cache', this.basicInfo.name);
             this.$store.commit('setHeaderTitle', this.basicInfo.name);
           }, (e) => {
             console.warn('error');
-            this.bkMessageInstance = this.$bkMessage({
-              limit: 1,
-              theme: 'error',
-              message: e.message || e.data.msg || e.statusText
-            });
+            this.messageAdvancedError(e);
           });
       }
     }

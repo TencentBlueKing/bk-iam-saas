@@ -170,7 +170,6 @@
           :rows="5"
           :ext-cls="isShowReasonError ? 'join-reason-error' : ''"
           v-model="reason"
-          @input="checkReason"
         />
       </section>
       <p class="reason-empty-error" v-if="isShowReasonError">{{ $t(`m.verify['理由不可为空']`) }}</p>
@@ -452,13 +451,7 @@
           this.aggregations = _.cloneDeep(data);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.isLoading = false;
         }
@@ -669,13 +662,7 @@
           this.handleDetailData(res.data);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -893,19 +880,13 @@
           await this.$store.dispatch('role/editRatingManagerWithGeneral', params);
           await this.$store.dispatch('role/updateCurrentRole', { id: 0 });
           await this.$store.dispatch('roleList');
-          this.messageSuccess(this.$t(`m.info['申请已提交']`), 1000);
+          this.messageSuccess(this.$t(`m.info['申请已提交']`), 3000);
           this.$router.push({
             name: 'apply'
           });
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.submitLoading = false;
         }
@@ -980,7 +961,7 @@
           this.submitLoading = true;
           await this.$store.dispatch(`role/${dispatchMethod}`, params);
           await this.$store.dispatch('roleList');
-          this.messageSuccess(this.$t(`m.info['编辑管理空间成功']`), 1000);
+          this.messageSuccess(this.$t(`m.info['编辑管理空间成功']`), 3000);
           this.$router.push({
             name: 'gradingAdminDetail',
             params: {
@@ -990,13 +971,7 @@
         } catch (e) {
           console.error(e);
           this.submitLoading = false;
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.submitLoading = false;
         }

@@ -82,6 +82,7 @@
             line-height: 22px;
             &:hover {
                 background: #dcdee5;
+                cursor: pointer;
                 .tag-clear {
                     color: #63656e;
                 }
@@ -163,6 +164,10 @@
                     border-color: #3c96ff !important;
                     background: #fff !important;
                     color: #3c96ff;
+                }
+                &:hover {
+                    color: #3c96ff;
+                    cursor: pointer;
                 }
             }
         }

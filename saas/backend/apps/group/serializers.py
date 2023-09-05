@@ -21,7 +21,7 @@ from backend.apps.application.base_serializers import BaseAggActionListSLZ, vali
 from backend.apps.application.serializers import ExpiredAtSLZ, SystemInfoSLZ
 from backend.apps.group.models import Group
 from backend.apps.policy.serializers import BasePolicyActionSLZ, ResourceTypeSLZ
-from backend.apps.role.models import Role, RoleRelatedObject, RoleRelation, RoleUser
+from backend.apps.role.models import Role, RoleRelatedObject, RoleRelation
 from backend.apps.role.serializers import ResourceInstancesSLZ
 from backend.apps.template.models import PermTemplatePolicyAuthorized
 from backend.biz.group import GroupBiz
@@ -68,6 +68,7 @@ class GroupSLZ(serializers.ModelSerializer):
             "role",
             "attributes",
             "readonly",
+            "apply_disable",
             "role_members",
         )
 
@@ -106,10 +107,10 @@ class GroupSLZ(serializers.ModelSerializer):
         if not self.group_role_dict:
             return []
         role = self.group_role_dict.get(obj.id)
-        if not role:
+        if not role or not role.members:
             return []
 
-        return list(RoleUser.objects.filter(role_id=role.id).values_list("username", flat=True))
+        return role.members
 
 
 class MemberSLZ(serializers.Serializer):
@@ -144,6 +145,7 @@ class GroupsAddMemberSLZ(GroupAddMemberSLZ):
 class GroupUpdateSLZ(serializers.Serializer):
     name = serializers.CharField(label="用户组名称", min_length=2, max_length=128)
     description = serializers.CharField(label="描述", allow_blank=True)
+    apply_disable = serializers.BooleanField(label="是否不可申请", default=False)
 
     def validate(self, data):
         """
@@ -315,6 +317,7 @@ class GroupCreateSLZ(serializers.Serializer):
     members = serializers.ListField(label="成员列表", child=GroupMemberSLZ(label="成员"))
     expired_at = serializers.IntegerField(label="过期时间", max_value=PERMANENT_SECONDS)
     templates = serializers.ListField(label="授权信息", child=TemplateAuthorizationSLZ(label="模板授权"), allow_empty=True)
+    apply_disable = serializers.BooleanField(label="是否不可申请", default=False)
 
     def validate(self, data):
         """
@@ -356,3 +359,4 @@ class GroupSearchSLZ(serializers.Serializer):
     resource_instances = serializers.ListField(
         label="资源实例", required=False, child=ResourceInstancesSLZ(label="资源实例信息"), default=list
     )
+    apply_disable = serializers.BooleanField(label="是否不可申请", required=False)

@@ -169,7 +169,7 @@
               data: condition
             });
           } else {
-            this.messageError(this.$t(`m.info['暂无可批量复制包含有属性条件的资源实例']`), 2000);
+            this.messageWarn(this.$t(`m.info['暂无可批量复制包含有属性条件的资源实例']`), 3000);
           }
         } catch (e) {
           this.$emit('on-paste', {
@@ -177,13 +177,7 @@
             data: null
           });
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.pasteLoading = false;
         }
@@ -215,13 +209,7 @@
             data: null
           });
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.isLoading = false;
         }

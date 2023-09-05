@@ -114,13 +114,7 @@
           this.tableList = res.data.map(item => new Policy(item));
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.initRequestQueue.shift();
         }
@@ -165,19 +159,13 @@
         const { id, type, templateId } = this.params;
         try {
           await this.$store.dispatch('permTemplate/templateAuthObjectSync', { id, type, templateId });
-          this.messageSuccess(this.$t(`m.permTemplate['同步成功']`), 2000);
+          this.messageSuccess(this.$t(`m.permTemplate['同步成功']`), 3000);
           this.isVisible = false;
           this.$emit('animation-end');
           this.$emit('on-sync');
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.syncLoading = false;
         }

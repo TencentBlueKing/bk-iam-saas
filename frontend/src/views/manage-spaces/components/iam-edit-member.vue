@@ -144,13 +144,7 @@
           this.userInfo = await this.$store.dispatch('userInfo');
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -185,7 +179,7 @@
 
       handleDelete (index) {
         if (this.displayValue.length === 1) {
-          this.messageError(this.$t(`m.verify['管理员不能为空']`), 2000);
+          this.messageWarn(this.$t(`m.verify['管理员不能为空']`), 3000);
           return;
         }
         this.roleIndex = index;
@@ -259,7 +253,7 @@
         if (JSON.stringify(this.displayValue) !== JSON.stringify(this.value)) {
           if (this.displayValue.length < 1) {
             this.handleDefaultData(this.value);
-            this.messageError(this.$t(`m.verify['管理员不能为空']`), 2000);
+            this.messageWarn(this.$t(`m.verify['管理员不能为空']`), 3000);
             return;
           }
           this.deleteList = this.value.filter(item =>

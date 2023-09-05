@@ -45,10 +45,7 @@
     <bk-table
       ref="spaceTable"
       size="small"
-      :ext-cls="[
-        'level-manage-table',
-        { 'search-manage-table': isFilter }
-      ]"
+      :ext-cls="isFilter ? 'level-manage-table search-manage-table' : 'level-manage-table'"
       :data="tableList"
       :max-height="tableHeight"
       :cell-class-name="getCellClass"
@@ -530,7 +527,7 @@
         };
         try {
           await this.$store.dispatch(url, params);
-          this.messageSuccess(this.$t(`m.info['编辑成功']`), 2000);
+          this.messageSuccess(this.$t(`m.info['编辑成功']`), 3000);
           this.formData = Object.assign(this.formData, {
             name: params.name,
             description: params.description,
@@ -545,14 +542,9 @@
           const { code, response } = e;
           if ((response && response.status && [401, 404].includes(response.status))
             || [1902000].includes(code)) {
-            this.messageSuccess(this.$t(`m.info['您已退出当前管理员授权范围']`), 2000);
+            this.messageSuccess(this.$t(`m.info['您已退出当前管理员授权范围']`), 3000);
           } else {
-            this.bkMessageInstance = this.$bkMessage({
-              limit: 1,
-              theme: 'error',
-              message: e.message || e.data.msg || e.statusText,
-              ellipsisCopy: true
-            });
+            this.messageAdvancedError(e);
           }
         }
       },
@@ -625,15 +617,9 @@
             this.tableList.length === 0
           );
         } catch (e) {
-          const { code, data, message, statusText } = e;
+          const { code } = e;
           this.emptyData = formatCodeData(code, this.emptyData);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: message || data.msg || statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.tableLoading = false;
         }
@@ -661,17 +647,11 @@
           );
         } catch (e) {
           console.error(e);
-          const { code, data, message, statusText } = e;
+          const { code } = e;
           row.children = [];
           this.subTableList = [];
           this.emptyData = formatCodeData(code, this.emptyData);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: message || data.msg || statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.curData = row;
           this.subLoading = false;
@@ -707,16 +687,10 @@
           );
         } catch (e) {
           console.error(e);
-          const { code, data, message, statusText } = e;
+          const { code } = e;
           this.emptyData = formatCodeData(code, this.emptyData);
           this.tableList = [];
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: message || data.msg || statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.tableLoading = false;
         }

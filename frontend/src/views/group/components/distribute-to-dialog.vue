@@ -71,7 +71,7 @@
         default: false
       },
       groupIds: {
-        type: Number,
+        type: Array,
         default: () => []
       },
       distributeDetail: {
@@ -135,10 +135,7 @@
           }
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.selectLoading = false;
         }
@@ -214,7 +211,7 @@
         try {
           this.loading = true;
           await this.$store.dispatch('userGroup/userGroupDistribute', params);
-          this.messageSuccess(this.$t(`m.info['分配成功']`), 1000);
+          this.messageSuccess(this.$t(`m.info['分配成功']`), 3000);
           this.$emit('on-success');
         } catch (e) {
           console.error(e);
@@ -223,11 +220,7 @@
             this.isShowWarnMessage = true;
             this.warnMessage = message;
           } else {
-            this.bkMessageInstance = this.$bkMessage({
-              limit: 1,
-              theme: 'error',
-              message
-            });
+            this.messageAdvancedError(e);
           }
         } finally {
           this.loading = false;

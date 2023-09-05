@@ -282,13 +282,7 @@
         } catch (e) {
           console.error(e);
           this.policyEmptyData = formatCodeData(e.code, this.policyEmptyData);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.initRequestQueue.shift();
         }
@@ -314,23 +308,19 @@
           this.handleActionLinearData();
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
       handleActionLinearData () {
         const linearActions = [];
         this.originalCustomTmplList.forEach((item, index) => {
+          item.actions = item.actions.filter(v => !v.hidden);
           item.actions.forEach(act => {
             linearActions.push(act);
-          })
-          ;(item.sub_groups || []).forEach(sub => {
+          });
+          (item.sub_groups || []).forEach(sub => {
+            sub.actions = sub.actions.filter(v => !v.hidden);
             sub.actions.forEach(act => {
               linearActions.push(act);
             });
@@ -400,18 +390,12 @@
           await this.$store.dispatch('permApply/updateSubjectPerm', params);
           this.isShowSideslider = false;
           this.handleAnimationEnd();
-          this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
+          this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
           this.handleRefreshData();
           // this.$emit('after-resource-delete')
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.deleteLoading = false;
         }
@@ -529,18 +513,12 @@
           if (index > -1) {
             this.tableList.splice(index, 1);
           }
-          this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
+          this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
           await this.fetchData(params);
           this.$emit('after-delete', this.tableList.length);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.deleteDialog.loading = false;
           this.deleteDialog.visible = false;

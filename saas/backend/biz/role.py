@@ -27,6 +27,7 @@ from backend.apps.group.models import Group
 from backend.apps.organization.models import Department, DepartmentMember, User
 from backend.apps.role.models import Role, RoleRelatedObject, RoleRelation, RoleResourceRelation, RoleSource, RoleUser
 from backend.apps.template.models import PermTemplate
+from backend.common.cache import cached
 from backend.common.error_codes import error_codes
 from backend.service.constants import (
     ACTION_ALL,
@@ -160,15 +161,14 @@ class RoleBiz:
         """
         self.svc.update(role, info, updater)
 
-        # 同步更新自动跟随的子集管理员的人员选择范围
-        if role.type == RoleType.GRADE_MANAGER.value and "subject_scopes" in info.get_partial_fields():
-            subject_scopes = self.svc.list_subject_scope(role.id)
-
-            subset_manager_ids = list(RoleRelation.objects.filter(parent_id=role.id).values_list("role_id", flat=True))
-            for subset_manager in Role.objects.filter(id__in=subset_manager_ids, inherit_subject_scope=True):
-                self.svc.update_role_subject_scope(subset_manager.id, subject_scopes)
-
         RoleResourceRelationHelper(role).handle()
+
+    def sync_subset_manager_subject_scope(self, role_id: int):
+        subject_scopes = self.svc.list_subject_scope(role_id)
+
+        subset_manager_ids = list(RoleRelation.objects.filter(parent_id=role_id).values_list("role_id", flat=True))
+        for subset_manager in Role.objects.filter(id__in=subset_manager_ids, inherit_subject_scope=True):
+            self.svc.update_role_subject_scope(subset_manager.id, subject_scopes)
 
     def create_subset_manager(self, grade_manager: Role, info: RoleInfoBean, creator: str) -> Role:
         """
@@ -652,6 +652,9 @@ class RoleListQuery:
         """
         查询用户组列表
         """
+        if self.role.type == RoleType.STAFF.value:
+            return Group.objects.filter(hidden=False)
+
         group_ids = self._get_role_related_object_ids(RoleRelatedObjectType.GROUP.value, inherit=inherit)
         return Group.objects.filter(id__in=group_ids)
 
@@ -779,21 +782,10 @@ class RoleListQuery:
 
         return queryset.filter(id__in=role_ids)
 
+    @cached(timeout=5 * 60, key_function=lambda _, user: str(user.id))
     def is_user_super_manager(self, user: User):
-        sql = dedent(
-            """SELECT
-            1
-            FROM
-            role_roleuser a
-            LEFT JOIN role_role b ON a.role_id = b.id
-            WHERE
-            b.type = %s
-            AND a.username = %s"""
-        )
-
-        with connection.cursor() as cursor:
-            cursor.execute(sql, (RoleType.SUPER_MANAGER.value, self.user.username))
-            return bool(cursor.fetchone())
+        super_manager = get_super_manager()
+        return RoleUser.objects.filter(username=user.username, role_id=super_manager.id).exists()
 
     def query_subset_manager(self):
         """
@@ -1223,6 +1215,11 @@ class ActionScopeDiffer:
         return True
 
 
+@cached(timeout=60 * 60)  # 1 hour
+def get_super_manager() -> Role:
+    return Role.objects.filter(type=RoleType.SUPER_MANAGER.value).first()
+
+
 def can_user_manage_role(username: str, role_id: int) -> bool:
     """是否用户能管理角色"""
     role_ids = [role_id]
@@ -1231,7 +1228,7 @@ def can_user_manage_role(username: str, role_id: int) -> bool:
     if relation:
         role_ids.append(relation.parent_id)
 
-    super_manager = Role.objects.filter(type=RoleType.SUPER_MANAGER.value).first()
+    super_manager = get_super_manager()
     if super_manager:
         role_ids.append(super_manager.id)
 

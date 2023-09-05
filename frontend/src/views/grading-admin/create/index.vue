@@ -132,7 +132,7 @@
                 type="rating_manager_merge_action"
                 direction="right"
                 :loading="isLoading"
-                :style="renderLabelWidth('rating_manager_merge_action_guide')"
+                :cur-style="renderLabelWidth('rating_manager_merge_action_guide')"
                 :content="$t(`m.guide['聚合操作']`)" />
               <div
                 v-for="item in AGGREGATION_EDIT_ENUM"
@@ -469,13 +469,7 @@
           this.originalList = _.cloneDeep(list);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -588,13 +582,7 @@
           this.aggregations = _.cloneDeep(data);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.isLoading = false;
         }
@@ -934,19 +922,13 @@
           await this.$store.dispatch('role/addRatingManagerWithGeneral', params);
           await this.$store.dispatch('roleList');
           this.isShowReasonDialog = false;
-          this.messageSuccess(this.$t(`m.info['申请已提交']`), 1000);
+          this.messageSuccess(this.$t(`m.info['申请已提交']`), 3000);
           this.$router.push({
             name: 'apply'
           });
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.submitLoading = false;
           this.dialogLoading = false;
@@ -1030,13 +1012,7 @@
           this.$router.go(-1);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.submitLoading = false;
         }

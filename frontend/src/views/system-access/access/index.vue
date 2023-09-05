@@ -6,12 +6,14 @@
         :controllable="controllableSteps.controllable"
         :cur-step.sync="controllableSteps.curStep"
         :before-change="beforeStepChanged"
-        @step-changed="stepChanged">
+      >
       </bk-steps>
       <smart-action class="base-info-wrapper">
         <render-horizontal-block :label="$t(`m.access['基础信息']`)">
           <section ref="basicInfoContentRef">
-            <basic-info :info-data="modelingSystemData" ref="basicInfoRef"
+            <basic-info
+              ref="basicInfoRef"
+              :info-data="modelingSystemData"
               @on-change="handleBasicInfoChange" />
           </section>
         </render-horizontal-block>
@@ -108,13 +110,7 @@
           this.fillFormData();
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -194,13 +190,7 @@
           });
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.submitLoading = false;
         }

@@ -24,6 +24,8 @@
  * IN THE SOFTWARE.
 */
 
+import il8n from '@/language';
+
 // 永久时间戳
 export const PERMANENT_TIMESTAMP = 4102444800;
 
@@ -128,4 +130,45 @@ export const NEED_CONFIRM_DIALOG_ROUTER = [
   'myManageSpaceCreate',
   'authorBoundaryEditFirstLevel',
   'secondaryManageSpaceCreate'
+];
+
+// 用户组属性枚举
+export const USER_GROUP_ATTRIBUTES = [
+  {
+    id: 'apply_disable',
+    name: '不可被申请',
+    disabled: false
+  }
+];
+
+// 用户组成员复制属性枚举
+export const COPY_KEYS_ENUM = [
+  {
+    id: 'copy-checked',
+    name: il8n('userGroup', '复制已选'),
+    children: [
+      {
+        id: 'user-selected',
+        name: il8n('userGroup', '成员')
+      },
+      {
+        id: 'userAndOrg-selected',
+        name: il8n('userGroup', '成员和组织架构')
+      }
+    ]
+  },
+  {
+    id: 'copy-all',
+    name: il8n('userGroup', '复制所有'),
+    children: [
+      {
+        id: 'user-all',
+        name: il8n('userGroup', '成员')
+      },
+      {
+        id: 'userAndOrg-all',
+        name: il8n('userGroup', '成员和组织架构')
+      }
+    ]
+  }
 ];

@@ -107,19 +107,38 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
         return ticket["sn"]
 
     def create_for_group(
-        self, data: GroupApplicationData, process: ApprovalProcessWithNodeProcessor, callback_url: str, tag: str = ""
+        self,
+        data: GroupApplicationData,
+        process: ApprovalProcessWithNodeProcessor,
+        callback_url: str,
+        tag: str = "",
+        approval_title_prefix: str = "",
+        approval_content: Optional[Dict] = None,
     ) -> str:
         """创建 - 申请加入或续期用户组单据"""
         params = self._generate_ticket_common_params(data, process, callback_url)
 
-        title_prefix = (
-            f"申请加入 {len(data.content.groups)} 个用户组"
-            if data.type == ApplicationType.JOIN_GROUP
-            else f"申请续期 {len(data.content.groups)} 个用户组"
-        )
-        params["title"] = "{}：{}".format(title_prefix, "、".join([one.name for one in data.content.groups]))
+        if approval_title_prefix:
+            title_prefix = approval_title_prefix + f" {len(data.content.groups)} 个用户组"
+        else:
+            title_prefix = (
+                f"申请加入 {len(data.content.groups)} 个用户组"
+                if data.type == ApplicationType.JOIN_GROUP
+                else f"申请续期 {len(data.content.groups)} 个用户组"
+            )
+        title = "{}：{}".format(title_prefix, "、".join([one.name for one in data.content.groups]))
+        if len(title) > 64:
+            title = title[:64] + "..."
 
-        params["content"] = {"schemes": FORM_SCHEMES, "form_data": [GroupTable.from_application(data.content).dict()]}
+        params["title"] = title
+
+        if approval_content:
+            params["content"] = approval_content
+        else:
+            params["content"] = {
+                "schemes": FORM_SCHEMES,
+                "form_data": [GroupTable.from_application(data.content).dict()],
+            }
 
         # 在params中加上权限获得者
         params["dynamic_fields"] = [

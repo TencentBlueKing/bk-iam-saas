@@ -232,6 +232,7 @@ export const m = {
         '查询': 'Search',
         '生效条件': 'Effective condition',
         '批量添加成员': 'Multi-add members',
+        '我的管理空间': 'My management space',
         '选择管理空间': 'Select management space',
         '管理我的管理空间': 'Manage my management space',
         '搜索管理空间': 'Search management space',
@@ -272,7 +273,9 @@ export const m = {
         '批量无限制': 'Unlimited batch size',
         '无该应用访问权限': 'No access permissions for this application',
         '暂无可复制内容': 'There is currently no replicable content',
-        '管理员组不能添加部门': 'The administrator group cannot add department'
+        '暂无可复制用户': 'There are currently no replicable users',
+        '管理员组不能添加部门': 'The administrator group cannot add department',
+        '批量退出': 'Multi-quit'
     },
     // 校验
     verify: {
@@ -356,7 +359,9 @@ export const m = {
         '请选择操作': 'Please select the actions',
         '请选择资源类型': 'Please select resource type',
         '管理空间名称不能为空': 'Management space name cannot be empty',
-        '请选择用户或组织成员': 'Please select user or organization member'
+        '请选择用户': 'Please select user',
+        '请选择用户或组织成员': 'Please select user or organization member',
+        '请选择用户组成员复制': 'Please select user group member copy'
     },
     info: {
         '加入用户组申请成功': 'Apply to join the group successfully',
@@ -515,6 +520,7 @@ export const m = {
          '已经复制到粘贴板，可在其他用户组添加成员时粘贴到手动输入框': 'Has been copied to the clipboard and can be pasted into the manual input box when adding members to other user groups',
          '用户组为管理员组，不能添加部门': 'The {value} is administrator group and cannot add departments',
          '用户组为只读用户组不能添加成员': '{value} is read-only user groups and cannot add members',
+         '用户组属性为只读属性': '{value} is read-only user group attribute',
          '管理员组不能添加权限': 'Administrators group cannot add permissions',
          '只读用户组不能添加权限': 'Read only user groups cannot add permissions'
     },
@@ -535,7 +541,8 @@ export const m = {
         '删除操作权限': 'the operation permission',
         '删除实例权限': 'instance permission',
         '删除一组实例权限': 'a set of instance permissions',
-        '确定要删除系统下的所有操作权限？': 'Confirm to delete all action permissions under the {value} system?'
+        '确定要删除系统下的所有操作权限？': 'Confirm to delete all action permissions under the {value} system?',
+        '确认批量退出所选的用户组吗？': 'Are you sure to batch quit the selected user groups?'
     },
     nav: {
         '蓝鲸权限中心': 'BlueKing-IAM',
@@ -590,7 +597,8 @@ export const m = {
         '新建管理空间': 'Create Management Space',
         '新建二级管理空间': 'New Secondary Management Space',
         '克隆管理空间': 'Clone Management Space',
-        '克隆二级管理空间': 'Clone Secondary management space'
+        '克隆二级管理空间': 'Clone Secondary management space',
+        '用户组设置': 'User Group Setting'
     },
     applyEntrance: {
         '立刻申请': 'Apply now',
@@ -728,7 +736,9 @@ export const m = {
         '个操作关联了': ' related actions have been completed ',
         '查看实例资源权限组': 'View instance resource permission groups',
         '删除实例资源权限组': 'Delete instance resource permission groups',
-        '唯一管理员不可退出': 'The only administrator cannot quit'
+        '唯一管理员不可退出': 'The only administrator cannot quit',
+        '存在用户组不可退出（唯一管理员不能退出）': 'There is user group that cannot be logged out (the only administrator cannot log out)',
+        '当前勾选项都为不可退出的用户组（唯一管理员不能退出）': 'The current checked options are all user groups that cannot be logged out (the only administrator cannot log out)'
     },
     permTemplate: {
         '模板名': 'Template name',
@@ -759,7 +769,8 @@ export const m = {
         '个模板': 'templates',
         '删除权限模版不会影响已授权用户，可以放心删除。': 'Deleting permission templates will not affect users who have already been granted permission, you can safely delete them.',
         '该模板无法选择的原因是：管理空间缩小了授权范围，但是没有同步删除模板里的操作，如需选择请重新编辑模板或者创建新的模板。': 'The reason this template cannot be selected is: the management space has narrowed the scope of authorization, but the actions in the template have not been deleted synchronously. If you need to select, please edit the template again or create a new one.',
-        '未分组操作': 'Ungrouped actions'
+        '未分组操作': 'Ungrouped actions',
+        '由于分级管理员的授权范围没有包含此操作，如需使用该模板进行新的授权必须先删除该操作。': 'Due to the fact that the authorization scope of the hierarchical administrator does not include this operation, to use this template for new authorization, the operation must be deleted first.'
     },
     permTemplateDetail: {
         '模板名称': 'Template Name',
@@ -798,6 +809,7 @@ export const m = {
         '所属系统': 'System',
         '管理空间': 'Management Space',
         '所属管理空间': 'Management space',
+        '用户组属性': 'User group attributes',
         '分配': 'Assign',
         '分配至': 'Assign to',
         '分配 (二级管理空间)': 'Assign (secondary management space)',
@@ -809,8 +821,14 @@ export const m = {
         '该组织能管理员主动授权，用户无法主动申请': 'The organization can be actively authorized by administrators, but users cannot actively apply',
         '勾选后，该用户组只能通过管理员主动授权': 'After checking, the user group can only be actively authorized by the administrator',
         '复制成员': 'Copy members',
-        '复制已选成员': 'Copy selected members',
-        '复制所有成员': 'Copy all members'
+        '复制已选': 'Copy selected',
+        '复制所有': 'Copy all',
+        '成员': 'Members',
+        '成员和组织架构': 'Members and organizational structure',
+        '不可被申请': 'Not applicable',
+        '该组只能管理员主动授权，用户无法主动申请': 'This group can only be actively authorized by administrators, and users cannot actively apply',
+        '设置不可被申请，则无法申请加入此用户组': 'If the setting cannot be applied for, you cannot apply to join this user group',
+        '管理员已设置空间下所有用户组不可被申请': 'The administrator has set that all user groups in the space cannot be applied for'
     },
     userGroupDetail: {
         '用户组名': 'Group name: ',
@@ -868,7 +886,7 @@ export const m = {
         '最近30天': 'Last 30 days'
     },
     grading: {
-        '管理空间': 'Management Space',
+        '管理空间': 'Management space',
         '创建人': 'Created by',
         '管理空间名称': 'Management Space Name',
         '系统管理员名称': 'System Manager Name',
@@ -1326,6 +1344,10 @@ export const m = {
         '操作权限': 'Action permissions',
         '自定义权限': 'Custom permissions',
         '模板权限': 'Template permissions'
+    },
+    userGroupSetting: {
+        '所有用户组不可被申请': 'All user groups cannot be applied for',
+        '编辑用户组配置成功': ' User group configuration edited'
     }
 }
 export default {

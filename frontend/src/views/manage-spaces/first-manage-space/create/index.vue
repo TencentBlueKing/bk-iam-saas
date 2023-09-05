@@ -72,7 +72,7 @@
         <iam-guide
           type="rating_manager_authorization_scope"
           direction="left"
-          :style="{ top: '-25px', left: '440px' }"
+          :cur-style="{ top: '-25px', left: '440px' }"
           :content="$t(`m.guide['授权人员范围']`)" />
       </render-action>
     </section>
@@ -298,13 +298,7 @@
           this.originalList = _.cloneDeep(list);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -417,13 +411,7 @@
           this.aggregations = _.cloneDeep(data);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.isLoading = false;
         }
@@ -748,19 +736,13 @@
           await this.$store.dispatch('role/addRatingManagerWithGeneral', params);
           await this.$store.dispatch('roleList');
           this.isShowReasonDialog = false;
-          this.messageSuccess(this.$t(`m.info['申请已提交']`), 1000);
+          this.messageSuccess(this.$t(`m.info['申请已提交']`), 3000);
           this.$router.push({
             name: 'apply'
           });
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.submitLoading = false;
           this.dialogLoading = false;
@@ -839,13 +821,7 @@
           });
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.submitLoading = false;
         }

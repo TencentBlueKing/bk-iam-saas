@@ -464,3 +464,7 @@ class RoleSearchSLZ(BaseGradeMangerSLZ):
             "updater",
             "members",
         )
+
+
+class RoleGroupConfigSLZ(serializers.Serializer):
+    apply_disable = serializers.BooleanField()

@@ -282,6 +282,7 @@
   import { mapGetters } from 'vuex';
   import Condition from '@/model/condition';
   import GroupPolicy from '@/model/group-policy';
+  import GroupAggregationPolicy from '@/model/group-aggregation-policy';
   import RenderAggregateSideslider from '@/components/choose-ip/sideslider';
   import { leaveConfirm } from '@/common/leave-confirm';
   import { CUSTOM_PERM_TEMPLATE_ID, PERMANENT_TIMESTAMP } from '@/common/constants';
@@ -291,7 +292,6 @@
   import RenderResourcePopover from '@/components/iam-view-resource-popover';
   import RenderDetail from '../common/render-detail';
   import DeleteActionDialog from '@/views/group/components/delete-related-action-dialog.vue';
-  import GroupAggregationPolicy from '../../../model/group-aggregation-policy';
 
   // import store from '@/store'
   export default {
@@ -345,7 +345,7 @@
         default: 'action'
       },
       groupId: {
-        type: String,
+        type: [String, Number],
         default: ''
       },
       authorization: {
@@ -1234,13 +1234,7 @@
           this.handleRelatedAction(res.data);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.sliderLoading = false;
         }
@@ -1304,7 +1298,7 @@
                 && (item.attribute && !item.attribute.length))
               || (!item.instance && !item.attribute.length));
             if (emptyIndex > -1) {
-              this.messageError(this.$t(`m.info['第几项实例和属性不能都为空']`, { value: emptyIndex + 1 }), 2000);
+              this.messageWarn(this.$t(`m.info['第几项实例和属性不能都为空']`, { value: emptyIndex + 1 }), 3000);
               return;
             }
             await this.handleMainActionSubmit(data, related_actions);

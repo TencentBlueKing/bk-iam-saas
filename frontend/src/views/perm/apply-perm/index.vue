@@ -444,11 +444,7 @@
           return this.processesList;
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -559,11 +555,7 @@
             });
           } catch (e) {
             console.error(e);
-            this.bkMessageInstance = this.$bkMessage({
-              limit: 1,
-              theme: 'primary',
-              message: e.message || e.data.msg || e.statusText
-            });
+            this.messageAdvancedError(e);
           } finally {
             this.tableLoading = false;
           }
@@ -583,13 +575,7 @@
       },
 
       fetchErrorMsg (payload) {
-        this.bkMessageInstance = this.$bkMessage({
-          limit: 1,
-          theme: 'error',
-          message: payload.message || payload.data.msg || payload.statusText,
-          ellipsisLine: 2,
-          ellipsisCopy: true
-        });
+        this.messageAdvancedError(payload);
       },
 
       handleCellAttributes ({ rowIndex, cellIndex, row, column }) {
@@ -727,7 +713,7 @@
         };
         try {
           await this.$store.dispatch('permApply/applyJoinGroup', params);
-          this.messageSuccess(this.$t(`m.info['申请已提交']`), 1000);
+          this.messageSuccess(this.$t(`m.info['申请已提交']`), 3000);
           // this.$router.push({
           //     name: 'apply'
           // });

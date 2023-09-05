@@ -7,7 +7,7 @@
         <div class="icon-content">
           <iam-popover-confirm
             :title="$t(`m.common['确定同步']`)"
-            :confirm-handler="() => handleSyncDepartment(row, $index)">
+            :confirm-handler="() => handleSyncDepartment()">
             <div :class="['action-wrapper', { 'is-disabled': isSync }]"
               :title="isSync ? $t(`m.user['正在同步中']`) : $t(`m.user['同步组织']`)"
             >
@@ -481,12 +481,9 @@
           this.emptyData = formatCodeData(code, this.emptyData, this.treeList.length === 0);
         } catch (e) {
           console.error(e);
-          const { code, data, message, statusText } = e;
+          const { code } = e;
           this.emptyData = formatCodeData(code, this.emptyData);
-          this.bkMessageInstance = this.$bkMessage({
-            theme: 'error',
-            message: message || data.msg || statusText
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.treeLoading = false;
         }
@@ -568,12 +565,9 @@
           this.emptyData.tipType = 'search';
           this.emptyData = formatCodeData(code, this.emptyData, isEmpty);
         } catch (e) {
-          const { code, data, message, statusText } = e;
+          const { code } = e;
           this.emptyData = formatCodeData(code, this.emptyData);
-          this.bkMessageInstance = this.$bkMessage({
-            theme: 'error',
-            message: message || data.msg || statusText
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.treeLoading = false;
         }
@@ -619,10 +613,7 @@
         } catch (e) {
           this.$store.commit('updateSync', false);
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -773,10 +764,7 @@
           payload.children.splice(0, payload.children.length, ...loadChildren);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText
-          });
+          this.messageAdvancedError(e);
         } finally {
           setTimeout(() => {
             payload.loading = false;

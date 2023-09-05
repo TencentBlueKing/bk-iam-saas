@@ -7,10 +7,7 @@
     :close-icon="false"
     header-position="center"
     :show-footer="false"
-    :ext-cls="[
-      'iam-confirm-dialog',
-      { 'iam-custom-confirm': isCustomStyle }
-    ]"
+    :ext-cls="isCustomStyle ? 'iam-confirm-dialog iam-custom-confirm' : 'iam-confirm-dialog'"
     @after-leave="handleAfterDeleteLeave">
     <div class="confirm-content-wrapper">
       <div class="iam-custom-dialog-title">{{ subTitle }}</div>

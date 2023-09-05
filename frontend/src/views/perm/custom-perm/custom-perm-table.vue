@@ -255,6 +255,8 @@
 <script>
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
+  import { bus } from '@/common/bus';
+  import { formatCodeData } from '@/common/util';
   import IamPopoverConfirm from '@/components/iam-popover-confirm';
   import DeleteDialog from '@/components/iam-confirm-dialog/index.vue';
   import RenderResourcePopover from '../components/prem-view-resource-popover';
@@ -264,7 +266,6 @@
   import EffectConditon from './effect-conditon';
   import SidesliderEffectConditon from './sideslider-effect-condition';
   import DeleteActionDialog from '@/views/group/components/delete-related-action-dialog.vue';
-  import { formatCodeData } from '@/common/util';
 
   export default {
     name: 'CustomPermTable',
@@ -287,6 +288,10 @@
         type: String,
         default: ''
       },
+      isSearchPerm: {
+        type: Boolean,
+        default: false
+      },
       emptyData: {
         type: Object,
         default: () => {
@@ -297,6 +302,9 @@
             tipType: ''
           };
         }
+      },
+      curSearchParams: {
+        type: Object
       }
     },
     data () {
@@ -341,7 +349,8 @@
           text: '',
           tip: '',
           tipType: ''
-        }
+        },
+        searchParams: {}
       };
     },
     computed: {
@@ -393,6 +402,12 @@
           this.policyEmptyData = Object.assign({}, value);
         },
         immediate: true
+      },
+      curSearchParams: {
+        handler (value) {
+          this.searchParams = Object.assign({}, value);
+        },
+        immediate: true
       }
     },
     methods: {
@@ -404,11 +419,13 @@
        */
       async fetchActions (systemId) {
         const params = {
-          system_id: systemId,
           user_id: this.user.username
         };
         if (this.externalSystemId) {
           params.system_id = this.externalSystemId;
+        }
+        if (systemId) {
+          params.system_id = systemId;
         }
         try {
           const res = await this.$store.dispatch('permApply/getActions', params);
@@ -416,15 +433,48 @@
           this.handleActionLinearData();
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
+
+      /**
+       * fetchData
+       */
+      async fetchData (params) {
+        try {
+          let url = '';
+          let queryParams = {};
+          if (this.isSearchPerm) {
+            url = 'perm/getPoliciesSearch';
+            queryParams = {
+              ...this.searchParams
+            };
+          } else {
+            url = 'permApply/getPolicies';
+            queryParams = {
+              system_id: params.systemId
+            };
+          }
+          const { code, data } = await this.$store.dispatch(url, queryParams);
+          // this.policyList = policyData[params.systemId].map(item => {
+          this.policyList = data.length && data.map(item => {
+            const relatedEnvironments = this.linearActionList.find(sub => sub.id === item.id);
+            item.related_environments = relatedEnvironments ? relatedEnvironments.related_environments : [];
+            return new PermPolicy(item);
+          });
+          this.policyEmptyData = formatCodeData(code, this.policyEmptyData, data.length === 0);
+        } catch (e) {
+          console.error(e);
+          this.policyEmptyData = formatCodeData(e.code, this.policyEmptyData);
+          this.messageAdvancedError(e);
+        } finally {
+          this.initRequestQueue.shift();
+          if (this.isSearchPerm) {
+            bus.$emit('on-perm-tab-count', { active: 'CustomPerm', count: this.policyList.length || 0 });
+          }
+        }
+      },
+
       handleActionLinearData () {
         const linearActions = [];
         this.originalCustomTmplList.forEach((item, index) => {
@@ -439,35 +489,7 @@
             });
           });
         });
-
         this.linearActionList = _.cloneDeep(linearActions);
-      },
-      /**
-       * fetchData
-       */
-      async fetchData (params) {
-        try {
-          const { code, data } = await this.$store.dispatch('permApply/getPolicies', { system_id: params.systemId });
-          // this.policyList = policyData[params.systemId].map(item => {
-          this.policyList = data.length && data.map(item => {
-            const relatedEnvironments = this.linearActionList.find(sub => sub.id === item.id);
-            item.related_environments = relatedEnvironments ? relatedEnvironments.related_environments : [];
-            return new PermPolicy(item);
-          });
-          this.policyEmptyData = formatCodeData(code, this.policyEmptyData, data.length === 0);
-        } catch (e) {
-          console.error(e);
-          this.policyEmptyData = formatCodeData(e.code, this.policyEmptyData);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
-        } finally {
-          this.initRequestQueue.shift();
-        }
       },
 
       /**
@@ -540,17 +562,11 @@
           window.changeAlert = false;
           this.isShowSideslider = false;
           this.resetDataAfterClose();
-          this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
+          this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
           this.handleRefreshData();
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           payload && payload.hide();
         }
@@ -793,7 +809,7 @@
             }
             setTimeout(() => {
               this.fetchData(this.params);
-              this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
+              this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
             }, 2000);
           } else {
             await this.$store.dispatch('permApply/deletePerm', {
@@ -806,18 +822,12 @@
             }
             await this.fetchActions(this.systemId);
             await this.fetchData(this.params);
-            this.messageSuccess(this.$t(`m.info['删除成功']`), 2000);
+            this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
             this.$emit('after-delete', this.policyList.length);
           }
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.deleteDialog.loading = false;
           this.deleteDialog.visible = false;

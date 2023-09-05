@@ -12,7 +12,7 @@ Authorization and reclamation interface for individual resource topologies, indi
 #### Parameters
 
 
-| field | type | mandatory | description |
+| Field | Type | Required | Description |
 |:---|:---|:---|:---|
 | asynchronous | boolean | yes | whether to call asynchronously, default no, only synchronous is currently supported
 | operate | string | yes | grant or revoke |
@@ -24,20 +24,20 @@ Authorization and reclamation interface for individual resource topologies, indi
 
 action
 
-| field | type | mandatory | description |
+| Field | Type | Required | Description |
 |:---|:---|:---|:---|
 | id | string | yes | action ID |
 
 subject
 
-| field | type |required | description |
+| Field | Type |Required | Description |
 |:---|:---|:---|:---|
 | type | string | yes | Authorized object type, currently only user | is supported
 | id | string | yes | authorization object ID |
 
 resources
 
-| field | type | mandatory | description |
+| Field | Type | Required | Description |
 |:---|:---|:---|:---|
 | system | string | yes | resource system ID |
 | type | string | yes | resource type ID |
@@ -45,7 +45,7 @@ resources
 
 resources.path
 
-| field | type | whether required | description |
+| Field | Type | Required | Description |
 |:---|:---|:---|:---|
 | type | string | yes | topology node type ID |
 | id | string | yes | topology node instance ID |

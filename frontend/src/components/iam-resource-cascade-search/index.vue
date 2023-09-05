@@ -55,7 +55,7 @@
                     :name="`${option.name} (${option.id})`">
                   </bk-option>
                 </bk-select>
-                <p class="error-tips" v-if="actionError">
+                <p class="error-tips" v-if="actionIdError">
                   {{$t(`m.verify['请选择操作']`)}}
                 </p>
               </iam-form-item>
@@ -139,7 +139,7 @@
             <bk-button
               class="ml20"
               theme="primary"
-              @click="handleSearchUserGroup(true)">
+              @click="handleSearchUserGroup(true, true)">
               {{ $t(`m.common['查询']`) }}
             </bk-button>
             <bk-button
@@ -180,7 +180,6 @@
           :original-data="originalCondition"
           :selection-mode="curSelectionMode"
           :params="params"
-          @on-limit-change="handleLimitChange"
         />
       </div>
       <div slot="footer" style="margin-left: 25px;">
@@ -292,17 +291,7 @@
           {
             id: 'description',
             name: this.$t(`m.common['描述']`),
-            disabled: true
-          },
-          {
-            id: 'system_id',
-            name: this.$t(`m.common['系统包含']`),
-            remoteMethod: this.handleRemoteSystem
-          },
-          {
-            id: 'role_id',
-            name: this.$t(`m.grading['管理空间']`),
-            remoteMethod: this.handleGradeAdmin
+            default: true
           }
         ],
         curResourceData: {
@@ -326,6 +315,8 @@
         isSearchSystem: false,
         groupIndex: -1,
         curResIndex: -1,
+        curCopyParams: {},
+        params: {},
         queryParams: {},
         searchUserGroupList: [],
         searchDepartGroupList: [],
@@ -366,7 +357,9 @@
       active: {
         async handler (newValue, oldValue) {
           if (oldValue && oldValue !== newValue) {
-            await this.handleSearchUserGroup(true);
+            if (this.searchList.length) {
+              await this.handleSearchUserGroup(true, false);
+            }
           }
         },
         immediate: true
@@ -389,7 +382,7 @@
         this.fetchSystemList();
         const isSearch = this.applyGroupData.system_id || Object.keys(this.searchParams).length > 0;
         if (isSearch) {
-          await this.handleSearchUserGroup();
+          await this.handleSearchUserGroup(false, false);
         }
       },
 
@@ -403,29 +396,24 @@
           this.systemSelectList = data || [];
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
-      async handleSearchUserGroup (isClick = false) {
-        this.handleManualInput();
+      async handleSearchUserGroup (isClick = false, isTagInput = false) {
+        // isTagInput是处理未生成tag的内容
+        this.systemIdError = false;
+        this.handleManualInput(isTagInput);
         const isSearch = this.applyGroupData.system_id || Object.keys(this.searchParams).length > 0;
         if (isSearch) {
-          this.systemIdError = false;
-          if (!this.applyGroupData.system_id && ['CustomPerm'].includes(this.active)) {
-            this.systemIdError = true;
-            return;
-          }
+          // if (!this.applyGroupData.system_id && ['CustomPerm'].includes(this.active)) {
+          //   this.systemIdError = true;
+          //   return;
+          // }
           let resourceInstances = _.cloneDeep(this.resourceInstances);
           if (this.applyGroupData.system_id) {
             if (!this.applyGroupData.action_id) {
-              this.actionError = true;
+              this.actionIdError = true;
               return;
             }
             if (this.curResourceTypeList.length && !this.curResourceData.type) {
@@ -451,14 +439,12 @@
               return;
             }
           }
-          this.isSearchSystem = true;
           if (isClick) {
             this.resetPagination();
           }
           await this.fetchSearchUserGroup(resourceInstances);
         } else {
           // 如果没有搜索参数，重置数据
-          this.isSearchSystem = false;
           this.emptyData.tipType = '';
           this.$emit('on-refresh-table');
         }
@@ -489,7 +475,7 @@
 
       async handleCascadeChange () {
         this.systemIdError = false;
-        this.actionError = false;
+        this.actionIdError = false;
         this.resourceTypeError = false;
         this.resourceInstanceError = false;
         this.resourceActionData = [];
@@ -503,11 +489,7 @@
             this.handleFormatRecursion(data || []);
           } catch (e) {
             console.error(e);
-            this.bkMessageInstance = this.$bkMessage({
-              limit: 1,
-              theme: 'error',
-              message: e.message || e.data.msg || e.statusText
-            });
+            this.messageAdvancedError(e);
           }
         }
       },
@@ -530,11 +512,11 @@
         this.curSelectMenu = '';
         this.curInputText = '';
         this.emptyData.tipType = 'search';
-        this.resetPagination();
         if (!result.length) {
+          this.resetPagination();
           this.resetLocationHref();
         }
-        this.handleSearchUserGroup();
+        this.handleSearchUserGroup(true, false);
       },
 
       handleEmptyClear () {
@@ -547,7 +529,7 @@
         }
         this.resetPagination();
         this.resetSearchParams();
-        this.handleSearchUserGroup();
+        this.handleSearchUserGroup(false, false);
       },
 
       async handleClearSearch () {
@@ -556,7 +538,7 @@
         this.emptyData.tipType = '';
         this.resourceInstances = [];
         this.resetPagination();
-        this.handleSearchUserGroup();
+        this.handleSearchUserGroup(false, false);
       },
 
       handleResourceTypeChange (index) {
@@ -677,7 +659,7 @@
       },
 
       // 处理手动输入各种场景
-      handleManualInput () {
+      handleManualInput (isTagInput) {
         if (this.curSelectMenu) {
           // 转换为tag标签后,需要清空输入框的值
           if (this.$refs.searchSelectRef && this.$refs.searchSelectRef.$refs.searchSelect) {
@@ -694,12 +676,21 @@
             && this.curInputText) {
             this.$refs.searchSelectRef.$refs.searchSelect.localValue = '';
           }
-          if (!this.searchList.length) {
+          if (!this.searchList.length && isTagInput) {
             // 处理无tag标签，直接输入内容情况
             this.searchParams.name = this.curInputText;
             if (!this.curInputText) {
               delete this.searchParams.name;
             }
+            this.$nextTick(() => {
+              const localValue = this.$refs.searchSelectRef.$refs.searchSelect.localValue;
+              this.searchParams.name = localValue;
+              if (!localValue) {
+                delete this.searchParams.name;
+              }
+              // 处理切换tab，只输入内容
+              this.$emit('on-input-value', localValue);
+            });
           }
         }
       },
@@ -785,6 +776,13 @@
           values: [value]
         };
       },
+      
+      resetDataAfterClose () {
+        this.curResIndex = -1;
+        this.groupIndex = -1;
+        this.params = {};
+        this.resourceInstanceSideSliderTitle = '';
+      },
 
       resetLocationHref () {
         // 需要删除的url上的字段
@@ -812,10 +810,9 @@
           type: ''
         });
         this.systemIdError = false;
-        this.actionError = false;
+        this.actionIdError = false;
         this.resourceTypeError = false;
         this.resourceInstanceError = false;
-        this.isSearchSystem = false;
         this.resourceInstances = [];
         this.resetLocationHref();
       }

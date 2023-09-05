@@ -7,7 +7,7 @@
     </div>
     <div class="header-breadcrumbs fl">
       <div class="nav-container">
-        <span v-for="(item, i) in navData" :key="item.id">
+        <span v-for="(item, i) in navData" :key="i">
           <h2
             v-if="item.show"
             class="heaer-nav-title"
@@ -214,7 +214,7 @@
         default: ''
       },
       userGroupId: {
-        type: String
+        type: [String, Number]
       }
     },
     data () {
@@ -412,13 +412,7 @@
           });
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
       handleClickOutSide (e) {

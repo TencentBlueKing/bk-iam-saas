@@ -6,6 +6,18 @@
           :data="formData"
           ref="basicInfoRef"
           @on-change="handleBasicInfoChange" />
+        <bk-checkbox
+          class="select-wrap-checkbox"
+          v-model="formData.apply_disable"
+          :disabled="userGroupAttributes.apply_disable"
+        >
+          <span
+            class="checkbox-sync-perm"
+            v-bk-tooltips="$t(`m.userGroup['设置不可被申请，则无法申请加入此用户组']`)">
+            {{ $t(`m.userGroup['不可被申请']`) }}
+          </span>
+          <span>({{ $t(`m.userGroup['该组只能管理员主动授权，用户无法主动申请']`) }})</span>
+        </bk-checkbox>
       </section>
     </render-horizontal-block>
     <render-action
@@ -23,7 +35,7 @@
     <render-horizontal-block
       :label="$t(`m.grading['操作和资源范围']`)"
       v-if="isHasPermTemplate">
-      <div class="grade-admin-select-wrapper">
+      <div class="user-group-select-wrapper">
         <div class="action">
           <section class="action-wrapper" @click.stop="handleAddPerm">
             <Icon bk type="plus-circle-shape" />
@@ -178,7 +190,8 @@
         formData: {
           name: '',
           approval_process_id: 1,
-          description: ''
+          description: '',
+          apply_disable: false
         },
         isShowAddMemberDialog: false,
         isShowMemberAdd: true,
@@ -219,6 +232,9 @@
         groupAttributes: {
           source_type: '',
           source_from_role: false
+        },
+        userGroupAttributes: {
+          apply_disable: false
         }
       };
     },
@@ -379,9 +395,25 @@
     },
     methods: {
       async handleInit () {
+        this.fetchUserGroupSet();
         if (this.groupId) {
-          this.fetchDetail();
-          this.fetchGroupSystem();
+          await this.fetchDetail();
+          await this.fetchGroupSystem();
+        }
+      },
+
+      // 获取分级管理员用户组配置
+      async fetchUserGroupSet () {
+        if (!['subset_manager'].includes(this.user.role.type)) {
+          try {
+            const { data } = await this.$store.dispatch('userGroupSetting/getUserGroupSetConfig');
+            if (data) {
+              this.userGroupAttributes = Object.assign({}, { apply_disable: data.apply_disable });
+            }
+          } catch (e) {
+            console.error(e);
+            this.messageAdvancedError(e);
+          }
         }
       },
 
@@ -394,21 +426,17 @@
             params.hidden = false;
           }
           const { data } = await this.$store.dispatch('userGroup/getUserGroupDetail', params);
-          const { name, description, attributes } = data;
+          const { name, description, attributes, apply_disable } = data;
           this.groupAttributes = Object.assign(this.groupAttributes, attributes);
           this.formData = Object.assign(this.formData, {
             name: `${name}_${this.$t(`m.grading['克隆']`)}`,
+            // eslint-disable-next-line camelcase
+            apply_disable: apply_disable || false,
             description
           });
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
             
@@ -443,13 +471,7 @@
           this.cloneLoading = false;
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -511,13 +533,7 @@
           // this.$set(item, 'tableDataBackup', tableDataBackup);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -539,13 +555,7 @@
           groupSystem.templates = res.data; // 赋值给展开项
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -602,13 +612,7 @@
           this.tableListBackup = _.cloneDeep(this.tableList);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           item.loading = false;
         }
@@ -621,13 +625,7 @@
           this.aggregationDataClone[id] = res.data.aggregations;
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -640,13 +638,7 @@
           this.authorizationDataClone[id] = res.data.filter(item => item.id !== '*');
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -1212,27 +1204,21 @@
           this.submitLoading = true;
           window.changeDialog = false;
           const params = {
-                        ...this.formData,
-                        members: this.members,
-                        expired_at: this.expired_at,
-                        templates
+            ...this.formData,
+            members: this.members,
+            expired_at: this.expired_at,
+            templates
           };
           try {
             await this.$store.dispatch('userGroup/addUserGroup', params);
-            this.messageSuccess(this.$t(`m.info['克隆用户组成功']`), 1000);
+            this.messageSuccess(this.$t(`m.info['克隆用户组成功']`), 3000);
             bus.$emit('show-guide', 'process');
             this.$router.push({
               name: 'userGroup'
             });
           } catch (e) {
             console.error(e);
-            this.bkMessageInstance = this.$bkMessage({
-              limit: 1,
-              theme: 'error',
-              message: e.message || e.data.msg || e.statusText,
-              ellipsisLine: 2,
-              ellipsisCopy: true
-            });
+            this.messageAdvancedError(e);
           } finally {
             this.submitLoading = false;
           }
@@ -1330,52 +1316,7 @@
     }
   };
 </script>
+
 <style lang="postcss" scoped>
-    .iam-create-user-group-wrapper {
-        padding-bottom: 50px;
-        .add-perm-action {
-            margin: 16px 0 20px 0;
-        }
-    }
-    .grade-admin-select-wrapper {
-        .action {
-            position: relative;
-            display: flex;
-            justify-content: flex-start;
-            .action-wrapper {
-                font-size: 14px;
-                color: #3a84ff;
-                cursor: pointer;
-                &:hover {
-                    color: #699df4;
-                }
-                i {
-                    position: relative;
-                    top: -1px;
-                    left: 2px;
-                }
-            }
-            .info-icon {
-                margin: 2px 0 0 2px;
-                color: #c4c6cc;
-                &:hover {
-                    color: #3a84ff;
-                }
-            }
-        }
-        .info-wrapper {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 16px;
-            line-height: 24px;
-            .tips,
-            .text {
-                line-height: 20px;
-                font-size: 12px;
-                &:not(&:last-child) {
-                  margin-right: 20px;
-                }
-            }
-        }
-    }
+@import '@/css/mixins/create-user-group.css';
 </style>

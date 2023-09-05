@@ -224,11 +224,7 @@
               ]);
             } catch (e) {
               console.error(e);
-              this.bkMessageInstance = this.$bkMessage({
-                limit: 1,
-                theme: 'error',
-                message: e.message || e.data.msg || e.statusText
-              });
+              this.messageAdvancedError(e);
             } finally {
               this.isLoading = false;
             }
@@ -277,7 +273,7 @@
           return;
         }
         if (item.resource_type_chain.length === 1) {
-          this.messageError(this.$t(`m.access['至少要有一个资源实例层级']`), 1000);
+          this.messageWarn(this.$t(`m.access['至少要有一个资源实例层级']`), 1000);
           return;
         }
 
@@ -309,13 +305,7 @@
           this.systemList.splice(0, this.systemList.length, ...systemList);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -346,13 +336,7 @@
           resolve(sys);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -429,13 +413,7 @@
           this.instanceSelectionListBackup = JSON.parse(JSON.stringify(instanceSelectionList));
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -474,16 +452,12 @@
               item.title = item.name;
               item.isEdit = false;
               item.isNewAdd = false;
-              this.messageSuccess(this.$t(`m.access['保存实例视图成功']`), 1000);
+              this.messageSuccess(this.$t(`m.access['保存实例视图成功']`), 3000);
               this.$emit('on-refresh-system-list', 'instanceSelection');
               this.addValidatorRules(); // 保存成功重新添加规则
             } catch (e) {
               console.error(e);
-              this.bkMessageInstance = this.$bkMessage({
-                limit: 1,
-                theme: 'error',
-                message: e.message || e.data.msg || e.statusText
-              });
+              this.messageAdvancedError(e);
             } finally {
               item.submitLoading = false;
               this.instanceSelectionListBackup = JSON.parse(JSON.stringify(this.instanceSelectionList));
@@ -539,11 +513,7 @@
               return true;
             } catch (e) {
               console.error(e);
-              me.bkMessageInstance = me.$bkMessage({
-                limit: 1,
-                theme: 'error',
-                message: e.message || e.data.msg || e.statusText
-              });
+              me.messageAdvancedError(e);
               return false;
             } finally {
               item.submitLoading = false;

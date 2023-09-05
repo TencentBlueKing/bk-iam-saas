@@ -204,7 +204,7 @@
         default: ''
       },
       userGroupId: {
-        type: String
+        type: [String, Number]
       }
     },
     data () {
@@ -359,13 +359,7 @@
           });
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
       handleClickOutSide (e) {
@@ -477,7 +471,7 @@
       async handleSwitchRole ({ id, type, name }) {
         try {
           await this.$store.dispatch('role/updateCurrentRole', { id });
-          this.messageSuccess(this.$t(`m.info['切换身份成功']`), 2000);
+          this.messageSuccess(this.$t(`m.info['切换身份成功']`), 3000);
           this.curIdentity = id === 0 ? 'STAFF' : name;
           this.curRole = type;
           this.curRoleId = id;
@@ -487,13 +481,7 @@
           bus.$emit('theme-change', this.curRole);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 

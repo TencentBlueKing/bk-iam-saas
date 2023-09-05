@@ -147,7 +147,7 @@
     },
     computed: {
       applyTitle () {
-        return `${this.$t(`m.myApply['申请内容']`)}${this.$t(`m.common['（']`)}${this.system.system_name}}${this.$t(`m.common['）']`)}`;
+        return `${this.$t(`m.myApply['申请内容']`)}${this.$t(`m.common['（']`)}${this.system.system_name}${this.$t(`m.common['）']`)}`;
       },
       isShowPreview () {
         return (payload) => {

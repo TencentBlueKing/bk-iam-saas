@@ -135,7 +135,7 @@
                 type="rating_manager_authorization_scope"
                 direction="right"
                 :loading="isLoading"
-                :style="renderLabelWidth('rating_manager_merge_action_guide')"
+                :cur-style="renderLabelWidth('rating_manager_merge_action_guide')"
                 :content="$t(`m.guide['聚合操作']`)" />
               <div
                 v-for="item in AGGREGATION_EDIT_ENUM"
@@ -196,7 +196,7 @@
             @on-add="handleAddMember"
             @on-delete="handleMemberDelete"
             @on-change="handleChange"
-            @on-delete-all="handleDeleteAll" />
+          />
         </div>
         <p class="action-empty-error" v-if="isShowMemberEmptyError && !inheritSubjectScope">
           {{ $t(`m.verify['可授权人员边界不可为空']`) }}
@@ -357,84 +357,87 @@
       };
     },
     computed: {
-            ...mapGetters(['user', 'externalSystemsLayout']),
-            /**
-             * isAggregateDisabled
-             */
-            isAggregateDisabled () {
-                const aggregationIds = this.policyList.reduce((counter, item) => {
-                    return item.aggregationId ? counter.concat(item.aggregationId) : counter;
-                }, []);
-                const temps = [];
-                aggregationIds.forEach(item => {
-                    if (!temps.some(sub => sub.includes(item))) {
-                        temps.push([item]);
-                    } else {
-                        const tempObj = temps.find(sub => sub.includes(item));
-                        tempObj.push(item);
-                    }
-                });
-                return !temps.some(item => item.length > 1) && !this.isAllExpanded;
-            },
+      ...mapGetters(['user', 'externalSystemsLayout']),
+      /**
+       * isAggregateDisabled
+       */
+      isAggregateDisabled () {
+          const aggregationIds = this.policyList.reduce((counter, item) => {
+              return item.aggregationId ? counter.concat(item.aggregationId) : counter;
+          }, []);
+          const temps = [];
+          aggregationIds.forEach(item => {
+              if (!temps.some(sub => sub.includes(item))) {
+                  temps.push([item]);
+              } else {
+                  const tempObj = temps.find(sub => sub.includes(item));
+                  tempObj.push(item);
+              }
+          });
+          return !temps.some(item => item.length > 1) && !this.isAllExpanded;
+      },
 
-            /**
-             * expandedText
-             */
-            expandedText () {
-                return this.isAllExpanded ? this.$t(`m.grading['逐项编辑']`) : this.$t(`m.grading['批量编辑']`);
-            },
-            members () {
-                const arr = [];
-                if (this.departments.length > 0) {
-                    arr.push(...this.departments.map(item => {
-                        return {
-                            id: item.id,
-                            type: 'department'
-                        };
-                    }));
-                }
-                if (this.users.length > 0) {
-                    arr.push(...this.users.map(item => {
-                        return {
-                            id: item.username,
-                            type: 'user'
-                        };
-                    }));
-                }
-                return arr;
-            },
-            defaultValue () {
-                if (this.originalList.length < 1) {
-                    return [];
-                }
-                const tempList = [];
-                this.originalList.forEach(item => {
-                    if (!tempList.some(sys => sys.system_id === item.system_id)) {
-                        tempList.push({
-                            system_id: item.system_id,
-                            system_name: item.system_name,
-                            list: [item]
-                        });
-                    } else {
-                        const curData = tempList.find(sys => sys.system_id === item.system_id);
-                        curData.list.push(item);
-                    }
-                });
-                return tempList;
-            },
-            isHasPermTemplate () {
-                return this.policyList.length > 0;
-            },
-            isRatingManager () {
-                return ['rating_manager', 'subset_manager'].includes(this.user.role.type);
-            },
-            isSuperManager () {
-                return this.user.role.type === 'super_manager';
-            },
-            curAuthorizationData () {
-                const data = Object.assign(this.authorizationData, this.authorizationDataByCustom);
-                return data;
-            }
+      /**
+       * expandedText
+       */
+      expandedText () {
+          return this.isAllExpanded ? this.$t(`m.grading['逐项编辑']`) : this.$t(`m.grading['批量编辑']`);
+      },
+      members () {
+          const arr = [];
+          if (this.departments.length > 0) {
+              arr.push(...this.departments.map(item => {
+                  return {
+                      id: item.id,
+                      type: 'department'
+                  };
+              }));
+          }
+          if (this.users.length > 0) {
+              arr.push(...this.users.map(item => {
+                  return {
+                      id: item.username,
+                      type: 'user'
+                  };
+              }));
+          }
+          return arr;
+      },
+      defaultValue () {
+          if (this.originalList.length < 1) {
+              return [];
+          }
+          const tempList = [];
+          this.originalList.forEach(item => {
+              if (!tempList.some(sys => sys.system_id === item.system_id)) {
+                  tempList.push({
+                      system_id: item.system_id,
+                      system_name: item.system_name,
+                      list: [item]
+                  });
+              } else {
+                  const curData = tempList.find(sys => sys.system_id === item.system_id);
+                  curData.list.push(item);
+              }
+          });
+          return tempList;
+      },
+      isHasPermTemplate () {
+          return this.policyList.length > 0;
+      },
+      isRatingManager () {
+          return ['rating_manager', 'subset_manager'].includes(this.user.role.type);
+      },
+      isSuperManager () {
+          return this.user.role.type === 'super_manager';
+      },
+      isStaff () {
+        return this.user.role.type === 'staff';
+      },
+      curAuthorizationData () {
+          const data = Object.assign(this.authorizationData, this.authorizationDataByCustom);
+          return data;
+      }
     },
     watch: {
       reason () {
@@ -483,13 +486,7 @@
           }
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -949,13 +946,7 @@
           this.aggregations = _.cloneDeep(data);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.isLoading = false;
         }
@@ -1230,13 +1221,7 @@
           this.$router.go(-1);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.submitLoading = false;
         }

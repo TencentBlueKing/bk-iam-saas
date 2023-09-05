@@ -216,15 +216,9 @@
           this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
         } catch (e) {
           console.error(e);
-          const { code, data, message, statusText } = e;
+          const { code } = e;
           this.emptyData = formatCodeData(code, this.emptyData);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: message || data.msg || statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.tableLoading = false;
         }
@@ -257,13 +251,7 @@
           this.tracebackMsg = res.data.traceback_msg.replace(/\n/g, '<br>');
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.logDetailLoading = false;
         }
@@ -288,8 +276,11 @@
 
       handleBackClick () {
         this.$emit('handleBack');
+      },
+
+      handleEmptyRefresh () {
+        this.fetchModelingList(true);
       }
-            
     }
   };
 </script>

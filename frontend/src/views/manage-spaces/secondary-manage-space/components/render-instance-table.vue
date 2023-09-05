@@ -1,8 +1,7 @@
 <template>
   <div class="template-resource-instance-table-wrapper">
     <div :class="[
-           'iam-resource-expand',
-           extCls
+           'iam-resource-expand'
          ]"
       @click.stop="handleExpanded">
       <div class="iam-resource-header flex-between">
@@ -1018,13 +1017,7 @@
           this.handleRelatedAction(res.data);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.sliderLoading = false;
         }
@@ -1035,13 +1028,7 @@
           this.authorization[systemId] = res.data.filter(item => item.id !== '*');
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
       handleRelatedAction (payload) {

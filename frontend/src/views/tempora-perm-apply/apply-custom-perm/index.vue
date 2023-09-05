@@ -78,9 +78,9 @@
                           :false-value="false"
                           v-model="act.checked"
                           :disabled="act.disabled"
-                          :ext-cls="['iam-action-cls', { 'iam-action-hover': hoverActionData.actions.includes(act.id) }]"
+                          :ext-cls="hoverActionData.actions.includes(act.id) ? 'iam-action-cls iam-action-hover' : 'iam-action-cls'"
                           @change="handleActionChecked(...arguments, act, item)">
-                          <bk-popover placement="top" :delay="[300, 0]" ext-cls="iam-tooltips-cls">
+                          <bk-popover placement="top" :delay="300" ext-cls="iam-tooltips-cls">
                             <template v-if="act.disabled">
                               <span class="text" @click.stop="handleDisabledClick(act)">{{ act.name }}</span>
                             </template>
@@ -124,12 +124,9 @@
                                 :false-value="false"
                                 v-model="act.checked"
                                 :disabled="act.disabled"
-                                :ext-cls="[
-                                  'iam-action-cls',
-                                  { 'iam-action-hover': hoverActionData.actions.includes(act.id) }
-                                ]"
+                                :ext-cls="hoverActionData.actions.includes(act.id) ? 'iam-action-cls iam-action-hover' : 'iam-action-cls'"
                                 @change="handleSubActionChecked(...arguments, act, subAct, item)">
-                                <bk-popover placement="top" :delay="[300, 0]" ext-cls="iam-tooltips-cls">
+                                <bk-popover placement="top" :delay="300" ext-cls="iam-tooltips-cls">
                                   <template v-if="act.disabled">
                                     <span class="text" @click.stop="handleDisabledClick(act)">{{ act.name }}</span>
                                   </template>
@@ -187,7 +184,7 @@
         <section ref="instanceTableRef">
           <resource-instance-table
             :list="tableData"
-            :original-list="tableDataBackup"
+            :original-table-list="tableDataBackup"
             :system-id="systemValue"
             :is-all-expanded="isAllExpanded"
             ref="resInstanceTableRef"
@@ -498,13 +495,7 @@
           });
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.tableLoading = false;
         }
@@ -578,13 +569,7 @@
         } catch (e) {
           this.$emit('toggle-loading', false);
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
       async fetchRoles (id) {
@@ -594,13 +579,7 @@
           this.gradeMembers = [...res.data];
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.sliderLoading = false;
         }
@@ -779,13 +758,7 @@
           }
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           if (this.requestQueue.length > 0) {
             this.requestQueue.shift();
@@ -943,13 +916,7 @@
           this.aggregations = aggregations;
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           if (this.requestQueue.length > 0) {
             this.requestQueue.shift();
@@ -1740,13 +1707,7 @@
           await this.fetchActions(this.systemValue);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           if (this.requestQueue.length > 0) {
             this.requestQueue.shift();
@@ -1773,13 +1734,7 @@
           this.aggregationsTableData = _.cloneDeep(this.tableData);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           if (this.requestQueue.length > 0) {
             this.requestQueue.shift();
@@ -1813,13 +1768,7 @@
         } catch (e) {
           console.error(e);
           this.emptyData = formatCodeData(e.code, this.emptyData);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           if (this.requestQueue.length > 0) {
             this.requestQueue.shift();
@@ -1909,7 +1858,7 @@
         this.buttonLoading = true;
         try {
           await this.$store.dispatch('applyProvisionPerm/permTemporaryApply', params);
-          this.messageSuccess(this.$t(`m.info['申请已提交']`), 1000);
+          this.messageSuccess(this.$t(`m.info['申请已提交']`), 3000);
           this.$router.push({
             name: 'apply'
           });
@@ -1918,13 +1867,7 @@
           if (['admin'].includes(this.user.username)) {
             this.isShowConfirmDialog = true;
           } else {
-            this.bkMessageInstance = this.$bkMessage({
-              limit: 1,
-              theme: 'error',
-              message: e.message || e.data.msg || e.statusText,
-              ellipsisLine: 2,
-              ellipsisCopy: true
-            });
+            this.messageAdvancedError(e);
           }
         } finally {
           this.buttonLoading = false;
@@ -1984,7 +1927,7 @@
         };
         try {
           await this.$store.dispatch('permApply/applyJoinGroup', params);
-          this.messageSuccess(this.$t(`m.info['申请已提交']`), 1000);
+          this.messageSuccess(this.$t(`m.info['申请已提交']`), 3000);
           this.$router.push({
             name: 'apply'
           });
@@ -1993,13 +1936,7 @@
           if (['admin'].includes(this.user.username)) {
             this.isShowConfirmDialog = true;
           } else {
-            this.bkMessageInstance = this.$bkMessage({
-              limit: 1,
-              theme: 'error',
-              message: e.message || e.data.msg || e.statusText,
-              ellipsisLine: 2,
-              ellipsisCopy: true
-            });
+            this.messageAdvancedError(e);
           }
         } finally {
           this.buttonLoading = false;

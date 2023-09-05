@@ -82,6 +82,9 @@ import applyProvisionPerm from './modules/apply-provision-perm';
 // 管理空间模块
 import spaceManage from './modules/space-manage';
 
+// 用户组设置模块
+import userGroupSetting from './modules/user-group-setting';
+
 Vue.use(Vuex);
 
 const SITE_URL = window.SITE_URL;
@@ -253,6 +256,14 @@ const currentNav = [
         rkey: 'audit',
         path: `${SITE_URL}audit`,
         disabled: false
+      },
+      {
+        icon: 'setting-fill',
+        name: il8n('nav', '用户组设置'),
+        id: 'userGroupSettingNav',
+        rkey: 'userGroupSetting',
+        path: `${SITE_URL}user-group-setting`,
+        disabled: false
       }
     ]
   }
@@ -305,7 +316,8 @@ const store = new Vuex.Store({
     access,
     resourcePermiss,
     applyProvisionPerm,
-    spaceManage
+    spaceManage,
+    userGroupSetting
   },
   state: {
     mainContentLoading: false,
@@ -623,6 +635,10 @@ const store = new Vuex.Store({
 
     updateSystemId (state, payload) {
       state.externalSystemId = payload;
+    },
+
+    setGuideShowByField (state, payload) {
+
     }
   },
   actions: {

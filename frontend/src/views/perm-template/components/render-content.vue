@@ -295,13 +295,7 @@
           this.$store.commit('permTemplate/updatePreGroupOnePage', Math.ceil(res.data.count / 5) === 1);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -319,13 +313,7 @@
           this.initialDescription = this.description;
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.requestQueue.shift();
         }
@@ -339,13 +327,7 @@
           this.$refs.commonActionRef && this.$refs.commonActionRef.handleSetSelectData($id);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -367,13 +349,7 @@
           this.$refs.commonActionRef && this.$refs.commonActionRef.handleSetActive(addData.$id);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -487,13 +463,7 @@
           }
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.isSystemListLoading = false;
         }
@@ -587,13 +557,7 @@
           this.commonActions.splice(0, this.commonActions.length, ...commonActions);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.requestQueue.shift();
         }
@@ -613,13 +577,7 @@
           this.handleActionLinearData();
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.requestQueue.shift();
         }
@@ -710,13 +668,7 @@
           });
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.nextRequestQueue.shift();
         }
@@ -733,13 +685,7 @@
           window.localStorage.setItem('iam-header-name-cache', this.tempName);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.nextRequestQueue.shift();
         }
@@ -747,13 +693,7 @@
 
       async handleNextStep () {
         if (!this.hasGroupPreview && this.originalCustomTmplList.some(e => e.deleteCount)) {
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: '由于分级管理员的授权范围没有包含此操作，如需使用该模板进行新的授权必须先删除该操作。',
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageWarn(this.$t(`m.permTemplate['由于分级管理员的授权范围没有包含此操作，如需使用该模板进行新的授权必须先删除该操作。']`), 3000);
           return;
         }
         this.handleNameBlur(this.tempName);
@@ -802,11 +742,7 @@
             });
           } catch (e) {
             console.error(e);
-            this.bkMessageInstance = this.$bkMessage({
-              limit: 1,
-              theme: 'error',
-              message: e.message || e.data.msg || e.statusText
-            });
+            this.messageAdvancedError(e);
           } finally {
             this.nextRequestQueue.shift();
           }
@@ -848,7 +784,7 @@
         this.saveLoading = true;
         try {
           await this.$store.dispatch('permTemplate/createTemplate', params);
-          this.messageSuccess(this.$t(`m.info['新建权限模板成功']`), 1000);
+          this.messageSuccess(this.$t(`m.info['新建权限模板成功']`), 3000);
           bus.$emit('show-guide', 'group');
           window.changeDialog = false;
           this.$router.push({
@@ -856,13 +792,7 @@
           });
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.saveLoading = false;
         }

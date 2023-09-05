@@ -104,7 +104,7 @@
                     :disabled="tmpl.disabled"
                     ext-cls="custom-action-checkbox-cls"
                     @change="handleActionChange(...arguments, customTmpl, tmpl.id, tmpl)">
-                    <bk-popover placement="top" :delay="[300, 0]" ext-cls="iam-tooltips-cls">
+                    <bk-popover placement="top" :delay="300" ext-cls="iam-tooltips-cls">
                       <span class="text">{{ tmpl.name }}</span>
                       <div slot="content" class="iam-perm-apply-action-popover-content">
                         <div>
@@ -135,7 +135,7 @@
                         v-model="subTmpl.checked"
                         ext-cls="custom-action-checkbox-sub-cls"
                         @change="handleSubActionChange(...arguments, customTmpl, subTmpl, subTmpl.id)">
-                        <bk-popover placement="top" :delay="[300, 0]" ext-cls="iam-tooltips-cls">
+                        <bk-popover placement="top" :delay="300" ext-cls="iam-tooltips-cls">
                           <span class="text">{{ subTmpl.name }}</span>
                           <div slot="content" class="iam-perm-apply-action-popover-content">
                             <div>
@@ -207,7 +207,7 @@
         default: ''
       },
       defaultData: {
-        type: Object,
+        type: Array,
         default: () => []
       },
       aggregation: {
@@ -947,15 +947,9 @@
 
       fetchErrorMsg (payload) {
         console.error(payload);
-        const { code, data, message, statusText } = payload;
+        const { code } = payload;
         this.emptyData = formatCodeData(code, this.emptyData);
-        this.bkMessageInstance = this.$bkMessage({
-          limit: 1,
-          theme: 'error',
-          message: message || data.msg || statusText,
-          ellipsisLine: 2,
-          ellipsisCopy: true
-        });
+        this.messageAdvancedError(payload);
       },
 
       handleCancel (payload) {

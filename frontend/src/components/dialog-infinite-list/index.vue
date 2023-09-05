@@ -74,7 +74,9 @@
 
   export default {
     name: 'dialog-infinite-list',
-    inject: ['getGroupAttributes'],
+    inject: {
+      getGroupAttributes: { value: 'getGroupAttributes', default: null }
+    },
     props: {
       // 所有数据
       allData: {
@@ -279,7 +281,7 @@
               node.is_selected = !node.is_selected;
               this.$emit('on-checked', node.is_selected, !node.is_selected, node.is_selected, node);
             } else {
-              this.messageError(this.$t(`m.verify['当前选择项不在授权范围内']`));
+              this.messageWarn(this.$t(`m.verify['当前选择项不在授权范围内']`), 3000);
             }
           }
         }
@@ -297,7 +299,7 @@
               node.is_selected = !node.is_selected;
               this.$emit('on-checked', node.is_selected, !node.is_selected, true, node);
             } else {
-              this.messageError(this.$t(`m.verify['当前选择项不在授权范围内']`));
+              this.messageWarn(this.$t(`m.verify['当前选择项不在授权范围内']`), 3000);
             }
           }
         }

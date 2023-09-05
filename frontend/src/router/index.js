@@ -165,6 +165,7 @@ export const beforeEach = async (to, from, next) => {
           if (existValue('externalApp')) {
             next();
           } else {
+            // next();
             next({ path: `${SITE_URL}${defaultRoute[navIndex]}` });
           }
         } else {

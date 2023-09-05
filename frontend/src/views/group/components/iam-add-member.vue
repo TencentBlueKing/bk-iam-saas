@@ -295,7 +295,9 @@
 
   export default {
     name: '',
-    inject: ['getGroupAttributes'],
+    inject: {
+      getGroupAttributes: { value: 'getGroupAttributes', default: null }
+    },
     components: {
       InfiniteTree,
       dialogInfiniteList,
@@ -401,6 +403,7 @@
         manualInputError: false,
         manualValueBackup: [],
         manualOrgList: [],
+        manualUserList: [],
         filterUserList: [],
         filterDepartList: [],
         usernameList: [],
@@ -627,20 +630,36 @@
 
       handleManualInput (value) {
         this.manualOrgList = [];
+        this.manualUserList = [];
         if (value) {
-          const inputValue = value.split()[0];
-          if (inputValue.indexOf('{') > -1 && inputValue.indexOf('}') > -1) {
+          const inputValue = _.cloneDeep(value.split()[0]);
+          if (inputValue.indexOf('{') > -1
+            && inputValue.indexOf('}') > -1
+            && (inputValue.includes('&type=department')
+              || inputValue.includes('&type=user'))) {
+            this.$nextTick(() => {
+              this.manualValue = '';
+              this.$refs.manualInputRef.curValue = '';
+            });
             const splitValue = value.split(/\n/).map(item => {
               const str = item.slice(item.indexOf('{') + 1, item.indexOf('}'));
-              if (item.indexOf('{') > -1 && item.indexOf('}') > -1 && /^[+-]?\d*(\.\d*)?(e[+-]?\d+)?$/.test(str)) {
-                this.manualOrgList.push(item);
-                item = item.substring(item.indexOf('{'), item.indexOf('&') > -1 ? item.indexOf('&') : item.length);
+              if (item.indexOf('{') > -1 && item.indexOf('}') > -1) {
+                if (item.includes('&type=user')) {
+                  this.manualUserList.push(item);
+                  item = item.substring(item.indexOf('{') + 1, item.indexOf('}'));
+                }
+                if (/^[+-]?\d*(\.\d*)?(e[+-]?\d+)?$/.test(str) && item.includes('type=department')) {
+                  this.manualOrgList.push(item);
+                  item = item.substring(item.indexOf('{'), item.indexOf('&') > -1 ? item.indexOf('&') : item.length);
+                }
               }
               return item;
             });
             if (this.$refs.manualInputRef) {
-              this.manualValue = splitValue.join('\n');
-              this.$refs.manualInputRef.curValue = splitValue.join('\n');
+              setTimeout(() => {
+                this.manualValue = _.cloneDeep(splitValue.join('\n'));
+                this.$refs.manualInputRef.curValue = _.cloneDeep(splitValue.join('\n'));
+              }, 200);
             }
           }
         }
@@ -697,7 +716,13 @@
               // formatStr = formatStr.replace(this.evil('/' + item + '(;\\n|\\s\\n|)/g'), '');
 
               // 处理既有部门又有用户且不连续相同类型的展示数据
-              formatStr = formatStr.replace(this.evil('/' + item + '(;\\n|\\s\\n|)/'), '').replace('\n\n', '\n').replace('\s\s', '\s').replace(';;', '');
+              formatStr = formatStr
+                .replace(this.evil('/' + item + '(;\\n|\\s\\n|)/'), '')
+                .replace('\n\n', '\n')
+                .replace('\s\s', '\s')
+                .replace(';;', '');
+              // 处理复制全部用户不相连的两个不在授权范围内的用户存在空字符
+              formatStr = formatStr.split(/;|\n|\s/).filter(item => item !== '').join('\n');
             });
             // 处理只选择全部符合条件的用户，还存在特殊符号的情况
             if (formatStr === '\n' || formatStr === '\s' || formatStr === ';') {
@@ -713,13 +738,9 @@
           const { response } = e;
           // 处理如果是前端校验为空导致的报错，使用前端自定义提示
           if (response && [400].includes(response.status)) {
-            this.messageError(this.$t(`m.verify['用户名输入格式错误']`), 2000);
+            this.messageWarn(this.$t(`m.verify['用户名输入格式错误']`), 3000);
           } else {
-            this.bkMessageInstance = this.$bkMessage({
-              limit: 1,
-              theme: 'error',
-              message: e.message || e.data.msg || e.statusText
-            });
+            this.messageAdvancedError(e);
           }
         } finally {
           this.manualAddLoading = false;
@@ -734,7 +755,7 @@
           const departGroups = this.filterDepartList.filter(item => departData.includes(item));
           if (departGroups.length && this.getGroupAttributes) {
             if (this.getGroupAttributes().source_from_role) {
-              this.messageError(this.$t(`m.common['管理员组不能添加部门']`), 2000);
+              this.messageWarn(this.$t(`m.common['管理员组不能添加部门']`), 3000);
               this.manualInputError = true;
               return;
             }
@@ -743,7 +764,7 @@
               return {
                 id: Number(item.slice(item.indexOf('{') + 1, item.indexOf('}'))),
                 name: item.slice(item.indexOf('}') + 1, item.indexOf('&') > -1 ? item.indexOf('&') : item.length),
-                count: item.slice(item.indexOf('&count=') + 7, item.length - 1),
+                count: item.slice(item.indexOf('&count=') + 7, item.indexOf('&type=')),
                 full_name: item.slice(item.indexOf('&full_name=') + 11, item.indexOf('&count=')),
                 type: 'depart',
                 showCount: true
@@ -809,12 +830,7 @@
             return result;
           }
         } catch (e) {
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 2,
-            theme: 'error',
-            ellipsisLine: 10,
-            message: e.message || e.data.msg || e.statusText
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -868,13 +884,7 @@
           }
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.requestQueue.shift();
         }
@@ -889,13 +899,7 @@
           }
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.requestQueue.shift();
         }
@@ -987,15 +991,9 @@
           this.treeList = _.cloneDeep(departments);
         } catch (e) {
           console.error(e);
-          const { code, data, message, statusText } = e;
+          const { code } = e;
           this.emptyData = formatCodeData(code, this.emptyData);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: message || data.msg || statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.treeLoading = false;
           if (isDialogLoading) {
@@ -1064,12 +1062,9 @@
           this.treeList = _.cloneDeep(categories);
         } catch (e) {
           console.error(e);
-          const { code, data, message, statusText } = e;
+          const { code } = e;
           this.emptyData = formatCodeData(code, this.emptyData);
-          this.bkMessageInstance = this.$bkMessage({
-            theme: 'error',
-            message: message || data.msg || statusText
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.treeLoading = false;
           if (isDialogLoading) {
@@ -1213,12 +1208,9 @@
           this.emptyData = formatCodeData(code, this.emptyData, isEmpty);
         } catch (e) {
           console.error(e);
-          const { code, data, message, statusText } = e;
+          const { code } = e;
           this.emptyData = formatCodeData(code, this.emptyData);
-          this.bkMessageInstance = this.$bkMessage({
-            theme: 'error',
-            message: message || data.msg || statusText
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.treeLoading = false;
         }
@@ -1351,10 +1343,7 @@
           payload.children.splice(0, payload.children.length, ...loadChildren);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText
-          });
+          this.messageAdvancedError(e);
         } finally {
           setTimeout(() => {
             payload.loading = false;

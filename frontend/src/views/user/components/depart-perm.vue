@@ -198,13 +198,7 @@
           this.curPageData = this.getDataByPage(this.pageConf.current);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           // if (!isTableLoading) {
           //     this.$emit('on-init', true)
@@ -244,17 +238,11 @@
             expired_at: expiredAt
           });
           this.isShowPermTemplateDialog = false;
-          this.messageSuccess(this.$t(`m.info['添加权限成功']`), 2000);
+          this.messageSuccess(this.$t(`m.info['添加权限成功']`), 3000);
           await this.fetchPermTemplates(true);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         } finally {
           this.addPermLoading = false;
         }
@@ -397,18 +385,12 @@
             id: this.deleteDialogConf.row.id
           });
           this.cancelDelete();
-          this.messageSuccess(this.$t(`m.info['解除成功']`), 2000);
+          this.messageSuccess(this.$t(`m.info['解除成功']`), 3000);
           await this.fetchPermTemplates(true);
         } catch (e) {
           this.deleteDialogConf.loading = false;
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 

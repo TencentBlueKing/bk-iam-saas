@@ -4,46 +4,46 @@
 
 | 字段 |  类型 |是否必须  | 描述  |
 |:---|:---|:---|:---|
-|system|字符串|是|系统 id|
-|actions|数组|是|申请权限的操作|
+|system|sting|是|系统 id|
+|actions|Arrary|是|申请权限的操作|
 
 actions
 
 | 字段 |  类型 |是否必须  | 描述  |
 |:---|:---|:---|:---|
-|id|字符串|是|操作 id|
-|related_resource_types|数组|是|操作关联的资源类型, `资源类型的顺序必须操作注册时的顺序一致`|
+|id|sting|是|操作 id|
+|related_resource_types|Arrary|是|操作关联的资源类型, `资源类型的顺序必须操作注册时的顺序一致`|
 
 related_resource_types
 
 | 字段 |  类型 |是否必须  | 描述  |
 |:---|:---|:---|:---|
-|system|字符串|是|资源类型的系统 id|
-|type|字符串|是|资源类型|
-|instances|数组[数组]|否|资源实例,可选|
-|attributes|数组|否|实例属性,可选|
+|system|sting|是|资源类型的系统 id|
+|type|sting|是|资源类型|
+|instances|Arrary[Arrary]|否|资源实例,可选|
+|attributes|Arrary|否|实例属性,可选|
 
 related_resource_types.instances
 
 | 字段 |  类型 |是否必须  | 描述  |
 |:---|:---|:---|:---|
-|type|字符串|是|资源类型|
-|id|字符串|是|资源实例 id|
+|type|sting|是|资源类型|
+|id|sting|是|资源实例 id|
 
 related_resource_types.attributes
 
 | 字段 |  类型 |是否必须  | 描述  |
 |:---|:---|:---|:---|
-|id|字符串|是|属性 key|
-|name|字符串|是|属性 key 名称|
-|values|数组|是|属性的可选值|
+|id|sting|是|属性 key|
+|name|sting|是|属性 key 名称|
+|values|Arrary|是|属性的可选值|
 
 related_resource_types.attributes.values
 
 | 字段 |  类型 |是否必须  | 描述  |
 |:---|:---|:---|:---|
-|id|字符串|是|属性 value|
-|name|字符串|是|属性 value 名称|
+|id|sting|是|属性 value|
+|name|sting|是|属性 value 名称|
 
 #### Request
 
@@ -182,7 +182,7 @@ data
 
 | 字段      |  类型      |  描述      |
 |:---|:---|:---|
-|url|字符串|权限申请重定向 URL|
+|url|sting|权限申请重定向 URL|
 
 
 返回结果错误说明

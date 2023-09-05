@@ -6,7 +6,7 @@
         :controllable="controllableSteps.controllable"
         :cur-step.sync="controllableSteps.curStep"
         :before-change="beforeStepChanged"
-        @step-changed="stepChanged">
+      >
       </bk-steps>
       <smart-action class="content-wrapper">
         <render-horizontal-block :label="$t(`m.access['操作分组']`)">
@@ -423,13 +423,7 @@
           this.allActionList.splice(0, this.allActionList.length, ...allActionList);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -453,13 +447,7 @@
           this.groupList.splice(0, this.groupList.length, ...groupList);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -480,13 +468,7 @@
           this.commonList.splice(0, this.commonList.length, ...commonList);
         } catch (e) {
           console.error(e);
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: e.message || e.data.msg || e.statusText,
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
+          this.messageAdvancedError(e);
         }
       },
 
@@ -803,11 +785,7 @@
               return true;
             } catch (e) {
               console.error(e);
-              me.bkMessageInstance = me.$bkMessage({
-                limit: 1,
-                theme: 'error',
-                message: e.message || e.data.msg || e.statusText
-              });
+              me.messageAdvancedError(e);
               return false;
             }
           }
@@ -870,11 +848,7 @@
               return true;
             } catch (e) {
               console.error(e);
-              me.bkMessageInstance = me.$bkMessage({
-                limit: 1,
-                theme: 'error',
-                message: e.message || e.data.msg || e.statusText
-              });
+              me.messageAdvancedError(e);
               return false;
             }
           }
@@ -1002,11 +976,7 @@
               return true;
             } catch (e) {
               console.error(e);
-              me.bkMessageInstance = me.$bkMessage({
-                limit: 1,
-                theme: 'error',
-                message: e.message || e.data.msg || e.statusText
-              });
+              me.messageAdvancedError(e);
               return false;
             }
           }
