@@ -74,17 +74,33 @@
                   <div
                     v-for="(item, index) in originalCustomTmplList"
                     :key="index"
-                    :class="['action-item', { 'set-border': originalCustomTmplList.length > 1 }]">
-                    <p style="cursor: pointer;" @click.stop="handleExpanded(item)" v-if="!(originalCustomTmplList.length === 1 && !isShowGroupAction(item))">
+                    :class="[
+                      'action-item',
+                      { 'set-border': originalCustomTmplList.length > 1 },
+                      { 'action-item-expand': item.expanded }
+                    ]"
+                  >
+                    <p
+                      v-if="!(originalCustomTmplList.length === 1 && !isShowGroupAction(item))"
+                      :class="['action-item-title']"
+                      @click.stop="handleExpanded(item)"
+                    >
                       <section :class="['action-group-name', { 'set-cursor': originalCustomTmplList.length > 1 }]">
-                        <Icon :type="item.expanded ? 'down-angle' : 'right-angle'" v-if="originalCustomTmplList.length > 1" />
-                        <span :class="[{ 'action-hover': handleFormatTitleHover(item) }]">
+                        <Icon
+                          v-if="originalCustomTmplList.length > 1"
+                          bk
+                          :type="item.expanded ? 'down-shape' : 'right-shape'"
+                        />
+                        <span :class="[
+                          'action-item-name',
+                          { 'action-hover': handleFormatTitleHover(item) }
+                        ]">
                           {{ item.name }}
                         </span>
                         <span class="count">{{$t(`m.common['已选']`)}} {{ item.count }} / {{ item.allCount }} {{ $t(`m.common['个']`) }}</span>
                       </section>
                       <span :class="['check-all', { 'is-disabled': item.actionsAllDisabled }]" @click.stop="handleCheckAll(item)">
-                        {{ item.actionsAllChecked ? $t(`m.common['取消全选']`) : $t(`m.common['选择全部']`) }}
+                        {{ item.actionsAllChecked ? $t(`m.common['取消全选']`) : $t(`m.common['全选']`) }}
                       </span>
                     </p>
                     <div class="action-content" v-if="item.expanded">
@@ -645,7 +661,7 @@
     data () {
       return {
         userApi: window.BK_USER_API,
-        systemValue: '',
+        systemValue: 'bk_cmdb',
         systemList: [],
         buttonLoading: false,
         originalCustomTmplList: [],

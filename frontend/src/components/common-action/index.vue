@@ -274,12 +274,12 @@
                 }
             }
             &.is-hover {
-                background: #eff5fe;
-                border-color: #3a84ff;
+                background: #E1ECFF;
+                color: #3a84ff;
             }
             &.is-active {
-                background: #eff5fe;
-                border-color: #3a84ff;
+              background: #E1ECFF;
+              color: #3a84ff;
             }
             .text {
                 display: inline-block;

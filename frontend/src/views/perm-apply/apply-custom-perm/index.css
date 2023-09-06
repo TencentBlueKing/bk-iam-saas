@@ -6,6 +6,7 @@
         .bk-checkbox-text {
             font-size: 12px;
             .text {
+                font-size: 12px;
                 display: inline-block;
                 max-width: 135px;
                 overflow: hidden;
@@ -16,15 +17,26 @@
             }
         }
         .action-item {
-            padding: 10px 0;
+            padding: 16px 0;
             &.set-border {
                 border-bottom: 1px solid #dcdee5;
             }
-            p {
+            &-expand {
+                background-color: #EAEBF0;
+                padding-bottom: 0;
+                border-bottom: 0 !important;
+            }
+            &-title {
                 position: relative;
                 display: flex;
                 justify-content: space-between;
                 font-size: 12px;
+                padding: 0 16px;
+                cursor: pointer;
+            }
+            &-name {
+                font-size: 14px;
+                margin-left: 5px;
             }
             .action-group-name {
                 color: #313238;
@@ -34,19 +46,22 @@
                 }
                 i {
                     position: relative;
-                    top: 2px;
-                    font-size: 24px;
+                    /* top: 2px; */
+                    top: 0;
+                    color: #63656E;
+                    font-size: 13px;
                 }
 
                 .count {
                     margin-left: 10px;
                     font-weight: normal;
-                    color: #979ba5;
+                    color: #63656E;
                 }
             }
             .check-all {
                 position: relative;
-                top: 4px;
+                /* top: 4px; */
+                top: 0;
                 color: #3a84ff;
                 cursor: pointer;
                 &.is-disabled {
@@ -60,9 +75,10 @@
                 min-height: 50px;
                 background: #f5f6fa;
                 border-radius: 2px;
+                font-size: 12px;
                 .self-action-content {
                     position: relative;
-                    padding: 20px;
+                    padding: 16px 16px 16px 40px;
                     &.set-border-bottom {
                         border-bottom: 1px solid #fff;
                     }
@@ -100,15 +116,22 @@
                 }
                 .iam-action-all-cls {
                     position: absolute;
-                    top: 20px;
-                    right: 20px;
+                    top: 16px;
+                    right: 16px;
                     line-height: 36px;
+                    /deep/ .bk-checkbox-text {
+                       font-size: 12px;
+                    }
                 }
                 .iam-sub-action-all-cls {
+                    font-size: 12px;
                     display: inline-block;
                     position: absolute;
                     right: 0;
                     line-height: 36px;
+                    /deep/ .bk-checkbox-text {
+                        font-size: 12px;
+                    }
                 }
             }
         }
