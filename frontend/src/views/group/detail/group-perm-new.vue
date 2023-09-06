@@ -1,6 +1,6 @@
 <template>
   <div class="iam-user-group-perm-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
-    <template v-if="!groupAttributes.source_from_role || !readonly">
+    <template v-if="!groupAttributes.source_from_role && !readonly">
       <template v-if="externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle">
         <bk-button
           v-if="!isLoading && isEditMode && !groupAttributes.source_type"
