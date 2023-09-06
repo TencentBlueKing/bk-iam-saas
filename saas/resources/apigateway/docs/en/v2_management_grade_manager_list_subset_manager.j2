@@ -1,0 +1,45 @@
+### Query the list of subset administrators
+
+#### Parameters
+
+| Field | Type | Required | Location | Description |
+| --------|--------|--------|--------|--------|--------|--------|
+| system_id | string | yes | path | Access to system unique identifier |
+| id | string | yes | path | grade manger id |
+
+#### Request
+
+```json
+GET /api/v2/open/management/systems/bk_cmdb/grade_managers/101/subset_managers/
+```
+
+#### Response
+
+| Field | Type | Description |
+| -----------|-----------|-----------|
+| count | int | total number |
+| results | array[object] | paginated query to results |
+
+results
+| Field | Type | Description |
+| -----------|-----------|-----------|
+| id | int | hierarchy_administrator_id |
+| name | string | Name of the administrator |
+| description | string | Description of the administrator |
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {
+    "count": 1,
+    "results": [
+      {
+        "id": 1,
+        "name": "测试管理员",
+        "description": ""
+      }
+    ]
+  }
+}
+```
