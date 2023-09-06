@@ -17,7 +17,7 @@
         <iam-search-select
           style="width: 420px"
           :data="searchData"
-          :values="searchValue"
+          :value="searchValue"
           :quick-search-method="quickSearchMethod"
           @on-change="handleSearch"
         />
