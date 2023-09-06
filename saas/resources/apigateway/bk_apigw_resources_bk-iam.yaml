@@ -2247,7 +2247,7 @@ paths:
   /api/v2/open/management/systems/{system_id}/grade_managers/{id}/subset_managers/:
     get:
       operationId: v2_management_grade_manager_list_subset_manager
-      description: 分级管理员创建二级管理员
+      description: 分级管理员查询二级管理员列表
       tags:
       - open
       - v2
