@@ -610,9 +610,8 @@
         };
         const { code } = await this.$store.dispatch('userGroup/editUserGroup', params);
         if (code === 0) {
+          this.$set(this.tableList[index], 'apply_disable', !!payload.includes('apply_disable'));
           this.messageSuccess(this.$t(`m.info['编辑成功']`), 3000);
-          this.resetPagination();
-          await this.fetchUserGroupList(true);
         }
       },
 

@@ -32,7 +32,7 @@ import glob from 'glob';
 import ora from 'ora';
 
 import config from './config';
-import { assetsPath } from './util';
+// import { assetsPath } from './util';
 
 const ret = glob.sync('../static/lib**', { mark: true, cwd: __dirname });
 
@@ -59,7 +59,7 @@ if (!ret.length) {
     },
     // 输出文件的名称和路径
     output: {
-      filename: assetsPath('[name].bundle.[chunkhash].js'),
+      filename: '[name].bundle.[chunkhash].js',
       path: path.join(__dirname, '..', 'static'),
       // lib.bundle.js 中暴露出的全局变量名
       library: '[name]_[chunkhash]',

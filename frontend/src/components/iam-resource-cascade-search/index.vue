@@ -391,6 +391,7 @@
           const params = {};
           if (this.externalSystemId) {
             params.hidden = false;
+            this.applyGroupData.system_id = this.externalSystemId;
           }
           const { data } = await this.$store.dispatch('system/getSystems', params);
           this.systemSelectList = data || [];
