@@ -37,10 +37,10 @@ def list_category() -> List[Dict]:
     return list_all_data_by_paging(list_paging_category, USERMGR_DEFAULT_PAGE_SIZE)
 
 
-def retrieve_user(username) -> Dict:
+def retrieve_user(username, fields: str = "id,username,display_name,staff_status,category_id") -> Dict:
     """获取单一用户信息"""
     url_path = "/api/c/compapi/v2/usermanage/retrieve_user/"
-    params = {"id": username, "fields": "id,username,display_name,staff_status,category_id"}
+    params = {"id": username, "fields": fields}
     return _call_esb_api(http_get, url_path, data=params)
 
 
