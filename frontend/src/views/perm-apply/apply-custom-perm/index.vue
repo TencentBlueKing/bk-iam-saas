@@ -99,12 +99,19 @@
                         </span>
                         <!-- <span class="count">{{$t(`m.common['已选']`)}} {{ item.count }} / {{ item.allCount }} {{ $t(`m.common['个']`) }}</span> -->
                         <span class="count">
-                          <span>{{ item.count }}</span>
-                          <span v-if="item.count - item.hasCheckedCount > 0">
+                          <span>{{ item.hasCheckedCount }}</span>
+                          <template v-if="item.count - item.hasCheckedCount > 0">
                             <span>+</span>
-                            <span>{{ item.hasAddCount }}</span>
+                            <span style="color: #3A84FF;">{{ item.count - item.hasCheckedCount }}</span>
+                          </template>
+                          <span>/{{ item.allCount }} {{ $t(`m.common['个']`) }}</span>
+                          <span
+                            v-if="item.hasCheckedCount > 0 && handleFormatTitleHover(item)"
+                            style="color: #3A84FF;"
+                          >
+                            {{ $t(`m.permApply['（标签只读：含只读操作）']`, { name: item.name, value: item.hasCheckedCount }) }}
                           </span>
-                          <span>/ {{ item.allCount }} {{ $t(`m.common['个']`) }}</span></span>
+                        </span>
                       </section>
                       <span :class="['check-all', { 'is-disabled': item.actionsAllDisabled }]" @click.stop="handleCheckAll(item)">
                         {{ item.actionsAllChecked ? $t(`m.common['取消全选']`) : $t(`m.common['全选']`) }}
@@ -668,7 +675,7 @@
     data () {
       return {
         userApi: window.BK_USER_API,
-        systemValue: 'bk_cmdb',
+        systemValue: 'bk_job',
         systemList: [],
         buttonLoading: false,
         originalCustomTmplList: [],
@@ -1467,6 +1474,7 @@
           if (!item.disabled) {
             if (!item.checked && newVal) {
               ++count;
+              ++item.hasAddCount;
             }
             item.checked = newVal;
             tempActionIds.push(item.id);
@@ -1526,6 +1534,7 @@
           if (!item.disabled) {
             if (!item.checked && newVal) {
               ++count;
+              ++item.hasAddCount;
             }
             item.checked = newVal;
             tempActionIds.push(item.id);
@@ -2002,6 +2011,7 @@
 
         this.handleRelatedActions(actData, true);
         payload.count++;
+
         if (this.isAllExpanded) {
           this.handleAggregateActionChange(false);
         }
@@ -2123,7 +2133,6 @@
           this.$set(item, 'expanded', index === 0);
           let allCount = 0;
           let count = 0;
-          let hasAddCount = 0;
           let hasCheckedCount = 0;
           if (!item.actions) {
             this.$set(item, 'actions', []);
@@ -2135,10 +2144,6 @@
             linearActions.push(act);
             if (act.checked) {
               ++count;
-              console.log(act.tag);
-              if (['add'].includes(act.tag)) {
-                ++hasAddCount;
-              }
               if (['readonly'].includes(act.tag)) {
                 ++hasCheckedCount;
               }
@@ -2158,9 +2163,6 @@
               linearActions.push(act);
               if (act.checked) {
                 ++count;
-                if (['add'].includes(act.tag)) {
-                  ++hasAddCount;
-                }
                 if (['readonly'].includes(act.tag)) {
                   ++hasCheckedCount;
                 }
@@ -2185,7 +2187,6 @@
           this.$set(item, 'allChecked', isAllChecked);
           this.$set(item, 'allCount', allCount);
           this.$set(item, 'count', count);
-          this.$set(item, 'hasAddCount', hasAddCount);
           this.$set(item, 'hasCheckedCount', hasCheckedCount);
           if (item.sub_groups && item.sub_groups.length > 0) {
             this.$set(item, 'actionsAllChecked', isAllChecked && item.sub_groups.every(v => v.allChecked));

@@ -275,11 +275,12 @@
             }
             &.is-hover {
                 background: #E1ECFF;
-                color: #3a84ff;
+                color: #3A84FF;
             }
             &.is-active {
               background: #E1ECFF;
-              color: #3a84ff;
+              color: #3A84FF;
+              border: 1px solid #3A84FF;
             }
             .text {
                 display: inline-block;
