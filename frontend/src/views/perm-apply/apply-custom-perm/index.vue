@@ -82,7 +82,7 @@
                   >
                     <p
                       v-if="!(originalCustomTmplList.length === 1 && !isShowGroupAction(item))"
-                      :class="['action-item-title']"
+                      :class="['action-item-title', { 'action-item-title-expand': item.expanded }]"
                       @click.stop="handleExpanded(item)"
                     >
                       <section :class="['action-group-name', { 'set-cursor': originalCustomTmplList.length > 1 }]">
@@ -97,7 +97,14 @@
                         ]">
                           {{ item.name }}
                         </span>
-                        <span class="count">{{$t(`m.common['已选']`)}} {{ item.count }} / {{ item.allCount }} {{ $t(`m.common['个']`) }}</span>
+                        <!-- <span class="count">{{$t(`m.common['已选']`)}} {{ item.count }} / {{ item.allCount }} {{ $t(`m.common['个']`) }}</span> -->
+                        <span class="count">
+                          <span>{{ item.count }}</span>
+                          <span v-if="item.count - item.hasCheckedCount > 0">
+                            <span>+</span>
+                            <span>{{ item.hasAddCount }}</span>
+                          </span>
+                          <span>/ {{ item.allCount }} {{ $t(`m.common['个']`) }}</span></span>
                       </section>
                       <span :class="['check-all', { 'is-disabled': item.actionsAllDisabled }]" @click.stop="handleCheckAll(item)">
                         {{ item.actionsAllChecked ? $t(`m.common['取消全选']`) : $t(`m.common['全选']`) }}
@@ -2116,6 +2123,8 @@
           this.$set(item, 'expanded', index === 0);
           let allCount = 0;
           let count = 0;
+          let hasAddCount = 0;
+          let hasCheckedCount = 0;
           if (!item.actions) {
             this.$set(item, 'actions', []);
           }
@@ -2126,6 +2135,13 @@
             linearActions.push(act);
             if (act.checked) {
               ++count;
+              console.log(act.tag);
+              if (['add'].includes(act.tag)) {
+                ++hasAddCount;
+              }
+              if (['readonly'].includes(act.tag)) {
+                ++hasCheckedCount;
+              }
             }
           });
           allCount = allCount + item.actions.length;
@@ -2142,6 +2158,12 @@
               linearActions.push(act);
               if (act.checked) {
                 ++count;
+                if (['add'].includes(act.tag)) {
+                  ++hasAddCount;
+                }
+                if (['readonly'].includes(act.tag)) {
+                  ++hasCheckedCount;
+                }
               }
             });
 
@@ -2163,6 +2185,8 @@
           this.$set(item, 'allChecked', isAllChecked);
           this.$set(item, 'allCount', allCount);
           this.$set(item, 'count', count);
+          this.$set(item, 'hasAddCount', hasAddCount);
+          this.$set(item, 'hasCheckedCount', hasCheckedCount);
           if (item.sub_groups && item.sub_groups.length > 0) {
             this.$set(item, 'actionsAllChecked', isAllChecked && item.sub_groups.every(v => v.allChecked));
             this.$set(item, 'actionsAllDisabled', isAllDisabled && item.sub_groups.every(v => {
@@ -2617,10 +2641,7 @@
 .action-hover {
     color: #3a84ff;
 }
-.iam-action-cls {
-    margin-right: 5px;
-    margin-bottom: 5px;
-}
+
 .iam-action-hover {
     background: #E7EFFE;
     color: #3a84ff;

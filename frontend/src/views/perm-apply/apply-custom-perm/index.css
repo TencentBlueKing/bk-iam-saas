@@ -17,22 +17,27 @@
             }
         }
         .action-item {
-            padding: 16px 0;
+            /* padding: 16px 0; */
             &.set-border {
                 border-bottom: 1px solid #dcdee5;
             }
-            &-expand {
-                background-color: #EAEBF0;
-                padding-bottom: 0;
-                border-bottom: 0 !important;
+            &.action-item-expand {
+                &.set-border {
+                    border-bottom: 0;
+                }
             }
             &-title {
                 position: relative;
                 display: flex;
                 justify-content: space-between;
                 font-size: 12px;
-                padding: 0 16px;
+                padding: 16px;
                 cursor: pointer;
+                &-expand {
+                    background-color: #EAEBF0;
+                    /* padding-bottom: 0; */
+                    border-bottom: 0 !important;
+                }
             }
             &-name {
                 font-size: 14px;
@@ -54,7 +59,7 @@
 
                 .count {
                     margin-left: 10px;
-                    font-weight: normal;
+                    font-weight: 700;
                     color: #63656E;
                 }
             }
@@ -65,14 +70,14 @@
                 color: #3a84ff;
                 cursor: pointer;
                 &.is-disabled {
-                    color: #dcdee5;
+                    color: #c4c6cc;
                     cursor: not-allowed;
                 }
             }
             .action-content {
                 /* margin: 14px 0 0 20px; */
-                margin: 14px 0 0 0;
-                min-height: 50px;
+                /* margin: 14px 0 0 0; */
+                min-height: 46px;
                 background: #f5f6fa;
                 border-radius: 2px;
                 font-size: 12px;
@@ -84,22 +89,28 @@
                     }
                 }
                 .sub-group-action-content {
-                    padding: 20px;
+                    /* padding: 16px; */
                     .sub-action-item {
                         display: flex;
                         justify-content: space-between;
                         position: relative;
-                        &.set-margin {
-                            margin-top: 10px;
+                        padding: 16px 16px 16px 40px;
+                        &:not(&:last-child) {
+                            border-bottom: 1px solid #fff;
                         }
+                        /* &.set-margin {
+                            margin-top: 10px;
+                        } */
                         .sub-action-wrapper {
                             display: flex;
                             justify-content: flex-start;
                             width: 100%;
                             .name {
                                 display: inline-block;
-                                flex: 0 0 130px;
-                                line-height: 36px;
+                                flex: 0 0 160px;
+                                margin-right: 8px;
+                                /* flex: 0 0 130px; */
+                                /* line-height: 36px; */
                                 font-size: 12px;
                                 color: #313238;
                                 font-weight: 700;
@@ -112,13 +123,18 @@
                 }
                 .iam-action-cls {
                     width: 175px;
-                    line-height: 36px;
+                    margin-right: 5px;
+                    margin-bottom: 10px;
+                    /* line-height: 36px; */
+                    &:nth-last-of-type(-n+6) {
+                        margin-bottom: 0;
+                    }
                 }
                 .iam-action-all-cls {
                     position: absolute;
                     top: 16px;
                     right: 16px;
-                    line-height: 36px;
+                    /* line-height: 36px; */
                     /deep/ .bk-checkbox-text {
                        font-size: 12px;
                     }
@@ -127,8 +143,9 @@
                     font-size: 12px;
                     display: inline-block;
                     position: absolute;
-                    right: 0;
-                    line-height: 36px;
+                    /* right: 0; */
+                    right: 16px;
+                    /* line-height: 36px; */
                     /deep/ .bk-checkbox-text {
                         font-size: 12px;
                     }
@@ -357,7 +374,7 @@
                 font-size: 14px;
                 color: #63656E;
                 padding-bottom: 12px;
-                .recommend{
+                .recommend {
                     display: inline-block;
                     font-size: 12px;
                     color: #3A84FF;
