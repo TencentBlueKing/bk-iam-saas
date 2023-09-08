@@ -24,16 +24,16 @@
  * IN THE SOFTWARE.
 */
 
-import path from 'path';
-
+import { resolve } from 'path';
 import webpack from 'webpack';
 import merge from 'webpack-merge';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import FriendlyErrorsPlugin from 'friendly-errors-webpack-plugin';
+// import CopyWebpackPlugin from 'copy-webpack-plugin';
 
 import config from './config';
 import baseConf from './webpack.base.conf';
-import manifest from '../static/lib-manifest.json';
+// import manifest from '../assets/lib-manifest.json';
 
 const webpackConfig = merge(baseConf, {
   mode: 'development',
@@ -57,7 +57,7 @@ const webpackConfig = merge(baseConf, {
             loader: 'postcss-loader',
             options: {
               config: {
-                path: path.resolve(__dirname, '..', 'postcss.config.js')
+                path: resolve(__dirname, '..', 'postcss.config.js')
               }
             }
           }
@@ -69,10 +69,10 @@ const webpackConfig = merge(baseConf, {
   plugins: [
     new webpack.DefinePlugin(config.dev.env),
 
-    new webpack.DllReferencePlugin({
-      context: __dirname,
-      manifest: manifest
-    }),
+    // new webpack.DllReferencePlugin({
+    //   context: __dirname,
+    //   manifest: manifest
+    // }),
 
     new webpack.HotModuleReplacementPlugin(),
 

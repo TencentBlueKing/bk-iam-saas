@@ -32,8 +32,9 @@ import glob from 'glob';
 import ora from 'ora';
 
 import config from './config';
+// import { assetsPath } from './util';
 
-const ret = glob.sync('../static/lib**', { mark: true, cwd: __dirname });
+const ret = glob.sync('../assets/lib**', { mark: true, cwd: __dirname });
 
 const mode = process.env.NODE_ENV === 'production' ? 'production' : 'development';
 const configMap = {
@@ -42,7 +43,7 @@ const configMap = {
 };
 
 if (!ret.length) {
-  // 需要打包到一起的 js 文件
+// 需要打包到一起的 js 文件
   const vendors = [
     'vue/dist/vue.esm.js',
     'vuex',
@@ -59,15 +60,16 @@ if (!ret.length) {
     // 输出文件的名称和路径
     output: {
       filename: '[name].bundle.js',
-      path: path.join(__dirname, '..', 'static'),
+      path: path.join(__dirname, '..', 'assets'),
       // lib.bundle.js 中暴露出的全局变量名
-      library: '[name]_[chunkhash]'
+      library: '[name]',
+      chunkFilename: 'js/[name].js'
     },
     plugins: [
       new webpack.DefinePlugin(configMap[mode].env),
       new webpack.DllPlugin({
-        path: path.join(__dirname, '..', 'static', '[name]-manifest.json'),
-        name: '[name]_[chunkhash]',
+        path: path.join(__dirname, '..', 'assets', '[name]-manifest.json'),
+        name: '[name]',
         context: __dirname
       }),
 

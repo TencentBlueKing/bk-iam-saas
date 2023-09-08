@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "better-npm-run dev",
     "clean": "rimraf dist",
-    "clean-dll": "rimraf static/lib*",
+    "clean-dll": "rimraf assets/lib*",
     "build": "better-npm-run build:ee",
     "build:analyzer": "better-npm-run build:analyzer",
     "dll": "better-npm-run dll",

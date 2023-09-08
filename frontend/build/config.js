@@ -47,7 +47,7 @@ export default {
     // 这里用 JSON.parse 是因为 dev.env.js 里有一次 JSON.stringify，dev.env.js 里的 JSON.stringify 不能去掉
     localDevUrl: JSON.parse(devEnv.LOCAL_DEV_URL),
     localDevPort: JSON.parse(devEnv.LOCAL_DEV_PORT),
-    assetsSubDirectory: 'static',
+    assetsSubDirectory: 'assets',
     assetsPublicPath: '/',
     proxyTable: {},
     cssSourceMap: false,
