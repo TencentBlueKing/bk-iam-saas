@@ -437,6 +437,9 @@
           limit,
           offset: limit * (current - 1)
         };
+        if (this.externalSystemId) {
+          params.hidden = false;
+        }
         try {
           const { code, data } = await this.$store.dispatch('perm/getDepartGroupSearch', params);
           const { count, results } = data;
