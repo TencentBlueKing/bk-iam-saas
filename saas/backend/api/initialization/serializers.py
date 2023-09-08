@@ -16,4 +16,4 @@ from backend.apps.organization.models import User
 class SyncUserSLZ(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = "username"
+        fields = ("username",)
