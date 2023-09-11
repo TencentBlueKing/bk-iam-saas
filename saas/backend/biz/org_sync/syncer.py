@@ -13,7 +13,7 @@ specific language governing permissions and limitations under the License.
 import datetime
 
 from backend.apps.organization.constants import NEW_USER_AUTO_SYNC_COUNT_LIMIT
-from backend.apps.organization.models import User
+from backend.apps.organization.models import Department, DepartmentMember, User
 from backend.component import iam, usermgr
 
 
@@ -36,7 +36,9 @@ class Syncer:
             return
         # TODO: 考虑并发情况，需要添加分布式锁
         # 2. 查询UserMgr API
-        user_info = usermgr.retrieve_user(username)
+        user_info = usermgr.retrieve_user(
+            username, fields="id,username,display_name,staff_status,category_id,departments"
+        )
         # 3. 同步到DB
         user, is_created = User.objects.get_or_create(
             id=user_info["id"],
@@ -47,9 +49,34 @@ class Syncer:
                 "category_id": user_info["category_id"],
             },
         )
+        if not is_created:
+            return
+
         # 4. 同步到IAM后台
-        if is_created:
-            iam.create_subjects([{"type": "user", "id": user.username, "name": user.display_name}])
+        iam.create_subjects([{"type": "user", "id": user.username, "name": user.display_name}])
+
+        # 5. 同步部门
+        department_ids = [one["id"] for one in user_info["departments"]]
+        if not department_ids:
+            return
+
+        departments = Department.objects.filter(id__in=department_ids)
+        if not departments:
+            return
+
+        # 创建用户与部门关系
+        DepartmentMember.objects.bulk_create(
+            [DepartmentMember(department_id=department.id, user_id=user_info["id"]) for department in departments]
+        )
+
+        department_id_set = set(department_ids)
+        for dept in departments:
+            for i in dept.parse_ancestors():
+                department_id_set.add(i["id"])
+
+        iam.create_subject_departments_by_auto_paging(
+            [{"id": user.username, "departments": [str(_id) for _id in department_id_set]}]
+        )
 
     def sync_new_users(self):
         """
