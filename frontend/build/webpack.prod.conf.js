@@ -38,7 +38,6 @@ import bundleAnalyzer from 'webpack-bundle-analyzer';
 import config from './config';
 import { assetsPath } from './util';
 import baseConf from './webpack.base.conf';
-// import manifest from '../assets/lib-manifest.json';
 // import ReplaceJSStaticUrlPlugin from './replace-js-static-url-plugin'
 import ReplaceCSSStaticUrlPlugin from './replace-css-static-url-plugin';
 

@@ -32,7 +32,6 @@ import glob from 'glob';
 import ora from 'ora';
 
 import config from './config';
-// import { assetsPath } from './util';
 
 const ret = glob.sync('../static/lib**', { mark: true, cwd: __dirname });
 
