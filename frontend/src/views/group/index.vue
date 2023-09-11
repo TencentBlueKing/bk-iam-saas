@@ -446,17 +446,23 @@
     async created () {
       this.curRole = this.user.role.type || 'staff';
       this.searchParams = this.$route.query;
-      this.setCurrentQueryCache(this.refreshCurrentQuery());
+      // await this.setCurrentQueryCache(this.refreshCurrentQuery());
       const isObject = (payload) => {
         return Object.prototype.toString.call(payload) === '[object Object]';
       };
       const currentQueryCache = await this.getCurrentQueryCache();
       if (currentQueryCache && Object.keys(currentQueryCache).length) {
-        if (currentQueryCache.limit) {
+        const { current, limit } = currentQueryCache;
+        if (current || limit) {
+          const pageConf = {
+            current: Number(current || this.pagination.current),
+            limit: Number(limit || this.pagination.limit)
+          };
           this.pagination = Object.assign(
             this.pagination,
-            { current: Number(currentQueryCache.current), limit: Number(currentQueryCache.limit) }
+            pageConf
           );
+          this.queryParams = Object.assign(this.queryParams, pageConf);
         }
         for (const key in currentQueryCache) {
           if (key !== 'limit' && key !== 'current') {
@@ -522,11 +528,14 @@
 
       refreshCurrentQuery () {
         const params = {};
-        const queryParams = {
-                    ...this.searchParams,
-                    ...this.$route.query,
-                    ...this.queryParams
+        let queryParams = {
+            ...this.searchParams,
+            ...this.queryParams
         };
+        const groupStorage = localStorage.getItem('groupList') ? JSON.parse(localStorage.getItem('groupList')) : {};
+        if (!Object.keys(queryParams).length && Object.keys(groupStorage).length > 0) {
+          queryParams = Object.assign(queryParams, groupStorage);
+        }
         if (Object.keys(queryParams).length) {
           window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
         }
@@ -571,7 +580,7 @@
 
       async fetchUserGroupList (isLoading = false) {
         this.tableLoading = isLoading;
-        this.setCurrentQueryCache(this.refreshCurrentQuery());
+        await this.setCurrentQueryCache(this.refreshCurrentQuery());
         const params = {
           ...this.searchParams,
           limit: this.pagination.limit,
@@ -610,9 +619,8 @@
         };
         const { code } = await this.$store.dispatch('userGroup/editUserGroup', params);
         if (code === 0) {
+          this.$set(this.tableList[index], 'apply_disable', !!payload.includes('apply_disable'));
           this.messageSuccess(this.$t(`m.info['编辑成功']`), 3000);
-          this.resetPagination();
-          await this.fetchUserGroupList(true);
         }
       },
 
