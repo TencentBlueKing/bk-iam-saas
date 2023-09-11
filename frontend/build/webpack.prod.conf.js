@@ -137,15 +137,9 @@ const prodConf = merge(baseConf, {
         },
         libBundle: {
           chunks: 'all',
-          test: /[\\/]assets[\\/]lib.bundle.js/,
+          test: /[\\/]static[\\/]lib.bundle.js/,
           name: 'lib-bundle',
-          priority: 1
-        },
-        libBundleJson: {
-          chunks: 'all',
-          test: /[\\/]assets[\\/]lib-manifest.json/,
-          name: 'lib-bundle-json',
-          priority: 2
+          priority: 3
         }
       }
     }
