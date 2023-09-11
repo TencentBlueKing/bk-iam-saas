@@ -19,7 +19,7 @@
                 <bk-select
                   :style="{ width: contentWidth }"
                   v-model="applyGroupData.system_id"
-                  :clearable="true"
+                  :clearable="!externalSystemsLayout.myPerm.hideApplyBtn"
                   :allow-enter="false"
                   :placeholder="$t(`m.verify['请选择']`)"
                   @change="handleCascadeChange"
