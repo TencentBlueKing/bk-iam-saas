@@ -203,6 +203,10 @@
           if (!this.mainContentLoading) {
             this.tableLoading = true;
           }
+          if (this.externalSystemId) {
+            params.system_id = this.externalSystemId;
+            params.hidden = false;
+          }
           const { code, data } = await this.$store.dispatch('perm/getDepartGroupSearch', params);
           const { count, results } = data;
           this.pageConf.count = count || 0;

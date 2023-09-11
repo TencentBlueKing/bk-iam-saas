@@ -413,6 +413,7 @@
           };
           if (this.externalSystemId) {
             params.system_id = this.externalSystemId;
+            params.hidden = false;
           }
           const { code, data } = await this.$store.dispatch('perm/getUserGroupSearch', params);
           this.personalGroupList = data.results || [];
@@ -437,6 +438,10 @@
           limit,
           offset: limit * (current - 1)
         };
+        if (this.externalSystemId) {
+          params.system_id = this.externalSystemId;
+          params.hidden = false;
+        }
         try {
           const { code, data } = await this.$store.dispatch('perm/getDepartGroupSearch', params);
           const { count, results } = data;
