@@ -62,14 +62,13 @@ if (!ret.length) {
       filename: '[name].bundle.js',
       path: path.join(__dirname, '..', 'static'),
       // lib.bundle.js 中暴露出的全局变量名
-      library: '[name]',
-      chunkFilename: 'js/[name].js'
+      library: '[name]_[chunkhash]'
     },
     plugins: [
       new webpack.DefinePlugin(configMap[mode].env),
       new webpack.DllPlugin({
         path: path.join(__dirname, '..', 'static', '[name]-manifest.json'),
-        name: '[name]',
+        name: '[name]_[chunkhash]',
         context: __dirname
       }),
 

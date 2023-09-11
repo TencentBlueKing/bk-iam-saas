@@ -33,7 +33,7 @@ import FriendlyErrorsPlugin from 'friendly-errors-webpack-plugin';
 
 import config from './config';
 import baseConf from './webpack.base.conf';
-import manifest from '../static/lib-manifest.json';
+// import manifest from '../static/lib-manifest.json';
 
 const webpackConfig = merge(baseConf, {
   mode: 'development',
@@ -69,10 +69,10 @@ const webpackConfig = merge(baseConf, {
   plugins: [
     new webpack.DefinePlugin(config.dev.env),
 
-    new webpack.DllReferencePlugin({
-      context: __dirname,
-      manifest: manifest
-    }),
+    // new webpack.DllReferencePlugin({
+    //   context: __dirname,
+    //   manifest: manifest,
+    // }),
 
     new webpack.HotModuleReplacementPlugin(),
 
