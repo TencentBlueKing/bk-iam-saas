@@ -478,7 +478,8 @@
       async fetchUserGroupList () {
         this.tableLoading = true;
         const params = {
-          cache_id: this.routerQuery.cache_id
+          cache_id: this.routerQuery.cache_id,
+          apply_disable: false
         };
         try {
           const res = await this.$store.dispatch('userGroup/getUserGroupList', params);

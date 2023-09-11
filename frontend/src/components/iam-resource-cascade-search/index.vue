@@ -363,6 +363,15 @@
           }
         },
         immediate: true
+      },
+      externalSystemId: {
+        handler (value) {
+          if (value) {
+            this.applyGroupData.system_id = value;
+            this.handleCascadeChange();
+          }
+        },
+        immediate: true
       }
     },
     async created () {
@@ -391,9 +400,13 @@
           const params = {};
           if (this.externalSystemId) {
             params.hidden = false;
+            params.system_id = this.externalSystemId;
           }
           const { data } = await this.$store.dispatch('system/getSystems', params);
           this.systemSelectList = data || [];
+          if (this.externalSystemId) {
+            this.systemSelectList = this.systemSelectList.filter(item => item.id === this.externalSystemId);
+          }
         } catch (e) {
           console.error(e);
           this.messageAdvancedError(e);

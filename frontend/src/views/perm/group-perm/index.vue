@@ -335,6 +335,7 @@
           }
           if (this.externalSystemId) {
             params.system_id = this.externalSystemId;
+            params.hidden = false;
           }
           const { code, data } = await this.$store.dispatch(url, params);
           this.pageConf.count = data.count || 0;

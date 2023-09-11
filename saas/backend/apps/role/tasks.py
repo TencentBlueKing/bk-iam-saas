@@ -310,7 +310,9 @@ class CmdbUnassignBizHostAuthScopeActionHandler(BaseAuthScopeActionHandler):
 
     def _query_cmdb_sys_resource_pool_directory_id(self, name: str) -> str:
         # 查询cmdb主机池id
-        _, resources = self.resource_biz.search_instance_for_topology("bk_cmdb", "sys_resource_pool_directory", name)
+        _, resources = self.resource_biz.search_instance_for_topology(
+            "bk_cmdb", "sys_resource_pool_directory", name, []
+        )
         for r in resources:
             if r.display_name == name:
                 return r.id
