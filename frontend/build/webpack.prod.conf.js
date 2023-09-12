@@ -38,7 +38,6 @@ import bundleAnalyzer from 'webpack-bundle-analyzer';
 import config from './config';
 import { assetsPath } from './util';
 import baseConf from './webpack.base.conf';
-import manifest from '../static/lib-manifest.json';
 // import ReplaceJSStaticUrlPlugin from './replace-js-static-url-plugin'
 import ReplaceCSSStaticUrlPlugin from './replace-css-static-url-plugin';
 
@@ -134,6 +133,12 @@ const prodConf = merge(baseConf, {
         vendors: {
           test: /[\\/]node_modules[\\/]/,
           priority: -10
+        },
+        libBundle: {
+          chunks: 'all',
+          test: /[\\/]static[\\/]lib.bundle.js/,
+          name: 'lib-bundle',
+          priority: 3
         }
       }
     }
@@ -165,10 +170,10 @@ const prodConf = merge(baseConf, {
   plugins: [
     new webpack.DefinePlugin(config.build.env),
 
-    new webpack.DllReferencePlugin({
-      context: __dirname,
-      manifest: manifest
-    }),
+    // new webpack.DllReferencePlugin({
+    //   context: __dirname,
+    //   manifest: manifest
+    // }),
 
     new HtmlWebpackPlugin({
       // filename: 'index.html',
