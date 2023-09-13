@@ -42,7 +42,7 @@ const configMap = {
 };
 
 if (!ret.length) {
-  // 需要打包到一起的 js 文件
+// 需要打包到一起的 js 文件
   const vendors = [
     'vue/dist/vue.esm.js',
     'vuex',
