@@ -403,6 +403,7 @@ ENABLE_FRONT_END_FEATURES = {
     "enable_temporary_policy": env.bool("BKAPP_ENABLE_FRONT_END_TEMPORARY_POLICY", default=False),
     "enable_group_instance_search": env.bool("BKAPP_ENABLE_FRONT_END_GROUP_INSTANCE_SEARCH", default=False),
     "enable_organization_count": env.bool("BKAPP_ENABLE_FRONT_END_ORGANIZATION_COUNT", default=False),
+    "enable_assistant": env.bool("BKAPP_ENABLE_FRONT_END_ASSISTANT", default=False),
 }
 
 # Open API接入APIGW后，需要对APIGW请求来源认证，使用公钥解开jwt
