@@ -328,7 +328,7 @@
       }
     },
     async created () {
-      await this.fetchUserGroupSet();
+      // await this.fetchUserGroupSet();
     },
     methods: {
       // 获取分级管理员用户组配置

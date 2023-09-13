@@ -191,8 +191,8 @@
         attributes: [],
         isHide: false,
         // isEmptyResource: false,
-        dragWidth: 220,
-        dragRealityWidth: 220,
+        dragWidth: 600,
+        dragRealityWidth: 600,
         isDrag: false
       };
     },
@@ -221,7 +221,7 @@
         };
       },
       leftLayoutStyle () {
-        if (this.dragWidth >= 220) {
+        if (this.dragWidth >= 600) {
           return {
             'min-width': `${this.dragWidth}px`
           };
@@ -324,7 +324,7 @@
           return;
         }
         // 可拖拽范围
-        const MIN_OFFSET_WIDTH = 220;
+        const MIN_OFFSET_WIDTH = 600;
         const minWidth = MIN_OFFSET_WIDTH;
         const maxWidth = MIN_OFFSET_WIDTH + 120;
         const offsetX = e.clientX - (document.body.clientWidth - 960);
@@ -863,11 +863,12 @@
                 height: 100%;
                 .left-layout {
                     position: relative;
-                    min-width: 220px;
+                    min-width: 600px;
+                    background-color: #ffffff;
                     .drag-dotted-line {
                         position: absolute;
                         top: 0;
-                        left: 220px;
+                        left: 600px;
                         height: 100%;
                         border-left: 1px solid #dcdee5;
                         z-index: 1500;
@@ -875,7 +876,7 @@
                     .drag-line {
                         position: absolute;
                         top: 0;
-                        left: 220px;
+                        left: 600px;
                         height: 100%;
                         width: 1px;
                         background: #dcdee5;
@@ -892,7 +893,7 @@
                 }
                 .right-layout {
                     position: relative;
-                    width: calc(100% - 180px);
+                    width: calc(100% - 500px);
                     overflow-y: auto;
                     &::-webkit-scrollbar {
                         width: 4px;

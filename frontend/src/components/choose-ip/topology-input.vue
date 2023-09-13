@@ -7,12 +7,15 @@
     :style="customStyle">
     <bk-input
       ref="input"
-      :clearable="false"
       v-model="value"
-      :placeholder="placeholder"
       ext-cls="iam-topology-search-input-cls"
+      :right-icon="'bk-icon icon-search'"
+      :clearable="true"
+      :placeholder="placeholder"
       :disabled="disabled"
-      @enter="handleKeyEnter">
+      @enter="handleKeyEnter"
+      @right-icon-click="handleIconClick"
+      @clear="handleClear">
     </bk-input>
   </div>
 </template>
@@ -64,8 +67,16 @@
         this.handleSearch();
       },
 
+      handleIconClick () {
+        this.handleSearch();
+      },
+
+      handleClear () {
+        this.$emit('on-search', '');
+      },
+
       handleSearch () {
-        if (this.value === '') {
+        if (!this.value) {
           return;
         }
         this.$emit('on-search', this.value);
@@ -79,10 +90,13 @@
 </script>
 <style lang="postcss">
     .iam-topology-input {
-        padding: 0 10px;
-        background: #fafbfd;
+        padding: 16px 10px;
+        /* background: #fafbfd; */
         &.reset-padding {
             padding: 0 0 0 3px;
+        }
+        .icon-search {
+          cursor: pointer;
         }
     }
 </style>

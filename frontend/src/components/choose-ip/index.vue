@@ -18,6 +18,8 @@
             ref="topologyRef"
             :all-data="treeData"
             :search-value="hasSearchValues"
+            :cur-chain="curChain"
+            :resource-total="resourceTotal"
             @on-expanded="handleOnExpanded"
             @on-search="handleTreeSearch"
             @on-select="handleTreeSelect"
@@ -31,7 +33,6 @@
                             {{ searchDisplayText }}
                         </section> -->
             <ExceptionEmpty
-              style="background: #fafbfd"
               :type="emptyData.type"
               :empty-text="emptyData.text"
               :tip-text="emptyData.tip"
@@ -168,6 +169,7 @@
       return {
         isLoading: false,
         limit: 100,
+        resourceTotal: 0,
         // 当前选择的链路
         curChain: [],
         treeData: [],
@@ -205,17 +207,17 @@
       treeValue: {
         handler (value) {
           if (value.length) {
-            const hasSelecteds = [];
+            const hasSelected = [];
             value.forEach(item => {
               item.path.forEach(pathItem => {
-                hasSelecteds.push({
+                hasSelected.push({
                   ids: pathItem.map(v => `${v.id}&${v.type}`),
                   idChain: pathItem.map(v => `${v.id}&${v.type}`).join('#'),
                   disabled: pathItem.some(subItem => subItem.disabled)
                 });
               });
             });
-            this.hasSelectedValues = _.cloneDeep(hasSelecteds);
+            this.hasSelectedValues = _.cloneDeep(hasSelected);
           } else {
             this.hasSelectedValues = [];
           }
@@ -229,7 +231,7 @@
             this.curChain = _.cloneDeep(this.selectList[0].resource_type_chain);
             this.ignorePathFlag = this.selectList[0].ignore_iam_path;
             this.isExistIgnore = this.selectList.some(item => item.ignore_iam_path);
-            this.curPlaceholder = `${this.$t(`m.common['搜索']`)} ${this.curChain[0].name}`;
+            this.curPlaceholder = this.curLanguageIsCn ? `${this.$t(`m.common['搜索']`)}${this.curChain[0].name}` : `${this.$t(`m.common['搜索']`)} ${this.curChain[0].name}`;
             this.firstFetchResources();
           }
         },
@@ -604,6 +606,7 @@
             this.searchDisplayText = RESULT_TIP[code];
             return;
           }
+          this.resourceTotal = data.count || 0;
           const totalPage = Math.ceil(data.count / this.limit);
           const isAsync = this.curChain.length > 1;
           this.treeData = data.results.map(item => {
@@ -1176,6 +1179,7 @@
             .topology-tree-wrapper {
                 position: relative;
                 height: 100%;
+                min-height: 450px;
                 .empty-wrapper {
                     position: absolute;
                     top: 50%;

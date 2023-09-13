@@ -209,9 +209,10 @@
 
     .iam-topology-search-input-cls.bk-form-control {
         .bk-form-input {
-            border: none !important;
-            border-bottom: 1px solid #dcdee5 !important;
+            /* border: none !important;
+            border-bottom: 1px solid #dcdee5 !important; */
             background: transparent !important;
+            border-color: #C4C6CC;
             &:focus {
                 border-color: #dcdee5 !important;
                 background-color: transparent !important;

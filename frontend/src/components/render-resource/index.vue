@@ -362,7 +362,7 @@
             }
             &.set-instance-style {
                 /* height: 330px; */
-                height: 450px;;
+                height: calc(100% - 50px);
                 padding: 0;
                 /* background: #f5f6fa; */
                 background: #fafbfd;

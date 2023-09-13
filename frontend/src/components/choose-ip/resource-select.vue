@@ -1,9 +1,9 @@
 <template>
   <div class="iam-resource-select">
-    <template v-if="isSingle">
+    <!-- <template v-if="isSingle">
       <section class="single-resource-name" :title="list[0].name">{{ list[0].name }}</section>
     </template>
-    <bk-select
+     <bk-select
       :value="value"
       :clearable="false"
       searchable
@@ -15,7 +15,22 @@
         :id="option.id"
         :name="option.name">
       </bk-option>
-    </bk-select>
+    </bk-select> -->
+    <bk-tab
+      :active.sync="active"
+      type="card"
+      ext-cls="iam-topology-tab-cls"
+      @tab-change="handleSelected"
+    >
+      <bk-tab-panel
+        v-for="panel in list"
+        v-bind="panel"
+        :label="panel.name"
+        :name="panel.id"
+        :key="`${panel.id}&${panel.system_id}`"
+      >
+      </bk-tab-panel>
+    </bk-tab>
   </div>
 </template>
 <script>
@@ -33,7 +48,7 @@
     },
     data () {
       return {
-
+        active: ''
       };
     },
     computed: {
@@ -42,15 +57,25 @@
         return this.list.length === 1;
       }
     },
+    watch: {
+      value: {
+        handler (value) {
+          if (value) {
+            this.active = value;
+          }
+        },
+        immediate: true
+      }
+    },
     methods: {
-      handleSelected (value, option) {
+      handleSelected (value) {
         this.$emit('on-select', value);
       }
     }
   };
 </script>
 <style lang="postcss" scoped>
-    .single-resource-name {
+    /* .single-resource-name {
         position: relative;
         padding: 0 36px 0 10px;
         display: block;
@@ -63,8 +88,20 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-    }
+    } */
     .iam-resource-select {
-        width: 100%;
+      width: 100%;
+    }
+    /deep/ .iam-topology-tab-cls {
+      .bk-tab-section {
+        padding: 0;
+        border: 0;
+      }
+      .bk-tab-label-list  {
+        border-top: 0;
+        .bk-tab-label-item.is-first {
+          border-left: 0;
+        }
+      }
     }
 </style>
