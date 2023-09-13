@@ -90,7 +90,7 @@ export const messageAdvancedError = (details, delay = 8000, ellipsisLine = 3) =>
   let linkContent = {
     url: ''
   };
-  const isTencent = location.hostname.indexOf('tencent') > -1;
+  const isTencent = window.ENABLE_ASSISTANT.toLowerCase() === 'true';
   const linkMap = {
     true: () => {
       linkContent = Object.assign(linkContent, {
