@@ -816,7 +816,7 @@
       
       resetSearchParams () {
         this.applyGroupData = Object.assign({}, {
-          system_id: '',
+          system_id: this.externalSystemId || '',
           action_id: ''
         });
         this.curResourceData = Object.assign({}, {
