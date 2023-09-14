@@ -2245,6 +2245,32 @@ paths:
         disabledStages: []
         descriptionEn:
   /api/v2/open/management/systems/{system_id}/grade_managers/{id}/subset_managers/:
+    get:
+      operationId: v2_management_grade_manager_list_subset_manager
+      description: 分级管理员查询二级管理员列表
+      tags:
+      - open
+      - v2
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v2/open/management/systems/{system_id}/grade_managers/{id}/subset_managers/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
     post:
       operationId: v2_management_grade_manager_create_subset_manager
       description: 分级管理员创建二级管理员

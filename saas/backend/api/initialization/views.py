@@ -18,6 +18,8 @@ from backend.biz.org_sync.syncer import Syncer
 from backend.biz.role import RoleBiz
 from backend.common.authentication import BasicAppCodeAuthentication
 
+from .serializers import SyncUserSLZ
+
 
 class InitializationView(views.APIView):
     """
@@ -39,5 +41,22 @@ class InitializationView(views.APIView):
         sync_system_manager()
         # 4. 异步任务 - 全量同步组织架构
         sync_organization.delay("admin")
+
+        return Response({})
+
+
+class SyncUserView(views.APIView):
+    """
+    同步用户
+    """
+
+    authentication_classes = [BasicAppCodeAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        slz = SyncUserSLZ(data=request.data)
+        slz.is_valid(raise_exception=True)
+
+        Syncer().sync_single_user(slz.validated_data["username"])
 
         return Response({})

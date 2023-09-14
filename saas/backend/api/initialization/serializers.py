@@ -8,11 +8,12 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from django.urls import path
+from rest_framework import serializers
 
-from . import views
+from backend.apps.organization.models import User
 
-urlpatterns = [
-    path("", views.InitializationView.as_view(), name="open.initialization"),
-    path("sync_user/", views.SyncUserView.as_view(), name="open.sync_user"),
-]
+
+class SyncUserSLZ(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("username",)

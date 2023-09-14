@@ -343,9 +343,10 @@
         this.tableLoading = true;
         this.setCurrentQueryCache(this.refreshCurrentQuery());
         const params = {
-        ...this.searchParams,
-        limit: this.pagination.limit,
-        offset: this.pagination.limit * (this.pagination.current - 1)
+          ...this.searchParams,
+          limit: this.pagination.limit,
+          offset: this.pagination.limit * (this.pagination.current - 1),
+          apply_disable: false
         };
         try {
           const { code, data } = await this.$store.dispatch('userGroup/getUserGroupList', params);

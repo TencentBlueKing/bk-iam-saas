@@ -86,6 +86,24 @@ export const messageWarn = (message, delay = 3000, ellipsisLine = 3) => {
 // message高阶用法
 
 export const messageAdvancedError = (details, delay = 8000, ellipsisLine = 3) => {
+  // 区分内外部链接
+  let linkContent = {
+    url: ''
+  };
+  const isTencent = window.ENABLE_ASSISTANT.toLowerCase() === 'true';
+  const linkMap = {
+    true: () => {
+      linkContent = Object.assign(linkContent, {
+        url: 'wxwork://message/?username=BK助手'
+      });
+    },
+    false: () => {
+      linkContent = Object.assign(linkContent, {
+        url: 'https://wpa1.qq.com/KziXGWJs?_type=wpa&qidian=true'
+      });
+    }
+  };
+  linkMap[isTencent]();
   const { code, data, message, statusText, response } = details;
   let errCode = null;
   const errMsg = message || data.msg || statusText;
@@ -100,7 +118,7 @@ export const messageAdvancedError = (details, delay = 8000, ellipsisLine = 3) =>
     overview: errMsg,
     suggestion: '',
     details: errMsg,
-    assistant: 'wxwork://message/?username=BK助手'
+    assistant: linkContent.url
   };
   messageInstance && messageInstance.close();
   messageInstance = Message({

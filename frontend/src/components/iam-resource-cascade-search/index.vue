@@ -19,7 +19,7 @@
                 <bk-select
                   :style="{ width: contentWidth }"
                   v-model="applyGroupData.system_id"
-                  :clearable="true"
+                  :clearable="!externalSystemsLayout.myPerm.hideApplyBtn"
                   :allow-enter="false"
                   :placeholder="$t(`m.verify['请选择']`)"
                   @change="handleCascadeChange"
@@ -363,6 +363,15 @@
           }
         },
         immediate: true
+      },
+      externalSystemId: {
+        handler (value) {
+          if (value) {
+            this.applyGroupData.system_id = value;
+            this.handleCascadeChange();
+          }
+        },
+        immediate: true
       }
     },
     async created () {
@@ -391,9 +400,13 @@
           const params = {};
           if (this.externalSystemId) {
             params.hidden = false;
+            params.system_id = this.externalSystemId;
           }
           const { data } = await this.$store.dispatch('system/getSystems', params);
           this.systemSelectList = data || [];
+          if (this.externalSystemId) {
+            this.systemSelectList = this.systemSelectList.filter(item => item.id === this.externalSystemId);
+          }
         } catch (e) {
           console.error(e);
           this.messageAdvancedError(e);
@@ -803,7 +816,7 @@
       
       resetSearchParams () {
         this.applyGroupData = Object.assign({}, {
-          system_id: '',
+          system_id: this.externalSystemId || '',
           action_id: ''
         });
         this.curResourceData = Object.assign({}, {

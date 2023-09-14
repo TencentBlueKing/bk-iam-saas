@@ -44,7 +44,7 @@
         </template>
       </bk-table-column>
       <!-- 加入用户组时间 -->
-      <bk-table-column :label="$t(`m.perm['加入用户组的时间']`)">
+      <bk-table-column :label="$t(`m.perm['加入用户组的时间']`)" width="160">
         <template slot-scope="{ row }">
           <span :title="row.created_time">{{ row.created_time.replace(/T/, ' ') }}</span>
         </template>
@@ -202,6 +202,10 @@
         try {
           if (!this.mainContentLoading) {
             this.tableLoading = true;
+          }
+          if (this.externalSystemId) {
+            params.system_id = this.externalSystemId;
+            params.hidden = false;
           }
           const { code, data } = await this.$store.dispatch('perm/getDepartGroupSearch', params);
           const { count, results } = data;

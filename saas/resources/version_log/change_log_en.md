@@ -1,3 +1,13 @@
+<!-- 2023-09-14 -->
+# V1.10.14 Version Update Log
+
+### Bug Fixes
+* "Not Requestable" now takes effect in automatic recommendation rules.
+* BlueShield My Permissions page now displays BlueShield projects only in search criteria.
+* Fixed an issue with CDN hashing for static files.
+
+---
+
 <!-- 2023-09-05 -->
 # V1.10.13 Version Update Log
 

@@ -44,7 +44,10 @@ class Policy(BaseModel):
         verbose_name = "权限策略"
         verbose_name_plural = "权限策略"
 
-        index_together = ["subject_id", "subject_type", "system_id"]
+        index_together = [
+            ("subject_id", "subject_type", "system_id"),
+            ("action_id", "system_id", "subject_type", "subject_id"),
+        ]
 
     @property
     def resources(self):
