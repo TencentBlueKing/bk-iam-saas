@@ -39,7 +39,7 @@ class InitialFilterSet(filters.FilterSet):
                 initial = f.extra.get("initial", None)
 
                 # filter param is either missing or empty, use initial as default
-                if not data.get(name) and initial is not None:
+                if data.get(name, None) is None and initial is not None:
                     data[name] = initial
 
         super().__init__(data, *args, **kwargs)
