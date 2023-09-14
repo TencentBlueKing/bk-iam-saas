@@ -999,7 +999,7 @@ class GroupSearchViewSet(mixins.ListModelMixin, GenericViewSet):
                 k: v
                 for k, v in data.items()
                 if k in ["id", "name", "description", "hidden", "apply_disable"]
-                if v != ""
+                if isinstance(v, bool) or v
             },
             queryset=self.get_queryset(),
         )
