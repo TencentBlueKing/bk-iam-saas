@@ -995,7 +995,7 @@ class GroupSearchViewSet(mixins.ListModelMixin, GenericViewSet):
 
         # 筛选
         f = GroupFilter(
-            data={k: v for k, v in data.items() if k in ["id", "name", "description"] and v},
+            data={k: v for k, v in data.items() if k in ["id", "name", "description", "hidden", "apply_disable"]},
             queryset=self.get_queryset(),
         )
         queryset = f.qs
