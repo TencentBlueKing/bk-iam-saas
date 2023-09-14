@@ -249,7 +249,7 @@ class UserGroupSearchViewSet(mixins.ListModelMixin, GenericViewSet):
 
         # 筛选
         f = GroupFilter(
-            data={k: v for k, v in data.items() if k in ["id", "name", "description", "hidden"]},
+            data={k: v for k, v in data.items() if k in ["id", "name", "description", "hidden"] if v != ""},
             queryset=self.get_queryset(),
         )
         queryset = f.qs
@@ -307,7 +307,7 @@ class UserDepartmentGroupSearchViewSet(mixins.ListModelMixin, GenericViewSet):
 
         # 筛选
         f = GroupFilter(
-            data={k: v for k, v in data.items() if k in ["id", "name", "description", "hidden"]},
+            data={k: v for k, v in data.items() if k in ["id", "name", "description", "hidden"] if v != ""},
             queryset=self.get_queryset(),
         )
         queryset = f.qs
