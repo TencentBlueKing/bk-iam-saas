@@ -481,6 +481,11 @@
       },
 
       setNodeNoChecked (value, node) {
+        this.$nextTick(() => {
+          if (this.$refs.topologyRef && this.$refs.topologyRef.$refs.topologyTableRef) {
+            this.$refs.topologyRef.$refs.topologyTableRef.toggleRowSelection(node, value);
+          }
+        });
         if (node.children && node.children.length > 0) {
           const children = this.treeData.filter(item => item.parentId === node.nodeId);
           children.forEach(item => {
@@ -1013,7 +1018,6 @@
         window.changeAlert = true;
         node.current = node.current + 1;
         node.loadingMore = true;
-
         const chainLen = this.curChain.length;
         let keyword = this.curKeyword;
         if (Object.keys(this.curSearchObj).length) {
@@ -1142,6 +1146,7 @@
             this.treeData.splice(index, 1, ...loadNodes);
           } else {
             this.treeData.splice(index, 0, ...loadNodes);
+            console.log(this.treeData.splice(index, 0, ...loadNodes));
           }
           // 将新加载的节点push到父级点的children中
           if (node.level > 0) {

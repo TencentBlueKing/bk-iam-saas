@@ -60,13 +60,16 @@
               <div class="right-layout">
                 <template v-if="condition.instance && condition.instance.length > 0">
                   <instance-view
+                    :select-list="selectList"
                     :data="condition.instance"
-                    @on-delete="handleIntanceDelete(...arguments, index)"
+                    @on-delete="handleInstanceDelete(...arguments, index)"
                     @on-clear="handleInstanceClearAll(...arguments, index)" />
                 </template>
                 <template v-else>
                   <div class="empty-wrapper">
-                    <ExceptionEmpty style="background: #fafbfd" />
+                    <ExceptionEmpty
+                      style="background: #fafbfd"
+                    />
                   </div>
                 </template>
               </div>
@@ -536,13 +539,13 @@
         });
 
         const curInstanceItem = this.conditionData[index].instance[payloadIndex];
-        const indexs = [];
+        const indexList = [];
         curInstanceItem.path.forEach((v, index) => {
           if (v.some(_ => _.disabled)) {
-            indexs.push(index);
+            indexList.push(index);
           }
         });
-        curInstanceItem.paths = curInstanceItem.paths.filter((v, index) => indexs.includes(index));
+        curInstanceItem.paths = curInstanceItem.paths.filter((v, index) => indexList.includes(index));
         curInstanceItem.path = curInstanceItem.path.filter(v => v.some(_ => _.disabled));
 
         if (curInstanceItem.path.length < 1) {
@@ -550,7 +553,7 @@
         }
       },
 
-      handleIntanceDelete (payload, payloadIndex, childIndex, index) {
+      handleInstanceDelete (payload, payloadIndex, childIndex, index) {
         window.changeAlert = true;
         const curIds = payload.parentChain.map(v => `${v.id}&${v.type}`);
         const isCarryNextNoLimit = payload.id === '*';

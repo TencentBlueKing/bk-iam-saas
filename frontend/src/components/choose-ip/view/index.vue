@@ -6,26 +6,39 @@
         <bk-collapse-item
           :key="index"
           :name="item.name"
+          :hide-arrow="true"
           v-if="item.displayPath.length">
-          <p class="title">
-            <Icon bk class="expanded-icon" :type="activePanel.includes(item.name) ? 'down-shape' : 'right-shape'" />
-            {{ $t(`m.common['含']`) }}
-            <span class="number">{{ item.displayPath.length }}</span>{{ $t(`m.common['个']`) }} {{ item.name }}
-            <template v-if="!curLanguageIsCn">
-              (s)
-            </template>
-            <span :class="['clear-all', { 'disabled': item.displayPath.every(v => v.disabled) }]" @click.stop="handleClearAll(item, index)">{{ $t(`m.common['清空']`) }}</span>
-          </p>
+          <div class="title flex-between">
+            <div
+              class="single-hide"
+              style="width: calc(100% - 20px)">
+              <Icon bk class="expanded-icon" :type="activePanel.includes(item.name) ? 'down-shape' : 'right-shape'" />
+              <span>{{ formatChain(item) }}: </span>
+              <span>{{ $t(`m.common['已选']`) }}</span>
+              <span class="number">{{ item.displayPath.length }}</span>
+              <span>{{ $t(`m.common['个']`) }}{{ item.name }}</span>
+            </div>
+            <div
+              :class="[
+                'clear-all',
+                { 'disabled': item.displayPath.every(v => v.disabled) }]"
+              @click.stop="handleClearAll(item, index)"
+            >
+              <!-- {{ $t(`m.common['清空']`) }} -->
+              <Icon bk type="more" />
+            </div>
+          </div>
           <div slot="content" class="instance-content">
             <p class="instance-item" v-for="(child, childIndex) in item.displayPath" :key="childIndex">
-              <span class="name" :title="`ID：${child.id}`">{{ child.display_name }}</span>
+              <span class="name" :title="`ID: ${child.id}`">{{ child.display_name }}</span>
               <bk-button
                 text
                 size="small"
+                class="instance-item-btn"
                 :style="buttonStyle"
                 :disabled="child.disabled && item.path[childIndex][0].disabled"
                 @click="handleRemove(child, index, childIndex)">
-                {{ $t(`m.common['移除']`) }}
+                ×
               </bk-button>
             </p>
           </div>
@@ -34,11 +47,17 @@
     </bk-collapse>
   </div>
 </template>
+
 <script>
+  import _ from 'lodash';
   export default {
     name: '',
     props: {
       data: {
+        type: Array,
+        default: () => []
+      },
+      selectList: {
         type: Array,
         default: () => []
       }
@@ -46,20 +65,36 @@
     data () {
       return {
         activePanel: [],
-        instanceData: []
+        instanceData: [],
+        // 当前选择的链路
+        curChain: [],
+        ignorePathFlag: false
       };
     },
     computed: {
       buttonStyle () {
         if (this.curLanguageIsCn) {
           return {
-            'min-width': '48px',
+            // 'min-width': '48px',
             'line-height': '42px'
           };
         }
         return {
-          'min-width': '70px',
+          // 'min-width': '70px',
           'line-height': '42px'
+        };
+      },
+      formatChain () {
+        return (payload) => {
+          let curChainItem = {};
+          this.selectList.forEach((item) => {
+            if (item.resource_type_chain && item.resource_type_chain.length) {
+              if (item.resource_type_chain.map((v) => v.id).includes(payload.type)) {
+                curChainItem = _.cloneDeep(item);
+              }
+            }
+          });
+          return curChainItem.name || '';
         };
       }
     },
@@ -91,65 +126,88 @@
     }
   };
 </script>
-<style lang="postcss">
-    .iam-instance-panel {
-        width: 100%;
-        .bk-collapse-item-content {
-            padding: 0;
-        }
-        .bk-collapse-item .bk-collapse-item-header {
-            border-bottom: 1px solid #dcdee5;
-            .fr {
+<style lang="postcss" scoped>
+  .iam-instance-panel {
+      width: 100%;
+      .bk-collapse-item-content {
+          padding: 0;
+      }
+      .bk-collapse-item .bk-collapse-item-header {
+          border-bottom: 1px solid #dcdee5;
+          .fr {
+              display: none;
+          }
+          &:hover {
+              color: #63656e;
+          }
+      }
+      .number {
+        color: #3A84FF;
+        font-weight: 700;
+        /* padding: 0 4px; */
+      }
+      .title {
+          position: relative;
+          color: #63656e;
+          .expanded-icon {
+              /* margin-right: 5px; */
+              font-size: 14px;
+          }
+          .clear-all {
+              position: absolute;
+              right: 0;
+              font-size: 12px;
+              /* color: #3a84ff; */
+              cursor: pointer;
+              &:hover {
+                  color: #699df4;
+              }
+              &.disabled {
+                  color: #c4c6cc;
+                  cursor: not-allowed;
+              }
+          }
+      }
+      .instance-content {
+          background: #ffffff;
+          .instance-item {
+              padding: 0 20px;
+              display: flex;
+              justify-content: space-between;
+              line-height: 42px;
+              border-bottom: 1px solid #F4F4F4;
+              border-radius: 2px;
+              background: #ffffff;
+              box-shadow: 0 1px 5px 0 #0000000f;
+              .name {
+                  display: inline-block;
+                  max-width: 300px;
+                  font-size: 12px;
+                  color: #63656e;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  white-space: nowrap;
+              }
+              &-btn {
                 display: none;
-            }
-            &:hover {
-                color: #63656e;
-            }
-        }
-        .number {
-            font-weight: 600;
-            padding: 0 4px;
-        }
-        .title {
-            position: relative;
-            color: #63656e;
-            .expanded-icon {
-                margin-right: 5px;
-                font-size: 14px;
-            }
-            .clear-all {
-                position: absolute;
-                right: 22px;
-                font-size: 12px;
-                color: #3a84ff;
+              }
+              &:last-child {
+                border-bottom: 0;
+              }
+              &:hover {
                 cursor: pointer;
-                &:hover {
-                    color: #699df4;
-                }
-                &.disabled {
+                background-color:#E3EBFE;
+                .instance-item-btn {
+                  display: block;
+                  font-size: 20px;
+                  color: #3A84FF;
+                  padding: 0;
+                  &.is-disabled {
                     color: #c4c6cc;
-                    cursor: not-allowed;
+                  }
                 }
-            }
-        }
-        .instance-content {
-            background: #fff;
-            .instance-item {
-                padding: 0 20px;
-                display: flex;
-                justify-content: space-between;
-                line-height: 42px;
-                border-bottom: 1px solid #dcdee5;
-                .name {
-                    display: inline-block;
-                    max-width: 300px;
-                    font-size: 12px;
-                    color: #63656e;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    white-space: nowrap;
-                }
-            }
-        }
-    }
+              }
+          }
+      }
+  }
 </style>

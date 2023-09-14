@@ -96,7 +96,7 @@ export default class Condition {
         }
       });
       if (strList.length > 0) {
-        return `${il8n('common', '已选择')} ${strList.join('、')}`;
+        return `${il8n('common', '已选择')} ${strList.join(', ')}`;
       }
       return il8n('resource', '未选择任何拓扑实例');
     }

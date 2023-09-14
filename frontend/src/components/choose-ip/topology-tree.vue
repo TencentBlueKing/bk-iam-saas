@@ -5,21 +5,18 @@
     <div class="render-wrapper" ref="content">
       <template v-if="isOnlyLevel">
         <bk-table
-          ref="topologyTreeRef"
+          ref="topologyTableRef"
           size="small"
           data-test-id="topology_tree_group"
           ext-cls="topology-tree-table"
           :header-border="false"
           :outer-border="false"
-          :data="allData"
-          :pagination="pagination"
-          @page-change="handlePageChange"
-          @page-limit-change="handleLimitChange"
+          :data="renderTopologyData"
           @select="handleSelectChange(...arguments)"
           @select-all="handleSelectAllChange"
           v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
         >
-          <bk-table-column type="selection" align="center" />
+          <bk-table-column type="selection" align="center" :selectable="setDefaultSelect" />
           <bk-table-column :label="curChain.length ? curChain[0].name : ''">
             <template slot-scope="{ row }">
               {{ row.name }}
@@ -30,6 +27,22 @@
             />
           </template>
         </bk-table>
+        <template
+          v-if="pagination.count > 0"
+        >
+          <bk-pagination
+            size="small"
+            align="right"
+            ext-cls="topology-tree-pagination-cls"
+            :small="true"
+            :show-total-count="true"
+            :show-limit="false"
+            :current.sync="pagination.current"
+            :count="pagination.count"
+            :limit="pagination.limit"
+            @change="handlePageChange"
+          />
+        </template>
       </template>
       <template v-if="!isOnlyLevel">
         <div
@@ -140,6 +153,7 @@
     </div>
   </div>
 </template>
+
 <script>
   import _ from 'lodash';
   import TopologyInput from './topology-input';
@@ -196,10 +210,8 @@
           current: 1,
           limit: 100,
           count: 0,
-          limitList: [100, 200, 500, 1000],
-          small: true,
-          size: 'small',
-          showTotalCount: false
+          showLimit: false,
+          small: true
         },
         emptyTableData: {
           type: '',
@@ -221,9 +233,13 @@
       visiableData () {
         return this.allData.filter((item) => item.visiable);
       },
+      // 过滤掉查看更多选项
+      renderTopologyData () {
+        return this.allData.filter((item) => item.type === 'node');
+      },
       // 返回只有一层数据的排版
       isOnlyLevel () {
-        return this.allData.every((item) => !item.async && item.level === 0);
+        return this.visiableData.every((item) => !item.async && item.level === 0);
       },
       // 页面渲染的数据
       renderData () {
@@ -235,7 +251,7 @@
       },
       dragDynamicWidth () {
         return (payload) => {
-          const offsetWidth = this.getDragDynamicWidth() > 220 ? 180 + this.getDragDynamicWidth() - 220 : 180;
+          const offsetWidth = this.getDragDynamicWidth() > 600 ? 560 + this.getDragDynamicWidth() - 600 : 560;
           const isSameLevelExistSync = this.allData
             .filter((item) => item.level === payload.level)
             .some((item) => item.type === 'node' && item.async);
@@ -303,6 +319,18 @@
           this.pagination = Object.assign(this.pagination, { count: value });
         },
         immediate: true
+      },
+      allData: {
+        handler (value) {
+          if (value.length) {
+            this.$nextTick(() => {
+              value.forEach((item) => {
+                this.$refs.topologyTableRef && this.$refs.topologyTableRef.toggleRowSelection(item, item.checked);
+              });
+            });
+          }
+        },
+        immediate: true
       }
     },
     mounted () {
@@ -318,6 +346,11 @@
       });
     },
     methods: {
+      setDefaultSelect (payload) {
+        const allData = this.allData.filter(item => item.disabled).map(item => item.id);
+        return !allData.includes(payload.id.toString());
+      },
+
       handleKeyup ($event) {
         if ($event.key === 'Shift') {
           this.isShiftBeingPress = false;
@@ -563,7 +596,6 @@
       },
 
       handleNodeChange (newVal, oldVal, localVal, node, index) {
-        console.log(newVal, oldVal, localVal, node, index);
         if (this.isShiftBeingPress) {
           this.pressIndex = index;
           this.pressLevels.push(node.level);
@@ -572,12 +604,16 @@
         this.$emit('on-select', newVal, node);
       },
 
-      handlePageChange () {
-
-      },
-
-      handleLimitChange () {
-
+      handlePageChange (current) {
+        console.log(current, 51556);
+        this.pagination = Object.assign(this.pagination, { current });
+        const loadNode = this.allData.find((item) => item.type === 'load');
+        console.log(this.allData, 5545);
+        if (loadNode) {
+          const { limit } = this.pagination;
+          const lastNode = Object.assign(loadNode, { current });
+          this.$emit('on-load-more', lastNode, limit);
+        }
       },
 
       fetchSelectedGroups (type, payload, row) {
@@ -586,31 +622,21 @@
             const isChecked = payload.length && payload.indexOf(row) !== -1;
             if (isChecked) {
               this.currentSelectedNode.push(row);
+              this.$set(row, 'checked', true);
               this.$emit('on-select', true, row);
             } else {
               this.currentSelectedNode = this.currentSelectedNode.filter(
                 (item) => item.id.toString() !== row.id.toString()
               );
+              this.$set(row, 'checked', false);
               this.$emit('on-select', false, row);
             }
-            this.$nextTick(() => {
-              const selectionCount = document.getElementsByClassName('bk-page-selection-count');
-              if (this.$refs.groupPermTableRef && selectionCount) {
-                selectionCount[0].children[0].innerHTML = this.currentSelectedNode.length;
-              }
-            });
           },
           all: () => {
             const tableList = _.cloneDeep(this.allData);
-            const selectGroups = this.currentSelectedNode.filter(
+            const selectNode = this.currentSelectedNode.filter(
               item => !tableList.map(v => v.id.toString()).includes(item.id.toString()));
-            this.currentSelectedNode = [...selectGroups, ...payload];
-            this.$nextTick(() => {
-              const selectionCount = document.getElementsByClassName('bk-page-selection-count');
-              if (this.$refs.groupPermTableRef && selectionCount) {
-                selectionCount[0].children[0].innerHTML = this.currentSelectedNode.length;
-              }
-            });
+            this.currentSelectedNode = [...selectNode, ...payload];
             this.$emit('on-select', this.currentSelectedNode);
           }
         };
@@ -618,20 +644,23 @@
       },
 
       handleSelectChange (selection, node) {
-        // console.log(section, node);
-        // if (this.isShiftBeingPress) {
-        //   this.pressIndex = index;
-        //   this.pressLevels.push(node.level);
-        // }
+        console.log(selection, node);
+        if (this.isShiftBeingPress) {
+          this.pressIndex = this.allData.findIndex((item) => item.id === node.id);
+          this.pressLevels.push(node.level);
+        }
         // this.handleNodeChecked(newVal, node);
         // this.$emit('on-select', newVal, node);
         this.fetchSelectedGroups('multiple', selection, node);
       },
 
-      handleSelectAllChange () {}
+      handleSelectAllChange (selection) {
+        this.fetchSelectedGroups('all', selection);
+      }
     }
   };
 </script>
+
 <style lang="postcss">
 .iam-topology-tree {
   height: calc(100vh - 450px);
@@ -828,12 +857,28 @@
       }
     }
   }
+}
+</style>
 
-  .topology-tree-table {
+<style lang="postcss" scoped>
+.topology-tree-table {
     border: 0;
     .bk-table-empty-block {
       height: calc(100vh - 450px);
     }
+    .bk-page.bk-page-align-right {
+      padding: 10px;
+    }
   }
-}
+
+ /deep/ .topology-tree-pagination-cls {
+    padding: 10px 20px;
+   .bk-page-small-jump {
+      .jump-input {
+        outline: none;
+        min-width: 0;
+      }
+    }
+  }
+
 </style>

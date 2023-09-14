@@ -710,6 +710,7 @@
       
       // 显示资源实例
       handleShowResourceInstance (data, resItem, resIndex, groupIndex) {
+        console.log(this.applyGroupData.system_id, 455454);
         this.params = {
           system_id: this.applyGroupData.system_id,
           action_id: data.id,
