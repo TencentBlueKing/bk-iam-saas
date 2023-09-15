@@ -10,10 +10,6 @@ specific language governing permissions and limitations under the License.
 """
 from rest_framework import serializers
 
-from backend.apps.organization.models import User
 
-
-class SyncUserSLZ(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ("username",)
+class SyncUserSLZ(serializers.Serializer):
+    username = serializers.CharField()
