@@ -431,7 +431,7 @@ class RoleCheckBiz:
         包括申请中需要检查
         """
         # 如果新名称与旧名称一致，说明名称没改变
-        if new_name == old_name:
+        if new_name.lower() == old_name.lower():
             return
 
         # 新名称已经有对应的分级管理员，则不可以
@@ -459,7 +459,7 @@ class RoleCheckBiz:
         每个分级管理员里面的子集管理员名字必须唯一
         """
         # 如果新名称与旧名称一致，说明名称没改变
-        if new_name == old_name:
+        if new_name.lower() == old_name.lower():
             return
 
         # 查询分级管理员已有的子集管理员id
