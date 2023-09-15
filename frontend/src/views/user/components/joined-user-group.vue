@@ -562,7 +562,9 @@
             this.isShowDeleteDialog = true;
             this.delActionDialogTitle = this.$t(`m.dialog['确认批量退出所选的用户组吗？']`);
             const adminGroups = this.currentSelectGroupList.filter(item =>
-              item.attributes && item.attributes.source_from_role && item.role_members.length === 1);
+              item.attributes && item.attributes.source_from_role
+              && item.role_members.length === 1 && item.department_id === 0
+            );
             if (adminGroups.length) {
               this.delActionDialogTip = this.$t(`m.perm['存在用户组不可退出（唯一管理员不能退出）']`);
               this.delActionList = adminGroups;

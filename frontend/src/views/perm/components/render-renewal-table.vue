@@ -1,5 +1,12 @@
 <template>
   <div class="iam-perm-renewal-table-wrapper" v-bkloading="{ isLoading: loading || isLoading, opacity: 1 }">
+    <div class="iam-perm-renewal-btn">
+      <bk-button
+        :disabled="!currentSelectList.length"
+        @click="handleBatchQuit">
+        {{ $t(`m.common['批量退出']`) }}
+      </bk-button>
+    </div>
     <bk-table
       v-show="!loading"
       :data="tableList"
@@ -132,7 +139,45 @@
                 </div>
               </template>
               <template v-else>
-                <span>{{ $t(`m.common['无需关联实例']`) }}{{ policyIndex}}</span>
+                <span>{{ $t(`m.common['无需关联实例']`) }}</span>
+              </template>
+            </template>
+          </bk-table-column>
+        </template>
+        <template v-else-if="item.prop === 'operate'">
+          <bk-table-column
+            :key="item.prop"
+            :label="item.label"
+            :prop="item.prop">
+            <template slot-scope="{ row }">
+              <template v-if="['group'].includes(type)">
+                <bk-button
+                  v-if="row.department_id !== 0"
+                  :disabled="true"
+                  :text="true"
+                >
+                  <span :title="$t(`m.perm['通过组织加入的组无法退出']`)">
+                    {{ $t(`m.common['退出']`) }}
+                  </span>
+                </bk-button>
+                <bk-button
+                  v-else
+                  class="mr10"
+                  theme="primary"
+                  :text="true"
+                  :title="isAdminGroup(row) ? $t(`m.perm['唯一管理员不可退出']`) : ''"
+                  :disabled="isAdminGroup(row)"
+                  @click="handleQuitRenewal(row)">
+                  {{ $t(`m.common['退出']`) }}
+                </bk-button>
+              </template>
+              <template v-if="['custom'].includes(type)">
+                <bk-button
+                  type="primary"
+                  text
+                  @click="handleShowDelDialog(row)">
+                  {{ $t(`m.userGroupDetail['删除操作权限']`) }}
+                </bk-button>
               </template>
             </template>
           </bk-table-column>
@@ -188,6 +233,18 @@
       :show-member="false"
       @animation-end="handleDetailAnimationEnd"
     />
+
+    <delete-action-dialog
+      :show.sync="isShowDeleteDialog"
+      :title="delActionDialogTitle"
+      :tip="delActionDialogTip"
+      :name="currentActionName"
+      :loading="batchQuitLoading"
+      :related-action-list="delActionList"
+      @on-after-leave="handleAfterDeleteLeaveAction"
+      @on-submit="handleSubmitDelete"
+      @on-cancel="handleCancelDelete"
+    />
   </div>
 </template>
 <script>
@@ -198,6 +255,7 @@
   import RenderDetail from './render-detail';
   import RenderPermSideSlider from '@/views/perm/components/render-group-perm-sideslider';
   import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
+  import DeleteActionDialog from '@/views/group/components/delete-related-action-dialog.vue';
   import PermPolicy from '@/model/my-perm-policy';
   import { PERMANENT_TIMESTAMP } from '@/common/constants';
   import { formatCodeData } from '@/common/util';
@@ -212,7 +270,8 @@
       RenderDetail,
       RenderResourcePopover,
       RenderPermSideSlider,
-      IamEditMemberSelector
+      IamEditMemberSelector,
+      DeleteActionDialog
     },
     props: {
       type: {
@@ -260,20 +319,28 @@
         currentBackup: 1,
         tableProps: [],
         systemFilter: [],
-        isLoading: false,
         emptyRenewalData: {
           type: '',
           text: '',
           tip: '',
           tipType: ''
         },
+        isLoading: false,
+        batchQuitLoading: false,
         isShowSideSlider: false,
         isShowPermSideSlider: false,
+        isShowDeleteDialog: false,
+        delActionDialogTitle: '',
+        delActionDialogTip: '',
+        currentActionName: '',
         sideSliderTitle: '',
         curGroupName: '',
         curGroupId: -1,
+        singleData: {},
         previewData: [],
-        sliderWidth: 960
+        delActionList: [],
+        sliderWidth: 960,
+        renewalGroupCount: 0
       };
     },
     computed: {
@@ -282,6 +349,20 @@
         return (payload) => {
           return payload.policy_id;
         };
+      },
+      isAdminGroup () {
+        return (payload) => {
+          if (payload) {
+            const { attributes, role_members } = payload;
+            if (attributes && attributes.source_from_role && role_members.length === 1) {
+              return true;
+            }
+            return false;
+          }
+        };
+      },
+      isMultiple () {
+        return !(Object.keys(this.singleData).length > 0);
       }
     },
     watch: {
@@ -373,9 +454,9 @@
                     });
                   }
                   if (this.currentSelectList.map(_ => _.id).includes(item.id)) {
-                    this.$refs.permTableRef
-                      && this.$refs.permTableRef.toggleRowSelection(item, true);
+                    this.$refs.permTableRef && this.$refs.permTableRef.toggleRowSelection(item, true);
                   }
+                  this.fetchCustomSelection();
                 });
               },
               custom: () => {
@@ -389,10 +470,10 @@
                     });
                   }
                   if (this.currentSelectList.map(_ => _.id).includes(item.id)) {
-                    this.$refs.permTableRef
-                      && this.$refs.permTableRef.toggleRowSelection(item, true);
+                    this.$refs.permTableRef && this.$refs.permTableRef.toggleRowSelection(item, true);
                   }
                   item.policy = new PermPolicy(item.policy);
+                  this.fetchCustomSelection();
                 });
               }
             };
@@ -434,14 +515,16 @@
             { label: this.$t(`m.common['描述']`), prop: 'description' },
             { label: this.$t(`m.grading['管理空间']`), prop: 'role.name' },
             { label: this.$t(`m.levelSpace['管理员']`), prop: 'role_members' },
-            { label: this.$t(`m.common['有效期']`), prop: 'expired_at' }
+            { label: this.$t(`m.common['有效期']`), prop: 'expired_at' },
+            { label: this.$t(`m.common['操作']`), prop: 'operate' }
           ];
         }
         return [
           { label: this.$t(`m.common['操作']`), prop: 'action' },
           { label: this.$t(`m.common['资源实例']`), prop: 'policy' },
           { label: this.$t(`m.common['所属系统']`), prop: 'system' },
-          { label: this.$t(`m.common['有效期']`), prop: 'expired_at' }
+          { label: this.$t(`m.common['有效期']`), prop: 'expired_at' },
+          { label: this.$t(`m.common['操作']`), prop: 'operate' }
         ];
       },
 
@@ -471,30 +554,84 @@
         this.fetchTableData();
       },
 
-      handlerAllChange (selection) {
-        const tabItem = {
-          group: () => {
-            this.currentSelectList = [...selection];
-          },
-          custom: () => {
-            // 直接点全选按钮切换数量为当前页条数，处理点击其他页面数据再点全选数量不对等问题
-            if (selection.length === this.tableList.length || selection.length === this.allData.length) {
-              this.currentSelectList = [...this.allData];
-              this.currentSelectList.forEach(item => {
-                this.$refs.permTableRef
-                  && this.$refs.permTableRef.toggleRowSelection(item, true);
-              });
-            } else {
-              this.currentSelectList = [];
-              this.$refs.permTableRef.clearSelection();
-            }
+      fetchCustomSelection () {
+        this.$nextTick(() => {
+          const selectionCount = document.getElementsByClassName('bk-page-selection-count');
+          if (this.$refs.permTableRef && selectionCount) {
+            selectionCount[0].children[0].innerHTML = this.currentSelectList.length;
           }
-        };
-        return tabItem[this.type] ? tabItem[this.type]() : tabItem['group']();
+        });
+      },
+
+      handlerAllChange (selection) {
+        // const tabItem = {
+        //   group: () => {
+        //     this.currentSelectList = [...selection];
+        //   },
+        //   custom: () => {
+        //     // 直接点全选按钮切换数量为当前页条数，处理点击其他页面数据再点全选数量不对等问题
+        //     if (selection.length === this.tableList.length || selection.length === this.allData.length) {
+        //       this.currentSelectList = [...this.allData];
+        //       this.currentSelectList.forEach(item => {
+        //         this.$refs.permTableRef
+        //           && this.$refs.permTableRef.toggleRowSelection(item, true);
+        //       });
+        //     } else {
+        //       this.currentSelectList = [];
+        //       this.$refs.permTableRef.clearSelection();
+        //     }
+        //   }
+        // };
+        // return tabItem[this.type] ? tabItem[this.type]() : tabItem['group']();
+        const tableList = _.cloneDeep(this.tableList);
+        const selectGroups = this.currentSelectList.filter(item =>
+          !tableList.map(v => v.id.toString()).includes(item.id.toString()));
+        this.currentSelectList = [...selectGroups, ...selection];
+        this.fetchCustomSelection();
       },
 
       handlerChange (selection, row) {
-        this.currentSelectList = [...selection];
+        // const tabItem = {
+        //   group: () => {
+        //     const isChecked = selection.length && selection.indexOf(row) !== -1;
+        //     if (isChecked) {
+        //       this.currentSelectGroupList.push(row);
+        //     } else {
+        //       this.currentSelectList = this.currentSelectList.filter(
+        //         (item) => item.id.toString() !== row.id.toString()
+        //       );
+        //     }
+        //     this.$nextTick(() => {
+        //       const selectionCount = document.getElementsByClassName('bk-page-selection-count');
+        //       if (this.$refs.permTableRef && selectionCount) {
+        //         selectionCount[0].children[0].innerHTML = this.currentSelectList.length;
+        //       }
+        //     });
+        //   },
+        //   custom: () => {
+        //     // 直接点全选按钮切换数量为当前页条数，处理点击其他页面数据再点全选数量不对等问题
+        //     if (selection.length === this.tableList.length || selection.length === this.allData.length) {
+        //       this.currentSelectList = [...this.allData];
+        //       this.currentSelectList.forEach(item => {
+        //         this.$refs.permTableRef
+        //           && this.$refs.permTableRef.toggleRowSelection(item, true);
+        //       });
+        //     } else {
+        //       this.currentSelectList = [];
+        //       this.$refs.permTableRef.clearSelection();
+        //     }
+        //   }
+        // };
+        // return tabItem[this.type] ? tabItem[this.type]() : tabItem['group']();
+        const isChecked = selection.length && selection.indexOf(row) !== -1;
+        if (isChecked) {
+          this.currentSelectList.push(row);
+        } else {
+          this.currentSelectList = this.currentSelectList.filter(
+            (item) => item.id.toString() !== row.id.toString()
+          );
+        }
+        this.fetchCustomSelection();
       },
 
       handleViewDetail (payload) {
@@ -556,6 +693,7 @@
               }
               const { code, data } = await this.$store.dispatch('renewal/getExpireSoonGroupWithUser', userGroupParams);
               this.tableList = data.results || [];
+              this.renewalGroupCount = data.count || 0;
               this.tableList.forEach(item => {
                 if (item.role_members && item.role_members.length) {
                   item.role_members = item.role_members.map(v => {
@@ -565,6 +703,22 @@
                     };
                   });
                 }
+              });
+              this.$nextTick(() => {
+                const currentSelectList = this.currentSelectList.map(item => item.id.toString());
+                this.tableList.forEach((item) => {
+                  if (item.role_members && item.role_members.length) {
+                    item.role_members = item.role_members.map(v => {
+                      return {
+                        username: v,
+                        readonly: false
+                      };
+                    });
+                  }
+                  if (currentSelectList.includes(item.id.toString())) {
+                    this.$refs.permTableRef && this.$refs.permTableRef.toggleRowSelection(item, true);
+                  }
+                });
               });
               this.pagination = Object.assign(this.pagination, { count: data.count });
               this.emptyRenewalData
@@ -593,6 +747,93 @@
         }
       },
 
+      async handleSubmitDelete () {
+        let selectGroups = [];
+        if (this.isMultiple) {
+          selectGroups = this.currentSelectList.filter(item =>
+            !this.delActionList.map(v => v.id.toString()).includes(item.id.toString()));
+          if (!selectGroups.length) {
+            this.messageWarn(this.$t(`m.perm['当前勾选项都为不可退出的用户组（唯一管理员不能退出）']`), 3000);
+            return;
+          }
+        } else {
+          selectGroups = [this.singleData];
+        }
+        this.batchQuitLoading = true;
+        try {
+          for (let i = 0; i < selectGroups.length; i++) {
+            await this.$store.dispatch('perm/quitGroupPerm', {
+              type: 'group',
+              id: selectGroups[i].id
+            });
+          }
+          this.isShowDeleteDialog = false;
+          this.currentSelectList = [];
+          this.messageSuccess(this.$t(`m.info['退出成功']`), 3000);
+          this.pagination = Object.assign(this.pagination, { current: 1, limit: 10 });
+          await this.fetchTableData();
+        } catch (e) {
+          console.error(e);
+          this.messageAdvancedError(e);
+        } finally {
+          this.batchQuitLoading = false;
+          this.singleData = {};
+          this.$emit('on-change-total', this.renewalGroupCount);
+        }
+      },
+
+      // 批量操作对应操作项
+      handleDeleteActions (type, isMultiple = false) {
+        const typeMap = {
+          quit: () => {
+            const checkboxMap = {
+              true: () => {
+                this.isShowDeleteDialog = true;
+                this.delActionDialogTitle = this.$t(`m.dialog['确认批量退出所选的用户组吗？']`);
+                const adminGroups = this.currentSelectList.filter(item =>
+                  item.attributes && item.attributes.source_from_role
+                  && item.role_members.length === 1 && item.department_id === 0);
+                if (adminGroups.length) {
+                  this.delActionDialogTip = this.$t(`m.perm['存在用户组不可退出（唯一管理员不能退出）']`);
+                  this.delActionList = adminGroups;
+                }
+              },
+              false: () => {
+                this.isShowDeleteDialog = true;
+                this.delActionDialogTitle = this.$t(`m.dialog['确认退出']`);
+              }
+            };
+            return checkboxMap[isMultiple]();
+          }
+        };
+        return typeMap[type]();
+      },
+
+      handleBatchQuit () {
+        this.singleData = {};
+        console.log(this.currentSelectList, '当前tab');
+        this.handleDeleteActions('quit', true);
+      },
+      
+      handleQuitRenewal (row) {
+        this.singleData = Object.assign({}, row);
+        this.handleDeleteActions('quit', false);
+      },
+
+      handleCancelDelete () {
+        this.isShowDeleteDialog = false;
+        this.singleData = {};
+        this.delActionList = [];
+      },
+
+      handleAfterDeleteLeaveAction () {
+        this.currentActionName = '';
+        this.delActionDialogTitle = '';
+        this.delActionDialogTip = '';
+        this.singleData = {};
+        this.delActionList = [];
+      },
+
       handleDetailAnimationEnd () {
         this.curGroupName = '';
         this.curGroupId = '';
@@ -610,6 +851,9 @@
 <style lang="postcss">
     .iam-perm-renewal-table-wrapper {
         min-height: 200px;
+        .iam-perm-renewal-btn {
+          margin-top: 20px;
+        }
         .perm-renewal-table {
             margin-top: 16px;
             border: none;

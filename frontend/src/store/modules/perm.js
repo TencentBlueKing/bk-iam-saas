@@ -509,12 +509,7 @@ export default {
          * @return {Promise} promise 对象
          */
     quitGroupPerm ({ commit, state, dispatch }, params = {}, config) {
-      return http.delete(
-        `${AJAX_URL_PREFIX}/users/groups/?${json2Query(params)}`,
-        // ?type=group&id=groupid
-        {},
-        config
-      );
+      return http.delete(`${AJAX_URL_PREFIX}/users/groups/?${json2Query(params)}`, {}, config);
     },
 
     /**
