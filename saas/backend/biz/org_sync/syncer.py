@@ -90,12 +90,6 @@ class Syncer:
         # 如果没有则无需执行
         if not users:
             return
-        # 如果用户大于一定量，则直接全量同步
-        if len(users) > NEW_USER_AUTO_SYNC_COUNT_LIMIT:
-            from backend.apps.organization.tasks import sync_organization
-
-            sync_organization.delay()
-            return
 
         # 去除已存在的用户
         exist_users = set(User.objects.filter(id__in=[u["id"] for u in users]).values_list("id", flat=True))
@@ -118,6 +112,12 @@ class Syncer:
         User.objects.bulk_create(created_users, batch_size=1000)
         # 后台新建
         iam.create_subjects([{"type": "user", "id": user["username"], "name": user["display_name"]} for user in users])
+
+        # 如果用户大于一定量，则直接全量同步
+        if len(created_users) > NEW_USER_AUTO_SYNC_COUNT_LIMIT:
+            from backend.apps.organization.tasks import sync_organization
+
+            sync_organization.delay()
 
     # def sync_full_organization(self):
     #     # TODO: 重构时将 backend.apps.organization.tasks里的全量同步迁移到这里
