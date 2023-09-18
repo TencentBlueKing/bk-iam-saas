@@ -231,7 +231,7 @@
         <sideslider-effect-conditon ref="sidesliderRef" :data="environmentsSidesliderData"></sideslider-effect-conditon>
       </div>
       <div slot="footer" style="margin-left: 25px">
-        <bk-button theme="primary" :loading="sliderLoading" @click="handleResourceEffectTimeSumit">
+        <bk-button theme="primary" @click="handleResourceEffectTimeSumit">
           {{ $t(`m.common['保存']`) }}</bk-button
         >
         <bk-button style="margin-left: 10px" @click="handleResourceEffectTimeCancel">{{
@@ -242,6 +242,7 @@
 
     <delete-action-dialog
       :show.sync="isShowDeleteDialog"
+      :loading="deleteDialog.loading"
       :title="delActionDialogTitle"
       :tip="delActionDialogTip"
       :name="currentActionName"
@@ -581,6 +582,7 @@
         const linearActionList = this.linearActionList.filter(item => policyIdList.includes(item.id));
         const curAction = linearActionList.find(item => item.id === id);
         const hasRelatedActions = curAction && curAction.related_actions && curAction.related_actions.length;
+        console.log(id, name, policyIdList);
         linearActionList.forEach(item => {
           // 如果这里过滤自己还能在其他数据找到相同的related_actions，就代表有其他数据也关联了相同的操作
           if (hasRelatedActions && item.related_actions && item.related_actions.length && item.id !== id) {

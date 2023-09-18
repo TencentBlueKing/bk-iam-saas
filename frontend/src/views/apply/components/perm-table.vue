@@ -213,6 +213,11 @@
       handleViewSidesliderCondition () {
         console.log('environmentsSidesliderData', this.environmentsSidesliderData);
         this.isShowResourceInstanceEffectTime = true;
+      },
+
+      handleResourceCancel () {
+        this.environmentsSidesliderTitle = '';
+        this.isShowEnvironmentsSideslider = false;
       }
     }
   };

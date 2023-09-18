@@ -31,7 +31,7 @@
         :loading="tableLoading"
         :empty-data="curEmptyData"
         @on-select="handleSelected"
-        @on-change-total="handleChangeCount"
+        @on-change-count="handleChangeCount"
       />
     </render-horizontal-block>
     <p class="error-tips" v-if="isShowErrorTips">{{ $t(`m.renewal['请选择过期权限']`) }}</p>
@@ -211,7 +211,7 @@
               emptyData: formatCodeData(customCode, this.panels[1].emptyData, customList.length === 0)
             });
           }
-          this.tabKey = +new Date();
+          // this.tabKey = +new Date();
           this.fetchActiveTabData(this.panels);
         } catch (e) {
           console.error(e);
@@ -302,9 +302,11 @@
             this.$set(this.panels[0], 'total', payload);
             this.tabKey = +new Date();
           },
-          custom: () => {
-            this.$set(this.panels[1], 'total', payload);
-            this.tabKey = +new Date();
+          custom: async () => {
+            if (this.panels[1]) {
+              this.$set(this.panels[1], 'total', payload);
+              await this.fetchData();
+            }
           }
         };
         return tabMap[this.active]();
