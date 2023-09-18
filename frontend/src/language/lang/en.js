@@ -105,6 +105,7 @@ export const m = {
         '用户组的有效期': 'The expiration date of the group',
         '设置新用户加入用户组的有效期': 'Set the expiration date for new users joining the group {value}',
         '当前版本': 'Current',
+        '批量删除': 'Multi-delete',
         '批量删除实例权限': 'Multi-delete instance permissions',
         '的关联': 'association',
         '添加成员': 'Add members',

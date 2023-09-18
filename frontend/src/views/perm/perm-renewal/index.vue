@@ -30,7 +30,9 @@
         :count="formatCount"
         :loading="tableLoading"
         :empty-data="curEmptyData"
-        @on-select="handleSelected" />
+        @on-select="handleSelected"
+        @on-change-count="handleChangeCount"
+      />
     </render-horizontal-block>
     <p class="error-tips" v-if="isShowErrorTips">{{ $t(`m.renewal['请选择过期权限']`) }}</p>
     <render-horizontal-block :label="$t(`m.renewal['续期时长']`)">
@@ -209,7 +211,7 @@
               emptyData: formatCodeData(customCode, this.panels[1].emptyData, customList.length === 0)
             });
           }
-          this.tabKey = +new Date();
+          // this.tabKey = +new Date();
           this.fetchActiveTabData(this.panels);
         } catch (e) {
           console.error(e);
@@ -294,6 +296,22 @@
         });
       },
 
+      handleChangeCount (payload) {
+        const tabMap = {
+          group: () => {
+            this.$set(this.panels[0], 'total', payload);
+            this.tabKey = +new Date();
+          },
+          custom: async () => {
+            if (this.panels[1]) {
+              this.$set(this.panels[1], 'total', payload);
+              await this.fetchData();
+            }
+          }
+        };
+        return tabMap[this.active]();
+      },
+
       async handleSubmit () {
         if (this.curSelectedList.length < 1) {
           this.isShowErrorTips = true;
@@ -345,12 +363,10 @@
 <style lang="postcss">
     .iam-perm-renewal-wrapper {
         .iam-renewal-tab-cls {
-            .bk-tab-section {
-                padding: 0;
-            }
-        }
-        .iam-renewal-tab-cls {
             margin-top: -15px;
+            .bk-tab-section {
+              padding: 0;
+            }
         }
         .panel-name {
             margin: 0 3px;

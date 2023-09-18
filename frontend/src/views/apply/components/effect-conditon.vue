@@ -14,7 +14,7 @@
     props: {
       value: {
         type: Array,
-        default: []
+        default: () => []
       },
       isEmpty: {
         type: Boolean,
