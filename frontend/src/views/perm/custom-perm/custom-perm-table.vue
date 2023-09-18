@@ -582,7 +582,6 @@
         const linearActionList = this.linearActionList.filter(item => policyIdList.includes(item.id));
         const curAction = linearActionList.find(item => item.id === id);
         const hasRelatedActions = curAction && curAction.related_actions && curAction.related_actions.length;
-        console.log(id, name, policyIdList);
         linearActionList.forEach(item => {
           // 如果这里过滤自己还能在其他数据找到相同的related_actions，就代表有其他数据也关联了相同的操作
           if (hasRelatedActions && item.related_actions && item.related_actions.length && item.id !== id) {

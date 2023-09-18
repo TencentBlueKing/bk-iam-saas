@@ -478,7 +478,6 @@
                 });
               },
               custom: () => {
-                console.log(EXPIRED_DISTRICT);
                 this.currentSelectList = this.allData.filter(item =>
                   this.getDays(item.expired_at) < EXPIRED_DISTRICT);
                 this.allData.forEach(item => {
@@ -902,7 +901,6 @@
       },
 
       handleDeleteActionOrInstance (payload, type) {
-        console.log(payload.policy);
         let delRelatedActions = [];
         this.delActionList = [];
         const { id, name, policy_id: policyId } = payload.policy;
