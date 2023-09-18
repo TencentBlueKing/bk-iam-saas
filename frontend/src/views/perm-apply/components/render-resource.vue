@@ -58,6 +58,7 @@
                 </div>
               </div>
               <div class="right-layout">
+                <div class="right-layout-title">{{ $t(`m.common['结果预览']`) }}</div>
                 <template v-if="condition.instance && condition.instance.length > 0">
                   <instance-view
                     :select-list="selectList"
@@ -906,6 +907,10 @@
                         height: 5px;
                         border-radius: 2px;
                         background-color: #e6e9ea;
+                    }
+                    &-title {
+                      font-size: 15px;
+                      padding: 10px;
                     }
                     .empty-wrapper {
                         position: absolute;
