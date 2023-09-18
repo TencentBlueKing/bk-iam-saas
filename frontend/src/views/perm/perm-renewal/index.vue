@@ -70,12 +70,13 @@
 </template>
 <script>
   import _ from 'lodash';
+  import { mapGetters } from 'vuex';
   import { buildURLParams } from '@/common/url';
   import { formatCodeData } from '@/common/util';
   import { SIX_MONTH_TIMESTAMP, ONE_DAY_TIMESTAMP } from '@/common/constants';
   import IamDeadline from '@/components/iam-deadline/horizontal';
   import RenderTable from '../components/render-renewal-table';
-  import { mapGetters } from 'vuex';
+  import PermPolicy from '@/model/my-perm-policy';
 
   export default {
     name: '',
@@ -134,12 +135,12 @@
     computed: {
       ...mapGetters(['externalSystemsLayout', 'externalSystemId']),
       getTableList () {
-        const panelData = this.panels.find(item => item.name === this.active);
-        if (panelData) {
-          this.curEmptyData = _.cloneDeep(panelData.emptyData);
-          return panelData.data;
-        }
-        return [];
+          const panelData = this.panels.find(item => item.name === this.active);
+          if (panelData) {
+            this.curEmptyData = _.cloneDeep(panelData.emptyData);
+            return panelData.data;
+          }
+          return [];
       },
       curBadgeTheme () {
         return payload => {
@@ -205,13 +206,16 @@
             = formatCodeData(code, this.panels[0].emptyData, data.results.length === 0);
           this.panels[0] = Object.assign(this.panels[0], { data: data.results, total: data.count });
           if (this.panels[1]) {
+            customList.forEach((item) => {
+              item.policy = new PermPolicy(item.policy);
+            });
             this.panels[1] = Object.assign(this.panels[1], {
               data: customList,
               total: customList.length,
               emptyData: formatCodeData(customCode, this.panels[1].emptyData, customList.length === 0)
             });
           }
-          // this.tabKey = +new Date();
+          this.tabKey = +new Date();
           this.fetchActiveTabData(this.panels);
         } catch (e) {
           console.error(e);
@@ -296,16 +300,18 @@
         });
       },
 
-      handleChangeCount (payload) {
+      handleChangeCount (count, data) {
         const tabMap = {
           group: () => {
-            this.$set(this.panels[0], 'total', payload);
+            this.$set(this.panels[0], 'total', count);
             this.tabKey = +new Date();
           },
           custom: async () => {
             if (this.panels[1]) {
-              this.$set(this.panels[1], 'total', payload);
-              await this.fetchData();
+              this.panels[1] = Object.assign(this.panels[1], {
+                total: count,
+                data
+              });
             }
           }
         };

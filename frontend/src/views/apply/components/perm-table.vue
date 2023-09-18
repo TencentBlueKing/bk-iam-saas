@@ -78,7 +78,7 @@
       :title="sidesliderTitle"
       :width="960"
       :quick-close="true"
-      @animation-end="handleAnimationEnd">
+    >
       <div slot="content">
         <component :is="renderDetailCom" :data="previewData" />
       </div>

@@ -261,15 +261,14 @@
 <script>
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
+  import { PERMANENT_TIMESTAMP } from '@/common/constants';
+  import { formatCodeData } from '@/common/util';
   import RenderExpireDisplay from '@/components/render-renewal-dialog/display';
   import RenderResourcePopover from '../components/prem-view-resource-popover';
   import RenderDetail from './render-detail';
   import RenderPermSideSlider from '@/views/perm/components/render-group-perm-sideslider';
   import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
   import DeleteActionDialog from '@/views/group/components/delete-related-action-dialog.vue';
-  import PermPolicy from '@/model/my-perm-policy';
-  import { PERMANENT_TIMESTAMP } from '@/common/constants';
-  import { formatCodeData } from '@/common/util';
 
   // 过期时间的天数区间
   const EXPIRED_DISTRICT = 15;
@@ -443,7 +442,7 @@
         handler (value) {
           this.allData = _.cloneDeep(value);
           this.pagination = Object.assign(this.pagination, { count: this.count });
-          const data = this.getCurPageData();
+          const data = this.getCurPageData(this.pagination.current);
           this.tableList.splice(0, this.tableList.length, ...data);
           // this.currentSelectList = this.tableList.filter(item =>
           //     this.getDays(item.expired_at) < EXPIRED_DISTRICT);
@@ -490,7 +489,6 @@
                   if (this.currentSelectList.map(_ => _.id).includes(item.id)) {
                     this.$refs.permTableRef && this.$refs.permTableRef.toggleRowSelection(item, true);
                   }
-                  item.policy = new PermPolicy(item.policy);
                   this.fetchCustomSelection();
                 });
               }
@@ -575,7 +573,7 @@
       fetchCustomSelection () {
         this.$nextTick(() => {
           const selectionCount = document.getElementsByClassName('bk-page-selection-count');
-          if (this.$refs.permTableRef && selectionCount) {
+          if (this.$refs.permTableRef && selectionCount && selectionCount.length && selectionCount[0].children) {
             selectionCount[0].children[0].innerHTML = this.currentSelectList.length;
           }
         });
@@ -601,7 +599,7 @@
         //   }
         // };
         // return tabItem[this.type] ? tabItem[this.type]() : tabItem['group']();
-        const tableList = _.cloneDeep(this.tableList);
+        const tableList = this.type === 'custom' ? _.cloneDeep(this.allData) : _.cloneDeep(this.tableList);
         const selectGroups = this.currentSelectList.filter(item =>
           !tableList.map(v => v.id.toString()).includes(item.id.toString()));
         this.currentSelectList = [...selectGroups, ...selection];
@@ -693,6 +691,10 @@
         if (endIndex > this.allData.length) {
           endIndex = this.allData.length;
         }
+        if (page > Math.ceil(this.allData.length / this.pagination.limit)) {
+          this.pagination = Object.assign(this.pagination, { current: 1 });
+        }
+        console.log(page, startIndex, endIndex, this.allData.length);
         return this.allData.slice(startIndex, endIndex);
       },
 
@@ -788,7 +790,7 @@
                 });
               }
               this.messageSuccess(this.$t(`m.info['退出成功']`), 3000);
-              this.pagination = Object.assign(this.pagination, { current: 1, limit: 10 });
+              this.pagination = Object.assign(this.pagination, { current: 1 });
               await this.fetchTableData();
             } catch (e) {
               console.error(e);
@@ -798,7 +800,9 @@
               this.isShowDeleteDialog = false;
               this.currentSelectList = [];
               this.singleData = {};
-              this.$emit('on-change-count', this.renewalGroupCount);
+              this.$refs.permTableRef && this.$refs.permTableRef.clearSelection();
+              this.fetchCustomSelection();
+              this.$emit('on-change-count', this.renewalGroupCount, this.tableList);
             }
           },
           actions: async () => {
@@ -808,19 +812,18 @@
                 policyIds: this.curDeleteIds,
                 systemId: this.curCustomData.system.id
               });
-              this.allData.forEach((item, index) => {
-                if (this.curDeleteIds.includes(item.policy.policy_id)) {
-                  this.allData.splice(index, 1);
-                }
-              });
+              this.allData = this.allData.filter((item) => !this.curDeleteIds.includes(item.policy.policy_id));
+              this.tableList = this.tableList.filter((item) => !this.curDeleteIds.includes(item.policy.policy_id));
+              this.pageChange(this.pagination.current);
               this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
             } catch (e) {
-              this.messageAdvancedError(e);
             } finally {
               this.batchQuitLoading = false;
               this.isShowDeleteDialog = false;
               this.currentSelectList = [];
-              this.$emit('on-change-count', this.allData.length);
+              this.fetchCustomSelection();
+              this.$refs.permTableRef && this.$refs.permTableRef.clearSelection();
+              this.$emit('on-change-count', this.allData.length, this.allData);
             }
           }
         };
