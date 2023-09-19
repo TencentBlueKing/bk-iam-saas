@@ -1,3 +1,13 @@
+<!-- 2023-09-19 -->
+# V1.10.15 Version Update Log
+
+### Bug Fixes
+* Added support for BlueShield in user search for My Permissions.
+* Modified the second-level administrator name change to be case-insensitive.
+* Adjusted the synchronization strategy for adding new users.
+
+---
+
 <!-- 2023-09-14 -->
 # V1.10.14 Version Update Log
 

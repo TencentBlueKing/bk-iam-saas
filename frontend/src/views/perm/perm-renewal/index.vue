@@ -30,7 +30,9 @@
         :count="formatCount"
         :loading="tableLoading"
         :empty-data="curEmptyData"
-        @on-select="handleSelected" />
+        @on-select="handleSelected"
+        @on-change-count="handleChangeCount"
+      />
     </render-horizontal-block>
     <p class="error-tips" v-if="isShowErrorTips">{{ $t(`m.renewal['请选择过期权限']`) }}</p>
     <render-horizontal-block :label="$t(`m.renewal['续期时长']`)">
@@ -68,12 +70,13 @@
 </template>
 <script>
   import _ from 'lodash';
+  import { mapGetters } from 'vuex';
   import { buildURLParams } from '@/common/url';
   import { formatCodeData } from '@/common/util';
   import { SIX_MONTH_TIMESTAMP, ONE_DAY_TIMESTAMP } from '@/common/constants';
   import IamDeadline from '@/components/iam-deadline/horizontal';
   import RenderTable from '../components/render-renewal-table';
-  import { mapGetters } from 'vuex';
+  import PermPolicy from '@/model/my-perm-policy';
 
   export default {
     name: '',
@@ -132,12 +135,12 @@
     computed: {
       ...mapGetters(['externalSystemsLayout', 'externalSystemId']),
       getTableList () {
-        const panelData = this.panels.find(item => item.name === this.active);
-        if (panelData) {
-          this.curEmptyData = _.cloneDeep(panelData.emptyData);
-          return panelData.data;
-        }
-        return [];
+          const panelData = this.panels.find(item => item.name === this.active);
+          if (panelData) {
+            this.curEmptyData = _.cloneDeep(panelData.emptyData);
+            return panelData.data;
+          }
+          return [];
       },
       curBadgeTheme () {
         return payload => {
@@ -203,6 +206,9 @@
             = formatCodeData(code, this.panels[0].emptyData, data.results.length === 0);
           this.panels[0] = Object.assign(this.panels[0], { data: data.results, total: data.count });
           if (this.panels[1]) {
+            customList.forEach((item) => {
+              item.policy = new PermPolicy(item.policy);
+            });
             this.panels[1] = Object.assign(this.panels[1], {
               data: customList,
               total: customList.length,
@@ -294,6 +300,24 @@
         });
       },
 
+      handleChangeCount (count, data) {
+        const tabMap = {
+          group: () => {
+            this.$set(this.panels[0], 'total', count);
+            this.tabKey = +new Date();
+          },
+          custom: async () => {
+            if (this.panels[1]) {
+              this.panels[1] = Object.assign(this.panels[1], {
+                total: count,
+                data
+              });
+            }
+          }
+        };
+        return tabMap[this.active]();
+      },
+
       async handleSubmit () {
         if (this.curSelectedList.length < 1) {
           this.isShowErrorTips = true;
@@ -345,12 +369,10 @@
 <style lang="postcss">
     .iam-perm-renewal-wrapper {
         .iam-renewal-tab-cls {
-            .bk-tab-section {
-                padding: 0;
-            }
-        }
-        .iam-renewal-tab-cls {
             margin-top: -15px;
+            .bk-tab-section {
+              padding: 0;
+            }
         }
         .panel-name {
             margin: 0 3px;
