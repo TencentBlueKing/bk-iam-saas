@@ -53,10 +53,12 @@ export default class RelateResourceTypes {
       this.conditionBackup = payload.condition;
     } else {
       const isEmpty = !payload.condition
-                || (
-                  payload.condition.length > 0
-                        && payload.condition.every(item => item.attributes.length < 1 && item.instances.length < 1)
-                );
+      || ((payload.condition.length > 0)
+        && payload.condition.every(item =>
+          (item.attributes && item.attributes.length < 1)
+          && (item.instance && item.instance.length < 1)
+          && (item.instances && item.instances.length < 1)
+        ));
       if (isEmpty) {
         this.condition = ['none'];
         this.conditionBackup = ['none'];
@@ -98,7 +100,7 @@ export default class RelateResourceTypes {
     }
     const singleResourceFlag = this.condition.every(item => {
       return (!item.attribute || (item.attribute && item.attribute.length < 1))
-                && item.instance.length === 1
+                && item.instance && item.instance.length === 1
                 && item.instance[0].path.length === 1;
     });
     if (singleResourceFlag) {

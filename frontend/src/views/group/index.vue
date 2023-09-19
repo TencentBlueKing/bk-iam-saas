@@ -87,12 +87,12 @@
       @page-limit-change="limitChange" @select="handlerChange" @select-all="handlerAllChange"
       v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
       <bk-table-column type="selection" align="center" :selectable="getIsSelect" reserve-selection />
-      <bk-table-column :label="$t(`m.userGroup['用户组名']`)" width="200">
+      <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
         <template slot-scope="{ row }">
           <span class="user-group-name" :title="row.name" @click="handleView(row)">{{ row.name }}</span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.userGroup['用户/组织']`)" width="150">
+      <bk-table-column :label="$t(`m.userGroup['用户/组织']`)">
         <template slot-scope="{ row }">
           <div class="member-wrapper">
             <span class="user">
@@ -139,7 +139,7 @@
           />
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.userGroup['创建人']`)" width="100">
+      <bk-table-column :label="$t(`m.userGroup['创建人']`)">
         <template slot-scope="{ row }">
           <span>{{ row.creator || '--' }}</span>
         </template>
@@ -157,7 +157,7 @@
           <span :title="row.created_time">{{ row.created_time }}</span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.common['描述']`)" width="240">
+      <bk-table-column :label="$t(`m.common['描述']`)">
         <template slot-scope="{ row }">
           <span :title="row.description || ''">{{ row.description || '--' }}</span>
         </template>

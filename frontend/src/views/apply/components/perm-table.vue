@@ -78,7 +78,7 @@
       :title="sidesliderTitle"
       :width="960"
       :quick-close="true"
-      @animation-end="handleAnimationEnd">
+    >
       <div slot="content">
         <component :is="renderDetailCom" :data="previewData" />
       </div>
@@ -138,7 +138,9 @@
         previewData: {},
         renderDetailCom: 'DetailContent',
         isShowSideslider: false,
+        isShowEnvironmentsSideslider: false,
         sidesliderTitle: '',
+        environmentsSidesliderTitle: '',
         tableList: [],
         curId: '',
         environmentsSidesliderData: [],
@@ -213,6 +215,11 @@
       handleViewSidesliderCondition () {
         console.log('environmentsSidesliderData', this.environmentsSidesliderData);
         this.isShowResourceInstanceEffectTime = true;
+      },
+
+      handleResourceCancel () {
+        this.environmentsSidesliderTitle = '';
+        this.isShowEnvironmentsSideslider = false;
       }
     }
   };

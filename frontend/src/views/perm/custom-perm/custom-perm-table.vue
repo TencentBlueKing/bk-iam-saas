@@ -231,7 +231,7 @@
         <sideslider-effect-conditon ref="sidesliderRef" :data="environmentsSidesliderData"></sideslider-effect-conditon>
       </div>
       <div slot="footer" style="margin-left: 25px">
-        <bk-button theme="primary" :loading="sliderLoading" @click="handleResourceEffectTimeSumit">
+        <bk-button theme="primary" @click="handleResourceEffectTimeSumit">
           {{ $t(`m.common['保存']`) }}</bk-button
         >
         <bk-button style="margin-left: 10px" @click="handleResourceEffectTimeCancel">{{
@@ -242,6 +242,7 @@
 
     <delete-action-dialog
       :show.sync="isShowDeleteDialog"
+      :loading="deleteDialog.loading"
       :title="delActionDialogTitle"
       :tip="delActionDialogTip"
       :name="currentActionName"
