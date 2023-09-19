@@ -23,7 +23,9 @@
             @on-expanded="handleOnExpanded"
             @on-search="handleTreeSearch"
             @on-select="handleTreeSelect"
+            @on-select-all="handleTreeSelectAll"
             @on-load-more="handleLoadMore"
+            @on-page-change="handlePageChange"
             @async-load-nodes="handleAsyncNodes" />
         </template>
         <template v-if="treeData.length < 1 && !isLoading">
@@ -785,6 +787,107 @@
         }
       },
 
+      // 单页全选
+      handleTreeSelectAll (nodes, list) {
+        console.log(nodes, list, 565656);
+        const tableData = nodes.length ? nodes : list;
+        let id = '';
+        let name = '';
+        let systemId = '';
+        const chainLen = this.curChain.length;
+        tableData.forEach((node) => {
+          const parentChain = _.cloneDeep(node.parentChain);
+          // const isNeedAny = node.level < this.curChain.length - 1
+          const isNeedAny = node.async;
+          const anyData = (() => {
+            const data = this.curChain[node.level + 1];
+            if (data) {
+              return data;
+            }
+            return this.curChain[this.curChain.length - 1];
+          })();
+  
+          const curChainData = this.curChain[node.level];
+          if (!curChainData) {
+            id = this.curChain[chainLen - 1].id;
+            name = this.curChain[chainLen - 1].name;
+            systemId = this.curChain[chainLen - 1].system_id;
+          } else {
+            id = curChainData.id;
+            name = curChainData.name;
+            systemId = curChainData.system_id;
+          }
+  
+          parentChain.forEach((item, index) => {
+            let curChainId = '';
+            if (this.curChain[index]) {
+              curChainId = this.curChain[index].id;
+            } else {
+              curChainId = this.curChain[this.curChain.length - 1].id;
+            }
+            item.type = curChainId;
+            item.type_name = curChainId;
+          });
+          parentChain.push({
+            type: id,
+            type_name: name,
+            id: node.id,
+            name: node.name,
+            system_id: systemId,
+            child_type: node.childType || ''
+          });
+          if (isNeedAny) {
+            parentChain.push({
+              type: anyData.id,
+              type_name: anyData.name,
+              id: '*',
+              name: `${anyData.name}: ${this.$t(`m.common['无限制']`)}`,
+              system_id: anyData.system_id,
+              child_type: anyData.id
+            });
+          }
+  
+          // 判断是否忽略路径
+          // const isNeedIgnore = this.ignorePathFlag && !isNeedAny
+          const params = [{
+            type: id,
+            name,
+            // path: isNeedIgnore ? [parentChain.slice(parentChain.length - 1)] : [parentChain],
+            path: [parentChain],
+            paths: [parentChain]
+          }];
+  
+          if (node.isExistNoCarryLimit) {
+            const p = [parentChain.slice(0, parentChain.length - 1)];
+            params.push({
+              type: id,
+              name,
+              path: p,
+              paths: p
+            });
+          }
+          this.$emit('on-tree-select', nodes.length > 0, node, params);
+          // 针对资源权限特殊处理
+          if (this.resourceValue) {
+            if (nodes.length > 0) {
+              this.treeData.forEach(item => {
+                if (item.id !== node.id) {
+                  item.disabled = true;
+                }
+              });
+              this.resourceNode = node;
+              this.resourceNeedDisable = true;
+            } else {
+              this.treeData.forEach(item => {
+                item.disabled = false;
+              });
+              this.resourceNode = {};
+              this.resourceNeedDisable = false;
+            }
+          }
+        });
+      },
+
       // 针对资源权限特殊处理
       handlerResourceNode () {
         if (this.treeData.some(item => item.checked)) {
@@ -1146,7 +1249,6 @@
             this.treeData.splice(index, 1, ...loadNodes);
           } else {
             this.treeData.splice(index, 0, ...loadNodes);
-            console.log(this.treeData.splice(index, 0, ...loadNodes));
           }
           // 将新加载的节点push到父级点的children中
           if (node.level > 0) {
@@ -1165,6 +1267,136 @@
             });
           }
           this.emptyData = formatCodeData(code, this.emptyData, data.results.length === 0);
+        } catch (e) {
+          console.error(e);
+          this.emptyData = formatCodeData(e.code, this.emptyData);
+          this.messageAdvancedError(e);
+        } finally {
+          node.loadingMore = false;
+        }
+      },
+
+      // 单个分页
+      async handlePageChange (page, node) {
+        const chainLen = this.curChain.length;
+        let keyword = this.curKeyword;
+        if (Object.keys(this.curSearchObj).length) {
+          if (node.parentId === this.curSearchObj.parentId) {
+            keyword = this.curSearchObj.value;
+          }
+        }
+        const params = {
+          limit: this.limit,
+          offset: this.limit * (page - 1),
+          ancestors: [],
+          keyword
+        };
+        if (node.level > chainLen - 1) {
+          params.system_id = this.curChain[chainLen - 1].system_id;
+          params.type = this.curChain[chainLen - 1].id;
+          params.action_system_id = this.systemParams.system_id || '';
+          params.action_id = this.systemParams.action_id || '';
+        } else {
+          params.system_id = this.curChain[node.level].system_id;
+          params.type = this.curChain[node.level].id;
+          params.action_system_id = this.systemParams.system_id || '';
+          params.action_id = this.systemParams.action_id || '';
+        }
+        try {
+          const { code, data } = await this.$store.dispatch('permApply/getResources', params);
+          let isAsync = this.curChain.length > (node.level + 1);
+          const list = data.results || [];
+          const loadNodes = list.map(item => {
+            let tempItem = _.cloneDeep(item);
+            let checked = false;
+            let disabled = false;
+            let isRemote = false;
+            let isExistNoCarryLimit = false;
+            if (!isAsync && tempItem.child_type !== '') {
+              isAsync = true;
+            }
+            if (this.hasSelectedValues.length > 0) {
+              // 父级链路id + 当前id = 整条链路id
+              const curIds = node.parentChain.map(v => `${v.id}&${v.type}`);
+              // 取当前的请求的type
+              curIds.push(`${item.id}&${params.type}`);
+              const tempData = [...curIds];
+              if (isAsync) {
+                const nextLevelId = (() => {
+                  const nextLevelData = this.curChain[node.level + 1];
+                  if (nextLevelData) {
+                    return nextLevelData.id;
+                  }
+                  return this.curChain[chainLen - 1].id;
+                })();
+                curIds.push(`*&${nextLevelId}`);
+              }
+              let noCarryLimitData = {};
+              let normalSelectedData = {};
+              this.hasSelectedValues.forEach(val => {
+                if (isAsync && val.idChain === tempData.join('#')) {
+                  noCarryLimitData = val;
+                } else {
+                  if (!isAsync && val.ids.length === 1 && this.ignorePathFlag && val.ids[0] === `${item.id}&${params.type}`) {
+                    normalSelectedData = val;
+                  } else {
+                    if (val.idChain === curIds.join('#')) {
+                      normalSelectedData = val;
+                    }
+                  }
+                }
+              });
+              isExistNoCarryLimit = Object.keys(noCarryLimitData).length > 0;
+              if (isExistNoCarryLimit && Object.keys(normalSelectedData).length > 0) {
+                checked = true;
+                disabled = normalSelectedData.disabled && noCarryLimitData.disabled;
+                isRemote = disabled;
+              } else {
+                if (isExistNoCarryLimit || Object.keys(normalSelectedData).length > 0) {
+                  checked = true;
+                  disabled = normalSelectedData.disabled || noCarryLimitData.disabled;
+                  isRemote = disabled;
+                }
+              }
+            }
+            if (node.level > 0) {
+              const parentData = this.treeData.find(sub => sub.nodeId === node.parentId);
+              tempItem = {
+                  ...item,
+                  parentId: node.parentId,
+                  parentSyncId: node.id,
+                  disabled: parentData.checked || disabled,
+                  checked: checked || parentData.checked,
+                  parentChain: _.cloneDeep(node.parentChain),
+                  isRemote,
+                  isExistNoCarryLimit
+              };
+            } else {
+              tempItem.checked = checked;
+              tempItem.disabled = disabled;
+              tempItem.isExistNoCarryLimit = isExistNoCarryLimit;
+            }
+
+            const isAsyncFlag = isAsync || item.child_type !== '';
+            return new Node(tempItem, node.level, isAsyncFlag);
+          });
+          this.treeData.splice(0, this.treeData.length, ...loadNodes);
+          // 将新加载的节点push到父级点的children中
+          if (node.level > 0) {
+            const parentNode = this.treeData.find(item => item.nodeId === node.parentId);
+            if (parentNode.children.length > 0) {
+              parentNode.children.push(...loadNodes);
+            }
+          }
+          // 针对资源权限特殊处理
+          if (this.resourceValue && this.resourceNeedDisable) {
+            this.treeData.forEach(item => {
+              if (item.id !== this.resourceNode.id) {
+                item.disabled = true;
+              }
+            });
+          }
+          this.emptyData = formatCodeData(code, this.emptyData, list.length === 0);
         } catch (e) {
           console.error(e);
           this.emptyData = formatCodeData(e.code, this.emptyData);

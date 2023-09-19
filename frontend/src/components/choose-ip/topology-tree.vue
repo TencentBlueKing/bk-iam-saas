@@ -12,7 +12,7 @@
           :header-border="false"
           :outer-border="false"
           :data="renderTopologyData"
-          @select="handleSelectChange(...arguments)"
+          @select="handleSelectChange"
           @select-all="handleSelectAllChange"
           v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
         >
@@ -600,20 +600,21 @@
           this.pressIndex = index;
           this.pressLevels.push(node.level);
         }
+        console.log(newVal, node, 455445);
         this.handleNodeChecked(newVal, node);
         this.$emit('on-select', newVal, node);
       },
 
       handlePageChange (current) {
-        console.log(current, 51556);
         this.pagination = Object.assign(this.pagination, { current });
-        const loadNode = this.allData.find((item) => item.type === 'load');
-        console.log(this.allData, 5545);
-        if (loadNode) {
-          const { limit } = this.pagination;
-          const lastNode = Object.assign(loadNode, { current });
-          this.$emit('on-load-more', lastNode, limit);
-        }
+        // const loadNode = this.allData.find((item) => item.type === 'load');
+        // console.log(this.allData, 5545);
+        // if (loadNode) {
+        //   const { limit } = this.pagination;
+        //   const lastNode = Object.assign(loadNode, { current });
+        //   this.$emit('on-page-change', lastNode, limit);
+        // }
+        this.$emit('on-page-change', current, this.allData[this.allData.length - 1]);
       },
 
       fetchSelectedGroups (type, payload, row) {
@@ -637,20 +638,23 @@
             const selectNode = this.currentSelectedNode.filter(
               item => !tableList.map(v => v.id.toString()).includes(item.id.toString()));
             this.currentSelectedNode = [...selectNode, ...payload];
-            this.$emit('on-select', this.currentSelectedNode);
+            this.allData.forEach(item => {
+              if (!item.disabled) {
+                this.$set(item, 'checked', payload.length > 0);
+              }
+            });
+            console.log(payload, tableList);
+            this.$emit('on-select-all', payload, tableList);
           }
         };
         return typeMap[type]();
       },
 
       handleSelectChange (selection, node) {
-        console.log(selection, node);
         if (this.isShiftBeingPress) {
           this.pressIndex = this.allData.findIndex((item) => item.id === node.id);
           this.pressLevels.push(node.level);
         }
-        // this.handleNodeChecked(newVal, node);
-        // this.$emit('on-select', newVal, node);
         this.fetchSelectedGroups('multiple', selection, node);
       },
 

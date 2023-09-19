@@ -52,20 +52,53 @@
                   :style="dragStyle">
                   <img
                     class="drag-bar"
-                    src="@/images/drag-icon.svg" alt=""
+                    src="@/images/drag-icon.svg"
+                    alt=""
                     :draggable="false"
                     @mousedown="handleDragMouseenter($event)">
                 </div>
               </div>
               <div class="right-layout">
-                <div class="right-layout-title">{{ $t(`m.common['结果预览']`) }}</div>
-                <template v-if="condition.instance && condition.instance.length > 0">
+                <div class="flex-between right-layout-header">
+                  <div class="right-layout-title">{{ $t(`m.common['结果预览']`) }}</div>
+                  <div
+                    :class="[
+                      'clear-all'
+                    ]"
+                    @click.stop=""
+                  >
+                    <bk-dropdown-menu
+                      ref="dropdownInstance"
+                      :position-fixed="true"
+                      align="left"
+                      :disabled="formatClearDisabled(condition.instance)"
+                    >
+                      <template slot="dropdown-trigger">
+                        <Icon bk type="more" />
+                      </template>
+                      <ul
+                        slot="dropdown-content"
+                        class="bk-dropdown-list"
+                      >
+                        <li>
+                          <a @click.stop="handleConditionClearAll(condition.instance, index)">
+                            {{ $t(`m.common['清除所有']`) }}
+                          </a>
+                        </li>
+                      </ul>
+                    </bk-dropdown-menu>
+                  </div>
+                </div>
+                <div
+                  v-if="condition.instance && condition.instance.length > 0"
+                  :style="{ maxHeight: 'calc(100vh - 600px)' }"
+                >
                   <instance-view
                     :select-list="selectList"
                     :data="condition.instance"
                     @on-delete="handleInstanceDelete(...arguments, index)"
                     @on-clear="handleInstanceClearAll(...arguments, index)" />
-                </template>
+                </div>
                 <template v-else>
                   <div class="empty-wrapper">
                     <ExceptionEmpty
@@ -231,6 +264,26 @@
           };
         }
         return {};
+      },
+      formatClearDisabled () {
+        return (payload) => {
+          let curPaths = [];
+          if (payload.length) {
+            curPaths = payload.reduce((prev, next) => {
+              prev.push(
+                ...next.path.map(v => {
+                  const paths = { ...v, ...next };
+                  delete paths.instance;
+                  delete paths.path;
+                  return paths[0];
+                })
+              );
+              return prev;
+            }, []);
+          }
+          console.log(curPaths, payload, 4444);
+          return curPaths.every(v => v.disabled);
+        };
       }
     },
     watch: {
@@ -521,6 +574,15 @@
         };
       },
 
+      handleConditionClearAll (payload, index) {
+        payload.forEach((item, i) => {
+          this.handleInstanceClearAll(item, i, index);
+        });
+        this.$nextTick(() => {
+          this.$refs.dropdownInstance && this.$refs.dropdownInstance[0].hide();
+        });
+      },
+
       handleInstanceClearAll (payload, payloadIndex, index) {
         window.changeAlert = true;
         const { displayPath } = payload;
@@ -803,126 +865,157 @@
     }
   };
 </script>
+
 <style lang="postcss" scoped>
-    .iam-slider-resource-wrapper {
-        height: calc(100vh - 114px);
+  .iam-slider-resource-wrapper {
+      height: calc(100vh - 114px);
 
-        .no-limit-wrapper {
-            padding: 20px 25px 0 25px;
-        }
+      .no-limit-wrapper {
+          padding: 20px 25px 0 25px;
+      }
 
-        .resource-error-tips {
-            padding-left: 25px;
-            font-size: 12px;
-            color: #ff4d4d;
-        }
+      .resource-error-tips {
+          padding-left: 25px;
+          font-size: 12px;
+          color: #ff4d4d;
+      }
 
-        .no-limit {
-            position: relative;
-            width: 100%;
-            height: 42px;
-            line-height: 39px;
-            font-size: 12px;
-            color: #63656e;
-            background-color: #fafbfd;
-            border: 1px solid #dcdee5;
-            padding: 0 21px 0 13px;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            overflow: hidden;
-            span.text {
-                display: inline-block;
-            }
-            span {
-                i {
-                    font-weight: 600;
+      .no-limit {
+          position: relative;
+          width: 100%;
+          height: 42px;
+          line-height: 39px;
+          font-size: 12px;
+          color: #63656e;
+          background-color: #fafbfd;
+          border: 1px solid #dcdee5;
+          padding: 0 21px 0 13px;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          overflow: hidden;
+          span.text {
+              display: inline-block;
+          }
+          span {
+              i {
+                  font-weight: 600;
+                  font-size: 14px;
+              }
+              .no-limit-checkbox {
+                  top: -28px;
+                  float: right;
+                  position: absolute;
+                  top: 10px;
+                  right: 30px;
+                  .bk-checkbox-text {
+                      font-size: 12px;
+                      position: relative;
+                      top: -1px;
+                  }
+              }
+          }
+      }
+
+      .is-one-resource-instance {
+          padding: 16px 25px 0 25px;
+      }
+
+      .resource-instance-wrapper {
+          &.set-padding {
+              padding: 0 25px;
+          }
+          .iam-instance-wrapper {
+              display: flex;
+              justify-content: flex-start;
+              height: 100%;
+              .left-layout {
+                  position: relative;
+                  min-width: 600px;
+                  background-color: #ffffff;
+                  .drag-dotted-line {
+                      position: absolute;
+                      top: 0;
+                      left: 600px;
+                      height: 100%;
+                      border-left: 1px solid #dcdee5;
+                      z-index: 1500;
+                  }
+                  .drag-line {
+                      position: absolute;
+                      top: 0;
+                      left: 600px;
+                      height: 100%;
+                      width: 1px;
+                      background: #dcdee5;
+                      z-index: 1500;
+                      .drag-bar {
+                          position: relative;
+                          top: calc(50% - 17px);
+                          left: 2px;
+                          width: 9px;
+                          background: transparent;
+                          cursor: col-resize;
+                      }
+                  }
+              }
+              .right-layout {
+                  position: relative;
+                  width: calc(100% - 500px);
+                  overflow-y: auto;
+                  &::-webkit-scrollbar {
+                      width: 4px;
+                      background-color: lighten(transparent, 80%);
+                  }
+                  &::-webkit-scrollbar-thumb {
+                      height: 5px;
+                      border-radius: 2px;
+                      background-color: #e6e9ea;
+                  }
+                  &-header {
                     font-size: 14px;
-                }
-                .no-limit-checkbox {
-                    top: -28px;
-                    float: right;
-                    position: absolute;
-                    top: 10px;
-                    right: 30px;
-                    .bk-checkbox-text {
-                        font-size: 12px;
-                        position: relative;
-                        top: -1px;
-                    }
-                }
-            }
-        }
-
-        .is-one-resource-instance {
-            padding: 16px 25px 0 25px;
-        }
-
-        .resource-instance-wrapper {
-            &.set-padding {
-                padding: 0 25px;
-            }
-            .iam-instance-wrapper {
-                display: flex;
-                justify-content: flex-start;
-                height: 100%;
-                .left-layout {
-                    position: relative;
-                    min-width: 600px;
+                    padding: 10px;
+                    position: sticky;
+                    top: 0;
                     background-color: #ffffff;
-                    .drag-dotted-line {
-                        position: absolute;
-                        top: 0;
-                        left: 600px;
-                        height: 100%;
-                        border-left: 1px solid #dcdee5;
-                        z-index: 1500;
-                    }
-                    .drag-line {
-                        position: absolute;
-                        top: 0;
-                        left: 600px;
-                        height: 100%;
-                        width: 1px;
-                        background: #dcdee5;
-                        z-index: 1500;
-                        .drag-bar {
-                            position: relative;
-                            top: calc(50% - 17px);
-                            left: 2px;
-                            width: 9px;
-                            background: transparent;
-                            cursor: col-resize;
+                    z-index: 1;
+                    .clear-all {
+                      .icon-more {
+                        font-size: 15px;
+                        color: #3a84ff;
+                        cursor: pointer;
+                        &:hover {
+                          color: #699df4;
                         }
-                    }
-                }
-                .right-layout {
-                    position: relative;
-                    width: calc(100% - 500px);
-                    overflow-y: auto;
-                    &::-webkit-scrollbar {
-                        width: 4px;
-                        background-color: lighten(transparent, 80%);
-                    }
-                    &::-webkit-scrollbar-thumb {
-                        height: 5px;
-                        border-radius: 2px;
-                        background-color: #e6e9ea;
-                    }
-                    &-title {
-                      font-size: 15px;
-                      padding: 10px;
-                    }
-                    .empty-wrapper {
-                        position: absolute;
-                        top: 50%;
-                        left: 50%;
-                        transform: translate(-50%, -50%);
-                        img {
-                            width: 120px;
+                      }
+                      .disabled {
+                        .icon-more {
+                          color: #c4c6cc;
+                          cursor: not-allowed;
                         }
+                      }
                     }
-                }
-            }
-        }
+                  }
+                  .empty-wrapper {
+                      position: absolute;
+                      top: 50%;
+                      left: 50%;
+                      transform: translate(-50%, -50%);
+                      img {
+                          width: 120px;
+                      }
+                  }
+              }
+          }
+      }
+  }
+  /deep/ .bk-dropdown-menu {
+    .bk-dropdown-content {
+      padding: 0;
     }
+    .bk-dropdown-list>li>a {
+      height: 42px;
+      line-height: 42px;
+      cursor: pointer;
+    }
+  }
 </style>

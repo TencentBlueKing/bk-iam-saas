@@ -4,10 +4,12 @@
     <bk-collapse v-model="activePanel">
       <template v-for="(item, index) in instanceData">
         <bk-collapse-item
+          v-if="item.displayPath.length"
           :key="index"
           :name="item.name"
           :hide-arrow="true"
-          v-if="item.displayPath.length">
+          ext-cls="iam-instance-panel-collapse"
+        >
           <div class="title flex-between">
             <div
               class="single-hide"
@@ -21,11 +23,14 @@
             <div
               :class="[
                 'clear-all',
-                { 'disabled': item.displayPath.every(v => v.disabled) }]"
-              @click.stop="handleClearAll(item, index)"
+                { 'disabled': formatClearDisabled(item) }
+              ]"
+              @click.stop="handleClearItem(item, index)"
             >
-              <!-- {{ $t(`m.common['清空']`) }} -->
-              <Icon bk type="more" />
+              <Icon
+                type="delete-line"
+                v-bk-tooltips="{ content: $t(`m.common['清空']`) }"
+              />
             </div>
           </div>
           <div slot="content" class="instance-content">
@@ -38,7 +43,7 @@
                 :style="buttonStyle"
                 :disabled="child.disabled && item.path[childIndex][0].disabled"
                 @click="handleRemove(child, index, childIndex)">
-                ×
+                <Icon bk type="close" />
               </bk-button>
             </p>
           </div>
@@ -96,6 +101,11 @@
           });
           return curChainItem.name || '';
         };
+      },
+      formatClearDisabled () {
+        return (payload) => {
+          return payload.displayPath.every(v => v.disabled);
+        };
       }
     },
     watch: {
@@ -117,7 +127,7 @@
         this.$emit('on-delete', child, index, childIndex);
       },
 
-      handleClearAll (item, index) {
+      handleClearItem (item, index) {
         if (item.displayPath.every(v => v.disabled)) {
           return;
         }
@@ -126,20 +136,24 @@
     }
   };
 </script>
+
 <style lang="postcss" scoped>
   .iam-instance-panel {
       width: 100%;
       .bk-collapse-item-content {
           padding: 0;
       }
-      .bk-collapse-item .bk-collapse-item-header {
-          border-bottom: 1px solid #dcdee5;
+      /deep/ .bk-collapse-item {
+      .bk-collapse-item-header {
+          font-size: 12px;
+          /* border-bottom: 1px solid #dcdee5; */
           .fr {
-              display: none;
+            display: none;
           }
           &:hover {
-              color: #63656e;
+            color: #63656e;
           }
+      }
       }
       .number {
         color: #3A84FF;
@@ -149,27 +163,34 @@
       .title {
           position: relative;
           color: #63656e;
+          background-color: #fafbfd;
           .expanded-icon {
               /* margin-right: 5px; */
-              font-size: 14px;
+              font-size: 12px;
           }
           .clear-all {
               position: absolute;
               right: 0;
-              font-size: 12px;
-              /* color: #3a84ff; */
-              cursor: pointer;
-              &:hover {
-                  color: #699df4;
+              .iamcenter-delete-line {
+                font-size: 15px;
+                color: #3a84ff;
+                cursor: pointer;
+                &:hover {
+                    color: #699df4;
+                }
               }
               &.disabled {
+                .iamcenter-delete-line {
+                  font-size: 15px;
                   color: #c4c6cc;
                   cursor: not-allowed;
+                }
               }
           }
       }
       .instance-content {
           background: #ffffff;
+          padding-bottom: 16px;
           .instance-item {
               padding: 0 20px;
               display: flex;

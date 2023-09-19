@@ -96,6 +96,7 @@
             padding: 0 0 0 3px;
         }
         .icon-search {
+          color: #979BA5;
           cursor: pointer;
         }
     }
