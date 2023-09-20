@@ -96,7 +96,7 @@
           this.handleInitData(this.relateActionData);
         } catch (e) {
           console.error(e);
-          this.messageAdvancedError(e,);
+          this.messageAdvancedError(e);
         } finally {
           this.isLoading = false;
         }
