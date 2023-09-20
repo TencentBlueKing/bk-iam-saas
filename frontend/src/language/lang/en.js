@@ -276,7 +276,8 @@ export const m = {
         '暂无可复制内容': 'There is currently no replicable content',
         '暂无可复制用户': 'There are currently no replicable users',
         '管理员组不能添加部门': 'The administrator group cannot add department',
-        '批量退出': 'Multi-quit'
+        '批量退出': 'Multi-quit',
+        '批量处理': 'Multi-process'
     },
     // 校验
     verify: {
@@ -522,6 +523,7 @@ export const m = {
          '用户组为管理员组，不能添加部门': 'The {value} is administrator group and cannot add departments',
          '用户组为只读用户组不能添加成员': '{value} is read-only user groups and cannot add members',
          '用户组属性为只读属性': '{value} is read-only user group attribute',
+         '不可续期的用户组成员如下': 'The non renewable user group members are as follows: {value}',
          '管理员组不能添加权限': 'Administrators group cannot add permissions',
          '只读用户组不能添加权限': 'Read only user groups cannot add permissions'
     },
@@ -829,7 +831,8 @@ export const m = {
         '不可被申请': 'Not applicable',
         '该组只能管理员主动授权，用户无法主动申请': 'This group can only be actively authorized by administrators, and users cannot actively apply',
         '设置不可被申请，则无法申请加入此用户组': 'If the setting cannot be applied for, you cannot apply to join this user group',
-        '管理员已设置空间下所有用户组不可被申请': 'The administrator has set that all user groups in the space cannot be applied for'
+        '管理员已设置空间下所有用户组不可被申请': 'The administrator has set that all user groups in the space cannot be applied for',
+        '已选择的用户组成员不需要续期': 'The selected user group members do not need to be renewed'
     },
     userGroupDetail: {
         '用户组名': 'Group name: ',
