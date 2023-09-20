@@ -30,10 +30,6 @@
         </template>
         <template v-if="treeData.length < 1 && !isLoading">
           <div class="empty-wrapper">
-            <!-- <iam-svg />
-                        <section class="search-text-wrapper" v-if="searchDisplayText !== ''">
-                            {{ searchDisplayText }}
-                        </section> -->
             <ExceptionEmpty
               :type="emptyData.type"
               :empty-text="emptyData.text"
@@ -253,13 +249,13 @@
       },
 
       handleEmptyRefresh () {
+        this.$refs.headerInput.value = '';
+        this.emptyData.tipType = '';
         this.firstFetchResources();
       },
 
       handleEmptyClear () {
-        this.$refs.headerInput.value = '';
-        this.emptyData.tipType = '';
-        this.firstFetchResources();
+        this.handleEmptyRefresh();
       },
 
       handleOnExpanded (index, expanded) {
@@ -788,103 +784,10 @@
       },
 
       // 单页全选
-      handleTreeSelectAll (nodes, list) {
-        console.log(nodes, list, 565656);
-        const tableData = nodes.length ? nodes : list;
-        let id = '';
-        let name = '';
-        let systemId = '';
-        const chainLen = this.curChain.length;
-        tableData.forEach((node) => {
-          const parentChain = _.cloneDeep(node.parentChain);
-          // const isNeedAny = node.level < this.curChain.length - 1
-          const isNeedAny = node.async;
-          const anyData = (() => {
-            const data = this.curChain[node.level + 1];
-            if (data) {
-              return data;
-            }
-            return this.curChain[this.curChain.length - 1];
-          })();
-  
-          const curChainData = this.curChain[node.level];
-          if (!curChainData) {
-            id = this.curChain[chainLen - 1].id;
-            name = this.curChain[chainLen - 1].name;
-            systemId = this.curChain[chainLen - 1].system_id;
-          } else {
-            id = curChainData.id;
-            name = curChainData.name;
-            systemId = curChainData.system_id;
-          }
-  
-          parentChain.forEach((item, index) => {
-            let curChainId = '';
-            if (this.curChain[index]) {
-              curChainId = this.curChain[index].id;
-            } else {
-              curChainId = this.curChain[this.curChain.length - 1].id;
-            }
-            item.type = curChainId;
-            item.type_name = curChainId;
-          });
-          parentChain.push({
-            type: id,
-            type_name: name,
-            id: node.id,
-            name: node.name,
-            system_id: systemId,
-            child_type: node.childType || ''
-          });
-          if (isNeedAny) {
-            parentChain.push({
-              type: anyData.id,
-              type_name: anyData.name,
-              id: '*',
-              name: `${anyData.name}: ${this.$t(`m.common['无限制']`)}`,
-              system_id: anyData.system_id,
-              child_type: anyData.id
-            });
-          }
-  
-          // 判断是否忽略路径
-          // const isNeedIgnore = this.ignorePathFlag && !isNeedAny
-          const params = [{
-            type: id,
-            name,
-            // path: isNeedIgnore ? [parentChain.slice(parentChain.length - 1)] : [parentChain],
-            path: [parentChain],
-            paths: [parentChain]
-          }];
-  
-          if (node.isExistNoCarryLimit) {
-            const p = [parentChain.slice(0, parentChain.length - 1)];
-            params.push({
-              type: id,
-              name,
-              path: p,
-              paths: p
-            });
-          }
-          this.$emit('on-tree-select', nodes.length > 0, node, params);
-          // 针对资源权限特殊处理
-          if (this.resourceValue) {
-            if (nodes.length > 0) {
-              this.treeData.forEach(item => {
-                if (item.id !== node.id) {
-                  item.disabled = true;
-                }
-              });
-              this.resourceNode = node;
-              this.resourceNeedDisable = true;
-            } else {
-              this.treeData.forEach(item => {
-                item.disabled = false;
-              });
-              this.resourceNode = {};
-              this.resourceNeedDisable = false;
-            }
-          }
+      handleTreeSelectAll (nodes, isAll) {
+        console.log(nodes, isAll);
+        nodes.forEach((item) => {
+          this.handleTreeSelect(isAll, item);
         });
       },
 

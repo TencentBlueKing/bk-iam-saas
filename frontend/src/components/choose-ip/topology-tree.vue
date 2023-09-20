@@ -219,6 +219,7 @@
           tip: '',
           tipType: ''
         },
+        renderTopologyData: [],
         currentSelectedNode: []
       };
     },
@@ -232,10 +233,6 @@
       // 当父节点收起时，子节点的 visiable 为 false
       visiableData () {
         return this.allData.filter((item) => item.visiable);
-      },
-      // 过滤掉查看更多选项
-      renderTopologyData () {
-        return this.allData.filter((item) => item.type === 'node');
       },
       // 返回只有一层数据的排版
       isOnlyLevel () {
@@ -323,8 +320,9 @@
       allData: {
         handler (value) {
           if (value.length) {
+            this.renderTopologyData = value.filter((item) => item.type === 'node');
             this.$nextTick(() => {
-              value.forEach((item) => {
+              this.renderTopologyData.forEach((item) => {
                 this.$refs.topologyTableRef && this.$refs.topologyTableRef.toggleRowSelection(item, item.checked);
               });
             });
@@ -634,17 +632,24 @@
             }
           },
           all: () => {
-            const tableList = _.cloneDeep(this.allData);
-            const selectNode = this.currentSelectedNode.filter(
-              item => !tableList.map(v => v.id.toString()).includes(item.id.toString()));
+            const tableIdList = _.cloneDeep(this.renderTopologyData.map(v => v.id.toString()));
+            const currentSelect = payload.filter((item) => !item.disabled);
+            const selectNode = this.currentSelectedNode.filter(item => !tableIdList.includes(item.id.toString()));
             this.currentSelectedNode = [...selectNode, ...payload];
-            this.allData.forEach(item => {
-              if (!item.disabled) {
-                this.$set(item, 'checked', payload.length > 0);
-              }
-            });
-            console.log(payload, tableList);
-            this.$emit('on-select-all', payload, tableList);
+            let nodes = currentSelect.length ? currentSelect : this.renderTopologyData;
+            console.log(payload, currentSelect, nodes);
+            if (nodes.length) {
+              nodes = nodes.filter((item) => !item.disabled);
+            }
+            if (!payload) {
+              this.renderTopologyData.forEach(item => {
+                if (!item.disabled) {
+                  this.$set(item, 'checked', !((!payload.length || !this.currentSelectedNode.map((v) => v.id.toString()).includes(item.id.toString()))));
+                  this.$refs.topologyTableRef && this.$refs.topologyTableRef.toggleRowSelection(item, item.checked);
+                }
+              });
+            }
+            this.$emit('on-select-all', nodes, currentSelect.length > 0);
           }
         };
         return typeMap[type]();

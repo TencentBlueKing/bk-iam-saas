@@ -280,9 +280,10 @@
               );
               return prev;
             }, []);
+            return curPaths.some(v => v.disabled);
           }
-          console.log(curPaths, payload, 4444);
-          return curPaths.every(v => v.disabled);
+          // return curPaths.every(v => v.disabled);
+          return true;
         };
       }
     },
@@ -772,6 +773,7 @@
       },
 
       handlePathSelect (value, node, payload, index) {
+        // console.log(value, node, payload, index);
         window.changeAlert = true;
         const { type, path, paths } = payload[0];
         const tempPath = path[0];
@@ -801,21 +803,22 @@
         } else {
           // const noCarryNoLimitPath = payload[1]
           const deleteInstanceItem = curInstance.find(item => item.type === type);
-
+          
           // const arr = path[0]
           // const tempPath = arr.filter(item => item.id !== '*')
-
+          
           // const deleteIndex = deleteInstanceItem.path.findIndex(item => item.map(v => v.id).join('') === tempPath.map(v => v.id).join(''))
           const deleteIndex = deleteInstanceItem.path.findIndex(item => item.map(v => `${v.id}&${v.type}`).join('') === tempPath.map(v => `${v.id}&${v.type}`).join(''));
-
+          
           // const curChildreIds = node.children.map(item => item.id)
           const curChildreIds = node.children.map(item => `${item.id}&${item.type}`);
-
+          
           // deleteInstanceItem.path.splice(deleteIndex, 1)
           let isDisabled = false;
           if (deleteIndex > -1) {
             isDisabled = deleteInstanceItem.path[deleteIndex].some(_ => _.disabled);
             if (!isDisabled) {
+              console.log(12122, index, deleteIndex, deleteInstanceItem);
               deleteInstanceItem.path.splice(deleteIndex, 1);
             }
           }
@@ -960,7 +963,8 @@
               }
               .right-layout {
                   position: relative;
-                  width: calc(100% - 500px);
+                  /* width: calc(100% - 500px); */
+                  width: 100%;
                   overflow-y: auto;
                   &::-webkit-scrollbar {
                       width: 4px;
@@ -1016,6 +1020,9 @@
       height: 42px;
       line-height: 42px;
       cursor: pointer;
+    }
+    &.disabled * {
+      background-color: #ffffff !important;
     }
   }
 </style>

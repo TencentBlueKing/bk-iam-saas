@@ -180,6 +180,7 @@
                 }
               }
               &.disabled {
+                cursor: not-allowed;
                 .iamcenter-delete-line {
                   font-size: 15px;
                   color: #c4c6cc;
@@ -189,7 +190,6 @@
           }
       }
       .instance-content {
-          background: #ffffff;
           padding-bottom: 16px;
           .instance-item {
               padding: 0 20px;

@@ -277,7 +277,8 @@ export const m = {
         '暂无可复制用户': 'There are currently no replicable users',
         '管理员组不能添加部门': 'The administrator group cannot add department',
         '批量退出': 'Multi-quit',
-        '结果预览': 'Result preview'
+        '结果预览': 'Result preview',
+        '清除所有': 'Clear all'
     },
     // 校验
     verify: {
