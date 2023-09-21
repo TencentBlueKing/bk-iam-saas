@@ -738,12 +738,13 @@
           }
         } catch (e) {
           console.error(e);
-          const { response } = e;
-          if (response && [400].includes(response.status)) {
-            this.messageWarn(this.$t(`m.verify['用户名输入格式错误']`), 3000);
-          } else {
-            this.messageAdvancedError(e);
-          }
+          // const { response } = e;
+          // if (response && [400].includes(response.status)) {
+          //   this.messageWarn(this.$t(`m.verify['用户名输入格式错误']`), 3000);
+          // } else {
+          //   this.messageAdvancedError(e);
+          // }
+          this.messageAdvancedError(e);
         } finally {
           this.manualAddLoading = false;
         }

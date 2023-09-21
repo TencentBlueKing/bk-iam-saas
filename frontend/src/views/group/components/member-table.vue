@@ -2,16 +2,66 @@
   <div class="iam-user-group-member">
     <render-search>
       <div class="flex-between group-member-button">
-        <bk-button :disabled="readOnly" @click="handleAddMember">
-          {{ $t(`m.userGroup['添加成员']`) }}
-        </bk-button>
-        <bk-button
+        <div class="group-member-button-item">
+          <bk-button :disabled="readOnly" @click="handleAddMember">
+            {{ $t(`m.userGroup['添加成员']`) }}
+          </bk-button>
+        </div>
+        <!-- <bk-button
           :disabled="isNoBatchDelete()"
           :title="adminGroupTitle"
           @click="handleBatchDelete">
           {{ $t(`m.common['批量移除']`) }}
-        </bk-button>
-        <div data-test="no-leave">
+        </bk-button> -->
+        <div class="group-member-button-item">
+          <bk-dropdown-menu
+            ref="batchDropdown"
+            :disabled="!currentSelectList.length"
+            @show="handleDropdownShow"
+            @hide="handleDropdownHide"
+          >
+            <div
+              class="group-dropdown-trigger-btn"
+              slot="dropdown-trigger"
+            >
+              <span class="group-dropdown-text">{{ $t(`m.common['批量处理']`) }}</span>
+              <i
+                :class="[
+                  'bk-icon icon-angle-down',
+                  { 'icon-flip': isDropdownShow }
+                ]"
+              />
+            </div>
+            <ul class="bk-dropdown-list" slot="dropdown-content">
+              <li>
+                <a
+                  :class="[
+                    { 'remove-disabled': isNoBatchDelete() }
+                  ]"
+                  :title="adminGroupTitle"
+                  @click.stop="handleBatchProcess('remove')"
+                >
+                  {{ $t(`m.common['批量移除']`) }}
+                </a>
+              </li>
+              <li>
+                <a
+                  :class="[
+                    { 'renewal-disabled': isNoBatchRenewal() }
+                  ]"
+                  :title="renewalGroupTitle"
+                  @click.stop="handleBatchProcess('renewal')"
+                >
+                  {{ $t(`m.renewal['批量续期']`) }}
+                </a>
+              </li>
+            </ul>
+          </bk-dropdown-menu>
+        </div>
+        <div
+          class="group-member-button-item"
+          data-test="no-leave"
+        >
           <bk-cascade
             ref="copyCascade"
             v-model="copyValue"
@@ -58,11 +108,14 @@
           v-model="keyword"
           style="width: 300px;"
           :placeholder="$t(`m.userGroupDetail['请输入至少3个字符的用户/组织，按enter键搜索']`)"
+          :clearable="true"
+          @clear="handleKeyWordClear"
           @enter="handleKeyWordEnter"
         />
       </div>
     </render-search>
     <bk-table
+      ref="groupMemberRef"
       :data="tableList"
       size="small"
       ext-cls="user-group-member-table"
@@ -75,7 +128,7 @@
       @select="handlerChange"
       @select-all="handlerAllChange"
       v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
-      <bk-table-column type="selection" align="center"></bk-table-column>
+      <bk-table-column type="selection" align="center" />
       <bk-table-column :label="$t(`m.userGroup['用户/组织']`)" width="400">
         <template slot-scope="{ row }">
           <div class="user" v-if="row.type === 'user'" :title="`${row.id}(${row.name})`">
@@ -175,6 +228,7 @@
       :show.sync="isShowRenewalDialog"
       :data="curData"
       :type="curType"
+      :list="currentSelectList"
       :loading="renewalLoading"
       @on-submit="handleRenewalSubmit" />
   </div>
@@ -252,6 +306,7 @@
           tipType: ''
         },
         adminGroupTitle: '',
+        renewalGroupTitle: '',
         keyword: '',
         enableOrganizationCount: window.ENABLE_ORGANIZATION_COUNT.toLowerCase() === 'true',
         isDropdownShow: false,
@@ -270,6 +325,20 @@
                 const isAll = hasData && this.currentSelectList.length === this.pagination.count;
                 this.adminGroupTitle = isAll ? this.$t(`m.userGroup['管理员组至少保留一条数据']`) : '';
                 return isAll;
+            }
+            return !hasData;
+        };
+      },
+      isNoBatchRenewal () {
+        return () => {
+            const hasData = this.tableList.length > 0 && this.currentSelectList.length > 0;
+            if (hasData) {
+              this.selectNoRenewalList = this.currentSelectList.filter(
+                (item) => item.expired_at === PERMANENT_TIMESTAMP);
+              if (this.currentSelectList.length === this.selectNoRenewalList.length) {
+                this.renewalGroupTitle = this.$t(`m.userGroup['已选择的用户组成员不需要续期']`);
+                return true;
+              }
             }
             return !hasData;
         };
@@ -335,24 +404,28 @@
         return '';
       },
 
-      async handleKeyWordEnter () {
-        this.emptyData.tipType = 'search';
-        this.pagination = Object.assign(this.pagination, { current: 1, limit: 10 });
-        this.fetchMemberList();
-      },
-
       async fetchMemberList () {
         this.tableLoading = true;
         try {
+          const { current, limit } = this.pagination;
           const params = {
             id: this.id,
-            limit: this.pagination.limit,
-            offset: this.pagination.limit * (this.pagination.current - 1),
+            limit,
+            offset: limit * (current - 1),
             keyword: this.keyword
           };
           const { code, data } = await this.$store.dispatch('userGroup/getUserGroupMemberList', params);
           this.pagination.count = data.count || 0;
           this.tableList.splice(0, this.tableList.length, ...(data.results || []));
+          this.$nextTick(() => {
+            const currentSelectList = this.currentSelectList.map(item => item.id.toString());
+            this.tableList.forEach(item => {
+              if (currentSelectList.includes(item.id.toString())) {
+                this.$refs.groupMemberRef && this.$refs.groupMemberRef.toggleRowSelection(item, true);
+              }
+            });
+          });
+          await this.fetchCustomTotal();
           this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
         } catch (e) {
           console.error(e);
@@ -365,8 +438,60 @@
         }
       },
 
+      async handleKeyWordEnter () {
+        this.emptyData.tipType = 'search';
+        this.pagination = Object.assign(this.pagination, { current: 1, limit: 10 });
+        this.fetchMemberList();
+      },
+
+      async handleKeyWordClear () {
+        await this.handleEmptyRefresh();
+      },
+
+      fetchCustomTotal () {
+        this.$nextTick(() => {
+          const selectionCount = document.getElementsByClassName('bk-page-selection-count');
+          if (this.$refs.groupMemberRef && selectionCount && selectionCount.length) {
+            selectionCount[0].children[0].innerHTML = this.currentSelectList.length;
+          }
+        });
+      },
+
+      fetchSelectedGroups (type, payload, row) {
+        const typeMap = {
+          multiple: async () => {
+            const isChecked = payload.length && payload.indexOf(row) !== -1;
+            if (isChecked) {
+              this.currentSelectList.push(row);
+            } else {
+              this.currentSelectList = this.currentSelectList.filter(
+                (item) => item.id.toString() !== row.id.toString()
+              );
+            }
+            await this.fetchCustomTotal();
+          },
+          all: async () => {
+            const tableList = _.cloneDeep(this.tableList);
+            const selectGroups = this.currentSelectList.filter(item =>
+              !tableList.map(v => v.id.toString()).includes(item.id.toString()));
+            this.currentSelectList = [...selectGroups, ...payload];
+            await this.fetchCustomTotal();
+          }
+        };
+        return typeMap[type]();
+      },
+
+      handlerAllChange (selection) {
+        this.fetchSelectedGroups('all', selection);
+      },
+
+      handlerChange (selection, row) {
+        this.fetchSelectedGroups('multiple', selection, row);
+      },
+
       handleDropdownShow () {
         this.isDropdownShow = true;
+        this.$refs.copyCascade.$refs.cascadeDropdown.hideHandler();
       },
 
       handleDropdownHide () {
@@ -398,6 +523,23 @@
             // this.$refs.copyCascade.$refs.cascadeDropdown.hideHandler();
           }
         });
+      },
+
+      handleBatchProcess (type) {
+        const typeMap = {
+          remove: () => {
+            if (!this.isNoBatchDelete()) {
+              this.handleBatchDelete();
+            }
+          },
+          renewal: () => {
+            if (!this.isNoBatchRenewal()) {
+              this.isShowRenewalDialog = true;
+              this.curData = {};
+            }
+          }
+        };
+        return typeMap[type]();
       },
 
       async handleTriggerCopy (event, payload) {
@@ -628,14 +770,6 @@
         this.fetchMemberList();
       },
 
-      handlerAllChange (selection) {
-        this.currentSelectList = [...selection];
-      },
-
-      handlerChange (selection, row) {
-        this.currentSelectList = [...selection];
-      },
-
       handleAfterDeleteLeave () {
         this.deleteDialog.subTitle = '';
         this.curMember = {};
@@ -663,7 +797,7 @@
             window.parent.postMessage({ type: 'IAM', data: externalParams, code: 'remove_user_confirm' }, '*');
             this.messageSuccess(this.$t(`m.info['移除成功']`), 3000);
             this.currentSelectList = [];
-            this.pagination.current = 1;
+            this.pagination = Object.assign(this.pagination, { current: 1, limit: 10 });
             this.fetchMemberList();
           }
         } catch (e) {
@@ -677,19 +811,22 @@
 
       async handleRenewalSubmit (payload) {
         this.renewalLoading = true;
-        const { id, type } = this.curData;
         const params = {
-          groupId: this.id,
-          members: [{
-            expired_at: payload,
-            id,
-            type
-          }]
+          groupId: this.id
         };
+        if (Object.keys(this.curData).length) {
+          const { id, type } = this.curData;
+          this.$set(params, 'members', [{ expired_at: payload, id, type }]);
+        } else {
+          this.$set(params, 'members', payload);
+        }
         try {
           await this.$store.dispatch('renewal/groupMemberPermRenewal', params);
           this.messageSuccess(this.$t(`m.renewal['续期成功']`), 3000);
           this.isShowRenewalDialog = false;
+          this.currentSelectList = [];
+          this.$refs.groupMemberRef && this.$refs.groupMemberRef.clearSelection();
+          this.pagination = Object.assign(this.pagination, { current: 1, limit: 10 });
           this.fetchMemberList();
         } catch (e) {
           console.error(e);
@@ -703,35 +840,35 @@
 </script>
 <style lang="postcss">
   .iam-user-group-member {
-      .user-group-member-table {
-          margin-top: 16px;
-          border: none;
-          tr:hover {
-              .user,
-              .depart {
-                  background: #fff;
-              }
-          }
+    .user-group-member-table {
+      margin-top: 16px;
+      border: none;
+      tr:hover {
           .user,
           .depart {
-              padding: 4px 6px;
-              background: #f0f1f5;
-              width: max-content;
-              border-radius: 2px;
-              i {
-                  font-size: 14px;
-                  color: #c4c6cc;
-              }
-              .name {
-                  display: inline-block;
-                  max-width: 350px;
-                  overflow: hidden;
-                  text-overflow: ellipsis;
-                  white-space: nowrap;
-                  vertical-align: bottom;
-              }
+              background: #fff;
           }
       }
+      .user,
+      .depart {
+          padding: 4px 6px;
+          background: #f0f1f5;
+          width: max-content;
+          border-radius: 2px;
+          i {
+              font-size: 14px;
+              color: #c4c6cc;
+          }
+          .name {
+              display: inline-block;
+              max-width: 350px;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+              vertical-align: bottom;
+          }
+      }
+    }
   }
   .copy-user-group-cls {
     width: auto !important;
@@ -781,31 +918,47 @@
 }
 
 .group-member-button {
-  .bk-button {
+  &-item {
     margin-right: 10px;
+    .group-dropdown-trigger-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #c4c6cc;
+      height: 32px;
+      min-width: 68px;
+      border-radius: 2px;
+      padding-left: 10px;
+      padding-right: 5px;
+      color: #63656E;
+      &:hover {
+        cursor: pointer;
+        border-color: #979ba5;
+      }
+      .group-dropdown-text {
+        font-size: 14px;
+      }
+      .bk-icon {
+        font-size: 22px;
+      }
+    }
   }
 }
 
-.group-dropdown-trigger-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid #c4c6cc;
-    height: 32px;
-    min-width: 68px;
-    border-radius: 2px;
-    padding: 0 15px;
-    color: #63656E;
-    &:hover {
-      cursor: pointer;
-      border-color: #979ba5;
-    }
-    .group-dropdown-text {
-      font-size: 14px;
-    }
-    .bk-icon {
-      font-size: 22px;
-    }
+/deep/ .bk-dropdown-menu  {
+  .bk-dropdown-content {
+    padding-top: 0;
+    cursor: pointer;
+  }
+  &.disabled,
+  &.disabled *,
+  .remove-disabled,
+  .renewal-disabled {
+    background-color: #fff !important;
+    border-color: #dcdee5 !important;
+    color: #c4c6cc !important;
+    cursor: not-allowed;
+  }
 }
 
 /deep/ .bk-cascade {

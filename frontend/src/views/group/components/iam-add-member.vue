@@ -735,13 +735,14 @@
           }
         } catch (e) {
           console.error(e);
-          const { response } = e;
+          // const { response } = e;
           // 处理如果是前端校验为空导致的报错，使用前端自定义提示
-          if (response && [400].includes(response.status)) {
-            this.messageWarn(this.$t(`m.verify['用户名输入格式错误']`), 3000);
-          } else {
-            this.messageAdvancedError(e);
-          }
+          // if (response && [400].includes(response.status)) {
+          //   this.messageWarn(this.$t(`m.verify['用户名输入格式错误']`), 3000);
+          // } else {
+          //   this.messageAdvancedError(e);
+          // }
+          this.messageAdvancedError(e);
         } finally {
           this.manualAddLoading = false;
         }

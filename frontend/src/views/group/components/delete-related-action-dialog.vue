@@ -107,6 +107,18 @@
                   &-content {
                     max-height: 500px;
                     overflow-y: auto;
+                    &::-webkit-scrollbar     {
+                      width: 6px;
+                      height: 6px;
+                    }
+                    &::-webkit-scrollbar-thumb {
+                      background: #dcdee5;
+                      border-radius: 3px;
+                    }
+                    &::-webkit-scrollbar-track {
+                      background: transparent;
+                      border-radius: 3px;
+                    }
                     .warn {
                         color: #ffb848;
                     }
