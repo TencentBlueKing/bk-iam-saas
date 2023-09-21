@@ -180,6 +180,9 @@
         getDragDynamicWidth: () => this.dragWidth
       };
     },
+    inject: {
+      getResourceSliderWidth: { value: 'getResourceSliderWidth', default: null }
+    },
     components: {
       renderResourceInstance,
       renderOrderNumber,
@@ -228,8 +231,8 @@
         attributes: [],
         isHide: false,
         // isEmptyResource: false,
-        dragWidth: 600,
-        dragRealityWidth: 600,
+        dragWidth: this.getResourceSliderWidth ? this.getResourceSliderWidth() * 0.67 : 600,
+        dragRealityWidth: this.getResourceSliderWidth ? this.getResourceSliderWidth() * 0.67 : 600,
         isDrag: false
       };
     },
@@ -258,7 +261,8 @@
         };
       },
       leftLayoutStyle () {
-        if (this.dragWidth >= 600) {
+        const sliderWidth = this.getResourceSliderWidth ? this.getResourceSliderWidth() * 0.67 : 600;
+        if (this.dragWidth >= sliderWidth) {
           return {
             'min-width': `${this.dragWidth}px`
           };
@@ -285,6 +289,9 @@
           // return curPaths.every(v => v.disabled);
           return true;
         };
+      },
+      dynamicsSliderWidth () {
+        return this.getResourceSliderWidth ? this.getResourceSliderWidth() - 300 : 600;
       }
     },
     watch: {
@@ -382,10 +389,10 @@
           return;
         }
         // 可拖拽范围
-        const MIN_OFFSET_WIDTH = 600;
+        const MIN_OFFSET_WIDTH = this.dynamicsSliderWidth;
         const minWidth = MIN_OFFSET_WIDTH;
         const maxWidth = MIN_OFFSET_WIDTH + 120;
-        const offsetX = e.clientX - (document.body.clientWidth - 960);
+        const offsetX = e.clientX - (document.body.clientWidth - (this.getResourceSliderWidth() || 960));
         if (offsetX < minWidth || offsetX >= maxWidth) {
           return;
         }
@@ -772,7 +779,7 @@
         });
       },
 
-      handlePathSelect (value, node, payload, index) {
+      handlePathSelect (value, node, payload, resourceLen, index) {
         // console.log(value, node, payload, index);
         window.changeAlert = true;
         const { type, path, paths } = payload[0];
@@ -801,25 +808,40 @@
             this.handleChain(tempPath, curInstance, index, node.async);
           }
         } else {
-          // const noCarryNoLimitPath = payload[1]
-          const deleteInstanceItem = curInstance.find(item => item.type === type);
-          
-          // const arr = path[0]
-          // const tempPath = arr.filter(item => item.id !== '*')
-          
-          // const deleteIndex = deleteInstanceItem.path.findIndex(item => item.map(v => v.id).join('') === tempPath.map(v => v.id).join(''))
-          const deleteIndex = deleteInstanceItem.path.findIndex(item => item.map(v => `${v.id}&${v.type}`).join('') === tempPath.map(v => `${v.id}&${v.type}`).join(''));
-          
-          // const curChildreIds = node.children.map(item => item.id)
-          const curChildreIds = node.children.map(item => `${item.id}&${item.type}`);
-          
-          // deleteInstanceItem.path.splice(deleteIndex, 1)
           let isDisabled = false;
-          if (deleteIndex > -1) {
-            isDisabled = deleteInstanceItem.path[deleteIndex].some(_ => _.disabled);
-            if (!isDisabled) {
-              console.log(12122, index, deleteIndex, deleteInstanceItem);
-              deleteInstanceItem.path.splice(deleteIndex, 1);
+          let curChildrenIds = [];
+          const deleteIndex = -1;
+          const deleteInstanceItem = curInstance.find(item => item.type === type);
+          console.log(resourceLen, '长度刷刷谁');
+          if (resourceLen) {
+            for (let i = 0; i < resourceLen; i++) {
+              // const noCarryNoLimitPath = payload[1]
+          
+              // const arr = path[0]
+              // const tempPath = arr.filter(item => item.id !== '*')
+          
+              // const deleteIndex = deleteInstanceItem.path.findIndex(item => item.map(v => v.id).join('') === tempPath.map(v => v.id).join(''))
+              const deleteIndex = deleteInstanceItem.path.findIndex(item => item.map(v => `${v.id}&${v.type}`).join('') === tempPath.map(v => `${v.id}&${v.type}`).join(''));
+          
+              // const curChildrenIds = node.children.map(item => item.id)
+              curChildrenIds = node.children.map(item => `${item.id}&${item.type}`);
+          
+              // deleteInstanceItem.path.splice(deleteIndex, 1)
+              if (deleteIndex > -1) {
+                isDisabled = deleteInstanceItem.path[deleteIndex].some(_ => _.disabled);
+                if (!isDisabled) {
+                  deleteInstanceItem.path.splice(deleteIndex, 1);
+                }
+              }
+            }
+          } else {
+            const deleteIndex = deleteInstanceItem.path.findIndex(item => item.map(v => `${v.id}&${v.type}`).join('') === tempPath.map(v => `${v.id}&${v.type}`).join(''));
+            curChildrenIds = node.children.map(item => `${item.id}&${item.type}`);
+            if (deleteIndex > -1) {
+              isDisabled = deleteInstanceItem.path[deleteIndex].some(_ => _.disabled);
+              if (!isDisabled) {
+                deleteInstanceItem.path.splice(deleteIndex, 1);
+              }
             }
           }
 
@@ -846,10 +868,10 @@
           for (let i = 0; i < curInstance.length; i++) {
             const instanceItem = curInstance[i];
             if (instanceItem.path.length === 1 && instanceItem.path[0].length === 1) {
-              // if (curChildreIds.includes(instanceItem.path[0][0].id)) {
+              // if (curChildrenIds.includes(instanceItem.path[0][0].id)) {
               //     curInstance.splice(i, 1)
               // }
-              if (curChildreIds.includes(`${instanceItem.path[0][0].id}&${instanceItem.path[0][0].type}`)) {
+              if (curChildrenIds.includes(`${instanceItem.path[0][0].id}&${instanceItem.path[0][0].type}`)) {
                 curInstance.splice(i, 1);
                 break;
               }

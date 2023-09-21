@@ -8,6 +8,7 @@
           @on-select="handleResourceSelect" />
       </div>
       <topology-input
+        v-if="isOnlyLevel"
         ref="headerInput"
         :is-filter="isFilter"
         :placeholder="curPlaceholder"
@@ -19,6 +20,8 @@
             :all-data="treeData"
             :search-value="hasSearchValues"
             :cur-chain="curChain"
+            :is-filter="isFilter"
+            :placeholder="curPlaceholder"
             :resource-total="resourceTotal"
             @on-expanded="handleOnExpanded"
             @on-search="handleTreeSearch"
@@ -200,6 +203,11 @@
           tipType: ''
         }
       };
+    },
+    computed: {
+      isOnlyLevel () {
+        return this.treeData.every((item) => !item.async && item.level === 0 && item.visiable);
+      }
     },
     watch: {
       treeValue: {
@@ -686,7 +694,7 @@
         await this.firstFetchResources();
       },
 
-      handleTreeSelect (value, node) {
+      handleTreeSelect (value, node, resourceLen) {
         const parentChain = _.cloneDeep(node.parentChain);
         // const isNeedAny = node.level < this.curChain.length - 1
         const isNeedAny = node.async;
@@ -761,8 +769,7 @@
             paths: p
           });
         }
-
-        this.$emit('on-tree-select', value, node, params);
+        this.$emit('on-tree-select', value, node, params, resourceLen);
         // 针对资源权限特殊处理
         if (this.resourceValue) {
           if (value) {
@@ -787,7 +794,7 @@
       handleTreeSelectAll (nodes, isAll) {
         console.log(nodes, isAll);
         nodes.forEach((item) => {
-          this.handleTreeSelect(isAll, item);
+          this.handleTreeSelect(isAll, item, nodes.length);
         });
       },
 
