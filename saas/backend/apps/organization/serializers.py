@@ -39,7 +39,7 @@ class DepartmentSLZ(DepartmentBaseInfoSLZ):
 
 
 class UserQuerySLZ(serializers.Serializer):
-    usernames = serializers.ListField(label="用户名列表", child=serializers.CharField(label="用户名"), max_length=100)
+    usernames = serializers.ListField(label="用户名列表", child=serializers.CharField(label="用户名"))
 
 
 class OrganizationSearchSLZ(serializers.Serializer):
