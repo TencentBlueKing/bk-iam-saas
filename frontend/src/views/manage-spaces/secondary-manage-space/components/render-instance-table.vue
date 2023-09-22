@@ -1363,10 +1363,18 @@
                       curScopeActionItem.related_resource_types.forEach(curResItem => {
                         if (`${curResItem.system_id}${curResItem.type}` === `${curPasteData.resource_type.system_id}${curPasteData.resource_type.type}`) {
                           // eslint-disable-next-line max-len
-                          const canPasteName = curResItem.condition[0].instances[0].path.reduce((p, v) => {
-                            p.push(v[0].name);
-                            return p;
-                          }, []);
+                          let canPasteName = [];
+                          let hasConditionData = [];
+                          const noConditionData = [];
+                          if (curResItem.condition && curResItem.condition.length) {
+                            hasConditionData = curResItem.condition[0].instances[0].path.reduce((p, v) => {
+                              p.push(v[0].name);
+                              return p;
+                            }, []);
+                          } else {
+                            console.log(1111, payload.data, curPasteData);
+                          }
+                          canPasteName = [...hasConditionData, ...noConditionData];
                           // eslint-disable-next-line max-len
                           item.resource_groups.forEach(groupItem => {
                             groupItem.related_resource_types.forEach(resItem => {

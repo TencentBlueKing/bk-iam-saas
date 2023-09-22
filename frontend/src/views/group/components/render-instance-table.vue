@@ -1585,9 +1585,10 @@
               }
             });
           } else {
+            const curCopyData = JSON.parse(JSON.stringify(payload.data));
             this.tableList.forEach(item => {
               if (!item.isAggregate) {
-                const curPasteData = (payload.data || []).find(_ => _.id === item.id);
+                const curPasteData = curCopyData.find(_ => _.id === item.id);
                 if (curPasteData) {
                   const systemId = this.isCreateMode ? item.detail.system.id : this.systemId;
                   const scopeAction = this.authorization[systemId] || [];
@@ -1600,10 +1601,19 @@
                         console.log('curResItem', curResItem, curPasteData);
                         if (`${curResItem.system_id}${curResItem.type}` === `${curPasteData.resource_type.system_id}${curPasteData.resource_type.type}`) {
                           // eslint-disable-next-line max-len
-                          const canPasteName = curResItem.condition[0].instances[0].path.reduce((p, v) => {
-                            p.push(v[0].name);
-                            return p;
-                          }, []);
+                          let canPasteName = [];
+                          let hasConditionData = [];
+                          const noConditionData = [];
+                          if (curResItem.condition && curResItem.condition.length) {
+                            hasConditionData = curResItem.condition[0].instances[0].path.reduce((p, v) => {
+                              p.push(v[0].name);
+                              return p;
+                            }, []);
+                          } else {
+                            // console.log(1111, curCopyData, curPasteData);
+                          }
+                          canPasteName = [...hasConditionData, ...noConditionData];
+                          // console.log(canPasteName, 56566);
                           // eslint-disable-next-line max-len
                           item.resource_groups.forEach(groupItem => {
                             groupItem.related_resource_types.forEach(resItem => {
