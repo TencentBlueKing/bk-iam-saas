@@ -53,7 +53,7 @@
               ref="topologyInputRef"
               :is-filter="isFilter"
               :placeholder="curPlaceholder"
-              @on-search="handleSearch" />
+              @on-search="handleTreeSearch" />
             <div
               v-for="(item, index) in visiableData"
               :key="item.nodeId"
@@ -64,6 +64,7 @@
                 { 'can-hover': item.type === 'node' && !item.loading }
               ]"
               :style="getNodeStyle(item)"
+              @click.stop="expandNode(item, index)"
             >
               <template v-if="item.type === 'node'">
                 <Icon
@@ -151,6 +152,12 @@
             </div>
           </div>
           <div class="multiple-topology-tree-right">
+            <topology-input
+              ref="topologyInputRef"
+              :is-filter="isFilter"
+              :placeholder="curPlaceholder"
+              @on-search="handleTreeSearch"
+            />
             <bk-table
               ref="topologyTableRef"
               size="small"
@@ -384,9 +391,6 @@
           }
         },
         immediate: true
-      },
-      curPlaceholder (value) {
-        console.log(value);
       }
     },
     mounted () {
@@ -452,6 +456,12 @@
 
       getSearchDisabled (item) {
         return this.allData.some((item) => item.type === 'search-loading');
+      },
+
+      handleTreeSearch (value) {
+        if (this.$parent.handleSearch) {
+          this.$parent.handleSearch(value);
+        }
       },
 
       handleSearch (value, node, index) {

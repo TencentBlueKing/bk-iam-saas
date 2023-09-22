@@ -21,7 +21,7 @@
             :search-value="hasSearchValues"
             :cur-chain="curChain"
             :is-filter="isFilter"
-            :placeholder="curPlaceholder"
+            :cur-placeholder="curPlaceholder"
             :resource-total="resourceTotal"
             @on-expanded="handleOnExpanded"
             @on-search="handleTreeSearch"
