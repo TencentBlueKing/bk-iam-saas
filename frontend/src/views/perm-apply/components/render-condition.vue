@@ -216,13 +216,14 @@
         this.isLoading = true;
         try {
           const res = await this.$store.dispatch('permApply/resourceBatchCopy', this.params);
-          if (!res.data.length) {
+          if (res.data.length) {
+            this.$emit('on-batch-paste', {
+              flag: true,
+              data: res.data
+            });
+          } else {
             this.messageWarn(this.$t(`m.info['暂无可批量复制包含有属性条件的资源实例']`), 3000);
           }
-          this.$emit('on-batch-paste', {
-            flag: res.data.length > 0,
-            data: res.data
-          });
         } catch (e) {
           this.$emit('on-batch-paste', {
             flag: false,
