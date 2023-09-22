@@ -714,16 +714,6 @@
               const { code, data } = await this.$store.dispatch('renewal/getExpireSoonGroupWithUser', userGroupParams);
               this.tableList = data.results || [];
               this.renewalGroupCount = data.count || 0;
-              this.tableList.forEach(item => {
-                if (item.role_members && item.role_members.length) {
-                  item.role_members = item.role_members.map(v => {
-                    return {
-                      username: v,
-                      readonly: false
-                    };
-                  });
-                }
-              });
               this.$nextTick(() => {
                 const currentSelectList = this.currentSelectList.map(item => item.id.toString());
                 this.tableList.forEach((item) => {
