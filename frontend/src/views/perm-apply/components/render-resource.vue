@@ -291,7 +291,7 @@
         };
       },
       dynamicsSliderWidth () {
-        return this.getResourceSliderWidth ? this.getResourceSliderWidth() - 300 : 600;
+        return this.getResourceSliderWidth ? this.getResourceSliderWidth() - 400 : 600;
       }
     },
     watch: {
@@ -392,12 +392,14 @@
         const MIN_OFFSET_WIDTH = this.dynamicsSliderWidth;
         const minWidth = MIN_OFFSET_WIDTH;
         const maxWidth = MIN_OFFSET_WIDTH + 120;
-        const offsetX = e.clientX - (document.body.clientWidth - (this.getResourceSliderWidth() || 960));
+        const sliderWidth = this.getResourceSliderWidth ? this.getResourceSliderWidth() : 960;
+        const offsetX = e.clientX - (document.body.clientWidth - sliderWidth);
         if (offsetX < minWidth || offsetX >= maxWidth) {
           return;
         }
         this.dragRealityWidth = offsetX;
         this.dragWidth = offsetX;
+        console.log(this.dragRealityWidth, e.clientX, document.body.clientWidth, this.getResourceSliderWidth());
       },
 
       async fetchInstanceSelection (params = {}) {

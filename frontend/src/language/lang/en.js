@@ -526,6 +526,7 @@ export const m = {
          '用户组为只读用户组不能添加成员': '{value} is read-only user groups and cannot add members',
          '用户组属性为只读属性': '{value} is read-only user group attribute',
          '不可续期的用户组成员如下': 'The non renewable user group members are as follows: {value}',
+         '搜索动态key值': 'Search {value}',
          '管理员组不能添加权限': 'Administrators group cannot add permissions',
          '只读用户组不能添加权限': 'Read only user groups cannot add permissions'
     },
