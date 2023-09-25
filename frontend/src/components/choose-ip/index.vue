@@ -23,13 +23,17 @@
             :is-filter="isFilter"
             :cur-placeholder="curPlaceholder"
             :resource-total="resourceTotal"
+            :sub-resource-total="subResourceTotal"
+            :all-table-data="treeTableData"
             @on-expanded="handleOnExpanded"
             @on-search="handleTreeSearch"
             @on-select="handleTreeSelect"
             @on-select-all="handleTreeSelectAll"
             @on-load-more="handleLoadMore"
             @on-page-change="handlePageChange"
-            @async-load-nodes="handleAsyncNodes" />
+            @on-sub-page-change="handleSubPageChange"
+            @async-load-nodes="handleAsyncNodes"
+            @async-load-table-nodes="handleAsyncTableNodes" />
         </template>
         <template v-if="treeData.length < 1 && !isLoading">
           <div class="empty-wrapper">
@@ -171,6 +175,7 @@
         isLoading: false,
         limit: 100,
         resourceTotal: 0,
+        subResourceTotal: 0,
         // 当前选择的链路
         curChain: [],
         treeData: [],
@@ -201,7 +206,8 @@
           text: '',
           tip: '',
           tipType: ''
-        }
+        },
+        treeTableData: []
       };
     },
     computed: {
@@ -1021,9 +1027,219 @@
         }
       },
 
+      async handleAsyncTableNodes (node, index, flag) {
+        console.log(node, index, flag);
+        const asyncItem = {
+          ...ASYNC_ITEM,
+          parentId: node.nodeId,
+          parentSyncId: node.id
+        };
+        const asyncData = new Node(asyncItem, node.level + 1, false, 'async');
+        this.treeTableData.splice(0, this.treeTableData.length, asyncData);
+        const chainLen = this.curChain.length;
+        const params = {
+          limit: this.limit,
+          offset: 0,
+          ancestors: [],
+          keyword: ''
+        };
+        if (Object.keys(this.curSearchObj).length) {
+          if (node.nodeId === this.curSearchObj.parentId) {
+            this.curSearchObj = {};
+          }
+        }
+        let placeholder = '';
+        let parentType = '';
+        let parentData = [];
+        const ancestorItem = {};
+        if (node.childType.length) {
+          params.system_id = this.curChain[chainLen - 1].system_id;
+          params.type = node.childType;
+          // params.action_system_id = this.curChain[chainLen - 1].system_id;
+          params.action_system_id = this.systemParams.system_id || '';
+          params.action_id = this.systemParams.action_id || '';
+          parentType = this.curChain[chainLen - 1].id;
+          placeholder = this.curChain[chainLen - 1].name;
+                    
+          ancestorItem.system_id = this.curChain[chainLen - 1].system_id;
+          ancestorItem.type = this.curChain[chainLen - 1].id;
+          console.log(15155, ancestorItem.type);
+        } else {
+          const isExistNextChain = !!this.curChain[node.level + 1];
+          const ExistSystemId = isExistNextChain
+            ? this.curChain[node.level + 1].system_id
+            : this.curChain[chainLen - 1].system_id;
+          params.system_id = ExistSystemId;
+          // params.action_system_id = ExistSystemId;
+          params.action_system_id = this.systemParams.system_id || '';
+          params.action_id = this.systemParams.action_id || '';
+
+          params.type = isExistNextChain
+            ? this.curChain[node.level + 1].id
+            : this.curChain[chainLen - 1].id;
+
+          parentType = this.curChain[node.level].id;
+
+          placeholder = isExistNextChain
+            ? this.curChain[node.level + 1].name
+            : this.curChain[chainLen - 1].name;
+                    
+          ancestorItem.system_id = this.curChain[node.level].system_id;
+          ancestorItem.type = this.curChain[node.level].id;
+        }
+        ancestorItem.id = node.id;
+        if (node.parentChain.length) {
+          parentData = node.parentChain.reduce((p, e) => {
+            p.push({
+              system_id: e.system_id,
+              id: e.id,
+              type: e.type
+            });
+            return p;
+          }, []);
+        }
+        params.ancestors.push(...parentData, ancestorItem);
+        try {
+          const { code, data } = await this.$store.dispatch('permApply/getResources', params);
+          this.subResourceTotal = data.count || 0;
+          console.log(this.subResourceTotal, 44554);
+          this.emptyData = formatCodeData(code, this.emptyData, data.results.length === 0);
+          if (data.results.length < 1) {
+            this.removeAsyncTableNode();
+            node.expanded = false;
+            node.async = false;
+            return;
+          }
+          const curLevel = node.level + 1;
+          const totalPage = Math.ceil(data.count / this.limit);
+          let isAsync = this.curChain.length > (curLevel + 1);
+          const parentChain = _.cloneDeep(node.parentChain);
+          parentChain.push({
+            name: node.name,
+            id: node.id,
+            type: parentType,
+            system_id: node.childType !== '' ? this.curChain[chainLen - 1].system_id : this.curChain[node.level].system_id,
+            child_type: node.childType || ''
+          });
+          const childNodes = data.results.map(item => {
+            let checked = false;
+            let disabled = false;
+            let isRemote = false;
+            let isExistNoCarryLimit = false;
+            if (!isAsync && item.child_type !== '') {
+              isAsync = true;
+            }
+            if (this.hasSelectedValues.length > 0) {
+              // 父级链路id + 当前id = 整条链路id
+              const curIds = parentChain.map(v => `${v.id}&${v.type}`);
+              // 取当前的请求的type
+              curIds.push(`${item.id}&${params.type}`);
+
+              const tempData = [...curIds];
+
+              if (isAsync) {
+                const nextLevelId = (() => {
+                  const nextLevelData = this.curChain[curLevel + 1];
+                  if (nextLevelData) {
+                    return nextLevelData.id;
+                  }
+                  return this.curChain[chainLen - 1].id;
+                })();
+                curIds.push(`*&${nextLevelId}`);
+              }
+
+              let noCarryLimitData = {};
+              let normalSelectedData = {};
+              this.hasSelectedValues.forEach(val => {
+                if (isAsync && val.idChain === tempData.join('#')) {
+                  noCarryLimitData = val;
+                } else {
+                  if (!isAsync && val.ids.length === 1 && this.ignorePathFlag && val.ids[0] === `${item.id}&${params.type}`) {
+                    normalSelectedData = val;
+                  } else {
+                    if (val.idChain === curIds.join('#')) {
+                      normalSelectedData = val;
+                    }
+                  }
+                }
+              });
+
+              isExistNoCarryLimit = Object.keys(noCarryLimitData).length > 0;
+              if (isExistNoCarryLimit && Object.keys(normalSelectedData).length > 0) {
+                checked = true;
+                disabled = normalSelectedData.disabled && noCarryLimitData.disabled;
+                isRemote = disabled;
+              } else {
+                if (isExistNoCarryLimit || Object.keys(normalSelectedData).length > 0) {
+                  checked = true;
+                  disabled = normalSelectedData.disabled || noCarryLimitData.disabled;
+                  isRemote = disabled;
+                }
+              }
+            }
+            const childItem = {
+              ...item,
+              parentId: node.nodeId,
+              parentSyncId: node.id,
+              disabled: node.checked || disabled,
+              checked: checked || node.checked,
+              parentChain,
+              isRemote,
+              isExistNoCarryLimit
+            };
+            const isAsyncFlag = isAsync || item.child_type !== '';
+            return new Node(childItem, curLevel, isAsyncFlag);
+          });
+          this.treeTableData.splice((index + 1), 0, ...childNodes);
+          node.children = [...data.results.map(item => new Node(item, curLevel, false))];
+          if (totalPage > 1) {
+            const loadItem = {
+              ...LOAD_ITEM,
+              totalPage: totalPage,
+              current: 1,
+              parentSyncId: node.id,
+              parentId: node.nodeId,
+              parentChain
+            };
+            const loadData = new Node(loadItem, curLevel, isAsync, 'load');
+            this.treeTableData.splice((index + childNodes.length + 1), 0, loadData);
+            node.children.push(new Node(loadItem, curLevel, false, 'load'));
+          }
+          const searchItem = {
+            ...SEARCH_ITEM,
+            totalPage: totalPage,
+            parentSyncId: node.id,
+            parentId: node.nodeId,
+            parentChain,
+            visiable: flag,
+            placeholder: `${this.$t(`m.common['搜索']`)} ${placeholder}`
+          };
+
+          const searchData = new Node(searchItem, curLevel, false, 'search');
+          this.treeTableData.splice((index + 1), 0, searchData);
+          if (flag) {
+            this.$nextTick(() => {
+              this.$refs.topologyRef.handleSetFocus(index + 1);
+            });
+          }
+          this.removeAsyncTableNode();
+        } catch (e) {
+          console.error(e);
+          const { code } = e;
+          this.removeAsyncTableNode();
+          this.emptyData = formatCodeData(code, this.emptyData);
+          this.messageAdvancedError(e);
+        }
+      },
+
       removeAsyncNode () {
         const index = this.treeData.findIndex(item => item.type === 'async');
         if (index > -1) this.treeData.splice(index, 1);
+      },
+
+      removeAsyncTableNode () {
+        const index = this.treeTableData.findIndex(item => item.type === 'async');
+        if (index > -1) this.treeTableData.splice(index, 1);
       },
 
       async handleLoadMore (node, index) {
@@ -1314,6 +1530,11 @@
         } finally {
           node.loadingMore = false;
         }
+      },
+
+      // 多层拓扑分页
+      async handleSubPageChange (page, node) {
+        console.log(page, node);
       }
     }
   };
