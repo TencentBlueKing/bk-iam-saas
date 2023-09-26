@@ -1353,7 +1353,7 @@
               if (!item.isAggregate) {
                 const curPasteData = (payload.data || []).find(_ => _.id === item.id);
                 if (curPasteData) {
-                  const systemId = this.isCreateMode ? item.detail.system.id : this.systemId;
+                  const systemId = this.isCreateMode && item.detail ? item.detail.system.id : this.systemId;
                   const scopeAction = this.authorization[systemId] || [];
                   // eslint-disable-next-line max-len
                   const curScopeAction = _.cloneDeep(scopeAction.find(scopeItem => scopeItem.id === item.id));
@@ -1365,14 +1365,25 @@
                           // eslint-disable-next-line max-len
                           let canPasteName = [];
                           let hasConditionData = [];
-                          const noConditionData = [];
+                          let noConditionData = [];
                           if (curResItem.condition && curResItem.condition.length) {
                             hasConditionData = curResItem.condition[0].instances[0].path.reduce((p, v) => {
                               p.push(v[0].name);
                               return p;
                             }, []);
                           } else {
-                            console.log(1111, payload.data, curPasteData);
+                            // 处理分级管理员下多个无限制操作的批量粘贴
+                            if (this.curCopyParams.resource_type.condition
+                              && this.curCopyParams.resource_type.condition.length) {
+                              let instancesData = this.curCopyParams.resource_type.condition[0].instances;
+                              if (!instancesData) {
+                                instancesData = this.curCopyParams.resource_type.condition[0].instance;
+                              }
+                              noConditionData = instancesData[0].path.reduce((p, v) => {
+                                p.push(v[0].name);
+                                return p;
+                              }, []);
+                            }
                           }
                           canPasteName = [...hasConditionData, ...noConditionData];
                           // eslint-disable-next-line max-len
