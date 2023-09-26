@@ -385,9 +385,9 @@
         } else {
           this.tagActionList = [];
         }
-        if (flag) {
-          Promise.all([this.fetchAggregationAction(), this.fetchAuthorizationScopeActions()]);
-        }
+        // if (flag) {
+        //   Promise.all([this.fetchAggregationAction(), this.fetchAuthorizationScopeActions()]);
+        // }
       },
 
       getRelatedActionTips (payload) {
@@ -540,7 +540,9 @@
           }
           await Promise.all([
             this.fetchCommonActions(this.curSystem),
-            this.fetchActions(this.curSystem)
+            this.fetchActions(this.curSystem),
+            this.fetchAggregationAction(),
+            this.fetchAuthorizationScopeActions()
           ]);
           this.handleCommonAction();
           this.isRightLoading = false;
@@ -736,7 +738,7 @@
           this.curSelectValue.push(...differenceSetIds);
 
           this.setCurSelectedCount();
-          Promise.all([this.fetchAggregationAction(), this.fetchAuthorizationScopeActions()]);
+          // Promise.all([this.fetchAggregationAction(), this.fetchAuthorizationScopeActions()]);
           return;
         }
         payload.text = this.$t(`m.common['全选']`);
@@ -812,9 +814,9 @@
           this.handleRelatedActions(item, false, $id);
         }
 
-        if (curVal) {
-          Promise.all([this.fetchAggregationAction(), this.fetchAuthorizationScopeActions()]);
-        }
+        // if (curVal) {
+        //   Promise.all([this.fetchAggregationAction(), this.fetchAuthorizationScopeActions()]);
+        // }
       },
 
       handleSubActionChange (curVal, oldVal, val, parent, payload, value) {
@@ -843,9 +845,9 @@
           this.handleRelatedActions(payload, false, $id);
         }
 
-        if (curVal) {
-          Promise.all([this.fetchAggregationAction(), this.fetchAuthorizationScopeActions()]);
-        }
+        // if (curVal) {
+        //   Promise.all([this.fetchAggregationAction(), this.fetchAuthorizationScopeActions()]);
+        // }
       },
 
       handleSubmit () {
@@ -902,7 +904,9 @@
         this.isRightLoading = true;
         await Promise.all([
           this.fetchCommonActions(this.curSystem),
-          this.fetchActions(this.curSystem)
+          this.fetchActions(this.curSystem),
+          this.fetchAggregationAction(),
+          this.fetchAuthorizationScopeActions()
         ]);
         this.handleCommonAction();
         this.tagActionList = [];

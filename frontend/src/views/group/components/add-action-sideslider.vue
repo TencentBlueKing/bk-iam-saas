@@ -264,13 +264,17 @@
     watch: {
       aggregation: {
         handler (value) {
-          this.aggregationData = _.cloneDeep(value);
+          if (Object.keys(value).length) {
+            this.aggregationData = _.cloneDeep(value);
+          }
         },
         immediate: true
       },
       authorization: {
         handler (value) {
-          this.authorizationData = _.cloneDeep(value);
+          if (Object.keys(value).length) {
+            this.authorizationData = _.cloneDeep(value);
+          }
         },
         immediate: true
       },
@@ -387,9 +391,9 @@
         } else {
           this.tagActionList = [];
         }
-        if (flag) {
-          Promise.all([this.fetchAggregationAction(), this.fetchAuthorizationScopeActions()]);
-        }
+        // if (flag) {
+        //   Promise.all([this.fetchAggregationAction(), this.fetchAuthorizationScopeActions()]);
+        // }
       },
 
       getRelatedActionTips (payload) {
@@ -551,7 +555,9 @@
           // this.fetchActions(this.curSystem, false)
           await Promise.all([
             this.fetchCommonActions(this.curSystem),
-            this.fetchActions(this.curSystem)
+            this.fetchActions(this.curSystem),
+            this.fetchAggregationAction(),
+            this.fetchAuthorizationScopeActions()
           ]);
           this.handleCommonAction();
           this.isRightLoading = false;
@@ -570,6 +576,7 @@
         try {
           const { code, data } = await this.$store.dispatch('aggregate/getAggregateAction', { system_ids: this.curSystem });
           this.aggregationData[this.curSystem] = data.aggregations;
+          this.$set(this.aggregationData, this.curSystem, data.aggregations);
           this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
         } catch (e) {
           this.fetchErrorMsg(e);
@@ -747,7 +754,7 @@
           this.curSelectValue.push(...differenceSetIds);
 
           this.setCurSelectedCount();
-          Promise.all([this.fetchAggregationAction(), this.fetchAuthorizationScopeActions()]);
+          // Promise.all([this.fetchAggregationAction(), this.fetchAuthorizationScopeActions()]);
           return;
         }
         payload.text = this.$t(`m.common['全选']`);
@@ -823,9 +830,9 @@
           this.handleRelatedActions(item, false, $id);
         }
 
-        if (curVal) {
-          Promise.all([this.fetchAggregationAction(), this.fetchAuthorizationScopeActions()]);
-        }
+        // if (curVal) {
+        //   Promise.all([this.fetchAggregationAction(), this.fetchAuthorizationScopeActions()]);
+        // }
       },
 
       handleSubActionChange (curVal, oldVal, val, parent, payload, value) {
@@ -854,9 +861,9 @@
           this.handleRelatedActions(payload, false, $id);
         }
 
-        if (curVal) {
-          Promise.all([this.fetchAggregationAction(), this.fetchAuthorizationScopeActions()]);
-        }
+        // if (curVal) {
+        //   Promise.all([this.fetchAggregationAction(), this.fetchAuthorizationScopeActions()]);
+        // }
       },
 
       handleSubmit () {
@@ -912,7 +919,9 @@
         this.isRightLoading = true;
         await Promise.all([
           this.fetchCommonActions(this.curSystem),
-          this.fetchActions(this.curSystem)
+          this.fetchActions(this.curSystem),
+          this.fetchAggregationAction(),
+          this.fetchAuthorizationScopeActions()
         ]);
         this.handleCommonAction();
         this.tagActionList = [];

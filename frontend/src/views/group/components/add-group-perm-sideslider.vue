@@ -231,14 +231,18 @@
       },
       aggregation: {
         handler (value) {
-          this.aggregationData = _.cloneDeep(value);
-          this.curSelectedSystem = Object.keys(this.aggregationData);
+          if (Object.keys(value).length) {
+            this.aggregationData = _.cloneDeep(value);
+            this.curSelectedSystem = Object.keys(this.aggregationData);
+          }
         },
         immediate: true
       },
       authorization: {
         handler (value) {
-          this.authorizationScope = _.cloneDeep(value);
+          if (Object.keys(value).length) {
+            this.authorizationScope = _.cloneDeep(value);
+          }
         },
         immediate: true
       },
@@ -469,8 +473,8 @@
           if (!this.curSelectedSystem.includes(row.system.id)) {
             this.curSelectedSystem.push(row.system.id);
             this.requestQueueBySys = ['aggregation', 'authorization'];
-            this.fetchAggregationAction(row.system.id);
-            this.fetchAuthorizationScopeActions(row.system.id);
+            await this.fetchAggregationAction(row.system.id);
+            await this.fetchAuthorizationScopeActions(row.system.id);
           }
           if (!this.curSelectedTemplate.includes(row.id)) {
             this.curSelectedTemplate.push(row.id);
