@@ -777,46 +777,48 @@
       },
 
       handleUnlimitedActionChange (payload) {
-        const tableData = _.cloneDeep(this.tableList);
-        tableData.forEach((item, index) => {
-          if (!item.isAggregate) {
-            if (item.resource_groups && item.resource_groups.length) {
-              item.resource_groups.forEach(groupItem => {
-                groupItem.related_resource_types && groupItem.related_resource_types.forEach(types => {
-                  if (!payload && (types.condition.length && types.condition[0] !== 'none')) {
-                    return;
-                  }
-                  types.condition = payload ? [] : ['none'];
-                  if (payload) {
-                    types.isError = false;
-                  }
+        if (['super_manager', 'system_manager'].includes(this.user.role.type)) {
+          const tableData = _.cloneDeep(this.tableList);
+          tableData.forEach((item, index) => {
+            if (!item.isAggregate) {
+              if (item.resource_groups && item.resource_groups.length) {
+                item.resource_groups.forEach(groupItem => {
+                  groupItem.related_resource_types && groupItem.related_resource_types.forEach(types => {
+                    if (!payload && (types.condition.length && types.condition[0] !== 'none')) {
+                      return;
+                    }
+                    types.condition = payload ? [] : ['none'];
+                    if (payload) {
+                      types.isError = false;
+                    }
+                  });
                 });
-              });
-            } else {
-              item.name = item.name.split('，')[0];
+              } else {
+                item.name = item.name.split('，')[0];
+              }
             }
-          }
-          if (item.instances && item.isAggregate) {
-            item.isNoLimited = false;
-            item.isError = !(item.instances.length || (!item.instances.length && item.isNoLimited));
-            item.isNeedNoLimited = true;
-            if (!payload || item.instances.length) {
+            if (item.instances && item.isAggregate) {
               item.isNoLimited = false;
-              item.isError = false;
+              item.isError = !(item.instances.length || (!item.instances.length && item.isNoLimited));
+              item.isNeedNoLimited = true;
+              if (!payload || item.instances.length) {
+                item.isNoLimited = false;
+                item.isError = false;
+              }
+              if ((!item.instances.length && !payload && item.isNoLimited) || payload) {
+                item.isNoLimited = true;
+                item.isError = false;
+                item.instances = [];
+              }
+              return this.$set(
+                tableData,
+                index,
+                new GroupAggregationPolicy(item)
+              );
             }
-            if ((!item.instances.length && !payload && item.isNoLimited) || payload) {
-              item.isNoLimited = true;
-              item.isError = false;
-              item.instances = [];
-            }
-            return this.$set(
-              tableData,
-              index,
-              new GroupAggregationPolicy(item)
-            );
-          }
-        });
-        this.tableList = _.cloneDeep(tableData);
+          });
+          this.tableList = _.cloneDeep(tableData);
+        }
       },
 
       setInstancesDisplayData (data) {

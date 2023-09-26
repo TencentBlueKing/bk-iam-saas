@@ -692,7 +692,6 @@
         if (conditions.length < 1) {
           return [];
         }
-
         const instances = actions.map(item => {
           const instancesItem = item.resource_groups[0].related_resource_types[0].condition[0]
             && item.resource_groups[0].related_resource_types[0].condition[0].instances;
@@ -700,11 +699,12 @@
         });
         const tempData = [];
         const resources = instances.map(item => item[0]
-          && item[0].path).map(item => item && item.map(v => v.map(_ => _.id)));
-        const resourceList = instances
+          && item[0].path).map(item => item && item.map(v => v.map(_ => _.id))).filter(item => item !== undefined);
+        let resourceList = instances
           .map(item => item[0] && item[0].path)
           .map(item => item && item.map(v => v.map(({ id, name }) => ({ id, name }))))
           .flat(2);
+        resourceList = resourceList.filter(item => item !== undefined);
         resources.forEach(item => {
           item && item.forEach(subItem => {
             if (resources.every(v => v && v.some(vItem => vItem[0] === subItem[0]))) {
