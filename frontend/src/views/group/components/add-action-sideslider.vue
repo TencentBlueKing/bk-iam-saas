@@ -589,7 +589,7 @@
         }
         try {
           const { code, data } = await this.$store.dispatch('permTemplate/getAuthorizationScopeActions', { systemId: this.curSystem });
-          this.authorizationData[this.curSystem] = data.filter(item => item.id !== '*');
+          this.$set(this.authorizationData, this.curSystem, data.filter(item => item.id !== '*'));
           this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
         } catch (e) {
           this.fetchErrorMsg(e);

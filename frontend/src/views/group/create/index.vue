@@ -442,7 +442,40 @@
             tempList.push(new GroupPolicy(sub, 'add', 'template', temp));
           });
         });
-        this.hasAddCustomList.forEach(item => {
+        // this.hasAddCustomList.forEach(item => {
+        //   if (!item.resource_groups || !item.resource_groups.length) {
+        //     item.resource_groups = item.related_resource_types.length ? [{ id: '', related_resource_types: item.related_resource_types }] : [];
+        //   }
+        //   tempList.push(new GroupPolicy(item, 'add', 'custom', {
+        //     system: {
+        //       id: item.system_id,
+        //       name: item.system_name
+        //     },
+        //     id: CUSTOM_PERM_TEMPLATE_ID
+        //   }));
+        // });
+
+        // if (this.tableList.length < 1) {
+        //   this.tableList = _.cloneDeep(tempList);
+        // } else {
+        //   this.tableList.push(..._.cloneDeep(tempList));
+        // }
+        // this.tableListBackup = _.cloneDeep(this.tableList);
+
+        const temps = [];
+        this.tableList.forEach(item => {
+          if (item.detail.id === CUSTOM_PERM_TEMPLATE_ID) {
+            if (item.isAggregate) {
+              temps.push(item.actions.map(_ => `${_.detail.system.id}&${_.id}`));
+            } else {
+              temps.push(`${item.detail.system.id}&${item.id}`);
+            }
+          }
+        });
+        
+        console.log('this.hasAddCustomList', this.hasAddCustomList);
+        const addCustomList = this.originalList.filter(item => !temps.includes(item.$id));
+        addCustomList.forEach(item => {
           if (!item.resource_groups || !item.resource_groups.length) {
             item.resource_groups = item.related_resource_types.length ? [{ id: '', related_resource_types: item.related_resource_types }] : [];
           }
@@ -454,12 +487,7 @@
             id: CUSTOM_PERM_TEMPLATE_ID
           }));
         });
-
-        if (this.tableList.length < 1) {
-          this.tableList = _.cloneDeep(tempList);
-        } else {
-          this.tableList.push(..._.cloneDeep(tempList));
-        }
+        this.tableList.push(...tempList);
         this.tableListBackup = _.cloneDeep(this.tableList);
 
         // 处理聚合的数据，将表格数据按照相同的聚合id分配好

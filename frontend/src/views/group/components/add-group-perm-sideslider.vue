@@ -403,8 +403,8 @@
       },
 
       handleSubmit () {
-        this.$emit('update:isShow', false);
         this.$emit('on-submit', this.tempalteDetailList, this.aggregationData, this.authorizationScope);
+        this.$emit('update:isShow', false);
       },
 
       handleAddCustomPerm () {
