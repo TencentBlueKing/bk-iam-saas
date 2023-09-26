@@ -28,21 +28,21 @@
     data () {
       return {
         footerList: [
-        //   {
-        //     link: window.ENABLE_ASSISTANT.toLowerCase() === 'true' ? 'wxwork://message/?username=BK助手' : 'https://wpa1.qq.com/KziXGWJs?_type=wpa&qidian=true',
-        //     text: '技术支持',
-        //     text_en: 'Support '
-        //   },
-        //   {
-        //     link: 'https://bk.tencent.com/s-mart/community',
-        //     text: '社区论坛',
-        //     text_en: 'Forum'
-        //   },
-        //   {
-        //     link: 'https://bk.tencent.com/index',
-        //     text: '产品官网',
-        //     text_en: 'Official'
-        //   }
+          {
+            link: window.ENABLE_ASSISTANT.toLowerCase() === 'true' ? 'wxwork://message/?username=BK助手' : 'https://wpa1.qq.com/KziXGWJs?_type=wpa&qidian=true',
+            text: '技术支持',
+            text_en: 'Support '
+          },
+          {
+            link: 'https://bk.tencent.com/s-mart/community',
+            text: '社区论坛',
+            text_en: 'Forum'
+          },
+          {
+            link: 'https://bk.tencent.com/index',
+            text: '产品官网',
+            text_en: 'Official'
+          }
         ],
         version: ''
       };
