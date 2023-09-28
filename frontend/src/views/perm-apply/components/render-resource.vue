@@ -391,7 +391,7 @@
         // 可拖拽范围
         const MIN_OFFSET_WIDTH = this.dynamicsSliderWidth;
         const minWidth = MIN_OFFSET_WIDTH;
-        const maxWidth = MIN_OFFSET_WIDTH + 120;
+        const maxWidth = MIN_OFFSET_WIDTH + 220;
         const sliderWidth = this.getResourceSliderWidth ? this.getResourceSliderWidth() : 960;
         const offsetX = e.clientX - (document.body.clientWidth - sliderWidth);
         if (offsetX < minWidth || offsetX >= maxWidth) {

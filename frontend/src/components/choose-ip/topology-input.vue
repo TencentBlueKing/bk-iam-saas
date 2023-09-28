@@ -2,9 +2,10 @@
   <div
     :class="[
       'iam-topology-input',
+      customClass,
       { 'reset-padding': isUsedByTree }
     ]"
-    :style="customStyle">
+  >
     <bk-input
       ref="input"
       v-model="value"
@@ -40,9 +41,8 @@
         type: Boolean,
         default: false
       },
-      customStyle: {
-        type: Object,
-        default: () => {}
+      customClass: {
+        type: String
       }
     },
     data () {
@@ -91,13 +91,17 @@
 <style lang="postcss">
     .iam-topology-input {
         padding: 16px 10px;
-        /* background: #fafbfd; */
+        background: #ffffff;
         &.reset-padding {
-            padding: 0 0 0 3px;
+          padding: 0 0 0 3px;
         }
         .icon-search {
           color: #979BA5;
           cursor: pointer;
+        }
+        &-side {
+          padding: 0;
+          background: #fafbfd;
         }
     }
 </style>

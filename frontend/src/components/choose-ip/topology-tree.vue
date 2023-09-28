@@ -18,7 +18,6 @@
           :data="renderTopologyData"
           @select="handleSelectChange"
           @select-all="handleSelectAllChange"
-          v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
         >
           <bk-table-column type="selection" align="center" :selectable="setDefaultSelect" />
           <bk-table-column :label="formatPlaceHolder('input')">
@@ -52,7 +51,7 @@
         <div class="multiple-topology-tree">
           <div
             class="multiple-topology-tree-left"
-            :style="{ width: 'calc(100% - 400px)' }">
+            :style="formatLeftStyle">
             <topology-input
               ref="topologyInputRef"
               :is-filter="isFilter"
@@ -64,16 +63,17 @@
                 :key="item.nodeId"
                 :class="[
                   'node-item',
-                  { 'node-item-active': item.nodeId === curNodeId },
+                  { 'node-item-active': item.nodeId === curSelectNode.nodeId && item.type === 'node' },
                   { 'load-more-node': item.type === 'load' },
                   { 'search-node': item.type === 'search' },
                   { 'can-hover': item.type === 'node' && !item.loading }
                 ]"
                 :style="getNodeStyle(item)"
-                @click.stop="handleChangeNode(item, index)"
+                @click.stop="handleSelectNode(item, index)"
               >
-                <template v-if="item.type === 'node'">
+                <template v-if="item.type === 'node' && item.level < curChain.length - 1">
                   <Icon
+                    v-if="!isTwoLevel"
                     bk
                     :type="item.expanded ? 'down-shape' : 'right-shape'"
                     :class="['arrow-icon', { 'is-disabled': getExpandedDisabled(index) || isExistAsync(item) }]"
@@ -134,7 +134,7 @@
                     />
                   </div>
                 </template>
-                <template v-else-if="item.type === 'search-loading'">
+                <!-- <template v-else-if="item.type === 'search-loading'">
                   <div
                     class="search-loading-wrapper"
                     v-bkloading="{ isLoading: true, opacity: 1, theme: 'primary', size: 'mini' }"
@@ -144,7 +144,7 @@
                   <spin-loading ext-cls="loading" />
                   <span class="loading-text">{{ $t(`m.common['加载中']`) }}</span>
                 </div>
-                <template v-else>
+               <template v-else>
                   <topology-input
                     :ref="`topologyInputRef${index}`"
                     :scene="'tree'"
@@ -153,16 +153,17 @@
                     :disabled="getSearchDisabled(item)"
                     @on-search="handleSearch(...arguments, item, index)"
                   />
-                </template>
+                </template> -->
               </div>
             </div>
           </div>
           <div class="multiple-topology-tree-right">
             <topology-input
-              ref="topologyInputRef"
-              :is-filter="isFilter"
-              :placeholder="formatPlaceHolder('input')"
-              @on-search="handleSubTreeSearch"
+              :ref="`topologyInputRef${curSelectNodeIndex}`"
+              :placeholder="curSelectNode.placeholder || ''"
+              :is-filter="curSelectNode.isFilter || false"
+              :disabled="getSearchDisabled(curSelectNode)"
+              @on-search="handleSearch(...arguments, curSelectNode, curSelectNodeIndex)"
             />
             <div class="multiple-topology-tree-right-content">
               <bk-table
@@ -172,15 +173,14 @@
                 ext-cls="topology-tree-table"
                 :header-border="false"
                 :outer-border="false"
-                :data="subToPologyData"
+                :data="renderTopologyData"
                 @select="handleSelectChange"
                 @select-all="handleSelectAllChange"
-                v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
               >
                 <bk-table-column type="selection" align="center" :selectable="setDefaultSelect" />
                 <bk-table-column :label="formatPlaceHolder('table')">
                   <template slot-scope="{ row }">
-                    {{ row.name }}
+                    <span :title="`ID: ${row.id}`">{{ row.name }}</span>
                   </template>
                 </bk-table-column>
                 <template slot="empty">
@@ -300,9 +300,9 @@
           tipType: ''
         },
         renderTopologyData: [],
-        subToPologyData: [],
         currentSelectedNode: [],
-        curNodeId: ''
+        curSelectNode: {},
+        curSelectNodeIndex: -1
       };
     },
     computed: {
@@ -322,7 +322,7 @@
       },
       // 返回两层数据的排版
       isTwoLevel () {
-        return this.visiableData.every((item) => this.curChain.length === 2 && this.curChain.length > (item.level + 1));
+        return this.visiableData.every((item) => this.curChain.length === 2 && this.curChain.length > item.level);
       },
       // 页面渲染的数据
       renderData () {
@@ -334,7 +334,9 @@
       },
       dragDynamicWidth () {
         return (payload) => {
-          const offsetWidth = this.getDragDynamicWidth() > 600 ? 560 + this.getDragDynamicWidth() - 600 : 560;
+          // const offsetWidth = this.getDragDynamicWidth() > 600 ? 560 + this.getDragDynamicWidth() - 600 : 560;
+          const offsetWidth = this.getDragDynamicWidth
+            ? this.getDragDynamicWidth() - 500 : 460 + this.getDragDynamicWidth() - 500;
           const isSameLevelExistSync = this.allData
             .filter((item) => item.level === payload.level)
             .some((item) => item.type === 'node' && item.async);
@@ -394,6 +396,11 @@
           };
           return typeMap[payload]();
         };
+      },
+      formatLeftStyle () {
+        return {
+          'width': this.getDragDynamicWidth ? `${this.getDragDynamicWidth() - 200}px` : '600px'
+        };
       }
     },
     watch: {
@@ -425,25 +432,32 @@
       allData: {
         handler (value) {
           if (value.length) {
-            this.renderTopologyData = value.filter((item) => item.type === 'node');
+            if (this.isOnlyLevel) {
+              this.renderTopologyData = value.filter((item) => item.type === 'node');
+            } else {
+              if (Object.keys(this.curSelectNode).length) {
+                const curNode = value.find((item) => item.id === this.curSelectNode.id);
+                if (curNode) {
+                  this.renderTopologyData = [...curNode.children || []];
+                }
+              }
+            }
+            const checkedNodeIdList = value.filter((item) => item.checked).map((v) => v.id);
+            console.log(checkedNodeIdList, this.renderTopologyData, 564646);
             this.$nextTick(() => {
               this.renderTopologyData.forEach((item) => {
-                this.$refs.topologyTableRef && this.$refs.topologyTableRef.toggleRowSelection(item, item.checked);
+                this.$refs.topologyTableRef
+                  && this.$refs.topologyTableRef.toggleRowSelection(item, checkedNodeIdList.includes(item.id));
               });
             });
           }
         },
         immediate: true
       },
-      allTableData: {
+      curSelectNodeIndex: {
         handler (value) {
-          if (value.length) {
-            this.subToPologyData = value.filter((item) => item.type === 'node');
-            this.$nextTick(() => {
-              this.subToPologyData.forEach((item) => {
-                this.$refs.topologyTableRef && this.$refs.topologyTableRef.toggleRowSelection(item, item.checked);
-              });
-            });
+          if (value === -1 && !this.isOnlyLevel) {
+            this.handleSelectNode(this.visiableData[0], 0);
           }
         },
         immediate: true
@@ -491,6 +505,7 @@
       isExistAsync (payload) {
         // (asyncNode && asyncNode.parentId === payload.nodeId)
         const asyncNode = this.allData.find((item) => item.type === 'async');
+        console.log(asyncNode, 454554);
         // if (!asyncNode) {
         //     return false
         // }
@@ -648,6 +663,7 @@
       expandNode (node, index, isExpand) {
         const flag = this.getExpandedDisabled(index);
         const canExpanded = this.isExistAsync(node) ? node.children && node.children.length : true;
+        console.log(flag || !canExpanded, this.isExistAsync(node), 112452);
         if (flag || !canExpanded) {
           return;
         }
@@ -706,31 +722,13 @@
       },
 
       // 选择当前节点，展示右侧表格数据
-      handleChangeNode (node, index, isExpand) {
-        this.curNodeId = node.nodeId;
-        const flag = this.getExpandedDisabled(index);
-        const canExpanded = this.isExistAsync(node) ? node.children && node.children.length : true;
-        if (flag || !canExpanded) {
+      handleSelectNode (node, index, isExpand) {
+        if (!['node'].includes(node.type)) {
           return;
         }
-        if (isExpand) {
-          node.expanded = isExpand;
-        } else {
-          node.expanded = !node.expanded;
-        }
-        if (!node.expanded) {
-          const nextNode = this.allData[index + 1];
-          if (nextNode && nextNode.type === 'search') {
-            this.allData.splice(index + 1, 1);
-          }
-          const nextOneNode = this.allData[index + 1];
-          if (nextOneNode && nextOneNode.type === 'search-empty') {
-            this.allData.splice(index + 1, 1);
-          }
-        }
-        if (node.async && node.expanded) {
-          this.$emit('async-load-table-nodes', node, index, false);
-        }
+        this.curSelectNode = Object.assign({}, node);
+        this.curSelectNodeIndex = index;
+        this.expandNode(node, index, isExpand);
       },
 
       handleNodeChecked (value, node) {
@@ -756,9 +754,13 @@
           this.pressIndex = index;
           this.pressLevels.push(node.level);
         }
-        console.log(newVal, node, 455445);
+        this.curSelectNode = Object.assign({}, node);
+        this.curSelectNodeIndex = index;
         this.handleNodeChecked(newVal, node);
         this.$emit('on-select', newVal, node);
+        if (node.async) {
+          this.$emit('async-load-table-nodes', node, index, false);
+        }
       },
 
       handlePageChange (current) {
@@ -774,7 +776,7 @@
       },
 
       handleSubPageChange (current) {
-        this.$emit('on-sub-page-change', current, this.allData[this.allData.length - 1]);
+        this.$emit('on-sub-page-change', current, this.renderTopologyData[this.renderTopologyData.length - 1]);
       },
 
       fetchSelectedGroups (type, payload, row) {
