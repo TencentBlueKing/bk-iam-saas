@@ -52,6 +52,7 @@
         <form class="bk-form bk-form-vertical inner-content">
           <div class="bk-form-item">
             <div
+              ref="selectActionRef"
               v-bkloading="{ isLoading: customLoading, opacity: 1 }"
               :class="[
                 'custom-tmpl-list-content-wrapper',
@@ -2397,6 +2398,10 @@
         if (recommendFlag || flag || this.isShowReasonError) {
           if (actions.length < 1 && aggregations.length < 1) {
             this.isShowActionError = true;
+            if (this.$refs.selectActionRef) {
+              this.scrollToLocation(this.$refs.selectActionRef);
+              return;
+            }
           }
           const tableRef = this.$refs.instanceTableRef;
           const reasonRef = this.$refs.resInstanceReasonRef;
@@ -2489,22 +2494,19 @@
       },
       // 用户组权限提交
       async handleSubmit () {
-        let validateFlag = true;
-        if (this.reason === '') {
+        if (!this.currentSelectList.length) {
+          this.isShowGroupError = true;
+          this.scrollToLocation(this.$refs.groupTableRef);
+          return;
+        }
+        if (!this.reason) {
           this.isShowReasonError = true;
-          validateFlag = false;
           this.scrollToLocation(this.$refs.reasonRef);
+          return;
         }
         if (this.expiredAtUse === 0) {
           this.isShowExpiredError = true;
           this.scrollToLocation(this.$refs.expiredAtRef);
-          validateFlag = false;
-        }
-        if (this.currentSelectList.length < 1) {
-          this.isShowGroupError = true;
-          validateFlag = false;
-        }
-        if (!validateFlag) {
           return;
         }
         this.buttonLoading = true;
