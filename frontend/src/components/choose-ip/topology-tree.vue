@@ -64,7 +64,7 @@
                 :class="[
                   'node-item',
                   { 'node-item-active': item.nodeId === curSelectNode.nodeId && item.type === 'node' },
-                  { 'load-more-node': item.type === 'load' },
+                  { 'load-more-node': formatLoadMore(item) },
                   { 'search-node': item.type === 'search' },
                   { 'can-hover': item.type === 'node' && !item.loading }
                 ]"
@@ -90,17 +90,18 @@
                       data-test-id="topology_checkbox_chooseip"
                       @change="handleNodeChange(...arguments, item, index)"
                     >
-                      <span
-                        class="tree-node-name single-hide"
-                        :style="dragDynamicWidth(item)"
-                        :title="item.name"
-                      >
-                        {{ item.name }}
-                      </span>
                     </bk-checkbox>
+                    <span
+                      class="tree-node-name single-hide"
+                      :style="dragDynamicWidth(item)"
+                      :title="item.name"
+                      @click.stop="handleSelectNode(item, index)"
+                    >
+                      {{ item.name }}
+                    </span>
                   </div>
                 </template>
-                <template v-else-if="item.type === 'load'">
+                <template v-else-if="formatLoadMore(item)">
                   <div class="load-more-wrapper">
                     <div
                       :class="[
@@ -254,7 +255,8 @@
         type: Number
       },
       subResourceTotal: {
-        type: Number
+        type: Number,
+        default: 0
       },
       isBorder: {
         type: Boolean,
@@ -401,6 +403,11 @@
         return {
           'width': this.getDragDynamicWidth ? `${this.getDragDynamicWidth() - 200}px` : '600px'
         };
+      },
+      formatLoadMore () {
+        return (payload) => {
+          return payload.type === 'load' && payload.level < this.curChain.length - 1;
+        };
       }
     },
     watch: {
@@ -431,32 +438,16 @@
       },
       allData: {
         handler (value) {
-          if (value.length) {
-            if (this.isOnlyLevel) {
-              this.renderTopologyData = value.filter((item) => item.type === 'node');
-            } else {
-              if (Object.keys(this.curSelectNode).length) {
-                const curNode = value.find((item) => item.id === this.curSelectNode.id);
-                if (curNode) {
-                  this.renderTopologyData = [...curNode.children || []];
-                }
-              }
-            }
-            const checkedNodeIdList = value.filter((item) => item.checked).map((v) => v.id);
-            console.log(checkedNodeIdList, this.renderTopologyData, 564646);
-            this.$nextTick(() => {
-              this.renderTopologyData.forEach((item) => {
-                this.$refs.topologyTableRef
-                  && this.$refs.topologyTableRef.toggleRowSelection(item, checkedNodeIdList.includes(item.id));
-              });
-            });
-          }
+          this.fetchLevelTree(value);
         },
         immediate: true
       },
       curSelectNodeIndex: {
-        handler (value) {
-          if (value === -1 && !this.isOnlyLevel) {
+        handler (newValue, oldValue) {
+          if (newValue !== oldValue) {
+            this.subPagination = Object.assign(this.subPagination, { current: 1 });
+          }
+          if (newValue === -1 && !this.isOnlyLevel) {
             this.handleSelectNode(this.visiableData[0], 0);
           }
         },
@@ -476,6 +467,31 @@
       });
     },
     methods: {
+      fetchLevelTree (value) {
+        if (value.length) {
+          if (this.isOnlyLevel) {
+            this.renderTopologyData = value.filter((item) => item.type === 'node');
+          } else {
+            if (Object.keys(this.curSelectNode).length) {
+              const curNode = value.find((item) => item.id === this.curSelectNode.id);
+              if (curNode) {
+                const list = [...curNode.children || []].filter((item) => item.type === 'node');
+                this.renderTopologyData = this.getDataByPage(curNode.current, list);
+                console.log(this.renderTopologyData, 1545545);
+              }
+            }
+          }
+          const checkedNodeIdList = value.filter((item) => item.checked).map((v) => v.id);
+          // console.log(checkedNodeIdList, value, this.curSelectNode.id, this.renderTopologyData, 564646);
+          this.$nextTick(() => {
+            this.renderTopologyData.forEach((item) => {
+              this.$refs.topologyTableRef
+                && this.$refs.topologyTableRef.toggleRowSelection(item, checkedNodeIdList.includes(item.id));
+            });
+          });
+        }
+      },
+
       setDefaultSelect (payload) {
         const allData = this.allData.filter(item => item.disabled).map(item => item.id);
         return !allData.includes(payload.id.toString());
@@ -505,7 +521,6 @@
       isExistAsync (payload) {
         // (asyncNode && asyncNode.parentId === payload.nodeId)
         const asyncNode = this.allData.find((item) => item.type === 'async');
-        console.log(asyncNode, 454554);
         // if (!asyncNode) {
         //     return false
         // }
@@ -594,11 +609,11 @@
         const flag = !node.async && isSameLevelExistSync;
         const asyncIconWidth = 5;
         if (!node.level) {
-          if (flag) {
-            return {
-              paddingLeft: `${this.leftBaseIndent + asyncIconWidth}px`
-            };
-          }
+          // if (flag) {
+          //   return {
+          //     paddingLeft: `${this.leftBaseIndent + asyncIconWidth}px`
+          //   };
+          // }
           return {
             paddingLeft: `${this.leftBaseIndent}px`
           };
@@ -663,7 +678,7 @@
       expandNode (node, index, isExpand) {
         const flag = this.getExpandedDisabled(index);
         const canExpanded = this.isExistAsync(node) ? node.children && node.children.length : true;
-        console.log(flag || !canExpanded, this.isExistAsync(node), 112452);
+        console.log(flag, canExpanded, this.isExistAsync(node), 112452);
         if (flag || !canExpanded) {
           return;
         }
@@ -722,13 +737,11 @@
       },
 
       // 选择当前节点，展示右侧表格数据
-      handleSelectNode (node, index, isExpand) {
-        if (!['node'].includes(node.type)) {
-          return;
-        }
-        this.curSelectNode = Object.assign({}, node);
+      handleSelectNode (node, index) {
         this.curSelectNodeIndex = index;
-        this.expandNode(node, index, isExpand);
+        this.curSelectNode = Object.assign({}, node);
+        console.log(index, this.allData);
+        this.$emit('async-load-table-nodes', node, index, false);
       },
 
       handleNodeChecked (value, node) {
@@ -754,13 +767,8 @@
           this.pressIndex = index;
           this.pressLevels.push(node.level);
         }
-        this.curSelectNode = Object.assign({}, node);
-        this.curSelectNodeIndex = index;
         this.handleNodeChecked(newVal, node);
         this.$emit('on-select', newVal, node);
-        if (node.async) {
-          this.$emit('async-load-table-nodes', node, index, false);
-        }
       },
 
       handlePageChange (current) {
@@ -774,9 +782,28 @@
         // }
         this.$emit('on-page-change', current, this.allData[this.allData.length - 1]);
       },
+      
+      getDataByPage (page, list) {
+        if (!page) {
+          this.subPagination.current = page = 1;
+        }
+        let startIndex = (page - 1) * this.subPagination.limit;
+        let endIndex = page * this.subPagination.limit;
+        if (startIndex < 0) {
+          startIndex = 0;
+        }
+        if (endIndex > list.length) {
+          endIndex = list.length;
+        }
+        return list.slice(startIndex, endIndex);
+      },
 
       handleSubPageChange (current) {
-        this.$emit('on-sub-page-change', current, this.renderTopologyData[this.renderTopologyData.length - 1]);
+        const index = this.allData.findIndex(item => item.parentSyncId === this.curSelectNode.id && item.type === 'load');
+        if (index > -1) {
+          this.$set(this.allData[index], 'current', current - 1);
+          this.$emit('on-sub-page-change', this.allData[index], index);
+        }
       },
 
       fetchSelectedGroups (type, payload, row) {
@@ -949,12 +976,17 @@
     }
 
     .node-radio {
-      display: inline-block;
+      /* display: inline-block; */
+      display: flex;
       .bk-form-checkbox {
         position: relative;
         margin-right: 0;
         padding: 0;
-        top: -2px;
+        /* top: -2px; */
+      }
+      .tree-node-name {
+        margin-left: 10px;
+        font-size: 12px;
       }
       /* .bk-checkbox-text {
           max-width: 200px;

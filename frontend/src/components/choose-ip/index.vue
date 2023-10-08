@@ -14,10 +14,10 @@
         :placeholder="curPlaceholder"
         @on-search="handleSearch" />
       <div class="topology-tree-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
-        <template v-if="treeData.length > 0 && !isLoading">
+        <template v-if="renderTopologyData.length > 0 && !isLoading">
           <topology-tree
             ref="topologyRef"
-            :all-data="treeData"
+            :all-data="renderTopologyData"
             :search-value="hasSearchValues"
             :cur-chain="curChain"
             :is-filter="isFilter"
@@ -34,7 +34,7 @@
             @async-load-nodes="handleAsyncNodes"
             @async-load-table-nodes="handleAsyncNodes" />
         </template>
-        <template v-if="treeData.length < 1 && !isLoading">
+        <template v-if="renderTopologyData.length < 1 && !isLoading">
           <div class="empty-wrapper">
             <ExceptionEmpty
               :type="emptyData.type"
@@ -211,6 +211,15 @@
     computed: {
       isOnlyLevel () {
         return this.treeData.every((item) => !item.async && item.level === 0 && item.visiable);
+      },
+      renderTopologyData () {
+        const hasNode = {};
+        const list = this.treeData.reduce((curr, next) => {
+          // eslint-disable-next-line no-unused-expressions
+          hasNode[next.id] ? '' : hasNode[next.id] = true && curr.push(next);
+          return curr;
+        }, []);
+        return list;
       }
     },
     watch: {
@@ -812,7 +821,7 @@
       },
 
       async handleAsyncNodes (node, index, flag) {
-        console.log('handleAsyncNodes', node);
+        console.log('handleAsyncNodes', node, index);
         window.changeAlert = true;
         const asyncItem = {
                     ...ASYNC_ITEM,
@@ -1191,7 +1200,7 @@
         }
       },
 
-      // 单个分页
+      // 单层拓扑分页
       async handlePageChange (page, node) {
         const chainLen = this.curChain.length;
         let keyword = this.curKeyword;
@@ -1322,10 +1331,9 @@
       },
 
       // 多层拓扑分页
-      async handleSubPageChange (page, node) {
-        console.log(page, node);
-        node.current = page - 1;
-        this.handleLoadMore(node, 100);
+      async handleSubPageChange (node, index) {
+        console.log(node, index, this.renderTopologyData);
+        this.handleLoadMore(node, index);
       }
     }
   };
