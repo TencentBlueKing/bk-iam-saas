@@ -18,7 +18,7 @@
       </custom-perm-system-policy>
     </template>
     <template v-if="isEmpty">
-      <div class="iam-custom-perm-empty-wrapper">
+      <div>
         <!-- <iam-svg /> -->
         <ExceptionEmpty
           :type="emptyData.type"
@@ -131,15 +131,6 @@
         height: calc(100vh - 204px);
         .iam-perm-ext-cls {
             margin-top: 10px;
-        }
-        .iam-custom-perm-empty-wrapper {
-            img {
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                width: 120px;
-            }
         }
     }
 </style>

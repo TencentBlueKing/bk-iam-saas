@@ -1712,7 +1712,6 @@
             }
           }
         });
-        console.log(aggregations, 45455);
         return {
           flag,
           actions: actionList,

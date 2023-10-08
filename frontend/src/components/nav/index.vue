@@ -878,8 +878,7 @@
     justify-content: space-between;
 }
 
-.iam-nav-select-dropdown-content
-  .bk-big-tree {
+  .iam-nav-select-dropdown-content .bk-big-tree {
     &-node {
         padding: 0 16px;
         .node-options {
@@ -901,6 +900,12 @@
         color: #fff !important;
         opacity: .6;
         font-size: 12px;
+    }
+  }
+
+  .iam-nav-select-dropdown-content {
+    .bk-loading {
+      background-color: transparent !important;;
     }
   }
 

@@ -109,12 +109,6 @@
               v-if="isSelectSystem"
               class="aggregate-action-group"
               style="min-width: 108px; position: relative;">
-              <iam-guide
-                type="rating_manager_merge_action"
-                direction="right"
-                :loading="isLoading"
-                :style="renderLabelWidth('rating_manager_merge_action_guide')"
-                :content="$t(`m.guide['聚合操作']`)" />
               <div
                 v-for="item in AGGREGATION_EDIT_ENUM"
                 :key="item.value"
@@ -149,7 +143,6 @@
                 :backup-list="aggregationsTableData"
                 @on-delete="handleDelete"
                 @on-aggregate-delete="handleAggregateDelete"
-                @on-select="handleAttrValueSelected"
                 @on-clear-all="handleDeleteResourceAll"
               />
             </div>
