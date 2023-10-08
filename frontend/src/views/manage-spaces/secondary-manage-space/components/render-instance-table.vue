@@ -897,7 +897,8 @@
         window.changeDialog = true;
         const aggregateResourceParams = {
           ...data.aggregateResourceType[data.selectedIndex],
-          curAggregateSystemId: data.system_id
+          curAggregateSystemId: data.system_id,
+          actionsId: data.actions.map((item) => item.id)
         };
         this.selectedIndex = data.selectedIndex;
         this.aggregateResourceParams = _.cloneDeep(aggregateResourceParams);

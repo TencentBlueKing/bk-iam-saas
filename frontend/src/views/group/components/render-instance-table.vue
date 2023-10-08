@@ -537,7 +537,6 @@
           if (value && aggregateResourceType[selectedIndex]) {
             let displayValue = aggregateResourceType[selectedIndex].displayValue;
             if (isNoLimited || empty) {
-              console.log(isNoLimited, empty);
               displayValue = value;
             }
             return displayValue;
@@ -912,7 +911,6 @@
         if (conditions.length < 1) {
           return [];
         }
-
         const instances = actions.map(item => {
           const instancesItem = item.resource_groups[0].related_resource_types[0].condition[0]
             && item.resource_groups[0].related_resource_types[0].condition[0].instances;
@@ -1131,7 +1129,8 @@
         const aggregateResourceParams = {
           ...data.aggregateResourceType[data.selectedIndex],
           curAggregateSystemId: data.system_id,
-          isNoLimited: data.isNoLimited || false
+          isNoLimited: data.isNoLimited || false,
+          actionsId: data.actions.map((item) => item.id)
         };
         this.selectedIndex = data.selectedIndex;
         window.changeDialog = true;
