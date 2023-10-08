@@ -71,7 +71,7 @@
             mode="create"
             ref="resInstanceTableRef"
             :list="tableList"
-            :authorization="curAuthorizationData"
+            :authorization="curAuthorizationData()"
             :original-list="tableListBackup"
             :is-all-expanded="isAllExpanded"
             :group-id="groupId"
@@ -326,11 +326,13 @@
           return this.user.role.type === 'super_manager';
       },
       curAuthorizationData () {
+        return () => {
           const data = Object.assign(
             this.authorizationData,
             this.authorizationDataByCustom,
             this.authorizationDataClone);
           return data;
+        };
       }
     },
     watch: {
@@ -456,8 +458,8 @@
           console.log('this.groupSystemList', this.groupSystemList);
           for (let i = 0; i < this.groupSystemList.length; i++) {
             this.groupSystemList[i].count = this.groupSystemList[i].custom_policy_count;
-            this.fetchAggregationAction(this.groupSystemList[i].id);
-            this.fetchAuthorizationScopeActions(this.groupSystemList[i].id);
+            await this.fetchAggregationAction(this.groupSystemList[i].id);
+            await this.fetchAuthorizationScopeActions(this.groupSystemList[i].id);
             if (this.groupSystemList[i].count > 0) {
               await this.getGroupCustomPolicy(this.groupSystemList[i]);
             }
