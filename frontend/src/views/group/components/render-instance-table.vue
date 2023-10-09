@@ -1667,10 +1667,10 @@
                   }
                 }
               } else {
+                const scopeAction = _.cloneDeep(curCopyData.find(_ => item.actions.map((v) => v.id).includes(_.id)));
                 item.aggregateResourceType && item.aggregateResourceType.forEach(aggregateResourceItem => {
                   const systemId = this.isSuperManager
                     ? aggregateResourceItem.system_id : item.system_id;
-                  const scopeAction = _.cloneDeep(curCopyData.find(_ => item.actions.map((v) => v.id).includes(_.id)));
                   if (`${systemId}${aggregateResourceItem.id}` === this.curCopyKey && scopeAction) {
                     item.instances = _.cloneDeep(tempArrgegateData);
                     this.instanceKey = aggregateResourceItem.id;
