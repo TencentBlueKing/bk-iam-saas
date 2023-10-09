@@ -1,143 +1,151 @@
 <template>
-  <div class="iam-my-perm-wrapper">
-    <div class="header">
-      <bk-button
-        v-if="!externalSystemsLayout.myPerm.hideApplyBtn"
-        data-test-id="myPerm_btn_applyPerm"
-        type="button"
-        theme="primary"
-        style="margin-bottom: 16px;"
-        @click="handleGoApply">
-        {{ $t(`m.common['申请权限']`) }}
-      </bk-button>
-      <bk-button
-        data-test-id="myPerm_btn_batchRenewal"
-        style="margin: 0 6px 16px 6px;"
-        :disabled="externalSystemsLayout.myPerm.hideApplyBtn ? isNoExternalRenewal : (isEmpty || isNoRenewal)"
-        @click="handleBatchRenewal">
-        {{ $t(`m.renewal['权限续期']`) }}
-      </bk-button>
+  <div>
+    <div class="iam-my-perm-wrapper">
+      <div class="header">
+        <bk-button
+          v-if="!externalSystemsLayout.myPerm.hideApplyBtn"
+          data-test-id="myPerm_btn_applyPerm"
+          type="button"
+          theme="primary"
+          style="margin-bottom: 16px;"
+          @click="handleGoApply">
+          {{ $t(`m.common['申请权限']`) }}
+        </bk-button>
+        <bk-button
+          data-test-id="myPerm_btn_batchRenewal"
+          style="margin: 0 6px 16px 6px;"
+          :disabled="externalSystemsLayout.myPerm.hideApplyBtn ? isNoExternalRenewal : (isEmpty || isNoRenewal)"
+          @click="handleBatchRenewal">
+          {{ $t(`m.renewal['权限续期']`) }}
+        </bk-button>
+        <div
+          :class="[
+            'info-renewal',
+            {
+              'external-info-renewal': externalSystemsLayout.myPerm.hideApplyBtn,
+              'info-renewal-lang': !['zh-cn'].includes(CUR_LANGUAGE)
+            }
+          ]"
+          style="background: #000"
+          v-bk-tooltips="$t(`m.renewal['没有需要续期的权限']`)"
+          v-if="externalSystemsLayout.myPerm.hideApplyBtn ? isNoExternalRenewal : (isEmpty || isNoRenewal)"
+        >
+        </div>
+        <bk-button
+          v-if="enablePermissionHandover.toLowerCase() === 'true'"
+          :disabled="isNoTransfer"
+          data-test-id="myPerm_btn_transferPerm"
+          type="button"
+          style="margin-bottom: 16px;"
+          @click="handleGoPermTransfer">
+          {{ $t(`m.permTransfer['权限交接']`) }}
+        </bk-button>
+        <div
+          v-if="isNoTransfer"
+          :class="[
+            'info-sys',
+            {
+              'external-info-sys': externalSystemsLayout.myPerm.hideApplyBtn,
+              'info-sys-lang': !['zh-cn'].includes(CUR_LANGUAGE)
+            }
+          ]"
+          style="background: #000"
+          v-bk-tooltips="$t(`m.permTransfer['您还没有权限，无需交接']`)">
+        </div>
+        <bk-button
+          v-if="enableTemporaryPolicy.toLowerCase() === 'true'"
+          data-test-id="myPerm_btn_temporaryPerm"
+          type="button"
+          style="margin-bottom: 16px;"
+          @click="handleGoApplyProvisionPerm">
+          {{ $t(`m.perm['临时权限申请']`) }}
+        </bk-button>
+      </div>
       <div
+        v-if="externalSystemsLayout.myPerm.hideApplyBtn ? !isNoExternalRenewal : !isNoRenewal"
         :class="[
-          'info-renewal',
+          'redCircle',
           {
-            'external-info-renewal': externalSystemsLayout.myPerm.hideApplyBtn,
-            'info-renewal-lang': !['zh-cn'].includes(CUR_LANGUAGE)
+            'redCircle-lang': !['zh-cn'].includes(CUR_LANGUAGE),
+            'external-redCircle': externalSystemsLayout.myPerm.hideApplyBtn,
+            'external-redCircle-lang': !['zh-cn'].includes(CUR_LANGUAGE)
+              && externalSystemsLayout.myPerm.hideApplyBtn
           }
         ]"
-        style="background: #000"
-        v-bk-tooltips="$t(`m.renewal['没有需要续期的权限']`)"
-        v-if="externalSystemsLayout.myPerm.hideApplyBtn ? isNoExternalRenewal : (isEmpty || isNoRenewal)"
-      >
-      </div>
-      <bk-button
-        v-if="enablePermissionHandover.toLowerCase() === 'true'"
-        :disabled="isNoTransfer"
-        data-test-id="myPerm_btn_transferPerm"
-        type="button"
-        style="margin-bottom: 16px;"
-        @click="handleGoPermTransfer">
-        {{ $t(`m.permTransfer['权限交接']`) }}
-      </bk-button>
-      <div
-        v-if="isNoTransfer"
-        :class="[
-          'info-sys',
-          {
-            'external-info-sys': externalSystemsLayout.myPerm.hideApplyBtn,
-            'info-sys-lang': !['zh-cn'].includes(CUR_LANGUAGE)
-          }
-        ]"
-        style="background: #000"
-        v-bk-tooltips="$t(`m.permTransfer['您还没有权限，无需交接']`)">
-      </div>
-      <bk-button
-        v-if="enableTemporaryPolicy.toLowerCase() === 'true'"
-        data-test-id="myPerm_btn_temporaryPerm"
-        type="button"
-        style="margin-bottom: 16px;"
-        @click="handleGoApplyProvisionPerm">
-        {{ $t(`m.perm['临时权限申请']`) }}
-      </bk-button>
+      />
+      <template>
+        <template v-if="isEmpty">
+          <div class="empty-wrapper">
+            <ExceptionEmpty
+              style="background: #f5f6fa"
+              :empty-text="$t(`m.common['您还没有任何权限']`)"
+            />
+          </div>
+        </template>
+        <template v-else>
+          <div>
+            <IamResourceCascadeSearch
+              ref="iamResourceSearchRef"
+              :active="active"
+              @on-remote-table="handleRemoteTable"
+              @on-refresh-table="handleRefreshTable"
+              @on-input-value="handleInputValue"
+            />
+          </div>
+          <bk-tab
+            ref="tabRef"
+            type="unborder-card"
+            ext-cls="iam-my-perm-tab-cls"
+            :active.sync="active"
+            :key="tabKey"
+            @tab-change="handleTabChange">
+            <bk-tab-panel
+              v-for="(panel, index) in panels"
+              v-bind="panel"
+              :data-test-id="`myPerm_tabPanel_${panel.name}`"
+              :key="index">
+              <template slot="label">
+                <span class="panel-name">
+                  <span>{{ panel.label }}</span>
+                  <span style="color:##3a84ff;" v-if="Object.keys(curSearchParams).length">
+                    ({{panel.count}})
+                  </span>
+                </span>
+              </template>
+              <div
+                class="content-wrapper"
+                v-bkloading="{ isLoading: componentLoading, opacity: 1 }">
+                <component
+                  v-if="active === panel.name"
+                  ref="childPermRef"
+                  :is="active"
+                  :total-count="panel.count"
+                  :personal-group-list="personalGroupList"
+                  :system-list="systemList"
+                  :tep-system-list="teporarySystemList"
+                  :department-group-list="departmentGroupList"
+                  :empty-data="curEmptyData"
+                  :cur-search-params="curSearchParams"
+                  :cur-search-pagination="curSearchPagination"
+                  :is-search-perm="isSearchPerm"
+                  :check-group-list="panels[0].selectList"
+                  @refresh="fetchData"
+                  @on-select-group="handleSelectGroup"
+                  @on-clear="handleEmptyClear"
+                  @on-refresh="handleEmptyRefresh"
+                ></component>
+              </div>
+            </bk-tab-panel>
+          </bk-tab>
+        </template>
+      </template>
     </div>
     <div
-      v-if="externalSystemsLayout.myPerm.hideApplyBtn ? !isNoExternalRenewal : !isNoRenewal"
-      :class="[
-        'redCircle',
-        {
-          'redCircle-lang': !['zh-cn'].includes(CUR_LANGUAGE),
-          'external-redCircle': externalSystemsLayout.myPerm.hideApplyBtn,
-          'external-redCircle-lang': !['zh-cn'].includes(CUR_LANGUAGE)
-            && externalSystemsLayout.myPerm.hideApplyBtn
-        }
-      ]"
-    />
-    <template>
-      <template v-if="isEmpty">
-        <div class="empty-wrapper">
-          <ExceptionEmpty
-            style="background: #f5f6fa"
-            :empty-text="$t(`m.common['您还没有任何权限']`)"
-          />
-        </div>
-      </template>
-      <template v-else>
-        <div>
-          <IamResourceCascadeSearch
-            ref="iamResourceSearchRef"
-            :active="active"
-            @on-remote-table="handleRemoteTable"
-            @on-refresh-table="handleRefreshTable"
-            @on-input-value="handleInputValue"
-          />
-        </div>
-        <bk-tab
-          ref="tabRef"
-          type="unborder-card"
-          ext-cls="iam-my-perm-tab-cls"
-          :active.sync="active"
-          :key="tabKey"
-          @tab-change="handleTabChange">
-          <bk-tab-panel
-            v-for="(panel, index) in panels"
-            v-bind="panel"
-            :data-test-id="`myPerm_tabPanel_${panel.name}`"
-            :key="index">
-            <template slot="label">
-              <span class="panel-name">
-                <span>{{ panel.label }}</span>
-                <span style="color:##3a84ff;" v-if="Object.keys(curSearchParams).length">
-                  ({{panel.count}})
-                </span>
-              </span>
-            </template>
-            <div
-              class="content-wrapper"
-              v-bkloading="{ isLoading: componentLoading, opacity: 1 }">
-              <component
-                v-if="active === panel.name"
-                ref="childPermRef"
-                :is="active"
-                :total-count="panel.count"
-                :personal-group-list="personalGroupList"
-                :system-list="systemList"
-                :tep-system-list="teporarySystemList"
-                :department-group-list="departmentGroupList"
-                :empty-data="curEmptyData"
-                :cur-search-params="curSearchParams"
-                :cur-search-pagination="curSearchPagination"
-                :is-search-perm="isSearchPerm"
-                :check-group-list="panels[0].selectList"
-                @refresh="fetchData"
-                @on-select-group="handleSelectGroup"
-                @on-clear="handleEmptyClear"
-                @on-refresh="handleEmptyRefresh"
-              ></component>
-            </div>
-          </bk-tab-panel>
-        </bk-tab>
-      </template>
-    </template>
+      v-if="!externalSystemsLayout.myPerm.hideApplyBtn"
+      class="custom-footer-wrapper"
+    >
+      <the-footer />
+    </div>
   </div>
 </template>
 <script>
@@ -151,6 +159,7 @@
   import GroupPerm from './group-perm/index.vue';
   import DepartmentGroupPerm from './department-group-perm/index.vue';
   import IamResourceCascadeSearch from '@/components/iam-resource-cascade-search';
+  import theFooter from '@/components/footer/index.vue';
 
   export default {
     name: 'MyPerm',
@@ -159,7 +168,8 @@
       TeporaryCustomPerm,
       GroupPerm,
       DepartmentGroupPerm,
-      IamResourceCascadeSearch
+      IamResourceCascadeSearch,
+      theFooter
     },
     data () {
       return {

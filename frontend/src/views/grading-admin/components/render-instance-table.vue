@@ -268,6 +268,8 @@
         curCopyDataId: '',
         emptyResourceGroupsList: [],
         emptyResourceGroupsName: [],
+        curSystemActions: [],
+        relatedActionsList: [],
         isExpandTable: false,
         curFilterSystem: ''
       };
@@ -394,6 +396,44 @@
       };
     },
     methods: {
+      async fetchActions (systemId) {
+        const params = {
+          system_id: systemId,
+          user_id: this.user.username
+        };
+        try {
+          const res = await this.$store.dispatch('permApply/getActions', params);
+          this.curSystemActions = _.cloneDeep(res.data);
+          this.handleActionLinearData();
+        } catch (e) {
+          console.error(e);
+          this.bkMessageInstance = this.$bkMessage({
+            limit: 1,
+            theme: 'error',
+            message: e.message || e.data.msg || e.statusText,
+            ellipsisLine: 2,
+            ellipsisCopy: true
+          });
+        }
+      },
+
+      handleActionLinearData () {
+        const linearActions = [];
+        this.curSystemActions.forEach((item) => {
+          item.actions = item.actions.filter(v => !v.hidden);
+          item.actions.forEach(act => {
+            linearActions.push(act);
+          });
+          (item.sub_groups || []).forEach(sub => {
+            sub.actions = sub.actions.filter(v => !v.hidden);
+            sub.actions.forEach(act => {
+              linearActions.push(act);
+            });
+          });
+        });
+        this.relatedActionsList = _.cloneDeep(linearActions);
+      },
+
       // 过滤方法
       systemFilterMethod (value, row, column) {
         const property = column.property;
@@ -612,11 +652,25 @@
           this.isShowResourceInstanceSideslider = false;
           return;
         }
-
-        const { isMainAction, related_actions } = this.tableList[this.curIndex];
+        const { isMainAction, related_actions, id, system_id: curSystemId } = this.tableList[this.curIndex];
         // 如果为主操作
         if (isMainAction) {
           await this.handleMainActionSubmit(data, related_actions);
+        }
+        // 处理编辑入口，逐项编辑授权边界
+        if (!isMainAction) {
+          await this.fetchActions(curSystemId);
+          if (this.relatedActionsList.length) {
+            const policyIdList = this.tableList.map(v => v.id);
+            const linearActionList = this.relatedActionsList.filter(item => policyIdList.includes(item.id));
+            const curActions = linearActionList.filter(item => item.id === id);
+            if (curActions.length) {
+              const relatedList = curActions.map((v) => v.related_actions);
+              if (relatedList.length) {
+                await this.handleMainActionSubmit(data, relatedList);
+              }
+            }
+          }
         }
         window.changeAlert = false;
         this.resourceInstanceSidesliderTitle = '';

@@ -178,7 +178,8 @@
           tip: '',
           tipType: ''
         },
-        isAny: false
+        isAny: false,
+        isUnlimited: false
       };
     },
     computed: {
@@ -216,7 +217,7 @@
             if (this.params.curAggregateSystemId) {
               await this.fetchAuthorizationScopeActions(this.params.curAggregateSystemId);
             }
-            if ((this.isSuperManager && !this.isHasDefaultData) || this.isAny) {
+            if ((this.isSuperManager && !this.isHasDefaultData) || this.isAny || this.isUnlimited) {
               this.fetchData(false, true);
             } else {
               this.setSelectList(this.defaultList);
@@ -311,6 +312,17 @@
           );
           // 判断是否是任意
           this.isAny = data && data.some(item => item.id === '*');
+          if (this.params.actionsId && data.length) {
+            const curActions = data.filter((item) => this.params.actionsId.includes(item.id));
+            if (curActions.length) {
+              // 判断操作是否都是无限制
+              this.isUnlimited = curActions.every((item) =>
+                item.resource_groups && item.resource_groups.length
+                && item.resource_groups[0].related_resource_types.length
+                && item.resource_groups[0].related_resource_types[0].condition.length === 0
+              );
+            }
+          }
         } catch (e) {
           console.error(e);
           this.messageAdvancedError(e);

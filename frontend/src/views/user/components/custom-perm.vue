@@ -23,7 +23,7 @@
       </custom-perm-system-policy>
     </template>
     <template v-if="isEmpty">
-      <div class="iam-custom-perm-empty-wrapper">
+      <div>
         <ExceptionEmpty
           :type="emptyData.type"
           :empty-text="emptyData.text"
