@@ -1,9 +1,5 @@
 <template>
-  <div :class="[
-    'iam-topology-tree',
-    { 'iam-topology-tree-only': isOnlyLevel },
-    { 'bk-has-border-tree': isBorder }]
-  ">
+  <div :class="['iam-topology-tree', { 'iam-topology-tree-only': isOnlyLevel }, { 'bk-has-border-tree': isBorder }]">
     <!-- eslint-disable max-len -->
     <!-- <div class="ghost-wrapper" :style="ghostStyle" v-if="!isOnlyLevel"></div> -->
     <div class="render-wrapper" ref="content">
@@ -20,19 +16,16 @@
           @select-all="handleSelectAllChange"
         >
           <bk-table-column type="selection" align="center" :selectable="setDefaultSelect" />
-          <bk-table-column :label="formatPlaceHolder('input')">
+          <bk-table-column :label="formatPlaceHolder('table')">
             <template slot-scope="{ row }">
               {{ row.name }}
             </template>
           </bk-table-column>
           <template slot="empty">
-            <ExceptionEmpty
-            />
+            <ExceptionEmpty />
           </template>
         </bk-table>
-        <template
-          v-if="pagination.count > 0"
-        >
+        <template v-if="pagination.count > 0">
           <bk-pagination
             size="small"
             align="right"
@@ -49,93 +42,93 @@
       </template>
       <template v-else>
         <div class="multiple-topology-tree">
-          <div
-            class="multiple-topology-tree-left"
-            :style="formatLeftStyle">
+          <div class="multiple-topology-tree-left" :style="formatLeftStyle">
             <topology-input
               ref="topologyInputRef"
               :is-filter="isFilter"
               :placeholder="curPlaceholder"
-              @on-search="handleTreeSearch" />
+              @on-search="handleSearch"
+            />
             <div class="multiple-topology-tree-left-content">
-              <div
-                v-for="(item, index) in visiableData"
-                :key="item.nodeId"
-                :class="[
-                  'node-item',
-                  { 'node-item-active': item.nodeId === curSelectNode.nodeId && item.type === 'node' },
-                  { 'load-more-node': formatLoadMore(item) },
-                  { 'search-node': item.type === 'search' },
-                  { 'can-hover': item.type === 'node' && !item.loading }
-                ]"
-                :style="getNodeStyle(item)"
-                @click.stop="handleSelectNode(item, index)"
-              >
-                <template v-if="item.type === 'node' && item.level < curChain.length - 1">
-                  <Icon
-                    v-if="!isTwoLevel"
-                    bk
-                    :type="item.expanded ? 'down-shape' : 'right-shape'"
-                    :class="['arrow-icon', { 'is-disabled': getExpandedDisabled(index) || isExistAsync(item) }]"
-                    @click.stop="expandNode(item, index)"
-                  />
-                  <div class="node-radio" @click.stop>
-                    <bk-checkbox
-                      :true-value="true"
-                      :false-value="false"
-                      :disabled="item.disabled"
-                      v-model="item.checked"
-                      ext-cls="iam-topology-title-cls"
-                      :title="`ID: ${item.id}`"
-                      data-test-id="topology_checkbox_chooseip"
-                      @change="handleNodeChange(...arguments, item, index)"
-                    >
-                    </bk-checkbox>
-                    <span
-                      class="tree-node-name single-hide"
-                      :style="dragDynamicWidth(item)"
-                      :title="item.name"
-                      @click.stop="handleSelectNode(item, index)"
-                    >
-                      {{ item.name }}
-                    </span>
-                  </div>
-                </template>
-                <template v-else-if="formatLoadMore(item)">
-                  <div class="load-more-wrapper">
-                    <div
-                      :class="[
-                        'load-item',
-                        { 'loading-more': item.loadingMore },
-                        { normal: !item.loadingMore && !isExistNodeLoadMore },
-                        { 'exist-load-more': isExistNodeLoadMore }
-                      ]"
-                      @click="loadMore(item, index)"
-                    >
-                      <template v-if="!item.loadingMore">
-                        {{ item.name }}
-                      </template>
-                      <template v-else>
-                        <div
-                          class="node-load-more-loading"
-                          v-bkloading="{ isLoading: item.loadingMore, opacity: 1, theme: 'primary', size: 'mini' }"
-                        ></div>
-                      </template>
-                    </div>
-                  </div>
-                </template>
-                <template v-else-if="item.type === 'search-empty'">
-                  <div class="search-empty-wrapper">
-                    <ExceptionEmpty
-                      :type="item.name === $t(`m.common['搜索结果为空']`) ? 'search-empty' : 500"
-                      :tip-type="item.name === $t(`m.common['搜索结果为空']`) ? 'search' : 'refresh'"
-                      :empty-text="item.name === $t(`m.common['搜索结果为空']`) ? item.name : '数据不存在'"
-                      @on-clear="handleEmptyClear(...arguments, item, index)"
-                      @on-refresh="handleEmptyRefresh(...arguments, item, index)"
+              <template>
+                <div
+                  v-for="(item, index) in allData"
+                  :key="item.nodeId"
+                  :class="[
+                    'node-item',
+                    { 'node-item-active': item.nodeId === selectNodeData.nodeId && item.type === 'node' },
+                    { 'load-more-node': formatLoadMore(item) },
+                    { 'search-node': item.type === 'search' },
+                    { 'can-hover': item.type === 'node' && !item.loading }
+                  ]"
+                  :style="getNodeStyle(item)"
+                  @click.stop="handleSelectNode(item, index)"
+                >
+                  <template v-if="item.type === 'node' && item.level < curChain.length - 1">
+                    <Icon
+                      v-if="!isTwoLevel"
+                      bk
+                      :type="item.expanded ? 'down-shape' : 'right-shape'"
+                      :class="['arrow-icon', { 'is-disabled': getExpandedDisabled(index) || isExistAsync(item) }]"
+                      @click.stop="expandNode(item, index)"
                     />
-                  </div>
-                </template>
-                <!-- <template v-else-if="item.type === 'search-loading'">
+                    <div class="node-radio" @click.stop>
+                      <bk-checkbox
+                        :true-value="true"
+                        :false-value="false"
+                        :disabled="item.disabled"
+                        v-model="item.checked"
+                        ext-cls="iam-topology-title-cls"
+                        :title="`ID: ${item.id}`"
+                        data-test-id="topology_checkbox_chooseip"
+                        @change="handleNodeChange(...arguments, item, index)"
+                      >
+                      </bk-checkbox>
+                      <span
+                        class="tree-node-name single-hide"
+                        :style="dragDynamicWidth(item)"
+                        :title="item.name"
+                        @click.stop="handleSelectNode(item, index)"
+                      >
+                        {{ item.name }}
+                      </span>
+                    </div>
+                  </template>
+                  <template v-else-if="formatLoadMore(item)">
+                    <div class="load-more-wrapper">
+                      <div
+                        :class="[
+                          'load-item',
+                          { 'loading-more': item.loadingMore },
+                          { normal: !item.loadingMore && !isExistNodeLoadMore },
+                          { 'exist-load-more': isExistNodeLoadMore }
+                        ]"
+                        @click.stop="loadMore(item, index)"
+                      >
+                        <template v-if="!item.loadingMore">
+                          {{ item.name }}
+                        </template>
+                        <template v-else>
+                          <div
+                            class="node-load-more-loading"
+                            v-bkloading="{ isLoading: item.loadingMore, opacity: 1, theme: 'primary', size: 'mini' }"
+                          ></div>
+                        </template>
+                      </div>
+                    </div>
+                  </template>
+                  <template v-else-if="item.type === 'search-empty' && curChain[curChain.length - 1] === item.level">
+                    <div class="search-empty-wrapper">
+                      <ExceptionEmpty
+                        :type="item.name === $t(`m.common['搜索结果为空']`) ? 'search-empty' : 500"
+                        :tip-type="item.name === $t(`m.common['搜索结果为空']`) ? 'search' : 'refresh'"
+                        :empty-text="item.name === $t(`m.common['搜索结果为空']`) ? item.name : '数据不存在'"
+                        @on-clear="handleEmptyClear(...arguments, item, index)"
+                        @on-refresh="handleEmptyRefresh(...arguments, item, index)"
+                      />
+                    </div>
+                  </template>
+                  <!-- <template v-else-if="item.type === 'search-loading'">
                   <div
                     class="search-loading-wrapper"
                     v-bkloading="{ isLoading: true, opacity: 1, theme: 'primary', size: 'mini' }"
@@ -145,7 +138,7 @@
                   <spin-loading ext-cls="loading" />
                   <span class="loading-text">{{ $t(`m.common['加载中']`) }}</span>
                 </div>
-               <template v-else>
+                <template v-else>
                   <topology-input
                     :ref="`topologyInputRef${index}`"
                     :scene="'tree'"
@@ -155,16 +148,26 @@
                     @on-search="handleSearch(...arguments, item, index)"
                   />
                 </template> -->
-              </div>
+                </div>
+              </template>
+              <template v-if="!visiableData.length">
+                <ExceptionEmpty
+                  :type="item.name === $t(`m.common['搜索结果为空']`) ? 'search-empty' : 500"
+                  :tip-type="item.name === $t(`m.common['搜索结果为空']`) ? 'search' : 'refresh'"
+                  :empty-text="item.name === $t(`m.common['搜索结果为空']`) ? item.name : '数据不存在'"
+                  @on-clear="handleEmptyClear(...arguments, item, index)"
+                  @on-refresh="handleEmptyRefresh(...arguments, item, index)"
+                />
+              </template>
             </div>
           </div>
           <div class="multiple-topology-tree-right">
             <topology-input
-              :ref="`topologyInputRef${curSelectNodeIndex}`"
-              :placeholder="curSelectNode.placeholder || ''"
-              :is-filter="curSelectNode.isFilter || false"
-              :disabled="getSearchDisabled(curSelectNode)"
-              @on-search="handleSearch(...arguments, curSelectNode, curSelectNodeIndex)"
+              :ref="`topologyInputRef${selectNodeDataIndex}`"
+              :placeholder="formatPlaceHolder('input') || ''"
+              :is-filter="selectNodeData.isFilter || false"
+              :disabled="getSearchDisabled(selectNodeData)"
+              @on-search="handleTableSearch(...arguments, selectNodeData, selectNodeDataIndex)"
             />
             <div class="multiple-topology-tree-right-content">
               <bk-table
@@ -177,6 +180,7 @@
                 :data="renderTopologyData"
                 @select="handleSelectChange"
                 @select-all="handleSelectAllChange"
+                v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
               >
                 <bk-table-column type="selection" align="center" :selectable="setDefaultSelect" />
                 <bk-table-column :label="formatPlaceHolder('table')">
@@ -186,12 +190,16 @@
                 </bk-table-column>
                 <template slot="empty">
                   <ExceptionEmpty
+                    v-if="!tableLoading"
+                    :type="formatTableEmpty('type', tableEmptyData)"
+                    :tip-type="formatTableEmpty('tipType', tableEmptyData)"
+                    :empty-text="formatTableEmpty('emptyText', tableEmptyData)"
+                    @on-clear="handleEmptyClear(...arguments, selectNodeData, selectNodeDataIndex)"
+                    @on-refresh="handleEmptyRefresh(...arguments, selectNodeData, selectNodeDataIndex)"
                   />
                 </template>
               </bk-table>
-              <template
-                v-if="subPagination.count > 0"
-              >
+              <template v-if="subPagination.count > 0">
                 <bk-pagination
                   size="small"
                   align="right"
@@ -202,7 +210,7 @@
                   :current.sync="subPagination.current"
                   :count="subPagination.count"
                   :limit="subPagination.limit"
-                  @change="handleSubPageChange"
+                  @change="handleTablePageChange"
                 />
               </template>
             </div>
@@ -235,7 +243,7 @@
       },
       searchValue: {
         type: Array,
-        default: []
+        default: () => []
       },
       curChain: {
         type: Array,
@@ -269,6 +277,21 @@
       curPlaceholder: {
         type: String,
         default: ''
+      },
+      emptyData: {
+        type: Object,
+        default: () => {
+          return {
+            type: '',
+            text: '',
+            tip: '',
+            tipType: ''
+          };
+        }
+      },
+      curTableData: {
+        type: Array,
+        default: () => []
       }
     },
     data () {
@@ -280,7 +303,7 @@
         pressLevels: [],
         levelIndex: -1, // 获取当前搜索焦点的位置索引
         offsetWidth: 180,
-        tableLoading: false,
+        tableLoading: true,
         pagination: {
           current: 1,
           limit: 100,
@@ -301,10 +324,13 @@
           tip: '',
           tipType: ''
         },
+        tableEmptyData: {},
         renderTopologyData: [],
+        checkedNodeIdList: [],
         currentSelectedNode: [],
-        curSelectNode: {},
-        curSelectNodeIndex: -1
+        selectNodeData: {},
+        selectNodeDataIndex: -1,
+        curSearchMode: ''
       };
     },
     computed: {
@@ -320,7 +346,7 @@
       },
       // 返回只有一层数据的排版
       isOnlyLevel () {
-        return this.visiableData.every((item) => !item.async && item.level === 0 && this.curChain.length < 2);
+        return this.visiableData.every((item) => !item.async && item.level === 0) && this.curChain.length < 2;
       },
       // 返回两层数据的排版
       isTwoLevel () {
@@ -338,7 +364,8 @@
         return (payload) => {
           // const offsetWidth = this.getDragDynamicWidth() > 600 ? 560 + this.getDragDynamicWidth() - 600 : 560;
           const offsetWidth = this.getDragDynamicWidth
-            ? this.getDragDynamicWidth() - 500 : 460 + this.getDragDynamicWidth() - 500;
+            ? this.getDragDynamicWidth() - 500
+            : 460 + this.getDragDynamicWidth() - 500;
           const isSameLevelExistSync = this.allData
             .filter((item) => item.level === payload.level)
             .some((item) => item.type === 'node' && item.async);
@@ -368,12 +395,12 @@
           }
           if (payload.async) {
             return {
-              maxWidth: offsetWidth - ((payload.level + 1) * this.leftBaseIndent) - asyncLevelWidth - searchIconWidth + 'px'
+              maxWidth: offsetWidth - (payload.level + 1) * this.leftBaseIndent - asyncLevelWidth - searchIconWidth + 'px'
             };
           }
           if (isSameLevelExistSync && ['search', 'search-empty'].includes(payload.type)) {
             return {
-              maxWidth: offsetWidth - ((payload.level + 1) * this.leftBaseIndent) + 'px'
+              maxWidth: offsetWidth - (payload.level + 1) * this.leftBaseIndent + 'px'
             };
           }
           if (flag) {
@@ -390,7 +417,9 @@
         return (payload) => {
           const typeMap = {
             input: () => {
-              return this.$t(`m.info['搜索动态key值']`, { value: this.curChain.length ? this.curChain[this.curChain.length - 1].name : '' });
+              return this.$t(`m.info['搜索动态key值']`, {
+                value: this.curChain.length ? this.curChain[this.curChain.length - 1].name : ''
+              });
             },
             table: () => {
               return this.curChain.length ? this.curChain[this.curChain.length - 1].name : '';
@@ -401,12 +430,49 @@
       },
       formatLeftStyle () {
         return {
-          'width': this.getDragDynamicWidth ? `${this.getDragDynamicWidth() - 200}px` : '600px'
+          width: this.getDragDynamicWidth ? `${this.getDragDynamicWidth() - 200}px` : '600px'
         };
       },
       formatLoadMore () {
         return (payload) => {
           return payload.type === 'load' && payload.level < this.curChain.length - 1;
+        };
+      },
+      formatTableEmpty () {
+        return (mode, payload) => {
+          const typeMap = {
+            type: () => {
+              if (Object.keys(payload).length) {
+                if (payload.name === this.$t(`m.common['搜索结果为空']`)) {
+                  return 'search-empty';
+                }
+                return 500;
+              } else {
+                return 'empty';
+              }
+            },
+            tipType: () => {
+              if (Object.keys(payload).length) {
+                if (payload.name === this.$t(`m.common['搜索结果为空']`)) {
+                  return 'search';
+                }
+                return 'refresh';
+              } else {
+                return '';
+              }
+            },
+            emptyText: () => {
+              if (Object.keys(payload).length) {
+                if (payload.name === this.$t(`m.common['搜索结果为空']`)) {
+                  return payload.name;
+                }
+                return '数据不存在';
+              } else {
+                return '暂无数据';
+              }
+            }
+          };
+          return typeMap[mode]();
         };
       }
     },
@@ -442,13 +508,21 @@
         },
         immediate: true
       },
-      curSelectNodeIndex: {
+      selectNodeDataIndex: {
         handler (newValue, oldValue) {
           if (newValue !== oldValue) {
             this.subPagination = Object.assign(this.subPagination, { current: 1 });
           }
           if (newValue === -1 && !this.isOnlyLevel) {
             this.handleSelectNode(this.visiableData[0], 0);
+          }
+        },
+        immediate: true
+      },
+      emptyData: {
+        handler (value) {
+          if (this.curSearchMode === 'table') {
+            this.emptyTableData = Object.assign({}, value);
           }
         },
         immediate: true
@@ -471,30 +545,55 @@
         if (value.length) {
           if (this.isOnlyLevel) {
             this.renderTopologyData = value.filter((item) => item.type === 'node');
+            this.checkedNodeIdList = this.renderTopologyData
+              .filter((item) => item.checked)
+              .map((v) => `${v.nodeId}&${v.id}`);
+            this.$nextTick(() => {
+              this.renderTopologyData.forEach((item) => {
+                this.$refs.topologyTableRef
+                  && this.$refs.topologyTableRef.toggleRowSelection(
+                    item,
+                    this.checkedNodeIdList.includes(`${item.nodeId}&${item.id}`)
+                  );
+              });
+            });
           } else {
-            if (Object.keys(this.curSelectNode).length) {
-              const curNode = value.find((item) => item.id === this.curSelectNode.id);
+            if (Object.keys(this.selectNodeData).length) {
+              const curNode = value.find(
+                (item) => `${item.nodeId}&${item.id}` === `${this.selectNodeData.nodeId}&${this.selectNodeData.id}`
+              );
               if (curNode) {
-                const list = [...curNode.children || []].filter((item) => item.type === 'node');
+                const list = [...(curNode.children || [])].filter((item) => item.type === 'node');
+                console.log(curNode.current, list, 564564);
+                curNode.current = this.subPagination.current;
                 this.renderTopologyData = this.getDataByPage(curNode.current, list);
-                console.log(this.renderTopologyData, 1545545);
+                this.checkedNodeIdList = value
+                  .filter((item) => item.checked && item.parentId === this.selectNodeData.nodeId)
+                  .map((v) => `${this.selectNodeData.nodeId}&${v.id}`);
+                if (!curNode.children.length) {
+                  const searchEmptyData = value.find((item) => item.type === 'search-empty');
+                  if (searchEmptyData) {
+                    this.tableEmptyData = Object.assign({}, searchEmptyData);
+                  }
+                }
+                this.$nextTick(() => {
+                  this.renderTopologyData.forEach((item) => {
+                    this.$refs.topologyTableRef
+                      && this.$refs.topologyTableRef.toggleRowSelection(
+                        item,
+                        this.checkedNodeIdList.includes(`${this.selectNodeData.nodeId}&${item.id}`)
+                      );
+                  });
+                });
               }
             }
           }
-          const checkedNodeIdList = value.filter((item) => item.checked).map((v) => v.id);
-          // console.log(checkedNodeIdList, value, this.curSelectNode.id, this.renderTopologyData, 564646);
-          this.$nextTick(() => {
-            this.renderTopologyData.forEach((item) => {
-              this.$refs.topologyTableRef
-                && this.$refs.topologyTableRef.toggleRowSelection(item, checkedNodeIdList.includes(item.id));
-            });
-          });
         }
       },
 
       setDefaultSelect (payload) {
-        const allData = this.allData.filter(item => item.disabled).map(item => item.id);
-        return !allData.includes(payload.id.toString());
+        const allData = this.allData.filter((item) => item.disabled && item.type === 'node').map((item) => item.id);
+        return !allData.includes(payload.id);
       },
 
       handleKeyup ($event) {
@@ -544,31 +643,49 @@
         return this.allData.some((item) => item.type === 'search-loading');
       },
 
-      handleTreeSearch (value) {
-        if (this.$parent.handleSearch) {
-          this.$parent.handleSearch(value);
+      handleSearch (value) {
+        this.curSearchMode = 'tree';
+        this.$emit('on-search', value);
+      },
+
+      handleTableSearch (value, node, index) {
+        this.curSearchMode = 'table';
+        const curNode = this.allData.find((item) => item.parentId === node.nodeId);
+        if (curNode) {
+          this.subPagination = Object.assign(this.subPagination, { current: 1, count: 0 });
+          this.$emit('on-table-search', { value, node: curNode, index });
         }
       },
 
-      handleSubTreeSearch (value) {
-        if (this.$parent.handleSearch) {
-          this.$parent.handleSearch(value);
-        }
-      },
-
-      handleSearch (value, node, index) {
-        this.$emit('on-search', { value, node, index });
-      },
-
-      handleEmptyClear (payload, item) {
+      handleEmptyClear (payload, node, index) {
         this.$nextTick(() => {
-          this.$refs[`topologyInputRef${this.levelIndex}`][0].value = '';
+          const typeMap = {
+            table: () => {
+              this.$refs[`topologyInputRef${index}`].value = '';
+              this.handleTableSearch('', node, index);
+            },
+            tree: () => {
+              this.$refs[`topologyInputRef${index}`][0].value = '';
+              this.handleSearch('', node, index);
+            }
+          };
+          typeMap[this.curSearchMode]();
         });
       },
 
-      handleEmptyRefresh () {
+      handleEmptyRefresh (payload, node, index) {
         this.$nextTick(() => {
-          this.$refs[`topologyInputRef${this.levelIndex}`][0].value = '';
+          const typeMap = {
+            table: () => {
+              this.$refs[`topologyInputRef${index}`].value = '';
+              this.handleTableSearch('', node, index);
+            },
+            tree: () => {
+              this.$refs[`topologyInputRef${index}`][0].value = '';
+              this.handleSearch('', node, index);
+            }
+          };
+          typeMap[this.curSearchMode]();
         });
       },
 
@@ -649,7 +766,7 @@
        * 滚动回调函数
        */
       rootScroll: _.throttle(function () {
-        // this.updateRenderData(this.$el.scrollTop)
+      // this.updateRenderData(this.$el.scrollTop)
       }, 0),
 
       /**
@@ -678,7 +795,6 @@
       expandNode (node, index, isExpand) {
         const flag = this.getExpandedDisabled(index);
         const canExpanded = this.isExistAsync(node) ? node.children && node.children.length : true;
-        console.log(flag, canExpanded, this.isExistAsync(node), 112452);
         if (flag || !canExpanded) {
           return;
         }
@@ -738,10 +854,20 @@
 
       // 选择当前节点，展示右侧表格数据
       handleSelectNode (node, index) {
-        this.curSelectNodeIndex = index;
-        this.curSelectNode = Object.assign({}, node);
-        console.log(index, this.allData);
+        this.tableLoading = true;
+        this.selectNodeDataIndex = index;
+        this.selectNodeData = Object.assign({}, node);
+        if (node.id !== this.curSearchMode.id) {
+          this.$nextTick(() => {
+            this.$refs[`topologyInputRef${index}`].value = '';
+            this.tableEmptyData = Object.assign({}, {});
+            this.subPagination.current = 1;
+          });
+        }
         this.$emit('async-load-table-nodes', node, index, false);
+        setTimeout(() => {
+          this.tableLoading = false;
+        }, 0);
       },
 
       handleNodeChecked (value, node) {
@@ -768,21 +894,44 @@
           this.pressLevels.push(node.level);
         }
         this.handleNodeChecked(newVal, node);
+        this.getChildrenChecked(newVal, node);
         this.$emit('on-select', newVal, node);
+      },
+
+      // 获取子集默认选中的数据
+      getChildrenChecked (newVal, node) {
+        const childrenList = this.allData.filter((item) => item.parentId === node.nodeId);
+        const childrenIdList = childrenList.map((v) => v.id);
+        const defaultCheckedList = childrenList
+          .filter((item) => item.disabled && childrenIdList.includes(item.id))
+          .map((v) => v.id);
+        this.$nextTick(() => {
+          this.renderTopologyData.forEach((item) => {
+            if (childrenIdList.includes(item.id) && this.$refs.topologyTableRef) {
+              this.$refs.topologyTableRef.toggleRowSelection(item, newVal);
+              if (defaultCheckedList.includes(item.id)) {
+                this.$refs.topologyTableRef.toggleRowSelection(item, true);
+              }
+            }
+          });
+        });
       },
 
       handlePageChange (current) {
         this.pagination = Object.assign(this.pagination, { current });
-        // const loadNode = this.allData.find((item) => item.type === 'load');
-        // console.log(this.allData, 5545);
-        // if (loadNode) {
-        //   const { limit } = this.pagination;
-        //   const lastNode = Object.assign(loadNode, { current });
-        //   this.$emit('on-page-change', lastNode, limit);
-        // }
         this.$emit('on-page-change', current, this.allData[this.allData.length - 1]);
       },
-      
+
+      handleTablePageChange (current) {
+        const index = this.allData.findIndex(
+          (item) => item.parentId === this.selectNodeData.nodeId && item.type === 'load'
+        );
+        if (index > -1) {
+          this.$set(this.allData[index], 'current', current - 1);
+          this.$emit('on-table-page-change', this.allData[index], index);
+        }
+      },
+
       getDataByPage (page, list) {
         if (!page) {
           this.subPagination.current = page = 1;
@@ -795,14 +944,11 @@
         if (endIndex > list.length) {
           endIndex = list.length;
         }
-        return list.slice(startIndex, endIndex);
-      },
-
-      handleSubPageChange (current) {
-        const index = this.allData.findIndex(item => item.parentSyncId === this.curSelectNode.id && item.type === 'load');
-        if (index > -1) {
-          this.$set(this.allData[index], 'current', current - 1);
-          this.$emit('on-sub-page-change', this.allData[index], index);
+        console.log(startIndex, endIndex);
+        if (startIndex >= list.length) {
+          return this.curTableData;
+        } else {
+          return list.slice(startIndex, endIndex);
         }
       },
 
@@ -821,20 +967,28 @@
               this.$set(row, 'checked', false);
               this.$emit('on-select', false, row);
             }
+            console.log(this.currentSelectedNode, 5555);
           },
           all: () => {
-            const tableIdList = _.cloneDeep(this.renderTopologyData.map(v => v.id.toString()));
+            const tableIdList = _.cloneDeep(this.renderTopologyData.map((v) => v.id.toString()));
             const currentSelect = payload.filter((item) => !item.disabled);
-            const selectNode = this.currentSelectedNode.filter(item => !tableIdList.includes(item.id.toString()));
+            const selectNode = this.currentSelectedNode.filter((item) => !tableIdList.includes(item.id.toString()));
             this.currentSelectedNode = [...selectNode, ...payload];
             let nodes = currentSelect.length ? currentSelect : this.renderTopologyData;
             if (nodes.length) {
               nodes = nodes.filter((item) => !item.disabled);
             }
             if (!payload) {
-              this.renderTopologyData.forEach(item => {
+              this.renderTopologyData.forEach((item) => {
                 if (!item.disabled) {
-                  this.$set(item, 'checked', !((!payload.length || !this.currentSelectedNode.map((v) => v.id.toString()).includes(item.id.toString()))));
+                  this.$set(
+                    item,
+                    'checked',
+                    !(
+                      !payload.length
+                      || !this.currentSelectedNode.map((v) => v.id.toString()).includes(item.id.toString())
+                    )
+                  );
                   this.$refs.topologyTableRef && this.$refs.topologyTableRef.toggleRowSelection(item, item.checked);
                 }
               });
@@ -861,252 +1015,252 @@
 </script>
 
 <style lang="postcss">
-  .iam-topology-tree {
-    padding: 10px 0;
-    font-size: 14px;
+.iam-topology-tree {
+  padding: 10px 0;
+  font-size: 14px;
+  position: relative;
+
+  .ghost-wrapper {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    z-index: -1;
+  }
+
+  .render-wrapper {
+    left: 0;
+    right: 0;
+    top: 0;
+    position: absolute;
+  }
+
+  .node-item {
+    display: flex;
     position: relative;
-
-    .ghost-wrapper {
-      position: absolute;
-      left: 0;
-      top: 0;
-      right: 0;
-      z-index: -1;
+    margin: 0;
+    line-height: 32px;
+    text-align: left;
+    &.active {
+      color: #3a84ff;
     }
-
-    .render-wrapper {
-      left: 0;
-      right: 0;
-      top: 0;
-      position: absolute;
+    &.load-more-node {
+      padding: 3px 0;
     }
-
-    .node-item {
-      display: flex;
-      position: relative;
-      margin: 0;
-      line-height: 32px;
-      text-align: left;
-      &.active {
+    &.can-hover {
+      cursor: pointer;
+      &:hover {
+        .search-icon {
+          display: inline-block;
+        }
+      }
+    }
+    &-active {
+      background-color: #e1ecff;
+      cursor: pointer;
+      .tree-node-name {
         color: #3a84ff;
       }
-      &.load-more-node {
-        padding: 3px 0;
-      }
-      &.can-hover {
-        cursor: pointer;
-        &:hover {
-          .search-icon {
-            display: inline-block;
-          }
-        }
-      }
-      &-active {
-        background-color: #E1ECFF;
-        cursor: pointer;
-        .tree-node-name {
-          color: #3a84ff;
-        }
-      }
     }
-    .search-empty-wrapper {
-      padding-left: 3px;
+  }
+  .search-empty-wrapper {
+    padding-left: 3px;
+    font-size: 12px;
+    color: #c4c6cc;
+  }
+
+  .search-icon {
+    margin-left: 2px;
+    display: none;
+    cursor: pointer;
+    i {
+      position: relative;
+      top: -2px;
       font-size: 12px;
+      font-weight: 600;
+      color: #3a84ff;
+    }
+  }
+
+  .node-icon {
+    position: relative;
+    font-size: 16px;
+    color: #c4c6cc;
+    &.active {
+      color: #3a84ff;
+    }
+  }
+
+  .arrow-icon {
+    margin-right: 5px;
+    line-height: 32px;
+    color: #c0c4cc;
+    cursor: pointer;
+    &.is-disabled {
       color: #c4c6cc;
+      cursor: not-allowed;
     }
+  }
 
-    .search-icon {
-      margin-left: 2px;
-      display: none;
-      cursor: pointer;
-      i {
-        position: relative;
-        top: -2px;
-        font-size: 12px;
-        font-weight: 600;
-        color: #3a84ff;
-      }
+  .block {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    color: #fafbfd;
+  }
+
+  .iam-topology-title-cls {
+    display: flex !important;
+    line-height: 32px;
+    .bk-checkbox {
+      top: 9px;
     }
+    .bk-checkbox-text {
+      font-size: 12px;
+      /* width: 180px; */
+      /* white-space: nowrap;
+          text-overflow: ellipsis;
+          overflow: hidden; */
+    }
+    .tree-node-name {
+      display: inline-block;
+      /* line-height: 1; */
+      vertical-align: middle;
+    }
+  }
 
-    .node-icon {
+  .node-radio {
+    /* display: inline-block; */
+    display: flex;
+    .bk-form-checkbox {
       position: relative;
-      font-size: 16px;
-      color: #c4c6cc;
-      &.active {
-        color: #3a84ff;
-      }
+      margin-right: 0;
+      padding: 0;
+      /* top: -2px; */
     }
-
-    .arrow-icon {
-      margin-right: 5px;
-      line-height: 32px;
-      color: #c0c4cc;
-      cursor: pointer;
-      &.is-disabled {
-        color: #c4c6cc;
-        cursor: not-allowed;
-      }
+    .tree-node-name {
+      margin-left: 10px;
+      font-size: 12px;
     }
+    /* .bk-checkbox-text {
+          max-width: 200px;
+      } */
+  }
 
-    .block {
+  .node-loading {
+    .loading {
       display: inline-block;
       width: 14px;
       height: 14px;
-      color: #fafbfd;
     }
+    .loading-text {
+      display: inline-block;
+      font-size: 12px;
+      color: #a3c5fd;
+    }
+  }
 
-    .iam-topology-title-cls {
-      display: flex !important;
-      line-height: 32px;
-      .bk-checkbox {
-        top: 9px;
-      }
-      .bk-checkbox-text {
-          font-size: 12px;
-          /* width: 180px; */
-          /* white-space: nowrap;
-          text-overflow: ellipsis;
-          overflow: hidden; */
-      }
-      .tree-node-name {
-          display: inline-block;
-          /* line-height: 1; */
-          vertical-align: middle;
+  .search-loading-wrapper {
+    position: relative;
+    left: 20px;
+    min-height: 32px;
+    .bk-loading {
+      /* background: #fafbfd !important; */
+      background-color: #ffffff !important;
+      .bk-loading-wrapper {
+        top: 75% !important;
       }
     }
+  }
 
-    .node-radio {
-      /* display: inline-block; */
-      display: flex;
-      .bk-form-checkbox {
+  .load-more-wrapper {
+    position: relative;
+    padding: 0 18px;
+    line-height: 26px;
+    .load-item {
+      width: 140px;
+      text-align: center;
+      background: #f0f1f5;
+      font-size: 12px;
+      color: #979ba5;
+      &.normal {
+        cursor: pointer;
+      }
+      &.normal:hover {
+        background: #e1ecff;
+        color: #3a84ff;
+      }
+      &.exist-load-more {
+        cursor: not-allowed;
+      }
+      .node-load-more-loading {
         position: relative;
-        margin-right: 0;
-        padding: 0;
-        /* top: -2px; */
-      }
-      .tree-node-name {
-        margin-left: 10px;
-        font-size: 12px;
-      }
-      /* .bk-checkbox-text {
-          max-width: 200px;
-      } */
-    }
-
-    .node-loading {
-      .loading {
-        display: inline-block;
-        width: 14px;
-        height: 14px;
-      }
-      .loading-text {
-        display: inline-block;
-        font-size: 12px;
-        color: #a3c5fd;
-      }
-    }
-
-    .search-loading-wrapper {
-      position: relative;
-      left: 20px;
-      min-height: 32px;
-      .bk-loading {
-        background: #fafbfd !important;
-        .bk-loading-wrapper {
-          top: 75% !important;
-        }
-      }
-    }
-
-    .load-more-wrapper {
-      position: relative;
-      padding: 0 18px;
-      line-height: 26px;
-      .load-item {
-        width: 140px;
-        text-align: center;
-        background: #f0f1f5;
-        font-size: 12px;
-        color: #979ba5;
-        &.normal {
-          cursor: pointer;
-        }
-        &.normal:hover {
-          background: #e1ecff;
-          color: #3a84ff;
-        }
-        &.exist-load-more {
-          cursor: not-allowed;
-        }
-        .node-load-more-loading {
-          position: relative;
-          min-height: 26px;
-          .bk-loading {
-            background: #f0f1f5 !important;
-            .bk-loading-wrapper {
-              top: 75% !important;
-            }
+        min-height: 26px;
+        .bk-loading {
+          background: #f0f1f5 !important;
+          .bk-loading-wrapper {
+            top: 75% !important;
           }
         }
       }
     }
   }
+}
 </style>
 
 <style lang="postcss" scoped>
-  .topology-tree-table {
-    border: 0;
-    .bk-table-empty-block {
-      height: calc(100vh - 450px);
-    }
-    .bk-page.bk-page-align-right {
-      padding: 10px;
-    }
-  }
-
-  .multiple-topology-tree {
-    display: flex;
-    &-left {
-      border-right: 1px solid #DCDEE5;
-    }
-    &-right {
-      width: 100%;
-      padding-left: 20px;
-    }
-  }
-  
-  .iam-topology-tree-only,
-  .multiple-topology-tree-left-content,
-  .multiple-topology-tree-right-content {
-    height: calc(100vh - 550px);
-    overflow: auto;
-    z-index: 2;
-    &::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    &::-webkit-scrollbar-thumb {
-      background: #dcdee5;
-      border-radius: 3px;
-    }
-    &::-webkit-scrollbar-track {
-      background: transparent;
-      border-radius: 3px;
-    }
-  }
-
-  .iam-topology-tree-only {
+.topology-tree-table {
+  border: 0;
+  .bk-table-empty-block {
     height: calc(100vh - 450px);
   }
+  .bk-page.bk-page-align-right {
+    padding: 10px;
+  }
+}
 
-  /deep/ .topology-tree-pagination-cls {
-    padding: 10px 20px;
-   .bk-page-small-jump {
-      .jump-input {
-        outline: none;
-        min-width: 0;
-      }
+.multiple-topology-tree {
+  display: flex;
+  &-left {
+    border-right: 1px solid #dcdee5;
+  }
+  &-right {
+    width: 100%;
+    padding-left: 20px;
+  }
+}
+
+.iam-topology-tree-only,
+.multiple-topology-tree-left-content,
+.multiple-topology-tree-right-content {
+  height: calc(100vh - 550px);
+  overflow: auto;
+  z-index: 2;
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #dcdee5;
+    border-radius: 3px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 3px;
+  }
+}
+
+.iam-topology-tree-only {
+  height: calc(100vh - 450px);
+}
+
+/deep/ .topology-tree-pagination-cls {
+  padding: 10px 20px;
+  .bk-page-small-jump {
+    .jump-input {
+      outline: none;
+      min-width: 0;
     }
   }
-
+}
 </style>

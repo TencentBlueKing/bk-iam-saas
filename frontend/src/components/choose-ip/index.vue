@@ -7,46 +7,92 @@
           :value="selectValue"
           @on-select="handleResourceSelect" />
       </div>
-      <topology-input
-        v-if="isOnlyLevel"
-        ref="headerInput"
-        :is-filter="isFilter"
-        :placeholder="curPlaceholder"
-        @on-search="handleSearch" />
-      <div class="topology-tree-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
-        <template v-if="renderTopologyData.length > 0 && !isLoading">
-          <topology-tree
-            ref="topologyRef"
-            :all-data="renderTopologyData"
-            :search-value="hasSearchValues"
-            :cur-chain="curChain"
-            :is-filter="isFilter"
-            :cur-placeholder="curPlaceholder"
-            :resource-total="resourceTotal"
-            :sub-resource-total="subResourceTotal"
-            @on-expanded="handleOnExpanded"
-            @on-search="handleTreeSearch"
-            @on-select="handleTreeSelect"
-            @on-select-all="handleTreeSelectAll"
-            @on-load-more="handleLoadMore"
-            @on-page-change="handlePageChange"
-            @on-sub-page-change="handleSubPageChange"
-            @async-load-nodes="handleAsyncNodes"
-            @async-load-table-nodes="handleAsyncNodes" />
-        </template>
-        <template v-if="renderTopologyData.length < 1 && !isLoading">
-          <div class="empty-wrapper">
-            <ExceptionEmpty
-              :type="emptyData.type"
-              :empty-text="emptyData.text"
-              :tip-text="emptyData.tip"
-              :tip-type="emptyData.tipType"
+      <template v-if="isOnlyLevel">
+        <topology-input
+          ref="headerInput"
+          :is-filter="isFilter"
+          :placeholder="curPlaceholder"
+          @on-search="handleSearch" />
+        <div class="topology-tree-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
+          <template v-if="renderTopologyData.length > 0 && !isLoading">
+            <topology-tree
+              ref="topologyRef"
+              :all-data="renderTopologyData"
+              :search-value="hasSearchValues"
+              :cur-chain="curChain"
+              :is-filter="isFilter"
+              :cur-placeholder="curPlaceholder"
+              :resource-total="resourceTotal"
+              :sub-resource-total="subResourceTotal"
+              @on-expanded="handleOnExpanded"
+              @on-search="handleSearch"
+              @on-table-search="handleTreeSearch"
+              @on-select="handleTreeSelect"
+              @on-select-all="handleTreeSelectAll"
+              @on-load-more="handleLoadMore"
+              @on-page-change="handlePageChange"
+              @on-table-page-change="handleTablePageChange"
+              @async-load-nodes="handleAsyncNodes"
+              @async-load-table-nodes="handleAsyncNodes" />
+          </template>
+          <template v-if="renderTopologyData.length < 1 && !isLoading">
+            <div class="empty-wrapper">
+              <ExceptionEmpty
+                :type="emptyData.type"
+                :empty-text="emptyData.text"
+                :tip-text="emptyData.tip"
+                :tip-type="emptyData.tipType"
+                @on-clear="handleEmptyClear"
+                @on-refresh="handleEmptyRefresh"
+              />
+            </div>
+          </template>
+        </div>
+      </template>
+      <template v-if="!isOnlyLevel">
+        <div class="topology-tree-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
+          <template v-if="renderTopologyData.length > 0 && !isLoading">
+            <topology-tree
+              ref="topologyRef"
+              :all-data="renderTopologyData"
+              :search-value="hasSearchValues"
+              :cur-chain="curChain"
+              :is-filter="isFilter"
+              :cur-placeholder="curPlaceholder"
+              :resource-total="resourceTotal"
+              :sub-resource-total="subResourceTotal"
+              :empty-data="emptyTreeData"
+              :cur-table-data="curTableData"
+              @on-expanded="handleOnExpanded"
+              @on-search="handleSearch"
+              @on-table-search="handleTreeSearch"
+              @on-tree-search="handleTreeSearch"
+              @on-select="handleTreeSelect"
+              @on-select-all="handleTreeSelectAll"
+              @on-load-more="handleLoadMore"
+              @on-page-change="handlePageChange"
+              @on-table-page-change="handleTablePageChange"
+              @async-load-nodes="handleAsyncNodes"
+              @async-load-table-nodes="handleAsyncNodes"
+            />
+          </template>
+          <template v-if="renderTopologyData.length < 1 && !isLoading">
+            <topology-tree
+              ref="topologyRef"
+              :search-value="hasSearchValues"
+              :cur-chain="curChain"
+              :is-filter="isFilter"
+              :cur-placeholder="curPlaceholder"
+              :resource-total="resourceTotal"
+              :sub-resource-total="subResourceTotal"
+              :empty-data="emptyTreeData"
+              :cur-table-data="curTableData"
               @on-clear="handleEmptyClear"
               @on-refresh="handleEmptyRefresh"
             />
-          </div>
-        </template>
-      </div>
+          </template>
+        </div>
+      </template>
     </div>
   </div>
 </template>
@@ -205,18 +251,19 @@
           text: '',
           tip: '',
           tipType: ''
-        }
+        },
+        curTableData: []
       };
     },
     computed: {
       isOnlyLevel () {
-        return this.treeData.every((item) => !item.async && item.level === 0 && item.visiable);
+        return this.treeData.every((item) => item.level === 0 && item.visiable) && this.curChain.length < 2;
       },
       renderTopologyData () {
         const hasNode = {};
         const list = this.treeData.reduce((curr, next) => {
           // eslint-disable-next-line no-unused-expressions
-          hasNode[next.id] ? '' : hasNode[next.id] = true && curr.push(next);
+          hasNode[next.name] ? '' : hasNode[next.name] = true && curr.push(next);
           return curr;
         }, []);
         return list;
@@ -260,7 +307,7 @@
     methods: {
       handleSearch (payload) {
         this.curKeyword = payload;
-        if (this.isFilter && payload === '') {
+        if (this.isFilter && !payload) {
           this.isFilter = false;
         } else {
           this.isFilter = true;
@@ -289,30 +336,25 @@
       async handleTreeSearch (payload) {
         window.changeAlert = true;
         const { index, node, value } = payload;
-
         this.curSearchObj = Object.assign({}, {
           value,
           parentId: node.parentId
         });
-
         if (node.isFilter && value === '') {
           node.isFilter = false;
         } else {
           node.isFilter = true;
         }
-
         this.treeData = this.treeData.filter(item => item.type !== 'search-empty');
-
         const searchLoadingItem = {
-                    ...SEARCH_LOAD_ITEM,
-                    parentId: node.parentId,
-                    parentSyncId: node.id,
-                    parentChain: _.cloneDeep(node.parentChain),
-                    level: node.level
+          ...SEARCH_LOAD_ITEM,
+          parentId: node.parentId,
+          parentSyncId: node.id,
+          parentChain: _.cloneDeep(node.parentChain),
+          level: node.level
         };
         const searchLoadingData = new Node(searchLoadingItem, node.level, false, 'search-loading');
         this.treeData.splice((index + 1), 0, searchLoadingData);
-
         const chainLen = this.curChain.length;
         const params = {
           limit: this.limit,
@@ -320,7 +362,6 @@
           ancestors: [],
           keyword: value
         };
-
         if (node.level > chainLen - 1) {
           params.system_id = this.curChain[chainLen - 1].system_id;
           params.type = this.curChain[chainLen - 1].id;
@@ -347,6 +388,9 @@
         }
         try {
           const { code, data } = await this.$store.dispatch('permApply/getResources', params);
+          this.emptyTreeData.tipType = 'search';
+          this.emptyTreeData = formatCodeData(code, this.emptyTreeData, data.results.length === 0);
+          this.subResourceTotal = data.count || 0;
           const parentNode = this.treeData.find(item => item.nodeId === node.parentId);
           if (parentNode || !parentNode.children) {
             parentNode.children = [];
@@ -355,27 +399,23 @@
             const flag = item.type === 'search' && item.parentId === node.parentId;
             return flag || !item.parentChain.map(v => v.id).includes(node.parentSyncId);
           });
-          this.emptyData = formatCodeData(code, this.emptyData, data.results.length === 0);
           if (data.results.length < 1) {
             const searchEmptyItem = {
-                            ...SEARCH_EMPTY_ITEM,
-                            parentId: node.parentId,
-                            parentSyncId: node.id,
-                            parentChain: _.cloneDeep(node.parentChain),
-                            level: node.level,
-                            display_name: RESULT_TIP[code]
+              ...SEARCH_EMPTY_ITEM,
+              parentId: node.parentId,
+              parentSyncId: node.id,
+              parentChain: _.cloneDeep(node.parentChain),
+              level: node.level,
+              display_name: RESULT_TIP[code]
             };
             const searchEmptyData = new Node(searchEmptyItem, node.level, false, 'search-empty');
             this.treeData.splice((index + 1), 0, searchEmptyData);
             return;
           }
-
           const totalPage = Math.ceil(data.count / this.limit);
-
           let isAsync = this.curChain.length > (node.level + 1);
           const loadNodes = data.results.map(item => {
             let tempItem = _.cloneDeep(item);
-
             let checked = false;
             let disabled = false;
             let isRemote = false;
@@ -459,18 +499,17 @@
 
           if (totalPage > 1) {
             const loadItem = {
-                            ...LOAD_ITEM,
-                            totalPage: totalPage,
-                            current: 1,
-                            parentSyncId: node.id,
-                            parentId: node.parentId,
-                            parentChain: _.cloneDeep(node.parentChain)
+              ...LOAD_ITEM,
+              totalPage: totalPage,
+              current: 1,
+              parentSyncId: node.id,
+              parentId: node.parentId,
+              parentChain: _.cloneDeep(node.parentChain)
             };
             const loadData = new Node(loadItem, node.level, isAsync, 'load');
             this.treeData.splice((index + loadNodes.length + 1), 0, loadData);
             parentNode.children.push(loadData);
           }
-
           if (this.resourceValue) {
             this.handlerResourceNode();
           }
@@ -481,14 +520,14 @@
           }
           const message = e.code !== 1902206 ? RESULT_TIP[e.code] : e.message;
           const searchEmptyItem = {
-                        ...SEARCH_EMPTY_ITEM,
-                        parentId: node.parentId,
-                        parentSyncId: node.id,
-                        parentChain: _.cloneDeep(node.parentChain),
-                        level: node.level,
-                        display_name: message
+            ...SEARCH_EMPTY_ITEM,
+            parentId: node.parentId,
+            parentSyncId: node.id,
+            parentChain: _.cloneDeep(node.parentChain),
+            level: node.level,
+            display_name: message
           };
-          this.emptyData = formatCodeData(e.code, this.emptyData);
+          this.emptyTreeData = formatCodeData(e.code, this.emptyTreeData);
           const searchEmptyData = new Node(searchEmptyItem, node.level, false, 'search-empty');
           this.treeData.splice((index + 1), 0, searchEmptyData);
         } finally {
@@ -536,6 +575,7 @@
       },
 
       handeCancelChecked (payload) {
+        console.log(111);
         const curNode = this.treeData.find(item => {
           const { parentChain, id, async, childType } = item;
           // const curIds = parentChain.map(v => v.id)
@@ -784,6 +824,7 @@
         }
         this.$emit('on-tree-select', value, node, params, resourceLen);
         // 针对资源权限特殊处理
+        console.log(this.resourceValue, 454554);
         if (this.resourceValue) {
           if (value) {
             this.treeData.forEach(item => {
@@ -887,7 +928,6 @@
           ancestorItem.type = this.curChain[node.level].id;
         }
         ancestorItem.id = node.id;
-                
         if (node.parentChain.length) {
           parentData = node.parentChain.reduce((p, e) => {
             p.push({
@@ -1019,6 +1059,8 @@
           };
 
           const searchData = new Node(searchItem, curLevel, false, 'search');
+          // 保存当前页条数用于自定义分页
+          this.curTableData = [...childNodes];
           this.treeData.splice((index + 1), 0, searchData);
           if (flag) {
             this.$nextTick(() => {
@@ -1087,6 +1129,7 @@
         }
         try {
           const { code, data } = await this.$store.dispatch('permApply/getResources', params);
+          console.log(data.results);
           let isAsync = this.curChain.length > (node.level + 1);
           const loadNodes = data.results.map(item => {
             let tempItem = _.cloneDeep(item);
@@ -1181,7 +1224,8 @@
               parentNode.children.push(...loadNodes);
             }
           }
-
+          // 保存当前页条数用于自定义分页
+          this.curTableData = [...loadNodes];
           // 针对资源权限特殊处理
           if (this.resourceValue && this.resourceNeedDisable) {
             this.treeData.forEach(item => {
@@ -1331,7 +1375,7 @@
       },
 
       // 多层拓扑分页
-      async handleSubPageChange (node, index) {
+      async handleTablePageChange (node, index) {
         console.log(node, index, this.renderTopologyData);
         this.handleLoadMore(node, index);
       }
@@ -1365,7 +1409,8 @@
                     } */
                 }
                 .bk-loading {
-                    background: #fafbfd !important;
+                    /* background: #fafbfd !important; */
+                    background: #ffffff !important;
                 }
             }
         }

@@ -705,6 +705,7 @@
                 // const tempPathItem = _.cloneDeep(pathItem)
                 // tempPathItem.unshift(...typeChain)
                 const tempPathItem = _.cloneDeep(item.paths[pathIndex]);
+                console.log(tempPathItem, 5566565);
                 if (tempPathItem.map(sub => sub.id).filter(v => curIdChain.includes(v)).length > 0) {
                   obj.childChain = tempPathItem.map(chain => chain.type);
                   obj.childChainId = tempPathItem.map(chain => chain.id);

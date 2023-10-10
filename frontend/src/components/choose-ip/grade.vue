@@ -1111,7 +1111,8 @@
                     }
                 }
                 .bk-loading {
-                    background: #fafbfd !important;
+                    /* background: #fafbfd !important; */
+                    background: #ffffff !important;
                 }
             }
         }

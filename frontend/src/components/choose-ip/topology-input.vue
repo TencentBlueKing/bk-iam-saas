@@ -76,9 +76,9 @@
       },
 
       handleSearch () {
-        if (!this.value) {
-          return;
-        }
+        // if (!this.value) {
+        //   return;
+        // }
         this.$emit('on-search', this.value);
       },
 
