@@ -247,7 +247,7 @@ class ManagementGroupMemberViewSet(GenericViewSet):
         # 分页参数
         limit, offset = CompatiblePagination().get_limit_offset_pair(request)
 
-        count, group_members = self.biz.list_paging_group_member(group.id, limit, offset)
+        count, group_members = self.biz.list_paging_thin_group_member(group.id, limit, offset)
         results = [one.dict(include={"type", "id", "name", "expired_at"}) for one in group_members]
         return Response({"count": count, "results": results})
 
