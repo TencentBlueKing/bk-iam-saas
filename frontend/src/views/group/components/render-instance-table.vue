@@ -240,6 +240,7 @@
       :is-super-manager="isSuperManager"
       :value="aggregateValue"
       :default-list="defaultSelectList"
+      :is-aggregate-empty-message="isAggregateEmptyMessage"
       @on-selected="handlerSelectAggregateRes" />
 
     <bk-sideslider
@@ -429,7 +430,8 @@
         curInstancePaths: [],
         currentActionName: '',
         delActionDialogTitle: '',
-        delActionDialogTip: ''
+        delActionDialogTip: '',
+        isAggregateEmptyMessage: false
       };
     },
     computed: {
@@ -928,6 +930,11 @@
           item && item.forEach(subItem => {
             if (resources.every(v => v && v.some(vItem => vItem[0] === subItem[0]))) {
               tempData.push(subItem[0]);
+            }
+            // 判断处理没有交集的情况
+            if (!resources.every(v => v && v.some(vItem => vItem[0] === subItem[0])
+              && resources.find(v => v && v.some(vItem => vItem[0] === subItem[0])))) {
+              this.isAggregateEmptyMessage = true;
             }
           });
         });
