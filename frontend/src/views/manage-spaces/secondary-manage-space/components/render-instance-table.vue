@@ -224,6 +224,7 @@
       :is-super-manager="isSuperManager"
       :value="aggregateValue"
       :default-list="defaultSelectList"
+      :is-aggregate-empty-message="isAggregateEmptyMessage"
       @on-selected="handlerSelectAggregateRes" />
 
     <bk-sideslider
