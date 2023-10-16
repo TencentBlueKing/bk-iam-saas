@@ -783,7 +783,7 @@
       },
 
       handlePathSelect (value, node, payload, resourceLen, index) {
-        // console.log(value, node, payload, index);
+        // console.log(value, node, payload, index, this.conditionData);
         window.changeAlert = true;
         const { type, path, paths } = payload[0];
         const tempPath = path[0];
@@ -805,6 +805,7 @@
               selectInstanceItem.path.push(...path);
               selectInstanceItem.paths.push(...paths);
               curInstance.splice(selectInstanceItemIndex, 1, selectInstanceItem);
+              console.log(curInstance, selectInstanceItem, selectInstanceItemIndex, 454554);
             } else {
               curInstance.push(new Instance(payload[0]));
             }
@@ -815,7 +816,6 @@
           let curChildrenIds = [];
           const deleteIndex = -1;
           const deleteInstanceItem = curInstance.find(item => item.type === type);
-          console.log(resourceLen, '长度刷刷谁');
           if (resourceLen) {
             for (let i = 0; i < resourceLen; i++) {
               // const noCarryNoLimitPath = payload[1]
@@ -839,11 +839,17 @@
             }
           } else {
             const deleteIndex = deleteInstanceItem.path.findIndex(item => item.map(v => `${v.id}&${v.type}`).join('') === tempPath.map(v => `${v.id}&${v.type}`).join(''));
+            const deleteItem = deleteInstanceItem.path.filter(item => item.map(v => `${v.id}&${v.type}`).join('') === tempPath.map(v => `${v.id}&${v.type}`).join(''));
             curChildrenIds = node.children.map(item => `${item.id}&${item.type}`);
+            console.log(deleteIndex, deleteInstanceItem, deleteItem);
             if (deleteIndex > -1) {
               isDisabled = deleteInstanceItem.path[deleteIndex].some(_ => _.disabled);
               if (!isDisabled) {
                 deleteInstanceItem.path.splice(deleteIndex, 1);
+                // 处理半选之后再全选会造成有重叠的数据
+                if (deleteItem.length > 1) {
+                  deleteInstanceItem.path = deleteInstanceItem.path.filter((item) => !deleteItem.includes(item));
+                }
               }
             }
           }

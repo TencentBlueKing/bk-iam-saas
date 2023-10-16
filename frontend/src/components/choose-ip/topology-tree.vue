@@ -44,19 +44,21 @@
         <div class="multiple-topology-tree">
           <div class="multiple-topology-tree-left" :style="formatLeftStyle">
             <topology-input
-              ref="topologyInputRef"
+              ref="topologyTreeInputRef"
               :is-filter="isFilter"
               :placeholder="curPlaceholder"
-              @on-search="handleSearch"
+              @on-search="handleTreeSearch(...arguments)"
             />
             <div class="multiple-topology-tree-left-content">
-              <template>
+              <template v-if="!isTreeEmpty">
                 <div
-                  v-for="(item, index) in allData"
+                  v-for="(item, index) in allTreeData"
                   :key="item.nodeId"
                   :class="[
                     'node-item',
-                    { 'node-item-active': item.nodeId === selectNodeData.nodeId && item.type === 'node' },
+                    {
+                      'node-item-active': item.nodeId === selectNodeData.nodeId && item.type === 'node'
+                    },
                     { 'load-more-node': formatLoadMore(item) },
                     { 'search-node': item.type === 'search' },
                     { 'can-hover': item.type === 'node' && !item.loading }
@@ -69,7 +71,12 @@
                       v-if="!isTwoLevel"
                       bk
                       :type="item.expanded ? 'down-shape' : 'right-shape'"
-                      :class="['arrow-icon', { 'is-disabled': getExpandedDisabled(index) || isExistAsync(item) }]"
+                      :class="[
+                        'arrow-icon',
+                        {
+                          'is-disabled': getExpandedDisabled(index) || isExistAsync(item)
+                        }
+                      ]"
                       @click.stop="expandNode(item, index)"
                     />
                     <div class="node-radio" @click.stop>
@@ -111,7 +118,12 @@
                         <template v-else>
                           <div
                             class="node-load-more-loading"
-                            v-bkloading="{ isLoading: item.loadingMore, opacity: 1, theme: 'primary', size: 'mini' }"
+                            v-bkloading="{
+                              isLoading: item.loadingMore,
+                              opacity: 1,
+                              theme: 'primary',
+                              size: 'mini'
+                            }"
                           ></div>
                         </template>
                       </div>
@@ -123,8 +135,8 @@
                         :type="item.name === $t(`m.common['搜索结果为空']`) ? 'search-empty' : 500"
                         :tip-type="item.name === $t(`m.common['搜索结果为空']`) ? 'search' : 'refresh'"
                         :empty-text="item.name === $t(`m.common['搜索结果为空']`) ? item.name : '数据不存在'"
-                        @on-clear="handleEmptyClear(...arguments, item, index)"
-                        @on-refresh="handleEmptyRefresh(...arguments, item, index)"
+                        @on-clear="handleEmptyClear('tree', item, index)"
+                        @on-refresh="handleEmptyRefresh('tree', item, index)"
                       />
                     </div>
                   </template>
@@ -145,31 +157,30 @@
                     :placeholder="item.placeholder"
                     :is-filter="item.isFilter"
                     :disabled="getSearchDisabled(item)"
-                    @on-search="handleSearch(...arguments, item, index)"
+                    @on-search="handleTreeSearch(...arguments, item, index)"
                   />
                 </template> -->
                 </div>
               </template>
-              <template v-if="!visiableData.length">
+              <template v-else>
                 <ExceptionEmpty
-                  :type="item.name === $t(`m.common['搜索结果为空']`) ? 'search-empty' : 500"
-                  :tip-type="item.name === $t(`m.common['搜索结果为空']`) ? 'search' : 'refresh'"
-                  :empty-text="item.name === $t(`m.common['搜索结果为空']`) ? item.name : '数据不存在'"
-                  @on-clear="handleEmptyClear(...arguments, item, index)"
-                  @on-refresh="handleEmptyRefresh(...arguments, item, index)"
+                  :type="formatTreeEmpty(emptyTreeData, 'tree', 'type')"
+                  :tip-type="formatTreeEmpty(emptyTreeData, 'tree', 'tipType')"
+                  :empty-text="formatTreeEmpty(emptyTreeData, 'tree', 'emptyText')"
+                  @on-clear="handleEmptyClear('tree')"
+                  @on-refresh="handleEmptyRefresh('tree')"
                 />
               </template>
             </div>
           </div>
           <div class="multiple-topology-tree-right">
             <topology-input
-              :ref="`topologyInputRef${selectNodeDataIndex}`"
+              ref="topologyTableInputRef"
               :placeholder="formatPlaceHolder('input') || ''"
-              :is-filter="selectNodeData.isFilter || false"
-              :disabled="getSearchDisabled(selectNodeData)"
               @on-search="handleTableSearch(...arguments, selectNodeData, selectNodeDataIndex)"
             />
             <div class="multiple-topology-tree-right-content">
+              {{ renderTopologyData.length }}
               <bk-table
                 ref="topologyTableRef"
                 size="small"
@@ -188,15 +199,16 @@
                     <span :title="`ID: ${row.id}`">{{ row.name }}</span>
                   </template>
                 </bk-table-column>
-                <template slot="empty">
-                  <ExceptionEmpty
-                    v-if="!tableLoading"
-                    :type="formatTableEmpty('type', tableEmptyData)"
-                    :tip-type="formatTableEmpty('tipType', tableEmptyData)"
-                    :empty-text="formatTableEmpty('emptyText', tableEmptyData)"
-                    @on-clear="handleEmptyClear(...arguments, selectNodeData, selectNodeDataIndex)"
-                    @on-refresh="handleEmptyRefresh(...arguments, selectNodeData, selectNodeDataIndex)"
-                  />
+                <template v-if="!tableLoading">
+                  <template slot="empty">
+                    <ExceptionEmpty
+                      :type="formatTreeEmpty(emptyTableData, 'table', 'type')"
+                      :tip-type="formatTreeEmpty(emptyTableData, 'table', 'tipType')"
+                      :empty-text="formatTreeEmpty(emptyTableData, 'table', 'emptyText')"
+                      @on-clear="handleEmptyClear('table', selectNodeData, selectNodeDataIndex)"
+                      @on-refresh="handleEmptyRefresh('table', selectNodeData, selectNodeDataIndex)"
+                    />
+                  </template>
                 </template>
               </bk-table>
               <template v-if="subPagination.count > 0">
@@ -224,6 +236,9 @@
 <script>
   import _ from 'lodash';
   import TopologyInput from './topology-input';
+  import { bus } from '@/common/bus';
+  import { formatCodeData } from '@/common/util';
+  import { mapGetters } from 'vuex';
 
   export default {
     name: '',
@@ -246,6 +261,10 @@
         default: () => []
       },
       curChain: {
+        type: Array,
+        default: () => []
+      },
+      hasSelectedValues: {
         type: Array,
         default: () => []
       },
@@ -292,6 +311,15 @@
       curTableData: {
         type: Array,
         default: () => []
+      },
+      curKeyword: {
+        type: String
+      },
+      curTableKeyword: {
+        type: String
+      },
+      searchDisplayText: {
+        type: String
       }
     },
     data () {
@@ -318,31 +346,47 @@
           showLimit: false,
           small: true
         },
+        emptyTreeData: {
+          type: '',
+          text: '',
+          tip: '',
+          tipType: ''
+        },
         emptyTableData: {
           type: '',
           text: '',
           tip: '',
           tipType: ''
         },
-        tableEmptyData: {},
-        renderTopologyData: [],
+        selectNodeData: {},
+        allTreeData: [],
         checkedNodeIdList: [],
         currentSelectedNode: [],
-        selectNodeData: {},
+        renderTopologyData: [],
+        tablePageData: [],
         selectNodeDataIndex: -1,
-        curSearchMode: ''
+        curSearchMode: 'tree',
+        treeKeyWord: '',
+        tableKeyWord: ''
       };
     },
     computed: {
+      ...mapGetters([
+        'curTreeTableData',
+        'curTreeTableDataIndex',
+        'curAllTreeNode',
+        'curTreeTableChecked',
+        'curTreeSelectedNode'
+      ]),
       ghostStyle () {
         return {
           height: this.visiableData.length * this.itemHeight + 'px'
         };
       },
-      // allData 中 visiable 为 true 的数据，visiable 属性辅助设置展开收起的
+      // allTreeData 中 visiable 为 true 的数据，visiable 属性辅助设置展开收起的
       // 当父节点收起时，子节点的 visiable 为 false
       visiableData () {
-        return this.allData.filter((item) => item.visiable);
+        return this.allTreeData.filter((item) => item.visiable);
       },
       // 返回只有一层数据的排版
       isOnlyLevel () {
@@ -358,7 +402,7 @@
         return this.visiableData.slice(this.startIndex, this.endIndex);
       },
       isExistNodeLoadMore () {
-        return this.allData.some((item) => item.id === -1 && item.loadingMore);
+        return this.allTreeData.some((item) => item.id === -1 && item.loadingMore);
       },
       dragDynamicWidth () {
         return (payload) => {
@@ -366,7 +410,7 @@
           const offsetWidth = this.getDragDynamicWidth
             ? this.getDragDynamicWidth() - 500
             : 460 + this.getDragDynamicWidth() - 500;
-          const isSameLevelExistSync = this.allData
+          const isSameLevelExistSync = this.allTreeData
             .filter((item) => item.level === payload.level)
             .some((item) => item.type === 'node' && item.async);
           const flag = !payload.async && isSameLevelExistSync;
@@ -438,42 +482,8 @@
           return payload.type === 'load' && payload.level < this.curChain.length - 1;
         };
       },
-      formatTableEmpty () {
-        return (mode, payload) => {
-          const typeMap = {
-            type: () => {
-              if (Object.keys(payload).length) {
-                if (payload.name === this.$t(`m.common['搜索结果为空']`)) {
-                  return 'search-empty';
-                }
-                return 500;
-              } else {
-                return 'empty';
-              }
-            },
-            tipType: () => {
-              if (Object.keys(payload).length) {
-                if (payload.name === this.$t(`m.common['搜索结果为空']`)) {
-                  return 'search';
-                }
-                return 'refresh';
-              } else {
-                return '';
-              }
-            },
-            emptyText: () => {
-              if (Object.keys(payload).length) {
-                if (payload.name === this.$t(`m.common['搜索结果为空']`)) {
-                  return payload.name;
-                }
-                return '数据不存在';
-              } else {
-                return '暂无数据';
-              }
-            }
-          };
-          return typeMap[mode]();
-        };
+      isTreeEmpty () {
+        return this.allTreeData.filter((item) => item.type === 'node').length === 0 || this.searchDisplayText === this.$t(`m.common['搜索结果为空']`);
       }
     },
     watch: {
@@ -482,7 +492,7 @@
           const indexs = [...new Set([newVal, oldVal].sort())];
           if (indexs.length > 1 && indexs[1] - indexs[0] > 1) {
             for (let i = indexs[0] + 1; i < indexs[1]; i++) {
-              const node = this.allData[i];
+              const node = this.allTreeData[i];
               node.checked = true;
               this.handleNodeChecked(true, node);
               this.$emit('on-select', true, node);
@@ -496,14 +506,10 @@
         },
         immediate: true
       },
-      subResourceTotal: {
-        handler (value) {
-          this.subPagination = Object.assign(this.subPagination, { count: value });
-        },
-        immediate: true
-      },
       allData: {
         handler (value) {
+          console.log(value, 2555);
+          this.allTreeData = [...value];
           this.fetchLevelTree(value);
         },
         immediate: true
@@ -514,7 +520,9 @@
             this.subPagination = Object.assign(this.subPagination, { current: 1 });
           }
           if (newValue === -1 && !this.isOnlyLevel) {
-            this.handleSelectNode(this.visiableData[0], 0);
+            const curSelectNode = this.visiableData.length ? this.visiableData[0] : {};
+            this.handleSelectNode(curSelectNode, 0);
+            this.tableLoading = false;
           }
         },
         immediate: true
@@ -523,6 +531,9 @@
         handler (value) {
           if (this.curSearchMode === 'table') {
             this.emptyTableData = Object.assign({}, value);
+          }
+          if (this.curSearchMode === 'tree') {
+            this.emptyTreeData = Object.assign({}, value);
           }
         },
         immediate: true
@@ -538,10 +549,34 @@
       this.$once('hook:beforeDestroy', () => {
         document.removeEventListener('keyup', this.handleKeyup);
         document.removeEventListener('keydown', this.handleKeydown);
+        bus.$off('update-table-toggleRowSelection');
+      });
+      bus.$on('update-table-toggleRowSelection', ({ isChecked, node }) => {
+        const childData = this.renderTopologyData.find((item) => `${item.name}&${item.id}` === `${node.name}&${node.id}`);
+        if (childData) {
+          this.$nextTick(() => {
+            this.renderTopologyData.forEach((item) => {
+              if (`${item.name}&${item.id}` === `${node.name}&${node.id}`) {
+                this.$refs.topologyTableRef.toggleRowSelection(item, isChecked);
+              }
+            });
+          });
+        } else {
+          this.getChildrenChecked(isChecked, node);
+        }
       });
     },
     methods: {
       fetchLevelTree (value) {
+        if (this.curKeyword) {
+          this.$nextTick(() => {
+            this.treeKeyWord = this.curKeyword;
+            this.$refs.topologyTreeInputRef.value = this.treeKeyWord;
+          });
+        }
+        this.subPagination = Object.assign(this.subPagination, {
+          count: this.subResourceTotal
+        });
         if (value.length) {
           if (this.isOnlyLevel) {
             this.renderTopologyData = value.filter((item) => item.type === 'node');
@@ -560,20 +595,32 @@
           } else {
             if (Object.keys(this.selectNodeData).length) {
               const curNode = value.find(
-                (item) => `${item.nodeId}&${item.id}` === `${this.selectNodeData.nodeId}&${this.selectNodeData.id}`
+                (item) => `${item.name}&${item.id}` === `${this.selectNodeData.name}&${this.selectNodeData.id}`
               );
+              // 判断搜索无数据
+              const searchData
+                = value.length === 1 && value.find((item) => ['search-empty', 'search-loading'].includes(item.type));
+              console.log(curNode, value, this.selectNodeData, 1223456);
               if (curNode) {
+                this.tablePageData = [...this.curTableData];
                 const list = [...(curNode.children || [])].filter((item) => item.type === 'node');
-                console.log(curNode.current, list, 564564);
                 curNode.current = this.subPagination.current;
-                this.renderTopologyData = this.getDataByPage(curNode.current, list);
+                this.renderTopologyData = list.length ? this.getDataByPage(curNode.current, list) : [];
+                // 这里要兼容判断父级全选和直接点击子集表格全选
+                const childSelectedNodes = this.currentSelectedNode.map((item) => `${item.name}&${item.id}`);
                 this.checkedNodeIdList = value
                   .filter((item) => item.checked && item.parentId === this.selectNodeData.nodeId)
                   .map((v) => `${this.selectNodeData.nodeId}&${v.id}`);
                 if (!curNode.children.length) {
-                  const searchEmptyData = value.find((item) => item.type === 'search-empty');
-                  if (searchEmptyData) {
-                    this.tableEmptyData = Object.assign({}, searchEmptyData);
+                  if (this.tableKeyWord) {
+                    const searchEmptyData = value.find((item) => item.type === 'search-empty');
+                    if (searchEmptyData) {
+                      this.emptyTableData = Object.assign({}, searchEmptyData);
+                    }
+                  } else {
+                    this.emptyTableData = formatCodeData(0, {
+                      tipType: ['refresh'].includes(this.emptyData.tipType) ? this.emptyData.tipType : ''
+                    });
                   }
                 }
                 this.$nextTick(() => {
@@ -582,18 +629,156 @@
                       && this.$refs.topologyTableRef.toggleRowSelection(
                         item,
                         this.checkedNodeIdList.includes(`${this.selectNodeData.nodeId}&${item.id}`)
+                          || childSelectedNodes.includes(`${item.name}&${item.id}`)
                       );
                   });
                 });
+                // 如果父级搜索无数据，默认回显已选中的资源
+                if (!this.allTreeData.length && this.curKeyword) {
+                  const childNode = this.curAllTreeNode.find((item) => item.parentId === curNode.nodeId);
+                  if (childNode) {
+                    this.$store.commit('setTreeTableData', childNode);
+                  }
+                  // 存储回显直接勾选父级，子集全部默认勾选数据
+                  console.log(this.curTreeSelectedNode, this.curTreeTableChecked, this.renderTopologyData);
+                  this.formatDefaultSelected();
+                }
+              }
+              if (!curNode && !this.emptyTableData.tipType && this.selectNodeData.children.length) {
+                console.log(1255);
+                this.renderTopologyData = [...this.selectNodeData.children];
+                this.formatDefaultSelected();
+                return;
+              }
+              if (searchData) {
+                if (
+                  ['search-empty', 'search-loading'].includes(searchData.type)
+                ) {
+                  if (searchData.level > 0 && ['table'].includes(this.curSearchMode)) {
+                    this.renderTopologyData = [];
+                    this.emptyTableData = formatCodeData(0, { tipType: 'search' });
+                  } else {
+                    this.emptyTreeData = formatCodeData(0, { tipType: 'search' });
+                  }
+                }
               }
             }
           }
         }
       },
 
+      formatTreeEmpty (payload, mode, type) {
+        const modeMap = {
+          tree: () => {
+            const typeMap = {
+              type: () => {
+                if (Object.keys(payload).length) {
+                  if ([payload.name].includes(this.$t(`m.common['搜索结果为空']`)) || payload.tipType === 'search') {
+                    return 'search-empty';
+                  }
+                  return 500;
+                } else {
+                  return 'empty';
+                }
+              },
+              tipType: () => {
+                if (Object.keys(payload).length) {
+                  if ([payload.name].includes(this.$t(`m.common['搜索结果为空']`)) || payload.tipType === 'search') {
+                    return 'search';
+                  }
+                  return 'refresh';
+                } else {
+                  return '';
+                }
+              },
+              emptyText: () => {
+                if (Object.keys(payload).length) {
+                  if ([payload.name].includes(this.$t(`m.common['搜索结果为空']`)) || payload.tipType === 'search') {
+                    return '搜索结果为空';
+                  }
+                  return '数据不存在';
+                } else {
+                  return '暂无数据';
+                }
+              }
+            };
+            return typeMap[type]();
+          },
+          table: () => {
+            const typeMap = {
+              type: () => {
+                if (Object.keys(payload).length) {
+                  if (payload.type === 'empty') {
+                    return 'empty';
+                  }
+                  if (payload.name === this.$t(`m.common['搜索结果为空']`) || payload.tipType === 'search') {
+                    return 'search-empty';
+                  }
+                  return payload.type;
+                } else {
+                  return 'empty';
+                }
+              },
+              tipType: () => {
+                if (Object.keys(payload).length) {
+                  if (payload.type === 'empty') {
+                    return '';
+                  }
+                  if (payload.name === this.$t(`m.common['搜索结果为空']`)) {
+                    return 'search';
+                  }
+                  return payload.tipType;
+                } else {
+                  return '';
+                }
+              },
+              emptyText: () => {
+                if (Object.keys(payload).length) {
+                  if (payload.type === 'empty') {
+                    return '暂无数据';
+                  }
+                  if (payload.name === this.$t(`m.common['搜索结果为空']`)) {
+                    return payload.name;
+                  }
+                  return payload.text;
+                } else {
+                  return '暂无数据';
+                }
+              }
+            };
+            return typeMap[type]();
+          }
+        };
+        return modeMap[mode]();
+      },
+
+      formatDefaultSelected () {
+        const defaultSelectList = this.hasSelectedValues.map((v) => v.ids).flat(this.curChain.length);
+        this.$nextTick(() => {
+          this.renderTopologyData.forEach((item) => {
+            this.$refs.topologyTableRef
+              && this.$refs.topologyTableRef.toggleRowSelection(
+                item,
+                this.curTreeTableChecked.includes(`${this.selectNodeData.nodeId}&${item.id}`)
+                  || this.curTreeSelectedNode.map((item) => `${item.name}&${item.id}`).includes(`${item.name}&${item.id}`)
+                  || defaultSelectList.includes(`${item.id}&${this.curChain[item.level].id}`)
+              );
+          });
+        });
+      },
+
       setDefaultSelect (payload) {
-        const allData = this.allData.filter((item) => item.disabled && item.type === 'node').map((item) => item.id);
-        return !allData.includes(payload.id);
+        const list = [...this.allTreeData].filter((item) => item.type === 'node');
+        console.log(this.hasSelectedValues.length, this.allTreeData, !this.isOnlyLevel);
+        if (this.hasSelectedValues.length && !list.length && !this.isOnlyLevel) {
+          const defaultSelectList = this.hasSelectedValues.filter((item) => item.disabled).map(
+            (v) => v.ids).flat(this.curChain.length);
+          return !defaultSelectList.includes(`${payload.id}&${this.curChain[payload.level].id}`);
+        }
+        const allTreeData = list
+          .filter((item) => item.disabled && item.type === 'node')
+          .map((item) => item.id);
+        return !allTreeData.includes(payload.id);
       },
 
       handleKeyup ($event) {
@@ -619,7 +804,7 @@
 
       isExistAsync (payload) {
         // (asyncNode && asyncNode.parentId === payload.nodeId)
-        const asyncNode = this.allData.find((item) => item.type === 'async');
+        const asyncNode = this.allTreeData.find((item) => item.type === 'async');
         // if (!asyncNode) {
         //     return false
         // }
@@ -627,7 +812,7 @@
       },
 
       getExpandedDisabled (index) {
-        const data = this.allData[index + 2];
+        const data = this.allTreeData[index + 2];
         if (data && data.hasOwnProperty('type') && data.type === 'search-loading') {
           return true;
         }
@@ -636,70 +821,117 @@
 
       handleSetFocus (index) {
         this.levelIndex = index;
-        this.$refs[`topologyInputRef${index}`][0] && this.$refs[`topologyInputRef${index}`][0].handleSetFocus();
+        if (this.$refs[`topologyInputRef${index}`]) {
+          this.$refs[`topologyInputRef${index}`][0] && this.$refs[`topologyInputRef${index}`][0].handleSetFocus();
+        }
       },
 
       getSearchDisabled (item) {
-        return this.allData.some((item) => item.type === 'search-loading');
+        return this.allTreeData.some((item) => item.type === 'search-loading');
       },
 
-      handleSearch (value) {
+      handleTreeSearch (value, node, index) {
+        // 如果没有node，代表是最外层的搜索
         this.curSearchMode = 'tree';
-        this.$emit('on-search', value);
+        this.treeKeyWord = value;
+        if (node) {
+          this.$emit('on-tree-search', { value, node, index });
+        } else {
+          this.$emit('on-search', value);
+        }
       },
 
       handleTableSearch (value, node, index) {
+        this.tableLoading = true;
         this.curSearchMode = 'table';
-        const curNode = this.allData.find((item) => item.parentId === node.nodeId);
+        this.tableKeyWord = value;
+        const filterNodeType = ['node', 'search', 'search-empty'];
+        let allTreeData = [...this.allTreeData].filter((item) => filterNodeType.includes(item.type));
+        let curNode = allTreeData.find((item) => item.parentId === node.nodeId);
+        if (this.treeKeyWord && !curNode) {
+          allTreeData = [...this.curAllTreeNode].filter((item) => filterNodeType.includes(item.type));
+          curNode = allTreeData.find((item) => item.parentId === node.nodeId);
+        }
         if (curNode) {
+          if (curNode.type === 'search-empty') {
+            this.emptyTableData = formatCodeData(0, {
+              tipType: value ? 'search' : '',
+              name: curNode.name
+            });
+          }
           this.subPagination = Object.assign(this.subPagination, { current: 1, count: 0 });
           this.$emit('on-table-search', { value, node: curNode, index });
+        } else {
+          this.emptyTableData = formatCodeData(0, {
+            tipType: value ? 'search' : '',
+            name: this.$t(`m.common['搜索结果为空']`)
+          });
+          // 如果父级搜索了没数据，此时搜索表格需要提供当前父级下的children
+          if (this.curTreeTableData.children && this.curTreeTableData.children.length && !this.emptyTableData.tipType) {
+            // const { id, name } = this.curTreeTableData.children[0];
+            // const emptyNodeData = allTreeData.find((item) => `${name}&${id}` === `${item.name}&${item.id}`);
+            // if (emptyNodeData) {
+            this.$emit('on-table-search', {
+              value,
+              node: this.curTreeTableData.children[0],
+              index: this.curTreeTableDataIndex
+            });
+            // }
+          }
         }
+        console.log(curNode, this.curTreeTableData, this.curAllTreeNode);
+        setTimeout(() => {
+          this.tableLoading = false;
+        }, 1000);
       },
 
       handleEmptyClear (payload, node, index) {
         this.$nextTick(() => {
           const typeMap = {
             table: () => {
-              this.$refs[`topologyInputRef${index}`].value = '';
+              this.emptyTableData.tipType = '';
+              this.tableKeyWord = '';
+              this.$refs.topologyTableInputRef.value = '';
+              this.emptyTableData = Object.assign({}, formatCodeData(0, { tipType: '' }));
+              console.log(this.allTreeData.length, 1569);
+              // 如果父级搜索了没数据，此时搜索表格需要提供当前父级下的children
+              if (!this.allTreeData.length && this.curTreeTableData.children && this.curTreeTableData.children.length) {
+                console.log(115566);
+                this.$emit('on-table-search', {
+                  value: '',
+                  node: this.curTreeTableData.children[0],
+                  index: this.curTreeTableDataIndex
+                });
+                return;
+              }
               this.handleTableSearch('', node, index);
             },
             tree: () => {
-              this.$refs[`topologyInputRef${index}`][0].value = '';
-              this.handleSearch('', node, index);
+              this.treeKeyWord = '';
+              this.$refs.topologyTreeInputRef.value = '';
+              this.handleTreeSearch('', node, index);
             }
           };
-          typeMap[this.curSearchMode]();
+          typeMap[payload]();
         });
       },
 
       handleEmptyRefresh (payload, node, index) {
-        this.$nextTick(() => {
-          const typeMap = {
-            table: () => {
-              this.$refs[`topologyInputRef${index}`].value = '';
-              this.handleTableSearch('', node, index);
-            },
-            tree: () => {
-              this.$refs[`topologyInputRef${index}`][0].value = '';
-              this.handleSearch('', node, index);
-            }
-          };
-          typeMap[this.curSearchMode]();
-        });
+        this.handleEmptyClear(payload, node, index);
       },
 
       handleOpenSearch (node, index) {
-        console.log(node, index);
         if (
-          (this.allData[index + 1] && this.allData[index + 1].type === 'search' && this.allData[index + 1].visiable)
+          (this.allTreeData[index + 1]
+            && this.allTreeData[index + 1].type === 'search'
+            && this.allTreeData[index + 1].visiable)
           || this.isExistAsync(node)
         ) {
           return;
         }
         node.expanded = true;
         if (node.children && node.children.length) {
-          const children = this.allData.filter((item) => item.parentId === node.nodeId);
+          const children = this.allTreeData.filter((item) => item.parentId === node.nodeId);
           children.forEach((child) => {
             child.visiable = node.expanded;
             if (child.async && !node.expanded) {
@@ -720,7 +952,7 @@
        * @param {Object} node 当前节点对象
        */
       getNodeStyle (node) {
-        const isSameLevelExistSync = this.allData
+        const isSameLevelExistSync = this.allTreeData
           .filter((item) => item.level === node.level)
           .some((item) => item.type === 'node' && item.async);
         const flag = !node.async && isSameLevelExistSync;
@@ -756,7 +988,7 @@
       },
 
       getComputedDisplay (node) {
-        const isSameLevelExistSync = this.allData
+        const isSameLevelExistSync = this.allTreeData
           .filter((item) => item.level === node.level)
           .some((item) => item.type === 'node' && item.async);
         return isSameLevelExistSync && !node.async;
@@ -804,7 +1036,7 @@
           node.expanded = !node.expanded;
         }
         if (node.children && node.children.length) {
-          const children = this.allData.filter((item) => item.parentId === node.nodeId);
+          const children = this.allTreeData.filter((item) => item.parentId === node.nodeId);
           children.forEach((child) => {
             if (node.expanded) {
               child.visiable = child.type !== 'search' && node.expanded;
@@ -818,13 +1050,13 @@
           this.$emit('on-expanded', index, node.expanded);
         } else {
           if (!node.expanded) {
-            const nextNode = this.allData[index + 1];
+            const nextNode = this.allTreeData[index + 1];
             if (nextNode && nextNode.type === 'search') {
-              this.allData.splice(index + 1, 1);
+              this.allTreeData.splice(index + 1, 1);
             }
-            const nextOneNode = this.allData[index + 1];
+            const nextOneNode = this.allTreeData[index + 1];
             if (nextOneNode && nextOneNode.type === 'search-empty') {
-              this.allData.splice(index + 1, 1);
+              this.allTreeData.splice(index + 1, 1);
             }
           }
           if (node.async && node.expanded) {
@@ -842,7 +1074,7 @@
       collapseNode (node) {
         node.expanded = false;
         if (node.children && node.children.length) {
-          const children = this.allData.filter((item) => item.parentId === node.nodeId);
+          const children = this.allTreeData.filter((item) => item.parentId === node.nodeId);
           children.forEach((child) => {
             child.visiable = false;
             if (child.async) {
@@ -855,24 +1087,34 @@
       // 选择当前节点，展示右侧表格数据
       handleSelectNode (node, index) {
         this.tableLoading = true;
-        this.selectNodeDataIndex = index;
-        this.selectNodeData = Object.assign({}, node);
-        if (node.id !== this.curSearchMode.id) {
-          this.$nextTick(() => {
-            this.$refs[`topologyInputRef${index}`].value = '';
-            this.tableEmptyData = Object.assign({}, {});
-            this.subPagination.current = 1;
-          });
+        if (node.id !== this.selectNodeData.id) {
+          this.handleEmptyClear('table', node, index);
         }
-        this.$emit('async-load-table-nodes', node, index, false);
+        if (Object.keys(node).length > 0) {
+          this.selectNodeDataIndex = index;
+          this.selectNodeData = Object.assign({}, node);
+          this.$store.commit('setTreeTableData', node);
+          this.$store.commit('setTreeTableDataIndex', index);
+          this.$store.commit('setToPoTreeData', this.allTreeData);
+          // 存储回显直接勾选父级，子集全部默认勾选数据
+          this.$store.commit('setTreeTableChecked', this.checkedNodeIdList);
+          this.$store.commit('setTreeSelectedNode', this.currentSelectedNode);
+          // 存储只选择表格
+          this.$emit('async-load-table-nodes', node, index, false);
+        } else {
+          this.selectNodeDataIndex = _.cloneDeep(this.curTreeTableDataIndex);
+          this.selectNodeData = _.cloneDeep(this.curTreeTableData);
+          this.fetchLevelTree(this.curAllTreeNode);
+        }
+        // console.log(node, this.selectNodeDataIndex, '选中大多数');
         setTimeout(() => {
           this.tableLoading = false;
-        }, 0);
+        }, 1000);
       },
 
       handleNodeChecked (value, node) {
         if (node.children && node.children.length > 0) {
-          const children = this.allData.filter((item) => item.parentId === node.nodeId);
+          const children = this.allTreeData.filter((item) => item.parentId === node.nodeId);
           children.forEach((item) => {
             // isRemote 已有默认权限标识
             if (item.checked !== value && !item.isRemote) {
@@ -895,104 +1137,128 @@
         }
         this.handleNodeChecked(newVal, node);
         this.getChildrenChecked(newVal, node);
+        this.$store.commit('setTreeSelectedNode');
         this.$emit('on-select', newVal, node);
       },
 
       // 获取子集默认选中的数据
       getChildrenChecked (newVal, node) {
-        const childrenList = this.allData.filter((item) => item.parentId === node.nodeId);
+        const childrenList = this.allTreeData.filter((item) => item.parentId === node.nodeId);
         const childrenIdList = childrenList.map((v) => v.id);
         const defaultCheckedList = childrenList
           .filter((item) => item.disabled && childrenIdList.includes(item.id))
           .map((v) => v.id);
         this.$nextTick(() => {
+          const list = [];
           this.renderTopologyData.forEach((item) => {
             if (childrenIdList.includes(item.id) && this.$refs.topologyTableRef) {
               this.$refs.topologyTableRef.toggleRowSelection(item, newVal);
               if (defaultCheckedList.includes(item.id)) {
+                list.push(item);
+                item.disabled = true;
                 this.$refs.topologyTableRef.toggleRowSelection(item, true);
               }
             }
           });
+          this.$store.commit('setTreeSelectedNode', list);
         });
       },
 
       handlePageChange (current) {
         this.pagination = Object.assign(this.pagination, { current });
-        this.$emit('on-page-change', current, this.allData[this.allData.length - 1]);
+        this.$emit('on-page-change', current, this.allTreeData[this.allTreeData.length - 1]);
       },
 
       handleTablePageChange (current) {
-        const index = this.allData.findIndex(
+        if (!this.allTreeData.length) {
+          this.allTreeData = _.cloneDeep(this.curAllTreeNode);
+        }
+        const index = this.allTreeData.findIndex(
           (item) => item.parentId === this.selectNodeData.nodeId && item.type === 'load'
         );
         if (index > -1) {
-          this.$set(this.allData[index], 'current', current - 1);
-          this.$emit('on-table-page-change', this.allData[index], index);
+          this.$set(this.allTreeData[index], 'current', current - 1);
+          this.$emit('on-table-page-change', this.allTreeData[index], index);
         }
       },
 
       getDataByPage (page, list) {
-        if (!page) {
+        if (!page || page === 1) {
           this.subPagination.current = page = 1;
-        }
-        let startIndex = (page - 1) * this.subPagination.limit;
-        let endIndex = page * this.subPagination.limit;
-        if (startIndex < 0) {
-          startIndex = 0;
-        }
-        if (endIndex > list.length) {
-          endIndex = list.length;
-        }
-        console.log(startIndex, endIndex);
-        if (startIndex >= list.length) {
-          return this.curTableData;
-        } else {
+          let startIndex = (page - 1) * this.subPagination.limit;
+          let endIndex = page * this.subPagination.limit;
+          if (startIndex < 0) {
+            startIndex = 0;
+          }
+          if (endIndex > list.length) {
+            endIndex = list.length;
+          }
           return list.slice(startIndex, endIndex);
+        } else {
+          return this.tablePageData;
         }
       },
 
       fetchSelectedGroups (type, payload, row) {
         const typeMap = {
           multiple: () => {
+            let allTreeData = [...this.allTreeData];
+            if (!allTreeData.length && !this.isOnlyLevel && this.curKeyword) {
+              allTreeData = [...this.curTreeTableData.children || []];
+            }
             const isChecked = payload.length && payload.indexOf(row) !== -1;
+            const curNode = allTreeData.find((item) => `${row.name}&${row.id}` === `${item.name}&${item.id}`);
             if (isChecked) {
-              this.currentSelectedNode.push(row);
               this.$set(row, 'checked', true);
-              this.$emit('on-select', true, row);
+              if (curNode) {
+                this.currentSelectedNode.push(curNode);
+                this.$emit('on-select', true, curNode);
+              }
             } else {
               this.currentSelectedNode = this.currentSelectedNode.filter(
-                (item) => item.id.toString() !== row.id.toString()
+                (item) => `${item.name}&${item.id}` !== `${row.name}&${row.id}`
               );
               this.$set(row, 'checked', false);
-              this.$emit('on-select', false, row);
+              if (curNode) {
+                this.$emit('on-select', false, curNode);
+              }
             }
-            console.log(this.currentSelectedNode, 5555);
+            this.$store.commit('setTreeSelectedNode', this.currentSelectedNode);
           },
           all: () => {
-            const tableIdList = _.cloneDeep(this.renderTopologyData.map((v) => v.id.toString()));
-            const currentSelect = payload.filter((item) => !item.disabled);
-            const selectNode = this.currentSelectedNode.filter((item) => !tableIdList.includes(item.id.toString()));
-            this.currentSelectedNode = [...selectNode, ...payload];
-            let nodes = currentSelect.length ? currentSelect : this.renderTopologyData;
-            if (nodes.length) {
-              nodes = nodes.filter((item) => !item.disabled);
+            let allTreeData = [...this.allTreeData];
+            if (!allTreeData.length && !this.isOnlyLevel && this.curKeyword) {
+              allTreeData = [...this.curAllTreeNode];
             }
-            if (!payload) {
-              this.renderTopologyData.forEach((item) => {
-                if (!item.disabled) {
+            const tableIdList = _.cloneDeep(this.renderTopologyData.map((v) => `${v.name}&${v.id}`));
+            const selectNode = this.currentSelectedNode.filter(
+              (item) => !tableIdList.includes(`${item.name}&${item.id}`)
+            );
+            this.currentSelectedNode = [...selectNode, ...payload];
+            const currentSelect = allTreeData.filter(
+              (item) => payload.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`) && !item.disabled
+            );
+            // 如果currentSelect有内容， 代表当前是勾选，否则就取从总数据里取当前页不是disabled的数据
+            const noDisabledData = allTreeData.filter(
+              (item) =>
+                !payload.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`)
+                && this.renderTopologyData.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`)
+            );
+            const nodes = currentSelect.length ? currentSelect : noDisabledData;
+            this.renderTopologyData.forEach((item) => {
+              if (!item.disabled) {
+                this.$set(item, 'checked', payload.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`));
+                if (payload.length && !currentSelect.length) {
                   this.$set(
                     item,
-                    'checked',
-                    !(
-                      !payload.length
-                      || !this.currentSelectedNode.map((v) => v.id.toString()).includes(item.id.toString())
-                    )
+                    'disabled',
+                    payload.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`)
                   );
-                  this.$refs.topologyTableRef && this.$refs.topologyTableRef.toggleRowSelection(item, item.checked);
                 }
-              });
-            }
+                this.$refs.topologyTableRef && this.$refs.topologyTableRef.toggleRowSelection(item, item.checked);
+              }
+            });
+            this.$store.commit('setTreeSelectedNode', this.currentSelectedNode);
             this.$emit('on-select-all', nodes, currentSelect.length > 0);
           }
         };
@@ -1001,7 +1267,7 @@
 
       handleSelectChange (selection, node) {
         if (this.isShiftBeingPress) {
-          this.pressIndex = this.allData.findIndex((item) => item.id === node.id);
+          this.pressIndex = this.allTreeData.findIndex((item) => item.id === node.id);
           this.pressLevels.push(node.level);
         }
         this.fetchSelectedGroups('multiple', selection, node);
@@ -1225,8 +1491,7 @@
     border-right: 1px solid #dcdee5;
   }
   &-right {
-    width: 100%;
-    padding-left: 20px;
+    width: calc(100% - 20px);
   }
 }
 
