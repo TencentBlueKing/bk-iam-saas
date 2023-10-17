@@ -185,7 +185,7 @@ class GrantActionApplicationData(ApplicationDataBaseInfo):
     def raw_content(self) -> Dict:
         """返回原生申请内容，保存到DB里的"""
         data = self.content.dict(by_alias=True)
-        data["action_sensitivity_level"] = self.get_action_sensitivity_level()
+        data["action_sensitivity_level"] = self.get_action_sensitivity_level_field()
         return data
 
     def get_action_sensitivity_level_field(self) -> str:
@@ -264,11 +264,11 @@ class GroupApplicationData(ApplicationDataBaseInfo):
                 for group in self.content.groups
             ],
             "applicants": [one.dict() for one in self.content.applicants],
-            "action_sensitivity_level": self.get_action_sensitivity_level(),
+            "action_sensitivity_level": self.get_action_sensitivity_level_field(),
         }
         return data
 
-    def get_action_sensitivity_level(self) -> str:
+    def get_action_sensitivity_level_field(self) -> str:
         comments = []
 
         level_count = Counter(obj.highest_sensitivity_level for obj in self.content.groups)

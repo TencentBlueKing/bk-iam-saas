@@ -402,7 +402,9 @@ class GroupColumnValue(BaseModel):
             desc=BaseDictStrValue(value=group.description),
             expired_display=BaseDictStrValue(value=group.expired_display),
             group_info=GroupInfo.from_group(group),
-            highest_sensitivity_level=SensitivityLevel.get_choice_label(group.highest_sensitivity_level),
+            highest_sensitivity_level=BaseDictStrValue(
+                value=SensitivityLevel.get_choice_label(group.highest_sensitivity_level)
+            ),
         )
 
 
