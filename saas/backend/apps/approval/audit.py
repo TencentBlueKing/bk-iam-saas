@@ -28,6 +28,10 @@ class ApprovalProcessActionAuditProvider(BaseRoleDataProvider):
     type = AuditType.APPROVAL_ACTION_UPDATE.value
 
     @property
+    def system_id(self) -> str:
+        return audit_context_getter(self.request, "system_id")
+
+    @property
     def extra(self):
         return {
             "system_id": audit_context_getter(self.request, "system_id"),
@@ -38,6 +42,10 @@ class ApprovalProcessActionAuditProvider(BaseRoleDataProvider):
 
 class ActionSensitivityLevelAuditProvider(BaseRoleDataProvider):
     type = AuditType.ACTION_SENSITIVITY_LEVEL_UPDATE.value
+
+    @property
+    def system_id(self) -> str:
+        return audit_context_getter(self.request, "system_id")
 
     @property
     def extra(self):
