@@ -273,6 +273,25 @@ class ApprovalActionProvider(ApprovalNameMixin, BaseProvider):
         return [{"type": AuditObjectType.ACTION.value, "id": ac.id, "name": ac.name} for ac in actions]
 
 
+class ActionSensitivityLevelProvider(BaseProvider):
+    system_biz = SystemBiz()
+    action_svc = ActionService()
+
+    @property
+    def description(self) -> str:
+        system_id = self.event.extra["system_id"]
+        system = self.system_biz.get(system_id)
+        sensitivity_level = self.event.extra["sensitivity_level"]
+        return f"设置 [{system.name}] 系统操作敏感等级: {sensitivity_level}"
+
+    @property
+    def sub_objects(self) -> List:
+        system_id = self.event.extra["system_id"]
+        action_ids = self.event.extra["action_ids"]
+        actions = self.action_svc.new_action_list(system_id).filter(action_ids)
+        return [{"type": AuditObjectType.ACTION.value, "id": ac.id, "name": ac.name} for ac in actions]
+
+
 class ApprovalGroupProvider(ApprovalNameMixin, BaseProvider):
     @property
     def description(self) -> str:
@@ -330,6 +349,7 @@ class EventDetailExtra:
         AuditType.APPROVAL_GLOBAL_UPDATE.value: ApprovalGlobalProvider,
         AuditType.APPROVAL_ACTION_UPDATE.value: ApprovalActionProvider,
         AuditType.APPROVAL_GROUP_UPDATE.value: ApprovalGroupProvider,
+        AuditType.ACTION_SENSITIVITY_LEVEL_UPDATE.value: ActionSensitivityLevelProvider,
     }
 
     def __init__(self, event: Event):
