@@ -478,6 +478,33 @@ class GroupBiz:
         count, relations = self.group_svc.list_paging_group_member(group_id, limit, offset)
         return count, self._convert_to_group_members(relations)
 
+    def _convert_to_thin_group_members(self, relations: List[SubjectGroup]) -> List[GroupMemberBean]:
+        subjects = parse_obj_as(List[Subject], relations)
+        subject_info_list = SubjectInfoList(subjects)
+
+        group_member_beans = []
+        for subject, relation in zip(subjects, relations):
+            subject_info = subject_info_list.get(subject)
+            if not subject_info:
+                continue
+
+            group_member_bean = GroupMemberBean(
+                expired_at=relation.expired_at,
+                expired_at_display=expired_at_display(relation.expired_at),
+                created_time=utc_string_to_local(relation.created_at),
+                **subject_info.dict(),
+            )
+            group_member_beans.append(group_member_bean)
+
+        return group_member_beans
+
+    def list_paging_thin_group_member(
+        self, group_id: int, limit: int, offset: int
+    ) -> Tuple[int, List[GroupMemberBean]]:
+        """分页查询用户组成员，并给成员填充name/full_named等相关信息"""
+        count, relations = self.group_svc.list_paging_group_member(group_id, limit, offset)
+        return count, self._convert_to_thin_group_members(relations)
+
     def list_paging_members_before_expired_at(
         self, group_id: int, expired_at: int, limit: int = 10, offset: int = 0
     ) -> Tuple[int, List[GroupMemberBean]]:
