@@ -180,7 +180,6 @@
               @on-search="handleTableSearch(...arguments, selectNodeData, selectNodeDataIndex)"
             />
             <div class="multiple-topology-tree-right-content">
-              {{ renderTopologyData.length }}
               <bk-table
                 ref="topologyTableRef"
                 size="small"
@@ -199,7 +198,7 @@
                     <span :title="`ID: ${row.id}`">{{ row.name }}</span>
                   </template>
                 </bk-table-column>
-                <template v-if="!tableLoading">
+                <template v-if="!tableLoading && subPagination.count === 0">
                   <template slot="empty">
                     <ExceptionEmpty
                       :type="formatTreeEmpty(emptyTableData, 'table', 'type')"
@@ -553,11 +552,16 @@
       });
       bus.$on('update-table-toggleRowSelection', ({ isChecked, node }) => {
         const childData = this.renderTopologyData.find((item) => `${item.name}&${item.id}` === `${node.name}&${node.id}`);
+        console.log(childData, isChecked, 55555);
         if (childData) {
           this.$nextTick(() => {
             this.renderTopologyData.forEach((item) => {
               if (`${item.name}&${item.id}` === `${node.name}&${node.id}`) {
                 this.$refs.topologyTableRef.toggleRowSelection(item, isChecked);
+              }
+              if (!isChecked) {
+                this.currentSelectedNode = this.currentSelectedNode.filter((v) => `${v.name}&${v.id}` !== `${node.name}&${node.id}`);
+                this.$store.commit('setTreeSelectedNode', this.currentSelectedNode);
               }
             });
           });
@@ -623,6 +627,7 @@
                     });
                   }
                 }
+                console.log(this.checkedNodeIdList, childSelectedNodes);
                 this.$nextTick(() => {
                   this.renderTopologyData.forEach((item) => {
                     this.$refs.topologyTableRef
@@ -630,6 +635,7 @@
                         item,
                         this.checkedNodeIdList.includes(`${this.selectNodeData.nodeId}&${item.id}`)
                           || childSelectedNodes.includes(`${item.name}&${item.id}`)
+
                       );
                   });
                 });
@@ -644,8 +650,7 @@
                   this.formatDefaultSelected();
                 }
               }
-              if (!curNode && !this.emptyTableData.tipType && this.selectNodeData.children.length) {
-                console.log(1255);
+              if (!curNode && !searchData && this.selectNodeData.children.length) {
                 this.renderTopologyData = [...this.selectNodeData.children];
                 this.formatDefaultSelected();
                 return;
@@ -769,7 +774,7 @@
 
       setDefaultSelect (payload) {
         const list = [...this.allTreeData].filter((item) => item.type === 'node');
-        console.log(this.hasSelectedValues.length, this.allTreeData, !this.isOnlyLevel);
+        // console.log(this.hasSelectedValues.length, this.allTreeData, !this.isOnlyLevel);
         if (this.hasSelectedValues.length && !list.length && !this.isOnlyLevel) {
           const defaultSelectList = this.hasSelectedValues.filter((item) => item.disabled).map(
             (v) => v.ids).flat(this.curChain.length);
@@ -862,10 +867,10 @@
           this.subPagination = Object.assign(this.subPagination, { current: 1, count: 0 });
           this.$emit('on-table-search', { value, node: curNode, index });
         } else {
-          this.emptyTableData = formatCodeData(0, {
-            tipType: value ? 'search' : '',
-            name: this.$t(`m.common['搜索结果为空']`)
-          });
+          // this.emptyTableData = formatCodeData(0, {
+          //   tipType: value ? 'search' : '',
+          //   name: this.$t(`m.common['搜索结果为空']`)
+          // });
           // 如果父级搜索了没数据，此时搜索表格需要提供当前父级下的children
           if (this.curTreeTableData.children && this.curTreeTableData.children.length && !this.emptyTableData.tipType) {
             // const { id, name } = this.curTreeTableData.children[0];
@@ -893,10 +898,8 @@
               this.tableKeyWord = '';
               this.$refs.topologyTableInputRef.value = '';
               this.emptyTableData = Object.assign({}, formatCodeData(0, { tipType: '' }));
-              console.log(this.allTreeData.length, 1569);
               // 如果父级搜索了没数据，此时搜索表格需要提供当前父级下的children
               if (!this.allTreeData.length && this.curTreeTableData.children && this.curTreeTableData.children.length) {
-                console.log(115566);
                 this.$emit('on-table-search', {
                   value: '',
                   node: this.curTreeTableData.children[0],
