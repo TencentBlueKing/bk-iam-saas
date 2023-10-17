@@ -176,8 +176,6 @@ class ApplicationDataTrans:
 
             if len(usernames) == 1:
                 application_policy_list = self._gen_need_apply_policy_list(usernames[0], system_id, policy_list)
-
-            application_policy_list.fill_empty_fields()
         else:
             # 2. 只对新增的策略进行申请，所以需要移除掉已有的权限
             application_policy_list = self._gen_need_apply_policy_list(applicant, system_id, policy_list)

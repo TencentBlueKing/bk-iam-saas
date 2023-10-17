@@ -8,10 +8,11 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from pydantic import parse_obj_as
 
+from backend.apps.approval.models import ActionProcessRelation
 from backend.common.cache import cachedmethod
 from backend.component import iam
 
@@ -59,3 +60,12 @@ class ActionService:
     def delete(self, system_id: str, action_id: str):
         """删除操作"""
         iam.delete_action(system_id, action_id)
+
+    @cachedmethod(timeout=60)
+    def get_action_sensitivity_level_map(self, system_id: str) -> Dict[str, str]:
+        action_sensitivity_level = {}
+        for action_level in ActionProcessRelation.objects.filter(system_id=system_id).values(
+            "action_id", "sensitivity_level"
+        ):
+            action_sensitivity_level[action_level["action_id"]] = action_level["sensitivity_level"]
+        return action_sensitivity_level

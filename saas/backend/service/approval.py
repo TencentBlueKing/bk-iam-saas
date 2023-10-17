@@ -155,6 +155,40 @@ class ApprovalProcessService:
                 process_id=process_id, updater=operator, updated_time=timezone.now()
             )
 
+    def batch_create_or_update_action_sensitivity_level(
+        self, system_id: str, action_ids: List[str], sensitivity_level: str, operator: str
+    ):
+        """批量更新操作的敏感级别"""
+        # 查询已存在的
+        exist_ids = set(
+            ActionProcessRelation.objects.filter(system_id=system_id, action_id__in=action_ids).values_list(
+                "action_id", flat=True
+            )
+        )
+
+        # 对不存在的进行创建
+        default_process = self.get_default_process(ApplicationType.GRANT_ACTION.value).process
+        not_exist_ids = set(action_ids) - set(exist_ids)
+        if not_exist_ids:
+            action_process_relations = [
+                ActionProcessRelation(
+                    system_id=system_id,
+                    action_id=aid,
+                    process_id=default_process.id,
+                    sensitivity_level=sensitivity_level,
+                    creator=operator,
+                    updater=operator,
+                )
+                for aid in not_exist_ids
+            ]
+            ActionProcessRelation.objects.bulk_create(action_process_relations)
+
+        # 对已存在的进行更新
+        if exist_ids:
+            ActionProcessRelation.objects.filter(system_id=system_id, action_id__in=exist_ids).update(
+                sensitivity_level=sensitivity_level, updater=operator, updated_time=timezone.now()
+            )
+
     def list_group_process(self, group_ids: List[int]) -> List[GroupApprovalProcess]:
         """批量查询用户组对应的审批流程"""
         # 获取所有已配置的用户组的审批流程

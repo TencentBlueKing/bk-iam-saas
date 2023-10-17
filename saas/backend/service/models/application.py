@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from collections import Counter
 from typing import Any, Dict, List, Union
 
 from pydantic import BaseModel, Field
@@ -15,7 +16,7 @@ from pydantic import BaseModel, Field
 from backend.service.models.subject import Applicant
 from backend.util.model import ListModel
 
-from ..constants import ApplicationStatus, ApplicationType, SubjectType
+from ..constants import ApplicationStatus, ApplicationType, SensitivityLevel, SubjectType
 
 
 class ApplicationTicket(BaseModel):
@@ -157,6 +158,7 @@ class ApplicationPolicyInfo(BaseModel):
     # Action名称
     name: str
     name_en: str = ""
+    sensitivity_level: str = ""
 
     class Config:
         # 当字段设置别名时，初始化支持原名或别名传入，False时，则只能是别名传入，同时配合dict(by_alias=True)可控制字典数据时的key是否别名
@@ -182,7 +184,26 @@ class GrantActionApplicationData(ApplicationDataBaseInfo):
 
     def raw_content(self) -> Dict:
         """返回原生申请内容，保存到DB里的"""
-        return self.content.dict(by_alias=True)
+        data = self.content.dict(by_alias=True)
+        data["action_sensitivity_level"] = self.get_action_sensitivity_level()
+        return data
+
+    def get_action_sensitivity_level_field(self) -> str:
+        comments = []
+
+        level_count = Counter(obj.sensitivity_level for obj in self.content.policies)
+        for level in sorted(level_count.keys(), reverse=True):
+            comments.append("{}个{}敏感等级操作".format(level_count[level], SensitivityLevel.get_choice_label(level)))
+
+        return "包含" + ", ".join(comments)
+
+    def get_applicants_field(self) -> str:
+        return ", ".join(
+            [
+                "{}: {}({})".format("用户" if u.type == SubjectType.USER.value else "部门", u.display_name, u.id)
+                for u in self.content.applicants
+            ]
+        )
 
 
 # 自定义权限申请数据内容数据结构 End #
@@ -207,6 +228,16 @@ class ApplicationGroupInfo(BaseModel):
     expired_display: str = ""
     # 用户组自身的权限信息(包含权限模板和自定义权限)
     templates: List[ApplicationGroupPermTemplate]
+    # 最高敏感等级
+    highest_sensitivity_level: str = ""
+
+    def __init__(self, **data: Any):
+        super().__init__(**data)
+
+        policy_sensitivity_levels = [p.sensitivity_level for t in self.templates for p in t.policies]
+        self.highest_sensitivity_level = (
+            max(policy_sensitivity_levels) if policy_sensitivity_levels else SensitivityLevel.L1.vaue  # type: ignore
+        )
 
 
 class GroupApplicationContent(BaseModel):
@@ -229,11 +260,30 @@ class GroupApplicationData(ApplicationDataBaseInfo):
             "expired_at": first_group.expired_at,
             "expired_display": first_group.expired_display,
             "groups": [
-                group.dict(include={"id", "name", "description", "expired_at"}) for group in self.content.groups
+                group.dict(include={"id", "name", "description", "expired_at", "highest_sensitivity_level"})
+                for group in self.content.groups
             ],
             "applicants": [one.dict() for one in self.content.applicants],
+            "action_sensitivity_level": self.get_action_sensitivity_level(),
         }
         return data
+
+    def get_action_sensitivity_level(self) -> str:
+        comments = []
+
+        level_count = Counter(obj.highest_sensitivity_level for obj in self.content.groups)
+        for level in sorted(level_count.keys(), reverse=True):
+            comments.append("最高敏感等级 {} 的用户组{}个".format(SensitivityLevel.get_choice_label(level), level_count[level]))
+
+        return "包含" + ", ".join(comments)
+
+    def get_applicants_field(self) -> str:
+        return ", ".join(
+            [
+                "{}: {}({})".format("用户" if u.type == SubjectType.USER.value else "部门", u.display_name, u.id)
+                for u in self.content.applicants
+            ]
+        )
 
 
 # 申请加入用户组数据内容数据结构 End #

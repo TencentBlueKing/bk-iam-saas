@@ -38,6 +38,7 @@ class ActionApprovalProcessQuerySLZ(serializers.Serializer):
     system_id = serializers.CharField(label="系统ID")
     action_group_id = serializers.IntegerField(label="操作分组ID", required=False, default=0)
     keyword = serializers.CharField(label="搜索关键字", required=False, default="")
+    sensitivity_level = serializers.CharField(label="敏感等级", max_length=32, default="")
 
 
 class ActionApprovalProcessSLZ(serializers.Serializer):
@@ -46,6 +47,7 @@ class ActionApprovalProcessSLZ(serializers.Serializer):
     system_id = serializers.CharField(label="系统ID")
     process_id = serializers.IntegerField(label="流程ID")
     process_name = serializers.CharField(label="流程名称")
+    sensitivity_level = serializers.CharField(label="敏感等级")
 
 
 class BaseActionSLZ(serializers.Serializer):
@@ -73,3 +75,16 @@ class GroupApprovalProcessSLZ(serializers.Serializer):
 class GroupApprovalProcessModifySLZ(serializers.Serializer):
     group_ids = serializers.ListField(label="用户组ID列表", child=serializers.IntegerField(label="用户组ID"))
     process_id = serializers.IntegerField(label="流程ID")
+
+
+class SensitivityLevelCountSLZ(serializers.Serializer):
+    all = serializers.IntegerField()
+    L1 = serializers.IntegerField()
+    L2 = serializers.IntegerField()
+    L3 = serializers.IntegerField()
+    L4 = serializers.IntegerField()
+
+
+class ActionSensitivityLevelSLZ(serializers.Serializer):
+    actions = serializers.ListField(label="操作列表", child=BaseActionSLZ(label="操作"))
+    sensitivity_level = serializers.CharField(label="敏感等级", max_length=32)
