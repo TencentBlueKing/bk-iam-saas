@@ -928,12 +928,13 @@
         resourceList = resourceList.filter(item => item !== undefined);
         resources.forEach(item => {
           item && item.forEach(subItem => {
-            if (resources.every(v => v && v.some(vItem => vItem[0] === subItem[0]))) {
+            const hasIntersectionResource = resources.every(v => v && v.some(vItem => vItem[0] === subItem[0]));
+            const hasResource = resources.find(v => v && v.some(vItem => vItem[0] === subItem[0]));
+            if (hasIntersectionResource) {
               tempData.push(subItem[0]);
             }
             // 判断处理没有交集的情况
-            if (!resources.every(v => v && v.some(vItem => vItem[0] === subItem[0])
-              && resources.find(v => v && v.some(vItem => vItem[0] === subItem[0])))) {
+            if (!hasIntersectionResource && hasResource) {
               this.isAggregateEmptyMessage = true;
             }
           });
