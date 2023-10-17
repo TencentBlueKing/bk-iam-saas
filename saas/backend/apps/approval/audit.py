@@ -36,6 +36,18 @@ class ApprovalProcessActionAuditProvider(BaseRoleDataProvider):
         }
 
 
+class ActionSensitivityLevelAuditProvider(BaseRoleDataProvider):
+    type = AuditType.ACTION_SENSITIVITY_LEVEL_UPDATE.value
+
+    @property
+    def extra(self):
+        return {
+            "system_id": audit_context_getter(self.request, "system_id"),
+            "action_ids": audit_context_getter(self.request, "action_ids"),
+            "sensitivity_level": audit_context_getter(self.request, "sensitivity_level"),
+        }
+
+
 class ApprovalProcessGroupAuditProvider(BaseRoleDataProvider):
     type = AuditType.APPROVAL_GROUP_UPDATE.value
 

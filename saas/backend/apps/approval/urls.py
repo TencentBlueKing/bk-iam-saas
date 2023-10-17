@@ -37,4 +37,15 @@ urlpatterns = [
         views.ApprovalProcessGlobalConfigViewSet.as_view({"get": "list", "post": "create"}),
         name="approval.approval_process_global_config",
     ),
+    # 操作的敏感等级数量
+    path(
+        "sensitivity_level/count/",
+        views.SystemActionSensitivityLevelCountViewSet.as_view({"get": "list"}),
+        name="approval.system_action_sensitivity_level_count",
+    ),
+    path(
+        "sensitivity_level/actions/",
+        views.ActionSensitivityLevelViewSet.as_view({"post": "create"}),
+        name="approval.action_sensitivity_level_update",
+    ),
 ]

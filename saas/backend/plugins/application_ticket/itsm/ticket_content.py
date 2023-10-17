@@ -12,7 +12,7 @@ from typing import List
 
 from pydantic import BaseModel
 
-from backend.service.constants import PolicyEnvConditionType, PolicyEnvType, SubjectType, WeekDayEnum
+from backend.service.constants import PolicyEnvConditionType, PolicyEnvType, SensitivityLevel, SubjectType, WeekDayEnum
 from backend.service.models import (
     ApplicationAuthorizationScope,
     ApplicationEnvironment,
@@ -315,6 +315,7 @@ class ActionColumnValue(BaseModel):
     """权限表格每一列的值"""
 
     action: BaseDictStrValue
+    sensitivity_level: BaseDictStrValue
     resource_groups: ResourceGroupInfo
     expired_display: BaseDictStrValue
 
@@ -326,6 +327,7 @@ class ActionColumnValue(BaseModel):
             resource_groups = ResourceGroupInfo.from_resource_groups(policy.resource_groups)
         return cls(
             action=BaseDictStrValue(value=policy.name),
+            sensitivity_level=BaseDictStrValue(value=SensitivityLevel.get_choice_label(policy.sensitivity_level)),
             resource_groups=resource_groups,
             expired_display=BaseDictStrValue(value=policy.expired_display),
         )
@@ -391,6 +393,7 @@ class GroupColumnValue(BaseModel):
     desc: BaseDictStrValue
     expired_display: BaseDictStrValue
     group_info: GroupInfo
+    highest_sensitivity_level: BaseDictStrValue  # 最高敏感等级
 
     @classmethod
     def from_group(cls, group: ApplicationGroupInfo):
@@ -399,6 +402,7 @@ class GroupColumnValue(BaseModel):
             desc=BaseDictStrValue(value=group.description),
             expired_display=BaseDictStrValue(value=group.expired_display),
             group_info=GroupInfo.from_group(group),
+            highest_sensitivity_level=SensitivityLevel.get_choice_label(group.highest_sensitivity_level),
         )
 
 
