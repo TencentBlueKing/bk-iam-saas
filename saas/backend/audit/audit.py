@@ -313,7 +313,7 @@ def log_user_permission_clean_event(
     event = Event(
         type=AuditType.USER_PERMISSION_CLEAN.value,
         username=subject.id,
-        object_type=AuditObjectType.USER_PERMISSION_CLEANUP.value,
+        object_type=AuditObjectType.USER_PERMISSION_CLEAN.value,
         object_id="0",
         object_name="user_permission_clean",
         source_type=source_type,
