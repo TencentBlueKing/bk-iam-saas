@@ -12,7 +12,10 @@
       <div
         v-if="isShowUnlimited"
         class="no-limited-wrapper flex-between"
-        :style="{ borderBottom: !isHide ? 0 : '' }"
+        :style="{
+          borderBottom: !isHide ? 0 : '' ,
+          marginBottom: isAggregateEmptyMessage ? '10px' : 0
+        }"
         :title="$t(`m.resource['无限制总文案']`)">
         <div class="no-limited-wrapper-left single-hide">
           <Icon type="info-new" />
@@ -27,6 +30,12 @@
             {{ $t(`m.common['无限制']`) }}
           </bk-checkbox>
         </div>
+      </div>
+      <div
+        v-if="isAggregateEmptyMessage"
+        class="no-aggregate-wrapper single-hide">
+        <Icon type="info-new" />
+        <span>{{ $t(`m.resource['操作之间无公共实例，无法批量编辑']`) }}</span>
       </div>
       <template v-if="!isHide">
         <div class="select-wrapper">
@@ -150,6 +159,10 @@
       selectionMode: {
         type: String,
         default: 'all'
+      },
+      isAggregateEmptyMessage: {
+        type: Boolean,
+        default: false
       }
     },
     data () {
@@ -557,7 +570,8 @@
         justify-self: start;
         border-top: 1px solid #dcdee5;
     }
-    .no-limited-wrapper {
+    .no-limited-wrapper,
+    .no-aggregate-wrapper {
       width: 100%;
       height: 42px;
       line-height: 39px;
@@ -576,6 +590,9 @@
           }
         }
       }
+    }
+    .no-aggregate-wrapper {
+      border-bottom: 0;
     }
     .left-content {
         width: 360px;
