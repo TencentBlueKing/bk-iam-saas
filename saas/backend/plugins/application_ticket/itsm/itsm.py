@@ -13,7 +13,7 @@ from typing import Dict, List, Optional
 from rest_framework.request import Request
 
 from backend.component import itsm
-from backend.service.constants import ApplicationStatus, ApplicationType, ProcessorSource, SubjectType
+from backend.service.constants import ApplicationStatus, ApplicationType, ProcessorSource
 from backend.service.models import (
     ApplicationTicket,
     ApprovalProcessWithNodeProcessor,
@@ -88,19 +88,20 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
         if process.has_instance_approver_node():
             params["has_instance_approver"] = int(process.has_instance_approver_node(judge_empty=True))
 
-        # 在params中加上权限获得者
+        # 在params中加上权限获得者, 增加敏感等级提示语句
         params["dynamic_fields"] = [
+            {
+                "name": "操作敏感等级",
+                "type": "STRING",
+                "value": data.get_action_sensitivity_level_field(),
+                "meta": {"language": {"en": "action sensitivity level"}},
+            },
             {
                 "name": "权限获得者",
                 "type": "STRING",
-                "value": ", ".join(
-                    [
-                        "{}: {}({})".format("用户" if u.type == SubjectType.USER.value else "部门", u.display_name, u.id)
-                        for u in data.content.applicants
-                    ]
-                ),
+                "value": data.get_applicants_field(),
                 "meta": {"language": {"en": "recipient of permissions"}},
-            }
+            },
         ]
 
         ticket = itsm.create_ticket(**params)
@@ -140,19 +141,20 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
                 "form_data": [GroupTable.from_application(data.content).dict()],
             }
 
-        # 在params中加上权限获得者
+        # 在params中加上权限获得者, 增加敏感等级提示语句
         params["dynamic_fields"] = [
+            {
+                "name": "操作敏感等级",
+                "type": "STRING",
+                "value": data.get_action_sensitivity_level_field(),
+                "meta": {"language": {"en": "action sensitivity level"}},
+            },
             {
                 "name": "权限获得者",
                 "type": "STRING",
-                "value": ", ".join(
-                    [
-                        "{}: {}({})".format("用户" if u.type == SubjectType.USER.value else "部门", u.display_name, u.id)
-                        for u in data.content.applicants
-                    ]
-                ),
+                "value": data.get_applicants_field(),
                 "meta": {"language": {"en": "recipient of permissions"}},
-            }
+            },
         ]
 
         params["tag"] = tag
