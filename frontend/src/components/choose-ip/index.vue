@@ -5,6 +5,7 @@
         <resource-select
           :list="selectList"
           :value="selectValue"
+          :cur-selected-chain="curSelectedChain"
           @on-select="handleResourceSelect" />
       </div>
       <template v-if="isOnlyLevel">
@@ -290,7 +291,8 @@
           tipType: ''
         },
         curTableData: [],
-        treeDataStorage: []
+        treeDataStorage: [],
+        curSelectedChain: {}
       };
     },
     computed: {
@@ -334,6 +336,7 @@
       selectValue: {
         handler (value) {
           if (value) {
+            this.curSelectedChain = this.selectList.find(item => item.id === value);
             this.curChain = _.cloneDeep(this.selectList[0].resource_type_chain);
             this.ignorePathFlag = this.selectList[0].ignore_iam_path;
             this.isExistIgnore = this.selectList.some(item => item.ignore_iam_path);
@@ -708,7 +711,6 @@
         });
         if (curNode && !curNode.disabled) {
           curNode.checked = true;
-          curNode.disabled = true;
           this.setNodeChecked(true, curNode);
           this.$nextTick(() => {
             this.$refs.topologyRef.$refs.topologyTableRef.toggleRowSelection(curNode, true);
@@ -770,6 +772,7 @@
               });
 
               isExistNoCarryLimit = Object.keys(noCarryLimitData).length > 0;
+              console.log(isExistNoCarryLimit, Object.keys(normalSelectedData).length > 0);
               if (isExistNoCarryLimit && Object.keys(normalSelectedData).length > 0) {
                 checked = true;
                 disabled = normalSelectedData.disabled && noCarryLimitData.disabled;
@@ -811,9 +814,9 @@
       },
 
       async handleResourceSelect (value) {
-        const curSelected = this.selectList.find(item => item.id === value);
-        this.curChain = _.cloneDeep(curSelected.resource_type_chain);
-        this.ignorePathFlag = curSelected.ignore_iam_path;
+        this.curSelectedChain = this.selectList.find(item => item.id === value);
+        this.curChain = _.cloneDeep(this.curSelectedChain.resource_type_chain);
+        this.ignorePathFlag = this.curSelectedChain.ignore_iam_path;
         this.curPlaceholder = `${this.$t(`m.common['搜索']`)} ${this.curChain[0].name}`;
         this.handleResetParams();
         await this.firstFetchResources();
@@ -1452,36 +1455,36 @@
   };
 </script>
 <style lang="postcss">
-    .iam-choose-ip {
-        height: 100%;
-        .topology-wrapper {
-            height: calc(100% - 74px);
-            .topology-tree-wrapper {
-                position: relative;
-                height: 100%;
-                min-height: 450px;
-                .empty-wrapper {
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    img {
-                        width: 120px;
-                    }
-                    /* .search-text-wrapper {
-                        position: relative;
-                        top: -20px;
-                        font-size: 12px;
-                        color: #c4c6cc;
-                        word-break: break-all;
-                        text-align: center;
-                    } */
-                }
-                .bk-loading {
-                    /* background: #fafbfd !important; */
-                    background: #ffffff !important;
-                }
-            }
-        }
-    }
+  .iam-choose-ip {
+      height: 100%;
+      .topology-wrapper {
+          height: calc(100% - 74px);
+          .topology-tree-wrapper {
+              position: relative;
+              height: 100%;
+              min-height: 450px;
+              .empty-wrapper {
+                  position: absolute;
+                  top: 50%;
+                  left: 50%;
+                  transform: translate(-50%, -50%);
+                  img {
+                      width: 120px;
+                  }
+                  /* .search-text-wrapper {
+                      position: relative;
+                      top: -20px;
+                      font-size: 12px;
+                      color: #c4c6cc;
+                      word-break: break-all;
+                      text-align: center;
+                  } */
+              }
+              .bk-loading {
+                  /* background: #fafbfd !important; */
+                  background: #ffffff !important;
+              }
+          }
+      }
+  }
 </style>

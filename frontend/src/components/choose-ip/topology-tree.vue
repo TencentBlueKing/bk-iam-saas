@@ -507,7 +507,6 @@
       },
       allData: {
         handler (value) {
-          console.log(value, 2555);
           this.allTreeData = [...value];
           this.fetchLevelTree(value);
         },
@@ -528,7 +527,6 @@
       },
       emptyData: {
         handler (value) {
-          console.log(value, 5544);
           if (this.curSearchMode === 'tree') {
             this.emptyTreeData = Object.assign({}, value);
           } else {
@@ -552,7 +550,6 @@
       });
       bus.$on('update-table-toggleRowSelection', ({ isChecked, node }) => {
         const childData = this.renderTopologyData.find((item) => `${item.name}&${item.id}` === `${node.name}&${node.id}`);
-        console.log(childData, isChecked, 55555);
         if (childData) {
           this.$nextTick(() => {
             this.renderTopologyData.forEach((item) => {
@@ -645,7 +642,6 @@
                     this.$store.commit('setTreeTableData', childNode);
                   }
                   // 存储回显直接勾选父级，子集全部默认勾选数据
-                  console.log(this.curTreeSelectedNode, this.curTreeTableChecked, this.renderTopologyData);
                   this.formatDefaultSelected();
                 }
               }
@@ -774,16 +770,16 @@
 
       setDefaultSelect (payload) {
         const list = [...this.allTreeData].filter((item) => item.type === 'node');
-        // console.log(this.hasSelectedValues.length, this.allTreeData, !this.isOnlyLevel);
         if (this.hasSelectedValues.length && !this.isOnlyLevel) {
           const defaultSelectList = this.hasSelectedValues.filter((item) => item.disabled).map(
             (v) => v.ids).flat(this.curChain.length);
-          return !defaultSelectList.includes(`${payload.id}&${this.curChain[payload.level].id}`);
+          return !(defaultSelectList.includes(`${payload.id}&${this.curChain[payload.level].id}`)
+            || defaultSelectList.includes(`${this.selectNodeData.id}&${this.curChain[payload.level - 1].id}`));
         }
         const allTreeData = list
           .filter((item) => item.disabled && item.type === 'node')
-          .map((item) => item.id);
-        return !allTreeData.includes(payload.id);
+          .map((item) => `${item.name}&${item.id}`);
+        return !allTreeData.includes(`${payload.name}&${payload.id}`);
       },
 
       handleKeyup ($event) {
@@ -897,7 +893,6 @@
             // }
           }
         }
-        console.log(curNode, this.curChain);
         setTimeout(() => {
           this.tableLoading = false;
         }, 1000);
@@ -1153,7 +1148,7 @@
         }
         this.handleNodeChecked(newVal, node);
         this.getChildrenChecked(newVal, node);
-        this.$store.commit('setTreeSelectedNode');
+        // this.$store.commit('setTreeSelectedNode');
         this.$emit('on-select', newVal, node);
       },
 

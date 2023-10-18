@@ -15,7 +15,7 @@
               class="single-hide"
               style="width: calc(100% - 20px)">
               <Icon bk class="expanded-icon" :type="activePanel.includes(item.name) ? 'down-shape' : 'right-shape'" />
-              <span>{{ formatChain(item) }}: </span>
+              <!-- <span>{{ formatChain(item) }}: </span> -->
               <span>{{ $t(`m.common['已选']`) }}</span>
               <span class="number">{{ item.displayPath.length }}</span>
               <span>{{ $t(`m.common['个']`) }}{{ item.name }}</span>
@@ -65,6 +65,9 @@
       selectList: {
         type: Array,
         default: () => []
+      },
+      selectValue: {
+        type: String
       }
     },
     data () {
