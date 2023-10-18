@@ -214,10 +214,6 @@ class RoleBiz:
         """
         self.svc.delete_member(role_id, username)
 
-        # 同步删除子集管理员的成员
-        for one in RoleRelation.objects.filter(parent_id=role_id):
-            self.svc.delete_member(one.role_id, username)
-
     def update_super_manager_member_system_permission(self, username: str, need_sync_backend_role: bool):
         """
         更新超级管理员成员的系统权限
@@ -516,7 +512,7 @@ class RoleCheckBiz:
         role_ids = Role.objects.filter(type=RoleType.GRADE_MANAGER.value).values_list("id", flat=True)
         exists_count = RoleUser.objects.filter(username=subject.id, role_id__in=role_ids).count()
         if exists_count >= limit:
-            raise serializers.ValidationError(_("成员({}): 可加入的分级管理员数量已超限 {}").format(subject.id))
+            raise serializers.ValidationError(_("成员({}): 可加入的分级管理员数量已超限 {}").format(subject.id, exists_count))
 
     def check_grade_manager_of_system_limit(self, system_id: str):
         """

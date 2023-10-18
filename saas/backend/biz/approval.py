@@ -82,6 +82,12 @@ class ApprovalProcessBiz:
         """批量更新或者创建操作的审批流程"""
         self.svc.batch_create_or_update_action_process(system_id, action_ids, process_id, operator)
 
+    def batch_create_or_update_action_sensitivity_level(
+        self, system_id: str, action_ids: List[str], sensitivity_level: str, operator: str
+    ):
+        """批量更新或者创建操作的敏感等级"""
+        self.svc.batch_create_or_update_action_sensitivity_level(system_id, action_ids, sensitivity_level, operator)
+
     def get_group_process_relation_dict(self, group_ids: List[int]) -> GroupApprovalProcessRelationDictBean:
         """获取用户组对应的流程"""
         group_processes = self.svc.list_group_process(group_ids)

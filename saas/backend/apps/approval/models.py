@@ -11,7 +11,7 @@ specific language governing permissions and limitations under the License.
 from django.db import models
 
 from backend.common.models import BaseModel
-from backend.service.constants import ApplicationType
+from backend.service.constants import ApplicationType, SensitivityLevel
 
 
 class ApprovalProcessGlobalConfig(BaseModel):
@@ -32,6 +32,9 @@ class ActionProcessRelation(BaseModel):
     system_id = models.CharField("系统ID", max_length=32)
     action_id = models.CharField("操作ID", max_length=32)
     process_id = models.IntegerField("审批流程ID")
+    sensitivity_level = models.CharField(
+        "敏感等级", max_length=32, choices=SensitivityLevel.get_choices(), default=SensitivityLevel.L1.value
+    )
 
     class Meta:
         verbose_name = "操作与审批流程关联"
