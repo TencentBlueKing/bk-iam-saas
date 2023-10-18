@@ -446,6 +446,7 @@
           this.emptyTreeData.tipType = 'search';
           this.emptyTreeData = formatCodeData(code, this.emptyTreeData, data.results.length === 0);
           this.subResourceTotal = data.count || 0;
+          this.curTableData = data.results || [];
           const treeData = this.treeData;
           const parentNode = treeData.find(item => item.nodeId === node.parentId);
           if (parentNode || (parentNode && !parentNode.children)) {

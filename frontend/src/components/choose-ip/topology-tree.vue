@@ -528,6 +528,7 @@
       },
       emptyData: {
         handler (value) {
+          console.log(value, 5544);
           if (this.curSearchMode === 'table') {
             this.emptyTableData = Object.assign({}, value);
           }
@@ -602,9 +603,8 @@
                 (item) => `${item.name}&${item.id}` === `${this.selectNodeData.name}&${this.selectNodeData.id}`
               );
               // 判断搜索无数据
-              const searchData
-                = value.length === 1 && value.find((item) => ['search-empty', 'search-loading'].includes(item.type));
-              console.log(curNode, value, this.selectNodeData, 1223456);
+              const searchData = value.find((item) => ['search-empty', 'search-loading'].includes(item.type));
+              console.log(curNode, value, this.selectNodeData, searchData, 1223456);
               if (curNode) {
                 this.tablePageData = [...this.curTableData];
                 const list = [...(curNode.children || [])].filter((item) => item.type === 'node');
@@ -627,7 +627,7 @@
                     });
                   }
                 }
-                console.log(this.checkedNodeIdList, childSelectedNodes);
+                console.log(this.renderTopologyData, this.checkedNodeIdList, childSelectedNodes);
                 this.$nextTick(() => {
                   this.renderTopologyData.forEach((item) => {
                     this.$refs.topologyTableRef
@@ -651,7 +651,8 @@
                 }
               }
               if (!curNode && !searchData && this.selectNodeData.children.length) {
-                this.renderTopologyData = [...this.selectNodeData.children];
+                this.renderTopologyData = [...this.selectNodeData.children].filter((item) =>
+                  this.curTableData.map((v) => `${v.display_name}&${v.id}`).includes(`${item.name}&${item.id}`));
                 this.formatDefaultSelected();
                 return;
               }
@@ -775,7 +776,7 @@
       setDefaultSelect (payload) {
         const list = [...this.allTreeData].filter((item) => item.type === 'node');
         // console.log(this.hasSelectedValues.length, this.allTreeData, !this.isOnlyLevel);
-        if (this.hasSelectedValues.length && !list.length && !this.isOnlyLevel) {
+        if (this.hasSelectedValues.length && !this.isOnlyLevel) {
           const defaultSelectList = this.hasSelectedValues.filter((item) => item.disabled).map(
             (v) => v.ids).flat(this.curChain.length);
           return !defaultSelectList.includes(`${payload.id}&${this.curChain[payload.level].id}`);
@@ -872,19 +873,32 @@
           //   name: this.$t(`m.common['搜索结果为空']`)
           // });
           // 如果父级搜索了没数据，此时搜索表格需要提供当前父级下的children
-          if (this.curTreeTableData.children && this.curTreeTableData.children.length && !this.emptyTableData.tipType) {
+          if (this.curTreeTableData.children && this.curTreeTableData.children.length) {
             // const { id, name } = this.curTreeTableData.children[0];
             // const emptyNodeData = allTreeData.find((item) => `${name}&${id}` === `${item.name}&${item.id}`);
             // if (emptyNodeData) {
+            const nodeItem = _.cloneDeep(this.curTreeTableData.children[0]);
+            if (!nodeItem.parentChain.length) {
+              const { id, system_id } = this.curChain[this.curTreeTableData.level];
+              nodeItem.parentChain = [
+                {
+                  name: this.curTreeTableData.name,
+                  id: this.curTreeTableData.id,
+                  type: id,
+                  system_id,
+                  child_type: ''
+                }
+              ];
+            }
             this.$emit('on-table-search', {
               value,
-              node: this.curTreeTableData.children[0],
+              node: nodeItem,
               index: this.curTreeTableDataIndex
             });
             // }
           }
         }
-        console.log(curNode, this.curTreeTableData, this.curAllTreeNode);
+        console.log(curNode, this.curChain);
         setTimeout(() => {
           this.tableLoading = false;
         }, 1000);
@@ -1109,7 +1123,7 @@
           this.selectNodeData = _.cloneDeep(this.curTreeTableData);
           this.fetchLevelTree(this.curAllTreeNode);
         }
-        // console.log(node, this.selectNodeDataIndex, '选中大多数');
+        console.log(node, this.allTreeData, this.renderTopologyData, '选中大多数');
         setTimeout(() => {
           this.tableLoading = false;
         }, 1000);
@@ -1231,7 +1245,7 @@
           all: () => {
             let allTreeData = [...this.allTreeData];
             if (!allTreeData.length && !this.isOnlyLevel && this.curKeyword) {
-              allTreeData = [...this.curAllTreeNode];
+              allTreeData = [...this.curTreeTableData.children || []];
             }
             const tableIdList = _.cloneDeep(this.renderTopologyData.map((v) => `${v.name}&${v.id}`));
             const selectNode = this.currentSelectedNode.filter(
