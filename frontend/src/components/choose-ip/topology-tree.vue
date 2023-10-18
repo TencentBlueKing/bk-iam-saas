@@ -529,11 +529,10 @@
       emptyData: {
         handler (value) {
           console.log(value, 5544);
-          if (this.curSearchMode === 'table') {
-            this.emptyTableData = Object.assign({}, value);
-          }
           if (this.curSearchMode === 'tree') {
             this.emptyTreeData = Object.assign({}, value);
+          } else {
+            this.emptyTableData = Object.assign({}, value);
           }
         },
         immediate: true
