@@ -229,6 +229,14 @@ const currentNav = [
     disabled: false
   },
   {
+    icon: 'resource-perm-manage',
+    id: 'sensitivityLevelNav',
+    rkey: 'sensitivityLevel',
+    name: il8n('nav', '敏感等级'),
+    path: `${SITE_URL}sensitivity-level`,
+    disabled: false
+  },
+  {
     icon: 'perm-manage',
     name: il8n('common', '设置'),
     rkey: 'set',

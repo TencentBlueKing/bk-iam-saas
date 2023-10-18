@@ -54,7 +54,8 @@ export const getRouterDiff = (payload) => {
       'secondaryManageSpace',
       'authorBoundary',
       'secondaryManageSpaceCreate',
-      'userGroupSetting'
+      'userGroupSetting',
+      'sensitivityLevel'
     ];
   }
   if (payload === 'super_manager') {
@@ -121,7 +122,8 @@ export const getRouterDiff = (payload) => {
       'firstManageSpace',
       'secondaryManageSpace',
       'authorBoundary',
-      'myManageSpace'
+      'myManageSpace',
+      'sensitivityLevel'
     ];
   }
   if (payload === 'rating_manager') {
@@ -151,7 +153,8 @@ export const getRouterDiff = (payload) => {
       'systemAccessComplete',
       'myManageSpace',
       'resourcePermiss',
-      'firstManageSpace'
+      'firstManageSpace',
+      'sensitivityLevel'
     ];
   }
   if (payload === 'subset_manager') {
@@ -186,7 +189,8 @@ export const getRouterDiff = (payload) => {
       'firstManageSpace',
       'myManageSpace',
       'permTemplate',
-      'userGroupSetting'
+      'userGroupSetting',
+      'sensitivityLevel'
     ];
   }
   // payload其它取值默认返回全部菜单
@@ -259,7 +263,8 @@ export const getNavRouterDiff = (navIndex) => {
       'ratingManager',
       'authorBoundary',
       'secondaryManageSpace',
-      'userGroupSetting'
+      'userGroupSetting',
+      'sensitivityLevel'
     ];
   }
 
@@ -307,7 +312,8 @@ export const getNavRouterDiff = (navIndex) => {
       'myManageSpace',
       'secondaryManageSpaceCreate',
       'secondaryManageSpaceDetail',
-      'userGroupSetting'
+      'userGroupSetting',
+      'sensitivityLevel'
     ];
   }
 

@@ -601,7 +601,8 @@ export const m = {
         '新建二级管理空间': 'New Secondary Management Space',
         '克隆管理空间': 'Clone Management Space',
         '克隆二级管理空间': 'Clone Secondary management space',
-        '用户组设置': 'User Group Setting'
+        '用户组设置': 'User Group Setting',
+        '敏感等级': 'Sensitivity Level'
     },
     applyEntrance: {
         '立刻申请': 'Apply now',

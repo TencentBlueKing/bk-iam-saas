@@ -180,6 +180,9 @@ const GroupPermRenewal = () => import(/* webpackChunkName: 'PermRenewal' */ '../
 // 审计
 const Audit = () => import(/* webpackChunkName: 'audit' */ '../views/audit');
 
+// 敏感等级
+const SensitivityLevel = import(/* webpackChunkName: 'sensitivityLevel' */ '../views/sensitivity-level');
+
 const TemplatePermDetail = () =>
   import(/* webpackChunkName: 'my-perm-template-perm' */ '../views/perm/template-perm/detail');
 const GroupPermDetail = () => import(/* webpackChunkName: 'my-perm-group-perm' */ '../views/perm/group-perm/detail');
@@ -632,6 +635,14 @@ export const routes = [
           headerTitle: il8n('nav', '资源权限管理')
         },
         component: ResourcePermiss
+      },
+      {
+        path: 'sensitivity-level',
+        name: 'sensitivityLevel',
+        meta: {
+          headerTitle: il8n('nav', '敏感等级')
+        },
+        component: SensitivityLevel
       },
       {
         path: 'administrator',
