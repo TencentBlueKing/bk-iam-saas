@@ -240,6 +240,7 @@
       :is-super-manager="isSuperManager"
       :value="aggregateValue"
       :default-list="defaultSelectList"
+      :is-aggregate-empty-message="isAggregateEmptyMessage"
       @on-selected="handlerSelectAggregateRes" />
 
     <bk-sideslider
@@ -429,7 +430,8 @@
         curInstancePaths: [],
         currentActionName: '',
         delActionDialogTitle: '',
-        delActionDialogTip: ''
+        delActionDialogTip: '',
+        isAggregateEmptyMessage: false
       };
     },
     computed: {
@@ -926,8 +928,14 @@
         resourceList = resourceList.filter(item => item !== undefined);
         resources.forEach(item => {
           item && item.forEach(subItem => {
-            if (resources.every(v => v && v.some(vItem => vItem[0] === subItem[0]))) {
+            const hasIntersectionResource = resources.every(v => v && v.some(vItem => vItem[0] === subItem[0]));
+            const hasResource = resources.find(v => v && v.some(vItem => vItem[0] === subItem[0]));
+            if (hasIntersectionResource) {
               tempData.push(subItem[0]);
+            }
+            // 判断处理没有交集的情况
+            if (!hasIntersectionResource && hasResource) {
+              this.isAggregateEmptyMessage = true;
             }
           });
         });
@@ -1667,10 +1675,11 @@
                   }
                 }
               } else {
+                const scopeAction = _.cloneDeep(curCopyData.find(_ => item.actions.map((v) => v.id).includes(_.id)));
                 item.aggregateResourceType && item.aggregateResourceType.forEach(aggregateResourceItem => {
                   const systemId = this.isSuperManager
                     ? aggregateResourceItem.system_id : item.system_id;
-                  if (`${systemId}${aggregateResourceItem.id}` === this.curCopyKey) {
+                  if (`${systemId}${aggregateResourceItem.id}` === this.curCopyKey && scopeAction) {
                     item.instances = _.cloneDeep(tempArrgegateData);
                     this.instanceKey = aggregateResourceItem.id;
                     this.setNomalInstancesDisplayData(item, this.instanceKey);

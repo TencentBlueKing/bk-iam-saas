@@ -858,7 +858,8 @@ export const m = {
         '添加拓扑实例': 'Add Topology Instance',
         '未选择任何拓扑实例': 'No Topology Instance Selected',
         '未设置任何属性条件': 'No Attribute Setted',
-        '个属性条件': 'attribute(s)'
+        '个属性条件': 'attribute(s)',
+        '操作之间无公共实例，无法批量编辑': 'There are no public instances between actions, unable to batch edit'
     },
     related: {
         '申请操作': 'Apply Action',
