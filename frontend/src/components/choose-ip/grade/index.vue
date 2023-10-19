@@ -24,6 +24,7 @@
               :is-filter="isFilter"
               :cur-placeholder="curPlaceholder"
               :resource-total="resourceTotal"
+              :empty-data="emptyData"
               :sub-resource-total="subResourceTotal"
               @on-expanded="handleOnExpanded"
               @on-search="handleSearch"
@@ -854,9 +855,9 @@
             level: node.level,
             display_name: message
           };
-          this.emptyData = formatCodeData(e.code, this.emptyData);
-          this.emptyTreeData = formatCodeData(e.code, this.emptyData);
           const searchEmptyData = new Node(searchEmptyItem, node.level, false, 'search-empty');
+          this.emptyData = formatCodeData(e.code, this.emptyData);
+          this.emptyTreeData = formatCodeData(e.code, this.emptyTreeData);
           this.treeData.splice(index + 1, 0, searchEmptyData);
         } finally {
           this.$nextTick(() => {
@@ -1031,7 +1032,6 @@
                 }
               });
               isExistNoCarryLimit = Object.keys(noCarryLimitData).length > 0;
-              console.log(isExistNoCarryLimit, Object.keys(normalSelectedData).length > 0);
               if (isExistNoCarryLimit && Object.keys(normalSelectedData).length > 0) {
                 checked = true;
                 disabled = normalSelectedData.disabled && noCarryLimitData.disabled;
@@ -1246,11 +1246,10 @@
       async handleAsyncNodes (node, index, flag) {
         window.changeAlert = true;
         const asyncItem = {
-        ...ASYNC_ITEM,
-        parentId: node.nodeId,
-        parentSyncId: node.id
+          ...ASYNC_ITEM,
+          parentId: node.nodeId,
+          parentSyncId: node.id
         };
-
         const chainLen = this.curChain.length;
         const params = {
           limit: this.limit,
@@ -1259,18 +1258,15 @@
           ancestors: [],
           keyword: ''
         };
-
         if (Object.keys(this.curSearchObj).length) {
           if (node.nodeId === this.curSearchObj.parentId) {
             this.curSearchObj = {};
           }
         }
-
         let placeholder = '';
         let parentType = '';
         let parentData = [];
         const ancestorItem = {};
-
         if (node.childType !== '') {
           params.system_id = this.curChain[chainLen - 1].system_id;
           params.type = node.childType;
@@ -1291,13 +1287,10 @@
           params.action_id = this.systemParams.action_id || '';
           parentType = this.curChain[node.level] ? this.curChain[node.level].id : this.curChain[chainLen - 1].id;
           placeholder = tempData.name;
-
           ancestorItem.system_id = this.curChain[node.level].system_id;
           ancestorItem.type = this.curChain[node.level].id;
         }
-
         ancestorItem.id = node.id;
-
         if (node.parentChain.length) {
           parentData = node.parentChain.reduce((p, e) => {
             p.push({
@@ -1309,7 +1302,6 @@
           }, []);
         }
         params.ancestors.push(...parentData, ancestorItem);
-
         const curLevel = node.level + 1;
         let isAsync = chainLen > curLevel + 1;
         const parentChain = _.cloneDeep(node.parentChain);
@@ -1325,7 +1317,6 @@
                 : this.curChain[chainLen - 1].system_id,
           child_type: node.childType || ''
         });
-
         const curTreeValue = [];
         const wholePathChains = [];
         this.limitValue.forEach((item) => {
@@ -1401,7 +1392,6 @@
                   }
                 }
               });
-
               isExistNoCarryLimit = Object.keys(noCarryLimitData).length > 0;
               if (isExistNoCarryLimit && Object.keys(normalSelectedData).length > 0) {
                 checked = true;
@@ -1415,7 +1405,6 @@
                 }
               }
             }
-
             const childItem = {
               id: item.id,
               display_name: item.name,
@@ -1427,7 +1416,6 @@
               isRemote,
               isExistNoCarryLimit
             };
-
             return new Node(childItem, curLevel, limitAsync);
           });
           this.treeData.splice(index + 1, 0, ...childNodes);
@@ -1435,15 +1423,14 @@
             ...nextLevelNodes.map((item) => new Node({ id: item.id, display_name: item.name }, curLevel, false))
           ];
           const searchItem = {
-          ...SEARCH_ITEM,
-          parentSyncId: node.id,
-          isFrontendSearch: true,
-          parentId: node.nodeId,
-          parentChain,
-          visiable: flag,
-          placeholder: `${this.$t(`m.common['搜索']`)} ${placeholder}`
+            ...SEARCH_ITEM,
+            parentSyncId: node.id,
+            isFrontendSearch: true,
+            parentId: node.nodeId,
+            parentChain,
+            visiable: flag,
+            placeholder: `${this.$t(`m.common['搜索']`)} ${placeholder}`
           };
-
           const searchData = new Node(searchItem, curLevel, false, 'search');
           this.treeData.splice(index + 1, 0, searchData);
           if (flag) {
@@ -1454,14 +1441,12 @@
           this.removeAsyncNode();
           return;
         }
-
         // 添加加载loading
         const asyncData = new Node(asyncItem, node.level + 1, false, 'async');
         this.treeData.splice(index + 1, 0, asyncData);
-
         try {
           const { code, data } = await this.$store.dispatch('permApply/getResources', params);
-          this.emptyTreeData = formatCodeData(code, this.emptyData, data.results.length === 0);
+          this.emptyTreeData = formatCodeData(code, this.emptyTreeData, data.results.length === 0);
           this.subResourceTotal = data.count || 0;
           if (data.results.length < 1) {
             this.removeAsyncNode();
@@ -1585,6 +1570,7 @@
           const { code } = e;
           this.removeAsyncNode();
           this.emptyData = formatCodeData(code, this.emptyData);
+          this.emptyTreeData = formatCodeData(code, this.emptyTreeData);
           this.messageAdvancedError(e);
         }
       },

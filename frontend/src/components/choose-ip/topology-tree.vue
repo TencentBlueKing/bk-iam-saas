@@ -201,9 +201,9 @@
                 <template v-if="!tableLoading && subPagination.count === 0">
                   <template slot="empty">
                     <ExceptionEmpty
-                      :type="formatTreeEmpty(emptyTableData, 'table', 'type')"
-                      :tip-type="formatTreeEmpty(emptyTableData, 'table', 'tipType')"
-                      :empty-text="formatTreeEmpty(emptyTableData, 'table', 'emptyText')"
+                      :type="formatTreeEmpty(emptyData, 'table', 'type')"
+                      :tip-type="formatTreeEmpty(emptyData, 'table', 'tipType')"
+                      :empty-text="formatTreeEmpty(emptyData, 'table', 'emptyText')"
                       @on-clear="handleEmptyClear('table', selectNodeData, selectNodeDataIndex)"
                       @on-refresh="handleEmptyRefresh('table', selectNodeData, selectNodeDataIndex)"
                     />
@@ -527,11 +527,7 @@
       },
       emptyData: {
         handler (value) {
-          if (this.curSearchMode === 'tree') {
-            this.emptyTreeData = Object.assign({}, value);
-          } else {
-            this.emptyTableData = Object.assign({}, value);
-          }
+          this.curSearchMode === 'tree' ? this.emptyTreeData = Object.assign({}, value) : this.emptyTableData = Object.assign({}, value);
         },
         immediate: true
       }
@@ -600,7 +596,7 @@
               );
               // 判断搜索无数据
               const searchData = value.find((item) => ['search-empty', 'search-loading'].includes(item.type));
-              console.log(curNode, value, this.selectNodeData, searchData, 1223456);
+              console.log(curNode, value, this.selectNodeData, searchData, this.emptyData, 1223456);
               if (curNode) {
                 this.tablePageData = [...this.curTableData];
                 const list = [...(curNode.children || [])].filter((item) => item.type === 'node');
@@ -669,6 +665,7 @@
       },
 
       formatTreeEmpty (payload, mode, type) {
+        console.log(payload, 555);
         const modeMap = {
           tree: () => {
             const typeMap = {
@@ -706,6 +703,7 @@
             return typeMap[type]();
           },
           table: () => {
+            console.log(payload, this.curSearchMode, this.emptyTableData);
             const typeMap = {
               type: () => {
                 if (Object.keys(payload).length) {
@@ -869,9 +867,6 @@
           // });
           // 如果父级搜索了没数据，此时搜索表格需要提供当前父级下的children
           if (this.curTreeTableData.children && this.curTreeTableData.children.length) {
-            // const { id, name } = this.curTreeTableData.children[0];
-            // const emptyNodeData = allTreeData.find((item) => `${name}&${id}` === `${item.name}&${item.id}`);
-            // if (emptyNodeData) {
             const nodeItem = _.cloneDeep(this.curTreeTableData.children[0]);
             if (!nodeItem.parentChain.length) {
               const { id, system_id } = this.curChain[this.curTreeTableData.level];
@@ -890,7 +885,6 @@
               node: nodeItem,
               index: this.curTreeTableDataIndex
             });
-            // }
           }
         }
         setTimeout(() => {
@@ -1110,6 +1104,7 @@
           // 存储回显直接勾选父级，子集全部默认勾选数据
           this.$store.commit('setTreeTableChecked', this.checkedNodeIdList);
           this.$store.commit('setTreeSelectedNode', this.currentSelectedNode);
+          this.curSearchMode = 'table';
           // 存储只选择表格
           this.$emit('async-load-table-nodes', node, index, false);
         } else {
@@ -1117,7 +1112,7 @@
           this.selectNodeData = _.cloneDeep(this.curTreeTableData);
           this.fetchLevelTree(this.curAllTreeNode);
         }
-        console.log(node, this.allTreeData, this.renderTopologyData, '选中大多数');
+        // console.log(node, this.allTreeData, this.renderTopologyData, '选中大多数');
         setTimeout(() => {
           this.tableLoading = false;
         }, 1000);
