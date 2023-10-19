@@ -799,16 +799,16 @@
           // const noCarryNoLimitPath = payload[1]
           // const deleteInstanceItem = curInstance.find(item => item.type === type);
 
-          // // const arr = path[0]
-          // // const tempPath = arr.filter(item => item.id !== '*')
+          /// const arr = path[0]
+          //  const tempPath = arr.filter(item => item.id !== '*')
 
-          // // const deleteIndex = deleteInstanceItem.path.findIndex(item => item.map(v => v.id).join('') === tempPath.map(v => v.id).join(''))
+          // const deleteIndex = deleteInstanceItem.path.findIndex(item => item.map(v => v.id).join('') === tempPath.map(v => v.id).join(''))
           // const deleteIndex = deleteInstanceItem.path.findIndex(item => item.map(v => `${v.id}&${v.type}`).join('') === tempPath.map(v => `${v.id}&${v.type}`).join(''));
 
-          // // const curChildreIds = node.children.map(item => item.id)
+          //  const curChildreIds = node.children.map(item => item.id)
           // const curChildreIds = node.children.map(item => `${item.id}&${item.type}`);
 
-          // // deleteInstanceItem.path.splice(deleteIndex, 1)
+          //  deleteInstanceItem.path.splice(deleteIndex, 1)
           // let isDisabled = false;
           // if (deleteIndex > -1) {
           //   isDisabled = deleteInstanceItem.path[deleteIndex].some(_ => _.disabled);
@@ -819,7 +819,25 @@
           let isDisabled = false;
           let curChildrenIds = [];
           const deleteIndex = -1;
-          const deleteInstanceItem = curInstance.find(item => item.type === type);
+          let deleteInstanceItem = curInstance.find(item => item.type === type);
+          if (!deleteInstanceItem) {
+            const hasSelectData = [];
+            curInstance.forEach(item => {
+              item.path.forEach(pathItem => {
+                hasSelectData.push({
+                  ids: pathItem.map(v => `${v.id}&${v.type}`),
+                  idChain: pathItem.map(v => `${v.id}&${v.type}`).join('#'),
+                  childTypes: pathItem.map(v => v.type),
+                  disabled: pathItem.some(subItem => subItem.disabled)
+                });
+              });
+            });
+            this.hasSelectData = _.cloneDeep(hasSelectData);
+            const hasData = this.hasSelectData.find((item) => item.childTypes.includes(type));
+            if (hasData) {
+              deleteInstanceItem = curInstance.find(item => hasData.childTypes.includes(item.type) && hasData.childTypes.includes(type));
+            }
+          }
           if (resourceLen) {
             for (let i = 0; i < resourceLen; i++) {
               // const noCarryNoLimitPath = payload[1]

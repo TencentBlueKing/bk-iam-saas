@@ -596,7 +596,7 @@
               );
               // 判断搜索无数据
               const searchData = value.find((item) => ['search-empty', 'search-loading'].includes(item.type));
-              console.log(curNode, value, this.selectNodeData, searchData, this.emptyData, 1223456);
+              console.log(curNode, value, this.selectNodeData, searchData, 1223456);
               if (curNode) {
                 this.tablePageData = [...this.curTableData];
                 const list = [...(curNode.children || [])].filter((item) => item.type === 'node');
@@ -665,7 +665,6 @@
       },
 
       formatTreeEmpty (payload, mode, type) {
-        console.log(payload, 555);
         const modeMap = {
           tree: () => {
             const typeMap = {
@@ -703,7 +702,6 @@
             return typeMap[type]();
           },
           table: () => {
-            console.log(payload, this.curSearchMode, this.emptyTableData);
             const typeMap = {
               type: () => {
                 if (Object.keys(payload).length) {

@@ -805,7 +805,6 @@
               selectInstanceItem.path.push(...path);
               selectInstanceItem.paths.push(...paths);
               curInstance.splice(selectInstanceItemIndex, 1, selectInstanceItem);
-              console.log(curInstance, selectInstanceItem, selectInstanceItemIndex, 454554);
             } else {
               curInstance.push(new Instance(payload[0]));
             }
@@ -815,7 +814,25 @@
           let isDisabled = false;
           let curChildrenIds = [];
           const deleteIndex = -1;
-          const deleteInstanceItem = curInstance.find(item => item.type === type);
+          let deleteInstanceItem = curInstance.find(item => item.type === type);
+          if (!deleteInstanceItem) {
+            const hasSelectData = [];
+            curInstance.forEach(item => {
+              item.path.forEach(pathItem => {
+                hasSelectData.push({
+                  ids: pathItem.map(v => `${v.id}&${v.type}`),
+                  idChain: pathItem.map(v => `${v.id}&${v.type}`).join('#'),
+                  childTypes: pathItem.map(v => v.type),
+                  disabled: pathItem.some(subItem => subItem.disabled)
+                });
+              });
+            });
+            this.hasSelectData = _.cloneDeep(hasSelectData);
+            const hasData = this.hasSelectData.find((item) => item.childTypes.includes(type));
+            if (hasData) {
+              deleteInstanceItem = curInstance.find(item => hasData.childTypes.includes(item.type) && hasData.childTypes.includes(type));
+            }
+          }
           if (resourceLen) {
             for (let i = 0; i < resourceLen; i++) {
               // const noCarryNoLimitPath = payload[1]
