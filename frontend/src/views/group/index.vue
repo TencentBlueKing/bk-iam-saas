@@ -499,6 +499,9 @@
       }
       await this.fetchUserGroupSet();
     },
+    beforeDestroy () {
+      window.localStorage.removeItem('groupList');
+    },
     methods: {
       /**
        * 获取页面数据
