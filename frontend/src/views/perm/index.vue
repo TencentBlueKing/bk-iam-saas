@@ -107,7 +107,9 @@
               <template slot="label">
                 <span class="panel-name">
                   <span>{{ panel.label }}</span>
-                  <span style="color:##3a84ff;" v-if="Object.keys(curSearchParams).length">
+                  <span
+                    style="color:##3a84ff;"
+                    v-if="curSearchParams && Object.keys(curSearchParams).length">
                     ({{panel.count}})
                   </span>
                 </span>
@@ -347,7 +349,7 @@
             { code: departmentGroupCode, data: departmentGroupData }
           ] = await Promise.all(requestList);
                     
-          const personalGroupList = personalGroupData.results || [];
+          const personalGroupList = personalGroupData && personalGroupData.results ? personalGroupData.results : [];
           this.personalGroupList.splice(0, this.personalGroupList.length, ...personalGroupList);
           this.$set(this.panels[0], 'count', personalGroupData.count || 0);
           this.emptyData = formatCodeData(personalGroupCode, this.emptyData, this.personalGroupList.length === 0);
@@ -370,8 +372,8 @@
 
           this.isEmpty = personalGroupList.length < 1 && customData.length < 1
             && teporarySystemList.length < 1 && departmentGroupList.length < 1;
-          this.soonGroupLength = data3.results.length;
-          this.soonPermLength = data4.length;
+          this.soonGroupLength = data3 && data3.results ? data3.results.length : 0;
+          this.soonPermLength = data4 ? data4.length : 0;
           this.isNoRenewal = this.soonGroupLength < 1 && this.soonPermLength < 1;
           this.isNoExternalRenewal = this.soonGroupLength < 1;
           this.isNoTransfer = hideApplyBtn ? !personalGroupList.length
@@ -396,19 +398,19 @@
         const res = await Promise.all(payload.map((item, index) => item.catch((e) => {
           errorList.push(index);
         })));
-        if (res[0]) {
-          const personalGroupList = res[0].data.results || [];
-          this.personalGroupList.splice(0, this.personalGroupList.length, ...personalGroupList);
-        }
-
-        if (res[1]) {
-          const systemList = res[1].data || [];
-          this.systemList.splice(0, this.systemList.length, ...systemList);
-        }
-                    
-        if (res[5]) {
-          const departmentGroupList = res[5].data || [];
-          this.departmentGroupList.splice(0, this.departmentGroupList.length, ...departmentGroupList);
+        if (res && res.length) {
+          if (res[0]) {
+            const personalGroupList = res[0].data && res[0].data.results ? res[0].data.results : [];
+            this.personalGroupList.splice(0, this.personalGroupList.length, ...personalGroupList);
+          }
+          if (res[1]) {
+            const systemList = res[1].data || [];
+            this.systemList.splice(0, this.systemList.length, ...systemList);
+          }
+          if (res[5]) {
+            const departmentGroupList = res[5].data || [];
+            this.departmentGroupList.splice(0, this.departmentGroupList.length, ...departmentGroupList);
+          }
         }
       },
 
@@ -582,16 +584,18 @@
               this.$refs.childPermRef[0].$refs.groupPermTableRef.toggleRowSelection(item, true);
             }
           });
-          this.departmentGroupList.length && this.departmentGroupList.forEach(item => {
-            if (item.role_members && item.role_members.length) {
-              item.role_members = item.role_members.map(v => {
-                return {
-                  username: v,
-                  readonly: false
-                };
-              });
-            }
-          });
+          if (this.departmentGroupList && this.departmentGroupList.length) {
+            this.departmentGroupList.forEach(item => {
+              if (item.role_members && item.role_members.length) {
+                item.role_members = item.role_members.map(v => {
+                  return {
+                    username: v,
+                    readonly: false
+                  };
+                });
+              }
+            });
+          }
         }, 0);
       },
 
