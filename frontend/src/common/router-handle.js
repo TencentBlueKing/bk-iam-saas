@@ -91,7 +91,8 @@ export const getRouterDiff = (payload) => {
       'myManageSpace',
       'myManageSpaceCreate',
       'permTransfer',
-      'myManageSpaceSubDetail'
+      'myManageSpaceSubDetail',
+      'sensitivityLevel'
     ];
   }
   if (payload === 'system_manager') {
