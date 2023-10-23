@@ -222,7 +222,8 @@
         return (payload) => {
           if (payload) {
             const { attributes, role_members } = payload;
-            if (attributes && attributes.source_from_role && role_members.length === 1) {
+            // eslint-disable-next-line camelcase
+            if (attributes && attributes.source_from_role && role_members && role_members.length === 1) {
               return true;
             }
             return false;

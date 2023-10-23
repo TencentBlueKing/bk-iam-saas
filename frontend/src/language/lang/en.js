@@ -277,7 +277,12 @@ export const m = {
         '暂无可复制用户': 'There are currently no replicable users',
         '管理员组不能添加部门': 'The administrator group cannot add department',
         '批量退出': 'Multi-quit',
-        '批量处理': 'Multi-process'
+        '批量处理': 'Multi-process',
+        '用户名': 'User name',
+        '结果预览': 'Result preview',
+        '解析并添加': 'Parse and add',
+        '搜索解析结果': 'Search parsing results',
+        '请先从左侧输入并解析': 'Please input and parse from the left first'
     },
     // 校验
     verify: {

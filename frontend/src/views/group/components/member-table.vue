@@ -647,9 +647,9 @@
       handleResetCascade () {
         this.$nextTick(() => {
           this.copyValue = [];
-          if (this.$refs.copyCascade) {
-            this.$refs.copyCascade.value = [];
-          }
+          // if (this.$refs.copyCascade) {
+          //   this.$refs.copyCascade.value = [];
+          // }
         });
       },
 
