@@ -15,6 +15,16 @@
           class="arrow-icon"
           :type="item.expanded ? 'down-shape' : 'right-shape'"
           @click.stop="expandNode(item)" />
+        <div class="node-radio" v-if="item.showRadio">
+          <span class="node-checkbox"
+            :class="{
+              'is-disabled': disabledNode(item),
+              'is-checked': selectedNode(item),
+              'is-indeterminate': item.indeterminate
+            }"
+            @click.stop="handleNodeClick(item)">
+          </span>
+        </div>
         <template v-if="item.type === 'depart'">
           <Icon
             v-if="item.level || isRatingManager"
@@ -42,16 +52,6 @@
           {{ '(' + item.count + `)` }}
         </span>
         <spin-loading ext-cls="loading" v-if="item.loading" />
-        <div class="node-radio" v-if="item.showRadio">
-          <span class="node-checkbox"
-            :class="{
-              'is-disabled': disabledNode(item),
-              'is-checked': selectedNode(item),
-              'is-indeterminate': item.indeterminate
-            }"
-            @click.stop="handleNodeClick(item)">
-          </span>
-        </div>
       </div>
       <template v-if="!renderData.length && emptyData.type">
         <ExceptionEmpty
@@ -462,6 +462,8 @@
         }
 
         .node-item {
+            display: flex;
+            align-items: center;
             position: relative;
             margin: 0;
             text-align: left;
@@ -497,6 +499,7 @@
             position: relative;
             font-size: 16px;
             color: #a3c5fd;
+            margin-right: 5px;
             &.active {
                 color: #3a84ff;
             }
@@ -536,8 +539,9 @@
         }
 
         .node-radio {
-            margin-right: 5px;
-            float: right;
+            /* margin-right: 5px;
+            float: left; */
+            margin-left: 5px;
             .node-checkbox {
                 display: inline-block;
                 position: relative;
@@ -546,7 +550,7 @@
                 height: 16px;
                 margin: 0 6px 0 0;
                 border: 1px solid #979ba5;
-                border-radius: 50%;
+                /* border-radius: 50%; */
                 &.is-checked {
                     border-color: #3a84ff;
                     background-color: #3a84ff;

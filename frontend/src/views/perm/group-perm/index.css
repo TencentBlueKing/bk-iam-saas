@@ -17,12 +17,45 @@
                 color: #699df4;
             }
         }
+        tr {
+            &:hover {
+              .member-wrapper {
+                .user,
+                .depart {
+                    background: #ffffff;
+                }
+              }
+            }
+        }
     }
     .can-view {
         color: #3a84ff;
         cursor: pointer;
         &:hover {
             color: #699df4;
+        }
+    }
+
+    .member-wrapper {
+        display: flex;
+        justify-content: flex-start;
+  
+        .user,
+        .depart {
+            display: inline-block;
+            min-width: 54px;
+            padding: 4px 6px;
+            background: #f0f1f5;
+            border-radius: 2px;
+  
+            i {
+              font-size: 14px;
+              color: #c4c6cc;
+            }
+        }
+  
+        .depart {
+          margin-left: 2px;
         }
     }
 }

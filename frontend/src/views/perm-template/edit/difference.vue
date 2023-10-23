@@ -55,7 +55,7 @@
       };
     },
     computed: {
-            ...mapGetters('permTemplate', ['actions', 'preActionIds', 'cloneActions', 'preGroupOnePage'])
+      ...mapGetters('permTemplate', ['actions', 'preActionIds', 'cloneActions', 'preGroupOnePage'])
     },
     watch: {
       actions: {
@@ -63,13 +63,15 @@
           const tempActions = [];
           value.forEach((item, index) => {
             item.actions.forEach(act => {
-              if (act.flag === 'added') {
+              // if (['added'].includes(act.flag)) {
+              if (['added'].includes(act.flag) || (['unchecked'].includes(act.tag) && act.checked)) {
                 tempActions.push(act);
               }
-            })
-            ;(item.sub_groups || []).forEach(sub => {
+            });
+            (item.sub_groups || []).forEach(sub => {
               sub.actions.forEach(act => {
-                if (act.flag === 'added') {
+                // if (['added'].includes(act.flag)) {
+                if (['added'].includes(act.flag) || (['unchecked'].includes(act.tag) && act.checked)) {
                   tempActions.push(act);
                 }
               });
