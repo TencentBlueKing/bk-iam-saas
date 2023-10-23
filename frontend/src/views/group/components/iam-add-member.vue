@@ -535,7 +535,9 @@
         },
         tableKeyWord: '',
         manualTableList: [],
-        manualTableListStorage: []
+        manualTableListStorage: [],
+        hasSelectedManualDepartments: [],
+        hasSelectedManualUsers: []
       };
     },
     computed: {
@@ -719,8 +721,8 @@
         this.$nextTick(() => {
           this.manualTableList.forEach((item) => {
             if (this.$refs.manualTableRef) {
-              const hasSelectedUsers = this.hasSelectedUsers.map((v) => `${v.username}${v.name}`);
-              const hasSelectedDepartments = this.hasSelectedDepartments.map((v) => v.id);
+              const hasSelectedUsers = this.hasSelectedManualUsers.map((v) => `${v.username}${v.name}`);
+              const hasSelectedDepartments = this.hasSelectedManualDepartments.map((v) => v.id);
               this.$refs.manualTableRef.toggleRowSelection(
                 item,
                 (hasSelectedUsers.includes(`${item.username}${item.name}`))
@@ -851,11 +853,12 @@
               });
               const result = await this.fetchSubjectScopeCheck(users, 'user');
               if (result && result.length) {
+                const hasSelectedUsers = [...this.hasSelectedUsers, ...this.hasSelectedManualUsers];
                 const userTemp = result.filter((item) => {
-                  return !this.hasSelectedUsers.map((subItem) =>
+                  return !hasSelectedUsers.map((subItem) =>
                     `${subItem.username}&${subItem.name}`).includes(`${item.username}&${item.name}`);
                 });
-                this.hasSelectedUsers.push(...userTemp);
+                this.hasSelectedManualUsers.push(...userTemp);
                 // 保存原有格式
                 let formatStr = _.cloneDeep(this.manualValue);
                 const usernameList = result.map((item) => item.username);
@@ -863,8 +866,7 @@
                   // 处理既有部门又有用户且不连续相同类型的展示数据
                   formatStr = formatStr
                     .replace(this.evil('/' + item + '(;\\n|\\s\\n|)/'), '')
-                    .replace('\n\n', '\n')
-                    .replace('\s\s', '\s')
+                    .replace(/(\s*\r?\n\s*)+/g, '\n')
                     .replace(';;', '');
                   // 处理复制全部用户不相连的两个不在授权范围内的用户存在空字符
                   formatStr = formatStr
@@ -888,10 +890,12 @@
               });
               const result = await this.fetchSubjectScopeCheck(departments, 'depart');
               if (result && result.length) {
+                const hasSelectedDepartments = [...this.hasSelectedDepartments, ...this.hasSelectedManualDepartments];
                 const departTemp = result.filter((item) => {
-                  return !this.hasSelectedDepartments.map((subItem) =>
+                  return !hasSelectedDepartments.map((subItem) =>
                     subItem.id.toString()).includes(item.id.toString());
                 });
+                this.hasSelectedManualDepartments.push(...departTemp);
                 this.hasSelectedDepartments.push(...departTemp);
                 // 备份一份粘贴板里的内容，清除组织的数据，在过滤掉组织的数据
                 let clipboardValue = _.cloneDeep(this.manualValue);
@@ -932,6 +936,7 @@
             return !this.hasSelectedUsers.map((subItem) => subItem.username).includes(item.username);
           });
           this.hasSelectedUsers.push(...temps);
+          this.hasSelectedManualUsers.push(...temps);
           if (res.data.length) {
             this.usernameList = res.data.map((item) => item.username);
             // 分号拼接
@@ -954,8 +959,9 @@
               // 处理既有部门又有用户且不连续相同类型的展示数据
               formatStr = formatStr
                 .replace(this.evil('/' + item + '(;\\n|\\s\\n|)/'), '')
-                .replace('\n\n', '\n')
-                .replace('\s\s', '\s')
+                // .replace('\n\n', '\n')
+                // .replace('\s\s', '\s')
+                .replace(/(\s*\r?\n\s*)+/g, '\n')
                 .replace(';;', '');
               // 处理复制全部用户不相连的两个不在授权范围内的用户存在空字符
               formatStr = formatStr
@@ -1012,10 +1018,17 @@
             });
             const result = await this.fetchSubjectScopeCheck(list);
             if (result && result.length) {
+              // const departTemp = result.filter((item) => {
+              //   return !this.hasSelectedDepartments.map((subItem) =>
+              //     subItem.id.toString()).includes(item.id.toString());
+              // });
+              // this.hasSelectedDepartments.push(...departTemp);
+              const hasSelectedDepartments = [...this.hasSelectedDepartments, ...this.hasSelectedManualDepartments];
               const departTemp = result.filter((item) => {
-                return !this.hasSelectedDepartments.map((subItem) =>
+                return !hasSelectedDepartments.map((subItem) =>
                   subItem.id.toString()).includes(item.id.toString());
               });
+              this.hasSelectedManualDepartments.push(...departTemp);
               this.hasSelectedDepartments.push(...departTemp);
               // 备份一份粘贴板里的内容，清除组织的数据，在过滤掉组织的数据
               let clipboardValue = _.cloneDeep(this.manualValue);
@@ -1049,7 +1062,7 @@
         if (this.manualInputError) {
           await this.handleSearchOrgAndUser();
         }
-        this.manualTableListStorage = [...this.hasSelectedDepartments, ...this.hasSelectedUsers];
+        this.manualTableListStorage = [...this.hasSelectedManualDepartments, ...this.hasSelectedManualUsers];
         this.manualTableList = _.cloneDeep(this.manualTableListStorage);
         this.fetchManualTableData();
       },
@@ -1694,6 +1707,8 @@
         this.manualValueBackup = [];
         this.manualTableList = [];
         this.manualTableListStorage = [];
+        this.hasSelectedManualDepartments = [];
+        this.hasSelectedManualUsers = [];
         this.tableKeyWord = '';
         this.$emit('update:show', false);
         this.$emit('on-after-leave');
@@ -2082,7 +2097,7 @@
               white-space: nowrap;
               vertical-align: top;
               &-width {
-                max-width: 160px;
+                max-width: 155px;
               }
             }
             .delete-depart-icon {
