@@ -303,19 +303,20 @@
             <div class="content">
               <div class="organization-content" v-if="isDepartSelectedEmpty">
                 <div class="organization-item" v-for="item in hasSelectedDepartments" :key="item.id">
-                  <Icon type="file-close" class="folder-icon" />
-                  <span
-                    :class="[
-                      'organization-name',
-                      { 'organization-name-width': item.showCount && enableOrganizationCount }
-                    ]"
-                    :title="nameType(item)"
-                  >
-                    {{ item.name }}
-                  </span>
-                  <span class="user-count" v-if="item.showCount && enableOrganizationCount">{{
-                    '(' + item.count + `)`
-                  }}</span>
+                  <div class="organization-item-left">
+                    <Icon type="file-close" class="folder-icon" />
+                    <span
+                      :class="[
+                        'organization-name'
+                      ]"
+                      :title="nameType(item)"
+                    >
+                      {{ item.name }}
+                    </span>
+                    <span class="user-count" v-if="item.showCount && enableOrganizationCount">{{
+                      '(' + item.count + `)`
+                    }}</span>
+                  </div>
                   <!-- <Icon bk type="close-circle-shape" class="delete-depart-icon" @click="handleDelete(item, 'organization')" /> -->
                   <Icon bk type="close" class="delete-depart-icon" @click="handleDelete(item, 'organization')" />
                 </div>
@@ -1371,6 +1372,8 @@
         }
         this.hasSelectedUsers.splice(0, this.hasSelectedUsers.length, ...[]);
         this.hasSelectedDepartments.splice(0, this.hasSelectedDepartments.length, ...[]);
+        this.hasSelectedManualUsers.splice(0, this.hasSelectedManualUsers.length, ...[]);
+        this.hasSelectedManualDepartments.splice(0, this.hasSelectedManualDepartments.length, ...[]);
         this.$refs.memberTreeRef && this.$refs.memberTreeRef.clearAllIsSelectedStatus();
         this.fetchManualTableData();
       },
@@ -1642,9 +1645,13 @@
         }
         if (type === 'user') {
           this.hasSelectedUsers = [...this.hasSelectedUsers.filter((user) => user.username !== item.username)];
+          this.hasSelectedManualUsers
+            = [...this.hasSelectedManualUsers.filter((user) => user.username !== item.username)];
         } else {
           // eslint-disable-next-line max-len
           this.hasSelectedDepartments = [...this.hasSelectedDepartments.filter((organ) => organ.id !== item.id)];
+          this.hasSelectedManualDepartments
+            = [...this.hasSelectedManualDepartments.filter((organ) => organ.id !== item.id)];
         }
         this.fetchManualTableData();
       },
@@ -1773,8 +1780,12 @@
             if (['depart', 'department'].includes(row.type)) {
               if (isChecked) {
                 this.hasSelectedDepartments.push(row);
+                this.hasSelectedManualDepartments.push(row);
               } else {
                 this.hasSelectedDepartments = this.hasSelectedDepartments.filter(
+                  (item) => item.id.toString() !== row.id.toString()
+                );
+                this.hasSelectedManualDepartments = this.hasSelectedManualDepartments.filter(
                   (item) => item.id.toString() !== row.id.toString()
                 );
               }
@@ -1782,8 +1793,12 @@
             if (['user'].includes(row.type)) {
               if (isChecked) {
                 this.hasSelectedUsers.push(row);
+                this.hasSelectedManualUsers.push(row);
               } else {
                 this.hasSelectedUsers = this.hasSelectedUsers.filter(
+                  (item) => `${item.username}${item.name}` !== `${row.username}${row.name}`
+                );
+                this.hasSelectedManualUsers = this.hasSelectedManualUsers.filter(
                   (item) => `${item.username}${item.name}` !== `${row.username}${row.name}`
                 );
               }
@@ -1795,8 +1810,12 @@
               if (['depart', 'department'].includes(item.type)) {
                 if (isAllCheck) {
                   this.hasSelectedDepartments.push(item);
+                  this.hasSelectedManualDepartments.push(item);
                 } else {
                   this.hasSelectedDepartments = this.hasSelectedDepartments.filter(
+                    (v) => item.id.toString() !== v.id.toString()
+                  );
+                  this.hasSelectedManualDepartments = this.hasSelectedManualDepartments.filter(
                     (v) => item.id.toString() !== v.id.toString()
                   );
                 }
@@ -1804,8 +1823,12 @@
               if (['user'].includes(item.type)) {
                 if (isAllCheck) {
                   this.hasSelectedUsers.push(item);
+                  this.hasSelectedManualUsers.push(item);
                 } else {
                   this.hasSelectedUsers = this.hasSelectedUsers.filter(
+                    (v) => `${item.username}${item.name}` !== `${v.username}${v.name}`
+                  );
+                  this.hasSelectedManualUsers = this.hasSelectedManualUsers.filter(
                     (v) => `${item.username}${item.name}` !== `${v.username}${v.name}`
                   );
                 }
@@ -2084,21 +2107,27 @@
             padding: 5px;
             box-shadow: 0 1px 1px 0 #00000014;
             border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             &:last-child {
               margin-bottom: 1px;
             }
+            &-left {
+              width: calc(100% - 30px);
+              display: flex;
+              align-items: center;
+            }
             .organization-name {
               display: inline-block;
+              margin-left: 5px;
               /* max-width: 200px; */
-              max-width: 150px;
               font-size: 12px;
               overflow: hidden;
               text-overflow: ellipsis;
               white-space: nowrap;
               vertical-align: top;
-              &-width {
-                max-width: 155px;
-              }
+              word-break: break-all;
             }
             .delete-depart-icon {
               display: block;
@@ -2135,6 +2164,7 @@
               text-overflow: ellipsis;
               white-space: nowrap;
               vertical-align: top;
+              word-break: break-all;
             }
             .delete-icon {
               display: block;
