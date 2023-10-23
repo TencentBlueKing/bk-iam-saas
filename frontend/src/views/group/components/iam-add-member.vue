@@ -836,7 +836,6 @@
       },
 
       async handleSearchOrgAndUser () {
-        console.log(this.manualValue.split(/;|\n|\s/));
         const manualInputValue = _.cloneDeep(this.manualValue.split(/;|\n|\s/));
         for (let i = 0; i < manualInputValue.length; i++) {
           const params = {
@@ -1756,7 +1755,6 @@
         const typeMap = {
           multiple: async () => {
             const isChecked = payload.length && payload.indexOf(row) !== -1;
-            console.log(this.manualTableList, this.hasSelectedDepartments, this.hasSelectedUsers);
             if (['depart', 'department'].includes(row.type)) {
               if (isChecked) {
                 this.hasSelectedDepartments.push(row);
@@ -1765,7 +1763,6 @@
                   (item) => item.id.toString() !== row.id.toString()
                 );
               }
-              console.log(this.manualTableList);
             }
             if (['user'].includes(row.type)) {
               if (isChecked) {
