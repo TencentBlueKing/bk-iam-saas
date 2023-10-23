@@ -1359,6 +1359,9 @@ export const m = {
     userGroupSetting: {
         '所有用户组不可被申请': 'All user groups cannot be applied for',
         '编辑用户组配置成功': ' User group configuration edited'
+    },
+    sensitivityLevel: {
+        '全部系统': 'All system'
     }
 }
 export default {

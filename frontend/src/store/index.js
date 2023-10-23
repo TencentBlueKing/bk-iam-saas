@@ -85,6 +85,9 @@ import spaceManage from './modules/space-manage';
 // 用户组设置模块
 import userGroupSetting from './modules/user-group-setting';
 
+// 敏感等级
+import sensitivityLevel from './modules/sensitivity-level';
+
 Vue.use(Vuex);
 
 const SITE_URL = window.SITE_URL;
@@ -325,7 +328,8 @@ const store = new Vuex.Store({
     resourcePermiss,
     applyProvisionPerm,
     spaceManage,
-    userGroupSetting
+    userGroupSetting,
+    sensitivityLevel
   },
   state: {
     mainContentLoading: false,

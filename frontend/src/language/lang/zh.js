@@ -1363,6 +1363,9 @@ export const m = {
     userGroupSetting: {
         '所有用户组不可被申请': '所有用户组不可被申请',
         '编辑用户组配置成功': '编辑用户组配置成功'
+    },
+    sensitivityLevel: {
+        '全部系统': '全部系统'
     }
 }
 export default {
