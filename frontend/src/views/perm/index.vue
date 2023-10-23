@@ -383,7 +383,7 @@
           const { code } = e;
           this.messageAdvancedError(e);
           // 获取非阻塞且未报错列表接口信息
-          await this.fetchAsyncTable(requestList);
+          // await this.fetchAsyncTable(requestList);
           const emptyField = this.panels.find(item => item.name === this.active);
           if (emptyField) {
             this[emptyField.empty] = formatCodeData(code, this[emptyField.empty]);

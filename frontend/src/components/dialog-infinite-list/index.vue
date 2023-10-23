@@ -10,6 +10,16 @@
           :class="['organization-item', { focus: index === organizationIndex || item.selected }, { 'is-disabled': item.disabled || isDisabled }]"
           :title="item.disabled ? $t(`m.common['该成员已添加']`) : item.full_name"
           @click.stop="nodeClick(item)">
+          <div class="organization-checkbox" v-if="item.showRadio">
+            <span class="node-checkbox"
+              :class="{
+                'is-disabled': disabledNode(item),
+                'is-checked': selectedNode(item),
+                'is-indeterminate': item.indeterminate
+              }"
+              @click.stop="handleNodeClick(item)">
+            </span>
+          </div>
           <Icon type="file-close" class="folder-icon" />
           <span
             class="organization-name"
@@ -23,16 +33,6 @@
           >
             {{ '(' + item.count + ')' }}
           </span>
-          <div class="organization-checkbox" v-if="item.showRadio">
-            <span class="node-checkbox"
-              :class="{
-                'is-disabled': disabledNode(item),
-                'is-checked': selectedNode(item),
-                'is-indeterminate': item.indeterminate
-              }"
-              @click.stop="handleNodeClick(item)">
-            </span>
-          </div>
         </div>
       </div>
       <div class="user-content">
@@ -42,16 +42,6 @@
           :class="['user-item', { focus: index === userIndex || item.selected }, { 'is-disabled': item.disabled || isDisabled }]"
           :title="item.disabled ? $t(`m.common['该成员已添加']`) : ''"
           @click.stop="nodeClick(item)">
-          <Icon type="personal-user" class="user-icon" />
-          <span
-            class="user-name"
-            :class="item.disabled ? 'is-disabled' : ''"
-            :title="nameType(item)">
-            {{ item.username }}
-            <template v-if="item.name !== ''">
-              ({{ item.name }})
-            </template>
-          </span>
           <div class="user-checkbox" v-if="item.showRadio">
             <span class="node-checkbox"
               :class="{
@@ -62,6 +52,16 @@
               @click.stop="handleNodeClick(item)">
             </span>
           </div>
+          <Icon type="personal-user" class="user-icon" />
+          <span
+            class="user-name"
+            :class="item.disabled ? 'is-disabled' : ''"
+            :title="nameType(item)">
+            {{ item.username }}
+            <template v-if="item.name !== ''">
+              ({{ item.name }})
+            </template>
+          </span>
         </div>
       </div>
     </div>
@@ -373,6 +373,8 @@
 
         .organization-content {
             .organization-item {
+                display: flex;
+                align-items: center;
                 padding: 5px 0;
                 border-radius: 2px;
                 cursor: pointer;
@@ -407,7 +409,7 @@
                 }
                 .organization-checkbox {
                     margin-right: 5px;
-                    float: right;
+                    /* float: right; */
                 }
                 .user-count {
                     color: #c4c6cc;
@@ -416,11 +418,14 @@
             .folder-icon {
                 font-size: 17px;
                 color: #a3c5fd;
+                margin-right: 5px;
             }
         }
 
         .user-content {
             .user-item {
+                display: flex;
+                align-items: center;
                 padding: 5px 0;
                 border-radius: 2px;
                 cursor: pointer;
@@ -455,12 +460,13 @@
                 }
                 .user-checkbox {
                     margin-right: 5px;
-                    float: right;
+                    /* float: right; */
                 }
             }
             .user-icon {
                 font-size: 16px;
                 color: #a3c5fd;
+                margin-right: 5px;
             }
         }
 
@@ -472,7 +478,7 @@
             height: 16px;
             margin: 0 6px 0 0;
             border: 1px solid #979ba5;
-            border-radius: 50%;
+            /* border-radius: 50%; */
             &.is-checked {
                 border-color: #3a84ff;
                 background-color: #3a84ff;
