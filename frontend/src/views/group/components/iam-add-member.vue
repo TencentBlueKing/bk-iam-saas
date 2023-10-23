@@ -303,19 +303,20 @@
             <div class="content">
               <div class="organization-content" v-if="isDepartSelectedEmpty">
                 <div class="organization-item" v-for="item in hasSelectedDepartments" :key="item.id">
-                  <Icon type="file-close" class="folder-icon" />
-                  <span
-                    :class="[
-                      'organization-name',
-                      { 'organization-name-width': item.showCount && enableOrganizationCount }
-                    ]"
-                    :title="nameType(item)"
-                  >
-                    {{ item.name }}
-                  </span>
-                  <span class="user-count" v-if="item.showCount && enableOrganizationCount">{{
-                    '(' + item.count + `)`
-                  }}</span>
+                  <div class="organization-item-left">
+                    <Icon type="file-close" class="folder-icon" />
+                    <span
+                      :class="[
+                        'organization-name'
+                      ]"
+                      :title="nameType(item)"
+                    >
+                      {{ item.name }}
+                    </span>
+                    <span class="user-count" v-if="item.showCount && enableOrganizationCount">{{
+                      '(' + item.count + `)`
+                    }}</span>
+                  </div>
                   <!-- <Icon bk type="close-circle-shape" class="delete-depart-icon" @click="handleDelete(item, 'organization')" /> -->
                   <Icon bk type="close" class="delete-depart-icon" @click="handleDelete(item, 'organization')" />
                 </div>
@@ -535,7 +536,9 @@
         },
         tableKeyWord: '',
         manualTableList: [],
-        manualTableListStorage: []
+        manualTableListStorage: [],
+        hasSelectedManualDepartments: [],
+        hasSelectedManualUsers: []
       };
     },
     computed: {
@@ -719,8 +722,8 @@
         this.$nextTick(() => {
           this.manualTableList.forEach((item) => {
             if (this.$refs.manualTableRef) {
-              const hasSelectedUsers = this.hasSelectedUsers.map((v) => `${v.username}${v.name}`);
-              const hasSelectedDepartments = this.hasSelectedDepartments.map((v) => v.id);
+              const hasSelectedUsers = this.hasSelectedManualUsers.map((v) => `${v.username}${v.name}`);
+              const hasSelectedDepartments = this.hasSelectedManualDepartments.map((v) => v.id);
               this.$refs.manualTableRef.toggleRowSelection(
                 item,
                 (hasSelectedUsers.includes(`${item.username}${item.name}`))
@@ -851,11 +854,12 @@
               });
               const result = await this.fetchSubjectScopeCheck(users, 'user');
               if (result && result.length) {
+                const hasSelectedUsers = [...this.hasSelectedUsers, ...this.hasSelectedManualUsers];
                 const userTemp = result.filter((item) => {
-                  return !this.hasSelectedUsers.map((subItem) =>
+                  return !hasSelectedUsers.map((subItem) =>
                     `${subItem.username}&${subItem.name}`).includes(`${item.username}&${item.name}`);
                 });
-                this.hasSelectedUsers.push(...userTemp);
+                this.hasSelectedManualUsers.push(...userTemp);
                 // 保存原有格式
                 let formatStr = _.cloneDeep(this.manualValue);
                 const usernameList = result.map((item) => item.username);
@@ -863,8 +867,7 @@
                   // 处理既有部门又有用户且不连续相同类型的展示数据
                   formatStr = formatStr
                     .replace(this.evil('/' + item + '(;\\n|\\s\\n|)/'), '')
-                    .replace('\n\n', '\n')
-                    .replace('\s\s', '\s')
+                    .replace(/(\s*\r?\n\s*)+/g, '\n')
                     .replace(';;', '');
                   // 处理复制全部用户不相连的两个不在授权范围内的用户存在空字符
                   formatStr = formatStr
@@ -888,10 +891,12 @@
               });
               const result = await this.fetchSubjectScopeCheck(departments, 'depart');
               if (result && result.length) {
+                const hasSelectedDepartments = [...this.hasSelectedDepartments, ...this.hasSelectedManualDepartments];
                 const departTemp = result.filter((item) => {
-                  return !this.hasSelectedDepartments.map((subItem) =>
+                  return !hasSelectedDepartments.map((subItem) =>
                     subItem.id.toString()).includes(item.id.toString());
                 });
+                this.hasSelectedManualDepartments.push(...departTemp);
                 this.hasSelectedDepartments.push(...departTemp);
                 // 备份一份粘贴板里的内容，清除组织的数据，在过滤掉组织的数据
                 let clipboardValue = _.cloneDeep(this.manualValue);
@@ -932,6 +937,7 @@
             return !this.hasSelectedUsers.map((subItem) => subItem.username).includes(item.username);
           });
           this.hasSelectedUsers.push(...temps);
+          this.hasSelectedManualUsers.push(...temps);
           if (res.data.length) {
             this.usernameList = res.data.map((item) => item.username);
             // 分号拼接
@@ -954,8 +960,9 @@
               // 处理既有部门又有用户且不连续相同类型的展示数据
               formatStr = formatStr
                 .replace(this.evil('/' + item + '(;\\n|\\s\\n|)/'), '')
-                .replace('\n\n', '\n')
-                .replace('\s\s', '\s')
+                // .replace('\n\n', '\n')
+                // .replace('\s\s', '\s')
+                .replace(/(\s*\r?\n\s*)+/g, '\n')
                 .replace(';;', '');
               // 处理复制全部用户不相连的两个不在授权范围内的用户存在空字符
               formatStr = formatStr
@@ -1012,10 +1019,17 @@
             });
             const result = await this.fetchSubjectScopeCheck(list);
             if (result && result.length) {
+              // const departTemp = result.filter((item) => {
+              //   return !this.hasSelectedDepartments.map((subItem) =>
+              //     subItem.id.toString()).includes(item.id.toString());
+              // });
+              // this.hasSelectedDepartments.push(...departTemp);
+              const hasSelectedDepartments = [...this.hasSelectedDepartments, ...this.hasSelectedManualDepartments];
               const departTemp = result.filter((item) => {
-                return !this.hasSelectedDepartments.map((subItem) =>
+                return !hasSelectedDepartments.map((subItem) =>
                   subItem.id.toString()).includes(item.id.toString());
               });
+              this.hasSelectedManualDepartments.push(...departTemp);
               this.hasSelectedDepartments.push(...departTemp);
               // 备份一份粘贴板里的内容，清除组织的数据，在过滤掉组织的数据
               let clipboardValue = _.cloneDeep(this.manualValue);
@@ -1049,7 +1063,7 @@
         if (this.manualInputError) {
           await this.handleSearchOrgAndUser();
         }
-        this.manualTableListStorage = [...this.hasSelectedDepartments, ...this.hasSelectedUsers];
+        this.manualTableListStorage = [...this.hasSelectedManualDepartments, ...this.hasSelectedManualUsers];
         this.manualTableList = _.cloneDeep(this.manualTableListStorage);
         this.fetchManualTableData();
       },
@@ -1358,6 +1372,8 @@
         }
         this.hasSelectedUsers.splice(0, this.hasSelectedUsers.length, ...[]);
         this.hasSelectedDepartments.splice(0, this.hasSelectedDepartments.length, ...[]);
+        this.hasSelectedManualUsers.splice(0, this.hasSelectedManualUsers.length, ...[]);
+        this.hasSelectedManualDepartments.splice(0, this.hasSelectedManualDepartments.length, ...[]);
         this.$refs.memberTreeRef && this.$refs.memberTreeRef.clearAllIsSelectedStatus();
         this.fetchManualTableData();
       },
@@ -1629,9 +1645,13 @@
         }
         if (type === 'user') {
           this.hasSelectedUsers = [...this.hasSelectedUsers.filter((user) => user.username !== item.username)];
+          this.hasSelectedManualUsers
+            = [...this.hasSelectedManualUsers.filter((user) => user.username !== item.username)];
         } else {
           // eslint-disable-next-line max-len
           this.hasSelectedDepartments = [...this.hasSelectedDepartments.filter((organ) => organ.id !== item.id)];
+          this.hasSelectedManualDepartments
+            = [...this.hasSelectedManualDepartments.filter((organ) => organ.id !== item.id)];
         }
         this.fetchManualTableData();
       },
@@ -1694,6 +1714,8 @@
         this.manualValueBackup = [];
         this.manualTableList = [];
         this.manualTableListStorage = [];
+        this.hasSelectedManualDepartments = [];
+        this.hasSelectedManualUsers = [];
         this.tableKeyWord = '';
         this.$emit('update:show', false);
         this.$emit('on-after-leave');
@@ -1758,8 +1780,12 @@
             if (['depart', 'department'].includes(row.type)) {
               if (isChecked) {
                 this.hasSelectedDepartments.push(row);
+                this.hasSelectedManualDepartments.push(row);
               } else {
                 this.hasSelectedDepartments = this.hasSelectedDepartments.filter(
+                  (item) => item.id.toString() !== row.id.toString()
+                );
+                this.hasSelectedManualDepartments = this.hasSelectedManualDepartments.filter(
                   (item) => item.id.toString() !== row.id.toString()
                 );
               }
@@ -1767,8 +1793,12 @@
             if (['user'].includes(row.type)) {
               if (isChecked) {
                 this.hasSelectedUsers.push(row);
+                this.hasSelectedManualUsers.push(row);
               } else {
                 this.hasSelectedUsers = this.hasSelectedUsers.filter(
+                  (item) => `${item.username}${item.name}` !== `${row.username}${row.name}`
+                );
+                this.hasSelectedManualUsers = this.hasSelectedManualUsers.filter(
                   (item) => `${item.username}${item.name}` !== `${row.username}${row.name}`
                 );
               }
@@ -1780,8 +1810,12 @@
               if (['depart', 'department'].includes(item.type)) {
                 if (isAllCheck) {
                   this.hasSelectedDepartments.push(item);
+                  this.hasSelectedManualDepartments.push(item);
                 } else {
                   this.hasSelectedDepartments = this.hasSelectedDepartments.filter(
+                    (v) => item.id.toString() !== v.id.toString()
+                  );
+                  this.hasSelectedManualDepartments = this.hasSelectedManualDepartments.filter(
                     (v) => item.id.toString() !== v.id.toString()
                   );
                 }
@@ -1789,8 +1823,12 @@
               if (['user'].includes(item.type)) {
                 if (isAllCheck) {
                   this.hasSelectedUsers.push(item);
+                  this.hasSelectedManualUsers.push(item);
                 } else {
                   this.hasSelectedUsers = this.hasSelectedUsers.filter(
+                    (v) => `${item.username}${item.name}` !== `${v.username}${v.name}`
+                  );
+                  this.hasSelectedManualUsers = this.hasSelectedManualUsers.filter(
                     (v) => `${item.username}${item.name}` !== `${v.username}${v.name}`
                   );
                 }
@@ -2069,21 +2107,27 @@
             padding: 5px;
             box-shadow: 0 1px 1px 0 #00000014;
             border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             &:last-child {
               margin-bottom: 1px;
             }
+            &-left {
+              width: calc(100% - 30px);
+              display: flex;
+              align-items: center;
+            }
             .organization-name {
               display: inline-block;
+              margin-left: 5px;
               /* max-width: 200px; */
-              max-width: 150px;
               font-size: 12px;
               overflow: hidden;
               text-overflow: ellipsis;
               white-space: nowrap;
               vertical-align: top;
-              &-width {
-                max-width: 160px;
-              }
+              word-break: break-all;
             }
             .delete-depart-icon {
               display: block;
@@ -2120,6 +2164,7 @@
               text-overflow: ellipsis;
               white-space: nowrap;
               vertical-align: top;
+              word-break: break-all;
             }
             .delete-icon {
               display: block;
