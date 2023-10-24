@@ -272,7 +272,7 @@
   import { CUSTOM_PERM_TEMPLATE_ID, PERMANENT_TIMESTAMP, SIX_MONTH_TIMESTAMP, AGGREGATION_EDIT_ENUM } from '@/common/constants';
   // import { leavePageConfirm } from '@/common/leave-page-confirm';
   import IamGuide from '@/components/iam-guide/index.vue';
-  import AddMemberDialog from '../components/iam-add-member';
+  import AddMemberDialog from '@/views/group/components/iam-add-member';
   import RenderMember from '@/views/manage-spaces/components/render-member';
   import basicInfo from '@/views/manage-spaces/components/basic-info';
   // import renderAction from '@/views/manage-spaces/common/render-action';
