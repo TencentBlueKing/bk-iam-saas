@@ -244,4 +244,11 @@
         text-align: center;
         word-break: break-all;
     }
+
+    .sensitivity-level-select-tag {
+        margin: 0 6px 0 0;
+        &-custom {
+          background-color: #c02121;
+        }
+    }
 }

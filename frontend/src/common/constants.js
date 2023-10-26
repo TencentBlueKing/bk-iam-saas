@@ -22,7 +22,7 @@
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
-*/
+ */
 
 import il8n from '@/language';
 
@@ -116,6 +116,10 @@ export const BOUNDARY_KEYS_ENUM = {
   membersPerm: {
     title: '最大可授权人员边界',
     isExpanded: false
+  },
+  transferPreview: {
+    title: '转移预览',
+    isExpanded: false
   }
 };
 
@@ -170,5 +174,39 @@ export const COPY_KEYS_ENUM = [
         name: il8n('userGroup', '成员和组织架构')
       }
     ]
+  }
+];
+
+// 敏感等级选项枚举
+export const SENSITIVITY_LEVEL_ENUM = [
+  {
+    name: '不敏感',
+    id: 'L1',
+    theme: '',
+    disabled: false
+  },
+  {
+    name: '低',
+    id: 'L2',
+    theme: 'success',
+    disabled: false
+  },
+  {
+    name: '中',
+    id: 'L3',
+    theme: 'warning',
+    disabled: false
+  },
+  {
+    name: '高',
+    id: 'L4',
+    theme: 'danger',
+    disabled: false
+  },
+  {
+    name: '极高',
+    id: 'L5',
+    theme: 'danger',
+    disabled: false
   }
 ];

@@ -268,7 +268,9 @@
     // 审计
     [['audit'], 'auditNav'],
     // 用户组设置
-    [['userGroupSetting'], 'userGroupSettingNav']
+    [['userGroupSetting'], 'userGroupSettingNav'],
+    // 敏感等级
+    [['sensitivityLevel'], 'sensitivityLevelNav']
   ]);
 
   export default {

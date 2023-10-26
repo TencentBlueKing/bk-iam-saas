@@ -84,8 +84,8 @@ export const beforeEach = async (to, from, next) => {
 
   let curRole = store.state.user.role.type;
   let navIndex = store.state.index || Number(window.localStorage.getItem('index') || 0);
-  const currentRoleId = String(to.query.current_role_id || '').trim();
-  const curRoleId = store.state.curRoleId;
+  let currentRoleId = String(to.query.current_role_id || '').trim();
+  let curRoleId = store.state.curRoleId;
   const defaultRoute = ['my-perm', 'user-group', 'audit', 'user'];
   // if (curRole === 'staff') {
   //     await store.dispatch('role/updateCurrentRole', { id: 0 });
@@ -133,6 +133,21 @@ export const beforeEach = async (to, from, next) => {
     navIndex = index;
     store.commit('updateIndex', index);
     window.localStorage.setItem('index', index);
+  }
+
+  // 如果进入没有权限，重新找roleList
+  if (['', 'staff'].includes(curRole) && navIndex > 0) {
+    const roleList = await store.dispatch('roleList', {
+      cancelWhenRouteChange: false,
+      cancelPrevious: false
+    });
+    if (roleList.length) {
+      const { id } = roleList[0];
+      currentRoleId = id;
+      curRoleId = id;
+      store.commit('updateCurRoleId', id);
+      await getManagerInfo();
+    }
   }
 
   if (['applyJoinUserGroup', 'applyCustomPerm', 'myManageSpace', 'myPerm', 'permTransfer', 'permRenewal'].includes(to.name)
