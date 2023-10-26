@@ -1361,7 +1361,28 @@ export const m = {
         '编辑用户组配置成功': ' User group configuration edited'
     },
     sensitivityLevel: {
-        '全部系统': 'All system'
+        '搜索系统': 'Search system',
+        '全部系统': 'All systems',
+        '全部等级': 'All levels',
+        '等级': 'Level',
+        '不敏感': 'Insensitive',
+        '低': 'Low',
+        '中': 'Middle',
+        '高': 'High',
+        '极高': 'Extremely high',
+        '操作名称': 'Action name',
+        '所属系统': 'System',
+        '当前审批流程': 'Current approval process',
+        '当前等级': 'Current level',
+        '目标等级': 'Target level',
+        '额外添加的审批节点': 'Extra approval nodes added',
+        '批量转移等级': 'Multi-transfer level',
+        '搜索操作名称、所属系统、当前等级': 'Search action name, system, current level',
+        '当前敏感等级为只读操作': 'The current sensitivity level is read-only action',
+        '转移到目标等级': 'Transfer to target level',
+        '转移预览的内容不能为空': 'The content of the transfer preview cannot be empty',
+        '转移预览': 'Transfer preview',
+        '确认转移': 'Confirm transfer'
     }
 }
 export default {

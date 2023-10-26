@@ -312,15 +312,17 @@
       if (this.$parent) {
         setTimeout(() => {
           let totalWidth = 0;
-          const { width: searchSelectWidth } = this.$refs.searchSelect.getBoundingClientRect();
-          const tagList = this.$refs.tag;
-          if (tagList && tagList.length && searchSelectWidth > 0) {
-            for (let i = 0; i < tagList.length; i++) {
-              if (totalWidth + tagList[i].$el.offsetWidth + 50 < searchSelectWidth) {
-                totalWidth = totalWidth + tagList[i].$el.offsetWidth + 6;
-              } else {
-                this.maxRenderTagNums = i;
-                break;
+          if (this.$refs.searchSelect && this.$refs.searchSelect.getBoundingClientRect) {
+            const { width: searchSelectWidth } = this.$refs.searchSelect.getBoundingClientRect();
+            const tagList = this.$refs.tag;
+            if (tagList && tagList.length && searchSelectWidth > 0) {
+              for (let i = 0; i < tagList.length; i++) {
+                if (totalWidth + tagList[i].$el.offsetWidth + 50 < searchSelectWidth) {
+                  totalWidth = totalWidth + tagList[i].$el.offsetWidth + 6;
+                } else {
+                  this.maxRenderTagNums = i;
+                  break;
+                }
               }
             }
           }

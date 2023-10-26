@@ -29,6 +29,15 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .iamcenter-time-circle-fill:before {
 	content: "\e20b";
 }
+.iamcenter-help:before {
+	content: "\e220";
+}
+.iamcenter-add-fill:before {
+	content: "\e222";
+}
+.iamcenter-reduce-fill:before {
+	content: "\e223";
+}
 .iamcenter-check:before {
 	content: "\e19b";
 }
@@ -407,9 +416,18 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .iamcenter-level-one-manage-space:before {
 	content: "\e218";
 }
+.iamcenter-shezhi:before {
+	content: "\e21f";
+}
 .iamcenter-my-manage-space:before {
 	content: "\e219";
 }
 .iamcenter-auth-scope:before {
 	content: "\e21a";
+}
+.iamcenter-mingandengji:before {
+	content: "\e221";
+}
+.iamcenter-all:before {
+	content: "\e224";
 }

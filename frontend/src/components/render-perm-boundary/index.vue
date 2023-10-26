@@ -1,24 +1,24 @@
 <template>
   <div>
-    <render-horizontal-block
-      :label="$t(`m.nav['授权边界']`)"
-      :required="false"
-    >
+    <render-horizontal-block :required="false">
       <div class="render-perm-boundary">
-        <div v-if="modules.includes('resourcePerm')"
-          class="render-form-item"
-        >
+        <div v-if="modules.includes('resourcePerm')" class="render-form-item">
           <div class="perm-boundary-title">
-            {{ $t(`m.levelSpace["${BOUNDARY_KEYS_ENUM['resourcePerm'].title}"]`) }}:
+            {{ $t(`m.levelSpace["${BOUNDARY_KEYS_ENUM["resourcePerm"].title}"]`) }}:
           </div>
-          <div :class="[
-                 'iam-resource-expand'
-               ]"
-            @click.stop="handleExpanded('resourcePerm')">
+          <div
+            :class="['iam-resource-expand']"
+            @click.stop="handleExpanded('resourcePerm')"
+          >
             <div class="iam-resource-header flex-between">
               <div class="iam-resource-header-left">
-                <Icon bk
-                  :type="BOUNDARY_KEYS_ENUM['resourcePerm'].isExpanded ? 'down-shape' : 'right-shape'"
+                <Icon
+                  bk
+                  :type="
+                    BOUNDARY_KEYS_ENUM['resourcePerm'].isExpanded
+                      ? 'down-shape'
+                      : 'right-shape'
+                  "
                 />
                 <div class="iam-resource-header-left-title">
                   <span>{{ $t(`m.common['共']`) }}</span>
@@ -34,22 +34,28 @@
             </div>
           </div>
         </div>
-        <div v-if="modules.includes('membersPerm')"
-          class="render-form-item">
+        <div v-if="modules.includes('membersPerm')" class="render-form-item">
           <div class="perm-boundary-title">
-            {{ $t(`m.levelSpace["${BOUNDARY_KEYS_ENUM['membersPerm'].title}"]`) }}:
+            {{ $t(`m.levelSpace["${BOUNDARY_KEYS_ENUM["membersPerm"].title}"]`) }}:
           </div>
-          <div :class="[
-                 'iam-resource-expand'
-               ]"
-            @click.stop="handleExpanded('membersPerm')">
+          <div
+            :class="['iam-resource-expand']"
+            @click.stop="handleExpanded('membersPerm')"
+          >
             <div class="iam-resource-header">
               <div class="iam-resource-header-left">
-                <Icon bk
-                  :type="BOUNDARY_KEYS_ENUM['membersPerm'].isExpanded ? 'down-shape' : 'right-shape'"
+                <Icon
+                  bk
+                  :type="
+                    BOUNDARY_KEYS_ENUM['membersPerm'].isExpanded
+                      ? 'down-shape'
+                      : 'right-shape'
+                  "
                 />
-                <div class="iam-resource-header-left-title"
-                  v-if="userLength > 0 || departLength > 0">
+                <div
+                  class="iam-resource-header-left-title"
+                  v-if="userLength > 0 || departLength > 0"
+                >
                   <template v-if="userLength > 0">
                     {{ $t(`m.common['共']`) }}
                     <span class="number">{{ userLength }}</span>
@@ -70,6 +76,54 @@
           <div class="content" v-if="BOUNDARY_KEYS_ENUM['membersPerm'].isExpanded">
             <div class="slot-content">
               <slot name="membersPerm" />
+            </div>
+          </div>
+        </div>
+        <div v-if="modules.includes('transferPreview')" class="render-form-item">
+          <div
+            :class="[
+              'perm-boundary-title',
+              { 'perm-boundary-title-custom': isCustomTitleStyle }
+            ]"
+          >
+            {{
+              $t(`m.sensitivityLevel["${BOUNDARY_KEYS_ENUM["transferPreview"].title}"]`)
+            }}
+          </div>
+          <div
+            :class="['iam-resource-expand']"
+            @click.stop="handleExpanded('transferPreview')"
+          >
+            <div class="iam-resource-header flex-between">
+              <div class="iam-resource-header-left">
+                <Icon
+                  bk
+                  :type="
+                    BOUNDARY_KEYS_ENUM['transferPreview'].isExpanded
+                      ? 'down-shape'
+                      : 'right-shape'
+                  "
+                />
+                <div class="iam-resource-header-left-title">
+                  <span>{{ $t(`m.common['已选择']`) }}</span>
+                  <span class="number">{{ permLength }}</span>
+                  <span>{{ $t(`m.common['个']`) }}{{ $t(`m.common['操作']`) }}</span>
+                </div>
+              </div>
+              <div class="iam-resource-header-right">
+                <bk-button
+                  :text="true"
+                  style="margin-right: 20px"
+                  @click="handleClearAll"
+                >
+                  {{ $t(`m.common['清空']`) }}
+                </bk-button>
+              </div>
+            </div>
+          </div>
+          <div class="content" v-if="BOUNDARY_KEYS_ENUM['transferPreview'].isExpanded">
+            <div class="slot-content">
+              <slot name="transferPreview" />
             </div>
           </div>
         </div>
@@ -121,6 +175,10 @@
       },
       membersTitle: {
         type: String
+      },
+      isCustomTitleStyle: {
+        type: Boolean,
+        default: false
       }
     },
     data () {
@@ -141,8 +199,13 @@
     },
     methods: {
       handleExpanded (payload) {
-        this.BOUNDARY_KEYS_ENUM[payload].isExpanded = !this.BOUNDARY_KEYS_ENUM[payload].isExpanded;
+        this.BOUNDARY_KEYS_ENUM[payload].isExpanded = !this.BOUNDARY_KEYS_ENUM[payload]
+          .isExpanded;
         this.$emit('on-expanded', payload, this.BOUNDARY_KEYS_ENUM[payload].isExpanded);
+      },
+
+      handleClearAll () {
+        this.$emit('on-clear');
       }
     }
   };
@@ -150,17 +213,16 @@
 
 <style lang="postcss">
 .render-perm-boundary {
-    .members-boundary-detail {
-        border: 1px solid #DCDEE5;
-        border-top: 0;
-        padding: 15px;
-    }
+  .members-boundary-detail {
+    border: 1px solid #dcdee5;
+    border-top: 0;
+    padding: 15px;
+  }
 }
-
 </style>
 
 <style lang="postcss" scoped>
-@import '@/css/mixins/space-resource-instance-table.css';
+@import "@/css/mixins/space-resource-instance-table.css";
 /deep/ .render-perm-boundary {
   .bk-table {
     margin-top: 0;
@@ -174,24 +236,27 @@
   .perm-boundary-title {
     font-size: 12px;
     margin-bottom: 10px;
+    &-custom {
+      font-size: 13px;
+      margin-bottom: 0;
+    }
   }
 
-    .iam-resource-expand {
-        background-color: #F5F7FA;
-        .iam-resource-header-left {
-            padding: 0 10px !important;
-            display: flex;
-            align-items: center;
-            &-title {
-                margin-left: 5px;
-            }
-        }
-
+  .iam-resource-expand {
+    background-color: #f5f7fa;
+    .iam-resource-header-left {
+      padding: 0 10px !important;
+      display: flex;
+      align-items: center;
+      &-title {
+        margin-left: 5px;
+      }
     }
+  }
 
-    .member-boundary-detail {
-        border: 1px solid #DCDEE5;
-        border-top: 0;
-    }
+  .member-boundary-detail {
+    border: 1px solid #dcdee5;
+    border-top: 0;
+  }
 }
 </style>

@@ -232,7 +232,7 @@ const currentNav = [
     disabled: false
   },
   {
-    icon: 'resource-perm-manage',
+    icon: 'mingandengji',
     id: 'sensitivityLevelNav',
     rkey: 'sensitivityLevel',
     name: il8n('nav', '敏感等级'),
@@ -379,18 +379,13 @@ const store = new Vuex.Store({
     host: '',
     // 前置路由
     fromRouteName: '',
-
     // nav导航
     navData: [],
-
     index: 0,
-
     navCurRoleId: 0,
-
     showNoviceGuide: false,
-
     curRoleId: 0,
-
+    allSystemList: [],
     externalSystemsLayout: {
       hideIamHeader: false, // 第一层级头部导航
       hideIamSlider: false, // 第一层级侧边导航
@@ -466,7 +461,8 @@ const store = new Vuex.Store({
     showNoviceGuide: state => state.showNoviceGuide,
     curRoleId: state => state.curRoleId,
     externalSystemsLayout: state => state.externalSystemsLayout,
-    externalSystemId: state => state.externalSystemId
+    externalSystemId: state => state.externalSystemId,
+    allSystemList: state => state.allSystemList
   },
   mutations: {
     updateHost (state, params) {
@@ -651,6 +647,10 @@ const store = new Vuex.Store({
 
     setGuideShowByField (state, payload) {
 
+    },
+
+    updateSystemList (state, list) {
+      state.allSystemList = [...list];
     }
   },
   actions: {
@@ -901,6 +901,13 @@ const store = new Vuex.Store({
         }
         return response.data;
       });
+    },
+
+    async getSystemList ({ commit, state, dispatch }, params, config) {
+      const { data } = await http.get(`${AJAX_URL_PREFIX}/systems/?${json2Query(params)}`);
+      const results = data || [];
+      commit('updateSystemList', results);
+      return results;
     }
   }
 });
