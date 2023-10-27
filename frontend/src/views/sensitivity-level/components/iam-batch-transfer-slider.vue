@@ -162,7 +162,10 @@
 
       async handleConfirmTransfer () {
         if (!this.selectTableList.length) {
-          return this.$t(`m.sensitivityLevel['转移预览的内容不能为空']`);
+          return this.messageWarn(
+            this.$t(`m.sensitivityLevel['转移预览的内容不能为空']`),
+            3000
+          );
         }
         window.changeAlert = false;
         this.submitLoading = true;
