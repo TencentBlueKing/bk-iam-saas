@@ -59,15 +59,52 @@
                 </div>
               </div>
               <div class="right-layout">
-                <template v-if="condition.instance && condition.instance.length > 0">
+                <div class="flex-between right-layout-header">
+                  <div class="right-layout-title">{{ $t(`m.common['结果预览']`) }}</div>
+                  <div
+                    :class="[
+                      'clear-all'
+                    ]"
+                    @click.stop=""
+                  >
+                    <bk-dropdown-menu
+                      ref="dropdownInstance"
+                      :position-fixed="true"
+                      align="left"
+                      :disabled="formatClearDisabled(condition.instance)"
+                    >
+                      <template slot="dropdown-trigger">
+                        <Icon bk type="more" />
+                      </template>
+                      <ul
+                        slot="dropdown-content"
+                        class="bk-dropdown-list"
+                      >
+                        <li>
+                          <a @click.stop="handleConditionClearAll(condition.instance, index)">
+                            {{ $t(`m.common['清除所有']`) }}
+                          </a>
+                        </li>
+                      </ul>
+                    </bk-dropdown-menu>
+                  </div>
+                </div>
+                <div
+                  v-if="condition.instance && condition.instance.length > 0"
+                  :style="{ maxHeight: 'calc(100vh - 600px)' }"
+                >
                   <instance-view
+                    :select-list="selectList"
+                    :select-value="selectValue"
                     :data="condition.instance"
                     @on-delete="handleInstanceDelete(...arguments, index)"
                     @on-clear="handleInstanceClearAll(...arguments, index)" />
-                </template>
+                </div>
                 <template v-else>
                   <div class="empty-wrapper">
-                    <ExceptionEmpty />
+                    <ExceptionEmpty
+                      style="background: #fafbfd"
+                    />
                   </div>
                 </template>
               </div>
@@ -144,6 +181,9 @@
         getDragDynamicWidth: () => this.dragWidth
       };
     },
+    inject: {
+      getResourceSliderWidth: { value: 'getResourceSliderWidth', default: null }
+    },
     components: {
       renderResourceInstance,
       renderOrderNumber,
@@ -218,8 +258,8 @@
         attributes: [],
         isHide: false,
         // isEmptyResource: false,
-        dragWidth: 220,
-        dragRealityWidth: 220,
+        dragWidth: this.getResourceSliderWidth ? this.getResourceSliderWidth() * 0.67 : 600,
+        dragRealityWidth: this.getResourceSliderWidth ? this.getResourceSliderWidth() * 0.67 : 600,
         isDrag: false,
         conditionLimitData: [],
         selectListMap: {},
@@ -261,7 +301,8 @@
         };
       },
       leftLayoutStyle () {
-        if (this.dragWidth >= 220) {
+        const sliderWidth = this.getResourceSliderWidth ? this.getResourceSliderWidth() * 0.67 : 600;
+        if (this.dragWidth >= sliderWidth) {
           return {
             'min-width': `${this.dragWidth}px`
           };
@@ -294,6 +335,29 @@
       },
       limitDisabled () {
         return this.disabled || this.conditionLimitData.length > 0;
+      },
+      formatClearDisabled () {
+        return (payload) => {
+          let curPaths = [];
+          if (payload.length) {
+            curPaths = payload.reduce((prev, next) => {
+              prev.push(
+                ...next.path.map(v => {
+                  const paths = { ...v, ...next };
+                  delete paths.instance;
+                  delete paths.path;
+                  return paths[0];
+                })
+              );
+              return prev;
+            }, []);
+            return curPaths.some(v => v.disabled);
+          }
+          return true;
+        };
+      },
+      dynamicsSliderWidth () {
+        return this.getResourceSliderWidth ? this.getResourceSliderWidth() - 400 : 600;
       }
     },
     watch: {
@@ -421,10 +485,11 @@
           return;
         }
         // 可拖拽范围
-        const MIN_OFFSET_WIDTH = 220;
+        const MIN_OFFSET_WIDTH = this.dynamicsSliderWidth;
         const minWidth = MIN_OFFSET_WIDTH;
         const maxWidth = MIN_OFFSET_WIDTH + 120;
-        const offsetX = e.clientX - (document.body.clientWidth - 960);
+        const sliderWidth = this.getResourceSliderWidth ? this.getResourceSliderWidth() : 960;
+        const offsetX = e.clientX - (document.body.clientWidth - sliderWidth);
         if (offsetX < minWidth || offsetX >= maxWidth) {
           return;
         }
@@ -714,6 +779,15 @@
           isEmpty: false,
           data: tempConditionData
         };
+      },
+
+      handleConditionClearAll (payload, index) {
+        payload.forEach((item, i) => {
+          this.handleInstanceClearAll(item, i, index);
+        });
+        this.$nextTick(() => {
+          this.$refs.dropdownInstance && this.$refs.dropdownInstance[0].hide();
+        });
       },
 
       handleInstanceClearAll (payload, payloadIndex, index) {
@@ -1111,7 +1185,7 @@
                         }
                     }
                 }
-                .right-layout {
+                /* .right-layout {
                     position: relative;
                     width: calc(100% - 180px);
                     overflow-y: auto;
@@ -1133,7 +1207,55 @@
                             width: 120px;
                         }
                     }
-                }
+                } */
+                .right-layout {
+                  position: relative;
+                  /* width: calc(100% - 500px); */
+                  width: 100%;
+                  overflow-y: auto;
+                  &::-webkit-scrollbar {
+                      width: 4px;
+                      background-color: lighten(transparent, 80%);
+                  }
+                  &::-webkit-scrollbar-thumb {
+                      height: 5px;
+                      border-radius: 2px;
+                      background-color: #e6e9ea;
+                  }
+                  &-header {
+                    font-size: 14px;
+                    padding: 10px;
+                    position: sticky;
+                    top: 0;
+                    background-color: #ffffff;
+                    z-index: 1;
+                    .clear-all {
+                      .icon-more {
+                        font-size: 15px;
+                        color: #3a84ff;
+                        cursor: pointer;
+                        &:hover {
+                          color: #699df4;
+                        }
+                      }
+                      .disabled {
+                        .icon-more {
+                          color: #c4c6cc;
+                          cursor: not-allowed;
+                        }
+                      }
+                    }
+                  }
+                  .empty-wrapper {
+                      position: absolute;
+                      top: 50%;
+                      left: 50%;
+                      transform: translate(-50%, -50%);
+                      img {
+                          width: 120px;
+                      }
+                  }
+              }
             }
         }
     }

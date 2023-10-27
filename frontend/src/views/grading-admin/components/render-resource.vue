@@ -580,6 +580,15 @@
         };
       },
 
+      handleConditionClearAll (payload, index) {
+        payload.forEach((item, i) => {
+          this.handleInstanceClearAll(item, i, index);
+        });
+        this.$nextTick(() => {
+          this.$refs.dropdownInstance && this.$refs.dropdownInstance[0].hide();
+        });
+      },
+
       handleInstanceClearAll (payload, payloadIndex, index) {
         window.changeAlert = true;
         const { displayPath } = payload;
