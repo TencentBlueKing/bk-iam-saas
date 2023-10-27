@@ -722,12 +722,13 @@
         this.$nextTick(() => {
           this.manualTableList.forEach((item) => {
             if (this.$refs.manualTableRef) {
-              const hasSelectedUsers = this.hasSelectedManualUsers.map((v) => `${v.username}${v.name}`);
-              const hasSelectedDepartments = this.hasSelectedManualDepartments.map((v) => v.id);
+              const hasSelectedUsers = [...this.hasSelectedUsers, ...this.hasSelectedManualUsers].map((v) => `${v.username}${v.name}`);
+              const hasSelectedDepartments = [...this.hasSelectedDepartments, ...this.hasSelectedManualDepartments]
+                .map((v) => String(v.id));
               this.$refs.manualTableRef.toggleRowSelection(
                 item,
                 (hasSelectedUsers.includes(`${item.username}${item.name}`))
-                  || (['depart', 'department'].includes(item.type) && hasSelectedDepartments.includes(item.id))
+                  || (['depart', 'department'].includes(item.type) && hasSelectedDepartments.includes(String(item.id)))
               );
             }
           });
@@ -777,8 +778,8 @@
             .split(';')
             .filter((item) => templateArr.includes(item) || this.filterDepartList.includes(item));
           this.manualValue = hasSelectedData.join('\n');
-          this.fetchManualTableData();
         }
+        this.fetchManualTableData();
       },
 
       handleManualInput (value) {
@@ -839,7 +840,8 @@
       },
 
       async handleSearchOrgAndUser () {
-        const manualInputValue = _.cloneDeep(this.manualValue.split(/;|\n|\s/));
+        let manualInputValue = _.cloneDeep(this.manualValue.split(/;|\n|\s/));
+        manualInputValue = manualInputValue.filter((item) => item !== '');
         for (let i = 0; i < manualInputValue.length; i++) {
           const params = {
             keyword: manualInputValue[i],
@@ -859,6 +861,7 @@
                   return !hasSelectedUsers.map((subItem) =>
                     `${subItem.username}&${subItem.name}`).includes(`${item.username}&${item.name}`);
                 });
+                this.hasSelectedUsers.push(...userTemp);
                 this.hasSelectedManualUsers.push(...userTemp);
                 // 保存原有格式
                 let formatStr = _.cloneDeep(this.manualValue);
@@ -981,13 +984,6 @@
           }
         } catch (e) {
           console.error(e);
-          // const { response } = e;
-          // 处理如果是前端校验为空导致的报错，使用前端自定义提示
-          // if (response && [400].includes(response.status)) {
-          //   this.messageWarn(this.$t(`m.verify['用户名输入格式错误']`), 3000);
-          // } else {
-          //   this.messageAdvancedError(e);
-          // }
           this.messageAdvancedError(e);
         } finally {
           this.manualAddLoading = false;
@@ -1019,11 +1015,6 @@
             });
             const result = await this.fetchSubjectScopeCheck(list);
             if (result && result.length) {
-              // const departTemp = result.filter((item) => {
-              //   return !this.hasSelectedDepartments.map((subItem) =>
-              //     subItem.id.toString()).includes(item.id.toString());
-              // });
-              // this.hasSelectedDepartments.push(...departTemp);
               const hasSelectedDepartments = [...this.hasSelectedDepartments, ...this.hasSelectedManualDepartments];
               const departTemp = result.filter((item) => {
                 return !hasSelectedDepartments.map((subItem) =>
@@ -1353,8 +1344,12 @@
         } else {
           if (node.type === 'user') {
             this.hasSelectedUsers = [...this.hasSelectedUsers.filter((item) => item.username !== node.username)];
+            this.hasSelectedManualUsers = [...this.hasSelectedManualUsers
+              .filter((item) => item.username !== node.username)];
           } else {
             this.hasSelectedDepartments = [...this.hasSelectedDepartments.filter((item) => item.id !== node.id)];
+            this.hasSelectedManualDepartments = [...this.hasSelectedManualDepartments
+              .filter((item) => item.id !== node.id)];
           }
         }
       },
@@ -1664,6 +1659,8 @@
             this.hasSelectedDepartments.push(item);
           } else {
             this.hasSelectedDepartments = this.hasSelectedDepartments.filter((organ) => organ.id !== item.id);
+            this.hasSelectedManualDepartments
+              = this.hasSelectedManualDepartments.filter((organ) => organ.id !== item.id);
           }
         }
       },
@@ -1673,6 +1670,7 @@
           this.hasSelectedUsers.push(item);
         } else {
           this.hasSelectedUsers = this.hasSelectedUsers.filter((user) => user.username !== item.username);
+          this.hasSelectedManualUsers = this.hasSelectedManualUsers.filter((user) => user.username !== item.username);
         }
       },
 
@@ -1779,8 +1777,15 @@
             const isChecked = payload.length && payload.indexOf(row) !== -1;
             if (['depart', 'department'].includes(row.type)) {
               if (isChecked) {
-                this.hasSelectedDepartments.push(row);
-                this.hasSelectedManualDepartments.push(row);
+                const hasSelectedDepart = [...this.hasSelectedDepartments, ...this.hasSelectedManualDepartments];
+                let hasSelectedDepartIds = [];
+                if (hasSelectedDepart.length) {
+                  hasSelectedDepartIds = hasSelectedDepart.map((v) => String(v.id));
+                }
+                if (!hasSelectedDepartIds.includes(String(row.id))) {
+                  this.hasSelectedDepartments.push(row);
+                  this.hasSelectedManualDepartments.push(row);
+                }
               } else {
                 this.hasSelectedDepartments = this.hasSelectedDepartments.filter(
                   (item) => item.id.toString() !== row.id.toString()
@@ -1792,8 +1797,15 @@
             }
             if (['user'].includes(row.type)) {
               if (isChecked) {
-                this.hasSelectedUsers.push(row);
-                this.hasSelectedManualUsers.push(row);
+                const hasSelectedUsers = [...this.hasSelectedUsers, ...this.hasSelectedManualUsers];
+                let hasSelectedUsersIds = [];
+                if (hasSelectedUsers.length) {
+                  hasSelectedUsersIds = hasSelectedUsers.map((v) => `${v.username}${v.name}`);
+                }
+                if (!hasSelectedUsersIds.includes(`${row.username}${row.name}`)) {
+                  this.hasSelectedUsers.push(row);
+                  this.hasSelectedManualUsers.push(row);
+                }
               } else {
                 this.hasSelectedUsers = this.hasSelectedUsers.filter(
                   (item) => `${item.username}${item.name}` !== `${row.username}${row.name}`
@@ -1809,8 +1821,15 @@
             this.manualTableList.forEach((item) => {
               if (['depart', 'department'].includes(item.type)) {
                 if (isAllCheck) {
-                  this.hasSelectedDepartments.push(item);
-                  this.hasSelectedManualDepartments.push(item);
+                  const hasSelectedDepart = [...this.hasSelectedDepartments, ...this.hasSelectedManualDepartments];
+                  let hasSelectedDepartIds = [];
+                  if (hasSelectedDepart.length) {
+                    hasSelectedDepartIds = hasSelectedDepart.map((v) => String(v.id));
+                  }
+                  if (!hasSelectedDepartIds.includes(String(item.id))) {
+                    this.hasSelectedDepartments.push(item);
+                    this.hasSelectedManualDepartments.push(item);
+                  }
                 } else {
                   this.hasSelectedDepartments = this.hasSelectedDepartments.filter(
                     (v) => item.id.toString() !== v.id.toString()
@@ -1822,8 +1841,15 @@
               }
               if (['user'].includes(item.type)) {
                 if (isAllCheck) {
-                  this.hasSelectedUsers.push(item);
-                  this.hasSelectedManualUsers.push(item);
+                  const hasSelectedUsers = [...this.hasSelectedUsers, ...this.hasSelectedManualUsers];
+                  let hasSelectedUsersIds = [];
+                  if (hasSelectedUsers.length) {
+                    hasSelectedUsersIds = hasSelectedUsers.map((v) => `${v.username}${v.name}`);
+                  }
+                  if (!hasSelectedUsersIds.includes(`${item.username}${item.name}`)) {
+                    this.hasSelectedUsers.push(item);
+                    this.hasSelectedManualUsers.push(item);
+                  }
                 } else {
                   this.hasSelectedUsers = this.hasSelectedUsers.filter(
                     (v) => `${item.username}${item.name}` !== `${v.username}${v.name}`
