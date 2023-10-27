@@ -12,6 +12,7 @@ import json
 from textwrap import dedent
 from typing import Dict, List, Union
 
+from django.core.paginator import Paginator
 from django.db import connection, models
 from django.utils.functional import cached_property
 
@@ -172,26 +173,35 @@ class RoleScope(models.Model):
         """
         从可授权范围里删除某个操作，由于json存储了所有授权信息，所以无法直接索引，只能遍历所有
         """
-        role_scopes = cls.objects.filter(type=RoleScopeType.AUTHORIZATION.value)
+        qs = Role.objects.only("id")
+        if system_id != "bk_ci_rbac":
+            qs = qs.exclude(source_system_id="bk_ci_rbac")
+
+        paginator = Paginator(qs, 100)
         should_updated_role_scopes = []
-        for role_scope in role_scopes:
-            content = json.loads(role_scope.content)
-            should_updated = False
-            # 遍历授权范围里每个系统
-            for scope in content:
-                if scope["system_id"] != system_id:
+        for i in paginator.page_range:
+            for role in paginator.page(i):
+                role_scope = cls.objects.filter(type=RoleScopeType.AUTHORIZATION.value, role_id=role.id).first()
+                if not role_scope:
                     continue
-                # 判断Action是否存在，不存在则忽略
-                action_ids = {action["id"] for action in scope["actions"]}
-                if action_id not in action_ids:
-                    continue
-                # 如果包含要删除的Action，则进行更新数据
-                scope["actions"] = [action for action in scope["actions"] if action["id"] != action_id]
-                should_updated = True
-                break
-            if should_updated:
-                role_scope.content = json_dumps(content)
-                should_updated_role_scopes.append(role_scope)
+
+                content = json.loads(role_scope.content)
+                should_updated = False
+                # 遍历授权范围里每个系统
+                for scope in content:
+                    if scope["system_id"] != system_id:
+                        continue
+                    # 判断Action是否存在，不存在则忽略
+                    action_ids = {action["id"] for action in scope["actions"]}
+                    if action_id not in action_ids:
+                        continue
+                    # 如果包含要删除的Action，则进行更新数据
+                    scope["actions"] = [action for action in scope["actions"] if action["id"] != action_id]
+                    should_updated = True
+                    break
+                if should_updated:
+                    role_scope.content = json_dumps(content)
+                    should_updated_role_scopes.append(role_scope)
 
         # 批量更新分级管理员授权范围
         if len(should_updated_role_scopes) > 0:
