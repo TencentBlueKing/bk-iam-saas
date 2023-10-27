@@ -139,5 +139,14 @@ export default {
         toType: 'dir'
       }
     ])
-  ]
+  ],
+
+  performance: {
+    hints: 'warning',
+    maxEntrypointSize: 50000000,
+    maxAssetSize: 30000000,
+    assetFilter: function (assetFilename) {
+      return assetFilename.endsWith('.css') || assetFilename.endsWith('.js') || assetFilename.endsWith('.png');
+    }
+  }
 };
