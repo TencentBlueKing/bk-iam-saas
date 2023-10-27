@@ -48,6 +48,7 @@
 <script>
   import _ from 'lodash';
   import { formatCodeData, guid } from '@/common/util';
+  import { bus } from '@/common/bus';
   import il8n from '@/language';
   import ResourceSelect from './resource-select';
   import TopologyInput from './topology-input';
@@ -527,6 +528,12 @@
         if (curNode && !curNode.disabled) {
           curNode.checked = false;
           this.setNodeNoChecked(false, curNode);
+          this.$nextTick(() => {
+            this.$refs.topologyRef.$refs.topologyTableRef.toggleRowSelection(curNode, false);
+            if (!this.isOnlyLevel) {
+              bus.$emit('update-table-toggleRowSelection', { node: curNode, isChecked: false });
+            }
+          });
         }
       },
 
@@ -558,8 +565,13 @@
         });
         if (curNode && !curNode.disabled) {
           curNode.checked = true;
-          curNode.disabled = true;
           this.setNodeChecked(true, curNode);
+          this.$nextTick(() => {
+            this.$refs.topologyRef.$refs.topologyTableRef.toggleRowSelection(curNode, true);
+            if (!this.isOnlyLevel) {
+              bus.$emit('update-table-toggleRowSelection', { node: curNode, isChecked: true });
+            }
+          });
         }
       },
 

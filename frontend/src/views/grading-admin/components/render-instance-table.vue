@@ -402,7 +402,18 @@
         return false;
       };
     },
+    mounted () {
+      window.addEventListener('resize', (this.formatFormItemWidth));
+      this.$once('hook:beforeDestroy', () => {
+        window.removeEventListener('resize', this.formatFormItemWidth);
+      });
+    },
     methods: {
+      formatFormItemWidth () {
+        this.resourceSliderWidth = Math.ceil(window.innerWidth * 0.67 - 7) < 960
+          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7);
+      },
+
       async fetchActions (systemId) {
         const params = {
           system_id: systemId,
@@ -455,11 +466,6 @@
         if (!filterTag.length) {
           this.curFilterSystem = '';
         }
-      },
-
-      formatFormItemWidth () {
-        this.resourceSliderWidth = Math.ceil(window.innerWidth * 0.67 - 7) < 960
-          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7);
       },
 
       handleRemove (row, payload) {
