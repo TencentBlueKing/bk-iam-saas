@@ -1,13 +1,15 @@
 <template>
   <bk-dialog
     v-model="isShowDialog"
-    width="700"
+    width="960"
     title=""
     :mask-close="false"
+    :close-icon="false"
     draggable
     header-position="left"
     ext-cls="iam-add-member-dialog"
-    @after-leave="handleAfterLeave">
+    @after-leave="handleAfterLeave"
+  >
     <!-- eslint-disable max-len -->
     <div slot="header" class="title">
       <template v-if="showExpiredAt">
@@ -15,11 +17,23 @@
         <div v-else>
           <div v-if="isPrev">
             {{ $t(`m.common['添加成员至']`) }}
-            {{$t(`m.common['【']`)}}<span class="member-title" :title="name">{{ name }}</span>{{$t(`m.common['】']`)}}
+            {{ $t(`m.common['【']`) }}<span class="member-title" :title="name">{{ name }}</span
+            >{{ $t(`m.common['】']`) }}
           </div>
-          <div v-else :title="$t(`m.common['设置新用户加入用户组的有效期']`, { value: `${$t(`m.common['【']`)}${name}${$t(`m.common['】']`)}` })">
+          <div
+            v-else
+            :title="
+              $t(`m.common['设置新用户加入用户组的有效期']`, {
+                value: `${$t(`m.common['【']`)}${name}${$t(`m.common['】']`)}`
+              })
+            "
+          >
             <!-- {{ $t(`m.common['设置新用户加入']`) }}<span class="expired-at-title" :title="name">{{$t(`m.common['【']`)}}{{ name }}</span>{{$t(`m.common['】']`)}}{{ $t(`m.common['用户组的有效期']`) }} -->
-            {{ $t(`m.common['设置新用户加入用户组的有效期']`, { value: `${$t(`m.common['【']`)}${name}${$t(`m.common['】']`)}` }) }}
+            {{
+              $t(`m.common['设置新用户加入用户组的有效期']`, {
+                value: `${$t(`m.common['【']`)}${name}${$t(`m.common['】']`)}`
+              })
+            }}
           </div>
         </div>
       </template>
@@ -40,11 +54,16 @@
               <section
                 v-for="(item, index) in panels"
                 :key="item.name"
-                :class="['tab-item', { 'has-margin-left': index !== 0 }]"
+                :class="[
+                  'tab-item',
+                  { 'has-margin-left': index !== 0 },
+                  { 'tab-item-active': tabActive === item.name }
+                ]"
                 data-test-id="group_addGroupMemberDialog_tab_switch"
-                @click.stop="handleTabChange(item)">
+                @click.stop="handleTabChange(item)"
+              >
                 {{ item.label }}
-                <span class="active-line" v-if="tabActive === item.name"></span>
+                <!-- <span class="active-line" v-if="tabActive === item.name"></span> -->
               </section>
             </div>
             <!-- <div
@@ -57,27 +76,24 @@
                       > -->
             <!-- 所有平台都开放搜索，通过选中做校验 -->
             <div
-              :class="[
-                'search-input',
-                { 'active': isSearchFocus },
-                { 'disabled': isAll && !isAllFlag }
-              ]"
+              :class="['search-input', { active: isSearchFocus }, { disabled: isAll && !isAllFlag }]"
               v-if="isOrganization"
             >
-              <bk-dropdown-menu
-                align="left"
-                ref="dropdown"
-                trigger="click">
+              <bk-dropdown-menu align="left" ref="dropdown" trigger="click">
                 <template slot="dropdown-trigger">
-                  <Icon class="search-icon" :type="searchConditionValue === 'fuzzy' ? 'fuzzy-search-allow' : 'exact-search-allow'" />
+                  <Icon
+                    class="search-icon"
+                    :type="searchConditionValue === 'fuzzy' ? 'fuzzy-search-allow' : 'exact-search-allow'"
+                  />
                 </template>
                 <ul class="bk-dropdown-list" slot="dropdown-content">
-                  <li
-                    v-for="item in searchConditionList"
-                    :key="item.id"
-                    @click.stop="handleConditionSelcted(item)">
-                    <a href="javascript:;" :class="{ 'active': item.id === searchConditionValue }">
-                      <Icon class="search-config-icon" style="font-size: 16px;" :type="item.id === 'fuzzy' ? 'fuzzy-search-allow' : 'exact-search-allow'" />
+                  <li v-for="item in searchConditionList" :key="item.id" @click.stop="handleConditionSelcted(item)">
+                    <a href="javascript:;" :class="{ active: item.id === searchConditionValue }">
+                      <Icon
+                        class="search-config-icon"
+                        style="font-size: 16px"
+                        :type="item.id === 'fuzzy' ? 'fuzzy-search-allow' : 'exact-search-allow'"
+                      />
                       {{ item.name }}
                     </a>
                   </li>
@@ -94,19 +110,18 @@
                 @blur="handleSearchBlur"
                 @keyup.enter.native="handleSearch"
                 @keyup.up.native="handleKeyup"
-                @keyup.down.native="handleKeydown">
+                @keyup.down.native="handleKeydown"
+              >
               </bk-input>
             </div>
-            <div class="member-tree-wrapper"
-              v-bkloading="{ isLoading: treeLoading, opacity: 1 }"
-              v-if="isOrganization">
+            <div class="member-tree-wrapper" v-bkloading="{ isLoading: treeLoading, opacity: 1 }" v-if="isOrganization">
               <template v-if="isShowMemberTree">
                 <div class="tree">
                   <infinite-tree
                     ref="memberTreeRef"
                     data-test-id="group_addGroupMemberDialog_tree_member"
                     :all-data="treeList"
-                    style="height: 309px;"
+                    style="height: 400px"
                     :is-rating-manager="curIsRatingManager"
                     :key="infiniteTreeKey"
                     :is-disabled="isAll"
@@ -117,8 +132,8 @@
                     @expand-node="handleExpanded"
                     @on-select="handleOnSelected"
                     @on-clear="handleEmptyClear"
-                    @on-refresh="handleEmptyRefresh">
-                  </infinite-tree>
+                    @on-refresh="handleEmptyRefresh"
+                  />
                 </div>
               </template>
               <template v-if="isShowSearchResult">
@@ -132,8 +147,9 @@
                       :is-disabled="isAll"
                       :has-selected-users="hasSelectedUsers"
                       :has-selected-departments="hasSelectedDepartments"
-                      style="height: 309px;"
-                      @on-checked="handleSearchResultSelected">
+                      style="height: 400px"
+                      @on-checked="handleSearchResultSelected"
+                    >
                     </dialog-infinite-list>
                   </template>
                   <template v-if="isSeachResultTooMuch">
@@ -159,56 +175,123 @@
                 </div>
               </template>
             </div>
-            <div
-              v-if="!isOrganization"
-              class="manual-wrapper"
-            >
-              <bk-input
-                ref="manualInputRef"
-                type="textarea"
-                v-model="manualValue"
-                data-test-id="group_addGroupMemberDialog_input_manualUser"
-                :placeholder="$t(`m.common['手动输入提示']`)"
-                :rows="14"
-                :disabled="isAll"
-                @input="handleManualInput"
-              />
-              <p class="manual-error-text" v-if="isManualInputOverLimit">{{ $t(`m.common['手动输入提示1']`) }}</p>
-              <p class="manual-error-text pr10" v-if="manualInputError">
-                {{ $t(`m.common['手动输入提示2']`) }}
-                <template v-if="isHierarchicalAdmin.type === 'rating_manager'">
-                  {{ $t(`m.common['，']`) }}{{ $t(`m.common['请尝试']`) }}<span class="highlight" @click="handleSkip">{{ $t(`m.common['修改授权人员范围']`) }}</span>
-                </template>
-              </p>
-              <bk-button
-                theme="primary"
-                :style="{ width: '100%', marginTop: '10px' }"
-                :loading="manualAddLoading"
-                :disabled="isManualDisabled || isAll"
-                data-test-id="group_addGroupMemberDialog_btn_addManualUser"
-                @click="handleAddManualUser">
-                {{ $t(`m.common['添加到已选列表']`) }}
-              </bk-button>
+            <div v-if="!isOrganization" class="manual-wrapper">
+              <div class="manual-wrapper-left">
+                <bk-input
+                  ref="manualInputRef"
+                  type="textarea"
+                  class="manual-textarea"
+                  v-model="manualValue"
+                  data-test-id="group_addGroupMemberDialog_input_manualUser"
+                  :placeholder="$t(`m.common['手动输入提示']`)"
+                  :rows="14"
+                  :disabled="isAll"
+                  @input="handleManualInput"
+                />
+                <p class="manual-error-text" v-if="isManualInputOverLimit">{{ $t(`m.common['手动输入提示1']`) }}</p>
+                <p class="manual-error-text pr10" v-if="manualInputError">
+                  {{ $t(`m.common['手动输入提示2']`) }}
+                  <template v-if="isHierarchicalAdmin.type === 'rating_manager'">
+                    {{ $t(`m.common['，']`) }}{{ $t(`m.common['请尝试']`)
+                    }}<span class="highlight" @click="handleSkip">{{ $t(`m.common['修改授权人员范围']`) }}</span>
+                  </template>
+                </p>
+                <div class="manual-bottom-btn">
+                  <bk-button
+                    theme="primary"
+                    :outline="true"
+                    style="width: 168px"
+                    :loading="manualAddLoading"
+                    :disabled="isManualDisabled || isAll"
+                    data-test-id="group_addGroupMemberDialog_btn_addManualUser"
+                    @click="handleAddManualUser"
+                  >
+                    {{ $t(`m.common['解析并添加']`) }}
+                  </bk-button>
+                  <bk-button style="margin-left: 10px" @click="handleClearManualUser">
+                    {{ $t(`m.common['清空']`) }}
+                  </bk-button>
+                </div>
+              </div>
+              <div v class="manual-wrapper-right">
+                <bk-input
+                  v-model="tableKeyWord"
+                  class="manual-input-wrapper"
+                  :placeholder="$t(`m.common['搜索解析结果']`)"
+                  :right-icon="'bk-icon icon-search'"
+                  :clearable="true"
+                  @clear="handleClearSearch"
+                  @enter="handleTableSearch"
+                  @right-icon-click="handleTableSearch"
+                />
+                <div>
+                  <bk-table
+                    ref="manualTableRef"
+                    size="small"
+                    :data="manualTableList"
+                    :max-height="360"
+                    :ext-cls="'manual-table-wrapper'"
+                    :outer-border="false"
+                    :header-border="false"
+                    @select="handleSelectChange"
+                    @select-all="handleSelectAllChange"
+                  >
+                    <bk-table-column type="selection" align="center" />
+                    <bk-table-column :label="$t(`m.common['用户名']`)" prop="name">
+                      <template slot-scope="{ row }">
+                        <span :title="formatUserName(row)">
+                          {{ formatUserName(row) }}
+                        </span>
+                      </template>
+                    </bk-table-column>
+                    <template slot="empty">
+                      <ExceptionEmpty
+                        :type="emptyTableData.type"
+                        :empty-text="emptyTableData.text"
+                        :tip-text="emptyTableData.tip"
+                        :tip-type="emptyTableData.tipType"
+                        @on-clear="handleEmptyClear"
+                        @on-refresh="handleEmptyRefresh"
+                      />
+                    </template>
+                  </bk-table>
+                </div>
+              </div>
             </div>
           </div>
           <div class="right">
+            <div class="result-preview">
+              <div>{{ $t(`m.common['结果预览']`) }}</div>
+              <bk-button
+                size="small"
+                theme="primary"
+                text
+                :disabled="!isShowSelectedText || isAll"
+                @click="handleDeleteAll"
+              >
+                {{ $t(`m.common['清空']`) }}
+              </bk-button>
+            </div>
             <div class="header">
               <div class="has-selected">
                 <template v-if="curLanguageIsCn">
-                  {{ $t(`m.common['已选择']`) }}
                   <template v-if="isShowSelectedText">
-                    <span class="organization-count">{{ hasSelectedDepartments.length }}</span>{{ $t(`m.common['个']`) }}{{ $t(`m.common['组织']`) }}
+                    {{ $t(`m.common['已选择']`) }}
+                    <span class="organization-count">{{ hasSelectedDepartments.length }}</span
+                    >{{ $t(`m.common['个']`) }}{{ $t(`m.common['组织']`) }}
                     {{ $t(`m.common['，']`) }}
-                    <span class="user-count">{{ hasSelectedUsers.length }}</span>{{ $t(`m.common['个']`) }}{{ $t(`m.common['用户']`) }}
+                    <span class="user-count">{{ hasSelectedUsers.length }}</span
+                    >{{ $t(`m.common['个']`) }}{{ $t(`m.common['用户']`) }}
                   </template>
-                  <template v-else>
+                  <!-- <template v-else>
                     <span class="user-count">0</span>
-                  </template>
+                  </template> -->
                 </template>
                 <template v-else>
                   <template v-if="isShowSelectedText">
-                    <span class="organization-count">{{ hasSelectedDepartments.length }}</span>Org{{ $t(`m.common['，']`) }}
-                    <span class="user-count">{{ hasSelectedUsers.length }}</span>User
+                    <span class="organization-count">{{ hasSelectedDepartments.length }}</span
+                    >Org{{ $t(`m.common['，']`) }} <span class="user-count">{{ hasSelectedUsers.length }}</span
+                    >User
                   </template>
                   <template v-else>
                     <span class="user-count">0</span>
@@ -216,23 +299,36 @@
                   {{ $t(`m.common['已选择']`) }}
                 </template>
               </div>
-              <bk-button theme="primary" text :disabled="!isShowSelectedText || isAll" @click="handleDeleteAll">{{ $t(`m.common['清空']`) }}</bk-button>
             </div>
             <div class="content">
               <div class="organization-content" v-if="isDepartSelectedEmpty">
                 <div class="organization-item" v-for="item in hasSelectedDepartments" :key="item.id">
-                  <Icon type="file-close" class="folder-icon" />
-                  <span class="organization-name" :title="nameType(item)">{{ item.name }}</span>
-                  <span class="user-count" v-if="item.showCount && enableOrganizationCount">{{ '(' + item.count + `)` }}</span>
-                  <Icon bk type="close-circle-shape" class="delete-depart-icon" @click="handleDelete(item, 'organization')" />
+                  <div class="organization-item-left">
+                    <Icon type="file-close" class="folder-icon" />
+                    <span
+                      :class="[
+                        'organization-name'
+                      ]"
+                      :title="nameType(item)"
+                    >
+                      {{ item.name }}
+                    </span>
+                    <span class="user-count" v-if="item.showCount && enableOrganizationCount">{{
+                      '(' + item.count + `)`
+                    }}</span>
+                  </div>
+                  <!-- <Icon bk type="close-circle-shape" class="delete-depart-icon" @click="handleDelete(item, 'organization')" /> -->
+                  <Icon bk type="close" class="delete-depart-icon" @click="handleDelete(item, 'organization')" />
                 </div>
               </div>
               <div class="user-content" v-if="isUserSelectedEmpty">
                 <div class="user-item" v-for="item in hasSelectedUsers" :key="item.id">
                   <Icon type="personal-user" class="user-icon" />
-                  <span class="user-name" :title="nameType(item)">{{ item.username }}<template v-if="item.name !== ''">({{ item.name }})</template>
+                  <span class="user-name" :title="nameType(item)"
+                  >{{ item.username }}<template v-if="item.name !== ''">({{ item.name }})</template>
                   </span>
-                  <Icon bk type="close-circle-shape" class="delete-icon" @click="handleDelete(item, 'user')" />
+                  <!-- <Icon bk type="close-circle-shape" class="delete-icon" @click="handleDelete(item, 'user')" /> -->
+                  <Icon bk type="close" class="delete-icon" @click="handleDelete(item, 'user')" />
                 </div>
               </div>
               <div class="selected-empty-wrapper" v-if="isSelectedEmpty">
@@ -242,7 +338,7 @@
           </div>
         </template>
         <template v-else>
-          <div style="margin-top: 25px;">
+          <div style="margin-top: 25px">
             <iam-deadline :value="expiredAt" type="dialog" @on-change="handleDeadlineChange" />
           </div>
         </template>
@@ -250,26 +346,41 @@
     </div>
     <div slot="footer">
       <div v-if="showLimit" class="limit-wrapper">
-        <bk-checkbox
-          :true-value="true"
-          :false-value="false"
-          v-model="isAll">
+        <bk-checkbox :true-value="true" :false-value="false" v-model="isAll">
           {{ $t(`m.common['全员']`) }}
         </bk-checkbox>
       </div>
       <template v-if="showExpiredAt">
         <template v-if="isPrev">
-          <bk-button theme="primary" :disabled="isDisabled" @click="handleNextStep">{{ $t(`m.common['下一步']`) }}</bk-button>
+          <bk-button theme="primary" :disabled="isDisabled" @click="handleNextStep">{{
+            $t(`m.common['下一步']`)
+          }}</bk-button>
         </template>
         <template v-else>
           <bk-button @click="handlePrevStep">{{ $t(`m.common['上一步']`) }}</bk-button>
-          <bk-button style="margin-left: 10px;" theme="primary" :disabled="isNextSureDisabled" :loading="loading" @click="handleSave" data-test-id="group_btn_addMemberConfirm">{{ $t(`m.common['确定']`) }}</bk-button>
+          <bk-button
+            style="margin-left: 10px"
+            theme="primary"
+            :disabled="isNextSureDisabled"
+            :loading="loading"
+            @click="handleSave"
+            data-test-id="group_btn_addMemberConfirm"
+          >{{ $t(`m.common['确定']`) }}</bk-button
+          >
         </template>
       </template>
       <template v-else>
-        <bk-button theme="primary" :disabled="isDisabled && !isAll" @click="handleSave" data-test-id="group_btn_addMemberConfirm">{{ $t(`m.common['确定']`) }}</bk-button>
+        <bk-button
+          theme="primary"
+          :disabled="isDisabled && !isAll"
+          @click="handleSave"
+          data-test-id="group_btn_addMemberConfirm"
+        >{{ $t(`m.common['确定']`) }}</bk-button
+        >
       </template>
-      <bk-button style="margin-left: 10px;" :disabled="loading" @click="handleCancel">{{ $t(`m.common['取消']`) }}</bk-button>
+      <bk-button style="margin-left: 10px" :disabled="loading" @click="handleCancel">{{
+        $t(`m.common['取消']`)
+      }}</bk-button>
     </div>
   </bk-dialog>
 </template>
@@ -286,7 +397,7 @@
   // 去除()以及之间的字符
   const getUsername = (str) => {
     const array = str.split('');
-    const index = array.findIndex(item => item === '(');
+    const index = array.findIndex((item) => item === '(');
     if (index !== -1) {
       return array.splice(0, index).join('');
     }
@@ -416,7 +527,18 @@
           text: '',
           tip: '',
           tipType: ''
-        }
+        },
+        emptyTableData: {
+          type: 'empty',
+          text: '请先从左侧输入并解析',
+          tip: '',
+          tipType: ''
+        },
+        tableKeyWord: '',
+        manualTableList: [],
+        manualTableListStorage: [],
+        hasSelectedManualDepartments: [],
+        hasSelectedManualUsers: []
       };
     },
     computed: {
@@ -437,8 +559,12 @@
         return !this.treeLoading && this.isShowTooMuch;
       },
       isSearchResultEmpty () {
-        return this.searchedDepartment.length < 1
-          && this.searchedUsers.length < 1 && !this.treeLoading && !this.isShowTooMuch;
+        return (
+          this.searchedDepartment.length < 1
+          && this.searchedUsers.length < 1
+          && !this.treeLoading
+          && !this.isShowTooMuch
+        );
       },
       isShowSelectedText () {
         return this.hasSelectedDepartments.length > 0 || this.hasSelectedUsers.length > 0;
@@ -462,7 +588,8 @@
         if (this.showExpiredAt) {
           if (this.isPrev) {
             return {
-              height: this.curLanguageIsCn ? '383px' : '400px'
+              // height: this.curLanguageIsCn ? '383px' : '400px'
+              height: this.curLanguageIsCn ? '510px' : '527px'
             };
           }
           return {
@@ -470,7 +597,8 @@
           };
         }
         return {
-          height: '383px'
+          // height: '383px'
+          height: '510px'
         };
       },
       isOrganization () {
@@ -481,7 +609,7 @@
           return false;
         }
         const MAX_LEN = 100;
-        return this.manualValue.split(';').filter(item => item !== '').length > MAX_LEN;
+        return this.manualValue.split(';').filter((item) => item !== '').length > MAX_LEN;
       },
       isManualDisabled () {
         return this.manualValue === '' || this.isManualInputOverLimit;
@@ -517,6 +645,11 @@
             }
           };
           return typeMap[type] ? typeMap[type]() : typeMap['user']();
+        };
+      },
+      formatUserName () {
+        return (payload) => {
+          return ['depart', 'department'].includes(payload.type) ? payload.name : `${payload.username}(${payload.name})`;
         };
       }
     },
@@ -585,6 +718,22 @@
         }
       },
 
+      fetchManualTableData () {
+        this.$nextTick(() => {
+          this.manualTableList.forEach((item) => {
+            if (this.$refs.manualTableRef) {
+              const hasSelectedUsers = this.hasSelectedManualUsers.map((v) => `${v.username}${v.name}`);
+              const hasSelectedDepartments = this.hasSelectedManualDepartments.map((v) => v.id);
+              this.$refs.manualTableRef.toggleRowSelection(
+                item,
+                (hasSelectedUsers.includes(`${item.username}${item.name}`))
+                  || (['depart', 'department'].includes(item.type) && hasSelectedDepartments.includes(item.id))
+              );
+            }
+          });
+        });
+      },
+
       handleSearchInput () {
         this.isSearchFocus = true;
       },
@@ -608,23 +757,27 @@
       handleTabChange ({ name }) {
         this.tabActive = name;
         // 已选择的需要从输入框中去掉
-        if (this.tabActive === 'manual'
-          && (this.hasSelectedUsers.length > 0
-            || this.hasSelectedDepartments.length > 0)
-          && this.manualValue !== '') {
+        if (
+          this.tabActive === 'manual'
+          && (this.hasSelectedUsers.length > 0 || this.hasSelectedDepartments.length > 0)
+          && this.manualValue !== ''
+        ) {
           this.fetchRegOrgData();
           const templateArr = [];
-          const usernameList = this.hasSelectedUsers.map(item => item.username);
-          const manualValueBackup = this.filterUserList.filter(item => item !== '');
-          manualValueBackup.forEach(item => {
+          const usernameList = this.hasSelectedUsers.map((item) => item.username);
+          const manualValueBackup = this.filterUserList.filter((item) => item !== '');
+          manualValueBackup.forEach((item) => {
             const name = getUsername(item);
             if (!usernameList.includes(name)) {
               templateArr.push(item);
             }
           });
           // 处理切换tab后按原有的格式回显
-          const hasSelectedData = this.manualValueActual.split(';').filter(item => templateArr.includes(item) || this.filterDepartList.includes(item));
+          const hasSelectedData = this.manualValueActual
+            .split(';')
+            .filter((item) => templateArr.includes(item) || this.filterDepartList.includes(item));
           this.manualValue = hasSelectedData.join('\n');
+          this.fetchManualTableData();
         }
       },
 
@@ -633,15 +786,16 @@
         this.manualUserList = [];
         if (value) {
           const inputValue = _.cloneDeep(value.split()[0]);
-          if (inputValue.indexOf('{') > -1
+          if (
+            inputValue.indexOf('{') > -1
             && inputValue.indexOf('}') > -1
-            && (inputValue.includes('&type=department')
-              || inputValue.includes('&type=user'))) {
+            && (inputValue.includes('&type=department') || inputValue.includes('&type=user'))
+          ) {
             this.$nextTick(() => {
               this.manualValue = '';
               this.$refs.manualInputRef.curValue = '';
             });
-            const splitValue = value.split(/\n/).map(item => {
+            const splitValue = value.split(/\n/).map((item) => {
               const str = item.slice(item.indexOf('{') + 1, item.indexOf('}'));
               if (item.indexOf('{') > -1 && item.indexOf('}') > -1) {
                 if (item.includes('&type=user')) {
@@ -667,8 +821,8 @@
       },
 
       fetchRegOrgData () {
-        const manualList = this.manualValueActual.split(';').filter(item => item !== '');
-        this.filterDepartList = manualList.filter(item => {
+        const manualList = this.manualValueActual.split(';').filter((item) => item !== '');
+        this.filterDepartList = manualList.filter((item) => {
           if (item.indexOf('{') > -1 && item.indexOf('}') > -1) {
             const str = item.slice(item.indexOf('{') + 1, item.indexOf('}'));
             if (/^[+-]?\d*(\.\d*)?(e[+-]?\d+)?$/.test(str)) {
@@ -676,7 +830,95 @@
             }
           }
         });
-        this.filterUserList = manualList.filter(item => !this.filterDepartList.includes(item));
+        this.filterUserList = manualList.filter((item) => !this.filterDepartList.includes(item));
+      },
+
+      handleClearManualUser () {
+        this.manualValue = '';
+        this.manualInputError = false;
+      },
+
+      async handleSearchOrgAndUser () {
+        const manualInputValue = _.cloneDeep(this.manualValue.split(/;|\n|\s/));
+        for (let i = 0; i < manualInputValue.length; i++) {
+          const params = {
+            keyword: manualInputValue[i],
+            is_exact: false
+          };
+          try {
+            const { data } = await this.$store.dispatch('organization/getSearchOrganizations', params);
+            const { users, departments } = data;
+            if (users && users.length) {
+              users.forEach((item) => {
+                item.type = 'user';
+              });
+              const result = await this.fetchSubjectScopeCheck(users, 'user');
+              if (result && result.length) {
+                const hasSelectedUsers = [...this.hasSelectedUsers, ...this.hasSelectedManualUsers];
+                const userTemp = result.filter((item) => {
+                  return !hasSelectedUsers.map((subItem) =>
+                    `${subItem.username}&${subItem.name}`).includes(`${item.username}&${item.name}`);
+                });
+                this.hasSelectedManualUsers.push(...userTemp);
+                // 保存原有格式
+                let formatStr = _.cloneDeep(this.manualValue);
+                const usernameList = result.map((item) => item.username);
+                usernameList.forEach((item) => {
+                  // 处理既有部门又有用户且不连续相同类型的展示数据
+                  formatStr = formatStr
+                    .replace(this.evil('/' + item + '(;\\n|\\s\\n|)/'), '')
+                    .replace(/(\s*\r?\n\s*)+/g, '\n')
+                    .replace(';;', '');
+                  // 处理复制全部用户不相连的两个不在授权范围内的用户存在空字符
+                  formatStr = formatStr
+                    .split(/;|\n|\s/)
+                    .filter((item) => item !== '' && item !== manualInputValue[i])
+                    .join('\n');
+                });
+                // 处理只选择全部符合条件的用户，还存在特殊符号的情况
+                if (formatStr === '\n' || formatStr === '\s' || formatStr === ';') {
+                  formatStr = '';
+                }
+                this.manualValue = _.cloneDeep(formatStr);
+                this.manualInputError = !!this.manualValue.length;
+              } else {
+                this.manualInputError = true;
+              }
+            }
+            if (departments && departments.length) {
+              departments.forEach((item) => {
+                item.type = 'depart';
+              });
+              const result = await this.fetchSubjectScopeCheck(departments, 'depart');
+              if (result && result.length) {
+                const hasSelectedDepartments = [...this.hasSelectedDepartments, ...this.hasSelectedManualDepartments];
+                const departTemp = result.filter((item) => {
+                  return !hasSelectedDepartments.map((subItem) =>
+                    subItem.id.toString()).includes(item.id.toString());
+                });
+                this.hasSelectedManualDepartments.push(...departTemp);
+                this.hasSelectedDepartments.push(...departTemp);
+                // 备份一份粘贴板里的内容，清除组织的数据，在过滤掉组织的数据
+                let clipboardValue = _.cloneDeep(this.manualValue);
+                // 处理不相连的数据之间存在特殊符号的情况
+                clipboardValue = clipboardValue
+                  .split(/;|\n|\s/)
+                  .filter((item) => item !== '' && item !== manualInputValue[i])
+                  .join('\n');
+                this.manualValue = _.cloneDeep(clipboardValue);
+                this.manualInputError = !!this.manualValue.length;
+              } else {
+                this.manualInputError = true;
+              }
+            }
+          } catch (e) {
+            console.error(e);
+            this.messageAdvancedError(e);
+          }
+        }
+        if (!this.manualValue) {
+          this.manualInputError = false;
+        }
       },
 
       async handleAddManualUser () {
@@ -685,19 +927,19 @@
         try {
           const url = this.isRatingManager ? 'role/queryRolesUsers' : 'organization/verifyManualUser';
           const res = await this.$store.dispatch(url, {
-            usernames: this.filterUserList.map(item => {
+            usernames: this.filterUserList.map((item) => {
               return getUsername(item);
             })
           });
-          const temps = res.data.filter(
-            item => {
-              this.$set(item, 'full_name', item.departments && item.departments.length ? item.departments.join(';') : '');
-              return !this.hasSelectedUsers.map(subItem => subItem.username).includes(item.username);
-            }
-          );
+          const temps = res.data.filter((item) => {
+            this.$set(item, 'type', 'user');
+            this.$set(item, 'full_name', item.departments && item.departments.length ? item.departments.join(';') : '');
+            return !this.hasSelectedUsers.map((subItem) => subItem.username).includes(item.username);
+          });
           this.hasSelectedUsers.push(...temps);
+          this.hasSelectedManualUsers.push(...temps);
           if (res.data.length) {
-            this.usernameList = res.data.map(item => item.username);
+            this.usernameList = res.data.map((item) => item.username);
             // 分号拼接
             // const templateArr = [];
             // this.manualValueBackup = this.manualValueActual.split(';').filter(item => item !== '');
@@ -711,18 +953,22 @@
 
             // 保存原有格式
             let formatStr = _.cloneDeep(this.manualValue);
-            this.usernameList.forEach(item => {
+            this.usernameList.forEach((item) => {
               // 去掉之前有查全局的写法， 如果username有多个重复的item, 比如shengjieliu03@shengjietest.com、shengjieliu05的时候/g就会有问题
               // formatStr = formatStr.replace(this.evil('/' + item + '(;\\n|\\s\\n|)/g'), '');
 
               // 处理既有部门又有用户且不连续相同类型的展示数据
               formatStr = formatStr
                 .replace(this.evil('/' + item + '(;\\n|\\s\\n|)/'), '')
-                .replace('\n\n', '\n')
-                .replace('\s\s', '\s')
+                // .replace('\n\n', '\n')
+                // .replace('\s\s', '\s')
+                .replace(/(\s*\r?\n\s*)+/g, '\n')
                 .replace(';;', '');
               // 处理复制全部用户不相连的两个不在授权范围内的用户存在空字符
-              formatStr = formatStr.split(/;|\n|\s/).filter(item => item !== '').join('\n');
+              formatStr = formatStr
+                .split(/;|\n|\s/)
+                .filter((item) => item !== '')
+                .join('\n');
             });
             // 处理只选择全部符合条件的用户，还存在特殊符号的情况
             if (formatStr === '\n' || formatStr === '\s' || formatStr === ';') {
@@ -753,7 +999,7 @@
         if (this.manualValue) {
           // 校验查验失败的数据是不是属于部门
           const departData = _.cloneDeep(this.manualValue.split(/;|\n|\s/));
-          const departGroups = this.filterDepartList.filter(item => departData.includes(item));
+          const departGroups = this.filterDepartList.filter((item) => departData.includes(item));
           if (departGroups.length && this.getGroupAttributes) {
             if (this.getGroupAttributes().source_from_role) {
               this.messageWarn(this.$t(`m.common['管理员组不能添加部门']`), 3000);
@@ -761,7 +1007,7 @@
               return;
             }
             // 重新组装粘贴的部门数据
-            const list = this.manualOrgList.map(item => {
+            const list = this.manualOrgList.map((item) => {
               return {
                 id: Number(item.slice(item.indexOf('{') + 1, item.indexOf('}'))),
                 name: item.slice(item.indexOf('}') + 1, item.indexOf('&') > -1 ? item.indexOf('&') : item.length),
@@ -773,21 +1019,37 @@
             });
             const result = await this.fetchSubjectScopeCheck(list);
             if (result && result.length) {
-              const departTemp = result.filter(item => {
-                return !this.hasSelectedDepartments.map(subItem => subItem.id.toString()).includes(item.id.toString());
+              // const departTemp = result.filter((item) => {
+              //   return !this.hasSelectedDepartments.map((subItem) =>
+              //     subItem.id.toString()).includes(item.id.toString());
+              // });
+              // this.hasSelectedDepartments.push(...departTemp);
+              const hasSelectedDepartments = [...this.hasSelectedDepartments, ...this.hasSelectedManualDepartments];
+              const departTemp = result.filter((item) => {
+                return !hasSelectedDepartments.map((subItem) =>
+                  subItem.id.toString()).includes(item.id.toString());
               });
+              this.hasSelectedManualDepartments.push(...departTemp);
               this.hasSelectedDepartments.push(...departTemp);
               // 备份一份粘贴板里的内容，清除组织的数据，在过滤掉组织的数据
               let clipboardValue = _.cloneDeep(this.manualValue);
-              this.manualOrgList.forEach(item => {
-                const displayValue = item.slice(item.indexOf('{'), item.indexOf('&') > -1 ? item.indexOf('&') : item.length);
-                const isScopeOrg = result.map(depart => String(depart.id)).includes(item.slice(item.indexOf('{') + 1, item.indexOf('}')));
+              this.manualOrgList.forEach((item) => {
+                const displayValue = item.slice(
+                  item.indexOf('{'),
+                  item.indexOf('&') > -1 ? item.indexOf('&') : item.length
+                );
+                const isScopeOrg = result
+                  .map((depart) => String(depart.id))
+                  .includes(item.slice(item.indexOf('{') + 1, item.indexOf('}')));
                 if (clipboardValue.split(/;|\n|\s/).includes(displayValue) && isScopeOrg) {
                   clipboardValue = clipboardValue.replace(displayValue, '');
                 }
               });
               // 处理不相连的数据之间存在特殊符号的情况
-              clipboardValue = clipboardValue.split(/;|\n|\s/).filter(item => item !== '').join('\n');
+              clipboardValue = clipboardValue
+                .split(/;|\n|\s/)
+                .filter((item) => item !== '')
+                .join('\n');
               this.manualValue = _.cloneDeep(clipboardValue);
               this.manualInputError = !!this.manualValue.length;
             } else {
@@ -797,11 +1059,18 @@
             this.manualInputError = true;
           }
         }
+
+        if (this.manualInputError) {
+          await this.handleSearchOrgAndUser();
+        }
+        this.manualTableListStorage = [...this.hasSelectedManualDepartments, ...this.hasSelectedManualUsers];
+        this.manualTableList = _.cloneDeep(this.manualTableListStorage);
+        this.fetchManualTableData();
       },
 
       // 校验部门/用户范围是否满足条件
-      async fetchSubjectScopeCheck (payload) {
-        const subjects = payload.map(item => {
+      async fetchSubjectScopeCheck (payload, mode) {
+        const subjects = payload.map((item) => {
           const { id, type, username } = item;
           const typeMap = {
             depart: () => {
@@ -817,16 +1086,18 @@
               };
             }
           };
-          return typeMap[type]();
+          return typeMap[type || mode]();
         });
         try {
           const { code, data } = await this.$store.dispatch('organization/getSubjectScopeCheck', { subjects });
           if (code === 0 && data) {
-            const result = payload.filter(item => {
+            const idList = data.map((v) => v.id);
+            const result = payload.filter((item) => {
               if (item.type === 'depart') {
                 item.type = 'department';
               }
-              return data.map(v => v.type).includes(item.type) && data.map(v => v.id).includes(String(item.id));
+              return data.map((v) => v.type).includes(item.type)
+                && (idList.includes(String(item.id)) || idList.includes(item.username));
             });
             return result;
           }
@@ -855,9 +1126,7 @@
         }
         const len = this.$refs.searchedResultsRef.renderData.length;
         this.focusItemIndex++;
-        this.focusItemIndex = this.focusItemIndex > len - 1
-          ? len
-          : this.focusItemIndex;
+        this.focusItemIndex = this.focusItemIndex > len - 1 ? len : this.focusItemIndex;
         if (this.focusItemIndex === len) {
           this.focusItemIndex = 0;
         }
@@ -876,8 +1145,8 @@
           };
           const res = await this.$store.dispatch('userGroup/getUserGroupMemberList', params);
 
-          this.defaultDepartments = res.data.results.filter(item => item.type === 'department');
-          this.defaultUsers = res.data.results.filter(item => item.type === 'user');
+          this.defaultDepartments = res.data.results.filter((item) => item.type === 'department');
+          this.defaultUsers = res.data.results.filter((item) => item.type === 'user');
           if (this.isRatingManager) {
             this.fetchRoleSubjectScope(false, true);
           } else {
@@ -911,13 +1180,13 @@
         try {
           const { code, data } = await this.$store.dispatch('role/getRoleSubjectScope');
           const departments = [...data];
-          this.isAllFlag = departments.some(item => item.type === '*' && item.id === '*');
+          this.isAllFlag = departments.some((item) => item.type === '*' && item.id === '*');
           if (this.isAllFlag) {
             this.fetchCategories(false, true);
             return;
           }
           this.emptyData = formatCodeData(code, this.emptyData, departments.length === 0);
-          departments.forEach(child => {
+          departments.forEach((child) => {
             child.visiable = true;
             child.level = 0;
             child.loading = false;
@@ -963,26 +1232,27 @@
             if (child.type === 'user') {
               child.username = child.id;
               if (this.hasSelectedUsers.length > 0) {
-                child.is_selected = this.hasSelectedUsers.map(item => item.id).includes(child.id);
+                child.is_selected = this.hasSelectedUsers.map((item) => item.id).includes(child.id);
               } else {
                 child.is_selected = false;
               }
 
-              if (this.defaultUsers.length && this.defaultUsers.map(item => item.id).includes(child.id)) {
+              if (this.defaultUsers.length && this.defaultUsers.map((item) => item.id).includes(child.id)) {
                 child.is_selected = true;
                 child.disabled = true;
               }
             }
-                        
+
             if (child.type === 'depart') {
               if (this.hasSelectedDepartments.length > 0) {
-                child.is_selected = this.hasSelectedDepartments.map(item => item.id).includes(child.id);
+                child.is_selected = this.hasSelectedDepartments.map((item) => item.id).includes(child.id);
               } else {
                 child.is_selected = false;
               }
-    
-              if (this.defaultDepartments.length > 0
-                && this.defaultDepartments.map(item => item.id).includes(child.id.toString())
+
+              if (
+                this.defaultDepartments.length > 0
+                && this.defaultDepartments.map((item) => item.id).includes(child.id.toString())
               ) {
                 child.is_selected = true;
                 child.disabled = true;
@@ -1043,15 +1313,14 @@
                 child.full_name = `${item.name}：${child.name}`;
 
                 if (this.hasSelectedDepartments.length) {
-                  child.is_selected = this.hasSelectedDepartments.map(
-                    item => item.id
-                  ).includes(child.id);
+                  child.is_selected = this.hasSelectedDepartments.map((item) => item.id).includes(child.id);
                 } else {
                   child.is_selected = false;
                 }
 
-                if (this.defaultDepartments.length > 0
-                  && this.defaultDepartments.map(item => item.id).includes(child.id.toString())
+                if (
+                  this.defaultDepartments.length > 0
+                  && this.defaultDepartments.map((item) => item.id).includes(child.id.toString())
                 ) {
                   child.is_selected = true;
                   child.disabled = true;
@@ -1083,31 +1352,30 @@
           }
         } else {
           if (node.type === 'user') {
-            this.hasSelectedUsers = [
-              ...this.hasSelectedUsers.filter(item => item.username !== node.username)
-            ];
+            this.hasSelectedUsers = [...this.hasSelectedUsers.filter((item) => item.username !== node.username)];
           } else {
-            this.hasSelectedDepartments = [
-              ...this.hasSelectedDepartments.filter(item => item.id !== node.id)
-            ];
+            this.hasSelectedDepartments = [...this.hasSelectedDepartments.filter((item) => item.id !== node.id)];
           }
         }
       },
 
       handleDeleteAll () {
         if (this.searchedUsers.length) {
-          this.searchedUsers.forEach(search => {
+          this.searchedUsers.forEach((search) => {
             search.is_selected = false;
           });
         }
         if (this.searchedDepartment.length) {
-          this.searchedDepartment.forEach(organ => {
+          this.searchedDepartment.forEach((organ) => {
             organ.is_selected = false;
           });
         }
         this.hasSelectedUsers.splice(0, this.hasSelectedUsers.length, ...[]);
         this.hasSelectedDepartments.splice(0, this.hasSelectedDepartments.length, ...[]);
+        this.hasSelectedManualUsers.splice(0, this.hasSelectedManualUsers.length, ...[]);
+        this.hasSelectedManualDepartments.splice(0, this.hasSelectedManualDepartments.length, ...[]);
         this.$refs.memberTreeRef && this.$refs.memberTreeRef.clearAllIsSelectedStatus();
+        this.fetchManualTableData();
       },
 
       handleConditionSelcted (payload) {
@@ -1147,10 +1415,10 @@
         this.searchedDepartment.splice(0, this.searchedDepartment.length, ...[]);
         this.searchedUsers.splice(0, this.searchedUsers.length, ...[]);
 
-        const defaultDepartIds = [...this.defaultDepartments.map(item => item.id)];
-        const defaultUserIds = [...this.defaultUsers.map(item => item.id)];
-        const departIds = [...this.hasSelectedDepartments.map(item => item.id)];
-        const userIds = [...this.hasSelectedUsers.map(item => item.username)];
+        const defaultDepartIds = [...this.defaultDepartments.map((item) => item.id)];
+        const defaultUserIds = [...this.defaultUsers.map((item) => item.id)];
+        const departIds = [...this.hasSelectedDepartments.map((item) => item.id)];
+        const userIds = [...this.hasSelectedUsers.map((item) => item.username)];
         const params = {
           keyword: this.keyword,
           is_exact: this.searchConditionValue === 'exact'
@@ -1164,7 +1432,7 @@
           }
           this.isShowTooMuch = false;
           if (departments.length > 0) {
-            data.departments.forEach(depart => {
+            data.departments.forEach((depart) => {
               depart.showRadio = true;
               depart.type = 'depart';
               if (departIds.length && departIds.includes(depart.id)) {
@@ -1182,7 +1450,7 @@
             this.searchedDepartment.splice(0, this.searchedDepartment.length, ...data.departments);
           }
           if (users.length > 0) {
-            data.users.forEach(user => {
+            data.users.forEach((user) => {
               user.id = guid();
               user.showRadio = true;
               user.type = 'user';
@@ -1221,13 +1489,13 @@
         if (this.isRatingManager && !this.isAllFlag) {
           return;
         }
-        const flag = this.treeList.some(item => item.parentNodeId === payload.id);
+        const flag = this.treeList.some((item) => item.parentNodeId === payload.id);
         if (payload.level === 0 && !flag) {
-          const curIndex = this.treeList.findIndex(item => item.id === payload.id);
+          const curIndex = this.treeList.findIndex((item) => item.id === payload.id);
           if (curIndex !== -1) {
             const children = _.cloneDeep(this.treeList[curIndex].children);
             if (children && children.length > 0) {
-              children.forEach(item => {
+              children.forEach((item) => {
                 item.visiable = true;
               });
               this.treeList.splice(curIndex + 1, 0, ...children);
@@ -1250,7 +1518,7 @@
             return;
           }
 
-          const curIndex = this.treeList.findIndex(item => item.id === payload.id);
+          const curIndex = this.treeList.findIndex((item) => item.id === payload.id);
 
           if (curIndex === -1) {
             return;
@@ -1275,13 +1543,14 @@
               child.full_name = `${payload.full_name}/${child.name}`;
 
               if (this.hasSelectedDepartments.length > 0) {
-                child.is_selected = this.hasSelectedDepartments.map(item => item.id).includes(child.id);
+                child.is_selected = this.hasSelectedDepartments.map((item) => item.id).includes(child.id);
               } else {
                 child.is_selected = false;
               }
 
-              if (this.defaultDepartments.length > 0
-                && this.defaultDepartments.map(item => item.id).includes(child.id.toString())
+              if (
+                this.defaultDepartments.length > 0
+                && this.defaultDepartments.map((item) => item.id).includes(child.id.toString())
               ) {
                 child.is_selected = true;
                 child.disabled = true;
@@ -1310,21 +1579,21 @@
               // parentNodeId + username 组合成id
               child.id = `${child.parentNodeId}${child.username}`;
               if (this.hasSelectedUsers.length > 0) {
-                child.is_selected = this.hasSelectedUsers.map(item => item.id).includes(child.id)
-                  || this.hasSelectedUsers.map(item => `${child.parentNodeId}${item.username}`).includes(child.id);
+                child.is_selected
+                  = this.hasSelectedUsers.map((item) => item.id).includes(child.id)
+                    || this.hasSelectedUsers.map((item) => `${child.parentNodeId}${item.username}`).includes(child.id);
               } else {
                 child.is_selected = false;
               }
               const existSelectedNode = this.treeList.find(
-                item => item.is_selected && item.username === child.username
+                (item) => item.is_selected && item.username === child.username
               );
               if (existSelectedNode) {
                 child.is_selected = true;
                 child.disabled = true;
               }
 
-              if (this.defaultUsers.length
-                && this.defaultUsers.map(item => item.id).includes(child.username)) {
+              if (this.defaultUsers.length && this.defaultUsers.map((item) => item.id).includes(child.username)) {
                 child.is_selected = true;
                 child.disabled = true;
               }
@@ -1358,14 +1627,14 @@
         }
         if (this.isBeingSearch) {
           if (this.searchedUsers.length) {
-            this.searchedUsers.forEach(search => {
+            this.searchedUsers.forEach((search) => {
               if (search.username === item.username) {
                 search.is_selected = false;
               }
             });
           }
           if (this.searchedDepartment.length) {
-            this.searchedDepartment.forEach(organ => {
+            this.searchedDepartment.forEach((organ) => {
               if (organ.id === item.id) {
                 organ.is_selected = false;
               }
@@ -1375,11 +1644,16 @@
           this.tabActive === 'organization' && this.$refs.memberTreeRef.setSingleSelectedStatus(item.id, false);
         }
         if (type === 'user') {
-          this.hasSelectedUsers = [...this.hasSelectedUsers.filter(user => user.username !== item.username)];
+          this.hasSelectedUsers = [...this.hasSelectedUsers.filter((user) => user.username !== item.username)];
+          this.hasSelectedManualUsers
+            = [...this.hasSelectedManualUsers.filter((user) => user.username !== item.username)];
         } else {
           // eslint-disable-next-line max-len
-          this.hasSelectedDepartments = [...this.hasSelectedDepartments.filter(organ => organ.id !== item.id)];
+          this.hasSelectedDepartments = [...this.hasSelectedDepartments.filter((organ) => organ.id !== item.id)];
+          this.hasSelectedManualDepartments
+            = [...this.hasSelectedManualDepartments.filter((organ) => organ.id !== item.id)];
         }
+        this.fetchManualTableData();
       },
 
       async handleSearchResultSelected (newVal, oldVal, localVal, item) {
@@ -1389,7 +1663,7 @@
           if (newVal) {
             this.hasSelectedDepartments.push(item);
           } else {
-            this.hasSelectedDepartments = this.hasSelectedDepartments.filter(organ => organ.id !== item.id);
+            this.hasSelectedDepartments = this.hasSelectedDepartments.filter((organ) => organ.id !== item.id);
           }
         }
       },
@@ -1398,8 +1672,23 @@
         if (newVal) {
           this.hasSelectedUsers.push(item);
         } else {
-          this.hasSelectedUsers = this.hasSelectedUsers.filter(user => user.username !== item.username);
+          this.hasSelectedUsers = this.hasSelectedUsers.filter((user) => user.username !== item.username);
         }
+      },
+
+      handleTableSearch () {
+        this.manualTableList = this.manualTableListStorage.filter((item) => {
+          return (
+            item.name.indexOf(this.tableKeyWord) > -1
+            || (item.username && item.username.indexOf(this.tableKeyWord) > -1));
+        });
+        this.fetchManualTableData();
+      },
+
+      handleClearSearch () {
+        this.tableKeyWord = '';
+        this.manualTableList = _.cloneDeep(this.manualTableListStorage);
+        this.fetchManualTableData();
       },
 
       handleAfterLeave () {
@@ -1423,6 +1712,11 @@
         this.manualAddLoading = false;
         this.manualInputError = false;
         this.manualValueBackup = [];
+        this.manualTableList = [];
+        this.manualTableListStorage = [];
+        this.hasSelectedManualDepartments = [];
+        this.hasSelectedManualUsers = [];
+        this.tableKeyWord = '';
         this.$emit('update:show', false);
         this.$emit('on-after-leave');
       },
@@ -1461,7 +1755,7 @@
         const Fn = Function;
         return new Fn('return ' + fn)();
       },
-            
+
       async handleSkip () {
         // bus.$emit('nav-change', { id: this.$store.getters.navCurRoleId }, 0);
         // await this.$store.dispatch('role/updateCurrentRole', { id: 0 });
@@ -1471,297 +1765,494 @@
           params: { id: this.$store.getters.curRoleId }
         });
         window.open(routeData.href, '_blank');
-        // this.$router.push({
-        //     name: 'gradingAdminEdit',
-        //     params: {
-        //         id: this.$store.getters.navCurRoleId
-        //     }
-        // });
+      // this.$router.push({
+      //     name: 'gradingAdminEdit',
+      //     params: {
+      //         id: this.$store.getters.navCurRoleId
+      //     }
+      // });
+      },
+
+      fetchSelectedGroups (type, payload, row) {
+        const typeMap = {
+          multiple: async () => {
+            const isChecked = payload.length && payload.indexOf(row) !== -1;
+            if (['depart', 'department'].includes(row.type)) {
+              if (isChecked) {
+                this.hasSelectedDepartments.push(row);
+                this.hasSelectedManualDepartments.push(row);
+              } else {
+                this.hasSelectedDepartments = this.hasSelectedDepartments.filter(
+                  (item) => item.id.toString() !== row.id.toString()
+                );
+                this.hasSelectedManualDepartments = this.hasSelectedManualDepartments.filter(
+                  (item) => item.id.toString() !== row.id.toString()
+                );
+              }
+            }
+            if (['user'].includes(row.type)) {
+              if (isChecked) {
+                this.hasSelectedUsers.push(row);
+                this.hasSelectedManualUsers.push(row);
+              } else {
+                this.hasSelectedUsers = this.hasSelectedUsers.filter(
+                  (item) => `${item.username}${item.name}` !== `${row.username}${row.name}`
+                );
+                this.hasSelectedManualUsers = this.hasSelectedManualUsers.filter(
+                  (item) => `${item.username}${item.name}` !== `${row.username}${row.name}`
+                );
+              }
+            }
+          },
+          all: async () => {
+            const isAllCheck = payload.length > 0;
+            this.manualTableList.forEach((item) => {
+              if (['depart', 'department'].includes(item.type)) {
+                if (isAllCheck) {
+                  this.hasSelectedDepartments.push(item);
+                  this.hasSelectedManualDepartments.push(item);
+                } else {
+                  this.hasSelectedDepartments = this.hasSelectedDepartments.filter(
+                    (v) => item.id.toString() !== v.id.toString()
+                  );
+                  this.hasSelectedManualDepartments = this.hasSelectedManualDepartments.filter(
+                    (v) => item.id.toString() !== v.id.toString()
+                  );
+                }
+              }
+              if (['user'].includes(item.type)) {
+                if (isAllCheck) {
+                  this.hasSelectedUsers.push(item);
+                  this.hasSelectedManualUsers.push(item);
+                } else {
+                  this.hasSelectedUsers = this.hasSelectedUsers.filter(
+                    (v) => `${item.username}${item.name}` !== `${v.username}${v.name}`
+                  );
+                  this.hasSelectedManualUsers = this.hasSelectedManualUsers.filter(
+                    (v) => `${item.username}${item.name}` !== `${v.username}${v.name}`
+                  );
+                }
+              }
+            });
+          }
+        };
+        return typeMap[type]();
+      },
+
+      handleSelectChange (selection, row) {
+        this.fetchSelectedGroups('multiple', selection, row);
+      },
+
+      handleSelectAllChange (selection) {
+        this.fetchSelectedGroups('all', selection);
       }
     }
   };
 </script>
-<style lang='postcss'>
-    .iam-add-member-dialog {
-        .title {
-            line-height: 26px;
-            color: #313238;
-            .member-title {
-                display: inline-block;
-                max-width: 470px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                vertical-align: top;
-            }
-            .expired-at-title {
-                display: inline-block;
-                max-width: 290px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                vertical-align: top;
-            }
-        }
-        .limit-wrapper {
-            float: left;
-            margin-top: 5px;
-        }
-        .add-member-content-wrapper {
-            height: 383px;
-            .left {
-                display: inline-block;
-                width: 320px;
-                height: 383px;
-                border-right: 1px solid #dcdee5;
-                float: left;
-                .tab-wrapper {
-                    position: relative;
-                    top: -15px;
-                    display: flex;
-                    justify-content: flex-start;
-                    height: 32px;
-                    line-height: 32px;
-                    border-bottom: 1px solid #d8d8d8;
-                    .tab-item {
-                        position: relative;
-                        cursor: pointer;
-                        &.has-margin-left {
-                            margin-left: 20px;
-                        }
-                        .active-line {
-                            position: absolute;
-                            bottom: -1px;
-                            left: 0;
-                            width: 100%;
-                            height: 2px;
-                            background: #3a84ff;
-                        }
-                    }
-                }
-                .member-tree-wrapper {
-                    min-height: 309px;
-                }
-                .tree {
-                    max-height: 309px;
-                    overflow: auto;
-                    &::-webkit-scrollbar {
-                        width: 4px;
-                        background-color: lighten(transparent, 80%);
-                    }
-                    &::-webkit-scrollbar-thumb {
-                        height: 5px;
-                        border-radius: 2px;
-                        background-color: #e6e9ea;
-                    }
-                }
-                .search-input {
-                    margin-bottom: 5px;
-                    width: 310px;
-                    height: 32px;
-                    line-height: normal;
-                    color: #63656e;
-                    background-color: #fff;
-                    border-radius: 2px;
-                    font-size: 12px;
-                    border: 1px solid #c4c6cc;
-                    padding: 0 10px;
-                    text-align: left;
-                    vertical-align: middle;
-                    outline: none;
-                    resize: none;
-                    transition: border .2s linear;
-                    &.disabled {
-                        background-color: #fafbfd;
-                    }
-                    &.active {
-                        border-color: #3a84ff;
-                    }
-                    .search-config-icon {
-                        font-size: 14px;
-                    }
-                    .bk-dropdown-menu {
-                        position: relative;
-                        top: 7px;
-                        &:hover {
-                            .search-icon {
-                                color: #3a84ff;
-                            }
-                        }
-                        .search-icon {
-                            font-size: 16px;
-                        }
-                    }
-                    .bk-dropdown-trigger {
-                        cursor: pointer;
-                    }
-                    .bk-dropdown-list {
-                        li {
-                            a {
-                                font-size: 14px;
-                                &.active {
-                                    background-color: #eaf3ff;
-                                    color: #3a84ff;
-                                }
-                            }
-                        }
-                    }
-                }
-                .search-content {
-                    .too-much-wrapper {
-                        position: absolute;
-                        left: 50%;
-                        top: 50%;
-                        text-align: center;
-                        transform: translate(-50%, -50%);
-                        .much-tips-icon {
-                            font-size: 21px;
-                            color: #63656e;
-                        }
-                        .text {
-                            margin-top: 6px;
-                            font-size: 12px;
-                            color: #dcdee5;
-                        }
-                    }
-                    .search-empty-wrapper {
-                        width: 100%;
-                        position: absolute;
-                        left: 50%;
-                        top: 50%;
-                        text-align: center;
-                        transform: translate(-50%, -50%);
-                        img {
-                            width: 120px;
-                        }
-                        .empty-tips {
-                            position: relative;
-                            top: -20px;
-                            font-size: 12px;
-                            color: #dcdee5;
-                        }
-                    }
-                }
-                .manual-wrapper {
-                    padding-right: 10px;
-                    .manual-error-text {
-                        /* position: absolute; */
-                        width: 320px;
-                        margin-top: 4px;
-                        font-size: 12px;
-                        color: #ff4d4d;
-                        line-height: 14px;
-                    }
-                }
-            }
-            .right {
-                display: inline-block;
-                padding-left: 10px;
-                width: 327px;
-                height: 383px;
-                .header {
-                    display: flex;
-                    justify-content: space-between;
-                    position: relative;
-                    top: 6px;
-                    .organization-count {
-                        margin-right: 3px;
-                        color: #2dcb56;
-                    }
-                    .user-count {
-                        margin-right: 3px;
-                        color: #2dcb56
-                    }
-                }
-                .content {
-                    position: relative;
-                    margin-top: 15px;
-                    padding-left: 10px;
-                    height: 345px;
-                    overflow: auto;
-                    &::-webkit-scrollbar {
-                        width: 4px;
-                        background-color: lighten(transparent, 80%);
-                    }
-                    &::-webkit-scrollbar-thumb {
-                        height: 5px;
-                        border-radius: 2px;
-                        background-color: #e6e9ea;
-                    }
-                    .organization-content {
-                        .organization-item {
-                            padding: 5px 0;
-                            .organization-name {
-                                display: inline-block;
-                                max-width: 200px;
-                                overflow: hidden;
-                                text-overflow: ellipsis;
-                                white-space: nowrap;
-                                vertical-align: top;
-                            }
-                            .delete-depart-icon {
-                                display: block;
-                                margin: 4px 6px 0 0;
-                                color: #c4c6cc;
-                                cursor: pointer;
-                                float: right;
-                                &:hover {
-                                    color: #3a84ff;
-                                }
-                            }
-                            .user-count {
-                                color: #c4c6cc;
-                            }
-                        }
-                        .folder-icon {
-                            font-size: 17px;
-                            color: #a3c5fd;
-                        }
-                    }
-                    .user-content {
-                        .user-item {
-                            padding: 5px 0;
-                            .user-name {
-                                display: inline-block;
-                                max-width: 200px;
-                                overflow: hidden;
-                                text-overflow: ellipsis;
-                                white-space: nowrap;
-                                vertical-align: top;
-                            }
-                            .delete-icon {
-                                display: block;
-                                margin: 4px 6px 0 0;
-                                color: #c4c6cc;
-                                cursor: pointer;
-                                float: right;
-                                &:hover {
-                                    color: #3a84ff;
-                                }
-                            }
-                        }
-                        .user-icon {
-                            font-size: 16px;
-                            color: #a3c5fd;
-                        }
-                    }
-                    .selected-empty-wrapper {
-                        position: absolute;
-                        left: 50%;
-                        top: 50%;
-                        transform: translate(-50%, -50%);
-                        img {
-                            width: 120px;
-                        }
-                    }
-                }
-            }
-        }
-
-        .highlight {
-            color: #3a84ff;
-            cursor: pointer;
-            user-select: none;
-        }
+<style lang="postcss" scoped>
+.iam-add-member-dialog {
+  .title {
+    line-height: 26px;
+    color: #313238;
+    .member-title {
+      display: inline-block;
+      max-width: 470px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      vertical-align: top;
     }
+    .expired-at-title {
+      display: inline-block;
+      max-width: 290px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      vertical-align: top;
+    }
+  }
+  .limit-wrapper {
+    float: left;
+    margin-top: 5px;
+  }
+  .add-member-content-wrapper {
+    /* height: 383px; */
+    height: 510px;
+    .left {
+      display: inline-block;
+      /* width: 320px; */
+      /* height: 383px; */
+      width: 680px;
+      height: 510px;
+      border-right: 1px solid #dcdee5;
+      float: left;
+      .tab-wrapper {
+        position: relative;
+        /* top: -15px; */
+        top: 0;
+        display: flex;
+        justify-content: flex-start;
+        height: 42px;
+        line-height: 42px;
+        /* border-bottom: 1px solid #d8d8d8; */
+        background-color: #fafbfd;
+        border: 1px solid #dcdee5;
+        border-right: 0;
+        margin-bottom: 15px;
+        .tab-item {
+          min-width: 97px;
+          text-align: center;
+          color: #63656e;
+          position: relative;
+          cursor: pointer;
+          border-right: 1px solid #dcdee5;
+          &-active {
+            background-color: #ffffff;
+            margin-bottom: -1px;
+          }
+          /* &.has-margin-left {
+                        margin-left: 20px;
+                    } */
+          .active-line {
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: #3a84ff;
+          }
+        }
+      }
+      .member-tree-wrapper {
+        /* min-height: 309px; */
+        min-height: 400px;
+        margin: 0 24px;
+      }
+      .tree {
+        /* max-height: 309px; */
+        max-height: 400px;
+        overflow: auto;
+        &::-webkit-scrollbar {
+          width: 4px;
+          background-color: lighten(transparent, 80%);
+        }
+        &::-webkit-scrollbar-thumb {
+          height: 5px;
+          border-radius: 2px;
+          background-color: #e6e9ea;
+        }
+      }
+      .search-input {
+        margin: 0 24px 5px 24px;
+        /* margin-bottom: 5px; */
+        /* width: 310px; */
+        width: 632px;
+        height: 32px;
+        line-height: normal;
+        color: #63656e;
+        background-color: #fff;
+        border-radius: 2px;
+        font-size: 12px;
+        border: 1px solid #c4c6cc;
+        padding: 0 10px;
+        /* text-align: left; */
+        vertical-align: middle;
+        outline: none;
+        resize: none;
+        transition: border 0.2s linear;
+        &.disabled {
+          background-color: #fafbfd;
+        }
+        &.active {
+          border-color: #3a84ff;
+        }
+        .search-config-icon {
+          font-size: 14px;
+        }
+        .bk-dropdown-menu {
+          position: relative;
+          /* top: 7px; */
+          top: 2px;
+          &:hover {
+            .search-icon {
+              color: #3a84ff;
+              cursor: pointer;
+            }
+          }
+          .search-icon {
+            font-size: 16px;
+          }
+        }
+        .bk-dropdown-trigger {
+          cursor: pointer;
+        }
+        .bk-dropdown-list {
+          li {
+            a {
+              font-size: 14px;
+              &.active {
+                background-color: #eaf3ff;
+                color: #3a84ff;
+              }
+            }
+          }
+        }
+      }
+      .search-content {
+        .too-much-wrapper {
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          text-align: center;
+          transform: translate(-50%, -50%);
+          .much-tips-icon {
+            font-size: 21px;
+            color: #63656e;
+          }
+          .text {
+            margin-top: 6px;
+            font-size: 12px;
+            color: #dcdee5;
+          }
+        }
+        .search-empty-wrapper {
+          width: 100%;
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          text-align: center;
+          transform: translate(-50%, -50%);
+          img {
+            width: 120px;
+          }
+          .empty-tips {
+            position: relative;
+            top: -20px;
+            font-size: 12px;
+            color: #dcdee5;
+          }
+        }
+      }
+      .manual-wrapper {
+        display: flex;
+        &-left {
+          padding-left: 24px;
+          padding-right: 10px;
+          .manual-error-text {
+            /* position: absolute; */
+            /* width: 320px; */
+            width: 248px;
+            margin-top: 4px;
+            font-size: 12px;
+            color: #ff4d4d;
+            line-height: 14px;
+          }
+        }
+      }
+    }
+    .right {
+      display: inline-block;
+      padding-left: 24px;
+      width: 280px;
+      /* height: 383px; */
+      height: 510px;
+      background-color: #f5f7fa;
+      border-top: 1px solid #dcdee5;
+      .result-preview {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 24px 8px 0px;
+        .bk-button-text.is-disabled {
+          color: #c4c6cc;
+        }
+      }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        position: relative;
+        top: 0;
+        /* padding: 8px 24px 8px 14px; */
+        font-size: 12px;
+        .organization-count {
+          margin-right: 3px;
+          color: #3a84ff;
+          font-weight: 700;
+        }
+        .user-count {
+          margin-right: 3px;
+          color: #3a84ff;
+          font-weight: 700;
+        }
+      }
+      .content {
+        position: relative;
+        margin-top: 15px;
+        /* padding-left: 10px; */
+        padding-right: 24px;
+        /* height: 345px; */
+        height: 414px;
+        overflow: auto;
+        &::-webkit-scrollbar {
+          width: 4px;
+          background-color: lighten(transparent, 80%);
+        }
+        &::-webkit-scrollbar-thumb {
+          height: 5px;
+          border-radius: 2px;
+          background-color: #e6e9ea;
+        }
+        .organization-content {
+          background-color: #ffffff;
+          .organization-item {
+            padding: 5px;
+            box-shadow: 0 1px 1px 0 #00000014;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            &:last-child {
+              margin-bottom: 1px;
+            }
+            &-left {
+              width: calc(100% - 30px);
+              display: flex;
+              align-items: center;
+            }
+            .organization-name {
+              display: inline-block;
+              margin-left: 5px;
+              /* max-width: 200px; */
+              font-size: 12px;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+              vertical-align: top;
+              word-break: break-all;
+            }
+            .delete-depart-icon {
+              display: block;
+              font-size: 18px;
+              margin: 4px 6px 0 0;
+              color: #c4c6cc;
+              cursor: pointer;
+              float: right;
+              &:hover {
+                color: #3a84ff;
+              }
+            }
+            .user-count {
+              color: #c4c6cc;
+            }
+          }
+          .folder-icon {
+            font-size: 17px;
+            color: #a3c5fd;
+          }
+        }
+        .user-content {
+          background-color: #ffffff;
+          .user-item {
+            padding: 5px;
+            box-shadow: 0 1px 1px 0 #00000014;
+            border-radius: 2px;
+            .user-name {
+              display: inline-block;
+              /* max-width: 200px; */
+              max-width: 160px;
+              font-size: 12px;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+              vertical-align: top;
+              word-break: break-all;
+            }
+            .delete-icon {
+              display: block;
+              font-size: 18px;
+              margin: 4px 6px 0 0;
+              color: #c4c6cc;
+              cursor: pointer;
+              float: right;
+              &:hover {
+                color: #3a84ff;
+              }
+            }
+          }
+          .user-icon {
+            font-size: 16px;
+            color: #a3c5fd;
+          }
+        }
+        .selected-empty-wrapper {
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          transform: translate(-50%, -50%);
+          img {
+            width: 120px;
+          }
+        }
+      }
+    }
+  }
+
+  .highlight {
+    color: #3a84ff;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .iam-add-member-search-input-cls {
+    position: relative;
+    top: 0;
+    left: 0;
+    /* width: 277px !important; */
+    width: 586px !important;
+    .bk-form-input {
+      height: 29px !important;
+      border: none !important;
+    }
+  }
+
+  .manual-bottom-btn {
+    margin-top: 10px;
+  }
+
+  .manual-input-wrapper {
+    width: 376px;
+    margin-bottom: 10px;
+  }
+
+  .manual-table-wrapper {
+    height: 360px;
+    border: none;
+  }
+}
+
+/deep/ .bk-dialog-wrapper {
+  .bk-dialog {
+    top: 100px;
+  }
+  .bk-dialog-body {
+    padding: 0 !important;
+  }
+}
+
+/deep/ .manual-textarea {
+  width: 248px;
+  .bk-textarea-wrapper {
+    .bk-form-textarea {
+      min-height: 360px;
+      &::-webkit-scrollbar {
+        width: 6px;
+        background-color: lighten(transparent, 80%);
+      }
+      &::-webkit-scrollbar-thumb {
+        height: 5px;
+        border-radius: 2px;
+        background-color: #e6e9ea;
+      }
+    }
+  }
+}
 </style>

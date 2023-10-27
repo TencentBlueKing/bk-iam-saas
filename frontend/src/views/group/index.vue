@@ -446,24 +446,19 @@
     async created () {
       this.curRole = this.user.role.type || 'staff';
       this.searchParams = this.$route.query;
-      // await this.setCurrentQueryCache(this.refreshCurrentQuery());
+      this.setCurrentQueryCache(this.refreshCurrentQuery());
       const isObject = (payload) => {
         return Object.prototype.toString.call(payload) === '[object Object]';
       };
       const currentQueryCache = await this.getCurrentQueryCache();
       if (currentQueryCache && Object.keys(currentQueryCache).length) {
-        const { current, limit } = currentQueryCache;
-        if (current || limit) {
-          const pageConf = {
-            current: Number(current || this.pagination.current),
-            limit: Number(limit || this.pagination.limit)
-          };
-          this.pagination = Object.assign(
-            this.pagination,
-            pageConf
-          );
-          this.queryParams = Object.assign(this.queryParams, pageConf);
-        }
+        this.pagination = Object.assign(
+          this.pagination,
+          {
+            current: currentQueryCache.current ? Number(currentQueryCache.current) : this.pagination.current,
+            limit: currentQueryCache.limit ? Number(currentQueryCache.limit) : this.pagination.limit
+          }
+        );
         for (const key in currentQueryCache) {
           if (key !== 'limit' && key !== 'current') {
             const curData = currentQueryCache[key];
@@ -498,6 +493,9 @@
         }
       }
       await this.fetchUserGroupSet();
+    },
+    beforeDestroy () {
+      window.localStorage.removeItem('groupList');
     },
     methods: {
       /**
@@ -553,10 +551,6 @@
           }
         }
         this.emptyData = Object.assign(this.emptyData, { tipType: Object.keys(this.searchParams).length > 0 ? 'search' : '' });
-        this.pagination = Object.assign(
-          this.pagination,
-          { current: queryParams.current || 1, limit: queryParams.limit || 10 }
-        );
         return {
             ...queryParams
         };

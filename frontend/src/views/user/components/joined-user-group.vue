@@ -10,6 +10,13 @@
         @click="handleBatchQuit">
         {{ $t(`m.common['批量退出']`) }}
       </bk-button>
+      <bk-button
+        :disabled="isBatchDisabled"
+        @click="handleBatchAddMember"
+        data-test-id="group_btn_create"
+      >
+        {{ $t(`m.common['批量添加成员']`) }}
+      </bk-button>
     </div>
     <div>
       <bk-table
@@ -29,6 +36,20 @@
         <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
           <template slot-scope="{ row }">
             <span class="user-group-name" :title="row.name" @click="goDetail(row)">{{ row.name }}</span>
+          </template>
+        </bk-table-column>
+        <bk-table-column :label="$t(`m.userGroup['用户/组织']`)" :min-width="140">
+          <template slot-scope="{ row }">
+            <div class="member-wrapper">
+              <span class="user">
+                <Icon type="personal-user" />
+                {{ row.user_count || '--' }}
+              </span>
+              <span class="depart">
+                <Icon type="organization-fill" />
+                {{ row.department_count || '--' }}
+              </span>
+            </div>
           </template>
         </bk-table-column>
         <bk-table-column :label="$t(`m.common['有效期']`)" prop="expired_at_display"></bk-table-column>
@@ -74,19 +95,30 @@
           </template>
         </bk-table-column>
         <bk-table-column :label="$t(`m.common['操作']`)" width="200">
-          <template slot-scope="props">
-            <bk-button disabled text v-if="props.row.department_id !== 0">
-              <span :title="$t(`m.perm['通过组织加入的组无法退出']`)">{{ $t(`m.common['退出']`) }}</span>
-            </bk-button>
+          <template slot-scope="{ row }">
             <bk-button
-              v-else
               theme="primary"
               text
-              :title="isAdminGroup(props.row) ? $t(`m.perm['唯一管理员不可退出']`) : ''"
-              :disabled="isAdminGroup(props.row)"
-              @click="showQuitTemplates(props.row)">
-              {{ $t(`m.common['退出']`) }}
+              :disabled="row.readonly"
+              @click="handleAddMember(row)"
+              style="margin-right: 5px;"
+            >
+              {{ $t(`m.common['添加成员']`) }}
             </bk-button>
+            <template>
+              <bk-button disabled text v-if="row.department_id !== 0">
+                <span :title="$t(`m.perm['通过组织加入的组无法退出']`)">{{ $t(`m.common['退出']`) }}</span>
+              </bk-button>
+              <bk-button
+                v-else
+                theme="primary"
+                text
+                :title="isAdminGroup(row) ? $t(`m.perm['唯一管理员不可退出']`) : ''"
+                :disabled="isAdminGroup(row)"
+                @click="showQuitTemplates(row)">
+                {{ $t(`m.common['退出']`) }}
+              </bk-button>
+            </template>
           </template>
         </bk-table-column>
         <template slot="empty">
@@ -205,6 +237,19 @@
       @on-cancel="handleCancelDelete"
       @on-submit="handleSubmitDelete"
     />
+
+    <add-member-dialog
+      :show.sync="isShowAddMemberDialog"
+      :is-batch="isBatch"
+      :loading="memberLoading"
+      :name="curName"
+      :id="curId"
+      :is-rating-manager="isRatingManager"
+      show-expired-at
+      @on-cancel="handleCancelAdd"
+      @on-sumbit="handleSubmitAdd"
+      @on-after-leave="handleAddAfterClose"
+    />
   </div>
 </template>
 <script>
@@ -218,6 +263,7 @@
   import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider';
   import IamDeadline from '@/components/iam-deadline/horizontal';
   import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
+  import AddMemberDialog from '@/views/group/components/iam-add-member.vue';
 
   export default {
     name: '',
@@ -227,7 +273,8 @@
       DeleteDialog,
       DeleteActionDialog,
       RenderPermSideslider,
-      IamEditMemberSelector
+      IamEditMemberSelector,
+      AddMemberDialog
     },
     props: {
       data: {
@@ -307,13 +354,25 @@
         delActionDialogTip: '',
         currentActionName: '',
         delActionList: [],
-        currentSelectGroupList: []
+        currentSelectGroupList: [],
+        isShowAddMemberDialog: false,
+        isBatch: false,
+        memberLoading: false,
+        curName: '',
+        curId: 0,
+        groupAttributes: {
+          source_type: '',
+          source_from_role: false
+        }
       };
     },
     computed: {
       ...mapGetters(['user']),
       curSelectIds () {
-          return this.currentSelectList.map(item => item.id);
+        return this.currentSelectList.map(item => item.id);
+      },
+      curSelectMemberIds () {
+        return this.currentSelectGroupList.map(item => item.id);
       },
       tableHeight () {
           return getWindowHeight() - 290;
@@ -331,6 +390,17 @@
       },
       curRole () {
         return this.user.role.type;
+      },
+      isRatingManager () {
+        return ['rating_manager', 'subset_manager'].includes(this.curRole);
+      },
+      isBatchDisabled () {
+        if (this.currentSelectGroupList.length) {
+          const isDisabled = this.currentSelectGroupList.every(item => item.readonly);
+          return isDisabled;
+        } else {
+          return true;
+        }
       }
     },
     watch: {
@@ -385,6 +455,9 @@
                     readonly: false
                   };
                 });
+              }
+              if (this.currentSelectGroupList.length < 1) {
+                this.$refs.groupPermTableRef && this.$refs.groupPermTableRef.clearSelection();
               }
             });
           });
@@ -586,6 +659,104 @@
         this.delActionList = [];
       },
 
+      handleBatchAddMember () {
+        const hasDisabledData = this.currentSelectGroupList.filter(item => item.readonly);
+        if (hasDisabledData.length) {
+          const disabledNames = hasDisabledData.map(item => item.name);
+          this.messageWarn(this.$t(`m.info['用户组为只读用户组不能添加成员']`, { value: `${this.$t(`m.common['【']`)}${disabledNames}${this.$t(`m.common['】']`)}` }), 3000);
+          return;
+        }
+        this.isBatch = true;
+        this.isShowAddMemberDialog = true;
+      },
+
+      handleAddAfterClose () {
+        this.curName = '';
+        this.curId = 0;
+      },
+
+      handleCancelAdd () {
+        this.curId = 0;
+        this.curName = '';
+        this.isShowAddMemberDialog = false;
+      },
+
+      handleAddMember (payload) {
+        const { id, name, attributes } = payload;
+        this.curName = name;
+        this.curId = id;
+        this.groupAttributes = Object.assign(this.groupAttributes, attributes);
+        this.isShowAddMemberDialog = true;
+      },
+
+      async handleSubmitAdd (payload) {
+        const { users, departments, expiredAt } = payload;
+        // 判断批量选择的用户组里是否包含管理员组
+        const hasAdminGroups = this.currentSelectGroupList.filter(item =>
+          item.attributes && item.attributes.source_from_role && departments.length > 0);
+        if (hasAdminGroups.length) {
+          const adminGroupNames = hasAdminGroups.map(item => item.name).join();
+          this.messageWarn(this.$t(`m.info['用户组为管理员组，不能添加部门']`, { value: `${this.$t(`m.common['【']`)}${adminGroupNames}${this.$t(`m.common['】']`)}` }), 3000);
+          return;
+        }
+        let expired = payload.policy_expired_at;
+        // 4102444800：非永久时需加上当前时间
+        if (expiredAt !== 4102444800) {
+          const nowTimestamp = +new Date() / 1000;
+          const tempArr = String(nowTimestamp).split('');
+          const dotIndex = tempArr.findIndex((item) => item === '.');
+          const nowSecond = parseInt(tempArr.splice(0, dotIndex).join(''), 10);
+          expired = expired + nowSecond;
+        }
+        const arr = [];
+        if (departments.length > 0) {
+          arr.push(
+            ...departments.map((item) => {
+              return {
+                id: item.id,
+                type: 'department'
+              };
+            })
+          );
+        }
+        if (users.length > 0) {
+          arr.push(
+            ...users.map((item) => {
+              return {
+                id: item.username,
+                type: 'user'
+              };
+            })
+          );
+        }
+        const params = {
+          members: arr,
+          expired_at: expired,
+          id: this.curId
+        };
+        let fetchUrl = 'userGroup/addUserGroupMember';
+        if (this.isBatch) {
+          params.group_ids = this.curSelectMemberIds;
+          delete params.id;
+          fetchUrl = 'userGroup/batchAddUserGroupMember';
+        }
+        console.log('params', params);
+        try {
+          this.memberLoading = true;
+          await this.$store.dispatch(fetchUrl, params);
+          this.isShowAddMemberDialog = false;
+          this.currentSelectGroupList = [];
+          this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10 });
+          this.messageSuccess(this.$t(`m.info['添加成员成功']`), 3000);
+          this.fetchPermGroups(true);
+        } catch (e) {
+          console.error(e);
+          this.messageAdvancedError(e);
+        } finally {
+          this.memberLoading = false;
+        }
+      },
+
       async handleSubmitDelete () {
         const selectGroups = this.currentSelectGroupList.filter(item =>
           !this.delActionList.map(v => v.id.toString()).includes(item.id.toString()));
@@ -675,9 +846,9 @@
       async fetchUserGroupList () {
         this.tableDialogLoading = true;
         const params = {
-                    ...this.searchParams,
-                    limit: this.pagination.limit,
-                    offset: this.pagination.limit * (this.pagination.current - 1)
+          ...this.searchParams,
+          limit: this.pagination.limit,
+          offset: this.pagination.limit * (this.pagination.current - 1)
         };
         try {
           const { code, data } = await this.$store.dispatch('userGroup/getUserGroupList', params);
@@ -762,19 +933,52 @@
   .iam-joined-user-group-wrapper {
       height: calc(100vh - 204px);
       .bk-table {
-          border-right: none;
-          border-bottom: none;
-          &.is-be-loading {
-              border-bottom: 1px solid #dfe0e5;
+        border-right: none;
+        border-bottom: none;
+        &.is-be-loading {
+            border-bottom: 1px solid #dfe0e5;
+        }
+        .user-group-name,
+        .can-view {
+            color: #3a84ff;
+            cursor: pointer;
+            &:hover {
+                color: #699df4;
+            }
+        }
+        .member-wrapper {
+          display: flex;
+          justify-content: flex-start;
+    
+          .user,
+          .depart {
+            display: inline-block;
+            min-width: 54px;
+            padding: 4px 6px;
+            background: #f0f1f5;
+            border-radius: 2px;
+  
+            i {
+              font-size: 14px;
+              color: #c4c6cc;
+            }
           }
-          .user-group-name,
-          .can-view {
-              color: #3a84ff;
-              cursor: pointer;
-              &:hover {
-                  color: #699df4;
+    
+          .depart {
+            margin-left: 2px;
+          }
+        }
+
+        tr {
+          &:hover {
+            .member-wrapper {
+              .user,
+              .depart {
+                background: #ffffff;
               }
+            }
           }
+        }
       }
   }
 </style>

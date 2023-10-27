@@ -32,7 +32,6 @@
           :empty-text="emptyData.text"
           :tip-text="emptyData.tip"
           :tip-type="emptyData.tipType"
-          @on-clear="handleEmptyClear"
           @on-refresh="handleEmptyRefresh"
         />
       </template>
@@ -84,7 +83,6 @@
         currentBackup: 1,
         removeSubTitle: '',
         currentMember: [],
-
         isShowPermSlider: false,
         curGroupId: '',
         emptyData: {
@@ -124,6 +122,7 @@
         } catch (e) {
           console.error(e);
           const { code } = e;
+          this.tableList = [];
           this.emptyData = formatCodeData(code, this.emptyData);
           this.messageAdvancedError(e);
         } finally {
@@ -192,6 +191,14 @@
           id: payload.id
         });
         this.isShowRemoveDialog = true;
+      },
+
+      handleEmptyRefresh () {
+        this.pagination = Object.assign(this.pagination, {
+          current: 1,
+          limit: 10
+        });
+        this.fetchData(false, true);
       }
     }
   };
