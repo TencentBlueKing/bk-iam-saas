@@ -14,7 +14,7 @@
       <!-- 先屏蔽 -->
       <div slot="right">
         <iam-search-select
-          style="width: 500px"
+          style="width: 400px"
           :placeholder="$t(`m.sensitivityLevel['搜索操作名称、当前等级']`)"
           :data="searchData"
           :value="searchValue"
@@ -380,7 +380,12 @@
       },
 
       async handleRemoteLevel (value) {
-        const list = _.cloneDeep(SENSITIVITY_LEVEL_ENUM);
+        const list = _.cloneDeep(SENSITIVITY_LEVEL_ENUM.map((item) => {
+          return {
+            ...item,
+            name: this.$t(`m.sensitivityLevel['${item.name}']`)
+          };
+        }));
         if (!value) {
           return Promise.resolve(list);
         }

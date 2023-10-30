@@ -18,7 +18,6 @@
     <div class="sensitivity-systems-search">
       <bk-input
         clearable
-        style="margin-top: 10px"
         :placeholder="$t(`m.sensitivityLevel['搜索系统']`)"
         :right-icon="'bk-icon icon-search'"
         v-model="systemValue"
