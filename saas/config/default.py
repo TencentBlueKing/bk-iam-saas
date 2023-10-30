@@ -465,4 +465,4 @@ BK_BCS_APIGW_URL = env.str("BK_BCS_APIGW_URL", default="")
 
 
 # 文档地址
-BK_DOCS_URL_PREFIX = env.str("BK_DOCS_URL_PREFIX", default="https://bk.tentcent.com/docs/")
+BK_DOCS_URL_PREFIX = env.str("BK_DOCS_URL_PREFIX", default="https://bk.tencent.com/docs/markdown/")
