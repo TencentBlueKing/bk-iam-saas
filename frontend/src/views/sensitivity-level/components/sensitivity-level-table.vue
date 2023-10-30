@@ -399,13 +399,13 @@
         };
       },
 
-      handleConfirmTransfer (payload) {
+      async handleConfirmTransfer (payload) {
         const { sensitivity_level, actions } = payload;
         this.isShowTransferSlider = false;
         this.curSelectData = {};
         this.currentSelectList = [];
         this.resetPagination();
-        this.fetchSensitivityLevelList(true);
+        await this.fetchSensitivityLevelList(true);
         if (payload) {
           bus.$emit('on-tab-level-count', { name: sensitivity_level, system_id: actions[0].system_id });
         }
