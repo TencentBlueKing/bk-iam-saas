@@ -129,24 +129,8 @@
           }
           const { code, data } = await this.$store.dispatch('system/getSystems', params);
           if (data && data.length) {
-            for (let i = 0; i < data.length; i++) {
-              this.$store.dispatch(
-                'sensitivityLevel/getSensitivityLevelCount',
-                {
-                  system_id: data[i].id
-                }
-              ).then(({ code: systemCountCode, data: systemCountData }) => {
-                // const curSystemId = data[i].id;
-                // if (systemCountMockData[curSystemId]) {
-                //   const { data: systemCountData } = systemCountMockData[curSystemId];
-                if (systemCountData && systemCountCode === 0) {
-                  this.$set(data[i], 'levelItem', systemCountData);
-                  this.$set(data[i], 'count', systemCountData.all || 0);
-                }
-                // }
-              });
-            }
-            this.systemListStorage = [...data];
+            const list = await this.getSystemCount(data);
+            this.systemListStorage = [...list];
             this.systemList = _.cloneDeep(this.systemListStorage);
           }
           this.emptySystemData = formatCodeData(code, this.emptySystemData, data.length === 0);
@@ -156,6 +140,27 @@
         } finally {
           this.systemLoading = false;
         }
+      },
+
+      // 根据系统id查找对应系统的敏感等级
+      async getSystemCount (payload) {
+        const list = [...payload];
+        try {
+          for (let i = 0; i < list.length; i++) {
+            const { data } = await this.$store.dispatch('sensitivityLevel/getSensitivityLevelCount', {
+              system_id: payload[i].id
+            });
+            // const curSystemId = list[i].id;
+            // if (systemCountMockData[curSystemId]) {
+            //   const { data } = systemCountMockData[curSystemId];
+            this.$set(list[i], 'levelItem', data);
+            this.$set(list[i], 'count', data.all || 0);
+            // }
+          }
+        } catch (e) {
+          this.messageAdvancedError(e);
+        }
+        return list;
       },
 
       handleSelectSystem (payload) {

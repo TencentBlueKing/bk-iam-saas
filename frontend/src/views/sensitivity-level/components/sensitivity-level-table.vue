@@ -237,10 +237,7 @@
         this.tableLoading = tableLoading;
         try {
           const { current, limit } = this.pagination;
-          let systemId = this.curSystemData.id;
-          if (['all'].includes(systemId)) {
-            systemId = this.allSystemData.map((item) => item.value).join();
-          }
+          const systemId = this.curSystemData.id;
           const params = {
             sensitivity_level: this.tabActive,
             system_id: systemId,
@@ -248,6 +245,9 @@
             offset: limit * (current - 1),
             limit
           };
+          if (['all'].includes(params.sensitivity_level)) {
+            delete params.sensitivity_level;
+          }
           const { code, data } = await this.$store.dispatch(
             'sensitivityLevel/getProcessesActionsList',
             params
