@@ -15,7 +15,7 @@
       <div slot="right">
         <iam-search-select
           style="width: 500px"
-          :placeholder="$t(`m.sensitivityLevel['搜索操作名称、所属系统、当前等级']`)"
+          :placeholder="$t(`m.sensitivityLevel['搜索操作名称、当前等级']`)"
           :data="searchData"
           :value="searchValue"
           :quick-search-method="quickSearchMethod"
@@ -47,9 +47,6 @@
       </bk-table-column>
       <bk-table-column
         :label="$t(`m.sensitivityLevel['所属系统']`)"
-        :filters="allSystemData"
-        :filter-method="handleSystemFilter"
-        :filter-multiple="false"
         prop="system_id"
       >
         <template slot-scope="{ row }">
@@ -146,11 +143,6 @@
             id: 'action_name',
             name: this.$t(`m.sensitivityLevel['操作名称']`),
             default: true
-          },
-          {
-            id: 'system_id',
-            name: this.$t(`m.sensitivityLevel['所属系统']`),
-            remoteMethod: this.handleRemoteSystem
           },
           {
             id: 'sensitivity_level',
@@ -385,18 +377,6 @@
           limit: currentLimit
         });
         this.fetchSensitivityLevelList(true);
-      },
-
-      async handleRemoteSystem (value) {
-        const params = {};
-        if (this.externalSystemId) {
-          params.hidden = false;
-        }
-        return this.$store.dispatch('system/getSystems', params).then(({ data }) => {
-          return data
-            .map(({ id, name }) => ({ id, name }))
-            .filter((item) => item.name.indexOf(value) > -1);
-        });
       },
 
       async handleRemoteLevel (value) {

@@ -14,7 +14,7 @@
           <span class="panel-label">
             {{ $t(`m.sensitivityLevel['${panel.label}']`) }}
           </span>
-          <span class="panel-count">({{ panel.count }})</span>
+          <span class="panel-count">({{ panel.count || 0}})</span>
         </template>
         <div
           class="content-wrapper"

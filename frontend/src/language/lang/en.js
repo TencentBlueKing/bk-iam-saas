@@ -1377,7 +1377,7 @@ export const m = {
         '目标等级': 'Target level',
         '额外添加的审批节点': 'Extra approval nodes added',
         '批量转移等级': 'Multi-transfer level',
-        '搜索操作名称、所属系统、当前等级': 'Search action name, system, current level',
+        '搜索操作名称、当前等级': 'Search action name, current level',
         '当前敏感等级为只读操作': 'The current sensitivity level is read-only action',
         '转移到目标等级': 'Transfer to target level',
         '转移预览的内容不能为空': 'The content of the transfer preview cannot be empty',
