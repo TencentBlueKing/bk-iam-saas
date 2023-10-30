@@ -235,10 +235,18 @@ class ApprovedPassApplicationBiz:
 
         subjects = [Subject.parse_obj(one) for one in applicants]
 
+        qs = Group.objects.filter(id__in=[group["id"] for group in application.data["groups"]]).values_list(
+            "id", flat=True
+        )
+        group_id_set = set(qs)
+
         # 兼容，新老数据在data都存在expired_at
         default_expired_at = application.data["expired_at"]
         # 加入用户组
         for group in application.data["groups"]:
+            if group["id"] not in group_id_set:
+                continue
+
             # 新数据才有，老数据则使用data外层的expired_at
             expired_at = group.get("expired_at", default_expired_at)
             try:
