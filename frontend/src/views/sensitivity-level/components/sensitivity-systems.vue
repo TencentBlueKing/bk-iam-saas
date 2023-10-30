@@ -155,8 +155,8 @@
             //   const { data } = systemCountMockData[curSystemId];
             this.$set(list[i], 'levelItem', data);
             this.$set(list[i], 'count', data.all || 0);
-            // }
           }
+          // }
         } catch (e) {
           this.messageAdvancedError(e);
         }

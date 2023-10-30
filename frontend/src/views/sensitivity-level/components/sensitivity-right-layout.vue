@@ -150,8 +150,33 @@
           });
         }
       });
+      bus.$on('on-tab-level-count', async (payload) => {
+        if (payload && Object.keys(payload).length > 0) {
+          this.fetchSystemLevelCount(payload);
+        }
+      });
     },
-    methods: {}
+    methods: {
+      async fetchSystemLevelCount (payload) {
+        try {
+          const { code, data } = await this.$store.dispatch('sensitivityLevel/getSensitivityLevelCount', {
+            system_id: payload.system_id
+          });
+          if (data && code === 0) {
+            this.$nextTick(() => {
+              this.panels.forEach((item) => {
+                item.count = data[item.name] || 0;
+              });
+              this.$refs.tabRef
+                && this.$refs.tabRef.$refs.tabLabel
+                && this.$refs.tabRef.$refs.tabLabel.forEach((label) => label.$forceUpdate());
+            });
+          }
+        } catch (e) {
+          this.messageAdvancedError(e);
+        }
+      }
+    }
   };
 </script>
 
