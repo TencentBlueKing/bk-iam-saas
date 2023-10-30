@@ -130,20 +130,21 @@
           const { code, data } = await this.$store.dispatch('system/getSystems', params);
           if (data && data.length) {
             for (let i = 0; i < data.length; i++) {
-              const { code: systemCountCode, data: systemCountData } = this.$store.dispatch(
+              this.$store.dispatch(
                 'sensitivityLevel/getSensitivityLevelCount',
                 {
                   system_id: data[i].id
                 }
-              );
-              // const curSystemId = data[i].id;
-              // if (systemCountMockData[curSystemId]) {
-              //   const { data: systemCountData } = systemCountMockData[curSystemId];
-              if (systemCountData && systemCountCode === 0) {
-                this.$set(data[i], 'levelItem', systemCountData);
-                this.$set(data[i], 'count', systemCountData.all || 0);
-              }
-              // }
+              ).then(({ code: systemCountCode, data: systemCountData }) => {
+                // const curSystemId = data[i].id;
+                // if (systemCountMockData[curSystemId]) {
+                //   const { data: systemCountData } = systemCountMockData[curSystemId];
+                if (systemCountData && systemCountCode === 0) {
+                  this.$set(data[i], 'levelItem', systemCountData);
+                  this.$set(data[i], 'count', systemCountData.all || 0);
+                }
+                // }
+              });
             }
             this.systemListStorage = [...data];
             this.systemList = _.cloneDeep(this.systemListStorage);
