@@ -47,7 +47,7 @@
       </bk-table-column>
       <bk-table-column
         :label="$t(`m.sensitivityLevel['所属系统']`)"
-        :filters="allSystemList"
+        :filters="allSystemData"
         :filter-method="handleSystemFilter"
         :filter-multiple="false"
         prop="system_id"
@@ -138,7 +138,7 @@
         isShowTransferSlider: false,
         sensitivityTableList: [],
         currentSelectList: [],
-        allSystemList: [],
+        allSystemData: [],
         searchList: [],
         searchValue: [],
         searchData: [
@@ -178,7 +178,7 @@
       };
     },
     computed: {
-    ...mapGetters(['externalSystemId']),
+    ...mapGetters(['allSystemList', 'externalSystemId']),
     isBatchDisabled () {
       return this.currentSelectList.length === 0;
     },
@@ -187,7 +187,7 @@
     },
     formaSystemText () {
       return (payload) => {
-        const curSystem = this.allSystemList.find((item) => item.value === payload);
+        const curSystem = this.allSystemData.find((item) => item.value === payload);
         if (curSystem) {
           return curSystem.text;
         }
@@ -222,6 +222,10 @@
 
       async fetchSystems () {
         if (this.allSystemList.length) {
+          this.allSystemData = [...this.allSystemList].map(({ id, name }) => ({
+            value: id,
+            text: name
+          }));
           return;
         }
         const params = {};
@@ -230,7 +234,7 @@
         }
         const result = await this.$store.dispatch('getSystemList', params);
         if (result && result.length) {
-          this.allSystemList = [...result].map(({ id, name }) => ({
+          this.allSystemData = [...result].map(({ id, name }) => ({
             value: id,
             text: name
           }));
@@ -243,7 +247,7 @@
           const { current, limit } = this.pagination;
           let systemId = this.curSystemData.id;
           if (['all'].includes(systemId)) {
-            systemId = this.allSystemList.map((item) => item.value).join();
+            systemId = this.allSystemData.map((item) => item.value).join();
           }
           const params = {
             sensitivity_level: this.tabActive,
