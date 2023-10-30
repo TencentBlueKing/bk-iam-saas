@@ -112,6 +112,7 @@
               </div>
               <div class="iam-resource-header-right">
                 <bk-button
+                  v-if="isShowClear"
                   :text="true"
                   style="margin-right: 20px"
                   @click="handleClearAll"
@@ -177,6 +178,10 @@
         type: String
       },
       isCustomTitleStyle: {
+        type: Boolean,
+        default: false
+      },
+      isShowClear: {
         type: Boolean,
         default: false
       }

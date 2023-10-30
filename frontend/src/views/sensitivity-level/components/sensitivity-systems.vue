@@ -7,25 +7,17 @@
       ]"
       @click.stop="handleSelectSystem({ id: 'all', isFirst: false })"
     > -->
-    <div
-      :class="[
-        'sensitivity-systems-all',
-        { 'sensitivity-systems-all-active': active === 'all' }
-      ]"
-    >
+    <!-- <div :class="['sensitivity-systems-all', { 'sensitivity-systems-all-active': active === 'all' }]">
       <div class="system-all-text">
-        <!-- <div>All</div> -->
         <div class="system-all-text-name">
           {{ $t(`m.sensitivityLevel['全部系统']`) }}
         </div>
       </div>
       <div class="system-all-total">{{ systemTotal }}</div>
-    </div>
-    <div class="sensitivity-systems-border"></div>
+    </div> -->
     <div class="sensitivity-systems-search">
       <bk-input
         clearable
-        style="margin-top: 10px"
         :placeholder="$t(`m.sensitivityLevel['搜索系统']`)"
         :right-icon="'bk-icon icon-search'"
         v-model="systemValue"
@@ -47,20 +39,14 @@
         <div
           v-for="item in systemList"
           :key="item.id"
-          :class="[
-            'sensitivity-systems-item',
-            { 'sensitivity-systems-item-active': item.id === active }
-          ]"
+          :class="['sensitivity-systems-item', { 'sensitivity-systems-item-active': item.id === active }]"
           @click.stop="handleSelectSystem(item)"
         >
           <div class="sensitivity-system-name">
-            <Icon
-              type="file-close"
-              :class="['folder-icon', { 'folder-icon-active': item.id === active }]"
-            />
+            <Icon type="file-close" :class="['folder-icon', { 'folder-icon-active': item.id === active }]" />
             <div>{{ item.name }}</div>
           </div>
-          <div class="sensitivity-system-count">{{ item.count }}</div>
+          <div class="sensitivity-system-count">{{ item.count || 0}}</div>
         </div>
       </template>
       <div v-else class="system-empty-wrapper">
@@ -78,9 +64,10 @@
 
 <script>
   import _ from 'lodash';
+  import { mapGetters } from 'vuex';
   import { bus } from '@/common/bus';
   import { formatCodeData, getWindowHeight } from '@/common/util';
-  // import { systemCountMockData } from "../testData.js";
+  // import { systemCountMockData } from '../testData.js';
   export default {
     data () {
       return {
@@ -107,6 +94,7 @@
       };
     },
     computed: {
+      ...mapGetters(['externalSystemId']),
       formatDragWidth () {
         return {
           minWidth: '280px'
@@ -135,34 +123,33 @@
       async fetchSystems () {
         this.systemLoading = true;
         try {
-          const { code, data } = await this.$store.dispatch('system/getSystems');
+          const params = {};
+          if (this.externalSystemId) {
+            params.hidden = false;
+          }
+          const { code, data } = await this.$store.dispatch('system/getSystems', params);
           if (data && data.length) {
             for (let i = 0; i < data.length; i++) {
-              const { data: systemCountData } = await this.$store.dispatch(
+              this.$store.dispatch(
                 'sensitivityLevel/getSensitivityLevelCount',
                 {
-                  page: 1,
-                  page_size: 100,
                   system_id: data[i].id
                 }
-              );
-              // const curSystemId = data[i].id;
-              if (systemCountData && systemCountData.results) {
-                // const { data: systemCountData } = systemCountMockData[curSystemId];
-                this.$set(data[i], 'count', systemCountData.count);
-                this.$set(data[i], 'levelItem', systemCountData.results);
-                this.systemTotal += systemCountData.count;
-              }
+              ).then(({ code: systemCountCode, data: systemCountData }) => {
+                // const curSystemId = data[i].id;
+                // if (systemCountMockData[curSystemId]) {
+                //   const { data: systemCountData } = systemCountMockData[curSystemId];
+                if (systemCountData && systemCountCode === 0) {
+                  this.$set(data[i], 'levelItem', systemCountData);
+                  this.$set(data[i], 'count', systemCountData.all || 0);
+                }
+                // }
+              });
             }
             this.systemListStorage = [...data];
             this.systemList = _.cloneDeep(this.systemListStorage);
-            this.getAllSystemsSensitivityLevelTotal(true);
           }
-          this.emptySystemData = formatCodeData(
-            code,
-            this.emptySystemData,
-            data.length === 0
-          );
+          this.emptySystemData = formatCodeData(code, this.emptySystemData, data.length === 0);
         } catch (e) {
           this.emptySystemData = formatCodeData(e.code, this.emptySystemData);
           this.messageAdvancedError(e);
@@ -171,47 +158,10 @@
         }
       },
 
-      // 计算所有系统不同敏感等级的总数
-      getAllSystemsSensitivityLevelTotal (isFirst = false) {
-        if (['all'].includes(this.active)) {
-          this.allSystemData = Object.assign(this.allSystemData, {
-            all: this.systemList.reduce((curr, next) => {
-              return curr + next.levelItem.all;
-            }, 0),
-            L1: this.systemList.reduce((curr, next) => {
-              return curr + next.levelItem.L1;
-            }, 0),
-            L2: this.systemList.reduce((curr, next) => {
-              return curr + next.levelItem.L2;
-            }, 0),
-            L3: this.systemList.reduce((curr, next) => {
-              return curr + next.levelItem.L3;
-            }, 0),
-            L4: this.systemList.reduce((curr, next) => {
-              return curr + next.levelItem.L4;
-            }, 0),
-            L5: this.systemList.reduce((curr, next) => {
-              return curr + next.levelItem.L5;
-            }, 0)
-          });
-          const params = {
-          ...this.allSystemData
-          };
-          if (isFirst) {
-            this.$set(params, 'isFirst', isFirst);
-          }
-          bus.$emit('on-systems-level-count', params);
-        }
-      },
-
       handleSelectSystem (payload) {
         const { id, levelItem, isFirst } = payload;
         this.active = id;
         this.$emit('on-select-system', payload);
-        if (['all'].includes(this.active)) {
-          this.getAllSystemsSensitivityLevelTotal(isFirst);
-          return;
-        }
         const params = {
         ...levelItem
         };

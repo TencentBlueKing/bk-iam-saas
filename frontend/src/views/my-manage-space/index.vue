@@ -895,7 +895,7 @@
       },
       handleOpenDocu () {
         const GRADE_DOCU_LINK = '/权限中心/产品白皮书/场景案例/GradingManager.md';
-        window.open(`${window.PRODUCT_DOC_URL_PREFIX}${GRADE_DOCU_LINK}`);
+        window.open(`${window.BK_DOCS_URL_PREFIX}${GRADE_DOCU_LINK}`);
       }
     }
   };
