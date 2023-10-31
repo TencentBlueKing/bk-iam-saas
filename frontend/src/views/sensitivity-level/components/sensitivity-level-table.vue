@@ -11,7 +11,6 @@
           {{ $t(`m.sensitivityLevel['批量转移等级']`) }}
         </bk-button>
       </div>
-      <!-- 先屏蔽 -->
       <div slot="right">
         <iam-search-select
           style="width: 400px"
@@ -331,7 +330,7 @@
         return typeMap[type]();
       },
 
-      handleSearch (payload, result) {
+      async handleSearch (payload, result) {
         this.searchParams = payload;
         this.searchList = result;
         this.emptyData.tipType = 'search';
@@ -340,7 +339,12 @@
           limit: 10
         });
         this.resetPagination();
-        this.fetchSensitivityLevelList(true);
+        await this.fetchSensitivityLevelList(true);
+        bus.$emit('on-tab-level-count', {
+          name: this.tabActive,
+          system_id: this.curSystemData.id,
+          count: this.pagination.count
+        });
       },
 
       handleSelectChange (selection, row) {
@@ -413,19 +417,26 @@
         }
       },
 
-      handleEmptyClear () {
+      async handleEmptyClear () {
         this.handleEmptyRefresh();
       },
 
-      handleEmptyRefresh () {
-        this.searchParams = {};
+      async handleEmptyRefresh () {
         this.queryParams = Object.assign(this.queryParams, {
           current: 1,
           limit: 10
         });
+        this.searchParams = {};
+        this.searchValue = [];
         this.currentSelectList = [];
+        this.emptyData.tipType = '';
         this.resetPagination();
-        this.fetchSensitivityLevelList(true);
+        await this.fetchSensitivityLevelList(true);
+        bus.$emit('on-tab-level-count', {
+          name: this.tabActive,
+          system_id: this.curSystemData.id,
+          count: this.pagination.count
+        });
       },
 
       resetPagination () {
