@@ -157,20 +157,31 @@
     },
     methods: {
       async fetchSystemLevelCount (payload) {
-        try {
-          const { code, data } = await this.$store.dispatch('sensitivityLevel/getSensitivityLevelCount', {
-            system_id: payload.system_id
-          });
-          if (data && code === 0) {
-            this.$nextTick(() => {
-              this.panels.forEach((item) => {
-                item.count = data[item.name] || 0;
-              });
-              this.tabKey = +new Date();
-            });
+        const { count, name, system_id } = payload;
+        if (count) {
+          const curIndex = this.panels.findIndex((item) => item.name === name);
+          if (curIndex > -1) {
+            this.$set(this.panels[curIndex], 'count', count);
+            this.tabKey = +new Date();
           }
-        } catch (e) {
-          this.messageAdvancedError(e);
+        } else {
+          try {
+            const { code, data } = await this.$store.dispatch('sensitivityLevel/getSensitivityLevelCount', {
+              system_id
+            });
+            if (data && code === 0) {
+              this.$nextTick(() => {
+                this.panels.forEach((item) => {
+                  if (data[item.name]) {
+                    item.count = data[item.name];
+                  }
+                });
+                this.tabKey = +new Date();
+              });
+            }
+          } catch (e) {
+            this.messageAdvancedError(e);
+          }
         }
       }
     }
