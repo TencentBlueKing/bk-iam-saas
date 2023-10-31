@@ -129,9 +129,9 @@
           }
           const { code, data } = await this.$store.dispatch('system/getSystems', params);
           if (data && data.length) {
-            const list = await this.getSystemCount(data);
-            this.systemListStorage = [...list];
-            this.systemList = _.cloneDeep(this.systemListStorage);
+            this.systemList = _.cloneDeep([...data]);
+            this.systemList = await this.getSystemCount(data);
+            this.systemListStorage = [...this.systemList];
           }
           this.emptySystemData = formatCodeData(code, this.emptySystemData, data.length === 0);
         } catch (e) {
