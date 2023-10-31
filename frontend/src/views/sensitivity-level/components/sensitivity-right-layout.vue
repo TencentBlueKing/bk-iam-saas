@@ -141,9 +141,7 @@
                 item.count = payload[item.name];
               }
             });
-            this.$refs.tabRef
-              && this.$refs.tabRef.$refs.tabLabel
-              && this.$refs.tabRef.$refs.tabLabel.forEach((label) => label.$forceUpdate());
+            this.tabKey = +new Date();
             // 首次加载不刷新key
             if (!payload.isFirst) {
               this.comKey = +new Date();
@@ -168,9 +166,7 @@
               this.panels.forEach((item) => {
                 item.count = data[item.name] || 0;
               });
-              this.$refs.tabRef
-                && this.$refs.tabRef.$refs.tabLabel
-                && this.$refs.tabRef.$refs.tabLabel.forEach((label) => label.$forceUpdate());
+              this.tabKey = +new Date();
             });
           }
         } catch (e) {

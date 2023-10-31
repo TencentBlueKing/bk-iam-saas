@@ -287,7 +287,9 @@
             // eslint-disable-next-line camelcase
             if (sensitivity_level !== payload) {
               bus.$emit('on-tab-level-count', { name: payload, system_id });
-              this.$set(this.sensitivityTableList[index], 'sensitivity_level', payload);
+              ['all'].includes(this.tabActive)
+                ? this.$set(this.sensitivityTableList[index], 'sensitivity_level', payload)
+                : this.sensitivityTableList.splice(index, 1);
               this.messageSuccess(this.$t(`m.info['编辑成功']`), 3000);
             }
           }
