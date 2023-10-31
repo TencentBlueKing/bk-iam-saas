@@ -1383,6 +1383,13 @@ export const m = {
         '转移预览的内容不能为空': 'The content of the transfer preview cannot be empty',
         '转移预览': 'Transfer preview',
         '确认转移': 'Confirm transfer'
+    },
+    memberTemplate: {
+        '模板名称': 'Template Name',
+        '创建人': 'Creator',
+        '关联用户组': 'Associate User Group',
+        '最近更新时间': 'Latest update time',
+        '搜索模板名称、描述、创建人': 'Search template name, description, creator'
     }
 }
 export default {

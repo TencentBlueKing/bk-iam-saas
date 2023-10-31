@@ -181,6 +181,14 @@ const currentNav = [
         name: il8n('nav', '用户'),
         path: `${SITE_URL}user`,
         disabled: false
+      },
+      {
+        icon: 'member-template',
+        id: 'memberTemplateNav',
+        rkey: 'memberTemplate',
+        name: il8n('nav', '人员模板'),
+        path: `${SITE_URL}member-template`,
+        disabled: false
       }
     ]
   },

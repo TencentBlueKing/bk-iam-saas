@@ -55,7 +55,8 @@ export const getRouterDiff = (payload) => {
       'authorBoundary',
       'secondaryManageSpaceCreate',
       'userGroupSetting',
-      'sensitivityLevel'
+      'sensitivityLevel',
+      'memberTemplate'
     ];
   }
   if (payload === 'super_manager') {
@@ -265,7 +266,8 @@ export const getNavRouterDiff = (navIndex) => {
       'authorBoundary',
       'secondaryManageSpace',
       'userGroupSetting',
-      'sensitivityLevel'
+      'sensitivityLevel',
+      'memberTemplate'
     ];
   }
 
@@ -314,7 +316,8 @@ export const getNavRouterDiff = (navIndex) => {
       'secondaryManageSpaceCreate',
       'secondaryManageSpaceDetail',
       'userGroupSetting',
-      'sensitivityLevel'
+      'sensitivityLevel',
+      'memberTemplate'
     ];
   }
 
@@ -350,7 +353,8 @@ export const getNavRouterDiff = (navIndex) => {
       'myManageSpace',
       'secondaryManageSpaceCreate',
       'secondaryManageSpaceDetail',
-      'userGroupSetting'
+      'userGroupSetting',
+      'memberTemplate'
     ];
   }
 };

@@ -183,6 +183,9 @@ const Audit = () => import(/* webpackChunkName: 'audit' */ '../views/audit');
 // 敏感等级
 const SensitivityLevel = () => import(/* webpackChunkName: 'sensitivityLevel' */ '../views/sensitivity-level');
 
+// 人员模板
+const MemberTemplate = () => import(/* webpackChunkName: 'memberTemplate' */ '../views/member-template/index.vue');
+
 const TemplatePermDetail = () =>
   import(/* webpackChunkName: 'my-perm-template-perm' */ '../views/perm/template-perm/detail');
 const GroupPermDetail = () => import(/* webpackChunkName: 'my-perm-group-perm' */ '../views/perm/group-perm/detail');
@@ -524,6 +527,14 @@ export const routes = [
           backRouter: -1
         },
         component: PermTemplateDifference
+      },
+      {
+        path: 'member-template',
+        name: 'memberTemplate',
+        meta: {
+          headerTitle: il8n('nav', '人员模板')
+        },
+        component: MemberTemplate
       },
       {
         path: 'apply-custom-perm',
