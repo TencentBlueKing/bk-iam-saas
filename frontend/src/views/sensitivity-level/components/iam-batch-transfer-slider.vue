@@ -182,7 +182,7 @@
             params
           );
           if (code === 0) {
-            this.$emit('on-confirm');
+            this.$emit('on-confirm', params);
             this.messageSuccess(this.$t(`m.info['编辑成功']`), 3000);
           }
         } catch (e) {

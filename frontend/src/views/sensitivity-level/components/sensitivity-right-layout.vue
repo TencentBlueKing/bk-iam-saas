@@ -96,9 +96,9 @@
             count: 0
           }
         ],
-        COM_MAP: new Map([
+        COM_MAP: Object.freeze(new Map([
           [['all', 'L1', 'L2', 'L3', 'L4', 'L5'], 'SensitivityLevelTable']
-        ])
+        ]))
       };
     },
     computed: {
@@ -131,6 +131,7 @@
     mounted () {
       this.$once('hook:beforeDestroy', () => {
         bus.$off('on-systems-level-count');
+        bus.$off('on-tab-level-count');
       });
       bus.$on('on-systems-level-count', (payload) => {
         if (payload && Object.keys(payload).length > 0) {
@@ -150,8 +151,33 @@
           });
         }
       });
+      bus.$on('on-tab-level-count', async (payload) => {
+        if (payload && Object.keys(payload).length > 0) {
+          this.fetchSystemLevelCount(payload);
+        }
+      });
     },
-    methods: {}
+    methods: {
+      async fetchSystemLevelCount (payload) {
+        try {
+          const { code, data } = await this.$store.dispatch('sensitivityLevel/getSensitivityLevelCount', {
+            system_id: payload.system_id
+          });
+          if (data && code === 0) {
+            this.$nextTick(() => {
+              this.panels.forEach((item) => {
+                item.count = data[item.name] || 0;
+              });
+              this.$refs.tabRef
+                && this.$refs.tabRef.$refs.tabLabel
+                && this.$refs.tabRef.$refs.tabLabel.forEach((label) => label.$forceUpdate());
+            });
+          }
+        } catch (e) {
+          this.messageAdvancedError(e);
+        }
+      }
+    }
   };
 </script>
 
