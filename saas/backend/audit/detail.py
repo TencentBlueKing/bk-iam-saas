@@ -306,6 +306,36 @@ class ApprovalGroupProvider(ApprovalNameMixin, BaseProvider):
         return [{"type": AuditObjectType.GROUP.value, "id": str(group.id), "name": group.name} for group in groups]
 
 
+class SubjectTemplateUpdateProvider(BaseProvider):
+    @property
+    def description(self) -> str:
+        extra = self.event.extra
+        return _("名称: {}, 描述: {}").format(extra["name"], extra["description"])
+
+
+class SubjectTemplateMemberProvider(BaseProvider):
+    @property
+    def sub_objects(self) -> List:
+        subject_list = SubjectInfoList(parse_obj_as(List[Subject], self.event.extra["subjects"]))
+        objects = []
+        for subject in subject_list.subjects:
+            data = {"type": subject.type, "id": subject.id, "name": subject.name}
+
+            if subject.type == AuditObjectType.DEPARTMENT.value:
+                data["name"] = subject.full_name
+            objects.append(data)
+        return objects
+
+
+class SubjectTemplateGroupProvider(BaseProvider):
+    @property
+    def sub_objects(self) -> List:
+        group = self.event.extra.get("group", None)
+        if not group:
+            return []
+        return [{"type": AuditObjectType.GROUP.value, "id": str(group.id), "name": group.name}]
+
+
 class EventDetailExtra:
     provider_map: Dict[str, Type[BaseProvider]] = {
         # group
@@ -350,6 +380,13 @@ class EventDetailExtra:
         AuditType.APPROVAL_ACTION_UPDATE.value: ApprovalActionProvider,
         AuditType.APPROVAL_GROUP_UPDATE.value: ApprovalGroupProvider,
         AuditType.ACTION_SENSITIVITY_LEVEL_UPDATE.value: ActionSensitivityLevelProvider,
+        # subject template
+        AuditType.SUBJECT_TEMPLATE_CREATE.value: BaseProvider,
+        AuditType.SUBJECT_TEMPLATE_UPDATE.value: SubjectTemplateUpdateProvider,
+        AuditType.SUBJECT_TEMPLATE_DELETE.value: BaseProvider,
+        AuditType.SUBJECT_TEMPLATE_MEMBER_CREATE.value: SubjectTemplateMemberProvider,
+        AuditType.SUBJECT_TEMPLATE_MEMBER_DELETE.value: SubjectTemplateMemberProvider,
+        AuditType.SUBJECT_TEMPLATE_GROUP_DELETE.value: SubjectTemplateGroupProvider,
     }
 
     def __init__(self, event: Event):

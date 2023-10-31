@@ -49,6 +49,7 @@ urlpatterns = [
                 url(r"^approvals/", include("backend.apps.approval.urls")),
                 url(r"^groups/", include("backend.apps.group.urls")),
                 url(r"^subjects/", include("backend.apps.subject.urls")),
+                url(r"^subject_templates/", include("backend.apps.subject_template.urls")),
                 url(r"^templates/", include("backend.apps.template.urls")),
                 url(r"^organizations/", include("backend.apps.organization.urls")),
                 url(r"^open/", include("backend.api.urls_v1")),

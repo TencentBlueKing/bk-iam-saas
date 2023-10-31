@@ -693,3 +693,19 @@ def query_rbac_group_by_resource(
     }
     result = _call_iam_api(http_post, url_path, data=data)
     return result
+
+
+def add_subject_template_groups(subjects: List[Dict]) -> Dict[str, int]:
+    """
+    批量添加subject的成员
+    """
+    url_path = "/api/v1/web/subject-template-groups"
+    return _call_iam_api(http_post, url_path, data=subjects)
+
+
+def delete_subject_template_groups(subjects: List[Dict]) -> Dict[str, int]:
+    """
+    批量添加subject的成员
+    """
+    url_path = "/api/v1/web/subject-template-groups"
+    return _call_iam_api(http_delete, url_path, data=subjects)

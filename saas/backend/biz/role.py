@@ -26,6 +26,7 @@ from backend.apps.application.models import Application
 from backend.apps.group.models import Group
 from backend.apps.organization.models import Department, DepartmentMember, User
 from backend.apps.role.models import Role, RoleRelatedObject, RoleRelation, RoleResourceRelation, RoleSource, RoleUser
+from backend.apps.subject_template.models import SubjectTemplate
 from backend.apps.template.models import PermTemplate
 from backend.common.cache import cached
 from backend.common.error_codes import error_codes
@@ -800,6 +801,18 @@ class RoleListQuery:
             return Role.objects.filter(type=RoleType.SUBSET_MANAGER.value)
 
         return Role.objects.none()
+
+    def query_subject_template(self):
+        """
+        查询人员模板列表
+        """
+        if self.role.type == RoleType.STAFF.value:
+            return SubjectTemplate.objects.all()
+
+        subject_template_ids = self._get_role_related_object_ids(
+            RoleRelatedObjectType.SUBJECT_TEMPLATE.value, inherit=False
+        )
+        return SubjectTemplate.objects.filter(id__in=subject_template_ids)
 
 
 class RoleObjectRelationChecker:
