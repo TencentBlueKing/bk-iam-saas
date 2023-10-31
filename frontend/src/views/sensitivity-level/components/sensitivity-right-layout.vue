@@ -96,9 +96,9 @@
             count: 0
           }
         ],
-        COM_MAP: new Map([
+        COM_MAP: Object.freeze(new Map([
           [['all', 'L1', 'L2', 'L3', 'L4', 'L5'], 'SensitivityLevelTable']
-        ])
+        ]))
       };
     },
     computed: {
@@ -131,6 +131,7 @@
     mounted () {
       this.$once('hook:beforeDestroy', () => {
         bus.$off('on-systems-level-count');
+        bus.$off('on-tab-level-count');
       });
       bus.$on('on-systems-level-count', (payload) => {
         if (payload && Object.keys(payload).length > 0) {
