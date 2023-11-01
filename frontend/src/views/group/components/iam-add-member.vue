@@ -168,8 +168,6 @@
                         @on-clear="handleEmptyClear"
                         @on-refresh="handleEmptyRefresh"
                       />
-                      <!-- <iam-svg />
-                                          <p class="empty-tips">{{ $t(`m.common['搜索无结果']`) }}</p> -->
                     </div>
                   </template>
                 </div>
@@ -236,7 +234,7 @@
                     @select="handleSelectChange"
                     @select-all="handleSelectAllChange"
                   >
-                    <bk-table-column type="selection" align="center" />
+                    <bk-table-column type="selection" align="center" :selectable="getDefaultSelect" />
                     <bk-table-column :label="$t(`m.common['用户名']`)" prop="name">
                       <template slot-scope="{ row }">
                         <span :title="formatUserName(row)">
@@ -250,8 +248,7 @@
                         :empty-text="emptyTableData.text"
                         :tip-text="emptyTableData.tip"
                         :tip-type="emptyTableData.tipType"
-                        @on-clear="handleEmptyClear"
-                        @on-refresh="handleEmptyRefresh"
+                        @on-clear="handleClearSearch"
                       />
                     </template>
                   </bk-table>
@@ -701,6 +698,11 @@
       }
     },
     methods: {
+      getDefaultSelect () {
+        const list = [...this.hasSelectedManualDepartments, this.hasSelectedManualUsers];
+        return list.length > 0;
+      },
+
       fetchInitData () {
         if (this.showExpiredAt) {
           if (this.isBatch) {
@@ -1675,20 +1677,33 @@
       },
 
       handleTableSearch () {
+        this.emptyTableData.tipType = 'search';
         this.manualTableList = this.manualTableListStorage.filter((item) => {
           return (
             item.name.indexOf(this.tableKeyWord) > -1
             || (item.username && item.username.indexOf(this.tableKeyWord) > -1));
         });
+        if (!this.manualTableList.length) {
+          this.emptyTableData = formatCodeData(0, this.emptyTableData, true);
+        }
         this.fetchManualTableData();
       },
 
       handleClearSearch () {
         this.tableKeyWord = '';
         this.manualTableList = _.cloneDeep(this.manualTableListStorage);
+        if (!this.manualTableList.length) {
+          this.emptyTableData = Object.assign({}, {
+            type: 'empty',
+            text: '请先从左侧输入并解析',
+            tip: '',
+            tipType: ''
+          });
+          return;
+        }
         this.fetchManualTableData();
       },
-
+      
       handleAfterLeave () {
         this.isPrev = true;
         this.expiredAt = 15552000;

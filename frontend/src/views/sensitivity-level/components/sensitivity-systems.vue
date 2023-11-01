@@ -109,12 +109,12 @@
     async created () {
       // this.handleSelectSystem({ id: 'all', isFirst: true });
       await this.fetchSystems();
-      if (this.systemList.length) {
+      if (this.systemListStorage.length) {
         const params = {
-        ...this.systemList[0],
-        ...{
-          isFirst: true
-        }
+          ...this.systemList[0],
+          ...{
+            isFirst: true
+          }
         };
         this.handleSelectSystem(params);
       }
@@ -129,9 +129,9 @@
           }
           const { code, data } = await this.$store.dispatch('system/getSystems', params);
           if (data && data.length) {
-            const list = await this.getSystemCount(data);
-            this.systemListStorage = [...list];
-            this.systemList = _.cloneDeep(this.systemListStorage);
+            this.systemList = _.cloneDeep([...data]);
+            this.systemList = await this.getSystemCount(data);
+            this.systemListStorage = [...this.systemList];
           }
           this.emptySystemData = formatCodeData(code, this.emptySystemData, data.length === 0);
         } catch (e) {
@@ -147,14 +147,15 @@
         const list = [...payload];
         try {
           for (let i = 0; i < list.length; i++) {
-            const { data } = await this.$store.dispatch('sensitivityLevel/getSensitivityLevelCount', {
+            await this.$store.dispatch('sensitivityLevel/getSensitivityLevelCount', {
               system_id: payload[i].id
+            }).then(({ data }) => {
+              // const curSystemId = list[i].id;
+              // if (systemCountMockData[curSystemId]) {
+              //   const { data } = systemCountMockData[curSystemId];
+              this.$set(list[i], 'levelItem', data);
+              this.$set(list[i], 'count', data.all || 0);
             });
-            // const curSystemId = list[i].id;
-            // if (systemCountMockData[curSystemId]) {
-            //   const { data } = systemCountMockData[curSystemId];
-            this.$set(list[i], 'levelItem', data);
-            this.$set(list[i], 'count', data.all || 0);
           }
           // }
         } catch (e) {
@@ -163,17 +164,23 @@
         return list;
       },
 
-      handleSelectSystem (payload) {
+      async handleSelectSystem (payload) {
         const { id, levelItem, isFirst } = payload;
         this.active = id;
-        this.$emit('on-select-system', payload);
+        let list = [];
         const params = {
         ...levelItem
         };
         if (isFirst) {
           this.$set(params, 'isFirst', isFirst);
+          this.$emit('on-select-system', payload);
+          bus.$emit('on-systems-level-count', params);
+        } else {
+          list = await this.getSystemCount([payload]);
+          this.$set(params, 'isFirst', isFirst);
+          this.$emit('on-select-system', list[0]);
+          bus.$emit('on-systems-level-count', list[0].levelItem);
         }
-        bus.$emit('on-systems-level-count', params);
       },
 
       handleSearchSystem () {

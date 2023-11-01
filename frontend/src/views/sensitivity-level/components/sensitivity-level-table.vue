@@ -285,10 +285,15 @@
           if (code === 0) {
             // eslint-disable-next-line camelcase
             if (sensitivity_level !== payload) {
-              bus.$emit('on-tab-level-count', { name: payload, system_id });
               ['all'].includes(this.tabActive)
                 ? this.$set(this.sensitivityTableList[index], 'sensitivity_level', payload)
                 : this.sensitivityTableList.splice(index, 1);
+              bus.$emit('on-tab-level-count', {
+                name: this.tabActive,
+                system_id,
+                count: this.pagination.count - 1,
+                isSearch: this.emptyData.tipType === 'search'
+              });
               this.messageSuccess(this.$t(`m.info['编辑成功']`), 3000);
             }
           }
@@ -343,7 +348,8 @@
         bus.$emit('on-tab-level-count', {
           name: this.tabActive,
           system_id: this.curSystemData.id,
-          count: this.pagination.count
+          count: this.pagination.count,
+          isSearch: this.emptyData.tipType === 'search'
         });
       },
 
@@ -413,7 +419,11 @@
         this.resetPagination();
         await this.fetchSensitivityLevelList(true);
         if (payload) {
-          bus.$emit('on-tab-level-count', { name: sensitivity_level, system_id: actions[0].system_id });
+          bus.$emit('on-tab-level-count', {
+            name: sensitivity_level,
+            system_id: actions[0].system_id,
+            isSearch: this.emptyData.tipType === 'search'
+          });
         }
       },
 
@@ -432,11 +442,6 @@
         this.emptyData.tipType = '';
         this.resetPagination();
         await this.fetchSensitivityLevelList(true);
-        bus.$emit('on-tab-level-count', {
-          name: this.tabActive,
-          system_id: this.curSystemData.id,
-          count: this.pagination.count
-        });
       },
 
       resetPagination () {
