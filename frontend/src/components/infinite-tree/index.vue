@@ -46,7 +46,7 @@
         </span>
         <span class="red-dot" v-if="item.isNewMember"></span>
         <span
-          v-if="item.showCount && !externalSystemsLayout.addMemberBoundary.hideInfiniteTreeCount && enableOrganizationCount"
+          v-if="item.showCount && enableOrganizationCount"
           class="node-user-count"
         >
           {{ '(' + item.count + `)` }}
