@@ -183,7 +183,7 @@ const currentNav = [
         disabled: false
       },
       {
-        icon: 'member-template',
+        icon: 'personal-user',
         id: 'memberTemplateNav',
         rkey: 'memberTemplate',
         name: il8n('nav', '人员模板'),
