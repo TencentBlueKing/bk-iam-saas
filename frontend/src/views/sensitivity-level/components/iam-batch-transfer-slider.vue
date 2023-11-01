@@ -128,6 +128,7 @@
         handler (value) {
           this.isShowSideSlider = !!value;
           if (this.isShowSideSlider) {
+            this.levelValue = 'L2';
             this.$nextTick(() => {
               this.$refs.renderPermBoundaryRef
                 && this.$refs.renderPermBoundaryRef.handleExpanded('transferPreview');

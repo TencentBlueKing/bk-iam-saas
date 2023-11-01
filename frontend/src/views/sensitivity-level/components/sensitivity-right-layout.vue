@@ -137,13 +137,11 @@
         if (payload && Object.keys(payload).length > 0) {
           this.$nextTick(() => {
             this.panels.forEach((item) => {
-              if (payload[item.name]) {
-                item.count = payload[item.name];
-                this.$refs.tabRef
-                  && this.$refs.tabRef.$refs.tabLabel
-                  && this.$refs.tabRef.$refs.tabLabel.forEach(label => label.$forceUpdate());
-              }
+              this.$set(item, 'count', payload[item.name] || 0);
             });
+            this.$refs.tabRef
+              && this.$refs.tabRef.$refs.tabLabel
+              && this.$refs.tabRef.$refs.tabLabel.forEach(label => label.$forceUpdate());
             // 首次加载不刷新key
             if (!payload.isFirst) {
               this.comKey = +new Date();
@@ -159,8 +157,8 @@
     },
     methods: {
       async fetchSystemLevelCount (payload) {
-        const { count, name, system_id } = payload;
-        if (count) {
+        const { count, name, system_id, isSearch } = payload;
+        if (isSearch) {
           const curIndex = this.panels.findIndex((item) => item.name === name);
           if (curIndex > -1) {
             this.$set(this.panels[curIndex], 'count', count);
@@ -178,8 +176,10 @@
             if (data && code === 0) {
               this.$nextTick(() => {
                 this.panels.forEach((item) => {
-                  if (data[item.name]) {
-                    item.count = data[item.name];
+                  if (item.name === name) {
+                    this.$set(item, 'count', count || 0);
+                  } else {
+                    this.$set(item, 'count', data[item.name] || 0);
                   }
                 });
                 this.$refs.tabRef

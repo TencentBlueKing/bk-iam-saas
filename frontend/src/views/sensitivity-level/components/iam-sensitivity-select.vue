@@ -172,8 +172,12 @@
       handleToggle (payload) {
         if (!payload) {
           this.isEditable = false;
-          if (JSON.stringify(this.multipleValue) !== JSON.stringify(this.value)) {
-            this.$emit('on-change', this.multipleValue, this.index);
+          const selectValue = _.cloneDeep(_.isArray(this.multipleValue)
+            ? this.multipleValue.join() : this.multipleValue);
+          const curValue = _.cloneDeep(_.isArray(this.value)
+            ? this.value.join() : this.value);
+          if (JSON.stringify(selectValue) !== JSON.stringify(curValue)) {
+            this.$emit('on-change', selectValue, this.index);
           }
         }
       },
@@ -184,7 +188,8 @@
             item.disabled && oldValue.includes(item.id) && !newValue.includes(item.id)
         );
         if (list.length) {
-          this.multipleValue = this.multipleValue.concat([...list.map((item) => item.id)]);
+          const multipleValue = _.cloneDeep(_.isArray(this.multipleValue) ? this.multipleValue : [this.multipleValue]);
+          this.multipleValue = multipleValue.concat([...list.map((item) => item.id)]);
           const nameList = list.map((item) =>
             this.$t(`m.sensitivityLevel['${item.name}']`)
           );
