@@ -57,7 +57,7 @@ class SubjectTemplateService:
     # 迁移到service
     def delete_group(self, template_id: int, group_id: int, subjects: Optional[List[Subject]] = None):
         # 查询所有成员
-        if not subjects:
+        if subjects is None:
             subjects = self._list_subjects(template_id)
 
         if not subjects:
@@ -156,5 +156,5 @@ class SubjectTemplateService:
                 iam.delete_subject_template_groups(backend_subjects)
 
     def _filter_exists_members(self, template_id: int, members: List[Subject]):
-        subjects = self._list_subjects(template_id)
+        subjects = set(self._list_subjects(template_id))
         return [subject for subject in members if subject in subjects]
