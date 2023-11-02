@@ -298,14 +298,8 @@
                 ? this.$set(this.sensitivityTableList[index], 'sensitivity_level', payload)
                 : this.sensitivityTableList.splice(index, 1);
               this.currentSelectList = [];
-              await this.fetchSensitivityLevelList(true);
               this.messageSuccess(this.$t(`m.info['编辑成功']`), 3000);
-              bus.$emit('on-tab-level-count', {
-                name: this.tabActive,
-                system_id: this.curSystemData.id,
-                count: this.pagination.count,
-                isSearch: this.emptyData.tipType === 'search'
-              });
+              await this.handleRefreshCount();
             }
           }
         } catch (e) {
@@ -361,13 +355,7 @@
           limit: 10
         });
         this.resetPagination();
-        await this.fetchSensitivityLevelList(true);
-        bus.$emit('on-tab-level-count', {
-          name: this.tabActive,
-          system_id: this.curSystemData.id,
-          count: this.pagination.count,
-          isSearch: true
-        });
+        await this.handleRefreshCount();
       },
 
       handleSelectChange (selection, row) {
@@ -429,20 +417,21 @@
       },
 
       async handleConfirmTransfer (payload) {
-        const { sensitivity_level, actions } = payload;
         this.isShowTransferSlider = false;
         this.curSelectData = {};
         this.currentSelectList = [];
         this.resetPagination();
+        await this.handleRefreshCount();
+      },
+
+      async handleRefreshCount () {
         await this.fetchSensitivityLevelList(true);
-        if (payload) {
-          bus.$emit('on-tab-level-count', {
-            name: sensitivity_level,
-            system_id: actions[0].system_id,
-            count: this.pagination.count,
-            isSearch: this.emptyData.tipType === 'search'
-          });
-        }
+        bus.$emit('on-tab-level-count', {
+          name: this.tabActive,
+          system_id: this.curSystemData.id,
+          count: this.pagination.count,
+          isSearch: this.emptyData.tipType === 'search'
+        });
       },
 
       async handleEmptyClear () {
@@ -459,7 +448,7 @@
         this.currentSelectList = [];
         this.emptyData.tipType = '';
         this.resetPagination();
-        await this.fetchSensitivityLevelList(true);
+        await this.handleRefreshCount();
       },
 
       resetPagination () {
