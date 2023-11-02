@@ -109,6 +109,9 @@ class ActionBiz:
 
     @cachedmethod(timeout=1 * 60)  # 缓存1分钟
     def list(self, system_id: str) -> ActionBeanList:
+        return self.list_without_cache(system_id)
+
+    def list_without_cache(self, system_id: str) -> ActionBeanList:
         actions = self.action_svc.list(system_id)
         action_list = ActionBeanList(parse_obj_as(List[ActionBean], actions))
         action_list.fill_related_resource_type_name()
