@@ -1906,7 +1906,7 @@
 
     .left {
       width: 600px;
-      height: 100%;
+      /* height: 100%; */
       border-right: 1px solid #dcdee5;
       position: relative;
 
@@ -2099,7 +2099,7 @@
       .result-preview {
         display: flex;
         justify-content: space-between;
-        padding: 8px 24px 8px 0px;
+        padding: 8px 36px 8px 0px;
         .bk-button-text.is-disabled {
           color: #c4c6cc;
         }
@@ -2126,7 +2126,7 @@
         position: relative;
         margin-top: 15px;
         /* padding-left: 10px; */
-        padding-right: 24px;
+        padding-right: 36px;
         /* height: 345px; */
         height: 414px;
         overflow: auto;
