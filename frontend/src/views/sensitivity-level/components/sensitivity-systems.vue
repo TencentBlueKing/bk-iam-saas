@@ -39,14 +39,20 @@
         <div
           v-for="item in systemList"
           :key="item.id"
-          :class="['sensitivity-systems-item', { 'sensitivity-systems-item-active': item.id === active }]"
+          :class="[
+            'sensitivity-systems-item',
+            { 'sensitivity-systems-item-active': item.id === active }
+          ]"
           @click.stop="handleSelectSystem(item)"
         >
           <div class="sensitivity-system-name">
-            <Icon type="file-close" :class="['folder-icon', { 'folder-icon-active': item.id === active }]" />
+            <Icon
+              type="file-close"
+              :class="['folder-icon', { 'folder-icon-active': item.id === active }]"
+            />
             <div>{{ item.name }}</div>
           </div>
-          <div class="sensitivity-system-count">{{ item.count || 0}}</div>
+          <div class="sensitivity-system-count">{{ item.count || 0 }}</div>
         </div>
       </template>
       <div v-else class="system-empty-wrapper">
@@ -94,30 +100,21 @@
       };
     },
     computed: {
-      ...mapGetters(['externalSystemId']),
-      formatDragWidth () {
-        return {
-          minWidth: '280px'
-        };
-      },
-      formatSystemsHeight () {
-        return {
-          maxHeight: `${getWindowHeight() - 185}px`
-        };
-      }
+    ...mapGetters(['externalSystemId']),
+    formatDragWidth () {
+      return {
+        minWidth: '280px'
+      };
+    },
+    formatSystemsHeight () {
+      return {
+        maxHeight: `${getWindowHeight() - 185}px`
+      };
+    }
     },
     async created () {
       // this.handleSelectSystem({ id: 'all', isFirst: true });
       await this.fetchSystems();
-      if (this.systemListStorage.length) {
-        const params = {
-          ...this.systemList[0],
-          ...{
-            isFirst: true
-          }
-        };
-        this.handleSelectSystem(params);
-      }
     },
     methods: {
       async fetchSystems () {
@@ -129,11 +126,15 @@
           }
           const { code, data } = await this.$store.dispatch('system/getSystems', params);
           if (data && data.length) {
-            this.systemList = _.cloneDeep([...data]);
+            // this.systemList = _.cloneDeep([...data]);
             this.systemList = await this.getSystemCount(data);
             this.systemListStorage = [...this.systemList];
           }
-          this.emptySystemData = formatCodeData(code, this.emptySystemData, data.length === 0);
+          this.emptySystemData = formatCodeData(
+            code,
+            this.emptySystemData,
+            data.length === 0
+          );
         } catch (e) {
           this.emptySystemData = formatCodeData(e.code, this.emptySystemData);
           this.messageAdvancedError(e);
@@ -147,17 +148,28 @@
         const list = [...payload];
         try {
           for (let i = 0; i < list.length; i++) {
-            await this.$store.dispatch('sensitivityLevel/getSensitivityLevelCount', {
-              system_id: payload[i].id
-            }).then(({ data }) => {
-              // const curSystemId = list[i].id;
-              // if (systemCountMockData[curSystemId]) {
-              //   const { data } = systemCountMockData[curSystemId];
-              this.$set(list[i], 'levelItem', data);
-              this.$set(list[i], 'count', data.all || 0);
-            });
+            this.$store
+              .dispatch('sensitivityLevel/getSensitivityLevelCount', {
+                system_id: list[i].id
+              })
+              .then(({ data }) => {
+                // const curSystemId = list[i].id;
+                // if (systemCountMockData[curSystemId]) {
+                //   const { data } = systemCountMockData[curSystemId];
+                this.$set(list[i], 'levelItem', data);
+                this.$set(list[i], 'count', data.all || 0);
+                if (i === 0) {
+                  const params = {
+                  ...list[i],
+                  ...{
+                    isFirst: true
+                  }
+                  };
+                  this.handleSelectSystem(params);
+                }
+              });
           }
-          // }
+        // }
         } catch (e) {
           this.messageAdvancedError(e);
         }

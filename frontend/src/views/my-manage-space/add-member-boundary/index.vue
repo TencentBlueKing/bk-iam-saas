@@ -2093,7 +2093,7 @@
 
     .right {
       width: calc(100% - 600px);
-      margin: 0 20px;
+      padding-left: 20px;
       background-color: #f5f7fa;
       border-top: 1px solid #dcdee5;
       .result-preview {
