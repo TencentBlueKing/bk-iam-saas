@@ -122,6 +122,15 @@ class ActionBiz:
 
         return action_list
 
+    def list_without_cache(self, system_id: str) -> ActionBeanList:
+        action_list = self.list(system_id)
+
+        # 填充敏感度等级
+        action_sensitivity_level = self.action_svc.get_action_sensitivity_level_map(system_id)
+        action_list.fill_sensitivity_level(action_sensitivity_level)
+
+        return action_list
+
     def list_by_role(self, system_id: str, role, hidden: bool = False) -> List[ActionBean]:
         action_list = self.list(system_id)
 
