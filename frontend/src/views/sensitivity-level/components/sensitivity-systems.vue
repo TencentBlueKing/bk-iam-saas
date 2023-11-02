@@ -46,11 +46,18 @@
           @click.stop="handleSelectSystem(item)"
         >
           <div class="sensitivity-system-name">
-            <Icon
-              type="file-close"
-              :class="['folder-icon', { 'folder-icon-active': item.id === active }]"
-            />
-            <div>{{ item.name }}</div>
+            <div
+              :style="{ width: `${getDragWidth() - 50}px` }"
+              class="sensitivity-system-name-left"
+            >
+              <Icon
+                type="file-close"
+                :class="['folder-icon', { 'folder-icon-active': item.id === active }]"
+              />
+              <div class="single-hide">
+                {{ item.name }}
+              </div>
+            </div>
           </div>
           <div class="sensitivity-system-count">{{ item.count || 0 }}</div>
         </div>
@@ -75,6 +82,9 @@
   import { formatCodeData, getWindowHeight } from '@/common/util';
   // import { systemCountMockData } from '../testData.js';
   export default {
+    inject: {
+      getDragWidth: { value: 'getDragWidth', default: 280 }
+    },
     data () {
       return {
         active: '',
@@ -290,12 +300,17 @@
         align-items: center;
         font-size: 13px;
         color: #63656e;
-        .folder-icon {
-          font-size: 14px;
-          color: #c4c6cc;
-          margin-right: 8px;
-          &-active {
-            color: #3a84ff;
+        &-left {
+          display: flex;
+          align-items: center;
+          word-break: break-all;
+          .folder-icon {
+            font-size: 14px;
+            color: #c4c6cc;
+            margin-right: 8px;
+            &-active {
+              color: #3a84ff;
+            }
           }
         }
       }
