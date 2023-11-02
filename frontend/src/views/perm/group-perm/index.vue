@@ -244,7 +244,7 @@
             this.curPageData = [...v];
             return;
           }
-          this.resetPagination();
+          this.resetPagination(this.pageConf.limit);
         },
         immediate: true
       },
@@ -317,6 +317,7 @@
           let url = '';
           let params = {};
           const { current, limit } = this.pageConf;
+          console.log(limit);
           if (!this.mainContentLoading) {
             this.tableLoading = true;
           }
@@ -343,6 +344,9 @@
           const currentSelectGroupList = this.currentSelectGroupList.map(item => item.id.toString());
           this.curPageData.splice(0, this.curPageData.length, ...(data.results || []));
           this.$nextTick(() => {
+            if (!this.currentSelectGroupList.length) {
+              this.$refs.groupPermTableRef && this.$refs.groupPermTableRef.clearSelection();
+            }
             this.curPageData.forEach(item => {
               if (item.role_members && item.role_members.length) {
                 item.role_members = item.role_members.map(v => {
@@ -383,6 +387,15 @@
         // }
         // return this.dataList.slice(startIndex, endIndex);
       },
+
+      fetchSelectedGroupCount () {
+        this.$nextTick(() => {
+          const selectionCount = document.getElementsByClassName('bk-page-selection-count');
+          if (this.$refs.groupPermTableRef && selectionCount) {
+            selectionCount[0].children[0].innerHTML = this.currentSelectGroupList.length;
+          }
+        });
+      },
       
       fetchSelectedGroups (type, payload, row) {
         const typeMap = {
@@ -395,12 +408,7 @@
                 (item) => item.id.toString() !== row.id.toString()
               );
             }
-            this.$nextTick(() => {
-              const selectionCount = document.getElementsByClassName('bk-page-selection-count');
-              if (this.$refs.groupPermTableRef && selectionCount) {
-                selectionCount[0].children[0].innerHTML = this.currentSelectGroupList.length;
-              }
-            });
+            this.fetchSelectedGroupCount();
             this.$emit('on-select-group', this.currentSelectGroupList);
           },
           all: () => {
@@ -408,12 +416,7 @@
             const selectGroups = this.currentSelectGroupList.filter(item =>
               !tableList.map(v => v.id.toString()).includes(item.id.toString()));
             this.currentSelectGroupList = [...selectGroups, ...payload];
-            this.$nextTick(() => {
-              const selectionCount = document.getElementsByClassName('bk-page-selection-count');
-              if (this.$refs.groupPermTableRef && selectionCount) {
-                selectionCount[0].children[0].innerHTML = this.currentSelectGroupList.length;
-              }
-            });
+            this.fetchSelectedGroupCount();
             this.$emit('on-select-group', this.currentSelectGroupList);
           }
         };
@@ -493,6 +496,7 @@
           });
           this.cancelDelete();
           this.messageSuccess(this.$t(`m.info['退出成功']`), 3000);
+          this.currentSelectGroupList = [];
           this.refreshTableData();
         } catch (e) {
           this.deleteDialogConf.loading = false;
@@ -574,17 +578,19 @@
         this.deleteDialogConf.loading = false;
       },
 
-      resetPagination () {
-        this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10 });
+      resetPagination (limit = 10) {
+        this.pageConf = Object.assign(this.pageConf, { current: 1, limit });
         this.getDataByPage();
       },
 
       refreshTableData () {
-        this.resetPagination();
+        const { limit } = this.pageConf;
+        this.resetPagination(limit);
+        this.fetchSelectedGroupCount();
         if (this.isSearchPerm) {
           return;
         }
-        this.$emit('refresh');
+        this.$emit('refresh', true, limit);
       }
     }
   };

@@ -316,12 +316,12 @@
         await this.fetchData();
       },
 
-      async fetchData (isLoading = false) {
+      async fetchData (isLoading = false, limit = 10, page = 1) {
         this.componentLoading = isLoading;
         const hideApplyBtn = this.externalSystemsLayout.myPerm.hideApplyBtn;
         const userGroupParams = {
-          page_size: 10,
-          page: 1
+          page_size: limit,
+          page
         };
         if (this.externalSystemId) {
           userGroupParams.system_id = this.externalSystemId;
