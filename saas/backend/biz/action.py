@@ -119,6 +119,15 @@ class ActionBiz:
 
         return action_list
 
+    def list_without_cache_sensitivity_level(self, system_id: str) -> ActionBeanList:
+        action_list = self.list(system_id)
+
+        # 填充敏感度等级
+        action_sensitivity_level = self.action_svc.get_action_sensitivity_level_map(system_id)
+        action_list.fill_sensitivity_level(action_sensitivity_level)
+
+        return action_list
+
     def list_by_role(self, system_id: str, role, hidden: bool = False) -> List[ActionBean]:
         action_list = self.list(system_id)
 
@@ -198,7 +207,7 @@ class ActionBiz:
 
     def search(self, system_id: str, condition: ActionSearchCondition) -> List[ActionBean]:
         """搜索过滤某个系统下的操作"""
-        action_list = self.list(system_id)
+        action_list = self.list_without_cache_sensitivity_level(system_id)
         # 搜索条件
         if condition.keyword:
             action_list = ActionBeanList(action_list.filter_by_name(condition.keyword))
