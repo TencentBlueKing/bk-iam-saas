@@ -317,7 +317,6 @@
           let url = '';
           let params = {};
           const { current, limit } = this.pageConf;
-          console.log(limit);
           if (!this.mainContentLoading) {
             this.tableLoading = true;
           }
@@ -343,7 +342,7 @@
           this.pageConf.count = data.count || 0;
           const currentSelectGroupList = this.currentSelectGroupList.map(item => item.id.toString());
           this.curPageData.splice(0, this.curPageData.length, ...(data.results || []));
-          this.$nextTick(() => {
+          setTimeout(() => {
             if (!this.currentSelectGroupList.length) {
               this.$refs.groupPermTableRef && this.$refs.groupPermTableRef.clearSelection();
             }
@@ -360,7 +359,7 @@
                 this.$refs.groupPermTableRef && this.$refs.groupPermTableRef.toggleRowSelection(item, true);
               }
             });
-          });
+          }, 200);
           this.groupPermEmptyData = formatCodeData(code, this.groupPermEmptyData, data.count === 0);
         } catch (e) {
           console.error(e);
