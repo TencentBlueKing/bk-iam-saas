@@ -30,6 +30,11 @@
       SensitivitySystems,
       SensitivityRightLayout
     },
+    provide: function () {
+      return {
+        getDragWidth: () => this.dragWidth
+      };
+    },
     data () {
       return {
         isDrag: false,

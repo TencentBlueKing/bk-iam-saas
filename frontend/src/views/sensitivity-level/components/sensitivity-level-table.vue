@@ -51,7 +51,7 @@
       </bk-table-column>
       <bk-table-column :label="$t(`m.sensitivityLevel['当前审批流程']`)">
         <template slot-scope="{ row }">
-          <span :title="row.process_name">{{ row.process_name || '--' }}</span>
+          <span :title="row.process_name">{{ row.process_name || "--" }}</span>
         </template>
       </bk-table-column>
       <bk-table-column
@@ -245,7 +245,10 @@
           if (['all'].includes(params.sensitivity_level)) {
             delete params.sensitivity_level;
           }
-          const { code, data } = await this.$store.dispatch('sensitivityLevel/getProcessesActionsList', params);
+          const { code, data } = await this.$store.dispatch(
+            'sensitivityLevel/getProcessesActionsList',
+            params
+          );
           this.pagination.count = data.count || 0;
           this.sensitivityTableList = [...data.results];
           this.emptyData = formatCodeData(code, this.emptyData);
@@ -253,11 +256,13 @@
             const currentSelectList = this.currentSelectList.map((item) => item.action_id);
             this.sensitivityTableList.forEach((item) => {
               if (currentSelectList.includes(item.action_id)) {
-                this.$refs.sensitivityTableRef && this.$refs.sensitivityTableRef.toggleRowSelection(item, true);
+                this.$refs.sensitivityTableRef
+                  && this.$refs.sensitivityTableRef.toggleRowSelection(item, true);
               }
             });
             if (this.currentSelectList.length < 1) {
-              this.$refs.sensitivityTableRef && this.$refs.sensitivityTableRef.clearSelection();
+              this.$refs.sensitivityTableRef
+                && this.$refs.sensitivityTableRef.clearSelection();
             }
           });
         } catch (e) {
@@ -271,7 +276,8 @@
 
       async handleChangeLevel (payload, index) {
         try {
-          const { action_id, system_id, sensitivity_level } = this.sensitivityTableList[index];
+          const tableData = this.sensitivityTableList[index];
+          const { action_id, system_id, sensitivity_level } = tableData;
           const params = {
             actions: [
               {
@@ -281,20 +287,25 @@
             ],
             sensitivity_level: payload
           };
-          const { code } = await this.$store.dispatch('sensitivityLevel/updateActionsSensitivityLevel', params);
+          const { code } = await this.$store.dispatch(
+            'sensitivityLevel/updateActionsSensitivityLevel',
+            params
+          );
           if (code === 0) {
             // eslint-disable-next-line camelcase
             if (sensitivity_level !== payload) {
               ['all'].includes(this.tabActive)
                 ? this.$set(this.sensitivityTableList[index], 'sensitivity_level', payload)
                 : this.sensitivityTableList.splice(index, 1);
+              this.currentSelectList = [];
+              await this.fetchSensitivityLevelList(true);
+              this.messageSuccess(this.$t(`m.info['编辑成功']`), 3000);
               bus.$emit('on-tab-level-count', {
                 name: this.tabActive,
-                system_id,
-                count: this.pagination.count - 1,
+                system_id: this.curSystemData.id,
+                count: this.pagination.count,
                 isSearch: this.emptyData.tipType === 'search'
               });
-              this.messageSuccess(this.$t(`m.info['编辑成功']`), 3000);
             }
           }
         } catch (e) {
@@ -309,10 +320,14 @@
             if (isChecked) {
               this.currentSelectList.push(row);
             } else {
-              this.currentSelectList = this.currentSelectList.filter((item) => item.action_id !== row.action_id);
+              this.currentSelectList = this.currentSelectList.filter(
+                (item) => item.action_id !== row.action_id
+              );
             }
             this.$nextTick(() => {
-              const selectionCount = document.getElementsByClassName('bk-page-selection-count');
+              const selectionCount = document.getElementsByClassName(
+                'bk-page-selection-count'
+              );
               if (this.$refs.sensitivityTableRef && selectionCount) {
                 selectionCount[0].children[0].innerHTML = this.currentSelectList.length;
               }
@@ -325,7 +340,9 @@
             );
             this.currentSelectList = [...selectGroups, ...payload];
             this.$nextTick(() => {
-              const selectionCount = document.getElementsByClassName('bk-page-selection-count');
+              const selectionCount = document.getElementsByClassName(
+                'bk-page-selection-count'
+              );
               if (this.$refs.sensitivityTableRef && selectionCount) {
                 selectionCount[0].children[0].innerHTML = this.currentSelectList.length;
               }
@@ -349,7 +366,7 @@
           name: this.tabActive,
           system_id: this.curSystemData.id,
           count: this.pagination.count,
-          isSearch: this.emptyData.tipType === 'search'
+          isSearch: true
         });
       },
 
@@ -422,6 +439,7 @@
           bus.$emit('on-tab-level-count', {
             name: sensitivity_level,
             system_id: actions[0].system_id,
+            count: this.pagination.count,
             isSearch: this.emptyData.tipType === 'search'
           });
         }
