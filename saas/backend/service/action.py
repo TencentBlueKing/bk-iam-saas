@@ -61,7 +61,6 @@ class ActionService:
         """删除操作"""
         iam.delete_action(system_id, action_id)
 
-    @cachedmethod(timeout=60)
     def get_action_sensitivity_level_map(self, system_id: str) -> Dict[str, str]:
         action_sensitivity_level = {}
         for action_level in ActionProcessRelation.objects.filter(system_id=system_id).values(
