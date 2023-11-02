@@ -458,6 +458,9 @@
               system_id: params.systemId
             };
           }
+          if (!queryParams.system_id) {
+            return;
+          }
           const { code, data } = await this.$store.dispatch(url, queryParams);
           if (data.length) {
             this.policyList = data.map(item => {

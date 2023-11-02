@@ -239,7 +239,7 @@
           //   this.initPageConf();
           //   this.curPageData = this.getDataByPage(this.pageConf.current);
           // }
-          if (this.pageConf.current === 1) {
+          if (this.pageConf.current === 1 && !this.isSearchPerm) {
             this.pageConf = Object.assign(this.pageConf, { count: this.totalCount });
             this.curPageData = [...v];
             return;
@@ -580,7 +580,11 @@
       },
 
       refreshTableData () {
-        this.isSearchPerm ? this.resetPagination() : this.$emit('refresh');
+        this.resetPagination();
+        if (this.isSearchPerm) {
+          return;
+        }
+        this.$emit('refresh');
       }
     }
   };

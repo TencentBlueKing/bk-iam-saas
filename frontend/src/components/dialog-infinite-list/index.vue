@@ -28,7 +28,7 @@
             {{ item.name }}
           </span>
           <span
-            v-if="item.showCount && !externalSystemsLayout.addMemberBoundary.hideInfiniteTreeCount && enableOrganizationCount"
+            v-if="item.showCount && enableOrganizationCount"
             class="user-count"
           >
             {{ '(' + item.count + ')' }}

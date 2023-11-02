@@ -39,14 +39,27 @@
         <div
           v-for="item in systemList"
           :key="item.id"
-          :class="['sensitivity-systems-item', { 'sensitivity-systems-item-active': item.id === active }]"
+          :class="[
+            'sensitivity-systems-item',
+            { 'sensitivity-systems-item-active': item.id === active }
+          ]"
           @click.stop="handleSelectSystem(item)"
         >
           <div class="sensitivity-system-name">
-            <Icon type="file-close" :class="['folder-icon', { 'folder-icon-active': item.id === active }]" />
-            <div>{{ item.name }}</div>
+            <div
+              :style="{ width: `${getDragWidth() - 50}px` }"
+              class="sensitivity-system-name-left"
+            >
+              <Icon
+                type="file-close"
+                :class="['folder-icon', { 'folder-icon-active': item.id === active }]"
+              />
+              <div class="single-hide">
+                {{ item.name }}
+              </div>
+            </div>
           </div>
-          <div class="sensitivity-system-count">{{ item.count || 0}}</div>
+          <div class="sensitivity-system-count">{{ item.count || 0 }}</div>
         </div>
       </template>
       <div v-else class="system-empty-wrapper">
@@ -69,6 +82,9 @@
   import { formatCodeData, getWindowHeight } from '@/common/util';
   // import { systemCountMockData } from '../testData.js';
   export default {
+    inject: {
+      getDragWidth: { value: 'getDragWidth', default: 280 }
+    },
     data () {
       return {
         active: '',
@@ -94,30 +110,21 @@
       };
     },
     computed: {
-      ...mapGetters(['externalSystemId']),
-      formatDragWidth () {
-        return {
-          minWidth: '280px'
-        };
-      },
-      formatSystemsHeight () {
-        return {
-          maxHeight: `${getWindowHeight() - 185}px`
-        };
-      }
+    ...mapGetters(['externalSystemId']),
+    formatDragWidth () {
+      return {
+        minWidth: '280px'
+      };
+    },
+    formatSystemsHeight () {
+      return {
+        maxHeight: `${getWindowHeight() - 185}px`
+      };
+    }
     },
     async created () {
       // this.handleSelectSystem({ id: 'all', isFirst: true });
       await this.fetchSystems();
-      if (this.systemList.length) {
-        const params = {
-        ...this.systemList[0],
-        ...{
-          isFirst: true
-        }
-        };
-        this.handleSelectSystem(params);
-      }
     },
     methods: {
       async fetchSystems () {
@@ -129,11 +136,15 @@
           }
           const { code, data } = await this.$store.dispatch('system/getSystems', params);
           if (data && data.length) {
-            const list = await this.getSystemCount(data);
-            this.systemListStorage = [...list];
-            this.systemList = _.cloneDeep(this.systemListStorage);
+            // this.systemList = _.cloneDeep([...data]);
+            this.systemList = await this.getSystemCount(data);
+            this.systemListStorage = [...this.systemList];
           }
-          this.emptySystemData = formatCodeData(code, this.emptySystemData, data.length === 0);
+          this.emptySystemData = formatCodeData(
+            code,
+            this.emptySystemData,
+            data.length === 0
+          );
         } catch (e) {
           this.emptySystemData = formatCodeData(e.code, this.emptySystemData);
           this.messageAdvancedError(e);
@@ -147,33 +158,51 @@
         const list = [...payload];
         try {
           for (let i = 0; i < list.length; i++) {
-            const { data } = await this.$store.dispatch('sensitivityLevel/getSensitivityLevelCount', {
-              system_id: payload[i].id
-            });
-            // const curSystemId = list[i].id;
-            // if (systemCountMockData[curSystemId]) {
-            //   const { data } = systemCountMockData[curSystemId];
-            this.$set(list[i], 'levelItem', data);
-            this.$set(list[i], 'count', data.all || 0);
+            this.$store
+              .dispatch('sensitivityLevel/getSensitivityLevelCount', {
+                system_id: list[i].id
+              })
+              .then(({ data }) => {
+                // const curSystemId = list[i].id;
+                // if (systemCountMockData[curSystemId]) {
+                //   const { data } = systemCountMockData[curSystemId];
+                this.$set(list[i], 'levelItem', data);
+                this.$set(list[i], 'count', data.all || 0);
+                if (i === 0) {
+                  const params = {
+                  ...list[i],
+                  ...{
+                    isFirst: true
+                  }
+                  };
+                  this.handleSelectSystem(params);
+                }
+              });
           }
-          // }
+        // }
         } catch (e) {
           this.messageAdvancedError(e);
         }
         return list;
       },
 
-      handleSelectSystem (payload) {
+      async handleSelectSystem (payload) {
         const { id, levelItem, isFirst } = payload;
         this.active = id;
-        this.$emit('on-select-system', payload);
+        let list = [];
         const params = {
         ...levelItem
         };
         if (isFirst) {
           this.$set(params, 'isFirst', isFirst);
+          this.$emit('on-select-system', payload);
+          bus.$emit('on-systems-level-count', params);
+        } else {
+          list = await this.getSystemCount([payload]);
+          this.$set(params, 'isFirst', isFirst);
+          this.$emit('on-select-system', list[0]);
+          bus.$emit('on-systems-level-count', list[0].levelItem);
         }
-        bus.$emit('on-systems-level-count', params);
       },
 
       handleSearchSystem () {
@@ -271,12 +300,17 @@
         align-items: center;
         font-size: 13px;
         color: #63656e;
-        .folder-icon {
-          font-size: 14px;
-          color: #c4c6cc;
-          margin-right: 8px;
-          &-active {
-            color: #3a84ff;
+        &-left {
+          display: flex;
+          align-items: center;
+          word-break: break-all;
+          .folder-icon {
+            font-size: 14px;
+            color: #c4c6cc;
+            margin-right: 8px;
+            &-active {
+              color: #3a84ff;
+            }
           }
         }
       }
