@@ -22,12 +22,13 @@
     </render-search>
     <bk-table
       ref="tableRef"
-      size="small"
       ext-cls="member-template-table"
+      :size="setting.size"
       :data="memberTemplateList"
       :row-class-name="getRowClass"
       :max-height="tableHeight"
       :pagination="pagination"
+      :dark-header="true"
       @page-change="handlePageChange"
       @page-limit-change="handleLimitChange"
       @select="handlerChange"
@@ -36,14 +37,21 @@
     >
       <bk-table-column type="selection" align="center" :selectable="getDefaultSelect" />
       <bk-table-column
-        :label="$t(`m.memberTemplate['模板名称']`)"
-        :sortable="true"
-        width="300"
+        v-for="field in setting.selectedFields"
+        :key="field.id"
+        :label="field.label"
+        :prop="field.id"
+        :sortable="
+          ['name', 'member_count', 'created_time', 'updated_time'].includes(field.id)
+        "
       >
         <template slot-scope="{ row, $index }">
-          <div class="member-template-name">
+          <div v-if="['name'].includes(field.id)" class="member-template-name">
             <span
-              class="single-hide member-template-name-label"
+              :class="[
+                'single-hide',
+                { 'member-template-name-label': isAddRow && $index === 0 }
+              ]"
               :title="row.name"
               @click="handleView(row)"
             >
@@ -58,29 +66,22 @@
               new
             </bk-tag>
           </div>
+          <div v-if="['member_count'].includes(field.id)">
+            <span
+              v-if="row.member_count"
+              class="related-group-count"
+              @click="handleViewGroup(row)"
+            >
+              {{ row.member_count }}
+            </span>
+            <span v-else>--</span>
+          </div>
+          <span v-if="!['name', 'member_count'].includes(field.id)">
+            {{ row[field.id] || "--" }}
+          </span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.common['描述']`)">
-        <template slot-scope="{ row }">
-          <span :title="row.description || ''">{{ row.description || "--" }}</span>
-        </template>
-      </bk-table-column>
-      <bk-table-column :label="$t(`m.memberTemplate['关联用户组']`)" :sortable="true">
-        <template slot-scope="{ row }">
-          <span class="related-group-count">{{ row.member_count || "--" }}</span>
-        </template>
-      </bk-table-column>
-      <bk-table-column :label="$t(`m.memberTemplate['创建人']`)">
-        <template slot-scope="{ row }">
-          <span>{{ row.creator || "--" }}</span>
-        </template>
-      </bk-table-column>
-      <bk-table-column :label="$t(`m.memberTemplate['最近更新时间']`)" width="240">
-        <template slot-scope="{ row }">
-          <span :title="row.last_updated_time">{{ row.last_updated_time }}</span>
-        </template>
-      </bk-table-column>
-      <bk-table-column :label="$t(`m.common['操作-table']`)" width="320" fixed="right">
+      <bk-table-column :label="$t(`m.common['操作-table']`)" fixed="right">
         <template slot-scope="{ row }">
           <div>
             <bk-button
@@ -102,6 +103,14 @@
           </div>
         </template>
       </bk-table-column>
+      <bk-table-column type="setting" :tippy-options="{ zIndex: 3000 }">
+        <bk-table-setting-content
+          :fields="setting.fields"
+          :selected="setting.selectedFields"
+          :size="setting.size"
+          @setting-change="handleSettingChange"
+        />
+      </bk-table-column>
       <template slot="empty">
         <ExceptionEmpty
           :type="emptyData.type"
@@ -113,6 +122,7 @@
         />
       </template>
     </bk-table>
+
     <AddMemberTemplateSlider
       :show.sync="isShowMemberSlider"
       @on-submit="handleTempSubmit"
@@ -124,6 +134,7 @@
       :loading="memberDialogLoading"
       :name="curName"
       :id="curId"
+      :show-limit="false"
       :is-rating-manager="isRatingManager"
       show-expired-at
       @on-cancel="handleCancelAdd"
@@ -137,9 +148,11 @@
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
   import { formatCodeData, getWindowHeight } from '@/common/util';
+  import { MEMBERS_TEMPLATE_FIELDS } from '@/common/constants';
   import IamSearchSelect from '@/components/iam-search-select';
   import AddMemberTemplateSlider from './components/add-member-template-slider.vue';
   import AddMemberDialog from '@/views/group/components/iam-add-member.vue';
+
   export default {
     components: {
       IamSearchSelect,
@@ -150,18 +163,22 @@
       return {
         memberTemplateList: [
           {
-            name: '11',
+            name: '11777757sasdddddddddddddddddd57',
             description: '4545',
             member_count: 2,
             creator: 'liu17',
-            last_updated_time: '2023-11-03 15:53'
+            created_time: '2023-11-03 15:53',
+            updated_by: 'liu17',
+            updated_time: '2023-11-03 15:53'
           },
           {
             name: '11',
             description: '4545',
             member_count: 2,
             creator: 'liu17',
-            last_updated_time: '2023-11-03 15:53'
+            created_time: '2023-11-03 15:53',
+            updated_by: 'liu17',
+            updated_time: '2023-11-03 15:53'
           }
         ],
         currentSelectList: [],
@@ -196,6 +213,13 @@
           text: '',
           tip: '',
           tipType: ''
+        },
+        setting: {
+          fields: MEMBERS_TEMPLATE_FIELDS,
+          selectedFields: MEMBERS_TEMPLATE_FIELDS.filter(
+            (item) => !['created_time', 'updated_by'].includes(item.id)
+          ),
+          size: 'small'
         },
         tableLoading: false,
         memberDialogLoading: false,
@@ -263,7 +287,12 @@
         this.isShowMemberSlider = true;
       },
 
+      handleView () {},
+
+      handleViewGroup () {},
+
       handleAddMember (payload) {
+        console.log(payload, 525);
         const { id, name } = payload;
         this.curName = name;
         this.curId = id;
@@ -343,6 +372,11 @@
       handleLimitChange (limit) {
         this.pagination = Object.assign(this.pagination, { limit });
         this.fetchMemberTemplateList(true);
+      },
+
+      handleSettingChange ({ fields, size }) {
+        this.setting.size = size;
+        this.setting.selectedFields = fields;
       },
 
       async handleTempSubmit () {
@@ -468,7 +502,7 @@
       color: #3a84ff;
       cursor: pointer;
       &-label {
-        max-width: 235px;
+        max-width: calc(100% - 50px);
         word-break: break-all;
       }
       &-tag {

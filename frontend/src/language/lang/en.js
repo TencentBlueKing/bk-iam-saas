@@ -1391,12 +1391,14 @@ export const m = {
         '模板名称': 'Template Name',
         '创建人': 'Creator',
         '关联用户组': 'Associate User Group',
+        '最近更新人': 'Latest modified by',
         '最近更新时间': 'Latest update time',
         '搜索模板名称、描述、创建人': 'Search template name, description, creator',
         '新建人员模板': 'New members template',
         '请输入模板名称': 'Please input template name',
         '请输入描述': 'Please input description',
         '模板成员': 'Template members',
+        '人员模板创建成功': 'Successfully created members template'
     }
 }
 export default {

@@ -75,7 +75,7 @@
       :departments="departments"
       :title="addMemberTitle"
       :all-checked="false"
-      show-limit
+      :show-limit="false"
       @on-cancel="handleCancelAdd"
       @on-sumbit="handleSubmitAdd"
     />
@@ -122,7 +122,6 @@
           return this.show;
         },
         set (newValue) {
-          console.log(newValue, 55);
           this.$emit('update:show', newValue);
         }
       }
@@ -183,6 +182,14 @@
         }
         try {
           this.$emit('on-submit', this.formData);
+          this.$bkMessage({
+            limit: 1,
+            theme: 'success',
+            message: this.$t(`m.memberTemplate['人员模板创建成功']`),
+            ellipsisLine: 2,
+            ellipsisCopy: true
+          });
+          this.resetData();
           this.$emit('update:show', false);
         } catch (e) {
           this.messageAdvancedError(e);
@@ -206,6 +213,8 @@
       resetData () {
         this.width = 640;
         this.selectTableList = [];
+        this.users = [];
+        this.departments = [];
         this.formData = Object.assign(
           {},
           {
