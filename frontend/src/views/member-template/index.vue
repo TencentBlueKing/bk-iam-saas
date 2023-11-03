@@ -25,6 +25,7 @@
       size="small"
       ext-cls="member-template-table"
       :data="memberTemplateList"
+      :row-class-name="getRowClass"
       :max-height="tableHeight"
       :pagination="pagination"
       @page-change="handlePageChange"
@@ -34,11 +35,29 @@
       v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
     >
       <bk-table-column type="selection" align="center" :selectable="getDefaultSelect" />
-      <bk-table-column :label="$t(`m.memberTemplate['模板名称']`)" :sortable="true">
-        <template slot-scope="{ row }">
-          <span class="member-template-name" :title="row.name" @click="handleView(row)">
-            {{ row.name }}
-          </span>
+      <bk-table-column
+        :label="$t(`m.memberTemplate['模板名称']`)"
+        :sortable="true"
+        width="300"
+      >
+        <template slot-scope="{ row, $index }">
+          <div class="member-template-name">
+            <span
+              class="single-hide member-template-name-label"
+              :title="row.name"
+              @click="handleView(row)"
+            >
+              {{ row.name }}
+            </span>
+            <bk-tag
+              v-if="isAddRow && $index === 0"
+              theme="success"
+              type="filled"
+              class="member-template-name-tag"
+            >
+              new
+            </bk-tag>
+          </div>
         </template>
       </bk-table-column>
       <bk-table-column :label="$t(`m.common['描述']`)">
@@ -48,7 +67,7 @@
       </bk-table-column>
       <bk-table-column :label="$t(`m.memberTemplate['关联用户组']`)" :sortable="true">
         <template slot-scope="{ row }">
-          <span :title="row.member_count">{{ row.member_count || "--" }}</span>
+          <span class="related-group-count">{{ row.member_count || "--" }}</span>
         </template>
       </bk-table-column>
       <bk-table-column :label="$t(`m.memberTemplate['创建人']`)">
@@ -136,6 +155,13 @@
             member_count: 2,
             creator: 'liu17',
             last_updated_time: '2023-11-03 15:53'
+          },
+          {
+            name: '11',
+            description: '4545',
+            member_count: 2,
+            creator: 'liu17',
+            last_updated_time: '2023-11-03 15:53'
           }
         ],
         currentSelectList: [],
@@ -175,6 +201,8 @@
         memberDialogLoading: false,
         isShowMemberSlider: false,
         isShowAddMemberDialog: false,
+        isAddRow: false,
+        isBatch: false,
         curRole: '',
         curName: '',
         curId: 0
@@ -222,6 +250,13 @@
         });
         this.resetPagination();
         await this.fetchMemberTemplateList(true);
+      },
+
+      getRowClass ({ row, rowIndex }) {
+        if (rowIndex === 0 && this.isAddRow) {
+          return 'member-template-table-add';
+        }
+        return '';
       },
 
       handleCreate () {
@@ -310,7 +345,8 @@
         this.fetchMemberTemplateList(true);
       },
 
-      async handleTemplateSubmit () {
+      async handleTempSubmit () {
+        this.isAddRow = true;
         this.resetPagination();
         await this.fetchMemberTemplateList();
       },
@@ -427,8 +463,29 @@
   .member-template-table {
     margin-top: 20px;
     .member-template-name {
+      display: flex;
+      align-items: center;
       color: #3a84ff;
       cursor: pointer;
+      &-label {
+        max-width: 235px;
+        word-break: break-all;
+      }
+      &-tag {
+        background-color: #2dcb56;
+        font-size: 10px;
+        height: 12px;
+        line-height: 1;
+        padding: 0 4px;
+        margin-left: 5px;
+      }
+    }
+    .related-group-count {
+      color: #3a84ff;
+      cursor: pointer;
+    }
+    /deep/ .member-template-table-add {
+      background-color: #f2fff4;
     }
   }
 }

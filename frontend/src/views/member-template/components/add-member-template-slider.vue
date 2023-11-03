@@ -135,12 +135,11 @@
         } else {
           this.departments.splice(payload, 1);
         }
-        this.isShowMemberAdd = this.users.length < 1 && this.departments.length < 1;
+        this.$set(this.formData, 'template_members', [...this.users, ...this.departments]);
       },
 
       handleDeleteAll () {
         this.isAll = false;
-        this.isShowMemberAdd = true;
       },
 
       handleAddMember () {
@@ -157,7 +156,7 @@
         this.isAll = isAll;
         this.users = _.cloneDeep(users);
         this.departments = _.cloneDeep(departments);
-        this.isShowMemberAdd = false;
+        this.$set(this.formData, 'template_members', [...this.users, ...this.departments]);
         this.isShowAddMemberDialog = false;
       },
 
@@ -184,6 +183,7 @@
         }
         try {
           this.$emit('on-submit', this.formData);
+          this.$emit('update:show', false);
         } catch (e) {
           this.messageAdvancedError(e);
         }
@@ -191,7 +191,6 @@
 
       handleCancel () {
         let cancelHandler = Promise.resolve();
-        console.log(55, window.changeAlert);
         if (window.changeAlert) {
           cancelHandler = leaveConfirm();
         }
