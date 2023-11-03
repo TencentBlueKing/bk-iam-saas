@@ -368,7 +368,9 @@ export const m = {
         '管理空间名称不能为空': 'Management space name cannot be empty',
         '请选择用户': 'Please select user',
         '请选择用户或组织成员': 'Please select user or organization member',
-        '请选择用户组成员复制': 'Please select user group member copy'
+        '请选择用户组成员复制': 'Please select user group member copy',
+        '模板名称不能为空': 'Template name cannot be empty',
+        '模板成员不能为空': 'Template member cannot be empty',
     },
     info: {
         '加入用户组申请成功': 'Apply to join the group successfully',
@@ -607,7 +609,8 @@ export const m = {
         '克隆管理空间': 'Clone Management Space',
         '克隆二级管理空间': 'Clone Secondary management space',
         '用户组设置': 'User Group Setting',
-        '敏感等级': 'Sensitivity Level'
+        '敏感等级': 'Sensitivity Level',
+        '人员模板': 'Members template'
     },
     applyEntrance: {
         '立刻申请': 'Apply now',
@@ -1389,7 +1392,11 @@ export const m = {
         '创建人': 'Creator',
         '关联用户组': 'Associate User Group',
         '最近更新时间': 'Latest update time',
-        '搜索模板名称、描述、创建人': 'Search template name, description, creator'
+        '搜索模板名称、描述、创建人': 'Search template name, description, creator',
+        '新建人员模板': 'New members template',
+        '请输入模板名称': 'Please input template name',
+        '请输入描述': 'Please input description',
+        '模板成员': 'Template members',
     }
 }
 export default {
