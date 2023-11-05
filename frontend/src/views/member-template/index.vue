@@ -123,8 +123,13 @@
       </template>
     </bk-table>
 
+    <MemberTemplateDetailSlider
+      :show.sync="isShowDetailSlider"
+      :cur-detail-data="curDetailData"
+    />
+
     <AddMemberTemplateSlider
-      :show.sync="isShowMemberSlider"
+      :show.sync="isShowAddSlider"
       @on-submit="handleTempSubmit"
     />
 
@@ -150,12 +155,14 @@
   import { formatCodeData, getWindowHeight } from '@/common/util';
   import { MEMBERS_TEMPLATE_FIELDS } from '@/common/constants';
   import IamSearchSelect from '@/components/iam-search-select';
+  import MemberTemplateDetailSlider from './components/member-template-detail-slider.vue';
   import AddMemberTemplateSlider from './components/add-member-template-slider.vue';
   import AddMemberDialog from '@/views/group/components/iam-add-member.vue';
 
   export default {
     components: {
       IamSearchSelect,
+      MemberTemplateDetailSlider,
       AddMemberTemplateSlider,
       AddMemberDialog
     },
@@ -163,6 +170,7 @@
       return {
         memberTemplateList: [
           {
+            id: 1473,
             name: '11777757sasdddddddddddddddddd57',
             description: '4545',
             member_count: 2,
@@ -172,6 +180,7 @@
             updated_time: '2023-11-03 15:53'
           },
           {
+            id: 1475,
             name: '11',
             description: '4545',
             member_count: 2,
@@ -223,13 +232,15 @@
         },
         tableLoading: false,
         memberDialogLoading: false,
-        isShowMemberSlider: false,
+        isShowDetailSlider: false,
+        isShowAddSlider: false,
         isShowAddMemberDialog: false,
         isAddRow: false,
         isBatch: false,
         curRole: '',
         curName: '',
-        curId: 0
+        curId: 0,
+        curDetailData: {}
       };
     },
     computed: {
@@ -284,15 +295,24 @@
       },
 
       handleCreate () {
-        this.isShowMemberSlider = true;
+        this.isShowAddSlider = true;
       },
 
-      handleView () {},
+      handleView (payload) {
+        this.curDetailData = Object.assign(payload, {
+          tabActive: 'basic_info'
+        });
+        this.isShowDetailSlider = true;
+      },
 
-      handleViewGroup () {},
+      handleViewGroup (payload) {
+        this.curDetailData = Object.assign(payload, {
+          tabActive: 'associate_groups'
+        });
+        this.isShowDetailSlider = true;
+      },
 
       handleAddMember (payload) {
-        console.log(payload, 525);
         const { id, name } = payload;
         this.curName = name;
         this.curId = id;

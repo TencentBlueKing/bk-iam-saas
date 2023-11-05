@@ -230,13 +230,10 @@
 
 <style lang="postcss" scoped>
 .iam-member-template-side {
-  .member-template-content {
-    padding: 0 40px;
-  }
   &-content {
     height: calc(100vh - 114px);
     .member-template-content {
-      padding-top: 4px;
+      padding: 0 40px;
       .bk-form-item {
         margin-top: 24px;
         .bk-label {

@@ -313,6 +313,7 @@
         copyValue: [],
         curCopyCascade: {},
         COPY_KEYS_ENUM,
+        externalRoutes: ['userGroupDetail', 'memberTemplate'],
         classNameList: ['iam-user-group-member ', 'bk-cascade-name', 'bk-option-content', 'bk-cascade is-focus is-unselected is-default-trigger', 'bk-cascade-dropdown-content copy-user-group-cls', 'cascade-custom-content', 'bk-cascade-panel', 'bk-cascade-right bk-icon icon-angle-right']
       };
     },
@@ -424,6 +425,9 @@
                 this.$refs.groupMemberRef && this.$refs.groupMemberRef.toggleRowSelection(item, true);
               }
             });
+            if (!this.currentSelectList.length) {
+              this.$refs.groupMemberRef && this.$refs.groupMemberRef.clearSelection();
+            }
           });
           await this.fetchCustomTotal();
           this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
@@ -723,8 +727,11 @@
         try {
           const { code, data } = await this.$store.dispatch('userGroup/addUserGroupMember', params);
           if (code === 0 && data) {
-            window.parent.postMessage({ type: 'IAM', data: externalPayload, code: 'add_user_confirm' }, '*');
+            if (this.externalRoutes.includes(this.$route.name)) {
+              window.parent.postMessage({ type: 'IAM', data: externalPayload, code: 'add_user_confirm' }, '*');
+            }
             this.isShowAddMemberDialog = false;
+            this.currentSelectList = [];
             this.messageSuccess(this.$t(`m.info['添加成员成功']`), 3000);
             this.fetchMemberList();
           }
@@ -794,7 +801,9 @@
               ...params,
               count: params.members.length
             };
-            window.parent.postMessage({ type: 'IAM', data: externalParams, code: 'remove_user_confirm' }, '*');
+            if (this.externalRoutes.includes(this.$route.name)) {
+              window.parent.postMessage({ type: 'IAM', data: externalParams, code: 'remove_user_confirm' }, '*');
+            }
             this.messageSuccess(this.$t(`m.info['移除成功']`), 3000);
             this.currentSelectList = [];
             this.pagination = Object.assign(this.pagination, { current: 1, limit: 10 });

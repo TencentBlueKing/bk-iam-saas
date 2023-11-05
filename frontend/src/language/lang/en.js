@@ -1388,7 +1388,7 @@ export const m = {
         '确认转移': 'Confirm transfer'
     },
     memberTemplate: {
-        '模板名称': 'Template Name',
+        '模板名称': 'Template name',
         '创建人': 'Creator',
         '关联用户组': 'Associate User Group',
         '最近更新人': 'Latest modified by',
@@ -1397,7 +1397,11 @@ export const m = {
         '新建人员模板': 'New members template',
         '请输入模板名称': 'Please input template name',
         '请输入描述': 'Please input description',
+        '请输入模板描述': 'Please input template description',
         '模板成员': 'Template members',
+        '模板详情': 'Template detail',
+        '模板描述': 'Template description',
+        '模板ID': 'Template ID',
         '人员模板创建成功': 'Successfully created members template'
     }
 }
