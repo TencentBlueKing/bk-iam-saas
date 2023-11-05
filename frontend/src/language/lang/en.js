@@ -44,6 +44,7 @@ export const m = {
         '全部': 'All',
         '没有更多内容了': 'No More',
         '删除': 'Delete',
+        '删除-dialog': 'DELETE',
         '编辑': 'Edit',
         '移除': 'Remove',
         '新建': 'New',
@@ -552,7 +553,9 @@ export const m = {
         '删除实例权限': 'instance permission',
         '删除一组实例权限': 'a set of instance permissions',
         '确定要删除系统下的所有操作权限？': 'Confirm to delete all action permissions under the {value} system?',
-        '确认批量退出所选的用户组吗？': 'Are you sure to batch quit the selected user groups?'
+        '确认批量退出所选的用户组吗？': 'Are you sure to batch quit the selected user groups?',
+        '确认删除该人员模板？': 'Are you sure to delete the member template?',
+        '确认解除与该用户组的关联？': 'Are you sure to dissociate from this user group?',
     },
     nav: {
         '蓝鲸权限中心': 'BlueKing-IAM',
@@ -1389,10 +1392,12 @@ export const m = {
     },
     memberTemplate: {
         '模板名称': 'Template name',
+        '用户组名称': 'User group name',
         '创建人': 'Creator',
-        '关联用户组': 'Associate User Group',
+        '关联用户组': 'Associate user group',
         '最近更新人': 'Latest modified by',
         '最近更新时间': 'Latest update time',
+        '搜索用户组': 'Search user group',
         '搜索模板名称、描述、创建人': 'Search template name, description, creator',
         '新建人员模板': 'New members template',
         '请输入模板名称': 'Please input template name',
@@ -1402,7 +1407,11 @@ export const m = {
         '模板详情': 'Template detail',
         '模板描述': 'Template description',
         '模板ID': 'Template ID',
-        '人员模板创建成功': 'Successfully created members template'
+        '解除': 'Remove',
+        '解除关联': 'Disassociate',
+        '人员模板创建成功': 'Successfully created members template',
+        '解除关联后，相关人员将失去用户组的权限。': 'After disassociation, the relevant personnel will lose the permissions of the user group.',
+        '删除后，关联用户组也会删除对应的人员权限。': 'After deletion, the associated user group will also delete the corresponding personnel permissions.'
     }
 }
 export default {

@@ -1,10 +1,6 @@
 <template>
   <div class="template-member-table">
-    <member-table
-      :id="curDetailData.id"
-      :name="curDetailData.name"
-      :read-only="readOnly"
-    />
+    <member-table :id="curDetailData.id" :name="curDetailData.name" :read-only="readOnly" />
   </div>
 </template>
 
@@ -69,6 +65,6 @@
 </script>
 <style lang="postcss" scoped>
 .template-member-table {
-    padding: 0 24px;
+  padding: 0 24px;
 }
 </style>

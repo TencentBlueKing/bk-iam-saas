@@ -16,15 +16,17 @@
       </div>
       <div slot="content" class="iam-member-template-detail-side-content">
         <div class="member-template-tab">
-          <div class="member-tab-groups" :style="formatTabWidth">
+          <div class="member-tab-groups">
             <div
               v-for="item in tabList"
               :key="item.id"
               :class="['member-tab-groups-item', { 'is-active': tabActive === item.id }]"
               @click.stop="handleTabChange(item.id)"
             >
-              <span>{{ item.name }}</span>
-              <span v-if="['associate_groups'].includes(item.id)">({{ item.count }})</span>
+              <span class="member-tab-groups-item-name">{{ item.name }}</span>
+              <span v-if="['associate_groups'].includes(item.id)" class="member-tab-groups-item-count">
+                ({{ item.count }})
+              </span>
             </div>
           </div>
         </div>
@@ -74,7 +76,7 @@
         tabList: [
           { name: this.$t(`m.common['基本信息']`), id: 'basic_info' },
           { name: this.$t(`m.memberTemplate['模板成员']`), id: 'template_member' },
-          { name: this.$t(`m.memberTemplate['关联用户组']`), id: 'associate_groups', count: 0 }
+          { name: this.$t(`m.memberTemplate['关联用户组']`), id: 'associate_groups', count: 10000 }
         ],
         COM_MAP: Object.freeze(
           new Map([
@@ -89,9 +91,6 @@
       };
     },
     computed: {
-      formatTabWidth () {
-        return { maxWidth: this.curLanguageIsCn ? '360px' : '500px' };
-      },
       curCom () {
         let com = '';
         for (const [key, value] of this.COM_MAP.entries()) {
@@ -137,7 +136,6 @@
               this.$refs.tempDetailComRef && this.$refs.tempDetailComRef.fetchAssociateGroup(true);
             });
           }
-
         };
         return typeMap[payload]();
       },
@@ -190,28 +188,32 @@
       .member-tab-groups {
         position: relative;
         display: flex;
-        justify-content: space-between;
-        background-color: #eaebf0;
-        border-radius: 4px 4px 0 0;
-        cursor: pointer;
         &-item {
+         min-width: 96px;
           display: flex;
           font-size: 14px;
           color: #63656e;
-          padding: 10px 20px;
+          padding: 0 20px;
+          height: 42px;
+          line-height: 42px;
+          background-color: #eaebf0;
+          border-radius: 4px 4px 0 0;
+          cursor: pointer;
+          &:last-child {
+            .member-tab-groups-item-count {
+              padding-left: 5px;
+            }
+          }
           &.is-active {
             color: #3a84ff;
             background: #ffffff;
             border-radius: 4px 4px 0 0;
           }
-          &:last-child {
-            min-width: 150px;
-          }
         }
       }
     }
     .member-template-content {
-        padding: 24px 0;
+      padding: 24px 0;
     }
   }
 }

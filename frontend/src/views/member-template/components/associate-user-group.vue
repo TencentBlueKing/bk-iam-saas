@@ -17,23 +17,49 @@
       ext-cls="associate-user-group-table"
       :data="groupTableList"
       :pagination="pagination"
+      :resize="true"
       @page-change="handlePageChange"
       @page-limit-change="handleLimitChange"
       v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
     >
       <bk-table-column :label="$t(`m.userGroup['用户组']`)">
         <template slot-scope="{ row }">
-          <span class="action-name" :title="row.name">
-            {{ row.name }}
-          </span>
+          <div class="user-groups">
+            <span class="user-groups-name" :title="row.name">
+              {{ row.name }}
+            </span>
+            <Icon bk type="edit" class="user-groups-icon" @click="handleOpen(row.id)" />
+          </div>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.common['操作-table']`)">
+      <bk-table-column :label="$t(`m.common['操作-table']`)" width="150">
         <template slot-scope="{ row }">
           <div>
-            <bk-button theme="primary" text @click="handleDisassociate(row)">
-              {{ $t(`m.memberTemplate['解除关联']`) }}
-            </bk-button>
+            <bk-popconfirm
+              trigger="click"
+              placement="bottom-end"
+              ext-popover-cls="disassociate-confirm"
+              :confirm-text="$t(`m.memberTemplate['解除']`)"
+              @confirm="handleConfirmDisassociate(row)"
+            >
+              <div slot="content">
+                <div class="popover-title">
+                  <div class="popover-title-text">{{ $t(`m.dialog['确认解除与该用户组的关联？']`) }}</div>
+                </div>
+                <div class="popover-content">
+                  <div class="popover-content-item">
+                    <span class="popover-content-item-label">{{ $t(`m.memberTemplate['用户组名称']`) }}:</span>
+                    <span class="popover-content-item-value"> {{ row.name }}</span>
+                  </div>
+                  <div class="popover-content-tip">
+                    {{ $t(`m.memberTemplate['解除关联后，相关人员将失去用户组的权限。']`) }}
+                  </div>
+                </div>
+              </div>
+              <bk-button theme="primary" text>
+                {{ $t(`m.memberTemplate['解除关联']`) }}
+              </bk-button>
+            </bk-popconfirm>
           </div>
         </template>
       </bk-table-column>
@@ -58,7 +84,12 @@
       return {
         tableLoading: false,
         groupValue: '',
-        groupTableList: [],
+        groupTableList: [
+          {
+            id: 1455,
+            name: 'adminasasasasasasasasasasasssasadminasasasasasasasasasasasssasasasasadminasasasasasasasasasasasssasasasasasasas'
+          }
+        ],
         pagination: {
           current: 1,
           limit: 10,
@@ -98,12 +129,22 @@
         await this.fetchAssociateGroup(true);
       },
 
-      async handleLimitChange (currentLimit, prevLimit) {
-        this.pagination = Object.assign(this.pagination, { current: 1, limit: currentLimit });
+      async handleLimitChange (limit) {
+        this.pagination = Object.assign(this.pagination, { current: 1, limit });
         await this.fetchAssociateGroup(true);
       },
 
-      handleDisassociate () {},
+      handleConfirmDisassociate () {},
+
+      handleOpen (id) {
+        const routeData = this.$router.resolve({
+          path: `user-group-detail/${id}`,
+          query: {
+            noFrom: true
+          }
+        });
+        window.open(routeData.href, '_blank');
+      },
 
       handleEmptyClear () {
         this.emptyTableData.tipType = '';
@@ -136,6 +177,40 @@
     margin-top: 16px;
     border-bottom: 0;
     border-right: 0;
+    .user-groups {
+      display: flex;
+      align-items: center;
+      .user-groups-icon {
+        display: none;
+      }
+      &:hover {
+        color: #3a84ff;
+        cursor: pointer;
+        .user-groups-icon {
+          display: block;
+          margin-left: 5px;
+        }
+      }
+    }
+  }
+}
+.disassociate-confirm {
+  .popover-title {
+    font-size: 16px;
+    padding-bottom: 16px;
+  }
+  .popover-content {
+    color: #63656e;
+    .popover-content-item {
+      display: flex;
+      &-value {
+        color: #313238;
+        margin-left: 5px;
+      }
+    }
+    &-tip {
+      padding: 6px 0 24px 0;
+    }
   }
 }
 </style>
