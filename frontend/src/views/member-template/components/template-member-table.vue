@@ -4,6 +4,7 @@
       :id="curDetailData.id"
       :name="curDetailData.name"
       :read-only="readOnly"
+      :is-show-tab="false"
       :display-set="displaySet"
     />
   </div>

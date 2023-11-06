@@ -24,7 +24,10 @@
               @click.stop="handleTabChange(item.id)"
             >
               <span class="member-tab-groups-item-name">{{ item.name }}</span>
-              <span v-if="['associate_groups'].includes(item.id)" class="member-tab-groups-item-count">
+              <span
+                v-if="['associate_groups'].includes(item.id)"
+                class="member-tab-groups-item-count"
+              >
                 ({{ item.count }})
               </span>
             </div>
@@ -76,7 +79,11 @@
         tabList: [
           { name: this.$t(`m.common['基本信息']`), id: 'basic_info' },
           { name: this.$t(`m.memberTemplate['模板成员']`), id: 'template_member' },
-          { name: this.$t(`m.memberTemplate['关联用户组']`), id: 'associate_groups', count: 10000 }
+          {
+            name: this.$t(`m.memberTemplate['关联用户组']`),
+            id: 'associate_groups',
+            count: 10000
+          }
         ],
         COM_MAP: Object.freeze(
           new Map([
@@ -133,7 +140,8 @@
           },
           associate_groups: () => {
             this.$nextTick(() => {
-              this.$refs.tempDetailComRef && this.$refs.tempDetailComRef.fetchAssociateGroup(true);
+              this.$refs.tempDetailComRef
+                && this.$refs.tempDetailComRef.fetchAssociateGroup(true);
             });
           }
         };
@@ -177,7 +185,7 @@
     }
   }
   &-content {
-    height: calc(100vh - 114px);
+    /* height: calc(100vh - 114px); */
     .member-template-tab {
       padding: 24px 24px 0;
       background-color: #f5f7fa;
@@ -189,7 +197,7 @@
         position: relative;
         display: flex;
         &-item {
-         min-width: 96px;
+          min-width: 96px;
           display: flex;
           font-size: 14px;
           color: #63656e;

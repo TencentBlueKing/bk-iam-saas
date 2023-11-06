@@ -231,7 +231,7 @@
 <style lang="postcss" scoped>
 .iam-member-template-side {
   &-content {
-    height: calc(100vh - 114px);
+    height: calc(100vh - 140px);
     .member-template-content {
       padding: 0 40px;
       .bk-form-item {

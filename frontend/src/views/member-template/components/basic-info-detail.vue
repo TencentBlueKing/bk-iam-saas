@@ -11,8 +11,12 @@
             :remote-hander="handleChangeInfo"
           />
         </detail-item>
-        <detail-item :label="`${$t(`m.memberTemplate['模板ID']`)}: `">{{ basicInfo.id }}</detail-item>
-        <detail-item :label="`${$t(`m.common['创建时间']`)}: `">{{ basicInfo.created_time }}</detail-item>
+        <detail-item :label="`${$t(`m.memberTemplate['模板ID']`)}: `">{{
+          basicInfo.id
+        }}</detail-item>
+        <detail-item :label="`${$t(`m.common['创建时间']`)}: `">{{
+          basicInfo.created_time
+        }}</detail-item>
         <detail-item :label="`${$t(`m.memberTemplate['模板描述']`)}: `">
           <iam-edit-textarea
             field="description"
@@ -49,21 +53,40 @@
           created_time: '',
           description: ''
         },
-        rules: [{
-          required: true,
-          message: this.$t(`m.verify['请填写名称']`),
-          trigger: 'blur'
-        }]
+        rules: [
+          {
+            required: true,
+            message: this.$t(`m.verify['请填写名称']`),
+            trigger: 'blur'
+          }
+        ]
       };
     },
     methods: {
       async fetchDetailInfo () {
-        console.log(111);
         this.basicInfo = Object.assign(this.basicInfo, {});
       },
 
-      handleChangeInfo () {
-        
+      async handleChangeInfo (payload) {
+        const { id, name, description } = this.basicInfo;
+        const params = {
+          name,
+          description,
+          id,
+        ...payload
+        };
+        try {
+          await this.$store.dispatch('role/updateRatingManager', params);
+          this.messageSuccess(this.$t(`m.info['编辑成功']`), 3000);
+          const { name, description } = params;
+          this.basicInfo = Object.assign(this.basicInfo, {
+            name,
+            description
+          });
+        } catch (e) {
+          console.warn('error');
+          this.messageAdvancedError(e);
+        }
       }
     }
   };

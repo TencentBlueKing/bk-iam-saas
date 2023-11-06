@@ -613,7 +613,7 @@ export const m = {
         '克隆二级管理空间': 'Clone Secondary management space',
         '用户组设置': 'User Group Setting',
         '敏感等级': 'Sensitivity Level',
-        '人员模板': 'Members template'
+        '人员模板': 'Members Template'
     },
     applyEntrance: {
         '立刻申请': 'Apply now',
@@ -1392,6 +1392,7 @@ export const m = {
     },
     memberTemplate: {
         '模板名称': 'Template name',
+        '人员模板': 'Member template',
         '用户组名称': 'User group name',
         '创建人': 'Creator',
         '关联用户组': 'Associate user group',

@@ -91,111 +91,214 @@
         />
       </div>
     </render-search>
-    <bk-table
-      ref="groupMemberRef"
-      :data="tableList"
-      size="small"
-      ext-cls="user-group-member-table"
-      :cell-class-name="getCellClass"
-      :outer-border="false"
-      :header-border="false"
-      :pagination="pagination"
-      @page-change="pageChange"
-      @page-limit-change="limitChange"
-      @select="handlerChange"
-      @select-all="handlerAllChange"
-      v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
-    >
-      <bk-table-column type="selection" align="center" />
-      <bk-table-column :label="$t(`m.userGroup['用户/组织']`)">
-        <template slot-scope="{ row }">
-          <div class="user" v-if="row.type === 'user'" :title="`${row.id}(${row.name})`">
-            <Icon type="personal-user" />
-            <span class="name">{{ row.id }}</span
-            ><span class="count" v-if="row.name !== ''">
-              {{ "(" + row.name + ")" }}
+    <div class="group-member-wrapper">
+      <bk-tab
+        v-if="isShowTab"
+        ref="tabRef"
+        :active.sync="tabActive"
+        type="unborder-card"
+        ext-cls="group-tab-wrapper"
+        @tab-change="handleTabChange"
+      >
+        <bk-tab-panel v-for="panel in groupTabList" v-bind="panel" :key="panel.name">
+          <template slot="label">
+            <span class="panel-name">{{ panel.label }}</span>
+            <span
+              :class="['panel-count', { 'panel-count-active': tabActive === panel.name }]"
+            >
+              {{ panel.count }}
             </span>
-          </div>
-          <div class="depart" v-else :title="row.full_name">
-            <Icon type="organization-fill" />
-            <span class="name" :style="{ maxWidth: curDisplaySet.customNameWidth }">
-              {{ row.name || "--" }}
-            </span>
-            <span class="count" v-if="row.member_count && enableOrganizationCount">
-              ({{ row.member_count }})
-            </span>
-          </div>
-        </template>
-      </bk-table-column>
-      <bk-table-column :label="$t(`m.userGroupDetail['所属组织架构']`)">
-        <template slot-scope="{ row }">
-          <template v-if="row.type === 'user'">
-            <template v-if="row.user_departments && row.user_departments.length">
+          </template>
+        </bk-tab-panel>
+      </bk-tab>
+
+      <template v-if="['userOrOrg'].includes(tabActive)">
+        <bk-table
+          ref="groupMemberRef"
+          :data="tableList"
+          size="small"
+          ext-cls="user-group-member-table"
+          :cell-class-name="getCellClass"
+          :outer-border="false"
+          :header-border="false"
+          :pagination="pagination"
+          @page-change="pageChange"
+          @page-limit-change="limitChange"
+          @select="handlerChange"
+          @select-all="handlerAllChange"
+          v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
+        >
+          <bk-table-column type="selection" align="center" />
+          <bk-table-column :label="$t(`m.userGroup['用户/组织']`)">
+            <template slot-scope="{ row }">
               <div
-                :title="row.user_departments.join(';')"
-                v-for="(item, index) in row.user_departments"
-                :key="index"
-                class="user_departs"
+                class="user"
+                v-if="row.type === 'user'"
+                :title="`${row.id}(${row.name})`"
               >
-                {{ item }}
+                <Icon type="personal-user" />
+                <span class="name">{{ row.id }}</span
+                ><span class="count" v-if="row.name !== ''">
+                  {{ "(" + row.name + ")" }}
+                </span>
+              </div>
+              <div class="depart" v-else :title="row.full_name">
+                <Icon type="organization-fill" />
+                <span class="name" :style="{ maxWidth: curDisplaySet.customNameWidth }">
+                  {{ row.name || "--" }}
+                </span>
+                <span class="count" v-if="row.member_count && enableOrganizationCount">
+                  ({{ row.member_count }})
+                </span>
               </div>
             </template>
-            <template v-else>
-              <div>--</div>
+          </bk-table-column>
+          <bk-table-column :label="$t(`m.userGroupDetail['所属组织架构']`)">
+            <template slot-scope="{ row }">
+              <template v-if="row.type === 'user'">
+                <template v-if="row.user_departments && row.user_departments.length">
+                  <div
+                    :title="row.user_departments.join(';')"
+                    v-for="(item, index) in row.user_departments"
+                    :key="index"
+                    class="user_departs"
+                  >
+                    {{ item }}
+                  </div>
+                </template>
+                <template v-else>
+                  <div>--</div>
+                </template>
+              </template>
+              <template v-else>
+                {{ row.full_name }}
+              </template>
             </template>
+          </bk-table-column>
+          <bk-table-column :label="$t(`m.common['加入时间']`)" width="180">
+            <template slot-scope="{ row }">
+              <span :title="row.created_time.replace(/T/, ' ')">{{
+                row.created_time.replace(/T/, " ")
+              }}</span>
+            </template>
+          </bk-table-column>
+          <template v-if="curDisplaySet.showExpiredAt">
+            <bk-table-column
+              :label="$t(`m.common['有效期']`)"
+              prop="expired_at_display"
+            />
           </template>
-          <template v-else>
-            {{ row.full_name }}
+          <bk-table-column :label="$t(`m.common['操作-table']`)" width="180">
+            <template slot-scope="{ row }">
+              <div>
+                <bk-button
+                  text
+                  theme="primary"
+                  :disabled="disabledGroup()"
+                  :title="
+                    disabledGroup() ? $t(`m.userGroup['管理员组至少保留一条数据']`) : ''
+                  "
+                  @click="handleDelete(row)"
+                >
+                  {{ $t(`m.common['移除']`) }}
+                </bk-button>
+                <bk-button
+                  v-if="
+                    row.expired_at !== PERMANENT_TIMESTAMP && curDisplaySet.showRenewal
+                  "
+                  theme="primary"
+                  style="margin-left: 4px"
+                  text
+                  @click="handleShowRenewal(row)"
+                >
+                  {{ $t(`m.renewal['续期']`) }}
+                </bk-button>
+              </div>
+            </template>
+          </bk-table-column>
+          <template slot="empty">
+            <ExceptionEmpty
+              :type="emptyData.type"
+              :empty-text="emptyData.text"
+              :tip-text="emptyData.tip"
+              :tip-type="emptyData.tipType"
+              @on-clear="handleEmptyClear"
+              @on-refresh="handleEmptyRefresh"
+            />
           </template>
-        </template>
-      </bk-table-column>
-      <bk-table-column :label="$t(`m.common['加入时间']`)" width="180">
-        <template slot-scope="{ row }">
-          <span :title="row.created_time.replace(/T/, ' ')">{{
-            row.created_time.replace(/T/, " ")
-          }}</span>
-        </template>
-      </bk-table-column>
-      <template v-if="curDisplaySet.showExpiredAt">
-        <bk-table-column :label="$t(`m.common['有效期']`)" prop="expired_at_display" />
+        </bk-table>
       </template>
-      <bk-table-column :label="$t(`m.common['操作']`)" width="180">
-        <template slot-scope="{ row }">
-          <div>
-            <bk-button
-              text
-              theme="primary"
-              :disabled="disabledGroup()"
-              :title="
-                disabledGroup() ? $t(`m.userGroup['管理员组至少保留一条数据']`) : ''
-              "
-              @click="handleDelete(row)"
-            >
-              {{ $t(`m.common['移除']`) }}
-            </bk-button>
-            <bk-button
-              v-if="row.expired_at !== PERMANENT_TIMESTAMP && curDisplaySet.showRenewal"
-              theme="primary"
-              style="margin-left: 4px"
-              text
-              @click="handleShowRenewal(row)"
-            >
-              {{ $t(`m.renewal['续期']`) }}
-            </bk-button>
-          </div>
-        </template>
-      </bk-table-column>
-      <template slot="empty">
-        <ExceptionEmpty
-          :type="emptyData.type"
-          :empty-text="emptyData.text"
-          :tip-text="emptyData.tip"
-          :tip-type="emptyData.tipType"
-          @on-clear="handleEmptyClear"
-          @on-refresh="handleEmptyRefresh"
-        />
+
+      <template v-if="['memberTemplate'].includes(tabActive)">
+        <bk-table
+          size="small"
+          ref="groupMemberRef"
+          ext-cls="user-group-member-table"
+          :data="tableList"
+          :cell-class-name="getCellClass"
+          :outer-border="false"
+          :header-border="false"
+          :pagination="memberPagination"
+          @page-change="handleMemberPageChange"
+          @page-limit-change="handleMemberLimitChange"
+          @select="handlerChange"
+          @select-all="handlerAllChange"
+          v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
+        >
+          <bk-table-column type="selection" align="center" />
+          <bk-table-column :label="$t(`m.memberTemplate['人员模板']`)">
+            <template slot-scope="{ row }">
+              <div
+                class="user"
+                v-if="row.type === 'user'"
+                :title="`${row.id}(${row.name})`"
+              >
+                <Icon type="personal-user" />
+                <span class="name">{{ row.id }}</span
+                ><span class="count" v-if="row.name !== ''">
+                  {{ "(" + row.name + ")" }}
+                </span>
+              </div>
+              <div class="depart" v-else :title="row.full_name">
+                <Icon type="organization-fill" />
+                <span class="name" :style="{ maxWidth: curDisplaySet.customNameWidth }">
+                  {{ row.name || "--" }}
+                </span>
+                <span class="count" v-if="row.member_count && enableOrganizationCount">
+                  ({{ row.member_count }})
+                </span>
+              </div>
+            </template>
+          </bk-table-column>
+          <bk-table-column :label="$t(`m.common['加入时间']`)">
+            <template slot-scope="{ row }">
+              <span :title="row.created_time.replace(/T/, ' ')">
+                {{ row.created_time.replace(/T/, " ") }}
+              </span>
+            </template>
+          </bk-table-column>
+          <bk-table-column :label="$t(`m.common['操作-table']`)" width="100">
+            <template slot-scope="{ row }">
+              <div>
+                <bk-button text theme="primary" @click="handleDelete(row)">
+                  {{ $t(`m.common['移除']`) }}
+                </bk-button>
+              </div>
+            </template>
+          </bk-table-column>
+          <template slot="empty">
+            <ExceptionEmpty
+              :type="emptyData.type"
+              :empty-text="emptyData.text"
+              :tip-text="emptyData.tip"
+              :tip-type="emptyData.tipType"
+              @on-clear="handleEmptyClear"
+              @on-refresh="handleEmptyRefresh"
+            />
+          </template>
+        </bk-table>
       </template>
-    </bk-table>
+    </div>
 
     <delete-dialog
       :show.sync="deleteDialog.visible"
@@ -270,6 +373,10 @@
         type: Boolean,
         default: false
       },
+      isShowTab: {
+        type: Boolean,
+        default: true
+      },
       displaySet: {
         type: Object,
         default: () => {
@@ -290,6 +397,11 @@
           count: 0,
           limit: 10
         },
+        memberPagination: {
+          current: 1,
+          count: 0,
+          limit: 10
+        },
         currentBackup: 1,
         deleteDialog: {
           visible: false,
@@ -300,11 +412,16 @@
         curMember: {},
         loading: false,
         isShowAddMemberDialog: false,
-
         isShowRenewalDialog: false,
         curData: {},
         renewalLoading: false,
         emptyData: {
+          type: '',
+          text: '',
+          tip: '',
+          tipType: ''
+        },
+        emptyMemberData: {
           type: '',
           text: '',
           tip: '',
@@ -329,6 +446,19 @@
           'bk-cascade-panel',
           'bk-cascade-right bk-icon icon-angle-right'
         ],
+        groupTabList: [
+          {
+            name: 'userOrOrg',
+            label: this.$t(`m.userGroup['用户/组织']`),
+            count: 0
+          },
+          {
+            name: 'memberTemplate',
+            label: this.$t(`m.nav['人员模板']`),
+            count: 0
+          }
+        ],
+        tabActive: 'userOrOrg',
         curDisplaySet: {}
       };
     },
@@ -469,6 +599,7 @@
               this.$refs.groupMemberRef && this.$refs.groupMemberRef.clearSelection();
             }
           });
+          await this.handleRefreshTabCount();
           await this.fetchCustomTotal();
           this.emptyData = formatCodeData(
             code,
@@ -486,6 +617,54 @@
         }
       },
 
+      async fetchMemberTemplateList () {
+        this.tableLoading = true;
+        try {
+          const { current, limit } = this.memberPagination;
+          const params = {
+            id: this.id,
+            limit,
+            offset: limit * (current - 1),
+            keyword: this.keyword
+          };
+          const { code, data } = await this.$store.dispatch(
+            'userGroup/getUserGroupMemberList',
+            params
+          );
+          this.memberPagination.count = data.count || 0;
+          this.tableList.splice(0, this.tableList.length, ...(data.results || []));
+          this.$nextTick(() => {
+            const currentSelectList = this.currentSelectList.map((item) =>
+              item.id.toString()
+            );
+            this.tableList.forEach((item) => {
+              if (currentSelectList.includes(item.id.toString())) {
+                this.$refs.groupMemberRef
+                  && this.$refs.groupMemberRef.toggleRowSelection(item, true);
+              }
+            });
+            if (!this.currentSelectList.length) {
+              this.$refs.groupMemberRef && this.$refs.groupMemberRef.clearSelection();
+            }
+          });
+          await this.handleRefreshTabCount();
+          await this.fetchCustomTotal();
+          this.emptyMemberData = formatCodeData(
+            code,
+            this.emptyMemberData,
+            this.tableList.length === 0
+          );
+        } catch (e) {
+          console.error(e);
+          const { code } = e;
+          this.tableList = [];
+          this.emptyMemberData = formatCodeData(code, this.emptyMemberData);
+          this.messageAdvancedError(e);
+        } finally {
+          this.tableLoading = false;
+        }
+      },
+
       async handleKeyWordEnter () {
         this.emptyData.tipType = 'search';
         this.pagination = Object.assign(this.pagination, { current: 1, limit: 10 });
@@ -494,6 +673,31 @@
 
       async handleKeyWordClear () {
         await this.handleEmptyRefresh();
+      },
+
+      async handleTabChange (payload) {
+        this.tabActive = payload;
+        this.currentSelectList = [];
+        this.resetPagination();
+        await this.fetchMemberList();
+        this.handleRefreshTabCount();
+      },
+
+      handleRefreshTabCount () {
+        this.$nextTick(() => {
+          const typeMap = {
+            userOrOrg: () => {
+              this.$set(this.groupTabList[0], 'count', this.pagination.count || 0);
+            },
+            memberTemplate: () => {
+              this.$set(this.groupTabList[1], 'count', this.memberPagination.count || 0);
+            }
+          };
+          typeMap[this.tabActive]();
+          this.$refs.tabRef
+            && this.$refs.tabRef.$refs.tabLabel
+            && this.$refs.tabRef.$refs.tabLabel.forEach((label) => label.$forceUpdate());
+        });
       },
 
       fetchCustomTotal () {
@@ -751,10 +955,7 @@
       async handleEmptyRefresh () {
         this.emptyData.tipType = '';
         this.keyword = '';
-        this.pagination = Object.assign(this.pagination, {
-          current: 1,
-          limit: 10
-        });
+        this.resetPagination();
         await this.fetchMemberList();
       },
 
@@ -885,6 +1086,19 @@
         this.fetchMemberList();
       },
 
+      handleMemberPageChange (current) {
+        if (this.currentBackup === current) {
+          return;
+        }
+        this.memberPagination = Object.assign(this.memberPagination, { current });
+        this.fetchMemberTemplateList(true);
+      },
+
+      handleMemberLimitChange (limit) {
+        this.memberPagination = Object.assign(this.memberPagination, { current: 1, limit });
+        this.fetchMemberTemplateList(true);
+      },
+
       handleAfterDeleteLeave () {
         this.deleteDialog.subTitle = '';
         this.curMember = {};
@@ -957,6 +1171,17 @@
         } finally {
           this.renewalLoading = false;
         }
+      },
+
+      resetPagination () {
+        this.pagination = Object.assign(this.pagination, {
+          current: 1,
+          limit: 10
+        });
+        this.memberPagination = Object.assign(this.memberPagination, {
+          current: 1,
+          limit: 10
+        });
       }
     }
   };
@@ -1096,6 +1321,30 @@
     &.is-default-trigger.is-unselected:before,
     .bk-cascade-angle {
       color: #c4c6cc;
+    }
+  }
+}
+
+/deep/ .group-member-wrapper {
+  .group-tab-wrapper {
+    margin-top: 16px;
+    .bk-tab-section {
+      display: none;
+    }
+    .panel-count {
+      min-width: 16px;
+      height: 16px;
+      line-height: 16px;
+      padding: 0 8px;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 12px;
+      color: #979ba5;
+      background-color: #f0f1f5;
+      &-active {
+        background-color: #e1ecff;
+        color: #3a84ff;
+      }
     }
   }
 }
