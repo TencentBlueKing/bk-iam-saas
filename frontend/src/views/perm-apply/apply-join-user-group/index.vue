@@ -197,6 +197,7 @@
               <span class="user-group-name" :title="row.name" @click="handleView(row)">
                 {{ row.name }}
               </span>
+              <span v-if="row.expired_at_display">({{ row.expired_at_display }})</span>
             </template>
           </bk-table-column>
           <bk-table-column :label="$t(`m.common['描述']`)">
@@ -1000,6 +1001,14 @@
                   };
                 });
               }
+              if (this.defaultSelectedGroups.length) {
+                const hasSelected = this.defaultSelectedGroups.find((v) => String(v.id) === String(item.id));
+                if (hasSelected) {
+                  this.$set(item, 'expired_at', hasSelected.expired_at);
+                  this.$set(item, 'expired_at_display', hasSelected.expired_at_display);
+                  this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
+                }
+              }
               if (currentSelectedGroups.includes(item.id.toString())
                 || this.curUserGroup.includes(item.id.toString())) {
                 this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
@@ -1049,6 +1058,14 @@
                     readonly: false
                   };
                 });
+              }
+              if (this.defaultSelectedGroups.length) {
+                const hasSelected = this.defaultSelectedGroups.find((v) => String(v.id) === String(item.id));
+                if (hasSelected) {
+                  this.$set(item, 'expired_at', hasSelected.expired_at);
+                  this.$set(item, 'expired_at_display', hasSelected.expired_at_display);
+                  this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
+                }
               }
               if (currentSelectedGroups.includes(item.id.toString())
                 || this.curUserGroup.includes(item.id.toString())) {
