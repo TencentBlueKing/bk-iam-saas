@@ -17,7 +17,6 @@
       ext-cls="associate-user-group-table"
       :data="groupTableList"
       :pagination="pagination"
-      :resize="true"
       @page-change="handlePageChange"
       @page-limit-change="handleLimitChange"
       v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
@@ -44,15 +43,21 @@
             >
               <div slot="content">
                 <div class="popover-title">
-                  <div class="popover-title-text">{{ $t(`m.dialog['确认解除与该用户组的关联？']`) }}</div>
+                  <div class="popover-title-text">
+                    {{ $t(`m.dialog['确认解除与该用户组的关联？']`) }}
+                  </div>
                 </div>
                 <div class="popover-content">
                   <div class="popover-content-item">
-                    <span class="popover-content-item-label">{{ $t(`m.memberTemplate['用户组名称']`) }}:</span>
+                    <span class="popover-content-item-label"
+                    >{{ $t(`m.memberTemplate['用户组名称']`) }}:</span
+                    >
                     <span class="popover-content-item-value"> {{ row.name }}</span>
                   </div>
                   <div class="popover-content-tip">
-                    {{ $t(`m.memberTemplate['解除关联后，相关人员将失去用户组的权限。']`) }}
+                    {{
+                      $t(`m.memberTemplate['解除关联后，相关人员将失去用户组的权限。']`)
+                    }}
                   </div>
                 </div>
               </div>
@@ -87,7 +92,8 @@
         groupTableList: [
           {
             id: 1455,
-            name: 'adminasasasasasasasasasasasssasadminasasasasasasasasasasasssasasasasadminasasasasasasasasasasasssasasasasasasas'
+            name:
+              'adminasasasasasasasasasasasssasadminasasasasasasasasasasasssasasasasadminasasasasasasasasasasasssasasasasasasas'
           }
         ],
         pagination: {

@@ -41,29 +41,40 @@
         :key="field.id"
         :label="field.label"
         :prop="field.id"
-        :sortable="['name', 'member_count', 'created_time', 'updated_time'].includes(field.id)"
       >
         <template slot-scope="{ row, $index }">
           <div v-if="['name'].includes(field.id)" class="member-template-name">
             <span
-              :class="['single-hide', { 'member-template-name-label': isAddRow && $index === 0 }]"
+              :class="[
+                'single-hide',
+                { 'member-template-name-label': isAddRow && $index === 0 }
+              ]"
               :title="row.name"
               @click="handleView(row)"
             >
               {{ row.name }}
             </span>
-            <bk-tag v-if="isAddRow && $index === 0" theme="success" type="filled" class="member-template-name-tag">
+            <bk-tag
+              v-if="isAddRow && $index === 0"
+              theme="success"
+              type="filled"
+              class="member-template-name-tag"
+            >
               new
             </bk-tag>
           </div>
           <div v-if="['member_count'].includes(field.id)">
-            <span v-if="row.member_count" class="associate-group-count" @click="handleViewGroup(row)">
+            <span
+              v-if="row.member_count"
+              class="associate-group-count"
+              @click="handleViewGroup(row)"
+            >
               {{ row.member_count }}
             </span>
             <span v-else>--</span>
           </div>
           <span v-if="!['name', 'member_count'].includes(field.id)">
-            {{ row[field.id] || '--' }}
+            {{ row[field.id] || "--" }}
           </span>
         </template>
       </bk-table-column>
@@ -88,15 +99,21 @@
             >
               <div slot="content">
                 <div class="popover-title">
-                  <div class="popover-title-text">{{ $t(`m.dialog['确认删除该人员模板？']`) }}</div>
+                  <div class="popover-title-text">
+                    {{ $t(`m.dialog['确认删除该人员模板？']`) }}
+                  </div>
                 </div>
                 <div class="popover-content">
                   <div class="popover-content-item">
-                    <span class="popover-content-item-label">{{ $t(`m.memberTemplate['用户组名称']`) }}:</span>
+                    <span class="popover-content-item-label"
+                    >{{ $t(`m.memberTemplate['用户组名称']`) }}:</span
+                    >
                     <span class="popover-content-item-value"> {{ row.name }}</span>
                   </div>
                   <div class="popover-content-tip">
-                    {{ $t(`m.memberTemplate['删除后，关联用户组也会删除对应的人员权限。']`) }}
+                    {{
+                      $t(`m.memberTemplate['删除后，关联用户组也会删除对应的人员权限。']`)
+                    }}
                   </div>
                 </div>
               </div>
@@ -127,7 +144,10 @@
       </template>
     </bk-table>
 
-    <MemberTemplateDetailSlider :show.sync="isShowDetailSlider" :cur-detail-data="curDetailData" />
+    <MemberTemplateDetailSlider
+      :show.sync="isShowDetailSlider"
+      :cur-detail-data="curDetailData"
+    />
 
     <AddMemberTemplateSlider :show.sync="isShowAddSlider" @on-submit="handleTempSubmit" />
 
@@ -168,7 +188,7 @@
       return {
         memberTemplateList: [
           {
-            id: 1473,
+            id: 398,
             name: '11777757sasdddddddddddddddddd57',
             description: '4545',
             member_count: 2,
@@ -178,7 +198,7 @@
             updated_time: '2023-11-03 15:53'
           },
           {
-            id: 1475,
+            id: 399,
             name: '11',
             description: '4545',
             member_count: 2,
@@ -223,7 +243,9 @@
         },
         setting: {
           fields: MEMBERS_TEMPLATE_FIELDS,
-          selectedFields: MEMBERS_TEMPLATE_FIELDS.filter((item) => !['created_time', 'updated_by'].includes(item.id)),
+          selectedFields: MEMBERS_TEMPLATE_FIELDS.filter(
+            (item) => !['created_time', 'updated_by'].includes(item.id)
+          ),
           size: 'small'
         },
         tableLoading: false,
@@ -283,9 +305,7 @@
         await this.fetchMemberTemplateList(true);
       },
 
-      async handleConfirmDelete () {
-
-      },
+      async handleConfirmDelete () {},
 
       getRowClass ({ row, rowIndex }) {
         if (rowIndex === 0 && this.isAddRow) {
@@ -325,7 +345,9 @@
           const disabledNames = hasDisabledData.map((item) => item.name);
           this.messageWarn(
             this.$t(`m.info['用户组为只读用户组不能添加成员']`, {
-              value: `${this.$t(`m.common['【']`)}${disabledNames}${this.$t(`m.common['】']`)}`
+              value: `${this.$t(`m.common['【']`)}${disabledNames}${this.$t(
+                `m.common['】']`
+              )}`
             }),
             3000
           );
@@ -342,10 +364,14 @@
             if (isChecked) {
               this.currentSelectList.push(row);
             } else {
-              this.currentSelectList = this.currentSelectList.filter((item) => item.id !== row.id);
+              this.currentSelectList = this.currentSelectList.filter(
+                (item) => item.id !== row.id
+              );
             }
             this.$nextTick(() => {
-              const selectionCount = document.getElementsByClassName('bk-page-selection-count');
+              const selectionCount = document.getElementsByClassName(
+                'bk-page-selection-count'
+              );
               if (this.$refs.sensitivityTableRef && selectionCount) {
                 selectionCount[0].children[0].innerHTML = this.currentSelectList.length;
               }
@@ -353,10 +379,14 @@
           },
           all: () => {
             const tableList = _.cloneDeep(this.memberTemplateList);
-            const selectGroups = this.currentSelectList.filter((item) => !tableList.map((v) => v.id).includes(item.id));
+            const selectGroups = this.currentSelectList.filter(
+              (item) => !tableList.map((v) => v.id).includes(item.id)
+            );
             this.currentSelectList = [...selectGroups, ...payload];
             this.$nextTick(() => {
-              const selectionCount = document.getElementsByClassName('bk-page-selection-count');
+              const selectionCount = document.getElementsByClassName(
+                'bk-page-selection-count'
+              );
               if (this.$refs.sensitivityTableRef && selectionCount) {
                 selectionCount[0].children[0].innerHTML = this.currentSelectList.length;
               }

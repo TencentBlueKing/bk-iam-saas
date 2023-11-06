@@ -1,6 +1,11 @@
 <template>
   <div class="template-member-table">
-    <member-table :id="curDetailData.id" :name="curDetailData.name" :read-only="readOnly" />
+    <MemberTable
+      :id="curDetailData.id"
+      :name="curDetailData.name"
+      :read-only="readOnly"
+      :display-set="displaySet"
+    />
   </div>
 </template>
 
@@ -25,7 +30,12 @@
         users: [],
         departments: [],
         addMemberTitle: this.$t(`m.common['添加成员']`),
-        readOnly: false
+        readOnly: false,
+        displaySet: {
+          showExpiredAt: false,
+          showRenewal: false,
+          customNameWidth: '300px'
+        }
       };
     },
     methods: {
