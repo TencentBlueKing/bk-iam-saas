@@ -35,7 +35,7 @@
         displaySet: {
           showExpiredAt: false,
           showRenewal: false,
-          customNameWidth: '300px'
+          customNameWidth: '180px'
         }
       };
     },

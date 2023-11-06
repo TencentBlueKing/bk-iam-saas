@@ -248,24 +248,10 @@
           <bk-table-column type="selection" align="center" />
           <bk-table-column :label="$t(`m.memberTemplate['人员模板']`)">
             <template slot-scope="{ row }">
-              <div
-                class="user"
-                v-if="row.type === 'user'"
-                :title="`${row.id}(${row.name})`"
-              >
-                <Icon type="personal-user" />
-                <span class="name">{{ row.id }}</span
-                ><span class="count" v-if="row.name !== ''">
-                  {{ "(" + row.name + ")" }}
-                </span>
-              </div>
-              <div class="depart" v-else :title="row.full_name">
+              <div class="member-template" :title="row.name">
                 <Icon type="organization-fill" />
-                <span class="name" :style="{ maxWidth: curDisplaySet.customNameWidth }">
+                <span class="name">
                   {{ row.name || "--" }}
-                </span>
-                <span class="count" v-if="row.member_count && enableOrganizationCount">
-                  ({{ row.member_count }})
                 </span>
               </div>
             </template>
@@ -551,7 +537,7 @@
     },
     created () {
       this.PERMANENT_TIMESTAMP = PERMANENT_TIMESTAMP;
-      this.fetchMemberList();
+      this.fetchInitData();
     // window.addEventListener('message', this.fetchReceiveData);
     },
     methods: {
@@ -567,6 +553,13 @@
           return 'iam-table-cell-depart-cls';
         }
         return '';
+      },
+
+      fetchInitData () {
+        this.fetchMemberList();
+        if (this.isShowTab) {
+          this.fetchMemberTemplateList();
+        }
       },
 
       async fetchMemberList () {
@@ -667,8 +660,8 @@
 
       async handleKeyWordEnter () {
         this.emptyData.tipType = 'search';
-        this.pagination = Object.assign(this.pagination, { current: 1, limit: 10 });
-        this.fetchMemberList();
+        this.resetPagination();
+        this.fetchInitData();
       },
 
       async handleKeyWordClear () {
@@ -685,15 +678,8 @@
 
       handleRefreshTabCount () {
         this.$nextTick(() => {
-          const typeMap = {
-            userOrOrg: () => {
-              this.$set(this.groupTabList[0], 'count', this.pagination.count || 0);
-            },
-            memberTemplate: () => {
-              this.$set(this.groupTabList[1], 'count', this.memberPagination.count || 0);
-            }
-          };
-          typeMap[this.tabActive]();
+          this.$set(this.groupTabList[0], 'count', this.pagination.count || 0);
+          this.$set(this.groupTabList[1], 'count', this.memberPagination.count || 0);
           this.$refs.tabRef
             && this.$refs.tabRef.$refs.tabLabel
             && this.$refs.tabRef.$refs.tabLabel.forEach((label) => label.$forceUpdate());
@@ -956,7 +942,7 @@
         this.emptyData.tipType = '';
         this.keyword = '';
         this.resetPagination();
-        await this.fetchMemberList();
+        await this.fetchInitData();
       },
 
       handleShowRenewal (payload) {
@@ -1198,7 +1184,8 @@
       }
     }
     .user,
-    .depart {
+    .depart,
+    .member-template {
       padding: 4px 6px;
       background: #f0f1f5;
       width: max-content;
@@ -1214,6 +1201,17 @@
         text-overflow: ellipsis;
         white-space: nowrap;
         vertical-align: bottom;
+      }
+    }
+    .member-template {
+      background-color: #f0f5ff;
+      color: #3a84ff;
+      i {
+        color: #699df4;
+      }
+      &:hover {
+        color: #699df4;
+        cursor: pointer;
       }
     }
   }

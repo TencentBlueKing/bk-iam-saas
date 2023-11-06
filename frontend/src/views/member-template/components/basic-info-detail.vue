@@ -11,12 +11,12 @@
             :remote-hander="handleChangeInfo"
           />
         </detail-item>
-        <detail-item :label="`${$t(`m.memberTemplate['模板ID']`)}: `">{{
-          basicInfo.id
-        }}</detail-item>
-        <detail-item :label="`${$t(`m.common['创建时间']`)}: `">{{
-          basicInfo.created_time
-        }}</detail-item>
+        <detail-item :label="`${$t(`m.memberTemplate['模板ID']`)}: `">
+          {{ basicInfo.id }}
+        </detail-item>
+        <detail-item :label="`${$t(`m.common['创建时间']`)}: `">
+          {{ basicInfo.created_time }}
+        </detail-item>
         <detail-item :label="`${$t(`m.memberTemplate['模板描述']`)}: `">
           <iam-edit-textarea
             field="description"
