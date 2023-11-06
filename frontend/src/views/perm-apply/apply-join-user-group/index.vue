@@ -194,10 +194,24 @@
           <bk-table-column type="selection" align="center" :selectable="setDefaultSelect" />
           <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
             <template slot-scope="{ row }">
-              <span class="user-group-name" :title="row.name" @click="handleView(row)">
-                {{ row.name }}
-              </span>
-              <span v-if="row.expired_at_display">({{ row.expired_at_display }})</span>
+              <div class="user-group-name">
+                <span
+                  :class="[
+                    'single-hide',
+                    'user-group-name-label'
+                  ]"
+                  :title="row.name"
+                  @click="handleView(row)"
+                >
+                  {{ row.name }}
+                </span>
+                <span
+                  v-if="row.expired_at_display"
+                  class="user-group-name-expired"
+                >
+                  ({{ row.expired_at_display }})
+                </span>
+              </div>
             </template>
           </bk-table-column>
           <bk-table-column :label="$t(`m.common['描述']`)">
@@ -1678,6 +1692,22 @@
 /deep/ .bk-page.bk-page-align-right {
   .bk-page-selection-count-left {
     display: none;
+  }
+}
+
+.user-group-name {
+  display: flex;
+  align-items: center;
+  &-label {
+    color: #3a84ff;
+    max-width: calc(100% - 50px);
+    word-break: break-all;
+    cursor: pointer;
+  }
+  &-expired {
+    color: #313238;
+    line-height: 1;
+    margin-left: 5px;
   }
 }
 </style>
