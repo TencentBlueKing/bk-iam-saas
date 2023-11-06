@@ -194,9 +194,24 @@
           <bk-table-column type="selection" align="center" :selectable="setDefaultSelect" />
           <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
             <template slot-scope="{ row }">
-              <span class="user-group-name" :title="row.name" @click="handleView(row)">
-                {{ row.name }}
-              </span>
+              <div class="user-group-name">
+                <span
+                  :class="[
+                    'single-hide',
+                    'user-group-name-label'
+                  ]"
+                  :title="row.name"
+                  @click="handleView(row)"
+                >
+                  {{ row.name }}
+                </span>
+                <span
+                  v-if="row.expired_at_display"
+                  class="user-group-name-expired"
+                >
+                  ({{ row.expired_at_display }})
+                </span>
+              </div>
             </template>
           </bk-table-column>
           <bk-table-column :label="$t(`m.common['描述']`)">
@@ -1000,6 +1015,14 @@
                   };
                 });
               }
+              if (this.defaultSelectedGroups.length) {
+                const hasSelected = this.defaultSelectedGroups.find((v) => String(v.id) === String(item.id));
+                if (hasSelected) {
+                  this.$set(item, 'expired_at', hasSelected.expired_at);
+                  this.$set(item, 'expired_at_display', hasSelected.expired_at_display);
+                  this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
+                }
+              }
               if (currentSelectedGroups.includes(item.id.toString())
                 || this.curUserGroup.includes(item.id.toString())) {
                 this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
@@ -1049,6 +1072,14 @@
                     readonly: false
                   };
                 });
+              }
+              if (this.defaultSelectedGroups.length) {
+                const hasSelected = this.defaultSelectedGroups.find((v) => String(v.id) === String(item.id));
+                if (hasSelected) {
+                  this.$set(item, 'expired_at', hasSelected.expired_at);
+                  this.$set(item, 'expired_at_display', hasSelected.expired_at_display);
+                  this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
+                }
               }
               if (currentSelectedGroups.includes(item.id.toString())
                 || this.curUserGroup.includes(item.id.toString())) {
@@ -1661,6 +1692,22 @@
 /deep/ .bk-page.bk-page-align-right {
   .bk-page-selection-count-left {
     display: none;
+  }
+}
+
+.user-group-name {
+  display: flex;
+  align-items: center;
+  &-label {
+    color: #3a84ff;
+    max-width: calc(100% - 50px);
+    word-break: break-all;
+    cursor: pointer;
+  }
+  &-expired {
+    color: #313238;
+    line-height: 1;
+    margin-left: 5px;
   }
 }
 </style>

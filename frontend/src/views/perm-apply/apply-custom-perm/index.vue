@@ -924,13 +924,14 @@
                   };
                 });
               }
-              this.personalUserGroup.forEach(v => {
-                if (String(item.id) === v.id) {
-                  this.$set(item, 'expired_at', v.expired_at);
-                  this.$set(item, 'expired_at_display', v.expired_at_display);
+              if (this.personalUserGroup.length) {
+                const hasSelected = this.personalUserGroup.find((v) => String(v.id) === String(item.id));
+                if (hasSelected) {
+                  this.$set(item, 'expired_at', hasSelected.expired_at);
+                  this.$set(item, 'expired_at_display', hasSelected.expired_at_display);
                   this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
                 }
-              });
+              }
             });
           });
         } catch (e) {
@@ -943,7 +944,7 @@
       async fetchCurUserGroup () {
         try {
           const { data } = await this.$store.dispatch('perm/getPersonalGroups', {
-            page_size: 100,
+            page_size: 1000,
             page: 1
           });
           if (data.results && data.results.length) {
@@ -987,10 +988,10 @@
           await this.fetchCommonActions(this.systemValue);
         }
         if (this.sysAndtid) {
-          // 获取用户组数据
-          await this.fetchUserGroupList();
           // 获取个人用户的用户组列表
           await this.fetchCurUserGroup();
+          // 获取用户组数据
+          await this.fetchUserGroupList();
           // 获取推荐操作
           await this.fetchRecommended();
         }
