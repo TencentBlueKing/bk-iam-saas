@@ -659,6 +659,10 @@
         const conditionData = this.$refs.renderResourceRef.handleGetValue();
         const { isEmpty, data } = conditionData;
         if (isEmpty || data[0] === 'none') {
+          this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+            .related_resource_types[this.curResIndex].condition = data;
+          this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+            .related_resource_types[this.curResIndex].isError = true;
           this.isShowResourceInstanceSideslider = false;
           return;
         }

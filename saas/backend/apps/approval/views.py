@@ -221,7 +221,7 @@ class SystemActionSensitivityLevelCountViewSet(GenericViewSet):
 
         system_id = slz.validated_data["system_id"]
 
-        action_list = self.biz.list(system_id)
+        action_list = self.biz.list_without_cache_sensitivity_level(system_id)
         level_count = Counter(obj.sensitivity_level for obj in action_list.actions)
 
         data = {sensitivity_level: count for sensitivity_level, count in level_count.items()}
