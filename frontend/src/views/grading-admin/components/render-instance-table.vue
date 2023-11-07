@@ -165,7 +165,7 @@
           @on-init="handlerOnInit" />
       </div>
       <div slot="footer" style="margin-left: 25px;">
-        <bk-button theme="primary" :disabled="disabled" :loading="sliderLoading" @click="handlerResourceSumit">{{ $t(`m.common['保存']`) }}</bk-button>
+        <bk-button theme="primary" :disabled="disabled" :loading="sliderLoading" @click="handlerResourceSubmit">{{ $t(`m.common['保存']`) }}</bk-button>
         <bk-button style="margin-left: 10px;" :disabled="disabled" @click="handlerResourcePreview" v-if="isShowPreview">{{ $t(`m.common['预览']`) }}</bk-button>
         <bk-button style="margin-left: 10px;" :disabled="disabled" @click="handleResourceCancel">{{ $t(`m.common['取消']`) }}</bk-button>
       </div>
@@ -644,11 +644,15 @@
         });
       },
 
-      async handlerResourceSumit () {
+      async handlerResourceSubmit () {
         window.changeDialog = true;
         const conditionData = this.$refs.renderResourceRef.handleGetValue();
         const { isEmpty, data } = conditionData;
         if (isEmpty || data[0] === 'none') {
+          this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+            .related_resource_types[this.curResIndex].condition = data;
+          this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+            .related_resource_types[this.curResIndex].isError = true;
           this.isShowResourceInstanceSideslider = false;
           return;
         }
