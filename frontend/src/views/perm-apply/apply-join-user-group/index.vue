@@ -1517,11 +1517,16 @@
           });
         } catch (e) {
           console.error(e);
+          const applyCount = this.defaultSelectedGroups.length + this.currentSelectedGroups.length;
           if (['admin'].includes(this.user.username)) {
             this.isShowConfirmDialog = true;
-          } else {
-            this.messageAdvancedError(e);
+            return;
           }
+          if (applyCount >= 100) {
+            this.messageAdvancedError(e, 8000, 3, this.$t(`m.info['申请加入失败，用户组数量超出上限（100个），请在“我的权限”中退出用户组后重试']`, { value: applyCount - 100 }));
+            return;
+          }
+          this.messageAdvancedError(e);
         } finally {
           this.submitLoading = false;
         }
@@ -1622,13 +1627,6 @@
             border-right: 1px solid #dfe0e5;
             border-bottom: 1px solid #dfe0e5;
         }
-        .user-group-name {
-            color: #3a84ff;
-            cursor: pointer;
-            &:hover {
-                color: #699df4;
-            }
-        }
     }
     .apply-selected-groups {
       padding: 10px 0;
@@ -1705,7 +1703,6 @@
     cursor: pointer;
   }
   &-expired {
-    color: #313238;
     line-height: 1;
     margin-left: 5px;
   }
