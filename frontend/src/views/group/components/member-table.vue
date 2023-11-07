@@ -81,9 +81,9 @@
       <div slot="right">
         <bk-input
           v-model="keyword"
-          style="width: 300px"
+          style="width: 400px"
           :placeholder="
-            $t(`m.userGroupDetail['请输入至少3个字符的用户/组织，按enter键搜索']`)
+            $t(`m.userGroupDetail['请输入至少3个字符的用户/组织或人员模板，按enter键搜索']`)
           "
           :clearable="true"
           @clear="handleKeyWordClear"
@@ -248,7 +248,7 @@
           <bk-table-column type="selection" align="center" />
           <bk-table-column :label="$t(`m.memberTemplate['人员模板']`)">
             <template slot-scope="{ row }">
-              <div class="member-template" :title="row.name">
+              <div class="member-template" :title="row.name" @click.stop="handleTempView(row)">
                 <Icon type="organization-fill" />
                 <span class="name">
                   {{ row.name || "--" }}
@@ -316,6 +316,11 @@
       :loading="renewalLoading"
       @on-submit="handleRenewalSubmit"
     />
+
+    <MemberTemplateDetailSlider
+      :show.sync="isShowTempDetailSlider"
+      :cur-detail-data="curTempData"
+    />
   </div>
 </template>
 <script>
@@ -327,6 +332,7 @@
   import renderRenewalDialog from '@/components/render-renewal-dialog';
   import DeleteDialog from '../common/iam-confirm-dialog';
   import AddMemberDialog from './iam-add-member';
+  import MemberTemplateDetailSlider from '@/views/group/components/member-template-detail-slider';
 
   export default {
     name: '',
@@ -336,7 +342,8 @@
     components: {
       DeleteDialog,
       AddMemberDialog,
-      renderRenewalDialog
+      renderRenewalDialog,
+      MemberTemplateDetailSlider
     },
     props: {
       id: {
@@ -396,10 +403,11 @@
           loading: false
         },
         curMember: {},
+        curData: {},
         loading: false,
         isShowAddMemberDialog: false,
         isShowRenewalDialog: false,
-        curData: {},
+        isShowTempDetailSlider: false,
         renewalLoading: false,
         emptyData: {
           type: '',
@@ -445,7 +453,8 @@
           }
         ],
         tabActive: 'userOrOrg',
-        curDisplaySet: {}
+        curDisplaySet: {},
+        curTempData: {}
       };
     },
     computed: {
@@ -674,6 +683,12 @@
         this.resetPagination();
         await this.fetchMemberList();
         this.handleRefreshTabCount();
+      },
+
+      handleTempView (payload) {
+        console.log(payload, 555);
+        this.curTempData = Object.assign({}, payload);
+        this.isShowTempDetailSlider = true;
       },
 
       handleRefreshTabCount () {
@@ -1173,49 +1188,6 @@
   };
 </script>
 <style lang="postcss">
-.iam-user-group-member {
-  .user-group-member-table {
-    margin-top: 16px;
-    border: none;
-    tr:hover {
-      .user,
-      .depart {
-        background: #fff;
-      }
-    }
-    .user,
-    .depart,
-    .member-template {
-      padding: 4px 6px;
-      background: #f0f1f5;
-      width: max-content;
-      border-radius: 2px;
-      i {
-        font-size: 14px;
-        color: #c4c6cc;
-      }
-      .name {
-        display: inline-block;
-        max-width: 350px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        vertical-align: bottom;
-      }
-    }
-    .member-template {
-      background-color: #f0f5ff;
-      color: #3a84ff;
-      i {
-        color: #699df4;
-      }
-      &:hover {
-        color: #699df4;
-        cursor: pointer;
-      }
-    }
-  }
-}
 .copy-user-group-cls {
   width: auto !important;
   .bk-cascade-options {
@@ -1248,6 +1220,7 @@
 </style>
 
 <style lang="postcss" scoped>
+@import '@/css/mixins/member-table.css';
 /deep/ .iam-table-cell-depart-cls {
   .cell {
     padding: 5px 0;

@@ -13,7 +13,6 @@
     </div>
     <bk-table
       size="small"
-      ref="sensitivityTableRef"
       ext-cls="associate-user-group-table"
       :data="groupTableList"
       :pagination="pagination"

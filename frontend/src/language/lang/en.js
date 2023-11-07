@@ -845,7 +845,8 @@ export const m = {
         '该组只能管理员主动授权，用户无法主动申请': 'This group can only be actively authorized by administrators, and users cannot actively apply',
         '设置不可被申请，则无法申请加入此用户组': 'If the setting cannot be applied for, you cannot apply to join this user group',
         '管理员已设置空间下所有用户组不可被申请': 'The administrator has set that all user groups in the space cannot be applied for',
-        '已选择的用户组成员不需要续期': 'The selected user group members do not need to be renewed'
+        '已选择的用户组成员不需要续期': 'The selected user group members do not need to be renewed',
+        '自动生成同名人员模板': 'Automatically generate member template with the same name'
     },
     userGroupDetail: {
         '用户组名': 'Group name: ',
@@ -856,7 +857,7 @@ export const m = {
         '删除操作权限': 'Delete action permissions',
         '暂无关联实例': 'No associated instance',
         '所属组织架构': 'Organizational structure',
-        '请输入至少3个字符的用户/组织，按enter键搜索': 'Please enter user/organization with at least 3 characters and press enter to search'
+        '请输入至少3个字符的用户/组织或人员模板，按enter键搜索': 'Please enter user/organization or members template with at least 3 characters and press enter to search'
     },
     resource: {
         '无限制总文案': 'If the action does not require restricted instances, select unlimited',
