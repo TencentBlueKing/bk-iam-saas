@@ -1725,6 +1725,9 @@
     max-width: calc(100% - 80px);
     word-break: break-all;
     cursor: pointer;
+    &:hover {
+      color: #699df4;
+    }
     &-expired {
       max-width: calc(100% - 150px);
     }
