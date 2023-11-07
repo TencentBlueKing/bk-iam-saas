@@ -133,6 +133,7 @@ class ActionApprovalProcessViewSet(GenericViewSet):
         system_id = slz.validated_data["system_id"]
         action_group_id = slz.validated_data.get("action_group_id")
         keyword = slz.validated_data.get("keyword")
+        sensitivity_level = slz.validated_data.get("sensitivity_level")
 
         # 分页参数
         paginator = LimitOffsetPagination()
@@ -144,7 +145,10 @@ class ActionApprovalProcessViewSet(GenericViewSet):
 
         # 执行搜索操作
         actions = self.action_biz.search(
-            system_id, ActionSearchCondition(keyword=keyword, action_group_id=action_group_id)
+            system_id,
+            ActionSearchCondition(
+                keyword=keyword, action_group_id=action_group_id, sensitivity_level=sensitivity_level
+            ),
         )
 
         # 分页数据
@@ -217,7 +221,7 @@ class SystemActionSensitivityLevelCountViewSet(GenericViewSet):
 
         system_id = slz.validated_data["system_id"]
 
-        action_list = self.biz.list(system_id)
+        action_list = self.biz.list_without_cache_sensitivity_level(system_id)
         level_count = Counter(obj.sensitivity_level for obj in action_list.actions)
 
         data = {sensitivity_level: count for sensitivity_level, count in level_count.items()}

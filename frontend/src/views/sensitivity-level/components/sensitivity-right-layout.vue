@@ -1,6 +1,12 @@
 <template>
   <div class="sensitivity-right-layout">
-    <bk-tab ref="tabRef" type="unborder-card" :active.sync="tabActive" :key="tabKey">
+    <bk-tab
+      ref="tabRef"
+      type="unborder-card"
+      :active.sync="tabActive"
+      :key="tabKey"
+      @tab-change="handleTabChange"
+    >
       <bk-tab-panel v-for="(panel, index) in panels" v-bind="panel" :key="index">
         <template slot="label">
           <bk-tag
@@ -14,7 +20,7 @@
           <span class="panel-label">
             {{ $t(`m.sensitivityLevel['${panel.label}']`) }}
           </span>
-          <span class="panel-count">({{ panel.count }})</span>
+          <span class="panel-count">({{ panel.count || 0 }})</span>
         </template>
         <div
           class="content-wrapper"
@@ -22,7 +28,7 @@
         >
           <component
             v-if="tabActive === panel.name"
-            ref="sensitivityTableRef"
+            ref="sensitivityComRef"
             :is="curCom"
             :key="comKey"
             :cur-system-data="curSystemData"
@@ -96,9 +102,9 @@
             count: 0
           }
         ],
-        COM_MAP: new Map([
-          [['all', 'L1', 'L2', 'L3', 'L4', 'L5'], 'SensitivityLevelTable']
-        ])
+        COM_MAP: Object.freeze(
+          new Map([[['all', 'L1', 'L2', 'L3', 'L4', 'L5'], 'SensitivityLevelTable']])
+        )
       };
     },
     computed: {
@@ -131,14 +137,13 @@
     mounted () {
       this.$once('hook:beforeDestroy', () => {
         bus.$off('on-systems-level-count');
+        bus.$off('on-tab-level-count');
       });
       bus.$on('on-systems-level-count', (payload) => {
         if (payload && Object.keys(payload).length > 0) {
           this.$nextTick(() => {
             this.panels.forEach((item) => {
-              if (payload[item.name]) {
-                item.count = payload[item.name];
-              }
+              this.$set(item, 'count', payload[item.name] || 0);
             });
             this.$refs.tabRef
               && this.$refs.tabRef.$refs.tabLabel
@@ -150,8 +155,56 @@
           });
         }
       });
+      bus.$on('on-tab-level-count', async (payload) => {
+        if (payload && Object.keys(payload).length > 0) {
+          this.fetchSystemLevelCount(payload);
+        }
+      });
     },
-    methods: {}
+    methods: {
+      async fetchSystemLevelCount (payload) {
+        const { count, name, system_id, isSearch } = payload;
+        if (isSearch) {
+          const curIndex = this.panels.findIndex((item) => item.name === name);
+          if (curIndex > -1) {
+            this.$set(this.panels[curIndex], 'count', count);
+            this.$nextTick(() => {
+              this.$refs.tabRef
+                && this.$refs.tabRef.$refs.tabLabel
+                && this.$refs.tabRef.$refs.tabLabel.forEach((label) => label.$forceUpdate());
+            });
+          }
+        } else {
+          try {
+            const { code, data } = await this.$store.dispatch(
+              'sensitivityLevel/getSensitivityLevelCount',
+              {
+                system_id
+              }
+            );
+            if (data && code === 0) {
+              this.$nextTick(() => {
+                this.panels.forEach((item) => {
+                  this.$set(item, 'count', data[item.name] || 0);
+                });
+                this.$refs.tabRef
+                  && this.$refs.tabRef.$refs.tabLabel
+                  && this.$refs.tabRef.$refs.tabLabel.forEach((label) => label.$forceUpdate());
+              });
+            }
+          } catch (e) {
+            this.messageAdvancedError(e);
+          }
+        }
+      },
+
+      handleTabChange () {
+        this.$refs.sensitivityComRef
+          && this.$refs.sensitivityComRef.length
+          && this.$refs.sensitivityComRef[0].fetchSensitivityLevelList(true);
+        this.fetchSystemLevelCount({ system_id: this.curSystemData.id });
+      }
+    }
   };
 </script>
 

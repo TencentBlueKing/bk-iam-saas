@@ -17,7 +17,7 @@
                 const BK_PAAS_HOST = '{{ BK_PAAS_HOST }}'
                 const BK_USER_API = '{{ BK_COMPONENT_API_URL }}' + '/api/c/compapi/v2/usermanage/fs_list_users/'
                 const CSRF_COOKIE_NAME = '{{ CSRF_COOKIE_NAME }}'
-                const PRODUCT_DOC_URL_PREFIX = 'https://bk.tencent.com/docs/'
+                const BK_DOCS_URL_PREFIX = '{{ BK_DOCS_URL_PREFIX }}' + '/markdown'
                 const CE_URL = 'https://bk.tencent.com/s-mart/community'
                 const BK_ITSM_APP_URL = '{{ BK_ITSM_APP_URL }}'
                 const ENABLE_MODEL_BUILD = '{{ ENABLE_MODEL_BUILD }}' || ''
@@ -37,7 +37,7 @@
                 window.BK_USER_API = BK_USER_API
                 window.CUR_LANGUAGE = getLanguage()
                 window.CSRF_COOKIE_NAME = CSRF_COOKIE_NAME
-                window.PRODUCT_DOC_URL_PREFIX = PRODUCT_DOC_URL_PREFIX
+                window.BK_DOCS_URL_PREFIX = BK_DOCS_URL_PREFIX
                 window.BK_ITSM_APP_URL = BK_ITSM_APP_URL
                 window.ENABLE_MODEL_BUILD = ENABLE_MODEL_BUILD
                 window.ENABLE_PERMISSION_HANDOVER = ENABLE_PERMISSION_HANDOVER

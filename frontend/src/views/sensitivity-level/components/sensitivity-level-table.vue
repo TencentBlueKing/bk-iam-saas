@@ -11,11 +11,10 @@
           {{ $t(`m.sensitivityLevel['批量转移等级']`) }}
         </bk-button>
       </div>
-      <!-- 先屏蔽 -->
       <div slot="right">
         <iam-search-select
-          style="width: 500px"
-          :placeholder="$t(`m.sensitivityLevel['搜索操作名称、所属系统、当前等级']`)"
+          style="width: 400px"
+          :placeholder="$t(`m.sensitivityLevel['搜索操作名称、当前等级']`)"
           :data="searchData"
           :value="searchValue"
           :quick-search-method="quickSearchMethod"
@@ -45,13 +44,7 @@
           </span>
         </template>
       </bk-table-column>
-      <bk-table-column
-        :label="$t(`m.sensitivityLevel['所属系统']`)"
-        :filters="allSystemList"
-        :filter-method="handleSystemFilter"
-        :filter-multiple="false"
-        prop="system_id"
-      >
+      <bk-table-column :label="$t(`m.sensitivityLevel['所属系统']`)" prop="system_id">
         <template slot-scope="{ row }">
           {{ formaSystemText(row.system_id) }}
         </template>
@@ -110,6 +103,7 @@
 <script>
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
+  import { bus } from '@/common/bus';
   import { formatCodeData, getWindowHeight } from '@/common/util';
   import { SENSITIVITY_LEVEL_ENUM } from '@/common/constants';
   import IamSearchSelect from '@/components/iam-search-select';
@@ -138,19 +132,14 @@
         isShowTransferSlider: false,
         sensitivityTableList: [],
         currentSelectList: [],
-        allSystemList: [],
+        allSystemData: [],
         searchList: [],
         searchValue: [],
         searchData: [
           {
-            id: 'action_name',
+            id: 'keyword',
             name: this.$t(`m.sensitivityLevel['操作名称']`),
             default: true
-          },
-          {
-            id: 'system_id',
-            name: this.$t(`m.sensitivityLevel['所属系统']`),
-            remoteMethod: this.handleRemoteSystem
           },
           {
             id: 'sensitivity_level',
@@ -178,7 +167,7 @@
       };
     },
     computed: {
-    ...mapGetters(['externalSystemId']),
+    ...mapGetters(['allSystemList', 'externalSystemId']),
     isBatchDisabled () {
       return this.currentSelectList.length === 0;
     },
@@ -187,7 +176,7 @@
     },
     formaSystemText () {
       return (payload) => {
-        const curSystem = this.allSystemList.find((item) => item.value === payload);
+        const curSystem = this.allSystemData.find((item) => item.value === payload);
         if (curSystem) {
           return curSystem.text;
         }
@@ -222,6 +211,10 @@
 
       async fetchSystems () {
         if (this.allSystemList.length) {
+          this.allSystemData = [...this.allSystemList].map(({ id, name }) => ({
+            value: id,
+            text: name
+          }));
           return;
         }
         const params = {};
@@ -230,7 +223,7 @@
         }
         const result = await this.$store.dispatch('getSystemList', params);
         if (result && result.length) {
-          this.allSystemList = [...result].map(({ id, name }) => ({
+          this.allSystemData = [...result].map(({ id, name }) => ({
             value: id,
             text: name
           }));
@@ -241,10 +234,7 @@
         this.tableLoading = tableLoading;
         try {
           const { current, limit } = this.pagination;
-          let systemId = this.curSystemData.id;
-          if (['all'].includes(systemId)) {
-            systemId = this.allSystemList.map((item) => item.value).join();
-          }
+          const systemId = this.curSystemData.id;
           const params = {
             sensitivity_level: this.tabActive,
             system_id: systemId,
@@ -252,6 +242,9 @@
             offset: limit * (current - 1),
             limit
           };
+          if (['all'].includes(params.sensitivity_level)) {
+            delete params.sensitivity_level;
+          }
           const { code, data } = await this.$store.dispatch(
             'sensitivityLevel/getProcessesActionsList',
             params
@@ -283,7 +276,8 @@
 
       async handleChangeLevel (payload, index) {
         try {
-          const { action_id, system_id } = this.sensitivityTableList[index];
+          const tableData = this.sensitivityTableList[index];
+          const { action_id, system_id, sensitivity_level } = tableData;
           const params = {
             actions: [
               {
@@ -298,8 +292,15 @@
             params
           );
           if (code === 0) {
-            this.$set(this.sensitivityTableList[index], 'sensitivity_level', payload);
-            this.messageSuccess(this.$t(`m.info['编辑成功']`), 3000);
+            // eslint-disable-next-line camelcase
+            if (sensitivity_level !== payload) {
+              ['all'].includes(this.tabActive)
+                ? this.$set(this.sensitivityTableList[index], 'sensitivity_level', payload)
+                : this.sensitivityTableList.splice(index, 1);
+              this.currentSelectList = [];
+              this.messageSuccess(this.$t(`m.info['编辑成功']`), 3000);
+              await this.handleRefreshCount();
+            }
           }
         } catch (e) {
           this.messageAdvancedError(e);
@@ -345,7 +346,7 @@
         return typeMap[type]();
       },
 
-      handleSearch (payload, result) {
+      async handleSearch (payload, result) {
         this.searchParams = payload;
         this.searchList = result;
         this.emptyData.tipType = 'search';
@@ -354,7 +355,7 @@
           limit: 10
         });
         this.resetPagination();
-        this.fetchSensitivityLevelList(true);
+        await this.handleRefreshCount();
       },
 
       handleSelectChange (selection, row) {
@@ -383,20 +384,15 @@
         this.fetchSensitivityLevelList(true);
       },
 
-      async handleRemoteSystem (value) {
-        const params = {};
-        if (this.externalSystemId) {
-          params.hidden = false;
-        }
-        return this.$store.dispatch('system/getSystems', params).then(({ data }) => {
-          return data
-            .map(({ id, name }) => ({ id, name }))
-            .filter((item) => item.name.indexOf(value) > -1);
-        });
-      },
-
       async handleRemoteLevel (value) {
-        const list = _.cloneDeep(SENSITIVITY_LEVEL_ENUM);
+        const list = _.cloneDeep(
+          SENSITIVITY_LEVEL_ENUM.map((item) => {
+            return {
+            ...item,
+            name: this.$t(`m.sensitivityLevel['${item.name}']`)
+            };
+          })
+        );
         if (!value) {
           return Promise.resolve(list);
         }
@@ -420,27 +416,39 @@
         };
       },
 
-      handleConfirmTransfer () {
+      async handleConfirmTransfer (payload) {
         this.isShowTransferSlider = false;
         this.curSelectData = {};
         this.currentSelectList = [];
         this.resetPagination();
-        this.fetchSensitivityLevelList(true);
+        await this.handleRefreshCount();
       },
 
-      handleEmptyClear () {
+      async handleRefreshCount () {
+        await this.fetchSensitivityLevelList(true);
+        bus.$emit('on-tab-level-count', {
+          name: this.tabActive,
+          system_id: this.curSystemData.id,
+          count: this.pagination.count,
+          isSearch: this.emptyData.tipType === 'search'
+        });
+      },
+
+      async handleEmptyClear () {
         this.handleEmptyRefresh();
       },
 
-      handleEmptyRefresh () {
-        this.searchParams = {};
+      async handleEmptyRefresh () {
         this.queryParams = Object.assign(this.queryParams, {
           current: 1,
           limit: 10
         });
+        this.searchParams = {};
+        this.searchValue = [];
         this.currentSelectList = [];
+        this.emptyData.tipType = '';
         this.resetPagination();
-        this.fetchSensitivityLevelList(true);
+        await this.handleRefreshCount();
       },
 
       resetPagination () {

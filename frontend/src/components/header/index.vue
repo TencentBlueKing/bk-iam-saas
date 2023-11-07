@@ -241,7 +241,7 @@
         curRoleList: [],
         searchValue: '',
         docuLinkMap: docuLinkMap,
-        curDocuLink: `${window.PRODUCT_DOC_URL_PREFIX}${NORMAL_DOCU_LINK}`,
+        curDocuLink: `${window.BK_DOCS_URL_PREFIX}${NORMAL_DOCU_LINK}`,
         showGuide: false,
         isShowHeader: false,
         placeholderValue: '',
@@ -292,7 +292,7 @@
         }
         for (const [key, value] of this.docuLinkMap.entries()) {
           if (key.includes(to.name)) {
-            this.curDocuLink = `${window.PRODUCT_DOC_URL_PREFIX}${value}`;
+            this.curDocuLink = `${window.BK_DOCS_URL_PREFIX}${value}`;
             break;
           }
         }
