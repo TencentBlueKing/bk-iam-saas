@@ -335,8 +335,10 @@
                         <div class="user-group-name-column">
                           <span class="user-group-name" :title="row.name" @click="handleView(row)">{{ row.name }}</span>
                           <div v-if="row.expired_at && user.timestamp > row.expired_at">
-                            <Icon type="error-fill" class="error-icon" />
-                            <span class="expired-text">{{$t(`m.permApply['你已获得该组权限，但是已过期']`)}}</span>
+                            <!-- <Icon type="error-fill" class="error-icon" />
+                            <span class="expired-text">{{$t(`m.permApply['你已获得该组权限，但是已过期']`)}}</span> -->
+                            (
+                            <span>{{ row.expired_at_display }}{{ $t(`m.common['，']`) }}</span>
                             <bk-button
                               text
                               theme="primary"
@@ -344,6 +346,7 @@
                               @click="handleBatchRenewal">
                               {{ $t(`m.permApply['去续期']`) }}
                             </bk-button>
+                            )
                           </div>
                         </div>
                       </template>
@@ -2619,6 +2622,7 @@
     align-items: center;
     .user-group-name {
         max-width: 200px;
+        margin-right: 5px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;

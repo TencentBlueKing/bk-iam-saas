@@ -198,7 +198,8 @@
                 <span
                   :class="[
                     'single-hide',
-                    'user-group-name-label'
+                    'user-group-name-label',
+                    { 'user-group-name-label-expired': user.timestamp > row.expired_at }
                   ]"
                   :title="row.name"
                   @click="handleView(row)"
@@ -209,7 +210,21 @@
                   v-if="row.expired_at_display"
                   class="user-group-name-expired"
                 >
-                  ({{ row.expired_at_display }})
+                  <template v-if="user.timestamp > row.expired_at">
+                    <span>({{ row.expired_at_display }}{{ $t(`m.common['，']`) }}</span>
+                    <bk-button
+                      size="small"
+                      theme="primary"
+                      :text="true"
+                      style="padding: 0"
+                      @click="handleBatchRenewal">
+                      {{ $t(`m.permApply['去续期']`) }}
+                    </bk-button>
+                    )
+                  </template>
+                  <span v-else>
+                    ({{ row.expired_at_display }})
+                  </span>
                 </span>
               </div>
             </template>
@@ -1517,11 +1532,16 @@
           });
         } catch (e) {
           console.error(e);
+          const applyCount = this.defaultSelectedGroups.length + this.currentSelectedGroups.length;
           if (['admin'].includes(this.user.username)) {
             this.isShowConfirmDialog = true;
-          } else {
-            this.messageAdvancedError(e);
+            return;
           }
+          if (applyCount >= 100) {
+            this.messageAdvancedError(e, 8000, 3, this.$t(`m.info['申请加入失败，用户组数量超出上限（100个），请在“我的权限”中退出用户组后重试']`, { value: applyCount - 100 }));
+            return;
+          }
+          this.messageAdvancedError(e);
         } finally {
           this.submitLoading = false;
         }
@@ -1536,6 +1556,15 @@
           this.isShowResourceInstanceSideSlider = false;
           this.resetDataAfterClose();
         }, _ => _);
+      },
+
+      handleBatchRenewal () {
+        this.$router.push({
+          name: 'permRenewal',
+          query: {
+            tab: 'group'
+          }
+        });
       },
 
       resetDataAfterClose () {
@@ -1622,13 +1651,6 @@
             border-right: 1px solid #dfe0e5;
             border-bottom: 1px solid #dfe0e5;
         }
-        .user-group-name {
-            color: #3a84ff;
-            cursor: pointer;
-            &:hover {
-                color: #699df4;
-            }
-        }
     }
     .apply-selected-groups {
       padding: 10px 0;
@@ -1700,12 +1722,17 @@
   align-items: center;
   &-label {
     color: #3a84ff;
-    max-width: calc(100% - 50px);
+    max-width: calc(100% - 80px);
     word-break: break-all;
     cursor: pointer;
+    &:hover {
+      color: #699df4;
+    }
+    &-expired {
+      max-width: calc(100% - 150px);
+    }
   }
   &-expired {
-    color: #313238;
     line-height: 1;
     margin-left: 5px;
   }
