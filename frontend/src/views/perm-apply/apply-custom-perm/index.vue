@@ -52,6 +52,7 @@
         <form class="bk-form bk-form-vertical inner-content">
           <div class="bk-form-item">
             <div
+              ref="selectActionRef"
               v-bkloading="{ isLoading: customLoading, opacity: 1 }"
               :class="[
                 'custom-tmpl-list-content-wrapper',
@@ -334,8 +335,10 @@
                         <div class="user-group-name-column">
                           <span class="user-group-name" :title="row.name" @click="handleView(row)">{{ row.name }}</span>
                           <div v-if="row.expired_at && user.timestamp > row.expired_at">
-                            <Icon type="error-fill" class="error-icon" />
-                            <span class="expired-text">{{$t(`m.permApply['你已获得该组权限，但是已过期']`)}}</span>
+                            <!-- <Icon type="error-fill" class="error-icon" />
+                            <span class="expired-text">{{$t(`m.permApply['你已获得该组权限，但是已过期']`)}}</span> -->
+                            (
+                            <span>{{ row.expired_at_display }}{{ $t(`m.common['，']`) }}</span>
                             <bk-button
                               text
                               theme="primary"
@@ -343,6 +346,7 @@
                               @click="handleBatchRenewal">
                               {{ $t(`m.permApply['去续期']`) }}
                             </bk-button>
+                            )
                           </div>
                         </div>
                       </template>
@@ -923,13 +927,14 @@
                   };
                 });
               }
-              this.personalUserGroup.forEach(v => {
-                if (String(item.id) === v.id) {
-                  this.$set(item, 'expired_at', v.expired_at);
-                  this.$set(item, 'expired_at_display', v.expired_at_display);
+              if (this.personalUserGroup.length) {
+                const hasSelected = this.personalUserGroup.find((v) => String(v.id) === String(item.id));
+                if (hasSelected) {
+                  this.$set(item, 'expired_at', hasSelected.expired_at);
+                  this.$set(item, 'expired_at_display', hasSelected.expired_at_display);
                   this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
                 }
-              });
+              }
             });
           });
         } catch (e) {
@@ -942,7 +947,7 @@
       async fetchCurUserGroup () {
         try {
           const { data } = await this.$store.dispatch('perm/getPersonalGroups', {
-            page_size: 100,
+            page_size: 1000,
             page: 1
           });
           if (data.results && data.results.length) {
@@ -986,10 +991,10 @@
           await this.fetchCommonActions(this.systemValue);
         }
         if (this.sysAndtid) {
-          // 获取用户组数据
-          await this.fetchUserGroupList();
           // 获取个人用户的用户组列表
           await this.fetchCurUserGroup();
+          // 获取用户组数据
+          await this.fetchUserGroupList();
           // 获取推荐操作
           await this.fetchRecommended();
         }
@@ -2397,6 +2402,10 @@
         if (recommendFlag || flag || this.isShowReasonError) {
           if (actions.length < 1 && aggregations.length < 1) {
             this.isShowActionError = true;
+            if (this.$refs.selectActionRef) {
+              this.scrollToLocation(this.$refs.selectActionRef);
+              return;
+            }
           }
           const tableRef = this.$refs.instanceTableRef;
           const reasonRef = this.$refs.resInstanceReasonRef;
@@ -2489,22 +2498,19 @@
       },
       // 用户组权限提交
       async handleSubmit () {
-        let validateFlag = true;
-        if (this.reason === '') {
+        if (!this.currentSelectList.length) {
+          this.isShowGroupError = true;
+          this.scrollToLocation(this.$refs.groupTableRef);
+          return;
+        }
+        if (!this.reason) {
           this.isShowReasonError = true;
-          validateFlag = false;
           this.scrollToLocation(this.$refs.reasonRef);
+          return;
         }
         if (this.expiredAtUse === 0) {
           this.isShowExpiredError = true;
           this.scrollToLocation(this.$refs.expiredAtRef);
-          validateFlag = false;
-        }
-        if (this.currentSelectList.length < 1) {
-          this.isShowGroupError = true;
-          validateFlag = false;
-        }
-        if (!validateFlag) {
           return;
         }
         this.buttonLoading = true;
@@ -2616,6 +2622,7 @@
     align-items: center;
     .user-group-name {
         max-width: 200px;
+        margin-right: 5px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;

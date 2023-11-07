@@ -220,7 +220,7 @@
       },
 
       handleOpenMoreLink () {
-        window.open(`${window.PRODUCT_DOC_URL_PREFIX}/权限中心/产品白皮书/场景案例/GradingManager.md`);
+        window.open(`${window.BK_DOCS_URL_PREFIX}/权限中心/产品白皮书/场景案例/GradingManager.md`);
       },
 
       refreshCurrentQuery () {

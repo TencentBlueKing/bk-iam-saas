@@ -105,6 +105,7 @@ class AuditType(ChoicesEnum, StrEnum):
     APPROVAL_GLOBAL_UPDATE = auto()
     APPROVAL_ACTION_UPDATE = auto()
     APPROVAL_GROUP_UPDATE = auto()
+    ACTION_SENSITIVITY_LEVEL_UPDATE = auto()
 
     EVENT_ROLLBACK = auto()  # unused
 

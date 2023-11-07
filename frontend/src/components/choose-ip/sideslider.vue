@@ -12,7 +12,10 @@
       <div
         v-if="isShowUnlimited"
         class="no-limited-wrapper flex-between"
-        :style="{ borderBottom: !isHide ? 0 : '' }"
+        :style="{
+          borderBottom: !isHide ? 0 : '' ,
+          marginBottom: isAggregateEmptyMessage ? '10px' : 0
+        }"
         :title="$t(`m.resource['无限制总文案']`)">
         <div class="no-limited-wrapper-left single-hide">
           <Icon type="info-new" />
@@ -27,6 +30,12 @@
             {{ $t(`m.common['无限制']`) }}
           </bk-checkbox>
         </div>
+      </div>
+      <div
+        v-if="isAggregateEmptyMessage"
+        class="no-aggregate-wrapper single-hide">
+        <Icon type="info-new" />
+        <span>{{ $t(`m.resource['操作之间无公共实例，无法批量编辑']`) }}</span>
       </div>
       <template v-if="!isHide">
         <div class="select-wrapper">
@@ -150,6 +159,10 @@
       selectionMode: {
         type: String,
         default: 'all'
+      },
+      isAggregateEmptyMessage: {
+        type: Boolean,
+        default: false
       }
     },
     data () {
@@ -178,7 +191,8 @@
           tip: '',
           tipType: ''
         },
-        isAny: false
+        isAny: false,
+        isUnlimited: false
       };
     },
     computed: {
@@ -216,7 +230,7 @@
             if (this.params.curAggregateSystemId) {
               await this.fetchAuthorizationScopeActions(this.params.curAggregateSystemId);
             }
-            if ((this.isSuperManager && !this.isHasDefaultData) || this.isAny) {
+            if ((this.isSuperManager && !this.isHasDefaultData) || this.isAny || this.isUnlimited) {
               this.fetchData(false, true);
             } else {
               this.setSelectList(this.defaultList);
@@ -311,6 +325,17 @@
           );
           // 判断是否是任意
           this.isAny = data && data.some(item => item.id === '*');
+          if (this.params.actionsId && data.length) {
+            const curActions = data.filter((item) => this.params.actionsId.includes(item.id));
+            if (curActions.length) {
+              // 判断操作是否都是无限制
+              this.isUnlimited = curActions.every((item) =>
+                item.resource_groups && item.resource_groups.length
+                && item.resource_groups[0].related_resource_types.length
+                && item.resource_groups[0].related_resource_types[0].condition.length === 0
+              );
+            }
+          }
         } catch (e) {
           console.error(e);
           this.messageAdvancedError(e);
@@ -545,7 +570,8 @@
         justify-self: start;
         border-top: 1px solid #dcdee5;
     }
-    .no-limited-wrapper {
+    .no-limited-wrapper,
+    .no-aggregate-wrapper {
       width: 100%;
       height: 42px;
       line-height: 39px;
@@ -564,6 +590,9 @@
           }
         }
       }
+    }
+    .no-aggregate-wrapper {
+      border-bottom: 0;
     }
     .left-content {
         width: 360px;

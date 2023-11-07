@@ -224,6 +224,7 @@
       :is-super-manager="isSuperManager"
       :value="aggregateValue"
       :default-list="defaultSelectList"
+      :is-aggregate-empty-message="isAggregateEmptyMessage"
       @on-selected="handlerSelectAggregateRes" />
 
     <bk-sideslider
@@ -377,7 +378,8 @@
         instanceKey: '',
         curCopyDataId: '',
         emptyResourceGroupsList: [],
-        isExpandTable: false
+        isExpandTable: false,
+        isAggregateEmptyMessage: false
       };
     },
     computed: {
@@ -692,7 +694,6 @@
         if (conditions.length < 1) {
           return [];
         }
-
         const instances = actions.map(item => {
           const instancesItem = item.resource_groups[0].related_resource_types[0].condition[0]
             && item.resource_groups[0].related_resource_types[0].condition[0].instances;
@@ -700,15 +701,22 @@
         });
         const tempData = [];
         const resources = instances.map(item => item[0]
-          && item[0].path).map(item => item && item.map(v => v.map(_ => _.id)));
-        const resourceList = instances
+          && item[0].path).map(item => item && item.map(v => v.map(_ => _.id))).filter(item => item !== undefined);
+        let resourceList = instances
           .map(item => item[0] && item[0].path)
           .map(item => item && item.map(v => v.map(({ id, name }) => ({ id, name }))))
           .flat(2);
+        resourceList = resourceList.filter(item => item !== undefined);
         resources.forEach(item => {
           item && item.forEach(subItem => {
-            if (resources.every(v => v && v.some(vItem => vItem[0] === subItem[0]))) {
+            const hasIntersectionResource = resources.every(v => v && v.some(vItem => vItem[0] === subItem[0]));
+            const hasResource = resources.find(v => v && v.some(vItem => vItem[0] === subItem[0]));
+            if (hasIntersectionResource) {
               tempData.push(subItem[0]);
+            }
+            // 判断处理没有交集的情况
+            if (!hasIntersectionResource && hasResource) {
+              this.isAggregateEmptyMessage = true;
             }
           });
         });
@@ -897,7 +905,8 @@
         window.changeDialog = true;
         const aggregateResourceParams = {
           ...data.aggregateResourceType[data.selectedIndex],
-          curAggregateSystemId: data.system_id
+          curAggregateSystemId: data.system_id,
+          actionsId: data.actions.map((item) => item.id)
         };
         this.selectedIndex = data.selectedIndex;
         this.aggregateResourceParams = _.cloneDeep(aggregateResourceParams);
@@ -1353,7 +1362,7 @@
               if (!item.isAggregate) {
                 const curPasteData = (payload.data || []).find(_ => _.id === item.id);
                 if (curPasteData) {
-                  const systemId = this.isCreateMode ? item.detail.system.id : this.systemId;
+                  const systemId = this.isCreateMode && item.detail ? item.detail.system.id : this.systemId;
                   const scopeAction = this.authorization[systemId] || [];
                   // eslint-disable-next-line max-len
                   const curScopeAction = _.cloneDeep(scopeAction.find(scopeItem => scopeItem.id === item.id));
@@ -1363,10 +1372,29 @@
                       curScopeActionItem.related_resource_types.forEach(curResItem => {
                         if (`${curResItem.system_id}${curResItem.type}` === `${curPasteData.resource_type.system_id}${curPasteData.resource_type.type}`) {
                           // eslint-disable-next-line max-len
-                          const canPasteName = curResItem.condition[0].instances[0].path.reduce((p, v) => {
-                            p.push(v[0].name);
-                            return p;
-                          }, []);
+                          let canPasteName = [];
+                          let hasConditionData = [];
+                          let noConditionData = [];
+                          if (curResItem.condition && curResItem.condition.length) {
+                            hasConditionData = curResItem.condition[0].instances[0].path.reduce((p, v) => {
+                              p.push(v[0].name);
+                              return p;
+                            }, []);
+                          } else {
+                            // 处理分级管理员下多个无限制操作的批量粘贴
+                            if (this.curCopyParams.resource_type.condition
+                              && this.curCopyParams.resource_type.condition.length) {
+                              let instancesData = this.curCopyParams.resource_type.condition[0].instances;
+                              if (!instancesData) {
+                                instancesData = this.curCopyParams.resource_type.condition[0].instance;
+                              }
+                              noConditionData = instancesData[0].path.reduce((p, v) => {
+                                p.push(v[0].name);
+                                return p;
+                              }, []);
+                            }
+                          }
+                          canPasteName = [...hasConditionData, ...noConditionData];
                           // eslint-disable-next-line max-len
                           item.resource_groups.forEach(groupItem => {
                             groupItem.related_resource_types.forEach(resItem => {
@@ -1409,10 +1437,11 @@
                   }
                 }
               } else {
+                const scopeAction = _.cloneDeep(payload.data.find(_ => item.actions.map((v) => v.id).includes(_.id)));
                 item.aggregateResourceType && item.aggregateResourceType.forEach(aggregateResourceItem => {
                   const systemId = this.isSuperManager
                     ? aggregateResourceItem.system_id : item.system_id;
-                  if (`${systemId}${aggregateResourceItem.id}` === this.curCopyKey) {
+                  if (`${systemId}${aggregateResourceItem.id}` === this.curCopyKey && scopeAction) {
                     item.instances = _.cloneDeep(tempArrgegateData);
                     this.instanceKey = aggregateResourceItem.id;
                     this.setNomalInstancesDisplayData(item, this.instanceKey);

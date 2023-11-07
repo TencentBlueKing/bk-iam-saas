@@ -26,7 +26,7 @@ from backend.common.error_codes import error_codes
 from backend.common.lock import gen_policy_alter_lock
 from backend.common.time import PERMANENT_SECONDS, expired_at_display, generate_default_expired_at
 from backend.service.action import ActionService
-from backend.service.constants import ANY_ID, DEFAULT_RESOURCE_GROUP_ID, FETCH_MAX_LIMIT
+from backend.service.constants import ANY_ID, DEFAULT_RESOURCE_GROUP_ID, FETCH_MAX_LIMIT, SensitivityLevel
 from backend.service.models import (
     Action,
     BackendThinPolicy,
@@ -854,6 +854,7 @@ class PolicyBean(Policy):
     description: str = ""
     description_en: str = ""
     expired_display: str = ""
+    sensitivity_level: str = ""
 
     def __init__(self, **data: Any):
         if "expired_at" in data and (data["expired_at"] is not None) and ("expired_display" not in data):
@@ -1013,11 +1014,15 @@ class PolicyBeanListMixin:
         resource_type_dict = self.resource_type_svc.get_system_resource_type_dict(list(system_id_set))
         action_list = self.action_svc.new_action_list(self.system_id)
 
+        action_sensitivity_level = self.action_svc.get_action_sensitivity_level_map(self.system_id)
         for policy in self.policies:
             action = action_list.get(policy.action_id)
             if not action:
                 continue
             policy.fill_empty_fields(action, resource_type_dict)
+
+            # 填充sensitivity_level
+            policy.sensitivity_level = action_sensitivity_level.get(policy.action_id, SensitivityLevel.L1.value)
 
     def check_instance_selection(self):
         """

@@ -8,6 +8,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from collections import Counter
+
 from django.db.models import Q
 from django.utils.translation import gettext as _
 from drf_yasg.utils import swagger_auto_schema
@@ -22,10 +24,12 @@ from backend.biz.action import ActionBiz, ActionSearchCondition
 from backend.biz.approval import ApprovalProcessBiz
 from backend.biz.role import RoleAuthorizationScopeChecker, RoleListQuery, RoleObjectRelationChecker
 from backend.common.error_codes import error_codes
+from backend.common.serializers import SystemQuerySLZ
 from backend.service.action import ActionService
 from backend.service.constants import PermissionCodeEnum
 
 from .audit import (
+    ActionSensitivityLevelAuditProvider,
     ApprovalProcessActionAuditProvider,
     ApprovalProcessGlobalConfigAuditProvider,
     ApprovalProcessGroupAuditProvider,
@@ -34,6 +38,7 @@ from .serializers import (
     ActionApprovalProcessModifySLZ,
     ActionApprovalProcessQuerySLZ,
     ActionApprovalProcessSLZ,
+    ActionSensitivityLevelSLZ,
     ApporvalProcessQuerySLZ,
     ApprovalProcessGlobalConfigModifySLZ,
     ApprovalProcessGlobalConfigSLZ,
@@ -41,6 +46,7 @@ from .serializers import (
     GroupApprovalProcessModifySLZ,
     GroupApprovalProcessQuerySLZ,
     GroupApprovalProcessSLZ,
+    SensitivityLevelCountSLZ,
 )
 
 
@@ -127,6 +133,7 @@ class ActionApprovalProcessViewSet(GenericViewSet):
         system_id = slz.validated_data["system_id"]
         action_group_id = slz.validated_data.get("action_group_id")
         keyword = slz.validated_data.get("keyword")
+        sensitivity_level = slz.validated_data.get("sensitivity_level")
 
         # 分页参数
         paginator = LimitOffsetPagination()
@@ -138,7 +145,10 @@ class ActionApprovalProcessViewSet(GenericViewSet):
 
         # 执行搜索操作
         actions = self.action_biz.search(
-            system_id, ActionSearchCondition(keyword=keyword, action_group_id=action_group_id)
+            system_id,
+            ActionSearchCondition(
+                keyword=keyword, action_group_id=action_group_id, sensitivity_level=sensitivity_level
+            ),
         )
 
         # 分页数据
@@ -159,6 +169,7 @@ class ActionApprovalProcessViewSet(GenericViewSet):
                     "action_name_en": action.name_en,
                     "process_id": process.id,
                     "process_name": process.name,
+                    "sensitivity_level": action.sensitivity_level,
                 }
             )
 
@@ -189,6 +200,66 @@ class ActionApprovalProcessViewSet(GenericViewSet):
         self.biz.batch_create_or_update_action_process(system_id, action_ids, process_id, request.user.username)
 
         audit_context_setter(role=request.role, system_id=system_id, action_ids=action_ids, process_id=process_id)
+
+        return Response({})
+
+
+class SystemActionSensitivityLevelCountViewSet(GenericViewSet):
+    permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_SYSTEM_SETTING.value)]
+
+    biz = ActionBiz()
+
+    @swagger_auto_schema(
+        operation_description="获取系统的操作与敏感等级数量",
+        query_serializer=SystemQuerySLZ(),
+        responses={status.HTTP_200_OK: SensitivityLevelCountSLZ()},
+        tags=["approval"],
+    )
+    def list(self, request, *args, **kwargs):
+        slz = SystemQuerySLZ(data=request.query_params)
+        slz.is_valid(raise_exception=True)
+
+        system_id = slz.validated_data["system_id"]
+
+        action_list = self.biz.list_without_cache_sensitivity_level(system_id)
+        level_count = Counter(obj.sensitivity_level for obj in action_list.actions)
+
+        data = {sensitivity_level: count for sensitivity_level, count in level_count.items()}
+        data["all"] = len(action_list.actions)
+
+        return Response(data)
+
+
+class ActionSensitivityLevelViewSet(GenericViewSet):
+    permission_classes = [role_perm_class(PermissionCodeEnum.MANAGE_SENSITIVITY_LEVEL.value)]
+
+    biz = ApprovalProcessBiz()
+
+    @swagger_auto_schema(
+        operation_description="批量设置操作的敏感等级",
+        request_body=ActionSensitivityLevelSLZ(),
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["approval"],
+    )
+    @view_audit_decorator(ActionSensitivityLevelAuditProvider)
+    def create(self, request, *args, **kwargs):
+        slz = ActionSensitivityLevelSLZ(data=request.data)
+        slz.is_valid(raise_exception=True)
+
+        actions = slz.validated_data["actions"]
+        sensitivity_level = slz.validated_data["sensitivity_level"]
+
+        # 目前只支持同一系统的批量Action设置审批流程
+        system_id = actions[0]["system_id"]
+        action_ids = [a["id"] for a in actions]
+
+        self.biz.batch_create_or_update_action_sensitivity_level(
+            system_id, action_ids, sensitivity_level, request.user.username
+        )
+
+        audit_context_setter(
+            role=request.role, system_id=system_id, action_ids=action_ids, sensitivity_level=sensitivity_level
+        )
 
         return Response({})
 

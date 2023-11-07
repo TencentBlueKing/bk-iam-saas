@@ -85,7 +85,7 @@ export const messageWarn = (message, delay = 3000, ellipsisLine = 3) => {
 
 // message高阶用法
 
-export const messageAdvancedError = (details, delay = 8000, ellipsisLine = 3) => {
+export const messageAdvancedError = (details, delay = 8000, ellipsisLine = 3, externalMsg = '') => {
   // 区分内外部链接
   let linkContent = {
     url: ''
@@ -106,7 +106,7 @@ export const messageAdvancedError = (details, delay = 8000, ellipsisLine = 3) =>
   linkMap[isTencent]();
   const { code, data, message, statusText, response } = details;
   let errCode = null;
-  const errMsg = message || data.msg || statusText;
+  const errMsg = externalMsg || (message || data.msg || statusText);
   if (code) {
     errCode = code;
   }

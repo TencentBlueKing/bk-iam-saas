@@ -270,6 +270,10 @@
         } finally {
           item.loading = false;
         }
+      },
+
+      handleEmptyRefresh () {
+        this.handleInit();
       }
     }
   };

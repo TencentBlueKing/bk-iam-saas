@@ -400,7 +400,9 @@
       },
       emptyData: {
         handler (value) {
-          this.policyEmptyData = Object.assign({}, value);
+          if (!value.type) {
+            this.policyEmptyData = Object.assign({}, value);
+          }
         },
         immediate: true
       },
@@ -456,13 +458,17 @@
               system_id: params.systemId
             };
           }
+          if (!queryParams.system_id) {
+            return;
+          }
           const { code, data } = await this.$store.dispatch(url, queryParams);
-          // this.policyList = policyData[params.systemId].map(item => {
-          this.policyList = data.length && data.map(item => {
-            const relatedEnvironments = this.linearActionList.find(sub => sub.id === item.id);
-            item.related_environments = relatedEnvironments ? relatedEnvironments.related_environments : [];
-            return new PermPolicy(item);
-          });
+          if (data.length) {
+            this.policyList = data.map(item => {
+              const relatedEnvironments = this.linearActionList.find(sub => sub.id === item.id);
+              item.related_environments = relatedEnvironments ? relatedEnvironments.related_environments : [];
+              return new PermPolicy(item);
+            });
+          }
           this.policyEmptyData = formatCodeData(code, this.policyEmptyData, data.length === 0);
         } catch (e) {
           console.error(e);
@@ -817,14 +823,11 @@
               policyIds: this.curDeleteIds,
               systemId: this.systemId
             });
-            const index = this.policyList.findIndex(item => item.policy_id === this.curDeleteIds[0]);
-            if (index > -1) {
-              this.policyList.splice(index, 1);
-            }
+            const policyList = this.policyList.filter(item => !this.curDeleteIds.includes(item.policy_id));
             await this.fetchActions(this.systemId);
             await this.fetchData(this.params);
             this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
-            this.$emit('after-delete', this.policyList.length);
+            this.$emit('after-delete', policyList.length);
           }
         } catch (e) {
           console.error(e);

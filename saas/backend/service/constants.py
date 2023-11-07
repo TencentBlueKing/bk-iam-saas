@@ -181,6 +181,7 @@ class PermissionCodeEnum(ChoicesEnum, LowerStrEnum):
     CREATE_SUBSET_MANAGER = auto()
     MANAGE_SUBSET_MANAGER = auto()
     TRANSFER_GROUP_BY_GRADE_MANAGER = auto()
+    MANAGE_SENSITIVITY_LEVEL = auto()
 
 
 # ---------------------------------------------------------------------------------------------- #
@@ -370,3 +371,19 @@ class AbacPolicyChangeType(ChoicesEnum, LowerStrEnum):
     UPDATED = auto()
     DELETED = auto()
     NONE = auto()
+
+
+class SensitivityLevel(ChoicesEnum):
+    L1 = "L1"
+    L2 = "L2"
+    L3 = "L3"
+    L4 = "L4"
+
+    _choices_labels = skip(
+        (
+            (L1, "不敏感"),
+            (L2, "低"),
+            (L3, "中"),
+            (L4, "高"),
+        )
+    )

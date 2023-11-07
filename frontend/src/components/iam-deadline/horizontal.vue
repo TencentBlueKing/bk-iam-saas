@@ -54,25 +54,39 @@
           // 4102444800: this.$t(`m.common['永久']`),
           'custom': this.$t(`m.common['自定义']`)
         },
-        currentActive: this.value,
+        currentActive: 4102444800,
         customTime: 1,
         isFocus: false
       };
     },
     computed: {
-            ...mapGetters(['user']),
-            isShowCustomTime () {
-                return this.currentActive === 'custom';
-            },
-            isNormal () {
-                return this.type === 'normal';
-            },
-            isDialog () {
-                return this.type === 'dialog';
-            },
-            isSuper () {
-                return this.user.role.type === 'super_manager';
-            }
+      ...mapGetters(['user']),
+      isShowCustomTime () {
+          return this.currentActive === 'custom';
+      },
+      isNormal () {
+          return this.type === 'normal';
+      },
+      isDialog () {
+          return this.type === 'dialog';
+      },
+      isSuper () {
+          return this.user.role.type === 'super_manager';
+      }
+    },
+
+    watch: {
+      value: {
+        handler (payload) {
+          if (![2592000, 7776000, 15552000, 31104000, 4102444800].includes(payload)) {
+            this.currentActive = 'custom';
+            return;
+          }
+          this.$set(this.timeFilters, 'custom', this.$t(`m.common['自定义']`));
+          this.currentActive = payload;
+        },
+        immediate: true
+      }
     },
 
     created () {
@@ -94,7 +108,7 @@
           this.handleTrigger();
           this.$delete(this.timeFilters, 'custom');
           this.$nextTick(() => {
-            this.$refs.deadlineRef.focus();
+            this.$refs.deadlineRef && this.$refs.deadlineRef.focus();
           });
         } else {
           this.customTime = 1;

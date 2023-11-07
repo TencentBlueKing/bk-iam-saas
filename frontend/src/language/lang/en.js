@@ -276,7 +276,13 @@ export const m = {
         '暂无可复制内容': 'There is currently no replicable content',
         '暂无可复制用户': 'There are currently no replicable users',
         '管理员组不能添加部门': 'The administrator group cannot add department',
-        '批量退出': 'Multi-quit'
+        '批量退出': 'Multi-quit',
+        '批量处理': 'Multi-process',
+        '用户名': 'User name',
+        '结果预览': 'Result preview',
+        '解析并添加': 'Parse and add',
+        '搜索解析结果': 'Search parsing results',
+        '请先从左侧输入并解析': 'Please input and parse from the left first'
     },
     // 校验
     verify: {
@@ -522,8 +528,10 @@ export const m = {
          '用户组为管理员组，不能添加部门': 'The {value} is administrator group and cannot add departments',
          '用户组为只读用户组不能添加成员': '{value} is read-only user groups and cannot add members',
          '用户组属性为只读属性': '{value} is read-only user group attribute',
+         '不可续期的用户组成员如下': 'The non renewable user group members are as follows: {value}',
          '管理员组不能添加权限': 'Administrators group cannot add permissions',
-         '只读用户组不能添加权限': 'Read only user groups cannot add permissions'
+         '只读用户组不能添加权限': 'Read only user groups cannot add permissions',
+         '申请加入失败，用户组数量超出上限（100个），请在“我的权限”中退出用户组后重试': 'Application to join failed. The number of user groups exceeds the maximum limit (100), please exit {value} user group in "My permissions" and try again'
     },
     // 二次确认弹窗相关
     dialog: {
@@ -599,7 +607,8 @@ export const m = {
         '新建二级管理空间': 'New Secondary Management Space',
         '克隆管理空间': 'Clone Management Space',
         '克隆二级管理空间': 'Clone Secondary management space',
-        '用户组设置': 'User Group Setting'
+        '用户组设置': 'User Group Setting',
+        '敏感等级': 'Sensitivity Level'
     },
     applyEntrance: {
         '立刻申请': 'Apply now',
@@ -829,7 +838,8 @@ export const m = {
         '不可被申请': 'Not applicable',
         '该组只能管理员主动授权，用户无法主动申请': 'This group can only be actively authorized by administrators, and users cannot actively apply',
         '设置不可被申请，则无法申请加入此用户组': 'If the setting cannot be applied for, you cannot apply to join this user group',
-        '管理员已设置空间下所有用户组不可被申请': 'The administrator has set that all user groups in the space cannot be applied for'
+        '管理员已设置空间下所有用户组不可被申请': 'The administrator has set that all user groups in the space cannot be applied for',
+        '已选择的用户组成员不需要续期': 'The selected user group members do not need to be renewed'
     },
     userGroupDetail: {
         '用户组名': 'Group name: ',
@@ -855,7 +865,8 @@ export const m = {
         '添加拓扑实例': 'Add Topology Instance',
         '未选择任何拓扑实例': 'No Topology Instance Selected',
         '未设置任何属性条件': 'No Attribute Setted',
-        '个属性条件': 'attribute(s)'
+        '个属性条件': 'attribute(s)',
+        '操作之间无公共实例，无法批量编辑': 'There are no public instances between actions, unable to batch edit'
     },
     related: {
         '申请操作': 'Apply Action',
@@ -1349,6 +1360,30 @@ export const m = {
     userGroupSetting: {
         '所有用户组不可被申请': 'All user groups cannot be applied for',
         '编辑用户组配置成功': ' User group configuration edited'
+    },
+    sensitivityLevel: {
+        '搜索系统': 'Search system',
+        '全部系统': 'All systems',
+        '全部等级': 'All levels',
+        '等级': 'Level',
+        '不敏感': 'Insensitive',
+        '低': 'Low',
+        '中': 'Middle',
+        '高': 'High',
+        '极高': 'Extremely high',
+        '操作名称': 'Action name',
+        '所属系统': 'System',
+        '当前审批流程': 'Current approval process',
+        '当前等级': 'Current level',
+        '目标等级': 'Target level',
+        '额外添加的审批节点': 'Extra approval nodes added',
+        '批量转移等级': 'Multi-transfer level',
+        '搜索操作名称、当前等级': 'Search action name, current level',
+        '当前敏感等级为只读操作': 'The current sensitivity level is read-only action',
+        '转移到目标等级': 'Transfer to target level',
+        '转移预览的内容不能为空': 'The content of the transfer preview cannot be empty',
+        '转移预览': 'Transfer preview',
+        '确认转移': 'Confirm transfer'
     }
 }
 export default {

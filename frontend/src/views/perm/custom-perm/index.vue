@@ -122,6 +122,9 @@
         immediate: true
       }
     },
+    async created () {
+      await this.handleRefreshSystem();
+    },
     methods: {
       // 搜索自定义权限
       fetchSystemSearch () {
@@ -148,7 +151,7 @@
           this.systemPolicyList.splice(sysIndex, 1);
         }
         if (!this.systemPolicyList.length) {
-          this.emptyPolicyData = formatCodeData(0, this.emptyPolicyData, true);
+          this.handleRefreshSystem();
         }
       },
 
@@ -178,7 +181,7 @@
                 this.systemPolicyList.splice(sysIndex, 1);
                 this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
                 if (!this.systemPolicyList.length) {
-                  this.emptyPolicyData = formatCodeData(0, this.emptyPolicyData, true);
+                  this.handleRefreshSystem();
                 }
                 return true;
               }
@@ -207,6 +210,9 @@
           }
         }
         this.onePerm = systemPolicyList.length;
+        if (this.isSearchPerm) {
+          this.emptyPolicyData.tipType = 'search';
+        }
         this.emptyPolicyData = formatCodeData(0, this.emptyPolicyData, this.onePerm === 0);
       },
 
@@ -215,6 +221,7 @@
         if (this.externalSystemId) {
           externalParams.system_id = this.externalSystemId;
         }
+        this.emptyPolicyData.tipType = '';
         const { code, data } = await this.$store.dispatch('permApply/getHasPermSystem', externalParams);
         this.formatSystemData(data || []);
         this.emptyPolicyData = formatCodeData(code, this.emptyPolicyData, data.length === 0);

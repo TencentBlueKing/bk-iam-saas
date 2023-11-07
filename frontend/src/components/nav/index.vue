@@ -268,7 +268,9 @@
     // 审计
     [['audit'], 'auditNav'],
     // 用户组设置
-    [['userGroupSetting'], 'userGroupSettingNav']
+    [['userGroupSetting'], 'userGroupSettingNav'],
+    // 敏感等级
+    [['sensitivityLevel'], 'sensitivityLevelNav']
   ]);
 
   export default {
@@ -878,8 +880,7 @@
     justify-content: space-between;
 }
 
-.iam-nav-select-dropdown-content
-  .bk-big-tree {
+  .iam-nav-select-dropdown-content .bk-big-tree {
     &-node {
         padding: 0 16px;
         .node-options {
@@ -901,6 +902,12 @@
         color: #fff !important;
         opacity: .6;
         font-size: 12px;
+    }
+  }
+
+  .iam-nav-select-dropdown-content {
+    .bk-loading {
+      background-color: transparent !important;;
     }
   }
 

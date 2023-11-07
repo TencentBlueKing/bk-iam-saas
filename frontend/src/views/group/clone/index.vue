@@ -71,7 +71,7 @@
             mode="create"
             ref="resInstanceTableRef"
             :list="tableList"
-            :authorization="curAuthorizationData"
+            :authorization="curAuthorizationData()"
             :original-list="tableListBackup"
             :is-all-expanded="isAllExpanded"
             :group-id="groupId"
@@ -326,11 +326,13 @@
           return this.user.role.type === 'super_manager';
       },
       curAuthorizationData () {
+        return () => {
           const data = Object.assign(
             this.authorizationData,
             this.authorizationDataByCustom,
             this.authorizationDataClone);
           return data;
+        };
       }
     },
     watch: {
@@ -456,8 +458,8 @@
           console.log('this.groupSystemList', this.groupSystemList);
           for (let i = 0; i < this.groupSystemList.length; i++) {
             this.groupSystemList[i].count = this.groupSystemList[i].custom_policy_count;
-            this.fetchAggregationAction(this.groupSystemList[i].id);
-            this.fetchAuthorizationScopeActions(this.groupSystemList[i].id);
+            await this.fetchAggregationAction(this.groupSystemList[i].id);
+            await this.fetchAuthorizationScopeActions(this.groupSystemList[i].id);
             if (this.groupSystemList[i].count > 0) {
               await this.getGroupCustomPolicy(this.groupSystemList[i]);
             }
@@ -726,6 +728,26 @@
           });
         }
 
+        // this.hasAddCustomList.forEach(item => {
+        //   if (!item.resource_groups || !item.resource_groups.length) {
+        //     item.resource_groups = item.related_resource_types.length ? [{ id: '', related_resource_types: item.related_resource_types }] : [];
+        //   }
+        //   tempList.push(new GroupPolicy(item, 'add', 'custom', {
+        //     system: {
+        //       id: item.system_id,
+        //       name: item.system_name
+        //     },
+        //     id: CUSTOM_PERM_TEMPLATE_ID
+        //   }));
+        // });
+
+        // if (this.tableList.length < 1) {
+        //   this.tableList = _.cloneDeep(tempList);
+        // } else {
+        //   this.tableList.push(..._.cloneDeep(tempList));
+        // }
+        // this.tableListBackup = _.cloneDeep(this.tableList);
+
         const tempList = [];
         hasAddTemplateList.forEach(item => {
           const temp = _.cloneDeep(item);
@@ -737,7 +759,22 @@
             tempList.push(new GroupPolicy(sub, 'add', 'template', temp));
           });
         });
-        this.hasAddCustomList.forEach(item => {
+
+        const temps = [];
+        this.tableList.forEach(item => {
+          if (item.detail.id === CUSTOM_PERM_TEMPLATE_ID) {
+            if (item.isAggregate) {
+              temps.push(item.actions.map(_ => `${_.detail.system.id}&${_.id}`));
+            } else {
+              temps.push(`${item.detail.system.id}&${item.id}`);
+            }
+          }
+        });
+        
+        console.log('this.hasAddCustomList', this.hasAddCustomList);
+        const addCustomList = this.originalList.filter(item => !temps.includes(item.$id));
+
+        addCustomList.forEach(item => {
           if (!item.resource_groups || !item.resource_groups.length) {
             item.resource_groups = item.related_resource_types.length ? [{ id: '', related_resource_types: item.related_resource_types }] : [];
           }
@@ -749,12 +786,7 @@
             id: CUSTOM_PERM_TEMPLATE_ID
           }));
         });
-
-        if (this.tableList.length < 1) {
-          this.tableList = _.cloneDeep(tempList);
-        } else {
-          this.tableList.push(..._.cloneDeep(tempList));
-        }
+        this.tableList.push(...tempList);
         this.tableListBackup = _.cloneDeep(this.tableList);
 
         // 处理聚合的数据，将表格数据按照相同的聚合id分配好
@@ -1076,46 +1108,48 @@
       },
 
       handleUnlimitedActionChange (payload) {
-        const tableData = _.cloneDeep(this.tableList);
-        tableData.forEach((item, index) => {
-          if (!item.isAggregate) {
-            if (item.resource_groups && item.resource_groups.length) {
-              item.resource_groups.forEach(groupItem => {
-                groupItem.related_resource_types && groupItem.related_resource_types.forEach(types => {
-                  if (!payload && (types.condition.length && types.condition[0] !== 'none')) {
-                    return;
-                  }
-                  types.condition = payload ? [] : ['none'];
-                  if (payload) {
-                    types.isError = false;
-                  }
+        if (['super_manager', 'system_manager'].includes(this.user.role.type)) {
+          const tableData = _.cloneDeep(this.tableList);
+          tableData.forEach((item, index) => {
+            if (!item.isAggregate) {
+              if (item.resource_groups && item.resource_groups.length) {
+                item.resource_groups.forEach(groupItem => {
+                  groupItem.related_resource_types && groupItem.related_resource_types.forEach(types => {
+                    if (!payload && (types.condition.length && types.condition[0] !== 'none')) {
+                      return;
+                    }
+                    types.condition = payload ? [] : ['none'];
+                    if (payload) {
+                      types.isError = false;
+                    }
+                  });
                 });
-              });
-            } else {
-              item.name = item.name.split('，')[0];
+              } else {
+                item.name = item.name.split('，')[0];
+              }
             }
-          }
-          if (item.instances && item.isAggregate) {
-            item.isNoLimited = false;
-            item.isError = !(item.instances.length || (!item.instances.length && item.isNoLimited));
-            item.isNeedNoLimited = true;
-            if (!payload || item.instances.length) {
+            if (item.instances && item.isAggregate) {
               item.isNoLimited = false;
-              item.isError = false;
+              item.isError = !(item.instances.length || (!item.instances.length && item.isNoLimited));
+              item.isNeedNoLimited = true;
+              if (!payload || item.instances.length) {
+                item.isNoLimited = false;
+                item.isError = false;
+              }
+              if ((!item.instances.length && !payload && item.isNoLimited) || payload) {
+                item.isNoLimited = true;
+                item.isError = false;
+                item.instances = [];
+              }
+              return this.$set(
+                tableData,
+                index,
+                new GroupAggregationPolicy(item)
+              );
             }
-            if ((!item.instances.length && !payload && item.isNoLimited) || payload) {
-              item.isNoLimited = true;
-              item.isError = false;
-              item.instances = [];
-            }
-            return this.$set(
-              tableData,
-              index,
-              new GroupAggregationPolicy(item)
-            );
-          }
-        });
-        this.tableList = _.cloneDeep(tableData);
+          });
+          this.tableList = _.cloneDeep(tableData);
+        }
       },
 
       setInstancesDisplayData (data) {
