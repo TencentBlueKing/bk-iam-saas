@@ -1,3 +1,29 @@
+<!-- 2023-11-07 -->
+# V1.10.16 Version Update Log
+
+### Optimization Updates
+* Optimized handling of multiple API calls in the sidebar for adding systems and operations, addressing aggregation issues.
+* Added version declaration at the bottom of the "My Permissions" list.
+* Added support for batch deletion and renewal of members in user groups across multiple pages.
+* Redesigned the organization structure member selector.
+* Made the product documentation link a dynamic configuration item.
+* Added custom error message for exceeding 100 requests to join a user group.
+* Added group renewal for expired user groups in the "Apply to Join User Group" feature.
+
+### Bug Fixes
+* Fixed an issue where creating or cloning a user group and re-editing the group permissions without changing the operations would not display the previously selected options.
+* Fixed the inability to batch paste multiple unrestricted operations under a hierarchical administrator.
+* Fixed an error in the aggregation of individual operations in batch operations, resulting in missing authorization scope data.
+* Fixed the lack of synchronization of dependency operations when editing authorization boundaries or editing management spaces.
+* Fixed an issue where batch paste would show unlimited content when there were no copyable attribute conditions.
+* Fixed a styling issue where a box appeared after deleting all custom permissions.
+* Fixed a blank page issue caused by batch editing operations with no intersection.
+* Fixed incomplete update information prompt for user groups after editing associated instances in permission template editing.
+* Fixed the failure to clear old data when there are no selected instances in the management space module.
+* Fixed the inability of the custom date selector to display the selected days based on the timestamp.
+
+---
+
 <!-- 2023-09-19 -->
 # V1.10.15 Version Update Log
 
