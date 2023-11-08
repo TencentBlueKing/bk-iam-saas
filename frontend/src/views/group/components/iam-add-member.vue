@@ -650,7 +650,7 @@
         };
       },
       isStaff () {
-        return this.user.role === 'staff';
+        return this.user.role.type === 'staff';
       }
     },
     watch: {
