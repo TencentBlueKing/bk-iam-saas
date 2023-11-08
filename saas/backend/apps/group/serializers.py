@@ -23,12 +23,13 @@ from backend.apps.group.models import Group
 from backend.apps.policy.serializers import BasePolicyActionSLZ, ResourceTypeSLZ
 from backend.apps.role.models import Role, RoleRelatedObject, RoleRelation
 from backend.apps.role.serializers import ResourceInstancesSLZ
+from backend.apps.subject_template.models import SubjectTemplate
 from backend.apps.template.models import PermTemplatePolicyAuthorized
 from backend.biz.group import GroupBiz
 from backend.biz.policy import PolicyBean, PolicyBeanList
 from backend.biz.system import SystemBiz
 from backend.biz.template import TemplateBiz
-from backend.common.time import PERMANENT_SECONDS
+from backend.common.time import PERMANENT_SECONDS, expired_at_display
 from backend.service.constants import ADMIN_USER, GroupMemberType, RoleRelatedObjectType
 from backend.service.group_saas_attribute import GroupAttributeService
 
@@ -361,3 +362,22 @@ class GroupSearchSLZ(serializers.Serializer):
     )
     apply_disable = serializers.BooleanField(label="是否不可申请", required=False)
     hidden = serializers.BooleanField(label="是否隐藏", default=True)
+
+
+class GroupSubjectTemplateListSLZ(serializers.ModelSerializer):
+    expired_at = serializers.SerializerMethodField(label="过期时间")
+    expired_at_display = serializers.SerializerMethodField(label="过期时间显示")
+
+    class Meta:
+        model = SubjectTemplate
+        fields = ("id", "name", "description", "expired_at", "expired_at_display", "creator", "created_time")
+
+    def get_expired_at(self, obj):
+        return self.context["expired_at_dict"].get(obj.id, 0)
+
+    def get_expired_at_display(self, obj):
+        return expired_at_display(self.get_expired_at(obj))
+
+
+class SearchTemplateGroupMemberSLZ(SearchMemberSLZ):
+    template_id = serializers.IntegerField(label="模板ID", required=True)

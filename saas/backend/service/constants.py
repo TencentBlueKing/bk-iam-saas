@@ -52,8 +52,9 @@ FETCH_MAX_LIMIT = 1000
 class GroupMemberType(ChoicesEnum, LowerStrEnum):
     USER = auto()
     DEPARTMENT = auto()
+    TEMPLATE = auto()
 
-    _choices_labels = skip(((USER, "用户"), (DEPARTMENT, "部门")))
+    _choices_labels = skip(((USER, "用户"), (DEPARTMENT, "部门"), (TEMPLATE, "人员模版")))
 
 
 class GroupSaaSAttributeEnum(ChoicesEnum, LowerStrEnum):
@@ -389,3 +390,10 @@ class SensitivityLevel(ChoicesEnum):
             (L4, "高"),
         )
     )
+
+
+class SubjectTemplateMemberType(ChoicesEnum, LowerStrEnum):
+    USER = auto()
+    DEPARTMENT = auto()
+
+    _choices_labels = skip(((USER, "用户"), (DEPARTMENT, "部门")))

@@ -41,7 +41,6 @@ class SubjectTemplateService:
 
         return template
 
-    # 迁移到service
     def delete(self, template_id: int):
         subjects = self._list_subjects(template_id)
 
@@ -54,18 +53,17 @@ class SubjectTemplateService:
             SubjectTemplate.objects.filter(id=template_id).delete()
             SubjectTemplateRelation.objects.filter(template_id=template_id).delete()
 
-    # 迁移到service
     def delete_group(self, template_id: int, group_id: int, subjects: Optional[List[Subject]] = None):
         # 查询所有成员
         if subjects is None:
             subjects = self._list_subjects(template_id)
 
-        if not subjects:
-            return
-
         with transaction.atomic():
             # 删除关联关系
             count, _ = SubjectTemplateGroup.objects.filter(template_id=template_id, group_id=group_id).delete()
+
+            if not subjects:
+                return
 
             if count != 0:
                 # 调用后台接口删除数据
@@ -75,7 +73,33 @@ class SubjectTemplateService:
                 ]
                 iam.delete_subject_template_groups(data)
 
-    def _list_subjects(self, template_id):
+    def add_group(self, template_id: int, group_id: int, expired_at: int, creator: str):
+        relation = SubjectTemplateGroup(
+            template_id=template_id,
+            group_id=group_id,
+            expired_at=expired_at,
+            creator=creator,
+        )
+
+        subjects = self._list_subjects(template_id)
+        backend_subjects = [
+            {
+                "template_id": template_id,
+                "group_id": group_id,
+                "type": subject.type,
+                "id": subject.id,
+                "expired_at": expired_at,
+            }
+            for subject in subjects
+        ]
+
+        with transaction.atomic():
+            relation.save()
+
+            if backend_subjects:
+                iam.add_subject_template_groups(backend_subjects)
+
+    def _list_subjects(self, template_id) -> List[Subject]:
         queryset = SubjectTemplateRelation.objects.filter(template_id=template_id)
         subjects = [Subject(type=relation.subject_type, id=relation.subject_id) for relation in queryset]
 
@@ -116,7 +140,7 @@ class SubjectTemplateService:
 
             # 调用后台接口
             if backend_subjects:
-                iam.create_subject_template_groups(backend_subjects)
+                iam.add_subject_template_groups(backend_subjects)
 
     def delete_members(self, template_id: int, members: List[Subject]):
         # 排除不存在的数据
@@ -158,3 +182,30 @@ class SubjectTemplateService:
     def _filter_exists_members(self, template_id: int, members: List[Subject]):
         subjects = set(self._list_subjects(template_id))
         return [subject for subject in members if subject in subjects]
+
+    def update_expired_at(self, group_id: int, template_id: int, expired_at: int):
+        """
+        更新人员模版与用户组关系的过期时间
+        """
+        subjects = self._list_subjects(template_id)
+
+        backend_subjects = [
+            {
+                "template_id": template_id,
+                "group_id": group_id,
+                "type": subject.type,
+                "id": subject.id,
+                "expired_at": expired_at,
+            }
+            for subject in subjects
+        ]
+
+        with transaction.atomic():
+            if not SubjectTemplateGroup.objects.filter(template_id=template_id, group_id=group_id).update(
+                expired_at=expired_at
+            ):
+                return
+
+            # 调用后台接口
+            if backend_subjects:
+                iam.update_subject_template_group_expired_at(backend_subjects)

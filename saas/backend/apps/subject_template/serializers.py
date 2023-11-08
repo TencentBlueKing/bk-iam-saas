@@ -10,9 +10,14 @@ specific language governing permissions and limitations under the License.
 """
 from rest_framework import serializers
 
-from backend.apps.group.serializers import GroupMemberSLZ, GroupMemberType
 from backend.apps.subject_template.models import SubjectTemplate
 from backend.common.time import PERMANENT_SECONDS
+from backend.service.constants import SubjectTemplateMemberType
+
+
+class SubjectTemplateSubjectSLZ(serializers.Serializer):
+    type = serializers.ChoiceField(label="成员类型", choices=SubjectTemplateMemberType.get_choices())
+    id = serializers.CharField(label="成员id")
 
 
 class BaseSubjectTemplateSLZ(serializers.Serializer):
@@ -21,7 +26,7 @@ class BaseSubjectTemplateSLZ(serializers.Serializer):
 
 
 class SubjectTemplateMemberSLZ(serializers.Serializer):
-    subjects = serializers.ListField(label="成员列表", child=GroupMemberSLZ(), max_length=1000)
+    subjects = serializers.ListField(label="成员列表", child=SubjectTemplateSubjectSLZ(), max_length=1000)
 
 
 class SubjectTemplateCreateSLZ(BaseSubjectTemplateSLZ, SubjectTemplateMemberSLZ):
@@ -41,7 +46,7 @@ class SubjectTemplateListSLZ(serializers.ModelSerializer):
 
 
 class SubjectTemplateMemberListSLZ(serializers.Serializer):
-    type = serializers.ChoiceField(label="成员类型", choices=GroupMemberType.get_choices())
+    type = serializers.ChoiceField(label="成员类型", choices=SubjectTemplateMemberType.get_choices())
     id = serializers.CharField(label="成员id")
     name = serializers.CharField(label="名称")
     full_name = serializers.CharField(label="全名(仅部门有)")

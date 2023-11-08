@@ -709,3 +709,20 @@ def delete_subject_template_groups(subjects: List[Dict]) -> Dict[str, int]:
     """
     url_path = "/api/v1/web/subject-template-groups"
     return _call_iam_api(http_delete, url_path, data=subjects)
+
+
+def list_template_group_member(_type: str, id: str, template_id: int, limit: int = 10, offset: int = 0) -> Dict:
+    """
+    获取template的group成员列表
+    """
+    url_path = "/api/v1/web/template-group-members"
+    params = {"type": _type, "id": id, "template_id": template_id, "limit": limit, "offset": offset}
+    return _call_iam_api(http_get, url_path, data=params)
+
+
+def update_subject_template_group_expired_at(subjects: List[Dict]) -> Dict[str, int]:
+    """
+    批量添加subject的成员
+    """
+    url_path = "/api/v1/web/subject-template-groups/expired_at"
+    return _call_iam_api(http_put, url_path, data=subjects)

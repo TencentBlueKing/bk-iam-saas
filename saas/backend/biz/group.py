@@ -22,6 +22,7 @@ from backend.apps.group.models import Group, GroupAuthorizeLock
 from backend.apps.organization.models import User
 from backend.apps.policy.models import Policy as PolicyModel
 from backend.apps.role.models import Role, RoleRelatedObject, RoleUser
+from backend.apps.subject_template.models import SubjectTemplateGroup
 from backend.apps.template.models import PermTemplatePolicyAuthorized, PermTemplatePreUpdateLock
 from backend.biz.policy import PolicyBean, PolicyBeanList, PolicyOperationBiz
 from backend.biz.resource import ResourceBiz
@@ -41,6 +42,7 @@ from backend.service.group_saas_attribute import GroupAttributeService
 from backend.service.models import Policy, Subject
 from backend.service.policy.query import PolicyQueryService
 from backend.service.role import AuthScopeSystem, RoleService, UserRole
+from backend.service.subject_template import SubjectTemplateService
 from backend.service.system import SystemService
 from backend.service.template import TemplateService
 from backend.util.time import utc_string_to_local
@@ -127,6 +129,7 @@ class GroupBiz:
     engine_svc = EngineService()
     role_svc = RoleService()
     action_svc = ActionService()
+    subject_template_svc = SubjectTemplateService()
 
     # TODO 这里为什么是biz?
     action_check_biz = ActionCheckBiz()
@@ -433,6 +436,13 @@ class GroupBiz:
             self.template_biz.delete_template_auth_by_subject(subject)
             # 删除所有的自定义策略
             PolicyModel.objects.filter(subject_type=subject.type, subject_id=subject.id).delete()
+
+            # 删除用户组关联的人员模版
+            for subject_template_id in SubjectTemplateGroup.objects.filter(group_id=group_id).values_list(
+                "template_id", flat=True
+            ):
+                self.subject_template_svc.delete_group(subject_template_id, group_id)
+
             # 删除用户组的属性
             self.group_attribute_svc.batch_delete_attributes([group_id])
             # 删除用户组本身
@@ -476,6 +486,13 @@ class GroupBiz:
     def list_paging_group_member(self, group_id: int, limit: int, offset: int) -> Tuple[int, List[GroupMemberBean]]:
         """分页查询用户组成员，并给成员填充name/full_named等相关信息"""
         count, relations = self.group_svc.list_paging_group_member(group_id, limit, offset)
+        return count, self._convert_to_group_members(relations)
+
+    def list_paging_template_group_member(
+        self, group_id: int, template_id: int, limit: int, offset: int
+    ) -> Tuple[int, List[GroupMemberBean]]:
+        """分页查询模版用户组成员，并给成员填充name/full_named等相关信息"""
+        count, relations = self.group_svc.list_paging_template_group_member(group_id, template_id, limit, offset)
         return count, self._convert_to_group_members(relations)
 
     def _convert_to_thin_group_members(self, relations: List[SubjectGroup]) -> List[GroupMemberBean]:
@@ -694,6 +711,18 @@ class GroupBiz:
 
         return hit_members
 
+    def search_template_group_member_by_keyword(
+        self, group_id: int, template_id: int, keyword: str
+    ) -> List[GroupMemberBean]:
+        """根据关键词 获取指定模版用户组成员列表"""
+        maximum_number_of_member = 1000
+        _, group_members = self.list_paging_template_group_member(
+            group_id=group_id, template_id=template_id, limit=maximum_number_of_member, offset=0
+        )
+        hit_members = list(filter(lambda m: keyword in m.id.lower() or keyword in m.name.lower(), group_members))
+
+        return hit_members
+
     def create_sync_perm_group_by_role(
         self, role: Role, creator: str, group_name: str = "", attrs: Optional[Dict] = None
     ):
@@ -875,6 +904,21 @@ class GroupBiz:
         if del_subjects:
             self.group_svc.remove_members(str(group_id), del_subjects)
 
+    def grant_subject_template(self, group_id: int, subject_template_id: int, expired_at: int, creator: str):
+        """
+        授权人员模版
+        """
+        if SubjectTemplateGroup.objects.filter(group_id=group_id, template_id=subject_template_id).exists():
+            return
+
+        self.subject_template_svc.add_group(subject_template_id, group_id, expired_at, creator)
+
+    def update_subject_template_expired_at(self, group_id: int, template_id: int, expired_at: int):
+        """
+        更新人员模版过期时间
+        """
+        self.subject_template_svc.update_expired_at(group_id, template_id, expired_at)
+
 
 class GroupCheckBiz:
     svc = GroupService()
@@ -948,3 +992,21 @@ class GroupCheckBiz:
                 raise error_codes.VALIDATE_ERROR.format(
                     _("系统: {} 的操作: {} 权限已存在, 只能新增, 不能修改!").format(system_id, p.action_id)
                 )
+
+    def check_subject_template(self, role_id: int, subject_template_ids: List[int]):
+        """
+        检查用户组授权人员模板
+        """
+        if not subject_template_ids:
+            return
+
+        exist_ids = set(
+            RoleRelatedObject.objects.filter(
+                object_type=RoleRelatedObjectType.SUBJECT_TEMPLATE.value,
+                object_id__in=subject_template_ids,
+                role_id=role_id,
+            ).values_list("object_id", flat=True)
+        )
+        for subject_template_id in subject_template_ids:
+            if subject_template_id not in exist_ids:
+                raise error_codes.VALIDATE_ERROR.format(_("人员模板不存在: {}").format(subject_template_id))

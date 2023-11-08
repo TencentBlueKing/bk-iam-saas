@@ -16,13 +16,14 @@ from pydantic.tools import parse_obj_as
 from backend.apps.group.models import Group
 from backend.apps.organization.models import User
 from backend.apps.role.models import Role
+from backend.apps.subject_template.models import SubjectTemplate
 from backend.apps.template.models import PermTemplate
 from backend.audit.models import Event
 from backend.biz.subject import SubjectInfoList
 from backend.biz.system import SystemBiz
 from backend.service.action import ActionService
 from backend.service.approval import ApprovalProcessService
-from backend.service.constants import ApplicationType
+from backend.service.constants import ApplicationType, GroupMemberType
 from backend.service.models import Subject
 from backend.util.time import timestamp_to_local
 
@@ -67,7 +68,12 @@ class GroupTemplateProvider(BaseProvider):
 class GroupMemberProvider(BaseProvider):
     @property
     def sub_objects(self) -> List:
-        subject_list = SubjectInfoList(parse_obj_as(List[Subject], self.event.extra["members"]))
+        subject_list = SubjectInfoList(
+            parse_obj_as(
+                List[Subject],
+                [one for one in self.event.extra["members"] if one["type"] != GroupMemberType.TEMPLATE.value],
+            )
+        )
         objects = []
         for subject in subject_list.subjects:
             data = {"type": subject.type, "id": subject.id, "name": subject.name}
@@ -75,6 +81,18 @@ class GroupMemberProvider(BaseProvider):
             if subject.type == AuditObjectType.DEPARTMENT.value:
                 data["name"] = subject.full_name
             objects.append(data)
+
+        subject_template_ids = [
+            one["id"] for one in self.event.extra["members"] if one["type"] == GroupMemberType.TEMPLATE.value
+        ]
+        if not subject_template_ids:
+            return objects
+
+        subject_templates = SubjectTemplate.objects.filter(id__in=subject_template_ids)
+        for subject_template in subject_templates:
+            data = {"type": GroupMemberType.TEMPLATE.value, "id": subject_template.id, "name": subject_template.name}
+            objects.append(data)
+
         return objects
 
 

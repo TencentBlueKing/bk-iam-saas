@@ -316,6 +316,13 @@ class GroupService:
         data = iam.list_subject_member(SubjectType.GROUP.value, str(group_id), limit, offset)
         return data["count"], parse_obj_as(List[SubjectGroup], data["results"])
 
+    def list_paging_template_group_member(
+        self, group_id: int, template_id: int, limit: int, offset: int
+    ) -> Tuple[int, List[SubjectGroup]]:
+        """分页查询模版用户组成员"""
+        data = iam.list_template_group_member(SubjectType.GROUP.value, str(group_id), template_id, limit, offset)
+        return data["count"], parse_obj_as(List[SubjectGroup], data["results"])
+
     def list_all_group_member(self, group_id: int) -> List[SubjectGroup]:
         """
         分页查询用户组所有成员

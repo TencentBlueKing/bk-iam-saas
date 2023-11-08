@@ -155,7 +155,7 @@ class SubjectTemplateViewSet(SubjectTemplateQueryMixin, ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = SubjectTemplateListSLZ(
-            instance, many=True, context={"group_count_dict": self.biz.get_group_count_dict([instance.id])}
+            instance, context={"group_count_dict": self.biz.get_group_count_dict([instance.id])}
         )
         return Response(serializer.data)
 
