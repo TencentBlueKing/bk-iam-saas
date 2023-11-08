@@ -984,13 +984,13 @@
             }
             this.manualValue = _.cloneDeep(formatStr);
             if (this.isStaff) {
-              this.manualInputError = true;
+              this.manualInputError = !!this.manualValue;
               return;
             }
             this.formatOrgAndUser();
           } else {
             if (this.isStaff) {
-              this.manualInputError = true;
+              this.manualInputError = !!this.manualValue;
               return;
             }
             this.formatOrgAndUser();
@@ -1061,14 +1061,14 @@
               // this.manualInputError = !!this.manualValue.length;
             } else {
               if (this.isStaff) {
-                this.manualInputError = true;
+                this.manualInputError = !!this.manualValue;
                 return;
               }
               // this.manualInputError = true;
             }
           } else {
             if (this.isStaff) {
-              this.manualInputError = true;
+              this.manualInputError = !!this.manualValue;
               return;
             }
           }
