@@ -437,6 +437,7 @@
             };
           }
           if (payload.async) {
+            console.log(555);
             return {
               maxWidth: offsetWidth - (payload.level + 1) * this.leftBaseIndent - asyncLevelWidth - searchIconWidth + 'px'
             };
@@ -971,6 +972,7 @@
           };
         }
         if (node.async) {
+          console.log(node, 5565);
           return {
             paddingLeft: (node.level + 1) * this.leftBaseIndent + 'px'
           };
@@ -1028,6 +1030,7 @@
        * @param {Boolean} isExpand 是否展开
        */
       expandNode (node, index, isExpand) {
+        console.log(isExpand, node.expanded);
         const flag = this.getExpandedDisabled(index);
         const canExpanded = this.isExistAsync(node) ? node.children && node.children.length : true;
         if (flag || !canExpanded) {
@@ -1094,6 +1097,7 @@
           this.handleEmptyClear('table', node, index);
         }
         if (Object.keys(node).length > 0) {
+          node.expanded = true;
           this.selectNodeDataIndex = index;
           this.selectNodeData = Object.assign({}, node);
           this.$store.commit('setTreeTableData', node);

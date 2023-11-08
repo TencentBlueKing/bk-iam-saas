@@ -75,7 +75,7 @@
   };
 </script>
 <style lang="postcss" scoped>
-    /* .single-resource-name {
+/* .single-resource-name {
         position: relative;
         padding: 0 36px 0 10px;
         display: block;
@@ -89,19 +89,26 @@
         text-overflow: ellipsis;
         white-space: nowrap;
     } */
-    .iam-resource-select {
-      width: 100%;
-    }
-    /deep/ .iam-topology-tab-cls {
-      .bk-tab-section {
-        padding: 0;
-        border: 0;
+.iam-resource-select {
+  width: 100%;
+  background-color: #f5f7fa;
+  color: #313238;
+}
+/deep/ .iam-topology-tab-cls {
+  .bk-tab-section {
+    padding: 0;
+    border: 0;
+  }
+  .bk-tab-label-list {
+    border-top: 0;
+    .bk-tab-label-item {
+      &.is-first {
+        border-left: 0;
       }
-      .bk-tab-label-list  {
-        border-top: 0;
-        .bk-tab-label-item.is-first {
-          border-left: 0;
-        }
+      &.active {
+        color: #63656e;
       }
     }
+  }
+}
 </style>
