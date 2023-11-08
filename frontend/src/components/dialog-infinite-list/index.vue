@@ -164,6 +164,9 @@
             },
             selectedNode () {
                 return (payload) => {
+                  if (payload.disabled) {
+                    return true;
+                  }
                     if (this.hasSelectedDepartments.length || this.hasSelectedUsers.length) {
                       payload.is_selected = this.hasSelectedDepartments.map(
                         item => item.id.toString()).includes(payload.id.toString())
@@ -288,7 +291,7 @@
       },
 
       async handleNodeClick (node) {
-        const isDisabled = this.isDisabled || (this.getGroupAttributes && this.getGroupAttributes().source_from_role && node.type === 'depart');
+        const isDisabled = node.disabled || this.isDisabled || (this.getGroupAttributes && this.getGroupAttributes().source_from_role && node.type === 'depart');
         if (!isDisabled) {
           if (this.isStaff) {
             node.is_selected = !node.is_selected;

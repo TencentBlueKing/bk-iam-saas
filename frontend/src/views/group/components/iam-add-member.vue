@@ -648,6 +648,9 @@
         return (payload) => {
           return ['depart', 'department'].includes(payload.type) ? payload.name : `${payload.username}(${payload.name})`;
         };
+      },
+      isStaff () {
+        return this.user.role.type === 'staff';
       }
     },
     watch: {
@@ -833,12 +836,77 @@
             }
           }
         });
-        this.filterUserList = manualList.filter((item) => !this.filterDepartList.includes(item));
+        this.filterUserList = manualList.filter((item) => !this.filterDepartList.includes(item) && item !== '');
       },
 
       handleClearManualUser () {
         this.manualValue = '';
         this.manualInputError = false;
+      },
+
+      // 处理同步异步操作数据
+      async formatSearchData (data, curData) {
+        if (data) {
+          const { users, departments } = data;
+          if (users && users.length) {
+            users.forEach((item) => {
+              item.type = 'user';
+            });
+            const result = await this.fetchSubjectScopeCheck(users, 'user');
+            if (result && result.length) {
+              const hasSelectedUsers = [...this.hasSelectedUsers, ...this.hasSelectedManualUsers];
+              const userTemp = result.filter((item) => {
+                return !hasSelectedUsers.map((subItem) =>
+                  `${subItem.username}&${subItem.name}`).includes(`${item.username}&${item.name}`);
+              });
+              this.hasSelectedUsers.push(...userTemp);
+              this.hasSelectedManualUsers.push(...userTemp);
+              // 保存原有格式
+              let formatStr = _.cloneDeep(this.manualValue);
+              const usernameList = result.map((item) => item.username);
+              usernameList.forEach((item) => {
+                // 处理既有部门又有用户且不连续相同类型的展示数据
+                formatStr = formatStr
+                  .replace(this.evil('/' + item + '(;\\n|\\s\\n|)/'), '')
+                  .replace(/(\s*\r?\n\s*)+/g, '\n')
+                  .replace(';;', '');
+                // 处理复制全部用户不相连的两个不在授权范围内的用户存在空字符
+                formatStr = formatStr
+                  .split(/;|\n|\s/)
+                  .filter((item) => item !== '' && item !== curData)
+                  .join('\n');
+              });
+              // 处理只选择全部符合条件的用户，还存在特殊符号的情况
+              if (formatStr === '\n' || formatStr === '\s' || formatStr === ';') {
+                formatStr = '';
+              }
+              this.manualValue = _.cloneDeep(formatStr);
+            }
+          }
+          if (departments && departments.length) {
+            departments.forEach((item) => {
+              item.type = 'depart';
+            });
+            const result = await this.fetchSubjectScopeCheck(departments, 'depart');
+            if (result && result.length) {
+              const hasSelectedDepartments = [...this.hasSelectedDepartments, ...this.hasSelectedManualDepartments];
+              const departTemp = result.filter((item) => {
+                return !hasSelectedDepartments.map((subItem) =>
+                  subItem.id.toString()).includes(item.id.toString());
+              });
+              this.hasSelectedManualDepartments.push(...departTemp);
+              this.hasSelectedDepartments.push(...departTemp);
+              // 备份一份粘贴板里的内容，清除组织的数据，在过滤掉组织的数据
+              let clipboardValue = _.cloneDeep(this.manualValue);
+              // 处理不相连的数据之间存在特殊符号的情况
+              clipboardValue = clipboardValue
+                .split(/;|\n|\s/)
+                .filter((item) => item !== '' && item !== curData)
+                .join('\n');
+              this.manualValue = _.cloneDeep(clipboardValue);
+            }
+          }
+        }
       },
 
       async handleSearchOrgAndUser () {
@@ -850,80 +918,20 @@
             is_exact: false
           };
           try {
-            const { data } = await this.$store.dispatch('organization/getSearchOrganizations', params);
-            const { users, departments } = data;
-            if (users && users.length) {
-              users.forEach((item) => {
-                item.type = 'user';
+            if (manualInputValue.length < 10) {
+              const { data } = await this.$store.dispatch('organization/getSearchOrganizations', params);
+              await this.formatSearchData(data, manualInputValue[i]);
+            } else {
+              this.$store.dispatch('organization/getSearchOrganizations', params).then(async ({ data }) => {
+                this.formatSearchData(data, manualInputValue[i]);
               });
-              const result = await this.fetchSubjectScopeCheck(users, 'user');
-              if (result && result.length) {
-                const hasSelectedUsers = [...this.hasSelectedUsers, ...this.hasSelectedManualUsers];
-                const userTemp = result.filter((item) => {
-                  return !hasSelectedUsers.map((subItem) =>
-                    `${subItem.username}&${subItem.name}`).includes(`${item.username}&${item.name}`);
-                });
-                this.hasSelectedUsers.push(...userTemp);
-                this.hasSelectedManualUsers.push(...userTemp);
-                // 保存原有格式
-                let formatStr = _.cloneDeep(this.manualValue);
-                const usernameList = result.map((item) => item.username);
-                usernameList.forEach((item) => {
-                  // 处理既有部门又有用户且不连续相同类型的展示数据
-                  formatStr = formatStr
-                    .replace(this.evil('/' + item + '(;\\n|\\s\\n|)/'), '')
-                    .replace(/(\s*\r?\n\s*)+/g, '\n')
-                    .replace(';;', '');
-                  // 处理复制全部用户不相连的两个不在授权范围内的用户存在空字符
-                  formatStr = formatStr
-                    .split(/;|\n|\s/)
-                    .filter((item) => item !== '' && item !== manualInputValue[i])
-                    .join('\n');
-                });
-                // 处理只选择全部符合条件的用户，还存在特殊符号的情况
-                if (formatStr === '\n' || formatStr === '\s' || formatStr === ';') {
-                  formatStr = '';
-                }
-                this.manualValue = _.cloneDeep(formatStr);
-                this.manualInputError = !!this.manualValue.length;
-              } else {
-                this.manualInputError = true;
-              }
-            }
-            if (departments && departments.length) {
-              departments.forEach((item) => {
-                item.type = 'depart';
-              });
-              const result = await this.fetchSubjectScopeCheck(departments, 'depart');
-              if (result && result.length) {
-                const hasSelectedDepartments = [...this.hasSelectedDepartments, ...this.hasSelectedManualDepartments];
-                const departTemp = result.filter((item) => {
-                  return !hasSelectedDepartments.map((subItem) =>
-                    subItem.id.toString()).includes(item.id.toString());
-                });
-                this.hasSelectedManualDepartments.push(...departTemp);
-                this.hasSelectedDepartments.push(...departTemp);
-                // 备份一份粘贴板里的内容，清除组织的数据，在过滤掉组织的数据
-                let clipboardValue = _.cloneDeep(this.manualValue);
-                // 处理不相连的数据之间存在特殊符号的情况
-                clipboardValue = clipboardValue
-                  .split(/;|\n|\s/)
-                  .filter((item) => item !== '' && item !== manualInputValue[i])
-                  .join('\n');
-                this.manualValue = _.cloneDeep(clipboardValue);
-                this.manualInputError = !!this.manualValue.length;
-              } else {
-                this.manualInputError = true;
-              }
             }
           } catch (e) {
             console.error(e);
             this.messageAdvancedError(e);
           }
         }
-        if (!this.manualValue) {
-          this.manualInputError = false;
-        }
+        this.manualInputError = !!this.manualValue.length;
       },
 
       async handleAddManualUser () {
@@ -980,8 +988,16 @@
               formatStr = '';
             }
             this.manualValue = _.cloneDeep(formatStr);
+            if (this.isStaff) {
+              this.manualInputError = true;
+              return;
+            }
             this.formatOrgAndUser();
           } else {
+            if (this.isStaff) {
+              this.manualInputError = true;
+              return;
+            }
             this.formatOrgAndUser();
           }
         } catch (e) {
@@ -994,13 +1010,16 @@
 
       // 处理只复制部门或者部门和用户一起复制情况
       async formatOrgAndUser () {
-        if (this.manualValue) {
+        if (this.manualValue && !this.isStaff) {
           // 校验查验失败的数据是不是属于部门
           const departData = _.cloneDeep(this.manualValue.split(/;|\n|\s/));
           const departGroups = this.filterDepartList.filter((item) => departData.includes(item));
-          if (departGroups.length && this.getGroupAttributes) {
-            if (this.getGroupAttributes().source_from_role) {
+          if (departGroups.length) {
+            if (this.getGroupAttributes && this.getGroupAttributes().source_from_role) {
               this.messageWarn(this.$t(`m.common['管理员组不能添加部门']`), 3000);
+              this.manualTableListStorage = [...this.hasSelectedManualDepartments, ...this.hasSelectedManualUsers];
+              this.manualTableList = _.cloneDeep(this.manualTableListStorage);
+              this.fetchManualTableData();
               this.manualInputError = true;
               return;
             }
@@ -1044,16 +1063,22 @@
                 .filter((item) => item !== '')
                 .join('\n');
               this.manualValue = _.cloneDeep(clipboardValue);
-              this.manualInputError = !!this.manualValue.length;
+              // this.manualInputError = !!this.manualValue.length;
             } else {
-              this.manualInputError = true;
+              if (this.isStaff) {
+                this.manualInputError = true;
+                return;
+              }
+              // this.manualInputError = true;
             }
           } else {
-            this.manualInputError = true;
+            if (this.isStaff) {
+              this.manualInputError = true;
+              return;
+            }
           }
         }
-
-        if (this.manualInputError) {
+        if (this.manualValue && !this.isStaff) {
           await this.handleSearchOrgAndUser();
         }
         this.manualTableListStorage = [...this.hasSelectedManualDepartments, ...this.hasSelectedManualUsers];
@@ -1137,7 +1162,6 @@
             offset: 0
           };
           const res = await this.$store.dispatch('userGroup/getUserGroupMemberList', params);
-
           this.defaultDepartments = res.data.results.filter((item) => item.type === 'department');
           this.defaultUsers = res.data.results.filter((item) => item.type === 'user');
           if (this.isRatingManager) {
@@ -1153,12 +1177,12 @@
         }
       },
 
-      fetchCategoriesList () {
+      async fetchCategoriesList () {
         try {
           if (this.isRatingManager) {
-            this.fetchRoleSubjectScope(false, true);
+            await this.fetchRoleSubjectScope(false, true);
           } else {
-            this.fetchCategories(false, true);
+            await this.fetchCategories(false, true);
           }
         } catch (e) {
           console.error(e);
@@ -1194,34 +1218,6 @@
             child.async = child.child_count > 0 || child.member_count > 0;
             child.isNewMember = false;
             child.parentNodeId = '';
-            // if (child.type === 'user') {
-            //     child.username = child.id;
-            // }
-
-            // if (this.hasSelectedDepartments.length > 0) {
-            //     child.is_selected = this.hasSelectedDepartments.map(item => item.id).includes(child.id);
-            // } else {
-            //     child.is_selected = false;
-            // }
-
-            // if (this.hasSelectedUsers.length > 0) {
-            //     child.is_selected = this.hasSelectedUsers.map(item => item.id).includes(child.id);
-            // } else {
-            //     child.is_selected = false;
-            // }
-
-            // if (this.defaultDepartments.length > 0
-            //     && this.defaultDepartments.map(item => item.id).includes(child.id.toString())
-            // ) {
-            //     child.is_selected = true;
-            //     child.disabled = true;
-            // }
-
-            // if (this.defaultUsers.length && this.defaultUsers.map(item => item.id).includes(child.id)) {
-            //     child.is_selected = true;
-            //     child.disabled = true;
-            // }
-
             if (child.type === 'user') {
               child.username = child.id;
               if (this.hasSelectedUsers.length > 0) {
@@ -1304,7 +1300,6 @@
                 child.isNewMember = false;
                 child.parentNodeId = item.id;
                 child.full_name = `${item.name}：${child.name}`;
-
                 if (this.hasSelectedDepartments.length) {
                   child.is_selected = this.hasSelectedDepartments.map((item) => item.id).includes(child.id);
                 } else {
@@ -1385,33 +1380,16 @@
         if (this.keyword === '') {
           return;
         }
-
-        // if (this.searchedResult.length === 1) {
-        //     if (this.searchedDepartment.length === 1) {
-        //         this.hasSelectedDepartments.push(this.searchedDepartment[0])
-        //     } else {
-        //         this.hasSelectedUsers.push(this.searchedUsers[0])
-        //     }
-        //     this.keyword = ''
-        //     this.searchedResult.splice(0, this.searchedResult.length, ...[])
-        //     this.searchedDepartment.splice(0, this.searchedDepartment.length, ...[])
-        //     this.searchedUsers.splice(0, this.searchedUsers.length, ...[])
-        //     return
-        // }
-
         if (this.focusItemIndex !== -1) {
           this.$refs.searchedResultsRef.setCheckStatusByIndex();
           return;
         }
-
         this.treeList.splice(0, this.treeList.length, ...[]);
         this.isBeingSearch = true;
         this.treeLoading = true;
-
         this.searchedResult.splice(0, this.searchedResult.length, ...[]);
         this.searchedDepartment.splice(0, this.searchedDepartment.length, ...[]);
         this.searchedUsers.splice(0, this.searchedUsers.length, ...[]);
-
         const defaultDepartIds = [...this.defaultDepartments.map((item) => item.id)];
         const defaultUserIds = [...this.defaultUsers.map((item) => item.id)];
         const departIds = [...this.hasSelectedDepartments.map((item) => item.id)];
@@ -1514,9 +1492,7 @@
             payload.expanded = false;
             return;
           }
-
           const curIndex = this.treeList.findIndex((item) => item.id === payload.id);
-
           if (curIndex === -1) {
             return;
           }
@@ -1538,13 +1514,11 @@
               child.isNewMember = false;
               child.parentNodeId = payload.id;
               child.full_name = `${payload.full_name}/${child.name}`;
-
               if (this.hasSelectedDepartments.length > 0) {
                 child.is_selected = this.hasSelectedDepartments.map((item) => item.id).includes(child.id);
               } else {
                 child.is_selected = false;
               }
-
               if (
                 this.defaultDepartments.length > 0
                 && this.defaultDepartments.map((item) => item.id).includes(child.id.toString())
@@ -1554,7 +1528,6 @@
               }
             });
           }
-
           if (members.length > 0) {
             members.forEach((child, childIndex) => {
               child.visiable = payload.expanded;
@@ -1572,7 +1545,6 @@
               child.parentNodeId = payload.id;
               // child.full_name = `${payload.full_name}/${child.name}`;
               child.full_name = payload.full_name;
-
               // parentNodeId + username 组合成id
               child.id = `${child.parentNodeId}${child.username}`;
               if (this.hasSelectedUsers.length > 0) {
@@ -1596,17 +1568,12 @@
               }
             });
           }
-
           const loadChildren = children.concat([...members]);
-
           treeList.splice(curIndex + 1, 0, ...loadChildren);
-
           this.treeList.splice(0, this.treeList.length, ...treeList);
-
           if (!payload.children) {
             payload.children = [];
           }
-
           payload.children.splice(0, payload.children.length, ...loadChildren);
         } catch (e) {
           console.error(e);
@@ -1770,20 +1737,11 @@
       },
 
       async handleSkip () {
-        // bus.$emit('nav-change', { id: this.$store.getters.navCurRoleId }, 0);
-        // await this.$store.dispatch('role/updateCurrentRole', { id: 0 });
-        // const routeData = this.$router.resolve({ path: `${this.$store.getters.navCurRoleId}/rating-manager-edit`, params: { id: this.$store.getters.navCurRoleId } });
         const routeData = this.$router.resolve({
           name: 'authorBoundaryEditFirstLevel',
           params: { id: this.$store.getters.curRoleId }
         });
         window.open(routeData.href, '_blank');
-      // this.$router.push({
-      //     name: 'gradingAdminEdit',
-      //     params: {
-      //         id: this.$store.getters.navCurRoleId
-      //     }
-      // });
       },
 
       fetchSelectedGroups (type, payload, row) {
