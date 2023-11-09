@@ -838,11 +838,19 @@ class RoleObjectRelationChecker:
         return role_ids
 
     def _check_object(self, obj_type: str, obj_id: int) -> bool:
+        # 如果是超级管理员, 直接返回True
+        if self.role.type == RoleType.SUPER_MANAGER.value:
+            return True
+
         return RoleRelatedObject.objects.filter(
             role_id__in=self._list_relation_role_id(), object_type=obj_type, object_id=obj_id
         ).exists()
 
     def _check_object_ids(self, obj_type: str, obj_ids: List[int]) -> bool:
+        # 如果是超级管理员, 直接返回True
+        if self.role.type == RoleType.SUPER_MANAGER.value:
+            return True
+
         count = RoleRelatedObject.objects.filter(
             role_id__in=self._list_relation_role_id(), object_type=obj_type, object_id__in=obj_ids
         ).count()
