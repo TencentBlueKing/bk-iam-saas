@@ -609,7 +609,6 @@
       handleChangeLocale (language) {
         Cookie.remove('blueking_language', { path: '' });
         Cookie.set('blueking_language', language, {
-          expires: 3600,
           domain: window.BK_DOMAIN
         });
         this.setMagicBoxLocale(language);
