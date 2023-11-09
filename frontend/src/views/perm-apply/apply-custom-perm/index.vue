@@ -136,7 +136,7 @@
                           :key="subIndex"
                           :class="['sub-action-item', { 'set-margin': subIndex !== 0 }]">
                           <div class="sub-action-wrapper">
-                            <span class="name" :title="subAct.name">{{ subAct.name }}</span>
+                            <span class="name" :title="subAct.name" v-if="subAct.actions.length > 0">{{ subAct.name }}</span>
                             <section>
                               <bk-checkbox
                                 v-for="(act, actIndex) in subAct.actions"
@@ -169,6 +169,7 @@
                             </section>
                           </div>
                           <bk-checkbox
+                            v-if="subAct.actions.length > 0"
                             :true-value="true"
                             :false-value="false"
                             v-model="subAct.allChecked"
