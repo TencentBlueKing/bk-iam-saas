@@ -17,8 +17,10 @@ from backend.account.permissions import role_perm_class
 from backend.account.serializers import AccountRoleSLZ
 from backend.apps.group.audit import GroupMemberDeleteAuditProvider
 from backend.apps.group.models import Group
+from backend.apps.group.serializers import GroupSearchSLZ
 from backend.apps.policy.serializers import PolicyDeleteSLZ, PolicyPartDeleteSLZ, PolicySLZ, PolicySystemSLZ
 from backend.apps.user.serializers import GroupSLZ
+from backend.apps.user.views import SubjectGroupSearchMixin
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.group import GroupBiz
 from backend.biz.policy import ConditionBean, PolicyOperationBiz, PolicyQueryBiz
@@ -337,3 +339,40 @@ class SubjectTemporaryPolicySystemViewSet(GenericViewSet):
         data = self.biz.list_temporary_system_counter_by_subject(subject)
 
         return Response([one.dict() for one in data])
+
+
+class SubjectGroupSearchViewSet(SubjectGroupSearchMixin):
+    @swagger_auto_schema(
+        operation_description="搜索subject用户组列表",
+        request_body=GroupSearchSLZ(label="用户组搜索"),
+        responses={status.HTTP_200_OK: SubjectGroupSLZ(label="用户组", many=True)},
+        tags=["subject"],
+    )
+    def search(self, request, *args, **kwargs):
+        return super().search(request, *args, **kwargs)
+
+    def get_subject(self, request, kwargs):
+        subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
+        return subject
+
+
+class SubjectDepartmentGroupSearchViewSet(SubjectGroupSearchMixin):
+    @swagger_auto_schema(
+        operation_description="搜索Subject部门用户组列表",
+        request_body=GroupSearchSLZ(label="用户组搜索"),
+        responses={status.HTTP_200_OK: SubjectGroupSLZ(label="用户组", many=True)},
+        tags=["subject"],
+    )
+    def search(self, request, *args, **kwargs):
+        return super().search(request, *args, **kwargs)
+
+    def get_subject(self, request, kwargs):
+        subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
+        return subject
+
+    def get_group_dict(self, subject: Subject):
+        groups = self.biz.list_all_user_department_group(subject)
+        return {one.id: one for one in groups}
+
+    def get_page_result(self, group_dict, page):
+        return [group_dict[one.id] for one in page]
