@@ -344,7 +344,7 @@ class UserPolicySearchViewSet(mixins.ListModelMixin, GenericViewSet):
         data = slz.validated_data
         system_id = data["system_id"]
 
-        subject = Subject.from_username(request.user.username)
+        subject = self.get_subject(request, kwargs)
         policies = self.policy_query_biz.list_by_subject(system_id, subject)
 
         # ResourceNameAutoUpdate
@@ -382,3 +382,7 @@ class UserPolicySearchViewSet(mixins.ListModelMixin, GenericViewSet):
 
         # no action_id policy
         return Response([])
+
+    def get_subject(self, request):
+        subject = Subject.from_username(request.user.username)
+        return subject
