@@ -130,7 +130,10 @@ class GroupPermissionMixin:
 
 def split_members_to_subject_and_template(members):
     subjects = parse_obj_as(List[Subject], [one for one in members if one["type"] != GroupMemberType.TEMPLATE.value])
-    subject_template_ids = [one["id"] for one in members if one["type"] == GroupMemberType.TEMPLATE.value]
+    try:
+        subject_template_ids = [int(one["id"]) for one in members if one["type"] == GroupMemberType.TEMPLATE.value]
+    except ValueError:
+        raise error_codes.VALIDATE_ERROR.format(_("人员模板ID非法"))
     return subjects, subject_template_ids
 
 
@@ -373,7 +376,7 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
 
         # 增加人员模版授权操作
         for _id in subject_template_ids:
-            self.group_biz.grant_subject_template(group.id, int(_id), expired_at, request.user.username)
+            self.group_biz.grant_subject_template(group.id, _id, expired_at, request.user.username)
 
         # 写入审计上下文
         audit_context_setter(group=group, members=[m.dict() for m in members])
@@ -462,7 +465,7 @@ class GroupsMemberViewSet(GenericViewSet):
 
                 # 增加人员模版授权操作
                 for _id in subject_template_ids:
-                    self.group_biz.grant_subject_template(group.id, int(_id), expired_at, request.user.username)
+                    self.group_biz.grant_subject_template(group.id, _id, expired_at, request.user.username)
 
                 # 如果是分级管理员在操作, 自动扩张子集管理员的人员授权范围
                 group_role = self.role_biz.get_role_by_group_id(group.id)

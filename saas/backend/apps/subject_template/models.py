@@ -44,7 +44,7 @@ class SubjectTemplateGroup(BaseModel):
 
     template_id = models.IntegerField("模板ID")
     group_id = models.IntegerField("用户组ID")
-    expired_at = models.IntegerField("过期时间")
+    expired_at = models.BigIntegerField("过期时间")
 
     class Meta:
         verbose_name = "人员模板用户组关联关系"

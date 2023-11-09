@@ -25,6 +25,7 @@ class SubjectTemplateService:
             description=description,
             creator=creator,
         )
+        template.save()
 
         relations = [
             SubjectTemplateRelation(
@@ -35,7 +36,6 @@ class SubjectTemplateService:
             for subject in subjects
         ]
 
-        template.save()
         if relations:
             SubjectTemplateRelation.objects.bulk_create(relations)
 

@@ -68,6 +68,7 @@ class SubjectTemplateViewSet(SubjectTemplateQueryMixin, ModelViewSet):
     ]
 
     queryset = SubjectTemplate.objects.all()
+    lookup_field = "id"
     filterset_class = SubjectTemplateFilter
 
     check_biz = SubjectTemplateCheckBiz()
@@ -77,7 +78,7 @@ class SubjectTemplateViewSet(SubjectTemplateQueryMixin, ModelViewSet):
         operation_description="创建人员模版",
         request_body=SubjectTemplateCreateSLZ(label="人员模版"),
         responses={status.HTTP_201_CREATED: SubjectTemplateIdSLZ(label="人员模版ID")},
-        tags=["subject"],
+        tags=["subject-template"],
     )
     @view_audit_decorator(SubjectTemplateCreateAuditProvider)
     def create(self, request, *args, **kwargs):
@@ -108,7 +109,7 @@ class SubjectTemplateViewSet(SubjectTemplateQueryMixin, ModelViewSet):
         operation_description="更新人员模版",
         request_body=BaseSubjectTemplateSLZ(label="人员模版"),
         responses={status.HTTP_200_OK: BaseSubjectTemplateSLZ(label="人员模版ID")},
-        tags=["subject"],
+        tags=["subject-template"],
     )
     @view_audit_decorator(SubjectTemplateUpdateAuditProvider)
     def update(self, request, *args, **kwargs):
@@ -136,7 +137,7 @@ class SubjectTemplateViewSet(SubjectTemplateQueryMixin, ModelViewSet):
     @swagger_auto_schema(
         operation_description="人员模版列表",
         responses={status.HTTP_200_OK: SubjectTemplateListSLZ(label="用户组", many=True)},
-        tags=["subject"],
+        tags=["subject-template"],
     )
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
@@ -150,7 +151,7 @@ class SubjectTemplateViewSet(SubjectTemplateQueryMixin, ModelViewSet):
     @swagger_auto_schema(
         operation_description="人员模版详情",
         responses={status.HTTP_200_OK: SubjectTemplateListSLZ(label="用户组")},
-        tags=["subject"],
+        tags=["subject-template"],
     )
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -162,7 +163,7 @@ class SubjectTemplateViewSet(SubjectTemplateQueryMixin, ModelViewSet):
     @swagger_auto_schema(
         operation_description="删除人员模版",
         responses={status.HTTP_200_OK: serializers.Serializer()},
-        tags=["subject"],
+        tags=["subject-template"],
     )
     @view_audit_decorator(SubjectTemplateDeleteAuditProvider)
     def destroy(self, request, *args, **kwargs):
@@ -185,6 +186,7 @@ class SubjectTemplateMemberViewSet(SubjectTemplateQueryMixin, GenericViewSet):
     ]
 
     queryset = SubjectTemplate.objects.all()
+    lookup_field = "id"
 
     check_biz = SubjectTemplateCheckBiz()
     biz = SubjectTemplateBiz()
@@ -193,7 +195,7 @@ class SubjectTemplateMemberViewSet(SubjectTemplateQueryMixin, GenericViewSet):
         operation_description="添加人员模版成员",
         request_body=SubjectTemplateMemberSLZ(label="人员模版"),
         responses={status.HTTP_201_CREATED: serializers.Serializer()},
-        tags=["subject"],
+        tags=["subject-template"],
     )
     @view_audit_decorator(SubjectTemplateMemberCreateAuditProvider)
     def create(self, request, *args, **kwargs):
@@ -216,7 +218,7 @@ class SubjectTemplateMemberViewSet(SubjectTemplateQueryMixin, GenericViewSet):
         operation_description="删除人员模版成员",
         request_body=SubjectTemplateMemberSLZ(label="人员模版"),
         responses={status.HTTP_201_CREATED: serializers.Serializer()},
-        tags=["subject"],
+        tags=["subject-template"],
     )
     @view_audit_decorator(SubjectTemplateMemberCreateAuditProvider)
     def destroy(self, request, *args, **kwargs):
@@ -235,7 +237,7 @@ class SubjectTemplateMemberViewSet(SubjectTemplateQueryMixin, GenericViewSet):
     @swagger_auto_schema(
         operation_description="人员模版成员列表",
         responses={status.HTTP_200_OK: SubjectTemplateMemberListSLZ(label="成员", many=True)},
-        tags=["subject"],
+        tags=["subject-template"],
     )
     def list(self, request, *args, **kwargs):
         template = self.get_object()
@@ -275,7 +277,7 @@ class SubjectTemplatesMemberCreateViewSet(SubjectTemplateQueryMixin, GenericView
         operation_description="批量人员模版添加成员",
         request_body=SubjectTemplatesAddMemberSLZ(label="成员"),
         responses={status.HTTP_200_OK: serializers.Serializer()},
-        tags=["subject"],
+        tags=["subject-template"],
     )
     def create(self, request, *args, **kwargs):
         serializer = SubjectTemplatesAddMemberSLZ(data=request.data)
@@ -316,7 +318,7 @@ class SubjectTemplatesMemberCreateViewSet(SubjectTemplateQueryMixin, GenericView
         raise error_codes.ACTIONS_PARTIAL_FAILED.format(failed_info)
 
 
-class SubjectTemplateGroupViewSet(GenericViewSet):
+class SubjectTemplateGroupViewSet(SubjectTemplateQueryMixin, GenericViewSet):
 
     permission_classes = [
         role_perm_class(
@@ -325,13 +327,14 @@ class SubjectTemplateGroupViewSet(GenericViewSet):
     ]
 
     queryset = SubjectTemplate.objects.all()
+    lookup_field = "id"
 
     biz = SubjectTemplateBiz()
 
     @swagger_auto_schema(
         operation_description="人员模版关联用户组列表",
         responses={status.HTTP_200_OK: SubjectTemplateGroupSLZ(label="用户组", many=True)},
-        tags=["subject"],
+        tags=["subject-template"],
     )
     def list(self, request, *args, **kwargs):
         template = self.get_object()
@@ -359,7 +362,7 @@ class SubjectTemplateGroupViewSet(GenericViewSet):
         operation_description="删除人员模版用户关联",
         request_body=SubjectTemplateGroupIdSLZ(label="人员模版"),
         responses={status.HTTP_200_OK: serializers.Serializer()},
-        tags=["subject"],
+        tags=["subject-template"],
     )
     @view_audit_decorator(SubjectTemplateGroupDeleteAuditProvider)
     def destroy(self, request, *args, **kwargs):

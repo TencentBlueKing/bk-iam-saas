@@ -96,7 +96,6 @@ class SubjectTemplateBiz:
         with transaction.atomic():
             # 创建template
             subject_template = self.svc.create(
-                role=role,
                 name=name,
                 description=description,
                 creator=creator,
