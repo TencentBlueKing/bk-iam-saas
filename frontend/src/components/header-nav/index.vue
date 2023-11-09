@@ -607,16 +607,13 @@
       },
         
       handleChangeLocale (language) {
+        Cookie.remove('blueking_language', { path: '' });
         Cookie.set('blueking_language', language, {
-          domain: window.BK_DOMAIN || window.location.hostname.split('.').slice(1).join('.')
+          expires: 3600,
+          domain: window.BK_DOMAIN
         });
-        jsonpRequest(
-          `${window.BK_COMPONENT_API_URL}/api/c/compapi/v2/usermanage/fe_update_user_language/`,
-          {
-            language
-          }
-        );
         this.setMagicBoxLocale(language);
+        jsonpRequest(`${window.BK_COMPONENT_API_URL}/api/c/compapi/v2/usermanage/fe_update_user_language/?language=${language}`, { language });
       },
 
       handleSwitchIdentity () {

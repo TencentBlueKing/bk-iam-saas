@@ -279,7 +279,6 @@ const currentNav = [
     ]
   }
 ];
-
 if (window.ENABLE_MODEL_BUILD.toLowerCase() === 'true') {
   currentNav.push({
     icon: 'perm-manage',
