@@ -62,13 +62,18 @@ urlpatterns = [
                 ),
                 path(
                     "groups/search/",
-                    views.SubjectGroupSearchViewSet.as_view({"get": "list"}),
+                    views.SubjectGroupSearchViewSet.as_view({"post": "search"}),
                     name="subject.group_search",
                 ),
                 path(
                     "departments/-/groups/search/",
-                    views.SubjectDepartmentGroupSearchViewSet.as_view({"get": "list"}),
+                    views.SubjectDepartmentGroupSearchViewSet.as_view({"post": "search"}),
                     name="subject.department.group_search",
+                ),
+                path(
+                    "policies/search/",
+                    views.SubjectPolicySearchViewSet.as_view({"post": "search"}),
+                    name="subject.policy_search",
                 ),
             ]
         ),
