@@ -60,6 +60,16 @@ urlpatterns = [
                     views.SubjectTemporaryPolicySystemViewSet.as_view({"get": "list"}),
                     name="subject.temporary_policies_systems",
                 ),
+                path(
+                    "groups/search/",
+                    views.SubjectGroupSearchViewSet.as_view({"get": "list"}),
+                    name="subject.group_search",
+                ),
+                path(
+                    "departments/-/groups/search/",
+                    views.SubjectDepartmentGroupSearchViewSet.as_view({"get": "list"}),
+                    name="subject.department.group_search",
+                ),
             ]
         ),
     )

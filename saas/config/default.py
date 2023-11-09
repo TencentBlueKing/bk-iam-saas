@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.sites",
     "django.contrib.messages",
+    "django.contrib.staticfiles",
     "backend.account",
     "rest_framework",
     "django_filters",
@@ -170,6 +171,8 @@ REST_FRAMEWORK = {
 SWAGGER_SETTINGS = {
     "DEFAULT_AUTO_SCHEMA_CLASS": "backend.common.swagger.ResponseSwaggerAutoSchema",
 }
+
+ENABLE_SWAGGER = env.bool("BKAPP_ENABLE_SWAGGER", default=False)
 
 # CELERY 开关，使用时请改为 True，否则请保持为False。启动方式为以下两行命令：
 # worker: python manage.py celery worker -l info
