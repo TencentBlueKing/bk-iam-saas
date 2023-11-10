@@ -113,6 +113,7 @@ class RoleInfo(PartialModel):
     type: str = RoleType.GRADE_MANAGER.value
     inherit_subject_scope: bool = False
     sync_perm: bool = False
+    sync_subject_template: bool = False
 
     members: List[RoleMember]
     subject_scopes: List[Subject] = []

@@ -76,6 +76,7 @@ class ManagementGradeManagerCreateApplicationSLZ(GradeMangerBaseInfoSLZ, ReasonS
     subject_scopes = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=False)
     sync_perm = serializers.BooleanField(label="同步分级管理员权限到用户组", required=False, default=False)
     group_name = serializers.CharField(label="同步用户组名称", max_length=512, required=False, allow_blank=True, default="")
+    sync_subject_template = serializers.BooleanField(label="是否同步创建人员模板", default=False)
     applicant = serializers.CharField(label="申请者的用户名", max_length=32)
     callback_id = serializers.CharField(label="回调ID", max_length=32, required=False, allow_blank=True, default="")
     callback_url = serializers.CharField(label="回调URL", required=False, allow_blank=True, default="")
