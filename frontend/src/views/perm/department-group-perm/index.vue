@@ -174,7 +174,7 @@
     },
     watch: {
       departmentGroupList: {
-        async handler (v) {
+        handler (v) {
           if (this.isSearchPerm) {
             this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10, count: this.totalCount });
           }

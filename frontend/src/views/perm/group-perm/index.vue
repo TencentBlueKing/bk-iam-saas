@@ -20,13 +20,11 @@
       v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
     >
       <bk-table-column type="selection" align="center" :selectable="setDefaultSelect" />
-      <!-- 用户组名 -->
       <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
         <template slot-scope="{ row }">
           <span class="user-group-name" :title="row.name" @click="goDetail(row)">{{ row.name }}</span>
         </template>
       </bk-table-column>
-      <!-- 描述 -->
       <bk-table-column :label="$t(`m.common['描述']`)">
         <template slot-scope="{ row }">
           <span :title="row.description !== '' ? row.description : ''">

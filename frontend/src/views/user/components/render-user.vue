@@ -41,26 +41,30 @@
               </span>
             </span>
           </template>
+          <div class="personal-com-wrapper">
+            <component
+              v-if="active === panel.name"
+              ref="childPermRef"
+              :key="componentsKey"
+              :is="active"
+              :data="curData"
+              :total-count="panel.count"
+              :personal-group-list="personalGroupList"
+              :system-list="systemList"
+              :tep-system-list="teporarySystemList"
+              :department-group-list="departmentGroupList"
+              :empty-data="curEmptyData"
+              :cur-search-params="curSearchParams"
+              :cur-search-pagination="curSearchPagination"
+              :is-search-perm="isSearchPerm"
+              :check-group-list="panels[0].selectList"
+              @refresh="fetchData"
+              @on-select-group="handleSelectGroup"
+              @on-clear="handleEmptyClear"
+              @on-refresh="handleEmptyRefresh"
+            />
+          </div>
         </bk-tab-panel>
-        <component
-          ref="childPermRef"
-          :key="componentsKey"
-          :is="curCom"
-          :data="curData"
-          :personal-group-list="personalGroupList"
-          :system-list="systemList"
-          :tep-system-list="teporarySystemList"
-          :department-group-list="departmentGroupList"
-          :empty-data="curEmptyData"
-          :cur-search-params="curSearchParams"
-          :cur-search-pagination="curSearchPagination"
-          :is-search-perm="isSearchPerm"
-          :check-group-list="panels[0].selectList"
-          @refresh="fetchData"
-          @on-select-group="handleSelectGroup"
-          @on-clear="handleEmptyClear"
-          @on-refresh="handleEmptyRefresh"
-        />
       </bk-tab>
     </div>
   </div>
@@ -136,6 +140,7 @@
         tabKey: 'tab-key',
         personalGroupList: [],
         systemList: [],
+        systemListStorage: [],
         teporarySystemList: [],
         departmentGroupList: [],
         curSearchParams: {},
@@ -188,10 +193,8 @@
       params: {
         handler (value) {
           if (Object.keys(value).length > 0) {
-            this.active = 'GroupPerm';
-            this.curCom = 'GroupPerm';
-            this.componentsKey = +new Date();
-            this.curData = _.cloneDeep(value);
+            // 切换的时候重置数据
+            this.fetchDetailData(value);
           }
         },
         immediate: true
@@ -216,6 +219,7 @@
       }
     },
     created () {
+      this.getHasSystem();
       this.emptyCustomData = _.cloneDeep(this.emptyData);
       this.emptyTemporarySystemData = _.cloneDeep(this.emptyData);
       this.emptyDepartmentGroupData = _.cloneDeep(this.emptyData);
@@ -239,24 +243,53 @@
       });
     },
     methods: {
-      fetchData () {
-        bus.$emit('on-clear-search-perm');
+      async fetchDetailData (value) {
+        this.active = 'GroupPerm';
+        this.curCom = 'GroupPerm';
+        this.curEmptyData.tipType = '';
+        this.isSearchPerm = false;
+        this.curSearchParams = {};
+        this.handleEmptyClear();
+        this.componentsKey = +new Date();
+        this.curData = _.cloneDeep(value);
       },
+      async fetchData () {
+        // bus.$emit('on-clear-search-perm');
+      },
+
+      async getHasSystem () {
+        try {
+          const { id, username, type } = this.curData;
+          const { data } = await this.$store.dispatch('organization/getSubjectHasPermSystem', {
+            subjectType: type === 'user' ? type : 'department',
+            subjectId: type === 'user' ? username : id
+          });
+          this.systemListStorage = data || [];
+        } catch (e) {
+          this.messageAdvancedError(e);
+        }
+      },
+
       // 获取搜索的个人用户组
       async fetchUserGroupSearch () {
         try {
           const { current, limit } = this.curSearchPagination;
+          const { id, username, type } = this.curData;
           const params = {
-          ...this.curSearchParams,
-          limit,
-          offset: limit * (current - 1)
+            ...this.curSearchParams,
+            ...{
+              subjectType: type === 'user' ? type : 'department',
+              subjectId: type === 'user' ? username : id
+            },
+            limit,
+            offset: limit * (current - 1)
           };
           if (this.externalSystemId) {
             params.system_id = this.externalSystemId;
             params.hidden = false;
           }
           const { code, data } = await this.$store.dispatch(
-            'perm/getUserGroupSearch',
+            'perm/getPermGroupsSearch',
             params
           );
           this.personalGroupList = data.results || [];
@@ -276,10 +309,15 @@
       // 获取所属组织用户组
       async fetchDepartSearch () {
         const { current, limit } = this.curSearchPagination;
+        const { id, username, type } = this.curData;
         const params = {
-        ...this.curSearchParams,
-        limit,
-        offset: limit * (current - 1)
+          ...this.curSearchParams,
+          ...{
+            subjectType: type === 'user' ? type : 'department',
+            subjectId: type === 'user' ? username : id
+          },
+          limit,
+          offset: limit * (current - 1)
         };
         if (this.externalSystemId) {
           params.system_id = this.externalSystemId;
@@ -287,7 +325,7 @@
         }
         try {
           const { code, data } = await this.$store.dispatch(
-            'perm/getDepartGroupSearch',
+            'perm/getDepartPermGroupsSearch',
             params
           );
           const { count, results } = data;
@@ -316,11 +354,23 @@
         const customIndex = this.panels.findIndex((item) => item.name === 'CustomPerm');
         if (customIndex > -1 && this.curSearchParams.system_id) {
           try {
+            const { id, username, type } = this.curData;
+            const params = {
+              ...this.curSearchParams,
+              ...{
+                subjectType: type === 'user' ? type : 'department',
+                subjectId: type === 'user' ? username : id
+              }
+            };
             const { code, data } = await this.$store.dispatch(
-              'perm/getPoliciesSearch',
-              this.curSearchParams
+              'perm/getPersonalPolicySearch',
+              params
             );
-            this.systemList = data || [];
+            console.log(this.systemListStorage);
+            this.systemList = this.systemListStorage.filter((item) => item.id === this.curSearchParams.system_id);
+            if (this.systemList.length) {
+              this.$set(this.systemList[0], 'count', data.length || 0);
+            }
             this.$set(this.panels[customIndex], 'count', data.length || 0);
             this.emptyCustomData = formatCodeData(
               code,

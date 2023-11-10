@@ -25,7 +25,7 @@
         />
       </custom-perm-system-policy>
     </template>
-    <template v-if="isEmpty">
+    <template v-else>
       <div>
         <ExceptionEmpty
           :type="emptyPolicyData.type"
@@ -47,7 +47,6 @@
   import PermTable from './perm-table-edit';
   import PermSystem from '@/model/my-perm-system';
   export default {
-    name: '',
     components: {
       CustomPermSystemPolicy,
       PermTable
@@ -106,7 +105,6 @@
         },
         onePerm: 0,
         systemPolicyList: [],
-        systemListStorage: [],
         emptyPolicyData: {
           type: 'empty',
           text: '暂无数据',
@@ -116,34 +114,21 @@
       };
     },
     computed: {
-      /**
-       * hasPerm
-       */
       hasPerm () {
-        return this.systemPolicyList.length > 0 && !this.pageLoading;
-      },
-
-      /**
-       * isEmpty
-       */
-      isEmpty () {
-        return this.systemPolicyList.length < 1 && !this.pageLoading;
+        return this.systemPolicyList.length > 0;
       }
     },
     watch: {
       systemList: {
         handler (v) {
-          let list = [...v];
-          if (this.isSearchPerm) {
-            list = this.systemListStorage.filter((item) => item.id === this.curSearchParams.system_id);
-          }
-          this.formatSystemData(list);
+          console.log(v, 555);
+          this.formatSystemData(v);
         },
         immediate: true,
         deep: true
       },
       emptyData: {
-        handler (value) {
+        async handler (value) {
           this.emptyPolicyData = Object.assign({}, value);
           if (this.isSearchPerm || ['search'].includes(value.tipType)) {
             this.fetchSystemSearch();
@@ -154,7 +139,7 @@
       totalCount: {
         handler (value) {
           if (this.isSearchPerm && this.systemList.length) {
-            this.$set(this.systemPolicyList[0], 'count', value);
+            this.$set(this.systemList[0], 'count', value);
           }
         },
         immediate: true
@@ -175,7 +160,7 @@
             subjectType: type === 'user' ? type : 'department',
             subjectId: type === 'user' ? username : id
           });
-          this.systemListStorage = data || [];
+          this.$store.commit('perm/updateHasPermSystems', data || []);
           this.formatSystemData(data || []);
         } catch (e) {
           console.error(e);
@@ -187,12 +172,12 @@
       },
 
       // 搜索自定义权限
-      fetchSystemSearch () {
+      async fetchSystemSearch () {
         // 过滤掉搜索框的参数, 处理既有筛选系统也有输入名字、描述等仍要展示为空的情况
         const { id, description, name, system_id: systemId } = this.curSearchParams;
         const noValue = !id && !name && !description;
         // 筛选搜索的系统id
-        const curSystemList = this.systemListStorage.filter(item => item.id === systemId && noValue);
+        const curSystemList = this.systemList.filter(item => item.id === systemId && noValue);
         this.formatSystemData(curSystemList || []);
       },
 
@@ -207,6 +192,7 @@
             bus.$emit('on-perm-tab-count', { active: 'CustomPerm', count: this.systemPolicyList.length });
           }
         }
+        this.$store.commit('perm/updateHasPermSystems', this.systemPolicyList);
       },
 
       async handleDeleteAll (payload, sysIndex) {
@@ -250,6 +236,7 @@
                       bus.$emit('on-perm-tab-count', { active: 'CustomPerm', count: this.systemPolicyList.length });
                     }
                   }
+                  this.$store.commit('perm/updateHasPermSystems', this.systemPolicyList);
                   return true;
                 }
               }
@@ -263,7 +250,8 @@
       },
 
       // 格式化系统列表数据
-      formatSystemData (payload) {
+      async formatSystemData (payload) {
+        console.log(payload, 44);
         const systemPolicyList = payload.map(item => new PermSystem(item));
         this.systemPolicyList.splice(0, this.systemPolicyList.length, ...systemPolicyList);
         this.systemPolicyList.sort((curr, next) => curr.name.localeCompare(next.name));

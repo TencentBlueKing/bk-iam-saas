@@ -542,7 +542,7 @@
             this.tableLoading = isTableLoading;
           }
           if (this.isSearchPerm) {
-            url = 'perm/getUserGroupSearch';
+            url = 'perm/getPermGroupsSearch';
             params = {
               ...this.curSearchParams,
               limit,

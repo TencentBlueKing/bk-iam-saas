@@ -773,7 +773,7 @@ export default {
      *
      * @return {Promise} promise 对象
      */
-    getPoliciesPermSearch ({ commit, state, dispatch }, params, config) {
+    getPersonalPolicySearch ({ commit, state, dispatch }, params, config) {
       delete params.offset;
       delete params.limit;
       delete params.id;
@@ -781,7 +781,7 @@ export default {
       delete params.name;
       return http.post(
         `${AJAX_URL_PREFIX}/subjects/${params.subjectType}/${params.subjectId}/policies/search/`,
-        {},
+        params,
         config
       );
     }

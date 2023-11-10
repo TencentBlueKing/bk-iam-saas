@@ -1,5 +1,5 @@
 <template>
-  <div class="my-perm-group-perm" v-bkloading="{ isLoading: pageLoading, opacity: 1 }">
+  <div class="my-perm-group-perm">
     <bk-table
       data-test-id="myPerm_table_group"
       :data="curPageData"
@@ -7,25 +7,26 @@
       :pagination="pageConf"
       @page-change="handlePageChange"
       @page-limit-change="handlePageLimitChange"
+      v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
     >
-      <!-- 用户组名 -->
       <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
         <template slot-scope="{ row }">
-          <span class="user-group-name" :title="row.name" @click="goDetail(row)">{{ row.name }}</span>
+          <span class="user-group-name" :title="row.name" @click="goDetail(row)">{{
+            row.name
+          }}</span>
         </template>
       </bk-table-column>
-      <!-- 描述 -->
       <bk-table-column :label="$t(`m.common['描述']`)">
         <template slot-scope="{ row }">
-          <span :title="row.description !== '' ? row.description : ''">
-            {{ row.description !== '' ? row.description : '--' }}
+          <span :title="row.description">
+            {{ row.description || "--" }}
           </span>
         </template>
       </bk-table-column>
       <bk-table-column :label="$t(`m.grading['管理空间']`)">
         <template slot-scope="{ row }">
           <span :title="row.role && row.role.name ? row.role.name : ''">
-            {{ row.role ? row.role.name : '--' }}
+            {{ row.role ? row.role.name : "--" }}
           </span>
         </template>
       </bk-table-column>
@@ -44,27 +45,41 @@
       <!-- 加入用户组时间 -->
       <bk-table-column :label="$t(`m.perm['加入用户组的时间']`)" width="160">
         <template slot-scope="{ row }">
-          <span :title="row.created_time">{{ row.created_time.replace(/T/, ' ') }}</span>
+          <span :title="row.created_time">{{ row.created_time.replace(/T/, " ") }}</span>
         </template>
       </bk-table-column>
       <!-- 加入方式 -->
       <bk-table-column :label="$t(`m.perm['加入方式']`)">
         <template slot-scope="props">
           <span v-if="props.row.department_id === 0">{{ $t(`m.perm['直接加入']`) }}</span>
-          <span v-else :title="`${$t(`m.perm['通过组织加入']`)}：${props.row.department_name}`">
-            {{ $t(`m.perm['通过组织加入']`) }}：{{ props.row.department_name }}
+          <span
+            v-else
+            :title="`${$t(`m.perm['通过组织加入']`)}：${props.row.department_name}`"
+          >
+            {{ $t(`m.perm['通过组织加入']`) }}: {{ props.row.department_name }}
           </span>
         </template>
       </bk-table-column>
       <!-- 有效期 -->
-      <bk-table-column :label="$t(`m.common['有效期']`)" prop="expired_at_display"></bk-table-column>
+      <bk-table-column
+        :label="$t(`m.common['有效期']`)"
+        prop="expired_at_display"
+      ></bk-table-column>
       <!-- 操作 -->
       <bk-table-column :label="$t(`m.common['操作']`)" width="200">
         <template slot-scope="props">
           <bk-button disabled text v-if="props.row.department_id !== 0">
-            <span :title="$t(`m.perm['通过组织加入的组无法退出']`)">{{ $t(`m.common['退出']`) }}</span>
+            <span :title="$t(`m.perm['通过组织加入的组无法退出']`)">{{
+              $t(`m.common['退出']`)
+            }}</span>
           </bk-button>
-          <bk-button v-else class="mr10" theme="primary" text @click="showQuitTemplates(props.row)">
+          <bk-button
+            v-else
+            class="mr10"
+            theme="primary"
+            text
+            @click="showQuitTemplates(props.row)"
+          >
             {{ $t(`m.common['退出']`) }}
           </bk-button>
         </template>
@@ -91,7 +106,7 @@
       @on-sumbit="confirmDelete"
     />
 
-    <render-perm-sideslider
+    <render-group-perm-sideslider
       :show="isShowPermSidesilder"
       :name="curGroupName"
       :group-id="curGroupId"
@@ -99,20 +114,19 @@
     />
   </div>
 </template>
-
 <script>
   import { mapGetters } from 'vuex';
   import { formatCodeData } from '@/common/util';
   import { bus } from '@/common/bus';
   import DeleteDialog from '@/components/iam-confirm-dialog/index.vue';
-  import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider';
+  import RenderGroupPermSideslider from '../../perm/components/render-group-perm-sideslider';
   import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
 
   export default {
     name: '',
     components: {
       DeleteDialog,
-      RenderPermSideslider,
+      RenderGroupPermSideslider,
       IamEditMemberSelector
     },
     props: {
@@ -163,12 +177,11 @@
           row: {},
           msg: ''
         },
-        pageLoading: false,
         isShowPermSidesilder: false,
         curGroupName: '',
         curGroupId: '',
         sliderLoading: false,
-        curRoleId: -1,
+        tableLoading: false,
         groupPermDepartEmptyData: {
           type: '',
           text: '',
@@ -178,13 +191,17 @@
       };
     },
     computed: {
-    ...mapGetters(['user', 'externalSystemId'])
+    ...mapGetters(['user', 'externalSystemId', 'mainContentLoading'])
     },
     watch: {
       departmentGroupList: {
         handler (v) {
           if (this.isSearchPerm) {
-            this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10, count: this.totalCount });
+            this.pageConf = Object.assign(this.pageConf, {
+              current: 1,
+              limit: 10,
+              count: this.totalCount
+            });
           }
           this.dataList.splice(0, this.dataList.length, ...v);
           this.initPageConf();
@@ -204,50 +221,42 @@
     },
     methods: {
       async fetchSystems () {
-        console.log(111);
-        this.pageLoading = true;
         try {
-          let url = '';
-          let params = {};
-          const { current, limit } = this.pageConf;
           if (!this.mainContentLoading) {
             this.tableLoading = true;
           }
+          let url = '';
+          let queryParams = {};
+          const { current, limit } = this.pageConf;
+          const { id, username, type } = this.data;
+          const params = {
+            subjectType: type === 'user' ? type : 'department',
+            subjectId: type === 'user' ? username : id
+          };
           if (this.isSearchPerm) {
-            url = 'perm/getDepartGroupSearch';
-            params = {
-            ...this.curSearchParams,
-            limit,
-            offset: limit * (current - 1)
+            url = 'perm/getDepartPermGroupsSearch';
+            queryParams = {
+              ...this.curSearchParams,
+              ...params,
+              limit,
+              offset: limit * (current - 1)
             };
           } else {
             url = 'perm/getDepartPermGroups';
-            params = {
-              page_size: limit,
-              page: current
+            queryParams = {
+              ...params
             };
           }
-          if (this.externalSystemId) {
-            params.system_id = this.externalSystemId;
-            params.hidden = false;
-          }
-          const { id, type, username } = this.data;
-          const { code, data } = await this.$store.dispatch(url, {
-          ...params,
-          ...{
-            subjectType: type === 'user' ? type : 'department',
-            subjectId: type === 'user' ? username : id
-          }
-          });
-          if (!this.isSearchPerm) {
+          const { code, data } = await this.$store.dispatch(url, queryParams);
+          if (this.isSearchPerm) {
+            const { results, count } = data;
+            this.curPageData = results || [];
+            this.pageConf.count = count;
+          } else {
             this.dataList = data || [];
             this.pageConf.count = this.dataList.length;
-          } else {
-            const { count, results } = data;
-            this.dataList = results || [];
-            this.pageConf.count = count || 0;
+            this.curPageData = this.getDataByPage(this.pageConf.current);
           }
-          this.curPageData = this.getDataByPage(this.pageConf.current);
           this.curPageData.forEach((item) => {
             if (item.role_members && item.role_members.length) {
               item.role_members = item.role_members.map((v) => {
@@ -258,35 +267,26 @@
               });
             }
           });
-          this.groupPermDepartEmptyData
-            = formatCodeData(code, this.groupPermDepartEmptyData, this.dataList.length === 0);
+          this.groupPermDepartEmptyData = formatCodeData(
+            code,
+            this.groupPermDepartEmptyData,
+            this.pageConf.count === 0
+          );
         } catch (e) {
           console.error(e);
-          this.groupPermDepartEmptyData = formatCodeData(e.code, this.groupPermDepartEmptyData);
+          const { code } = e;
+          this.groupPermDepartEmptyData = formatCodeData(
+            code,
+            this.groupPermDepartEmptyData
+          );
           this.messageAdvancedError(e);
         } finally {
-          this.pageLoading = false;
-          if (this.isSearchPerm) {
-            bus.$emit('on-perm-tab-count', { active: 'DepartmentGroupPerm', count: this.pageConf.count });
-          }
+          this.tableLoading = false;
+          bus.$emit('on-perm-tab-count', {
+            active: 'DepartmentGroupPerm',
+            count: this.pageConf.count
+          });
         }
-      },
-
-      handleEmptyRefresh () {
-        this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10 });
-        this.fetchSystems();
-        this.handlePageChange(1);
-        this.$emit('on-refresh');
-      },
-
-      handleEmptyClear () {
-        this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10 });
-        this.getDataByPage();
-        this.$emit('on-clear');
-      },
-
-      handleEmptySliderRefresh () {
-        this.fetchRoles(this.curRoleId);
       },
 
       handleAnimationEnd () {
@@ -311,8 +311,12 @@
        */
       handlePageChange (page = 1) {
         this.pageConf.current = page;
-        const data = this.getDataByPage(page);
-        this.curPageData.splice(0, this.curPageData.length, ...data);
+        if (this.isSearchPerm) {
+          this.fetchDepartSearch();
+        } else {
+          const data = this.getDataByPage(page);
+          this.curPageData.splice(0, this.curPageData.length, ...data);
+        }
       },
 
       /**
@@ -373,9 +377,11 @@
       showQuitTemplates (row) {
         this.deleteDialogConf.visiable = true;
         this.deleteDialogConf.row = Object.assign({}, row);
-        this.deleteDialogConf.msg = `${this.$t(`m.common['退出']`)}${this.$t(`m.common['【']`)}${row.name}${this.$t(
-          `m.common['】']`
-        )}${this.$t(`m.common['，']`)}${this.$t(`m.info['将不再继承该组的权限']`)}${this.$t(`m.common['。']`)}`;
+        this.deleteDialogConf.msg = `${this.$t(`m.common['退出']`)}${this.$t(
+          `m.common['【']`
+        )}${row.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['，']`)}${this.$t(
+          `m.info['将不再继承该组的权限']`
+        )}${this.$t(`m.common['。']`)}`;
       },
 
       /**
@@ -390,7 +396,7 @@
           });
           this.cancelDelete();
           this.messageSuccess(this.$t(`m.info['退出成功']`), 3000);
-          this.fetchSystems();
+          this.refreshTableData();
         } catch (e) {
           this.deleteDialogConf.loading = false;
           console.error(e);
@@ -412,11 +418,27 @@
         this.deleteDialogConf.row = Object.assign({}, {});
         this.deleteDialogConf.msg = '';
         this.deleteDialogConf.loading = false;
+      },
+
+      refreshTableData () {
+        this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10 });
+        this.fetchSystems();
+      },
+
+      handleEmptyRefresh () {
+        this.refreshTableData();
+        this.$emit('on-refresh');
+      },
+
+      handleEmptyClear () {
+        this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10 });
+        this.getDataByPage();
+        this.$emit('on-clear');
       }
     }
   };
 </script>
 
 <style lang="postcss" scoped>
-@import '@/views/perm/department-group-perm/index.css';
+@import "@/views/perm/department-group-perm/index.css";
 </style>

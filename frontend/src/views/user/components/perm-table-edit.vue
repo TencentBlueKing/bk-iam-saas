@@ -309,7 +309,7 @@
           let url = '';
           let queryParams = {};
           if (this.isSearchPerm) {
-            url = 'perm/getPoliciesSearch';
+            url = 'perm/getPersonalPolicySearch';
             queryParams = {
               ...this.searchParams,
               ...{
