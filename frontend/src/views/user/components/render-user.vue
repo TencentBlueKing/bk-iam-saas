@@ -4,27 +4,75 @@
       <span class="display-name">{{ curData.username }}</span>
       <span class="name" v-if="isExistName">({{ curData.name }})</span>
     </div>
+    <div>
+      <IamResourceCascadeSearch
+        ref="iamResourceSearchRef"
+        :active="active"
+        :custom-select-width="customSelectWidth"
+        :min-select-width="'165px'"
+        :max-select-width="'200px'"
+        @on-remote-table="handleRemoteTable"
+        @on-refresh-table="handleRefreshTable"
+        @on-input-value="handleInputValue"
+      />
+    </div>
     <div class="table-list-wrapper">
       <bk-tab
-        :active.sync="active"
+        ref="tabRef"
         type="unborder-card"
-        ext-cls="iam-user-tab-cls">
+        ext-cls="iam-user-tab-cls"
+        :active.sync="active"
+        :key="tabKey"
+      >
         <bk-tab-panel
           v-for="(panel, index) in panels"
           v-bind="panel"
-          :key="index">
+          :key="index"
+          @tab-change="handleTabChange"
+        >
+          <template slot="label">
+            <span class="panel-name">
+              <span>{{ panel.label }}</span>
+              <span
+                style="color: ##3a84ff"
+                v-if="curSearchParams && Object.keys(curSearchParams).length"
+              >
+                ({{ panel.count }})
+              </span>
+            </span>
+          </template>
         </bk-tab-panel>
         <component
+          ref="childPermRef"
           :key="componentsKey"
           :is="curCom"
-          :data="curData">
-        </component>
+          :data="curData"
+          :personal-group-list="personalGroupList"
+          :system-list="systemList"
+          :tep-system-list="teporarySystemList"
+          :department-group-list="departmentGroupList"
+          :empty-data="curEmptyData"
+          :cur-search-params="curSearchParams"
+          :cur-search-pagination="curSearchPagination"
+          :is-search-perm="isSearchPerm"
+          :check-group-list="panels[0].selectList"
+          @refresh="fetchData"
+          @on-select-group="handleSelectGroup"
+          @on-clear="handleEmptyClear"
+          @on-refresh="handleEmptyRefresh"
+        />
       </bk-tab>
     </div>
   </div>
 </template>
+
 <script>
   import _ from 'lodash';
+  import { mapGetters } from 'vuex';
+  import { bus } from '@/common/bus';
+  import { buildURLParams } from '@/common/url';
+  import { formatCodeData } from '@/common/util';
+  import IamResourceCascadeSearch from '@/components/iam-resource-cascade-search';
   import CustomPerm from './custom-perm';
   import GroupPerm from './group-perm';
   import TeporaryCustomPerm from './teporary-custom-perm';
@@ -35,7 +83,8 @@
       CustomPerm,
       GroupPerm,
       TeporaryCustomPerm,
-      DepartmentGroupPerm
+      DepartmentGroupPerm,
+      IamResourceCascadeSearch
     },
     props: {
       params: {
@@ -49,29 +98,88 @@
       return {
         curData: {},
         panels: [
-          { name: 'groupPerm', label: this.$t(`m.perm['用户组权限']`) },
-          { name: 'departmentGroupPerm', label: this.$t(`m.perm['所属组织用户组权限']`) },
-          { name: 'customPerm', label: this.$t(`m.perm['自定义权限']`) }
-          // { name: 'teporaryCustomPerm', label: this.$t(`m.myApply['临时权限']`) }
+          {
+            name: 'GroupPerm',
+            label: this.$t(`m.perm['用户组权限']`),
+            empty: 'emptyData',
+            count: 0,
+            selectList: []
+          },
+          {
+            name: 'DepartmentGroupPerm',
+            label: this.$t(`m.perm['所属组织用户组权限']`),
+            empty: 'emptyDepartmentGroupData',
+            count: 0,
+            selectList: []
+          },
+          {
+            name: 'CustomPerm',
+            label: this.$t(`m.perm['自定义权限']`),
+            empty: 'emptyCustomData',
+            count: 0,
+            selectList: []
+          }
+        // { name: 'teporaryCustomPerm', label: this.$t(`m.myApply['临时权限']`) }
         ],
-        active: 'groupPerm',
+        active: 'GroupPerm',
         componentsKey: -1,
-        curCom: 'GroupPerm'
+        curCom: 'GroupPerm',
+        isShowConfirmDialog: false,
+        componentLoading: false,
+        isSearchPerm: false,
+        actionIdError: false,
+        searchTypeError: false,
+        resourceTypeError: false,
+        resourceInstanceError: false,
+        isShowResourceInstanceSideSlider: false,
+        resourceInstanceSideSliderTitle: '',
+        tabKey: 'tab-key',
+        personalGroupList: [],
+        systemList: [],
+        teporarySystemList: [],
+        departmentGroupList: [],
+        curSearchParams: {},
+        curSearchPagination: {
+          current: 1,
+          count: 0,
+          limit: 10
+        },
+        emptyDepartmentGroupData: {},
+        emptyTemporarySystemData: {},
+        emptyData: {
+          type: '',
+          text: '',
+          tip: '',
+          tipType: ''
+        },
+        curEmptyData: {
+          type: 'empty',
+          text: '暂无数据',
+          tip: '',
+          tipType: ''
+        },
+        customSelectWidth: window.innerWidth <= 1520 ? '160px' : '240px'
       };
     },
     computed: {
-      /**
-       * isExistName
-       */
-      isExistName () {
-        return this.curData.name !== '';
-      },
-      /**
-       * isShowPage
-       */
-      isShowPage () {
-        return Object.keys(this.params).length > 0;
-      }
+    ...mapGetters([
+      'externalSystemsLayout',
+      'externalSystemId',
+      'roleList',
+      'mainContentLoading'
+    ]),
+    /**
+     * isExistName
+     */
+    isExistName () {
+      return this.curData.name !== '';
+    },
+    /**
+     * isShowPage
+     */
+    isShowPage () {
+      return Object.keys(this.params).length > 0;
+    }
     },
     watch: {
       /**
@@ -80,7 +188,7 @@
       params: {
         handler (value) {
           if (Object.keys(value).length > 0) {
-            this.active = 'groupPerm';
+            this.active = 'GroupPerm';
             this.curCom = 'GroupPerm';
             this.componentsKey = +new Date();
             this.curData = _.cloneDeep(value);
@@ -88,43 +196,333 @@
         },
         immediate: true
       },
-      /**
-       * active
-       */
-      active (value) {
-        const comMap = {
-          'customPerm': 'CustomPerm',
-          'groupPerm': 'GroupPerm',
-          'teporaryCustomPerm': 'TeporaryCustomPerm',
-          'departmentGroupPerm': 'DepartmentGroupPerm'
-        };
-        this.curCom = comMap[value];
-        this.componentsKey = +new Date();
+      active: {
+        handler (value) {
+          // 因为同时调了很多接口，所以需要对应的空配置内容
+          const comMap = {
+            CustomPerm: 'CustomPerm',
+            GroupPerm: 'GroupPerm',
+            TeporaryCustomPerm: 'TeporaryCustomPerm',
+            DepartmentGroupPerm: 'DepartmentGroupPerm'
+          };
+          this.curCom = comMap[value];
+          this.componentsKey = +new Date();
+          const emptyField = this.panels.find(item => item.name === value);
+          if (emptyField) {
+            this.curEmptyData = _.cloneDeep(this[emptyField.empty]);
+          }
+        },
+        immediate: true
       }
     },
-    methods: {}
+    created () {
+      this.emptyCustomData = _.cloneDeep(this.emptyData);
+      this.emptyTemporarySystemData = _.cloneDeep(this.emptyData);
+      this.emptyDepartmentGroupData = _.cloneDeep(this.emptyData);
+    },
+    mounted () {
+      this.$once('hook:beforeDestroy', () => {
+        bus.$off('on-perm-tab-count');
+      });
+      bus.$on('on-perm-tab-count', (payload) => {
+        const { active, count } = payload;
+        const panelIndex = this.panels.findIndex(item => item.name === active);
+        if (panelIndex > -1) {
+          if (active === this.active && count !== this.panels[panelIndex].count) {
+            this.tabKey = +new Date();
+          }
+          this.$set(this.panels[panelIndex], 'count', count);
+          if (['CustomPerm'].includes(active) && count < 1) {
+            this.systemList = [];
+          }
+        }
+      });
+    },
+    methods: {
+      fetchData () {
+        bus.$emit('on-clear-search-perm');
+      },
+      // 获取搜索的个人用户组
+      async fetchUserGroupSearch () {
+        try {
+          const { current, limit } = this.curSearchPagination;
+          const params = {
+          ...this.curSearchParams,
+          limit,
+          offset: limit * (current - 1)
+          };
+          if (this.externalSystemId) {
+            params.system_id = this.externalSystemId;
+            params.hidden = false;
+          }
+          const { code, data } = await this.$store.dispatch(
+            'perm/getUserGroupSearch',
+            params
+          );
+          this.personalGroupList = data.results || [];
+          this.$set(this.panels[0], 'count', data.count || 0);
+          this.emptyData = formatCodeData(code, this.emptyData, data.count === 0);
+        } catch (e) {
+          console.error(e);
+          const { code } = e;
+          this.personalGroupList = [];
+          this.emptyData = formatCodeData(code, this.emptyData);
+          this.messageAdvancedError(e);
+        } finally {
+          this.componentLoading = false;
+        }
+      },
+
+      // 获取所属组织用户组
+      async fetchDepartSearch () {
+        const { current, limit } = this.curSearchPagination;
+        const params = {
+        ...this.curSearchParams,
+        limit,
+        offset: limit * (current - 1)
+        };
+        if (this.externalSystemId) {
+          params.system_id = this.externalSystemId;
+          params.hidden = false;
+        }
+        try {
+          const { code, data } = await this.$store.dispatch(
+            'perm/getDepartGroupSearch',
+            params
+          );
+          const { count, results } = data;
+          this.departmentGroupList = results || [];
+          this.$set(this.panels[1], 'count', count || 0);
+          this.emptyDepartmentGroupData = formatCodeData(
+            code,
+            this.emptyDepartmentGroupData,
+            results.length === 0
+          );
+        } catch (e) {
+          const { code } = e;
+          this.emptyDepartmentGroupData = formatCodeData(
+            code,
+            this.emptyDepartmentGroupData
+          );
+          this.departmentGroupList = [];
+          this.messageAdvancedError(e);
+        } finally {
+          this.componentLoading = false;
+        }
+      },
+
+      // 获取policy
+      async fetchPolicySearch () {
+        const customIndex = this.panels.findIndex((item) => item.name === 'CustomPerm');
+        if (customIndex > -1 && this.curSearchParams.system_id) {
+          try {
+            const { code, data } = await this.$store.dispatch(
+              'perm/getPoliciesSearch',
+              this.curSearchParams
+            );
+            this.systemList = data || [];
+            this.$set(this.panels[customIndex], 'count', data.length || 0);
+            this.emptyCustomData = formatCodeData(
+              code,
+              this.emptyCustomData,
+              data.length === 0
+            );
+          } catch (e) {
+            console.error(e);
+            this.emptyCustomData = formatCodeData(e.code, this.emptyCustomData);
+            this.systemList = [];
+            this.messageAdvancedError(e);
+          }
+        } else {
+          this.systemList = [];
+        }
+      },
+
+      async fetchRemoteTable () {
+        // 这里需要拿到所有tab项的total，所以需要调所有接口, 且需要在当前页动态加载tab的label
+        const typeMap = {
+          GroupPerm: async () => {
+            this.emptyData = _.cloneDeep(this.curEmptyData);
+            await Promise.all([
+              this.fetchUserGroupSearch(),
+              this.fetchDepartSearch(),
+              this.fetchPolicySearch()
+            ]);
+            this.curEmptyData = Object.assign({}, this.emptyData);
+            this.tabKey = +new Date();
+          },
+          DepartmentGroupPerm: async () => {
+            this.emptyDepartmentGroupData = _.cloneDeep(this.curEmptyData);
+            await Promise.all([
+              this.fetchDepartSearch(),
+              this.fetchUserGroupSearch(),
+              this.fetchPolicySearch()
+            ]);
+            this.curEmptyData = Object.assign({}, this.emptyDepartmentGroupData);
+            this.tabKey = +new Date();
+          },
+          CustomPerm: async () => {
+            this.emptyCustomData = _.cloneDeep(this.curEmptyData);
+            await Promise.all([
+              this.fetchPolicySearch(),
+              this.fetchUserGroupSearch(),
+              this.fetchDepartSearch()
+            ]);
+            this.curEmptyData = Object.assign({}, this.emptyCustomData);
+            this.tabKey = +new Date();
+          }
+        };
+        return typeMap[this.active] ? typeMap[this.active]() : typeMap['GroupPerm']();
+      },
+
+      async handleRemoteTable (payload) {
+        if (!this.mainContentLoading) {
+          this.componentLoading = true;
+        }
+        const { emptyData, pagination, searchParams, isNoTag } = payload;
+        this.isSearchPerm = emptyData.tipType === 'search';
+        this.curSearchParams = _.cloneDeep(searchParams);
+        this.curSearchPagination = _.cloneDeep(pagination);
+        if (!isNoTag) {
+          this.curEmptyData = _.cloneDeep(emptyData);
+          await this.fetchRemoteTable();
+          this.formatCheckGroups();
+        }
+      },
+
+      // 处理只输入纯文本，不生成tag情况
+      async handleInputValue (payload) {
+        this.curEmptyData.tipType = payload ? 'search' : '';
+        if (payload && !this.curSearchParams.system_id) {
+          this.isSearchPerm = true;
+          this.$set(this.curSearchParams, 'name', payload);
+          await this.fetchRemoteTable();
+          this.formatCheckGroups();
+        }
+      },
+
+      async handleRefreshTable () {
+        this.curEmptyData.tipType = '';
+        this.isSearchPerm = false;
+        this.curSearchParams = {};
+        // 重置搜索参数需要去掉tab上的数量
+        this.tabKey = +new Date();
+      },
+
+      async handleTabChange (tabName) {
+        this.active = tabName;
+        // 如果active是同一项目
+        const searchParams = {
+        ...this.$route.query,
+        tab: tabName
+        };
+        if (!['GroupPerm'].includes(tabName)) {
+          this.handleSelectGroup([]);
+        }
+        window.history.replaceState({}, '', `?${buildURLParams(searchParams)}`);
+      },
+
+      formatCheckGroups () {
+        const selectList = this.panels[0].selectList.map((item) => item.id.toString());
+        setTimeout(() => {
+          this.personalGroupList.length
+            && this.personalGroupList.forEach((item) => {
+              if (item.role_members && item.role_members.length) {
+                const hasName = item.role_members.some((v) => v.username);
+                if (!hasName) {
+                  item.role_members = item.role_members.map(v => {
+                    return {
+                      username: v,
+                      readonly: false
+                    };
+                  });
+                }
+              }
+              if (
+                selectList.includes(item.id.toString())
+                && this.$refs.childPermRef
+                && this.$refs.childPermRef.length
+              ) {
+                this.$refs.childPermRef[0].$refs.groupPermTableRef.toggleRowSelection(
+                  item,
+                  true
+                );
+              }
+            });
+          if (this.departmentGroupList && this.departmentGroupList.length) {
+            this.departmentGroupList.forEach((item) => {
+              if (item.role_members && item.role_members.length) {
+                const hasName = item.role_members.some((v) => v.username);
+                if (!hasName) {
+                  item.role_members = item.role_members.map(v => {
+                    return {
+                      username: v,
+                      readonly: false
+                    };
+                  });
+                }
+              }
+            });
+          }
+        }, 0);
+      },
+
+      handleSelectGroup (payload) {
+        this.$set(this.panels[0], 'selectList', payload);
+      },
+
+      // 显示资源实例
+      handleShowResourceInstance (data, resItem, resIndex, groupIndex) {
+        this.params = {
+          system_id: this.applyGroupData.system_id,
+          action_id: data.id,
+          resource_type_system: resItem.system_id,
+          resource_type_id: resItem.type
+        };
+        this.curResIndex = resIndex;
+        this.groupIndex = groupIndex;
+        this.resourceInstanceSidesliderTitle = this.$t(
+          `m.info['关联侧边栏操作的资源实例']`,
+          {
+            value: `${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}`
+          }
+        );
+        window.changeAlert = 'iamSidesider';
+        this.isShowResourceInstanceSideSlider = true;
+      },
+
+      handleEmptyRefresh () {
+        this.isSearchPerm = false;
+        // 调用子组件的刷新方法
+        this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyClear();
+      },
+
+      handleEmptyClear () {
+        this.isSearchPerm = false;
+        // 调用子组件的刷新方法
+        this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyClear();
+      }
+    }
   };
 </script>
+
 <style lang="postcss">
-    .iam-personal-user-perm-wrapper {
-        .header {
-            .display-name {
-                font-size: 16px;
-                color: #313238;
-            }
-            .count,
-            .name {
-                font-size: 16px;
-                color: #c4c6cc;
-            }
-        }
-        .table-list-wrapper {
-            margin-top: 20px;
-            .iam-user-tab-cls {
-                .bk-tab-section {
-                    padding: 20px 0 0 0;
-                }
-            }
-        }
+.iam-personal-user-perm-wrapper {
+  background-color: #ffffff;
+  height: calc(100vh - 120px);
+  overflow-y: auto;
+  .header {
+     padding: 20px;
+    padding-bottom: 0;
+    .display-name {
+      font-size: 16px;
+      color: #313238;
     }
+    .count,
+    .name {
+      font-size: 16px;
+      color: #c4c6cc;
+    }
+  }
+}
 </style>

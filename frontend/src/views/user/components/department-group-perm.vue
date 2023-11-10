@@ -6,7 +6,8 @@
       :size="'small'"
       :pagination="pageConf"
       @page-change="handlePageChange"
-      @page-limit-change="handlePageLimitChange">
+      @page-limit-change="handlePageLimitChange"
+    >
       <!-- 用户组名 -->
       <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
         <template slot-scope="{ row }">
@@ -17,15 +18,13 @@
       <bk-table-column :label="$t(`m.common['描述']`)">
         <template slot-scope="{ row }">
           <span :title="row.description !== '' ? row.description : ''">
-            {{ row.description !== '' ? row.description : '--'}}
+            {{ row.description !== '' ? row.description : '--' }}
           </span>
         </template>
       </bk-table-column>
       <bk-table-column :label="$t(`m.grading['管理空间']`)">
         <template slot-scope="{ row }">
-          <span
-            :title="row.role && row.role.name ? row.role.name : ''"
-          >
+          <span :title="row.role && row.role.name ? row.role.name : ''">
             {{ row.role ? row.role.name : '--' }}
           </span>
         </template>
@@ -72,10 +71,11 @@
       </bk-table-column>
       <template slot="empty">
         <ExceptionEmpty
-          :type="emptyData.type"
-          :empty-text="emptyData.text"
-          :tip-text="emptyData.tip"
-          :tip-type="emptyData.tipType"
+          :type="groupPermDepartEmptyData.type"
+          :empty-text="groupPermDepartEmptyData.text"
+          :tip-text="groupPermDepartEmptyData.tip"
+          :tip-type="groupPermDepartEmptyData.tipType"
+          @on-clear="handleEmptyClear"
           @on-refresh="handleEmptyRefresh"
         />
       </template>
@@ -88,18 +88,22 @@
       :sub-title="deleteDialogConf.msg"
       @on-after-leave="afterLeaveDelete"
       @on-cancel="cancelDelete"
-      @on-sumbit="confirmDelete" />
+      @on-sumbit="confirmDelete"
+    />
 
     <render-perm-sideslider
       :show="isShowPermSidesilder"
       :name="curGroupName"
       :group-id="curGroupId"
-      @animation-end="handleAnimationEnd" />
+      @animation-end="handleAnimationEnd"
+    />
   </div>
 </template>
+
 <script>
   import { mapGetters } from 'vuex';
   import { formatCodeData } from '@/common/util';
+  import { bus } from '@/common/bus';
   import DeleteDialog from '@/components/iam-confirm-dialog/index.vue';
   import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider';
   import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
@@ -117,6 +121,31 @@
         default: () => {
           return {};
         }
+      },
+      departmentGroupList: {
+        type: Array,
+        default: () => []
+      },
+      emptyData: {
+        type: Object,
+        default: () => {
+          return {
+            type: '',
+            text: '',
+            tip: '',
+            tipType: ''
+          };
+        }
+      },
+      curSearchParams: {
+        type: Object
+      },
+      isSearchPerm: {
+        type: Boolean,
+        default: false
+      },
+      totalCount: {
+        type: Number
       }
     },
     data () {
@@ -134,13 +163,13 @@
           row: {},
           msg: ''
         },
-
+        pageLoading: false,
         isShowPermSidesilder: false,
         curGroupName: '',
         curGroupId: '',
         sliderLoading: false,
         curRoleId: -1,
-        emptyData: {
+        groupPermDepartEmptyData: {
           type: '',
           text: '',
           tip: '',
@@ -149,26 +178,79 @@
       };
     },
     computed: {
-            ...mapGetters(['user'])
+    ...mapGetters(['user', 'externalSystemId'])
+    },
+    watch: {
+      departmentGroupList: {
+        handler (v) {
+          if (this.isSearchPerm) {
+            this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10, count: this.totalCount });
+          }
+          this.dataList.splice(0, this.dataList.length, ...v);
+          this.initPageConf();
+          this.curPageData = this.getDataByPage(this.pageConf.current);
+        },
+        immediate: true
+      },
+      emptyData: {
+        handler (value) {
+          this.groupPermDepartEmptyData = Object.assign({}, value);
+        },
+        immediate: true
+      }
     },
     async created () {
       await this.fetchSystems();
     },
     methods: {
       async fetchSystems () {
+        console.log(111);
         this.pageLoading = true;
-        const { type } = this.data;
         try {
-          const { code, data } = await this.$store.dispatch('perm/getDepartPermGroups', {
+          let url = '';
+          let params = {};
+          const { current, limit } = this.pageConf;
+          if (!this.mainContentLoading) {
+            this.tableLoading = true;
+          }
+          if (this.isSearchPerm) {
+            url = 'perm/getDepartGroupSearch';
+            params = {
+            ...this.curSearchParams,
+            limit,
+            offset: limit * (current - 1)
+            };
+          } else {
+            url = 'perm/getDepartPermGroups';
+            params = {
+              page_size: limit,
+              page: current
+            };
+          }
+          if (this.externalSystemId) {
+            params.system_id = this.externalSystemId;
+            params.hidden = false;
+          }
+          const { id, type, username } = this.data;
+          const { code, data } = await this.$store.dispatch(url, {
+          ...params,
+          ...{
             subjectType: type === 'user' ? type : 'department',
-            subjectId: type === 'user' ? this.data.username : this.data.id
+            subjectId: type === 'user' ? username : id
+          }
           });
-          this.dataList = data || [];
-          this.pageConf.count = this.dataList.length;
+          if (!this.isSearchPerm) {
+            this.dataList = data || [];
+            this.pageConf.count = this.dataList.length;
+          } else {
+            const { count, results } = data;
+            this.dataList = results || [];
+            this.pageConf.count = count || 0;
+          }
           this.curPageData = this.getDataByPage(this.pageConf.current);
-          this.curPageData.forEach(item => {
+          this.curPageData.forEach((item) => {
             if (item.role_members && item.role_members.length) {
-              item.role_members = item.role_members.map(v => {
+              item.role_members = item.role_members.map((v) => {
                 return {
                   username: v,
                   readonly: false
@@ -176,26 +258,31 @@
               });
             }
           });
-          this.emptyData = formatCodeData(code, this.emptyData, this.dataList.length === 0);
+          this.groupPermDepartEmptyData
+            = formatCodeData(code, this.groupPermDepartEmptyData, this.dataList.length === 0);
         } catch (e) {
           console.error(e);
-          const { code } = e;
-          this.emptyData = formatCodeData(code, this.emptyData);
+          this.groupPermDepartEmptyData = formatCodeData(e.code, this.groupPermDepartEmptyData);
           this.messageAdvancedError(e);
         } finally {
           this.pageLoading = false;
+          if (this.isSearchPerm) {
+            bus.$emit('on-perm-tab-count', { active: 'DepartmentGroupPerm', count: this.pageConf.count });
+          }
         }
       },
 
       handleEmptyRefresh () {
-        this.pageConf = Object.assign(
-          {},
-          {
-            current: 1,
-            count: 0,
-            limit: 10
-          });
+        this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10 });
         this.fetchSystems();
+        this.handlePageChange(1);
+        this.$emit('on-refresh');
+      },
+
+      handleEmptyClear () {
+        this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10 });
+        this.getDataByPage();
+        this.$emit('on-clear');
       },
 
       handleEmptySliderRefresh () {
@@ -271,11 +358,11 @@
         this.curGroupName = row.name;
         this.curGroupId = row.id;
         this.isShowPermSidesilder = true;
-        // this.$router.push({
-        //     name: 'groupPermDetail',
-        //     params: Object.assign({}, { id: row.id, name: row.name }, this.$route.params),
-        //     query: this.$route.query
-        // })
+      // this.$router.push({
+      //     name: 'groupPermDetail',
+      //     params: Object.assign({}, { id: row.id, name: row.name }, this.$route.params),
+      //     query: this.$route.query
+      // })
       },
 
       /**
@@ -286,7 +373,9 @@
       showQuitTemplates (row) {
         this.deleteDialogConf.visiable = true;
         this.deleteDialogConf.row = Object.assign({}, row);
-        this.deleteDialogConf.msg = `${this.$t(`m.common['退出']`)}${this.$t(`m.common['【']`)}${row.name}${this.$t(`m.common['】']`)}${this.$t(`m.common['，']`)}${this.$t(`m.info['将不再继承该组的权限']`)}${this.$t(`m.common['。']`)}`;
+        this.deleteDialogConf.msg = `${this.$t(`m.common['退出']`)}${this.$t(`m.common['【']`)}${row.name}${this.$t(
+          `m.common['】']`
+        )}${this.$t(`m.common['，']`)}${this.$t(`m.info['将不再继承该组的权限']`)}${this.$t(`m.common['。']`)}`;
       },
 
       /**
@@ -301,7 +390,7 @@
           });
           this.cancelDelete();
           this.messageSuccess(this.$t(`m.info['退出成功']`), 3000);
-          this.$emit('refresh');
+          this.fetchSystems();
         } catch (e) {
           this.deleteDialogConf.loading = false;
           console.error(e);
@@ -327,6 +416,7 @@
     }
   };
 </script>
+
 <style lang="postcss" scoped>
-  @import '@/views/perm/department-group-perm/index.css';
+@import '@/views/perm/department-group-perm/index.css';
 </style>
