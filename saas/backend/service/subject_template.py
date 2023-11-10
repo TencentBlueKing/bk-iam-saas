@@ -47,7 +47,7 @@ class SubjectTemplateService:
         if subjects:
             groups = SubjectTemplateGroup.objects.filter(template_id=template_id)
             for group in groups:
-                self.delete_group(template_id, group.id, subjects)
+                self.delete_group(template_id, group.group_id, subjects)
 
         with transaction.atomic():
             SubjectTemplate.objects.filter(id=template_id).delete()
@@ -106,8 +106,8 @@ class SubjectTemplateService:
         return subjects
 
     def add_members(self, template_id: int, members: List[Subject]):
-        # 排除不存在的数据
-        members = self._filter_exists_members(template_id, members)
+        # 排除存在的数据
+        members = self._filter_members(template_id, members, include=False)
         if not members:
             return
 
@@ -144,7 +144,7 @@ class SubjectTemplateService:
 
     def delete_members(self, template_id: int, members: List[Subject]):
         # 排除不存在的数据
-        members = self._filter_exists_members(template_id, members)
+        members = self._filter_members(template_id, members)
         if not members:
             return
 
@@ -179,9 +179,12 @@ class SubjectTemplateService:
             if backend_subjects:
                 iam.delete_subject_template_groups(backend_subjects)
 
-    def _filter_exists_members(self, template_id: int, members: List[Subject]):
+    def _filter_members(self, template_id: int, members: List[Subject], include: bool = True):
         subjects = set(self._list_subjects(template_id))
-        return [subject for subject in members if subject in subjects]
+        if include:
+            return [subject for subject in members if subject in subjects]
+
+        return [subject for subject in members if subject not in subjects]
 
     def update_expired_at(self, group_id: int, template_id: int, expired_at: int):
         """
