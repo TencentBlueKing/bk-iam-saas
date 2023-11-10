@@ -19,8 +19,8 @@ from backend.apps.group.audit import GroupMemberDeleteAuditProvider
 from backend.apps.group.models import Group
 from backend.apps.group.serializers import GroupSearchSLZ
 from backend.apps.policy.serializers import PolicyDeleteSLZ, PolicyPartDeleteSLZ, PolicySLZ, PolicySystemSLZ
-from backend.apps.user.serializers import GroupSLZ
-from backend.apps.user.views import SubjectGroupSearchMixin
+from backend.apps.user.serializers import GroupSLZ, UserPolicySearchSLZ
+from backend.apps.user.views import SubjectGroupSearchMixin, UserPolicySearchViewSet
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.group import GroupBiz
 from backend.biz.policy import ConditionBean, PolicyOperationBiz, PolicyQueryBiz
@@ -376,3 +376,18 @@ class SubjectDepartmentGroupSearchViewSet(SubjectGroupSearchMixin):
 
     def get_page_result(self, group_dict, page):
         return [group_dict[one.id] for one in page]
+
+
+class SubjectPolicySearchViewSet(UserPolicySearchViewSet):
+    @swagger_auto_schema(
+        operation_description="搜索subject权限策略列表",
+        request_body=UserPolicySearchSLZ(label="用户组搜索"),
+        responses={status.HTTP_200_OK: PolicySLZ(label="策略", many=True)},
+        tags=["subject"],
+    )
+    def search(self, request, *args, **kwargs):
+        return super().search(request, *args, **kwargs)
+
+    def get_subject(self, request, kwargs):
+        subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
+        return subject
