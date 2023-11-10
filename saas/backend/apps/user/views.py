@@ -383,6 +383,6 @@ class UserPolicySearchViewSet(mixins.ListModelMixin, GenericViewSet):
         # no action_id policy
         return Response([])
 
-    def get_subject(self, request):
+    def get_subject(self, request, kwargs):
         subject = Subject.from_username(request.user.username)
         return subject
