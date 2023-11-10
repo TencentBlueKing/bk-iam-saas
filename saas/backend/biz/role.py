@@ -809,10 +809,29 @@ class RoleListQuery:
         if self.role.type == RoleType.STAFF.value:
             return SubjectTemplate.objects.all()
 
-        subject_template_ids = self._get_role_related_object_ids(
-            RoleRelatedObjectType.SUBJECT_TEMPLATE.value, inherit=False
-        )
+        subject_template_ids = self.query_subject_template_id()
         return SubjectTemplate.objects.filter(id__in=subject_template_ids)
+
+    def query_subject_template_id(self):
+        if self.role.type == RoleType.SUBSET_MANAGER.value:
+            subject_template_ids = self._query_subset_manager_subject_template_id()
+        else:
+            subject_template_ids = self._get_role_related_object_ids(
+                RoleRelatedObjectType.SUBJECT_TEMPLATE.value, inherit=False
+            )
+
+        return subject_template_ids
+
+    def _query_subset_manager_subject_template_id(self) -> List[int]:
+        """
+        查询子集管理员可授权的人员模版列表
+        """
+        assert self.role.type == RoleType.SUBSET_MANAGER.value
+        return list(
+            RoleRelatedObject.objects.filter(
+                role_id=self.role.id, object_type=RoleRelatedObjectType.SUBJECT_TEMPLATE.value
+            ).values_list("object_id", flat=True)
+        )
 
 
 class RoleObjectRelationChecker:

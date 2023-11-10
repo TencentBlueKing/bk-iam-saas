@@ -319,6 +319,7 @@ class GroupCreateSLZ(serializers.Serializer):
     expired_at = serializers.IntegerField(label="过期时间", max_value=PERMANENT_SECONDS)
     templates = serializers.ListField(label="授权信息", child=TemplateAuthorizationSLZ(label="模板授权"), allow_empty=True)
     apply_disable = serializers.BooleanField(label="是否不可申请", default=False)
+    sync_subject_template = serializers.BooleanField(label="是否同步创建人员模板", default=False)
 
     def validate(self, data):
         """

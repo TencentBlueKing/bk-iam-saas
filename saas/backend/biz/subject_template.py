@@ -92,6 +92,8 @@ class SubjectTemplateBiz:
         description: str,
         creator: str,
         subjects: List[Subject],
+        readonly: bool = False,
+        source_group_id: int = 0,
     ) -> SubjectTemplate:
         with transaction.atomic():
             # 创建template
@@ -100,6 +102,8 @@ class SubjectTemplateBiz:
                 description=description,
                 creator=creator,
                 subjects=subjects,
+                readonly=readonly,
+                source_group_id=source_group_id,
             )
 
             # 关联角色

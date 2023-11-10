@@ -22,11 +22,12 @@ from backend.apps.group.models import Group, GroupAuthorizeLock
 from backend.apps.organization.models import User
 from backend.apps.policy.models import Policy as PolicyModel
 from backend.apps.role.models import Role, RoleRelatedObject, RoleUser
-from backend.apps.subject_template.models import SubjectTemplateGroup
+from backend.apps.subject_template.models import SubjectTemplate, SubjectTemplateGroup
 from backend.apps.template.models import PermTemplatePolicyAuthorized, PermTemplatePreUpdateLock
 from backend.biz.policy import PolicyBean, PolicyBeanList, PolicyOperationBiz
 from backend.biz.resource import ResourceBiz
-from backend.biz.role import RoleAuthorizationScopeChecker, RoleSubjectScopeChecker
+from backend.biz.role import RoleAuthorizationScopeChecker, RoleListQuery, RoleSubjectScopeChecker
+from backend.biz.subject_template import SubjectTemplateBiz
 from backend.biz.template import TemplateBiz, TemplateCheckBiz
 from backend.biz.utils import fill_resources_attribute
 from backend.common.error_codes import error_codes
@@ -137,6 +138,7 @@ class GroupBiz:
     template_biz = TemplateBiz()
     resource_biz = ResourceBiz()
     template_check_biz = TemplateCheckBiz()
+    subject_template_biz = SubjectTemplateBiz()
 
     # 直通的方法
     check_subject_groups_belong = GroupService.__dict__["check_subject_groups_belong"]
@@ -159,6 +161,7 @@ class GroupBiz:
         subjects: List[Subject],
         expired_at: int,
         apply_disable: bool = False,
+        sync_subject_template: bool = False,
     ) -> Group:
         """
         创建用户组
@@ -178,10 +181,21 @@ class GroupBiz:
             if subjects:
                 self.group_svc.add_members(group.id, subjects, expired_at)
 
+            if sync_subject_template:
+                # 创建人员模版
+                self.subject_template_biz.create(
+                    role, name, description, creator, subjects, readonly=True, source_group_id=group.id
+                )
+
         return group
 
     def batch_create(
-        self, role_id: int, infos: List[GroupCreationBean], creator: str, attrs: Optional[Dict] = None
+        self,
+        role: Role,
+        infos: List[GroupCreationBean],
+        creator: str,
+        attrs: Optional[Dict] = None,
+        sync_subject_template: bool = False,
     ) -> List[Group]:
         """
         批量创建用户组
@@ -192,7 +206,14 @@ class GroupBiz:
             if attrs:
                 group_attrs = {group.id: attrs for group in groups}
                 self.group_attribute_svc.batch_set_attributes(group_attrs)
-            RoleRelatedObject.objects.batch_create_group_relation(role_id, [group.id for group in groups])
+            RoleRelatedObject.objects.batch_create_group_relation(role.id, [group.id for group in groups])
+
+        # 创建同步人员模版
+        if sync_subject_template:
+            for group in groups:
+                self.subject_template_biz.create(
+                    role, group.name, group.description, creator, [], readonly=True, source_group_id=group.id
+                )
 
         return groups
 
@@ -211,6 +232,11 @@ class GroupBiz:
             if usernames:
                 self.role_svc.add_grade_manager_members(relation.role_id, usernames)
 
+        # 同步变更关联的人员模版
+        subject_template = SubjectTemplate.objects.filter(source_group_id=group_id).first()
+        if subject_template:
+            self.subject_template_biz.add_members(subject_template.id, members)
+
     def remove_members(self, group_id: str, subjects: List[Subject]):
         """
         移除用户组成员
@@ -225,6 +251,11 @@ class GroupBiz:
             usernames = [m.id for m in subjects if m.type == SubjectType.USER.value]
             if usernames:
                 RoleUser.objects.delete_grade_manager_member(relation.role_id, usernames)
+
+        # 同步变更关联的人员模版
+        subject_template = SubjectTemplate.objects.filter(source_group_id=group_id).first()
+        if subject_template:
+            self.subject_template_biz.delete_members(subject_template.id, subjects)
 
     def list_system_counter(self, group_id: int, hidden: bool = True) -> List[GroupSystemCounterBean]:
         """
@@ -447,6 +478,11 @@ class GroupBiz:
             self.group_attribute_svc.batch_delete_attributes([group_id])
             # 删除用户组本身
             self.group_svc.delete(group_id)
+
+        # 同步删除关联的人员模版
+        subject_template = SubjectTemplate.objects.filter(source_group_id=group_id).first()
+        if subject_template:
+            self.subject_template_biz.delete(subject_template.id)
 
     def _convert_to_group_members(self, relations: List[SubjectGroup]) -> List[GroupMemberBean]:
         subjects = parse_obj_as(List[Subject], relations)
@@ -724,7 +760,12 @@ class GroupBiz:
         return hit_members
 
     def create_sync_perm_group_by_role(
-        self, role: Role, creator: str, group_name: str = "", attrs: Optional[Dict] = None
+        self,
+        role: Role,
+        creator: str,
+        group_name: str = "",
+        attrs: Optional[Dict] = None,
+        sync_subject_template: bool = False,
     ):
         """
         创建与分级管理员授权范围同步的用户组
@@ -754,12 +795,19 @@ class GroupBiz:
                 role_id=role.id, object_type=RoleRelatedObjectType.GROUP.value, object_id=group.id, sync_perm=True
             )
             members = self.role_svc.list_members_by_role_id(role.id)
-            if members:
+            subjects = Subject.from_usernames(members)
+            if subjects:
                 self.group_svc.add_members(
                     group.id,
-                    Subject.from_usernames(members),
+                    subjects,
                     PERMANENT_SECONDS,
                 )
+
+        # 创建同步人员模版
+        if sync_subject_template:
+            self.subject_template_biz.create(
+                role, group.name, group.description, creator, subjects, readonly=True, source_group_id=group.id
+            )
 
         # 查询角色的授权范围
         auth_scopes = self.role_svc.list_auth_scope(role.id)
@@ -993,20 +1041,14 @@ class GroupCheckBiz:
                     _("系统: {} 的操作: {} 权限已存在, 只能新增, 不能修改!").format(system_id, p.action_id)
                 )
 
-    def check_subject_template(self, role_id: int, subject_template_ids: List[int]):
+    def check_subject_template(self, role: Role, subject_template_ids: List[int]):
         """
         检查用户组授权人员模板
         """
         if not subject_template_ids:
             return
 
-        exist_ids = set(
-            RoleRelatedObject.objects.filter(
-                object_type=RoleRelatedObjectType.SUBJECT_TEMPLATE.value,
-                object_id__in=subject_template_ids,
-                role_id=role_id,
-            ).values_list("object_id", flat=True)
-        )
+        exist_ids = set(RoleListQuery(role, None).query_subject_template_id())
         for subject_template_id in subject_template_ids:
             if subject_template_id not in exist_ids:
                 raise error_codes.VALIDATE_ERROR.format(_("人员模板不存在: {}").format(subject_template_id))

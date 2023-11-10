@@ -18,6 +18,8 @@ class SubjectTemplate(BaseModel):
 
     name = models.CharField("名称", max_length=512)
     description = models.CharField("描述", max_length=512)
+    readonly = models.BooleanField("只读标识", default=False)
+    source_group_id = models.IntegerField("来源用户组ID", default=0)
 
     class Meta:
         verbose_name = "人员模板"

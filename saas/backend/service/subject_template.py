@@ -19,11 +19,21 @@ from backend.service.models.subject import Subject
 
 
 class SubjectTemplateService:
-    def create(self, name: str, description: str, subjects: List[Subject], creator: str) -> SubjectTemplate:
+    def create(
+        self,
+        name: str,
+        description: str,
+        subjects: List[Subject],
+        creator: str,
+        readonly: bool = False,
+        source_group_id: int = 0,
+    ) -> SubjectTemplate:
         template = SubjectTemplate(
             name=name,
             description=description,
             creator=creator,
+            readonly=readonly,
+            source_group_id=source_group_id,
         )
         template.save()
 

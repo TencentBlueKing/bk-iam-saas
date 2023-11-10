@@ -133,6 +133,7 @@ class ManagementGroupBasicCreateSLZ(ManagementGroupBasicInfoSLZ):
 class ManagementGradeManagerGroupCreateSLZ(serializers.Serializer):
     groups = serializers.ListField(child=ManagementGroupBasicCreateSLZ(label="用户组"), max_length=10)
     create_attributes = serializers.BooleanField(label="是否创建属性", default=True, required=False)
+    sync_subject_template = serializers.BooleanField(label="是否同步创建人员模板", default=False)
 
     def validate(self, data):
         """
@@ -304,6 +305,7 @@ class ManagementGradeManagerCreateSLZ(GradeMangerBaseInfoSLZ):
     subject_scopes = serializers.ListField(label="授权对象", child=RoleScopeSubjectSLZ(label="授权对象"), allow_empty=False)
     sync_perm = serializers.BooleanField(label="同步分级管理员权限到用户组", required=False, default=False)
     group_name = serializers.CharField(label="同步用户组名称", max_length=512, required=False, allow_blank=True, default="")
+    sync_subject_template = serializers.BooleanField(label="是否同步创建人员模板", default=False)
 
 
 class ManagementGradeMangerDetailSLZ(serializers.ModelSerializer):

@@ -38,7 +38,7 @@ class SubjectTemplateListSLZ(serializers.ModelSerializer):
 
     class Meta:
         model = SubjectTemplate
-        fields = ("id", "name", "description", "group_count", "creator", "created_time")
+        fields = ("id", "name", "description", "readonly", "group_count", "creator", "created_time")
 
     # 关联的用户组数量
     def get_group_count(self, obj):

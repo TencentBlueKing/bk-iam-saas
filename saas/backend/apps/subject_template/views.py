@@ -9,8 +9,10 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import logging
+from functools import wraps
 from typing import List
 
+from django.utils.translation import gettext as _
 from drf_yasg.utils import swagger_auto_schema
 from pydantic import parse_obj_as
 from rest_framework import serializers, status
@@ -51,6 +53,21 @@ from .serializers import (
 )
 
 logger = logging.getLogger("app")
+
+
+def check_readonly_subject_template(func):
+    """人员可读检测"""
+
+    @wraps(func)
+    def decorate(view, request, *args, **kwargs):
+        subject_template = view.get_object()
+        if subject_template.readonly:
+            raise error_codes.FORBIDDEN.format(message=_("只读人员模版({})禁止变更").format(subject_template.id), replace=True)
+
+        response = func(view, request, *args, **kwargs)
+        return response
+
+    return decorate
 
 
 class SubjectTemplateQueryMixin:
@@ -112,6 +129,7 @@ class SubjectTemplateViewSet(SubjectTemplateQueryMixin, ModelViewSet):
         tags=["subject-template"],
     )
     @view_audit_decorator(SubjectTemplateUpdateAuditProvider)
+    @check_readonly_subject_template
     def update(self, request, *args, **kwargs):
         template = self.get_object()
         serializer = BaseSubjectTemplateSLZ(template, data=request.data)
@@ -166,6 +184,7 @@ class SubjectTemplateViewSet(SubjectTemplateQueryMixin, ModelViewSet):
         tags=["subject-template"],
     )
     @view_audit_decorator(SubjectTemplateDeleteAuditProvider)
+    @check_readonly_subject_template
     def destroy(self, request, *args, **kwargs):
         template = self.get_object()
 
@@ -198,6 +217,7 @@ class SubjectTemplateMemberViewSet(SubjectTemplateQueryMixin, GenericViewSet):
         tags=["subject-template"],
     )
     @view_audit_decorator(SubjectTemplateMemberCreateAuditProvider)
+    @check_readonly_subject_template
     def create(self, request, *args, **kwargs):
         template = self.get_object()
         serializer = SubjectTemplateMemberSLZ(data=request.data)
@@ -221,6 +241,7 @@ class SubjectTemplateMemberViewSet(SubjectTemplateQueryMixin, GenericViewSet):
         tags=["subject-template"],
     )
     @view_audit_decorator(SubjectTemplateMemberCreateAuditProvider)
+    @check_readonly_subject_template
     def destroy(self, request, *args, **kwargs):
         template = self.get_object()
         serializer = SubjectTemplateMemberSLZ(data=request.data)
@@ -294,6 +315,9 @@ class SubjectTemplatesMemberCreateViewSet(SubjectTemplateQueryMixin, GenericView
 
         templates = self.get_queryset().filter(id__in=template_ids)
         for template in templates:
+            if template.readonly:
+                raise error_codes.FORBIDDEN.format(message=_("只读人员模版({})禁止变更").format(template.id), replace=True)
+
             try:
                 # 校验用户组数量是否超限
                 self.check_biz.check_member_count(template.id, len(members))

@@ -105,6 +105,7 @@ class ManagementGradeManagerViewSet(ManagementAPIPermissionCheckMixin, GenericVi
                     GroupSaaSAttributeEnum.SOURCE_TYPE.value: AuditSourceType.OPENAPI.value,
                     GroupSaaSAttributeEnum.SOURCE_FROM_ROLE.value: True,
                 },
+                sync_subject_template=data["sync_subject_template"],
             )
 
         # 审计

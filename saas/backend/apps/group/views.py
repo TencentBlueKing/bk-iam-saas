@@ -183,7 +183,7 @@ class GroupViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericView
         self.group_check_biz.check_role_subject_scope(request.role, members)
 
         # 检查人员模版是否在role的授权范围内
-        self.group_check_biz.check_subject_template(request.role.id, subject_template_ids)
+        self.group_check_biz.check_subject_template(request.role, subject_template_ids)
 
         with gen_group_upsert_lock(request.role.id):
             # 用户组名称在角色内唯一
@@ -197,11 +197,12 @@ class GroupViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericView
                 members,
                 data["expired_at"],
                 apply_disable=data["apply_disable"],
+                sync_subject_template=data["sync_subject_template"],
             )
 
             # 增加人员模版授权操作
             for _id in subject_template_ids:
-                self.group_biz.grant_subject_template(group.id, int(_id), data["expired_at"], user_id)
+                self.group_biz.grant_subject_template(group.id, _id, data["expired_at"], user_id)
 
         # 使用长时任务触发多个模板同时授权
         if data["templates"]:
@@ -363,7 +364,7 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
         self.group_check_biz.check_member_count(group.id, len(members))
 
         # 检查人员模版是否在role的授权范围内
-        self.group_check_biz.check_subject_template(request.role.id, subject_template_ids)
+        self.group_check_biz.check_subject_template(request.role, subject_template_ids)
 
         # 如果是分级管理员在操作子集管理员的成员, 需要同步更新子集管理员的授权范围
         group_role = self.role_biz.get_role_by_group_id(group.id)
@@ -439,7 +440,7 @@ class GroupsMemberViewSet(GenericViewSet):
         self.group_check_biz.check_role_subject_scope(request.role, members)
 
         # 检查人员模版是否在role的授权范围内
-        self.group_check_biz.check_subject_template(request.role.id, subject_template_ids)
+        self.group_check_biz.check_subject_template(request.role, subject_template_ids)
 
         role_checker = RoleObjectRelationChecker(request.role)
         groups = self.queryset.filter(id__in=group_ids)
