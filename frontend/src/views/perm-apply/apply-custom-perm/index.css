@@ -20,6 +20,9 @@
             &.set-border {
                 border-bottom: 1px solid #dcdee5;
             }
+            &.action-item-none {
+                display: none;
+            }
             p {
                 position: relative;
                 display: flex;
@@ -92,6 +95,9 @@
                                 white-space: nowrap;
                             }
                         }
+                    }
+                    .sub-action-item-none {
+                        display: none;
                     }
                 }
                 .iam-action-cls {

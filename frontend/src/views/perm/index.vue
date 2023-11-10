@@ -144,7 +144,10 @@
     </div>
     <div
       v-if="!externalSystemsLayout.myPerm.hideApplyBtn"
-      class="custom-footer-wrapper"
+      :class="[
+        'custom-footer-wrapper',
+        { 'custom-footer-wrapper-no-perm': isEmpty }
+      ]"
     >
       <the-footer />
     </div>
@@ -210,6 +213,7 @@
         soonPermLength: 0,
         personalGroupList: [],
         systemList: [],
+        systemListStorage: [],
         teporarySystemList: [],
         departmentGroupList: [],
         curSearchParams: {},
@@ -356,6 +360,7 @@
                     
           const systemList = customData || [];
           this.systemList.splice(0, this.systemList.length, ...systemList);
+          this.systemListStorage = _.cloneDeep(systemList);
           this.emptyCustomData = formatCodeData(emptyCustomCode, this.emptyCustomData, this.systemList.length === 0);
 
           const teporarySystemList = teporarySystemData || [];
@@ -476,6 +481,7 @@
         if (customIndex > -1 && this.curSearchParams.system_id) {
           try {
             const { code, data } = await this.$store.dispatch('perm/getPoliciesSearch', this.curSearchParams);
+            this.systemList = this.systemListStorage.filter((item) => item.id === this.curSearchParams.system_id);
             this.$set(this.panels[customIndex], 'count', data.length || 0);
             this.emptyCustomData = formatCodeData(code, this.emptyCustomData, data.length === 0);
           } catch (e) {
@@ -484,6 +490,8 @@
             this.systemList = [];
             this.messageAdvancedError(e);
           }
+        } else {
+          this.systemList = [];
         }
       },
 
@@ -512,7 +520,11 @@
           },
           CustomPerm: async () => {
             this.emptyCustomData = _.cloneDeep(this.curEmptyData);
-            await Promise.all([this.fetchUserGroupSearch(), this.fetchDepartSearch()]);
+            await Promise.all([
+              this.fetchPolicySearch(),
+              this.fetchUserGroupSearch(),
+              this.fetchDepartSearch()
+            ]);
             this.curEmptyData = Object.assign({}, this.emptyCustomData);
             this.tabKey = +new Date();
           }
@@ -705,7 +717,7 @@
         }
         .empty-wrapper {
             position: absolute;
-            top: 50%;
+            top: 200px;
             left: 50%;
             transform: translate(-50%, -50%);
             img {
@@ -783,5 +795,14 @@
         &.info-sys-lang {
             left: 200px;
         }
+    }
+
+    .custom-perm-wrapper {
+      &.custom-perm-wrapper-no-perm {
+        position: absolute;
+        left: 50%;
+        bottom: 0;
+        transform: translate(-50%, 10px);
+       }
     }
 </style>
