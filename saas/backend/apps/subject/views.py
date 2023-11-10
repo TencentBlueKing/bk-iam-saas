@@ -383,7 +383,7 @@ class SubjectPolicySearchViewSet(UserPolicySearchViewSet):
         operation_description="搜索subject权限策略列表",
         request_body=UserPolicySearchSLZ(label="用户组搜索"),
         responses={status.HTTP_200_OK: PolicySLZ(label="策略", many=True)},
-        tags=["user"],
+        tags=["subject"],
     )
     def search(self, request, *args, **kwargs):
         return super().search(request, *args, **kwargs)
