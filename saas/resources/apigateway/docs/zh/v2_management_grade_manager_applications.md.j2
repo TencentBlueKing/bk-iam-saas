@@ -12,6 +12,7 @@
 | subject_scopes | array[object] | 是 | body |分级管理员可授权的人员范围 |
 | sync_perm | bool | 否 | body |是否创建同步权限用户组, 默认false |
 | group_name | string | 否 | body |如果sync_perm为true, 可以自定义用户组名称, 默认为空 |
+| sync_subject_template | bool | 否 | body |是否创建用户组的同步人员模版, 默认false |
 | applicant | string | 是 | body |申请人用户名 |
 | reason | string | 是 | body |申请理由 |
 | callback_id | string | 否 | body |申请回调id, 用于标识申请单, 默认为空 |
