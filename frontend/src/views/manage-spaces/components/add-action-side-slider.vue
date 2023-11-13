@@ -125,7 +125,7 @@
                   v-for="subItem in customTmpl.sub_groups"
                   class="sub-item"
                   :key="subItem.name">
-                  <label class="sub-item-name" :title="subItem.name">{{ subItem.name }}</label>
+                  <label class="sub-item-name" :title="subItem.name" v-if="subItem.actions && subItem.actions.length > 0">{{ subItem.name }}55</label>
                   <div class="choose-perm-sub-tmpl">
                     <span v-for="subTmpl in subItem.actions" :key="subTmpl.$id">
                       <bk-checkbox
