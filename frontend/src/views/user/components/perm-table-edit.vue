@@ -152,6 +152,7 @@
   import DeleteActionDialog from '@/views/group/components/delete-related-action-dialog.vue';
   import { formatCodeData } from '@/common/util';
   import { mapGetters } from 'vuex';
+  import { bus } from '@/common/bus';
 
   export default {
     name: '',
@@ -188,6 +189,13 @@
             tipType: ''
           };
         }
+      },
+      curSearchParams: {
+        type: Object
+      },
+      isSearchPerm: {
+        type: Boolean,
+        default: false
       }
     },
     data () {
@@ -228,7 +236,8 @@
           text: '',
           tip: '',
           tipType: ''
-        }
+        },
+        searchParams: {}
       };
     },
     computed: {
@@ -245,7 +254,7 @@
     watch: {
       systemId: {
         async handler (value) {
-          if (value !== '') {
+          if (value) {
             this.initRequestQueue = ['permTable'];
             const params = {
               subjectType: 'user',
@@ -268,26 +277,15 @@
           this.policyEmptyData = Object.assign({}, value);
         },
         immediate: true
+      },
+      curSearchParams: {
+        handler (value) {
+          this.searchParams = Object.assign({}, value);
+        },
+        immediate: true
       }
     },
     methods: {
-      /**
-       * fetchData
-       */
-      async fetchData (params) {
-        try {
-          const { code, data } = await this.$store.dispatch('perm/getPersonalPolicy', { ...params });
-          this.tableList = data && data.map(item => new PermPolicy(item));
-          this.policyEmptyData = formatCodeData(code, this.policyEmptyData, data.length === 0);
-        } catch (e) {
-          console.error(e);
-          this.policyEmptyData = formatCodeData(e.code, this.policyEmptyData);
-          this.messageAdvancedError(e);
-        } finally {
-          this.initRequestQueue.shift();
-        }
-      },
-
       /**
        * 获取系统对应的自定义操作
        *
@@ -309,6 +307,50 @@
         } catch (e) {
           console.error(e);
           this.messageAdvancedError(e);
+        }
+      },
+
+      async fetchData (params) {
+        try {
+          const { subjectId, subjectType } = params;
+          let url = '';
+          let queryParams = {};
+          if (this.isSearchPerm) {
+            url = 'perm/getPersonalPolicySearch';
+            queryParams = {
+              ...this.searchParams,
+              ...{
+                subjectId,
+                subjectType
+              }
+            };
+            if (!queryParams.system_id) {
+              return;
+            }
+          } else {
+            url = 'perm/getPersonalPolicy';
+            queryParams = {
+              ...params
+            };
+          }
+          const { code, data } = await this.$store.dispatch(url, queryParams);
+          if (data.length) {
+            this.tableList = data.map(item => {
+              const relatedEnvironments = this.linearActionList.find(sub => sub.id === item.id);
+              item.related_environments = relatedEnvironments ? relatedEnvironments.related_environments : [];
+              return new PermPolicy(item);
+            });
+          }
+          this.policyEmptyData = formatCodeData(code, this.policyEmptyData, data.length === 0);
+        } catch (e) {
+          console.error(e);
+          this.policyEmptyData = formatCodeData(e.code, this.policyEmptyData);
+          this.messageAdvancedError(e);
+        } finally {
+          this.initRequestQueue.shift();
+          if (this.isSearchPerm) {
+            bus.$emit('on-perm-tab-count', { active: 'CustomPerm', count: this.tableList.length || 0 });
+          }
         }
       },
 

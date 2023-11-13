@@ -20,13 +20,11 @@
       v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
     >
       <bk-table-column type="selection" align="center" :selectable="setDefaultSelect" />
-      <!-- 用户组名 -->
       <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
         <template slot-scope="{ row }">
           <span class="user-group-name" :title="row.name" @click="goDetail(row)">{{ row.name }}</span>
         </template>
       </bk-table-column>
-      <!-- 描述 -->
       <bk-table-column :label="$t(`m.common['描述']`)">
         <template slot-scope="{ row }">
           <span :title="row.description !== '' ? row.description : ''">
@@ -178,6 +176,10 @@
       },
       totalCount: {
         type: Number
+      },
+      componentLoading: {
+        type: Boolean,
+        default: false
       }
     },
     data () {
@@ -239,7 +241,7 @@
           //   this.initPageConf();
           //   this.curPageData = this.getDataByPage(this.pageConf.current);
           // }
-          if (this.pageConf.current === 1 && !this.isSearchPerm) {
+          if (this.pageConf.current === 1) {
             this.pageConf = Object.assign(this.pageConf, { count: this.totalCount });
             this.curPageData = [...v];
             return;
@@ -317,7 +319,7 @@
           let url = '';
           let params = {};
           const { current, limit } = this.pageConf;
-          if (!this.mainContentLoading) {
+          if (!this.mainContentLoading && !this.componentLoading) {
             this.tableLoading = true;
           }
           if (this.isSearchPerm) {
@@ -429,8 +431,7 @@
        * @param {number} prevLimit 变化前每页多少条的数量
        */
       handlePageLimitChange (currentLimit, prevLimit) {
-        this.pageConf.limit = currentLimit;
-        this.pageConf.current = 1;
+        this.pageConf = Object.assign(this.pageConf, { current: 1, limit: currentLimit });
         this.handlePageChange(this.pageConf.current);
       },
 
@@ -579,12 +580,12 @@
 
       resetPagination (limit = 10) {
         this.pageConf = Object.assign(this.pageConf, { current: 1, limit });
-        this.getDataByPage();
       },
 
       refreshTableData () {
         const { limit } = this.pageConf;
         this.resetPagination(limit);
+        this.getDataByPage();
         this.fetchSelectedGroupCount();
         if (this.isSearchPerm) {
           return;
