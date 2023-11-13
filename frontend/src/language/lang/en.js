@@ -44,6 +44,7 @@ export const m = {
         '全部': 'All',
         '没有更多内容了': 'No More',
         '删除': 'Delete',
+        '删除-dialog': 'DELETE',
         '编辑': 'Edit',
         '移除': 'Remove',
         '新建': 'New',
@@ -368,7 +369,9 @@ export const m = {
         '管理空间名称不能为空': 'Management space name cannot be empty',
         '请选择用户': 'Please select user',
         '请选择用户或组织成员': 'Please select user or organization member',
-        '请选择用户组成员复制': 'Please select user group member copy'
+        '请选择用户组成员复制': 'Please select user group member copy',
+        '模板名称不能为空': 'Template name cannot be empty',
+        '模板成员不能为空': 'Template member cannot be empty',
     },
     info: {
         '加入用户组申请成功': 'Apply to join the group successfully',
@@ -551,7 +554,9 @@ export const m = {
         '删除实例权限': 'instance permission',
         '删除一组实例权限': 'a set of instance permissions',
         '确定要删除系统下的所有操作权限？': 'Confirm to delete all action permissions under the {value} system?',
-        '确认批量退出所选的用户组吗？': 'Are you sure to batch quit the selected user groups?'
+        '确认批量退出所选的用户组吗？': 'Are you sure to batch quit the selected user groups?',
+        '确认删除该人员模板？': 'Are you sure to delete the member template?',
+        '确认解除与该用户组的关联？': 'Are you sure to dissociate from this user group?',
     },
     nav: {
         '蓝鲸权限中心': 'BlueKing-IAM',
@@ -608,7 +613,8 @@ export const m = {
         '克隆管理空间': 'Clone Management Space',
         '克隆二级管理空间': 'Clone Secondary management space',
         '用户组设置': 'User Group Setting',
-        '敏感等级': 'Sensitivity Level'
+        '敏感等级': 'Sensitivity Level',
+        '人员模板': 'Members Template'
     },
     applyEntrance: {
         '立刻申请': 'Apply now',
@@ -839,7 +845,8 @@ export const m = {
         '该组只能管理员主动授权，用户无法主动申请': 'This group can only be actively authorized by administrators, and users cannot actively apply',
         '设置不可被申请，则无法申请加入此用户组': 'If the setting cannot be applied for, you cannot apply to join this user group',
         '管理员已设置空间下所有用户组不可被申请': 'The administrator has set that all user groups in the space cannot be applied for',
-        '已选择的用户组成员不需要续期': 'The selected user group members do not need to be renewed'
+        '已选择的用户组成员不需要续期': 'The selected user group members do not need to be renewed',
+        '自动生成同名人员模板': 'Automatically generate member template with the same name'
     },
     userGroupDetail: {
         '用户组名': 'Group name: ',
@@ -850,7 +857,7 @@ export const m = {
         '删除操作权限': 'Delete action permissions',
         '暂无关联实例': 'No associated instance',
         '所属组织架构': 'Organizational structure',
-        '请输入至少3个字符的用户/组织，按enter键搜索': 'Please enter user/organization with at least 3 characters and press enter to search'
+        '请输入至少3个字符的用户/组织或人员模板，按enter键搜索': 'Please enter user/organization or members template with at least 3 characters and press enter to search'
     },
     resource: {
         '无限制总文案': 'If the action does not require restricted instances, select unlimited',
@@ -1384,6 +1391,30 @@ export const m = {
         '转移预览的内容不能为空': 'The content of the transfer preview cannot be empty',
         '转移预览': 'Transfer preview',
         '确认转移': 'Confirm transfer'
+    },
+    memberTemplate: {
+        '模板名称': 'Template name',
+        '人员模板': 'Member template',
+        '用户组名称': 'User group name',
+        '创建人': 'Creator',
+        '关联用户组': 'Associate user group',
+        '最近更新人': 'Latest modified by',
+        '最近更新时间': 'Latest update time',
+        '搜索用户组': 'Search user group',
+        '搜索模板名称、描述、创建人': 'Search template name, description, creator',
+        '新建人员模板': 'New members template',
+        '请输入模板名称': 'Please input template name',
+        '请输入描述': 'Please input description',
+        '请输入模板描述': 'Please input template description',
+        '模板成员': 'Template members',
+        '模板详情': 'Template detail',
+        '模板描述': 'Template description',
+        '模板ID': 'Template ID',
+        '解除': 'Remove',
+        '解除关联': 'Disassociate',
+        '人员模板创建成功': 'Successfully created members template',
+        '解除关联后，相关人员将失去用户组的权限。': 'After disassociation, the relevant personnel will lose the permissions of the user group.',
+        '删除后，关联用户组也会删除对应的人员权限。': 'After deletion, the associated user group will also delete the corresponding personnel permissions.'
     }
 }
 export default {
