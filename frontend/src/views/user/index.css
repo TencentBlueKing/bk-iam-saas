@@ -298,7 +298,8 @@
 .drag-line {
     position: absolute;
     left: 280px;
-    height: calc(100vh - 61px);
+    /* height: calc(100vh - 61px); */
+    height: 100%;
     width: 1px;
     background: #dcdee5;
     z-index: 1500;

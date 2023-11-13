@@ -144,7 +144,7 @@
                             { 'sub-action-item-none': !subAct.actions.length }
                           ]">
                           <div class="sub-action-wrapper">
-                            <span class="name" :title="subAct.name" v-if="subAct.actions.length > 0">{{ subAct.name }}</span>{{ subAct.actions.length > 0 }}
+                            <span class="name" :title="subAct.name" v-if="subAct.actions.length > 0">{{ subAct.name }}</span>
                             <section>
                               <bk-checkbox
                                 v-for="(act, actIndex) in subAct.actions"

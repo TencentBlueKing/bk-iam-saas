@@ -337,8 +337,10 @@
     methods: {
       _calcTextareaWidth () {
         this.$nextTick(() => {
-          const { width } = this.$refs.realInputContent.getBoundingClientRect();
-          this.textareaWidth = width + 20;
+          if (this.$refs.realInputContent.getBoundingClientRect) {
+            const { width } = this.$refs.realInputContent.getBoundingClientRect();
+            this.textareaWidth = width + 20;
+          }
         });
       },
       // 显示 key 面板
@@ -571,18 +573,20 @@
 
         this.$nextTick(() => {
           const allTag = this.$refs.tagGroup.querySelectorAll('.search-tag-box');
-          const {
-            width: searchSelectWidth
-          } = this.$refs.searchSelect.getBoundingClientRect();
-
-          let tagWidthTotal = 0;
-          for (let i = 0; i < allTag.length; i++) {
-            const { width } = allTag[i].getBoundingClientRect();
-            if (tagWidthTotal + width + 50 < searchSelectWidth) {
-              tagWidthTotal = tagWidthTotal + width + 6;
-            } else {
-              this.maxRenderTagNums = i;
-              break;
+          if (this.$refs.searchSelect.getBoundingClientRect) {
+            const {
+              width: searchSelectWidth
+            } = this.$refs.searchSelect.getBoundingClientRect();
+  
+            let tagWidthTotal = 0;
+            for (let i = 0; i < allTag.length; i++) {
+              const { width } = allTag[i].getBoundingClientRect();
+              if (tagWidthTotal + width + 50 < searchSelectWidth) {
+                tagWidthTotal = tagWidthTotal + width + 6;
+              } else {
+                this.maxRenderTagNums = i;
+                break;
+              }
             }
           }
         });

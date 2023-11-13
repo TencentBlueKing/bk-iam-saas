@@ -21,7 +21,8 @@
           :cur-search-params="curSearchParams"
           :empty-data="emptyPolicyData"
           :is-search-perm="isSearchPerm"
-          @after-delete="handleAfterDelete(...arguments, sysIndex)" />
+          @after-delete="handleAfterDelete(...arguments, sysIndex)"
+        />
       </custom-perm-system-policy>
     </template>
     <template v-else>
@@ -128,7 +129,7 @@
       totalCount: {
         handler (value) {
           if (this.isSearchPerm && this.systemList.length) {
-            this.$set(this.systemPolicyList[0], 'count', value);
+            this.$set(this.systemList[0], 'count', value);
           }
         },
         immediate: true
@@ -141,10 +142,10 @@
       // 搜索自定义权限
       fetchSystemSearch () {
         // 过滤掉搜索框的参数, 处理既有筛选系统也有输入名字、描述等仍要展示为空的情况
-        const noValue = !this.curSearchParams.id && !this.curSearchParams.name && !this.curSearchParams.description;
+        const { id, description, name, system_id: systemId } = this.curSearchParams;
+        const noValue = !id && !name && !description;
         // 筛选搜索的系统id
-        const curSystemList
-          = this.systemList.filter(item => item.id === this.curSearchParams.system_id && noValue);
+        const curSystemList = this.systemList.filter(item => item.id === systemId && noValue);
         this.formatSystemData(curSystemList || []);
       },
 

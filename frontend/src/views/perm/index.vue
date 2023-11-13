@@ -121,6 +121,7 @@
                   v-if="active === panel.name"
                   ref="childPermRef"
                   :is="active"
+                  :component-loading="componentLoading"
                   :total-count="panel.count"
                   :personal-group-list="personalGroupList"
                   :system-list="systemList"
@@ -229,6 +230,7 @@
           tipType: ''
         },
         emptyDepartmentGroupData: {},
+        emptyTemporarySystemData: {},
         curEmptyData: {
           type: 'empty',
           text: '暂无数据',
@@ -249,8 +251,7 @@
         resourceInstanceError: false,
         isShowResourceInstanceSideSlider: false,
         resourceInstanceSideSliderTitle: '',
-        tabKey: 'tab-key',
-        contentWidth: window.innerWidth <= 1440 ? '200px' : '240px'
+        tabKey: 'tab-key'
       };
     },
     computed: {
@@ -398,27 +399,6 @@
         }
       },
             
-      async fetchAsyncTable (payload) {
-        const errorList = [];
-        const res = await Promise.all(payload.map((item, index) => item.catch((e) => {
-          errorList.push(index);
-        })));
-        if (res && res.length) {
-          if (res[0]) {
-            const personalGroupList = res[0].data && res[0].data.results ? res[0].data.results : [];
-            this.personalGroupList.splice(0, this.personalGroupList.length, ...personalGroupList);
-          }
-          if (res[1]) {
-            const systemList = res[1].data || [];
-            this.systemList.splice(0, this.systemList.length, ...systemList);
-          }
-          if (res[5]) {
-            const departmentGroupList = res[5].data || [];
-            this.departmentGroupList.splice(0, this.departmentGroupList.length, ...departmentGroupList);
-          }
-        }
-      },
-
       // 获取搜索的个人用户组
       async fetchUserGroupSearch () {
         try {
@@ -536,19 +516,21 @@
         if (!this.mainContentLoading) {
           this.componentLoading = true;
         }
-        const { emptyData, pagination, searchParams } = payload;
+        const { emptyData, pagination, searchParams, isNoTag } = payload;
         this.isSearchPerm = emptyData.tipType === 'search';
-        this.curEmptyData = _.cloneDeep(emptyData);
         this.curSearchParams = _.cloneDeep(searchParams);
         this.curSearchPagination = _.cloneDeep(pagination);
-        await this.fetchRemoteTable();
-        this.formatCheckGroups();
+        if (!isNoTag) {
+          this.curEmptyData = _.cloneDeep(emptyData);
+          await this.fetchRemoteTable();
+          this.formatCheckGroups();
+        }
       },
 
       // 处理只输入纯文本，不生成tag情况
       async handleInputValue (payload) {
         this.curEmptyData.tipType = payload ? 'search' : '';
-        if (payload) {
+        if (payload && !this.curSearchParams.system_id) {
           this.isSearchPerm = true;
           this.$set(this.curSearchParams, 'name', payload);
           await this.fetchRemoteTable();
@@ -583,12 +565,15 @@
         setTimeout(() => {
           this.personalGroupList.length && this.personalGroupList.forEach(item => {
             if (item.role_members && item.role_members.length) {
-              item.role_members = item.role_members.map(v => {
-                return {
-                  username: v,
-                  readonly: false
-                };
-              });
+              const hasName = item.role_members.some((v) => v.username);
+              if (!hasName) {
+                item.role_members = item.role_members.map(v => {
+                  return {
+                    username: v,
+                    readonly: false
+                  };
+                });
+              }
             }
             if (selectList.includes(item.id.toString())
               && this.$refs.childPermRef
@@ -599,12 +584,15 @@
           if (this.departmentGroupList && this.departmentGroupList.length) {
             this.departmentGroupList.forEach(item => {
               if (item.role_members && item.role_members.length) {
-                item.role_members = item.role_members.map(v => {
-                  return {
-                    username: v,
-                    readonly: false
-                  };
-                });
+                const hasName = item.role_members.some((v) => v.username);
+                if (!hasName) {
+                  item.role_members = item.role_members.map(v => {
+                    return {
+                      username: v,
+                      readonly: false
+                    };
+                  });
+                }
               }
             });
           }
@@ -685,10 +673,6 @@
         this.$router.push({
           name: 'applyProvisionPerm'
         });
-      },
-
-      formatFormItemWidth () {
-        this.contentWidth = window.innerWidth <= 1520 ? '200px' : '240px';
       },
       
       handleEmptyRefresh () {
