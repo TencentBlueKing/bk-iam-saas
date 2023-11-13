@@ -228,13 +228,74 @@ class RoleViewSet(GenericViewSet):
         return Response([one.dict() for one in user_roles])
 
 
-class UserGroupSearchViewSet(mixins.ListModelMixin, GenericViewSet):
+class SubjectGroupSearchMixin(mixins.ListModelMixin, GenericViewSet):
 
     queryset = Group.objects.all()
     serializer_class = GroupSLZ
 
     biz = GroupBiz()
 
+    def search(self, request, *args, **kwargs):
+        slz = GroupSearchSLZ(data=request.data)
+        slz.is_valid(raise_exception=True)
+
+        data = slz.validated_data
+
+        # 筛选
+        f = GroupFilter(
+            data={
+                k: v
+                for k, v in data.items()
+                if k in ["id", "name", "description", "hidden"]
+                if isinstance(v, bool) or v
+            },
+            queryset=self.get_queryset(),
+        )
+        queryset = f.qs
+
+        subject = self.get_subject(request, kwargs)
+        # 查询用户加入的所有用户组
+        group_dict = self.get_group_dict(subject)
+        ids = sorted(group_dict.keys())
+
+        if data["system_id"] and data["action_id"]:
+            # 通过实例或操作查询用户组
+            data["permission_type"] = PermissionTypeEnum.RESOURCE_INSTANCE.value
+            data["limit"] = 1000
+            subjects = QueryAuthorizedSubjects(data).query_by_resource_instance(subject_type="group")
+            subject_id_set = {int(s["id"]) for s in subjects}
+
+            # 筛选同时有权限并且用户加入的用户组
+            ids = [_id for _id in ids if _id in subject_id_set]
+
+        if not ids:
+            return Response({"count": 0, "results": []})
+
+        queryset = queryset.filter(id__in=ids)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            results = self.get_page_result(group_dict, page)
+
+            slz = GroupSLZ(instance=results, many=True)
+            return Response({"count": queryset.count(), "results": slz.data})
+
+        return Response({"count": 0, "results": []})
+
+    def get_subject(self, request, kwargs):
+        subject = Subject.from_username(request.user.username)
+        return subject
+
+    def get_group_dict(self, subject: Subject):
+        groups = list_all_subject_groups(subject.type, subject.id)
+        return {int(one["id"]): one for one in groups}
+
+    def get_page_result(self, group_dict, page):
+        relations = [SubjectGroup(**group_dict[one.id]) for one in page]
+        return self.biz._convert_to_subject_group_beans(relations)
+
+
+class UserGroupSearchViewSet(SubjectGroupSearchMixin):
     @swagger_auto_schema(
         operation_description="搜索用户用户组列表",
         request_body=GroupSearchSLZ(label="用户组搜索"),
@@ -242,62 +303,10 @@ class UserGroupSearchViewSet(mixins.ListModelMixin, GenericViewSet):
         tags=["user"],
     )
     def search(self, request, *args, **kwargs):
-        slz = GroupSearchSLZ(data=request.data)
-        slz.is_valid(raise_exception=True)
-
-        data = slz.validated_data
-
-        # 筛选
-        f = GroupFilter(
-            data={
-                k: v
-                for k, v in data.items()
-                if k in ["id", "name", "description", "hidden"]
-                if isinstance(v, bool) or v
-            },
-            queryset=self.get_queryset(),
-        )
-        queryset = f.qs
-
-        subject = Subject.from_username(request.user.username)
-        # 查询用户加入的所有用户组
-        groups = list_all_subject_groups(subject.type, subject.id)
-        ids = sorted([int(g["id"]) for g in groups])
-
-        if data["system_id"] and data["action_id"]:
-            # 通过实例或操作查询用户组
-            data["permission_type"] = PermissionTypeEnum.RESOURCE_INSTANCE.value
-            data["limit"] = 1000
-            subjects = QueryAuthorizedSubjects(data).query_by_resource_instance(subject_type="group")
-            subject_id_set = {int(s["id"]) for s in subjects}
-
-            # 筛选同时有权限并且用户加入的用户组
-            ids = [_id for _id in ids if _id in subject_id_set]
-
-        if not ids:
-            return Response({"count": 0, "results": []})
-
-        queryset = queryset.filter(id__in=ids)
-
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            group_dict = {int(one["id"]): one for one in groups}
-            relations = [SubjectGroup(**group_dict[one.id]) for one in page]
-            results = self.biz._convert_to_subject_group_beans(relations)
-
-            slz = GroupSLZ(instance=results, many=True)
-            return Response({"count": queryset.count(), "results": slz.data})
-
-        return Response({"count": 0, "results": []})
+        return super().search(request, *args, **kwargs)
 
 
-class UserDepartmentGroupSearchViewSet(mixins.ListModelMixin, GenericViewSet):
-
-    queryset = Group.objects.all()
-    serializer_class = GroupSLZ
-
-    biz = GroupBiz()
-
+class UserDepartmentGroupSearchViewSet(SubjectGroupSearchMixin):
     @swagger_auto_schema(
         operation_description="搜索用户部门用户组列表",
         request_body=GroupSearchSLZ(label="用户组搜索"),
@@ -305,53 +314,14 @@ class UserDepartmentGroupSearchViewSet(mixins.ListModelMixin, GenericViewSet):
         tags=["user"],
     )
     def search(self, request, *args, **kwargs):
-        slz = GroupSearchSLZ(data=request.data)
-        slz.is_valid(raise_exception=True)
+        return super().search(request, *args, **kwargs)
 
-        data = slz.validated_data
-
-        # 筛选
-        f = GroupFilter(
-            data={
-                k: v
-                for k, v in data.items()
-                if k in ["id", "name", "description", "hidden"]
-                if isinstance(v, bool) or v
-            },
-            queryset=self.get_queryset(),
-        )
-        queryset = f.qs
-
-        subject = Subject.from_username(request.user.username)
+    def get_group_dict(self, subject: Subject):
         groups = self.biz.list_all_user_department_group(subject)
+        return {one.id: one for one in groups}
 
-        # 查询用户加入的所有用户组
-        ids = sorted([g.id for g in groups])
-
-        if data["system_id"] and data["action_id"]:
-            # 通过实例或操作查询用户组
-            data["permission_type"] = PermissionTypeEnum.RESOURCE_INSTANCE.value
-            data["limit"] = 1000
-            subjects = QueryAuthorizedSubjects(data).query_by_resource_instance(subject_type="group")
-            subject_id_set = {int(s["id"]) for s in subjects}
-
-            # 筛选同时有权限并且用户加入的用户组
-            ids = [_id for _id in ids if _id in subject_id_set]
-
-        if not ids:
-            return Response({"count": 0, "results": []})
-
-        queryset = queryset.filter(id__in=ids)
-
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            group_dict = {one.id: one for one in groups}
-            relations = [group_dict[one.id] for one in page]
-
-            slz = GroupSLZ(instance=relations, many=True)
-            return Response({"count": queryset.count(), "results": slz.data})
-
-        return Response({"count": 0, "results": []})
+    def get_page_result(self, group_dict, page):
+        return [group_dict[one.id] for one in page]
 
 
 class UserPolicySearchViewSet(mixins.ListModelMixin, GenericViewSet):
@@ -374,7 +344,7 @@ class UserPolicySearchViewSet(mixins.ListModelMixin, GenericViewSet):
         data = slz.validated_data
         system_id = data["system_id"]
 
-        subject = Subject.from_username(request.user.username)
+        subject = self.get_subject(request, kwargs)
         policies = self.policy_query_biz.list_by_subject(system_id, subject)
 
         # ResourceNameAutoUpdate
@@ -412,3 +382,7 @@ class UserPolicySearchViewSet(mixins.ListModelMixin, GenericViewSet):
 
         # no action_id policy
         return Response([])
+
+    def get_subject(self, request, kwargs):
+        subject = Subject.from_username(request.user.username)
+        return subject

@@ -208,7 +208,7 @@ export default {
          * @return {Promise} promise 对象
          */
     getSubjectScopeCheck ({ commit, state, dispatch }, config) {
-      return http.post(`${AJAX_URL_PREFIX}/roles/subject_scope_check/`, config);
+      return http.post(`${AJAX_URL_PREFIX}/roles/subject_scope_check/?${+new Date()}`, config);
     }
   }
 };

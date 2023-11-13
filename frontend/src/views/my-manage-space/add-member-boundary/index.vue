@@ -473,6 +473,11 @@
         manualAddLoading: false,
         manualInputError: false,
         manualValueBackup: [],
+        manualOrgList: [],
+        manualUserList: [],
+        filterUserList: [],
+        filterDepartList: [],
+        usernameList: [],
         isAll: false,
         isAllFlag: false,
         showLimit: false,
@@ -606,6 +611,9 @@
         return (payload) => {
           return ['depart', 'department'].includes(payload.type) ? payload.name : `${payload.username}(${payload.name})`;
         };
+      },
+      isStaff () {
+        return this.user.role.type === 'staff';
       }
     },
     watch: {
@@ -831,6 +839,71 @@
         this.manualInputError = false;
       },
 
+      // 处理同步异步操作数据
+      async formatSearchData (data, curData) {
+        if (data) {
+          const { users, departments } = data;
+          if (users && users.length) {
+            users.forEach((item) => {
+              item.type = 'user';
+            });
+            const result = await this.fetchSubjectScopeCheck(users, 'user');
+            if (result && result.length) {
+              const hasSelectedUsers = [...this.hasSelectedUsers, ...this.hasSelectedManualUsers];
+              const userTemp = result.filter((item) => {
+                return !hasSelectedUsers.map((subItem) =>
+                  `${subItem.username}&${subItem.name}`).includes(`${item.username}&${item.name}`);
+              });
+              this.hasSelectedUsers.push(...userTemp);
+              this.hasSelectedManualUsers.push(...userTemp);
+              // 保存原有格式
+              let formatStr = _.cloneDeep(this.manualValue);
+              const usernameList = result.map((item) => item.username);
+              usernameList.forEach((item) => {
+                // 处理既有部门又有用户且不连续相同类型的展示数据
+                formatStr = formatStr
+                  .replace(this.evil('/' + item + '(;\\n|\\s\\n|)/'), '')
+                  .replace(/(\s*\r?\n\s*)+/g, '\n')
+                  .replace(';;', '');
+                // 处理复制全部用户不相连的两个不在授权范围内的用户存在空字符
+                formatStr = formatStr
+                  .split(/;|\n|\s/)
+                  .filter((item) => item !== '' && item !== curData)
+                  .join('\n');
+              });
+              // 处理只选择全部符合条件的用户，还存在特殊符号的情况
+              if (formatStr === '\n' || formatStr === '\s' || formatStr === ';') {
+                formatStr = '';
+              }
+              this.manualValue = _.cloneDeep(formatStr);
+            }
+          }
+          if (departments && departments.length) {
+            departments.forEach((item) => {
+              item.type = 'depart';
+            });
+            const result = await this.fetchSubjectScopeCheck(departments, 'depart');
+            if (result && result.length) {
+              const hasSelectedDepartments = [...this.hasSelectedDepartments, ...this.hasSelectedManualDepartments];
+              const departTemp = result.filter((item) => {
+                return !hasSelectedDepartments.map((subItem) =>
+                  subItem.id.toString()).includes(item.id.toString());
+              });
+              this.hasSelectedManualDepartments.push(...departTemp);
+              this.hasSelectedDepartments.push(...departTemp);
+              // 备份一份粘贴板里的内容，清除组织的数据，在过滤掉组织的数据
+              let clipboardValue = _.cloneDeep(this.manualValue);
+              // 处理不相连的数据之间存在特殊符号的情况
+              clipboardValue = clipboardValue
+                .split(/;|\n|\s/)
+                .filter((item) => item !== '' && item !== curData)
+                .join('\n');
+              this.manualValue = _.cloneDeep(clipboardValue);
+            }
+          }
+        }
+      },
+
       async handleSearchOrgAndUser () {
         let manualInputValue = _.cloneDeep(this.manualValue.split(/;|\n|\s/));
         manualInputValue = manualInputValue.filter((item) => item !== '');
@@ -840,80 +913,20 @@
             is_exact: false
           };
           try {
-            const { data } = await this.$store.dispatch('organization/getSearchOrganizations', params);
-            const { users, departments } = data;
-            if (users && users.length) {
-              users.forEach((item) => {
-                item.type = 'user';
+            if (manualInputValue.length < 10) {
+              const { data } = await this.$store.dispatch('organization/getSearchOrganizations', params);
+              await this.formatSearchData(data, manualInputValue[i]);
+            } else {
+              this.$store.dispatch('organization/getSearchOrganizations', params).then(async ({ data }) => {
+                this.formatSearchData(data, manualInputValue[i]);
               });
-              const result = await this.fetchSubjectScopeCheck(users, 'user');
-              if (result && result.length) {
-                const hasSelectedUsers = [...this.hasSelectedUsers, ...this.hasSelectedManualUsers];
-                const userTemp = result.filter((item) => {
-                  return !hasSelectedUsers.map((subItem) =>
-                    `${subItem.username}&${subItem.name}`).includes(`${item.username}&${item.name}`);
-                });
-                this.hasSelectedUsers.push(...userTemp);
-                this.hasSelectedManualUsers.push(...userTemp);
-                // 保存原有格式
-                let formatStr = _.cloneDeep(this.manualValue);
-                const usernameList = result.map((item) => item.username);
-                usernameList.forEach((item) => {
-                  // 处理既有部门又有用户且不连续相同类型的展示数据
-                  formatStr = formatStr
-                    .replace(this.evil('/' + item + '(;\\n|\\s\\n|)/'), '')
-                    .replace(/(\s*\r?\n\s*)+/g, '\n')
-                    .replace(';;', '');
-                  // 处理复制全部用户不相连的两个不在授权范围内的用户存在空字符
-                  formatStr = formatStr
-                    .split(/;|\n|\s/)
-                    .filter((item) => item !== '' && item !== manualInputValue[i])
-                    .join('\n');
-                });
-                // 处理只选择全部符合条件的用户，还存在特殊符号的情况
-                if (formatStr === '\n' || formatStr === '\s' || formatStr === ';') {
-                  formatStr = '';
-                }
-                this.manualValue = _.cloneDeep(formatStr);
-                this.manualInputError = !!this.manualValue.length;
-              } else {
-                this.manualInputError = true;
-              }
-            }
-            if (departments && departments.length) {
-              departments.forEach((item) => {
-                item.type = 'depart';
-              });
-              const result = await this.fetchSubjectScopeCheck(departments, 'depart');
-              if (result && result.length) {
-                const hasSelectedDepartments = [...this.hasSelectedDepartments, ...this.hasSelectedManualDepartments];
-                const departTemp = result.filter((item) => {
-                  return !hasSelectedDepartments.map((subItem) =>
-                    subItem.id.toString()).includes(item.id.toString());
-                });
-                this.hasSelectedManualDepartments.push(...departTemp);
-                this.hasSelectedDepartments.push(...departTemp);
-                // 备份一份粘贴板里的内容，清除组织的数据，在过滤掉组织的数据
-                let clipboardValue = _.cloneDeep(this.manualValue);
-                // 处理不相连的数据之间存在特殊符号的情况
-                clipboardValue = clipboardValue
-                  .split(/;|\n|\s/)
-                  .filter((item) => item !== '' && item !== manualInputValue[i])
-                  .join('\n');
-                this.manualValue = _.cloneDeep(clipboardValue);
-                this.manualInputError = !!this.manualValue.length;
-              } else {
-                this.manualInputError = true;
-              }
             }
           } catch (e) {
             console.error(e);
             this.messageAdvancedError(e);
           }
         }
-        if (!this.manualValue) {
-          this.manualInputError = false;
-        }
+        this.manualInputError = !!this.manualValue.length;
       },
 
       async handleAddManualUser () {
@@ -935,11 +948,28 @@
           this.hasSelectedManualUsers.push(...temps);
           if (res.data.length) {
             this.usernameList = res.data.map((item) => item.username);
+            // 分号拼接
+            // const templateArr = [];
+            // this.manualValueBackup = this.manualValueActual.split(';').filter(item => item !== '');
+            // this.manualValueBackup.forEach(item => {
+            //     const name = getUsername(item);
+            //     if (!usernameList.includes(name)) {
+            //         templateArr.push(item);
+            //     }
+            // });
+            // this.manualValue = templateArr.join(';');
+
             // 保存原有格式
             let formatStr = _.cloneDeep(this.manualValue);
             this.usernameList.forEach((item) => {
+              // 去掉之前有查全局的写法， 如果username有多个重复的item, 比如shengjieliu03@shengjietest.com、shengjieliu05的时候/g就会有问题
+              // formatStr = formatStr.replace(this.evil('/' + item + '(;\\n|\\s\\n|)/g'), '');
+
+              // 处理既有部门又有用户且不连续相同类型的展示数据
               formatStr = formatStr
                 .replace(this.evil('/' + item + '(;\\n|\\s\\n|)/'), '')
+                // .replace('\n\n', '\n')
+                // .replace('\s\s', '\s')
                 .replace(/(\s*\r?\n\s*)+/g, '\n')
                 .replace(';;', '');
               // 处理复制全部用户不相连的两个不在授权范围内的用户存在空字符
@@ -953,8 +983,16 @@
               formatStr = '';
             }
             this.manualValue = _.cloneDeep(formatStr);
+            if (this.isStaff) {
+              this.manualInputError = !!this.manualValue;
+              return;
+            }
             this.formatOrgAndUser();
           } else {
+            if (this.isStaff) {
+              this.manualInputError = !!this.manualValue;
+              return;
+            }
             this.formatOrgAndUser();
           }
         } catch (e) {
@@ -967,13 +1005,16 @@
 
       // 处理只复制部门或者部门和用户一起复制情况
       async formatOrgAndUser () {
-        if (this.manualValue) {
+        if (this.manualValue && !this.isStaff) {
           // 校验查验失败的数据是不是属于部门
           const departData = _.cloneDeep(this.manualValue.split(/;|\n|\s/));
           const departGroups = this.filterDepartList.filter((item) => departData.includes(item));
-          if (departGroups.length && this.getGroupAttributes) {
-            if (this.getGroupAttributes().source_from_role) {
+          if (departGroups.length) {
+            if (this.getGroupAttributes && this.getGroupAttributes().source_from_role) {
               this.messageWarn(this.$t(`m.common['管理员组不能添加部门']`), 3000);
+              this.manualTableListStorage = [...this.hasSelectedManualDepartments, ...this.hasSelectedManualUsers];
+              this.manualTableList = _.cloneDeep(this.manualTableListStorage);
+              this.fetchManualTableData();
               this.manualInputError = true;
               return;
             }
@@ -1017,16 +1058,22 @@
                 .filter((item) => item !== '')
                 .join('\n');
               this.manualValue = _.cloneDeep(clipboardValue);
-              this.manualInputError = !!this.manualValue.length;
+              // this.manualInputError = !!this.manualValue.length;
             } else {
-              this.manualInputError = true;
+              if (this.isStaff) {
+                this.manualInputError = !!this.manualValue;
+                return;
+              }
+              // this.manualInputError = true;
             }
           } else {
-            this.manualInputError = true;
+            if (this.isStaff) {
+              this.manualInputError = !!this.manualValue;
+              return;
+            }
           }
         }
-
-        if (this.manualInputError) {
+        if (this.manualValue && !this.isStaff) {
           await this.handleSearchOrgAndUser();
         }
         this.manualTableListStorage = [...this.hasSelectedManualDepartments, ...this.hasSelectedManualUsers];

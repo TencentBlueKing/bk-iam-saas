@@ -75,8 +75,12 @@
                   <div
                     v-for="(item, index) in originalCustomTmplList"
                     :key="index"
-                    :class="['action-item', { 'set-border': originalCustomTmplList.length > 1 }]">
-                    <p style="cursor: pointer;" @click.stop="handleExpanded(item)" v-if="!(originalCustomTmplList.length === 1 && !isShowGroupAction(item))">
+                    :class="[
+                      'action-item',
+                      { 'set-border': originalCustomTmplList.length > 1 },
+                      { 'action-item-none': !isShowGroupTitle(item) }
+                    ]">
+                    <p style="cursor: pointer;" @click.stop="handleExpanded(item)" v-if="isShowGroupTitle(item)">
                       <section :class="['action-group-name', { 'set-cursor': originalCustomTmplList.length > 1 }]">
                         <Icon :type="item.expanded ? 'down-angle' : 'right-angle'" v-if="originalCustomTmplList.length > 1" />
                         <span :class="[{ 'action-hover': handleFormatTitleHover(item) }]">
@@ -130,13 +134,17 @@
                           {{ $t(`m.common['全选']`) }}
                         </bk-checkbox>
                       </div>
-                      <div class="sub-group-action-content" v-if="isShowGroupAction(item)">
+                      <div class="sub-group-action-content" v-if="isShowGroupSubAction(item)">
                         <section
                           v-for="(subAct, subIndex) in item.sub_groups"
                           :key="subIndex"
-                          :class="['sub-action-item', { 'set-margin': subIndex !== 0 }]">
+                          :class="[
+                            'sub-action-item',
+                            { 'set-margin': subIndex !== 0 },
+                            { 'sub-action-item-none': !subAct.actions.length }
+                          ]">
                           <div class="sub-action-wrapper">
-                            <span class="name" :title="subAct.name">{{ subAct.name }}</span>
+                            <span class="name" :title="subAct.name" v-if="subAct.actions.length > 0">{{ subAct.name }}</span>{{ subAct.actions.length > 0 }}
                             <section>
                               <bk-checkbox
                                 v-for="(act, actIndex) in subAct.actions"
@@ -169,6 +177,7 @@
                             </section>
                           </div>
                           <bk-checkbox
+                            v-if="subAct.actions.length > 0"
                             :true-value="true"
                             :false-value="false"
                             v-model="subAct.allChecked"
@@ -733,10 +742,29 @@
         isNoPermissionsSet () {
             return this.routerQuery.cache_id;
         },
+        isShowGroupTitle () {
+            return (item) => {
+              const isExistActions = item.actions && item.actions.length > 0;
+                const isExistSubGroup = (item.sub_groups || []).some(v =>
+                (v.sub_groups && v.sub_groups.length > 0)
+                 || (v.actions && v.actions.length > 0)
+                 );
+              return isExistSubGroup || isExistActions;
+            };
+        },
         isShowGroupAction () {
             return (item) => {
                 const isExistSubGroup = (item.sub_groups || []).some(v => v.sub_groups && v.sub_groups.length > 0);
                 return item.sub_groups && item.sub_groups.length > 0 && !isExistSubGroup;
+            };
+        },
+        isShowGroupSubAction () {
+            return (item) => {
+              const isExistSubGroup = (item.sub_groups || []).some(v =>
+                (v.sub_groups && v.sub_groups.length > 0)
+                 || (v.actions && v.actions.length > 0)
+                 );
+              return item.sub_groups && item.sub_groups.length > 0 && isExistSubGroup;
             };
         },
         customLoading () {
