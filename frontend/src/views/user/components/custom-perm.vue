@@ -93,6 +93,10 @@
       },
       totalCount: {
         type: Number
+      },
+      systemListStorage: {
+        type: Array,
+        default: () => []
       }
     },
     data () {
@@ -121,7 +125,6 @@
     watch: {
       systemList: {
         handler (v) {
-          console.log(v, 555);
           this.formatSystemData(v);
         },
         immediate: true,
@@ -146,7 +149,9 @@
       }
     },
     async created () {
-      await this.handleRefreshSystem();
+      if (!this.isSearchPerm) {
+        await this.fetchSystems();
+      }
     },
     methods: {
       /**
@@ -177,7 +182,7 @@
         const { id, description, name, system_id: systemId } = this.curSearchParams;
         const noValue = !id && !name && !description;
         // 筛选搜索的系统id
-        const curSystemList = this.systemList.filter(item => item.id === systemId && noValue);
+        const curSystemList = this.systemListStorage.filter(item => item.id === systemId && noValue);
         this.formatSystemData(curSystemList || []);
       },
 
@@ -251,7 +256,6 @@
 
       // 格式化系统列表数据
       async formatSystemData (payload) {
-        console.log(payload, 44);
         const systemPolicyList = payload.map(item => new PermSystem(item));
         this.systemPolicyList.splice(0, this.systemPolicyList.length, ...systemPolicyList);
         this.systemPolicyList.sort((curr, next) => curr.name.localeCompare(next.name));

@@ -217,7 +217,9 @@
       }
     },
     async created () {
-      await this.fetchSystems();
+      if (!this.isSearchPerm) {
+        await this.fetchSystems();
+      }
     },
     methods: {
       async fetchSystems () {

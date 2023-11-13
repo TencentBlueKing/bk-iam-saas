@@ -514,7 +514,9 @@
       }
     },
     async created () {
-      await this.fetchPermGroups(false, true);
+      if (!this.isSearchPerm) {
+        await this.fetchPermGroups(false, true);
+      }
     },
     methods: {
       setDefaultSelect () {

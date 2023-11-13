@@ -236,7 +236,8 @@
           text: '',
           tip: '',
           tipType: ''
-        }
+        },
+        searchParams: {}
       };
     },
     computed: {
@@ -253,7 +254,7 @@
     watch: {
       systemId: {
         async handler (value) {
-          if (value !== '') {
+          if (value) {
             this.initRequestQueue = ['permTable'];
             const params = {
               subjectType: 'user',
@@ -274,6 +275,12 @@
       emptyData: {
         handler (value) {
           this.policyEmptyData = Object.assign({}, value);
+        },
+        immediate: true
+      },
+      curSearchParams: {
+        handler (value) {
+          this.searchParams = Object.assign({}, value);
         },
         immediate: true
       }
@@ -304,8 +311,8 @@
       },
 
       async fetchData (params) {
-        const { subjectId, subjectType } = params;
         try {
+          const { subjectId, subjectType } = params;
           let url = '';
           let queryParams = {};
           if (this.isSearchPerm) {

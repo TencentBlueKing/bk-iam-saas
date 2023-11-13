@@ -51,6 +51,7 @@
               :total-count="panel.count"
               :personal-group-list="personalGroupList"
               :system-list="systemList"
+              :system-list-storage="systemListStorage"
               :tep-system-list="teporarySystemList"
               :department-group-list="departmentGroupList"
               :empty-data="curEmptyData"
@@ -219,7 +220,6 @@
       }
     },
     created () {
-      this.getHasSystem();
       this.emptyCustomData = _.cloneDeep(this.emptyData);
       this.emptyTemporarySystemData = _.cloneDeep(this.emptyData);
       this.emptyDepartmentGroupData = _.cloneDeep(this.emptyData);
@@ -252,9 +252,11 @@
         this.handleEmptyClear();
         this.componentsKey = +new Date();
         this.curData = _.cloneDeep(value);
+        await this.getHasSystem();
       },
-      async fetchData () {
-        // bus.$emit('on-clear-search-perm');
+      
+      fetchData () {
+        this.handleEmptyClear();
       },
 
       async getHasSystem () {
@@ -366,7 +368,6 @@
               'perm/getPersonalPolicySearch',
               params
             );
-            console.log(this.systemListStorage);
             this.systemList = this.systemListStorage.filter((item) => item.id === this.curSearchParams.system_id);
             if (this.systemList.length) {
               this.$set(this.systemList[0], 'count', data.length || 0);
