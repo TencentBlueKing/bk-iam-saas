@@ -214,6 +214,14 @@
       active: {
         type: String,
         default: 'GroupPerm'
+      },
+      minSelectWidth: {
+        type: String,
+        default: '200px'
+      },
+      maxSelectWidth: {
+        type: String,
+        default: '240px'
       }
     },
     data () {
@@ -324,7 +332,7 @@
         resourceInstanceSideSliderTitle: '',
         curSelectMenu: '',
         curInputText: '',
-        contentWidth: window.innerWidth <= 1440 ? '200px' : '240px'
+        contentWidth: ''
       };
     },
     computed: {
@@ -375,6 +383,7 @@
       }
     },
     async created () {
+      this.contentWidth = window.innerWidth <= 1520 ? this.minSelectWidth : this.maxSelectWidth;
       this.searchData = this.enableGroupInstanceSearch
         ? this.initSearchData.filter(item => ['name', 'id', 'description'].includes(item.id))
         : this.initSearchData;
@@ -418,6 +427,8 @@
         this.systemIdError = false;
         this.handleManualInput(isTagInput);
         const isSearch = this.applyGroupData.system_id || Object.keys(this.searchParams).length > 0;
+        // 处理搜索框没有生成tag，下拉框也没有选择任务数据，但实际有输入内容情况
+        const isNoTag = isTagInput && this.searchList.length < 1 && !this.applyGroupData.system_id;
         if (isSearch) {
           // if (!this.applyGroupData.system_id && ['CustomPerm'].includes(this.active)) {
           //   this.systemIdError = true;
@@ -455,15 +466,18 @@
           if (isClick) {
             this.resetPagination();
           }
-          await this.fetchSearchUserGroup(resourceInstances);
+          await this.fetchSearchUserGroup(resourceInstances, isNoTag);
         } else {
+          if (isNoTag) {
+            return;
+          }
           // 如果没有搜索参数，重置数据
           this.emptyData.tipType = '';
           this.$emit('on-refresh-table');
         }
       },
 
-      async fetchSearchUserGroup (resourceInstances) {
+      async fetchSearchUserGroup (resourceInstances, isNoTag) {
         const { current, limit } = this.pagination;
         if (this.searchParams.hasOwnProperty('id')) {
           if (!isNaN(Number(this.searchParams.id))) {
@@ -480,7 +494,8 @@
         this.$emit('on-remote-table', {
           searchParams: params,
           pagination: this.pagination,
-          emptyData: { ...this.emptyData, ...{ tipType: 'search' } }
+          emptyData: { ...this.emptyData, ...{ tipType: 'search' } },
+          isNoTag
         });
         this.curSelectMenu = '';
         this.curInputText = '';
@@ -601,7 +616,7 @@
             if (!this.curResourceData.type) {
               this.$set(this.resourceTypeData.resource_groups[0], 'related_resource_types', []);
             }
-            // 如果related_resource_types和related_resource_types_list都为空，则需要填充默认数据显示资源实例下路拉框
+            // 如果related_resource_types和related_resource_types_list都为空，则需要填充默认数据显示资源实例下拉框
             if ((resourceGroups[0].related_resource_types_list
               && resourceGroups[0].related_resource_types_list.length
               && !resourceGroups[0].related_resource_types.length)
@@ -696,13 +711,15 @@
               delete this.searchParams.name;
             }
             this.$nextTick(() => {
-              const localValue = this.$refs.searchSelectRef.$refs.searchSelect.localValue;
-              this.searchParams.name = localValue;
-              if (!localValue) {
-                delete this.searchParams.name;
+              if (this.$refs.searchSelectRef && this.$refs.searchSelectRef.$refs.searchSelect) {
+                const localValue = this.$refs.searchSelectRef.$refs.searchSelect.localValue;
+                this.searchParams.name = localValue;
+                if (!localValue) {
+                  delete this.searchParams.name;
+                }
+                // 处理切换tab，只输入内容
+                this.$emit('on-input-value', localValue);
               }
-              // 处理切换tab，只输入内容
-              this.$emit('on-input-value', localValue);
             });
           }
         }
@@ -779,7 +796,7 @@
       },
 
       formatFormItemWidth () {
-        this.contentWidth = window.innerWidth <= 1520 ? '200px' : '240px';
+        this.contentWidth = window.innerWidth <= 1520 ? this.minSelectWidth : this.maxSelectWidth;
       },
 
       handleQuickSearchMethod (value) {

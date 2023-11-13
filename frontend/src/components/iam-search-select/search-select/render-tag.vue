@@ -86,7 +86,9 @@
     },
     mounted () {
       this.searchSelect.renderTagInstance = this;
-      this.keyBoxWidth = this.$refs.keyBox.getBoundingClientRect().width;
+      if (this.$refs.keyBox.getBoundingClientRect) {
+        this.keyBoxWidth = this.$refs.keyBox.getBoundingClientRect().width;
+      }
       document.body.addEventListener('click', this.handleInputOutSide);
     },
     beforeDestroy () {
@@ -95,8 +97,10 @@
     methods: {
       calcTextareaWidth () {
         this.$nextTick(() => {
-          const { width } = this.$refs.realContent.getBoundingClientRect();
-          this.textareaWidth = width + 20;
+          if (this.$refs.realContent.getBoundingClientRect) {
+            const { width } = this.$refs.realContent.getBoundingClientRect();
+            this.textareaWidth = width + 20;
+          }
         });
       },
 
@@ -196,7 +200,9 @@
         });
         this.calcTextareaWidth();
         this.isEditing = true;
-        this.searchSelectWidth = this.searchSelect.$refs.searchSelect.getBoundingClientRect().width;
+        if (this.searchSelect.$refs && this.searchSelect.$refs.searchSelect.getBoundingClientRect) {
+          this.searchSelectWidth = this.searchSelect.$refs.searchSelect.getBoundingClientRect().width;
+        }
         // 编辑tag的值时隐藏 searchSelect 操作面板
         this.searchSelect.hidePopper();
         this.showPopper();
