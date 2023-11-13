@@ -430,12 +430,22 @@
       handleActionLinearData () {
         const linearActions = [];
         this.curSystemActions.forEach((item) => {
-          item.actions = item.actions.filter(v => !v.hidden);
+          if (['myManageSpaceCreate'].includes(this.$route.name)
+            && (['gradingAdminCreate'].includes(this.$route.name)
+              && ['staff'].includes(this.user.role.type))
+          ) {
+            item.actions = item.actions.filter(v => !v.hidden);
+          }
           item.actions.forEach(act => {
             linearActions.push(act);
           });
           (item.sub_groups || []).forEach(sub => {
-            sub.actions = sub.actions.filter(v => !v.hidden);
+            if (['myManageSpaceCreate'].includes(this.$route.name)
+              && (['gradingAdminCreate'].includes(this.$route.name)
+                && ['staff'].includes(this.user.role.type))
+            ) {
+              sub.actions = sub.actions.filter(v => !v.hidden);
+            }
             sub.actions.forEach(act => {
               linearActions.push(act);
             });
