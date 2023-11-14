@@ -6,7 +6,7 @@
       :title="$t(`m.memberTemplate['新建人员模板']`)"
       ext-cls="iam-member-template-side"
       :quick-close="true"
-      @update:isShow="handleCancel"
+      @update:isShow="handleCancel('dialog')"
     >
       <div slot="content" class="iam-member-template-side-content">
         <div class="member-template-content">
@@ -17,7 +17,7 @@
               :required="true"
             >
               <bk-input
-                v-model="formData.template_name"
+                v-model="formData.name"
                 :placeholder="$t(`m.memberTemplate['请输入模板名称']`)"
                 @input="handleNameInput"
               />
@@ -63,7 +63,7 @@
           >
             {{ $t(`m.common['提交']`) }}
           </bk-button>
-          <bk-button theme="default" class="member-footer-btn" @click="handleCancel">
+          <bk-button theme="default" class="member-footer-btn" @click="handleCancel('cancel')">
             {{ $t(`m.common['取消']`) }}
           </bk-button>
         </div>
@@ -104,9 +104,9 @@
         isShowAddMemberDialog: false,
         width: 640,
         formData: {
-          template_name: '',
+          name: '',
           description: '',
-          template_members: []
+          subjects: []
         },
         customButtonStyle: {
           width: '160px'
@@ -134,7 +134,7 @@
         } else {
           this.departments.splice(payload, 1);
         }
-        this.$set(this.formData, 'template_members', [...this.users, ...this.departments]);
+        this.$set(this.formData, 'subjects', [...this.users, ...this.departments]);
       },
 
       handleDeleteAll () {
@@ -155,7 +155,7 @@
         this.isAll = isAll;
         this.users = _.cloneDeep(users);
         this.departments = _.cloneDeep(departments);
-        this.$set(this.formData, 'template_members', [...this.users, ...this.departments]);
+        this.$set(this.formData, 'subjects', [...this.users, ...this.departments]);
         this.isShowAddMemberDialog = false;
       },
 
@@ -172,12 +172,12 @@
       },
 
       handleSubmit () {
-        const { template_name, template_members } = this.formData;
+        const { name, subjects } = this.formData;
         // eslint-disable-next-line camelcase
-        if (!template_name) {
+        if (!name) {
           return this.messageWarn(this.$t(`m.verify['模板名称不能为空']`), 3000);
         }
-        if (!template_members.length) {
+        if (!subjects.length) {
           return this.messageWarn(this.$t(`m.verify['模板成员不能为空']`), 3000);
         }
         try {
@@ -196,18 +196,23 @@
         }
       },
 
-      handleCancel () {
-        let cancelHandler = Promise.resolve();
-        if (window.changeAlert) {
-          cancelHandler = leaveConfirm();
+      handleCancel (payload) {
+        if (['cancel'].includes(payload)) {
+          this.$emit('update:show', false);
+          this.resetData();
+        } else {
+          let cancelHandler = Promise.resolve();
+          if (window.changeAlert) {
+            cancelHandler = leaveConfirm();
+          }
+          cancelHandler.then(
+            () => {
+              this.$emit('update:show', false);
+              this.resetData();
+            },
+            (_) => _
+          );
         }
-        cancelHandler.then(
-          () => {
-            this.$emit('update:show', false);
-            this.resetData();
-          },
-          (_) => _
-        );
       },
 
       resetData () {
@@ -218,9 +223,9 @@
         this.formData = Object.assign(
           {},
           {
-            template_name: '',
+            name: '',
             description: '',
-            template_members: []
+            subjects: []
           }
         );
       }

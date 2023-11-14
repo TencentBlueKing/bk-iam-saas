@@ -88,6 +88,9 @@ import userGroupSetting from './modules/user-group-setting';
 // 敏感等级
 import sensitivityLevel from './modules/sensitivity-level';
 
+// 人员模板
+import memberTemplate from './modules/memberTemplate';
+
 Vue.use(Vuex);
 
 const SITE_URL = window.SITE_URL;
@@ -336,7 +339,8 @@ const store = new Vuex.Store({
     applyProvisionPerm,
     spaceManage,
     userGroupSetting,
-    sensitivityLevel
+    sensitivityLevel,
+    memberTemplate
   },
   state: {
     mainContentLoading: false,

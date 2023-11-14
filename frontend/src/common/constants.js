@@ -225,7 +225,7 @@ export const MEMBERS_TEMPLATE_FIELDS = [
     disabled: false
   },
   {
-    id: 'member_count',
+    id: 'group_count',
     label: il8n('memberTemplate', '关联用户组'),
     disabled: false
   },

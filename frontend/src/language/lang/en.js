@@ -557,6 +557,7 @@ export const m = {
         '确认批量退出所选的用户组吗？': 'Are you sure to batch quit the selected user groups?',
         '确认删除该人员模板？': 'Are you sure to delete the member template?',
         '确认解除与该用户组的关联？': 'Are you sure to dissociate from this user group?',
+        '确认批量删除所选的人员模板吗？': 'Are you sure to batch delete the selected member templates?'
     },
     nav: {
         '蓝鲸权限中心': 'BlueKing-IAM',

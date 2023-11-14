@@ -8,6 +8,9 @@
         <bk-button :disabled="isBatchDisabled" @click="handleBatchAddMember">
           {{ $t(`m.common['批量添加成员']`) }}
         </bk-button>
+        <bk-button :disabled="isBatchDisabled" @click="handleBatchDelete">
+          {{ $t(`m.common['批量删除']`) }}
+        </bk-button>
       </div>
       <div slot="right">
         <IamSearchSelect
@@ -21,7 +24,7 @@
       </div>
     </render-search>
     <bk-table
-      ref="tableRef"
+      ref="memberTemplateRef"
       ext-cls="member-template-table"
       :size="setting.size"
       :data="memberTemplateList"
@@ -36,49 +39,32 @@
       v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
     >
       <bk-table-column type="selection" align="center" :selectable="getDefaultSelect" />
-      <bk-table-column
-        v-for="field in setting.selectedFields"
-        :key="field.id"
-        :label="field.label"
-        :prop="field.id"
-      >
+      <bk-table-column v-for="field in setting.selectedFields" :key="field.id" :label="field.label" :prop="field.id">
         <template slot-scope="{ row, $index }">
           <div v-if="['name'].includes(field.id)" class="member-template-name">
             <span
-              :class="[
-                'single-hide',
-                { 'member-template-name-label': isAddRow && $index === 0 }
-              ]"
+              :class="['single-hide', { 'member-template-name-label': isAddRow && $index === 0 }]"
               :title="row.name"
               @click="handleView(row)"
             >
               {{ row.name }}
             </span>
-            <bk-tag
-              v-if="isAddRow && $index === 0"
-              theme="success"
-              type="filled"
-              class="member-template-name-tag"
-            >
+            <bk-tag v-if="isAddRow && $index === 0" theme="success" type="filled" class="member-template-name-tag">
               new
             </bk-tag>
           </div>
           <div v-if="['member_count'].includes(field.id)">
-            <span
-              v-if="row.member_count"
-              class="associate-group-count"
-              @click="handleViewGroup(row)"
-            >
+            <span v-if="row.member_count" class="associate-group-count" @click="handleViewGroup(row)">
               {{ row.member_count }}
             </span>
             <span v-else>--</span>
           </div>
           <span v-if="!['name', 'member_count'].includes(field.id)">
-            {{ row[field.id] || "--" }}
+            {{ row[field.id] || '--' }}
           </span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.common['操作-table']`)" fixed="right">
+      <bk-table-column :label="$t(`m.common['操作-table']`)">
         <template slot-scope="{ row }">
           <div class="actions-btn">
             <bk-button
@@ -95,7 +81,7 @@
               placement="bottom-end"
               ext-popover-cls="delete-confirm"
               :confirm-text="$t(`m.common['删除-dialog']`)"
-              @confirm="handleConfirmDelete(row)"
+              @confirm="handleConfirmDelete(row.id)"
             >
               <div slot="content">
                 <div class="popover-title">
@@ -105,15 +91,11 @@
                 </div>
                 <div class="popover-content">
                   <div class="popover-content-item">
-                    <span class="popover-content-item-label"
-                    >{{ $t(`m.memberTemplate['用户组名称']`) }}:</span
-                    >
+                    <span class="popover-content-item-label">{{ $t(`m.memberTemplate['用户组名称']`) }}:</span>
                     <span class="popover-content-item-value"> {{ row.name }}</span>
                   </div>
                   <div class="popover-content-tip">
-                    {{
-                      $t(`m.memberTemplate['删除后，关联用户组也会删除对应的人员权限。']`)
-                    }}
+                    {{ $t(`m.memberTemplate['删除后，关联用户组也会删除对应的人员权限。']`) }}
                   </div>
                 </div>
               </div>
@@ -144,10 +126,7 @@
       </template>
     </bk-table>
 
-    <MemberTemplateDetailSlider
-      :show.sync="isShowDetailSlider"
-      :cur-detail-data="curDetailData"
-    />
+    <MemberTemplateDetailSlider :show.sync="isShowDetailSlider" :cur-detail-data="curDetailData" />
 
     <AddMemberTemplateSlider :show.sync="isShowAddSlider" @on-submit="handleTempSubmit" />
 
@@ -164,6 +143,19 @@
       @on-sumbit="handleSubmitAdd"
       @on-after-leave="handleAddAfterClose"
     />
+
+    <DeleteActionDialog
+      :show.sync="isShowDeleteDialog"
+      :loading="batchQuitLoading"
+      :width="formatDeleteWidth"
+      :title="delActionDialogTitle"
+      :tip="delActionDialogTip"
+      :name="currentActionName"
+      :related-action-list="delActionList"
+      @on-after-leave="handleAfterDeleteLeave"
+      @on-cancel="handleCancelDelete"
+      @on-submit="handleSubmitDelete"
+    />
   </div>
 </template>
 
@@ -176,41 +168,23 @@
   import MemberTemplateDetailSlider from './components/member-template-detail-slider.vue';
   import AddMemberTemplateSlider from './components/add-member-template-slider.vue';
   import AddMemberDialog from '@/views/group/components/iam-add-member.vue';
+  import DeleteActionDialog from '@/views/group/components/delete-related-action-dialog.vue';
 
   export default {
     components: {
       IamSearchSelect,
       MemberTemplateDetailSlider,
       AddMemberTemplateSlider,
-      AddMemberDialog
+      AddMemberDialog,
+      DeleteActionDialog
     },
     data () {
       return {
-        memberTemplateList: [
-          {
-            id: 398,
-            name: '11777757sasdddddddddddddddddd57',
-            description: '4545',
-            member_count: 2,
-            creator: 'liu17',
-            created_time: '2023-11-03 15:53',
-            updated_by: 'liu17',
-            updated_time: '2023-11-03 15:53'
-          },
-          {
-            id: 399,
-            name: '11',
-            description: '4545',
-            member_count: 2,
-            creator: 'liu17',
-            created_time: '2023-11-03 15:53',
-            updated_by: 'liu17',
-            updated_time: '2023-11-03 15:53'
-          }
-        ],
+        memberTemplateList: [],
         currentSelectList: [],
         searchList: [],
         searchValue: [],
+        delActionList: [],
         searchData: [
           {
             id: 'name',
@@ -243,9 +217,7 @@
         },
         setting: {
           fields: MEMBERS_TEMPLATE_FIELDS,
-          selectedFields: MEMBERS_TEMPLATE_FIELDS.filter(
-            (item) => !['created_time', 'updated_by'].includes(item.id)
-          ),
+          selectedFields: MEMBERS_TEMPLATE_FIELDS.filter((item) => !['updated_time', 'updated_by'].includes(item.id)),
           size: 'small'
         },
         tableLoading: false,
@@ -253,10 +225,15 @@
         isShowDetailSlider: false,
         isShowAddSlider: false,
         isShowAddMemberDialog: false,
+        isShowDeleteDialog: false,
         isAddRow: false,
         isBatch: false,
+        batchQuitLoading: false,
         curRole: '',
         curName: '',
+        currentActionName: '',
+        delActionDialogTitle: '',
+        delActionDialogTip: '',
         curId: 0,
         curDetailData: {}
       };
@@ -271,6 +248,9 @@
     },
     isRatingManager () {
       return ['rating_manager', 'subset_manager'].includes(this.curRole);
+    },
+    formatDeleteWidth () {
+      return this.curLanguageIsCn ? 700 : 1000;
     }
     },
     watch: {
@@ -286,10 +266,34 @@
     },
     methods: {
       async fetchMemberTemplateList (tableLoading = false) {
+        this.tableLoading = tableLoading;
         try {
-          this.emptyData = formatCodeData(0, this.emptyData, true);
+          const { current, limit } = this.pagination;
+          const params = {
+            page: current,
+            page_size: limit,
+          ...this.searchParams
+          };
+          const { data } = await this.$store.dispatch('memberTemplate/getSubjectTemplateList', params);
+          const { count, results } = data;
+          this.pagination.count = count;
+          this.memberTemplateList = results || [];
+          this.emptyData = formatCodeData(0, this.emptyData, results.length === 0);
+          this.$nextTick(() => {
+            const currentSelectList = this.currentSelectList.map((item) => item.id);
+            this.memberTemplateList.forEach((item) => {
+              if (currentSelectList.includes(item.id)) {
+                this.$refs.memberTemplateRef && this.$refs.memberTemplateRef.toggleRowSelection(item, true);
+              }
+            });
+            if (this.currentSelectList.length < 1) {
+              this.$refs.memberTemplateRef && this.$refs.memberTemplateRef.clearSelection();
+            }
+          });
         } catch (e) {
           console.error(e);
+        } finally {
+          this.tableLoading = false;
         }
       },
 
@@ -305,13 +309,134 @@
         await this.fetchMemberTemplateList(true);
       },
 
-      async handleConfirmDelete () {},
-
-      getRowClass ({ row, rowIndex }) {
-        if (rowIndex === 0 && this.isAddRow) {
-          return 'member-template-table-add';
+      async handleTempSubmit (payload) {
+        try {
+          const subjects = payload.subjects.map((item) => {
+            const { id, username, type } = item;
+            if (['depart', 'department'].includes(item.type)) {
+              return {
+                id,
+                type: 'department'
+              };
+            }
+            if (['user'].includes(item.type)) {
+              return {
+                id: username,
+                type
+              };
+            }
+          });
+          const params = {
+          ...payload,
+          ...{
+            subjects
+          }
+          };
+          const { code } = await this.$store.dispatch('memberTemplate/createSubjectTemplate', params);
+          if (code === 0) {
+            this.isAddRow = true;
+            this.resetPagination();
+            await this.fetchMemberTemplateList();
+          }
+        } catch (e) {
+          this.messageAdvancedError(e);
         }
-        return '';
+      },
+
+      async handleSubmitAdd (payload) {
+        const { users, departments, expiredAt } = payload;
+        let expired = payload.policy_expired_at;
+        // 4102444800：非永久时需加上当前时间
+        if (expiredAt !== 4102444800) {
+          const nowTimestamp = +new Date() / 1000;
+          const tempArr = String(nowTimestamp).split('');
+          const dotIndex = tempArr.findIndex((item) => item === '.');
+          const nowSecond = parseInt(tempArr.splice(0, dotIndex).join(''), 10);
+          expired = expired + nowSecond;
+        }
+        const subjects = [];
+
+        if (departments.length > 0) {
+          subjects.push(
+            ...departments.map((item) => {
+              return {
+                id: item.id,
+                type: 'department'
+              };
+            })
+          );
+        }
+        if (users.length > 0) {
+          subjects.push(
+            ...users.map((item) => {
+              return {
+                id: item.username,
+                type: 'user'
+              };
+            })
+          );
+        }
+        const params = {
+          subjects,
+          expired_at: expired,
+          template_ids: this.isBatch
+            ? this.currentSelectList.filter((item) => item.readonly).map((v) => v.id)
+            : [this.curId]
+        };
+        console.log('params', params);
+        try {
+          this.memberDialogLoading = true;
+          await this.$store.dispatch('memberTemplate/addBatchSubjectTemplateMembers', params);
+          this.isShowAddMemberDialog = false;
+          this.messageSuccess(this.$t(`m.info['添加成员成功']`), 3000);
+          this.resetPagination();
+          this.fetchMemberTemplateList(true);
+        } catch (e) {
+          console.error(e);
+          this.messageAdvancedError(e);
+        } finally {
+          this.memberDialogLoading = false;
+        }
+      },
+
+      async handleSubmitDelete () {
+        this.batchQuitLoading = true;
+        const selectGroups = this.currentSelectList;
+        try {
+          for (let i = 0; i < selectGroups.length; i++) {
+            await this.$store.dispatch('memberTemplate/deleteSubjectTemplate', {
+              type: 'group',
+              id: selectGroups[i].id
+            });
+          }
+          this.isShowDeleteDialog = false;
+          this.currentSelectList = [];
+          this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
+          this.resetPagination();
+          this.fetchMemberTemplateList(true);
+        } catch (e) {
+          console.error(e);
+          this.messageAdvancedError(e);
+        } finally {
+          this.batchQuitLoading = false;
+        }
+      },
+
+      async handleConfirmDelete (id) {
+        try {
+          const { code } = await this.$store.dispatch('memberTemplate/deleteSubjectTemplate', { id });
+          if (code === 0) {
+            // const tableIndex = this.memberTemplateList.findIndex((item) => item.id === id);
+            // if (tableIndex > -1) {
+            //   this.memberTemplateList.splice(tableIndex, 1);
+            // }
+            this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
+            this.currentSelectList = [];
+            await this.fetchMemberTemplateList(true);
+          }
+        } catch (e) {
+          this.messageAdvancedError(e);
+        }
       },
 
       handleCreate () {
@@ -344,10 +469,8 @@
         if (hasDisabledData.length) {
           const disabledNames = hasDisabledData.map((item) => item.name);
           this.messageWarn(
-            this.$t(`m.info['用户组为只读用户组不能添加成员']`, {
-              value: `${this.$t(`m.common['【']`)}${disabledNames}${this.$t(
-                `m.common['】']`
-              )}`
+            this.$t(`m.info['只读人员模板不能添加成员']`, {
+              value: `${this.$t(`m.common['【']`)}${disabledNames}${this.$t(`m.common['】']`)}`
             }),
             3000
           );
@@ -357,6 +480,32 @@
         this.isShowAddMemberDialog = true;
       },
 
+      // 批量操作对应操作项
+      handleDeleteActions (type) {
+        const typeMap = {
+          delete: () => {
+            this.isShowDeleteDialog = true;
+            this.delActionDialogTitle = this.$t(`m.dialog['确认批量删除所选的人员模板吗？']`);
+            this.delActionDialogTip = this.$t(`m.memberTemplate['删除后，关联用户组也会删除对应的人员权限。']`);
+            this.delActionList = this.currentSelectList;
+          }
+        };
+        return typeMap[type]();
+      },
+
+      handleBatchDelete () {
+        this.handleDeleteActions('delete');
+      },
+
+      fetchSelectedGroupCount () {
+        this.$nextTick(() => {
+          const selectionCount = document.getElementsByClassName('bk-page-selection-count');
+          if (this.$refs.groupPermTableRef && selectionCount) {
+            selectionCount[0].children[0].innerHTML = this.currentSelectList.length;
+          }
+        });
+      },
+
       fetchSelectedGroups (type, payload, row) {
         const typeMap = {
           multiple: () => {
@@ -364,30 +513,22 @@
             if (isChecked) {
               this.currentSelectList.push(row);
             } else {
-              this.currentSelectList = this.currentSelectList.filter(
-                (item) => item.id !== row.id
-              );
+              this.currentSelectList = this.currentSelectList.filter((item) => item.id !== row.id);
             }
             this.$nextTick(() => {
-              const selectionCount = document.getElementsByClassName(
-                'bk-page-selection-count'
-              );
-              if (this.$refs.sensitivityTableRef && selectionCount) {
+              const selectionCount = document.getElementsByClassName('bk-page-selection-count');
+              if (this.$refs.memberTemplateRef && selectionCount) {
                 selectionCount[0].children[0].innerHTML = this.currentSelectList.length;
               }
             });
           },
           all: () => {
             const tableList = _.cloneDeep(this.memberTemplateList);
-            const selectGroups = this.currentSelectList.filter(
-              (item) => !tableList.map((v) => v.id).includes(item.id)
-            );
+            const selectGroups = this.currentSelectList.filter((item) => !tableList.map((v) => v.id).includes(item.id));
             this.currentSelectList = [...selectGroups, ...payload];
             this.$nextTick(() => {
-              const selectionCount = document.getElementsByClassName(
-                'bk-page-selection-count'
-              );
-              if (this.$refs.sensitivityTableRef && selectionCount) {
+              const selectionCount = document.getElementsByClassName('bk-page-selection-count');
+              if (this.$refs.memberTemplateRef && selectionCount) {
                 selectionCount[0].children[0].innerHTML = this.currentSelectList.length;
               }
             });
@@ -419,78 +560,24 @@
         this.setting.selectedFields = fields;
       },
 
-      async handleTempSubmit () {
-        this.isAddRow = true;
-        this.resetPagination();
-        await this.fetchMemberTemplateList();
-      },
-
       handleCancelAdd () {
         this.curId = 0;
         this.isShowAddMemberDialog = false;
       },
 
-      async handleSubmitAdd (payload) {
-        const { users, departments, expiredAt } = payload;
-        let expired = payload.policy_expired_at;
-        // 4102444800：非永久时需加上当前时间
-        if (expiredAt !== 4102444800) {
-          const nowTimestamp = +new Date() / 1000;
-          const tempArr = String(nowTimestamp).split('');
-          const dotIndex = tempArr.findIndex((item) => item === '.');
-          const nowSecond = parseInt(tempArr.splice(0, dotIndex).join(''), 10);
-          expired = expired + nowSecond;
-        }
-        const arr = [];
-        if (departments.length > 0) {
-          arr.push(
-            ...departments.map((item) => {
-              return {
-                id: item.id,
-                type: 'department'
-              };
-            })
-          );
-        }
-        if (users.length > 0) {
-          arr.push(
-            ...users.map((item) => {
-              return {
-                id: item.username,
-                type: 'user'
-              };
-            })
-          );
-        }
-        const params = {
-          members: arr,
-          expired_at: expired,
-          id: this.curId
-        };
-        let fetchUrl = 'userGroup/addUserGroupMember';
-        if (this.isBatch) {
-          params.group_ids = this.curSelectIds;
-          delete params.id;
-          fetchUrl = 'userGroup/batchAddUserGroupMember';
-        }
-        console.log('params', params);
-        try {
-          this.memberDialogLoading = true;
-          await this.$store.dispatch(fetchUrl, params);
-          this.isShowAddMemberDialog = false;
-          this.messageSuccess(this.$t(`m.info['添加成员成功']`), 3000);
-          this.fetchUserGroupList(true);
-        } catch (e) {
-          console.error(e);
-          this.messageAdvancedError(e);
-        } finally {
-          this.memberDialogLoading = false;
-        }
-      },
-
       handleAddAfterClose () {
         this.curName = '';
         this.curId = 0;
+      },
+
+      handleAfterDeleteLeave () {
+        this.currentActionName = '';
+        this.delActionList = [];
+        this.policyIdList = [];
+      },
+
+      handleCancelDelete () {
+        this.isShowDeleteDialog = false;
       },
 
       handleEmptyClear () {
@@ -521,6 +608,13 @@
         return this.memberTemplateList.length > 0;
       },
 
+      getRowClass ({ row, rowIndex }) {
+        if (rowIndex === 0 && this.isAddRow) {
+          return 'member-template-table-add';
+        }
+        return '';
+      },
+
       quickSearchMethod (value) {
         return {
           name: this.$t(`m.common['关键字']`),
@@ -536,15 +630,18 @@
 .iam-member-template-wrapper {
   .member-template-table {
     margin-top: 20px;
+
     .member-template-name {
       display: flex;
       align-items: center;
       color: #3a84ff;
       cursor: pointer;
+
       &-label {
         max-width: calc(100% - 50px);
         word-break: break-all;
       }
+
       &-tag {
         background-color: #2dcb56;
         font-size: 10px;
@@ -554,37 +651,49 @@
         margin-left: 5px;
       }
     }
+
     .associate-group-count {
       color: #3a84ff;
       cursor: pointer;
     }
+
     .actions-btn {
       &-item {
         margin-right: 10px;
       }
     }
+
     /deep/ .member-template-table-add {
       background-color: #f2fff4;
     }
   }
 }
+
 .delete-confirm {
   .popover-title {
     font-size: 16px;
     padding-bottom: 16px;
   }
+
   .popover-content {
     color: #63656e;
+
     .popover-content-item {
       display: flex;
+
       &-value {
         color: #313238;
         margin-left: 5px;
       }
     }
+
     &-tip {
       padding: 6px 0 24px 0;
     }
   }
+}
+
+/deep/ .content-line-height {
+  display: none;
 }
 </style>
