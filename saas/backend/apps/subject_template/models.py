@@ -19,7 +19,7 @@ class SubjectTemplate(BaseModel):
     name = models.CharField("名称", max_length=512)
     description = models.CharField("描述", max_length=512)
     readonly = models.BooleanField("只读标识", default=False)
-    source_group_id = models.IntegerField("来源用户组ID", default=0)
+    source_group_id = models.IntegerField("来源用户组ID", default=0, db_index=True)
 
     class Meta:
         verbose_name = "人员模板"
@@ -30,7 +30,7 @@ class SubjectTemplate(BaseModel):
 class SubjectTemplateRelation(BaseModel):
     """人员模板关联关系"""
 
-    template_id = models.IntegerField("模板ID")
+    template_id = models.IntegerField("模板ID", db_index=True)
     subject_type = models.CharField("类型", max_length=32)
     subject_id = models.CharField("ID", max_length=64)
 
@@ -44,8 +44,8 @@ class SubjectTemplateRelation(BaseModel):
 class SubjectTemplateGroup(BaseModel):
     """人员模板用户组关联关系"""
 
-    template_id = models.IntegerField("模板ID")
-    group_id = models.IntegerField("用户组ID")
+    template_id = models.IntegerField("模板ID", db_index=True)
+    group_id = models.IntegerField("用户组ID", db_index=True)
     expired_at = models.BigIntegerField("过期时间")
 
     class Meta:
