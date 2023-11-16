@@ -168,7 +168,7 @@
     };
   };
 
-  const NORMAL_DOCU_LINK = '/权限中心/产品白皮书/产品简介/README.md';
+  const NORMAL_DOCU_LINK = '/IAM/UserGuide/Introduce/README.md';
   // const GRADE_DOCU_LINK = '/权限中心/产品白皮书/场景案例/GradingManager.md';
 
   const docuLinkMap = new Map([
@@ -607,16 +607,12 @@
       },
         
       handleChangeLocale (language) {
+        Cookie.remove('blueking_language', { path: '' });
         Cookie.set('blueking_language', language, {
-          domain: window.BK_DOMAIN || window.location.hostname.split('.').slice(1).join('.')
+          domain: window.BK_DOMAIN
         });
-        jsonpRequest(
-          `${window.BK_COMPONENT_API_URL}/api/c/compapi/v2/usermanage/fe_update_user_language/`,
-          {
-            language
-          }
-        );
         this.setMagicBoxLocale(language);
+        jsonpRequest(`${window.BK_COMPONENT_API_URL}/api/c/compapi/v2/usermanage/fe_update_user_language/?language=${language}`, { language });
       },
 
       handleSwitchIdentity () {

@@ -480,7 +480,7 @@
           if (!item.actions) {
             this.$set(item, 'actions', []);
           }
-          item.actions = item.actions.filter(v => !v.hidden);
+          // item.actions = item.actions.filter(v => !v.hidden);
           item.actions.forEach(act => {
             this.$set(act, 'checked', ['checked', 'readonly', 'delete'].includes(act.tag));
             this.$set(act, 'disabled', act.tag === 'readonly');
@@ -501,7 +501,7 @@
             if (!sub.actions) {
               this.$set(sub, 'actions', []);
             }
-            sub.actions = sub.actions.filter(v => !v.hidden);
+            // sub.actions = sub.actions.filter(v => !v.hidden);
             sub.actions.forEach(act => {
               this.$set(act, 'checked', ['checked', 'readonly', 'delete'].includes(act.tag));
               this.$set(act, 'disabled', act.tag === 'readonly');

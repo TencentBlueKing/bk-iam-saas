@@ -121,6 +121,7 @@
                   v-if="active === panel.name"
                   ref="childPermRef"
                   :is="active"
+                  :component-loading="componentLoading"
                   :total-count="panel.count"
                   :personal-group-list="personalGroupList"
                   :system-list="systemList"
@@ -144,7 +145,10 @@
     </div>
     <div
       v-if="!externalSystemsLayout.myPerm.hideApplyBtn"
-      class="custom-footer-wrapper"
+      :class="[
+        'custom-footer-wrapper',
+        { 'custom-footer-wrapper-no-perm': isEmpty }
+      ]"
     >
       <the-footer />
     </div>
@@ -210,6 +214,7 @@
         soonPermLength: 0,
         personalGroupList: [],
         systemList: [],
+        systemListStorage: [],
         teporarySystemList: [],
         departmentGroupList: [],
         curSearchParams: {},
@@ -225,6 +230,7 @@
           tipType: ''
         },
         emptyDepartmentGroupData: {},
+        emptyTemporarySystemData: {},
         curEmptyData: {
           type: 'empty',
           text: '暂无数据',
@@ -245,8 +251,7 @@
         resourceInstanceError: false,
         isShowResourceInstanceSideSlider: false,
         resourceInstanceSideSliderTitle: '',
-        tabKey: 'tab-key',
-        contentWidth: window.innerWidth <= 1440 ? '200px' : '240px'
+        tabKey: 'tab-key'
       };
     },
     computed: {
@@ -356,6 +361,7 @@
                     
           const systemList = customData || [];
           this.systemList.splice(0, this.systemList.length, ...systemList);
+          this.systemListStorage = _.cloneDeep(systemList);
           this.emptyCustomData = formatCodeData(emptyCustomCode, this.emptyCustomData, this.systemList.length === 0);
 
           const teporarySystemList = teporarySystemData || [];
@@ -393,27 +399,6 @@
         }
       },
             
-      async fetchAsyncTable (payload) {
-        const errorList = [];
-        const res = await Promise.all(payload.map((item, index) => item.catch((e) => {
-          errorList.push(index);
-        })));
-        if (res && res.length) {
-          if (res[0]) {
-            const personalGroupList = res[0].data && res[0].data.results ? res[0].data.results : [];
-            this.personalGroupList.splice(0, this.personalGroupList.length, ...personalGroupList);
-          }
-          if (res[1]) {
-            const systemList = res[1].data || [];
-            this.systemList.splice(0, this.systemList.length, ...systemList);
-          }
-          if (res[5]) {
-            const departmentGroupList = res[5].data || [];
-            this.departmentGroupList.splice(0, this.departmentGroupList.length, ...departmentGroupList);
-          }
-        }
-      },
-
       // 获取搜索的个人用户组
       async fetchUserGroupSearch () {
         try {
@@ -476,6 +461,7 @@
         if (customIndex > -1 && this.curSearchParams.system_id) {
           try {
             const { code, data } = await this.$store.dispatch('perm/getPoliciesSearch', this.curSearchParams);
+            this.systemList = this.systemListStorage.filter((item) => item.id === this.curSearchParams.system_id);
             this.$set(this.panels[customIndex], 'count', data.length || 0);
             this.emptyCustomData = formatCodeData(code, this.emptyCustomData, data.length === 0);
           } catch (e) {
@@ -484,6 +470,8 @@
             this.systemList = [];
             this.messageAdvancedError(e);
           }
+        } else {
+          this.systemList = [];
         }
       },
 
@@ -512,7 +500,11 @@
           },
           CustomPerm: async () => {
             this.emptyCustomData = _.cloneDeep(this.curEmptyData);
-            await Promise.all([this.fetchUserGroupSearch(), this.fetchDepartSearch()]);
+            await Promise.all([
+              this.fetchPolicySearch(),
+              this.fetchUserGroupSearch(),
+              this.fetchDepartSearch()
+            ]);
             this.curEmptyData = Object.assign({}, this.emptyCustomData);
             this.tabKey = +new Date();
           }
@@ -524,19 +516,21 @@
         if (!this.mainContentLoading) {
           this.componentLoading = true;
         }
-        const { emptyData, pagination, searchParams } = payload;
+        const { emptyData, pagination, searchParams, isNoTag } = payload;
         this.isSearchPerm = emptyData.tipType === 'search';
-        this.curEmptyData = _.cloneDeep(emptyData);
         this.curSearchParams = _.cloneDeep(searchParams);
         this.curSearchPagination = _.cloneDeep(pagination);
-        await this.fetchRemoteTable();
-        this.formatCheckGroups();
+        if (!isNoTag) {
+          this.curEmptyData = _.cloneDeep(emptyData);
+          await this.fetchRemoteTable();
+          this.formatCheckGroups();
+        }
       },
 
       // 处理只输入纯文本，不生成tag情况
       async handleInputValue (payload) {
         this.curEmptyData.tipType = payload ? 'search' : '';
-        if (payload) {
+        if (payload && !this.curSearchParams.system_id) {
           this.isSearchPerm = true;
           this.$set(this.curSearchParams, 'name', payload);
           await this.fetchRemoteTable();
@@ -571,12 +565,15 @@
         setTimeout(() => {
           this.personalGroupList.length && this.personalGroupList.forEach(item => {
             if (item.role_members && item.role_members.length) {
-              item.role_members = item.role_members.map(v => {
-                return {
-                  username: v,
-                  readonly: false
-                };
-              });
+              const hasName = item.role_members.some((v) => v.username);
+              if (!hasName) {
+                item.role_members = item.role_members.map(v => {
+                  return {
+                    username: v,
+                    readonly: false
+                  };
+                });
+              }
             }
             if (selectList.includes(item.id.toString())
               && this.$refs.childPermRef
@@ -587,12 +584,15 @@
           if (this.departmentGroupList && this.departmentGroupList.length) {
             this.departmentGroupList.forEach(item => {
               if (item.role_members && item.role_members.length) {
-                item.role_members = item.role_members.map(v => {
-                  return {
-                    username: v,
-                    readonly: false
-                  };
-                });
+                const hasName = item.role_members.some((v) => v.username);
+                if (!hasName) {
+                  item.role_members = item.role_members.map(v => {
+                    return {
+                      username: v,
+                      readonly: false
+                    };
+                  });
+                }
               }
             });
           }
@@ -674,10 +674,6 @@
           name: 'applyProvisionPerm'
         });
       },
-
-      formatFormItemWidth () {
-        this.contentWidth = window.innerWidth <= 1520 ? '200px' : '240px';
-      },
       
       handleEmptyRefresh () {
         this.isSearchPerm = false;
@@ -705,7 +701,7 @@
         }
         .empty-wrapper {
             position: absolute;
-            top: 50%;
+            top: 200px;
             left: 50%;
             transform: translate(-50%, -50%);
             img {
@@ -783,5 +779,14 @@
         &.info-sys-lang {
             left: 200px;
         }
+    }
+
+    .custom-perm-wrapper {
+      &.custom-perm-wrapper-no-perm {
+        position: absolute;
+        left: 50%;
+        bottom: 0;
+        transform: translate(-50%, 10px);
+       }
     }
 </style>

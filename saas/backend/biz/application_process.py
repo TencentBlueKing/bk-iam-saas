@@ -217,17 +217,7 @@ def copy_policy_by_instance_path(policy, resource_group, rrt, instance, path):
                 )
             ]
         ),
-        policy_id=policy.policy_id,
-        expired_at=policy.expired_at,
-        type=policy.type,
-        name=policy.name,
-        name_en=policy.name_en,
-        description=policy.description,
-        description_en=policy.description_en,
-        expired_display=policy.expired_display,
-        action_id=policy.action_id,
-        backend_policy_id=policy.backend_policy_id,
-        auth_type=policy.auth_type,
+        **policy.dict(exclude={"resource_groups"}),
     )
 
 
