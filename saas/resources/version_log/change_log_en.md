@@ -1,3 +1,19 @@
+<!-- 2023-11-16 -->
+# V1.10.17 Version Update Log
+
+### Optimization Updates
+* Sensitive level requirements
+* Custom permission application - Add custom message when adding user groups exceeds 100
+* User module - Add resource instance search for user types
+* User module - Add ability to add members to organizational structure
+
+### Bug Fixes
+* Frontend configuration to hide operations on certain pages (no longer handled through backend flags)
+* No response when administrator tries to add duplicate members (show tip when unable to add members)
+* Resolve issue with staff role showing no permissions in person selector
+
+---
+
 <!-- 2023-11-07 -->
 # V1.10.16 Version Update Log
 
