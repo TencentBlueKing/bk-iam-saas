@@ -534,7 +534,9 @@ export const m = {
          '不可续期的用户组成员如下': 'The non renewable user group members are as follows: {value}',
          '管理员组不能添加权限': 'Administrators group cannot add permissions',
          '只读用户组不能添加权限': 'Read only user groups cannot add permissions',
-         '申请加入失败，用户组数量超出上限（100个），请在“我的权限”中退出用户组后重试': 'Application to join failed. The number of user groups exceeds the maximum limit (100), please exit {value} user group in "My permissions" and try again'
+         '申请加入失败，用户组数量超出上限（100个），请在“我的权限”中退出用户组后重试': 'Application to join failed. The number of user groups exceeds the maximum limit (100), please exit {value} user group in "My permissions" and try again',
+         '只读人员模板不能添加成员': 'Read-only member templates [{value}] cannot add members',
+         '该用户/组织可能会失去关联用户组的权限': 'The user/organization may lose permissions to the associated user group'
     },
     // 二次确认弹窗相关
     dialog: {
@@ -1415,7 +1417,11 @@ export const m = {
         '解除关联': 'Disassociate',
         '人员模板创建成功': 'Successfully created members template',
         '解除关联后，相关人员将失去用户组的权限。': 'After disassociation, the relevant personnel will lose the permissions of the user group.',
-        '删除后，关联用户组也会删除对应的人员权限。': 'After deletion, the associated user group will also delete the corresponding personnel permissions.'
+        '删除后，关联用户组也会删除对应的人员权限。': 'After deletion, the associated user group will also delete the corresponding personnel permissions.',
+        '只读人员模板不可删除': 'Read-only member templates cannot delete',
+        '当前选择人员模板皆为只读属性，暂无可删除人员模板': 'The currently selected member templates are all read-only attributes, and there are currently no member templates to delete',
+        '解除关联成功': 'Disassociated successfully',
+        '请输入至少3个字符的用户/组织，按enter键搜索': 'Please enter user/organization with at least 3 characters and press enter to search'
     }
 }
 export default {

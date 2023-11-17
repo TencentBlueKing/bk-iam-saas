@@ -1,30 +1,36 @@
 <template>
-  <div class="member-template-basic-info">
+  <div class="member-template-basic-info"
+    v-bkloading="{ isLoading: detailLoading, opacity: 1 }"
+  >
     <detail-layout mode="member-template-detail">
       <render-layout>
         <detail-item :label="`${$t(`m.memberTemplate['模板名称']`)}: `">
-          <iam-edit-input
-            field="name"
-            :placeholder="$t(`m.memberTemplate['请输入模板名称']`)"
-            :rules="rules"
-            :value="basicInfo.name"
-            :remote-hander="handleChangeInfo"
-          />
+          <div class="basic-info-value">
+            <iam-edit-input
+              field="name"
+              :placeholder="$t(`m.memberTemplate['请输入模板名称']`)"
+              :rules="rules"
+              :value="basicInfo.name"
+              :remote-hander="handleChangeInfo"
+            />
+          </div>
         </detail-item>
         <detail-item :label="`${$t(`m.memberTemplate['模板ID']`)}: `">
-          {{ basicInfo.id }}
+          <span class="basic-info-value">{{ basicInfo.id }}</span>
         </detail-item>
         <detail-item :label="`${$t(`m.common['创建时间']`)}: `">
-          {{ basicInfo.created_time }}
+          <span class="basic-info-value">{{ basicInfo.created_time }}</span>
         </detail-item>
         <detail-item :label="`${$t(`m.memberTemplate['模板描述']`)}: `">
-          <iam-edit-textarea
-            field="description"
-            width="600px"
-            :placeholder="$t(`m.memberTemplate['请输入模板描述']`)"
-            :value="basicInfo.description"
-            :remote-hander="handleChangeInfo"
-          />
+          <div class="basic-info-value">
+            <iam-edit-textarea
+              field="description"
+              width="600px"
+              :placeholder="$t(`m.memberTemplate['请输入模板描述']`)"
+              :value="basicInfo.description"
+              :remote-hander="handleChangeInfo"
+            />
+          </div>
         </detail-item>
       </render-layout>
     </detail-layout>
@@ -32,6 +38,7 @@
 </template>
 
 <script>
+  import { bus } from '@/common/bus';
   import RenderLayout from '@/views/group/common/render-layout';
   import DetailLayout from '@/components/detail-layout';
   import DetailItem from '@/components/detail-layout/item';
@@ -45,8 +52,14 @@
       IamEditInput,
       IamEditTextarea
     },
+    props: {
+      curDetailData: {
+        type: Object
+      }
+    },
     data () {
       return {
+        detailLoading: false,
         basicInfo: {
           id: 0,
           name: '',
@@ -64,7 +77,16 @@
     },
     methods: {
       async fetchDetailInfo () {
-        this.basicInfo = Object.assign(this.basicInfo, {});
+        this.detailLoading = true;
+        try {
+          const { id } = this.curDetailData;
+          const { data } = await this.$store.dispatch('memberTemplate/subjectTemplateDetail', { id });
+          this.basicInfo = Object.assign(this.basicInfo, data);
+        } catch (e) {
+          this.messageAdvancedError(e);
+        } finally {
+          this.detailLoading = false;
+        }
       },
 
       async handleChangeInfo (payload) {
@@ -76,13 +98,14 @@
         ...payload
         };
         try {
-          await this.$store.dispatch('role/updateRatingManager', params);
+          await this.$store.dispatch('memberTemplate/updateSubjectTemplate', params);
           this.messageSuccess(this.$t(`m.info['编辑成功']`), 3000);
           const { name, description } = params;
           this.basicInfo = Object.assign(this.basicInfo, {
             name,
             description
           });
+          bus.$emit('on-info-change', { id, name, description });
         } catch (e) {
           console.warn('error');
           this.messageAdvancedError(e);
@@ -95,5 +118,8 @@
 <style lang="postcss" scoped>
 .member-template-basic-info {
   padding-left: 40px;
+  .basic-info-value {
+    margin-left: 15px;
+  }
 }
 </style>

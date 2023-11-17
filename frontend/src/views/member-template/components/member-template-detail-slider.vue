@@ -21,7 +21,7 @@
               v-for="item in tabList"
               :key="item.id"
               :class="['member-tab-groups-item', { 'is-active': tabActive === item.id }]"
-              @click.stop="handleTabChange(item.id)"
+              @click.stop="handleTabChange(item.id, true)"
             >
               <span class="member-tab-groups-item-name">{{ item.name }}</span>
               <span
@@ -40,6 +40,7 @@
             :key="comKey"
             :cur-detail-data="curDetailData"
             :tab-active="tabActive"
+            @on-associate-change="handleAssociateChange"
           />
         </div>
       </div>
@@ -82,7 +83,7 @@
           {
             name: this.$t(`m.memberTemplate['关联用户组']`),
             id: 'associate_groups',
-            count: 10000
+            count: 0
           }
         ],
         COM_MAP: Object.freeze(
@@ -93,7 +94,6 @@
           ])
         ),
         tabActive: 'basic_info',
-        tabActiveStorage: '',
         comKey: -1
       };
     },
@@ -115,19 +115,18 @@
           this.isShowSideSlider = !!value;
           if (this.curDetailData.tabActive) {
             this.tabActive = this.curDetailData.tabActive;
-            this.handleTabChange(this.tabActive);
+            this.handleTabChange(this.tabActive, false);
           }
         },
         immediate: true
       }
     },
     methods: {
-      handleTabChange (payload) {
-        if (payload === this.tabActiveStorage) {
+      handleTabChange (payload, isClick = false) {
+        if (payload === this.tabActive && isClick) {
           return;
         }
         this.tabActive = payload;
-        this.tabActiveStorage = payload;
         const typeMap = {
           basic_info: () => {
             this.$nextTick(() => {
@@ -135,8 +134,9 @@
             });
           },
           template_member: () => {
-            // this.$refs.tempDetailComRef && this.$refs.tempDetailComRef.fetchDetailInfo();
-            this.comKey = +new Date();
+            this.$nextTick(() => {
+              this.$refs.tempDetailComRef && this.$refs.tempDetailComRef.fetchTempMemberList();
+            });
           },
           associate_groups: () => {
             this.$nextTick(() => {
@@ -146,6 +146,14 @@
           }
         };
         return typeMap[payload]();
+      },
+      
+      handleAssociateChange (payload) {
+        const { count } = payload;
+        const tabIndex = this.tabList.findIndex((item) => ['associate_groups'].includes(item.id));
+        if (tabIndex > -1) {
+          this.tabList[tabIndex].count = count || 0;
+        }
       },
 
       handleCancel () {

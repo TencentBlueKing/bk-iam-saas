@@ -13,53 +13,34 @@
         </bk-button>
       </div>
       <div slot="right">
-        <IamSearchSelect
-          style="width: 420px"
-          :placeholder="$t(`m.memberTemplate['搜索模板名称、描述、创建人']`)"
-          :data="searchData"
-          :value="searchValue"
-          :quick-search-method="quickSearchMethod"
-          @on-change="handleSearch"
-        />
+        <IamSearchSelect style="width: 420px" :placeholder="$t(`m.memberTemplate['搜索模板名称、描述、创建人']`)" :data="searchData"
+          :value="searchValue" :quick-search-method="quickSearchMethod" @on-change="handleSearch" />
       </div>
     </render-search>
-    <bk-table
-      ref="memberTemplateRef"
-      ext-cls="member-template-table"
-      :size="setting.size"
-      :data="memberTemplateList"
-      :row-class-name="getRowClass"
-      :max-height="tableHeight"
-      :pagination="pagination"
-      :dark-header="true"
-      @page-change="handlePageChange"
-      @page-limit-change="handleLimitChange"
-      @select="handlerChange"
-      @select-all="handlerAllChange"
-      v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
-    >
+    <bk-table ref="memberTemplateRef" ext-cls="member-template-table" :size="setting.size" :data="memberTemplateList"
+      :row-class-name="getRowClass" :max-height="tableHeight" :pagination="pagination" :dark-header="true"
+      @page-change="handlePageChange" @page-limit-change="handleLimitChange" @select="handlerChange"
+      @select-all="handlerAllChange" v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
       <bk-table-column type="selection" align="center" :selectable="getDefaultSelect" />
       <bk-table-column v-for="field in setting.selectedFields" :key="field.id" :label="field.label" :prop="field.id">
         <template slot-scope="{ row, $index }">
           <div v-if="['name'].includes(field.id)" class="member-template-name">
-            <span
-              :class="['single-hide', { 'member-template-name-label': isAddRow && $index === 0 }]"
-              :title="row.name"
-              @click="handleView(row)"
-            >
+            <span :class="['single-hide', { 'member-template-name-label': isAddRow && $index === 0 }]" :title="row.name"
+              @click="handleViewGroup(row, 'basic_info')">
               {{ row.name }}
             </span>
             <bk-tag v-if="isAddRow && $index === 0" theme="success" type="filled" class="member-template-name-tag">
               new
             </bk-tag>
           </div>
-          <div v-if="['member_count'].includes(field.id)">
-            <span v-if="row.member_count" class="associate-group-count" @click="handleViewGroup(row)">
-              {{ row.member_count }}
+          <div v-if="['group_count'].includes(field.id)">
+            <span v-if="row.group_count >= 0" class="associate-group-count"
+              @click="handleViewGroup(row, 'associate_groups')">
+              {{ row.group_count }}
             </span>
             <span v-else>--</span>
           </div>
-          <span v-if="!['name', 'member_count'].includes(field.id)">
+          <span v-if="!['name', 'group_count'].includes(field.id)">
             {{ row[field.id] || '--' }}
           </span>
         </template>
@@ -67,22 +48,12 @@
       <bk-table-column :label="$t(`m.common['操作-table']`)">
         <template slot-scope="{ row }">
           <div class="actions-btn">
-            <bk-button
-              theme="primary"
-              text
-              :disabled="row.readonly"
-              class="actions-btn-item"
-              @click="handleAddMember(row)"
-            >
+            <bk-button theme="primary" text :disabled="row.readonly" class="actions-btn-item"
+              @click="handleAddMember(row)">
               {{ $t(`m.common['添加成员']`) }}
             </bk-button>
-            <bk-popconfirm
-              trigger="click"
-              placement="bottom-end"
-              ext-popover-cls="delete-confirm"
-              :confirm-text="$t(`m.common['删除-dialog']`)"
-              @confirm="handleConfirmDelete(row.id)"
-            >
+            <bk-popconfirm trigger="click" placement="bottom-end" ext-popover-cls="delete-confirm"
+              :confirm-text="$t(`m.common['删除-dialog']`)" @confirm="handleConfirmDelete(row.id)">
               <div slot="content">
                 <div class="popover-title">
                   <div class="popover-title-text">
@@ -99,7 +70,8 @@
                   </div>
                 </div>
               </div>
-              <bk-button theme="primary" text class="actions-btn-item">
+              <bk-button theme="primary" text class="actions-btn-item" :disabled="row.readonly"
+                :title="row.readonly ? $t(`m.memberTemplate['只读人员模板不可删除]`) : ''">
                 {{ $t(`m.common['删除']`) }}
               </bk-button>
             </bk-popconfirm>
@@ -107,22 +79,12 @@
         </template>
       </bk-table-column>
       <bk-table-column type="setting" :tippy-options="{ zIndex: 3000 }">
-        <bk-table-setting-content
-          :fields="setting.fields"
-          :selected="setting.selectedFields"
-          :size="setting.size"
-          @setting-change="handleSettingChange"
-        />
+        <bk-table-setting-content :fields="setting.fields" :selected="setting.selectedFields" :size="setting.size"
+          @setting-change="handleSettingChange" />
       </bk-table-column>
       <template slot="empty">
-        <ExceptionEmpty
-          :type="emptyData.type"
-          :empty-text="emptyData.text"
-          :tip-text="emptyData.tip"
-          :tip-type="emptyData.tipType"
-          @on-clear="handleEmptyClear"
-          @on-refresh="handleEmptyRefresh"
-        />
+        <ExceptionEmpty :type="emptyData.type" :empty-text="emptyData.text" :tip-text="emptyData.tip"
+          :tip-type="emptyData.tipType" @on-clear="handleEmptyClear" @on-refresh="handleEmptyRefresh" />
       </template>
     </bk-table>
 
@@ -130,38 +92,22 @@
 
     <AddMemberTemplateSlider :show.sync="isShowAddSlider" @on-submit="handleTempSubmit" />
 
-    <AddMemberDialog
-      :show.sync="isShowAddMemberDialog"
-      :is-batch="isBatch"
-      :loading="memberDialogLoading"
+    <AddMemberDialog :show.sync="isShowAddMemberDialog" :is-batch="isBatch" :loading="memberDialogLoading"
       :name="curName"
-      :id="curId"
-      :show-limit="false"
-      :is-rating-manager="isRatingManager"
-      show-expired-at
-      @on-cancel="handleCancelAdd"
-      @on-sumbit="handleSubmitAdd"
-      @on-after-leave="handleAddAfterClose"
-    />
+      :id="curId" :show-limit="false" :is-rating-manager="isRatingManager" show-expired-at @on-cancel="handleCancelAdd"
+      @on-sumbit="handleSubmitAdd" @on-after-leave="handleAddAfterClose" />
 
-    <DeleteActionDialog
-      :show.sync="isShowDeleteDialog"
-      :loading="batchQuitLoading"
-      :width="formatDeleteWidth"
-      :title="delActionDialogTitle"
-      :tip="delActionDialogTip"
-      :name="currentActionName"
-      :related-action-list="delActionList"
-      @on-after-leave="handleAfterDeleteLeave"
-      @on-cancel="handleCancelDelete"
-      @on-submit="handleSubmitDelete"
-    />
+    <DeleteActionDialog :show.sync="isShowDeleteDialog" :loading="batchQuitLoading" :width="formatDeleteWidth"
+      :title="delActionDialogTitle" :tip="delActionDialogTip" :name="currentActionName"
+      :related-action-list="readOnlyGroups" @on-after-leave="handleAfterDeleteLeave" @on-cancel="handleCancelDelete"
+      @on-submit="handleSubmitDelete" />
   </div>
 </template>
 
 <script>
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
+  import { bus } from '@/common/bus';
   import { formatCodeData, getWindowHeight } from '@/common/util';
   import { MEMBERS_TEMPLATE_FIELDS } from '@/common/constants';
   import IamSearchSelect from '@/components/iam-search-select';
@@ -184,7 +130,7 @@
         currentSelectList: [],
         searchList: [],
         searchValue: [],
-        delActionList: [],
+        readOnlyGroups: [],
         searchData: [
           {
             id: 'name',
@@ -239,19 +185,22 @@
       };
     },
     computed: {
-    ...mapGetters(['user', 'externalSystemId']),
-    isBatchDisabled () {
-      return this.currentSelectList.length === 0;
-    },
-    tableHeight () {
-      return getWindowHeight() - 185;
-    },
-    isRatingManager () {
-      return ['rating_manager', 'subset_manager'].includes(this.curRole);
-    },
-    formatDeleteWidth () {
-      return this.curLanguageIsCn ? 700 : 1000;
-    }
+      ...mapGetters(['user', 'externalSystemId']),
+      isBatchDisabled () {
+        return this.currentSelectList.length === 0;
+      },
+      tableHeight () {
+        return getWindowHeight() - 185;
+      },
+      isRatingManager () {
+        return ['rating_manager', 'subset_manager'].includes(this.curRole);
+      },
+      formatDeleteWidth () {
+        return this.curLanguageIsCn ? 700 : 1000;
+      },
+      curSelectIds () {
+        return this.currentSelectList.map((item) => item.id);
+      }
     },
     watch: {
       user: {
@@ -263,6 +212,21 @@
     },
     async created () {
       await this.fetchMemberTemplateList(true);
+    },
+    mounted () {
+      this.$once('hook:beforeDestroy', () => {
+        bus.$off('on-info-change');
+      });
+      bus.$on('on-info-change', (payload) => {
+        const { id, name, description } = payload;
+        const index = this.memberTemplateList.findIndex((item) => item.id === id);
+        if (index > -1) {
+          this.memberTemplateList[index] = Object.assign(this.memberTemplateList[index], {
+            name,
+            description
+          });
+        }
+      });
     },
     methods: {
       async fetchMemberTemplateList (tableLoading = false) {
@@ -379,16 +343,21 @@
         const params = {
           subjects,
           expired_at: expired,
-          template_ids: this.isBatch
-            ? this.currentSelectList.filter((item) => item.readonly).map((v) => v.id)
-            : [this.curId]
+          id: this.curId
         };
+        let url = 'addSubjectTemplateMembers';
+        if (this.isBatch) {
+          params.template_ids = this.curSelectIds;
+          delete params.id;
+          url = 'addBatchSubjectTemplateMembers';
+        }
         console.log('params', params);
         try {
           this.memberDialogLoading = true;
-          await this.$store.dispatch('memberTemplate/addBatchSubjectTemplateMembers', params);
+          await this.$store.dispatch(`memberTemplate/${url}`, params);
           this.isShowAddMemberDialog = false;
           this.messageSuccess(this.$t(`m.info['添加成员成功']`), 3000);
+          this.currentSelectList = [];
           this.resetPagination();
           this.fetchMemberTemplateList(true);
         } catch (e) {
@@ -400,12 +369,15 @@
       },
 
       async handleSubmitDelete () {
+        const selectGroups = this.currentSelectList.filter((item) => !item.readonly);
+        if (this.readOnlyGroups.length === this.currentSelectList.length) {
+          return this.messageWarn(this.$t(`m.memberTemplate['当前选择人员模板皆为只读属性，暂无可删除人员模板']`), 3000);
+        }
         this.batchQuitLoading = true;
-        const selectGroups = this.currentSelectList;
         try {
           for (let i = 0; i < selectGroups.length; i++) {
             await this.$store.dispatch('memberTemplate/deleteSubjectTemplate', {
-              type: 'group',
+              type: 'template',
               id: selectGroups[i].id
             });
           }
@@ -443,16 +415,9 @@
         this.isShowAddSlider = true;
       },
 
-      handleView (payload) {
+      handleViewGroup (payload, tabActive) {
         this.curDetailData = Object.assign(payload, {
-          tabActive: 'basic_info'
-        });
-        this.isShowDetailSlider = true;
-      },
-
-      handleViewGroup (payload) {
-        this.curDetailData = Object.assign(payload, {
-          tabActive: 'associate_groups'
+          tabActive
         });
         this.isShowDetailSlider = true;
       },
@@ -461,6 +426,7 @@
         const { id, name } = payload;
         this.curName = name;
         this.curId = id;
+        this.isBatch = false;
         this.isShowAddMemberDialog = true;
       },
 
@@ -486,8 +452,8 @@
           delete: () => {
             this.isShowDeleteDialog = true;
             this.delActionDialogTitle = this.$t(`m.dialog['确认批量删除所选的人员模板吗？']`);
-            this.delActionDialogTip = this.$t(`m.memberTemplate['删除后，关联用户组也会删除对应的人员权限。']`);
-            this.delActionList = this.currentSelectList;
+            this.delActionDialogTip = this.$t(`m.memberTemplate['以下为只读人员模板，不可删除。']`);
+            this.readOnlyGroups = this.currentSelectList.filter((item) => item.readonly);
           }
         };
         return typeMap[type]();
@@ -572,8 +538,7 @@
 
       handleAfterDeleteLeave () {
         this.currentActionName = '';
-        this.delActionList = [];
-        this.policyIdList = [];
+        this.readOnlyGroups = [];
       },
 
       handleCancelDelete () {

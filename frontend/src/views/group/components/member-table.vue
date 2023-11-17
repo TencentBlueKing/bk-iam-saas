@@ -28,7 +28,7 @@
                   {{ $t(`m.common['批量移除']`) }}
                 </a>
               </li>
-              <li v-if="curDisplaySet.showRenewal">
+              <li v-if="!['memberTemplate'].includes(tabActive)">
                 <a
                   :class="[{ 'renewal-disabled': isNoBatchRenewal() }]"
                   :title="renewalGroupTitle"
@@ -82,9 +82,7 @@
         <bk-input
           v-model="keyword"
           style="width: 400px"
-          :placeholder="
-            $t(`m.userGroupDetail['请输入至少3个字符的用户/组织或人员模板，按enter键搜索']`)
-          "
+          :placeholder="searchPlaceholder"
           :clearable="true"
           @clear="handleKeyWordClear"
           @enter="handleKeyWordEnter"
@@ -112,23 +110,57 @@
         </bk-tab-panel>
       </bk-tab>
 
-      <template v-if="['userOrOrg'].includes(tabActive)">
-        <bk-table
-          ref="groupMemberRef"
-          :data="tableList"
-          size="small"
-          ext-cls="user-group-member-table"
-          :cell-class-name="getCellClass"
-          :outer-border="false"
-          :header-border="false"
-          :pagination="pagination"
-          @page-change="pageChange"
-          @page-limit-change="limitChange"
-          @select="handlerChange"
-          @select-all="handlerAllChange"
-          v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
-        >
-          <bk-table-column type="selection" align="center" />
+      <bk-table
+        ref="groupMemberRef"
+        :data="tableList"
+        size="small"
+        ext-cls="user-group-member-table"
+        :cell-class-name="getCellClass"
+        :outer-border="false"
+        :header-border="false"
+        :pagination="pagination"
+        @page-change="pageChange"
+        @page-limit-change="limitChange"
+        @select="handlerChange"
+        @select-all="handlerAllChange"
+        v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
+      >
+        <bk-table-column type="selection" align="center" />
+        <template v-if="['memberTemplate'].includes(tabActive)">
+          <bk-table-column :label="$t(`m.memberTemplate['人员模板']`)">
+            <template slot-scope="{ row }">
+              <div class="member-template" :title="row.name" @click.stop="handleTempView(row)">
+                <Icon type="organization-fill" />
+                <span class="name">
+                  {{ row.name || "--" }}
+                </span>
+              </div>
+            </template>
+          </bk-table-column>
+          <bk-table-column :label="$t(`m.common['加入时间']`)">
+            <template slot-scope="{ row }">
+              <span :title="row.created_time.replace(/T/, ' ')">
+                {{ row.created_time.replace(/T/, " ") }}
+              </span>
+            </template>
+          </bk-table-column>
+          <bk-table-column :label="$t(`m.common['操作-table']`)" width="180">
+            <template slot-scope="{ row }">
+              <div>
+                <bk-button
+                  text
+                  theme="primary"
+                  :disabled="disabledGroup()"
+                  :title="disabledGroup() ? $t(`m.userGroup['管理员组至少保留一条数据']`) : ''"
+                  @click="handleDelete(row)"
+                >
+                  {{ $t(`m.common['移除']`) }}
+                </bk-button>
+              </div>
+            </template>
+          </bk-table-column>
+        </template>
+        <template v-else>
           <bk-table-column :label="$t(`m.userGroup['用户/组织']`)">
             <template slot-scope="{ row }">
               <div
@@ -153,7 +185,9 @@
               </div>
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t(`m.userGroupDetail['所属组织架构']`)">
+          <bk-table-column
+            :label="$t(`m.userGroupDetail['所属组织架构']`)"
+          >
             <template slot-scope="{ row }">
               <template v-if="row.type === 'user'">
                 <template v-if="row.user_departments && row.user_departments.length">
@@ -175,19 +209,19 @@
               </template>
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t(`m.common['加入时间']`)" width="180">
-            <template slot-scope="{ row }">
-              <span :title="row.created_time.replace(/T/, ' ')">{{
-                row.created_time.replace(/T/, " ")
-              }}</span>
-            </template>
-          </bk-table-column>
-          <template v-if="curDisplaySet.showExpiredAt">
+          <template>
             <bk-table-column
               :label="$t(`m.common['有效期']`)"
               prop="expired_at_display"
             />
           </template>
+          <bk-table-column :label="$t(`m.common['加入时间']`)" prop="created_time">
+            <template slot-scope="{ row }">
+              <span :title="row.created_time.replace(/T/, ' ')">
+                {{ row.created_time.replace(/T/, " ") }}
+              </span>
+            </template>
+          </bk-table-column>
           <bk-table-column :label="$t(`m.common['操作-table']`)" width="180">
             <template slot-scope="{ row }">
               <div>
@@ -195,17 +229,13 @@
                   text
                   theme="primary"
                   :disabled="disabledGroup()"
-                  :title="
-                    disabledGroup() ? $t(`m.userGroup['管理员组至少保留一条数据']`) : ''
-                  "
+                  :title="disabledGroup() ? $t(`m.userGroup['管理员组至少保留一条数据']`) : ''"
                   @click="handleDelete(row)"
                 >
                   {{ $t(`m.common['移除']`) }}
                 </bk-button>
                 <bk-button
-                  v-if="
-                    row.expired_at !== PERMANENT_TIMESTAMP && curDisplaySet.showRenewal
-                  "
+                  v-if="(row.expired_at !== PERMANENT_TIMESTAMP && !['memberTemplate'].includes(tabActive))"
                   theme="primary"
                   style="margin-left: 4px"
                   text
@@ -216,74 +246,18 @@
               </div>
             </template>
           </bk-table-column>
-          <template slot="empty">
-            <ExceptionEmpty
-              :type="emptyData.type"
-              :empty-text="emptyData.text"
-              :tip-text="emptyData.tip"
-              :tip-type="emptyData.tipType"
-              @on-clear="handleEmptyClear"
-              @on-refresh="handleEmptyRefresh"
-            />
-          </template>
-        </bk-table>
-      </template>
-
-      <template v-if="['memberTemplate'].includes(tabActive)">
-        <bk-table
-          size="small"
-          ref="groupMemberRef"
-          ext-cls="user-group-member-table"
-          :data="tableList"
-          :cell-class-name="getCellClass"
-          :outer-border="false"
-          :header-border="false"
-          :pagination="memberPagination"
-          @page-change="handleMemberPageChange"
-          @page-limit-change="handleMemberLimitChange"
-          @select="handlerChange"
-          @select-all="handlerAllChange"
-          v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
-        >
-          <bk-table-column type="selection" align="center" />
-          <bk-table-column :label="$t(`m.memberTemplate['人员模板']`)">
-            <template slot-scope="{ row }">
-              <div class="member-template" :title="row.name" @click.stop="handleTempView(row)">
-                <Icon type="organization-fill" />
-                <span class="name">
-                  {{ row.name || "--" }}
-                </span>
-              </div>
-            </template>
-          </bk-table-column>
-          <bk-table-column :label="$t(`m.common['加入时间']`)">
-            <template slot-scope="{ row }">
-              <span :title="row.created_time.replace(/T/, ' ')">
-                {{ row.created_time.replace(/T/, " ") }}
-              </span>
-            </template>
-          </bk-table-column>
-          <bk-table-column :label="$t(`m.common['操作-table']`)" width="100">
-            <template slot-scope="{ row }">
-              <div>
-                <bk-button text theme="primary" @click="handleDelete(row)">
-                  {{ $t(`m.common['移除']`) }}
-                </bk-button>
-              </div>
-            </template>
-          </bk-table-column>
-          <template slot="empty">
-            <ExceptionEmpty
-              :type="emptyData.type"
-              :empty-text="emptyData.text"
-              :tip-text="emptyData.tip"
-              :tip-type="emptyData.tipType"
-              @on-clear="handleEmptyClear"
-              @on-refresh="handleEmptyRefresh"
-            />
-          </template>
-        </bk-table>
-      </template>
+        </template>
+        <template slot="empty">
+          <ExceptionEmpty
+            :type="emptyData.type"
+            :empty-text="emptyData.text"
+            :tip-text="emptyData.tip"
+            :tip-type="emptyData.tipType"
+            @on-clear="handleEmptyClear"
+            @on-refresh="handleEmptyRefresh"
+          />
+        </template>
+      </bk-table>
     </div>
 
     <delete-dialog
@@ -325,6 +299,7 @@
 </template>
 <script>
   import _ from 'lodash';
+  import il8n from '@/language';
   import ClipboardJS from 'clipboard';
   import { mapGetters } from 'vuex';
   import { PERMANENT_TIMESTAMP, COPY_KEYS_ENUM } from '@/common/constants';
@@ -370,14 +345,16 @@
         type: Boolean,
         default: true
       },
+      searchPlaceholder: {
+        type: String,
+        default: il8n('userGroupDetail', '请输入至少3个字符的用户/组织或人员模板，按enter键搜索')
+      },
+      routeMode: {
+        type: String,
+        default: ''
+      },
       displaySet: {
-        type: Object,
-        default: () => {
-          return {
-            showExpiredAt: true,
-            showRenewal: true
-          };
-        }
+        type: Object
       }
     },
     data () {
@@ -404,6 +381,7 @@
         },
         curMember: {},
         curData: {},
+        curDisplaySet: {},
         loading: false,
         isShowAddMemberDialog: false,
         isShowRenewalDialog: false,
@@ -453,8 +431,33 @@
           }
         ],
         tabActive: 'userOrOrg',
-        curDisplaySet: {},
-        curTempData: {}
+        curTempData: {},
+        copyUrl: 'userGroup/getUserGroupMemberList',
+        curRouteMode: 'userGroupDetail',
+        curModeMap: {
+          memberTemplate: {
+            list: {
+              url: 'memberTemplate/getSubjectTemplateMembers',
+              params: {}
+            },
+            removeMember: {
+              dialogTitle: '确认移除该用户/组织？',
+              url: 'memberTemplate/deleteSubjectTemplateMembers',
+              params: {
+                subjects: []
+              }
+            },
+            addMember: {
+              url: 'memberTemplate/addSubjectTemplateMembers',
+              params: {
+                subjects: []
+              }
+            },
+            copy: {
+              url: 'memberTemplate/getSubjectTemplateMembers'
+            }
+          }
+        }
       };
     },
     computed: {
@@ -529,9 +532,15 @@
         },
         immediate: true
       },
+      routeMode: {
+        handler (value) {
+          this.curRouteMode = value;
+        },
+        immediate: true
+      },
       displaySet: {
         handler (value) {
-          this.curDisplaySet = Object.assign(this.curDisplaySet, value);
+          this.curDisplaySet = Object.assign({}, value);
         },
         immediate: true
       }
@@ -581,8 +590,12 @@
             offset: limit * (current - 1),
             keyword: this.keyword
           };
+          let url = 'userGroup/getUserGroupMemberList';
+          if (this.curModeMap[this.curRouteMode]) {
+            url = this.curModeMap[this.curRouteMode].list.url;
+          }
           const { code, data } = await this.$store.dispatch(
-            'userGroup/getUserGroupMemberList',
+            url,
             params
           );
           this.pagination.count = data.count || 0;
@@ -630,7 +643,7 @@
             keyword: this.keyword
           };
           const { code, data } = await this.$store.dispatch(
-            'userGroup/getUserGroupMemberList',
+            'memberTemplate/getSubjectTemplateList',
             params
           );
           this.memberPagination.count = data.count || 0;
@@ -679,6 +692,7 @@
 
       async handleTabChange (payload) {
         this.tabActive = payload;
+        this.curMember = {};
         this.currentSelectList = [];
         this.resetPagination();
         await this.fetchMemberList();
@@ -858,8 +872,12 @@
           },
           'user-all': async () => {
             this.handleResetCascade();
+            let copyUrl = this.copyUrl;
+            if (this.curModeMap[this.curRouteMode]) {
+              copyUrl = this.curModeMap[this.curRouteMode].copy.url;
+            }
             const { data } = await this.$store.dispatch(
-              'userGroup/getUserGroupMemberList',
+              copyUrl,
               params
             );
             if (data && data.results && data.results.length) {
@@ -885,8 +903,12 @@
           },
           'userAndOrg-all': async () => {
             this.handleResetCascade();
+            let copyUrl = this.copyUrl;
+            if (this.curModeMap[this.curRouteMode]) {
+              copyUrl = this.curModeMap[this.curRouteMode].copy.url;
+            }
             const { data } = await this.$store.dispatch(
-              'userGroup/getUserGroupMemberList',
+              copyUrl,
               params
             );
             if (data && data.results && data.results.length) {
@@ -978,7 +1000,7 @@
       async handleSubmitAdd (payload) {
         const externalPayload = _.cloneDeep(payload);
         this.loading = true;
-        const { users, departments, expiredAt } = payload;
+        const { users, departments, templates, expiredAt } = payload;
         let expired = payload.policy_expired_at;
         // 4102444800：非永久时需加上当前时间
         if (expiredAt !== 4102444800) {
@@ -1009,14 +1031,30 @@
             })
           );
         }
+        if (templates && templates.length) {
+          arr.push(
+            ...templates.map((item) => {
+              return {
+                id: item.id,
+                type: 'template'
+              };
+            })
+          );
+        }
         const params = {
           members: arr,
           expired_at: expired,
           id: this.id
         };
+        let url = 'userGroup/addUserGroupMember';
+        if (this.curModeMap[this.curRouteMode]) {
+          url = this.curModeMap[this.curRouteMode].addMember.url;
+          params.subjects = _.cloneDeep(arr);
+          delete params.members;
+        }
         try {
           const { code, data } = await this.$store.dispatch(
-            'userGroup/addUserGroupMember',
+            url,
             params
           );
           if (code === 0 && data) {
@@ -1058,19 +1096,35 @@
       },
 
       handleDelete (payload) {
-        this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)}${this.$t(
-          `m.common['【']`
-        )}${payload.id}(${payload.name})${this.$t(`m.common['】']`)}${this.$t(
-          `m.common['，']`
-        )}${this.$t(`m.info['该成员将不再继承该组的权限']`)}${this.$t(`m.common['。']`)}`;
-        this.deleteDialog.visible = true;
-        this.curMember = Object.assign(
-          {},
-          {
-            id: payload.id,
-            type: payload.type
-          }
-        );
+        if (this.curModeMap[this.curRouteMode]) {
+          this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)}${this.$t(
+            `m.common['【']`
+          )}${payload.id}(${payload.name})${this.$t(`m.common['】']`)}${this.$t(
+            `m.common['，']`
+          )}${this.$t(`m.info['该用户/组织可能会失去关联用户组的权限']`)}${this.$t(`m.common['。']`)}`;
+          this.deleteDialog.visible = true;
+          this.curMember = Object.assign(
+            {},
+            {
+              id: payload.id,
+              type: payload.type
+            }
+          );
+        } else {
+          this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)}${this.$t(
+            `m.common['【']`
+          )}${payload.id}(${payload.name})${this.$t(`m.common['】']`)}${this.$t(
+            `m.common['，']`
+          )}${this.$t(`m.info['该成员将不再继承该组的权限']`)}${this.$t(`m.common['。']`)}`;
+          this.deleteDialog.visible = true;
+          this.curMember = Object.assign(
+            {},
+            {
+              id: payload.id,
+              type: payload.type
+            }
+          );
+        }
       },
 
       pageChange (page) {
@@ -1112,20 +1166,28 @@
       async handleSubmitDelete () {
         this.deleteDialog.loading = true;
         try {
+          let url = 'userGroup/deleteUserGroupMember';
           const params = {
             id: this.id,
             members: this.curMember.id
               ? [this.curMember]
               : this.currentSelectList.map(({ id, type }) => ({ id, type }))
           };
+          let totalCount = params.members.length;
+          if (this.curModeMap[this.curRouteMode]) {
+            url = this.curModeMap[this.curRouteMode].removeMember.url;
+            params.subjects = _.cloneDeep(params.members);
+            totalCount = params.subjects.length;
+            delete params.members;
+          }
           const { code, data } = await this.$store.dispatch(
-            'userGroup/deleteUserGroupMember',
+            url,
             params
           );
           if (code === 0 && data) {
             const externalParams = {
             ...params,
-            count: params.members.length
+            count: totalCount
             };
             if (this.externalRoutes.includes(this.$route.name)) {
               window.parent.postMessage(

@@ -238,15 +238,5 @@ export const MEMBERS_TEMPLATE_FIELDS = [
     id: 'created_time',
     label: il8n('common', '创建时间'),
     disabled: false
-  },
-  {
-    id: 'updated_by',
-    label: il8n('memberTemplate', '最近更新人'),
-    disabled: false
-  },
-  {
-    id: 'updated_time',
-    label: il8n('memberTemplate', '最近更新时间'),
-    disabled: false
   }
 ];

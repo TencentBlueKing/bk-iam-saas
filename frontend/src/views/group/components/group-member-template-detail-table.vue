@@ -1,5 +1,7 @@
 <template>
-  <div class="iam-user-group-member member-template-detail-slider">
+  <div
+    class="iam-user-group-member member-template-detail-slider"
+    v-bkloading="{ isLoading: tableLoading, opacity: 1, zIndex: 1000 }">
     <bk-table
       size="small"
       ext-cls="user-group-member-table"
@@ -69,16 +71,16 @@
 <script>
   import { formatCodeData } from '@/common/util';
   export default {
+    props: {
+      curDetailData: {
+        type: Object
+      }
+    },
     data () {
       return {
         tableLoading: false,
         groupValue: '',
-        groupTableList: [
-          {
-            id: 1455,
-            name: 'adminasasasasasasasasasasasssasadminasasasasasasasasasasasssasasasasadminasasasasasasasasasasasssasasasasasasas'
-          }
-        ],
+        groupTableList: [],
         pagination: {
           current: 1,
           limit: 10,
@@ -92,10 +94,16 @@
         }
       };
     },
+    created () {
+      this.fetchAssociateGroupDetail();
+    },
     methods: {
-      async fetchAssociateGroup (tableLoading = false) {
+      async fetchAssociateGroupDetail (isTableLoading = false) {
+        this.tableLoading = isTableLoading;
         try {
-          console.log(333);
+          const { id } = this.curDetailData;
+          const { data } = await this.$store.dispatch('memberTemplate/subjectTemplateDetail', { id });
+          console.log(333, data);
           this.emptyTableData = formatCodeData(0, this.emptyTableData, true);
         } catch (e) {
           this.messageAdvancedError(e);

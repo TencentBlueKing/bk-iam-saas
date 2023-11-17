@@ -84,17 +84,16 @@
 <script>
   import { formatCodeData } from '@/common/util';
   export default {
+    props: {
+      curDetailData: {
+        type: Object
+      }
+    },
     data () {
       return {
         tableLoading: false,
         groupValue: '',
-        groupTableList: [
-          {
-            id: 1455,
-            name:
-              'adminasasasasasasasasasasasssasadminasasasasasasasasasasasssasasasasadminasasasasasasasasasasasssasasasasasasas'
-          }
-        ],
+        groupTableList: [],
         pagination: {
           current: 1,
           limit: 10,
@@ -110,15 +109,31 @@
     },
     methods: {
       async fetchAssociateGroup (tableLoading = false) {
+        this.tableLoading = tableLoading;
         try {
-          console.log(333);
-          this.emptyTableData = formatCodeData(0, this.emptyTableData, true);
+          const { current, limit } = this.pagination;
+          const params = {
+            page: current,
+            limit,
+            keyword: this.groupValue,
+            id: this.curDetailData.id
+          };
+          const { code, data } = await this.$store.dispatch('memberTemplate/getSubjectTemplatesGroups', params);
+          const { count, results } = data;
+          this.pagination.count = count || 0;
+          this.groupTableList = results || [];
+          this.emptyTableData = formatCodeData(code, this.emptyTableData, this.groupTableList.length === 0);
         } catch (e) {
+          this.groupTableList = [];
+          this.emptyTableData = formatCodeData(0, this.emptyTableData);
           this.messageAdvancedError(e);
+        } finally {
+          this.tableLoading = false;
+          this.$emit('on-associate-change', { count: this.pagination.count });
         }
       },
 
-      handleSearchGroup (payload) {
+      handleSearchGroup () {
         this.emptyTableData.tipType = 'search';
         this.fetchAssociateGroup(true);
       },
@@ -139,7 +154,22 @@
         await this.fetchAssociateGroup(true);
       },
 
-      handleConfirmDisassociate () {},
+      async handleConfirmDisassociate ({ id }) {
+        try {
+          const params = {
+            group_id: id,
+            id: this.curDetailData.id
+          };
+          const { code } = await this.$store.dispatch('memberTemplate/deleteSubjectTemplateGroups', params);
+          if (code === 0) {
+            this.messageSuccess(this.$t(`m.memberTemplate['解除关联成功']`), 3000);
+            this.pagination.current = 1;
+            await this.fetchAssociateGroup(true);
+          }
+        } catch (e) {
+          this.messageAdvancedError(e);
+        }
+      },
 
       handleOpen (id) {
         const routeData = this.$router.resolve({

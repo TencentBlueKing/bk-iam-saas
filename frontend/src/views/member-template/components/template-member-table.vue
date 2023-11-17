@@ -1,9 +1,12 @@
 <template>
   <div class="template-member-table">
     <MemberTable
+      ref="memberTable"
+      route-mode="memberTemplate"
       :id="curDetailData.id"
       :name="curDetailData.name"
-      :read-only="readOnly"
+      :search-placeholder="placeholder"
+      :read-only="curDetailData.readonly"
       :is-show-tab="false"
       :display-set="displaySet"
     />
@@ -31,15 +34,17 @@
         users: [],
         departments: [],
         addMemberTitle: this.$t(`m.common['添加成员']`),
-        readOnly: false,
+        placeholder: this.$t(`m.memberTemplate['请输入至少3个字符的用户/组织，按enter键搜索']`),
         displaySet: {
-          showExpiredAt: false,
-          showRenewal: false,
           customNameWidth: '180px'
         }
       };
     },
     methods: {
+      async fetchTempMemberList () {
+        // this.$refs.memberTable && this.$refs.memberTable.fetchMemberList();
+      },
+
       handleMemberDelete (type, payload) {
         window.changeDialog = true;
         if (type === 'user') {

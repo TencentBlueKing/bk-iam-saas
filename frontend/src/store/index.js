@@ -89,7 +89,7 @@ import userGroupSetting from './modules/user-group-setting';
 import sensitivityLevel from './modules/sensitivity-level';
 
 // 人员模板
-import memberTemplate from './modules/memberTemplate';
+import memberTemplate from './modules/member-template';
 
 Vue.use(Vuex);
 
