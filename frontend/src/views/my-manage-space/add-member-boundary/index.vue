@@ -2141,12 +2141,12 @@
     .right {
       width: calc(100% - 600px);
       padding-left: 20px;
-      background-color: #f5f7fa;
+      /* background-color: #f5f7fa; */
       border-top: 1px solid #dcdee5;
       .result-preview {
         display: flex;
         justify-content: space-between;
-        padding: 8px 36px 8px 0px;
+        padding: 8px 42px 8px 0px;
         .bk-button-text.is-disabled {
           color: #c4c6cc;
         }
@@ -2173,7 +2173,7 @@
         position: relative;
         margin-top: 15px;
         /* padding-left: 10px; */
-        padding-right: 36px;
+        padding-right: 42px;
         /* height: 345px; */
         height: 414px;
         overflow: auto;
@@ -2190,7 +2190,7 @@
           background-color: #ffffff;
           .organization-item {
             padding: 5px;
-            box-shadow: 0 1px 1px 0 #00000014;
+            box-shadow: 0px 1px 1px rgba(0,0,0, 0.06);
             border-radius: 2px;
             display: flex;
             align-items: center;
@@ -2238,7 +2238,7 @@
           background-color: #ffffff;
           .user-item {
             padding: 5px;
-            box-shadow: 0 1px 1px 0 #00000014;
+            box-shadow: 0px 1px 1px rgba(0,0,0, 0.06);
             border-radius: 2px;
             .user-name {
               display: inline-block;

@@ -2558,11 +2558,23 @@
           });
         } catch (e) {
           console.error(e);
+          const applyCount = this.personalUserGroup.length + this.currentSelectList.length;
           if (['admin'].includes(this.user.username)) {
             this.isShowConfirmDialog = true;
-          } else {
-            this.messageAdvancedError(e);
+            return;
           }
+          if (applyCount >= 100) {
+            this.messageAdvancedError(
+              e,
+              8000,
+              3,
+              this.$t(
+                `m.info['申请加入失败，用户组数量超出上限（100个），请在“我的权限”中退出用户组后重试']`,
+                { value: applyCount - 100 }
+              ));
+            return;
+          }
+          this.messageAdvancedError(e);
         } finally {
           this.buttonLoading = false;
         }
