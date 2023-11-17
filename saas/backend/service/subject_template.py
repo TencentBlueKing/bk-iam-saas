@@ -83,7 +83,7 @@ class SubjectTemplateService:
                 ]
                 iam.delete_subject_template_groups(data)
 
-    def add_group(self, template_id: int, group_id: int, expired_at: int, creator: str):
+    def add_group(self, template_id: int, group_id: int, expired_at: int, creator: str) -> List[Subject]:
         relation = SubjectTemplateGroup(
             template_id=template_id,
             group_id=group_id,
@@ -109,17 +109,19 @@ class SubjectTemplateService:
             if backend_subjects:
                 iam.add_subject_template_groups(backend_subjects)
 
+        return subjects
+
     def _list_subjects(self, template_id) -> List[Subject]:
         queryset = SubjectTemplateRelation.objects.filter(template_id=template_id)
         subjects = [Subject(type=relation.subject_type, id=relation.subject_id) for relation in queryset]
 
         return subjects
 
-    def add_members(self, template_id: int, members: List[Subject]):
+    def add_members(self, template_id: int, members: List[Subject]) -> List[int]:
         # 排除存在的数据
         members = self._filter_members(template_id, members, include=False)
         if not members:
-            return
+            return []
 
         groups = SubjectTemplateGroup.objects.filter(template_id=template_id)
         # 拼接调用后台的数据
@@ -151,6 +153,8 @@ class SubjectTemplateService:
             # 调用后台接口
             if backend_subjects:
                 iam.add_subject_template_groups(backend_subjects)
+
+        return [group.group_id for group in groups]
 
     def delete_members(self, template_id: int, members: List[Subject]):
         # 排除不存在的数据

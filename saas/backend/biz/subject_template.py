@@ -18,12 +18,13 @@ from django.utils.translation import gettext as _
 from pydantic import BaseModel
 
 from backend.apps.organization.models import User
-from backend.apps.role.models import Role, RoleRelatedObject
+from backend.apps.role.models import Role, RoleGroupMember, RoleRelatedObject
 from backend.apps.subject_template.models import SubjectTemplate, SubjectTemplateGroup, SubjectTemplateRelation
 from backend.biz.subject import SubjectInfoList
 from backend.common.error_codes import error_codes
 from backend.service.constants import RoleRelatedObjectType, RoleType, SubjectType
 from backend.service.models.subject import Subject
+from backend.service.role import RoleService
 from backend.service.subject_template import SubjectTemplateService
 from backend.util.time import utc_to_local
 
@@ -85,6 +86,8 @@ class SubjectTemplateCheckBiz:
 class SubjectTemplateBiz:
     svc = SubjectTemplateService()
 
+    role_svc = RoleService()
+
     def create(
         self,
         role: Role,
@@ -123,13 +126,60 @@ class SubjectTemplateBiz:
         return self.svc.delete(template_id)
 
     def delete_group(self, template_id: int, group_id: int):
-        return self.svc.delete_group(template_id, group_id)
+        self.svc.delete_group(template_id, group_id)
+
+        # 同步删除role group member
+        RoleGroupMember.objects.filter(group_id=group_id, subject_template_id=template_id).delete()
 
     def add_members(self, template_id: int, members: List[Subject]):
-        return self.svc.add_members(template_id, members)
+        group_ids = self.svc.add_members(template_id, members)
+
+        # 同步添加role group member
+        role_group_members = []
+        for group_id in group_ids:
+            # 添加role group member
+            role = self.role_svc.get_role_by_group_id(group_id)
+            if role.type == RoleType.SUBSET_MANAGER.value:
+                role_id = self.role_svc.get_parent_id(role.id)
+                subset_id = role.id
+            else:
+                role_id = role.id
+                subset_id = 0
+
+            role_group_members.extend(
+                [
+                    RoleGroupMember(
+                        role_id=role_id,
+                        group_id=group_id,
+                        subset_id=subset_id,
+                        subject_template_id=template_id,
+                        subject_id=one.id,
+                        subject_type=one.type,
+                    )
+                    for one in members
+                ]
+            )
+
+        if role_group_members:
+            RoleGroupMember.objects.bulk_create(role_group_members, batch_size=100, ignore_conflicts=True)
 
     def delete_members(self, template_id: int, members: List[Subject]):
-        return self.svc.delete_members(template_id, members)
+        self.svc.delete_members(template_id, members)
+
+        # 同步删除role group member
+        user_ids = [one.id for one in members if one.type == SubjectType.USER.value]
+        if user_ids:
+            RoleGroupMember.objects.filter(
+                subject_template_id=template_id, subject_type=SubjectType.USER.value, subject_id__in=user_ids
+            ).delete()
+
+        department_ids = [one.id for one in members if one.type == SubjectType.DEPARTMENT.value]
+        if department_ids:
+            RoleGroupMember.objects.filter(
+                subject_template_id=template_id,
+                subject_type=SubjectType.DEPARTMENT.value,
+                subject_id__in=department_ids,
+            ).delete()
 
     def convert_to_subject_template_members(
         self, relations: List[SubjectTemplateRelation]
