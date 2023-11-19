@@ -75,6 +75,9 @@ class SubjectGroupBean(BaseModel):
     department_id: int = 0
     department_name: str = ""
 
+    user_count: int = 0
+    department_count: int = 0
+
 
 class GroupMemberBean(BaseModel):
     type: str
@@ -380,6 +383,8 @@ class GroupBiz:
                     created_time=utc_string_to_local(relation.created_at),
                     department_id=relation.department_id,
                     department_name=relation.department_name,
+                    user_count=group.user_count,
+                    department_count=group.department_count,
                 )
             )
 

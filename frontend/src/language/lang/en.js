@@ -537,7 +537,9 @@ export const m = {
          '只读用户组不能添加权限': 'Read only user groups cannot add permissions',
          '申请加入失败，用户组数量超出上限（100个），请在“我的权限”中退出用户组后重试': 'Application to join failed. The number of user groups exceeds the maximum limit (100), please exit {value} user group in "My permissions" and try again',
          '只读人员模板不能添加成员': 'Read-only member templates [{value}] cannot add members',
-         '该用户/组织可能会失去关联用户组的权限': 'The user/organization may lose permissions to the associated user group'
+         '该用户/组织可能会失去关联用户组的权限': 'The user/organization may lose permissions to the associated user group',
+         '最多添加一个管理员': 'Add at most one administrator',
+         '管理员不可重复添加': 'Administrators cannot be added repeatedly'
     },
     // 二次确认弹窗相关
     dialog: {

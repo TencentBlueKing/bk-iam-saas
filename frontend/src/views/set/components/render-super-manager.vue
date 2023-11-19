@@ -51,7 +51,12 @@
         <bk-table-column :label="$t(`m.common['操作']`)" width="120">
           <template slot-scope="{ row, $index }">
             <template v-if="row.isEdit">
-              <bk-button theme="primary" text :disabled="isDisabled(row)" @click="handleSave(row)">
+              <bk-button
+                theme="primary"
+                text
+                :title="saveDisableTip"
+                :disabled="isDisabled(row)"
+                @click="handleSave(row)">
                 {{ $t(`m.common['保存']`) }}
               </bk-button>
               <bk-button theme="primary" text style="margin-left: 10px;"
@@ -125,6 +130,7 @@
     data () {
       return {
         subTitle: this.$t(`m.set['超级管理员提示']`),
+        saveDisableTip: '',
         superUserList: [],
         userApi: window.BK_USER_API,
         emptyData: {
@@ -136,21 +142,28 @@
       };
     },
     computed: {
-            ...mapGetters(['user']),
-            isDisabled () {
-                return payload => {
-                    if (payload.user.length !== 1) {
-                        return true;
-                    }
-                    if (this.superUserList.filter(item => item.user[0] === payload.user[0]).length > 1) {
-                        return true;
-                    }
-                    return false;
-                };
-            },
-            tableHeight () {
-                return getWindowHeight() - 297;
-            }
+      ...mapGetters(['user']),
+      isDisabled () {
+      return (payload) => {
+          if (!payload.user.length) {
+            this.saveDisableTip = this.$t(`m.verify['管理员不能为空']`);
+            return true;
+          }
+          if (payload.user.length > 1) {
+            this.saveDisableTip = this.$t(`m.info['最多添加一个管理员']`);
+            return true;
+          }
+          if (this.superUserList.filter(item => item.user[0] === payload.user[0]).length > 1) {
+            this.saveDisableTip = this.$t(`m.info['管理员不可重复添加']`);
+            return true;
+          }
+          this.saveDisableTip = '';
+          return false;
+      };
+      },
+      tableHeight () {
+          return getWindowHeight() - 297;
+      }
     },
     created () {
       this.fetchSuperManager();
@@ -198,6 +211,16 @@
 
       handleSuperRtxChange (payload, row) {
         row.user = [...payload];
+        if (this.superUserList.length) {
+          const hasManager = this.superUserList.filter(item => item.user[0] === row.user[0]).length > 1;
+          if (hasManager) {
+            if (row.user.length < 2) {
+              return this.messageWarn(this.$t(`m.info['管理员不可重复添加']`), 3000);
+            } else {
+              return this.messageWarn(this.$t(`m.info['最多添加一个管理员']`), 3000);
+            }
+          }
+        }
       },
 
       handleSuperRtxEnter (event, payload) {
@@ -206,6 +229,16 @@
         }
         if (event.keyCode === 13) {
           event.stopPropagation();
+          if (this.superUserList.length) {
+            const hasManager = this.superUserList.filter(item => item.user[0] === payload.user[0]).length > 1;
+            if (hasManager) {
+              if (payload.user.length < 2) {
+                return this.messageWarn(this.$t(`m.info['管理员不可重复添加']`), 3000);
+              } else {
+                return this.messageWarn(this.$t(`m.info['最多添加一个管理员']`), 3000);
+              }
+            }
+          }
           const flag = _.isEqual(payload.user.sort(), payload.userBackup.sort());
           if (flag) {
             payload.isEdit = false;
