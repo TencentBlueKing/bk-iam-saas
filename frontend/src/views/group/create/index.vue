@@ -21,8 +21,7 @@
         </div>
         <div class="select-wrap-checkbox">
           <bk-checkbox
-            v-model="formData.apply_disable"
-            :disabled="userGroupAttributes.apply_disable"
+            v-model="formData.sync_subject_template"
           >
             <span class="checkbox-sync-perm no-border">
               {{ $t(`m.userGroup['自动生成同名人员模板']`) }}
@@ -201,7 +200,8 @@
           name: '',
           approval_process_id: 1,
           description: '',
-          apply_disable: false
+          apply_disable: false,
+          sync_subject_template: false
         },
         isShowAddMemberDialog: false,
         isShowMemberAdd: true,
@@ -238,7 +238,8 @@
           source_from_role: false
         },
         userGroupAttributes: {
-          apply_disable: false
+          apply_disable: false,
+          sync_subject_template: false
         }
       };
     },

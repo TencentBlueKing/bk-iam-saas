@@ -112,140 +112,153 @@
 
       <bk-table
         ref="groupMemberRef"
-        :data="tableList"
         size="small"
         ext-cls="user-group-member-table"
+        :data="tableList"
         :cell-class-name="getCellClass"
         :outer-border="false"
         :header-border="false"
         :pagination="pagination"
-        @page-change="pageChange"
-        @page-limit-change="limitChange"
+        @page-change="handlePageChange"
+        @page-limit-change="handleLimitChange"
         @select="handlerChange"
         @select-all="handlerAllChange"
         v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
       >
-        <bk-table-column type="selection" align="center" />
-        <template v-if="['memberTemplate'].includes(tabActive)">
-          <bk-table-column :label="$t(`m.memberTemplate['人员模板']`)">
-            <template slot-scope="{ row }">
-              <div class="member-template" :title="row.name" @click.stop="handleTempView(row)">
-                <Icon type="organization-fill" />
-                <span class="name">
-                  {{ row.name || "--" }}
-                </span>
-              </div>
-            </template>
-          </bk-table-column>
-          <bk-table-column :label="$t(`m.common['加入时间']`)">
-            <template slot-scope="{ row }">
-              <span :title="row.created_time.replace(/T/, ' ')">
-                {{ row.created_time.replace(/T/, " ") }}
-              </span>
-            </template>
-          </bk-table-column>
-          <bk-table-column :label="$t(`m.common['操作-table']`)" width="180">
-            <template slot-scope="{ row }">
-              <div>
-                <bk-button
-                  text
-                  theme="primary"
-                  :disabled="disabledGroup()"
-                  :title="disabledGroup() ? $t(`m.userGroup['管理员组至少保留一条数据']`) : ''"
-                  @click="handleDelete(row)"
+        <bk-table-column type="selection" align="center" :selectable="getDefaultSelect" />
+        <template v-for="item in tableProps">
+          <template v-if="item.prop === 'name'">
+            <bk-table-column
+              :key="item.prop"
+              :label="item.label"
+              :prop="item.prop">
+              <template slot-scope="{ row }">
+                <div
+                  v-if="row.type === 'user'"
+                  class="user"
+                  :title="`${row.id}(${row.name})`"
                 >
-                  {{ $t(`m.common['移除']`) }}
-                </bk-button>
-              </div>
-            </template>
-          </bk-table-column>
-        </template>
-        <template v-else>
-          <bk-table-column :label="$t(`m.userGroup['用户/组织']`)">
-            <template slot-scope="{ row }">
-              <div
-                class="user"
-                v-if="row.type === 'user'"
-                :title="`${row.id}(${row.name})`"
-              >
-                <Icon type="personal-user" />
-                <span class="name">{{ row.id }}</span
-                ><span class="count" v-if="row.name !== ''">
-                  {{ "(" + row.name + ")" }}
-                </span>
-              </div>
-              <div class="depart" v-else :title="row.full_name">
-                <Icon type="organization-fill" />
-                <span class="name" :style="{ maxWidth: curDisplaySet.customNameWidth }">
-                  {{ row.name || "--" }}
-                </span>
-                <span class="count" v-if="row.member_count && enableOrganizationCount">
-                  ({{ row.member_count }})
-                </span>
-              </div>
-            </template>
-          </bk-table-column>
-          <bk-table-column
-            :label="$t(`m.userGroupDetail['所属组织架构']`)"
-          >
-            <template slot-scope="{ row }">
-              <template v-if="row.type === 'user'">
-                <template v-if="row.user_departments && row.user_departments.length">
-                  <div
-                    :title="row.user_departments.join(';')"
-                    v-for="(item, index) in row.user_departments"
-                    :key="index"
-                    class="user_departs"
-                  >
-                    {{ item }}
-                  </div>
+                  <Icon type="personal-user" />
+                  <span class="name">{{ row.id }}</span
+                  ><span class="count" v-if="row.name">
+                    {{ "(" + row.name + ")" }}
+                  </span>
+                </div>
+                <div v-else
+                  class="depart"
+                  :title="row.full_name"
+                >
+                  <Icon type="organization-fill" />
+                  <span class="name" :style="{ maxWidth: curDisplaySet.customNameWidth }">
+                    {{ row.name || "--" }}
+                  </span>
+                  <span class="count" v-if="row.member_count && enableOrganizationCount">
+                    ({{ row.member_count }})
+                  </span>
+                </div>
+              </template>
+            </bk-table-column>
+          </template>
+          <template v-else-if="item.prop === 'template_name'">
+            <bk-table-column
+              :key="item.prop"
+              :label="item.label"
+              :prop="item.prop">
+              <template slot-scope="{ row }">
+                <div class="member-template" :title="row.name" @click.stop="handleTempView(row)">
+                  <Icon type="organization-fill" />
+                  <span class="name">
+                    {{ row.name || "--" }}
+                  </span>
+                </div>
+              </template>
+            </bk-table-column>
+          </template>
+          <template v-else-if="item.prop === 'user_departments'">
+            <bk-table-column
+              :key="item.prop"
+              :label="item.label"
+              :prop="item.prop">
+              <template slot-scope="{ row }">
+                <template v-if="row.type === 'user'">
+                  <template v-if="row.user_departments && row.user_departments.length">
+                    <div
+                      :title="row.user_departments.join(';')"
+                      v-for="(v, i) in row.user_departments"
+                      :key="i"
+                      class="user_departs"
+                    >
+                      {{ v }}
+                    </div>
+                  </template>
+                  <template v-else>
+                    <div>--</div>
+                  </template>
                 </template>
                 <template v-else>
-                  <div>--</div>
+                  {{ row.full_name }}
                 </template>
               </template>
-              <template v-else>
-                {{ row.full_name }}
-              </template>
-            </template>
-          </bk-table-column>
-          <template>
+            </bk-table-column>
+          </template>
+          <template v-else-if="item.prop === 'expired_at_display'">
             <bk-table-column
-              :label="$t(`m.common['有效期']`)"
-              prop="expired_at_display"
+              :key="item.prop"
+              :label="item.label"
+              :prop="item.prop"
             />
           </template>
-          <bk-table-column :label="$t(`m.common['加入时间']`)" prop="created_time">
-            <template slot-scope="{ row }">
-              <span :title="row.created_time.replace(/T/, ' ')">
-                {{ row.created_time.replace(/T/, " ") }}
-              </span>
-            </template>
-          </bk-table-column>
-          <bk-table-column :label="$t(`m.common['操作-table']`)" width="180">
-            <template slot-scope="{ row }">
-              <div>
-                <bk-button
-                  text
-                  theme="primary"
-                  :disabled="disabledGroup()"
-                  :title="disabledGroup() ? $t(`m.userGroup['管理员组至少保留一条数据']`) : ''"
-                  @click="handleDelete(row)"
-                >
-                  {{ $t(`m.common['移除']`) }}
-                </bk-button>
-                <bk-button
-                  v-if="(row.expired_at !== PERMANENT_TIMESTAMP && !['memberTemplate'].includes(tabActive))"
-                  theme="primary"
-                  style="margin-left: 4px"
-                  text
-                  @click="handleShowRenewal(row)"
-                >
-                  {{ $t(`m.renewal['续期']`) }}
-                </bk-button>
-              </div>
-            </template>
-          </bk-table-column>
+          <template v-else-if="item.prop === 'created_time'">
+            <bk-table-column
+              :key="item.prop"
+              :label="item.label"
+              :prop="item.prop">
+              <template slot-scope="{ row }">
+                <span :title="row.created_time.replace(/T/, ' ')">
+                  {{ row.created_time.replace(/T/, " ") }}
+                </span>
+              </template>
+            </bk-table-column>
+          </template>
+          <template v-else-if="item.prop === 'operate'">
+            <bk-table-column
+              :key="item.prop"
+              :label="item.label"
+              :prop="item.prop"
+              :width="['memberTemplate'].includes(tabActive) ? 180 : 'auto'">
+              <template slot-scope="{ row }">
+                <template v-if="['userOrOrg'].includes(tabActive)">
+                  <bk-button
+                    text
+                    theme="primary"
+                    :disabled="disabledGroup()"
+                    :title="disabledGroup() ? $t(`m.userGroup['管理员组至少保留一条数据']`) : ''"
+                    @click="handleDelete(row)"
+                  >
+                    {{ $t(`m.common['移除']`) }}
+                  </bk-button>
+                  <bk-button
+                    v-if="row.expired_at !== PERMANENT_TIMESTAMP"
+                    theme="primary"
+                    style="margin-left: 4px"
+                    text
+                    @click="handleShowRenewal(row)"
+                  >
+                    {{ $t(`m.renewal['续期']`) }}
+                  </bk-button>
+                </template>
+                <template v-if="['memberTemplate'].includes(tabActive)">
+                  <bk-button
+                    text
+                    theme="primary"
+                    @click="handleDelete(row)"
+                  >
+                    {{ $t(`m.common['移除']`) }}
+                  </bk-button>
+                </template>
+              </template>
+            </bk-table-column>
+          </template>
         </template>
         <template slot="empty">
           <ExceptionEmpty
@@ -393,12 +406,6 @@
           tip: '',
           tipType: ''
         },
-        emptyMemberData: {
-          type: '',
-          text: '',
-          tip: '',
-          tipType: ''
-        },
         adminGroupTitle: '',
         renewalGroupTitle: '',
         keyword: '',
@@ -457,7 +464,8 @@
               url: 'memberTemplate/getSubjectTemplateMembers'
             }
           }
-        }
+        },
+        tableProps: []
       };
     },
     computed: {
@@ -467,6 +475,7 @@
         const hasData = this.tableList.length > 0 && this.currentSelectList.length > 0;
         if (
           hasData
+          && ['userOrOrg'].includes(this.tabActive)
           && this.getGroupAttributes
           && this.getGroupAttributes().source_from_role
         ) {
@@ -543,6 +552,16 @@
           this.curDisplaySet = Object.assign({}, value);
         },
         immediate: true
+      },
+      tabActive: {
+        handler (newValue, oldValue) {
+          this.curRouteMode = ['userOrOrg'].includes(newValue) ? 'userGroupDetail' : newValue;
+          this.tableProps = this.getTableProps(newValue);
+          if (oldValue && oldValue !== newValue) {
+            this.resetPagination();
+          }
+        },
+        immediate: true
       }
     },
     mounted () {
@@ -559,11 +578,30 @@
     // window.addEventListener('message', this.fetchReceiveData);
     },
     methods: {
-      // 接收iframe父页面传递的message
-      fetchReceiveData (payload) {
-        const { data } = payload;
-        console.log(data, '接受传递过来的数据');
-      // this.fetchResetData(data);
+      getTableProps (payload) {
+        const tabMap = {
+          userOrOrg: () => {
+            return [
+              { label: this.$t(`m.userGroup['用户组名']`), prop: 'name' },
+              { label: this.$t(`m.userGroupDetail['所属组织架构']`), prop: 'user_departments' },
+              { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' },
+              { label: this.$t(`m.common['加入时间']`), prop: 'created_time' },
+              { label: this.$t(`m.common['操作']`), prop: 'operate' }
+            ];
+          },
+          memberTemplate: () => {
+            return [
+              { label: this.$t(`m.memberTemplate['人员模板']`), prop: 'template_name' },
+              { label: this.$t(`m.common['加入时间']`), prop: 'created_time' },
+              { label: this.$t(`m.common['操作']`), prop: 'operate' }
+            ];
+          }
+        };
+        return tabMap[payload]();
+      },
+
+      getDefaultSelect () {
+        return this.tableList.length > 0;
       },
 
       getCellClass ({ row, column, rowIndex, columnIndex }) {
@@ -573,14 +611,25 @@
         return '';
       },
 
+      // 接收iframe父页面传递的message
+      fetchReceiveData (payload) {
+        const { data } = payload;
+        console.log(data, '接受传递过来的数据');
+      // this.fetchResetData(data);
+      },
+
       fetchInitData () {
         this.fetchMemberList();
+      },
+
+      fetchMemberList () {
+        this.fetchUserOrOrgList();
         if (this.isShowTab) {
           this.fetchMemberTemplateList();
         }
       },
 
-      async fetchMemberList () {
+      async fetchUserOrOrgList () {
         this.tableLoading = true;
         try {
           const { current, limit } = this.pagination;
@@ -591,41 +640,20 @@
             keyword: this.keyword
           };
           let url = 'userGroup/getUserGroupMemberList';
-          if (this.curModeMap[this.curRouteMode]) {
-            url = this.curModeMap[this.curRouteMode].list.url;
+          if (this.curModeMap[this.routeMode]) {
+            url = this.curModeMap[this.routeMode].list.url;
           }
           const { code, data } = await this.$store.dispatch(
             url,
             params
           );
-          this.pagination.count = data.count || 0;
-          this.tableList.splice(0, this.tableList.length, ...(data.results || []));
-          this.$nextTick(() => {
-            const currentSelectList = this.currentSelectList.map((item) =>
-              item.id.toString()
-            );
-            this.tableList.forEach((item) => {
-              if (currentSelectList.includes(item.id.toString())) {
-                this.$refs.groupMemberRef
-                  && this.$refs.groupMemberRef.toggleRowSelection(item, true);
-              }
-            });
-            if (!this.currentSelectList.length) {
-              this.$refs.groupMemberRef && this.$refs.groupMemberRef.clearSelection();
-            }
-          });
-          await this.handleRefreshTabCount();
-          await this.fetchCustomTotal();
-          this.emptyData = formatCodeData(
-            code,
-            this.emptyData,
-            this.tableList.length === 0
-          );
+          const { count, results } = data;
+          this.pagination.count = count || 0;
+          this.fetchRefreshSelectList(code, results || []);
         } catch (e) {
           console.error(e);
-          const { code } = e;
           this.tableList = [];
-          this.emptyData = formatCodeData(code, this.emptyData);
+          this.emptyData = formatCodeData(e.code, this.emptyData);
           this.messageAdvancedError(e);
         } finally {
           this.tableLoading = false;
@@ -646,34 +674,13 @@
             'memberTemplate/getSubjectTemplateList',
             params
           );
-          this.memberPagination.count = data.count || 0;
-          this.tableList.splice(0, this.tableList.length, ...(data.results || []));
-          this.$nextTick(() => {
-            const currentSelectList = this.currentSelectList.map((item) =>
-              item.id.toString()
-            );
-            this.tableList.forEach((item) => {
-              if (currentSelectList.includes(item.id.toString())) {
-                this.$refs.groupMemberRef
-                  && this.$refs.groupMemberRef.toggleRowSelection(item, true);
-              }
-            });
-            if (!this.currentSelectList.length) {
-              this.$refs.groupMemberRef && this.$refs.groupMemberRef.clearSelection();
-            }
-          });
-          await this.handleRefreshTabCount();
-          await this.fetchCustomTotal();
-          this.emptyMemberData = formatCodeData(
-            code,
-            this.emptyMemberData,
-            this.tableList.length === 0
-          );
+          const { count, results } = data;
+          this.memberPagination.count = count || 0;
+          this.fetchRefreshSelectList(code, results || []);
         } catch (e) {
           console.error(e);
-          const { code } = e;
           this.tableList = [];
-          this.emptyMemberData = formatCodeData(code, this.emptyMemberData);
+          this.emptyData = formatCodeData(e.code, this.emptyData);
           this.messageAdvancedError(e);
         } finally {
           this.tableLoading = false;
@@ -695,8 +702,15 @@
         this.curMember = {};
         this.currentSelectList = [];
         this.resetPagination();
-        await this.fetchMemberList();
-        this.handleRefreshTabCount();
+        const tabMap = {
+          userOrOrg: async () => {
+            await this.fetchUserOrOrgList();
+          },
+          memberTemplate: async () => {
+            await this.fetchMemberTemplateList();
+          }
+        };
+        return tabMap[payload]();
       },
 
       handleTempView (payload) {
@@ -713,6 +727,31 @@
             && this.$refs.tabRef.$refs.tabLabel
             && this.$refs.tabRef.$refs.tabLabel.forEach((label) => label.$forceUpdate());
         });
+      },
+
+      async fetchRefreshSelectList (code, list) {
+        this.tableList = [...list];
+        this.$nextTick(() => {
+          const currentSelectList = this.currentSelectList.map((item) =>
+            item.id.toString()
+          );
+          this.tableList.forEach((item) => {
+            if (currentSelectList.includes(item.id.toString())) {
+              this.$refs.groupMemberRef
+                && this.$refs.groupMemberRef.toggleRowSelection(item, true);
+            }
+          });
+          if (!this.currentSelectList.length) {
+            this.$refs.groupMemberRef && this.$refs.groupMemberRef.clearSelection();
+          }
+        });
+        await this.handleRefreshTabCount();
+        await this.fetchCustomTotal();
+        this.emptyData = formatCodeData(
+          code,
+          this.emptyData,
+          this.tableList.length === 0
+        );
       },
 
       fetchCustomTotal () {
@@ -1080,17 +1119,33 @@
       handleBatchDelete () {
         if (this.currentSelectList.length === 1) {
           const payload = this.currentSelectList[0];
-          this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)}${this.$t(
-            `m.common['【']`
-          )}${payload.id}(${payload.name})${this.$t(`m.common['】']`)}${this.$t(
-            `m.common['，']`
-          )}${this.$t(`m.info['该成员将不再继承该组的权限']`)}${this.$t(`m.common['。']`)}`;
+          if (this.curModeMap[this.curRouteMode]) {
+            this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)}${this.$t(
+              `m.common['【']`
+            )}${payload.id}(${payload.name})${this.$t(`m.common['】']`)}${this.$t(
+              `m.common['，']`
+            )}${this.$t(`m.info['该用户/组织可能会失去关联用户组的权限']`)}${this.$t(`m.common['。']`)}`;
+          } else {
+            this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)}${this.$t(
+              `m.common['【']`
+            )}${payload.id}(${payload.name})${this.$t(`m.common['】']`)}${this.$t(
+              `m.common['，']`
+            )}${this.$t(`m.info['该成员将不再继承该组的权限']`)}${this.$t(`m.common['。']`)}`;
+          }
         } else {
-          this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)} ${
-            this.currentSelectList.length
-          } ${this.$t(`m.common['位成员']`)}${this.$t(`m.common['，']`)}${this.$t(
-            `m.info['这些成员将不再继承该组的权限']`
-          )}${this.$t(`m.common['。']`)}`;
+          if (this.curModeMap[this.curRouteMode]) {
+            this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)} ${
+              this.currentSelectList.length
+            } ${this.$t(`m.common['位成员']`)}${this.$t(`m.common['，']`)}${this.$t(
+              `m.info['这些成员将不再关联该用户组的权限']`
+            )}${this.$t(`m.common['。']`)}`;
+          } else {
+            this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)} ${
+              this.currentSelectList.length
+            } ${this.$t(`m.common['位成员']`)}${this.$t(`m.common['，']`)}${this.$t(
+              `m.info['这些成员将不再继承该组的权限']`
+            )}${this.$t(`m.common['。']`)}`;
+          }
         }
         this.deleteDialog.visible = true;
       },
@@ -1127,31 +1182,35 @@
         }
       },
 
-      pageChange (page) {
-        if (this.currentBackup === page) {
-          return;
-        }
-        this.pagination.current = page;
-        this.fetchMemberList();
-      },
-
-      limitChange (currentLimit, prevLimit) {
-        this.pagination.limit = currentLimit;
-        this.pagination.current = 1;
-        this.fetchMemberList();
-      },
-
-      handleMemberPageChange (current) {
+      handlePageChange (current) {
         if (this.currentBackup === current) {
           return;
         }
-        this.memberPagination = Object.assign(this.memberPagination, { current });
-        this.fetchMemberTemplateList(true);
+        const tabMap = {
+          userOrOrg: () => {
+            this.pagination = Object.assign(this.pagination, { current });
+            this.fetchUserOrOrgList();
+          },
+          memberTemplate: () => {
+            this.memberPagination = Object.assign(this.memberPagination, { current });
+            this.fetchMemberTemplateList();
+          }
+        };
+        return tabMap[this.tabActive]();
       },
 
-      handleMemberLimitChange (limit) {
-        this.memberPagination = Object.assign(this.memberPagination, { current: 1, limit });
-        this.fetchMemberTemplateList(true);
+      handleLimitChange (limit, prevLimit) {
+        const tabMap = {
+          userOrOrg: () => {
+            this.pagination = Object.assign(this.pagination, { current: 1, limit });
+            this.fetchUserOrOrgList();
+          },
+          memberTemplate: () => {
+            this.memberPagination = Object.assign(this.memberPagination, { current: 1, limit });
+            this.fetchMemberTemplateList();
+          }
+        };
+        return tabMap[this.tabActive]();
       },
 
       handleAfterDeleteLeave () {
@@ -1197,7 +1256,7 @@
             }
             this.messageSuccess(this.$t(`m.info['移除成功']`), 3000);
             this.currentSelectList = [];
-            this.pagination = Object.assign(this.pagination, { current: 1, limit: 10 });
+            this.resetPagination();
             this.fetchMemberList();
           }
         } catch (e) {

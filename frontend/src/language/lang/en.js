@@ -399,6 +399,7 @@ export const m = {
         '该成员将不再继承该组的权限': 'the member will no longer inherit the permissions of the group',
         '这些成员将不再继承该组的权限': 'these members will no longer inherit the permissions of the group',
         '该组将不再继承该模板的权限': 'The group will no longer inherit the permissions of the template',
+        '这些成员将不再关联该用户组的权限': 'These members will no longer be associated with the permissions of this user group',
         '解除成功': 'Lifted',
         '当前用户将不再继承该模板权限': 'The current user will no longer inherit the template permissions',
         '退出成功': 'Quit successfully',
