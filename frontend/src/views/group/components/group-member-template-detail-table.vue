@@ -1,7 +1,18 @@
 <template>
   <div
     class="iam-user-group-member member-template-detail-slider"
-    v-bkloading="{ isLoading: tableLoading, opacity: 1, zIndex: 1000 }">
+  >
+    <div class="template-search-input">
+      <bk-input
+        v-model="tableKeyWord"
+        class="template-input-wrapper"
+        :placeholder="$t(`m.memberTemplate['请输入至少3个字符的用户/组织，按enter键搜索']`)"
+        :right-icon="'bk-icon icon-search'"
+        :clearable="true"
+        @clear="handleClearSearch"
+        @enter="handleSearchGroup"
+        @right-icon-click="handleSearchGroup" />
+    </div>
     <bk-table
       size="small"
       ext-cls="user-group-member-table"
@@ -79,7 +90,7 @@
     data () {
       return {
         tableLoading: false,
-        groupValue: '',
+        tableKeyWord: '',
         groupTableList: [],
         pagination: {
           current: 1,
@@ -91,68 +102,72 @@
           text: '',
           tip: '',
           tipType: ''
-        }
+        },
+        enableOrganizationCount: window.ENABLE_ORGANIZATION_COUNT.toLowerCase() === 'true'
       };
     },
     created () {
-      this.fetchAssociateGroupDetail();
+      this.fetchTemplateGroupList();
     },
     methods: {
-      async fetchAssociateGroupDetail (isTableLoading = false) {
-        this.tableLoading = isTableLoading;
+      async fetchTemplateGroupList () {
+        this.tableLoading = true;
         try {
-          const { id } = this.curDetailData;
-          const { data } = await this.$store.dispatch('memberTemplate/subjectTemplateDetail', { id });
-          console.log(333, data);
-          this.emptyTableData = formatCodeData(0, this.emptyTableData, true);
+          const { current, limit } = this.pagination;
+          const { id, template_id } = this.curDetailData;
+          const params = {
+            id,
+            template_id,
+            page: current,
+            page_size: limit,
+            keyword: this.tableKeyWord
+          };
+          const { code, data } = await this.$store.dispatch('memberTemplate/getGroupSubjectTemplateMembers', params);
+          const { count, results } = data;
+          this.pagination.count = count || 0;
+          this.groupTableList = results || [];
+          this.emptyTableData = formatCodeData(code, this.emptyTableData, this.groupTableList.length === 0);
         } catch (e) {
+          this.groupTableList = [];
+          this.emptyTableData = formatCodeData(e.code, this.emptyTableData);
           this.messageAdvancedError(e);
+        } finally {
+          this.tableLoading = false;
         }
       },
 
       handleSearchGroup (payload) {
+        this.tableKeyWord = payload;
         this.emptyTableData.tipType = 'search';
-        this.fetchAssociateGroup(true);
+        this.fetchTemplateGroupList();
       },
 
-      handleClearGroup () {
-        this.groupValue = '';
+      handleClearSearch () {
+        this.tableKeyWord = '';
         this.emptyTableData.tipType = '';
-        this.fetchAssociateGroup(true);
+        this.resetPagination();
+        this.fetchTemplateGroupList();
       },
 
-      async handlePageChange (page) {
-        this.pagination = Object.assign(this.pagination, { current: page });
-        await this.fetchAssociateGroup(true);
+      async handlePageChange (current) {
+        this.pagination = Object.assign(this.pagination, { current });
+        await this.fetchTemplateGroupList();
       },
 
       async handleLimitChange (limit) {
         this.pagination = Object.assign(this.pagination, { current: 1, limit });
-        await this.fetchAssociateGroup(true);
-      },
-
-      handleConfirmDisassociate () {},
-
-      handleOpen (id) {
-        const routeData = this.$router.resolve({
-          path: `user-group-detail/${id}`,
-          query: {
-            noFrom: true
-          }
-        });
-        window.open(routeData.href, '_blank');
+        await this.fetchTemplateGroupList();
       },
 
       handleEmptyClear () {
         this.emptyTableData.tipType = '';
-        this.groupValue = '';
+        this.tableKeyWord = '';
         this.resetPagination();
-        this.fetchAssociateGroup(true);
+        this.fetchTemplateGroupList();
       },
 
       handleEmptyRefresh () {
-        this.resetPagination();
-        this.fetchAssociateGroup(true);
+        this.handleEmptyClear();
       },
 
       resetPagination () {
@@ -165,9 +180,9 @@
 <style lang="postcss" scoped>
 @import '@/css/mixins/member-table.css';
 .member-template-detail-slider {
+  padding: 0 40px;
   .user-group-member-table {
-    padding: 0 40px;
-    margin-top: 0;
+    margin-top: 20px;
   }
 }
 </style>

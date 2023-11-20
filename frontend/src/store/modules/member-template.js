@@ -219,7 +219,42 @@ export default {
       const id = requestParams.id;
       delete requestParams.id;
       return http.delete(`${AJAX_URL_PREFIX}/subject_templates/${id}/members/`, { data: requestParams }, config);
-    }
+    },
 
+    /**
+     * 用户组拥有的人员模板列表
+     *
+     * @param {Function} commit store commit mutation handler
+     * @param {Object} state store state
+     * @param {Function} dispatch store dispatch action handler
+     * @param {Object} params 请求参数
+     * @param {Object?} config http config
+     *
+     * @return {Promise} promise 对象
+    */
+    getGroupSubjectTemplate ({ commit, state, dispatch }, params, config) {
+      const requestParams = Object.assign({}, params);
+      const id = requestParams.id;
+      delete requestParams.id;
+      return http.get(`${AJAX_URL_PREFIX}/groups/${id}/subject_templates/?${json2Query(requestParams)}`, requestParams, config);
+    },
+
+    /**
+     * 模版用户组成员列表
+     *
+     * @param {Function} commit store commit mutation handler
+     * @param {Object} state store state
+     * @param {Function} dispatch store dispatch action handler
+     * @param {Object} params 请求参数
+     * @param {Object?} config http config
+     *
+     * @return {Promise} promise 对象
+    */
+    getGroupSubjectTemplateMembers ({ commit, state, dispatch }, params, config) {
+      const requestParams = Object.assign({}, params);
+      const id = requestParams.id;
+      delete requestParams.id;
+      return http.get(`${AJAX_URL_PREFIX}/groups/${id}/template-members/?${json2Query(requestParams)}`, requestParams, config);
+    }
   }
 };

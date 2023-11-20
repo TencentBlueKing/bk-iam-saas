@@ -138,7 +138,7 @@
               </template>
               <template v-if="isShowSearchResult">
                 <div class="search-content">
-                  <template v-if="isHasSeachResult">
+                  <template v-if="isHasSearchResult">
                     <dialog-infinite-list
                       ref="searchedResultsRef"
                       data-test-id="group_addGroupMemberDialog_list_searchResult"
@@ -152,7 +152,7 @@
                     >
                     </dialog-infinite-list>
                   </template>
-                  <template v-if="isSeachResultTooMuch">
+                  <template v-if="isSearchResultTooMuch">
                     <div class="too-much-wrapper">
                       <Icon type="warning" class="much-tips-icon" />
                       <p class="text">{{ $t(`m.info['搜索结果']`) }}</p>
@@ -173,7 +173,7 @@
                 </div>
               </template>
             </div>
-            <div v-if="!isOrganization" class="manual-wrapper">
+            <div v-if="isManual" class="manual-wrapper">
               <div class="manual-wrapper-left">
                 <bk-input
                   ref="manualInputRef"
@@ -255,6 +255,12 @@
                 </div>
               </div>
             </div>
+            <div v-if="isMemberTemplate" class="template-wrapper">
+              <IamMemberTemplateTable
+                :has-selected-templates="hasSelectedTemplates"
+                @on-selected-templates="handleSelectedTemplates"
+              />
+            </div>
           </div>
           <div class="right">
             <div class="result-preview">
@@ -279,6 +285,9 @@
                     {{ $t(`m.common['，']`) }}
                     <span class="user-count">{{ hasSelectedUsers.length }}</span
                     >{{ $t(`m.common['个']`) }}{{ $t(`m.common['用户']`) }}
+                    {{ $t(`m.common['，']`) }}
+                    <span class="template-count">{{ hasSelectedTemplates.length }}</span
+                    >{{ $t(`m.common['个']`) }}{{ $t(`m.memberTemplate['人员模板']`) }}
                   </template>
                   <!-- <template v-else>
                     <span class="user-count">0</span>
@@ -288,7 +297,8 @@
                   <template v-if="isShowSelectedText">
                     <span class="organization-count">{{ hasSelectedDepartments.length }}</span
                     >Org{{ $t(`m.common['，']`) }} <span class="user-count">{{ hasSelectedUsers.length }}</span
-                    >User
+                    >User{{ $t(`m.common['，']`) }}<span class="template-count">{{ hasSelectedTemplates.length }}</span
+                    >Member template
                   </template>
                   <template v-else>
                     <span class="user-count">0</span>
@@ -319,13 +329,31 @@
                 </div>
               </div>
               <div class="user-content" v-if="isUserSelectedEmpty">
-                <div class="user-item" v-for="item in hasSelectedUsers" :key="item.id">
+                <div
+                  :class="[
+                    'user-item',
+                    { 'user-item-bottom': isTempSelectedEmpty }
+                  ]"
+                  v-for="item in hasSelectedUsers"
+                  :key="item.id"
+                >
                   <Icon type="personal-user" class="user-icon" />
                   <span class="user-name" :title="nameType(item)"
                   >{{ item.username }}<template v-if="item.name !== ''">({{ item.name }})</template>
                   </span>
                   <!-- <Icon bk type="close-circle-shape" class="delete-icon" @click="handleDelete(item, 'user')" /> -->
                   <Icon bk type="close" class="delete-icon" @click="handleDelete(item, 'user')" />
+                </div>
+              </div>
+              <div class="template-content" v-if="isTempSelectedEmpty">
+                <div class="template-item"
+                  v-for="item in hasSelectedTemplates"
+                  :key="item.id">
+                  <Icon type="personal-user" class="user-icon" />
+                  <span class="template-name" :title="nameType(item)">
+                    {{ item.name }}
+                  </span>
+                  <Icon bk type="close" class="delete-icon" @click="handleDelete(item, 'template')" />
                 </div>
               </div>
               <div class="selected-empty-wrapper" v-if="isSelectedEmpty">
@@ -335,7 +363,7 @@
           </div>
         </template>
         <template v-else>
-          <div style="margin-top: 25px">
+          <div class="set-user-deadline">
             <iam-deadline :value="expiredAt" type="dialog" @on-change="handleDeadlineChange" />
           </div>
         </template>
@@ -362,8 +390,9 @@
             :loading="loading"
             @click="handleSave"
             data-test-id="group_btn_addMemberConfirm"
-          >{{ $t(`m.common['确定']`) }}</bk-button
           >
+            {{ $t(`m.common['确定']`) }}
+          </bk-button>
         </template>
       </template>
       <template v-else>
@@ -372,12 +401,13 @@
           :disabled="isDisabled && !isAll"
           @click="handleSave"
           data-test-id="group_btn_addMemberConfirm"
-        >{{ $t(`m.common['确定']`) }}</bk-button
         >
+          {{ $t(`m.common['确定']`) }}
+        </bk-button>
       </template>
-      <bk-button style="margin-left: 10px" :disabled="loading" @click="handleCancel">{{
-        $t(`m.common['取消']`)
-      }}</bk-button>
+      <bk-button style="margin-left: 10px" :disabled="loading" @click="handleCancel">
+        {{ $t(`m.common['取消']`) }}
+      </bk-button>
     </div>
   </bk-dialog>
 </template>
@@ -387,6 +417,7 @@
   import InfiniteTree from '@/components/infinite-tree';
   import dialogInfiniteList from '@/components/dialog-infinite-list';
   import IamDeadline from '@/components/iam-deadline/horizontal';
+  import IamMemberTemplateTable from '@/components/iam-member-template-table';
   import { guid, formatCodeData } from '@/common/util';
   import { mapGetters } from 'vuex';
   // import { bus } from '@/common/bus';
@@ -409,7 +440,8 @@
     components: {
       InfiniteTree,
       dialogInfiniteList,
-      IamDeadline
+      IamDeadline,
+      IamMemberTemplateTable
     },
     props: {
       show: {
@@ -421,6 +453,10 @@
         default: () => []
       },
       departments: {
+        type: Array,
+        default: () => []
+      },
+      templates: {
         type: Array,
         default: () => []
       },
@@ -472,10 +508,11 @@
         keyword: '',
         treeLoading: false,
         isBeingSearch: false,
-        hasSelectedUsers: [],
         searchedUsers: [],
         searchedDepartment: [],
+        hasSelectedUsers: [],
         hasSelectedDepartments: [],
+        hasSelectedTemplates: [],
         treeList: [],
         infiniteTreeKey: -1,
         searchedResult: [],
@@ -503,7 +540,8 @@
 
         panels: [
           { name: 'organization', label: this.$t(`m.common['组织架构']`) },
-          { name: 'manual', label: this.$t(`m.common['手动输入']`) }
+          { name: 'manual', label: this.$t(`m.common['手动输入']`) },
+          { name: 'memberTemplate', label: this.$t(`m.memberTemplate['人员模板']`) }
         ],
         tabActive: 'organization',
         manualValue: '',
@@ -535,7 +573,8 @@
         manualTableList: [],
         manualTableListStorage: [],
         hasSelectedManualDepartments: [],
-        hasSelectedManualUsers: []
+        hasSelectedManualUsers: [],
+        needMemberTempRoutes: ['userGroupDetail']
       };
     },
     computed: {
@@ -544,15 +583,20 @@
         return this.requestQueue.length > 0;
       },
       isDisabled () {
-        return this.isLoading || (this.hasSelectedUsers.length < 1 && this.hasSelectedDepartments.length < 1);
+        return this.isLoading
+         || (
+          this.hasSelectedUsers.length < 1
+          && this.hasSelectedDepartments.length < 1
+          && this.hasSelectedTemplates.length < 1
+          );
       },
       isNextSureDisabled () {
         return this.expiredAt === 0;
       },
-      isHasSeachResult () {
+      isHasSearchResult () {
         return (this.searchedDepartment.length > 0 || this.searchedUsers.length > 0) && !this.treeLoading;
       },
-      isSeachResultTooMuch () {
+      isSearchResultTooMuch () {
         return !this.treeLoading && this.isShowTooMuch;
       },
       isSearchResultEmpty () {
@@ -564,7 +608,9 @@
         );
       },
       isShowSelectedText () {
-        return this.hasSelectedDepartments.length > 0 || this.hasSelectedUsers.length > 0;
+        return this.hasSelectedDepartments.length > 0
+        || this.hasSelectedUsers.length > 0
+        || this.hasSelectedTemplates.length > 0;
       },
       isShowSearchResult () {
         return this.isBeingSearch && !this.treeLoading;
@@ -578,8 +624,13 @@
       isUserSelectedEmpty () {
         return this.hasSelectedUsers.length > 0;
       },
+      isTempSelectedEmpty () {
+        return this.hasSelectedTemplates.length > 0;
+      },
       isSelectedEmpty () {
-        return this.hasSelectedDepartments.length < 1 && this.hasSelectedUsers.length < 1;
+        return this.hasSelectedDepartments.length < 1
+        && this.hasSelectedUsers.length < 1
+         && this.hasSelectedTemplates.length < 1;
       },
       style () {
         if (this.showExpiredAt) {
@@ -600,6 +651,12 @@
       },
       isOrganization () {
         return this.tabActive === 'organization';
+      },
+      isManual () {
+        return this.tabActive === 'manual';
+      },
+      isMemberTemplate () {
+        return ['memberTemplate'].includes(this.tabActive);
       },
       isManualInputOverLimit () {
         if (this.manualValue === '') {
@@ -639,6 +696,9 @@
             },
             depart: () => {
               return fullName || payload.fullName || name;
+            },
+            template: () => {
+              return name;
             }
           };
           return typeMap[type] ? typeMap[type]() : typeMap['user']();
@@ -658,9 +718,16 @@
         handler (value) {
           this.isShowDialog = !!value;
           if (this.isShowDialog) {
+            if (
+              !this.needMemberTempRoutes.includes(this.$route.name)
+              || ['staff', 'subset_manager'].includes(this.user.role.type)
+            ) {
+              this.panels = this.panels.filter((item) => !['memberTemplate'].includes(item.name));
+            }
             this.infiniteTreeKey = new Date().getTime();
             this.hasSelectedUsers.splice(0, this.hasSelectedUsers.length, ...this.users);
             this.hasSelectedDepartments.splice(0, this.hasSelectedDepartments.length, ...this.departments);
+            this.hasSelectedTemplates.splice(0, this.hasSelectedDepartments.length, ...this.templates);
             this.fetchInitData();
           }
         },
@@ -1351,6 +1418,10 @@
         }
       },
 
+      async handleSelectedTemplates (payload) {
+        this.hasSelectedTemplates = [...payload];
+      },
+
       handleDeleteAll () {
         if (this.searchedUsers.length) {
           this.searchedUsers.forEach((search) => {
@@ -1706,6 +1777,12 @@
       },
 
       handleNextStep () {
+        if (this.getGroupAttributes
+          && this.getGroupAttributes().source_from_role
+          && this.hasSelectedTemplates.length > 0) {
+          this.messageWarn(this.$t(`m.common['管理员组不能添加人员模板']`), 3000);
+          return;
+        }
         this.isPrev = false;
       },
 
@@ -1715,9 +1792,16 @@
       },
 
       handleSave () {
+        if (this.getGroupAttributes
+          && this.getGroupAttributes().source_from_role
+          && this.hasSelectedTemplates.length > 0) {
+          this.messageWarn(this.$t(`m.common['管理员组不能添加人员模板']`), 3000);
+          return;
+        }
         const params = {
           users: this.hasSelectedUsers,
           departments: this.hasSelectedDepartments,
+          templates: this.hasSelectedTemplates,
           expiredAt: this.expiredAt,
           isAll: this.isAll
         };
@@ -1878,7 +1962,7 @@
     /* height: 383px; */
     height: 510px;
     .left {
-      display: inline-block;
+      /* display: inline-block; */
       /* width: 320px; */
       /* height: 383px; */
       width: 680px;
@@ -1900,18 +1984,16 @@
         margin-bottom: 15px;
         .tab-item {
           min-width: 97px;
+          padding: 0 5px;
           text-align: center;
           color: #63656e;
+          border-right: 1px solid #dcdee5;
           position: relative;
           cursor: pointer;
-          border-right: 1px solid #dcdee5;
           &-active {
             background-color: #ffffff;
             margin-bottom: -1px;
           }
-          /* &.has-margin-left {
-                        margin-left: 20px;
-                    } */
           .active-line {
             position: absolute;
             bottom: -1px;
@@ -2048,6 +2130,9 @@
           }
         }
       }
+      .template-wrapper {
+        padding: 0 24px;
+      }
     }
     .right {
       display: inline-block;
@@ -2072,12 +2157,10 @@
         top: 0;
         /* padding: 8px 24px 8px 14px; */
         font-size: 12px;
-        .organization-count {
-          margin-right: 3px;
-          color: #3a84ff;
-          font-weight: 700;
-        }
-        .user-count {
+        word-break: break-all;
+        .organization-count,
+        .user-count,
+        .template-count {
           margin-right: 3px;
           color: #3a84ff;
           font-weight: 700;
@@ -2148,13 +2231,16 @@
             color: #a3c5fd;
           }
         }
-        .user-content {
+        .user-content,
+        .template-content {
           background-color: #ffffff;
-          .user-item {
+          .user-item,
+          .template-item {
             padding: 5px;
             box-shadow: 0 1px 1px 0 #00000014;
             border-radius: 2px;
-            .user-name {
+            .user-name,
+            .template-name {
               display: inline-block;
               /* max-width: 200px; */
               max-width: 160px;
@@ -2176,6 +2262,9 @@
                 color: #3a84ff;
               }
             }
+          }
+          .user-item-bottom {
+            margin-bottom: 1px;
           }
           .user-icon {
             font-size: 16px;
@@ -2225,6 +2314,10 @@
   .manual-table-wrapper {
     height: 360px;
     border: none;
+  }
+
+  .set-user-deadline {
+    padding: 0 24px;
   }
 }
 

@@ -180,20 +180,7 @@
         if (!subjects.length) {
           return this.messageWarn(this.$t(`m.verify['模板成员不能为空']`), 3000);
         }
-        try {
-          this.$emit('on-submit', this.formData);
-          this.$bkMessage({
-            limit: 1,
-            theme: 'success',
-            message: this.$t(`m.memberTemplate['人员模板创建成功']`),
-            ellipsisLine: 2,
-            ellipsisCopy: true
-          });
-          this.resetData();
-          this.$emit('update:show', false);
-        } catch (e) {
-          this.messageAdvancedError(e);
-        }
+        this.$emit('on-submit', this.formData);
       },
 
       handleCancel (payload) {

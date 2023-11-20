@@ -90,7 +90,7 @@
 
     <MemberTemplateDetailSlider :show.sync="isShowDetailSlider" :cur-detail-data="curDetailData" />
 
-    <AddMemberTemplateSlider :show.sync="isShowAddSlider" @on-submit="handleTempSubmit" />
+    <AddMemberTemplateSlider ref="addMemberRef" :show.sync="isShowAddSlider" @on-submit="handleTempSubmit" />
 
     <AddMemberDialog :show.sync="isShowAddMemberDialog" :is-batch="isBatch" :loading="memberDialogLoading"
       :name="curName"
@@ -298,7 +298,16 @@
           };
           const { code } = await this.$store.dispatch('memberTemplate/createSubjectTemplate', params);
           if (code === 0) {
+            this.$bkMessage({
+              limit: 1,
+              theme: 'success',
+              message: this.$t(`m.memberTemplate['人员模板创建成功']`),
+              ellipsisLine: 2,
+              ellipsisCopy: true
+            });
             this.isAddRow = true;
+            this.isShowAddSlider = false;
+            this.$refs.addMemberRef && this.$refs.addMemberRef.resetData();
             this.resetPagination();
             await this.fetchMemberTemplateList();
           }

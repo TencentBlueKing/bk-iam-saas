@@ -2,7 +2,7 @@
   <div class="template-member-table">
     <MemberTable
       ref="memberTable"
-      route-mode="memberTemplate"
+      :route-mode="'memberTemplate'"
       :id="curDetailData.id"
       :name="curDetailData.name"
       :search-placeholder="placeholder"

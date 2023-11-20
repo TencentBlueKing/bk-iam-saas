@@ -114,7 +114,7 @@
           const { current, limit } = this.pagination;
           const params = {
             page: current,
-            limit,
+            page_size: limit,
             keyword: this.groupValue,
             id: this.curDetailData.id
           };

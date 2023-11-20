@@ -28,7 +28,7 @@
                   {{ $t(`m.common['批量移除']`) }}
                 </a>
               </li>
-              <li v-if="!['memberTemplate'].includes(tabActive)">
+              <li v-if="!['memberTemplate'].includes(curRouteMode)">
                 <a
                   :class="[{ 'renewal-disabled': isNoBatchRenewal() }]"
                   :title="renewalGroupTitle"
@@ -201,7 +201,7 @@
               </template>
             </bk-table-column>
           </template>
-          <template v-else-if="item.prop === 'expired_at_display'">
+          <template v-else-if="item.prop === 'expired_at_display' && !['memberTemplate'].includes(routeMode)">
             <bk-table-column
               :key="item.prop"
               :label="item.label"
@@ -227,7 +227,16 @@
               :prop="item.prop"
               :width="['memberTemplate'].includes(tabActive) ? 180 : 'auto'">
               <template slot-scope="{ row }">
-                <template v-if="['userOrOrg'].includes(tabActive)">
+                <template v-if="['memberTemplate'].includes(routeMode)">
+                  <bk-button
+                    text
+                    theme="primary"
+                    @click="handleDelete(row)"
+                  >
+                    {{ $t(`m.common['移除']`) }}
+                  </bk-button>
+                </template>
+                <template v-else>
                   <bk-button
                     text
                     theme="primary"
@@ -240,20 +249,11 @@
                   <bk-button
                     v-if="row.expired_at !== PERMANENT_TIMESTAMP"
                     theme="primary"
-                    style="margin-left: 4px"
+                    style="margin-left: 5px"
                     text
                     @click="handleShowRenewal(row)"
                   >
                     {{ $t(`m.renewal['续期']`) }}
-                  </bk-button>
-                </template>
-                <template v-if="['memberTemplate'].includes(tabActive)">
-                  <bk-button
-                    text
-                    theme="primary"
-                    @click="handleDelete(row)"
-                  >
-                    {{ $t(`m.common['移除']`) }}
                   </bk-button>
                 </template>
               </template>
@@ -323,7 +323,6 @@
   import MemberTemplateDetailSlider from '@/views/group/components/member-template-detail-slider';
 
   export default {
-    name: '',
     inject: {
       getGroupAttributes: { value: 'getGroupAttributes', default: null }
     },
@@ -406,6 +405,18 @@
           tip: '',
           tipType: ''
         },
+        emptyOrgData: {
+          type: '',
+          text: '',
+          tip: '',
+          tipType: ''
+        },
+        emptyTempData: {
+          type: '',
+          text: '',
+          tip: '',
+          tipType: ''
+        },
         adminGroupTitle: '',
         renewalGroupTitle: '',
         keyword: '',
@@ -429,18 +440,20 @@
           {
             name: 'userOrOrg',
             label: this.$t(`m.userGroup['用户/组织']`),
-            count: 0
+            count: 0,
+            empty: 'emptyOrgData'
           },
           {
             name: 'memberTemplate',
             label: this.$t(`m.nav['人员模板']`),
-            count: 0
+            count: 0,
+            empty: 'emptyTempData'
           }
         ],
         tabActive: 'userOrOrg',
-        curTempData: {},
         copyUrl: 'userGroup/getUserGroupMemberList',
-        curRouteMode: 'userGroupDetail',
+        curRouteMode: '',
+        curTempData: {},
         curModeMap: {
           memberTemplate: {
             list: {
@@ -518,11 +531,12 @@
           this.getGroupAttributes
           && this.getGroupAttributes().source_from_role
           && this.pagination.count === 1
+          && (['userOrOrg'].includes(this.tabActive) && !this.routeMode)
         );
       };
     },
     isCopyDisabled () {
-      return this.readOnly || !this.tableList.length;
+      return this.readOnly || (!this.tableList.length && ['userOrOrg'].includes(this.tabActive));
     }
     },
     watch: {
@@ -541,12 +555,6 @@
         },
         immediate: true
       },
-      routeMode: {
-        handler (value) {
-          this.curRouteMode = value;
-        },
-        immediate: true
-      },
       displaySet: {
         handler (value) {
           this.curDisplaySet = Object.assign({}, value);
@@ -556,6 +564,9 @@
       tabActive: {
         handler (newValue, oldValue) {
           this.curRouteMode = ['userOrOrg'].includes(newValue) ? 'userGroupDetail' : newValue;
+          if (this.routeMode) {
+            this.curRouteMode = _.cloneDeep(this.routeMode);
+          }
           this.tableProps = this.getTableProps(newValue);
           if (oldValue && oldValue !== newValue) {
             this.resetPagination();
@@ -586,14 +597,15 @@
               { label: this.$t(`m.userGroupDetail['所属组织架构']`), prop: 'user_departments' },
               { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' },
               { label: this.$t(`m.common['加入时间']`), prop: 'created_time' },
-              { label: this.$t(`m.common['操作']`), prop: 'operate' }
+              { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
             ];
           },
           memberTemplate: () => {
             return [
               { label: this.$t(`m.memberTemplate['人员模板']`), prop: 'template_name' },
+              { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' },
               { label: this.$t(`m.common['加入时间']`), prop: 'created_time' },
-              { label: this.$t(`m.common['操作']`), prop: 'operate' }
+              { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
             ];
           }
         };
@@ -649,14 +661,21 @@
           );
           const { count, results } = data;
           this.pagination.count = count || 0;
+          this.emptyOrgData = formatCodeData(code, this.emptyOrgData, this.pagination.count === 0);
           this.fetchRefreshSelectList(code, results || []);
         } catch (e) {
           console.error(e);
           this.tableList = [];
-          this.emptyData = formatCodeData(e.code, this.emptyData);
+          this.pagination.count = 0;
+          this.emptyOrgData = formatCodeData(e.code, this.emptyOrgData);
+          this.handleRefreshTabCount();
           this.messageAdvancedError(e);
         } finally {
           this.tableLoading = false;
+          const emptyField = this.groupTabList.find(item => item.name === this.tabActive);
+          if (emptyField) {
+            this.emptyData = _.cloneDeep(this[emptyField.empty]);
+          }
         }
       },
 
@@ -666,29 +685,37 @@
           const { current, limit } = this.memberPagination;
           const params = {
             id: this.id,
-            limit,
-            offset: limit * (current - 1),
-            keyword: this.keyword
+            page: current,
+            page_size: limit,
+            name: this.keyword
           };
           const { code, data } = await this.$store.dispatch(
-            'memberTemplate/getSubjectTemplateList',
+            'memberTemplate/getGroupSubjectTemplate',
             params
           );
           const { count, results } = data;
           this.memberPagination.count = count || 0;
+          this.emptyTempData = formatCodeData(code, this.emptyTempData, this.memberPagination.count === 0);
           this.fetchRefreshSelectList(code, results || []);
         } catch (e) {
           console.error(e);
           this.tableList = [];
-          this.emptyData = formatCodeData(e.code, this.emptyData);
+          this.memberPagination.count = 0;
+          this.emptyTempData = formatCodeData(e.code, this.emptyTempData);
           this.messageAdvancedError(e);
+          this.handleRefreshTabCount();
         } finally {
           this.tableLoading = false;
+          const emptyField = this.groupTabList.find(item => item.name === this.tabActive);
+          if (emptyField) {
+            this.emptyData = _.cloneDeep(this[emptyField.empty]);
+          }
         }
       },
 
       async handleKeyWordEnter () {
-        this.emptyData.tipType = 'search';
+        this.emptyOrgData.tipType = 'search';
+        this.emptyTempData.tipType = 'search';
         this.resetPagination();
         this.fetchInitData();
       },
@@ -701,6 +728,7 @@
         this.tabActive = payload;
         this.curMember = {};
         this.currentSelectList = [];
+        this.tableList = [];
         this.resetPagination();
         const tabMap = {
           userOrOrg: async () => {
@@ -714,12 +742,16 @@
       },
 
       handleTempView (payload) {
-        console.log(payload, 555);
-        this.curTempData = Object.assign({}, payload);
+        this.curTempData = Object.assign({}, {
+          ...payload,
+          id: this.id,
+          template_id: payload.id
+        });
         this.isShowTempDetailSlider = true;
       },
 
       handleRefreshTabCount () {
+        console.log(this.pagination.count, this.memberPagination.count);
         this.$nextTick(() => {
           this.$set(this.groupTabList[0], 'count', this.pagination.count || 0);
           this.$set(this.groupTabList[1], 'count', this.memberPagination.count || 0);
@@ -747,11 +779,6 @@
         });
         await this.handleRefreshTabCount();
         await this.fetchCustomTotal();
-        this.emptyData = formatCodeData(
-          code,
-          this.emptyData,
-          this.tableList.length === 0
-        );
       },
 
       fetchCustomTotal () {
@@ -912,8 +939,8 @@
           'user-all': async () => {
             this.handleResetCascade();
             let copyUrl = this.copyUrl;
-            if (this.curModeMap[this.curRouteMode]) {
-              copyUrl = this.curModeMap[this.curRouteMode].copy.url;
+            if (this.curModeMap[this.routeMode]) {
+              copyUrl = this.curModeMap[this.routeMode].copy.url;
             }
             const { data } = await this.$store.dispatch(
               copyUrl,
@@ -943,8 +970,8 @@
           'userAndOrg-all': async () => {
             this.handleResetCascade();
             let copyUrl = this.copyUrl;
-            if (this.curModeMap[this.curRouteMode]) {
-              copyUrl = this.curModeMap[this.curRouteMode].copy.url;
+            if (this.curModeMap[this.routeMode]) {
+              copyUrl = this.curModeMap[this.routeMode].copy.url;
             }
             const { data } = await this.$store.dispatch(
               copyUrl,
@@ -1015,8 +1042,10 @@
       },
 
       async handleEmptyRefresh () {
-        this.emptyData.tipType = '';
         this.keyword = '';
+        this.emptyData.tipType = '';
+        this.emptyOrgData.tipType = '';
+        this.emptyTempData.tipType = '';
         this.resetPagination();
         await this.fetchInitData();
       },

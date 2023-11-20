@@ -553,7 +553,7 @@
                 height: 16px;
                 margin: 0 6px 0 0;
                 border: 1px solid #979ba5;
-                /* border-radius: 50%; */
+                border-radius: 2px;
                 &.is-checked {
                     border-color: #3a84ff;
                     background-color: #3a84ff;

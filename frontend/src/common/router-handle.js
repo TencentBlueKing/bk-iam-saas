@@ -192,7 +192,8 @@ export const getRouterDiff = (payload) => {
       'myManageSpace',
       'permTemplate',
       'userGroupSetting',
-      'sensitivityLevel'
+      'sensitivityLevel',
+      'memberTemplate'
     ];
   }
   // payload其它取值默认返回全部菜单
