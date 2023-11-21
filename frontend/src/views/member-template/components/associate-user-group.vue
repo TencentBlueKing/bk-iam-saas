@@ -206,7 +206,6 @@
   &-search {
     position: static;
     top: 0;
-    padding-bottom: 16px;
   }
   &-table {
     margin-top: 16px;

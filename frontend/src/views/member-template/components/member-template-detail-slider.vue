@@ -114,11 +114,9 @@
         handler (value) {
           this.isShowSideSlider = !!value;
           if (this.curDetailData.tabActive && value) {
-            this.tabActive = this.curDetailData.tabActive;
-            // 打开侧边栏需要默认展示关联用户组数量
-            if (!['associate_groups'].includes(this.tabActive)) {
-              this.fetchAssociateData();
-            }
+            const { tabActive, group_count: groupCount } = this.curDetailData;
+            this.tabActive = tabActive;
+            this.$set(this.tabList[2], 'count', groupCount || 0);
             this.handleTabChange(this.tabActive, false);
           }
         },
@@ -126,23 +124,6 @@
       }
     },
     methods: {
-      async fetchAssociateData () {
-        try {
-          const params = {
-            page: 1,
-            page_size: 10,
-            id: this.curDetailData.id
-          };
-          const { data } = await this.$store.dispatch('memberTemplate/getSubjectTemplatesGroups', params);
-          this.$set(this.tabList[2], 'count', data.count || 0);
-        } catch (e) {
-          this.messageAdvancedError(e);
-        } finally {
-          this.tableLoading = false;
-          this.$emit('on-associate-change', { count: this.pagination.count });
-        }
-      },
-
       handleTabChange (payload, isClick = false) {
         if (payload === this.tabActive && isClick) {
           return;

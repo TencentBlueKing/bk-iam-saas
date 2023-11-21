@@ -257,6 +257,7 @@
             </div>
             <div v-if="isMemberTemplate" class="template-wrapper">
               <IamMemberTemplateTable
+                ref="memberTableRef"
                 :has-selected-templates="hasSelectedTemplates"
                 @on-selected-templates="handleSelectedTemplates"
               />
@@ -1437,6 +1438,7 @@
         this.hasSelectedDepartments.splice(0, this.hasSelectedDepartments.length, ...[]);
         this.hasSelectedManualUsers.splice(0, this.hasSelectedManualUsers.length, ...[]);
         this.hasSelectedManualDepartments.splice(0, this.hasSelectedManualDepartments.length, ...[]);
+        this.hasSelectedTemplates.splice(0, this.hasSelectedTemplates.length, ...[]);
         this.$refs.memberTreeRef && this.$refs.memberTreeRef.clearAllIsSelectedStatus();
         this.fetchManualTableData();
       },
@@ -1687,6 +1689,18 @@
           this.hasSelectedDepartments = [...this.hasSelectedDepartments.filter((organ) => organ.id !== item.id)];
           this.hasSelectedManualDepartments
             = [...this.hasSelectedManualDepartments.filter((organ) => organ.id !== item.id)];
+        }
+        if (type === 'template') {
+          this.$nextTick(() => {
+            this.hasSelectedTemplates.forEach((v) => {
+              if (this.$refs.memberTableRef) {
+                console.log(this.$refs.memberTableRef.$refs.templateTableRef);
+                this.$refs.memberTableRef.$refs.templateTableRef
+                  .toggleRowSelection(item, String(item.id) !== String(v.id));
+              }
+            });
+            this.hasSelectedTemplates = [...this.hasSelectedTemplates.filter((v) => String(item.id) !== String(v.id))];
+          });
         }
         this.fetchManualTableData();
       },

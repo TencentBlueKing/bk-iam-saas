@@ -28,7 +28,7 @@
                   {{ $t(`m.common['批量移除']`) }}
                 </a>
               </li>
-              <li v-if="!['memberTemplate'].includes(curRouteMode)">
+              <li v-if="!['memberTemplate'].includes(routeMode)">
                 <a
                   :class="[{ 'renewal-disabled': isNoBatchRenewal() }]"
                   :title="renewalGroupTitle"
@@ -114,11 +114,11 @@
         ref="groupMemberRef"
         size="small"
         ext-cls="user-group-member-table"
-        :data="tableList"
+        :data="getTableList()"
         :cell-class-name="getCellClass"
         :outer-border="false"
         :header-border="false"
-        :pagination="pagination"
+        :pagination="formatPagination()"
         @page-change="handlePageChange"
         @page-limit-change="handleLimitChange"
         @select="handlerChange"
@@ -379,10 +379,16 @@
           count: 0,
           limit: 10
         },
-        memberPagination: {
+        userOrOrgPagination: {
           current: 1,
           count: 0,
           limit: 10
+        },
+        memberPagination: {
+          current: 1,
+          count: 0,
+          limit: 10,
+          showTotalCount: true
         },
         currentBackup: 1,
         deleteDialog: {
@@ -441,13 +447,15 @@
             name: 'userOrOrg',
             label: this.$t(`m.userGroup['用户/组织']`),
             count: 0,
-            empty: 'emptyOrgData'
+            empty: 'emptyOrgData',
+            tableList: []
           },
           {
             name: 'memberTemplate',
             label: this.$t(`m.nav['人员模板']`),
             count: 0,
-            empty: 'emptyTempData'
+            empty: 'emptyTempData',
+            tableList: []
           }
         ],
         tabActive: 'userOrOrg',
@@ -485,7 +493,7 @@
     ...mapGetters(['user']),
     isNoBatchDelete () {
       return () => {
-        const hasData = this.tableList.length > 0 && this.currentSelectList.length > 0;
+        const hasData = this.currentSelectList.length > 0;
         if (
           hasData
           && ['userOrOrg'].includes(this.tabActive)
@@ -493,7 +501,7 @@
           && this.getGroupAttributes().source_from_role
         ) {
           const isAll
-            = hasData && this.currentSelectList.length === this.pagination.count;
+            = hasData && this.currentSelectList.length === this.userOrOrgPagination.count;
           this.adminGroupTitle = isAll
             ? this.$t(`m.userGroup['管理员组至少保留一条数据']`)
             : '';
@@ -504,19 +512,22 @@
     },
     isNoBatchRenewal () {
       return () => {
-        const hasData = this.tableList.length > 0 && this.currentSelectList.length > 0;
-        if (hasData) {
-          this.selectNoRenewalList = this.currentSelectList.filter(
-            (item) => item.expired_at === PERMANENT_TIMESTAMP
-          );
-          if (this.currentSelectList.length === this.selectNoRenewalList.length) {
-            this.renewalGroupTitle = this.$t(
-              `m.userGroup['已选择的用户组成员不需要续期']`
+        const emptyField = this.groupTabList.find((item) => item.name === this.tabActive);
+        if (emptyField) {
+          const hasData = emptyField.tableList.length > 0 && this.currentSelectList.length > 0;
+          if (hasData) {
+            this.selectNoRenewalList = this.currentSelectList.filter(
+              (item) => item.expired_at === PERMANENT_TIMESTAMP
             );
-            return true;
+            if (this.currentSelectList.length === this.selectNoRenewalList.length) {
+              this.renewalGroupTitle = this.$t(
+                `m.userGroup['已选择的用户组成员不需要续期']`
+              );
+              return true;
+            }
           }
+          return !hasData;
         }
-        return !hasData;
       };
     },
     isRatingManager () {
@@ -530,28 +541,54 @@
         return (
           this.getGroupAttributes
           && this.getGroupAttributes().source_from_role
-          && this.pagination.count === 1
+          && this.userOrOrgPagination.count === 1
           && (['userOrOrg'].includes(this.tabActive) && !this.routeMode)
         );
       };
     },
     isCopyDisabled () {
-      return this.readOnly || (!this.tableList.length && ['userOrOrg'].includes(this.tabActive));
+      return this.readOnly || (!this.groupTabList[0].tableList.length && ['userOrOrg'].includes(this.tabActive));
+    },
+    formatPagination () {
+      return () => {
+        const typeMap = {
+          userOrOrg: () => {
+            return this.userOrOrgPagination;
+          },
+          memberTemplate: () => {
+            return this.memberPagination;
+          }
+        };
+        return typeMap[this.tabActive]();
+      };
+    },
+    getTableList () {
+      return () => {
+        const typeMap = {
+          userOrOrg: () => {
+            return this.groupTabList[0].tableList;
+          },
+          memberTemplate: () => {
+            return this.groupTabList[1].tableList;
+          }
+        };
+        return typeMap[this.tabActive]();
+      };
     }
     },
     watch: {
-      'pagination.current' (value) {
+      'userOrOrgPagination.current' (value) {
         this.currentBackup = value;
       },
       data: {
         handler (value) {
-          this.tableList.splice(0, this.tableList.length, ...value);
+          this.groupTabList[0].tableList.splice(0, this.groupTabList[0].tableList.length, ...value);
         },
         immediate: true
       },
       count: {
         handler (value) {
-          this.pagination.count = value;
+          this.userOrOrgPagination.count = value;
         },
         immediate: true
       },
@@ -613,7 +650,15 @@
       },
 
       getDefaultSelect () {
-        return this.tableList.length > 0;
+        const typeMap = {
+          userOrOrg: () => {
+            return this.groupTabList[0].tableList.length > 0;
+          },
+          memberTemplate: () => {
+            return this.groupTabList[1].tableList.length > 0;
+          }
+        };
+        return typeMap[this.tabActive];
       },
 
       getCellClass ({ row, column, rowIndex, columnIndex }) {
@@ -660,13 +705,20 @@
             params
           );
           const { count, results } = data;
-          this.pagination.count = count || 0;
-          this.emptyOrgData = formatCodeData(code, this.emptyOrgData, this.pagination.count === 0);
-          this.fetchRefreshSelectList(code, results || []);
+          this.$set(this.groupTabList[0], 'tableList', results || []);
+          this.userOrOrgPagination.count = count || 0;
+          this.emptyOrgData = formatCodeData(code, this.emptyOrgData, this.groupTabList[0].tableList.length === 0);
+          if (this.keyword) {
+            if (!data.hasOwnProperty('count')) {
+              this.userOrOrgPagination.count = this.groupTabList[0].tableList.length;
+            }
+            this.emptyOrgData = Object.assign(this.emptyOrgData, { tipType: 'search' });
+          }
+          this.fetchRefreshSelectList();
         } catch (e) {
           console.error(e);
-          this.tableList = [];
-          this.pagination.count = 0;
+          this.$set(this.groupTabList[0], 'tableList', []);
+          this.userOrOrgPagination.count = 0;
           this.emptyOrgData = formatCodeData(e.code, this.emptyOrgData);
           this.handleRefreshTabCount();
           this.messageAdvancedError(e);
@@ -674,7 +726,7 @@
           this.tableLoading = false;
           const emptyField = this.groupTabList.find(item => item.name === this.tabActive);
           if (emptyField) {
-            this.emptyData = _.cloneDeep(this[emptyField.empty]);
+            this.emptyData = _.cloneDeep(Object.assign(this[emptyField.empty], { tipType: this.keyword ? 'search' : '' }));
           }
         }
       },
@@ -694,12 +746,19 @@
             params
           );
           const { count, results } = data;
+          this.$set(this.groupTabList[1], 'tableList', results || []);
           this.memberPagination.count = count || 0;
+          if (this.keyword) {
+            if (!data.hasOwnProperty('count')) {
+              this.memberPagination.count = this.groupTabList[1].tableList.length;
+            }
+            this.emptyOrgData = Object.assign(this.emptyOrgData, { tipType: 'search' });
+          }
           this.emptyTempData = formatCodeData(code, this.emptyTempData, this.memberPagination.count === 0);
-          this.fetchRefreshSelectList(code, results || []);
+          this.fetchRefreshSelectList();
         } catch (e) {
           console.error(e);
-          this.tableList = [];
+          this.$set(this.groupTabList[1], 'tableList', []);
           this.memberPagination.count = 0;
           this.emptyTempData = formatCodeData(e.code, this.emptyTempData);
           this.messageAdvancedError(e);
@@ -708,14 +767,12 @@
           this.tableLoading = false;
           const emptyField = this.groupTabList.find(item => item.name === this.tabActive);
           if (emptyField) {
-            this.emptyData = _.cloneDeep(this[emptyField.empty]);
+            this.emptyData = _.cloneDeep(Object.assign(this[emptyField.empty], { tipType: this.keyword ? 'search' : '' }));
           }
         }
       },
 
       async handleKeyWordEnter () {
-        this.emptyOrgData.tipType = 'search';
-        this.emptyTempData.tipType = 'search';
         this.resetPagination();
         this.fetchInitData();
       },
@@ -726,9 +783,14 @@
 
       async handleTabChange (payload) {
         this.tabActive = payload;
+        this.handleRefreshTab();
+      },
+
+      handleRefreshTab () {
         this.curMember = {};
         this.currentSelectList = [];
-        this.tableList = [];
+        this.$set(this.groupTabList[0], 'tableList', []);
+        this.$set(this.groupTabList[0], 'tableList', []);
         this.resetPagination();
         const tabMap = {
           userOrOrg: async () => {
@@ -738,7 +800,7 @@
             await this.fetchMemberTemplateList();
           }
         };
-        return tabMap[payload]();
+        return tabMap[this.tabActive]();
       },
 
       handleTempView (payload) {
@@ -751,9 +813,8 @@
       },
 
       handleRefreshTabCount () {
-        console.log(this.pagination.count, this.memberPagination.count);
         this.$nextTick(() => {
-          this.$set(this.groupTabList[0], 'count', this.pagination.count || 0);
+          this.$set(this.groupTabList[0], 'count', this.userOrOrgPagination.count || 0);
           this.$set(this.groupTabList[1], 'count', this.memberPagination.count || 0);
           this.$refs.tabRef
             && this.$refs.tabRef.$refs.tabLabel
@@ -761,24 +822,27 @@
         });
       },
 
-      async fetchRefreshSelectList (code, list) {
-        this.tableList = [...list];
-        this.$nextTick(() => {
-          const currentSelectList = this.currentSelectList.map((item) =>
-            item.id.toString()
-          );
-          this.tableList.forEach((item) => {
-            if (currentSelectList.includes(item.id.toString())) {
-              this.$refs.groupMemberRef
-                && this.$refs.groupMemberRef.toggleRowSelection(item, true);
+      async fetchRefreshSelectList () {
+        const emptyField = this.groupTabList.find(item => item.name === this.tabActive);
+        if (emptyField) {
+          this.$nextTick(() => {
+            const currentSelectList = this.currentSelectList.map((item) => item.id.toString());
+            emptyField.tableList.forEach((item) => {
+              if (['memberTemplate'].includes(this.tabActive)) {
+                this.$set(item, 'type', 'template');
+              }
+              if (currentSelectList.includes(item.id.toString())) {
+                this.$refs.groupMemberRef
+                  && this.$refs.groupMemberRef.toggleRowSelection(item, true);
+              }
+            });
+            if (!this.currentSelectList.length) {
+              this.$refs.groupMemberRef && this.$refs.groupMemberRef.clearSelection();
             }
           });
-          if (!this.currentSelectList.length) {
-            this.$refs.groupMemberRef && this.$refs.groupMemberRef.clearSelection();
-          }
-        });
-        await this.handleRefreshTabCount();
-        await this.fetchCustomTotal();
+          await this.handleRefreshTabCount();
+          await this.fetchCustomTotal();
+        }
       },
 
       fetchCustomTotal () {
@@ -804,12 +868,15 @@
             await this.fetchCustomTotal();
           },
           all: async () => {
-            const tableList = _.cloneDeep(this.tableList);
-            const selectGroups = this.currentSelectList.filter(
-              (item) => !tableList.map((v) => v.id.toString()).includes(item.id.toString())
-            );
-            this.currentSelectList = [...selectGroups, ...payload];
-            await this.fetchCustomTotal();
+            const emptyField = this.groupTabList.find((item) => item.name === this.tabActive);
+            if (emptyField) {
+              const tableList = _.cloneDeep(emptyField.tableList);
+              const selectGroups = this.currentSelectList.filter(
+                (item) => !tableList.map((v) => v.id.toString()).includes(item.id.toString())
+              );
+              this.currentSelectList = [...selectGroups, ...payload];
+              await this.fetchCustomTotal();
+            }
           }
         };
         return typeMap[type]();
@@ -1044,15 +1111,22 @@
       async handleEmptyRefresh () {
         this.keyword = '';
         this.emptyData.tipType = '';
-        this.emptyOrgData.tipType = '';
-        this.emptyTempData.tipType = '';
+        this.groupTabList.forEach((item) => {
+          if (this[item.empty]) {
+            this[item.empty].tipType = '';
+          }
+        });
         this.resetPagination();
         await this.fetchInitData();
       },
 
       handleShowRenewal (payload) {
         this.isShowRenewalDialog = true;
-        this.curData = Object.assign({}, payload);
+        const params = _.cloneDeep(payload);
+        if (!['memberTemplate'].includes(this.routeMode)) {
+          this.$set(params, 'type', 'template');
+        }
+        this.curData = Object.assign({}, params);
       },
 
       handleAddMember () {
@@ -1115,8 +1189,8 @@
           id: this.id
         };
         let url = 'userGroup/addUserGroupMember';
-        if (this.curModeMap[this.curRouteMode]) {
-          url = this.curModeMap[this.curRouteMode].addMember.url;
+        if (this.curModeMap[this.routeMode]) {
+          url = this.curModeMap[this.routeMode].addMember.url;
           params.subjects = _.cloneDeep(arr);
           delete params.members;
         }
@@ -1133,9 +1207,8 @@
               );
             }
             this.isShowAddMemberDialog = false;
-            this.currentSelectList = [];
             this.messageSuccess(this.$t(`m.info['添加成员成功']`), 3000);
-            this.fetchMemberList();
+            this.handleRefreshTab();
           }
         } catch (e) {
           console.error(e);
@@ -1191,7 +1264,7 @@
             {},
             {
               id: payload.id,
-              type: payload.type
+              type: ['memberTemplate'].includes(this.routeMode) ? payload.type : 'template'
             }
           );
         } else {
@@ -1217,7 +1290,7 @@
         }
         const tabMap = {
           userOrOrg: () => {
-            this.pagination = Object.assign(this.pagination, { current });
+            this.userOrOrgPagination = Object.assign(this.userOrOrgPagination, { current });
             this.fetchUserOrOrgList();
           },
           memberTemplate: () => {
@@ -1231,7 +1304,7 @@
       handleLimitChange (limit, prevLimit) {
         const tabMap = {
           userOrOrg: () => {
-            this.pagination = Object.assign(this.pagination, { current: 1, limit });
+            this.userOrOrgPagination = Object.assign(this.userOrOrgPagination, { current: 1, limit });
             this.fetchUserOrOrgList();
           },
           memberTemplate: () => {
@@ -1262,8 +1335,8 @@
               : this.currentSelectList.map(({ id, type }) => ({ id, type }))
           };
           let totalCount = params.members.length;
-          if (this.curModeMap[this.curRouteMode]) {
-            url = this.curModeMap[this.curRouteMode].removeMember.url;
+          if (this.curModeMap[this.routeMode]) {
+            url = this.curModeMap[this.routeMode].removeMember.url;
             params.subjects = _.cloneDeep(params.members);
             totalCount = params.subjects.length;
             delete params.members;
@@ -1284,9 +1357,7 @@
               );
             }
             this.messageSuccess(this.$t(`m.info['移除成功']`), 3000);
-            this.currentSelectList = [];
-            this.resetPagination();
-            this.fetchMemberList();
+            this.handleRefreshTab();
           }
         } catch (e) {
           console.error(e);
@@ -1312,10 +1383,8 @@
           await this.$store.dispatch('renewal/groupMemberPermRenewal', params);
           this.messageSuccess(this.$t(`m.renewal['续期成功']`), 3000);
           this.isShowRenewalDialog = false;
-          this.currentSelectList = [];
           this.$refs.groupMemberRef && this.$refs.groupMemberRef.clearSelection();
-          this.pagination = Object.assign(this.pagination, { current: 1, limit: 10 });
-          this.fetchMemberList();
+          this.handleRefreshTab();
         } catch (e) {
           console.error(e);
           this.messageAdvancedError(e);
@@ -1325,7 +1394,7 @@
       },
 
       resetPagination () {
-        this.pagination = Object.assign(this.pagination, {
+        this.userOrOrgPagination = Object.assign(this.userOrOrgPagination, {
           current: 1,
           limit: 10
         });
