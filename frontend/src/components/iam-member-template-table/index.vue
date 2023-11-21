@@ -89,6 +89,7 @@
       hasSelectedTemplates: {
         handler (value) {
           this.currentSelectList = [...value];
+          console.log(this.currentSelectList);
         },
         immediate: true
       }

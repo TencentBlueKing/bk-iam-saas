@@ -166,7 +166,7 @@
               :prop="item.prop">
               <template slot-scope="{ row }">
                 <div class="member-template" :title="row.name" @click.stop="handleTempView(row)">
-                  <Icon type="organization-fill" />
+                  <Icon type="renyuanmuban" />
                   <span class="name">
                     {{ row.name || "--" }}
                   </span>

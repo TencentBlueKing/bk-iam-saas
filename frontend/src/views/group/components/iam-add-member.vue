@@ -325,7 +325,6 @@
                       '(' + item.count + `)`
                     }}</span>
                   </div>
-                  <!-- <Icon bk type="close-circle-shape" class="delete-depart-icon" @click="handleDelete(item, 'organization')" /> -->
                   <Icon bk type="close" class="delete-depart-icon" @click="handleDelete(item, 'organization')" />
                 </div>
               </div>
@@ -338,22 +337,26 @@
                   v-for="item in hasSelectedUsers"
                   :key="item.id"
                 >
-                  <Icon type="personal-user" class="user-icon" />
-                  <span class="user-name" :title="nameType(item)"
-                  >{{ item.username }}<template v-if="item.name !== ''">({{ item.name }})</template>
-                  </span>
-                  <!-- <Icon bk type="close-circle-shape" class="delete-icon" @click="handleDelete(item, 'user')" /> -->
+                  <div class="user-item-left">
+                    <Icon type="personal-user" class="user-icon" />
+                    <span class="user-name" :title="nameType(item)"
+                    >{{ item.username }}<template v-if="item.name !== ''">({{ item.name }})</template>
+                    </span>
+                  </div>
                   <Icon bk type="close" class="delete-icon" @click="handleDelete(item, 'user')" />
                 </div>
               </div>
               <div class="template-content" v-if="isTempSelectedEmpty">
-                <div class="template-item"
+                <div
+                  class="template-item"
                   v-for="item in hasSelectedTemplates"
                   :key="item.id">
-                  <Icon type="personal-user" class="user-icon" />
-                  <span class="template-name" :title="nameType(item)">
-                    {{ item.name }}
-                  </span>
+                  <div class="template-item-left">
+                    <Icon type="renyuanmuban" class="user-icon" />
+                    <span class="template-name" :title="nameType(item)">
+                      {{ item.name }}
+                    </span>
+                  </div>
                   <Icon bk type="close" class="delete-icon" @click="handleDelete(item, 'template')" />
                 </div>
               </div>
@@ -525,7 +528,6 @@
         defaultDepartments: [],
         defaultUsers: [],
         isShowTooMuch: false,
-
         searchConditionList: [
           {
             id: 'fuzzy',
@@ -2253,8 +2255,17 @@
             padding: 5px;
             box-shadow: 0 1px 1px 0 #00000014;
             border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            .user-item-left,
+            .template-item-left {
+              display: flex;
+              align-items: center;
+            }
             .user-name,
             .template-name {
+              margin-left: 5px;
               display: inline-block;
               /* max-width: 200px; */
               max-width: 160px;

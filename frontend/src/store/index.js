@@ -186,7 +186,7 @@ const currentNav = [
         disabled: false
       },
       {
-        icon: 'personal-user',
+        icon: 'renyuanmuban',
         id: 'memberTemplateNav',
         rkey: 'memberTemplate',
         name: il8n('nav', '人员模板'),
