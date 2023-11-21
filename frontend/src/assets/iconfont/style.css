@@ -431,3 +431,6 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .iamcenter-all:before {
 	content: "\e224";
 }
+.iamcenter-renyuanmuban:before {
+	content: "\e225";
+}

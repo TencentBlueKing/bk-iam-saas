@@ -235,7 +235,7 @@
           </div>
         </template>
         <template v-else>
-          <div style="margin-top: 25px;">
+          <div class="set-user-deadline">
             <iam-deadline :value="expiredAt" type="dialog" @on-change="handleDeadlineChange" />
           </div>
         </template>
@@ -1567,6 +1567,10 @@
             color: #3a84ff;
             cursor: pointer;
             user-select: none;
+        }
+
+        .set-user-deadline {
+          padding: 0 24px;
         }
     }
 </style>

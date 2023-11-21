@@ -6,9 +6,22 @@
       <Icon bk type="plus-circle-shape" />
       <span>{{ $t(`m.userGroup['添加组成员']`) }}</span>
     </section>
-    <render-member-item :data="users" @on-delete="handleDeleteUser" v-if="isHasUser" />
-    <render-member-item :data="departments" type="department" v-if="isHasDepartment"
+    <render-member-item
+      v-if="isHasUser"
+      type="user"
+      :data="users"
+      @on-delete="handleDeleteUser"
+    />
+    <render-member-item
+      v-if="isHasDepartment"
+      type="department"
+      :data="departments"
       @on-delete="handleDeleteDepartment" />
+    <render-member-item
+      v-if="isHasTemplate"
+      type="template"
+      :data="templates"
+      @on-delete="handleDeleteTemplate" />
     <render-vertical-block :label="$t(`m.common['授权期限']`)" ext-cls="auth-expired-at">
       <iam-deadline :value="expiredAt" @on-change="handleDeadlineChange" />
       <p class="expired-at-error" v-if="expiredAtError">{{ $t(`m.verify['请选择授权期限']`) }}</p>
@@ -33,6 +46,10 @@
         type: Array,
         default: () => []
       },
+      templates: {
+        type: Array,
+        default: () => []
+      },
       expiredAtError: {
         type: Boolean,
         default: false
@@ -49,6 +66,9 @@
       },
       isHasDepartment () {
         return this.departments.length > 0;
+      },
+      isHasTemplate () {
+        return this.templates.length > 0;
       }
     },
     created () {
@@ -70,6 +90,10 @@
 
       handleDeleteDepartment (payload) {
         this.$emit('on-delete', 'department', payload);
+      },
+
+      handleDeleteTemplate (payload) {
+        this.$emit('on-delete', 'template', payload);
       }
     }
   };

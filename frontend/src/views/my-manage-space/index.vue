@@ -61,7 +61,7 @@
             size="small"
             ext-cls="children-expand-cls"
             :data="row.children"
-            :row-key="row.id"
+            :row-key="row.id + '__' + row.name"
             :show-header="false"
             :border="false"
             :cell-class-name="getSubCellClass"

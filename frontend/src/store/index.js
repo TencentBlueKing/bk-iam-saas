@@ -88,6 +88,9 @@ import userGroupSetting from './modules/user-group-setting';
 // 敏感等级
 import sensitivityLevel from './modules/sensitivity-level';
 
+// 人员模板
+import memberTemplate from './modules/member-template';
+
 Vue.use(Vuex);
 
 const SITE_URL = window.SITE_URL;
@@ -180,6 +183,14 @@ const currentNav = [
         rkey: 'user',
         name: il8n('nav', '用户'),
         path: `${SITE_URL}user`,
+        disabled: false
+      },
+      {
+        icon: 'renyuanmuban',
+        id: 'memberTemplateNav',
+        rkey: 'memberTemplate',
+        name: il8n('nav', '人员模板'),
+        path: `${SITE_URL}member-template`,
         disabled: false
       }
     ]
@@ -328,7 +339,8 @@ const store = new Vuex.Store({
     applyProvisionPerm,
     spaceManage,
     userGroupSetting,
-    sensitivityLevel
+    sensitivityLevel,
+    memberTemplate
   },
   state: {
     mainContentLoading: false,
