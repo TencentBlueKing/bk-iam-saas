@@ -1695,7 +1695,6 @@
           this.hasSelectedManualDepartments
             = [...this.hasSelectedManualDepartments.filter((organ) => organ.id !== item.id)];
         }
-        console.log(type, this.hasSelectedTemplates, 5555);
         if (type === 'template') {
           this.hasSelectedTemplates.forEach((v) => {
             if (this.$refs.memberTableRef && this.$refs.memberTableRef.$refs.templateTableRef) {

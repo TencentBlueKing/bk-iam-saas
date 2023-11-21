@@ -130,7 +130,6 @@
                 && this.$refs.templateTableRef.clearSelection();
             }
           });
-          console.log(this.currentSelectList);
           this.fetchSelectedGroupCount();
         } catch (e) {
           this.templateTableList = [];
@@ -213,7 +212,6 @@
       },
 
       getDefaultSelect (row) {
-        console.log(this.$refs.templateTableRef);
         const index = this.currentSelectList.findIndex((v) => String(v.id) === String(row.id));
         return this.currentSelectList.length >= this.maxSelectCount ? index !== -1 : true;
       },
