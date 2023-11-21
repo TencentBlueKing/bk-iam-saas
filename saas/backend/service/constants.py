@@ -228,6 +228,7 @@ class ProcessorNodeType(LowerStrEnum):
     SYSTEM_MANAGER = auto()
     GRADE_MANAGER: enum = "rating_manager"
     INSTANCE_APPROVER = auto()
+    INSTANCE_APPROVER_MERGE = auto()
 
 
 # 每一种申请单据，对应的审批流程节点可以支持的ROLE
