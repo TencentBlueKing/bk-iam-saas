@@ -270,14 +270,14 @@ class SubjectTemplateMemberViewSet(SubjectTemplateQueryMixin, GenericViewSet):
 
             group_members = self.biz.search_member_by_keyword(template.id, keyword)
 
-            return Response({"results": [one.dict() for one in group_members]})
+            return Response({"results": SubjectTemplateMemberListSLZ(group_members, many=True).data})
 
         queryset = SubjectTemplateRelation.objects.filter(template_id=template.id)
         page = self.paginate_queryset(queryset)
 
         # 填充数据
-        results = [one.dict() for one in self.biz.convert_to_subject_template_members(page)]
-        return self.get_paginated_response(results)
+        group_members = self.biz.convert_to_subject_template_members(page)
+        return self.get_paginated_response(SubjectTemplateMemberListSLZ(group_members, many=True).data)
 
 
 class SubjectTemplatesMemberCreateViewSet(SubjectTemplateQueryMixin, GenericViewSet):
