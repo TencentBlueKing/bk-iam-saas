@@ -577,7 +577,7 @@
         manualTableListStorage: [],
         hasSelectedManualDepartments: [],
         hasSelectedManualUsers: [],
-        needMemberTempRoutes: ['userGroupDetail']
+        needMemberTempRoutes: ['userGroup', 'userGroupDetail', 'createUserGroup', 'cloneUserGroup']
       };
     },
     computed: {
@@ -1442,6 +1442,9 @@
         this.hasSelectedManualDepartments.splice(0, this.hasSelectedManualDepartments.length, ...[]);
         this.hasSelectedTemplates.splice(0, this.hasSelectedTemplates.length, ...[]);
         this.$refs.memberTreeRef && this.$refs.memberTreeRef.clearAllIsSelectedStatus();
+        this.$refs.memberTableRef
+          && this.$refs.memberTableRef.$refs
+          && this.$refs.memberTableRef.$refs.templateTableRef.clearSelection();
         this.fetchManualTableData();
       },
 
@@ -1692,17 +1695,16 @@
           this.hasSelectedManualDepartments
             = [...this.hasSelectedManualDepartments.filter((organ) => organ.id !== item.id)];
         }
+        console.log(type, this.hasSelectedTemplates, 5555);
         if (type === 'template') {
-          this.$nextTick(() => {
-            this.hasSelectedTemplates.forEach((v) => {
-              if (this.$refs.memberTableRef) {
-                console.log(this.$refs.memberTableRef.$refs.templateTableRef);
-                this.$refs.memberTableRef.$refs.templateTableRef
-                  .toggleRowSelection(item, String(item.id) !== String(v.id));
+          this.hasSelectedTemplates.forEach((v) => {
+            if (this.$refs.memberTableRef && this.$refs.memberTableRef.$refs.templateTableRef) {
+              if (String(item.id) === String(v.id)) {
+                this.$refs.memberTableRef.$refs.templateTableRef.toggleRowSelection(item, false);
               }
-            });
-            this.hasSelectedTemplates = [...this.hasSelectedTemplates.filter((v) => String(item.id) !== String(v.id))];
+            }
           });
+          this.hasSelectedTemplates = [...this.hasSelectedTemplates.filter((v) => String(item.id) !== String(v.id))];
         }
         this.fetchManualTableData();
       },
@@ -1783,6 +1785,10 @@
         this.manualTableListStorage = [];
         this.hasSelectedManualDepartments = [];
         this.hasSelectedManualUsers = [];
+        this.hasSelectedTemplates = [];
+        this.$refs.memberTableRef
+          && this.$refs.memberTableRef.$refs
+          && this.$refs.memberTableRef.$refs.templateTableRef.clearSelection();
         this.tableKeyWord = '';
         this.$emit('update:show', false);
         this.$emit('on-after-leave');
@@ -2172,6 +2178,7 @@
         position: relative;
         top: 0;
         /* padding: 8px 24px 8px 14px; */
+        padding-right: 24px;
         font-size: 12px;
         word-break: break-all;
         .organization-count,

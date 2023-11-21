@@ -254,6 +254,7 @@
               this.$refs.memberTemplateRef && this.$refs.memberTemplateRef.clearSelection();
             }
           });
+          this.fetchSelectedGroupCount();
         } catch (e) {
           console.error(e);
         } finally {
@@ -490,23 +491,13 @@
             } else {
               this.currentSelectList = this.currentSelectList.filter((item) => item.id !== row.id);
             }
-            this.$nextTick(() => {
-              const selectionCount = document.getElementsByClassName('bk-page-selection-count');
-              if (this.$refs.memberTemplateRef && selectionCount) {
-                selectionCount[0].children[0].innerHTML = this.currentSelectList.length;
-              }
-            });
+            this.fetchSelectedGroupCount();
           },
           all: () => {
             const tableList = _.cloneDeep(this.memberTemplateList);
             const selectGroups = this.currentSelectList.filter((item) => !tableList.map((v) => v.id).includes(item.id));
             this.currentSelectList = [...selectGroups, ...payload];
-            this.$nextTick(() => {
-              const selectionCount = document.getElementsByClassName('bk-page-selection-count');
-              if (this.$refs.memberTemplateRef && selectionCount) {
-                selectionCount[0].children[0].innerHTML = this.currentSelectList.length;
-              }
-            });
+            this.fetchSelectedGroupCount();
           }
         };
         return typeMap[type]();

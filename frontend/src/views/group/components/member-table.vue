@@ -1208,7 +1208,7 @@
             }
             this.isShowAddMemberDialog = false;
             this.messageSuccess(this.$t(`m.info['添加成员成功']`), 3000);
-            this.handleRefreshTab();
+            this.fetchMemberList();
           }
         } catch (e) {
           console.error(e);

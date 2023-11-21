@@ -108,6 +108,7 @@
       <render-member
         :users="users"
         :departments="departments"
+        :templates="templates"
         :expired-at-error="isShowExpiredError"
         @on-change="handleExpiredAtChange"
         @on-add="handleAddMember"
@@ -125,8 +126,9 @@
     <add-member-dialog
       :show.sync="isShowAddMemberDialog"
       :users="users"
-      :is-rating-manager="isRatingManager"
       :departments="departments"
+      :templates="templates"
+      :is-rating-manager="isRatingManager"
       @on-cancel="handleCancelAdd"
       @on-sumbit="handleSubmitAdd" />
 
@@ -210,6 +212,7 @@
         expired_at: SIX_MONTH_TIMESTAMP,
         users: [],
         departments: [],
+        templates: [],
         submitLoading: false,
         isShowExpiredError: false,
         isShowAddSideslider: false,
@@ -304,6 +307,14 @@
                   return {
                       id: item.username,
                       type: 'user'
+                  };
+              }));
+          }
+          if (this.templates.length > 0) {
+              arr.push(...this.templates.map(item => {
+                  return {
+                      id: item.id,
+                      type: 'template'
                   };
               }));
           }
@@ -1327,10 +1338,12 @@
         window.changeDialog = true;
         if (type === 'user') {
           this.users.splice(payload, 1);
+        } else if (type === 'template') {
+          this.templates.splice(payload, 1);
         } else {
           this.departments.splice(payload, 1);
         }
-        this.isShowMemberAdd = this.users.length < 1 && this.departments.length < 1;
+        this.isShowMemberAdd = this.users.length < 1 && this.departments.length < 1 && this.templates.length < 1;
       },
 
       /**
@@ -1357,9 +1370,10 @@
        */
       handleSubmitAdd (payload) {
         window.changeDialog = true;
-        const { users, departments } = payload;
+        const { users, departments, templates } = payload;
         this.users = _.cloneDeep(users);
         this.departments = _.cloneDeep(departments);
+        this.templates = _.cloneDeep(templates);
         this.isShowMemberAdd = false;
         this.isShowAddMemberDialog = false;
       }

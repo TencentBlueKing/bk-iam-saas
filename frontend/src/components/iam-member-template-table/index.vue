@@ -15,9 +15,9 @@
       <bk-table
         ref="templateTableRef"
         size="small"
-        row-key="id"
         :data="templateTableList"
         :max-height="360"
+        row-key="id"
         :ext-cls="'template-table'"
         :outer-border="false"
         :header-border="false"
@@ -27,7 +27,7 @@
         @select="handleSelectChange"
         @select-all="handleSelectAllChange"
         v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
-        <bk-table-column type="selection" align="center" :selectable="getDefaultSelect" />
+        <bk-table-column type="selection" align="center" :selectable="getDefaultSelect" :title="'111'" />
         <bk-table-column :label="$t(`m.memberTemplate['模板名称']`)" prop="name" :sortable="true">
           <template slot-scope="{ row }">
             <span class="template-name" :title="row.name ">
@@ -64,12 +64,17 @@
       hasSelectedTemplates: {
         type: Array,
         default: () => []
+      },
+      maxSelectCount: {
+        type: Number,
+        default: 10
       }
     },
     data () {
       return {
         tableLoading: false,
         tableKeyWord: '',
+        tableKey: 'tableKey',
         currentSelectList: [],
         templateTableList: [],
         pagination: {
@@ -89,7 +94,6 @@
       hasSelectedTemplates: {
         handler (value) {
           this.currentSelectList = [...value];
-          console.log(this.currentSelectList);
         },
         immediate: true
       }
@@ -126,6 +130,8 @@
                 && this.$refs.templateTableRef.clearSelection();
             }
           });
+          console.log(this.currentSelectList);
+          this.fetchSelectedGroupCount();
         } catch (e) {
           this.templateTableList = [];
           this.emptyTableData = formatCodeData(e.code, this.emptyTableData);
@@ -160,7 +166,10 @@
                 (item) => item.id.toString() !== row.id.toString()
               );
             }
-            this.fetchCustomSelection();
+            if (this.currentSelectList.length > 10) {
+              this.currentSelectList = this.currentSelectList.slice(0, 10);
+            }
+            this.fetchSelectedGroupCount();
             this.$emit('on-selected-templates', this.currentSelectList);
           },
           all: () => {
@@ -169,7 +178,7 @@
               (item) => !tableList.map((v) => v.id.toString()).includes(item.id.toString())
             );
             this.currentSelectList = [...selectGroups, ...payload];
-            this.fetchCustomSelection();
+            this.fetchSelectedGroupCount();
             this.$emit('on-selected-templates', this.currentSelectList);
           }
         };
@@ -194,17 +203,19 @@
         this.fetchTemplateList();
       },
 
-      fetchCustomSelection () {
+      fetchSelectedGroupCount () {
         this.$nextTick(() => {
           const selectionCount = document.getElementsByClassName('bk-page-selection-count');
-          if (this.$refs.templateTableRef && selectionCount && selectionCount.length && selectionCount[0].children) {
+          if (this.$refs.templateTableRef && selectionCount) {
             selectionCount[0].children[0].innerHTML = this.currentSelectList.length;
           }
         });
       },
 
-      getDefaultSelect () {
-        return this.templateTableList.length > 0;
+      getDefaultSelect (row) {
+        console.log(this.$refs.templateTableRef);
+        const index = this.currentSelectList.findIndex((v) => String(v.id) === String(row.id));
+        return this.currentSelectList.length >= this.maxSelectCount ? index !== -1 : true;
       },
 
       resetPagination () {

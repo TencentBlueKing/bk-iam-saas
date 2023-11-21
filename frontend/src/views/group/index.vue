@@ -737,7 +737,7 @@
       },
 
       async handleSubmitAdd (payload) {
-        const { users, departments, expiredAt } = payload;
+        const { users, departments, templates, expiredAt } = payload;
         // 判断批量选择的用户组里是否包含管理员组
         const hasAdminGroups = this.currentSelectList.filter(item =>
           item.attributes && item.attributes.source_from_role && departments.length > 0);
@@ -776,6 +776,16 @@
             })
           );
         }
+        if (templates.length > 0) {
+          arr.push(
+            ...templates.map((item) => {
+              return {
+                id: item.id,
+                type: 'template'
+              };
+            })
+          );
+        }
         const params = {
           members: arr,
           expired_at: expired,
@@ -792,6 +802,7 @@
           this.loading = true;
           await this.$store.dispatch(fetchUrl, params);
           this.isShowAddMemberDialog = false;
+          this.currentSelectList = [];
           this.messageSuccess(this.$t(`m.info['添加成员成功']`), 3000);
           this.fetchUserGroupList(true);
         } catch (e) {
