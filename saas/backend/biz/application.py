@@ -70,6 +70,7 @@ from backend.service.system import SystemService
 from .application_process import (
     GradeManagerApproverHandler,
     InstanceApproverHandler,
+    InstanceApproverMergeHandler,
     PolicyProcess,
     PolicyProcessHandler,
 )
@@ -510,6 +511,7 @@ class ApplicationBiz:
 
         # 5. 通过管道填充可能的资源实例审批人/分级管理员审批节点的审批人
         pipeline: List[Type[PolicyProcessHandler]] = [
+            InstanceApproverMergeHandler,
             InstanceApproverHandler,
             GradeManagerApproverHandler,
         ]
