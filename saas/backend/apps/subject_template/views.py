@@ -24,6 +24,7 @@ from backend.apps.group.models import Group
 from backend.apps.group.serializers import SearchMemberSLZ
 from backend.apps.subject_template.models import SubjectTemplate, SubjectTemplateGroup, SubjectTemplateRelation
 from backend.audit.audit import audit_context_setter, log_api_event, view_audit_decorator
+from backend.biz.group import GroupCheckBiz
 from backend.biz.role import RoleListQuery
 from backend.biz.subject_template import SubjectTemplateBiz, SubjectTemplateCheckBiz
 from backend.common.error_codes import error_codes
@@ -209,6 +210,7 @@ class SubjectTemplateMemberViewSet(SubjectTemplateQueryMixin, GenericViewSet):
 
     check_biz = SubjectTemplateCheckBiz()
     biz = SubjectTemplateBiz()
+    group_check_biz = GroupCheckBiz()
 
     @swagger_auto_schema(
         operation_description="添加人员模版成员",
@@ -224,6 +226,9 @@ class SubjectTemplateMemberViewSet(SubjectTemplateQueryMixin, GenericViewSet):
         serializer.is_valid(raise_exception=True)
 
         subjects = parse_obj_as(List[Subject], serializer.validated_data["subjects"])
+
+        # 检查人员在管理员的范围内
+        self.group_check_biz.check_role_subject_scope(request.role, subjects)
 
         self.check_biz.check_member_count(template.id, len(subjects))
 
@@ -292,6 +297,7 @@ class SubjectTemplatesMemberCreateViewSet(SubjectTemplateQueryMixin, GenericView
 
     check_biz = SubjectTemplateCheckBiz()
     biz = SubjectTemplateBiz()
+    group_check_biz = GroupCheckBiz()
 
     # 批量添加成员
     @swagger_auto_schema(
@@ -312,6 +318,9 @@ class SubjectTemplatesMemberCreateViewSet(SubjectTemplateQueryMixin, GenericView
         failed_info = {}
         # 成员Dict结构转换为Subject结构，并去重
         members = list(set(parse_obj_as(List[Subject], data["subjects"])))
+
+        # 检查人员在管理员的范围内
+        self.group_check_biz.check_role_subject_scope(request.role, members)
 
         templates = self.get_queryset().filter(id__in=template_ids)
         for template in templates:
