@@ -1428,7 +1428,8 @@ export const m = {
         '解除关联成功': 'Disassociated successfully',
         '请输入至少3个字符的用户/组织，按enter键搜索': 'Please enter user/organization with at least 3 characters and press enter to search',
         '只读人员模板不能移除': 'The read-only personnel template cannot be removed',
-        '只读人员模板不能添加、删除、复制成员': 'Read-only member templates cannot add, delete, or copy members'
+        '只读人员模板不能添加、删除、复制成员': 'Read-only member templates cannot add, delete, or copy members',
+        '最多只能选择10个人员模板' : 'You can only select up to 10 member templates'
     }
 }
 export default {
