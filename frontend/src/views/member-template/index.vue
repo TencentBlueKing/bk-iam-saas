@@ -90,11 +90,24 @@
 
     <MemberTemplateDetailSlider :show.sync="isShowDetailSlider" :cur-detail-data="curDetailData" />
 
-    <AddMemberTemplateSlider ref="addMemberRef" :show.sync="isShowAddSlider" @on-submit="handleTempSubmit" />
+    <AddMemberTemplateSlider
+      ref="addMemberRef"
+      :show.sync="isShowAddSlider"
+      :is-rating-manager="isRatingManager"
+      @on-submit="handleTempSubmit"
+    />
 
-    <AddMemberDialog :show.sync="isShowAddMemberDialog" :is-batch="isBatch" :loading="memberDialogLoading"
+    <AddMemberDialog
+      :show.sync="isShowAddMemberDialog"
+      :is-rating-manager="isRatingManager"
+      :is-batch="isBatch"
+      :loading="memberDialogLoading"
       :name="curName"
-      :id="curId" :show-limit="false" :is-rating-manager="isRatingManager" show-expired-at @on-cancel="handleCancelAdd"
+      :id="curId"
+      :show-limit="false"
+      :route-mode="'memberTemplate'"
+      show-expired-at
+      @on-cancel="handleCancelAdd"
       @on-sumbit="handleSubmitAdd" @on-after-leave="handleAddAfterClose" />
 
     <DeleteActionDialog :show.sync="isShowDeleteDialog" :loading="batchQuitLoading" :width="formatDeleteWidth"

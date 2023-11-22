@@ -43,7 +43,11 @@
             curRestDays () {
                 const dif = this.curTime - this.user.timestamp;
                 if (dif < 1) {
-                    return 0;
+                  return 0;
+                }
+                const days = Math.floor(dif / (24 * 3600));
+                if (dif >= 1 && days < 2) {
+                  return 1;
                 }
                 return Math.ceil(dif / (24 * 3600));
             },
