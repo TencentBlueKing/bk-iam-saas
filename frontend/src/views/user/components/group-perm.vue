@@ -243,6 +243,7 @@
           <bk-button
             class="mb20"
             theme="primary"
+            :disabled="currentSelectList.length < 1"
             @click="handleBatchUserGroupSubmit"
             data-test-id="group_btn_create"
           >

@@ -200,6 +200,7 @@
         <section class="button-warp">
           <bk-button
             class="mb20"
+            :disabled="currentSelectList.length < 1"
             theme="primary" @click="handleBatchUserGroupSubmit" data-test-id="group_btn_create">
             {{ $t(`m.common['提交']`) }}
           </bk-button>
