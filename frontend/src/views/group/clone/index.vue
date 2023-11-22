@@ -464,9 +464,7 @@
               await this.getGroupCustomPolicy(this.groupSystemList[i]);
             }
             if (this.groupSystemList[i].template_count > 0) {
-              setTimeout(async () => {
-                await this.getGroupTemplateList(this.groupSystemList[i]);
-              }, 500);
+              await this.getGroupTemplateList(this.groupSystemList[i]);
             }
           }
           this.handleAggregateData();
@@ -776,7 +774,7 @@
 
         addCustomList.forEach(item => {
           if (!item.resource_groups || !item.resource_groups.length) {
-            item.resource_groups = item.related_resource_types.length ? [{ id: '', related_resource_types: item.related_resource_types }] : [];
+            item.resource_groups = item.related_resource_types && item.related_resource_types.length ? [{ id: '', related_resource_types: item.related_resource_types }] : [];
           }
           tempList.push(new GroupPolicy(item, 'add', 'custom', {
             system: {
