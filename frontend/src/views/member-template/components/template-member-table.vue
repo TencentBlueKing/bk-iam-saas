@@ -2,7 +2,7 @@
   <div class="template-member-table">
     <div v-if="curDetailData.readonly" class="template-member-table-tip">
       <bk-alert
-        type="warning"
+        type="info"
         :title="$t(`m.memberTemplate['只读人员模板不能添加、删除、复制成员']`)"
       />
     </div>
