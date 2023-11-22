@@ -113,9 +113,10 @@ class SubjectTemplateBiz:
 
     def get_group_count_dict(self, template_ids: List[int]) -> Dict[int, int]:
         q = (
-            SubjectTemplateGroup.objects.filter(template_id__in=template_ids)
+            SubjectTemplateGroup.objects.order_by()
+            .filter(template_id__in=template_ids)
             .values("template_id")
-            .annotate(count=Count("id"))
+            .annotate(count=Count("*"))
         )
         return {item["template_id"]: item["count"] for item in q}
 
