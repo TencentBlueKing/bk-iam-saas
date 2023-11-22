@@ -1426,7 +1426,9 @@ export const m = {
         '只读人员模板不可删除': 'Read-only member templates cannot delete',
         '当前选择人员模板皆为只读属性，暂无可删除人员模板': 'The currently selected member templates are all read-only attributes, and there are currently no member templates to delete',
         '解除关联成功': 'Disassociated successfully',
-        '请输入至少3个字符的用户/组织，按enter键搜索': 'Please enter user/organization with at least 3 characters and press enter to search'
+        '请输入至少3个字符的用户/组织，按enter键搜索': 'Please enter user/organization with at least 3 characters and press enter to search',
+        '只读人员模板不能移除': 'The read-only personnel template cannot be removed',
+        '只读人员模板不能添加、删除、复制成员': 'Read-only member templates cannot add, delete, or copy members'
     }
 }
 export default {

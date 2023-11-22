@@ -1696,14 +1696,17 @@
             = [...this.hasSelectedManualDepartments.filter((organ) => organ.id !== item.id)];
         }
         if (type === 'template') {
-          this.hasSelectedTemplates.forEach((v) => {
-            if (this.$refs.memberTableRef && this.$refs.memberTableRef.$refs.templateTableRef) {
-              if (String(item.id) === String(v.id)) {
-                this.$refs.memberTableRef.$refs.templateTableRef.toggleRowSelection(item, false);
+          setTimeout(() => {
+            this.hasSelectedTemplates.forEach((v) => {
+              if (this.$refs.memberTableRef && this.$refs.memberTableRef.$refs.templateTableRef) {
+                if (String(item.id) === String(v.id)) {
+                  this.$refs.memberTableRef.$refs.templateTableRef.toggleRowSelection(item, false);
+                }
               }
-            }
-          });
-          this.hasSelectedTemplates = [...this.hasSelectedTemplates.filter((v) => String(item.id) !== String(v.id))];
+            });
+            this.hasSelectedTemplates = [...this.hasSelectedTemplates.filter((v) => String(item.id) !== String(v.id))];
+            console.log(type, this.$refs.memberTableRef.$refs.templateTableRef, this.hasSelectedTemplates);
+          }, 100);
         }
         this.fetchManualTableData();
       },

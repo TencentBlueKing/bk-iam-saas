@@ -123,6 +123,8 @@
               if (currentSelectList.includes(String(item.id))) {
                 this.$refs.templateTableRef
                   && this.$refs.templateTableRef.toggleRowSelection(item, true);
+              } else {
+                this.$refs.templateTableRef.toggleRowSelection(item, false);
               }
             });
             if (this.currentSelectList.length < 1) {
@@ -165,9 +167,6 @@
                 (item) => item.id.toString() !== row.id.toString()
               );
             }
-            if (this.currentSelectList.length > 10) {
-              this.currentSelectList = this.currentSelectList.slice(0, 10);
-            }
             this.fetchSelectedGroupCount();
             this.$emit('on-selected-templates', this.currentSelectList);
           },
@@ -176,7 +175,16 @@
             const selectGroups = this.currentSelectList.filter(
               (item) => !tableList.map((v) => v.id.toString()).includes(item.id.toString())
             );
-            this.currentSelectList = [...selectGroups, ...payload];
+            const selectList = _.cloneDeep([...selectGroups, ...payload]);
+            if (selectList.length > 10) {
+              this.currentSelectList.forEach((item, index) => {
+                if (index > 9) {
+                  selectList.splice(index, 1);
+                  this.$refs.templateTableRef.toggleRowSelection(item, false);
+                }
+              });
+            }
+            this.currentSelectList = _.cloneDeep(selectList);
             this.fetchSelectedGroupCount();
             this.$emit('on-selected-templates', this.currentSelectList);
           }
