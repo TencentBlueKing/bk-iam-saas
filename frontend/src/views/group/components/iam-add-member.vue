@@ -504,6 +504,10 @@
       isBatch: {
         type: Boolean,
         default: false
+      },
+      routeMode: {
+        type: String,
+        default: ''
       }
     },
     data () {
@@ -785,6 +789,7 @@
           }
         } else {
           this.requestQueue = ['categories'];
+          console.log(this.isRatingManager);
           if (this.isRatingManager) {
             this.fetchRoleSubjectScope(false, true);
           } else {
@@ -1225,25 +1230,34 @@
       },
 
       async fetchMemberList () {
-        try {
-          const params = {
-            id: this.id,
-            limit: 1000,
-            offset: 0
-          };
-          const res = await this.$store.dispatch('userGroup/getUserGroupMemberList', params);
-          this.defaultDepartments = res.data.results.filter((item) => item.type === 'department');
-          this.defaultUsers = res.data.results.filter((item) => item.type === 'user');
+        if (['memberTemplate'].includes(this.routeMode)) {
           if (this.isRatingManager) {
             this.fetchRoleSubjectScope(false, true);
           } else {
             this.fetchCategories(false, true);
           }
-        } catch (e) {
-          console.error(e);
-          this.messageAdvancedError(e);
-        } finally {
-          this.requestQueue.shift();
+          this.requestQueue = [];
+        } else {
+          try {
+            const params = {
+              id: this.id,
+              limit: 1000,
+              offset: 0
+            };
+            const res = await this.$store.dispatch('userGroup/getUserGroupMemberList', params);
+            this.defaultDepartments = res.data.results.filter((item) => item.type === 'department');
+            this.defaultUsers = res.data.results.filter((item) => item.type === 'user');
+            if (this.isRatingManager) {
+              this.fetchRoleSubjectScope(false, true);
+            } else {
+              this.fetchCategories(false, true);
+            }
+          } catch (e) {
+            console.error(e);
+            this.messageAdvancedError(e);
+          } finally {
+            this.requestQueue.shift();
+          }
         }
       },
 
