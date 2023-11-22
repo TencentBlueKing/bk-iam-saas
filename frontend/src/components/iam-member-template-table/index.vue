@@ -1,5 +1,6 @@
 <template>
   <div class="iam-member-template-wrapper">
+    <bk-alert type="info" :title="$t(`m.memberTemplate['最多只能选择10个人员模板']`)" />
     <div class="template-search-input">
       <bk-input
         v-model="tableKeyWord"
@@ -17,7 +18,6 @@
         size="small"
         :data="templateTableList"
         :max-height="360"
-        row-key="id"
         :ext-cls="'template-table'"
         :outer-border="false"
         :header-border="false"
@@ -27,7 +27,7 @@
         @select="handleSelectChange"
         @select-all="handleSelectAllChange"
         v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
-        <bk-table-column type="selection" align="center" :selectable="getDefaultSelect" :title="'111'" />
+        <bk-table-column type="selection" align="center" :selectable="getDefaultSelect" />
         <bk-table-column :label="$t(`m.memberTemplate['模板名称']`)" prop="name" :sortable="true">
           <template slot-scope="{ row }">
             <span class="template-name" :title="row.name ">
@@ -94,6 +94,11 @@
       hasSelectedTemplates: {
         handler (value) {
           this.currentSelectList = [...value];
+          const selectIdList = this.currentSelectList.map((v) => String(v.id));
+          this.templateTableList.forEach((item) => {
+            this.$refs.templateTableRef.toggleRowSelection(item, !!selectIdList.includes(String(item.id)));
+          });
+          this.fetchSelectedGroupCount();
         },
         immediate: true
       }
@@ -123,6 +128,8 @@
               if (currentSelectList.includes(String(item.id))) {
                 this.$refs.templateTableRef
                   && this.$refs.templateTableRef.toggleRowSelection(item, true);
+              } else {
+                this.$refs.templateTableRef.toggleRowSelection(item, false);
               }
             });
             if (this.currentSelectList.length < 1) {
@@ -165,9 +172,6 @@
                 (item) => item.id.toString() !== row.id.toString()
               );
             }
-            if (this.currentSelectList.length > 10) {
-              this.currentSelectList = this.currentSelectList.slice(0, 10);
-            }
             this.fetchSelectedGroupCount();
             this.$emit('on-selected-templates', this.currentSelectList);
           },
@@ -176,7 +180,12 @@
             const selectGroups = this.currentSelectList.filter(
               (item) => !tableList.map((v) => v.id.toString()).includes(item.id.toString())
             );
-            this.currentSelectList = [...selectGroups, ...payload];
+            const selectList = _.cloneDeep([...selectGroups, ...payload]).slice(0, 10);
+            const selectIdList = selectList.map((v) => String(v.id));
+            this.templateTableList.forEach((item) => {
+              this.$refs.templateTableRef.toggleRowSelection(item, !!selectIdList.includes(String(item.id)));
+            });
+            this.currentSelectList = _.cloneDeep(selectList);
             this.fetchSelectedGroupCount();
             this.$emit('on-selected-templates', this.currentSelectList);
           }
@@ -205,7 +214,7 @@
       fetchSelectedGroupCount () {
         this.$nextTick(() => {
           const selectionCount = document.getElementsByClassName('bk-page-selection-count');
-          if (this.$refs.templateTableRef && selectionCount) {
+          if (this.$refs.templateTableRef && selectionCount && selectionCount.length) {
             selectionCount[0].children[0].innerHTML = this.currentSelectList.length;
           }
         });
@@ -221,12 +230,13 @@
       }
     }
   };
-  </script>
+</script>
   
 <style lang="postcss" scoped>
 .iam-member-template-wrapper {
     .template-input-wrapper {
-        margin-bottom: 10px;
+      margin-top: 10px;
+      margin-bottom: 10px;
     }
     /deep/ .template-table-wrapper {
         .template-table {

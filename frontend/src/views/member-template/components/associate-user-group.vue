@@ -83,6 +83,7 @@
 
 <script>
   import { formatCodeData } from '@/common/util';
+  import { bus } from '@/common/bus';
   export default {
     props: {
       curDetailData: {
@@ -165,6 +166,13 @@
             this.messageSuccess(this.$t(`m.memberTemplate['解除关联成功']`), 3000);
             this.pagination.current = 1;
             await this.fetchAssociateGroup(true);
+            const params = {
+              ...this.curDetailData,
+              ...{
+                group_count: this.pagination.count
+              }
+            };
+            bus.$emit('on-related-change', params);
           }
         } catch (e) {
           this.messageAdvancedError(e);

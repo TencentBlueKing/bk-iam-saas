@@ -216,6 +216,7 @@
     mounted () {
       this.$once('hook:beforeDestroy', () => {
         bus.$off('on-info-change');
+        bus.$off('on-related-change');
       });
       bus.$on('on-info-change', (payload) => {
         const { id, name, description } = payload;
@@ -224,6 +225,15 @@
           this.memberTemplateList[index] = Object.assign(this.memberTemplateList[index], {
             name,
             description
+          });
+        }
+      });
+      bus.$on('on-related-change', (payload) => {
+        const { id, group_count } = payload;
+        const index = this.memberTemplateList.findIndex((item) => item.id === id);
+        if (index > -1) {
+          this.memberTemplateList[index] = Object.assign(this.memberTemplateList[index], {
+            group_count
           });
         }
       });

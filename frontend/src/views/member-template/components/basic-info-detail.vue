@@ -8,6 +8,7 @@
           <div class="basic-info-value">
             <iam-edit-input
               field="name"
+              :mode="formatEdit"
               :placeholder="$t(`m.memberTemplate['请输入模板名称']`)"
               :rules="rules"
               :value="basicInfo.name"
@@ -26,6 +27,7 @@
             <iam-edit-textarea
               field="description"
               width="600px"
+              :mode="formatEdit"
               :placeholder="$t(`m.memberTemplate['请输入模板描述']`)"
               :value="basicInfo.description"
               :remote-hander="handleChangeInfo"
@@ -74,6 +76,11 @@
           }
         ]
       };
+    },
+    computed: {
+      formatEdit () {
+        return this.curDetailData.readonly ? 'detail' : 'edit';
+      }
     },
     methods: {
       async fetchDetailInfo () {

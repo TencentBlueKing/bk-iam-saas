@@ -1696,14 +1696,10 @@
             = [...this.hasSelectedManualDepartments.filter((organ) => organ.id !== item.id)];
         }
         if (type === 'template') {
-          this.hasSelectedTemplates.forEach((v) => {
-            if (this.$refs.memberTableRef && this.$refs.memberTableRef.$refs.templateTableRef) {
-              if (String(item.id) === String(v.id)) {
-                this.$refs.memberTableRef.$refs.templateTableRef.toggleRowSelection(item, false);
-              }
-            }
-          });
           this.hasSelectedTemplates = [...this.hasSelectedTemplates.filter((v) => String(item.id) !== String(v.id))];
+          // this.$nextTick(() => {
+          //   console.log(type, this.$refs.memberTableRef.$refs.templateTableRef, this.hasSelectedTemplates);
+          // });
         }
         this.fetchManualTableData();
       },
@@ -2190,9 +2186,7 @@
       }
       .content {
         position: relative;
-        margin-top: 15px;
-        /* padding-left: 10px; */
-        padding-right: 24px;
+        padding: 15px 24px 15px 0;
         /* height: 345px; */
         height: 414px;
         overflow: auto;
