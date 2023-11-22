@@ -118,6 +118,8 @@
             display: inline-block;
             margin-bottom: 9px;
             font-size: 12px;
+            min-width: 120px;
+            width: 130px;
             .icon {
                 display: inline-block;
                 color: #3a84ff;
