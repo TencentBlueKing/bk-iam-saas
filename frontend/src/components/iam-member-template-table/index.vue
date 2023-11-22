@@ -98,6 +98,7 @@
           this.templateTableList.forEach((item) => {
             this.$refs.templateTableRef.toggleRowSelection(item, !!selectIdList.includes(String(item.id)));
           });
+          this.fetchSelectedGroupCount();
         },
         immediate: true
       }
@@ -213,7 +214,7 @@
       fetchSelectedGroupCount () {
         this.$nextTick(() => {
           const selectionCount = document.getElementsByClassName('bk-page-selection-count');
-          if (this.$refs.templateTableRef && selectionCount) {
+          if (this.$refs.templateTableRef && selectionCount && selectionCount.length) {
             selectionCount[0].children[0].innerHTML = this.currentSelectList.length;
           }
         });
