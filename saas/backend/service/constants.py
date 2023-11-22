@@ -379,6 +379,7 @@ class SensitivityLevel(ChoicesEnum):
     L2 = "L2"
     L3 = "L3"
     L4 = "L4"
+    L5 = "L5"
 
     _choices_labels = skip(
         (
@@ -386,5 +387,6 @@ class SensitivityLevel(ChoicesEnum):
             (L2, "低"),
             (L3, "中"),
             (L4, "高"),
+            (L5, "极高"),
         )
     )
