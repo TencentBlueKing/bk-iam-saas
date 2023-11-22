@@ -223,7 +223,9 @@
                     )
                   </template>
                   <span v-else>
-                    ({{ row.expired_at_display }})
+                    {{ row.expired_at === 4102444800 ?
+                      `(${row.expired_at_display})`
+                      : `(${$t(`m.common['有效期']`)}${row.expired_at_display})`}}
                   </span>
                 </span>
               </div>
@@ -1722,7 +1724,7 @@
   align-items: center;
   &-label {
     color: #3a84ff;
-    max-width: calc(100% - 80px);
+    max-width: calc(100% - 120px);
     word-break: break-all;
     cursor: pointer;
     &:hover {
