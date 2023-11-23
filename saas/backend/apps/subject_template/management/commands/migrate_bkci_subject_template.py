@@ -29,9 +29,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         subject_template_biz = SubjectTemplateBiz()
 
-        queryset = Role.objects.filter(source_system_id="bk_ci_rbac", type=RoleType.SUBSET_MANAGER.value).order_by(
-            "id"
-        )
+        queryset = Role.objects.filter(source_system_id="bk_ci_rbac", type=RoleType.GRADE_MANAGER.value).order_by("id")
 
         paginator = Paginator(queryset, 100)
 
