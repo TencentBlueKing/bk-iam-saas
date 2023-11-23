@@ -14,6 +14,7 @@ from backend.apps.group.models import Group
 from backend.apps.role.serializers import ResourceInstancesSLZ
 from backend.apps.subject.serializers import SubjectGroupSLZ
 from backend.biz.group import GroupBiz
+from backend.biz.subject_template import SubjectTemplateBiz
 from backend.service.group_saas_attribute import GroupAttributeService
 
 from .constants import NewbieSceneEnum
@@ -32,6 +33,7 @@ class GroupSLZ(SubjectGroupSLZ):
     role = serializers.SerializerMethodField()
     role_members = serializers.SerializerMethodField()
     attributes = serializers.SerializerMethodField()
+    subject_template_count = serializers.SerializerMethodField()
 
     class Meta:
         ref_name = "UserGroupSLZ"
@@ -40,14 +42,19 @@ class GroupSLZ(SubjectGroupSLZ):
         super().__init__(*args, **kwargs)
         self.group_role_dict = None
         self.group_attrs_dict = None
+        self.subject_template_count_dict = None
         if isinstance(self.instance, list) and self.instance:
             group_ids = [int(group.id) for group in self.instance]
 
             self.group_role_dict = GroupBiz().get_group_role_dict_by_ids(group_ids)
             # 查询涉及到的用户组的属性
             self.group_attrs_dict = GroupAttributeService().batch_get_attributes(group_ids)
+            # 人员模版数量
+            self.subject_template_count_dict = SubjectTemplateBiz().get_group_template_count_dict(group_ids)
         elif isinstance(self.instance, Group):
             self.group_attrs_dict = GroupAttributeService().batch_get_attributes([self.instance.id])
+            # 人员模版数量
+            self.subject_template_count_dict = SubjectTemplateBiz().get_group_template_count_dict([self.instance.id])
 
     def get_role(self, obj):
         if not self.group_role_dict:
@@ -75,6 +82,11 @@ class GroupSLZ(SubjectGroupSLZ):
             return []
 
         return role.members
+
+    def get_subject_template_count(self, obj):
+        if not self.subject_template_count_dict:
+            return 0
+        return self.subject_template_count_dict.get(obj.id, 0)
 
 
 class QueryRoleSLZ(serializers.Serializer):
