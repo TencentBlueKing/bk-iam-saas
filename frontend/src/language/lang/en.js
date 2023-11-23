@@ -1424,11 +1424,12 @@ export const m = {
         '解除关联后，相关人员将失去用户组的权限。': 'After disassociation, the relevant personnel will lose the permissions of the user group.',
         '删除后，关联用户组也会删除对应的人员权限。': 'After deletion, the associated user group will also delete the corresponding personnel permissions.',
         '只读人员模板不可删除': 'Read-only member templates cannot delete',
+        '只读人员模板不能添加成员': 'Read-only member templates cannot add members',
         '当前选择人员模板皆为只读属性，暂无可删除人员模板': 'The currently selected member templates are all read-only attributes, and there are currently no member templates to delete',
         '解除关联成功': 'Disassociated successfully',
         '请输入至少3个字符的用户/组织，按enter键搜索': 'Please enter user/organization with at least 3 characters and press enter to search',
-        '只读人员模板不能移除': 'The read-only personnel template cannot be removed',
-        '只读人员模板不能添加、删除、复制成员': 'Read-only member templates cannot add, delete, or copy members',
+        '只读人员模板不能移除': 'The read-only member template cannot be removed',
+        '只读人员模板不能添加、删除、复制成员': 'Read-only member template cannot add, delete, or copy members',
         '最多只能选择10个人员模板' : 'You can only select up to 10 member templates'
     }
 }

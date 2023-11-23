@@ -48,7 +48,12 @@
       <bk-table-column :label="$t(`m.common['操作-table']`)">
         <template slot-scope="{ row }">
           <div class="actions-btn">
-            <bk-button theme="primary" text :disabled="row.readonly" class="actions-btn-item"
+            <bk-button
+              theme="primary"
+              text
+              :disabled="row.readonly"
+              class="actions-btn-item"
+              :title="row.readonly ? $t(`m.memberTemplate['只读人员模板不能添加成员']`) : ''"
               @click="handleAddMember(row)">
               {{ $t(`m.common['添加成员']`) }}
             </bk-button>
@@ -71,7 +76,7 @@
                 </div>
               </div>
               <bk-button theme="primary" text class="actions-btn-item" :disabled="row.readonly"
-                :title="row.readonly ? $t(`m.memberTemplate['只读人员模板不可删除]`) : ''">
+                :title="row.readonly ? $t(`m.memberTemplate['只读人员模板不可删除']`) : ''">
                 {{ $t(`m.common['删除']`) }}
               </bk-button>
             </bk-popconfirm>
@@ -106,7 +111,7 @@
       :id="curId"
       :show-limit="false"
       :route-mode="'memberTemplate'"
-      show-expired-at
+      :show-expired-at="false"
       @on-cancel="handleCancelAdd"
       @on-sumbit="handleSubmitAdd" @on-after-leave="handleAddAfterClose" />
 
@@ -194,16 +199,14 @@
         delActionDialogTitle: '',
         delActionDialogTip: '',
         curId: 0,
-        curDetailData: {}
+        curDetailData: {},
+        tableHeight: getWindowHeight() - 185
       };
     },
     computed: {
       ...mapGetters(['user', 'externalSystemId']),
       isBatchDisabled () {
         return this.currentSelectList.length === 0;
-      },
-      tableHeight () {
-        return getWindowHeight() - 185;
       },
       isRatingManager () {
         return ['rating_manager', 'subset_manager'].includes(this.curRole);
@@ -224,6 +227,9 @@
       }
     },
     async created () {
+      window.addEventListener('resize', () => {
+        this.tableHeight = getWindowHeight() - 185;
+      });
       await this.fetchMemberTemplateList(true);
     },
     mounted () {
@@ -341,16 +347,7 @@
       },
 
       async handleSubmitAdd (payload) {
-        const { users, departments, expiredAt } = payload;
-        let expired = payload.policy_expired_at;
-        // 4102444800：非永久时需加上当前时间
-        if (expiredAt !== 4102444800) {
-          const nowTimestamp = +new Date() / 1000;
-          const tempArr = String(nowTimestamp).split('');
-          const dotIndex = tempArr.findIndex((item) => item === '.');
-          const nowSecond = parseInt(tempArr.splice(0, dotIndex).join(''), 10);
-          expired = expired + nowSecond;
-        }
+        const { users, departments } = payload;
         const subjects = [];
 
         if (departments.length > 0) {
@@ -375,7 +372,6 @@
         }
         const params = {
           subjects,
-          expired_at: expired,
           id: this.curId
         };
         let url = 'addSubjectTemplateMembers';

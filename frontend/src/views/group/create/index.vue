@@ -19,7 +19,7 @@
             <span>({{ $t(`m.userGroup['该组只能管理员主动授权，用户无法主动申请']`) }})</span>
           </bk-checkbox>
         </div>
-        <div class="select-wrap-checkbox">
+        <div class="select-wrap-checkbox" v-if="isShowTemplate">
           <bk-checkbox
             v-model="formData.sync_subject_template"
           >
@@ -341,6 +341,9 @@
       curAuthorizationData () {
           const data = Object.assign(this.authorizationData, this.authorizationDataByCustom);
           return data;
+      },
+      isShowTemplate () {
+        return !['staff', 'subset_manager'].includes(this.user.role.type);
       }
     },
     watch: {

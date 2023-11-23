@@ -82,6 +82,7 @@
     </render-search>
     <bk-table
       size="small" :data="tableList"
+      :resize="true"
       :max-height="tableHeight" :class="{ 'set-border': tableLoading }" ext-cls="user-group-table"
       :pagination="pagination" ref="tableRef" row-key="id" @page-change="pageChange"
       @page-limit-change="limitChange" @select="handlerChange" @select-all="handlerAllChange"
@@ -92,7 +93,7 @@
           <span class="user-group-name" :title="row.name" @click="handleView(row)">{{ row.name }}</span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.userGroup['用户/组织']`)">
+      <bk-table-column :label="$t(`m.userGroup['用户/组织']`)" min-width="200">
         <template slot-scope="{ row }">
           <div class="member-wrapper">
             <span class="user">
@@ -102,6 +103,10 @@
             <span class="depart">
               <Icon type="organization-fill" />
               {{ row.department_count || '--' }}
+            </span>
+            <span class="template">
+              <Icon type="renyuanmuban" />
+              {{ row.subject_template_count || '--' }}
             </span>
           </div>
         </template>
@@ -162,7 +167,7 @@
           <span :title="row.description || ''">{{ row.description || '--' }}</span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.common['操作']`)" width="320" fixed="right">
+      <bk-table-column :label="$t(`m.common['操作-table']`)" width="320" fixed="right">
         <template slot-scope="{ row }">
           <div>
             <bk-button
@@ -393,7 +398,8 @@
         userGroupAttributes: {
           apply_disable: false
         },
-        userGroupAttributesList: USER_GROUP_ATTRIBUTES
+        userGroupAttributesList: USER_GROUP_ATTRIBUTES,
+        tableHeight: getWindowHeight() - 185
       };
     },
     computed: {
@@ -409,9 +415,6 @@
             },
             curSelectIds () {
                 return this.currentSelectList.map((item) => item.id);
-            },
-            tableHeight () {
-                return getWindowHeight() - 185;
             },
             isBatchDisabled () {
               if (this.currentSelectList.length) {
@@ -444,6 +447,9 @@
       }
     },
     async created () {
+      window.addEventListener('resize', () => {
+        this.tableHeight = getWindowHeight() - 185;
+      });
       this.curRole = this.user.role.type || 'staff';
       this.searchParams = this.$route.query;
       this.setCurrentQueryCache(this.refreshCurrentQuery());
@@ -967,7 +973,8 @@
             .member-wrapper {
 
                 .user,
-                .depart {
+                .depart,
+                .template {
                     background: #fff;
                 }
             }
@@ -996,7 +1003,8 @@
             justify-content: flex-start;
 
             .user,
-            .depart {
+            .depart,
+            .template {
                 display: inline-block;
                 min-width: 54px;
                 padding: 4px 6px;
@@ -1009,7 +1017,8 @@
                 }
             }
 
-            .depart {
+            .depart,
+            .template {
                 margin-left: 2px;
             }
         }

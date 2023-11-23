@@ -286,9 +286,10 @@
                     {{ $t(`m.common['，']`) }}
                     <span class="user-count">{{ hasSelectedUsers.length }}</span
                     >{{ $t(`m.common['个']`) }}{{ $t(`m.common['用户']`) }}
-                    {{ $t(`m.common['，']`) }}
-                    <span class="template-count">{{ hasSelectedTemplates.length }}</span
-                    >{{ $t(`m.common['个']`) }}{{ $t(`m.memberTemplate['人员模板']`) }}
+                    <span v-if="isShowMemberTemplate">
+                      {{ $t(`m.common['，']`) }}
+                      <span class="template-count">{{ hasSelectedTemplates.length }}</span>{{ $t(`m.common['个']`) }}{{ $t(`m.memberTemplate['人员模板']`) }}
+                    </span>
                   </template>
                   <!-- <template v-else>
                     <span class="user-count">0</span>
@@ -298,8 +299,12 @@
                   <template v-if="isShowSelectedText">
                     <span class="organization-count">{{ hasSelectedDepartments.length }}</span
                     >Org{{ $t(`m.common['，']`) }} <span class="user-count">{{ hasSelectedUsers.length }}</span
-                    >User{{ $t(`m.common['，']`) }}<span class="template-count">{{ hasSelectedTemplates.length }}</span
-                    >Member template
+                    >User
+                    <span v-if="isShowMemberTemplate">
+                      {{ $t(`m.common['，']`) }}
+                      <span class="template-count">{{ hasSelectedTemplates.length }}</span>
+                      Member template
+                    </span>
                   </template>
                   <template v-else>
                     <span class="user-count">0</span>
@@ -718,6 +723,9 @@
       },
       isStaff () {
         return this.user.role.type === 'staff';
+      },
+      isShowMemberTemplate () {
+        return this.needMemberTempRoutes.includes(this.$route.name) && !['staff', 'subset_manager'].includes(this.user.role.type);
       }
     },
     watch: {
@@ -727,7 +735,7 @@
           if (this.isShowDialog) {
             if (
               !this.needMemberTempRoutes.includes(this.$route.name)
-              || ['staff', 'subset_manager'].includes(this.user.role.type)
+              || ['staff'].includes(this.user.role.type)
             ) {
               this.panels = this.panels.filter((item) => !['memberTemplate'].includes(item.name));
             }
@@ -789,12 +797,7 @@
           }
         } else {
           this.requestQueue = ['categories'];
-          console.log(this.isRatingManager);
-          if (this.isRatingManager) {
-            this.fetchRoleSubjectScope(false, true);
-          } else {
-            this.fetchCategories(false, true);
-          }
+          this.fetchMemberList();
         }
       },
 
@@ -1230,23 +1233,29 @@
       },
 
       async fetchMemberList () {
-        if (['memberTemplate'].includes(this.routeMode)) {
-          if (this.isRatingManager) {
-            this.fetchRoleSubjectScope(false, true);
-          } else {
-            this.fetchCategories(false, true);
-          }
-          this.requestQueue = [];
-        } else {
+        if (this.id) {
           try {
             const params = {
               id: this.id,
               limit: 1000,
               offset: 0
             };
-            const res = await this.$store.dispatch('userGroup/getUserGroupMemberList', params);
-            this.defaultDepartments = res.data.results.filter((item) => item.type === 'department');
-            this.defaultUsers = res.data.results.filter((item) => item.type === 'user');
+            let url = 'userGroup/getUserGroupMemberList';
+            if (['memberTemplate'].includes(this.routeMode)) {
+              url = 'memberTemplate/getSubjectTemplateMembers';
+            }
+            const { data } = await this.$store.dispatch(url, params);
+            const results = data.results || [];
+            this.defaultDepartments = results.filter((item) => item.type === 'department');
+            this.defaultUsers = results.filter((item) => item.type === 'user');
+            // const defaultUsers = this.defaultUsers.map((v) => {
+            //   return {
+            //     ...v,
+            //     username: v.username || v.id
+            //   };
+            // });
+            // this.hasSelectedUsers = [...this.hasSelectedUsers, ...defaultUsers];
+            // this.hasSelectedDepartments = [...this.hasSelectedDepartments, ...this.defaultDepartments];
             if (this.isRatingManager) {
               this.fetchRoleSubjectScope(false, true);
             } else {
@@ -1257,6 +1266,12 @@
             this.messageAdvancedError(e);
           } finally {
             this.requestQueue.shift();
+          }
+        } else {
+          if (this.isRatingManager) {
+            this.fetchRoleSubjectScope(false, true);
+          } else {
+            this.fetchCategories(false, true);
           }
         }
       },
@@ -1711,9 +1726,6 @@
         }
         if (type === 'template') {
           this.hasSelectedTemplates = [...this.hasSelectedTemplates.filter((v) => String(item.id) !== String(v.id))];
-          // this.$nextTick(() => {
-          //   console.log(type, this.$refs.memberTableRef.$refs.templateTableRef, this.hasSelectedTemplates);
-          // });
         }
         this.fetchManualTableData();
       },
@@ -1795,6 +1807,8 @@
         this.hasSelectedManualDepartments = [];
         this.hasSelectedManualUsers = [];
         this.hasSelectedTemplates = [];
+        this.defaultDepartments = [];
+        this.defaultUsers = [];
         this.$refs.memberTableRef
           && this.$refs.memberTableRef.$refs
           && this.$refs.memberTableRef.$refs.templateTableRef.clearSelection();

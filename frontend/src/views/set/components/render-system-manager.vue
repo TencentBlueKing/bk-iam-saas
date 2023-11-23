@@ -108,15 +108,14 @@
           text: '',
           tip: '',
           tipType: ''
-        }
+        },
+        tableHeight: getWindowHeight() - 297
       };
     },
-    computed: {
-      tableHeight () {
-        return getWindowHeight() - 297;
-      }
-    },
     async created () {
+      window.addEventListener('resize', () => {
+        this.tableHeight = getWindowHeight() - 297;
+      });
       await this.fetchSystemManager();
     },
     methods: {
