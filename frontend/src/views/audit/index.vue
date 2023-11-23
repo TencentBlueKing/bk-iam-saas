@@ -382,7 +382,8 @@
           'authorization.api.allow.list.config.delete': this.$t(`m.audit['授权类API白名单删除']`),
           'management.api.allow.list.config.create': this.$t(`m.audit['管理类API白名单创建']`),
           'management.api.allow.list.config.delete': this.$t(`m.audit['管理类API白名单删除']`),
-          'group.transfer': this.$t(`m.audit['用户组权限交接']`)
+          'group.transfer': this.$t(`m.audit['用户组权限交接']`),
+          'action.sensitivity.level.update': this.$t(`m.audit['操作敏感等级更新']`)
         },
         currentMonth: '',
         noDetailType: NO_DETAIL_TYPE,
@@ -680,7 +681,8 @@
           { id: 'authorization.api.allow.list.config.create', name: this.$t(`m.audit['授权类API白名单创建']`) },
           { id: 'authorization.api.allow.list.config.delete', name: this.$t(`m.audit['授权类API白名单删除']`) },
           { id: 'management.api.allow.list.config.create', name: this.$t(`m.audit['管理类API白名单创建']`) },
-          { id: 'management.api.allow.list.config.delete', name: this.$t(`m.audit['管理类API白名单删除']`) }
+          { id: 'management.api.allow.list.config.delete', name: this.$t(`m.audit['管理类API白名单删除']`) },
+          { id: 'action.sensitivity.level.update', name: this.$t(`m.audit['操作敏感等级更新']`) }
         ];
         if (value === '') {
           return Promise.resolve(list);
