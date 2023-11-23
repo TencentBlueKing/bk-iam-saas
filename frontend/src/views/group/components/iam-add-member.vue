@@ -735,7 +735,7 @@
           if (this.isShowDialog) {
             if (
               !this.needMemberTempRoutes.includes(this.$route.name)
-              || ['staff', 'subset_manager'].includes(this.user.role.type)
+              || ['staff'].includes(this.user.role.type)
             ) {
               this.panels = this.panels.filter((item) => !['memberTemplate'].includes(item.name));
             }
@@ -797,11 +797,7 @@
           }
         } else {
           this.requestQueue = ['categories'];
-          if (this.isRatingManager) {
-            this.fetchRoleSubjectScope(false, true);
-          } else {
-            this.fetchCategories(false, true);
-          }
+          this.fetchMemberList();
         }
       },
 
@@ -1237,23 +1233,29 @@
       },
 
       async fetchMemberList () {
-        if (['memberTemplate'].includes(this.routeMode)) {
-          if (this.isRatingManager) {
-            this.fetchRoleSubjectScope(false, true);
-          } else {
-            this.fetchCategories(false, true);
-          }
-          this.requestQueue = [];
-        } else {
+        if (this.id) {
           try {
             const params = {
               id: this.id,
               limit: 1000,
               offset: 0
             };
-            const res = await this.$store.dispatch('userGroup/getUserGroupMemberList', params);
-            this.defaultDepartments = res.data.results.filter((item) => item.type === 'department');
-            this.defaultUsers = res.data.results.filter((item) => item.type === 'user');
+            let url = 'userGroup/getUserGroupMemberList';
+            if (['memberTemplate'].includes(this.routeMode)) {
+              url = 'memberTemplate/getSubjectTemplateMembers';
+            }
+            const { data } = await this.$store.dispatch(url, params);
+            const results = data.results || [];
+            this.defaultDepartments = results.filter((item) => item.type === 'department');
+            this.defaultUsers = results.filter((item) => item.type === 'user');
+            // const defaultUsers = this.defaultUsers.map((v) => {
+            //   return {
+            //     ...v,
+            //     username: v.username || v.id
+            //   };
+            // });
+            // this.hasSelectedUsers = [...this.hasSelectedUsers, ...defaultUsers];
+            // this.hasSelectedDepartments = [...this.hasSelectedDepartments, ...this.defaultDepartments];
             if (this.isRatingManager) {
               this.fetchRoleSubjectScope(false, true);
             } else {
@@ -1264,6 +1266,12 @@
             this.messageAdvancedError(e);
           } finally {
             this.requestQueue.shift();
+          }
+        } else {
+          if (this.isRatingManager) {
+            this.fetchRoleSubjectScope(false, true);
+          } else {
+            this.fetchCategories(false, true);
           }
         }
       },
