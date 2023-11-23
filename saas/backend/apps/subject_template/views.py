@@ -19,7 +19,7 @@ from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
-from backend.account.permissions import role_perm_class
+from backend.account.permissions import RolePermission, role_perm_class
 from backend.apps.group.models import Group
 from backend.apps.group.serializers import SearchMemberSLZ
 from backend.apps.subject_template.models import SubjectTemplate, SubjectTemplateGroup, SubjectTemplateRelation
@@ -79,11 +79,12 @@ class SubjectTemplateQueryMixin:
 
 class SubjectTemplateViewSet(SubjectTemplateQueryMixin, ModelViewSet):
 
-    permission_classes = [
-        role_perm_class(
-            PermissionCodeEnum.MANAGE_SUBJECT_TEMPLATE.value,
-        )
-    ]
+    permission_classes = [RolePermission]
+    action_permission = {
+        "create": PermissionCodeEnum.MANAGE_SUBJECT_TEMPLATE.value,
+        "update": PermissionCodeEnum.MANAGE_SUBJECT_TEMPLATE.value,
+        "destroy": PermissionCodeEnum.MANAGE_SUBJECT_TEMPLATE.value,
+    }
 
     queryset = SubjectTemplate.objects.all()
     lookup_field = "id"
@@ -199,11 +200,11 @@ class SubjectTemplateViewSet(SubjectTemplateQueryMixin, ModelViewSet):
 
 class SubjectTemplateMemberViewSet(SubjectTemplateQueryMixin, GenericViewSet):
 
-    permission_classes = [
-        role_perm_class(
-            PermissionCodeEnum.MANAGE_SUBJECT_TEMPLATE.value,
-        )
-    ]
+    permission_classes = [RolePermission]
+    action_permission = {
+        "create": PermissionCodeEnum.MANAGE_SUBJECT_TEMPLATE.value,
+        "destroy": PermissionCodeEnum.MANAGE_SUBJECT_TEMPLATE.value,
+    }
 
     queryset = SubjectTemplate.objects.all()
     lookup_field = "id"
@@ -353,11 +354,10 @@ class SubjectTemplatesMemberCreateViewSet(SubjectTemplateQueryMixin, GenericView
 
 class SubjectTemplateGroupViewSet(SubjectTemplateQueryMixin, GenericViewSet):
 
-    permission_classes = [
-        role_perm_class(
-            PermissionCodeEnum.MANAGE_SUBJECT_TEMPLATE.value,
-        )
-    ]
+    permission_classes = [RolePermission]
+    action_permission = {
+        "destroy": PermissionCodeEnum.MANAGE_SUBJECT_TEMPLATE.value,
+    }
 
     queryset = SubjectTemplate.objects.all()
     lookup_field = "id"

@@ -39,6 +39,7 @@ from backend.biz.permission_audit import QueryAuthorizedSubjects
 from backend.biz.policy import PolicyBean, PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.policy_tag import ConditionTagBean, ConditionTagBiz
 from backend.biz.role import AuthScopeAction, AuthScopeSystem, RoleBiz, RoleListQuery, RoleObjectRelationChecker
+from backend.biz.subject_template import SubjectTemplateBiz
 from backend.biz.template import TemplateBiz
 from backend.common.error_codes import error_codes
 from backend.common.filters import NoCheckModelFilterBackend
@@ -308,6 +309,7 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
     group_biz = GroupBiz()
     role_biz = RoleBiz()
     group_check_biz = GroupCheckBiz()
+    subject_template_biz = SubjectTemplateBiz()
 
     @swagger_auto_schema(
         operation_description="用户组成员列表",
@@ -399,7 +401,13 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
         group = self.get_object()
         data = serializer.validated_data
 
-        self.group_biz.remove_members(str(group.id), parse_obj_as(List[Subject], data["members"]))
+        members, subject_template_ids = split_members_to_subject_and_template(data["members"])
+
+        if members:
+            self.group_biz.remove_members(str(group.id), members)
+
+        for template_id in subject_template_ids:
+            self.subject_template_biz.delete_group(template_id, group.id)
 
         # 写入审计上下文
         audit_context_setter(group=group, members=data["members"])
