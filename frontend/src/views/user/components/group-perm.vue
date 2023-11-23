@@ -440,7 +440,8 @@
         groupAttributes: {
           source_type: '',
           source_from_role: false
-        }
+        },
+        tableHeight: getWindowHeight() - 290
       };
     },
     computed: {
@@ -450,9 +451,6 @@
     },
     curSelectMemberIds () {
       return this.currentSelectGroupList.map((item) => item.id);
-    },
-    tableHeight () {
-      return getWindowHeight() - 290;
     },
     isAdminGroup () {
       return (payload) => {
@@ -515,6 +513,9 @@
       }
     },
     async created () {
+      window.addEventListener('resize', () => {
+        this.tableHeight = getWindowHeight() - 290;
+      });
       if (!this.isSearchPerm) {
         await this.fetchPermGroups(false, true);
       }

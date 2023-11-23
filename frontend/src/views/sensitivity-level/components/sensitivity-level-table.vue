@@ -163,16 +163,14 @@
           text: '',
           tip: '',
           tipType: ''
-        }
+        },
+        tableHeight: getWindowHeight() - 260
       };
     },
     computed: {
     ...mapGetters(['allSystemList', 'externalSystemId']),
     isBatchDisabled () {
       return this.currentSelectList.length === 0;
-    },
-    tableHeight () {
-      return getWindowHeight() - 260;
     },
     formaSystemText () {
       return (payload) => {
@@ -202,6 +200,11 @@
         },
         immediate: true
       }
+    },
+    created () {
+      window.addEventListener('resize', () => {
+        this.tableHeight = getWindowHeight() - 260;
+      });
     },
     methods: {
       async fetchInitData () {

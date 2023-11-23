@@ -286,9 +286,10 @@
                     {{ $t(`m.common['，']`) }}
                     <span class="user-count">{{ hasSelectedUsers.length }}</span
                     >{{ $t(`m.common['个']`) }}{{ $t(`m.common['用户']`) }}
-                    {{ $t(`m.common['，']`) }}
-                    <span class="template-count">{{ hasSelectedTemplates.length }}</span
-                    >{{ $t(`m.common['个']`) }}{{ $t(`m.memberTemplate['人员模板']`) }}
+                    <span v-if="isShowMemberTemplate">
+                      {{ $t(`m.common['，']`) }}
+                      <span class="template-count">{{ hasSelectedTemplates.length }}</span>{{ $t(`m.common['个']`) }}{{ $t(`m.memberTemplate['人员模板']`) }}
+                    </span>
                   </template>
                   <!-- <template v-else>
                     <span class="user-count">0</span>
@@ -298,8 +299,12 @@
                   <template v-if="isShowSelectedText">
                     <span class="organization-count">{{ hasSelectedDepartments.length }}</span
                     >Org{{ $t(`m.common['，']`) }} <span class="user-count">{{ hasSelectedUsers.length }}</span
-                    >User{{ $t(`m.common['，']`) }}<span class="template-count">{{ hasSelectedTemplates.length }}</span
-                    >Member template
+                    >User
+                    <span v-if="isShowMemberTemplate">
+                      {{ $t(`m.common['，']`) }}
+                      <span class="template-count">{{ hasSelectedTemplates.length }}</span>
+                      Member template
+                    </span>
                   </template>
                   <template v-else>
                     <span class="user-count">0</span>
@@ -718,6 +723,9 @@
       },
       isStaff () {
         return this.user.role.type === 'staff';
+      },
+      isShowMemberTemplate () {
+        return this.needMemberTempRoutes.includes(this.$route.name) && !['staff', 'subset_manager'].includes(this.user.role.type);
       }
     },
     watch: {
@@ -789,7 +797,6 @@
           }
         } else {
           this.requestQueue = ['categories'];
-          console.log(this.isRatingManager);
           if (this.isRatingManager) {
             this.fetchRoleSubjectScope(false, true);
           } else {
@@ -1711,9 +1718,6 @@
         }
         if (type === 'template') {
           this.hasSelectedTemplates = [...this.hasSelectedTemplates.filter((v) => String(item.id) !== String(v.id))];
-          // this.$nextTick(() => {
-          //   console.log(type, this.$refs.memberTableRef.$refs.templateTableRef, this.hasSelectedTemplates);
-          // });
         }
         this.fetchManualTableData();
       },
@@ -1795,6 +1799,8 @@
         this.hasSelectedManualDepartments = [];
         this.hasSelectedManualUsers = [];
         this.hasSelectedTemplates = [];
+        this.defaultDepartments = [];
+        this.defaultUsers = [];
         this.$refs.memberTableRef
           && this.$refs.memberTableRef.$refs
           && this.$refs.memberTableRef.$refs.templateTableRef.clearSelection();
