@@ -292,6 +292,7 @@
       :id="id"
       show-expired-at
       :is-rating-manager="isRatingManager"
+      :route-mode="routeMode"
       @on-cancel="handleCancelAdd"
       @on-sumbit="handleSubmitAdd"
       @on-after-leave="handleAddAfterClose"
@@ -1134,7 +1135,7 @@
       handleShowRenewal (payload) {
         this.isShowRenewalDialog = true;
         const params = _.cloneDeep(payload);
-        if (!['memberTemplate'].includes(this.routeMode)) {
+        if ((!['memberTemplate'].includes(this.routeMode) && ['memberTemplate'].includes(this.tabActive))) {
           this.$set(params, 'type', 'template');
         }
         this.curData = Object.assign({}, params);
