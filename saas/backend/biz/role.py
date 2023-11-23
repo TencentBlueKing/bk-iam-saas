@@ -827,9 +827,15 @@ class RoleListQuery:
         查询子集管理员可授权的人员模版列表
         """
         assert self.role.type == RoleType.SUBSET_MANAGER.value
+
+        # 1. 查询子集管理员的父级分级管理员
+        parent_role_id = RoleRelation.objects.get_parent_role_id(self.role.id)
+        if not parent_role_id:
+            return []
+
         return list(
             RoleRelatedObject.objects.filter(
-                role_id=self.role.id, object_type=RoleRelatedObjectType.SUBJECT_TEMPLATE.value
+                role_id=parent_role_id, object_type=RoleRelatedObjectType.SUBJECT_TEMPLATE.value
             ).values_list("object_id", flat=True)
         )
 
