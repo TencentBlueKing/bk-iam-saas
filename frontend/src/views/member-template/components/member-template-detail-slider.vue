@@ -79,7 +79,7 @@
         width: 960,
         tabList: [
           { name: this.$t(`m.common['基本信息']`), id: 'basic_info' },
-          { name: this.$t(`m.memberTemplate['用户/组织']`), id: 'template_member' },
+          { name: this.$t(`m.userGroup['用户/组织']`), id: 'template_member' },
           {
             name: this.$t(`m.memberTemplate['关联用户组']`),
             id: 'associate_groups',
