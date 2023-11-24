@@ -864,7 +864,7 @@ export const m = {
         '删除操作权限': 'Delete action permissions',
         '暂无关联实例': 'No associated instance',
         '所属组织架构': 'Organizational structure',
-        '请输入至少3个字符的用户/组织或人员模板，按enter键搜索': 'Please enter user/organization or members template with at least 3 characters and press enter to search'
+        '请输入用户/组织或人员模板，按enter键搜索': 'Please enter user/organization or members template, press enter to search'
     },
     resource: {
         '无限制总文案': 'If the action does not require restricted instances, select unlimited',
@@ -1427,7 +1427,7 @@ export const m = {
         '只读人员模板不能添加成员': 'Read-only member templates cannot add members',
         '当前选择人员模板皆为只读属性，暂无可删除人员模板': 'The currently selected member templates are all read-only attributes, and there are currently no member templates to delete',
         '解除关联成功': 'Disassociated successfully',
-        '请输入至少3个字符的用户/组织，按enter键搜索': 'Please enter user/organization with at least 3 characters and press enter to search',
+        '请输入用户/组织，按enter键搜索': 'Please enter user/organization, press enter to search',
         '只读人员模板不能移除': 'The read-only member template cannot be removed',
         '只读人员模板不能添加、删除、复制成员': 'Read-only member template cannot add, delete, or copy members',
         '最多只能选择10个人员模板' : 'You can only select up to 10 member templates'

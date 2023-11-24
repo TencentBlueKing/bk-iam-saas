@@ -363,7 +363,7 @@
       },
       searchPlaceholder: {
         type: String,
-        default: il8n('userGroupDetail', '请输入至少3个字符的用户/组织或人员模板，按enter键搜索')
+        default: il8n('userGroupDetail', '请输入用户/组织或人员模板，按enter键搜索')
       },
       routeMode: {
         type: String,

@@ -6,7 +6,7 @@
       <bk-input
         v-model="tableKeyWord"
         class="template-input-wrapper"
-        :placeholder="$t(`m.memberTemplate['请输入至少3个字符的用户/组织，按enter键搜索']`)"
+        :placeholder="$t(`m.memberTemplate['请输入用户/组织，按enter键搜索']`)"
         :right-icon="'bk-icon icon-search'"
         :clearable="true"
         @clear="handleClearSearch"

@@ -22,11 +22,11 @@
     >
       <bk-table-column :label="$t(`m.userGroup['用户组']`)">
         <template slot-scope="{ row }">
-          <div class="user-groups">
+          <div class="user-groups" @click="handleOpen(row.id)">
             <span class="user-groups-name" :title="row.name">
               {{ row.name }}
             </span>
-            <Icon bk type="edit" class="user-groups-icon" @click="handleOpen(row.id)" />
+            <Icon bk type="edit" class="user-groups-icon" />
           </div>
         </template>
       </bk-table-column>
@@ -116,7 +116,7 @@
           const params = {
             page: current,
             page_size: limit,
-            keyword: this.groupValue,
+            name: this.groupValue,
             id: this.curDetailData.id
           };
           const { code, data } = await this.$store.dispatch('memberTemplate/getSubjectTemplatesGroups', params);
