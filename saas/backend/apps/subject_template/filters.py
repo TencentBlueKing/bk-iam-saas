@@ -10,6 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 from django_filters import rest_framework as filters
 
+from backend.apps.group.models import Group
 from backend.apps.subject_template.models import SubjectTemplate
 
 
@@ -21,3 +22,11 @@ class SubjectTemplateFilter(filters.FilterSet):
     class Meta:
         model = SubjectTemplate
         fields = ["name", "description", "creator"]
+
+
+class SubjectTemplateGroupFilter(filters.FilterSet):
+    name = filters.CharFilter(label="名字", lookup_expr="icontains")
+
+    class Meta:
+        model = Group
+        fields = ["name"]

@@ -28,8 +28,8 @@ from backend.biz.group import GroupCheckBiz
 from backend.biz.role import RoleListQuery
 from backend.biz.subject_template import SubjectTemplateBiz, SubjectTemplateCheckBiz
 from backend.common.error_codes import error_codes
+from backend.common.filters import NoCheckModelFilterBackend
 from backend.common.lock import gen_subject_template_upsert_lock
-from backend.common.time import expired_at_display
 from backend.service.constants import PermissionCodeEnum
 from backend.service.models import Subject
 
@@ -40,11 +40,12 @@ from .audit import (
     SubjectTemplateMemberCreateAuditProvider,
     SubjectTemplateUpdateAuditProvider,
 )
-from .filters import SubjectTemplateFilter
+from .filters import SubjectTemplateFilter, SubjectTemplateGroupFilter
 from .serializers import (
     BaseSubjectTemplateSLZ,
     SubjectTemplateCreateSLZ,
     SubjectTemplateGroupIdSLZ,
+    SubjectTemplateGroupOutputSLZ,
     SubjectTemplateGroupSLZ,
     SubjectTemplateIdSLZ,
     SubjectTemplateListSLZ,
@@ -362,6 +363,9 @@ class SubjectTemplateGroupViewSet(SubjectTemplateQueryMixin, GenericViewSet):
     queryset = SubjectTemplate.objects.all()
     lookup_field = "id"
 
+    filterset_class = SubjectTemplateGroupFilter
+    filter_backends = [NoCheckModelFilterBackend]
+
     biz = SubjectTemplateBiz()
 
     @swagger_auto_schema(
@@ -372,24 +376,22 @@ class SubjectTemplateGroupViewSet(SubjectTemplateQueryMixin, GenericViewSet):
     def list(self, request, *args, **kwargs):
         template = self.get_object()
 
-        queryset = SubjectTemplateGroup.objects.filter(template_id=template.id)
+        subject_template_groups = list(
+            SubjectTemplateGroup.objects.filter(template_id=template.id).values(
+                "group_id", "expired_at", "created_time"
+            )
+        )
+        queryset = Group.objects.filter(id__in=[one["group_id"] for one in subject_template_groups])
+        queryset = self.filter_queryset(queryset)
+
         page = self.paginate_queryset(queryset)
 
-        groups = Group.objects.filter(id__in=[one.group_id for one in page]).values("id", "name")
-        group_name_dict = {one["id"]: one["name"] for one in groups}
-
-        # 填充数据
-        results = [
-            {
-                "id": one.group_id,
-                "name": group_name_dict.get(one.group_id, ""),
-                "expired_at": one.expired_at,
-                "expired_at_display": expired_at_display(one.expired_at),
-                "created_time": one.created_time,
-            }
-            for one in page
-        ]
-        return self.get_paginated_response(results)
+        serializer = SubjectTemplateGroupOutputSLZ(
+            page,
+            many=True,
+            context={"template_dict": {one["group_id"]: one for one in subject_template_groups}},
+        )
+        return self.get_paginated_response(serializer.data)
 
     @swagger_auto_schema(
         operation_description="删除人员模版用户关联",

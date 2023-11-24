@@ -10,8 +10,9 @@ specific language governing permissions and limitations under the License.
 """
 from rest_framework import serializers
 
+from backend.apps.group.models import Group
 from backend.apps.subject_template.models import SubjectTemplate
-from backend.common.time import PERMANENT_SECONDS
+from backend.common.time import PERMANENT_SECONDS, expired_at_display
 from backend.service.constants import SubjectTemplateMemberType
 
 
@@ -81,3 +82,22 @@ class SubjectTemplateGroupIdSLZ(serializers.Serializer):
     """
 
     group_id = serializers.IntegerField(label="用户组ID")
+
+
+class SubjectTemplateGroupOutputSLZ(serializers.Serializer):
+    expired_at = serializers.SerializerMethodField(label="过期时间")
+    expired_at_display = serializers.SerializerMethodField(label="过期时间显示")
+    created_time = serializers.SerializerMethodField(label="创建时间")
+
+    class Meta:
+        model = Group
+        fields = ("id", "name", "expired_at", "expired_at_display", "created_time")
+
+    def get_expired_at(self, obj):
+        return self.context["template_dict"].get(obj.id, {}).get("expired_at", 0)
+
+    def get_expired_at_display(self, obj):
+        return expired_at_display(self.get_expired_at(obj))
+
+    def get_created_time(self, obj):
+        return self.context["template_dict"].get(obj.id, {}).get("created_time", "")
