@@ -357,6 +357,13 @@
                             </bk-button>
                             )
                           </div>
+                          <template v-else>
+                            <span v-if="row.expired_at_display">
+                              {{ row.expired_at === 4102444800 ?
+                                `(${row.expired_at_display})`
+                                : `(${$t(`m.common['有效期']`)}${row.expired_at_display})`}}
+                            </span>
+                          </template>
                         </div>
                       </template>
                     </bk-table-column>
