@@ -166,6 +166,9 @@
       curSearchParams: {
         type: Object
       },
+      curSearchPagination: {
+        type: Object
+      },
       isSearchPerm: {
         type: Boolean,
         default: false
@@ -243,6 +246,9 @@
           // }
           if (this.pageConf.current === 1) {
             this.pageConf = Object.assign(this.pageConf, { count: this.totalCount });
+            if (this.isSearchPerm) {
+              this.pageConf.limit = this.curSearchPagination.limit;
+            }
             this.curPageData = [...v];
             return;
           }
@@ -344,6 +350,7 @@
           this.pageConf.count = data.count || 0;
           const currentSelectGroupList = this.currentSelectGroupList.map(item => item.id.toString());
           this.curPageData.splice(0, this.curPageData.length, ...(data.results || []));
+          this.groupPermEmptyData = formatCodeData(code, this.groupPermEmptyData, data.count === 0);
           setTimeout(() => {
             if (!this.currentSelectGroupList.length) {
               this.$refs.groupPermTableRef && this.$refs.groupPermTableRef.clearSelection();
@@ -365,7 +372,6 @@
               }
             });
           }, 200);
-          this.groupPermEmptyData = formatCodeData(code, this.groupPermEmptyData, data.count === 0);
         } catch (e) {
           console.error(e);
           const { code } = e;

@@ -352,6 +352,9 @@
       curSearchParams: {
         type: Object
       },
+      curSearchPagination: {
+        type: Object
+      },
       isSearchPerm: {
         type: Boolean,
         default: false
@@ -487,6 +490,9 @@
         handler (v) {
           if (this.pageConf.current === 1) {
             this.pageConf = Object.assign(this.pageConf, { count: this.totalCount });
+            if (this.isSearchPerm) {
+              this.pageConf.limit = this.curSearchPagination.limit;
+            }
             this.curPageData = [...v];
             return;
           }
