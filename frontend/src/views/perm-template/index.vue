@@ -194,7 +194,8 @@
           text: '',
           tip: '',
           tipType: ''
-        }
+        },
+        tableHeight: getWindowHeight() - 185
       };
     },
     computed: {
@@ -204,9 +205,6 @@
             },
             isRatingManager () {
                 return this.curRole === 'rating_manager';
-            },
-            tableHeight () {
-                return getWindowHeight() - 185;
             }
     },
     watch: {
@@ -222,6 +220,9 @@
       }
     },
     async created () {
+      window.addEventListener('resize', () => {
+        this.tableHeight = getWindowHeight() - 185;
+      });
       this.searchParams = this.$route.query;
       this.setCurrentQueryCache(this.refreshCurrentQuery());
       const isObject = (payload) => {

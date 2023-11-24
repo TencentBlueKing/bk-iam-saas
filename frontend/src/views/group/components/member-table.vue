@@ -253,6 +253,7 @@
                     theme="primary"
                     style="margin-left: 5px"
                     text
+                    :title="$t(`m.userGroup['该有效期为模板里成员的默认有效期，实际有效期以成员有效期为准']`)"
                     @click="handleShowRenewal(row)"
                   >
                     {{ $t(`m.renewal['续期']`) }}
@@ -641,7 +642,7 @@
         const tabMap = {
           userOrOrg: () => {
             return [
-              { label: this.$t(`m.userGroup['用户组名']`), prop: 'name' },
+              { label: this.$t(`m.userGroup['用户/组织']`), prop: 'name' },
               { label: this.$t(`m.userGroupDetail['所属组织架构']`), prop: 'user_departments' },
               { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' },
               { label: this.$t(`m.common['加入时间']`), prop: 'created_time' },

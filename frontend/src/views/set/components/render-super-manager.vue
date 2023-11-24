@@ -138,7 +138,8 @@
           text: '',
           tip: '',
           tipType: ''
-        }
+        },
+        tableHeight: getWindowHeight() - 297
       };
     },
     computed: {
@@ -160,12 +161,12 @@
           this.saveDisableTip = '';
           return false;
       };
-      },
-      tableHeight () {
-          return getWindowHeight() - 297;
       }
     },
     created () {
+      window.addEventListener('resize', () => {
+        this.tableHeight = getWindowHeight() - 297;
+      });
       this.fetchSuperManager();
     },
     methods: {
