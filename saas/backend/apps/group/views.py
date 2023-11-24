@@ -1092,7 +1092,7 @@ class GroupSubjectTemplateViewSet(GroupPermissionMixin, GenericViewSet):
 
         # 查询用户组拥有的权限模板
         subject_template_ids = list(
-            SubjectTemplateGroup.objects.filter(group_id=group.id).values("template_id", "expired_at")
+            SubjectTemplateGroup.objects.filter(group_id=group.id).values("template_id", "expired_at", "created_time")
         )
         queryset = SubjectTemplate.objects.filter(id__in=[one["template_id"] for one in subject_template_ids])
         queryset = self.filter_queryset(queryset)
@@ -1101,7 +1101,7 @@ class GroupSubjectTemplateViewSet(GroupPermissionMixin, GenericViewSet):
         serializer = GroupSubjectTemplateListSLZ(
             page,
             many=True,
-            context={"expired_at_dict": {one["template_id"]: one["expired_at"] for one in subject_template_ids}},
+            context={"template_dict": {one["template_id"]: one for one in subject_template_ids}},
         )
         return self.get_paginated_response(serializer.data)
 

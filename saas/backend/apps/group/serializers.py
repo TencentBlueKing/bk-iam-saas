@@ -41,7 +41,7 @@ class GroupMemberSLZ(serializers.Serializer):
 
 
 class SearchMemberSLZ(serializers.Serializer):
-    keyword = serializers.CharField(label="搜索关键词", min_length=3, allow_null=False, required=False, default="")
+    keyword = serializers.CharField(label="搜索关键词", allow_null=False, required=False, default="")
 
 
 class GroupIdSLZ(serializers.Serializer):
@@ -383,16 +383,20 @@ class GroupSearchSLZ(serializers.Serializer):
 class GroupSubjectTemplateListSLZ(serializers.ModelSerializer):
     expired_at = serializers.SerializerMethodField(label="过期时间")
     expired_at_display = serializers.SerializerMethodField(label="过期时间显示")
+    created_time = serializers.SerializerMethodField(label="创建时间")
 
     class Meta:
         model = SubjectTemplate
         fields = ("id", "name", "description", "expired_at", "expired_at_display", "creator", "created_time")
 
     def get_expired_at(self, obj):
-        return self.context["expired_at_dict"].get(obj.id, 0)
+        return self.context["template_dict"].get(obj.id, {}).get("expired_at", 0)
 
     def get_expired_at_display(self, obj):
         return expired_at_display(self.get_expired_at(obj))
+
+    def get_created_time(self, obj):
+        return self.context["template_dict"].get(obj.id, {}).get("created_time", "")
 
 
 class SearchTemplateGroupMemberSLZ(SearchMemberSLZ):
