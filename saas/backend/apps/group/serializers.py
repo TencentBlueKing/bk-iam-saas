@@ -41,7 +41,7 @@ class GroupMemberSLZ(serializers.Serializer):
 
 
 class SearchMemberSLZ(serializers.Serializer):
-    keyword = serializers.CharField(label="搜索关键词", min_length=3, allow_null=False, required=False, default="")
+    keyword = serializers.CharField(label="搜索关键词", allow_null=False, required=False, default="")
 
 
 class GroupIdSLZ(serializers.Serializer):
