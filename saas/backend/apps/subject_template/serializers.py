@@ -84,7 +84,7 @@ class SubjectTemplateGroupIdSLZ(serializers.Serializer):
     group_id = serializers.IntegerField(label="用户组ID")
 
 
-class SubjectTemplateGroupOutputSLZ(serializers.Serializer):
+class SubjectTemplateGroupOutputSLZ(serializers.ModelSerializer):
     expired_at = serializers.SerializerMethodField(label="过期时间")
     expired_at_display = serializers.SerializerMethodField(label="过期时间显示")
     created_time = serializers.SerializerMethodField(label="创建时间")
