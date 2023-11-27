@@ -14,6 +14,7 @@
       :search-placeholder="placeholder"
       :read-only="curDetailData.readonly"
       :is-show-tab="false"
+      :show-expired-at="false"
       :display-set="displaySet"
     />
   </div>

@@ -1857,10 +1857,10 @@
           users: this.hasSelectedUsers,
           departments: this.hasSelectedDepartments,
           templates: this.hasSelectedTemplates,
-          expiredAt: this.expiredAt,
           isAll: this.isAll
         };
         if (this.showExpiredAt) {
+          params.expiredAt = this.expiredAt;
           if (this.expiredAt !== 4102444800) {
             params.policy_expired_at = this.expiredAt;
           } else {

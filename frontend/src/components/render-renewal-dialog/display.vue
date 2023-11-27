@@ -45,11 +45,7 @@
                 if (dif < 1) {
                   return 0;
                 }
-                const days = Math.floor(dif / (24 * 3600));
-                if (dif >= 1 && days < 2) {
-                  return 1;
-                }
-                return Math.ceil(dif / (24 * 3600));
+                return Math.round(dif / (24 * 3600));
             },
             status () {
                 if (!this.curRestDays) {

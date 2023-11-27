@@ -216,7 +216,9 @@
 
   // 只显示角色名称的审计类型
   const ONLY_ROLE_TYPE = [
-    'template.create'
+    'template.create',
+    'subject.template.create',
+    'subject.template.delete'
   ];
 
   // 没有详情的审计类型
@@ -251,7 +253,10 @@
     'role.member.delete',
     'role.member.update',
     'role.commonaction.create',
-    'role.commonaction.delete'
+    'role.commonaction.delete',
+    'subject.template.group.delete',
+    'subject.template.member.create',
+    'subject.template.member.delete'
   ];
 
   // 只有附加信息的审计类型
@@ -319,7 +324,8 @@
           super_manager: this.$t(`m.myApproval['超级管理员']`),
           system_manager: this.$t(`m.nav['系统管理员']`),
           rating_manager: this.$t(`m.nav['一级空间管理员']`),
-          subset_manager: this.$t(`m.nav['二级空间管理员']`)
+          subset_manager: this.$t(`m.nav['二级空间管理员']`),
+          subject_template: this.$t(`m.memberTemplate['人员模板']`)
         },
         sourceMap: {
           web: this.$t(`m.audit['页面']`),
@@ -359,6 +365,12 @@
           'template.version.sync': this.$t(`m.audit['权限模板版本全量同步']`),
           'template.version.update': this.$t(`m.audit['权限模板更新同步']`),
           'template.update.commit': this.$t(`m.audit['权限模板更新提交']`),
+          'subject.template.create': this.$t(`m.audit['人员模板创建']`),
+          'subject.template.delete': this.$t(`m.audit['人员模板删除']`),
+          'subject.template.update': this.$t(`m.audit['人员模板更新']`),
+          'subject.template.member.create': this.$t(`m.audit['人员模板成员增加']`),
+          'subject.template.member.delete': this.$t(`m.audit['人员模板成员删除']`),
+          'subject.template.group.delete': this.$t(`m.audit['用户组人员模板删除']`),
           'role.create': this.$t(`m.audit['管理员创建']`),
           'role.member.create': this.$t(`m.audit['管理员成员增加']`),
           'role.member.delete': this.$t(`m.audit['管理员成员删除']`),
@@ -614,7 +626,8 @@
           { id: 'task', name: this.$t(`m.audit['任务']`) },
           { id: 'event', name: this.$t(`m.audit['审计事件']`) },
           { id: 'commonaction', name: this.$t(`m.audit['常用操作']`) },
-          { id: 'action', name: this.$t(`m.common['操作']`) }
+          { id: 'action', name: this.$t(`m.common['操作']`) },
+          { id: 'subject_template', name: this.$t(`m.memberTemplate['人员模板']`) }
         ];
         if (value === '') {
           return Promise.resolve(list);
@@ -657,6 +670,12 @@
           { id: 'template.version.sync', name: this.$t(`m.audit['权限模板版本全量同步']`) },
           { id: 'template.version.update', name: this.$t(`m.audit['权限模板更新同步']`) },
           { id: 'template.update.commit', name: this.$t(`m.audit['权限模板更新提交']`) },
+          { id: 'subject.template.create', name: this.$t(`m.audit['人员模板创建']`) },
+          { id: 'subject.template.delete', name: this.$t(`m.audit['人员模板删除']`) },
+          { id: 'subject.template.update', name: this.$t(`m.audit['人员模板更新']`) },
+          { id: 'subject.template.member.create', name: this.$t(`m.audit['人员模板成员增加']`) },
+          { id: 'subject.template.member.delete', name: this.$t(`m.audit['人员模板成员删除']`) },
+          { id: 'subject.template.group.delete', name: this.$t(`m.audit['用户组人员模板删除']`) },
           { id: 'role.create', name: this.$t(`m.audit['管理员创建']`) },
           { id: 'role.update', name: this.$t(`m.audit['管理员更新']`) },
           { id: 'role.delete', name: this.$t(`m.audit['管理员退出']`) },
