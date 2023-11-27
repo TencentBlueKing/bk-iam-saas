@@ -223,7 +223,9 @@
                     )
                   </template>
                   <span v-else>
-                    ({{ row.expired_at_display }})
+                    {{ row.expired_at === 4102444800 ?
+                      `(${row.expired_at_display})`
+                      : `(${$t(`m.common['有效期']`)}${row.expired_at_display})`}}
                   </span>
                 </span>
               </div>
@@ -1023,12 +1025,15 @@
               ? this.currentSelectedGroups.map(item => item.id.toString()) : [];
             this.tableList.forEach((item) => {
               if (item.role_members && item.role_members.length) {
-                item.role_members = item.role_members.map(v => {
-                  return {
-                    username: v,
-                    readonly: false
-                  };
-                });
+                const hasName = item.role_members.some((v) => v.username);
+                if (!hasName) {
+                  item.role_members = item.role_members.map(v => {
+                    return {
+                      username: v,
+                      readonly: false
+                    };
+                  });
+                }
               }
               if (this.defaultSelectedGroups.length) {
                 const hasSelected = this.defaultSelectedGroups.find((v) => String(v.id) === String(item.id));
@@ -1081,12 +1086,15 @@
               ? this.currentSelectedGroups.map(item => item.id.toString()) : [];
             this.tableList.forEach((item) => {
               if (item.role_members && item.role_members.length) {
-                item.role_members = item.role_members.map(v => {
-                  return {
-                    username: v,
-                    readonly: false
-                  };
-                });
+                const hasName = item.role_members.some((v) => v.username);
+                if (!hasName) {
+                  item.role_members = item.role_members.map(v => {
+                    return {
+                      username: v,
+                      readonly: false
+                    };
+                  });
+                }
               }
               if (this.defaultSelectedGroups.length) {
                 const hasSelected = this.defaultSelectedGroups.find((v) => String(v.id) === String(item.id));
@@ -1373,12 +1381,15 @@
             tableData.forEach((item) => {
               groupIdList.push(item.id);
               if (item.role_members && item.role_members.length) {
-                item.role_members = item.role_members.map((v) => {
-                  return {
-                    username: v,
-                    readonly: false
-                  };
-                });
+                const hasName = item.role_members.some((v) => v.username);
+                if (!hasName) {
+                  item.role_members = item.role_members.map(v => {
+                    return {
+                      username: v,
+                      readonly: false
+                    };
+                  });
+                }
               }
             });
             this.curUserGroup = _.cloneDeep(groupIdList);
@@ -1722,7 +1733,7 @@
   align-items: center;
   &-label {
     color: #3a84ff;
-    max-width: calc(100% - 80px);
+    max-width: calc(100% - 120px);
     word-break: break-all;
     cursor: pointer;
     &:hover {
