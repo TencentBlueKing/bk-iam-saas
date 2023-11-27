@@ -8,6 +8,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from datetime import datetime
+
 from rest_framework import serializers
 
 from backend.apps.group.models import Group
@@ -100,4 +102,8 @@ class SubjectTemplateGroupOutputSLZ(serializers.ModelSerializer):
         return expired_at_display(self.get_expired_at(obj))
 
     def get_created_time(self, obj):
-        return self.context["template_dict"].get(obj.id, {}).get("created_time", "")
+        t = self.context["template_dict"].get(obj.id, {}).get("created_time", "")
+        if not isinstance(t, datetime):
+            return t
+
+        return serializers.DateTimeField().to_representation(t)

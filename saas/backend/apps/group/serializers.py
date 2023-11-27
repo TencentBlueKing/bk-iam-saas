@@ -9,6 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import time
+from datetime import datetime
 from typing import List
 
 from django.conf import settings
@@ -396,7 +397,11 @@ class GroupSubjectTemplateListSLZ(serializers.ModelSerializer):
         return expired_at_display(self.get_expired_at(obj))
 
     def get_created_time(self, obj):
-        return self.context["template_dict"].get(obj.id, {}).get("created_time", "")
+        t = self.context["template_dict"].get(obj.id, {}).get("created_time", "")
+        if not isinstance(t, datetime):
+            return t
+
+        return serializers.DateTimeField().to_representation(t)
 
 
 class SearchTemplateGroupMemberSLZ(SearchMemberSLZ):
