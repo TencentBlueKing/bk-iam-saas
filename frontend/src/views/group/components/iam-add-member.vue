@@ -258,6 +258,8 @@
             <div v-if="isMemberTemplate" class="template-wrapper">
               <IamMemberTemplateTable
                 ref="memberTableRef"
+                :group-id="curId"
+                :default-temp-id-list="defaultTempIdList"
                 :has-selected-templates="hasSelectedTemplates"
                 @on-selected-templates="handleSelectedTemplates"
               />
@@ -586,6 +588,8 @@
         manualTableListStorage: [],
         hasSelectedManualDepartments: [],
         hasSelectedManualUsers: [],
+        defaultTempIdList: [],
+        curId: 0,
         needMemberTempRoutes: ['userGroup', 'userGroupDetail', 'createUserGroup', 'cloneUserGroup']
       };
     },
@@ -739,6 +743,7 @@
             ) {
               this.panels = this.panels.filter((item) => !['memberTemplate'].includes(item.name));
             }
+            this.curId = this.id;
             this.infiniteTreeKey = new Date().getTime();
             this.hasSelectedUsers.splice(0, this.hasSelectedUsers.length, ...this.users);
             this.hasSelectedDepartments.splice(0, this.hasSelectedDepartments.length, ...this.departments);
@@ -771,6 +776,12 @@
           this.isAll = !!value;
         },
         immediate: true
+      },
+      id: {
+        handler (value) {
+          this.curId = value;
+        },
+        immediate: true
       }
     },
     created () {
@@ -788,15 +799,14 @@
         return list.length > 0;
       },
 
-      fetchInitData () {
+      async fetchInitData () {
         if (this.showExpiredAt) {
+          await this.fetchMemberList();
           if (this.isBatch) {
-            this.fetchCategoriesList();
-          } else {
-            this.fetchMemberList();
+            await this.fetchCategoriesList();
           }
         } else {
-          this.requestQueue = ['categories'];
+          this.requestQueue = ['memberList'];
           this.fetchMemberList();
         }
       },
@@ -1233,10 +1243,10 @@
       },
 
       async fetchMemberList () {
-        if (this.id) {
+        if (this.curId) {
           try {
             const params = {
-              id: this.id,
+              id: this.curId,
               limit: 1000,
               offset: 0
             };

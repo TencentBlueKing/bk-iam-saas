@@ -61,6 +61,10 @@
   import { formatCodeData } from '@/common/util';
   export default {
     props: {
+      groupId: {
+        type: [String, Number],
+        default: ''
+      },
       hasSelectedTemplates: {
         type: Array,
         default: () => []
@@ -77,6 +81,7 @@
         tableKey: 'tableKey',
         currentSelectList: [],
         templateTableList: [],
+        curTempIdList: [],
         pagination: {
           current: 1,
           limit: 10,
@@ -96,17 +101,42 @@
           this.currentSelectList = [...value];
           const selectIdList = this.currentSelectList.map((v) => String(v.id));
           this.templateTableList.forEach((item) => {
-            this.$refs.templateTableRef.toggleRowSelection(item, !!selectIdList.includes(String(item.id)));
+            this.$refs.templateTableRef.toggleRowSelection(
+              item,
+              !!(selectIdList.includes(String(item.id)) || this.curTempIdList.includes(String(item.id)))
+            );
           });
+          console.log(this.currentSelectList);
           this.fetchSelectedGroupCount();
         },
         immediate: true
       }
     },
-    created () {
-      this.fetchTemplateList();
+    async created () {
+      await this.fetchGroupSubjectTemplate();
+      await this.fetchTemplateList();
     },
     methods: {
+      // 获取用户组关联模板列表
+      async fetchGroupSubjectTemplate () {
+        if (this.groupId) {
+          try {
+            const params = {
+              page: 1,
+              page_size: 1000,
+              id: this.groupId
+            };
+            const { data } = await this.$store.dispatch('memberTemplate/getGroupSubjectTemplate', params);
+            if (data.results && data.results.length) {
+              this.curTempIdList = data.results.map((item) => String(item.id));
+            }
+          } catch (e) {
+            this.curTempIdList = [];
+            this.messageAdvancedError(e);
+          }
+        }
+      },
+      
       async fetchTemplateList () {
         this.tableLoading = true;
         try {
@@ -125,14 +155,14 @@
             const currentSelectList = this.currentSelectList.map((item) => String(item.id));
             this.templateTableList.forEach((item) => {
               this.$set(item, 'type', 'template');
-              if (currentSelectList.includes(String(item.id))) {
+              if (currentSelectList.includes(String(item.id)) || this.curTempIdList.includes(String(item.id))) {
                 this.$refs.templateTableRef
                   && this.$refs.templateTableRef.toggleRowSelection(item, true);
               } else {
                 this.$refs.templateTableRef.toggleRowSelection(item, false);
               }
             });
-            if (this.currentSelectList.length < 1) {
+            if (this.currentSelectList.length < 1 && this.curTempIdList.length < 1) {
               this.$refs.templateTableRef
                 && this.$refs.templateTableRef.clearSelection();
             }
@@ -176,14 +206,20 @@
             this.$emit('on-selected-templates', this.currentSelectList);
           },
           all: () => {
+            const list = payload.filter(item => !this.curTempIdList.includes(String(item.id)));
             const tableList = _.cloneDeep(this.templateTableList);
             const selectGroups = this.currentSelectList.filter(
-              (item) => !tableList.map((v) => v.id.toString()).includes(item.id.toString())
+              (item) =>
+                !tableList.map((v) => v.id.toString()).includes(item.id.toString())
+                && !this.curTempIdList.includes(String(item.id))
             );
-            const selectList = _.cloneDeep([...selectGroups, ...payload]).slice(0, 10);
+            const selectList = _.cloneDeep([...selectGroups, ...list]).slice(0, 10);
             const selectIdList = selectList.map((v) => String(v.id));
             this.templateTableList.forEach((item) => {
-              this.$refs.templateTableRef.toggleRowSelection(item, !!selectIdList.includes(String(item.id)));
+              this.$refs.templateTableRef.toggleRowSelection(
+                item,
+                !!(selectIdList.includes(String(item.id)) || this.curTempIdList.includes(String(item.id)))
+              );
             });
             this.currentSelectList = _.cloneDeep(selectList);
             this.fetchSelectedGroupCount();
@@ -222,7 +258,11 @@
 
       getDefaultSelect (row) {
         const index = this.currentSelectList.findIndex((v) => String(v.id) === String(row.id));
-        return this.currentSelectList.length >= this.maxSelectCount ? index !== -1 : true;
+        const isMax = this.currentSelectList.length >= this.maxSelectCount ? index !== -1 : true;
+        if (this.curTempIdList.length && this.curTempIdList.includes(String(row.id))) {
+          return false;
+        }
+        return isMax;
       },
 
       resetPagination () {
@@ -244,6 +284,12 @@
                color: #3a84ff;
             }
         }
+    }
+
+    /deep/ .bk-page.bk-page-align-right {
+      .bk-page-selection-count-left {
+        display: none;
+      }
     }
 }
 </style>

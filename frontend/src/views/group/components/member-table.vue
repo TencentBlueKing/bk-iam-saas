@@ -363,7 +363,7 @@
       },
       searchPlaceholder: {
         type: String,
-        default: il8n('userGroupDetail', '请输入至少3个字符的用户/组织或人员模板，按enter键搜索')
+        default: il8n('userGroupDetail', '请输入用户/组织或人员模板，按enter键搜索')
       },
       routeMode: {
         type: String,
@@ -1215,7 +1215,11 @@
           if (code === 0 && data) {
             if (this.externalRoutes.includes(this.$route.name)) {
               window.parent.postMessage(
-                { type: 'IAM', data: externalPayload, code: 'add_user_confirm' },
+                {
+                  type: 'IAM',
+                  data: externalPayload,
+                  code: ['memberTemplate'].includes(this.tabActive) ? 'add_template_confirm' : 'add_user_confirm'
+                },
                 '*'
               );
             }
@@ -1340,63 +1344,41 @@
       async handleSubmitDelete () {
         this.deleteDialog.loading = true;
         try {
-          if (['memberTemplate'].includes(this.tabActive)) {
-            const selectList = this.curMember.id ? [this.curMember] : this.currentSelectList;
-            for (let i = 0; i < selectList.length; i++) {
-              const params = {
-                id: selectList[i].id,
-                group_id: this.id
-              };
-              await this.$store.dispatch(
-                'memberTemplate/deleteSubjectTemplateGroups',
-                params
+          let url = 'userGroup/deleteUserGroupMember';
+          const params = {
+            id: this.id,
+            members: this.curMember.id
+              ? [this.curMember]
+              : this.currentSelectList.map(({ id, type }) => ({ id, type }))
+          };
+          let totalCount = params.members.length;
+          if (this.curModeMap[this.routeMode]) {
+            url = this.curModeMap[this.routeMode].removeMember.url;
+            params.subjects = _.cloneDeep(params.members);
+            totalCount = params.subjects.length;
+            delete params.members;
+          }
+          const { code, data } = await this.$store.dispatch(
+            url,
+            params
+          );
+          if (code === 0 && data) {
+            const externalParams = {
+              ...params,
+              count: totalCount
+            };
+            if (this.externalRoutes.includes(this.$route.name)) {
+              window.parent.postMessage(
+                {
+                  type: 'IAM',
+                  data: externalParams,
+                  code: ['memberTemplate'].includes(this.tabActive) ? 'remove_template_confirm' : 'remove_user_confirm'
+                },
+                '*'
               );
             }
             this.messageSuccess(this.$t(`m.info['移除成功']`), 3000);
             this.handleRefreshTab();
-            const externalParams = {
-              id: this.id,
-              count: this.memberPagination.count
-            };
-            if (this.externalRoutes.includes(this.$route.name)) {
-              window.parent.postMessage(
-                { type: 'IAM', data: externalParams, code: 'remove_template_confirm' },
-                '*'
-              );
-            }
-          } else {
-            let url = 'userGroup/deleteUserGroupMember';
-            const params = {
-              id: this.id,
-              members: this.curMember.id
-                ? [this.curMember]
-                : this.currentSelectList.map(({ id, type }) => ({ id, type }))
-            };
-            let totalCount = params.members.length;
-            if (this.curModeMap[this.routeMode]) {
-              url = this.curModeMap[this.routeMode].removeMember.url;
-              params.subjects = _.cloneDeep(params.members);
-              totalCount = params.subjects.length;
-              delete params.members;
-            }
-            const { code, data } = await this.$store.dispatch(
-              url,
-              params
-            );
-            if (code === 0 && data) {
-              const externalParams = {
-              ...params,
-              count: totalCount
-              };
-              if (this.externalRoutes.includes(this.$route.name)) {
-                window.parent.postMessage(
-                  { type: 'IAM', data: externalParams, code: 'remove_user_confirm' },
-                  '*'
-                );
-              }
-              this.messageSuccess(this.$t(`m.info['移除成功']`), 3000);
-              this.handleRefreshTab();
-            }
           }
         } catch (e) {
           console.error(e);

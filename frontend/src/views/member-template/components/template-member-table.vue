@@ -40,7 +40,7 @@
         users: [],
         departments: [],
         addMemberTitle: this.$t(`m.common['添加成员']`),
-        placeholder: this.$t(`m.memberTemplate['请输入至少3个字符的用户/组织，按enter键搜索']`),
+        placeholder: this.$t(`m.memberTemplate['请输入用户/组织，按enter键搜索']`),
         displaySet: {
           customNameWidth: '180px'
         }
