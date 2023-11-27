@@ -291,7 +291,7 @@
       :loading="loading"
       :name="name"
       :id="id"
-      show-expired-at
+      :show-expired-at="showExpiredAt"
       :is-rating-manager="isRatingManager"
       :route-mode="routeMode"
       @on-cancel="handleCancelAdd"
@@ -371,6 +371,10 @@
       },
       displaySet: {
         type: Object
+      },
+      showExpiredAt: {
+        type: Boolean,
+        default: false
       }
     },
     data () {
@@ -1198,9 +1202,11 @@
         }
         const params = {
           members: arr,
-          expired_at: expired,
           id: this.id
         };
+        if (this.showExpiredAt) {
+          params.expired_at = expired;
+        }
         let url = 'userGroup/addUserGroupMember';
         if (this.curModeMap[this.routeMode]) {
           url = this.curModeMap[this.routeMode].addMember.url;

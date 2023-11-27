@@ -49,8 +49,6 @@
 </template>
 
 <script>
-//   import { bus } from '@/common/bus';
-  import { leaveConfirm } from '@/common/leave-confirm';
   import AssociateUserGroup from './associate-user-group.vue';
   import BasicInfoDetail from './basic-info-detail.vue';
   import TemplateMemberTable from './template-member-table.vue';
@@ -159,17 +157,8 @@
       },
 
       handleCancel () {
-        let cancelHandler = Promise.resolve();
-        if (window.changeAlert) {
-          cancelHandler = leaveConfirm();
-        }
-        cancelHandler.then(
-          () => {
-            this.$emit('update:show', false);
-            this.resetData();
-          },
-          (_) => _
-        );
+        this.resetData();
+        this.$emit('update:show', false);
       },
 
       resetData () {

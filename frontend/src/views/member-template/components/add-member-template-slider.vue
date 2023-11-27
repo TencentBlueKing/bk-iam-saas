@@ -76,6 +76,7 @@
       :title="addMemberTitle"
       :all-checked="false"
       :show-limit="false"
+      :show-expired-at="false"
       @on-cancel="handleCancelAdd"
       @on-sumbit="handleSubmitAdd"
     />
