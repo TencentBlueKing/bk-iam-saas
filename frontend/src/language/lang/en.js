@@ -945,7 +945,7 @@ export const m = {
         '创建时间': 'Created at',
         '更新人': 'Modified by',
         '更新时间': 'Modified at',
-        "进入空间": "Go To",
+        "进入空间": "Go to",
         "克隆": "Clone",
         '请输入空间名': 'Please enter the space name',
         '管理员': 'Administrators',
