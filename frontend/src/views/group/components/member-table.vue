@@ -563,7 +563,7 @@
       return ['memberTemplate'].includes(this.routeMode) ? this.readOnly : !this.currentSelectList.length;
     },
     isCopyDisabled () {
-      return this.readOnly || (!this.groupTabList[0].tableList.length && ['userOrOrg'].includes(this.tabActive));
+      return this.readOnly || (!this.groupTabList[0].tableList.length);
     },
     formatPagination () {
       return () => {
