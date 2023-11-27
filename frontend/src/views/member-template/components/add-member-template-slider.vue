@@ -74,6 +74,7 @@
       :users="users"
       :departments="departments"
       :title="addMemberTitle"
+      :is-rating-manager="isRatingManager"
       :all-checked="false"
       :show-limit="false"
       :show-expired-at="false"
@@ -85,6 +86,7 @@
 
 <script>
   import _ from 'lodash';
+  import { mapGetters } from 'vuex';
   import { leaveConfirm } from '@/common/leave-confirm';
   import RenderMember from '@/views/grading-admin/components/render-member';
   import AddMemberDialog from '@/views/group/components/iam-add-member.vue';
@@ -118,6 +120,7 @@
       };
     },
     computed: {
+      ...mapGetters(['user']),
       isShowSideSlider: {
         get () {
           return this.show;
@@ -125,6 +128,9 @@
         set (newValue) {
           this.$emit('update:show', newValue);
         }
+      },
+      isRatingManager () {
+        return ['rating_manager', 'subset_manager'].includes(this.user.role.type);
       }
     },
     methods: {
