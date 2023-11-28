@@ -265,6 +265,7 @@ IAM_SUPPORT_PROCESSOR_TYPES = [
     ProcessorNodeType.SYSTEM_MANAGER.value,
     ProcessorNodeType.GRADE_MANAGER.value,
     ProcessorNodeType.INSTANCE_APPROVER.value,
+    ProcessorNodeType.INSTANCE_APPROVER_MERGE.value,
 ]
 
 
