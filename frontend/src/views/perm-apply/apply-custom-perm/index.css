@@ -395,6 +395,8 @@
     }
 }
 .perm-recipient-error,
+.user-group-error,
+.expired-at-error,
 .reason-empty-wrapper {
     margin-top: 5px;
     font-size: 12px;

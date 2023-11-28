@@ -451,12 +451,15 @@
                 this.$refs.groupPermTableRef && this.$refs.groupPermTableRef.toggleRowSelection(item, true);
               }
               if (item.role_members && item.role_members.length) {
-                item.role_members = item.role_members.map(v => {
-                  return {
-                    username: v,
-                    readonly: false
-                  };
-                });
+                const hasName = item.role_members.some((v) => v.username);
+                if (!hasName) {
+                  item.role_members = item.role_members.map(v => {
+                    return {
+                      username: v,
+                      readonly: false
+                    };
+                  });
+                }
               }
               if (this.currentSelectGroupList.length < 1) {
                 this.$refs.groupPermTableRef && this.$refs.groupPermTableRef.clearSelection();

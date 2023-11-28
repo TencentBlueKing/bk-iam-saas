@@ -61,7 +61,6 @@
             size="small"
             ext-cls="children-expand-cls"
             :data="row.children"
-            :row-key="row.id + '__' + row.name"
             :show-header="false"
             :border="false"
             :cell-class-name="getSubCellClass"
@@ -118,22 +117,31 @@
                 <span :title="child.row.updated_time">{{ child.row.updated_time }}</span>
               </template>
             </bk-table-column>
-            <bk-table-column :width="curLanguageIsCn ? 200 : 320">
+            <bk-table-column :width="curLanguageIsCn ? 240 : 320">
               <template slot-scope="child">
                 <div class="operate_btn">
                   <bk-button
                     theme="primary"
                     text
-                    @click.stop="handleSubView(child.row, 'detail')"
+                    @click.stop="handleSubView(child.row, child.$index, row, 'detail')"
                   >
                     {{ $t(`m.levelSpace['进入空间']`) }}
                   </bk-button>
                   <bk-button
                     theme="primary"
                     text
-                    @click.stop="handleSubView(child.row, 'auth')"
+                    @click.stop="handleSubView(child.row, child.$index, row, 'auth')"
                   >
                     {{ $t(`m.nav['授权边界']`) }}
+                  </bk-button>
+                  <bk-button
+                    theme="primary"
+                    text
+                    :disabled="!!(child.row.members && child.row.members.length < 2)"
+                    :title="!!(child.row.members && child.row.members.length < 2) ? $t(`m.perm['唯一管理员不可退出']`) : ''"
+                    @click.stop="handleSubView(child.row, child.$index, row, 'quit')"
+                  >
+                    {{ $t(`m.common['退出']`) }}
                   </bk-button>
                   <!--<bk-button theme="primary" text @click.stop="handleSubView(child.row, 'clone')">
                                         {{ $t(`m.levelSpace['克隆']`) }}
@@ -227,20 +235,20 @@
           <span :title="row.updated_time">{{ row.updated_time }}</span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.common['操作']`)" :width="curLanguageIsCn ? 200 : 320">
-        <template slot-scope="{ row }">
+      <bk-table-column :label="$t(`m.common['操作-table']`)" :width="curLanguageIsCn ? 240 : 320">
+        <template slot-scope="{ row, $index }">
           <div class="operate_btn">
             <bk-button
               theme="primary"
               text
-              @click="handleView(row, 'detail')"
+              @click="handleView(row, $index, 'detail')"
             >
               {{ $t(`m.levelSpace['进入空间']`) }}
             </bk-button>
             <bk-button
               theme="primary"
               text
-              @click.stop="handleView(row, 'auth')"
+              @click.stop="handleView(row, $index,'auth')"
             >
               {{ $t(`m.nav['授权边界']`) }}
             </bk-button>
@@ -255,10 +263,19 @@
               {{ $t(`m.levelSpace['克隆']`) }}
             </bk-button> -->
             <bk-button
+              theme="primary"
+              text
+              :disabled="!!(row.members && row.members.length < 2)"
+              :title="!!(row.members && row.members.length < 2) ? $t(`m.perm['唯一管理员不可退出']`) : ''"
+              @click="handleView(row, $index, 'quit')"
+            >
+              {{ $t(`m.common['退出']`) }}
+            </bk-button>
+            <bk-button
               v-if="!['subset_manager'].includes(row.type)"
               theme="primary"
               text
-              @click="handleView(row, 'clone')"
+              @click="handleView(row, $index, 'clone')"
             >
               {{ $t(`m.levelSpace['克隆']`) }}
             </bk-button>
@@ -697,7 +714,7 @@
       },
 
       // 管理空间
-      async handleView ({ id, name }, mode) {
+      async handleView ({ id, name }, index, mode) {
         window.localStorage.setItem('iam-header-name-cache', name);
         let routerName = 'userGroup';
         const routerNav = {
@@ -715,16 +732,45 @@
             routerName = 'gradingAdminCreate';
             this.$store.commit('updateIndex', 0);
             window.localStorage.setItem('index', 0);
+          },
+          quit: () => {
+            this.$store.commit('updateIndex', 0);
+            window.localStorage.setItem('index', 0);
           }
         };
         routerNav[mode]();
-        if (!['clone'].includes(mode)) {
+        if (!['clone', 'quit'].includes(mode)) {
           await this.$store.dispatch('role/updateCurrentRole', { id });
           await this.$store.dispatch('userInfo');
           const { role } = this.user;
           this.$store.commit('updateCurRoleId', id);
           this.$store.commit('updateIdentity', { id, type: role.type, name });
           this.$store.commit('updateNavId', id);
+        }
+        if (['quit'].includes(mode)) {
+          this.$bkInfo({
+            title: this.$t(`m.dialog['确认退出']`),
+            subHeader: (
+              <div class="del-actions-warn-info">
+                <bk-icon type="info-circle-shape" class="warn" />
+                <span>
+                  { `${this.$t(`m.common['退出']`)}${this.$t(`m.common['【']`)}${name}${this.$t(`m.common['】']`)}, ${this.$t(`m.grading['退出提示']`)}` }
+                  </span>
+              </div>
+            ),
+            width: this.curLanguageIsCn ? 500 : 700,
+            maskClose: true,
+            closeIcon: false,
+            confirmLoading: true,
+            extCls: 'custom-perm-del-info',
+            confirmFn: async () => {
+              await this.$store.dispatch('role/deleteRatingManager', { id });
+              this.messageSuccess(this.$t(`m.info['退出成功']`), 3000);
+              this.resetPagination();
+              this.handleFilterData();
+            }
+          });
+          return;
         }
         this.$router.push({
           name: routerName,
@@ -737,22 +783,7 @@
       },
 
       // 二级管理空间
-      async handleSubView ({ id, name }, mode) {
-        // let routerName = 'myManageSpaceSubDetail';
-        // switch (type) {
-        //     case 'detail':
-        //         routerName = 'myManageSpaceSubDetail';
-        //         break;
-        //     case 'edit':
-        //         routerName = 'myManageSpaceSubDetail';
-        //         break;
-        //     case 'clone':
-        //         routerName = 'secondaryManageSpaceCreate';
-        //         break;
-        //     default:
-        //         break;
-        // }
-        // const currentRole = getTreeNode(id, this.roleList);
+      async handleSubView ({ id, name }, index, row, mode) {
         window.localStorage.setItem('iam-header-name-cache', name);
         let routerName = 'userGroup';
         const routerNav = {
@@ -770,16 +801,52 @@
             routerName = 'secondaryManageSpaceCreate';
             this.$store.commit('updateIndex', 0);
             window.localStorage.setItem('index', 0);
+          },
+          quit: () => {
+            this.$store.commit('updateIndex', 0);
+            window.localStorage.setItem('index', 0);
           }
         };
         routerNav[mode]();
-        if (!['clone'].includes(mode)) {
+        if (!['clone', 'quit'].includes(mode)) {
           await this.$store.dispatch('role/updateCurrentRole', { id });
           await this.$store.dispatch('userInfo');
           const { role } = this.user;
           this.$store.commit('updateCurRoleId', id);
           this.$store.commit('updateIdentity', { id, type: role.type, name });
           this.$store.commit('updateNavId', id);
+        }
+        if (['quit'].includes(mode)) {
+          this.$bkInfo({
+            title: this.$t(`m.dialog['确认退出']`),
+            subHeader: (
+              <div class="del-actions-warn-info">
+                <bk-icon type="info-circle-shape" class="warn" />
+                <span>
+                  { `${this.$t(`m.common['退出']`)}${this.$t(`m.common['【']`)}${name}${this.$t(`m.common['】']`)}, ${this.$t(`m.grading['退出提示']`)}` }
+                  </span>
+              </div>
+            ),
+            width: this.curLanguageIsCn ? 500 : 700,
+            maskClose: true,
+            closeIcon: false,
+            confirmLoading: true,
+            extCls: 'custom-perm-del-info',
+            confirmFn: async () => {
+              await this.$store.dispatch('role/deleteRatingManager', { id });
+              this.messageSuccess(this.$t(`m.info['退出成功']`), 3000);
+              if (row.children && row.children.length) {
+                const childData = row.children.find((item) => item.id === id);
+                if (childData) {
+                  row.children = [];
+                  this.resetSubPagination();
+                  this.isFilter ? await this.fetchSearchManageList()
+                  : await this.fetchSubManagerList(row);
+                }
+              }
+            }
+          });
+          return;
         }
         this.$router.push({
           name: routerName,
@@ -878,7 +945,8 @@
           {
             current: 1,
             count: 0,
-            limit: 10
+            limit: 10,
+            showTotalCount: true
           }
         );
       },
@@ -902,6 +970,7 @@
 </script>
 
 <style lang="postcss" scoped>
+@import '@/css/mixins/custom-delete-action.css';
 .iam-level-manage-space-wrapper {
   .level-manage-table {
     margin-top: 16px;

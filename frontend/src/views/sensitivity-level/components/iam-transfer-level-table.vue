@@ -39,7 +39,7 @@
           </bk-tag>
         </template>
       </bk-table-column>
-      <bk-table-column :width="50">
+      <!-- <bk-table-column :width="50">
         <template slot-scope="{ row }">
           <Icon
             type="delete-line"
@@ -47,7 +47,7 @@
             @click.stop="handleDelete(row)"
           />
         </template>
-      </bk-table-column>
+      </bk-table-column> -->
     </bk-table>
   </div>
 </template>
@@ -128,9 +128,9 @@
       }
     },
     methods: {
-      handleDelete (payload) {
-        this.$emit('on-delete', payload);
-      }
+      // handleDelete (payload) {
+      //   this.$emit('on-delete', payload);
+      // }
     }
   };
 </script>
