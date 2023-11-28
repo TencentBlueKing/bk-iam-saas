@@ -1089,4 +1089,10 @@
         }
     }
 }
+
+.custom-perm-del-info {
+  .bk-dialog-footer {
+    padding: 0 65px 33px !important;
+  }
+}
 </style>
