@@ -39,5 +39,4 @@ class Migration(migrations.Migration):
         ('authorization', '0014_auto_20231109_1046'),
     ]
 
-    operations = [migrations.RunPython(init_allow_list)
-    ]
+    operations = [migrations.RunPython(init_allow_list)]
