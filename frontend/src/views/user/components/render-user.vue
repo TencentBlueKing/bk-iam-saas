@@ -233,7 +233,7 @@
         const panelIndex = this.panels.findIndex(item => item.name === active);
         if (panelIndex > -1) {
           if (active === this.active && count !== this.panels[panelIndex].count) {
-            this.tabKey = +new Date();
+            this.fetchRemoteTable(true);
           }
           this.$set(this.panels[panelIndex], 'count', count);
           if (['CustomPerm'].includes(active) && count < 1) {
@@ -389,37 +389,53 @@
         }
       },
 
-      async fetchRemoteTable () {
+      async fetchRemoteTable (isRefreshCurCount = false) {
         // 这里需要拿到所有tab项的total，所以需要调所有接口, 且需要在当前页动态加载tab的label
         const typeMap = {
           GroupPerm: async () => {
             this.emptyData = _.cloneDeep(this.curEmptyData);
-            await Promise.all([
-              this.fetchUserGroupSearch(),
-              this.fetchDepartSearch(),
-              this.fetchPolicySearch()
-            ]);
-            this.curEmptyData = Object.assign({}, this.emptyData);
+            if (isRefreshCurCount) {
+              if (this.$refs.childPermRef && this.$refs.childPermRef.length) {
+                this.curSearchPagination.limit = this.$refs.childPermRef[0].pageConf.limit;
+                this.$refs.childPermRef[0].$refs.groupPermTableRef.clearSelection();
+              }
+              await this.fetchUserGroupSearch();
+            } else {
+              await Promise.all([
+                this.fetchUserGroupSearch(),
+                this.fetchDepartSearch(),
+                this.fetchPolicySearch()
+              ]);
+            }
+            this.curEmptyData = Object.assign({}, this.emptyData, { tipType: this.isSearchPerm ? 'search' : '' });
             this.tabKey = +new Date();
           },
           DepartmentGroupPerm: async () => {
             this.emptyDepartmentGroupData = _.cloneDeep(this.curEmptyData);
-            await Promise.all([
-              this.fetchDepartSearch(),
-              this.fetchUserGroupSearch(),
-              this.fetchPolicySearch()
-            ]);
-            this.curEmptyData = Object.assign({}, this.emptyDepartmentGroupData);
+            if (isRefreshCurCount) {
+              await this.fetchDepartSearch();
+            } else {
+              await Promise.all([
+                this.fetchDepartSearch(),
+                this.fetchUserGroupSearch(),
+                this.fetchPolicySearch()
+              ]);
+            }
+            this.curEmptyData = Object.assign({}, this.emptyDepartmentGroupData, { tipType: this.isSearchPerm ? 'search' : '' });
             this.tabKey = +new Date();
           },
           CustomPerm: async () => {
             this.emptyCustomData = _.cloneDeep(this.curEmptyData);
-            await Promise.all([
-              this.fetchPolicySearch(),
-              this.fetchUserGroupSearch(),
-              this.fetchDepartSearch()
-            ]);
-            this.curEmptyData = Object.assign({}, this.emptyCustomData);
+            if (isRefreshCurCount) {
+              await this.fetchPolicySearch();
+            } else {
+              await Promise.all([
+                this.fetchPolicySearch(),
+                this.fetchUserGroupSearch(),
+                this.fetchDepartSearch()
+              ]);
+            }
+            this.curEmptyData = Object.assign({}, this.emptyCustomData, { tipType: this.isSearchPerm ? 'search' : '' });
             this.tabKey = +new Date();
           }
         };

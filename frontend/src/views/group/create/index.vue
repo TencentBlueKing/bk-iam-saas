@@ -503,7 +503,7 @@
         const addCustomList = this.originalList.filter(item => !temps.includes(item.$id));
         addCustomList.forEach(item => {
           if (!item.resource_groups || !item.resource_groups.length) {
-            item.resource_groups = item.related_resource_types.length ? [{ id: '', related_resource_types: item.related_resource_types }] : [];
+            item.resource_groups = item.related_resource_types && item.related_resource_types.length ? [{ id: '', related_resource_types: item.related_resource_types }] : [];
           }
           tempList.push(new GroupPolicy(item, 'add', 'custom', {
             system: {

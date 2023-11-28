@@ -718,12 +718,15 @@
                 const currentSelectList = this.currentSelectList.map(item => item.id.toString());
                 this.tableList.forEach((item) => {
                   if (item.role_members && item.role_members.length) {
-                    item.role_members = item.role_members.map(v => {
-                      return {
-                        username: v,
-                        readonly: false
-                      };
-                    });
+                    const hasName = item.role_members.some((v) => v.username);
+                    if (!hasName) {
+                      item.role_members = item.role_members.map(v => {
+                        return {
+                          username: v,
+                          readonly: false
+                        };
+                      });
+                    }
                   }
                   if (currentSelectList.includes(item.id.toString())) {
                     this.$refs.permTableRef && this.$refs.permTableRef.toggleRowSelection(item, true);
