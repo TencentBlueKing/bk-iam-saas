@@ -136,7 +136,7 @@
                     { 'sub-item-none': !subItem.actions.length }
                   ]"
                 >
-                  <label class="sub-item-name" :title="subItem.name" v-if="subItem.actions && subItem.actions.length > 0">{{ subItem.name }}55</label>
+                  <label class="sub-item-name" :title="subItem.name" v-if="subItem.actions && subItem.actions.length > 0">{{ subItem.name }}</label>
                   <div class="choose-perm-sub-tmpl">
                     <span v-for="subTmpl in subItem.actions" :key="subTmpl.$id">
                       <bk-checkbox

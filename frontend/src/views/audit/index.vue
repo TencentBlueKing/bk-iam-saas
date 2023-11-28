@@ -239,6 +239,7 @@
 
   // 只有子对象的审计类型
   const ONLY_SUB_TYPE = [
+    'action.sensitivity.level.update',
     'group.template.create',
     'group.member.create',
     'group.member.delete',
@@ -319,7 +320,8 @@
           super_manager: this.$t(`m.myApproval['超级管理员']`),
           system_manager: this.$t(`m.nav['系统管理员']`),
           rating_manager: this.$t(`m.nav['一级空间管理员']`),
-          subset_manager: this.$t(`m.nav['二级空间管理员']`)
+          subset_manager: this.$t(`m.nav['二级空间管理员']`),
+          action: this.$t(`m.common['操作-table']`)
         },
         sourceMap: {
           web: this.$t(`m.audit['页面']`),
