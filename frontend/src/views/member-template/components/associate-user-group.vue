@@ -26,7 +26,7 @@
             <span class="user-groups-name" :title="row.name">
               {{ row.name }}
             </span>
-            <Icon bk type="edit" class="user-groups-icon" />
+            <i class="user-groups-icon iam-icon iamcenter-jump-link" />
           </div>
         </template>
       </bk-table-column>

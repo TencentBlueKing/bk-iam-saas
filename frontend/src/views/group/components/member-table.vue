@@ -206,6 +206,7 @@
               :key="item.prop"
               :label="item.label"
               :prop="item.prop"
+              :render-header="renderHeader"
             />
           </template>
           <template v-else-if="item.prop === 'created_time'">
@@ -253,7 +254,6 @@
                     theme="primary"
                     style="margin-left: 5px"
                     text
-                    :title="$t(`m.userGroup['该有效期为模板里成员的默认有效期，实际有效期以成员有效期为准']`)"
                     @click="handleShowRenewal(row)"
                   >
                     {{ $t(`m.renewal['续期']`) }}
@@ -642,6 +642,17 @@
     // window.addEventListener('message', this.fetchReceiveData);
     },
     methods: {
+      renderHeader (h, data) {
+        const directive = {
+          name: 'bkTooltips',
+          content: this.$t(`m.userGroupDetail['该有效期为模板里成员的默认有效期，实际有效期以成员有效期为准']`),
+          placement: 'top'
+        };
+        return ['memberTemplate'].includes(this.tabActive)
+          ? <a class="custom-expired-header-cell" v-bk-tooltips={ directive }>{ data.column.label }</a>
+          : <a>{ data.column.label }</a>;
+      },
+
       getTableProps (payload) {
         const tabMap = {
           userOrOrg: () => {
@@ -1564,5 +1575,13 @@
       }
     }
   }
+}
+
+/deep/ .custom-expired-header-cell {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-style: dashed;
+  text-underline-position: under;
+  cursor: pointer;
 }
 </style>
