@@ -115,7 +115,8 @@
         currentFocusIndex: this.focusIndex,
         organizationIndex: -1,
         userIndex: -1,
-        enableOrganizationCount: window.ENABLE_ORGANIZATION_COUNT.toLowerCase() === 'true'
+        enableOrganizationCount: window.ENABLE_ORGANIZATION_COUNT.toLowerCase() === 'true',
+        noVerifyRoutes: ['authorBoundaryEditFirstLevel', 'authorBoundaryEditSecondLevel', 'applyJoinUserGroup', 'addMemberBoundary', 'gradingAdminCreate', 'gradingAdminEdit']
       };
     },
     computed: {
@@ -280,7 +281,10 @@
             node.is_selected = !node.is_selected;
             this.$emit('on-checked', node.is_selected, !node.is_selected, node.is_selected, node);
           } else {
-            if (getParamsValue('search_scene') && getParamsValue('search_scene') === 'add') {
+            if (
+              (getParamsValue('search_scene') && getParamsValue('search_scene') === 'add')
+              || this.noVerifyRoutes.includes(this.$route.name)
+            ) {
               node.is_selected = !node.is_selected;
               this.$emit('on-checked', node.is_selected, !node.is_selected, node.is_selected, node);
             } else {

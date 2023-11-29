@@ -373,10 +373,8 @@
           this.departmentGroupList.splice(0, this.departmentGroupList.length, ...departmentGroupList);
           this.emptyDepartmentGroupData
             = formatCodeData(departmentGroupCode, this.emptyDepartmentGroupData, this.departmentGroupList.length === 0);
-
           this.formatCheckGroups();
-
-          this.isEmpty = personalGroupList.length < 1 && systemList && systemList.length < 1
+          this.isEmpty = personalGroupList.length < 1 && systemList.length < 1
             && teporarySystemList.length < 1 && departmentGroupList.length < 1;
           this.soonGroupLength = data3 && data3.results ? data3.results.length : 0;
           this.soonPermLength = data4 ? data4.length : 0;
