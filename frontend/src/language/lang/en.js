@@ -534,7 +534,7 @@ export const m = {
          '搜索动态key值': 'Search {value}',
          '管理员组不能添加权限': 'Administrators group cannot add permissions',
          '只读用户组不能添加权限': 'Read only user groups cannot add permissions',
-         '申请加入失败，用户组数量超出上限（100个），请在“我的权限”中退出用户组后重试': 'Application to join failed. The number of user groups exceeds the maximum limit (100), please exit {value} user group in "My permissions" and try again',
+         '已加入用户组数量 ， 新申请数量，总数超过上限：100，请减少申请或退出部分用户组后重试': 'Number of added user groups: {applyCount}, number of new applications: {newApplyCount}, total exceeds the limit of 100. Please reduce the number of applications or exit some user groups and try again',
          '最多添加一个管理员': 'Add at most one administrator',
          '管理员不可重复添加': 'Administrators cannot be added repeatedly'
     },
