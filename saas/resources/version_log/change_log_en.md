@@ -1,3 +1,20 @@
+<!-- 2023-11-28 -->
+# V1.10.18 Version Update Log
+
+### Bug Fixes
+
+* Fixed a bug where authorization scope validation was not required in the organizational structure selector for IAM system and Blue Shield system
+* Fixed an issue where the calculation of renewal timestamps for user group members resulted in incorrect display of days due to rounding off floating point numbers
+* Added sensitive level business block to the audit module
+* Fixed an issue where filtering by all levels in the sensitive level selection was not working
+* Resolved an error message length issue when there were no custom permissions in the IAM permission center page within the Blue Shield system
+* Fixed the inability to batch edit newly created user groups when cloning user groups for the first time
+* Fixed a bug where the submit button was disabled in the user module's organizational structure when no personnel were added
+* Fixed an issue where the table component did not adapt its height when opening the console
+* Added functionality to exit My Management Space
+
+---
+
 <!-- 2023-11-16 -->
 # V1.10.17 Version Update Log
 

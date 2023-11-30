@@ -148,3 +148,12 @@ class ApprovalProcessWithNodeProcessor(ApprovalProcessWithNode):
             if node.is_iam_source() and node.processor_type == ProcessorNodeType.GRADE_MANAGER.value:
                 return True
         return False
+
+    def has_instance_approver_merge_node(self) -> bool:
+        """
+        是否包含合并实例审批人节点
+        """
+        for node in self.nodes:
+            if node.is_iam_source() and node.processor_type == ProcessorNodeType.INSTANCE_APPROVER_MERGE.value:
+                return True
+        return False

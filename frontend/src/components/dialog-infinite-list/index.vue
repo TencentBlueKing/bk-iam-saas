@@ -71,6 +71,7 @@
 <script>
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
+  import { getParamsValue } from '@/common/util';
 
   export default {
     name: 'dialog-infinite-list',
@@ -114,7 +115,8 @@
         currentFocusIndex: this.focusIndex,
         organizationIndex: -1,
         userIndex: -1,
-        enableOrganizationCount: window.ENABLE_ORGANIZATION_COUNT.toLowerCase() === 'true'
+        enableOrganizationCount: window.ENABLE_ORGANIZATION_COUNT.toLowerCase() === 'true',
+        noVerifyRoutes: ['authorBoundaryEditFirstLevel', 'authorBoundaryEditSecondLevel', 'applyJoinUserGroup', 'addMemberBoundary', 'gradingAdminCreate', 'gradingAdminEdit']
       };
     },
     computed: {
@@ -279,12 +281,20 @@
             node.is_selected = !node.is_selected;
             this.$emit('on-checked', node.is_selected, !node.is_selected, node.is_selected, node);
           } else {
-            const result = await this.fetchSubjectScopeCheck(node);
-            if (result) {
+            if (
+              (getParamsValue('search_scene') && getParamsValue('search_scene') === 'add')
+              || this.noVerifyRoutes.includes(this.$route.name)
+            ) {
               node.is_selected = !node.is_selected;
               this.$emit('on-checked', node.is_selected, !node.is_selected, node.is_selected, node);
             } else {
-              this.messageWarn(this.$t(`m.verify['当前选择项不在授权范围内']`), 3000);
+              const result = await this.fetchSubjectScopeCheck(node);
+              if (result) {
+                node.is_selected = !node.is_selected;
+                this.$emit('on-checked', node.is_selected, !node.is_selected, node.is_selected, node);
+              } else {
+                this.messageWarn(this.$t(`m.verify['当前选择项不在授权范围内']`), 3000);
+              }
             }
           }
         }
@@ -297,12 +307,17 @@
             node.is_selected = !node.is_selected;
             this.$emit('on-checked', node.is_selected, !node.is_selected, true, node);
           } else {
-            const result = await this.fetchSubjectScopeCheck(node);
-            if (result) {
+            if (getParamsValue('search_scene') && getParamsValue('search_scene') === 'add') {
               node.is_selected = !node.is_selected;
-              this.$emit('on-checked', node.is_selected, !node.is_selected, true, node);
+              this.$emit('on-checked', node.is_selected, !node.is_selected, node.is_selected, node);
             } else {
-              this.messageWarn(this.$t(`m.verify['当前选择项不在授权范围内']`), 3000);
+              const result = await this.fetchSubjectScopeCheck(node);
+              if (result) {
+                node.is_selected = !node.is_selected;
+                this.$emit('on-checked', node.is_selected, !node.is_selected, node.is_selected, node);
+              } else {
+                this.messageWarn(this.$t(`m.verify['当前选择项不在授权范围内']`), 3000);
+              }
             }
           }
         }

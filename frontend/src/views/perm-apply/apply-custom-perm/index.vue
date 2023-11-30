@@ -357,6 +357,13 @@
                             </bk-button>
                             )
                           </div>
+                          <template v-else>
+                            <span v-if="row.expired_at_display">
+                              {{ row.expired_at === 4102444800 ?
+                                `(${row.expired_at_display})`
+                                : `(${$t(`m.common['有效期']`)}  ${row.expired_at_display})`}}
+                            </span>
+                          </template>
                         </div>
                       </template>
                     </bk-table-column>
@@ -948,12 +955,15 @@
           this.$nextTick(() => {
             this.tableList.forEach(item => {
               if (item.role_members && item.role_members.length) {
-                item.role_members = item.role_members.map(v => {
-                  return {
-                    username: v,
-                    readonly: false
-                  };
-                });
+                const hasName = item.role_members.some((v) => v.username);
+                if (!hasName) {
+                  item.role_members = item.role_members.map(v => {
+                    return {
+                      username: v,
+                      readonly: false
+                    };
+                  });
+                }
               }
               if (this.personalUserGroup.length) {
                 const hasSelected = this.personalUserGroup.find((v) => String(v.id) === String(item.id));

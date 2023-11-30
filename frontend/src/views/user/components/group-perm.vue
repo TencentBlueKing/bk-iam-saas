@@ -352,6 +352,9 @@
       curSearchParams: {
         type: Object
       },
+      curSearchPagination: {
+        type: Object
+      },
       isSearchPerm: {
         type: Boolean,
         default: false
@@ -487,6 +490,9 @@
         handler (v) {
           if (this.pageConf.current === 1) {
             this.pageConf = Object.assign(this.pageConf, { count: this.totalCount });
+            if (this.isSearchPerm) {
+              this.pageConf.limit = this.curSearchPagination.limit;
+            }
             this.curPageData = [...v];
             return;
           }
@@ -578,12 +584,15 @@
           this.$nextTick(() => {
             this.curPageData.forEach((item) => {
               if (item.role_members && item.role_members.length) {
-                item.role_members = item.role_members.map((v) => {
-                  return {
-                    username: v,
-                    readonly: false
-                  };
-                });
+                const hasName = item.role_members.some((v) => v.username);
+                if (!hasName) {
+                  item.role_members = item.role_members.map(v => {
+                    return {
+                      username: v,
+                      readonly: false
+                    };
+                  });
+                }
               }
               if (currentSelectGroupList.includes(item.id.toString())) {
                 this.$refs.groupPermTableRef

@@ -30,8 +30,10 @@
       :data="sensitivityTableList"
       :max-height="tableHeight"
       :pagination="pagination"
+      :header-cell-class-name="getHeaderCellClass"
       @page-change="handlePageChange"
       @page-limit-change="handleLimitChange"
+      @filter-change="handleFilterChange"
       @select="handleSelectChange"
       @select-all="handleSelectAllChange"
       v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
@@ -58,8 +60,8 @@
         :label="$t(`m.sensitivityLevel['当前等级']`)"
         :sortable="true"
         :filters="formatLevelFilter"
-        :filter-method="handleLevelFilter"
         :filter-multiple="false"
+        :column-key="'level'"
         width="280"
         prop="sensitivity_level"
       >
@@ -156,23 +158,22 @@
         pagination: {
           current: 1,
           limit: 10,
-          count: 0
+          count: 0,
+          showTotalCount: true
         },
         emptyData: {
           type: '',
           text: '',
           tip: '',
           tipType: ''
-        }
+        },
+        tableHeight: getWindowHeight() - 260
       };
     },
     computed: {
     ...mapGetters(['allSystemList', 'externalSystemId']),
     isBatchDisabled () {
       return this.currentSelectList.length === 0;
-    },
-    tableHeight () {
-      return getWindowHeight() - 260;
     },
     formaSystemText () {
       return (payload) => {
@@ -195,6 +196,7 @@
         async handler (newVal, oldVal) {
           if (newVal) {
             if (oldVal && oldVal !== newVal) {
+              this.filterLevel = '';
               this.resetPagination();
             }
             await this.fetchInitData();
@@ -202,6 +204,11 @@
         },
         immediate: true
       }
+    },
+    created () {
+      window.addEventListener('resize', () => {
+        this.tableHeight = getWindowHeight() - 260;
+      });
     },
     methods: {
       async fetchInitData () {
@@ -236,7 +243,7 @@
           const { current, limit } = this.pagination;
           const systemId = this.curSystemData.id;
           const params = {
-            sensitivity_level: this.tabActive,
+            sensitivity_level: this.filterLevel || this.tabActive,
             system_id: systemId,
           ...this.searchParams,
             offset: limit * (current - 1),
@@ -384,6 +391,12 @@
         this.fetchSensitivityLevelList(true);
       },
 
+      handleFilterChange (payload) {
+        this.filterLevel = payload.level && payload.level.length ? payload.level[0] : '';
+        this.resetPagination();
+        this.fetchSensitivityLevelList(true);
+      },
+
       async handleRemoteLevel (value) {
         const list = _.cloneDeep(
           SENSITIVITY_LEVEL_ENUM.map((item) => {
@@ -400,11 +413,6 @@
       },
 
       handleSystemFilter (value, row, column) {
-        const property = column.property;
-        return row[property] === value;
-      },
-
-      handleLevelFilter (value, row, column) {
         const property = column.property;
         return row[property] === value;
       },
@@ -451,13 +459,22 @@
         await this.handleRefreshCount();
       },
 
+      getHeaderCellClass ({ row, column, rowIndex, columnIndex }) {
+        console.log(row, columnIndex);
+        if (columnIndex === 4 && !['all'].includes(this.tabActive)) {
+          return 'iam-level-header-cell-cls';
+        }
+        return '';
+      },
+
       resetPagination () {
         this.pagination = Object.assign(
           {},
           {
             limit: 10,
             current: 1,
-            count: 0
+            count: 0,
+            showTotalCount: true
           }
         );
       },
@@ -479,10 +496,15 @@
 
 <style lang="postcss" scoped>
 .iam-sensitivity-level-wrapper {
-  .sensitivity-level-table {
+  /deep/ .sensitivity-level-table {
     margin-top: 16px;
     border-bottom: 0;
     border-right: 0;
+    .iam-level-header-cell-cls {
+      .bk-table-column-filter-trigger {
+        display: none;
+      }
+    }
   }
 }
 </style>
