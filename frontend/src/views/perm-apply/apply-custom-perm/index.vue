@@ -2573,14 +2573,14 @@
             this.isShowConfirmDialog = true;
             return;
           }
-          if (applyCount >= 100) {
+          if (applyCount > 100) {
             this.messageAdvancedError(
               e,
               8000,
               3,
               this.$t(
-                `m.info['申请加入失败，用户组数量超出上限（100个），请在“我的权限”中退出用户组后重试']`,
-                { value: applyCount - 100 }
+                `m.info['已加入用户组数量 ， 新申请数量，总数超过上限：100，请减少申请或退出部分用户组后重试']`,
+                { applyCount: this.personalUserGroup.length, newApplyCount: this.currentSelectList.length }
               ));
             return;
           }
