@@ -11,7 +11,7 @@
 * Fixed the inability to batch edit newly created user groups when cloning user groups for the first time
 * Fixed a bug where the submit button was disabled in the user module's organizational structure when no personnel were added
 * Fixed an issue where the table component did not adapt its height when opening the console
-* Added functionality to exit My Management Space 😌
+* Added functionality to exit My Management Space
 
 ---
 
