@@ -864,7 +864,8 @@ export const m = {
         '删除操作权限': 'Delete action permissions',
         '暂无关联实例': 'No associated instance',
         '所属组织架构': 'Organizational structure',
-        '请输入用户/组织或人员模板，按enter键搜索': 'Please enter user/organization or members template, press enter to search'
+        '请输入用户/组织或人员模板，按enter键搜索': 'Please enter user/organization or members template, press enter to search',
+        '该有效期为模板里成员的默认有效期，实际有效期以成员有效期为准': 'This validity period is the default validity period of the members in the template, and the actual validity period is based on the members validity period'
     },
     resource: {
         '无限制总文案': 'If the action does not require restricted instances, select unlimited',
