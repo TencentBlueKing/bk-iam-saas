@@ -92,15 +92,24 @@
               mode="detail"
               v-if="!isRightLoading && commonActions.length > 0"
               @on-change="handleActionTagChange" />
-            <div class="custom-tmpl-wrapper" v-for="(customTmpl, index) in systemData[curSystem].list" :key="index">
-              <label class="bk-label" style="line-height: 20px;">
+            <div
+              :class="[
+                'custom-tmpl-wrapper',
+                { 'custom-tmpl-wrapper-none': !isShowGroupTitle(customTmpl) }
+              ]"
+              v-for="(customTmpl, index) in systemData[curSystem].list"
+              :key="index"
+            >
+              <label class="bk-label" style="line-height: 20px;" v-if="isShowGroupTitle(customTmpl)">
                 <span class="name">{{ customTmpl.name }}</span>
                 <span class="select-all" data-test-id="grading_btn_selectAllAction" @click.stop="handleSelectAll(customTmpl, index)">
                   （{{ customTmpl.text }}）
                 </span>
               </label>
               <div
-                :class="['choose-perm-tmpl', { 'set-style': index !== systemData[curSystem].list.length - 1 }]">
+                v-if="customTmpl.actions && customTmpl.actions.length > 0"
+                :class="['choose-perm-tmpl', { 'set-style': index !== systemData[curSystem].list.length - 1 }]"
+              >
                 <span v-for="tmpl in customTmpl.actions" :key="tmpl.$id">
                   <bk-checkbox
                     :true-value="true"
@@ -124,36 +133,42 @@
                   </bk-checkbox>
                 </span>
               </div>
-              <section class="sub-group-wrapper">
+              <section class="sub-group-wrapper" v-if="isShowGroupSubAction(customTmpl)">
                 <div
                   v-for="subItem in customTmpl.sub_groups"
-                  class="sub-item"
-                  :key="subItem.name">
-                  <label class="sub-item-name" :title="subItem.name">{{ subItem.name }}</label>
-                  <div class="choose-perm-sub-tmpl">
-                    <span v-for="subTmpl in subItem.actions" :key="subTmpl.$id">
-                      <bk-checkbox
-                        :true-value="true"
-                        :false-value="false"
-                        v-model="subTmpl.checked"
-                        ext-cls="custom-action-checkbox-sub-cls"
-                        @change="handleSubActionChange(...arguments, customTmpl, subTmpl, subTmpl.id)">
-                        <bk-popover placement="top" :delay="300" ext-cls="iam-tooltips-cls">
-                          <span class="text">{{ subTmpl.name }}</span>
-                          <div slot="content" class="iam-perm-apply-action-popover-content">
-                            <div>
-                              <span class="name">{{ subTmpl.name }}</span>
-                              <span :class="getComputedClass(subTmpl)">({{ subTmpl.checked ? $t(`m.common['已选择']`) : $t(`m.common['未选择']`) }})</span>
+                  :key="subItem.name"
+                  :class="[
+                    'sub-item',
+                    { 'sub-item-none': !subItem.actions.length }
+                  ]"
+                >
+                  <template v-if="subItem.actions && subItem.actions.length > 0">
+                    <label class="sub-item-name" :title="subItem.name">{{ subItem.name }}</label>
+                    <div class="choose-perm-sub-tmpl">
+                      <span v-for="subTmpl in subItem.actions" :key="subTmpl.$id">
+                        <bk-checkbox
+                          :true-value="true"
+                          :false-value="false"
+                          v-model="subTmpl.checked"
+                          ext-cls="custom-action-checkbox-sub-cls"
+                          @change="handleSubActionChange(...arguments, customTmpl, subTmpl, subTmpl.id)">
+                          <bk-popover placement="top" :delay="300" ext-cls="iam-tooltips-cls">
+                            <span class="text">{{ subTmpl.name }}</span>
+                            <div slot="content" class="iam-perm-apply-action-popover-content">
+                              <div>
+                                <span class="name">{{ subTmpl.name }}</span>
+                                <span :class="getComputedClass(subTmpl)">({{ subTmpl.checked ? $t(`m.common['已选择']`) : $t(`m.common['未选择']`) }})</span>
+                              </div>
+                              <div class="description">{{ $t(`m.common['描述']`) + ':' + (subTmpl.description || '--') }}</div>
+                              <div class="relate-action" v-if="subTmpl.related_actions.length > 0">
+                                {{ getRelatedActionTips(subTmpl.related_actions) }}
+                              </div>
                             </div>
-                            <div class="description">{{ $t(`m.common['描述']`) + ':' + (subTmpl.description || '--') }}</div>
-                            <div class="relate-action" v-if="subTmpl.related_actions.length > 0">
-                              {{ getRelatedActionTips(subTmpl.related_actions) }}
-                            </div>
-                          </div>
-                        </bk-popover>
-                      </bk-checkbox>
-                    </span>
-                  </div>
+                          </bk-popover>
+                        </bk-checkbox>
+                      </span>
+                    </div>
+                  </template>
                 </div>
               </section>
             </div>
@@ -241,33 +256,52 @@
       };
     },
     computed: {
-            ...mapGetters(['user', 'externalSystemId']),
-            isLoading () {
-                return this.initRequestQueue.length > 0;
-            },
-            isShowContent () {
-                return this.initRequestQueue.length < 1 && this.systemList.length > 0;
-            },
-            isDisabled () {
-                let flag = false;
-                if (Object.keys(this.systemData).length > 0) {
-                    for (const key in this.systemData) {
-                        if (!flag) {
-                            flag = (this.systemData[key].list || []).some(item => {
-                                return (item.actions || []).some(act => act.checked)
-                                    || (item.sub_groups || []).some(sub => (sub.actions || []).some(v => v.checked));
-                            });
-                        }
-                    }
-                } else {
-                    flag = false;
-                }
-                return this.initRequestQueue.length > 0 || !flag;
-            },
-            isHierarchicalAdmin () {
-                // return this.$store.getters.roleList.find(item => item.id === this.$store.getters.navCurRoleId) || {};
-                return this.user.role || {};
-            }
+      ...mapGetters(['user', 'externalSystemId']),
+      isLoading () {
+          return this.initRequestQueue.length > 0;
+      },
+      isShowContent () {
+          return this.initRequestQueue.length < 1 && this.systemList.length > 0;
+      },
+      isDisabled () {
+          let flag = false;
+          if (Object.keys(this.systemData).length > 0) {
+              for (const key in this.systemData) {
+                  if (!flag) {
+                      flag = (this.systemData[key].list || []).some(item => {
+                          return (item.actions || []).some(act => act.checked)
+                              || (item.sub_groups || []).some(sub => (sub.actions || []).some(v => v.checked));
+                      });
+                  }
+              }
+          } else {
+              flag = false;
+          }
+          return this.initRequestQueue.length > 0 || !flag;
+      },
+      isHierarchicalAdmin () {
+          // return this.$store.getters.roleList.find(item => item.id === this.$store.getters.navCurRoleId) || {};
+          return this.user.role || {};
+      },
+      isShowGroupTitle () {
+        return (item) => {
+          const isExistActions = item.actions && item.actions.length > 0;
+            const isExistSubGroup = (item.sub_groups || []).some(v =>
+            (v.sub_groups && v.sub_groups.length > 0)
+              || (v.actions && v.actions.length > 0)
+              );
+          return isExistSubGroup || isExistActions;
+        };
+      },
+      isShowGroupSubAction () {
+        return (item) => {
+          const isExistSubGroup = (item.sub_groups || []).some(v =>
+            (v.sub_groups && v.sub_groups.length > 0)
+              || (v.actions && v.actions.length > 0)
+              );
+          return item.sub_groups && item.sub_groups.length > 0 && isExistSubGroup;
+        };
+      }
     },
     watch: {
       isShow: {
@@ -599,7 +633,7 @@
             item.sub_groups = [];
           }
           let allChecked = true;
-          item.actions = item.actions.filter(v => !v.hidden);
+          // item.actions = item.actions.filter(v => !v.hidden);
           item.actions.forEach(act => {
             act.$id = `${payload}&${act.id}`;
             act.related_resource_types.forEach(v => {
@@ -615,7 +649,7 @@
             this.linearAction.push(act);
           });
           item.sub_groups.forEach(act => {
-            act.actions = act.actions.filter(v => !v.hidden);
+            // act.actions = act.actions.filter(v => !v.hidden);
             (act.actions || []).forEach(v => {
               v.$id = `${payload}&${v.id}`;
               v.related_resource_types.forEach(subItem => {
@@ -1046,6 +1080,9 @@
                             margin: 0 -7px 0 2px;
                         }
                     }
+                    &.custom-tmpl-wrapper-none {
+                      display: none;
+                    }
                 }
                 .choose-perm-tmpl {
                     line-height: 30px;
@@ -1079,6 +1116,9 @@
                         line-height: 30px;
                         &.set-mt {
                             margin-top: 5px;
+                        }
+                        &.sub-item-none {
+                          display: none;
                         }
                     }
                     .sub-item-name {

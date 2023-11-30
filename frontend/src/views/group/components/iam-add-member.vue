@@ -535,7 +535,8 @@
         manualTableList: [],
         manualTableListStorage: [],
         hasSelectedManualDepartments: [],
-        hasSelectedManualUsers: []
+        hasSelectedManualUsers: [],
+        noVerifyRoutes: ['authorBoundaryEditFirstLevel', 'authorBoundaryEditSecondLevel', 'applyJoinUserGroup', 'addMemberBoundary', 'gradingAdminCreate', 'gradingAdminEdit']
       };
     },
     computed: {
@@ -989,13 +990,13 @@
             }
             this.manualValue = _.cloneDeep(formatStr);
             if (this.isStaff) {
-              this.manualInputError = true;
+              this.manualInputError = !!this.manualValue;
               return;
             }
             this.formatOrgAndUser();
           } else {
             if (this.isStaff) {
-              this.manualInputError = true;
+              this.manualInputError = !!this.manualValue;
               return;
             }
             this.formatOrgAndUser();
@@ -1066,14 +1067,14 @@
               // this.manualInputError = !!this.manualValue.length;
             } else {
               if (this.isStaff) {
-                this.manualInputError = true;
+                this.manualInputError = !!this.manualValue;
                 return;
               }
               // this.manualInputError = true;
             }
           } else {
             if (this.isStaff) {
-              this.manualInputError = true;
+              this.manualInputError = !!this.manualValue;
               return;
             }
           }
@@ -1088,39 +1089,41 @@
 
       // 校验部门/用户范围是否满足条件
       async fetchSubjectScopeCheck (payload, mode) {
-        const subjects = payload.map((item) => {
-          const { id, type, username } = item;
-          const typeMap = {
-            depart: () => {
-              return {
-                type: 'department',
-                id
-              };
-            },
-            user: () => {
-              return {
-                type: 'user',
-                id: username
-              };
-            }
-          };
-          return typeMap[type || mode]();
-        });
-        try {
-          const { code, data } = await this.$store.dispatch('organization/getSubjectScopeCheck', { subjects });
-          if (code === 0 && data) {
-            const idList = data.map((v) => v.id);
-            const result = payload.filter((item) => {
-              if (item.type === 'depart') {
-                item.type = 'department';
+        if (!this.noVerifyRoutes.includes(this.$route.name)) {
+          const subjects = payload.map((item) => {
+            const { id, type, username } = item;
+            const typeMap = {
+              depart: () => {
+                return {
+                  type: 'department',
+                  id
+                };
+              },
+              user: () => {
+                return {
+                  type: 'user',
+                  id: username
+                };
               }
-              return data.map((v) => v.type).includes(item.type)
-                && (idList.includes(String(item.id)) || idList.includes(item.username));
-            });
-            return result;
+            };
+            return typeMap[type || mode]();
+          });
+          try {
+            const { code, data } = await this.$store.dispatch('organization/getSubjectScopeCheck', { subjects });
+            if (code === 0 && data) {
+              const idList = data.map((v) => v.id);
+              const result = payload.filter((item) => {
+                if (item.type === 'depart') {
+                  item.type = 'department';
+                }
+                return data.map((v) => v.type).includes(item.type)
+                  && (idList.includes(String(item.id)) || idList.includes(item.username));
+              });
+              return result;
+            }
+          } catch (e) {
+            this.messageAdvancedError(e);
           }
-        } catch (e) {
-          this.messageAdvancedError(e);
         }
       },
 

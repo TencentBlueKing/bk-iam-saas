@@ -16,12 +16,12 @@
       :class="backRouter ? 'has-cursor' : ''"
       v-show="isShowExternal || (!mainContentLoading && !externalSystemsLayout.hideIamBreadCrumbs)"
       @click="back">
-      <div v-if="!isHide">
+      <div v-if="!isHide" class="breadcrumbs-content">
         <Icon type="arrows-left" class="breadcrumbs-back" v-if="backRouter" />
-        <h2 v-if="customBreadCrumbTitles.includes(routeName)" class="breadcrumbs-current">
+        <h2 v-if="customBreadCrumbTitles.includes(routeName)" class="breadcrumbs-current single-hide">
           {{ $t(`m.info['用户组成员添加权限']`, { value: `${$t(`m.common['【']`)}${userGroupName}${$t(`m.common['】']`)}` }) }}
         </h2>
-        <h2 v-else class="breadcrumbs-current">{{ headerTitle }}</h2>
+        <h2 v-else class="breadcrumbs-current single-hide">{{ headerTitle }}</h2>
       </div>
     </div>
     <!-- <div class="user fr">
@@ -164,7 +164,7 @@
     };
   };
 
-  const NORMAL_DOCU_LINK = '/权限中心/产品白皮书/产品简介/README.md';
+  const NORMAL_DOCU_LINK = '/IAM/UserGuide/Introduce/README.md';
   // const GRADE_DOCU_LINK = '/权限中心/产品白皮书/场景案例/GradingManager.md';
 
   const docuLinkMap = new Map([

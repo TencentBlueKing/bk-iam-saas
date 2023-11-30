@@ -8,7 +8,7 @@
         :ext-cls="sysIndex > 0 ? 'iam-perm-ext-cls' : ''"
         :class="sysIndex === systemPolicyList.length - 1 ? 'iam-perm-ext-reset-cls' : ''"
         :title="sys.name"
-        :perm-length="sys.count"
+        :perm-length="isSearchPerm ? totalCount : sys.count"
         :one-perm="onePerm"
         :is-all-delete="true"
         @on-expanded="handleExpanded(...arguments, sys)"
@@ -21,7 +21,8 @@
           :cur-search-params="curSearchParams"
           :empty-data="emptyPolicyData"
           :is-search-perm="isSearchPerm"
-          @after-delete="handleAfterDelete(...arguments, sysIndex)" />
+          @after-delete="handleAfterDelete(...arguments, sysIndex)"
+        />
       </custom-perm-system-policy>
     </template>
     <template v-else>
@@ -40,6 +41,7 @@
 </template>
 <script>
   import { formatCodeData } from '@/common/util';
+  import { bus } from '@/common/bus';
   import CustomPermSystemPolicy from '@/components/custom-perm-system-policy/index.vue';
   import PermSystem from '@/model/my-perm-system';
   import CustomPermTable from './custom-perm-table.vue';
@@ -84,6 +86,9 @@
       isSearchPerm: {
         type: Boolean,
         default: false
+      },
+      totalCount: {
+        type: Number
       }
     },
     data () {
@@ -120,6 +125,14 @@
           }
         },
         immediate: true
+      },
+      totalCount: {
+        handler (value) {
+          if (this.isSearchPerm && this.systemList.length) {
+            this.$set(this.systemList[0], 'count', value);
+          }
+        },
+        immediate: true
       }
     },
     async created () {
@@ -129,10 +142,10 @@
       // 搜索自定义权限
       fetchSystemSearch () {
         // 过滤掉搜索框的参数, 处理既有筛选系统也有输入名字、描述等仍要展示为空的情况
-        const noValue = !this.curSearchParams.id && !this.curSearchParams.name && !this.curSearchParams.description;
+        const { id, description, name, system_id: systemId } = this.curSearchParams;
+        const noValue = !id && !name && !description;
         // 筛选搜索的系统id
-        const curSystemList
-          = this.systemList.filter(item => item.id === this.curSearchParams.system_id && noValue);
+        const curSystemList = this.systemList.filter(item => item.id === systemId && noValue);
         this.formatSystemData(curSystemList || []);
       },
 
@@ -152,6 +165,9 @@
         }
         if (!this.systemPolicyList.length) {
           this.handleRefreshSystem();
+          if (this.isSearchPerm) {
+            bus.$emit('on-perm-tab-count', { active: 'CustomPerm', count: this.systemPolicyList.length });
+          }
         }
       },
 
@@ -182,6 +198,9 @@
                 this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
                 if (!this.systemPolicyList.length) {
                   this.handleRefreshSystem();
+                  if (this.isSearchPerm) {
+                    bus.$emit('on-perm-tab-count', { active: 'CustomPerm', count: this.systemPolicyList.length });
+                  }
                 }
                 return true;
               }
@@ -217,14 +236,19 @@
       },
 
       async handleRefreshSystem () {
-        const externalParams = {};
-        if (this.externalSystemId) {
-          externalParams.system_id = this.externalSystemId;
+        if (!this.isSearchPerm && this.curSearchParams.system_id) {
+          const externalParams = {};
+          if (this.externalSystemId) {
+            externalParams.system_id = this.externalSystemId;
+          }
+          this.emptyPolicyData.tipType = '';
+          const { code, data } = await this.$store.dispatch('permApply/getHasPermSystem', externalParams);
+          this.formatSystemData(data || []);
+          this.emptyPolicyData = formatCodeData(code, this.emptyPolicyData, data.length === 0);
+        } else {
+          this.formatSystemData(this.systemPolicyList || []);
+          this.emptyPolicyData = formatCodeData(0, this.emptyPolicyData, this.systemPolicyList.length === 0);
         }
-        this.emptyPolicyData.tipType = '';
-        const { code, data } = await this.$store.dispatch('permApply/getHasPermSystem', externalParams);
-        this.formatSystemData(data || []);
-        this.emptyPolicyData = formatCodeData(code, this.emptyPolicyData, data.length === 0);
       },
       
       async handleEmptyClear () {

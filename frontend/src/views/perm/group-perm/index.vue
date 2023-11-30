@@ -20,13 +20,11 @@
       v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
     >
       <bk-table-column type="selection" align="center" :selectable="setDefaultSelect" />
-      <!-- 用户组名 -->
       <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
         <template slot-scope="{ row }">
           <span class="user-group-name" :title="row.name" @click="goDetail(row)">{{ row.name }}</span>
         </template>
       </bk-table-column>
-      <!-- 描述 -->
       <bk-table-column :label="$t(`m.common['描述']`)">
         <template slot-scope="{ row }">
           <span :title="row.description !== '' ? row.description : ''">
@@ -168,6 +166,9 @@
       curSearchParams: {
         type: Object
       },
+      curSearchPagination: {
+        type: Object
+      },
       isSearchPerm: {
         type: Boolean,
         default: false
@@ -178,6 +179,10 @@
       },
       totalCount: {
         type: Number
+      },
+      componentLoading: {
+        type: Boolean,
+        default: false
       }
     },
     data () {
@@ -239,8 +244,11 @@
           //   this.initPageConf();
           //   this.curPageData = this.getDataByPage(this.pageConf.current);
           // }
-          if (this.pageConf.current === 1 && !this.isSearchPerm) {
+          if (this.pageConf.current === 1) {
             this.pageConf = Object.assign(this.pageConf, { count: this.totalCount });
+            if (this.isSearchPerm) {
+              this.pageConf.limit = this.curSearchPagination.limit;
+            }
             this.curPageData = [...v];
             return;
           }
@@ -317,7 +325,7 @@
           let url = '';
           let params = {};
           const { current, limit } = this.pageConf;
-          if (!this.mainContentLoading) {
+          if (!this.mainContentLoading && !this.componentLoading) {
             this.tableLoading = true;
           }
           if (this.isSearchPerm) {
@@ -342,25 +350,28 @@
           this.pageConf.count = data.count || 0;
           const currentSelectGroupList = this.currentSelectGroupList.map(item => item.id.toString());
           this.curPageData.splice(0, this.curPageData.length, ...(data.results || []));
+          this.groupPermEmptyData = formatCodeData(code, this.groupPermEmptyData, data.count === 0);
           setTimeout(() => {
             if (!this.currentSelectGroupList.length) {
               this.$refs.groupPermTableRef && this.$refs.groupPermTableRef.clearSelection();
             }
             this.curPageData.forEach(item => {
               if (item.role_members && item.role_members.length) {
-                item.role_members = item.role_members.map(v => {
-                  return {
-                    username: v,
-                    readonly: false
-                  };
-                });
+                const hasName = item.role_members.some((v) => v.username);
+                if (!hasName) {
+                  item.role_members = item.role_members.map(v => {
+                    return {
+                      username: v,
+                      readonly: false
+                    };
+                  });
+                }
               }
               if (currentSelectGroupList.includes(item.id.toString())) {
                 this.$refs.groupPermTableRef && this.$refs.groupPermTableRef.toggleRowSelection(item, true);
               }
             });
           }, 200);
-          this.groupPermEmptyData = formatCodeData(code, this.groupPermEmptyData, data.count === 0);
         } catch (e) {
           console.error(e);
           const { code } = e;
@@ -429,8 +440,7 @@
        * @param {number} prevLimit 变化前每页多少条的数量
        */
       handlePageLimitChange (currentLimit, prevLimit) {
-        this.pageConf.limit = currentLimit;
-        this.pageConf.current = 1;
+        this.pageConf = Object.assign(this.pageConf, { current: 1, limit: currentLimit });
         this.handlePageChange(this.pageConf.current);
       },
 
@@ -579,12 +589,12 @@
 
       resetPagination (limit = 10) {
         this.pageConf = Object.assign(this.pageConf, { current: 1, limit });
-        this.getDataByPage();
       },
 
       refreshTableData () {
         const { limit } = this.pageConf;
         this.resetPagination(limit);
+        this.getDataByPage();
         this.fetchSelectedGroupCount();
         if (this.isSearchPerm) {
           return;

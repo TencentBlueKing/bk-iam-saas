@@ -228,6 +228,7 @@ class ProcessorNodeType(LowerStrEnum):
     SYSTEM_MANAGER = auto()
     GRADE_MANAGER: enum = "rating_manager"
     INSTANCE_APPROVER = auto()
+    INSTANCE_APPROVER_MERGE = auto()
 
 
 # 每一种申请单据，对应的审批流程节点可以支持的ROLE
@@ -236,6 +237,7 @@ APPLICATION_SUPPORT_PROCESSOR_ROLE_MAP = {
         ProcessorNodeType.SUPER_MANAGER.value,
         ProcessorNodeType.SYSTEM_MANAGER.value,
         ProcessorNodeType.INSTANCE_APPROVER.value,
+        ProcessorNodeType.INSTANCE_APPROVER_MERGE.value,
         ProcessorNodeType.GRADE_MANAGER.value,
     ),
     ApplicationType.JOIN_GROUP.value: (
@@ -264,6 +266,7 @@ IAM_SUPPORT_PROCESSOR_TYPES = [
     ProcessorNodeType.SYSTEM_MANAGER.value,
     ProcessorNodeType.GRADE_MANAGER.value,
     ProcessorNodeType.INSTANCE_APPROVER.value,
+    ProcessorNodeType.INSTANCE_APPROVER_MERGE.value,
 ]
 
 
@@ -378,6 +381,7 @@ class SensitivityLevel(ChoicesEnum):
     L2 = "L2"
     L3 = "L3"
     L4 = "L4"
+    L5 = "L5"
 
     _choices_labels = skip(
         (
@@ -385,5 +389,6 @@ class SensitivityLevel(ChoicesEnum):
             (L2, "低"),
             (L3, "中"),
             (L4, "高"),
+            (L5, "极高"),
         )
     )

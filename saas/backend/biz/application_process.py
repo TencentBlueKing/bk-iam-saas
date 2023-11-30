@@ -76,7 +76,7 @@ class InstanceApproverHandler(PolicyProcessHandler):
 
         for policy_process in policy_process_list:
             # 没有实例审批人节点不需要处理
-            if not policy_process.process.has_instance_approver_node():
+            if not self.has_instance_approver_node(policy_process.process):
                 policy_process_results.append(policy_process)
                 continue
 
@@ -102,6 +102,9 @@ class InstanceApproverHandler(PolicyProcessHandler):
             )
 
         return policy_process_results
+
+    def has_instance_approver_node(self, process: ApprovalProcessWithNodeProcessor) -> bool:
+        return process.has_instance_approver_node()
 
     def _split_policy_process_by_resource_approver_dict(
         self, policy_process: PolicyProcess, resource_approver_dict: ResourceNodeAttributeDictBean
@@ -184,6 +187,93 @@ class InstanceApproverHandler(PolicyProcessHandler):
         return list(resource_node_set)
 
 
+class InstanceApproverMergeHandler(InstanceApproverHandler):
+    """
+    实例审批人合并审批
+    """
+
+    def has_instance_approver_node(self, process: ApprovalProcessWithNodeProcessor) -> bool:
+        return process.has_instance_approver_merge_node()
+
+    def _split_policy_process_by_resource_approver_dict(
+        self, policy_process: PolicyProcess, resource_approver_dict: ResourceNodeAttributeDictBean
+    ) -> List[PolicyProcess]:
+        """
+        通过实例审批人信息, 分离policy_process为独立的实例policy
+        """
+        # 填充系统管理员, 默认为系统管理管理员
+        if self.system_manager_approver:
+            policy_process.process.set_node_approver(
+                ProcessorNodeType.INSTANCE_APPROVER_MERGE.value,
+                self.system_manager_approver[0],
+            )
+
+        if len(policy_process.policy.list_thin_resource_type()) != 1:
+            return [policy_process]
+
+        policy = policy_process.policy
+        copied_process = deepcopy(policy_process.process)
+        copied_process.set_node_approver(
+            ProcessorNodeType.INSTANCE_APPROVER_MERGE.value,
+            [],
+        )
+        instance_approvers: List[str] = []
+
+        policy_process_list: List[PolicyProcess] = []
+        for rg in policy.resource_groups:
+            rrt: RelatedResourceBean = rg.related_resource_types[0]  # type: ignore
+            for condition in rrt.condition:
+                # 忽略有属性的condition
+                if not condition.has_no_attributes():
+                    continue
+
+                # 遍历所有的实例路径, 筛选出有查询有实例审批人的实例
+                for instance in condition.instances:
+                    for path in instance.path:
+                        last_node = path[-1]
+                        if last_node.id == ANY_ID:
+                            if len(path) < 2:
+                                continue
+                            last_node = path[-2]
+
+                        resource_node = ResourceNodeBean.parse_obj(last_node)
+                        if not resource_approver_dict.get_attribute(resource_node):
+                            continue
+
+                        # 由于ITSM的限制, 合并审批这里只取每个实例的第一个审批人
+                        instance_approvers.append(resource_approver_dict.get_attribute(resource_node)[0])
+
+                        # 复制出单实例的policy
+                        copied_policy = copy_policy_by_instance_path(policy, rg, rrt, instance, path)
+                        policy_process_list.append(PolicyProcess(policy=copied_policy, process=copied_process))
+
+        # 如果没有拆分处理部分实例, 直接返回原始的policy_process
+        if not policy_process_list:
+            return [policy_process]
+
+        # 填充实例审批人
+        copied_process.set_node_approver(
+            ProcessorNodeType.INSTANCE_APPROVER_MERGE.value,
+            sorted(set(instance_approvers)),
+        )
+
+        # 把原始的策略剔除拆分的部分
+        for part_policy_process in policy_process_list:
+            try:
+                policy_process.policy.remove_resource_group_list(part_policy_process.policy.resource_groups)
+            except PolicyEmptyException:
+                # 如果原始的策略全部删完了, 直接返回拆分的部分
+                return policy_process_list
+
+        # 原始拆分后剩余的部分填回来
+        policy_process_list.append(policy_process)
+        return policy_process_list
+
+    @cached_property
+    def system_manager_approver(self) -> List[str]:
+        return Role.objects.get(type=RoleType.SYSTEM_MANAGER.value, code=self.system_id).members
+
+
 def copy_policy_by_instance_path(policy, resource_group, rrt, instance, path):
     # 复制出单实例的policy
     return PolicyBean(
@@ -217,17 +307,7 @@ def copy_policy_by_instance_path(policy, resource_group, rrt, instance, path):
                 )
             ]
         ),
-        policy_id=policy.policy_id,
-        expired_at=policy.expired_at,
-        type=policy.type,
-        name=policy.name,
-        name_en=policy.name_en,
-        description=policy.description,
-        description_en=policy.description_en,
-        expired_display=policy.expired_display,
-        action_id=policy.action_id,
-        backend_policy_id=policy.backend_policy_id,
-        auth_type=policy.auth_type,
+        **policy.dict(exclude={"resource_groups"}),
     )
 
 

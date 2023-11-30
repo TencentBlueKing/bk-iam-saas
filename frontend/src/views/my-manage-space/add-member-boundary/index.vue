@@ -511,7 +511,8 @@
         manualTableList: [],
         manualTableListStorage: [],
         hasSelectedManualDepartments: [],
-        hasSelectedManualUsers: []
+        hasSelectedManualUsers: [],
+        noVerifyRoutes: ['authorBoundaryEditFirstLevel', 'authorBoundaryEditSecondLevel', 'applyJoinUserGroup', 'addMemberBoundary', 'gradingAdminCreate', 'gradingAdminEdit']
       };
     },
     computed: {
@@ -984,13 +985,13 @@
             }
             this.manualValue = _.cloneDeep(formatStr);
             if (this.isStaff) {
-              this.manualInputError = true;
+              this.manualInputError = !!this.manualValue;
               return;
             }
             this.formatOrgAndUser();
           } else {
             if (this.isStaff) {
-              this.manualInputError = true;
+              this.manualInputError = !!this.manualValue;
               return;
             }
             this.formatOrgAndUser();
@@ -1061,14 +1062,14 @@
               // this.manualInputError = !!this.manualValue.length;
             } else {
               if (this.isStaff) {
-                this.manualInputError = true;
+                this.manualInputError = !!this.manualValue;
                 return;
               }
               // this.manualInputError = true;
             }
           } else {
             if (this.isStaff) {
-              this.manualInputError = true;
+              this.manualInputError = !!this.manualValue;
               return;
             }
           }
@@ -1083,39 +1084,41 @@
 
       // 校验部门/用户范围是否满足条件
       async fetchSubjectScopeCheck (payload, mode) {
-        const subjects = payload.map((item) => {
-          const { id, type, username } = item;
-          const typeMap = {
-            depart: () => {
-              return {
-                type: 'department',
-                id
-              };
-            },
-            user: () => {
-              return {
-                type: 'user',
-                id: username
-              };
-            }
-          };
-          return typeMap[type || mode]();
-        });
-        try {
-          const { code, data } = await this.$store.dispatch('organization/getSubjectScopeCheck', { subjects });
-          if (code === 0 && data) {
-            const idList = data.map((v) => v.id);
-            const result = payload.filter((item) => {
-              if (item.type === 'depart') {
-                item.type = 'department';
+        if (!this.noVerifyRoutes.includes(this.$route.name)) {
+          const subjects = payload.map((item) => {
+            const { id, type, username } = item;
+            const typeMap = {
+              depart: () => {
+                return {
+                  type: 'department',
+                  id
+                };
+              },
+              user: () => {
+                return {
+                  type: 'user',
+                  id: username
+                };
               }
-              return data.map((v) => v.type).includes(item.type)
-                && (idList.includes(String(item.id)) || idList.includes(item.username));
-            });
-            return result;
+            };
+            return typeMap[type || mode]();
+          });
+          try {
+            const { code, data } = await this.$store.dispatch('organization/getSubjectScopeCheck', { subjects });
+            if (code === 0 && data) {
+              const idList = data.map((v) => v.id);
+              const result = payload.filter((item) => {
+                if (item.type === 'depart') {
+                  item.type = 'department';
+                }
+                return data.map((v) => v.type).includes(item.type)
+                  && (idList.includes(String(item.id)) || idList.includes(item.username));
+              });
+              return result;
+            }
+          } catch (e) {
+            this.messageAdvancedError(e);
           }
-        } catch (e) {
-          this.messageAdvancedError(e);
         }
       },
 
@@ -2141,12 +2144,12 @@
     .right {
       width: calc(100% - 600px);
       padding-left: 20px;
-      background-color: #f5f7fa;
+      /* background-color: #f5f7fa; */
       border-top: 1px solid #dcdee5;
       .result-preview {
         display: flex;
         justify-content: space-between;
-        padding: 8px 36px 8px 0px;
+        padding: 8px 42px 8px 0px;
         .bk-button-text.is-disabled {
           color: #c4c6cc;
         }
@@ -2173,7 +2176,7 @@
         position: relative;
         margin-top: 15px;
         /* padding-left: 10px; */
-        padding-right: 36px;
+        padding-right: 42px;
         /* height: 345px; */
         height: 414px;
         overflow: auto;
@@ -2190,7 +2193,7 @@
           background-color: #ffffff;
           .organization-item {
             padding: 5px;
-            box-shadow: 0 1px 1px 0 #00000014;
+            box-shadow: 0px 1px 1px rgba(0,0,0, 0.06);
             border-radius: 2px;
             display: flex;
             align-items: center;
@@ -2238,7 +2241,7 @@
           background-color: #ffffff;
           .user-item {
             padding: 5px;
-            box-shadow: 0 1px 1px 0 #00000014;
+            box-shadow: 0px 1px 1px rgba(0,0,0, 0.06);
             border-radius: 2px;
             .user-name {
               display: inline-block;

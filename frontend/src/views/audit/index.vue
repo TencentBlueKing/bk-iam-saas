@@ -239,6 +239,7 @@
 
   // 只有子对象的审计类型
   const ONLY_SUB_TYPE = [
+    'action.sensitivity.level.update',
     'group.template.create',
     'group.member.create',
     'group.member.delete',
@@ -319,7 +320,8 @@
           super_manager: this.$t(`m.myApproval['超级管理员']`),
           system_manager: this.$t(`m.nav['系统管理员']`),
           rating_manager: this.$t(`m.nav['一级空间管理员']`),
-          subset_manager: this.$t(`m.nav['二级空间管理员']`)
+          subset_manager: this.$t(`m.nav['二级空间管理员']`),
+          action: this.$t(`m.common['操作-table']`)
         },
         sourceMap: {
           web: this.$t(`m.audit['页面']`),
@@ -382,7 +384,8 @@
           'authorization.api.allow.list.config.delete': this.$t(`m.audit['授权类API白名单删除']`),
           'management.api.allow.list.config.create': this.$t(`m.audit['管理类API白名单创建']`),
           'management.api.allow.list.config.delete': this.$t(`m.audit['管理类API白名单删除']`),
-          'group.transfer': this.$t(`m.audit['用户组权限交接']`)
+          'group.transfer': this.$t(`m.audit['用户组权限交接']`),
+          'action.sensitivity.level.update': this.$t(`m.audit['操作敏感等级更新']`)
         },
         currentMonth: '',
         noDetailType: NO_DETAIL_TYPE,
@@ -680,7 +683,8 @@
           { id: 'authorization.api.allow.list.config.create', name: this.$t(`m.audit['授权类API白名单创建']`) },
           { id: 'authorization.api.allow.list.config.delete', name: this.$t(`m.audit['授权类API白名单删除']`) },
           { id: 'management.api.allow.list.config.create', name: this.$t(`m.audit['管理类API白名单创建']`) },
-          { id: 'management.api.allow.list.config.delete', name: this.$t(`m.audit['管理类API白名单删除']`) }
+          { id: 'management.api.allow.list.config.delete', name: this.$t(`m.audit['管理类API白名单删除']`) },
+          { id: 'action.sensitivity.level.update', name: this.$t(`m.audit['操作敏感等级更新']`) }
         ];
         if (value === '') {
           return Promise.resolve(list);

@@ -78,11 +78,12 @@
                     :class="[
                       'action-item',
                       { 'set-border': originalCustomTmplList.length > 1 },
-                      { 'action-item-expand': item.expanded }
+                      { 'action-item-expand': item.expanded },
+                      { 'action-item-none': !isShowGroupTitle(item) }
                     ]"
                   >
                     <p
-                      v-if="!(originalCustomTmplList.length === 1 && !isShowGroupAction(item))"
+                      v-if="isShowGroupTitle(item)"
                       :class="['action-item-title', { 'action-item-title-expand': item.expanded }]"
                       @click.stop="handleExpanded(item)"
                     >
@@ -160,13 +161,17 @@
                           {{ $t(`m.common['全选']`) }}
                         </bk-checkbox>
                       </div>
-                      <div class="sub-group-action-content" v-if="isShowGroupAction(item)">
+                      <div class="sub-group-action-content" v-if="isShowGroupSubAction(item)">
                         <section
                           v-for="(subAct, subIndex) in item.sub_groups"
                           :key="subIndex"
-                          :class="['sub-action-item', { 'set-margin': subIndex !== 0 }]">
+                          :class="[
+                            'sub-action-item',
+                            { 'set-margin': subIndex !== 0 },
+                            { 'sub-action-item-none': !subAct.actions.length }
+                          ]">
                           <div class="sub-action-wrapper">
-                            <span class="name" :title="subAct.name">{{ subAct.name }}</span>
+                            <span class="name" :title="subAct.name" v-if="subAct.actions.length > 0">{{ subAct.name }}</span>
                             <section>
                               <bk-checkbox
                                 v-for="(act, actIndex) in subAct.actions"
@@ -199,6 +204,7 @@
                             </section>
                           </div>
                           <bk-checkbox
+                            v-if="subAct.actions.length > 0"
                             :true-value="true"
                             :false-value="false"
                             v-model="subAct.allChecked"
@@ -378,6 +384,13 @@
                             </bk-button>
                             )
                           </div>
+                          <template v-else>
+                            <span v-if="row.expired_at_display">
+                              {{ row.expired_at === 4102444800 ?
+                                `(${row.expired_at_display})`
+                                : `(${$t(`m.common['有效期']`)}  ${row.expired_at_display})`}}
+                            </span>
+                          </template>
                         </div>
                       </template>
                     </bk-table-column>
@@ -763,10 +776,29 @@
         isNoPermissionsSet () {
             return this.routerQuery.cache_id;
         },
+        isShowGroupTitle () {
+            return (item) => {
+              const isExistActions = item.actions && item.actions.length > 0;
+                const isExistSubGroup = (item.sub_groups || []).some(v =>
+                (v.sub_groups && v.sub_groups.length > 0)
+                 || (v.actions && v.actions.length > 0)
+                 );
+              return isExistSubGroup || isExistActions;
+            };
+        },
         isShowGroupAction () {
             return (item) => {
                 const isExistSubGroup = (item.sub_groups || []).some(v => v.sub_groups && v.sub_groups.length > 0);
                 return item.sub_groups && item.sub_groups.length > 0 && !isExistSubGroup;
+            };
+        },
+        isShowGroupSubAction () {
+            return (item) => {
+              const isExistSubGroup = (item.sub_groups || []).some(v =>
+                (v.sub_groups && v.sub_groups.length > 0)
+                 || (v.actions && v.actions.length > 0)
+                 );
+              return item.sub_groups && item.sub_groups.length > 0 && isExistSubGroup;
             };
         },
         customLoading () {
@@ -950,12 +982,15 @@
           this.$nextTick(() => {
             this.tableList.forEach(item => {
               if (item.role_members && item.role_members.length) {
-                item.role_members = item.role_members.map(v => {
-                  return {
-                    username: v,
-                    readonly: false
-                  };
-                });
+                const hasName = item.role_members.some((v) => v.username);
+                if (!hasName) {
+                  item.role_members = item.role_members.map(v => {
+                    return {
+                      username: v,
+                      readonly: false
+                    };
+                  });
+                }
               }
               if (this.personalUserGroup.length) {
                 const hasSelected = this.personalUserGroup.find((v) => String(v.id) === String(item.id));
@@ -2571,11 +2606,23 @@
           });
         } catch (e) {
           console.error(e);
+          const applyCount = this.personalUserGroup.length + this.currentSelectList.length;
           if (['admin'].includes(this.user.username)) {
             this.isShowConfirmDialog = true;
-          } else {
-            this.messageAdvancedError(e);
+            return;
           }
+          if (applyCount >= 100) {
+            this.messageAdvancedError(
+              e,
+              8000,
+              3,
+              this.$t(
+                `m.info['申请加入失败，用户组数量超出上限（100个），请在“我的权限”中退出用户组后重试']`,
+                { value: applyCount - 100 }
+              ));
+            return;
+          }
+          this.messageAdvancedError(e);
         } finally {
           this.buttonLoading = false;
         }

@@ -534,7 +534,9 @@ export const m = {
          '搜索动态key值': 'Search {value}',
          '管理员组不能添加权限': 'Administrators group cannot add permissions',
          '只读用户组不能添加权限': 'Read only user groups cannot add permissions',
-         '申请加入失败，用户组数量超出上限（100个），请在“我的权限”中退出用户组后重试': 'Application to join failed. The number of user groups exceeds the maximum limit (100), please exit {value} user group in "My permissions" and try again'
+         '申请加入失败，用户组数量超出上限（100个），请在“我的权限”中退出用户组后重试': 'Application to join failed. The number of user groups exceeds the maximum limit (100), please exit {value} user group in "My permissions" and try again',
+         '最多添加一个管理员': 'Add at most one administrator',
+         '管理员不可重复添加': 'Administrators cannot be added repeatedly'
     },
     // 二次确认弹窗相关
     dialog: {
@@ -947,7 +949,7 @@ export const m = {
         '创建时间': 'Created at',
         '更新人': 'Modified by',
         '更新时间': 'Modified at',
-        "进入空间": "Go To",
+        "进入空间": "Go to",
         "克隆": "Clone",
         '请输入空间名': 'Please enter the space name',
         '管理员': 'Administrators',
@@ -1120,6 +1122,7 @@ export const m = {
         '授权类API白名单删除': 'Author class API whitelist delete',
         '管理类API白名单创建': 'Management class API whitelist create',
         '管理类API白名单删除': 'Management class API whitelist delete',
+        '操作敏感等级更新': 'Action sensitivity level update',
         '回滚事件': 'Rollback event',
         '管理空间用户组成员续期': 'Management space group members renew',
         '用户组成员续期': 'Group members renew',

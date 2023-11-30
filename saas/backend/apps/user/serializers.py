@@ -33,6 +33,9 @@ class GroupSLZ(SubjectGroupSLZ):
     role_members = serializers.SerializerMethodField()
     attributes = serializers.SerializerMethodField()
 
+    class Meta:
+        ref_name = "UserGroupSLZ"
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.group_role_dict = None
