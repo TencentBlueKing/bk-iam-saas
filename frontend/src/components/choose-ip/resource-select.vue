@@ -28,8 +28,7 @@
         :label="panel.name"
         :name="panel.id"
         :key="`${panel.id}&${panel.system_id}`"
-      >
-      </bk-tab-panel>
+      />
     </bk-tab>
   </div>
 </template>
@@ -44,11 +43,16 @@
       value: {
         type: String,
         default: ''
+      },
+      isShowManual: {
+        type: Boolean,
+        default: true
       }
     },
     data () {
       return {
-        active: ''
+        active: '',
+        tabList: []
       };
     },
     computed: {
@@ -62,6 +66,22 @@
         handler (value) {
           if (value) {
             this.active = value;
+          }
+        },
+        immediate: true
+      },
+      list: {
+        handler (value) {
+          if (value) {
+            this.tabList = value;
+            const hasManual = this.tabList.find((item) => item.id === 'manualInput');
+            if (!hasManual) {
+              this.tabList.push({
+                name: this.$t(`m.common['手动输入']`),
+                id: 'manualInput',
+                system_id: this.tabList[0].system_id
+              });
+            }
           }
         },
         immediate: true
