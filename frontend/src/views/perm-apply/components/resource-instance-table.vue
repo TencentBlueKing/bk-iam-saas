@@ -476,7 +476,7 @@
               return 'all';
           }
           const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-              .related_resource_types[this.curResIndex];
+          .related_resource_types[this.curResIndex];
           return curData.selectionMode;
       },
       curAggregateDisabled () {
@@ -591,6 +591,7 @@
         this.resourceSliderWidth = Math.ceil(window.innerWidth * 0.67 - 7) < 960
           ? 960 : Math.ceil(window.innerWidth * 0.67 - 7);
       },
+
       fetchInstanceDefaultCheck (payload) {
         if (this.isRecommend) {
           this.$nextTick(() => {
@@ -623,6 +624,7 @@
           });
         }
       },
+      
       handleOpenRenewal (row, index) {
         row.isShowRenewal = false;
         row.customValueBackup = row.customValue;

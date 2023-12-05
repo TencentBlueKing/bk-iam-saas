@@ -175,7 +175,7 @@
     <bk-sideslider
       :is-show="isShowResourceInstanceSideslider"
       :title="resourceInstanceSidesliderTitle"
-      :width="960"
+      :width="resourceSliderWidth"
       quick-close
       transfer
       :ext-cls="'relate-instance-sideslider'"
@@ -212,6 +212,11 @@
   // const RESOURCE_MAX_LEN = 20
   export default {
     name: 'resource-permiss',
+    provide: function () {
+      return {
+        getResourceSliderWidth: () => this.resourceSliderWidth
+      };
+    },
     components: {
       RenderCondition,
       RenderResource
@@ -269,7 +274,9 @@
           text: '暂无数据',
           tip: '',
           tipType: ''
-        }
+        },
+        resourceSliderWidth: Math.ceil(window.innerWidth * 0.67 - 7) < 960
+          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7)
       };
     },
     computed: {
@@ -323,7 +330,18 @@
         }
       ];
     },
+    mounted () {
+      window.addEventListener('resize', (this.formatFormItemWidth));
+      this.$once('hook:beforeDestroy', () => {
+        window.removeEventListener('resize', this.formatFormItemWidth);
+      });
+    },
     methods: {
+      formatFormItemWidth () {
+        this.resourceSliderWidth = Math.ceil(window.innerWidth * 0.67 - 7) < 960
+          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7);
+      },
+
       async fetchSystemList () {
         try {
           const params = {};

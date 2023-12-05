@@ -8,110 +8,25 @@
           :cur-selected-chain="curSelectedChain"
           @on-select="handleResourceSelect" />
       </div>
-      <template v-if="isOnlyLevel">
-        <topology-input
-          ref="headerInput"
-          :is-filter="isFilter"
-          :placeholder="curPlaceholder"
-          @on-search="handleSearch" />
-        <div class="topology-tree-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
-          <template v-if="renderTopologyData.length > 0 && !isLoading">
-            <topology-tree
-              ref="topologyRef"
-              :all-data="renderTopologyData"
-              :search-value="hasSearchValues"
-              :cur-chain="curChain"
-              :is-filter="isFilter"
-              :cur-placeholder="curPlaceholder"
-              :resource-total="resourceTotal"
-              :empty-data="emptyData"
-              :sub-resource-total="subResourceTotal"
-              @on-expanded="handleOnExpanded"
-              @on-search="handleSearch"
-              @on-table-search="handleTableSearch"
-              @on-select="handleTreeSelect"
-              @on-select-all="handleTreeSelectAll"
-              @on-load-more="handleLoadMore"
-              @on-page-change="handlePageChange"
-              @on-table-page-change="handleTablePageChange"
-              @async-load-nodes="handleAsyncNodes"
-              @async-load-table-nodes="handleAsyncNodes" />
-          </template>
-          <template v-if="renderTopologyData.length < 1 && !isLoading">
-            <div class="empty-wrapper">
-              <ExceptionEmpty
-                :type="emptyData.type"
-                :empty-text="emptyData.text"
-                :tip-text="emptyData.tip"
-                :tip-type="emptyData.tipType"
-                @on-clear="handleEmptyClear"
-                @on-refresh="handleEmptyRefresh"
-              />
-            </div>
-          </template>
-        </div>
-      </template>
-      <template v-if="!isOnlyLevel">
-        <div class="topology-tree-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
-          <template v-if="renderTopologyData.length > 0 && !isLoading">
-            <topology-tree
-              ref="topologyRef"
-              :all-data="renderTopologyData"
-              :is-filter="isFilter"
-              :search-value="hasSearchValues"
-              :search-display-text="searchDisplayText"
-              :cur-chain="curChain"
-              :cur-placeholder="curPlaceholder"
-              :resource-total="resourceTotal"
-              :sub-resource-total="subResourceTotal"
-              :empty-data="emptyTreeData"
-              :cur-table-data="curTableData"
-              :cur-keyword="curKeyword"
-              :cur-table-key-word="curTableKeyWord"
-              :has-selected-values="hasSelectedValues"
-              @on-expanded="handleOnExpanded"
-              @on-search="handleSearch"
-              @on-table-search="handleTableSearch"
-              @on-tree-search="handleTreeSearch"
-              @on-select="handleTreeSelect"
-              @on-select-all="handleTreeSelectAll"
-              @on-load-more="handleLoadMore"
-              @on-page-change="handlePageChange"
-              @on-table-page-change="handleTablePageChange"
-              @async-load-nodes="handleAsyncNodes"
-              @async-load-table-nodes="handleAsyncNodes"
-            />
-          </template>
-          <template v-if="renderTopologyData.length < 1 && !isLoading">
-            <div
-              v-if="[500].includes(emptyData.type)"
-              class="empty-wrapper"
-            >
-              <ExceptionEmpty
-                :type="emptyData.type"
-                :empty-text="emptyData.text"
-                :tip-text="emptyData.tip"
-                :tip-type="emptyData.tipType"
-                @on-clear="handleEmptyClear"
-                @on-refresh="handleEmptyRefresh"
-              />
-            </div>
-            <template v-else>
+      <template v-if="!isManualInput">
+        <template v-if="isOnlyLevel">
+          <topology-input
+            ref="headerInput"
+            :is-filter="isFilter"
+            :placeholder="curPlaceholder"
+            @on-search="handleSearch" />
+          <div class="topology-tree-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
+            <template v-if="renderTopologyData.length > 0 && !isLoading">
               <topology-tree
                 ref="topologyRef"
                 :all-data="renderTopologyData"
                 :search-value="hasSearchValues"
-                :search-display-text="searchDisplayText"
                 :cur-chain="curChain"
-                :cur-keyword="curKeyword"
-                :cur-table-key-word="curTableKeyWord"
                 :is-filter="isFilter"
                 :cur-placeholder="curPlaceholder"
                 :resource-total="resourceTotal"
+                :empty-data="emptyData"
                 :sub-resource-total="subResourceTotal"
-                :empty-data="emptyTreeData"
-                :cur-table-data="curTableData"
-                :has-selected-values="hasSelectedValues"
                 @on-expanded="handleOnExpanded"
                 @on-search="handleSearch"
                 @on-table-search="handleTableSearch"
@@ -121,15 +36,107 @@
                 @on-page-change="handlePageChange"
                 @on-table-page-change="handleTablePageChange"
                 @async-load-nodes="handleAsyncNodes"
-                @async-load-table-nodes="handleAsyncNodes"
+                @async-load-table-nodes="handleAsyncNodes" />
+            </template>
+            <template v-if="renderTopologyData.length < 1 && !isLoading">
+              <div class="empty-wrapper">
+                <ExceptionEmpty
+                  :type="emptyData.type"
+                  :empty-text="emptyData.text"
+                  :tip-text="emptyData.tip"
+                  :tip-type="emptyData.tipType"
+                  @on-clear="handleEmptyClear"
+                  @on-refresh="handleEmptyRefresh"
+                />
+              </div>
+            </template>
+          </div>
+        </template>
+        <template v-if="!isOnlyLevel">
+          <div class="topology-tree-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
+            <template v-if="renderTopologyData.length > 0 && !isLoading">
+              <topology-tree
+                ref="topologyRef"
+                :all-data="renderTopologyData"
+                :is-filter="isFilter"
+                :search-value="hasSearchValues"
+                :search-display-text="searchDisplayText"
+                :cur-chain="curChain"
+                :cur-placeholder="curPlaceholder"
+                :resource-total="resourceTotal"
+                :sub-resource-total="subResourceTotal"
+                :empty-data="emptyTreeData"
+                :cur-table-data="curTableData"
+                :cur-keyword="curKeyword"
+                :cur-table-key-word="curTableKeyWord"
+                :has-selected-values="hasSelectedValues"
+                @on-expanded="handleOnExpanded"
+                @on-search="handleSearch"
+                @on-table-search="handleTableSearch"
                 @on-tree-search="handleTreeSearch"
-                @on-clear="handleEmptyClear"
-                @on-refresh="handleEmptyRefresh"
+                @on-select="handleTreeSelect"
+                @on-select-all="handleTreeSelectAll"
+                @on-load-more="handleLoadMore"
+                @on-page-change="handlePageChange"
+                @on-table-page-change="handleTablePageChange"
+                @async-load-nodes="handleAsyncNodes"
+                @async-load-table-nodes="handleAsyncNodes"
               />
             </template>
-          </template>
-        </div>
+            <template v-if="renderTopologyData.length < 1 && !isLoading">
+              <div
+                v-if="[500].includes(emptyData.type)"
+                class="empty-wrapper"
+              >
+                <ExceptionEmpty
+                  :type="emptyData.type"
+                  :empty-text="emptyData.text"
+                  :tip-text="emptyData.tip"
+                  :tip-type="emptyData.tipType"
+                  @on-clear="handleEmptyClear"
+                  @on-refresh="handleEmptyRefresh"
+                />
+              </div>
+              <template v-else>
+                <topology-tree
+                  ref="topologyRef"
+                  :all-data="renderTopologyData"
+                  :search-value="hasSearchValues"
+                  :search-display-text="searchDisplayText"
+                  :cur-chain="curChain"
+                  :cur-keyword="curKeyword"
+                  :cur-table-key-word="curTableKeyWord"
+                  :is-filter="isFilter"
+                  :cur-placeholder="curPlaceholder"
+                  :resource-total="resourceTotal"
+                  :sub-resource-total="subResourceTotal"
+                  :empty-data="emptyTreeData"
+                  :cur-table-data="curTableData"
+                  :has-selected-values="hasSelectedValues"
+                  @on-expanded="handleOnExpanded"
+                  @on-search="handleSearch"
+                  @on-table-search="handleTableSearch"
+                  @on-select="handleTreeSelect"
+                  @on-select-all="handleTreeSelectAll"
+                  @on-load-more="handleLoadMore"
+                  @on-page-change="handlePageChange"
+                  @on-table-page-change="handleTablePageChange"
+                  @async-load-nodes="handleAsyncNodes"
+                  @async-load-table-nodes="handleAsyncNodes"
+                  @on-tree-search="handleTreeSearch"
+                  @on-clear="handleEmptyClear"
+                  @on-refresh="handleEmptyRefresh"
+                />
+              </template>
+            </template>
+          </div>
+        </template>
       </template>
+      <div v-else>
+        <TopologyManualInput
+          :cur-selected-chain="curSelectedChain"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -141,6 +148,7 @@
   import ResourceSelect from '../resource-select';
   import TopologyInput from '../topology-input';
   import TopologyTree from '../topology-tree';
+  import TopologyManualInput from '../topology-manual-Input.vue';
 
   const LOAD_ITEM = {
     nodeId: guid(),
@@ -226,7 +234,8 @@
     components: {
       ResourceSelect,
       TopologyInput,
-      TopologyTree
+      TopologyTree,
+      TopologyManualInput
     },
     props: {
       selectList: {
@@ -317,6 +326,9 @@
       isOnlyLevel () {
         return this.treeData.every((item) => item.level === 0 && item.visiable) && this.curChain.length < 2;
       },
+      isManualInput () {
+        return this.curSelectedChain.id === 'manualInput';
+      },
       renderTopologyData () {
         const hasNode = {};
         const treeData = [...this.treeData];
@@ -356,6 +368,7 @@
           if (value) {
             this.curChain = this.selectList[0].resource_type_chain;
             console.log('choose-ip this.curChain', this.curChain);
+            this.curSelectedChain = this.selectList.find(item => item.id === value);
             this.ignorePathFlag = this.selectList[0].ignore_iam_path;
             this.isExistIgnore = this.selectList.some((item) => item.ignore_iam_path);
             const index = this.ignorePathFlag ? this.curChain.length - 1 : 0;
@@ -1068,15 +1081,18 @@
       },
 
       async handleResourceSelect (value) {
-        const curSelected = this.selectList.find((item) => item.id === value);
-        this.curChain = _.cloneDeep(curSelected.resource_type_chain);
-        this.ignorePathFlag = curSelected.ignore_iam_path;
-        this.curPlaceholder = `${this.$t(`m.common['搜索']`)} ${this.curChain[0].name}`;
-        this.handleResetParams();
-        if (this.limitValue.length < 1) {
-          await this.firstFetchResources();
-        } else {
-          this.treeData = this.getLimitResourceData();
+        if (!['manualInput'].includes(value)) {
+          this.curSelectedChain = this.selectList.find(item => item.id === value);
+          console.log(this.curSelectedChain, 4744);
+          this.curChain = _.cloneDeep(this.curSelectedChain.resource_type_chain);
+          this.ignorePathFlag = this.curSelectedChain.ignore_iam_path;
+          this.curPlaceholder = `${this.$t(`m.common['搜索']`)} ${this.curChain[0].name}`;
+          this.handleResetParams();
+          if (this.limitValue.length < 1) {
+            await this.firstFetchResources();
+          } else {
+            this.treeData = this.getLimitResourceData();
+          }
         }
       },
 

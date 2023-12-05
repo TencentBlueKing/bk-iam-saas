@@ -6,6 +6,7 @@
           :list="selectList"
           :value="selectValue"
           :cur-selected-chain="curSelectedChain"
+          :selection-mode="selectionMode"
           @on-select="handleResourceSelect" />
       </div>
       <template v-if="!isManualInput">
@@ -26,6 +27,7 @@
                 :cur-placeholder="curPlaceholder"
                 :resource-total="resourceTotal"
                 :sub-resource-total="subResourceTotal"
+                :resource-value="resourceValue"
                 @on-expanded="handleOnExpanded"
                 @on-search="handleSearch"
                 @on-table-search="handleTableSearch"
@@ -69,6 +71,7 @@
                 :cur-keyword="curKeyword"
                 :cur-table-key-word="curTableKeyWord"
                 :has-selected-values="hasSelectedValues"
+                :resource-value="resourceValue"
                 @on-expanded="handleOnExpanded"
                 @on-search="handleSearch"
                 @on-table-search="handleTableSearch"
@@ -112,6 +115,7 @@
                   :empty-data="emptyTreeData"
                   :cur-table-data="curTableData"
                   :has-selected-values="hasSelectedValues"
+                  :resource-value="resourceValue"
                   @on-expanded="handleOnExpanded"
                   @on-search="handleSearch"
                   @on-table-search="handleTableSearch"
@@ -132,7 +136,10 @@
         </template>
       </template>
       <div v-else>
-        <TopologyManualInput />
+        <TopologyManualInput
+          :cur-selected-chain="curSelectedChain"
+          :selection-mode="selectionMode"
+        />
       </div>
     </div>
   </div>
@@ -145,7 +152,7 @@
   import ResourceSelect from './resource-select';
   import TopologyInput from './topology-input';
   import TopologyTree from './topology-tree';
-  import TopologyManualInput from './manualInput.vue';
+  import TopologyManualInput from './topology-manual-Input.vue';
 
   const LOAD_ITEM = {
     nodeId: guid(),
@@ -257,6 +264,9 @@
             action_id: ''
           };
         }
+      },
+      selectionMode: {
+        type: String
       }
     },
     data () {
@@ -306,6 +316,9 @@
       isOnlyLevel () {
         return this.treeData.every((item) => item.level === 0 && item.visiable) && this.curChain.length < 2;
       },
+      isManualInput () {
+        return ['manualInput'].includes(this.curSelectedChain.id) && !['instance_paste'].includes(this.selectionMode);
+      },
       renderTopologyData () {
         const hasNode = {};
         const treeData = [...this.treeData];
@@ -316,9 +329,6 @@
           return curr;
         }, []);
         return list;
-      },
-      isManualInput () {
-        return this.curSelectedChain.id === 'manualInput';
       }
     },
     watch: {
@@ -782,7 +792,6 @@
               });
 
               isExistNoCarryLimit = Object.keys(noCarryLimitData).length > 0;
-              console.log(isExistNoCarryLimit, Object.keys(normalSelectedData).length > 0);
               if (isExistNoCarryLimit && Object.keys(normalSelectedData).length > 0) {
                 checked = true;
                 disabled = normalSelectedData.disabled && noCarryLimitData.disabled;
@@ -824,7 +833,6 @@
       },
 
       async handleResourceSelect (value) {
-        console.log(value);
         this.curSelectedChain = this.selectList.find(item => item.id === value);
         if (!['manualInput'].includes(value)) {
           this.curChain = _.cloneDeep(this.curSelectedChain.resource_type_chain);

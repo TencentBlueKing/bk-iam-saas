@@ -284,7 +284,10 @@ export const m = {
         '结果预览': 'Result preview',
         '解析并添加': 'Parse and add',
         '搜索解析结果': 'Search parsing results',
-        '请先从左侧输入并解析': 'Please input and parse from the left first'
+        '请先从左侧输入并解析': 'Please input and parse from the left first',
+        '实例名称输入错误或不存在于授权资源实例范围内': 'Instance name input error or does not exist within the authorized resource instance scope',
+        '实例名称': 'Instance name',
+        '请输入实例名称，以回车/分号/空格分割': 'Please enter the instance name, separated by carriage return, semicolon, or space'
     },
     // 校验
     verify: {

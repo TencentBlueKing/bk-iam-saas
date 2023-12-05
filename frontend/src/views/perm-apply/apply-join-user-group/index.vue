@@ -368,7 +368,7 @@
     <bk-sideslider
       :is-show="isShowResourceInstanceSideSlider"
       :title="resourceInstanceSideSliderTitle"
-      :width="960"
+      :width="resourceSliderWidth"
       quick-close
       transfer
       :ext-cls="'relate-instance-sideslider'"
@@ -591,7 +591,9 @@
         enableGroupInstanceSearch: window.ENABLE_GROUP_INSTANCE_SEARCH.toLowerCase() === 'true',
         curSelectMenu: '',
         curInputText: '',
-        contentWidth: window.innerWidth <= 1440 ? '200px' : '240px'
+        contentWidth: window.innerWidth <= 1440 ? '200px' : '240px',
+        resourceSliderWidth: Math.ceil(window.innerWidth * 0.67 - 7) < 960
+          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7)
       };
     },
     computed: {
@@ -703,17 +705,22 @@
     },
     mounted () {
       window.addEventListener('resize', (this.formatFormItemWidth));
+      window.addEventListener('resize', (this.formatResourceSliderWidth));
       this.$once('hook:beforeDestroy', () => {
         window.removeEventListener('resize', this.formatFormItemWidth);
+        window.removeEventListener('resize', this.formatResourceSliderWidth);
       });
     },
     methods: {
       formatFormItemWidth () {
         this.contentWidth = window.innerWidth <= 1520 ? '200px' : '240px';
       },
-      /**
-       * 获取页面数据
-       */
+
+      formatResourceSliderWidth () {
+        this.resourceSliderWidth = Math.ceil(window.innerWidth * 0.67 - 7) < 960
+          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7);
+      },
+
       async fetchDefaultData () {
         this.fetchSystemList();
         await this.fetchCurUserGroup();
@@ -983,6 +990,7 @@
           }, []);
           if (this.curResourceData.type
             && !resourceInstances.length
+            && this.resourceTypeData.resource_groups[this.groupIndex]
             && this.resourceTypeData.resource_groups[this.groupIndex]
               .related_resource_types.some(e => e.empty)) {
             this.resourceInstanceError = true;
