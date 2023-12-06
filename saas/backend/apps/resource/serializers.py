@@ -56,3 +56,15 @@ class ResourceAttributeValueQuerySLZ(serializers.Serializer):
     keyword = serializers.CharField(label="搜索关键词", required=False)
     limit = serializers.IntegerField(label="分页Limit", min_value=1, max_value=100)
     offset = serializers.IntegerField(label="分页offset", min_value=0)
+
+
+class ResourceQueryByDisplayNameSLZ(serializers.Serializer):
+    system_id = serializers.CharField()
+    type = serializers.CharField(label="资源类型")
+    display_names = serializers.ListField(
+        label="资源展示名称", child=serializers.CharField(label="资源展示名称"), allow_empty=False, required=True
+    )
+    action_system_id = serializers.CharField(
+        label="操作系统id", required=False, allow_blank=True, allow_null=True, default=""
+    )
+    action_id = serializers.CharField(label="操作系统id", required=False, allow_blank=True, allow_null=True, default="")
