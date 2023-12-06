@@ -236,7 +236,7 @@ class ApplicationGroupInfo(BaseModel):
 
         policy_sensitivity_levels = [p.sensitivity_level for t in self.templates for p in t.policies]
         self.highest_sensitivity_level = (
-            max(policy_sensitivity_levels) if policy_sensitivity_levels else SensitivityLevel.L1.vaue  # type: ignore
+            max(policy_sensitivity_levels) if policy_sensitivity_levels else SensitivityLevel.L1.value  # type: ignore
         )
 
 
