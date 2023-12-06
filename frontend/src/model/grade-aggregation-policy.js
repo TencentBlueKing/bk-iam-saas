@@ -75,16 +75,7 @@ export default class GradeAggregationPolicy {
         Vue.set(item, 'displayValue', '');
         str = '';
       }
-      // if (this.instancesDisplayData[item.id] && this.instancesDisplayData[item.id].length === 1) {
-      // } else if (this.instancesDisplayData[item.id] && this.instancesDisplayData[item.id].length > 1) {
-      //   for (const key in this.instancesDisplayData) {
-      //     if (item.id === key) {
-      //       str = language === 'zh-cn' ? `${str}，已选择${this.instancesDisplayData[item.id].length}个${item.name}` : `${str}, selected ${this.instancesDisplayData[item.id].length} ${item.name}(s)`;
-      //     }
-      //   }
-      // }
     });
-    // return str.substring(1, str.length);
     const aggregateResourceType = _.cloneDeep(this.aggregateResourceType.map(item => item.displayValue));
     return aggregateResourceType.join();
   }
