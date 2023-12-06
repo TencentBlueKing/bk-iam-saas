@@ -318,7 +318,7 @@
         return this.treeData.every((item) => item.level === 0 && item.visiable) && this.curChain.length < 2;
       },
       isManualInput () {
-        return ['manualInput'].includes(this.curSelectedChain.id) && !['instance_paste'].includes(this.selectionMode);
+        return ['manualInput'].includes(this.curSelectedChain.id) && !['instance:paste'].includes(this.selectionMode);
       },
       renderTopologyData () {
         const hasNode = {};

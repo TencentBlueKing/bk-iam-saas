@@ -74,7 +74,7 @@
         handler (value) {
           if (value) {
             this.tabList = value;
-            if (!['instance_paste'].includes(this.selectionMode)) {
+            if (!['instance:paste'].includes(this.selectionMode)) {
               const hasManual = this.tabList.find((item) => item.id === 'manualInput');
               if (!hasManual) {
                 this.tabList.push({

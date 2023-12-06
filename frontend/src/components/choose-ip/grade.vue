@@ -863,6 +863,13 @@
         this.$emit('on-tree-select', value, node, params);
       },
 
+      // 单页全选
+      handleTreeSelectAll (nodes, isAll) {
+        nodes.forEach((item) => {
+          this.handleTreeSelect(isAll, item, nodes.length);
+        });
+      },
+
       async handleAsyncNodes (node, index, flag) {
         window.changeAlert = true;
         const asyncItem = {
