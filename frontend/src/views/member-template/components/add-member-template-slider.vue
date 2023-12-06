@@ -19,8 +19,11 @@
               <bk-input
                 v-model="formData.name"
                 :placeholder="$t(`m.memberTemplate['请输入模板名称']`)"
+                :ext-cls="isShowNameError ? 'template-name-error' : ''"
                 @input="handleNameInput"
+                @blur="handleNameBlur"
               />
+              <p class="verify-field-error" v-if="isShowNameError">{{ $t(`m.verify['模板名称必填']`) }}</p>
             </bk-form-item>
             <bk-form-item
               :label="$t(`m.common['描述']`)"
@@ -32,7 +35,7 @@
                 v-model="formData.description"
                 :placeholder="$t(`m.memberTemplate['请输入描述']`)"
                 :rows="3"
-                :maxlength="100"
+                :maxlength="255"
                 @input="handleDescInput"
               />
             </bk-form-item>
@@ -49,6 +52,7 @@
                   @on-delete-all="handleDeleteAll"
                 />
               </div>
+              <p class="verify-field-error" v-if="isShowSubjectError">{{ $t(`m.verify['模板成员不能为空']`) }}</p>
             </bk-form-item>
           </bk-form>
         </div>
@@ -105,6 +109,8 @@
       return {
         submitLoading: false,
         isShowAddMemberDialog: false,
+        isShowNameError: false,
+        isShowSubjectError: false,
         width: 640,
         formData: {
           name: '',
@@ -164,11 +170,20 @@
         this.departments = _.cloneDeep(departments);
         this.$set(this.formData, 'subjects', [...this.users, ...this.departments]);
         this.isShowAddMemberDialog = false;
+        this.isShowSubjectError = false;
       },
 
       handleNameInput (payload) {
+        this.isShowNameError = false;
         if (payload) {
           window.changeAlert = true;
+        }
+      },
+
+      handleNameBlur (payload) {
+        const inputValue = payload.trim();
+        if (!inputValue) {
+          this.isShowNameError = true;
         }
       },
 
@@ -180,12 +195,11 @@
 
       handleSubmit () {
         const { name, subjects } = this.formData;
-        // eslint-disable-next-line camelcase
-        if (!name) {
-          return this.messageWarn(this.$t(`m.verify['模板名称不能为空']`), 3000);
-        }
-        if (!subjects.length) {
-          return this.messageWarn(this.$t(`m.verify['模板成员不能为空']`), 3000);
+        this.isShowNameError = !name;
+        this.isShowSubjectError = !subjects.length;
+        const isVerify = this.isShowNameError || this.isShowSubjectError;
+        if (isVerify) {
+          return;
         }
         this.$emit('on-submit', this.formData);
       },
@@ -222,6 +236,8 @@
             subjects: []
           }
         );
+        this.isShowNameError = false;
+        this.isShowSubjectError = false;
       }
     }
   };
@@ -233,10 +249,19 @@
     height: calc(100vh - 140px);
     .member-template-content {
       padding: 0 40px;
-      .bk-form-item {
+      /deep/ .bk-form-item {
         margin-top: 24px;
         .bk-label {
           font-size: 12px;
+        }
+        .template-name-error {
+          .bk-form-input {
+            border-color: #ff5656;
+          }
+        }
+        .verify-field-error {
+          font-size: 12px;
+          color: #ff4d4d;
         }
       }
     }

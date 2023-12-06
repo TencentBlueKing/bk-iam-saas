@@ -23,13 +23,18 @@
       @select-all="handlerAllChange" v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
       <bk-table-column type="selection" align="center" :selectable="getDefaultSelect" />
       <bk-table-column v-for="field in setting.selectedFields" :key="field.id" :label="field.label" :prop="field.id">
-        <template slot-scope="{ row, $index }">
+        <template slot-scope="{ row }">
           <div v-if="['name'].includes(field.id)" class="member-template-name">
-            <span :class="['single-hide', { 'member-template-name-label': isAddRow && $index === 0 }]" :title="row.name"
+            <span
+              :class="[
+                'single-hide',
+                { 'member-template-name-label': isShowNewTag(row) }
+              ]"
+              :title="row.name"
               @click="handleViewGroup(row, 'basic_info')">
               {{ row.name }}
             </span>
-            <bk-tag v-if="isAddRow && $index === 0" theme="success" type="filled" class="member-template-name-tag">
+            <bk-tag v-if="isShowNewTag(row)" theme="success" type="filled" class="member-template-name-tag">
               new
             </bk-tag>
           </div>
@@ -214,6 +219,11 @@
       },
       isRatingManager () {
         return ['rating_manager', 'subset_manager'].includes(this.curRole);
+      },
+      isShowNewTag () {
+        return (payload) => {
+          return this.isAddRow && this.createId === payload.id;
+        };
       },
       formatDeleteWidth () {
         return this.curLanguageIsCn ? 700 : 1000;
@@ -433,10 +443,6 @@
         try {
           const { code } = await this.$store.dispatch('memberTemplate/deleteSubjectTemplate', { id });
           if (code === 0) {
-            // const tableIndex = this.memberTemplateList.findIndex((item) => item.id === id);
-            // if (tableIndex > -1) {
-            //   this.memberTemplateList.splice(tableIndex, 1);
-            // }
             this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
             this.currentSelectList = [];
             this.isAddRow = false;
@@ -600,7 +606,7 @@
         return this.memberTemplateList.length > 0;
       },
 
-      getRowClass ({ row, rowIndex }) {
+      getRowClass ({ row }) {
         if (row.id === this.createId && this.isAddRow) {
           return 'member-template-table-add';
         }
