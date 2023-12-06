@@ -26,7 +26,6 @@ from backend.service.constants import RoleRelatedObjectType, RoleType, SubjectTy
 from backend.service.models.subject import Subject
 from backend.service.role import RoleService
 from backend.service.subject_template import SubjectTemplateService
-from backend.util.time import utc_to_local
 
 
 class SubjectTemplateMemberBean(BaseModel):
@@ -207,7 +206,7 @@ class SubjectTemplateBiz:
                     user_departments = [d.full_name for d in user.departments]
 
             subject_template_member_bean = SubjectTemplateMemberBean(
-                created_time=utc_to_local(relation.created_time),
+                created_time=relation.created_time,
                 user_departments=user_departments,
                 **subject_info.dict(),
             )
