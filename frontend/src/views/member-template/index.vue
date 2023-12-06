@@ -107,6 +107,7 @@
       :is-rating-manager="isRatingManager"
       :is-batch="isBatch"
       :loading="memberDialogLoading"
+      :title="memberDialogTitle"
       :name="curName"
       :id="curId"
       :show-limit="false"
@@ -171,7 +172,8 @@
         pagination: {
           current: 1,
           limit: 10,
-          count: 0
+          count: 0,
+          showTotalCount: true
         },
         emptyData: {
           type: '',
@@ -195,6 +197,7 @@
         batchQuitLoading: false,
         curRole: '',
         curName: '',
+        memberDialogTitle: '',
         currentActionName: '',
         delActionDialogTitle: '',
         delActionDialogTip: '',
@@ -413,6 +416,7 @@
           this.isShowDeleteDialog = false;
           this.currentSelectList = [];
           this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
+          this.isAddRow = false;
           this.resetPagination();
           this.fetchMemberTemplateList(true);
         } catch (e) {
@@ -433,6 +437,7 @@
             // }
             this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
             this.currentSelectList = [];
+            this.isAddRow = false;
             await this.fetchMemberTemplateList(true);
           }
         } catch (e) {
@@ -495,7 +500,7 @@
       fetchSelectedGroupCount () {
         this.$nextTick(() => {
           const selectionCount = document.getElementsByClassName('bk-page-selection-count');
-          if (this.$refs.groupPermTableRef && selectionCount) {
+          if (this.$refs.memberTemplateRef && selectionCount) {
             selectionCount[0].children[0].innerHTML = this.currentSelectList.length;
           }
         });
@@ -583,7 +588,8 @@
           {
             limit: 10,
             current: 1,
-            count: 0
+            count: 0,
+            showTotalCount: true
           }
         );
       },
@@ -649,6 +655,11 @@
 
     /deep/ .member-template-table-add {
       background-color: #f2fff4;
+    }
+
+    /deep/ .bk-form-checkbox.is-checked .bk-checkbox {
+      border-color: #3a84ff;
+      background-color: #3a84ff;
     }
   }
 }

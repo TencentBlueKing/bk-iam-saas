@@ -832,6 +832,7 @@
         this.curName = name;
         this.curId = id;
         this.groupAttributes = Object.assign(this.groupAttributes, attributes);
+        this.isBatch = false;
         this.isShowAddMemberDialog = true;
       },
 

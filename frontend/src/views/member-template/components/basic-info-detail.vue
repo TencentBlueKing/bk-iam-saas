@@ -29,6 +29,7 @@
               width="600px"
               :mode="formatEdit"
               :placeholder="$t(`m.memberTemplate['请输入模板描述']`)"
+              :max-length="255"
               :value="basicInfo.description"
               :remote-hander="handleChangeInfo"
             />
