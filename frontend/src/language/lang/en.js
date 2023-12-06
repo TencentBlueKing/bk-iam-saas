@@ -536,9 +536,9 @@ export const m = {
          '不可续期的用户组成员如下': 'The non renewable user group members are as follows: {value}',
          '管理员组不能添加权限': 'Administrators group cannot add permissions',
          '只读用户组不能添加权限': 'Read only user groups cannot add permissions',
-         '申请加入失败，用户组数量超出上限（100个），请在“我的权限”中退出用户组后重试': 'Application to join failed. The number of user groups exceeds the maximum limit (100), please exit {value} user group in "My permissions" and try again',
          '只读人员模板不能添加成员': 'Read-only member templates [{value}] cannot add members',
          '该用户/组织可能会失去关联用户组的权限': 'The user/organization may lose permissions to the associated user group',
+         '已加入用户组数量 ， 新申请数量，总数超过上限：100，请减少申请或退出部分用户组后重试': 'Number of added user groups: {applyCount}, number of new applications: {newApplyCount}, total exceeds the limit of 100. Please reduce the number of applications or exit some user groups and try again',
          '最多添加一个管理员': 'Add at most one administrator',
          '管理员不可重复添加': 'Administrators cannot be added repeatedly'
     },
