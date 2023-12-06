@@ -98,7 +98,11 @@ class SelectionMode(ChoicesEnum, LowerStrEnum):
     ALL = auto()
     INSTANCE = auto()
     ATTRIBUTE = auto()
+<<<<<<< HEAD
     INSTANCE_PASTE = auto()
+=======
+    INSTANCE_PASTE = "instance:paste"
+>>>>>>> upstream/develop
 
     _choices_labels = skip(
         ((ALL, _("实例与属性")), (INSTANCE, _("实例")), (ATTRIBUTE, _("属性")), (INSTANCE_PASTE, _("实例与粘贴")))

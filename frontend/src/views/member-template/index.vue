@@ -107,6 +107,7 @@
       :is-rating-manager="isRatingManager"
       :is-batch="isBatch"
       :loading="memberDialogLoading"
+      :title="memberDialogTitle"
       :name="curName"
       :id="curId"
       :show-limit="false"
@@ -171,7 +172,8 @@
         pagination: {
           current: 1,
           limit: 10,
-          count: 0
+          count: 0,
+          showTotalCount: true
         },
         emptyData: {
           type: '',
@@ -195,10 +197,12 @@
         batchQuitLoading: false,
         curRole: '',
         curName: '',
+        memberDialogTitle: '',
         currentActionName: '',
         delActionDialogTitle: '',
         delActionDialogTip: '',
         curId: 0,
+        createId: 0,
         curDetailData: {},
         tableHeight: getWindowHeight() - 185
       };
@@ -326,7 +330,7 @@
             subjects
           }
           };
-          const { code } = await this.$store.dispatch('memberTemplate/createSubjectTemplate', params);
+          const { code, data } = await this.$store.dispatch('memberTemplate/createSubjectTemplate', params);
           if (code === 0) {
             this.$bkMessage({
               limit: 1,
@@ -335,6 +339,7 @@
               ellipsisLine: 2,
               ellipsisCopy: true
             });
+            this.createId = data.id || 0;
             this.isAddRow = true;
             this.isShowAddSlider = false;
             this.$refs.addMemberRef && this.$refs.addMemberRef.resetData();
@@ -413,6 +418,7 @@
           this.isShowDeleteDialog = false;
           this.currentSelectList = [];
           this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
+          this.isAddRow = false;
           this.resetPagination();
           this.fetchMemberTemplateList(true);
         } catch (e) {
@@ -433,6 +439,7 @@
             // }
             this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
             this.currentSelectList = [];
+            this.isAddRow = false;
             await this.fetchMemberTemplateList(true);
           }
         } catch (e) {
@@ -495,7 +502,7 @@
       fetchSelectedGroupCount () {
         this.$nextTick(() => {
           const selectionCount = document.getElementsByClassName('bk-page-selection-count');
-          if (this.$refs.groupPermTableRef && selectionCount) {
+          if (this.$refs.memberTemplateRef && selectionCount) {
             selectionCount[0].children[0].innerHTML = this.currentSelectList.length;
           }
         });
@@ -583,7 +590,8 @@
           {
             limit: 10,
             current: 1,
-            count: 0
+            count: 0,
+            showTotalCount: true
           }
         );
       },
@@ -593,7 +601,7 @@
       },
 
       getRowClass ({ row, rowIndex }) {
-        if (rowIndex === 0 && this.isAddRow) {
+        if (row.id === this.createId && this.isAddRow) {
           return 'member-template-table-add';
         }
         return '';
@@ -649,6 +657,11 @@
 
     /deep/ .member-template-table-add {
       background-color: #f2fff4;
+    }
+
+    /deep/ .bk-form-checkbox.is-checked .bk-checkbox {
+      border-color: #3a84ff;
+      background-color: #3a84ff;
     }
   }
 }

@@ -201,12 +201,14 @@
           font-size: 14px;
           color: #63656e;
           padding: 0 20px;
+          margin-right: 8px;
           height: 42px;
           line-height: 42px;
           background-color: #eaebf0;
           border-radius: 4px 4px 0 0;
           cursor: pointer;
           &:last-child {
+            margin-right: 0px;
             .member-tab-groups-item-count {
               padding-left: 5px;
             }
