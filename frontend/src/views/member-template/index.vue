@@ -202,6 +202,7 @@
         delActionDialogTitle: '',
         delActionDialogTip: '',
         curId: 0,
+        createId: 0,
         curDetailData: {},
         tableHeight: getWindowHeight() - 185
       };
@@ -329,7 +330,7 @@
             subjects
           }
           };
-          const { code } = await this.$store.dispatch('memberTemplate/createSubjectTemplate', params);
+          const { code, data } = await this.$store.dispatch('memberTemplate/createSubjectTemplate', params);
           if (code === 0) {
             this.$bkMessage({
               limit: 1,
@@ -338,6 +339,7 @@
               ellipsisLine: 2,
               ellipsisCopy: true
             });
+            this.createId = data.id || 0;
             this.isAddRow = true;
             this.isShowAddSlider = false;
             this.$refs.addMemberRef && this.$refs.addMemberRef.resetData();
@@ -599,7 +601,7 @@
       },
 
       getRowClass ({ row, rowIndex }) {
-        if (rowIndex === 0 && this.isAddRow) {
+        if (row.id === this.createId && this.isAddRow) {
           return 'member-template-table-add';
         }
         return '';
