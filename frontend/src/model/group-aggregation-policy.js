@@ -75,28 +75,6 @@ export default class GroupAggregationPolicy {
     }
   }
 
-  // get value () {
-  //   if (this.empty) {
-  //     return il8n('verify', '请选择');
-  //   }
-  //   if (this.isNoLimited || (!this.instances.length && !['add'].includes(this.tag))) {
-  //     return il8n('common', '无限制');
-  //   }
-  //   let str = '';
-  //   this.aggregateResourceType.forEach(item => {
-  //     if (this.instancesDisplayData[item.id] && this.instancesDisplayData[item.id].length === 1) {
-  //       str = `${str}${il8n('common', '，')}${item.name}${il8n('common', '：')}${this.instancesDisplayData[item.id][0].name}`;
-  //     } else if (this.instancesDisplayData[item.id] && this.instancesDisplayData[item.id].length > 1) {
-  //       for (const key in this.instancesDisplayData) {
-  //         if (item.id === key) {
-  //           str = language === 'zh-cn' ? `${str}，已选择${this.instancesDisplayData[item.id].length}个${item.name}` : `${str}, selected ${this.instancesDisplayData[item.id].length} ${item.name}(s)`;
-  //         }
-  //       }
-  //     }
-  //   });
-  //   return str.substring(1, str.length);
-  // }
-
   get value () {
     if (this.empty) {
       return il8n('verify', '请选择');
