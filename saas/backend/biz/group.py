@@ -21,7 +21,7 @@ from pydantic import BaseModel, parse_obj_as
 from backend.apps.group.models import Group, GroupAuthorizeLock
 from backend.apps.organization.models import User
 from backend.apps.policy.models import Policy as PolicyModel
-from backend.apps.role.models import Role, RoleRelatedObject, RoleUser
+from backend.apps.role.models import Role, RoleGroupMember, RoleRelatedObject, RoleUser
 from backend.apps.subject_template.models import SubjectTemplate, SubjectTemplateGroup
 from backend.apps.template.models import PermTemplatePolicyAuthorized, PermTemplatePreUpdateLock
 from backend.biz.policy import PolicyBean, PolicyBeanList, PolicyOperationBiz
@@ -182,7 +182,7 @@ class GroupBiz:
             )
             RoleRelatedObject.objects.create_group_relation(role.id, group.id)
             if subjects:
-                self.group_svc.add_members(group.id, subjects, expired_at)
+                self._add_members(group.id, subjects, expired_at)
 
             if sync_subject_template:
                 # 创建人员模版
@@ -191,6 +191,36 @@ class GroupBiz:
                 )
 
         return group
+
+    def _add_members(self, group_id: int, subjects: List[Subject], expired_at: int):
+        self.group_svc.add_members(group_id, subjects, expired_at)
+
+        self._add_role_group_member(group_id, 0, subjects)
+
+    def _add_role_group_member(self, group_id: int, subject_template_id: int, subjects: List[Subject]):
+        # 添加role group member
+        role = self.role_svc.get_role_by_group_id(group_id)
+        if role.type == RoleType.SUBSET_MANAGER.value:
+            role_id = self.role_svc.get_parent_id(role.id)
+            subset_id = role.id
+        else:
+            role_id = role.id
+            subset_id = 0
+
+        role_group_members = [
+            RoleGroupMember(
+                role_id=role_id,
+                group_id=group_id,
+                subset_id=subset_id,
+                subject_template_id=subject_template_id,
+                subject_id=one.id,
+                subject_type=one.type,
+            )
+            for one in subjects
+        ]
+
+        if role_group_members:
+            RoleGroupMember.objects.bulk_create(role_group_members, batch_size=100, ignore_conflicts=True)
 
     def batch_create(
         self,
@@ -224,7 +254,7 @@ class GroupBiz:
         """
         添加用户组成员
         """
-        self.group_svc.add_members(group_id, members, expired_at)
+        self._add_members(group_id, members, expired_at)
 
         relation = RoleRelatedObject.objects.filter(
             object_type=RoleRelatedObjectType.GROUP.value, object_id=group_id, sync_perm=True
@@ -244,7 +274,7 @@ class GroupBiz:
         """
         移除用户组成员
         """
-        self.group_svc.remove_members(group_id, subjects)
+        self._remove_members(group_id, subjects)
 
         relation = RoleRelatedObject.objects.filter(
             object_type=RoleRelatedObjectType.GROUP.value, object_id=group_id, sync_perm=True
@@ -259,6 +289,28 @@ class GroupBiz:
         subject_template = SubjectTemplate.objects.filter(source_group_id=group_id).first()
         if subject_template:
             self.subject_template_biz.delete_members(subject_template.id, subjects)
+
+    def _remove_members(self, group_id, subjects):
+        self.group_svc.remove_members(group_id, subjects)
+
+        # 同步删除role group member
+        user_ids = [m.id for m in subjects if m.type == SubjectType.USER.value]
+        if user_ids:
+            RoleGroupMember.objects.filter(
+                group_id=group_id,
+                subject_template_id=0,
+                subject_type=SubjectType.USER.value,
+                subject_id__in=user_ids,
+            ).delete()
+
+        department_ids = [m.id for m in subjects if m.type == SubjectType.DEPARTMENT.value]
+        if department_ids:
+            RoleGroupMember.objects.filter(
+                group_id=group_id,
+                subject_template_id=0,
+                subject_type=SubjectType.DEPARTMENT.value,
+                subject_id__in=department_ids,
+            ).delete()
 
     def list_system_counter(self, group_id: int, hidden: bool = True) -> List[GroupSystemCounterBean]:
         """
@@ -802,7 +854,7 @@ class GroupBiz:
             members = self.role_svc.list_members_by_role_id(role.id)
             subjects = Subject.from_usernames(members)
             if subjects:
-                self.group_svc.add_members(
+                self._add_members(
                     group.id,
                     subjects,
                     PERMANENT_SECONDS,
@@ -950,12 +1002,12 @@ class GroupBiz:
         # 需要新增的成员
         add_subjects = list(role_subjects - group_subjects)
         if add_subjects:
-            self.group_svc.add_members(group_id, add_subjects, PERMANENT_SECONDS)
+            self._add_members(group_id, add_subjects, PERMANENT_SECONDS)
 
             # 需要删除的成员
         del_subjects = list(group_subjects - role_subjects)
         if del_subjects:
-            self.group_svc.remove_members(str(group_id), del_subjects)
+            self._remove_members(str(group_id), del_subjects)
 
     def grant_subject_template(self, group_id: int, subject_template_id: int, expired_at: int, creator: str):
         """
@@ -964,7 +1016,8 @@ class GroupBiz:
         if SubjectTemplateGroup.objects.filter(group_id=group_id, template_id=subject_template_id).exists():
             return
 
-        self.subject_template_svc.add_group(subject_template_id, group_id, expired_at, creator)
+        subjects = self.subject_template_svc.add_group(subject_template_id, group_id, expired_at, creator)
+        self._add_role_group_member(group_id, subject_template_id, subjects)
 
     def update_subject_template_expired_at(self, group_id: int, template_id: int, expired_at: int):
         """
