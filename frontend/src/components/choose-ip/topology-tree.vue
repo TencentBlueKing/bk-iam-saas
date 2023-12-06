@@ -319,6 +319,10 @@
       },
       searchDisplayText: {
         type: String
+      },
+      resourceValue: {
+        type: Boolean,
+        default: false
       }
     },
     data () {
@@ -358,11 +362,13 @@
           tipType: ''
         },
         selectNodeData: {},
+        curSelectTreeNode: {},
         allTreeData: [],
         checkedNodeIdList: [],
         currentSelectedNode: [],
         renderTopologyData: [],
         tablePageData: [],
+        curSelectedValues: [],
         selectNodeDataIndex: -1,
         curSearchMode: 'tree',
         treeKeyWord: '',
@@ -437,7 +443,6 @@
             };
           }
           if (payload.async) {
-            console.log(555);
             return {
               maxWidth: offsetWidth - (payload.level + 1) * this.leftBaseIndent - asyncLevelWidth - searchIconWidth + 'px'
             };
@@ -489,9 +494,9 @@
     watch: {
       pressIndex (newVal, oldVal) {
         if (newVal > -1 && oldVal > -1 && [...new Set(this.pressLevels)].length === 1) {
-          const indexs = [...new Set([newVal, oldVal].sort())];
-          if (indexs.length > 1 && indexs[1] - indexs[0] > 1) {
-            for (let i = indexs[0] + 1; i < indexs[1]; i++) {
+          const indexList = [...new Set([newVal, oldVal].sort())];
+          if (indexList.length > 1 && indexList[1] - indexList[0] > 1) {
+            for (let i = indexList[0] + 1; i < indexList[1]; i++) {
               const node = this.allTreeData[i];
               node.checked = true;
               this.handleNodeChecked(true, node);
@@ -529,6 +534,12 @@
       emptyData: {
         handler (value) {
           this.curSearchMode === 'tree' ? this.emptyTreeData = Object.assign({}, value) : this.emptyTableData = Object.assign({}, value);
+        },
+        immediate: true
+      },
+      hasSelectedValues: {
+        handler (value) {
+          this.curSelectedValues = [...value];
         },
         immediate: true
       }
@@ -592,12 +603,13 @@
             });
           } else {
             if (Object.keys(this.selectNodeData).length) {
+              this.curSelectTreeNode = value.find((v) =>
+                `${v.nodeId}&${v.id}` === `${this.selectNodeData.nodeId}&${this.selectNodeData.id}`) || {};
               const curNode = value.find(
                 (item) => `${item.name}&${item.id}` === `${this.selectNodeData.name}&${this.selectNodeData.id}`
               );
               // 判断搜索无数据
               const searchData = value.find((item) => ['search-empty', 'search-loading'].includes(item.type));
-              console.log(curNode, value, this.selectNodeData, searchData, 1223456);
               if (curNode) {
                 this.tablePageData = [...this.curTableData];
                 const list = [...(curNode.children || [])].filter((item) => item.type === 'node');
@@ -751,7 +763,7 @@
       },
 
       formatDefaultSelected () {
-        const defaultSelectList = this.hasSelectedValues.map((v) => v.ids).flat(this.curChain.length);
+        const defaultSelectList = this.curSelectedValues.map((v) => v.ids).flat(this.curChain.length);
         this.$nextTick(() => {
           this.renderTopologyData.forEach((item) => {
             this.$refs.topologyTableRef
@@ -766,17 +778,33 @@
       },
 
       setDefaultSelect (payload) {
-        const list = [...this.allTreeData].filter((item) => item.type === 'node');
-        if (this.hasSelectedValues.length && !this.isOnlyLevel) {
-          const defaultSelectList = this.hasSelectedValues.filter((item) => item.disabled).map(
+        if (this.curSelectedValues.length && !this.isOnlyLevel) {
+          const defaultSelectList = this.curSelectedValues.filter((item) => item.disabled).map(
             (v) => v.ids).flat(this.curChain.length);
-          return !(defaultSelectList.includes(`${payload.id}&${this.curChain[payload.level].id}`)
-            || defaultSelectList.includes(`${this.selectNodeData.id}&${this.curChain[payload.level - 1].id}`));
+          if (defaultSelectList.length) {
+            let childrenIdList = [];
+            const result = !(defaultSelectList.includes(`${payload.id}&${this.curChain[payload.level].id}`))
+              || !(defaultSelectList.includes(`${this.selectNodeData.id}&${this.curChain[payload.level - 1].id}`));
+            if (this.curSelectTreeNode.children && this.curSelectTreeNode.children.length) {
+              childrenIdList = this.curSelectTreeNode.children.filter((v) => v.disabled).map((v) => `${v.name}&${v.id}`);
+            }
+            // 处理多层资源权限搜索只支持单选
+            if (this.resourceValue) {
+              childrenIdList = this.curSelectTreeNode.children.filter((v) => v.checked).map((v) => `${v.name}&${v.id}`);
+            }
+            return result && !childrenIdList.includes(`${payload.name}&${payload.id}`);
+          }
         }
-        const allTreeData = list
-          .filter((item) => item.disabled && item.type === 'node')
-          .map((item) => `${item.name}&${item.id}`);
-        return !allTreeData.includes(`${payload.name}&${payload.id}`);
+        let singleCheckedData = [];
+        const list = [...this.allTreeData].filter((item) => item.type === 'node');
+        const allTreeData = list.filter((item) => item.disabled && item.type === 'node').map((item) => `${item.name}&${item.id}`);
+        const selectNodeList = [...allTreeData, ...singleCheckedData];
+        // 处理有的资源全选只能勾选一项
+        if (this.resourceValue && this.curSelectedValues.length) {
+          singleCheckedData = this.curSelectedValues.map((v) => v.ids).flat(this.curChain.length);
+          return singleCheckedData.includes(`${payload.id}&${this.curChain[payload.level].id}`);
+        }
+        return !selectNodeList.includes(`${payload.name}&${payload.id}`);
       },
 
       handleKeyup ($event) {
@@ -972,7 +1000,7 @@
           };
         }
         if (node.async) {
-          console.log(node, 5565);
+          // console.log(node, 5565);
           return {
             paddingLeft: (node.level + 1) * this.leftBaseIndent + 'px'
           };
@@ -1100,6 +1128,7 @@
           node.expanded = true;
           this.selectNodeDataIndex = index;
           this.selectNodeData = Object.assign({}, node);
+          // 当存在多层拓扑时，获取当前选中节点方便处理子集数据
           this.$store.commit('setTreeTableData', node);
           this.$store.commit('setTreeTableDataIndex', index);
           this.$store.commit('setToPoTreeData', this.allTreeData);
@@ -1162,8 +1191,8 @@
             if (childrenIdList.includes(item.id) && this.$refs.topologyTableRef) {
               this.$refs.topologyTableRef.toggleRowSelection(item, newVal);
               if (defaultCheckedList.includes(item.id)) {
-                list.push(item);
                 item.disabled = true;
+                list.push(item);
                 this.$refs.topologyTableRef.toggleRowSelection(item, true);
               }
             }
@@ -1234,6 +1263,8 @@
             this.$store.commit('setTreeSelectedNode', this.currentSelectedNode);
           },
           all: () => {
+            // 针对资源权限搜索单选特殊处理
+            const resourceList = this.resourceValue ? [...payload].slice(0, 1) : [...payload];
             let allTreeData = [...this.allTreeData];
             if (!allTreeData.length && !this.isOnlyLevel && this.curKeyword) {
               allTreeData = [...this.curTreeTableData.children || []];
@@ -1242,31 +1273,32 @@
             const selectNode = this.currentSelectedNode.filter(
               (item) => !tableIdList.includes(`${item.name}&${item.id}`)
             );
-            this.currentSelectedNode = [...selectNode, ...payload];
+            this.currentSelectedNode = [...selectNode, ...resourceList];
             const currentSelect = allTreeData.filter(
-              (item) => payload.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`) && !item.disabled
+              (item) => resourceList.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`) && !item.disabled
             );
             // 如果currentSelect有内容， 代表当前是勾选，否则就取从总数据里取当前页不是disabled的数据
             const noDisabledData = allTreeData.filter(
               (item) =>
-                !payload.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`)
+                !resourceList.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`)
                 && this.renderTopologyData.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`)
             );
             const nodes = currentSelect.length ? currentSelect : noDisabledData;
             this.renderTopologyData.forEach((item) => {
               if (!item.disabled) {
-                this.$set(item, 'checked', payload.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`));
-                if (payload.length && !currentSelect.length) {
+                this.$set(item, 'checked', resourceList.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`));
+                if (resourceList.length && !currentSelect.length) {
                   this.$set(
                     item,
                     'disabled',
-                    payload.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`)
+                    resourceList.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`)
                   );
                 }
                 this.$refs.topologyTableRef && this.$refs.topologyTableRef.toggleRowSelection(item, item.checked);
               }
             });
             this.$store.commit('setTreeSelectedNode', this.currentSelectedNode);
+            console.log(nodes, currentSelect.length, 44444);
             this.$emit('on-select-all', nodes, currentSelect.length > 0);
           }
         };

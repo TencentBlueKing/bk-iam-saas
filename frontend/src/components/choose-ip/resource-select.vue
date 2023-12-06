@@ -74,13 +74,15 @@
         handler (value) {
           if (value) {
             this.tabList = value;
-            const hasManual = this.tabList.find((item) => item.id === 'manualInput');
-            if (!hasManual) {
-              this.tabList.push({
-                name: this.$t(`m.common['手动输入']`),
-                id: 'manualInput',
-                system_id: this.tabList[0].system_id
-              });
+            if (!['instance_paste'].includes(this.selectionMode)) {
+              const hasManual = this.tabList.find((item) => item.id === 'manualInput');
+              if (!hasManual) {
+                this.tabList.push({
+                  name: this.$t(`m.common['手动输入']`),
+                  id: 'manualInput',
+                  system_id: this.tabList[0].system_id
+                });
+              }
             }
           }
         },

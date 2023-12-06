@@ -28,6 +28,7 @@
                 :resource-total="resourceTotal"
                 :sub-resource-total="subResourceTotal"
                 :resource-value="resourceValue"
+                :has-selected-values="hasSelectedValues"
                 @on-expanded="handleOnExpanded"
                 @on-search="handleSearch"
                 @on-table-search="handleTableSearch"
@@ -334,21 +335,7 @@
     watch: {
       treeValue: {
         handler (value) {
-          if (value.length) {
-            const hasSelected = [];
-            value.forEach(item => {
-              item.path.forEach(pathItem => {
-                hasSelected.push({
-                  ids: pathItem.map(v => `${v.id}&${v.type}`),
-                  idChain: pathItem.map(v => `${v.id}&${v.type}`).join('#'),
-                  disabled: pathItem.some(subItem => subItem.disabled)
-                });
-              });
-            });
-            this.hasSelectedValues = _.cloneDeep(hasSelected);
-          } else {
-            this.hasSelectedValues = [];
-          }
+          this.getHasSelectedValues(value);
         },
         deep: true,
         immediate: true
@@ -376,6 +363,24 @@
       }
     },
     methods: {
+      getHasSelectedValues (value) {
+        if (value.length) {
+          const hasSelected = [];
+          value.forEach(item => {
+            item.path.forEach(pathItem => {
+              hasSelected.push({
+                ids: pathItem.map(v => `${v.id}&${v.type}`),
+                idChain: pathItem.map(v => `${v.id}&${v.type}`).join('#'),
+                disabled: pathItem.some(subItem => subItem.disabled)
+              });
+            });
+          });
+          this.hasSelectedValues = _.cloneDeep(hasSelected);
+        } else {
+          this.hasSelectedValues = [];
+        }
+      },
+
       handleSearch (payload) {
         this.curKeyword = payload;
         this.isFilter = !(this.isFilter && !payload);
@@ -405,7 +410,6 @@
       },
 
       handleTableSearch (payload) {
-        console.log(payload, '表格搜索');
         const { value } = payload;
         this.curTableKeyWord = value;
         this.handleTreeSearch(payload);
@@ -619,7 +623,6 @@
             this.$refs.topologyRef && this.$refs.topologyRef.handleSetFocus(index);
           });
           this.treeData = this.treeData.filter(item => item.type !== 'search-loading');
-          console.log(this.treeData, 564545);
         }
       },
 
@@ -690,6 +693,14 @@
           return false;
         });
         console.log(curNode, this.treeData, this.treeDataStorage, 41556655);
+        if (this.resourceValue && curNode) {
+          treeData.forEach((v) => {
+            v.checked = false;
+            v.disabled = false;
+            this.$refs.topologyRef.$refs.topologyTableRef.toggleRowSelection(v, false);
+          });
+        }
+        console.log(curNode);
         if (curNode && !curNode.disabled) {
           curNode.checked = false;
           this.setNodeNoChecked(false, curNode);
@@ -928,6 +939,7 @@
             paths: p
           });
         }
+        console.log(value, node, params, resourceLen, 555);
         this.$emit('on-tree-select', value, node, params, resourceLen);
         // 针对资源权限特殊处理
         if (this.resourceValue) {
