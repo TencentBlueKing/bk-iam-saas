@@ -632,7 +632,6 @@
                     });
                   }
                 }
-                console.log(this.renderTopologyData, this.checkedNodeIdList, childSelectedNodes);
                 this.$nextTick(() => {
                   this.renderTopologyData.forEach((item) => {
                     this.$refs.topologyTableRef
@@ -778,24 +777,34 @@
       },
 
       setDefaultSelect (payload) {
+        let singleCheckedData = [];
         if (this.curSelectedValues.length && !this.isOnlyLevel) {
-          const defaultSelectList = this.curSelectedValues.filter((item) => item.disabled).map(
-            (v) => v.ids).flat(this.curChain.length);
+          const defaultSelectList = this.curSelectedValues
+            .filter((item) => item.disabled)
+            .map((v) => v.ids).flat(this.curChain.length);
+          console.log(defaultSelectList, this.curSelectedValues);
           if (defaultSelectList.length) {
             let childrenIdList = [];
             const result = !(defaultSelectList.includes(`${payload.id}&${this.curChain[payload.level].id}`))
               || !(defaultSelectList.includes(`${this.selectNodeData.id}&${this.curChain[payload.level - 1].id}`));
             if (this.curSelectTreeNode.children && this.curSelectTreeNode.children.length) {
-              childrenIdList = this.curSelectTreeNode.children.filter((v) => v.disabled).map((v) => `${v.name}&${v.id}`);
+              childrenIdList = this.curSelectTreeNode.children.filter((v) => v.checked).map((v) => `${v.name}&${v.id}`);
             }
             // 处理多层资源权限搜索只支持单选
             if (this.resourceValue) {
+              // 处理子集表格disabled
               childrenIdList = this.curSelectTreeNode.children.filter((v) => v.checked).map((v) => `${v.name}&${v.id}`);
+              return !childrenIdList.includes(`${payload.name}&${payload.id}`);
             }
-            return result && !childrenIdList.includes(`${payload.name}&${payload.id}`);
+            return result;
+          } else {
+            // if (this.resourceValue) {
+            //   const allList = [...this.allTreeData].filter((item) => item.type === 'node' && !item.checked).map((v) => `${v.name}&${v.id}`);
+            //   console.log(allList, `${payload.name}&${payload.nodeId}`, 555);
+            //   return !allList.includes(`${payload.name}&${payload.id}`);
+            // }
           }
         }
-        let singleCheckedData = [];
         const list = [...this.allTreeData].filter((item) => item.type === 'node');
         const allTreeData = list.filter((item) => item.disabled && item.type === 'node').map((item) => `${item.name}&${item.id}`);
         const selectNodeList = [...allTreeData, ...singleCheckedData];
@@ -1143,7 +1152,6 @@
           this.selectNodeData = _.cloneDeep(this.curTreeTableData);
           this.fetchLevelTree(this.curAllTreeNode);
         }
-        // console.log(node, this.allTreeData, this.renderTopologyData, '选中大多数');
         setTimeout(() => {
           this.tableLoading = false;
         }, 1000);
@@ -1278,11 +1286,22 @@
               (item) => resourceList.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`) && !item.disabled
             );
             // 如果currentSelect有内容， 代表当前是勾选，否则就取从总数据里取当前页不是disabled的数据
-            const noDisabledData = allTreeData.filter(
-              (item) =>
-                !resourceList.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`)
-                && this.renderTopologyData.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`)
-            );
+            let noDisabledData = [];
+            if (this.resourceValue) {
+              // 处理单选业务
+              const defaultSelectList = this.curSelectedValues
+                .filter((item) => !item.disabled)
+                .map((v) => v.ids).flat(this.curChain.length);
+              noDisabledData = allTreeData.filter(
+                (item) => defaultSelectList.includes(`${item.id}&${this.curChain[item.level].id}`)
+              );
+            } else {
+              noDisabledData = allTreeData.filter(
+                (item) =>
+                  !resourceList.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`)
+                  && this.renderTopologyData.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`)
+              );
+            }
             const nodes = currentSelect.length ? currentSelect : noDisabledData;
             this.renderTopologyData.forEach((item) => {
               if (!item.disabled) {
@@ -1298,7 +1317,6 @@
               }
             });
             this.$store.commit('setTreeSelectedNode', this.currentSelectedNode);
-            console.log(nodes, currentSelect.length, 44444);
             this.$emit('on-select-all', nodes, currentSelect.length > 0);
           }
         };

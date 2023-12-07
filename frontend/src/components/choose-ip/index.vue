@@ -939,7 +939,7 @@
             paths: p
           });
         }
-        console.log(value, node, params, resourceLen, 555);
+        // console.log(value, node, params, resourceLen, 555);
         this.$emit('on-tree-select', value, node, params, resourceLen);
         // 针对资源权限特殊处理
         if (this.resourceValue) {
