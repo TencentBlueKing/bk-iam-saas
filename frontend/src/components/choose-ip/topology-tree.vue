@@ -83,7 +83,7 @@
                       <bk-checkbox
                         :true-value="true"
                         :false-value="false"
-                        :disabled="item.disabled"
+                        :disabled="item.disabled || formatRadioDisabled(item)"
                         v-model="item.checked"
                         ext-cls="iam-topology-title-cls"
                         :title="`ID: ${item.id}`"
@@ -487,6 +487,16 @@
           return payload.type === 'load' && payload.level < this.curChain.length - 1;
         };
       },
+      formatRadioDisabled () {
+        return (payload) => {
+          console.log(`${payload.id}&${this.curChain[payload.level].id}`, this.curSelectedValues);
+          if (this.resourceValue && this.curSelectedValues.length) {
+            const hasData = this.curSelectedValues.map((v) => v.ids.flat(this.curChain.length)).includes(`${payload.id}&${this.curChain[payload.level].id}`);
+            console.log(hasData);
+          }
+          return payload.disabled;
+        };
+      },
       isTreeEmpty () {
         return this.allTreeData.filter((item) => item.type === 'node').length === 0 || this.searchDisplayText === this.$t(`m.common['搜索结果为空']`);
       }
@@ -782,7 +792,6 @@
           const defaultSelectList = this.curSelectedValues
             .filter((item) => item.disabled)
             .map((v) => v.ids).flat(this.curChain.length);
-          console.log(defaultSelectList, this.curSelectedValues);
           if (defaultSelectList.length) {
             let childrenIdList = [];
             const result = !(defaultSelectList.includes(`${payload.id}&${this.curChain[payload.level].id}`))
@@ -797,12 +806,6 @@
               return !childrenIdList.includes(`${payload.name}&${payload.id}`);
             }
             return result;
-          } else {
-            // if (this.resourceValue) {
-            //   const allList = [...this.allTreeData].filter((item) => item.type === 'node' && !item.checked).map((v) => `${v.name}&${v.id}`);
-            //   console.log(allList, `${payload.name}&${payload.nodeId}`, 555);
-            //   return !allList.includes(`${payload.name}&${payload.id}`);
-            // }
           }
         }
         const list = [...this.allTreeData].filter((item) => item.type === 'node');
