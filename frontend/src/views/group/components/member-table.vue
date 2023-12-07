@@ -494,7 +494,8 @@
             }
           }
         },
-        tableProps: []
+        tableProps: [],
+        userOrOrgCount: 0
       };
     },
     computed: {
@@ -509,7 +510,7 @@
           && this.getGroupAttributes().source_from_role
         ) {
           const isAll
-            = hasData && this.currentSelectList.length === this.userOrOrgPagination.count;
+            = hasData && this.currentSelectList.length === this.userOrOrgCount;
           this.adminGroupTitle = isAll
             ? this.$t(`m.userGroup['管理员组至少保留一条数据']`)
             : '';
@@ -549,7 +550,7 @@
         return (
           this.getGroupAttributes
           && this.getGroupAttributes().source_from_role
-          && this.userOrOrgPagination.count === 1
+          && this.userOrOrgCount === 1
           && (['userOrOrg'].includes(this.tabActive) && !this.routeMode)
         );
       };
@@ -716,7 +717,7 @@
       async fetchUserOrOrgList () {
         this.tableLoading = true;
         try {
-          const { current, limit } = this.pagination;
+          const { current, limit } = this.userOrOrgPagination;
           const params = {
             id: this.id,
             limit,
@@ -734,6 +735,10 @@
           const { count, results } = data;
           this.$set(this.groupTabList[0], 'tableList', results || []);
           this.userOrOrgPagination.count = count || 0;
+          // 处理蓝盾管理员组业务，搜索只有一条实际有多条数据
+          if (!this.keyword) {
+            this.userOrOrgCount = count || 0;
+          }
           this.emptyOrgData = formatCodeData(code, this.emptyOrgData, this.groupTabList[0].tableList.length === 0);
           if (this.keyword) {
             if (!data.hasOwnProperty('count')) {
@@ -746,6 +751,7 @@
           console.error(e);
           this.$set(this.groupTabList[0], 'tableList', []);
           this.userOrOrgPagination.count = 0;
+          this.userOrOrgCount = 0;
           this.emptyOrgData = formatCodeData(e.code, this.emptyOrgData);
           this.handleRefreshTabCount();
           this.messageAdvancedError(e);
@@ -1319,9 +1325,6 @@
       },
 
       handlePageChange (current) {
-        if (this.currentBackup === current) {
-          return;
-        }
         const tabMap = {
           userOrOrg: () => {
             this.userOrOrgPagination = Object.assign(this.userOrOrgPagination, { current });
@@ -1335,7 +1338,7 @@
         return tabMap[this.tabActive]();
       },
 
-      handleLimitChange (limit, prevLimit) {
+      handleLimitChange (limit) {
         const tabMap = {
           userOrOrg: () => {
             this.userOrOrgPagination = Object.assign(this.userOrOrgPagination, { current: 1, limit });
