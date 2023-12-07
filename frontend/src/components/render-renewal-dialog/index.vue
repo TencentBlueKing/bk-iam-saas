@@ -69,7 +69,9 @@
               :key="i"
               class="item-expiration-date"
             >
-              <span class="item-expiration-date-name">{{ item.id ? `${item.name}(${item.id})` : item.name }}:</span>
+              <span class="item-expiration-date-name">
+                {{ item.id && item.type === 'user' ? `${item.name}(${item.id})` : item.name }}:
+              </span>
               <render-expire-display selected :renewal-time="expiredAt" :cur-time="item.expired_at || 0" />
             </div>
           </div>

@@ -217,7 +217,7 @@ export const MEMBERS_TEMPLATE_FIELDS = [
     id: 'name',
     label: il8n('memberTemplate', '模板名称'),
     sortable: true,
-    disabled: false
+    disabled: true
   },
   {
     id: 'description',
