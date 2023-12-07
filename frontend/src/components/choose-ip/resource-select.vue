@@ -32,6 +32,7 @@
     </bk-tab>
   </div>
 </template>
+
 <script>
   export default {
     name: '',
@@ -96,6 +97,7 @@
     }
   };
 </script>
+
 <style lang="postcss" scoped>
 /* .single-resource-name {
         position: relative;

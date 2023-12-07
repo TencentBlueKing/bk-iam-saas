@@ -47,6 +47,7 @@
           :ext-cls="'manual-table-wrapper'"
           :outer-border="false"
           :header-border="false"
+          :pagination="pagination"
           @select="handleSelectChange"
           @select-all="handleSelectAllChange">
 
@@ -81,6 +82,9 @@
       curSelectedChain: {
         type: Object
       },
+      systemParams: {
+        type: Object
+      },
       selectionMode: {
         type: String
       }
@@ -93,6 +97,11 @@
         manualInputError: false,
         manualTableList: [],
         manualTableListStorage: [],
+        pagination: {
+          current: 1,
+          limit: 10,
+          showTotalCount: true
+        },
         emptyTableData: {
           type: 'empty',
           text: '请先从左侧输入并解析',
@@ -264,12 +273,21 @@
       async handleAddManualUser () {
         this.manualAddLoading = true;
         try {
+          const { system_id, action_id, resource_type_system, resource_type_id } = this.systemParams;
           const params = {
-            // system_id: this.curSelectedChain.system_id
+            type: resource_type_id,
+            system_id,
+            action_id,
+            action_system_id: resource_type_system,
+            display_names: this.manualValue.split(/;|\n|\s/)
           };
-          console.log(params, this.curSelectedChain, 5555);
-          await this.$store.dispatch('permApply/getResourcesFilterByName', params);
+          const { code, data } = await this.$store.dispatch('permApply/getResourceInstanceManual', params);
+          this.pagination.count = data.count || 0;
+          this.manualTableList = data.results || [];
+          this.emptyTableData = formatCodeData(code, this.emptyTableData);
         } catch (e) {
+          this.manualTableList = [];
+          this.emptyTableData = formatCodeData(e.code, this.emptyTableData);
           this.messageAdvancedError(e);
         } finally {
           this.manualAddLoading = false;

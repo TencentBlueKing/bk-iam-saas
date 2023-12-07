@@ -22,9 +22,10 @@
                 ref="topologyRef"
                 :all-data="renderTopologyData"
                 :search-value="hasSearchValues"
-                :cur-chain="curChain"
                 :is-filter="isFilter"
+                :cur-chain="curChain"
                 :cur-placeholder="curPlaceholder"
+                :cur-selected-chain="curSelectedChain"
                 :resource-total="resourceTotal"
                 :sub-resource-total="subResourceTotal"
                 :resource-value="resourceValue"
@@ -65,12 +66,13 @@
                 :search-display-text="searchDisplayText"
                 :cur-chain="curChain"
                 :cur-placeholder="curPlaceholder"
-                :resource-total="resourceTotal"
-                :sub-resource-total="subResourceTotal"
-                :empty-data="emptyTreeData"
+                :cur-selected-chain="curSelectedChain"
                 :cur-table-data="curTableData"
                 :cur-keyword="curKeyword"
                 :cur-table-key-word="curTableKeyWord"
+                :resource-total="resourceTotal"
+                :sub-resource-total="subResourceTotal"
+                :empty-data="emptyTreeData"
                 :has-selected-values="hasSelectedValues"
                 :resource-value="resourceValue"
                 @on-expanded="handleOnExpanded"
@@ -109,12 +111,13 @@
                   :cur-chain="curChain"
                   :cur-keyword="curKeyword"
                   :cur-table-key-word="curTableKeyWord"
-                  :is-filter="isFilter"
                   :cur-placeholder="curPlaceholder"
+                  :cur-selected-chain="curSelectedChain"
+                  :cur-table-data="curTableData"
                   :resource-total="resourceTotal"
+                  :is-filter="isFilter"
                   :sub-resource-total="subResourceTotal"
                   :empty-data="emptyTreeData"
-                  :cur-table-data="curTableData"
                   :has-selected-values="hasSelectedValues"
                   :resource-value="resourceValue"
                   @on-expanded="handleOnExpanded"
@@ -139,6 +142,7 @@
       <div v-else>
         <TopologyManualInput
           :cur-selected-chain="curSelectedChain"
+          :system-params="systemParams"
           :selection-mode="selectionMode"
         />
       </div>
@@ -692,7 +696,6 @@
           }
           return false;
         });
-        console.log(curNode, this.treeData, this.treeDataStorage, 41556655);
         if (this.resourceValue && curNode) {
           treeData.forEach((v) => {
             v.checked = false;
@@ -700,7 +703,6 @@
             this.$refs.topologyRef.$refs.topologyTableRef.toggleRowSelection(v, false);
           });
         }
-        console.log(curNode);
         if (curNode && !curNode.disabled) {
           curNode.checked = false;
           this.setNodeNoChecked(false, curNode);

@@ -21,11 +21,14 @@
                 ref="topologyRef"
                 :all-data="renderTopologyData"
                 :search-value="hasSearchValues"
-                :cur-chain="curChain"
                 :is-filter="isFilter"
+                :cur-chain="curChain"
                 :cur-placeholder="curPlaceholder"
+                :cur-selected-chain="curSelectedChain"
                 :resource-total="resourceTotal"
                 :sub-resource-total="subResourceTotal"
+                :resource-value="resourceValue"
+                :has-selected-values="hasSelectedValues"
                 @on-expanded="handleOnExpanded"
                 @on-search="handleSearch"
                 @on-table-search="handleTableSearch"
@@ -62,13 +65,15 @@
                 :search-display-text="searchDisplayText"
                 :cur-chain="curChain"
                 :cur-placeholder="curPlaceholder"
-                :resource-total="resourceTotal"
-                :sub-resource-total="subResourceTotal"
-                :empty-data="emptyTreeData"
+                :cur-selected-chain="curSelectedChain"
                 :cur-table-data="curTableData"
                 :cur-keyword="curKeyword"
                 :cur-table-key-word="curTableKeyWord"
+                :resource-total="resourceTotal"
+                :sub-resource-total="subResourceTotal"
+                :empty-data="emptyTreeData"
                 :has-selected-values="hasSelectedValues"
+                :resource-value="resourceValue"
                 @on-expanded="handleOnExpanded"
                 @on-search="handleSearch"
                 @on-table-search="handleTableSearch"
@@ -105,13 +110,15 @@
                   :cur-chain="curChain"
                   :cur-keyword="curKeyword"
                   :cur-table-key-word="curTableKeyWord"
-                  :is-filter="isFilter"
                   :cur-placeholder="curPlaceholder"
+                  :cur-selected-chain="curSelectedChain"
+                  :cur-table-data="curTableData"
                   :resource-total="resourceTotal"
+                  :is-filter="isFilter"
                   :sub-resource-total="subResourceTotal"
                   :empty-data="emptyTreeData"
-                  :cur-table-data="curTableData"
                   :has-selected-values="hasSelectedValues"
+                  :resource-value="resourceValue"
                   @on-expanded="handleOnExpanded"
                   @on-search="handleSearch"
                   @on-table-search="handleTableSearch"
@@ -131,11 +138,12 @@
           </div>
         </template>
       </template>
-      <template v-else>
+      <div v-else>
         <TopologyManualInput
           :cur-selected-chain="curSelectedChain"
+          :selection-mode="selectionMode"
         />
-      </template>
+      </div>
     </div>
   </div>
 </template>

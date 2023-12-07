@@ -83,7 +83,7 @@
                       <bk-checkbox
                         :true-value="true"
                         :false-value="false"
-                        :disabled="item.disabled || formatRadioDisabled(item)"
+                        :disabled="formatRadioDisabled(item)"
                         v-model="item.checked"
                         ext-cls="iam-topology-title-cls"
                         :title="`ID: ${item.id}`"
@@ -317,6 +317,9 @@
       curTableKeyword: {
         type: String
       },
+      curSelectedChain: {
+        type: Object
+      },
       searchDisplayText: {
         type: String
       },
@@ -489,10 +492,8 @@
       },
       formatRadioDisabled () {
         return (payload) => {
-          console.log(`${payload.id}&${this.curChain[payload.level].id}`, this.curSelectedValues);
           if (this.resourceValue && this.curSelectedValues.length) {
-            const hasData = this.curSelectedValues.map((v) => v.ids.flat(this.curChain.length)).includes(`${payload.id}&${this.curChain[payload.level].id}`);
-            console.log(hasData);
+            return !payload.checked;
           }
           return payload.disabled;
         };
@@ -794,8 +795,8 @@
             .map((v) => v.ids).flat(this.curChain.length);
           if (defaultSelectList.length) {
             let childrenIdList = [];
-            const result = !(defaultSelectList.includes(`${payload.id}&${this.curChain[payload.level].id}`))
-              || !(defaultSelectList.includes(`${this.selectNodeData.id}&${this.curChain[payload.level - 1].id}`));
+            const result = !(defaultSelectList.includes(`${payload.id}&${this.curChain[payload.level].id}`)
+              || defaultSelectList.includes(`${this.selectNodeData.id}&${this.curChain[payload.level - 1].id}`));
             if (this.curSelectTreeNode.children && this.curSelectTreeNode.children.length) {
               childrenIdList = this.curSelectTreeNode.children.filter((v) => v.checked).map((v) => `${v.name}&${v.id}`);
             }

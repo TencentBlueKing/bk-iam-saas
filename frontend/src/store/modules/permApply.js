@@ -148,7 +148,7 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-    getResourcesFilterByName ({ commit, state, dispatch }, params, config) {
+    getResourceInstanceManual ({ commit, state, dispatch }, params, config) {
       return http.post(`${AJAX_URL_PREFIX}/resources/filter_by_display_name/`, params, config);
     },
 
