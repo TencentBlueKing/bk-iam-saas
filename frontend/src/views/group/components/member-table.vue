@@ -509,8 +509,7 @@
           && this.getGroupAttributes
           && this.getGroupAttributes().source_from_role
         ) {
-          const isAll
-            = hasData && this.currentSelectList.length === this.userOrOrgCount;
+          const isAll = hasData && this.currentSelectList.length === this.userOrOrgCount;
           this.adminGroupTitle = isAll
             ? this.$t(`m.userGroup['管理员组至少保留一条数据']`)
             : '';
@@ -550,7 +549,7 @@
         return (
           this.getGroupAttributes
           && this.getGroupAttributes().source_from_role
-          && this.userOrOrgCount === 1
+          && (this.userOrOrgCount === 1 || (this.userOrOrgCount === this.userOrOrgPagination.count === 1))
           && (['userOrOrg'].includes(this.tabActive) && !this.routeMode)
         );
       };
@@ -1399,6 +1398,7 @@
             }
             this.messageSuccess(this.$t(`m.info['移除成功']`), 3000);
             this.handleRefreshTab();
+            this.fetchMemberListCount();
           }
         } catch (e) {
           console.error(e);
@@ -1431,6 +1431,27 @@
           this.messageAdvancedError(e);
         } finally {
           this.renewalLoading = false;
+        }
+      },
+
+      async fetchMemberListCount () {
+        // 搜索移除成员后，再去查询当前搜索的数据是不是最后一条
+        if (
+          (['userOrOrg'].includes(this.tabActive) && !this.routeMode)
+          && this.getGroupAttributes
+          && this.getGroupAttributes().source_from_role
+          && this.keyword) {
+          const selectParams = {
+            id: this.id,
+            offset: 0,
+            limit: 10
+          };
+          try {
+            const { data } = await this.$store.dispatch('userGroup/getUserGroupMemberList', selectParams);
+            this.userOrOrgCount = data.count || 0;
+          } catch (e) {
+            this.messageAdvancedError(e);
+          }
         }
       },
 
