@@ -107,7 +107,6 @@
               !!(selectIdList.includes(String(item.id)) || this.curTempIdList.includes(String(item.id)))
             );
           });
-          console.log(this.currentSelectList);
           this.fetchSelectedGroupCount();
         },
         immediate: true
