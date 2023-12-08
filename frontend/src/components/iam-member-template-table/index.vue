@@ -49,6 +49,7 @@
             :tip-text="emptyTableData.tip"
             :tip-type="emptyTableData.tipType"
             @on-clear="handleClearSearch"
+            @on-refresh="handleClearSearch"
           />
         </template>
       </bk-table>

@@ -91,7 +91,7 @@
     </render-search>
     <div class="group-member-wrapper">
       <bk-tab
-        v-if="isShowTab"
+        v-if="isExistMemberTemplate"
         ref="tabRef"
         :active.sync="tabActive"
         type="unborder-card"
@@ -499,7 +499,7 @@
       };
     },
     computed: {
-    ...mapGetters(['user']),
+    ...mapGetters(['user', 'externalSystemId']),
     isNoBatchDelete () {
       return () => {
         const hasData = this.currentSelectList.length > 0;
@@ -590,6 +590,20 @@
         };
         return typeMap[this.tabActive]();
       };
+    },
+    isAdminGroup () {
+        return this.getGroupAttributes && this.getGroupAttributes().source_from_role;
+    },
+    isShowMemberTemplate () {
+        return !['staff'].includes(this.user.role.type) && !this.isAdminGroup;
+    },
+    // 蓝盾场景
+    isShowExternalMemberTemplate () {
+      return !['staff', 'rating_manager'].includes(this.user.role.type) && !this.isAdminGroup;
+    },
+    isExistMemberTemplate () {
+      return this.externalSystemId
+      ? this.isShowTab && this.isShowExternalMemberTemplate : this.isShowTab && this.isShowMemberTemplate;
     }
     },
     watch: {
@@ -708,7 +722,7 @@
 
       fetchMemberList () {
         this.fetchUserOrOrgList();
-        if (this.isShowTab) {
+        if (this.isExistMemberTemplate) {
           this.fetchMemberTemplateList();
         }
       },

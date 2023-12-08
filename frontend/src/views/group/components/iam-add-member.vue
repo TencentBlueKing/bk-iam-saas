@@ -288,7 +288,7 @@
                     {{ $t(`m.common['，']`) }}
                     <span class="user-count">{{ hasSelectedUsers.length }}</span
                     >{{ $t(`m.common['个']`) }}{{ $t(`m.common['用户']`) }}
-                    <span v-if="isShowMemberTemplate">
+                    <span v-if="isExistMemberTemplate">
                       {{ $t(`m.common['，']`) }}
                       <span class="template-count">{{ hasSelectedTemplates.length }}</span>{{ $t(`m.common['个']`) }}{{ $t(`m.memberTemplate['人员模板']`) }}
                     </span>
@@ -302,7 +302,7 @@
                     <span class="organization-count">{{ hasSelectedDepartments.length }}</span
                     >Org{{ $t(`m.common['，']`) }} <span class="user-count">{{ hasSelectedUsers.length }}</span
                     >User
-                    <span v-if="isShowMemberTemplate">
+                    <span v-if="isExistMemberTemplate">
                       {{ $t(`m.common['，']`) }}
                       <span class="template-count">{{ hasSelectedTemplates.length }}</span>
                       Member template
@@ -595,7 +595,7 @@
       };
     },
     computed: {
-      ...mapGetters(['user']),
+      ...mapGetters(['user', 'externalSystemId']),
       isLoading () {
         return this.requestQueue.length > 0;
       },
@@ -705,7 +705,7 @@
           const typeMap = {
             user: () => {
               if (fullName) {
-                const result = fullName.indexOf(';') > -1 ? fullName.replace(/[,;；]/g, '\n') : fullName;
+                const result = fullName.indexOf(';') > -1 ? fullName.replace(/[，,;；]/g, '\n') : fullName;
                 return result;
               } else {
                 return name ? `${username}(${name})` : username;
@@ -729,8 +729,18 @@
       isStaff () {
         return this.user.role.type === 'staff';
       },
+      isAdminGroup () {
+        return this.getGroupAttributes && this.getGroupAttributes().source_from_role;
+      },
       isShowMemberTemplate () {
-        return this.needMemberTempRoutes.includes(this.$route.name) && !['staff', 'subset_manager'].includes(this.user.role.type);
+        return this.needMemberTempRoutes.includes(this.$route.name) && !this.isStaff && !this.isAdminGroup;
+      },
+      isExistMemberTemplate () {
+        return this.externalSystemId ? this.isShowExternalMemberTemplate : this.isShowMemberTemplate;
+      },
+      // 蓝盾场景
+      isShowExternalMemberTemplate () {
+        return !['staff', 'rating_manager'].includes(this.user.role.type) && this.needMemberTempRoutes.includes(this.$route.name) && !this.isAdminGroup;
       }
     },
     watch: {
@@ -738,10 +748,7 @@
         handler (value) {
           this.isShowDialog = !!value;
           if (this.isShowDialog) {
-            if (
-              !this.needMemberTempRoutes.includes(this.$route.name)
-              || ['staff'].includes(this.user.role.type)
-            ) {
+            if (!this.isExistMemberTemplate) {
               this.panels = this.panels.filter((item) => !['memberTemplate'].includes(item.name));
             }
             this.curId = this.id;
@@ -956,12 +963,12 @@
               usernameList.forEach((item) => {
                 // 处理既有部门又有用户且不连续相同类型的展示数据
                 formatStr = formatStr
-                  .replace(this.evil('/' + item + '(;\\n|\\s\\n|)/'), '')
+                  .replace(this.evil('/' + item + '(，|；|;|\\n|\\s\\n|)/'), '')
                   .replace(/(\s*\r?\n\s*)+/g, '\n')
                   .replace(';;', '');
                 // 处理复制全部用户不相连的两个不在授权范围内的用户存在空字符
                 formatStr = formatStr
-                  .split(/;|\n|\s/)
+                  .split(/，|,|；|;|、|\n|\s/)
                   .filter((item) => item !== '' && item !== curData)
                   .join('\n');
               });
@@ -989,7 +996,7 @@
               let clipboardValue = _.cloneDeep(this.manualValue);
               // 处理不相连的数据之间存在特殊符号的情况
               clipboardValue = clipboardValue
-                .split(/;|\n|\s/)
+                .split(/，|,|；|;|、|\n|\s/)
                 .filter((item) => item !== '' && item !== curData)
                 .join('\n');
               this.manualValue = _.cloneDeep(clipboardValue);
@@ -999,7 +1006,7 @@
       },
 
       async handleSearchOrgAndUser () {
-        let manualInputValue = _.cloneDeep(this.manualValue.split(/;|\n|\s/));
+        let manualInputValue = _.cloneDeep(this.manualValue.split(/；|;|\n|\s/));
         manualInputValue = manualInputValue.filter((item) => item !== '');
         for (let i = 0; i < manualInputValue.length; i++) {
           const params = {
@@ -1059,16 +1066,16 @@
               // 去掉之前有查全局的写法， 如果username有多个重复的item, 比如shengjieliu03@shengjietest.com、shengjieliu05的时候/g就会有问题
               // formatStr = formatStr.replace(this.evil('/' + item + '(;\\n|\\s\\n|)/g'), '');
 
-              // 处理既有部门又有用户且不连续相同类型的展示数据
+              // 处理既有部门又有用户且不连续相同类型的展示数据 .split(/，|,|；|;|、|\n|\s/)
               formatStr = formatStr
-                .replace(this.evil('/' + item + '(;\\n|\\s\\n|)/'), '')
+                .replace(this.evil('/' + item + '(，|,|；|;\\n|\\s\\n|)/'), '')
                 // .replace('\n\n', '\n')
                 // .replace('\s\s', '\s')
                 .replace(/(\s*\r?\n\s*)+/g, '\n')
                 .replace(';;', '');
               // 处理复制全部用户不相连的两个不在授权范围内的用户存在空字符
               formatStr = formatStr
-                .split(/;|\n|\s/)
+                .split(/，|,|；|;|\n|\s/)
                 .filter((item) => item !== '')
                 .join('\n');
             });
@@ -1101,7 +1108,7 @@
       async formatOrgAndUser () {
         if (this.manualValue && !this.isStaff) {
           // 校验查验失败的数据是不是属于部门
-          const departData = _.cloneDeep(this.manualValue.split(/;|\n|\s/));
+          const departData = _.cloneDeep(this.manualValue.split(/，|,|；|;|、|\n|\s/));
           const departGroups = this.filterDepartList.filter((item) => departData.includes(item));
           if (departGroups.length) {
             if (this.getGroupAttributes && this.getGroupAttributes().source_from_role) {
@@ -1142,13 +1149,13 @@
                 const isScopeOrg = result
                   .map((depart) => String(depart.id))
                   .includes(item.slice(item.indexOf('{') + 1, item.indexOf('}')));
-                if (clipboardValue.split(/;|\n|\s/).includes(displayValue) && isScopeOrg) {
+                if (clipboardValue.split(/，|,|；|;|、|\n|\s/).includes(displayValue) && isScopeOrg) {
                   clipboardValue = clipboardValue.replace(displayValue, '');
                 }
               });
               // 处理不相连的数据之间存在特殊符号的情况
               clipboardValue = clipboardValue
-                .split(/;|\n|\s/)
+                .split(/，|,|；|;|、|\n|\s/)
                 .filter((item) => item !== '')
                 .join('\n');
               this.manualValue = _.cloneDeep(clipboardValue);
