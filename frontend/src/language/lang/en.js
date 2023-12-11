@@ -865,7 +865,8 @@ export const m = {
         '暂无关联实例': 'No associated instance',
         '所属组织架构': 'Organizational structure',
         '请输入用户/组织或人员模板，按enter键搜索': 'Please enter user/organization or members template, press enter to search',
-        '该有效期为模板里成员的默认有效期，实际有效期以成员有效期为准': 'This validity period is the default validity period of the members in the template, and the actual validity period is based on the members validity period'
+        '该有效期为模板里成员的默认有效期，实际有效期以成员有效期为准': 'This validity period is the default validity period of the members in the template, and the actual validity period is based on the members validity period',
+        '单次最多添加100个成员，批量复制的内容不可随意编辑，如需减少成员，可通过再次批量粘贴添加人员': 'Add up to 100 members at a time. The content copied in bulk cannot be edited at will. If you want to reduce members, you can add them by pasting them again in bulk'
     },
     resource: {
         '无限制总文案': 'If the action does not require restricted instances, select unlimited',
