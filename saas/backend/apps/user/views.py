@@ -30,6 +30,7 @@ from backend.biz.group import GroupBiz
 from backend.biz.permission_audit import QueryAuthorizedSubjects
 from backend.biz.policy import ConditionBean, InstanceBean, PathNodeBeanList, PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import ActionScopeDiffer, RoleBiz
+from backend.biz.subject_template import SubjectTemplateBiz
 from backend.common.pagination import CustomPageNumberPagination
 from backend.common.serializers import SystemQuerySLZ
 from backend.common.time import get_soon_expire_ts
@@ -38,7 +39,15 @@ from backend.service.constants import SubjectRelationType
 from backend.service.group import SubjectGroup
 from backend.service.models import Subject
 
-from .serializers import GroupSLZ, QueryGroupSLZ, QueryRoleSLZ, UserNewbieSLZ, UserNewbieUpdateSLZ, UserPolicySearchSLZ
+from .serializers import (
+    GroupSLZ,
+    QueryGroupSLZ,
+    QueryRoleSLZ,
+    SubjectTemplateGroupSLZ,
+    UserNewbieSLZ,
+    UserNewbieUpdateSLZ,
+    UserPolicySearchSLZ,
+)
 
 
 class UserGroupViewSet(GenericViewSet):
@@ -382,6 +391,118 @@ class UserPolicySearchViewSet(mixins.ListModelMixin, GenericViewSet):
 
         # no action_id policy
         return Response([])
+
+    def get_subject(self, request, kwargs):
+        subject = Subject.from_username(request.user.username)
+        return subject
+
+
+class UserSubjectTemplateGroupViewSet(GenericViewSet):
+
+    pagination_class = CustomPageNumberPagination
+
+    biz = SubjectTemplateBiz()
+
+    @swagger_auto_schema(
+        operation_description="我的权限-人员模版用户组列表",
+        request_body=GroupSearchSLZ(label="用户组搜索"),
+        responses={status.HTTP_200_OK: SubjectTemplateGroupSLZ(label="用户组", many=True)},
+        tags=["user"],
+    )
+    def list(self, request, *args, **kwargs):
+        slz = GroupSearchSLZ(data=request.data)
+        slz.is_valid(raise_exception=True)
+
+        data = slz.validated_data
+
+        subject_ids = None
+        if data["system_id"] and data["action_id"]:
+            # 通过实例或操作查询用户组
+            data["permission_type"] = PermissionTypeEnum.RESOURCE_INSTANCE.value
+            data["limit"] = 1000
+            subjects = QueryAuthorizedSubjects(data).query_by_resource_instance(subject_type="group")
+            subject_ids = list({int(s["id"]) for s in subjects})
+
+        subject = self.get_subject(request, kwargs)
+        limit, offset = CustomPageNumberPagination().get_limit_offset_pair(request)
+
+        count = self.biz.get_subject_template_group_count(
+            subject,
+            id=data["id"],
+            name=data["name"],
+            description=data["description"],
+            hidden=data["hidden"],
+            group_ids=subject_ids,
+        )
+        relations = self.biz.list_paging_subject_template_group(
+            subject,
+            id=data["id"],
+            name=data["name"],
+            description=data["description"],
+            hidden=data["hidden"],
+            group_ids=subject_ids,
+            limit=limit,
+            offset=offset,
+        )
+
+        slz = SubjectTemplateGroupSLZ(instance=relations, many=True)
+        return Response({"count": count, "results": slz.data})
+
+    def get_subject(self, request, kwargs):
+        subject = Subject.from_username(request.user.username)
+        return subject
+
+
+class UserDepartmentSubjectTemplateGroupViewSet(GenericViewSet):
+
+    pagination_class = CustomPageNumberPagination
+
+    biz = SubjectTemplateBiz()
+
+    @swagger_auto_schema(
+        operation_description="我的权限-部门人员模版用户组列表",
+        request_body=GroupSearchSLZ(label="用户组搜索"),
+        responses={status.HTTP_200_OK: SubjectTemplateGroupSLZ(label="用户组", many=True)},
+        tags=["user"],
+    )
+    def list(self, request, *args, **kwargs):
+        slz = GroupSearchSLZ(data=request.data)
+        slz.is_valid(raise_exception=True)
+
+        data = slz.validated_data
+
+        subject_ids = None
+        if data["system_id"] and data["action_id"]:
+            # 通过实例或操作查询用户组
+            data["permission_type"] = PermissionTypeEnum.RESOURCE_INSTANCE.value
+            data["limit"] = 1000
+            subjects = QueryAuthorizedSubjects(data).query_by_resource_instance(subject_type="group")
+            subject_ids = list({int(s["id"]) for s in subjects})
+
+        subject = self.get_subject(request, kwargs)
+        limit, offset = CustomPageNumberPagination().get_limit_offset_pair(request)
+
+        count = self.biz.get_subject_department_template_group_count(
+            subject,
+            id=data["id"],
+            name=data["name"],
+            description=data["description"],
+            hidden=data["hidden"],
+            group_ids=subject_ids,
+        )
+        relations = self.biz.list_paging_subject_department_template_group(
+            subject,
+            id=data["id"],
+            name=data["name"],
+            description=data["description"],
+            hidden=data["hidden"],
+            group_ids=subject_ids,
+            limit=limit,
+            offset=offset,
+        )
+
+        slz = SubjectTemplateGroupSLZ(instance=relations, many=True)
+        return Response({"count": count, "results": slz.data})
 
     def get_subject(self, request, kwargs):
         subject = Subject.from_username(request.user.username)
