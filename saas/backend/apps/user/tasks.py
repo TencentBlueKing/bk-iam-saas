@@ -53,6 +53,8 @@ class SendUserExpireRemindMailTask(Task):
     base_url = url_join(settings.APP_URL, "/perm-renewal")
 
     def run(self, username: str, expired_at: int):
+        now = int(db_time())
+
         user = User.objects.filter(username=username).first()
         if not user:
             return
@@ -60,11 +62,15 @@ class SendUserExpireRemindMailTask(Task):
         subject = Subject.from_username(username)
 
         # 注意: rbac用户所属组很大, 这里会变成多次查询, 也变成多次db io (单次 1000 个)
-        groups = self.group_biz.list_all_subject_group_before_expired_at(subject, expired_at)
+        groups = [
+            group
+            for group in self.group_biz.list_all_subject_group_before_expired_at(subject, expired_at)
+            if group.expired_at > now
+        ]
 
         policies = self.policy_biz.list_expired(subject, expired_at)
         # NOTE 针对蓝盾权限的特殊处理, 等蓝盾迁移半年后删除数据
-        policies = [p for p in policies if p.system.id != "bk_ci"]
+        policies = [p for p in policies if p.system.id != "bk_ci" and p.expired_at > now]
 
         if not groups and not policies:
             return
