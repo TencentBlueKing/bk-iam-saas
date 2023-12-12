@@ -232,7 +232,7 @@
         const { active, count } = payload;
         const panelIndex = this.panels.findIndex(item => item.name === active);
         if (panelIndex > -1) {
-          if (active === this.active && count !== this.panels[panelIndex].count) {
+          if (active === this.active && count !== this.panels[panelIndex].count && this.isSearchPerm) {
             this.fetchRemoteTable(true);
           }
           this.$set(this.panels[panelIndex], 'count', count);

@@ -460,7 +460,6 @@
       },
 
       getHeaderCellClass ({ row, column, rowIndex, columnIndex }) {
-        console.log(row, columnIndex);
         if (columnIndex === 4 && !['all'].includes(this.tabActive)) {
           return 'iam-level-header-cell-cls';
         }

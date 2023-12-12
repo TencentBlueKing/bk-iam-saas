@@ -12,12 +12,10 @@
             v-model="formData.apply_disable"
             :disabled="userGroupAttributes.apply_disable"
           >
-            <span
-              class="checkbox-sync-perm"
-              v-bk-tooltips="$t(`m.userGroup['设置不可被申请，则无法申请加入此用户组']`)">
+            <span class="checkbox-sync-perm no-border">
               {{ $t(`m.userGroup['不可被申请']`) }}
             </span>
-            <span>({{ $t(`m.userGroup['该组只能管理员主动授权，用户无法主动申请']`) }})</span>
+            <span>({{ $t(`m.userGroup['设置后该组只能管理员主动授权，用户无法主动申请']`) }})</span>
           </bk-checkbox>
         </div>
         <div class="select-wrap-checkbox" v-if="isShowTemplate">

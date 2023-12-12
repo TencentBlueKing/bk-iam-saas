@@ -701,6 +701,71 @@ export default {
     },
 
     /**
+     *  通过用户加入人员模板的用户组权限
+     *
+     * @param {Function} commit store commit mutation handler
+     * @param {Object} state store state
+     * @param {Function} dispatch store dispatch action handler
+     * @param {Object?} config http config
+     *
+     * @return {Promise} promise 对象
+     */
+    getMemberTempByUser ({ commit, state, dispatch }, params, config) {
+      return http.get(`${AJAX_URL_PREFIX}/users/groups/?${json2Query(params)}`, {}, config);
+    },
+      
+    /**
+     *  通过组织加入人员模板的用户组权限
+     *
+     * @param {Function} commit store commit mutation handler
+     * @param {Object} state store state
+     * @param {Function} dispatch store dispatch action handler
+     * @param {Object?} config http config
+     *
+     * @return {Promise} promise 对象
+     */
+    getMemberTempByDepart ({ commit, state, dispatch }, params, config) {
+      const queryParams = params ? `?${json2Query(params)}` : '';
+      return http.get(`${AJAX_URL_PREFIX}/users/departments/-/groups/${queryParams}`, {}, config);
+    },
+
+    /**
+     *  通过用户加入人员模板的用户组权限搜索
+     *
+     * @param {Function} commit store commit mutation handler
+     * @param {Object} state store state
+     * @param {Function} dispatch store dispatch action handler
+     * @param {Object?} config http config
+     *
+     * @return {Promise} promise 对象
+     */
+    getMemberTempByUserSearch ({ commit, state, dispatch }, params, config) {
+      const { offset, limit } = params;
+      const queryParams = Object.assign({}, { offset, limit });
+      return http.post(`${AJAX_URL_PREFIX}/users/groups/search/?${json2Query(queryParams)}`, params, config);
+    },
+
+    /**
+     *  通过组织加入人员模板的用户组权限搜索
+     *
+     * @param {Function} commit store commit mutation handler
+     * @param {Object} state store state
+     * @param {Function} dispatch store dispatch action handler
+     * @param {Object?} config http config
+     *
+     * @return {Promise} promise 对象
+     */
+    getMemberTempByDepartSearch ({ commit, state, dispatch }, params, config) {
+      const { offset, limit } = params;
+      const queryParams = Object.assign({}, { offset, limit });
+      return http.post(
+        `${AJAX_URL_PREFIX}/users/departments/-/groups/search/?${json2Query(queryParams)}`,
+        params,
+        config
+      );
+    },
+
+    /**
      *  自定义权限搜索
      *
      * @param {Function} commit store commit mutation handler

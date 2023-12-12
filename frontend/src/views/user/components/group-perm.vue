@@ -712,7 +712,7 @@
       handleSearch (payload, result) {
         this.currentSelectList = [];
         this.searchParams = payload;
-        this.resetPagination();
+        this.resetDialogPagination();
         this.fetchUserGroupList(true);
       },
 
@@ -951,12 +951,12 @@
         this.searchParams = {};
         this.searchValue = [];
         this.emptyDialogData.tipType = '';
-        this.resetPagination();
+        this.resetDialogPagination();
         await this.fetchUserGroupList();
       },
 
       async handleEmptyDialogRefresh () {
-        this.resetPagination();
+        this.resetDialogPagination();
         await this.fetchUserGroupList(true);
       },
 
@@ -964,23 +964,28 @@
         this.searchParams = {};
         this.searchValue = [];
         this.groupPermEmptyData.tipType = '';
-        this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10 });
+        this.resetPagination();
         this.$emit('on-clear');
       },
 
       async handleEmptyRefresh () {
-        this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10 });
+        this.resetPagination();
         await this.fetchPermGroups(false, true);
         this.$emit('on-refresh');
       },
 
-      resetPagination () {
+      resetPagination (limit = 10) {
+        this.pageConf = Object.assign(this.pageConf, { current: 1, limit });
+      },
+
+      resetDialogPagination () {
         this.pagination = Object.assign(
           {},
           {
             limit: 10,
             current: 1,
-            count: 0
+            count: 0,
+            showTotalCount: true
           }
         );
       },

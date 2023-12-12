@@ -10,34 +10,72 @@
         <span class="name" v-if="isExistName">({{ curData.name }})</span>
       </template>
     </div>
+    <div>
+      <IamResourceCascadeSearch
+        ref="iamResourceSearchRef"
+        :active="active"
+        :custom-select-width="customSelectWidth"
+        :min-select-width="'165px'"
+        :max-select-width="'200px'"
+        @on-remote-table="handleRemoteTable"
+        @on-refresh-table="handleRefreshTable"
+        @on-input-value="handleInputValue"
+      />
+    </div>
     <div class="table-list-wrapper">
       <bk-tab
-        :active.sync="active"
         type="unborder-card"
         ext-cls="iam-user-tab-cls"
+        :active.sync="active"
+        :key="tabKey"
+        @tab-change="handleTabChange"
       >
-        <bk-tab-panel
-          v-for="(panel, index) in panels"
-          v-bind="panel"
-          :key="index">
+        <bk-tab-panel v-for="(panel, index) in panels" v-bind="panel" :key="index">
+          <template slot="label">
+            <span class="panel-name">
+              <span>{{ panel.label }}</span>
+              <span style="color: ##3a84ff" v-if="curSearchParams && Object.keys(curSearchParams).length">
+                ({{ panel.count }})
+              </span>
+            </span>
+          </template>
+          <component
+            ref="childPermRef"
+            :key="componentsKey"
+            :is="curCom"
+            :data="curData"
+            :total-count="panel.count"
+            :personal-group-list="personalGroupList"
+            :empty-data="curEmptyData"
+            :cur-search-params="curSearchParams"
+            :cur-search-pagination="curSearchPagination"
+            :is-search-perm="isSearchPerm"
+            :check-group-list="panels[0].selectList"
+            @on-select-group="handleSelectGroup"
+            @refresh="handleEmptyClear"
+            @on-clear="handleEmptyClear"
+            @on-refresh="handleEmptyRefresh"
+            @on-init="handleComInit"
+          />
         </bk-tab-panel>
-        <component
-          :key="componentsKey"
-          :is="curCom"
-          :data="curData"
-          @on-init="handleComInit">
-        </component>
       </bk-tab>
     </div>
   </div>
 </template>
+
 <script>
   import _ from 'lodash';
+  import { mapGetters } from 'vuex';
+  import { buildURLParams } from '@/common/url';
+  import { bus } from '@/common/bus';
+  import { formatCodeData } from '@/common/util';
   import JoinedUserGroup from './joined-user-group';
+  import IamResourceCascadeSearch from '@/components/iam-resource-cascade-search';
   export default {
     name: '',
     components: {
-      JoinedUserGroup
+      JoinedUserGroup,
+      IamResourceCascadeSearch
     },
     props: {
       params: {
@@ -51,88 +89,281 @@
       return {
         curData: {},
         panels: [
-          { name: 'group', label: this.$t(`m.perm['加入的用户组']`) }
+          { name: 'GroupPerm',
+            label: this.$t(`m.perm['用户组权限']`),
+            empty: 'emptyData',
+            count: 0,
+            selectList: []
+          }
         ],
-        active: 'group',
+        active: 'GroupPerm',
+        curCom: 'JoinedUserGroup',
         componentsKey: -1,
-        curCom: 'JoinedUserGroup'
+        tabKey: -1,
+        isSearchPerm: false,
+        actionIdError: false,
+        searchTypeError: false,
+        resourceTypeError: false,
+        resourceInstanceError: false,
+        isShowResourceInstanceSideSlider: false,
+        resourceInstanceSideSliderTitle: '',
+        curSearchParams: {},
+        curSearchPagination: {
+          current: 1,
+          count: 0,
+          limit: 10
+        },
+        emptyData: {
+          type: '',
+          text: '',
+          tip: '',
+          tipType: ''
+        },
+        curEmptyData: {
+          type: 'empty',
+          text: '暂无数据',
+          tip: '',
+          tipType: ''
+        },
+        personalGroupList: [],
+        customSelectWidth: window.innerWidth <= 1520 ? '160px' : '240px'
       };
     },
     computed: {
-      /**
-       * isDepart
-       */
+      ...mapGetters(['externalSystemId', 'roleList', 'mainContentLoading']),
       isDepart () {
         return this.curData.type === 'depart';
       },
-      /**
-       * isExistName
-       */
       isExistName () {
         return this.curData.type === 'user' && this.curData.name !== '';
       },
-      /**
-       * isShowPage
-       */
+
       isShowPage () {
         return Object.keys(this.params).length > 0;
       }
     },
     watch: {
-      /**
-       * params
-       */
       params: {
         handler (value) {
           if (Object.keys(value).length > 0) {
-            // this.active = 'perm'
-            // this.curCom = 'DepartPerm'
-            this.active = 'group';
-            this.curCom = 'JoinedUserGroup';
-            this.componentsKey = +new Date();
-            this.curData = _.cloneDeep(value);
+            this.fetchDetailData(value);
           }
         },
         immediate: true
       },
-      /**
-       * active
-       */
       active (value) {
         this.curCom = value === 'perm' ? 'DepartPerm' : 'JoinedUserGroup';
         this.componentsKey = +new Date();
       }
     },
+    mounted () {
+      this.$once('hook:beforeDestroy', () => {
+        bus.$off('on-perm-tab-count');
+      });
+      bus.$on('on-perm-tab-count', (payload) => {
+        const { active, count } = payload;
+        const panelIndex = this.panels.findIndex(item => item.name === active);
+        if (panelIndex > -1) {
+          if (active === this.active && count !== this.panels[panelIndex].count && this.isSearchPerm) {
+            this.fetchRemoteTable(true);
+          }
+          this.$set(this.panels[panelIndex], 'count', count);
+        }
+      });
+    },
     methods: {
-      /**
-       * handleComInit
-       */
       handleComInit (payload) {
         this.$emit('on-init', payload);
+      },
+
+      handleSelectGroup (payload) {
+        this.$set(this.panels[0], 'selectList', payload);
+      },
+
+      formatCheckGroups () {
+        const selectList = this.panels[0].selectList.map((item) => item.id.toString());
+        setTimeout(() => {
+          this.personalGroupList.length
+            && this.personalGroupList.forEach((item) => {
+              if (item.role_members && item.role_members.length) {
+                const hasName = item.role_members.some((v) => v.username);
+                if (!hasName) {
+                  item.role_members = item.role_members.map(v => {
+                    return {
+                      username: v,
+                      readonly: false
+                    };
+                  });
+                }
+              }
+              if (
+                selectList.includes(item.id.toString())
+                && this.$refs.childPermRef
+                && this.$refs.childPermRef.length
+              ) {
+                this.$refs.childPermRef[0].$refs.groupPermTableRef.toggleRowSelection(
+                  item,
+                  true
+                );
+              }
+            });
+        }, 0);
+      },
+
+      fetchDetailData (value) {
+        this.active = 'GroupPerm';
+        this.curCom = 'JoinedUserGroup';
+        this.curEmptyData.tipType = '';
+        this.isSearchPerm = false;
+        this.curSearchParams = {};
+        this.handleEmptyClear();
+        this.componentsKey = +new Date();
+        this.curData = _.cloneDeep(value);
+      },
+
+      // 处理只输入纯文本，不生成tag情况
+      async handleInputValue (payload) {
+        this.curEmptyData.tipType = payload ? 'search' : '';
+        if (payload && !this.curSearchParams.system_id) {
+          this.isSearchPerm = true;
+          this.$set(this.curSearchParams, 'name', payload);
+          await this.fetchRemoteTable();
+          this.formatCheckGroups();
+        }
+      },
+
+      async handleRemoteTable (payload) {
+        if (!this.mainContentLoading) {
+          this.componentLoading = true;
+        }
+        const { emptyData, pagination, searchParams, isNoTag } = payload;
+        this.isSearchPerm = emptyData.tipType === 'search';
+        this.curSearchParams = _.cloneDeep(searchParams);
+        this.curSearchPagination = _.cloneDeep(pagination);
+        if (!isNoTag) {
+          this.curEmptyData = _.cloneDeep(emptyData);
+          await this.fetchRemoteTable();
+          this.formatCheckGroups();
+        }
+      },
+
+      async handleRefreshTable () {
+        this.curEmptyData.tipType = '';
+        this.isSearchPerm = false;
+        this.curSearchParams = {};
+        // 重置搜索参数需要去掉tab上的数量
+        this.tabKey = +new Date();
+      },
+
+      async handleTabChange (tabName) {
+        this.active = tabName;
+        // 如果active是同一项目
+        const searchParams = {
+        ...this.$route.query,
+        tab: tabName
+        };
+        if (!['GroupPerm'].includes(tabName)) {
+          this.handleSelectGroup([]);
+        }
+        window.history.replaceState({}, '', `?${buildURLParams(searchParams)}`);
+      },
+      
+      async fetchUserGroupSearch () {
+        try {
+          const { current, limit } = this.curSearchPagination;
+          const { id, username, type } = this.curData;
+          const params = {
+            ...this.curSearchParams,
+            ...{
+              subjectType: type === 'user' ? type : 'department',
+              subjectId: type === 'user' ? username : id
+            },
+            limit,
+            offset: limit * (current - 1)
+          };
+          if (this.externalSystemId) {
+            params.system_id = this.externalSystemId;
+            params.hidden = false;
+          }
+          const { code, data } = await this.$store.dispatch(
+            'perm/getPermGroupsSearch',
+            params
+          );
+          this.personalGroupList = data.results || [];
+          this.$set(this.panels[0], 'count', data.count || 0);
+          this.emptyData = formatCodeData(code, this.emptyData, data.count === 0);
+        } catch (e) {
+          console.error(e);
+          const { code } = e;
+          this.personalGroupList = [];
+          this.emptyData = formatCodeData(code, this.emptyData);
+          this.messageAdvancedError(e);
+        } finally {
+          this.componentLoading = false;
+        }
+      },
+
+      async fetchRemoteTable (isRefreshCurCount = false) {
+        // 这里需要拿到所有tab项的total，所以需要调所有接口, 且需要在当前页动态加载tab的label
+        const typeMap = {
+          GroupPerm: async () => {
+            this.emptyData = _.cloneDeep(this.curEmptyData);
+            if (isRefreshCurCount) {
+              if (this.$refs.childPermRef && this.$refs.childPermRef.length) {
+                this.curSearchPagination.limit = this.$refs.childPermRef[0].pageConf.limit;
+                this.$refs.childPermRef[0].$refs.groupPermTableRef.clearSelection();
+              }
+              await this.fetchUserGroupSearch();
+            } else {
+              await Promise.all([
+                this.fetchUserGroupSearch()
+              ]);
+            }
+            this.curEmptyData = Object.assign({}, this.emptyData, { tipType: this.isSearchPerm ? 'search' : '' });
+            this.tabKey = +new Date();
+          }
+        };
+        return typeMap[this.active] ? typeMap[this.active]() : typeMap['GroupPerm']();
+      },
+      
+      handleEmptyRefresh () {
+        this.isSearchPerm = false;
+        this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyClear();
+      },
+
+      handleEmptyClear () {
+        this.handleEmptyRefresh();
       }
+
     }
   };
 </script>
-<style lang="postcss">
-    .iam-depart-perm-wrapper {
-        .header {
-            .display-name {
-                font-size: 16px;
-                color: #313238;
-            }
-            .count,
-            .name {
-                font-size: 16px;
-                color: #c4c6cc;
-            }
-        }
-        .table-list-wrapper {
-            margin-top: 20px;
-            .iam-user-tab-cls {
-                .bk-tab-section {
-                    padding: 20px 0 0 0;
-                }
-            }
-        }
+
+<style lang="postcss" scoped>
+.iam-depart-perm-wrapper {
+  background-color: #ffffff;
+  height: calc(100vh - 120px);
+  overflow-y: auto;
+  .header {
+    padding: 20px;
+    padding-bottom: 0;
+    .display-name {
+      font-size: 16px;
+      color: #313238;
     }
+    .count,
+    .name {
+      font-size: 16px;
+      color: #c4c6cc;
+    }
+  }
+  .table-list-wrapper {
+    /* margin-top: 20px; */
+    .iam-user-tab-cls {
+      .bk-tab-section {
+        padding: 20px 0 0 0;
+      }
+    }
+  }
+}
 </style>
