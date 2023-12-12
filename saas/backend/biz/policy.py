@@ -1442,6 +1442,9 @@ class PolicyQueryBiz:
         # 填充action, system
         expired_policies = []
         for p in backend_policies:
+            if p.system == "bk_ci":
+                continue
+
             action = (
                 action_list_dict[p.system].get(p.action_id) if p.system in action_list_dict else None
             ) or ThinAction(id="", name="", name_en="")
