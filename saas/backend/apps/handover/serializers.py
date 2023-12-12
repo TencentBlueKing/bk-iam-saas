@@ -27,6 +27,9 @@ class HandoverInfoSLZ(serializers.Serializer):
         label="用户ids", child=CustomPolicySLZ(label="自定权限"), required=False, default=list
     )
     role_ids = serializers.ListField(label="管理员ids", child=serializers.IntegerField(), required=False, default=list)
+    subject_template_ids = serializers.ListField(
+        label="人员模板ids", child=serializers.IntegerField(), required=False, default=list
+    )
 
     def validate(self, data):
         if all([not value for value in data.values()]):
