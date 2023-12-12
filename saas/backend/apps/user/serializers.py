@@ -13,6 +13,7 @@ from rest_framework import serializers
 from backend.apps.group.models import Group
 from backend.apps.role.serializers import ResourceInstancesSLZ
 from backend.apps.subject.serializers import SubjectGroupSLZ
+from backend.apps.subject_template.models import SubjectTemplate
 from backend.biz.group import GroupBiz
 from backend.biz.subject_template import SubjectTemplateBiz
 from backend.service.group_saas_attribute import GroupAttributeService
@@ -103,3 +104,21 @@ class UserPolicySearchSLZ(serializers.Serializer):
     resource_instances = serializers.ListField(
         label="资源实例", required=False, child=ResourceInstancesSLZ(label="资源实例信息"), default=list
     )
+
+
+class SubjectTemplateGroupSLZ(GroupSLZ):
+    template_id = serializers.IntegerField(label="模板ID")
+    template_name = serializers.SerializerMethodField(label="模板名称")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.subject_template_dict = None
+        if isinstance(self.instance, list) and self.instance:
+            template_ids = [group.template_id for group in self.instance]
+            self.subject_template_dict = {one.id: one for one in SubjectTemplate.objects.filter(id__in=template_ids)}
+
+    def get_template_name(self, obj):
+        if not self.subject_template_dict or not self.subject_template_dict.get(obj.template_id):
+            return ""
+
+        return self.subject_template_dict.get(obj.template_id).name
