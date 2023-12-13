@@ -40,6 +40,7 @@
             </span>
           </template>
           <component
+            v-if="panel.name === active"
             ref="childPermRef"
             :key="componentsKey"
             :is="curCom"
@@ -281,7 +282,6 @@
         this.curEmptyData.tipType = '';
         this.isSearchPerm = false;
         this.curSearchParams = {};
-        // 重置搜索参数需要去掉tab上的数量
         this.tabKey = +new Date();
       },
 
@@ -385,7 +385,6 @@
       },
 
       async fetchRemoteTable (isRefreshCurCount = false) {
-        console.log(444);
         const typeMap = {
           GroupPerm: async () => {
             this.emptyData = _.cloneDeep(this.curEmptyData);

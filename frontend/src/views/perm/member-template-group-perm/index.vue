@@ -47,6 +47,7 @@
 </template>
 
 <script>
+  import { cloneDeep } from 'lodash';
   import { mapGetters } from 'vuex';
   import { formatCodeData, sleep } from '@/common/util';
   import MemberTempPermPolicy from '@/components/custom-perm-system-policy/index.vue';
@@ -372,6 +373,7 @@
             emptyData: formatCodeData(code, emptyData, totalCount === 0),
             pagination: { ...pagination, ...{ count: totalCount } }
           });
+          this.emptyPermData = cloneDeep(this.memberTempPermData[0].emptyData);
           this.$nextTick(() => {
             this.memberTempPermData[0].list.forEach(item => {
               item.role_members = this.formatRoleMembers(item.role_members);
@@ -379,6 +381,7 @@
           });
         } catch (e) {
           console.error(e);
+          this.emptyPermData = formatCodeData(e.code, emptyData);
           this.memberTempPermData[0] = Object.assign(this.memberTempPermData[0], {
             list: [],
             emptyData: formatCodeData(e.code, emptyData),
@@ -429,6 +432,7 @@
             emptyData: formatCodeData(code, emptyData, totalCount === 0),
             pagination: { ...pagination, ...{ count: totalCount } }
           });
+          this.emptyPermData = cloneDeep(this.memberTempPermData[1].emptyData);
           this.$nextTick(() => {
             this.memberTempPermData[1].list.forEach(item => {
               item.role_members = this.formatRoleMembers(item.role_members);
@@ -441,6 +445,8 @@
             emptyData: formatCodeData(e.code, emptyData),
             pagination: { ...pagination, ...{ count: 0 } }
           });
+          this.emptyPermData = formatCodeData(e.code, emptyData);
+          console.log(this.memberTempPermData);
           this.messageAdvancedError(e);
         } finally {
           this.memberTempPermData[1].loading = false;

@@ -54,6 +54,8 @@
               :system-list-storage="systemListStorage"
               :tep-system-list="teporarySystemList"
               :department-group-list="departmentGroupList"
+              :member-temp-by-user-list="memberTempByUserList"
+              :member-temp-by-depart-list="memberTempByDepartList"
               :empty-data="curEmptyData"
               :cur-search-params="curSearchParams"
               :cur-search-pagination="curSearchPagination"
@@ -80,6 +82,7 @@
   import IamResourceCascadeSearch from '@/components/iam-resource-cascade-search';
   import CustomPerm from './custom-perm';
   import GroupPerm from './group-perm';
+  import MemberTemplateGroupPerm from '@/views/perm/member-template-group-perm/index.vue';
   import TeporaryCustomPerm from './teporary-custom-perm';
   import DepartmentGroupPerm from './department-group-perm';
   export default {
@@ -89,6 +92,7 @@
       GroupPerm,
       TeporaryCustomPerm,
       DepartmentGroupPerm,
+      MemberTemplateGroupPerm,
       IamResourceCascadeSearch
     },
     props: {
@@ -118,6 +122,15 @@
             selectList: []
           },
           {
+            name: 'MemberTemplateGroupPerm',
+            label: this.$t(`m.perm['所属人员模板用户组权限']`),
+            empty: 'emptyMemberTemplateData',
+            count: 0,
+            userCount: 0,
+            departCount: 0,
+            selectList: []
+          },
+          {
             name: 'CustomPerm',
             label: this.$t(`m.perm['自定义权限']`),
             empty: 'emptyCustomData',
@@ -144,6 +157,8 @@
         systemListStorage: [],
         teporarySystemList: [],
         departmentGroupList: [],
+        memberTempByUserList: [],
+        memberTempByDepartList: [],
         curSearchParams: {},
         curSearchPagination: {
           current: 1,
@@ -206,6 +221,7 @@
           const comMap = {
             CustomPerm: 'CustomPerm',
             GroupPerm: 'GroupPerm',
+            MemberTemplateGroupPerm: 'MemberTemplateGroupPerm',
             TeporaryCustomPerm: 'TeporaryCustomPerm',
             DepartmentGroupPerm: 'DepartmentGroupPerm'
           };
@@ -223,6 +239,7 @@
       this.emptyCustomData = _.cloneDeep(this.emptyData);
       this.emptyTemporarySystemData = _.cloneDeep(this.emptyData);
       this.emptyDepartmentGroupData = _.cloneDeep(this.emptyData);
+      this.emptyMemberTemplateData = _.cloneDeep(this.emptyData);
     },
     mounted () {
       this.$once('hook:beforeDestroy', () => {
@@ -387,6 +404,102 @@
         } else {
           this.systemList = [];
         }
+      },
+
+      async fetchPermGroupsByUser () {
+        try {
+          const { current, limit } = this.curSearchPagination;
+          const { id, username, type } = this.curData;
+          const params = {
+            ...this.curSearchParams,
+            ...{
+              subjectType: type === 'user' ? type : 'department',
+              subjectId: type === 'user' ? username : id
+            },
+            limit,
+            offset: limit * (current - 1)
+          };
+          if (this.externalSystemId) {
+            params.system_id = this.externalSystemId;
+            params.hidden = false;
+          }
+          const { code, data } = await this.$store.dispatch(
+            'perm/getPermGroupsByTempSearch',
+            params
+          );
+          this.panels[2] = Object.assign(
+            this.panels[2],
+            {
+              userCount: data.count || 0
+            }
+          );
+          this.memberTempByUserList = data.results || [];
+          this.emptyMemberTemplateData = formatCodeData(code, this.emptyMemberTemplateData, this.panels[2].count === 0);
+        } catch (e) {
+          console.error(e);
+          this.panels[2] = Object.assign(
+            this.panels[2],
+            {
+              userCount: 0
+            }
+          );
+          this.memberTempByUserList = [];
+          this.emptyMemberTemplateData = formatCodeData(e.code, this.emptyMemberTemplateData);
+          this.messageAdvancedError(e);
+        } finally {
+          this.componentLoading = false;
+        }
+      },
+
+      async fetchMemberTempByDepartSearch () {
+        try {
+          const { current, limit } = this.curSearchPagination;
+          const { id, username, type } = this.curData;
+          const params = {
+            ...this.curSearchParams,
+            ...{
+              subjectType: type === 'user' ? type : 'department',
+              subjectId: type === 'user' ? username : id
+            },
+            limit,
+            offset: limit * (current - 1)
+          };
+          if (this.externalSystemId) {
+            params.system_id = this.externalSystemId;
+            params.hidden = false;
+          }
+          const { code, data } = await this.$store.dispatch(
+            'perm/getDepartPermGroupsByTempSearch',
+            params
+          );
+          this.panels[2] = Object.assign(
+            this.panels[2],
+            {
+              departCount: data.count || 0
+            }
+          );
+          this.memberTempByDepartList = data.results || [];
+          this.emptyMemberTemplateData = formatCodeData(code, this.emptyMemberTemplateData, this.panels[2].count === 0);
+        } catch (e) {
+          console.error(e);
+          this.panels[2] = Object.assign(
+            this.panels[2],
+            {
+              departCount: 0
+            }
+          );
+          this.memberTempByDepartList = [];
+          this.emptyMemberTemplateData = formatCodeData(e.code, this.emptyMemberTemplateData);
+          this.messageAdvancedError(e);
+        } finally {
+          this.componentLoading = false;
+        }
+      },
+
+      async fetchMemberTempByWay () {
+        await Promise.all([this.fetchMemberTempByDepartSearch()]);
+        const { departCount } = this.panels[1];
+        this.$set(this.panels[2], 'count', departCount);
       },
 
       async fetchRemoteTable (isRefreshCurCount = false) {
