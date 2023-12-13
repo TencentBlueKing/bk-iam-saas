@@ -306,7 +306,7 @@
                 : this.sensitivityTableList.splice(index, 1);
               this.currentSelectList = [];
               this.messageSuccess(this.$t(`m.info['编辑成功']`), 3000);
-              await this.handleRefreshCount();
+              await this.handleRefreshCount(true);
             }
           }
         } catch (e) {
@@ -362,7 +362,7 @@
           limit: 10
         });
         this.resetPagination();
-        await this.handleRefreshCount();
+        await this.handleRefreshCount(false);
       },
 
       handleSelectChange (selection, row) {
@@ -429,16 +429,18 @@
         this.curSelectData = {};
         this.currentSelectList = [];
         this.resetPagination();
-        await this.handleRefreshCount();
+        const isTransfer = payload.sensitivity_level !== this.tabActive;
+        await this.handleRefreshCount(isTransfer);
       },
 
-      async handleRefreshCount () {
+      async handleRefreshCount (isTransfer = false) {
         await this.fetchSensitivityLevelList(true);
         bus.$emit('on-tab-level-count', {
           name: this.tabActive,
           system_id: this.curSystemData.id,
           count: this.pagination.count,
-          isSearch: this.emptyData.tipType === 'search'
+          isSearch: this.emptyData.tipType === 'search' && !isTransfer,
+          isTransfer: isTransfer
         });
       },
 
@@ -456,7 +458,7 @@
         this.currentSelectList = [];
         this.emptyData.tipType = '';
         this.resetPagination();
-        await this.handleRefreshCount();
+        await this.handleRefreshCount(false);
       },
 
       getHeaderCellClass ({ row, column, rowIndex, columnIndex }) {
