@@ -533,7 +533,7 @@
             item.id.toString()
           );
           this.pageConf.count = data.count || 0;
-          this.dataList.splice(0, this.dataList.length, ...(data.results || []));
+          this.dataList = data.results || [];
           this.curPageData = [...this.dataList];
           this.$nextTick(() => {
             this.curPageData.forEach((item) => {

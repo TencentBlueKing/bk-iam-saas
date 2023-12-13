@@ -5,22 +5,25 @@
         v-for="(item, index) in memberTempPermData"
         :key="item.id"
         :title="item.name"
+        :type-title="$t(`m.userGroup['用户组']`)"
         :expanded.sync="item.expanded"
         :ext-cls="formatExtCls(index)"
         :class="[
           { 'iam-perm-ext-reset-cls': index === memberTempPermData.length - 1 }
         ]"
         :perm-length="item.pagination.count"
-        :one-perm="0"
+        :one-perm="formatPermLength"
         :is-all-delete="false"
         @on-expanded="handleExpanded(...arguments, item)"
       >
         <TemplatePermTable
+          v-if="item.pagination.count > 0"
           :mode="item.id"
           :is-loading="item.loading"
           :is-search-perm="isSearchPerm"
           :pagination="item.pagination"
           :list="item.list"
+          :empty-data="item.emptyData"
           @on-page-change="handlePageChange(...arguments, item)"
           @on-limit-change="handleLimitChange(...arguments, item)"
           @on-clear="handleEmptyClear"
@@ -68,6 +71,12 @@
       memberTempByDepartCount: {
         type: Number
       },
+      data: {
+        type: Object,
+        default: () => {
+          return {};
+        }
+      },
       emptyData: {
         type: Object,
         default: () => {
@@ -107,6 +116,7 @@
     },
     data () {
       return {
+        hasPerm: false,
         onePerm: 0,
         memberTempPermData: [
           {
@@ -161,9 +171,6 @@
     },
     computed: {
       ...mapGetters(['user', 'externalSystemId', 'mainContentLoading']),
-      hasPerm () {
-        return this.totalCount > 0;
-      },
       formatExtCls () {
         return (index) => {
           const isOnePerm = this.memberTempPermData.filter((item) => item.pagination.count > 0).length;
@@ -172,15 +179,16 @@
           }
           return index > 0 ? 'iam-perm-ext-cls' : '';
         };
+      },
+      formatPermLength () {
+        const len = this.memberTempPermData.filter((item) => item.pagination.count > 0).length;
+        return len;
       }
     },
     watch: {
       emptyData: {
         handler (value) {
           this.emptyPermData = Object.assign({}, value);
-          if (this.isSearchPerm || ['search'].includes(value.tipType)) {
-            this.fetchInitData();
-          }
         },
         immediate: true
       },
@@ -207,9 +215,24 @@
           this.$set(this.memberTempPermData[1], 'list', [...value]);
         },
         immediate: true
+      },
+      totalCount: {
+        handler (value) {
+          this.hasPerm = value > 0;
+        },
+        immediate: true
+      },
+      hasPerm (value) {
+        return value || this.totalCount > 0;
+      }
+    },
+    created () {
+      if (['user'].includes(this.$route.name) && !this.isSearchPerm) {
+        this.fetchInitData();
       }
     },
     methods: {
+      // 我的权限模块接口
       async fetchDataByUser () {
         const { emptyData, pagination } = this.memberTempPermData[0];
         try {
@@ -243,17 +266,7 @@
           });
           this.$nextTick(() => {
             this.memberTempPermData[0].list.forEach(item => {
-              if (item.role_members && item.role_members.length) {
-                const hasName = item.role_members.some((v) => v.username);
-                if (!hasName) {
-                  item.role_members = item.role_members.map(v => {
-                    return {
-                      username: v,
-                      readonly: false
-                    };
-                  });
-                }
-              }
+              item.role_members = this.formatRoleMembers(item.role_members);
             });
           });
         } catch (e) {
@@ -295,25 +308,15 @@
             params.hidden = false;
           }
           const { code, data } = await this.$store.dispatch(url, params);
-          const totalCount = data.count || data.length;
+          const totalCount = data.count;
           this.memberTempPermData[1] = Object.assign(this.memberTempPermData[1], {
-            list: data.results || data || [],
+            list: data.results || [],
             emptyData: formatCodeData(code, emptyData, totalCount === 0),
             pagination: { ...pagination, ...{ count: totalCount } }
           });
           this.$nextTick(() => {
             this.memberTempPermData[1].list.forEach(item => {
-              if (item.role_members && item.role_members.length) {
-                const hasName = item.role_members.some((v) => v.username);
-                if (!hasName) {
-                  item.role_members = item.role_members.map(v => {
-                    return {
-                      username: v,
-                      readonly: false
-                    };
-                  });
-                }
-              }
+              item.role_members = this.formatRoleMembers(item.role_members);
             });
           });
         } catch (e) {
@@ -329,9 +332,152 @@
         }
       },
 
+      // 用户模块接口
+      async fetchPermGroupsByUser () {
+        const { emptyData, pagination } = this.memberTempPermData[0];
+        try {
+          this.memberTempPermData[1].loading = true;
+          let url = '';
+          let params = {};
+          const { current, limit } = pagination;
+          if (this.isSearchPerm) {
+            url = 'perm/getPermGroupsByTempSearch';
+            params = {
+              ...this.curSearchParams,
+              limit,
+              offset: limit * (current - 1)
+            };
+          } else {
+            url = 'perm/getPermGroupsByTemp';
+            params = {
+              limit,
+              offset: current
+            };
+          }
+          if (this.externalSystemId) {
+            params.system_id = this.externalSystemId;
+            params.hidden = false;
+          }
+          const { id, type, username } = this.data;
+          const { code, data } = await this.$store.dispatch(url, {
+            ...params,
+            ...{
+              subjectType: type === 'user' ? type : 'department',
+              subjectId: type === 'user' ? username : id
+            }
+          });
+          const totalCount = data.count;
+          this.memberTempPermData[0] = Object.assign(this.memberTempPermData[0], {
+            list: data.results || [],
+            emptyData: formatCodeData(code, emptyData, totalCount === 0),
+            pagination: { ...pagination, ...{ count: totalCount } }
+          });
+          this.$nextTick(() => {
+            this.memberTempPermData[0].list.forEach(item => {
+              item.role_members = this.formatRoleMembers(item.role_members);
+            });
+          });
+        } catch (e) {
+          console.error(e);
+          this.memberTempPermData[0] = Object.assign(this.memberTempPermData[0], {
+            list: [],
+            emptyData: formatCodeData(e.code, emptyData),
+            pagination: { ...pagination, ...{ count: 0 } }
+          });
+          this.messageAdvancedError(e);
+        } finally {
+          this.memberTempPermData[0].loading = false;
+        }
+      },
+
+      async fetchPermGroupsByDepart () {
+        const { emptyData, pagination } = this.memberTempPermData[1];
+        try {
+          this.memberTempPermData[1].loading = true;
+          let url = '';
+          let params = {};
+          const { current, limit } = pagination;
+          if (this.isSearchPerm) {
+            url = 'perm/getDepartPermGroupsByTempSearch';
+            params = {
+              ...this.curSearchParams,
+              limit,
+              offset: limit * (current - 1)
+            };
+          } else {
+            url = 'perm/getDepartPermGroupsByTemp';
+            params = {
+              limit,
+              offset: current
+            };
+          }
+          if (this.externalSystemId) {
+            params.system_id = this.externalSystemId;
+            params.hidden = false;
+          }
+          const { id, type, username } = this.data;
+          const { code, data } = await this.$store.dispatch(url, {
+            ...params,
+            ...{
+              subjectType: type === 'user' ? type : 'department',
+              subjectId: type === 'user' ? username : id
+            }
+          });
+          const totalCount = data.count;
+          this.memberTempPermData[1] = Object.assign(this.memberTempPermData[1], {
+            list: data.results || [],
+            emptyData: formatCodeData(code, emptyData, totalCount === 0),
+            pagination: { ...pagination, ...{ count: totalCount } }
+          });
+          this.$nextTick(() => {
+            this.memberTempPermData[1].list.forEach(item => {
+              item.role_members = this.formatRoleMembers(item.role_members);
+            });
+          });
+        } catch (e) {
+          console.error(e, 5555);
+          this.memberTempPermData[1] = Object.assign(this.memberTempPermData[1], {
+            list: [],
+            emptyData: formatCodeData(e.code, emptyData),
+            pagination: { ...pagination, ...{ count: 0 } }
+          });
+          this.messageAdvancedError(e);
+        } finally {
+          this.memberTempPermData[1].loading = false;
+        }
+      },
+
       fetchInitData () {
-        this.fetchDataByUser();
-        this.fetchDataByDepart();
+        const routeMap = {
+          myPerm: () => {
+            this.fetchDataByUser();
+            this.fetchDataByDepart();
+          },
+          user: async () => {
+            this.data.type === 'user'
+              ? await Promise.all([this.fetchPermGroupsByUser(), this.fetchPermGroupsByDepart()])
+              : await this.fetchPermGroupsByDepart();
+            this.hasPerm = this.memberTempPermData.some((v) => v.pagination.count > 0);
+          }
+        };
+        if (routeMap[this.$route.name]) {
+          routeMap[this.$route.name]();
+        }
+      },
+      
+      formatRoleMembers (payload) {
+        if (payload && payload.length) {
+          const hasName = payload.some((v) => v.username);
+          if (!hasName) {
+            payload = payload.map(v => {
+              return {
+                username: v,
+                readonly: false
+              };
+            });
+          }
+        }
+        return payload || [];
       },
 
       handleExpanded (value, payload) {
@@ -345,14 +491,26 @@
         const typeMap = {
           user: async () => {
             this.memberTempPermData[0].pagination = Object.assign(this.memberTempPermData[0].pagination, { current });
-            await this.fetchDataByUser();
+            if (['myPerm'].includes(this.$route.name)) {
+              await this.fetchDataByUser();
+              return;
+            }
+            if (['user'].includes(this.$route.name)) {
+              await this.fetchPermGroupsByUser();
+            }
           },
           depart: async () => {
             this.memberTempPermData[1].pagination = Object.assign(this.memberTempPermData[1].pagination, { current });
-            await this.fetchDataByDepart();
+            if (['myPerm'].includes(this.$route.name)) {
+              await this.fetchDataByDepart();
+              return;
+            }
+            if (['user'].includes(this.$route.name)) {
+              await this.fetchPermGroupsByDepart();
+            }
           }
         };
-        typeMap[payload.id]();
+        return typeMap[payload.id]();
       },
 
       handleLimitChange (limit, payload) {
@@ -360,15 +518,27 @@
           user: async () => {
             this.memberTempPermData[0].pagination
               = Object.assign(this.memberTempPermData[0].pagination, { current: 1, limit });
-            await this.fetchDataByUser();
+            if (['myPerm'].includes(this.$route.name)) {
+              await this.fetchDataByUser();
+              return;
+            }
+            if (['user'].includes(this.$route.name)) {
+              await this.fetchPermGroupsByUser();
+            }
           },
           depart: async () => {
             this.memberTempPermData[1].pagination
               = Object.assign(this.memberTempPermData[1].pagination, { current: 1, limit });
-            await this.fetchDataByDepart();
+            if (['myPerm'].includes(this.$route.name)) {
+              await this.fetchDataByDepart();
+              return;
+            }
+            if (['user'].includes(this.$route.name)) {
+              await this.fetchPermGroupsByDepart();
+            }
           }
         };
-        typeMap[payload.id]();
+        return typeMap[payload.id]();
       },
 
       resetPagination (limit = 10) {

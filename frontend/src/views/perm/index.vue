@@ -358,9 +358,7 @@
           this.$store.dispatch('renewal/getExpireSoonGroupWithUser', userGroupParams),
           this.$store.dispatch('renewal/getExpireSoonPerm', externalParams),
           this.$store.dispatch('permApply/getTeporHasPermSystem', externalParams),
-          this.$store.dispatch('perm/getDepartMentsPersonalGroups', externalParams),
-          this.$store.dispatch('perm/getMemberTempByUser', userGroupParams),
-          this.$store.dispatch('perm/getMemberTempByDepart', userGroupParams)
+          this.$store.dispatch('perm/getDepartMentsPersonalGroups', externalParams)
         ];
         if (hideApplyBtn) {
           requestList[1] = {};
@@ -373,9 +371,7 @@
             { data: data3 },
             { data: data4 },
             { code: teporarySystemCode, data: teporarySystemData },
-            { code: departmentGroupCode, data: departmentGroupData },
-            { code: memberTempByUserCode, data: memberTempByUserData },
-            { code: memberTempByDepartCode, data: memberTempByDepartData }
+            { code: departmentGroupCode, data: departmentGroupData }
           ] = await Promise.all(requestList);
                     
           const personalGroupList = personalGroupData && personalGroupData.results ? personalGroupData.results : [];
@@ -398,30 +394,7 @@
           this.emptyDepartmentGroupData
             = formatCodeData(departmentGroupCode, this.emptyDepartmentGroupData, this.departmentGroupList.length === 0);
 
-          const memberTempByUserList
-            = memberTempByUserData && memberTempByUserData.results ? memberTempByUserData.results : [];
-          const memberTempByUserCount = memberTempByUserData.count || 0;
-          this.memberTempByUserList.splice(0, this.memberTempByUserList.length, ...memberTempByUserList);
-          this.$set(this.panels[2], 'userCount', memberTempByUserData.count || 0);
-          this.emptyDepartmentGroupData = formatCodeData(
-            memberTempByUserCode,
-            this.emptyMemberTemplateData,
-            this.memberTempByUserList.length === 0
-          );
-
-          const memberTempByDepartList = memberTempByDepartData || [];
-          const memberTempByDepartCount = memberTempByDepartData.count || memberTempByDepartList.length || 0;
-          this.memberTempByDepartList.splice(0, this.memberTempByDepartList.length, ...memberTempByDepartList);
-          this.$set(this.panels[2], 'departCount', memberTempByDepartCount);
-          this.emptyDepartmentGroupData = formatCodeData(
-            memberTempByDepartCode,
-            this.emptyMemberTemplateData,
-            this.memberTempByDepartList.length === 0
-          );
-
           this.formatCheckGroups();
-
-          this.$set(this.panels[2], 'count', memberTempByUserCount + memberTempByDepartCount);
           this.isEmpty = personalGroupList.length < 1 && systemList.length < 1
             && teporarySystemList.length < 1 && departmentGroupList.length < 1;
           this.soonGroupLength = data3 && data3.results ? data3.results.length : 0;
@@ -430,18 +403,56 @@
           this.isNoExternalRenewal = this.soonGroupLength < 1;
           this.isNoTransfer = hideApplyBtn ? !personalGroupList.length
             : (!personalGroupList.length && !systemList.length && !this.roleList.length);
+
+          await this.fetchMemberTempPermData(userGroupParams);
         } catch (e) {
           console.error(e);
-          const { code } = e;
           this.messageAdvancedError(e);
-          // 获取非阻塞且未报错列表接口信息
-          // await this.fetchAsyncTable(requestList);
           const emptyField = this.panels.find(item => item.name === this.active);
           if (emptyField) {
-            this[emptyField.empty] = formatCodeData(code, this[emptyField.empty]);
+            this[emptyField.empty] = formatCodeData(e.code, this[emptyField.empty]);
           }
         } finally {
           this.componentLoading = false;
+        }
+      },
+
+      // 获取所属人员模板用户组权限
+      async fetchMemberTempPermData (userGroupParams) {
+        const list = [
+          this.$store.dispatch('perm/getMemberTempByUser', userGroupParams),
+          this.$store.dispatch('perm/getMemberTempByDepart', userGroupParams)
+        ];
+        try {
+          const [
+            { code: memberTempByUserCode, data: memberTempByUserData },
+            { code: memberTempByDepartCode, data: memberTempByDepartData }
+          ] = await Promise.all(list);
+  
+          const memberTempByUserList = memberTempByUserData.results || [];
+          const memberTempByUserCount = memberTempByUserData.count || 0;
+          this.memberTempByUserList.splice(0, this.memberTempByUserList.length, ...memberTempByUserList);
+  
+          const memberTempByDepartList = memberTempByDepartData.results || [];
+          const memberTempByDepartCount = memberTempByDepartData.count || 0;
+          this.memberTempByDepartList.splice(0, this.memberTempByDepartList.length, ...memberTempByDepartList);
+  
+          this.panels[2] = Object.assign(this.panels[2], {
+            userCount: memberTempByUserCount,
+            departCount: memberTempByDepartCount,
+            count: memberTempByUserCount + memberTempByDepartCount
+          });
+  
+          this.emptyDepartmentGroupData = formatCodeData(
+            memberTempByUserCode || memberTempByDepartCode,
+            this.emptyMemberTemplateData,
+            this.panels[2].count === 0
+          );
+        } catch (e) {
+          this.emptyDepartmentGroupData = formatCodeData(e.code, this.emptyMemberTemplateData);
+          if (['MemberTemplateGroupPerm'].includes(this.active)) {
+            this.curEmptyData = _.cloneDeep(this.emptyMemberTemplateData);
+          }
         }
       },
             

@@ -1,13 +1,12 @@
 <template>
-  <div :class="['iam-perm-item', extCls]">
-    <div class="header" @click="handleExpanded" v-if="permLength > 0">
+  <div :class="['iam-perm-item', extCls]" v-if="permLength > 0">
+    <div class="header" @click="handleExpanded">
       <Icon bk class="expanded-icon" :type="isExpanded ? 'down-shape' : 'right-shape'" />
       <label class="title">{{ title }}</label>
       <div class="sub-title">
         {{ $t(`m.common['共']`) }}
         <span class="number">{{ permLength }}</span>
-        {{ $t(`m.common['个']`) }}
-        {{ typeTitle }}
+        {{ $t(`m.common['个']`) }}{{ typeTitle }}
         <span
           v-if="isAllDelete"
           class="del-all-icon">
