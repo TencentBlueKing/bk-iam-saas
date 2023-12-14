@@ -17,7 +17,7 @@ from django.db.models import Count
 from django.utils.translation import gettext as _
 from pydantic import BaseModel
 
-from backend.apps.organization.models import Department, DepartmentMember, User
+from backend.apps.organization.models import Department, User
 from backend.apps.role.models import Role, RoleGroupMember, RoleRelatedObject
 from backend.apps.subject_template.models import SubjectTemplate, SubjectTemplateGroup, SubjectTemplateRelation
 from backend.biz.subject import SubjectInfoList
@@ -316,6 +316,9 @@ class SubjectTemplateBiz:
             return 0
 
         departments = self._get_user_departments(subject.id)
+        if not departments:
+            return 0
+
         department_ids = [str(department.id) for department in departments]
 
         # 构建动态的 WHERE 子句
@@ -453,6 +456,9 @@ class SubjectTemplateBiz:
             return []
 
         departments = self._get_user_departments(subject.id)
+        if not departments:
+            return []
+
         department_dict = {str(department.id): department.name for department in departments}
 
         # 构建动态的 WHERE 子句
@@ -528,5 +534,8 @@ class SubjectTemplateBiz:
         return beans
 
     def _get_user_departments(self, username: str) -> List[Department]:
-        dept_ids = DepartmentMember.objects.filter(user_id=username).values_list("department_id", flat=True)
-        return list(Department.objects.filter(id__in=dept_ids))
+        u = User.objects.filter(username=username).first()
+        if not u:
+            return []
+
+        return list(u.departments)

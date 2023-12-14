@@ -43,6 +43,7 @@ from .serializers import (
     GroupSLZ,
     QueryGroupSLZ,
     QueryRoleSLZ,
+    SubjectTemplateGroupQuerySLZ,
     SubjectTemplateGroupSLZ,
     UserNewbieSLZ,
     UserNewbieUpdateSLZ,
@@ -424,7 +425,8 @@ class UserSubjectTemplateGroupViewSet(GenericViewSet):
             subject_ids = list({int(s["id"]) for s in subjects})
 
         subject = self.get_subject(request, kwargs)
-        limit, offset = CustomPageNumberPagination().get_limit_offset_pair(request)
+        query_slz = SubjectTemplateGroupQuerySLZ(data=request.query_params)
+        query_slz.is_valid(raise_exception=True)
 
         count = self.biz.get_subject_template_group_count(
             subject,
@@ -441,8 +443,8 @@ class UserSubjectTemplateGroupViewSet(GenericViewSet):
             description=data["description"],
             hidden=data["hidden"],
             group_ids=subject_ids,
-            limit=limit,
-            offset=offset,
+            limit=query_slz.validated_data["limit"],
+            offset=query_slz.validated_data["offset"],
         )
 
         slz = SubjectTemplateGroupSLZ(instance=relations, many=True)
@@ -480,7 +482,8 @@ class UserDepartmentSubjectTemplateGroupViewSet(GenericViewSet):
             subject_ids = list({int(s["id"]) for s in subjects})
 
         subject = self.get_subject(request, kwargs)
-        limit, offset = CustomPageNumberPagination().get_limit_offset_pair(request)
+        query_slz = SubjectTemplateGroupQuerySLZ(data=request.query_params)
+        query_slz.is_valid(raise_exception=True)
 
         count = self.biz.get_subject_department_template_group_count(
             subject,
@@ -497,8 +500,8 @@ class UserDepartmentSubjectTemplateGroupViewSet(GenericViewSet):
             description=data["description"],
             hidden=data["hidden"],
             group_ids=subject_ids,
-            limit=limit,
-            offset=offset,
+            limit=query_slz.validated_data["limit"],
+            offset=query_slz.validated_data["offset"],
         )
 
         slz = SubjectTemplateGroupSLZ(instance=relations, many=True)

@@ -122,3 +122,8 @@ class SubjectTemplateGroupSLZ(GroupSLZ):
             return ""
 
         return self.subject_template_dict.get(obj.template_id).name
+
+
+class SubjectTemplateGroupQuerySLZ(serializers.Serializer):
+    limit = serializers.IntegerField(label="分页Limit", min_value=1, max_value=100)
+    offset = serializers.IntegerField(label="分页offset", min_value=0)
