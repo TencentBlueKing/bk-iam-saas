@@ -456,6 +456,18 @@
             this.emptyMemberTemplateData,
             this.panels[2].count === 0
           );
+
+          if (this.memberTempByUserList && this.memberTempByUserList.length) {
+            this.memberTempByUserList.forEach(item => {
+              item.role_members = this.formatRoleMembers(item.role_members);
+            });
+          }
+
+          if (this.memberTempByDepartList && this.memberTempByDepartList.length) {
+            this.memberTempByDepartList.forEach(item => {
+              item.role_members = this.formatRoleMembers(item.role_members);
+            });
+          }
         } catch (e) {
           this.messageAdvancedError(e);
           this.memberTempByUserList = [];
