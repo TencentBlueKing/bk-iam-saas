@@ -36,7 +36,7 @@ class Command(BaseCommand):
 
                 # 遍历role创建每一个group
                 for group_id in RoleRelatedObject.objects.filter(
-                    role_id=role_id, type=RoleRelatedObjectType.GROUP.value
+                    role_id=role_id, object_type=RoleRelatedObjectType.GROUP.value
                 ).values_list("object_id", flat=True):
                     # 查询group的所有成员
                     members = list_all_subject_member(SubjectType.GROUP.value, str(group_id))

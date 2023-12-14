@@ -39,13 +39,13 @@ class Command(BaseCommand):
                 # 遍历role创建每一个group
                 group_ids = list(
                     RoleRelatedObject.objects.filter(
-                        role_id=role.id, type=RoleRelatedObjectType.GROUP.value
+                        role_id=role.id, object_type=RoleRelatedObjectType.GROUP.value
                     ).values_list("object_id", flat=True)
                 )
 
                 exist_subject_template_ids = list(
                     RoleRelatedObject.objects.filter(
-                        role_id=role.id, type=RoleRelatedObjectType.SUBJECT_TEMPLATE.value
+                        role_id=role.id, object_type=RoleRelatedObjectType.SUBJECT_TEMPLATE.value
                     ).values_list("object_id", flat=True)
                 )
 
