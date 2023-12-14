@@ -167,6 +167,8 @@
         },
         emptyDepartmentGroupData: {},
         emptyTemporarySystemData: {},
+        emptyMemberTemplateData: {},
+        emptyCustomData: {},
         emptyData: {
           type: '',
           text: '',
@@ -406,7 +408,7 @@
         }
       },
 
-      async fetchPermGroupsByUser () {
+      async fetchMemberTempByUserSearch () {
         try {
           const { current, limit } = this.curSearchPagination;
           const { id, username, type } = this.curData;
@@ -497,9 +499,9 @@
       },
 
       async fetchMemberTempByWay () {
-        await Promise.all([this.fetchMemberTempByDepartSearch()]);
-        const { departCount } = this.panels[1];
-        this.$set(this.panels[2], 'count', departCount);
+        await Promise.all([this.fetchMemberTempByUserSearch(), this.fetchMemberTempByDepartSearch()]);
+        const { userCount, departCount } = this.panels[2];
+        this.$set(this.panels[2], 'count', userCount + departCount);
       },
 
       async fetchRemoteTable (isRefreshCurCount = false) {
@@ -517,11 +519,11 @@
               await Promise.all([
                 this.fetchUserGroupSearch(),
                 this.fetchDepartSearch(),
+                this.fetchMemberTempByWay(),
                 this.fetchPolicySearch()
               ]);
             }
-            this.curEmptyData = Object.assign({}, this.emptyData, { tipType: this.isSearchPerm ? 'search' : '' });
-            this.tabKey = +new Date();
+            this.handleRefreshTabData('emptyData');
           },
           DepartmentGroupPerm: async () => {
             this.emptyDepartmentGroupData = _.cloneDeep(this.curEmptyData);
@@ -531,11 +533,25 @@
               await Promise.all([
                 this.fetchDepartSearch(),
                 this.fetchUserGroupSearch(),
+                this.fetchMemberTempByWay(),
                 this.fetchPolicySearch()
               ]);
             }
-            this.curEmptyData = Object.assign({}, this.emptyDepartmentGroupData, { tipType: this.isSearchPerm ? 'search' : '' });
-            this.tabKey = +new Date();
+            this.handleRefreshTabData('emptyDepartmentGroupData');
+          },
+          MemberTemplateGroupPerm: async () => {
+            this.emptyMemberTemplateData = _.cloneDeep(this.curEmptyData);
+            if (isRefreshCurCount) {
+              await this.fetchMemberTempByWay();
+            } else {
+              await Promise.all([
+                this.fetchMemberTempByWay(),
+                this.fetchUserGroupSearch(),
+                this.fetchDepartSearch(),
+                this.fetchPolicySearch()
+              ]);
+            }
+            this.handleRefreshTabData('emptyMemberTemplateData');
           },
           CustomPerm: async () => {
             this.emptyCustomData = _.cloneDeep(this.curEmptyData);
@@ -545,11 +561,11 @@
               await Promise.all([
                 this.fetchPolicySearch(),
                 this.fetchUserGroupSearch(),
-                this.fetchDepartSearch()
+                this.fetchDepartSearch(),
+                this.fetchMemberTempByWay()
               ]);
             }
-            this.curEmptyData = Object.assign({}, this.emptyCustomData, { tipType: this.isSearchPerm ? 'search' : '' });
-            this.tabKey = +new Date();
+            this.handleRefreshTabData('emptyCustomData');
           }
         };
         return typeMap[this.active] ? typeMap[this.active]() : typeMap['GroupPerm']();
@@ -581,14 +597,6 @@
         }
       },
 
-      async handleRefreshTable () {
-        this.curEmptyData.tipType = '';
-        this.isSearchPerm = false;
-        this.curSearchParams = {};
-        // 重置搜索参数需要去掉tab上的数量
-        this.tabKey = +new Date();
-      },
-
       async handleTabChange (tabName) {
         this.active = tabName;
         // 如果active是同一项目
@@ -600,6 +608,26 @@
           this.handleSelectGroup([]);
         }
         window.history.replaceState({}, '', `?${buildURLParams(searchParams)}`);
+      },
+
+      handleRefreshTabData (payload) {
+        let tipType = '';
+        if (this.isSearchPerm) {
+          tipType = 'search';
+        }
+        if (this[payload].type === 500) {
+          tipType = 'refresh';
+        }
+        this.curEmptyData = Object.assign({}, this[payload], { tipType });
+        this.tabKey = +new Date();
+      },
+
+      handleRefreshTable () {
+        this.curEmptyData.tipType = '';
+        this.isSearchPerm = false;
+        this.curSearchParams = {};
+        // 重置搜索参数需要去掉tab上的数量
+        this.tabKey = +new Date();
       },
 
       formatCheckGroups () {
@@ -673,13 +701,11 @@
 
       handleEmptyRefresh () {
         this.isSearchPerm = false;
-        // 调用子组件的刷新方法
-        this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyClear();
+        this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyRefresh();
       },
 
       handleEmptyClear () {
         this.isSearchPerm = false;
-        // 调用子组件的刷新方法
         this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyClear();
       }
     }

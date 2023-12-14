@@ -730,7 +730,9 @@ export default {
      * @return {Promise} promise 对象
      */
     getMemberTempByUser ({ commit, state, dispatch }, params, config) {
-      return http.post(`${AJAX_URL_PREFIX}/users/subject_template_groups/`, params, config);
+      const { offset, limit } = params;
+      const queryParams = Object.assign({}, { offset, limit });
+      return http.post(`${AJAX_URL_PREFIX}/users/subject_template_groups/?${json2Query(queryParams)}`, params, config);
     },
       
     /**
@@ -744,7 +746,9 @@ export default {
      * @return {Promise} promise 对象
      */
     getMemberTempByDepart ({ commit, state, dispatch }, params, config) {
-      return http.post(`${AJAX_URL_PREFIX}/users/departments/-/subject_template_groups/`, params, config);
+      const { offset, limit } = params;
+      const queryParams = Object.assign({}, { offset, limit });
+      return http.post(`${AJAX_URL_PREFIX}/users/departments/-/subject_template_groups/?${json2Query(queryParams)}`, params, config);
     },
 
     /**
@@ -758,7 +762,9 @@ export default {
      * @return {Promise} promise 对象
      */
     getMemberTempByUserSearch ({ commit, state, dispatch }, params, config) {
-      return http.post(`${AJAX_URL_PREFIX}/users/subject_template_groups/`, params, config);
+      const { offset, limit } = params;
+      const queryParams = Object.assign({}, { offset, limit });
+      return http.post(`${AJAX_URL_PREFIX}/users/subject_template_groups/?${json2Query(queryParams)}`, params, config);
     },
 
     /**
@@ -772,7 +778,9 @@ export default {
      * @return {Promise} promise 对象
      */
     getMemberTempByDepartSearch ({ commit, state, dispatch }, params, config) {
-      return http.post(`${AJAX_URL_PREFIX}/users/departments/-/subject_template_groups/`, params, config);
+      const { offset, limit } = params;
+      const queryParams = Object.assign({}, { offset, limit });
+      return http.post(`${AJAX_URL_PREFIX}/users/departments/-/subject_template_groups/?${json2Query(queryParams)}`, params, config);
     },
 
     /**
@@ -854,8 +862,10 @@ export default {
      * @return {Promise} promise 对象
      */
     getPermGroupsByTemp ({ commit, state, dispatch }, params = {}, config) {
+      const { offset, limit } = params;
+      const queryParams = Object.assign({}, { offset, limit });
       return http.post(
-        `${AJAX_URL_PREFIX}/subjects/${params.subjectType}/${params.subjectId}/subject_template_groups/`,
+        `${AJAX_URL_PREFIX}/subjects/${params.subjectType}/${params.subjectId}/subject_template_groups/?${json2Query(queryParams)}`,
         params,
         config
       );
@@ -873,8 +883,10 @@ export default {
        * @return {Promise} promise 对象
        */
     getDepartPermGroupsByTemp ({ commit, state, dispatch }, params = {}, config) {
+      const { offset, limit } = params;
+      const queryParams = Object.assign({}, { offset, limit });
       return http.post(
-        `${AJAX_URL_PREFIX}/subjects/${params.subjectType}/${params.subjectId}/departments/-/subject_template_groups/`,
+        `${AJAX_URL_PREFIX}/subjects/${params.subjectType}/${params.subjectId}/departments/-/subject_template_groups/?${json2Query(queryParams)}`,
         params,
         config
       );
@@ -891,8 +903,10 @@ export default {
      * @return {Promise} promise 对象
      */
     getPermGroupsByTempSearch ({ commit, state, dispatch }, params, config) {
+      const { offset, limit } = params;
+      const queryParams = Object.assign({}, { offset, limit });
       return http.post(
-        `${AJAX_URL_PREFIX}/subjects/${params.subjectType}/${params.subjectId}/subject_template_groups/`,
+        `${AJAX_URL_PREFIX}/subjects/${params.subjectType}/${params.subjectId}/subject_template_groups/?${json2Query(queryParams)}`,
         params,
         config
       );
@@ -909,8 +923,10 @@ export default {
      * @return {Promise} promise 对象
      */
     getDepartPermGroupsByTempSearch ({ commit, state, dispatch }, params, config) {
+      const { offset, limit } = params;
+      const queryParams = Object.assign({}, { offset, limit });
       return http.post(
-        `${AJAX_URL_PREFIX}/subjects/${params.subjectType}/${params.subjectId}/departments/-/subject_template_groups/`,
+        `${AJAX_URL_PREFIX}/subjects/${params.subjectType}/${params.subjectId}/departments/-/subject_template_groups/?${json2Query(queryParams)}`,
         params,
         config
       );

@@ -238,21 +238,19 @@
         const { emptyData, pagination } = this.memberTempPermData[0];
         try {
           this.memberTempPermData[0].loading = true;
-          let url = '';
-          let params = {};
           const { current, limit } = pagination;
+          let url = 'perm/getMemberTempByUser';
+          let params = {
+            limit,
+            offset: limit * (current - 1)
+          };
+ 
           if (this.isSearchPerm) {
             url = 'perm/getMemberTempByUserSearch';
             params = {
               ...this.curSearchParams,
               limit,
               offset: limit * (current - 1)
-            };
-          } else {
-            url = 'perm/getMemberTempByUser';
-            params = {
-              page_size: limit,
-              page: current
             };
           }
           if (this.externalSystemId) {
@@ -287,21 +285,19 @@
         const { emptyData, pagination } = this.memberTempPermData[1];
         try {
           this.memberTempPermData[1].loading = true;
-          let url = '';
-          let params = {};
           const { current, limit } = pagination;
+          let url = 'perm/getMemberTempByDepart';
+          let params = {
+            limit,
+            offset: limit * (current - 1)
+          };
+ 
           if (this.isSearchPerm) {
             url = 'perm/getMemberTempByDepartSearch';
             params = {
               ...this.curSearchParams,
               limit,
               offset: limit * (current - 1)
-            };
-          } else {
-            url = 'perm/getMemberTempByDepart';
-            params = {
-              page_size: limit,
-              page: current
             };
           }
           if (this.externalSystemId) {
@@ -337,22 +333,19 @@
       async fetchPermGroupsByUser () {
         const { emptyData, pagination } = this.memberTempPermData[0];
         try {
-          this.memberTempPermData[1].loading = true;
-          let url = '';
-          let params = {};
+          this.memberTempPermData[0].loading = true;
           const { current, limit } = pagination;
+          let url = 'perm/getPermGroupsByTemp';
+          let params = {
+            limit,
+            offset: limit * (current - 1)
+          };
           if (this.isSearchPerm) {
             url = 'perm/getPermGroupsByTempSearch';
             params = {
               ...this.curSearchParams,
               limit,
               offset: limit * (current - 1)
-            };
-          } else {
-            url = 'perm/getPermGroupsByTemp';
-            params = {
-              limit,
-              offset: current
             };
           }
           if (this.externalSystemId) {
@@ -397,21 +390,18 @@
         const { emptyData, pagination } = this.memberTempPermData[1];
         try {
           this.memberTempPermData[1].loading = true;
-          let url = '';
-          let params = {};
           const { current, limit } = pagination;
+          let url = 'perm/getDepartPermGroupsByTemp';
+          let params = {
+            limit,
+            offset: limit * (current - 1)
+          };
           if (this.isSearchPerm) {
             url = 'perm/getDepartPermGroupsByTempSearch';
             params = {
               ...this.curSearchParams,
               limit,
               offset: limit * (current - 1)
-            };
-          } else {
-            url = 'perm/getDepartPermGroupsByTemp';
-            params = {
-              limit,
-              offset: current
             };
           }
           if (this.externalSystemId) {
@@ -439,7 +429,7 @@
             });
           });
         } catch (e) {
-          console.error(e, 5555);
+          console.error(e);
           this.memberTempPermData[1] = Object.assign(this.memberTempPermData[1], {
             list: [],
             emptyData: formatCodeData(e.code, emptyData),

@@ -278,13 +278,6 @@
         }
       },
 
-      async handleRefreshTable () {
-        this.curEmptyData.tipType = '';
-        this.isSearchPerm = false;
-        this.curSearchParams = {};
-        this.tabKey = +new Date();
-      },
-
       async handleTabChange (tabName) {
         this.active = tabName;
         // 如果active是同一项目
@@ -400,8 +393,7 @@
                 this.fetchMemberTempByWay()
               ]);
             }
-            this.curEmptyData = Object.assign({}, this.emptyData, { tipType: this.isSearchPerm ? 'search' : '' });
-            this.tabKey = +new Date();
+            this.handleRefreshTabData('emptyData');
           },
           MemberTemplateGroupPerm: async () => {
             this.emptyMemberTemplateData = _.cloneDeep(this.curEmptyData);
@@ -409,22 +401,40 @@
               this.fetchMemberTempByWay(),
               this.fetchUserGroupSearch()
             ]);
-            this.curEmptyData = Object.assign({}, this.emptyMemberTemplateData, { tipType: this.isSearchPerm ? 'search' : '' });
-            this.tabKey = +new Date();
+            this.handleRefreshTabData('emptyMemberTemplateData');
           }
         };
         return typeMap[this.active] ? typeMap[this.active]() : typeMap['GroupPerm']();
       },
+
+      handleRefreshTabData (payload) {
+        let tipType = '';
+        if (this.isSearchPerm) {
+          tipType = 'search';
+        }
+        if (this[payload].type === 500) {
+          tipType = 'refresh';
+        }
+        this.curEmptyData = Object.assign({}, this[payload], { tipType });
+        this.tabKey = +new Date();
+      },
+
+      handleRefreshTable () {
+        this.curEmptyData.tipType = '';
+        this.isSearchPerm = false;
+        this.curSearchParams = {};
+        this.tabKey = +new Date();
+      },
       
       handleEmptyRefresh () {
         this.isSearchPerm = false;
-        this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyClear();
+        this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyRefresh();
       },
 
       handleEmptyClear () {
-        this.handleEmptyRefresh();
+        this.isSearchPerm = false;
+        this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyClear();
       }
-
     }
   };
 </script>
