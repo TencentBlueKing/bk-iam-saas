@@ -109,6 +109,7 @@ class UserPolicySearchSLZ(serializers.Serializer):
 class SubjectTemplateGroupSLZ(GroupSLZ):
     template_id = serializers.IntegerField(label="模板ID")
     template_name = serializers.SerializerMethodField(label="模板名称")
+    created_time = serializers.SerializerMethodField(label="创建时间")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -122,6 +123,9 @@ class SubjectTemplateGroupSLZ(GroupSLZ):
             return ""
 
         return self.subject_template_dict.get(obj.template_id).name
+
+    def get_created_time(self, obj):
+        return serializers.DateTimeField().to_representation(obj.created_time)
 
 
 class SubjectTemplateGroupQuerySLZ(serializers.Serializer):

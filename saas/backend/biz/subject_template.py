@@ -277,7 +277,7 @@ class SubjectTemplateBiz:
         if hidden:
             where_conditions.append("a.hidden = 0")
         if group_ids:
-            where_conditions.append("a.id IN (%s)")
+            where_conditions.append("a.id IN %s")
             params.append(tuple(group_ids))
 
         sql_query = """
@@ -336,7 +336,7 @@ class SubjectTemplateBiz:
         if hidden:
             where_conditions.append("a.hidden = 0")
         if group_ids:
-            where_conditions.append("a.id IN (%s)")
+            where_conditions.append("a.id IN %s")
             params.append(tuple(group_ids))
 
         sql_query = """
@@ -349,7 +349,7 @@ class SubjectTemplateBiz:
             LEFT JOIN
                 subject_template_subjecttemplaterelation AS c ON b.template_id = c.template_id
             WHERE
-                c.subject_type = %s AND c.subject_id IN (%s)
+                c.subject_type = %s AND c.subject_id IN %s
         """
 
         if where_conditions:
@@ -388,7 +388,7 @@ class SubjectTemplateBiz:
         if hidden:
             where_conditions.append("a.hidden = 0")
         if group_ids:
-            where_conditions.append("a.id IN (%s)")
+            where_conditions.append("a.id IN %s")
             params.append(tuple(group_ids))
 
         params.extend([limit, offset])
@@ -476,7 +476,7 @@ class SubjectTemplateBiz:
         if hidden:
             where_conditions.append("a.hidden = 0")
         if group_ids:
-            where_conditions.append("a.id IN (%s)")
+            where_conditions.append("a.id IN %s")
             params.append(tuple(group_ids))
 
         params.extend([limit, offset])
@@ -499,7 +499,7 @@ class SubjectTemplateBiz:
             LEFT JOIN
                 subject_template_subjecttemplaterelation AS c ON b.template_id = c.template_id
             WHERE
-                c.subject_type = %s AND c.subject_id IN (%s)
+                c.subject_type = %s AND c.subject_id IN %s
         """
 
         if where_conditions:
