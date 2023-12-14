@@ -167,7 +167,7 @@ export const m = {
         '请尝试': 'Please try ',
         '修改授权人员范围': 'to modify the authorized personnel range',
         '添加到已选列表': 'Add to selected list',
-        '手动输入提示': 'Please enter the username, separated by Enter/semicolon/space',
+        '手动输入提示': 'Please enter the username, separated by Enter/semicolon/comma/space',
         '重置': 'Reset',
         '搜索当前层级资源': 'Search current level resources',
         '操作成功': 'Succeeded',
@@ -753,6 +753,7 @@ export const m = {
         '通过组织加入': 'Through Organization',
         '组权限': 'Permissions',
         '所属组织用户组权限': 'Group Permissions of the Organization',
+        '所属人员模板用户组权限': 'Member Template User Group Permissions',
         '临时权限申请': 'Apply for temporary permissions',
         '一组实例权限': ' A Set of Instance Permissions',
         '不能删除当前操作': 'Unable to delete current permission',
@@ -761,7 +762,9 @@ export const m = {
         '删除实例资源权限组': 'Delete instance resource permission groups',
         '唯一管理员不可退出': 'The only administrator cannot quit',
         '存在用户组不可退出（唯一管理员不能退出）': 'There is user group that cannot be logged out (the only administrator cannot log out)',
-        '当前勾选项都为不可退出的用户组（唯一管理员不能退出）': 'The current checked options are all user groups that cannot be logged out (the only administrator cannot log out)'
+        '当前勾选项都为不可退出的用户组（唯一管理员不能退出）': 'The current checked options are all user groups that cannot be logged out (the only administrator cannot log out)',
+        '通过用户加入人员模板的用户组权限': 'User group permissions for joining member templates through users',
+        '通过组织加入人员模板的用户组权限': 'User group permissions for joining member templates through organization'
     },
     permTemplate: {
         '模板名': 'Template name',
@@ -849,7 +852,7 @@ export const m = {
         '成员': 'Members',
         '成员和组织架构': 'Members and organizational structure',
         '不可被申请': 'Not applicable',
-        '该组只能管理员主动授权，用户无法主动申请': 'This group can only be actively authorized by administrators, and users cannot actively apply',
+        '设置后该组只能管理员主动授权，用户无法主动申请': 'After setting up, this group can only be actively authorized by administrators, and users cannot apply proactively',
         '设置不可被申请，则无法申请加入此用户组': 'If the setting cannot be applied for, you cannot apply to join this user group',
         '管理员已设置空间下所有用户组不可被申请': 'The administrator has set that all user groups in the space cannot be applied for',
         '已选择的用户组成员不需要续期': 'The selected user group members do not need to be renewed',
@@ -866,7 +869,7 @@ export const m = {
         '所属组织架构': 'Organizational structure',
         '请输入用户/组织或人员模板，按enter键搜索': 'Please enter user/organization or members template, press enter to search',
         '该有效期为模板里成员的默认有效期，实际有效期以成员有效期为准': 'This validity period is the default validity period of the members in the template, and the actual validity period is based on the members validity period',
-        '单次最多添加100个成员，批量复制的内容不可随意编辑，如需减少成员，可通过再次批量粘贴添加人员': 'Add up to 100 members at a time. The content copied in bulk cannot be edited at will. If you want to reduce members, you can add them by pasting them again in bulk'
+        '单次最多添加100个成员/组织，批量复制的内容不可随意编辑，如超过上限100个，可通过再次批量粘贴添加人员': 'A maximum of 100 members/organizations can be added at a time. The content copied in bulk cannot be edited at will. If it exceeds the limit of 100, personnel can be added by pasting in bulk again'
     },
     resource: {
         '无限制总文案': 'If the action does not require restricted instances, select unlimited',

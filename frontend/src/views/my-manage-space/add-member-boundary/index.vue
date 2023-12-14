@@ -160,7 +160,7 @@
                   <bk-alert
                     type="info"
 
-                    :title="$t(`m.userGroupDetail['单次最多添加100个成员，批量复制的内容不可随意编辑，如需减少成员，可通过再次批量粘贴添加人员']`)"
+                    :title="$t(`m.userGroupDetail['单次最多添加100个成员/组织，批量复制的内容不可随意编辑，如超过上限100个，可通过再次批量粘贴添加人员']`)"
                   />
                 </div>
                 <div class="manual-wrapper">
