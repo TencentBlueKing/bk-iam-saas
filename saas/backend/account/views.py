@@ -43,7 +43,7 @@ class UserViewSet(GenericViewSet):
                 "username": user.username,
                 "role": {"type": role.type, "id": role.id, "name": role.name},
                 "timezone": user.get_property("time_zone"),
-                "name": u.display_name,
+                "name": u.display_name if u else "",
             }
         )
 

@@ -38,6 +38,7 @@ from backend.biz.application import (
 )
 from backend.biz.group import GroupBiz
 from backend.biz.role import RoleCheckBiz
+from backend.common.error_codes import error_codes
 from backend.common.lock import gen_role_upsert_lock
 from backend.service.constants import ApplicationType, RoleType, SubjectType
 from backend.service.models import Applicant, Subject
@@ -77,7 +78,9 @@ class ManagementGroupApplicationViewSet(GenericViewSet):
         user_id = data["applicant"]
 
         # 转换为ApplicationBiz创建申请单所需数据结构
-        user = UserModel.objects.get(username=user_id)
+        user = UserModel.objects.filter(username=user_id).first()
+        if not user:
+            raise error_codes.INVALID_ARGS.format(f"user: {user_id} not exists")
 
         source_system_id = kwargs["system_id"]
 
@@ -299,7 +302,9 @@ class ManagementGroupRenewApplicationViewSet(GenericViewSet):
         user_id = data["applicant"]
 
         # 转换为ApplicationBiz创建申请单所需数据结构
-        user = UserModel.objects.get(username=user_id)
+        user = UserModel.objects.filter(username=user_id).first()
+        if not user:
+            raise error_codes.INVALID_ARGS.format(f"user: {user_id} not exists")
 
         source_system_id = kwargs["system_id"]
 
