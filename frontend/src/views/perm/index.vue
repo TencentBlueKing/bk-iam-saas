@@ -127,6 +127,10 @@
                   :system-list="systemList"
                   :tep-system-list="teporarySystemList"
                   :department-group-list="departmentGroupList"
+                  :member-temp-by-user-list="memberTempByUserList"
+                  :member-temp-by-depart-list="memberTempByDepartList"
+                  :member-temp-by-user-count="panels[2].userCount"
+                  :member-temp-by-depart-count="panels[2].departCount"
                   :empty-data="curEmptyData"
                   :cur-search-params="curSearchParams"
                   :cur-search-pagination="curSearchPagination"
@@ -136,7 +140,7 @@
                   @on-select-group="handleSelectGroup"
                   @on-clear="handleEmptyClear"
                   @on-refresh="handleEmptyRefresh"
-                ></component>
+                />
               </div>
             </bk-tab-panel>
           </bk-tab>
@@ -164,6 +168,7 @@
   import TeporaryCustomPerm from './teporary-custom-perm/index.vue';
   import GroupPerm from './group-perm/index.vue';
   import DepartmentGroupPerm from './department-group-perm/index.vue';
+  import MemberTemplateGroupPerm from './member-template-group-perm/index.vue';
   import IamResourceCascadeSearch from '@/components/iam-resource-cascade-search';
   import theFooter from '@/components/footer/index.vue';
 
@@ -174,6 +179,7 @@
       TeporaryCustomPerm,
       GroupPerm,
       DepartmentGroupPerm,
+      MemberTemplateGroupPerm,
       IamResourceCascadeSearch,
       theFooter
     },
@@ -191,6 +197,15 @@
             name: 'DepartmentGroupPerm',
             label: this.$t(`m.perm['所属组织用户组权限']`),
             empty: 'emptyDepartmentGroupData',
+            count: 0,
+            userCount: 0,
+            departCount: 0,
+            selectList: []
+          },
+          {
+            name: 'MemberTemplateGroupPerm',
+            label: this.$t(`m.perm['所属人员模板用户组权限']`),
+            empty: 'emptyMemberTemplateData',
             count: 0,
             selectList: []
           },
@@ -217,6 +232,8 @@
         systemListStorage: [],
         teporarySystemList: [],
         departmentGroupList: [],
+        memberTempByUserList: [],
+        memberTempByDepartList: [],
         curSearchParams: {},
         curSearchPagination: {
           current: 1,
@@ -231,6 +248,8 @@
         },
         emptyDepartmentGroupData: {},
         emptyTemporarySystemData: {},
+        emptyCustomData: {},
+        emptyMemberTemplateData: {},
         curEmptyData: {
           type: 'empty',
           text: '暂无数据',
@@ -270,7 +289,7 @@
       externalSystemsLayout: {
         handler (value) {
           if (value.myPerm.hideCustomTab) {
-            this.panels.splice(2, 1);
+            this.panels.splice(3, 1);
           }
         },
         immediate: true,
@@ -291,6 +310,7 @@
       this.emptyCustomData = _.cloneDeep(this.emptyData);
       this.emptyTemporarySystemData = _.cloneDeep(this.emptyData);
       this.emptyDepartmentGroupData = _.cloneDeep(this.emptyData);
+      this.emptyMemberTemplateData = _.cloneDeep(this.emptyData);
       // if (this.enableTemporaryPolicy.toLowerCase() === 'true') {
       //   this.panels.push({
       //     name: 'TeporaryCustomPerm',
@@ -373,6 +393,7 @@
           this.departmentGroupList.splice(0, this.departmentGroupList.length, ...departmentGroupList);
           this.emptyDepartmentGroupData
             = formatCodeData(departmentGroupCode, this.emptyDepartmentGroupData, this.departmentGroupList.length === 0);
+
           this.formatCheckGroups();
           this.isEmpty = personalGroupList.length < 1 && systemList.length < 1
             && teporarySystemList.length < 1 && departmentGroupList.length < 1;
@@ -382,18 +403,72 @@
           this.isNoExternalRenewal = this.soonGroupLength < 1;
           this.isNoTransfer = hideApplyBtn ? !personalGroupList.length
             : (!personalGroupList.length && !systemList.length && !this.roleList.length);
+
+          await this.fetchMemberTempPermData(userGroupParams);
         } catch (e) {
           console.error(e);
-          const { code } = e;
           this.messageAdvancedError(e);
-          // 获取非阻塞且未报错列表接口信息
-          // await this.fetchAsyncTable(requestList);
           const emptyField = this.panels.find(item => item.name === this.active);
           if (emptyField) {
-            this[emptyField.empty] = formatCodeData(code, this[emptyField.empty]);
+            this[emptyField.empty] = formatCodeData(e.code, this[emptyField.empty]);
           }
         } finally {
           this.componentLoading = false;
+        }
+      },
+
+      // 获取所属人员模板用户组权限
+      async fetchMemberTempPermData (userGroupParams) {
+        const { page, page_size } = userGroupParams;
+        const params = {
+          // eslint-disable-next-line camelcase
+          offset: page_size * (page - 1),
+          limit: page_size
+        };
+        if (this.externalSystemId) {
+          params.system_id = this.externalSystemId;
+          params.hidden = false;
+        }
+        const list = [
+          this.$store.dispatch('perm/getMemberTempByUser', params),
+          this.$store.dispatch('perm/getMemberTempByDepart', params)
+        ];
+        try {
+          const [
+            { code: memberTempByUserCode, data: memberTempByUserData },
+            { code: memberTempByDepartCode, data: memberTempByDepartData }
+          ] = await Promise.all(list);
+  
+          const memberTempByUserCount = memberTempByUserData.count || 0;
+          this.memberTempByUserList = memberTempByUserData.results || [];
+  
+          const memberTempByDepartCount = memberTempByDepartData.count || 0;
+          this.memberTempByDepartList = memberTempByDepartData.results || [];
+  
+          this.panels[2] = Object.assign(this.panels[2], {
+            userCount: memberTempByUserCount,
+            departCount: memberTempByDepartCount,
+            count: memberTempByUserCount + memberTempByDepartCount
+          });
+  
+          this.emptyDepartmentGroupData = formatCodeData(
+            memberTempByUserCode || memberTempByDepartCode,
+            this.emptyMemberTemplateData,
+            this.panels[2].count === 0
+          );
+        } catch (e) {
+          this.messageAdvancedError(e);
+          this.memberTempByUserList = [];
+          this.memberTempByDepartList = [];
+          this.panels[2] = Object.assign(this.panels[2], {
+            userCount: 0,
+            departCount: 0,
+            count: 0
+          });
+          this.emptyDepartmentGroupData = formatCodeData(e.code, this.emptyMemberTemplateData);
+          if (['MemberTemplateGroupPerm'].includes(this.active)) {
+            this.curEmptyData = _.cloneDeep(this.emptyMemberTemplateData);
+          }
         }
       },
             
@@ -473,6 +548,68 @@
         }
       },
 
+      // 获取通过用户加入的人员模块的用户组权限
+      async fetchMemberTempByUserSearch () {
+        try {
+          const { current, limit } = this.curSearchPagination;
+          const params = {
+            ...this.curSearchParams,
+            limit,
+            offset: limit * (current - 1)
+          };
+          if (this.externalSystemId) {
+            params.system_id = this.externalSystemId;
+            params.hidden = false;
+          }
+          const { code, data } = await this.$store.dispatch('perm/getMemberTempByUserSearch', params);
+          this.memberTempByUserList = data.results || [];
+          this.$set(this.panels[2], 'userCount', data.count || 0);
+          this.emptyMemberTemplateData = formatCodeData(code, this.emptyMemberTemplateData, data.count === 0);
+        } catch (e) {
+          console.error(e);
+          this.memberTempByUserList = [];
+          this.$set(this.panels[2], 'userCount', 0);
+          this.emptyMemberTemplateData = formatCodeData(e.code, this.emptyMemberTemplateData);
+          this.messageAdvancedError(e);
+        } finally {
+          this.componentLoading = false;
+        }
+      },
+
+      // 获取通过组织加入的人员模块的用户组权限
+      async fetchMemberTempByDepartSearch () {
+        const { current, limit } = this.curSearchPagination;
+        const params = {
+          ...this.curSearchParams,
+          limit,
+          offset: limit * (current - 1)
+        };
+        if (this.externalSystemId) {
+          params.system_id = this.externalSystemId;
+          params.hidden = false;
+        }
+        try {
+          const { code, data } = await this.$store.dispatch('perm/getMemberTempByDepartSearch', params);
+          const { count, results } = data;
+          this.memberTempByDepartList = results || [];
+          this.$set(this.panels[2], 'departCount', count || 0);
+          this.emptyMemberTemplateData = formatCodeData(code, this.emptyMemberTemplateData, results.length === 0);
+        } catch (e) {
+          this.messageAdvancedError(e);
+          this.emptyMemberTemplateData = formatCodeData(e.code, this.emptyMemberTemplateData);
+          this.memberTempByDepartList = [];
+          this.$set(this.panels[2], 'departCount', 0);
+        } finally {
+          this.componentLoading = false;
+        }
+      },
+
+      async fetchMemberTempByWay () {
+        await Promise.all([this.fetchMemberTempByUserSearch(), this.fetchMemberTempByDepartSearch()]);
+        const { userCount, departCount } = this.panels[2];
+        this.$set(this.panels[2], 'count', userCount + departCount);
+      },
+
       async fetchRemoteTable (isRefreshCurCount = false) {
         // 这里需要拿到所有tab项的total，所以需要调所有接口, 且需要在当前页动态加载tab的label
         const typeMap = {
@@ -487,6 +624,7 @@
               await Promise.all([
                 this.fetchUserGroupSearch(),
                 this.fetchDepartSearch(),
+                this.fetchMemberTempByWay(),
                 this.fetchPolicySearch()
               ]);
             }
@@ -495,8 +633,7 @@
                 this.$refs.childPermRef[0].$refs.groupPermTableRef.clearSelection();
               });
             }
-            this.curEmptyData = Object.assign({}, this.emptyData, { tipType: this.isSearchPerm ? 'search' : '' });
-            this.tabKey = +new Date();
+            this.handleRefreshTabData('emptyData');
           },
           DepartmentGroupPerm: async () => {
             this.emptyDepartmentGroupData = _.cloneDeep(this.curEmptyData);
@@ -506,11 +643,25 @@
               await Promise.all([
                 this.fetchDepartSearch(),
                 this.fetchUserGroupSearch(),
+                this.fetchMemberTempByWay(),
                 this.fetchPolicySearch()
               ]);
             }
-            this.curEmptyData = Object.assign({}, this.emptyDepartmentGroupData, { tipType: this.isSearchPerm ? 'search' : '' });
-            this.tabKey = +new Date();
+            this.handleRefreshTabData('emptyDepartmentGroupData');
+          },
+          MemberTemplateGroupPerm: async () => {
+            this.emptyMemberTemplateData = _.cloneDeep(this.curEmptyData);
+            if (isRefreshCurCount) {
+              await this.fetchMemberTempByWay();
+            } else {
+              await Promise.all([
+                this.fetchMemberTempByWay(),
+                this.fetchUserGroupSearch(),
+                this.fetchDepartSearch(),
+                this.fetchPolicySearch()
+              ]);
+            }
+            this.handleRefreshTabData('emptyMemberTemplateData');
           },
           CustomPerm: async () => {
             this.emptyCustomData = _.cloneDeep(this.curEmptyData);
@@ -520,11 +671,11 @@
               await Promise.all([
                 this.fetchPolicySearch(),
                 this.fetchUserGroupSearch(),
-                this.fetchDepartSearch()
+                this.fetchDepartSearch(),
+                this.fetchMemberTempByWay()
               ]);
             }
-            this.curEmptyData = Object.assign({}, this.emptyCustomData, { tipType: this.isSearchPerm ? 'search' : '' });
-            this.tabKey = +new Date();
+            this.handleRefreshTabData('emptyCustomData');
           }
         };
         return typeMap[this.active] ? typeMap[this.active]() : typeMap['GroupPerm']();
@@ -556,15 +707,6 @@
         }
       },
 
-      async handleRefreshTable () {
-        this.curEmptyData.tipType = '';
-        this.isSearchPerm = false;
-        this.curSearchParams = {};
-        // 重置搜索参数需要去掉tab上的数量
-        this.tabKey = +new Date();
-        this.fetchData(true);
-      },
-
       async handleTabChange (tabName) {
         this.active = tabName;
         // 如果active是同一项目
@@ -577,22 +719,48 @@
         }
         window.history.replaceState({}, '', `?${buildURLParams(searchParams)}`);
       },
+
+      handleRefreshTabData (payload) {
+        let tipType = '';
+        if (this.isSearchPerm) {
+          tipType = 'search';
+        }
+        if (this[payload].type === 500) {
+          tipType = 'refresh';
+        }
+        this.curEmptyData = Object.assign({}, this[payload], { tipType });
+        this.tabKey = +new Date();
+      },
+
+      handleRefreshTable () {
+        this.curEmptyData.tipType = '';
+        this.isSearchPerm = false;
+        this.curSearchParams = {};
+        // 重置搜索参数需要去掉tab上的数量
+        this.tabKey = +new Date();
+        this.fetchData(true);
+      },
+
+      formatRoleMembers (payload) {
+        if (payload && payload.length) {
+          const hasName = payload.some((v) => v.username);
+          if (!hasName) {
+            payload = payload.map(v => {
+              return {
+                username: v,
+                readonly: false
+              };
+            });
+          }
+        }
+        return payload || [];
+      },
       
       formatCheckGroups () {
         const selectList = this.panels[0].selectList.map(item => item.id.toString());
         setTimeout(() => {
           this.personalGroupList.length && this.personalGroupList.forEach(item => {
-            if (item.role_members && item.role_members.length) {
-              const hasName = item.role_members.some((v) => v.username);
-              if (!hasName) {
-                item.role_members = item.role_members.map(v => {
-                  return {
-                    username: v,
-                    readonly: false
-                  };
-                });
-              }
-            }
+            item.role_members = this.formatRoleMembers(item.role_members);
             if (selectList.includes(item.id.toString())
               && this.$refs.childPermRef
               && this.$refs.childPermRef.length) {
@@ -601,17 +769,17 @@
           });
           if (this.departmentGroupList && this.departmentGroupList.length) {
             this.departmentGroupList.forEach(item => {
-              if (item.role_members && item.role_members.length) {
-                const hasName = item.role_members.some((v) => v.username);
-                if (!hasName) {
-                  item.role_members = item.role_members.map(v => {
-                    return {
-                      username: v,
-                      readonly: false
-                    };
-                  });
-                }
-              }
+              item.role_members = this.formatRoleMembers(item.role_members);
+            });
+          }
+          if (this.memberTempByUserList && this.memberTempByUserList.length) {
+            this.memberTempByUserList.forEach(item => {
+              item.role_members = this.formatRoleMembers(item.role_members);
+            });
+          }
+          if (this.memberTempByDepartList && this.memberTempByDepartList.length) {
+            this.memberTempByDepartList.forEach(item => {
+              item.role_members = this.formatRoleMembers(item.role_members);
             });
           }
         }, 0);
@@ -682,13 +850,11 @@
       
       handleEmptyRefresh () {
         this.isSearchPerm = false;
-        // 调用子组件的刷新方法
-        this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyClear();
+        this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyRefresh();
       },
 
       handleEmptyClear () {
         this.isSearchPerm = false;
-        // 调用子组件的刷新方法
         this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyClear();
       }
     }

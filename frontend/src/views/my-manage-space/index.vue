@@ -975,18 +975,16 @@
   .level-manage-table {
     margin-top: 16px;
   }
-
   .right-form {
     display: flex;
   }
 
   .AdminLink {
-        margin-left: 10px;
-        .linkText {
-            font-size: 12px
-        }
+    margin-left: 10px;
+    .linkText {
+        font-size: 12px
+    }
   }
-
   /deep/ .flex_space_name {
     display: flex;
     align-items: center;
@@ -1090,7 +1088,7 @@
     }
 }
 
-.custom-perm-del-info {
+/deep/ .custom-perm-del-info {
   .bk-dialog-footer {
     padding: 0 65px 33px !important;
   }

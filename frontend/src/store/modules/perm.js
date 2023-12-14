@@ -720,6 +720,70 @@ export default {
     },
 
     /**
+     *  通过用户加入人员模板的用户组权限
+     *
+     * @param {Function} commit store commit mutation handler
+     * @param {Object} state store state
+     * @param {Function} dispatch store dispatch action handler
+     * @param {Object?} config http config
+     *
+     * @return {Promise} promise 对象
+     */
+    getMemberTempByUser ({ commit, state, dispatch }, params, config) {
+      const { offset, limit } = params;
+      const queryParams = Object.assign({}, { offset, limit });
+      return http.post(`${AJAX_URL_PREFIX}/users/subject_template_groups/?${json2Query(queryParams)}`, params, config);
+    },
+      
+    /**
+     *  通过组织加入人员模板的用户组权限
+     *
+     * @param {Function} commit store commit mutation handler
+     * @param {Object} state store state
+     * @param {Function} dispatch store dispatch action handler
+     * @param {Object?} config http config
+     *
+     * @return {Promise} promise 对象
+     */
+    getMemberTempByDepart ({ commit, state, dispatch }, params, config) {
+      const { offset, limit } = params;
+      const queryParams = Object.assign({}, { offset, limit });
+      return http.post(`${AJAX_URL_PREFIX}/users/departments/-/subject_template_groups/?${json2Query(queryParams)}`, params, config);
+    },
+
+    /**
+     *  通过用户加入人员模板的用户组权限搜索
+     *
+     * @param {Function} commit store commit mutation handler
+     * @param {Object} state store state
+     * @param {Function} dispatch store dispatch action handler
+     * @param {Object?} config http config
+     *
+     * @return {Promise} promise 对象
+     */
+    getMemberTempByUserSearch ({ commit, state, dispatch }, params, config) {
+      const { offset, limit } = params;
+      const queryParams = Object.assign({}, { offset, limit });
+      return http.post(`${AJAX_URL_PREFIX}/users/subject_template_groups/?${json2Query(queryParams)}`, params, config);
+    },
+
+    /**
+     *  通过组织加入人员模板的用户组权限搜索
+     *
+     * @param {Function} commit store commit mutation handler
+     * @param {Object} state store state
+     * @param {Function} dispatch store dispatch action handler
+     * @param {Object?} config http config
+     *
+     * @return {Promise} promise 对象
+     */
+    getMemberTempByDepartSearch ({ commit, state, dispatch }, params, config) {
+      const { offset, limit } = params;
+      const queryParams = Object.assign({}, { offset, limit });
+      return http.post(`${AJAX_URL_PREFIX}/users/departments/-/subject_template_groups/?${json2Query(queryParams)}`, params, config);
+    },
+
+    /**
      *  用户模块用户组权限搜索
      *
      * @param {Function} commit store commit mutation handler
@@ -781,6 +845,88 @@ export default {
       delete params.name;
       return http.post(
         `${AJAX_URL_PREFIX}/subjects/${params.subjectType}/${params.subjectId}/policies/search/`,
+        params,
+        config
+      );
+    },
+
+    /**
+     * 用户模块——>通过用户加入人员模板的用户组权限
+     *
+     * @param {Function} commit store commit mutation handler
+     * @param {Object} state store state
+     * @param {Function} dispatch store dispatch action handler
+     * @param {Object} params 请求参数
+     * @param {Object?} config http config
+     *
+     * @return {Promise} promise 对象
+     */
+    getPermGroupsByTemp ({ commit, state, dispatch }, params = {}, config) {
+      const { offset, limit } = params;
+      const queryParams = Object.assign({}, { offset, limit });
+      return http.post(
+        `${AJAX_URL_PREFIX}/subjects/${params.subjectType}/${params.subjectId}/subject_template_groups/?${json2Query(queryParams)}`,
+        params,
+        config
+      );
+    },
+  
+    /**
+       * 用户模块——>通过组织加入人员模板的用户组权限
+       *
+       * @param {Function} commit store commit mutation handler
+       * @param {Object} state store state
+       * @param {Function} dispatch store dispatch action handler
+       * @param {Object} params 请求参数
+       * @param {Object?} config http config
+       *
+       * @return {Promise} promise 对象
+       */
+    getDepartPermGroupsByTemp ({ commit, state, dispatch }, params = {}, config) {
+      const { offset, limit } = params;
+      const queryParams = Object.assign({}, { offset, limit });
+      return http.post(
+        `${AJAX_URL_PREFIX}/subjects/${params.subjectType}/${params.subjectId}/departments/-/subject_template_groups/?${json2Query(queryParams)}`,
+        params,
+        config
+      );
+    },
+
+    /**
+     *  用户模块通过用户加入人员模板的用户组权限搜索
+     *
+     * @param {Function} commit store commit mutation handler
+     * @param {Object} state store state
+     * @param {Function} dispatch store dispatch action handler
+     * @param {Object?} config http config
+     *
+     * @return {Promise} promise 对象
+     */
+    getPermGroupsByTempSearch ({ commit, state, dispatch }, params, config) {
+      const { offset, limit } = params;
+      const queryParams = Object.assign({}, { offset, limit });
+      return http.post(
+        `${AJAX_URL_PREFIX}/subjects/${params.subjectType}/${params.subjectId}/subject_template_groups/?${json2Query(queryParams)}`,
+        params,
+        config
+      );
+    },
+
+    /**
+     *  用户模块通过组织加入人员模板的用户组权限搜索
+     *
+     * @param {Function} commit store commit mutation handler
+     * @param {Object} state store state
+     * @param {Function} dispatch store dispatch action handler
+     * @param {Object?} config http config
+     *
+     * @return {Promise} promise 对象
+     */
+    getDepartPermGroupsByTempSearch ({ commit, state, dispatch }, params, config) {
+      const { offset, limit } = params;
+      const queryParams = Object.assign({}, { offset, limit });
+      return http.post(
+        `${AJAX_URL_PREFIX}/subjects/${params.subjectType}/${params.subjectId}/departments/-/subject_template_groups/?${json2Query(queryParams)}`,
         params,
         config
       );
