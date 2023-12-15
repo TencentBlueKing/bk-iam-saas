@@ -764,7 +764,8 @@ export const m = {
         '存在用户组不可退出（唯一管理员不能退出）': 'There is user group that cannot be logged out (the only administrator cannot log out)',
         '当前勾选项都为不可退出的用户组（唯一管理员不能退出）': 'The current checked options are all user groups that cannot be logged out (the only administrator cannot log out)',
         '通过用户加入人员模板的用户组权限': 'User group permissions for joining member templates through users',
-        '通过组织加入人员模板的用户组权限': 'User group permissions for joining member templates through organization'
+        '通过组织加入人员模板的用户组权限': 'User group permissions for joining member templates through organization',
+        '通过人员模板加入': 'Through Member Template'
     },
     permTemplate: {
         '模板名': 'Template name',

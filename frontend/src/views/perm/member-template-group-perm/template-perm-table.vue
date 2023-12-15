@@ -49,20 +49,15 @@
       </bk-table-column>
       <bk-table-column :label="$t(`m.perm['加入方式']`)">
         <template slot-scope="{ row }">
-          <span v-if="row.department_id === 0">{{ $t(`m.perm['直接加入']`) }}</span>
-          <span v-else :title="`${$t(`m.perm['通过组织加入']`)}: ${row.department_name}`">
-            {{ $t(`m.perm['通过组织加入']`) }}: {{ row.department_name }}
+          <span :title="`${$t(`m.perm['通过人员模板加入']`)}: ${row.template_name}`">
+            {{ $t(`m.perm['通过人员模板加入']`) }}: {{ row.template_name }}
           </span>
         </template>
       </bk-table-column>
       <bk-table-column :label="$t(`m.common['有效期']`)" prop="expired_at_display" />
-      <bk-table-column :label="$t(`m.common['操作-table']`)" width="200">
-        <template slot-scope="{ row }">
-          <bk-button disabled text v-if="row.department_id !== 0">
-            <span :title="$t(`m.perm['通过组织加入的组无法退出']`)">{{ $t(`m.common['退出']`) }}</span>
-          </bk-button>
+      <bk-table-column :label="$t(`m.common['操作-table']`)">
+        <template>
           <bk-button
-            v-else
             class="mr10"
             theme="primary"
             text
@@ -152,7 +147,6 @@
     watch: {
       emptyData: {
         handler (value) {
-          console.log(value);
           this.tableEmptyData = Object.assign({}, value);
         },
         immediate: true

@@ -195,18 +195,19 @@
       },
       memberTempByUserCount: {
         handler (value) {
-          this.$set(this.memberTempPermData[0].pagination, 'count', value);
+          this.$set(this.memberTempPermData[0].pagination, 'count', value || 0);
         },
         immediate: true
       },
       memberTempByDepartCount: {
         handler (value) {
-          this.$set(this.memberTempPermData[1].pagination, 'count', value);
+          this.$set(this.memberTempPermData[1].pagination, 'count', value || 0);
         },
         immediate: true
       },
       memberTempByUserList: {
         handler (value) {
+          console.log(value, 4444);
           this.$set(this.memberTempPermData[0], 'list', [...value]);
         },
         immediate: true
@@ -330,10 +331,12 @@
       },
 
       // 用户模块接口
-      async fetchPermGroupsByUser () {
-        const { emptyData, pagination } = this.memberTempPermData[0];
+      async fetchPermGroupsBySubjectType () {
+        const { id, type, username } = this.data;
+        let curData = ['user'].includes(type) ? this.memberTempPermData[0] : this.memberTempPermData[1];
+        const { emptyData, pagination } = curData;
         try {
-          this.memberTempPermData[0].loading = true;
+          curData.loading = true;
           const { current, limit } = pagination;
           let url = 'perm/getPermGroupsByTemp';
           let params = {
@@ -352,7 +355,6 @@
             params.system_id = this.externalSystemId;
             params.hidden = false;
           }
-          const { id, type, username } = this.data;
           const { code, data } = await this.$store.dispatch(url, {
             ...params,
             ...{
@@ -361,28 +363,28 @@
             }
           });
           const totalCount = data.count;
-          this.memberTempPermData[0] = Object.assign(this.memberTempPermData[0], {
+          curData = Object.assign(curData, {
             list: data.results || [],
             emptyData: formatCodeData(code, emptyData, totalCount === 0),
             pagination: { ...pagination, ...{ count: totalCount } }
           });
-          this.emptyPermData = cloneDeep(this.memberTempPermData[0].emptyData);
+          this.emptyPermData = cloneDeep(curData.emptyData);
           this.$nextTick(() => {
-            this.memberTempPermData[0].list.forEach(item => {
+            curData.list.forEach(item => {
               item.role_members = this.formatRoleMembers(item.role_members);
             });
           });
         } catch (e) {
           console.error(e);
           this.emptyPermData = formatCodeData(e.code, emptyData);
-          this.memberTempPermData[0] = Object.assign(this.memberTempPermData[0], {
+          curData = Object.assign(curData, {
             list: [],
             emptyData: formatCodeData(e.code, emptyData),
             pagination: { ...pagination, ...{ count: 0 } }
           });
           this.messageAdvancedError(e);
         } finally {
-          this.memberTempPermData[0].loading = false;
+          curData.loading = false;
         }
       },
 
@@ -450,14 +452,14 @@
             this.fetchDataByDepart();
           },
           user: async () => {
-            this.data.type === 'user'
-              ? await Promise.all([this.fetchPermGroupsByUser(), this.fetchPermGroupsByDepart()])
-              : await this.fetchPermGroupsByDepart();
+            this.data.type !== 'user'
+              ? await this.fetchPermGroupsBySubjectType()
+              : await Promise.all([this.fetchPermGroupsBySubjectType(), this.fetchPermGroupsByDepart()]);
             this.hasPerm = this.memberTempPermData.some((v) => v.pagination.count > 0);
           }
         };
         if (routeMap[this.$route.name]) {
-          routeMap[this.$route.name]();
+          return routeMap[this.$route.name]();
         }
       },
       
@@ -483,58 +485,42 @@
         });
       },
 
-      handlePageChange (current, payload) {
+      formatPaginationData (payload, current, limit) {
         const typeMap = {
           user: async () => {
-            this.memberTempPermData[0].pagination = Object.assign(this.memberTempPermData[0].pagination, { current });
+            this.memberTempPermData[0].pagination
+              = Object.assign(this.memberTempPermData[0].pagination, { current, limit });
             if (['myPerm'].includes(this.$route.name)) {
               await this.fetchDataByUser();
               return;
             }
             if (['user'].includes(this.$route.name)) {
-              await this.fetchPermGroupsByUser();
+              await this.fetchPermGroupsBySubjectType();
             }
           },
           depart: async () => {
-            this.memberTempPermData[1].pagination = Object.assign(this.memberTempPermData[1].pagination, { current });
+            this.memberTempPermData[1].pagination
+              = Object.assign(this.memberTempPermData[1].pagination, { current, limit });
             if (['myPerm'].includes(this.$route.name)) {
               await this.fetchDataByDepart();
               return;
             }
             if (['user'].includes(this.$route.name)) {
-              await this.fetchPermGroupsByDepart();
+              this.data.type === 'user' ? await this.fetchPermGroupsByDepart() : await this.fetchPermGroupsBySubjectType();
             }
           }
         };
         return typeMap[payload.id]();
       },
 
+      handlePageChange (current, payload) {
+        const curData = this.memberTempPermData.find((item) => item.id === payload.id);
+        this.formatPaginationData(payload, current, curData.pagination.limit);
+      },
+
       handleLimitChange (limit, payload) {
-        const typeMap = {
-          user: async () => {
-            this.memberTempPermData[0].pagination
-              = Object.assign(this.memberTempPermData[0].pagination, { current: 1, limit });
-            if (['myPerm'].includes(this.$route.name)) {
-              await this.fetchDataByUser();
-              return;
-            }
-            if (['user'].includes(this.$route.name)) {
-              await this.fetchPermGroupsByUser();
-            }
-          },
-          depart: async () => {
-            this.memberTempPermData[1].pagination
-              = Object.assign(this.memberTempPermData[1].pagination, { current: 1, limit });
-            if (['myPerm'].includes(this.$route.name)) {
-              await this.fetchDataByDepart();
-              return;
-            }
-            if (['user'].includes(this.$route.name)) {
-              await this.fetchPermGroupsByDepart();
-            }
-          }
-        };
-        return typeMap[payload.id]();
+        const curData = this.memberTempPermData.find((item) => item.id === payload.id);
+        this.formatPaginationData(payload, curData.pagination.current, limit);
       },
 
       resetPagination (limit = 10) {
