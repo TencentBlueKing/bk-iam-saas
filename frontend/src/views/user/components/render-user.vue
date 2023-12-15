@@ -54,6 +54,8 @@
               :system-list-storage="systemListStorage"
               :tep-system-list="teporarySystemList"
               :department-group-list="departmentGroupList"
+              :member-temp-by-user-count="panel.userCount"
+              :member-temp-by-depart-count="panel.departCount"
               :member-temp-by-user-list="memberTempByUserList"
               :member-temp-by-depart-list="memberTempByDepartList"
               :empty-data="curEmptyData"
@@ -630,22 +632,26 @@
         this.tabKey = +new Date();
       },
 
+      formatRoleMembers (payload) {
+        if (payload && payload.length) {
+          const hasName = payload.some((v) => v.username);
+          if (!hasName) {
+            payload = payload.map(v => {
+              return {
+                username: v,
+                readonly: false
+              };
+            });
+          }
+        }
+        return payload || [];
+      },
+
       formatCheckGroups () {
         const selectList = this.panels[0].selectList.map((item) => item.id.toString());
         setTimeout(() => {
           this.personalGroupList.length
             && this.personalGroupList.forEach((item) => {
-              if (item.role_members && item.role_members.length) {
-                const hasName = item.role_members.some((v) => v.username);
-                if (!hasName) {
-                  item.role_members = item.role_members.map(v => {
-                    return {
-                      username: v,
-                      readonly: false
-                    };
-                  });
-                }
-              }
               if (
                 selectList.includes(item.id.toString())
                 && this.$refs.childPermRef
@@ -656,20 +662,21 @@
                   true
                 );
               }
+              item.role_members = this.formatRoleMembers(item.role_members);
             });
           if (this.departmentGroupList && this.departmentGroupList.length) {
             this.departmentGroupList.forEach((item) => {
-              if (item.role_members && item.role_members.length) {
-                const hasName = item.role_members.some((v) => v.username);
-                if (!hasName) {
-                  item.role_members = item.role_members.map(v => {
-                    return {
-                      username: v,
-                      readonly: false
-                    };
-                  });
-                }
-              }
+              item.role_members = this.formatRoleMembers(item.role_members);
+            });
+          }
+          if (this.memberTempByUserList && this.memberTempByUserList.length) {
+            this.memberTempByUserList.forEach(item => {
+              item.role_members = this.formatRoleMembers(item.role_members);
+            });
+          }
+          if (this.memberTempByDepartList && this.memberTempByDepartList.length) {
+            this.memberTempByDepartList.forEach(item => {
+              item.role_members = this.formatRoleMembers(item.role_members);
             });
           }
         }, 0);

@@ -47,6 +47,8 @@
             :data="curData"
             :total-count="panel.count"
             :personal-group-list="personalGroupList"
+            :member-temp-by-user-list="panel.userList"
+            :member-temp-by-user-count="panel.userCount"
             :member-temp-by-depart-list="panel.departList"
             :member-temp-by-depart-count="panel.departCount"
             :empty-data="curEmptyData"
@@ -55,7 +57,6 @@
             :is-search-perm="isSearchPerm"
             :check-group-list="panels[0].selectList"
             @on-select-group="handleSelectGroup"
-            @refresh="handleEmptyClear"
             @on-clear="handleEmptyClear"
             @on-refresh="handleEmptyRefresh"
             @on-init="handleComInit"
@@ -107,6 +108,8 @@
             label: this.$t(`m.perm['所属人员模板用户组权限']`),
             empty: 'emptyMemberTemplateData',
             count: 0,
+            userCount: 0,
+            userList: [],
             departCount: 0,
             departList: [],
             selectList: []
@@ -211,22 +214,26 @@
         this.$set(this.panels[0], 'selectList', payload);
       },
 
+      formatRoleMembers (payload) {
+        if (payload && payload.length) {
+          const hasName = payload.some((v) => v.username);
+          if (!hasName) {
+            payload = payload.map(v => {
+              return {
+                username: v,
+                readonly: false
+              };
+            });
+          }
+        }
+        return payload || [];
+      },
+
       formatCheckGroups () {
         const selectList = this.panels[0].selectList.map((item) => item.id.toString());
         setTimeout(() => {
           this.personalGroupList.length
             && this.personalGroupList.forEach((item) => {
-              if (item.role_members && item.role_members.length) {
-                const hasName = item.role_members.some((v) => v.username);
-                if (!hasName) {
-                  item.role_members = item.role_members.map(v => {
-                    return {
-                      username: v,
-                      readonly: false
-                    };
-                  });
-                }
-              }
               if (
                 selectList.includes(item.id.toString())
                 && this.$refs.childPermRef
@@ -237,7 +244,13 @@
                   true
                 );
               }
+              item.role_members = this.formatRoleMembers(item.role_members);
             });
+          if (this.panels[1].departList.length) {
+            this.panels[1].departList.forEach(item => {
+              item.role_members = this.formatRoleMembers(item.role_members);
+            });
+          }
         }, 0);
       },
 
@@ -344,7 +357,7 @@
             params.hidden = false;
           }
           const { code, data } = await this.$store.dispatch(
-            'perm/getDepartPermGroupsByTempSearch',
+            'perm/getPermGroupsByTempSearch',
             params
           );
           this.panels[1] = Object.assign(
@@ -354,7 +367,11 @@
               departCount: data.count || 0
             }
           );
-          this.emptyMemberTemplateData = formatCodeData(code, this.emptyMemberTemplateData, this.panels[1].count === 0);
+          this.emptyMemberTemplateData = formatCodeData(
+            code,
+            this.emptyMemberTemplateData,
+            this.panels[1].departCount === 0
+          );
         } catch (e) {
           console.error(e);
           this.panels[1] = Object.assign(
@@ -375,6 +392,7 @@
         await Promise.all([this.fetchMemberTempByDepartSearch()]);
         const { departCount } = this.panels[1];
         this.$set(this.panels[1], 'count', departCount);
+        this.formatCheckGroups();
       },
 
       async fetchRemoteTable (isRefreshCurCount = false) {
