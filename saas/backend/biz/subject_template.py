@@ -14,6 +14,7 @@ from typing import Dict, List, Optional
 from django.conf import settings
 from django.db import connection, transaction
 from django.db.models import Count
+from django.utils.timezone import make_aware, utc
 from django.utils.translation import gettext as _
 from pydantic import BaseModel
 
@@ -402,7 +403,7 @@ class SubjectTemplateBiz:
                 a.department_count,
                 b.template_id,
                 b.expired_at,
-                c.created_time
+                b.created_time
             FROM
                 group_group AS a
             LEFT JOIN
@@ -434,7 +435,7 @@ class SubjectTemplateBiz:
                 template_id=one[5],
                 expired_at=one[6],
                 expired_at_display=expired_at_display(one[6]),
-                created_time=one[7],
+                created_time=make_aware(one[7], timezone=utc),
             )
             for one in result
         ]
@@ -490,7 +491,7 @@ class SubjectTemplateBiz:
                 a.department_count,
                 b.template_id,
                 b.expired_at,
-                c.created_time,
+                b.created_time,
                 c.subject_id
             FROM
                 group_group AS a
@@ -524,7 +525,7 @@ class SubjectTemplateBiz:
                 template_id=one[5],
                 expired_at=one[6],
                 expired_at_display=expired_at_display(one[6]),
-                created_time=one[7],
+                created_time=make_aware(one[7], timezone=utc),
                 department_id=int(one[8]),
                 department_name=department_dict.get(one[8], ""),
             )
