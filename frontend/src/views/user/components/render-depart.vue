@@ -201,7 +201,6 @@
           if (active === this.active && count !== this.panels[panelIndex].count && this.isSearchPerm) {
             this.fetchRemoteTable(true);
           }
-          console.log(count, 46545);
           this.$set(this.panels[panelIndex], 'count', count);
         }
       });

@@ -207,7 +207,6 @@
       },
       memberTempByUserList: {
         handler (value) {
-          console.log(value, 4444);
           this.$set(this.memberTempPermData[0], 'list', [...value]);
         },
         immediate: true
@@ -438,7 +437,6 @@
             pagination: { ...pagination, ...{ count: 0 } }
           });
           this.emptyPermData = formatCodeData(e.code, emptyData);
-          console.log(this.memberTempPermData);
           this.messageAdvancedError(e);
         } finally {
           this.memberTempPermData[1].loading = false;
