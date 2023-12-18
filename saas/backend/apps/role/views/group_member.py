@@ -105,7 +105,7 @@ class RoleGroupMemberDepartmentTemplateGroupViewSet(DepartmentSubjectTemplateGro
         operation_description="角色用户组成员-部门人员模版用户组列表",
         request_body=GroupSearchSLZ(label="用户组搜索"),
         responses={status.HTTP_200_OK: SubjectTemplateGroupSLZ(label="用户组", many=True)},
-        tags=["subject"],
+        tags=["role"],
     )
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
@@ -148,7 +148,7 @@ class RoleGroupMemberGroupViewSet(SubjectGroupSearchViewSet):
         operation_description="角色用户组成员-用户组列表",
         request_body=GroupSearchSLZ(label="用户组搜索"),
         responses={status.HTTP_200_OK: SubjectGroupSLZ(label="用户组", many=True)},
-        tags=["subject"],
+        tags=["role"],
     )
     def list(self, request, *args, **kwargs):
         return super().search(request, *args, **kwargs)
@@ -175,7 +175,7 @@ class RoleGroupMemberDepartmentGroupViewSet(SubjectDepartmentGroupSearchViewSet)
         operation_description="角色用户组成员-部门用户组列表",
         request_body=GroupSearchSLZ(label="用户组搜索"),
         responses={status.HTTP_200_OK: SubjectGroupSLZ(label="用户组", many=True)},
-        tags=["subject"],
+        tags=["role"],
     )
     def list(self, request, *args, **kwargs):
         return super().search(request, *args, **kwargs)
