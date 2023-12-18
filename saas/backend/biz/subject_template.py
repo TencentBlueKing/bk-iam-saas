@@ -263,6 +263,9 @@ class SubjectTemplateBiz:
         hidden: bool = True,
         group_ids: Optional[List[int]] = None,
     ) -> int:
+        if group_ids is not None and len(group_ids) == 0:
+            return 0
+
         # 构建动态的 WHERE 子句
         where_conditions = []
         params = [subject.type, subject.id]
@@ -316,7 +319,10 @@ class SubjectTemplateBiz:
         if subject.type != SubjectType.USER.value:
             return 0
 
-        departments = self._get_user_departments(subject.id)
+        if group_ids is not None and len(group_ids) == 0:
+            return 0
+
+        departments = self.get_user_departments(subject.id)
         if not departments:
             return 0
 
@@ -374,6 +380,9 @@ class SubjectTemplateBiz:
         limit: int = 10,
         offset: int = 0,
     ) -> List[SubjectTemplateGroupBean]:
+        if group_ids is not None and len(group_ids) == 0:
+            return []
+
         # 构建动态的 WHERE 子句
         where_conditions = []
         params = [subject.type, subject.id]
@@ -456,7 +465,10 @@ class SubjectTemplateBiz:
         if subject.type != SubjectType.USER.value:
             return []
 
-        departments = self._get_user_departments(subject.id)
+        if group_ids is not None and len(group_ids) == 0:
+            return []
+
+        departments = self.get_user_departments(subject.id)
         if not departments:
             return []
 
@@ -534,7 +546,7 @@ class SubjectTemplateBiz:
 
         return beans
 
-    def _get_user_departments(self, username: str) -> List[Department]:
+    def get_user_departments(self, username: str) -> List[Department]:
         u = User.objects.filter(username=username).first()
         if not u:
             return []

@@ -9,6 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from copy import copy
+from typing import List, Optional
 
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, serializers, status
@@ -268,15 +269,9 @@ class SubjectGroupSearchMixin(mixins.ListModelMixin, GenericViewSet):
         group_dict = self.get_group_dict(subject)
         ids = sorted(group_dict.keys())
 
-        if data["system_id"] and data["action_id"]:
-            # 通过实例或操作查询用户组
-            data["permission_type"] = PermissionTypeEnum.RESOURCE_INSTANCE.value
-            data["limit"] = 1000
-            subjects = QueryAuthorizedSubjects(data).query_by_resource_instance(subject_type="group")
-            subject_id_set = {int(s["id"]) for s in subjects}
-
-            # 筛选同时有权限并且用户加入的用户组
-            ids = [_id for _id in ids if _id in subject_id_set]
+        search_group_ids = self.search_group_ids(request, kwargs, data)
+        if search_group_ids is not None:
+            ids = [_id for _id in ids if _id in set(search_group_ids)]
 
         if not ids:
             return Response({"count": 0, "results": []})
@@ -291,6 +286,9 @@ class SubjectGroupSearchMixin(mixins.ListModelMixin, GenericViewSet):
             return Response({"count": queryset.count(), "results": slz.data})
 
         return Response({"count": 0, "results": []})
+
+    def search_group_ids(self, request, kwargs, data) -> Optional[List[int]]:
+        return search_group_ids(data)
 
     def get_subject(self, request, kwargs):
         subject = Subject.from_username(request.user.username)
@@ -416,13 +414,7 @@ class UserSubjectTemplateGroupViewSet(GenericViewSet):
 
         data = slz.validated_data
 
-        subject_ids = None
-        if data["system_id"] and data["action_id"]:
-            # 通过实例或操作查询用户组
-            data["permission_type"] = PermissionTypeEnum.RESOURCE_INSTANCE.value
-            data["limit"] = 1000
-            subjects = QueryAuthorizedSubjects(data).query_by_resource_instance(subject_type="group")
-            subject_ids = list({int(s["id"]) for s in subjects})
+        group_ids = self.search_group_ids(request, kwargs, data)
 
         subject = self.get_subject(request, kwargs)
         query_slz = SubjectTemplateGroupQuerySLZ(data=request.query_params)
@@ -434,7 +426,7 @@ class UserSubjectTemplateGroupViewSet(GenericViewSet):
             name=data["name"],
             description=data["description"],
             hidden=data["hidden"],
-            group_ids=subject_ids,
+            group_ids=group_ids,
         )
         relations = self.biz.list_paging_subject_template_group(
             subject,
@@ -442,7 +434,7 @@ class UserSubjectTemplateGroupViewSet(GenericViewSet):
             name=data["name"],
             description=data["description"],
             hidden=data["hidden"],
-            group_ids=subject_ids,
+            group_ids=group_ids,
             limit=query_slz.validated_data["limit"],
             offset=query_slz.validated_data["offset"],
         )
@@ -450,9 +442,23 @@ class UserSubjectTemplateGroupViewSet(GenericViewSet):
         slz = SubjectTemplateGroupSLZ(instance=relations, many=True)
         return Response({"count": count, "results": slz.data})
 
+    def search_group_ids(self, request, kwargs, data) -> Optional[List[int]]:
+        return search_group_ids(data)
+
     def get_subject(self, request, kwargs):
         subject = Subject.from_username(request.user.username)
         return subject
+
+
+def search_group_ids(data) -> Optional[List[int]]:
+    group_ids = None
+    if data["system_id"] and data["action_id"]:
+        # 通过实例或操作查询用户组
+        data["permission_type"] = PermissionTypeEnum.RESOURCE_INSTANCE.value
+        data["limit"] = 1000
+        subjects = QueryAuthorizedSubjects(data).query_by_resource_instance(subject_type="group")
+        group_ids = list({int(s["id"]) for s in subjects})
+    return group_ids
 
 
 class UserDepartmentSubjectTemplateGroupViewSet(GenericViewSet):
@@ -473,13 +479,7 @@ class UserDepartmentSubjectTemplateGroupViewSet(GenericViewSet):
 
         data = slz.validated_data
 
-        subject_ids = None
-        if data["system_id"] and data["action_id"]:
-            # 通过实例或操作查询用户组
-            data["permission_type"] = PermissionTypeEnum.RESOURCE_INSTANCE.value
-            data["limit"] = 1000
-            subjects = QueryAuthorizedSubjects(data).query_by_resource_instance(subject_type="group")
-            subject_ids = list({int(s["id"]) for s in subjects})
+        group_ids = self.search_group_ids(request, kwargs, data)
 
         subject = self.get_subject(request, kwargs)
         query_slz = SubjectTemplateGroupQuerySLZ(data=request.query_params)
@@ -491,7 +491,7 @@ class UserDepartmentSubjectTemplateGroupViewSet(GenericViewSet):
             name=data["name"],
             description=data["description"],
             hidden=data["hidden"],
-            group_ids=subject_ids,
+            group_ids=group_ids,
         )
         relations = self.biz.list_paging_subject_department_template_group(
             subject,
@@ -499,13 +499,23 @@ class UserDepartmentSubjectTemplateGroupViewSet(GenericViewSet):
             name=data["name"],
             description=data["description"],
             hidden=data["hidden"],
-            group_ids=subject_ids,
+            group_ids=group_ids,
             limit=query_slz.validated_data["limit"],
             offset=query_slz.validated_data["offset"],
         )
 
         slz = SubjectTemplateGroupSLZ(instance=relations, many=True)
         return Response({"count": count, "results": slz.data})
+
+    def search_group_ids(self, request, kwargs, data):
+        group_ids = None
+        if data["system_id"] and data["action_id"]:
+            # 通过实例或操作查询用户组
+            data["permission_type"] = PermissionTypeEnum.RESOURCE_INSTANCE.value
+            data["limit"] = 1000
+            subjects = QueryAuthorizedSubjects(data).query_by_resource_instance(subject_type="group")
+            group_ids = list({int(s["id"]) for s in subjects})
+        return group_ids
 
     def get_subject(self, request, kwargs):
         subject = Subject.from_username(request.user.username)
