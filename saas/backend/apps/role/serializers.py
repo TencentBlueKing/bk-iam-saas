@@ -16,6 +16,7 @@ from django.db.models import QuerySet
 from rest_framework import serializers
 
 from backend.apps.application.base_serializers import BaseAggActionListSLZ, SystemInfoSLZ, validate_action_repeat
+from backend.apps.organization.models import Department, User
 from backend.apps.policy.serializers import ConditionSLZ, InstanceSLZ, ResourceGroupSLZ, ResourceSLZ, ResourceTypeSLZ
 from backend.apps.role.models import Role, RoleCommonAction, RoleRelation, RoleUser
 from backend.biz.role import RoleBiz
@@ -468,3 +469,32 @@ class RoleSearchSLZ(BaseGradeMangerSLZ):
 
 class RoleGroupConfigSLZ(serializers.Serializer):
     apply_disable = serializers.BooleanField()
+
+
+class RoleGroupSubjectSLZ(serializers.Serializer):
+    type = serializers.CharField(label="用户类型", source="subject_type")
+    id = serializers.CharField(label="用户ID", source="subject_id")
+    name = serializers.SerializerMethodField(label="名称")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user_name_dict = None
+        self.department_name_dict = None
+        if isinstance(self.instance, (QuerySet, list)) and self.instance:
+            usernames = [u["subject_id"] for u in self.instance if u["subject_type"] == SubjectType.USER.value]
+            if usernames:
+                q = User.objects.filter(username__in=usernames).values("username", "display_name")
+                self.user_name_dict = {u["username"]: u["display_name"] for u in q}
+
+            department_ids = [
+                int(u["subject_id"]) for u in self.instance if u["subject_type"] == SubjectType.DEPARTMENT.value
+            ]
+            if department_ids:
+                q = Department.objects.filter(id__in=department_ids).values("id", "name")
+                self.department_name_dict = {str(u["id"]): u["name"] for u in q}
+
+    def get_name(self, obj):
+        if obj["subject_type"] == SubjectType.USER.value:
+            return self.user_name_dict.get(obj["subject_id"], "") if self.user_name_dict else ""
+        if obj["subject_type"] == SubjectType.DEPARTMENT.value:
+            return self.department_name_dict.get(obj["subject_id"], "") if self.department_name_dict else ""

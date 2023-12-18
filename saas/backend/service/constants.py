@@ -188,6 +188,7 @@ class PermissionCodeEnum(ChoicesEnum, LowerStrEnum):
     MANAGE_SUBSET_MANAGER = auto()
     TRANSFER_GROUP_BY_GRADE_MANAGER = auto()
     MANAGE_SENSITIVITY_LEVEL = auto()
+    MANAGE_ROLE_GROUP_MEMBER = auto()
 
 
 # ---------------------------------------------------------------------------------------------- #
