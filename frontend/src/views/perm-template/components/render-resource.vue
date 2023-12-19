@@ -55,7 +55,8 @@
                     class="drag-bar"
                     src="@/images/drag-icon.svg" alt=""
                     :draggable="false"
-                    @mousedown="handleDragMouseenter($event)">
+                    @mousedown="handleDragMouseenter($event)"
+                  />
                 </div>
               </div>
               <div class="right-layout">
@@ -763,6 +764,15 @@
         };
       },
 
+      handleConditionClearAll (payload, index) {
+        payload.forEach((item, i) => {
+          this.handleInstanceClearAll(item, i, index);
+        });
+        this.$nextTick(() => {
+          this.$refs.dropdownInstance && this.$refs.dropdownInstance[0].hide();
+        });
+      },
+
       handleInstanceClearAll (payload, payloadIndex, index) {
         window.changeAlert = true;
         const { displayPath } = payload;
@@ -971,7 +981,7 @@
         });
       },
 
-      handlePathSelect (value, node, payload, index) {
+      ePathSelect (value, node, payload, resourceLen, index) {
         window.changeAlert = true;
         const { type, path, paths } = payload[0];
         const tempPath = path[0];
@@ -999,24 +1009,52 @@
             this.handleChain(tempPath, curInstance, index, node.async);
           }
         } else {
-          // const noCarryNoLimitPath = payload[1]
-          const deleteInstanceItem = curInstance.find(item => item.type === type);
-
-          // const arr = path[0]
-          // const tempPath = arr.filter(item => item.id !== '*')
-
-          // const deleteIndex = deleteInstanceItem.path.findIndex(item => item.map(v => v.id).join('') === tempPath.map(v => v.id).join(''))
-          const deleteIndex = deleteInstanceItem.path.findIndex(item => item.map(v => `${v.id}&${v.type}`).join('') === tempPath.map(v => `${v.id}&${v.type}`).join(''));
-
-          // const curChildreIds = node.children.map(item => item.id)
-          const curChildreIds = node.children.map(item => `${item.id}&${item.type}`);
-
-          // deleteInstanceItem.path.splice(deleteIndex, 1)
           let isDisabled = false;
-          if (deleteIndex > -1) {
-            isDisabled = deleteInstanceItem.path[deleteIndex].some(_ => _.disabled);
-            if (!isDisabled) {
-              deleteInstanceItem.path.splice(deleteIndex, 1);
+          let curChildrenIds = [];
+          const deleteIndex = -1;
+          let deleteInstanceItem = curInstance.find(item => item.type === type);
+          if (!deleteInstanceItem) {
+            const hasSelectData = [];
+            curInstance.forEach(item => {
+              item.path.forEach(pathItem => {
+                hasSelectData.push({
+                  ids: pathItem.map(v => `${v.id}&${v.type}`),
+                  idChain: pathItem.map(v => `${v.id}&${v.type}`).join('#'),
+                  childTypes: pathItem.map(v => v.type),
+                  disabled: pathItem.some(subItem => subItem.disabled)
+                });
+              });
+            });
+            this.hasSelectData = _.cloneDeep(hasSelectData);
+            const hasData = this.hasSelectData.find((item) => item.childTypes.includes(type));
+            if (hasData) {
+              deleteInstanceItem = curInstance.find(item => hasData.childTypes.includes(item.type) && hasData.childTypes.includes(type));
+            }
+          }
+          if (resourceLen) {
+            for (let i = 0; i < resourceLen; i++) {
+              const deleteIndex = deleteInstanceItem.path.findIndex(item => item.map(v => `${v.id}&${v.type}`).join('') === tempPath.map(v => `${v.id}&${v.type}`).join(''));
+              curChildrenIds = node.children.map(item => `${item.id}&${item.type}`);
+              if (deleteIndex > -1) {
+                isDisabled = deleteInstanceItem.path[deleteIndex].some(_ => _.disabled);
+                if (!isDisabled) {
+                  deleteInstanceItem.path.splice(deleteIndex, 1);
+                }
+              }
+            }
+          } else {
+            const deleteIndex = deleteInstanceItem.path.findIndex(item => item.map(v => `${v.id}&${v.type}`).join('') === tempPath.map(v => `${v.id}&${v.type}`).join(''));
+            const deleteItem = deleteInstanceItem.path.filter(item => item.map(v => `${v.id}&${v.type}`).join('') === tempPath.map(v => `${v.id}&${v.type}`).join(''));
+            curChildrenIds = node.children.map(item => `${item.id}&${item.type}`);
+            if (deleteIndex > -1) {
+              isDisabled = deleteInstanceItem.path[deleteIndex].some(_ => _.disabled);
+              if (!isDisabled) {
+                deleteInstanceItem.path.splice(deleteIndex, 1);
+                // 处理半选之后再全选会造成有重叠的数据
+                if (deleteItem.length > 1) {
+                  deleteInstanceItem.path = deleteInstanceItem.path.filter((item) => !deleteItem.includes(item));
+                }
+              }
             }
           }
 
@@ -1046,7 +1084,7 @@
               // if (curChildreIds.includes(instanceItem.path[0][0].id)) {
               //     curInstance.splice(i, 1)
               // }
-              if (curChildreIds.includes(`${instanceItem.path[0][0].id}&${instanceItem.path[0][0].type}`)) {
+              if (curChildrenIds.includes(`${instanceItem.path[0][0].id}&${instanceItem.path[0][0].type}`)) {
                 curInstance.splice(i, 1);
                 break;
               }

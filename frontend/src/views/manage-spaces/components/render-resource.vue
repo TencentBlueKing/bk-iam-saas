@@ -56,7 +56,8 @@
                     class="drag-bar"
                     src="@/images/drag-icon.svg" alt=""
                     :draggable="false"
-                    @mousedown="handleDragMouseenter($event)">
+                    @mousedown="handleDragMouseenter($event)"
+                  />
                 </div>
               </div>
               <div class="right-layout">
