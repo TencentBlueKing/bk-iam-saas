@@ -43,12 +43,13 @@ class RoleCommonActionFilter(filters.FilterSet):
 
 
 class RoleSearchFilter(GradeMangerFilter):
+    id = filters.CharFilter(label="ID")
     member = filters.CharFilter(label="成员", method="member_filter")
     with_super = filters.BooleanFilter(method="with_super_filter", initial=False)
 
     class Meta:
         model = Role
-        fields = ["name", "hidden", "member"]
+        fields = ["id", "name", "hidden", "member"]
 
     def member_filter(self, queryset, name, value):
         role_ids = list(RoleUser.objects.filter(username=value).values_list("role_id", flat=True))
