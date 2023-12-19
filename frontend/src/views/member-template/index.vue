@@ -80,8 +80,11 @@
                   </div>
                 </div>
               </div>
-              <bk-button theme="primary" text class="actions-btn-item" :disabled="row.readonly"
-                :title="row.readonly ? $t(`m.memberTemplate['只读人员模板不可删除']`) : ''">
+              <bk-button
+                theme="primary"
+                text class="actions-btn-item"
+                :disabled="formatDelAction(row, 'disabled')"
+                :title="formatDelAction(row, 'title')">
                 {{ $t(`m.common['删除']`) }}
               </bk-button>
             </bk-popconfirm>
@@ -230,6 +233,30 @@
       },
       curSelectIds () {
         return this.currentSelectList.map((item) => item.id);
+      },
+      formatDelAction () {
+        return ({ readonly, group_count }, type) => {
+          const typeMap = {
+            title: () => {
+              if (readonly) {
+                return this.$t(`m.memberTemplate['只读人员模板不可删除']`);
+              }
+              // eslint-disable-next-line camelcase
+              if (group_count > 0) {
+                return this.$t(`m.info['有关联的用户组, 无法删除']`);
+              }
+              return '';
+            },
+            disabled: () => {
+              // eslint-disable-next-line camelcase
+              if (readonly || group_count > 0) {
+                return true;
+              }
+              return false;
+            }
+          };
+          return typeMap[type]();
+        };
       }
     },
     watch: {

@@ -99,7 +99,7 @@
               {{ $t(`m.common['删除']`) }}
             </bk-button>
             <bk-button theme="primary" disabled text v-else>
-              <span :title="$t(`m.permTemplate['有关联的组时不能删除']`)">
+              <span :title="$t(`m.info['有关联的用户组, 无法删除']`)">
                 {{ $t(`m.common['删除']`) }}
               </span>
             </bk-button>
