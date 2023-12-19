@@ -141,9 +141,11 @@
       </template>
       <div v-else>
         <TopologyManualInput
-          :cur-selected-chain="curSelectedChain"
-          :system-params="systemParams"
           :selection-mode="selectionMode"
+          :system-params="systemParams"
+          :resource-value="resourceValue"
+          :cur-selected-chain="curSelectedChain"
+          :has-selected-values="hasSelectedValues"
         />
       </div>
     </div>
@@ -157,7 +159,7 @@
   import ResourceSelect from './resource-select';
   import TopologyInput from './topology-input';
   import TopologyTree from './topology-tree';
-  import TopologyManualInput from './topology-manual-Input.vue';
+  import TopologyManualInput from './topology-manual-input.vue';
 
   const LOAD_ITEM = {
     nodeId: guid(),

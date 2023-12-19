@@ -2,17 +2,10 @@
   <div>
     <template v-if="isSpaceRoute">
       <div class="authorize-members-content">
-        <div
-          :class="[
-            'members-boundary-title',
-            { 'is-required': required }
-          ]"
-        >
-          {{ $t(`m.levelSpace['最大可授权人员边界']`) }}
+        <div :class="['members-boundary-title', { 'is-required': required }]">
+          {{ renderTitle }}
         </div>
-        <section
-          class="members-boundary-header"
-          data-test-id="grading_btn_showAddMember">
+        <section class="members-boundary-header">
           <bk-button
             theme="default"
             size="small"
@@ -23,7 +16,7 @@
             {{ $t(`m.common['添加']`) }}
           </bk-button>
         </section>
-        <div style="margin-top: 9px;" v-if="isAll">
+        <div style="margin-top: 9px" v-if="isAll">
           <div class="all-item">
             <span class="member-name">{{ allText }}</span>
             <span class="display-name">(All)</span>
@@ -50,20 +43,23 @@
         :label="renderTitle"
         :label-width="labelWidth"
         :ext-cls="extClsRouteList.includes($route.name) ? 'ext-cls-member-boundary' : ''"
-        :required="required">
+        :required="required"
+      >
         <section
           class="action-wrapper"
           @click.stop="handleAddMember"
-          data-test-id="grading_btn_showAddMember">
+          data-test-id="grading_btn_showAddMember"
+        >
           <Icon bk type="plus-circle-shape" />
           <span>{{ renderText }}</span>
         </section>
         <Icon
           type="info-fill"
           class="info-icon"
-          v-bk-tooltips.top="{ content: tips, width: 236, extCls: 'iam-tooltips-cls' }" />
+          v-bk-tooltips.top="{ content: tips, width: 236, extCls: 'iam-tooltips-cls' }"
+        />
         <template>
-          <div style="margin-top: 9px;" v-if="isAll">
+          <div style="margin-top: 9px" v-if="isAll">
             <div class="all-item">
               <span class="member-name">{{ allText }}</span>
               <span class="display-name">(All)</span>
@@ -88,8 +84,9 @@
     </template>
   </div>
 </template>
+
 <script>
-  import RenderMemberItem from '../../group/common/render-member-display';
+  import RenderMemberItem from '@/views/group/common/render-member-display';
   import { il8n } from '@/language';
   export default {
     name: '',
@@ -142,7 +139,8 @@
           'secondaryManageSpaceCreate',
           'authorBoundary',
           'authorBoundaryEditFirstLevel',
-          'authorBoundaryEditSecondLevel'
+          'authorBoundaryEditSecondLevel',
+          'memberTemplate'
         ]
       };
     },
@@ -176,108 +174,130 @@
     }
   };
 </script>
+
 <style lang="postcss" scoped>
-    .action-wrapper {
-        margin-left: 8px;
+.action-wrapper {
+  margin-left: 8px;
+  display: inline-block;
+  font-size: 14px;
+  color: #3a84ff;
+  cursor: pointer;
+  &:hover {
+    color: #699df4;
+  }
+  i {
+    position: relative;
+    top: -1px;
+    left: 2px;
+  }
+}
+.info-icon {
+  color: #c4c6cc;
+  &:hover {
+    color: #3a84ff;
+  }
+}
+.all-item {
+  position: relative;
+  display: inline-block;
+  margin: 0 6px 6px 0px;
+  padding: 0 10px;
+  line-height: 22px;
+  background: #f5f6fa;
+  border: 1px solid #dcdee5;
+  border-radius: 2px;
+  font-size: 12px;
+  &:hover {
+    .remove-icon {
+      display: block;
+    }
+  }
+  .member-name {
+    display: inline-block;
+    max-width: 200px;
+    line-height: 17px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: text-top;
+    .count {
+      color: #c4c6cc;
+    }
+  }
+  .display_name {
+    display: inline-block;
+    vertical-align: top;
+  }
+  .remove-icon {
+    display: none;
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    cursor: pointer;
+  }
+}
+
+.ext-cls-member-boundary {
+  box-shadow: none;
+}
+
+/deep/ .authorize-members-content {
+  .members-boundary-title {
+    font-size: 12px;
+    position: relative;
+    &.is-required {
+      &::after {
+        content: "*";
+        color: #ea3636;
+        height: 8px;
+        line-height: 1;
         display: inline-block;
+        vertical-align: middle;
+        position: absolute;
+        top: 50%;
+        transform: translate(3px, -50%);
+      }
+    }
+  }
+  .members-boundary-header {
+    margin: 10px 0;
+    .perm-members-add {
+      width: 88px;
+      height: 32px;
+      background: #f0f5ff;
+      color: #3a84ff;
+      border-radius: 2px;
+      border: none;
+      vertical-align: middle;
+      .icon-plus-circle-shape {
+        color: #3a84ff !important;
         font-size: 14px;
-        color: #3a84ff;
-        cursor: pointer;
-        &:hover {
-            color: #699df4;
-        }
-        i {
-            position: relative;
-            top: -1px;
-            left: 2px;
-        }
+      }
+      span {
+        vertical-align: middle;
+      }
     }
-    .info-icon {
-        color: #c4c6cc;
-        &:hover {
-            color: #3a84ff;
-        }
+    &.members-template-header {
+      margin: 0;
+      .perm-members-add {
+        width: 160px;
+      }
     }
-    .all-item {
-        position: relative;
-        display: inline-block;
-        margin: 0 6px 6px 0px;
-        padding: 0 10px;
-        line-height: 22px;
-        background: #f5f6fa;
-        border: 1px solid #dcdee5;
-        border-radius: 2px;
-        font-size: 12px;
-        &:hover {
-            .remove-icon {
-                display: block;
-            }
-        }
-        .member-name {
-            display: inline-block;
-            max-width: 200px;
-            line-height: 17px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            vertical-align: text-top;
-            .count {
-                color: #c4c6cc;
-            }
-        }
-        .display_name {
-            display: inline-block;
-            vertical-align: top;
-        }
-        .remove-icon {
-            display: none;
-            position: absolute;
-            top: -6px;
-            right: -6px;
-            cursor: pointer;
-        }
-    }
+  }
 
-    .ext-cls-member-boundary {
-        box-shadow: none;
+  /* &.members-template-content {
+    .members-boundary-header {
+      margin: 0;
+      .perm-members-add {
+        width: 160px;
+      }
     }
-
-    /deep/ .authorize-members-content {
-        .perm-members-add {
-            width: 88px;
-            height: 32px;
-            background: #f0f5ff;
-            color: #3a84ff;
-            border-radius: 2px;
-            border: none;
-            vertical-align: middle;
-            .icon-plus-circle-shape {
-                color: #3a84ff !important;
-                font-size: 14px;
-            }
-            span {
-                vertical-align: middle;
-            }
-        }
-        .members-boundary-title {
-            font-size: 12px;
-            position: relative;
-            &.is-required {
-                &::after {
-                    content: "*";
-                    color: #ea3636;
-                    height: 8px;
-                    line-height: 1;
-                    display: inline-block;
-                    vertical-align: middle;
-                    position: absolute;
-                    top: 50%;
-                    transform: translate(3px,-50%);
-                }
-            }
-        }
-        .members-boundary-header {
-            margin: 10px 0;
-        }
+    .iam-member-display-wrapper {
+      margin-left: 0;
+      .label {
+        margin-bottom: 0;
+      }
     }
+  } */
+}
 </style>

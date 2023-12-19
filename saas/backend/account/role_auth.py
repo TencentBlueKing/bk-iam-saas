@@ -29,4 +29,8 @@ def authenticate(request=None, role_id=0):
         return AnonymousRole()
 
     # 3. 对于用户与角色关系认证通过的，返回对应的分级管理员(超级管理员和系统管理员是两类特殊的分级管理员)
-    return Role.objects.get(id=role_id)
+    role = Role.objects.filter(id=role_id).first()
+    if not role:
+        return AnonymousRole()
+
+    return role

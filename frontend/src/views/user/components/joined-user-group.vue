@@ -123,10 +123,11 @@
         </bk-table-column>
         <template slot="empty">
           <ExceptionEmpty
-            :type="emptyData.type"
-            :empty-text="emptyData.text"
-            :tip-text="emptyData.tip"
-            :tip-type="emptyData.tipType"
+            :type="groupPermEmptyData.type"
+            :empty-text="groupPermEmptyData.text"
+            :tip-text="groupPermEmptyData.tip"
+            :tip-type="groupPermEmptyData.tipType"
+            @on-clear="handleEmptyClear"
             @on-refresh="handleEmptyRefresh"
           />
         </template>
@@ -200,6 +201,7 @@
         <section class="button-warp">
           <bk-button
             class="mb20"
+            :disabled="currentSelectList.length < 1"
             theme="primary" @click="handleBatchUserGroupSubmit" data-test-id="group_btn_create">
             {{ $t(`m.common['提交']`) }}
           </bk-button>
@@ -252,9 +254,11 @@
     />
   </div>
 </template>
+
 <script>
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
+  import { bus } from '@/common/bus';
   import { PERMANENT_TIMESTAMP } from '@/common/constants';
   import { formatCodeData, getWindowHeight } from '@/common/util';
   import DeleteDialog from '@/components/iam-confirm-dialog/index.vue';
@@ -282,6 +286,38 @@
         default: () => {
           return {};
         }
+      },
+      personalGroupList: {
+        type: Array,
+        default: () => []
+      },
+      emptyData: {
+        type: Object,
+        default: () => {
+          return {
+            type: '',
+            text: '',
+            tip: '',
+            tipType: ''
+          };
+        }
+      },
+      curSearchParams: {
+        type: Object
+      },
+      curSearchPagination: {
+        type: Object
+      },
+      isSearchPerm: {
+        type: Boolean,
+        default: false
+      },
+      checkGroupList: {
+        type: Array,
+        default: () => []
+      },
+      totalCount: {
+        type: Number
       }
     },
     data () {
@@ -336,7 +372,7 @@
           limit: 10
         },
         searchParams: {},
-        emptyData: {
+        groupPermEmptyData: {
           type: '',
           text: '',
           tip: '',
@@ -363,7 +399,8 @@
         groupAttributes: {
           source_type: '',
           source_from_role: false
-        }
+        },
+        tableHeight: getWindowHeight() - 290
       };
     },
     computed: {
@@ -373,9 +410,6 @@
       },
       curSelectMemberIds () {
         return this.currentSelectGroupList.map(item => item.id);
-      },
-      tableHeight () {
-          return getWindowHeight() - 290;
       },
       isAdminGroup () {
         return (payload) => {
@@ -406,10 +440,47 @@
     watch: {
       'pagination.current' (value) {
         this.currentBackup = value;
+      },
+      personalGroupList: {
+        handler (v) {
+          if (this.pageConf.current === 1) {
+            this.pageConf = Object.assign(this.pageConf, { count: this.totalCount });
+            if (this.isSearchPerm) {
+              this.pageConf.limit = this.curSearchPagination.limit;
+            }
+            this.curPageData = [...v];
+            return;
+          }
+          this.resetPagination(this.pageConf.limit);
+        },
+        immediate: true
+      },
+      emptyData: {
+        handler (value) {
+          this.groupPermEmptyData = Object.assign({}, value);
+        },
+        immediate: true
+      },
+      checkGroupList: {
+        handler (value) {
+          const list = value.filter(
+            (item) =>
+              !this.currentSelectGroupList
+                .map((v) => v.id.toString())
+                .includes(item.id.toString())
+          );
+          this.currentSelectGroupList = [...this.currentSelectGroupList, ...list];
+        },
+        immediate: true
       }
     },
     async created () {
-      await this.fetchPermGroups(false, true);
+      window.addEventListener('resize', () => {
+        this.tableHeight = getWindowHeight() - 290;
+      });
+      if (!this.isSearchPerm) {
+        await this.fetchPermGroups(false, true);
+      }
     },
     methods: {
       setDefaultSelect () {
@@ -425,29 +496,47 @@
         this.isShowPermSidesilder = false;
       },
 
-      /**
-       * 获取权限模板列表
-       */
       async fetchPermGroups (isTableLoading = false, isPageLoading = false) {
-        this.tableLoading = isTableLoading;
-        this.pageLoading = isPageLoading;
-        const { type } = this.data;
         try {
-          const { code, data } = await this.$store.dispatch('perm/getPermGroups', {
-            subjectType: type === 'user' ? type : 'department',
-            subjectId: type === 'user' ? this.data.username : this.data.id,
-            limit: this.pageConf.limit,
-            offset: this.pageConf.current
+          this.tableLoading = isTableLoading;
+          this.pageLoading = isPageLoading;
+          let url = '';
+          let params = {};
+          const { current, limit } = this.pageConf;
+          if (this.isSearchPerm) {
+            url = 'perm/getPermGroupsSearch';
+            params = {
+              ...this.curSearchParams,
+              limit,
+              offset: limit * (current - 1)
+            };
+          } else {
+            url = 'perm/getPermGroups';
+            params = {
+              limit: this.pageConf.limit,
+              offset: this.pageConf.current
+            };
+          }
+          if (this.externalSystemId) {
+            params.system_id = this.externalSystemId;
+            params.hidden = false;
+          }
+          const { id, type, username } = this.data;
+          const { code, data } = await this.$store.dispatch(url, {
+            ...params,
+            ...{
+              subjectType: type === 'user' ? type : 'department',
+              subjectId: type === 'user' ? username : id
+            }
           });
-          const currentSelectGroupList = this.currentSelectGroupList.map(item => item.id.toString());
+          const currentSelectGroupList = this.currentSelectGroupList.map((item) =>
+            item.id.toString()
+          );
           this.pageConf.count = data.count || 0;
-          this.dataList.splice(0, this.dataList.length, ...(data.results || []));
+          this.dataList = data.results || [];
           this.curPageData = [...this.dataList];
           this.$nextTick(() => {
-            this.curPageData.forEach(item => {
-              if (currentSelectGroupList.includes(item.id.toString())) {
-                this.$refs.groupPermTableRef && this.$refs.groupPermTableRef.toggleRowSelection(item, true);
-              }
+            this.curPageData.forEach((item) => {
               if (item.role_members && item.role_members.length) {
                 const hasName = item.role_members.some((v) => v.username);
                 if (!hasName) {
@@ -459,20 +548,29 @@
                   });
                 }
               }
-              if (this.currentSelectGroupList.length < 1) {
-                this.$refs.groupPermTableRef && this.$refs.groupPermTableRef.clearSelection();
+              if (currentSelectGroupList.includes(item.id.toString())) {
+                this.$refs.groupPermTableRef
+                  && this.$refs.groupPermTableRef.toggleRowSelection(item, true);
               }
             });
+            if (this.currentSelectGroupList.length < 1) {
+              this.$refs.groupPermTableRef && this.$refs.groupPermTableRef.clearSelection();
+            }
           });
-          this.emptyData = formatCodeData(code, this.emptyData, this.curPageData.length === 0);
+          this.groupPermEmptyData = formatCodeData(code, this.emptyData, data.results.length === 0);
         } catch (e) {
+          this.$emit('toggle-loading', false);
           console.error(e);
-          const { code } = e;
-          this.emptyData = formatCodeData(code, this.emptyData);
+          this.currentSelectGroupList = [];
+          this.pageConf.count = 0;
+          this.groupPermEmptyData = formatCodeData(e.code, this.emptyData);
           this.messageAdvancedError(e);
         } finally {
           this.tableLoading = false;
           this.pageLoading = false;
+          if (this.isSearchPerm) {
+            bus.$emit('on-perm-tab-count', { active: 'GroupPerm', count: this.pageConf.count });
+          }
         }
       },
 
@@ -490,7 +588,7 @@
        */
       handlePageChange (page = 1) {
         this.pageConf.current = page;
-        this.fetchPermGroups();
+        this.fetchPermGroups(true, false);
       },
       /**
        * handlePageLimitChange
@@ -573,7 +671,7 @@
         this.currentSelectList = [];
         this.searchParams = payload;
         this.emptyDialogData.tipType = 'search';
-        this.resetPagination();
+        this.resetDialogPagination();
         this.fetchUserGroupList(true);
       },
 
@@ -581,7 +679,7 @@
         this.searchParams = {};
         this.searchValue = [];
         this.emptyDialogData.tipType = '';
-        this.resetPagination();
+        this.resetDialogPagination();
         await this.fetchUserGroupList();
       },
 
@@ -689,6 +787,7 @@
         this.curName = name;
         this.curId = id;
         this.groupAttributes = Object.assign(this.groupAttributes, attributes);
+        this.isBatch = false;
         this.isShowAddMemberDialog = true;
       },
 
@@ -779,8 +878,8 @@
           }
           this.isShowDeleteDialog = false;
           this.currentSelectGroupList = [];
-          this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10 });
           this.messageSuccess(this.$t(`m.info['退出成功']`), 3000);
+          this.resetPagination();
           await this.fetchPermGroups(true);
         } catch (e) {
           this.deleteDialogConf.loading = false;
@@ -790,20 +889,33 @@
       },
 
       async handleEmptyDialogRefresh () {
-        this.resetPagination();
+        this.resetDialogPagination();
         await this.fetchUserGroupList(true);
       },
 
       async handleEmptyRefresh () {
-        this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10 });
+        this.resetPagination();
         await this.fetchPermGroups(false, true);
       },
 
-      resetPagination () {
+      handleEmptyClear () {
+        this.searchParams = {};
+        this.searchValue = [];
+        this.groupPermEmptyData.tipType = '';
+        this.resetPagination();
+        this.$emit('on-clear');
+      },
+
+      resetPagination (limit = 10) {
+        this.pageConf = Object.assign(this.pageConf, { current: 1, limit });
+      },
+
+      resetDialogPagination () {
         this.pagination = Object.assign({}, {
-          limit: 10,
           current: 1,
-          count: 0
+          limit: 10,
+          count: 0,
+          showTotalCount: true
         });
       },
 
@@ -816,7 +928,7 @@
         this.fetchUserGroupList();
       },
 
-      limitChange (currentLimit, prevLimit) {
+      limitChange (currentLimit) {
         this.pagination.limit = currentLimit;
         this.pagination.current = 1;
         this.fetchUserGroupList();
@@ -860,8 +972,7 @@
           this.emptyDialogData = formatCodeData(code, this.emptyDialogData, this.tableList.length === 0);
         } catch (e) {
           console.error(e);
-          const { code } = e;
-          this.emptyDialogData = formatCodeData(code, this.emptyDialogData);
+          this.emptyDialogData = formatCodeData(e.code, this.emptyDialogData);
           this.messageAdvancedError(e);
         } finally {
           this.tableDialogLoading = false;
@@ -927,7 +1038,6 @@
       handleBatchUserGroupCancel () {
         this.isShowUserGroupDialog = false;
       }
-
     }
   };
 </script>

@@ -123,16 +123,14 @@
           text: '',
           tip: '',
           tipType: ''
-        }
+        },
+        tableHeight: getWindowHeight() - 185
       };
     },
     computed: {
             ...mapGetters(['user']),
             isStaff () {
                 return this.user.role.type === 'staff';
-            },
-            tableHeight () {
-                return getWindowHeight() - 185;
             },
             disabledPerm () {
                 return (payload) => {
@@ -154,6 +152,9 @@
       }
     },
     created () {
+      window.addEventListener('resize', () => {
+        this.tableHeight = getWindowHeight() - 185;
+      });
       const currentQueryCache = this.getCurrentQueryCache();
       if (currentQueryCache && Object.keys(currentQueryCache).length) {
         if (currentQueryCache.limit) {

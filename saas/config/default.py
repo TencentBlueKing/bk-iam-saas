@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     "backend.apps.approval",
     "backend.apps.group",
     "backend.apps.subject",
+    "backend.apps.subject_template",
     "backend.apps.template",
     "backend.apps.organization",
     "backend.apps.role",
@@ -367,7 +368,7 @@ SUBJECT_AUTHORIZATION_LIMIT = {
         # key: system_id, value: int
     },  # 系统可自定义配置的 用户组能加入同一个系统的权限模板的最大数量
     # 用户组成员最大数量
-    "group_member_limit": env.int("BKAPP_GROUP_MEMBER_LIMIT", default=500),
+    "group_member_limit": env.int("BKAPP_GROUP_MEMBER_LIMIT", default=1000),
     # 用户组单次授权模板数
     "group_auth_template_once_limit": env.int("BKAPP_GROUP_AUTH_TEMPLATE_ONCE_LIMIT", default=10),
     # 用户组单次授权的系统数
@@ -383,6 +384,10 @@ SUBJECT_AUTHORIZATION_LIMIT = {
     "grade_manager_of_specified_systems_limit": env.str(
         "BKAPP_GRADE_MANAGER_OF_SPECIFIED_SYSTEMS_LIMIT", default="bk_ci_rbac:30000,bk_lesscode:5000"
     ),
+    # 人员模版最大成员数量
+    "subject_template_member_limit": env.int("BKAPP_SUBJECT_TEMPLATE_MEMBER_LIMIT", default=1000),
+    # 一个分级管理员可创建的人员模版个数
+    "grade_manager_subject_template_limit": env.int("BKAPP_GRADE_MANAGER_SUBJECT_TEMPLATE_LIMIT", default=10000),
 }
 # 授权的实例最大数量限制
 AUTHORIZATION_INSTANCE_LIMIT = env.int("BKAPP_AUTHORIZATION_INSTANCE_LIMIT", default=200)

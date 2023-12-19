@@ -6,7 +6,7 @@
         type="textarea"
         class="manual-textarea"
         v-model="manualValue"
-        :placeholder="$t(`m.common['请输入实例名称，以回车/分号/空格分割']`)"
+        :placeholder="$t(`m.common['请输入实例名称，以回车/逗号/分号/空格分割']`)"
         :rows="14"
         @input="handleManualInput"
       />
@@ -47,7 +47,6 @@
           :ext-cls="'manual-table-wrapper'"
           :outer-border="false"
           :header-border="false"
-          :pagination="pagination"
           @select="handleSelectChange"
           @select-all="handleSelectAllChange">
 
@@ -87,6 +86,10 @@
       },
       selectionMode: {
         type: String
+      },
+      hasSelectedValues: {
+        type: Array,
+        default: () => []
       }
     },
     data () {
@@ -95,11 +98,17 @@
         manualValue: '',
         manualAddLoading: false,
         manualInputError: false,
+        manualTableListStorage: [{
+          id: 1,
+          display_name: 'admin',
+          child_type: ''
+        }],
         manualTableList: [],
-        manualTableListStorage: [],
+        hasSelectedInstances: [],
         pagination: {
           current: 1,
           limit: 10,
+          count: 1,
           showTotalCount: true
         },
         emptyTableData: {
@@ -107,104 +116,94 @@
           text: '请先从左侧输入并解析',
           tip: '',
           tipType: ''
-        }
+        },
+        regValue: /，|,|；|;|、|\\|\n|\s/
       };
     },
     computed: {
       isManualDisabled () {
+        // 处理单选
+        if (this.resourceValue && this.hasSelectedValues.length) {
+          return true;
+        }
         return this.manualValue === '';
       }
     },
     methods: {
       fetchSelectedGroups (type, payload, row) {
         const typeMap = {
-          multiple: async () => {
+          multiple: () => {
+            let allTreeData = [...this.manualTableList];
+            if (!allTreeData.length && !this.isOnlyLevel && this.curKeyword) {
+              allTreeData = [...this.curTreeTableData.children || []];
+            }
             const isChecked = payload.length && payload.indexOf(row) !== -1;
-            if (['depart', 'department'].includes(row.type)) {
-              if (isChecked) {
-                const hasSelectedDepart = [...this.hasSelectedDepartments, ...this.hasSelectedManualDepartments];
-                let hasSelectedDepartIds = [];
-                if (hasSelectedDepart.length) {
-                  hasSelectedDepartIds = hasSelectedDepart.map((v) => String(v.id));
-                }
-                if (!hasSelectedDepartIds.includes(String(row.id))) {
-                  this.hasSelectedDepartments.push(row);
-                  this.hasSelectedManualDepartments.push(row);
-                }
-              } else {
-                this.hasSelectedDepartments = this.hasSelectedDepartments.filter(
-                  (item) => item.id.toString() !== row.id.toString()
-                );
-                this.hasSelectedManualDepartments = this.hasSelectedManualDepartments.filter(
-                  (item) => item.id.toString() !== row.id.toString()
-                );
+            const curNode = allTreeData.find((item) => `${row.name}&${row.id}` === `${item.name}&${item.id}`);
+            if (isChecked) {
+              this.$set(row, 'checked', true);
+              if (curNode) {
+                this.currentSelectedNode.push(curNode);
+                this.$emit('on-select', true, curNode);
+              }
+            } else {
+              this.currentSelectedNode = this.currentSelectedNode.filter(
+                (item) => `${item.name}&${item.id}` !== `${row.name}&${row.id}`
+              );
+              this.$set(row, 'checked', false);
+              if (curNode) {
+                this.$emit('on-select', false, curNode);
               }
             }
-            if (['user'].includes(row.type)) {
-              if (isChecked) {
-                const hasSelectedUsers = [...this.hasSelectedUsers, ...this.hasSelectedManualUsers];
-                let hasSelectedUsersIds = [];
-                if (hasSelectedUsers.length) {
-                  hasSelectedUsersIds = hasSelectedUsers.map((v) => `${v.username}${v.name}`);
-                }
-                if (!hasSelectedUsersIds.includes(`${row.username}${row.name}`)) {
-                  this.hasSelectedUsers.push(row);
-                  this.hasSelectedManualUsers.push(row);
-                }
-              } else {
-                this.hasSelectedUsers = this.hasSelectedUsers.filter(
-                  (item) => `${item.username}${item.name}` !== `${row.username}${row.name}`
-                );
-                this.hasSelectedManualUsers = this.hasSelectedManualUsers.filter(
-                  (item) => `${item.username}${item.name}` !== `${row.username}${row.name}`
-                );
-              }
-            }
+            this.$store.commit('setTreeSelectedNode', this.currentSelectedNode);
           },
-          all: async () => {
-            const isAllCheck = payload.length > 0;
-            this.manualTableList.forEach((item) => {
-              if (['depart', 'department'].includes(item.type)) {
-                if (isAllCheck) {
-                  const hasSelectedDepart = [...this.hasSelectedDepartments, ...this.hasSelectedManualDepartments];
-                  let hasSelectedDepartIds = [];
-                  if (hasSelectedDepart.length) {
-                    hasSelectedDepartIds = hasSelectedDepart.map((v) => String(v.id));
-                  }
-                  if (!hasSelectedDepartIds.includes(String(item.id))) {
-                    this.hasSelectedDepartments.push(item);
-                    this.hasSelectedManualDepartments.push(item);
-                  }
-                } else {
-                  this.hasSelectedDepartments = this.hasSelectedDepartments.filter(
-                    (v) => item.id.toString() !== v.id.toString()
-                  );
-                  this.hasSelectedManualDepartments = this.hasSelectedManualDepartments.filter(
-                    (v) => item.id.toString() !== v.id.toString()
+          all: () => {
+            // 针对资源权限搜索单选特殊处理
+            const resourceList = this.resourceValue ? [...payload].slice(0, 1) : [...payload];
+            let allTreeData = [...this.allTreeData];
+            if (!allTreeData.length && !this.isOnlyLevel && this.curKeyword) {
+              allTreeData = [...this.curTreeTableData.children || []];
+            }
+            const tableIdList = cloneDeep(this.renderTopologyData.map((v) => `${v.name}&${v.id}`));
+            const selectNode = this.currentSelectedNode.filter(
+              (item) => !tableIdList.includes(`${item.name}&${item.id}`)
+            );
+            this.currentSelectedNode = [...selectNode, ...resourceList];
+            const currentSelect = allTreeData.filter(
+              (item) => resourceList.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`) && !item.disabled
+            );
+            // 如果currentSelect有内容， 代表当前是勾选，否则就取从总数据里取当前页不是disabled的数据
+            let noDisabledData = [];
+            if (this.resourceValue) {
+              // 处理单选业务
+              const defaultSelectList = this.curSelectedValues
+                .filter((item) => !item.disabled)
+                .map((v) => v.ids).flat(this.curChain.length);
+              noDisabledData = allTreeData.filter(
+                (item) => defaultSelectList.includes(`${item.id}&${this.curChain[item.level].id}`)
+              );
+            } else {
+              noDisabledData = allTreeData.filter(
+                (item) =>
+                  !resourceList.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`)
+                  && this.renderTopologyData.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`)
+              );
+            }
+            const nodes = currentSelect.length ? currentSelect : noDisabledData;
+            this.renderTopologyData.forEach((item) => {
+              if (!item.disabled) {
+                this.$set(item, 'checked', resourceList.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`));
+                if (resourceList.length && !currentSelect.length) {
+                  this.$set(
+                    item,
+                    'disabled',
+                    resourceList.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`)
                   );
                 }
-              }
-              if (['user'].includes(item.type)) {
-                if (isAllCheck) {
-                  const hasSelectedUsers = [...this.hasSelectedUsers, ...this.hasSelectedManualUsers];
-                  let hasSelectedUsersIds = [];
-                  if (hasSelectedUsers.length) {
-                    hasSelectedUsersIds = hasSelectedUsers.map((v) => `${v.username}${v.name}`);
-                  }
-                  if (!hasSelectedUsersIds.includes(`${item.username}${item.name}`)) {
-                    this.hasSelectedUsers.push(item);
-                    this.hasSelectedManualUsers.push(item);
-                  }
-                } else {
-                  this.hasSelectedUsers = this.hasSelectedUsers.filter(
-                    (v) => `${item.username}${item.name}` !== `${v.username}${v.name}`
-                  );
-                  this.hasSelectedManualUsers = this.hasSelectedManualUsers.filter(
-                    (v) => `${item.username}${item.name}` !== `${v.username}${v.name}`
-                  );
-                }
+                this.$refs.topologyTableRef && this.$refs.topologyTableRef.toggleRowSelection(item, item.checked);
               }
             });
+            this.$store.commit('setTreeSelectedNode', this.currentSelectedNode);
+            this.$emit('on-select-all', nodes, currentSelect.length > 0);
           }
         };
         return typeMap[type]();
@@ -212,18 +211,15 @@
 
       fetchManualTableData () {
         this.$nextTick(() => {
-          // this.manualTableList.forEach((item) => {
-          //   if (this.$refs.manualTableRef) {
-          //     const hasSelectedUsers = [...this.hasSelectedUsers, ...this.hasSelectedManualUsers].map((v) => `${v.username}${v.name}`);
-          //     const hasSelectedDepartments = [...this.hasSelectedDepartments, ...this.hasSelectedManualDepartments]
-          //       .map((v) => String(v.id));
-          //     this.$refs.manualTableRef.toggleRowSelection(
-          //       item,
-          //       (hasSelectedUsers.includes(`${item.username}${item.name}`))
-          //         || (['depart', 'department'].includes(item.type) && hasSelectedDepartments.includes(String(item.id)))
-          //     );
-          //   }
-          // });
+          this.manualTableList.forEach((item) => {
+            if (this.$refs.manualTableRef) {
+              const hasSelectedInstances = [...this.hasSelectedInstances].map((v) => `${v.id}${v.display_name}`);
+              this.$refs.manualTableRef.toggleRowSelection(
+                item,
+                (hasSelectedInstances.includes(`${item.id}${item.display_name}`))
+              );
+            }
+          });
         });
       },
 
@@ -261,8 +257,10 @@
         this.fetchManualTableData();
       },
 
-      handleManualInput () {
-
+      handleManualInput (value) {
+        if (value.trim()) {
+          this.manualInputError = false;
+        }
       },
 
       handleClearManualInput () {
@@ -279,11 +277,17 @@
             system_id,
             action_id,
             action_system_id: resource_type_system,
-            display_names: this.manualValue.split(/;|\n|\s/)
+            display_names: this.manualValue.split(this.regValue)
           };
           const { code, data } = await this.$store.dispatch('permApply/getResourceInstanceManual', params);
-          this.pagination.count = data.count || 0;
-          this.manualTableList = data.results || [];
+          const list = data.results.filter((item) => {
+            return !this.hasSelectedInstances.map((v) => `${v.id}${v.display_name}`).includes(`${item.id}${item.display_name}`);
+          });
+          this.manualTableListStorage = data.results.filter((item) => {
+            return !this.manualTableList.map((v) => `${v.id}${v.display_name}`).includes(`${item.id}${item.display_name}`);
+          });
+          this.manualTableList = cloneDeep(this.manualTableListStorage);
+          this.hasSelectedInstances.push(...list);
           this.emptyTableData = formatCodeData(code, this.emptyTableData);
         } catch (e) {
           this.manualTableList = [];

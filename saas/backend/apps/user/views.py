@@ -9,6 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from copy import copy
+from typing import List, Optional
 
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, serializers, status
@@ -30,6 +31,7 @@ from backend.biz.group import GroupBiz
 from backend.biz.permission_audit import QueryAuthorizedSubjects
 from backend.biz.policy import ConditionBean, InstanceBean, PathNodeBeanList, PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import ActionScopeDiffer, RoleBiz
+from backend.biz.subject_template import SubjectTemplateBiz
 from backend.common.pagination import CustomPageNumberPagination
 from backend.common.serializers import SystemQuerySLZ
 from backend.common.time import get_soon_expire_ts
@@ -38,7 +40,16 @@ from backend.service.constants import SubjectRelationType
 from backend.service.group import SubjectGroup
 from backend.service.models import Subject
 
-from .serializers import GroupSLZ, QueryGroupSLZ, QueryRoleSLZ, UserNewbieSLZ, UserNewbieUpdateSLZ, UserPolicySearchSLZ
+from .serializers import (
+    GroupSLZ,
+    QueryGroupSLZ,
+    QueryRoleSLZ,
+    SubjectTemplateGroupQuerySLZ,
+    SubjectTemplateGroupSLZ,
+    UserNewbieSLZ,
+    UserNewbieUpdateSLZ,
+    UserPolicySearchSLZ,
+)
 
 
 class UserGroupViewSet(GenericViewSet):
@@ -258,15 +269,9 @@ class SubjectGroupSearchMixin(mixins.ListModelMixin, GenericViewSet):
         group_dict = self.get_group_dict(subject)
         ids = sorted(group_dict.keys())
 
-        if data["system_id"] and data["action_id"]:
-            # 通过实例或操作查询用户组
-            data["permission_type"] = PermissionTypeEnum.RESOURCE_INSTANCE.value
-            data["limit"] = 1000
-            subjects = QueryAuthorizedSubjects(data).query_by_resource_instance(subject_type="group")
-            subject_id_set = {int(s["id"]) for s in subjects}
-
-            # 筛选同时有权限并且用户加入的用户组
-            ids = [_id for _id in ids if _id in subject_id_set]
+        search_group_ids = self.search_group_ids(request, kwargs, data)
+        if search_group_ids is not None:
+            ids = [_id for _id in ids if _id in set(search_group_ids)]
 
         if not ids:
             return Response({"count": 0, "results": []})
@@ -281,6 +286,9 @@ class SubjectGroupSearchMixin(mixins.ListModelMixin, GenericViewSet):
             return Response({"count": queryset.count(), "results": slz.data})
 
         return Response({"count": 0, "results": []})
+
+    def search_group_ids(self, request, kwargs, data) -> Optional[List[int]]:
+        return search_group_ids(data)
 
     def get_subject(self, request, kwargs):
         subject = Subject.from_username(request.user.username)
@@ -382,6 +390,132 @@ class UserPolicySearchViewSet(mixins.ListModelMixin, GenericViewSet):
 
         # no action_id policy
         return Response([])
+
+    def get_subject(self, request, kwargs):
+        subject = Subject.from_username(request.user.username)
+        return subject
+
+
+class UserSubjectTemplateGroupViewSet(GenericViewSet):
+
+    pagination_class = CustomPageNumberPagination
+
+    biz = SubjectTemplateBiz()
+
+    @swagger_auto_schema(
+        operation_description="我的权限-人员模版用户组列表",
+        request_body=GroupSearchSLZ(label="用户组搜索"),
+        responses={status.HTTP_200_OK: SubjectTemplateGroupSLZ(label="用户组", many=True)},
+        tags=["user"],
+    )
+    def list(self, request, *args, **kwargs):
+        slz = GroupSearchSLZ(data=request.data)
+        slz.is_valid(raise_exception=True)
+
+        data = slz.validated_data
+
+        group_ids = self.search_group_ids(request, kwargs, data)
+
+        subject = self.get_subject(request, kwargs)
+        query_slz = SubjectTemplateGroupQuerySLZ(data=request.query_params)
+        query_slz.is_valid(raise_exception=True)
+
+        count = self.biz.get_subject_template_group_count(
+            subject,
+            id=data["id"],
+            name=data["name"],
+            description=data["description"],
+            hidden=data["hidden"],
+            group_ids=group_ids,
+        )
+        relations = self.biz.list_paging_subject_template_group(
+            subject,
+            id=data["id"],
+            name=data["name"],
+            description=data["description"],
+            hidden=data["hidden"],
+            group_ids=group_ids,
+            limit=query_slz.validated_data["limit"],
+            offset=query_slz.validated_data["offset"],
+        )
+
+        slz = SubjectTemplateGroupSLZ(instance=relations, many=True)
+        return Response({"count": count, "results": slz.data})
+
+    def search_group_ids(self, request, kwargs, data) -> Optional[List[int]]:
+        return search_group_ids(data)
+
+    def get_subject(self, request, kwargs):
+        subject = Subject.from_username(request.user.username)
+        return subject
+
+
+def search_group_ids(data) -> Optional[List[int]]:
+    group_ids = None
+    if data["system_id"] and data["action_id"]:
+        # 通过实例或操作查询用户组
+        data["permission_type"] = PermissionTypeEnum.RESOURCE_INSTANCE.value
+        data["limit"] = 1000
+        subjects = QueryAuthorizedSubjects(data).query_by_resource_instance(subject_type="group")
+        group_ids = list({int(s["id"]) for s in subjects})
+    return group_ids
+
+
+class UserDepartmentSubjectTemplateGroupViewSet(GenericViewSet):
+
+    pagination_class = CustomPageNumberPagination
+
+    biz = SubjectTemplateBiz()
+
+    @swagger_auto_schema(
+        operation_description="我的权限-部门人员模版用户组列表",
+        request_body=GroupSearchSLZ(label="用户组搜索"),
+        responses={status.HTTP_200_OK: SubjectTemplateGroupSLZ(label="用户组", many=True)},
+        tags=["user"],
+    )
+    def list(self, request, *args, **kwargs):
+        slz = GroupSearchSLZ(data=request.data)
+        slz.is_valid(raise_exception=True)
+
+        data = slz.validated_data
+
+        group_ids = self.search_group_ids(request, kwargs, data)
+
+        subject = self.get_subject(request, kwargs)
+        query_slz = SubjectTemplateGroupQuerySLZ(data=request.query_params)
+        query_slz.is_valid(raise_exception=True)
+
+        count = self.biz.get_subject_department_template_group_count(
+            subject,
+            id=data["id"],
+            name=data["name"],
+            description=data["description"],
+            hidden=data["hidden"],
+            group_ids=group_ids,
+        )
+        relations = self.biz.list_paging_subject_department_template_group(
+            subject,
+            id=data["id"],
+            name=data["name"],
+            description=data["description"],
+            hidden=data["hidden"],
+            group_ids=group_ids,
+            limit=query_slz.validated_data["limit"],
+            offset=query_slz.validated_data["offset"],
+        )
+
+        slz = SubjectTemplateGroupSLZ(instance=relations, many=True)
+        return Response({"count": count, "results": slz.data})
+
+    def search_group_ids(self, request, kwargs, data):
+        group_ids = None
+        if data["system_id"] and data["action_id"]:
+            # 通过实例或操作查询用户组
+            data["permission_type"] = PermissionTypeEnum.RESOURCE_INSTANCE.value
+            data["limit"] = 1000
+            subjects = QueryAuthorizedSubjects(data).query_by_resource_instance(subject_type="group")
+            group_ids = list({int(s["id"]) for s in subjects})
+        return group_ids
 
     def get_subject(self, request, kwargs):
         subject = Subject.from_username(request.user.username)

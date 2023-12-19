@@ -45,7 +45,7 @@
                   :clearable="false"
                   :allow-enter="false"
                   :placeholder="$t(`m.verify['请选择']`)"
-                  :disabled="!applyGroupData.action_id"
+                  :disabled="!applyGroupData.system_id"
                   :title="!applyGroupData.system_id ? $t(`m.verify['请选择系统']`) : ''"
                   @selected="handleSelectedAction"
                   searchable>
@@ -572,6 +572,15 @@
         }
         this.resetPagination();
         this.resetSearchParams();
+        this.handleSearchUserGroup(false, false);
+      },
+
+      handleEmptyRefresh () {
+        this.emptyData.tipType = '';
+        if (this.$refs.searchSelectRef && this.$refs.searchSelectRef.$refs.searchSelect) {
+          this.$refs.searchSelectRef.$refs.searchSelect.localValue = '';
+        }
+        this.resetPagination();
         this.handleSearchUserGroup(false, false);
       },
 

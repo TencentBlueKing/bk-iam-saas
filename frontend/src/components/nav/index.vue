@@ -270,7 +270,9 @@
     // 用户组设置
     [['userGroupSetting'], 'userGroupSettingNav'],
     // 敏感等级
-    [['sensitivityLevel'], 'sensitivityLevelNav']
+    [['sensitivityLevel'], 'sensitivityLevelNav'],
+    // 人员模板
+    [['memberTemplate'], 'memberTemplateNav']
   ]);
 
   export default {

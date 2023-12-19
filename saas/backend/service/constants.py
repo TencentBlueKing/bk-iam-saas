@@ -52,8 +52,9 @@ FETCH_MAX_LIMIT = 1000
 class GroupMemberType(ChoicesEnum, LowerStrEnum):
     USER = auto()
     DEPARTMENT = auto()
+    TEMPLATE = auto()
 
-    _choices_labels = skip(((USER, "用户"), (DEPARTMENT, "部门")))
+    _choices_labels = skip(((USER, "用户"), (DEPARTMENT, "部门"), (TEMPLATE, "人员模版")))
 
 
 class GroupSaaSAttributeEnum(ChoicesEnum, LowerStrEnum):
@@ -141,8 +142,9 @@ class RoleConfigType(ChoicesEnum, LowerStrEnum):
 class RoleRelatedObjectType(ChoicesEnum, LowerStrEnum):
     TEMPLATE = auto()
     GROUP = auto()
+    SUBJECT_TEMPLATE = auto()
 
-    _choices_labels = skip(((TEMPLATE, "权限模板"), (GROUP, "用户组")))
+    _choices_labels = skip(((TEMPLATE, "权限模板"), (GROUP, "用户组"), (SUBJECT_TEMPLATE, "人员模版")))
 
 
 class RoleScopeSubjectType(ChoicesEnum, LowerStrEnum):
@@ -166,6 +168,7 @@ class RoleSourceType(ChoicesEnum, LowerStrEnum):
 class PermissionCodeEnum(ChoicesEnum, LowerStrEnum):
     MANAGE_GROUP = auto()
     MANAGE_TEMPLATE = auto()
+    MANAGE_SUBJECT_TEMPLATE = auto()
     MANAGE_SUPER_MANAGER_MEMBER = auto()
     MANAGE_SYSTEM_MANAGER_MEMBER = auto()
     CREATE_GRADE_MANAGER: enum = "create_rating_manager"  # NOTE: 不能直接改成auto, 历史原因以前分级管理员是rating_manager, 数据已入库
@@ -185,6 +188,7 @@ class PermissionCodeEnum(ChoicesEnum, LowerStrEnum):
     MANAGE_SUBSET_MANAGER = auto()
     TRANSFER_GROUP_BY_GRADE_MANAGER = auto()
     MANAGE_SENSITIVITY_LEVEL = auto()
+    MANAGE_ROLE_GROUP_MEMBER = auto()
 
 
 # ---------------------------------------------------------------------------------------------- #
@@ -395,3 +399,10 @@ class SensitivityLevel(ChoicesEnum):
             (L5, "极高"),
         )
     )
+
+
+class SubjectTemplateMemberType(ChoicesEnum, LowerStrEnum):
+    USER = auto()
+    DEPARTMENT = auto()
+
+    _choices_labels = skip(((USER, "用户"), (DEPARTMENT, "部门")))

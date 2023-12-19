@@ -14,13 +14,13 @@
             :flag="groupGuideShow"
             :content="$t(`m.guide['创建用户组']`)" /> -->
     <template v-if="!['403'].includes(routeName)">
-      <iam-guide
+      <!-- <iam-guide
         v-if="processGuideShow"
         type="set_group_approval_process"
         direction="left"
         :cur-style="processGuideStyle"
         :flag="processGuideShow"
-        :content="$t(`m.guide['创建审批流程']`)" />
+        :content="$t(`m.guide['创建审批流程']`)" /> -->
       <header-nav
         v-if="!externalSystemsLayout.hideIamHeader"
         @reload-page="handleRefreshPage"
@@ -60,7 +60,7 @@
   import HeaderNav from '@/components/header-nav/index.vue';
   import theHeader from '@/components/header/index.vue';
   import theNav from '@/components/nav/index.vue';
-  import IamGuide from '@/components/iam-guide/index.vue';
+  // import IamGuide from '@/components/iam-guide/index.vue';
   import { existValue, formatI18nKey } from '@/common/util';
   import { bus } from '@/common/bus';
   import { mapGetters } from 'vuex';
@@ -75,7 +75,7 @@
       };
     },
     components: {
-      IamGuide,
+      // IamGuide,
       theHeader,
       theNav,
       HeaderNav

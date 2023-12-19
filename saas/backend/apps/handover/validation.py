@@ -18,9 +18,11 @@ from rest_framework import serializers
 
 from backend.apps.group.models import Group
 from backend.apps.role.models import Role, RoleUser
+from backend.apps.subject_template.models import SubjectTemplate, SubjectTemplateRelation
 from backend.biz.group import GroupBiz, SubjectGroupBean
 from backend.biz.policy import PolicyQueryBiz
 from backend.biz.system import SystemBiz
+from backend.service.constants import SubjectType
 from backend.service.models.subject import Subject
 
 
@@ -114,3 +116,20 @@ class RoleInfoProcessor(BaseHandoverDataProcessor):
     def get_info(self):
         roles = Role.objects.filter(id__in=self.role_ids)
         return [{"id": role.id, "type": role.type, "name": role.name, "name_en": role.name_en} for role in roles]
+
+
+class SubjectTemplateProcessor(BaseHandoverDataProcessor):
+    def __init__(self, handover_from: str, subject_template_ids: List[int]) -> None:
+        self.handover_from = handover_from
+        self.subject_template_ids = subject_template_ids
+
+    def validate(self):
+        for _id in self.subject_template_ids:
+            if not SubjectTemplateRelation.objects.filter(
+                template_id=_id, subject_id=self.handover_from, subject_type=SubjectType.USER.value
+            ).exists():
+                raise serializers.ValidationError("角色: {} 不在当前用户的可交接范围内!".format(_id))
+
+    def get_info(self):
+        templates = SubjectTemplate.objects.filter(id__in=self.subject_template_ids)
+        return [{"id": t.id, "name": t.name} for t in templates]

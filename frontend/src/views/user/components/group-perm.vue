@@ -243,6 +243,7 @@
           <bk-button
             class="mb20"
             theme="primary"
+            :disabled="currentSelectList.length < 1"
             @click="handleBatchUserGroupSubmit"
             data-test-id="group_btn_create"
           >
@@ -442,7 +443,8 @@
         groupAttributes: {
           source_type: '',
           source_from_role: false
-        }
+        },
+        tableHeight: getWindowHeight() - 290
       };
     },
     computed: {
@@ -452,9 +454,6 @@
     },
     curSelectMemberIds () {
       return this.currentSelectGroupList.map((item) => item.id);
-    },
-    tableHeight () {
-      return getWindowHeight() - 290;
     },
     isAdminGroup () {
       return (payload) => {
@@ -520,6 +519,9 @@
       }
     },
     async created () {
+      window.addEventListener('resize', () => {
+        this.tableHeight = getWindowHeight() - 290;
+      });
       if (!this.isSearchPerm) {
         await this.fetchPermGroups(false, true);
       }
@@ -710,7 +712,7 @@
       handleSearch (payload, result) {
         this.currentSelectList = [];
         this.searchParams = payload;
-        this.resetPagination();
+        this.resetDialogPagination();
         this.fetchUserGroupList(true);
       },
 
@@ -830,6 +832,7 @@
         this.curName = name;
         this.curId = id;
         this.groupAttributes = Object.assign(this.groupAttributes, attributes);
+        this.isBatch = false;
         this.isShowAddMemberDialog = true;
       },
 
@@ -948,12 +951,12 @@
         this.searchParams = {};
         this.searchValue = [];
         this.emptyDialogData.tipType = '';
-        this.resetPagination();
+        this.resetDialogPagination();
         await this.fetchUserGroupList();
       },
 
       async handleEmptyDialogRefresh () {
-        this.resetPagination();
+        this.resetDialogPagination();
         await this.fetchUserGroupList(true);
       },
 
@@ -961,23 +964,28 @@
         this.searchParams = {};
         this.searchValue = [];
         this.groupPermEmptyData.tipType = '';
-        this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10 });
+        this.resetPagination();
         this.$emit('on-clear');
       },
 
       async handleEmptyRefresh () {
-        this.pageConf = Object.assign(this.pageConf, { current: 1, limit: 10 });
+        this.resetPagination();
         await this.fetchPermGroups(false, true);
         this.$emit('on-refresh');
       },
 
-      resetPagination () {
+      resetPagination (limit = 10) {
+        this.pageConf = Object.assign(this.pageConf, { current: 1, limit });
+      },
+
+      resetDialogPagination () {
         this.pagination = Object.assign(
           {},
           {
             limit: 10,
             current: 1,
-            count: 0
+            count: 0,
+            showTotalCount: true
           }
         );
       },
