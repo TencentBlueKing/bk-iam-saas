@@ -127,7 +127,7 @@
         memberTempPermData: [
           {
             id: 'user',
-            name: this.$t(`m.perm['通过用户加入人员模板的用户组权限']`),
+            name: this.$t(`m.perm['直接加入人员模板的用户组权限']`),
             loading: false,
             expanded: false,
             pagination: {

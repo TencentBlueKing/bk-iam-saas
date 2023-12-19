@@ -540,7 +540,8 @@ export const m = {
          '该用户/组织可能会失去关联用户组的权限': 'The user/organization may lose permissions to the associated user group',
          '已加入用户组数量 ， 新申请数量，总数超过上限：100，请减少申请或退出部分用户组后重试': 'Number of added user groups: {applyCount}, number of new applications: {newApplyCount}, total exceeds the limit of 100. Please reduce the number of applications or exit some user groups and try again',
          '最多添加一个管理员': 'Add at most one administrator',
-         '管理员不可重复添加': 'Administrators cannot be added repeatedly'
+         '管理员不可重复添加': 'Administrators cannot be added repeatedly',
+         '有关联的用户组, 无法删除': 'Associated user groups cannot be deleted'
     },
     // 二次确认弹窗相关
     dialog: {
@@ -763,7 +764,7 @@ export const m = {
         '唯一管理员不可退出': 'The only administrator cannot quit',
         '存在用户组不可退出（唯一管理员不能退出）': 'There is user group that cannot be logged out (the only administrator cannot log out)',
         '当前勾选项都为不可退出的用户组（唯一管理员不能退出）': 'The current checked options are all user groups that cannot be logged out (the only administrator cannot log out)',
-        '通过用户加入人员模板的用户组权限': 'User group permissions for joining member templates through users',
+        '直接加入人员模板的用户组权限': 'Directly add user group permissions to personnel templates',
         '通过组织加入人员模板的用户组权限': 'User group permissions for joining member templates through organization',
         '通过人员模板加入': 'Through Member Template'
     },
