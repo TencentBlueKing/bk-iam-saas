@@ -294,7 +294,7 @@
             system_id,
             action_id,
             action_system_id: resource_type_system,
-            display_names: this.manualValue.split(this.regValue).filter(item => item !== '').length === 0
+            display_names: this.manualValue.split(this.regValue).filter(item => item !== '')
           };
           const { code, data } = await this.$store.dispatch('permApply/getResourceInstanceManual', params);
           const list = data.results.filter((item) => {

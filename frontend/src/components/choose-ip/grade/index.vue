@@ -343,7 +343,7 @@
         return this.treeData.every((item) => item.level === 0 && item.visiable) && this.curChain.length < 2;
       },
       isManualInput () {
-        return this.curSelectedChain.id === 'manualInput';
+        return ['manualInput'].includes(this.curSelectedChain.id) && !['instance:paste'].includes(this.selectionMode);
       },
       renderTopologyData () {
         const hasNode = {};
@@ -360,17 +360,17 @@
       treeValue: {
         handler (value) {
           if (value.length) {
-            const hasSelecteds = [];
+            const hasSelected = [];
             value.forEach((item) => {
               item.path.forEach((pathItem) => {
-                hasSelecteds.push({
+                hasSelected.push({
                   ids: pathItem.map((v) => `${v.id}&${v.type}`),
                   idChain: pathItem.map((v) => `${v.id}&${v.type}`).join('#'),
                   disabled: pathItem.some((subItem) => subItem.disabled)
                 });
               });
             });
-            this.hasSelectedValues = _.cloneDeep(hasSelecteds);
+            this.hasSelectedValues = _.cloneDeep(hasSelected);
           } else {
             this.hasSelectedValues = [];
           }
@@ -928,7 +928,7 @@
       },
 
       handeCancelChecked (payload) {
-        const treeData = _.cloneDeep(this.treeData.length ? this.treeData : this.treeDataStorage);
+        const treeData = this.treeData.length ? this.treeData : this.treeDataStorage;
         const curNode = treeData.find((item) => {
           const { parentChain, id, async, childType } = item;
           const curIds = parentChain.map((v) => `${v.id}&${v.type}`);
@@ -968,7 +968,7 @@
       },
 
       handeSetChecked (payload) {
-        const treeData = _.cloneDeep(this.treeData.length ? this.treeData : this.treeDataStorage);
+        const treeData = this.treeData.length ? this.treeData : this.treeDataStorage;
         const curNode = treeData.find((item) => {
           const { parentChain, id, async, childType } = item;
           const curIds = parentChain.map((v) => `${v.id}&${v.type}`);
@@ -1185,8 +1185,6 @@
           id = curChainData.id;
           name = curChainData.name;
           systemId = curChainData.system_id;
-
-          console.log(node);
           if (node.level === 0 && !node.async) {
             parentChainData = {
               type: this.curChain[chainLen - 1].id,

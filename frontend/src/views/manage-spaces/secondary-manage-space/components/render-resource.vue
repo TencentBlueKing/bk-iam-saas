@@ -44,6 +44,7 @@
                   :cur-selection-condition="curSelectionCondition"
                   :tree-value="condition.instance"
                   :limit-value="getLimitInstance(conditionLimitData[index])"
+                  :selection-mode="curSelectionMode(index)"
                   :select-list="curSelectList(index)"
                   :select-value="curSelectValue(index)"
                   :system-params="params"

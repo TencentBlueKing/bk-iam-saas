@@ -979,16 +979,10 @@
         const curInstance = this.conditionData[index].instance;
         this.conditionData[index].isInstanceEmpty = false;
         if (value) {
-          // console.warn('curInstance: ')
-          // console.warn(curInstance)
           if (curInstance.length < 1) {
             curInstance.push(new Instance(payload[0]));
           } else {
             const selectInstanceItemIndex = curInstance.findIndex(item => item.type === type);
-            // console.warn('selectInstanceItem: ')
-            // console.warn(selectInstanceItem)
-            // console.warn('path: ')
-            // console.warn(path)
             if (selectInstanceItemIndex > -1) {
               const selectInstanceItem = _.cloneDeep(curInstance[selectInstanceItemIndex]);
               selectInstanceItem.path.push(...path);
@@ -1037,7 +1031,6 @@
             const deleteIndex = deleteInstanceItem.path.findIndex(item => item.map(v => `${v.id}&${v.type}`).join('') === tempPath.map(v => `${v.id}&${v.type}`).join(''));
             const deleteItem = deleteInstanceItem.path.filter(item => item.map(v => `${v.id}&${v.type}`).join('') === tempPath.map(v => `${v.id}&${v.type}`).join(''));
             curChildrenIds = node.children.map(item => `${item.id}&${item.type}`);
-            console.log(deleteIndex, deleteInstanceItem, deleteItem);
             if (deleteIndex > -1) {
               isDisabled = deleteInstanceItem.path[deleteIndex].some(_ => _.disabled);
               if (!isDisabled) {
@@ -1073,7 +1066,7 @@
           for (let i = 0; i < curInstance.length; i++) {
             const instanceItem = curInstance[i];
             if (instanceItem.path.length === 1 && instanceItem.path[0].length === 1) {
-              // if (curChildreIds.includes(instanceItem.path[0][0].id)) {
+              // if (curChildrenIds.includes(instanceItem.path[0][0].id)) {
               //     curInstance.splice(i, 1)
               // }
               if (curChildrenIds.includes(`${instanceItem.path[0][0].id}&${instanceItem.path[0][0].type}`)) {

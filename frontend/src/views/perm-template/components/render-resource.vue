@@ -43,6 +43,7 @@
                   :ref="`${index}TreeRef`"
                   :tree-value="condition.instance"
                   :limit-value="getLimitInstance(conditionLimitData[index])"
+                  :selection-mode="curSelectionMode(index)"
                   :select-list="curSelectList(index)"
                   :select-value="curSelectValue(index)"
                   :system-params="params"
@@ -58,15 +59,52 @@
                 </div>
               </div>
               <div class="right-layout">
-                <template v-if="condition.instance && condition.instance.length > 0">
+                <div class="flex-between right-layout-header">
+                  <div class="right-layout-title">{{ $t(`m.common['结果预览']`) }}</div>
+                  <div
+                    :class="[
+                      'clear-all'
+                    ]"
+                    @click.stop=""
+                  >
+                    <bk-dropdown-menu
+                      ref="dropdownInstance"
+                      :position-fixed="true"
+                      align="left"
+                      :disabled="formatClearDisabled(condition.instance)"
+                    >
+                      <template slot="dropdown-trigger">
+                        <Icon bk type="more" />
+                      </template>
+                      <ul
+                        slot="dropdown-content"
+                        class="bk-dropdown-list"
+                      >
+                        <li>
+                          <a @click.stop="handleConditionClearAll(condition.instance, index)">
+                            {{ $t(`m.common['清除所有']`) }}
+                          </a>
+                        </li>
+                      </ul>
+                    </bk-dropdown-menu>
+                  </div>
+                </div>
+                <div
+                  v-if="condition.instance && condition.instance.length > 0"
+                  :style="{ maxHeight: 'calc(100vh - 600px)' }"
+                >
                   <instance-view
+                    :select-list="selectList"
+                    :select-value="selectValue"
                     :data="condition.instance"
-                    @on-delete="handleIntanceDelete(...arguments, index)"
+                    @on-delete="handleInstanceDelete(...arguments, index)"
                     @on-clear="handleInstanceClearAll(...arguments, index)" />
-                </template>
+                </div>
                 <template v-else>
                   <div class="empty-wrapper">
-                    <ExceptionEmpty />
+                    <ExceptionEmpty
+                      style="background: #fafbfd"
+                    />
                   </div>
                 </template>
               </div>
@@ -138,10 +176,14 @@
 
   export default {
     name: '',
+    // 这里用箭头函数会改变this
     provide: function () {
       return {
         getDragDynamicWidth: () => this.dragWidth
       };
+    },
+    inject: {
+      getResourceSliderWidth: { value: 'getResourceSliderWidth', default: null }
     },
     components: {
       renderResourceInstance,
@@ -201,8 +243,8 @@
         attributes: [],
         isHide: false,
         // isEmptyResource: false,
-        dragWidth: 220,
-        dragRealityWidth: 220,
+        dragWidth: this.getResourceSliderWidth ? this.getResourceSliderWidth() * 0.67 : 600,
+        dragRealityWidth: this.getResourceSliderWidth ? this.getResourceSliderWidth() * 0.67 : 600,
         isDrag: false,
         conditionLimitData: [],
         selectListMap: {},
@@ -243,14 +285,6 @@
           'left': `${this.dragRealityWidth}px`
         };
       },
-      leftLayoutStyle () {
-        if (this.dragWidth >= 220) {
-          return {
-            'min-width': `${this.dragWidth}px`
-          };
-        }
-        return {};
-      },
       curSelectList () {
         return payload => {
           if (this.selectListMap[payload] && this.selectListMap[payload].length > 0) {
@@ -277,6 +311,39 @@
       },
       limitDisabled () {
         return this.disabled || this.conditionLimitData.length > 0;
+      },
+      leftLayoutStyle () {
+        const sliderWidth = this.getResourceSliderWidth ? this.getResourceSliderWidth() * 0.67 : 600;
+        if (this.dragWidth >= sliderWidth) {
+          return {
+            'min-width': `${this.dragWidth}px`
+          };
+        }
+        return {};
+      },
+      formatClearDisabled () {
+        return (payload) => {
+          let curPaths = [];
+          if (payload.length) {
+            curPaths = payload.reduce((prev, next) => {
+              prev.push(
+                ...next.path.map(v => {
+                  const paths = { ...v, ...next };
+                  delete paths.instance;
+                  delete paths.path;
+                  return paths[0];
+                })
+              );
+              return prev;
+            }, []);
+            return curPaths.some(v => v.disabled);
+          }
+          // return curPaths.every(v => v.disabled);
+          return true;
+        };
+      },
+      dynamicsSliderWidth () {
+        return this.getResourceSliderWidth ? this.getResourceSliderWidth() - 400 : 600;
       }
     },
     watch: {
@@ -497,10 +564,11 @@
           return;
         }
         // 可拖拽范围
-        const MIN_OFFSET_WIDTH = 220;
+        const MIN_OFFSET_WIDTH = this.dynamicsSliderWidth;
         const minWidth = MIN_OFFSET_WIDTH;
-        const maxWidth = MIN_OFFSET_WIDTH + 120;
-        const offsetX = e.clientX - (document.body.clientWidth - 960);
+        const maxWidth = MIN_OFFSET_WIDTH + 220;
+        const sliderWidth = this.getResourceSliderWidth ? this.getResourceSliderWidth() : 960;
+        const offsetX = e.clientX - (document.body.clientWidth - sliderWidth);
         if (offsetX < minWidth || offsetX >= maxWidth) {
           return;
         }
@@ -728,7 +796,7 @@
         }
       },
 
-      handleIntanceDelete (payload, payloadIndex, childIndex, index) {
+      handleInstanceDelete (payload, payloadIndex, childIndex, index) {
         // const curIds = payload.parentChain.map(v => `${v.id}&${v.type}`)
 
         // const curInstance = this.conditionData[index].instance
@@ -997,121 +1065,7 @@
     }
   };
 </script>
+
 <style lang="postcss" scoped>
-    .iam-slider-resource-wrapper {
-        height: calc(100vh - 114px);
-
-        .no-limit-wrapper {
-            padding: 20px 25px 0 25px;
-        }
-
-        .resource-error-tips {
-            padding-left: 25px;
-            font-size: 12px;
-            color: #ff4d4d;
-        }
-
-        .no-limit {
-            position: relative;
-            width: 100%;
-            height: 42px;
-            line-height: 39px;
-            font-size: 12px;
-            color: #63656e;
-            background-color: #fafbfd;
-            border: 1px solid #dcdee5;
-            padding: 0 21px 0 13px;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            overflow: hidden;
-            span.text {
-                display: inline-block;
-            }
-            span {
-                i {
-                    font-weight: 600;
-                    font-size: 14px;
-                }
-                .no-limit-checkbox {
-                    top: -28px;
-                    float: right;
-                    position: absolute;
-                    top: 10px;
-                    right: 30px;
-                    .bk-checkbox-text {
-                        font-size: 12px;
-                        position: relative;
-                        top: -1px;
-                    }
-                }
-            }
-        }
-
-        .is-one-resource-instance {
-            padding: 16px 25px 0 25px;
-        }
-
-        .resource-instance-wrapper {
-            &.set-padding {
-                padding: 0 25px;
-            }
-            .iam-instance-wrapper {
-                display: flex;
-                justify-content: flex-start;
-                height: 100%;
-                .left-layout {
-                    position: relative;
-                    min-width: 220px;
-                    .drag-dotted-line {
-                        position: absolute;
-                        top: 0;
-                        left: 220px;
-                        height: 100%;
-                        border-left: 1px solid #dcdee5;
-                        z-index: 1500;
-                    }
-                    .drag-line {
-                        position: absolute;
-                        top: 0;
-                        left: 220px;
-                        height: 100%;
-                        width: 1px;
-                        background: #dcdee5;
-                        z-index: 1500;
-                        .drag-bar {
-                            position: relative;
-                            top: calc(50% - 17px);
-                            left: 2px;
-                            width: 9px;
-                            background: transparent;
-                            cursor: col-resize;
-                        }
-                    }
-                }
-                .right-layout {
-                    position: relative;
-                    width: calc(100% - 180px);
-                    overflow-y: auto;
-                    &::-webkit-scrollbar {
-                        width: 4px;
-                        background-color: lighten(transparent, 80%);
-                    }
-                    &::-webkit-scrollbar-thumb {
-                        height: 5px;
-                        border-radius: 2px;
-                        background-color: #e6e9ea;
-                    }
-                    .empty-wrapper {
-                        position: absolute;
-                        top: 50%;
-                        left: 50%;
-                        transform: translate(-50%, -50%);
-                        img {
-                            width: 120px;
-                        }
-                    }
-                }
-            }
-        }
-    }
+  @import '@/css/mixins/resource-instance-slider.css';
 </style>

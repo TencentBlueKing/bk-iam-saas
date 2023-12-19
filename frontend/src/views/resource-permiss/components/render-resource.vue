@@ -44,6 +44,7 @@
                   :ref="`${index}TreeRef`"
                   :resource-value="true"
                   :tree-value="condition.instance"
+                  :selection-mode="selectionMode"
                   :select-list="selectList"
                   :select-value="selectValue"
                   :system-params="params"
