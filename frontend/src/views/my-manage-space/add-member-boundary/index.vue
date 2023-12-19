@@ -480,7 +480,7 @@
         usernameList: [],
         isAll: false,
         isAllFlag: false,
-        showLimit: false,
+        showLimit: true,
         showExpiredAt: false,
         disabled: false,
         loading: false,
@@ -718,7 +718,7 @@
           this.hasSelectedDepartments.splice(0, this.hasSelectedDepartments.length, ...this.departments);
         }
         this.isAll = isAll || false;
-        this.showLimit = showLimit || false;
+        this.showLimit = showLimit || this.showLimit;
         this.showExpiredAt = showExpiredAt || false;
         this.disabled = disabled || false;
         this.loading = loading || false;
@@ -1738,34 +1738,41 @@
       },
 
       handleSave () {
-        let users = [];
-        let departments = [];
-        if (this.hasSelectedUsers.length) {
-          users = this.hasSelectedUsers.map((item) => {
-            return {
-              id: item.id || '',
-              type: 'user',
-              name: item.name,
-              username: item.username || item.id,
-              full_name: item.full_name || item.username
-            };
+        let subjects = [];
+        if (this.isAll) {
+          subjects.push({
+            id: '*',
+            type: '*',
+            name: '',
+            username: '',
+            full_name: ''
           });
+        } else {
+          if (this.hasSelectedUsers.length) {
+            subjects = this.hasSelectedUsers.map((item) => {
+              return {
+                id: item.id || '',
+                type: 'user',
+                name: item.name,
+                username: item.username || item.id,
+                full_name: item.full_name || item.username
+              };
+            });
+          }
+          if (this.hasSelectedDepartments.length) {
+            subjects = this.hasSelectedDepartments.map((item) => {
+              return {
+                id: item.id,
+                type: 'depart',
+                name: item.name,
+                full_name: item.full_name,
+                username: item.name
+              };
+            });
+          }
         }
-        if (this.hasSelectedDepartments.length) {
-          departments = this.hasSelectedDepartments.map((item) => {
-            return {
-              id: item.id,
-              type: 'depart',
-              name: item.name,
-              full_name: item.full_name,
-              username: item.name
-            };
-          });
-        }
-        // eslint-disable-next-line camelcase
-        const subject_scopes = [...users, ...departments];
         const params = {
-          subject_scopes
+          subject_scopes: subjects
         };
         if (this.showExpiredAt) {
           if (this.expiredAt !== 4102444800) {

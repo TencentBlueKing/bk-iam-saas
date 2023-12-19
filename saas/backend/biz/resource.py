@@ -119,6 +119,19 @@ class ResourceBiz:
         count, results = rp.list_instance(ancestors, limit, offset, action_system_id, action_id)
         return count, parse_obj_as(List[ResourceInstanceBaseInfoBean], results)
 
+    def list_instance_by_display_names(
+        self,
+        system_id: str,
+        resource_type_id: str,
+        display_names: List[str],
+        action_system_id: str = "",
+        action_id: str = "",
+    ) -> Tuple[int, List[ResourceInstanceBaseInfoBean]]:
+        """实例粘贴的场景下，根据显示名称获取某个资源实例列表"""
+        rp = self.new_resource_provider(system_id, resource_type_id)
+        count, results = rp.list_instance_by_display_names(display_names, action_system_id, action_id)
+        return count, parse_obj_as(List[ResourceInstanceBaseInfoBean], results)
+
     def search_instance_for_topology(
         self,
         system_id: str,
