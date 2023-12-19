@@ -401,7 +401,6 @@
         }
         this.dragRealityWidth = offsetX;
         this.dragWidth = offsetX;
-        console.log(this.dragRealityWidth, e.clientX, document.body.clientWidth, this.getResourceSliderWidth());
       },
 
       async fetchInstanceSelection (params = {}) {

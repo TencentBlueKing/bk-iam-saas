@@ -8,6 +8,7 @@
         v-model="manualValue"
         :placeholder="$t(`m.common['请输入实例名称，以回车/逗号/分号/空格分割']`)"
         :rows="14"
+        :disabled="isInputDisabled"
         @input="handleManualInput"
       />
       <p class="manual-error-text pr10" v-if="manualInputError">
@@ -78,14 +79,18 @@
   import { formatCodeData } from '@/common/util';
   export default {
     props: {
+      resourceValue: {
+        type: Boolean,
+        default: false
+      },
+      selectionMode: {
+        type: String
+      },
       curSelectedChain: {
         type: Object
       },
       systemParams: {
         type: Object
-      },
-      selectionMode: {
-        type: String
       },
       hasSelectedValues: {
         type: Array,
@@ -96,15 +101,9 @@
       return {
         tableKeyWord: '',
         manualValue: '',
+        regValue: /，|,|；|;|、|\\|\n|\s/,
         manualAddLoading: false,
         manualInputError: false,
-        manualTableListStorage: [{
-          id: 1,
-          display_name: 'admin',
-          child_type: ''
-        }],
-        manualTableList: [],
-        hasSelectedInstances: [],
         pagination: {
           current: 1,
           limit: 10,
@@ -117,7 +116,14 @@
           tip: '',
           tipType: ''
         },
-        regValue: /，|,|；|;|、|\\|\n|\s/
+        manualTableListStorage: [{
+          id: 1,
+          display_name: 'admin',
+          child_type: ''
+        }],
+        manualTableList: [],
+        hasSelectedInstances: [],
+        curSelectedValues: []
       };
     },
     computed: {
@@ -126,7 +132,18 @@
         if (this.resourceValue && this.hasSelectedValues.length) {
           return true;
         }
-        return this.manualValue === '';
+        return this.manualValue.split(this.regValue).filter(item => item !== '').length === 0;
+      },
+      isInputDisabled () {
+        return this.resourceValue && this.hasSelectedValues.length;
+      }
+    },
+    watch: {
+      hasSelectedValues: {
+        handler (value) {
+          this.curSelectedValues = [...value];
+        },
+        immediate: true
       }
     },
     methods: {
@@ -277,7 +294,7 @@
             system_id,
             action_id,
             action_system_id: resource_type_system,
-            display_names: this.manualValue.split(this.regValue)
+            display_names: this.manualValue.split(this.regValue).filter(item => item !== '').length === 0
           };
           const { code, data } = await this.$store.dispatch('permApply/getResourceInstanceManual', params);
           const list = data.results.filter((item) => {

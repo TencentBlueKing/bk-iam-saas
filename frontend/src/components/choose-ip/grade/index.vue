@@ -273,14 +273,20 @@
         type: Array,
         default: () => []
       },
+      resourceValue: {
+        type: Boolean,
+        default: () => false
+      },
       systemParams: {
         type: Object,
         default: () => {
           return {
-            action_id: '',
-            system_id: ''
+            action_id: ''
           };
         }
+      },
+      selectionMode: {
+        type: String
       }
     },
     data () {
@@ -1091,9 +1097,8 @@
       },
 
       async handleResourceSelect (value) {
+        this.curSelectedChain = this.selectList.find(item => item.id === value);
         if (!['manualInput'].includes(value)) {
-          this.curSelectedChain = this.selectList.find(item => item.id === value);
-          console.log(this.curSelectedChain, 4744);
           this.curChain = _.cloneDeep(this.curSelectedChain.resource_type_chain);
           this.ignorePathFlag = this.curSelectedChain.ignore_iam_path;
           this.curPlaceholder = `${this.$t(`m.common['搜索']`)} ${this.curChain[0].name}`;

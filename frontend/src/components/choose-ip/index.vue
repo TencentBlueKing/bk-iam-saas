@@ -699,10 +699,12 @@
           return false;
         });
         if (this.resourceValue && curNode) {
-          treeData.forEach((v) => {
-            v.checked = false;
-            v.disabled = false;
-            this.$refs.topologyRef.$refs.topologyTableRef.toggleRowSelection(v, false);
+          this.$nextTick(() => {
+            treeData.forEach((v) => {
+              v.checked = false;
+              v.disabled = false;
+              this.$refs.topologyRef.$refs.topologyTableRef.toggleRowSelection(v, false);
+            });
           });
         }
         if (curNode && !curNode.disabled) {
