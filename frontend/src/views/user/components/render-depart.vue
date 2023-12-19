@@ -55,6 +55,7 @@
             :cur-search-params="curSearchParams"
             :cur-search-pagination="curSearchPagination"
             :is-search-perm="isSearchPerm"
+            :is-only-perm="true"
             :check-group-list="panels[0].selectList"
             @on-select-group="handleSelectGroup"
             @on-clear="handleEmptyClear"
