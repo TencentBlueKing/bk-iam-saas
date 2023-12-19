@@ -1,6 +1,6 @@
 <template>
   <div :class="['iam-perm-item', extCls]" v-if="permLength > 0">
-    <div class="header" @click="handleExpanded">
+    <div class="header" @click="handleExpanded" v-if="!isOnlyPerm">
       <Icon bk class="expanded-icon" :type="isExpanded ? 'down-shape' : 'right-shape'" />
       <label class="title">{{ title }}</label>
       <div class="sub-title">
@@ -53,6 +53,10 @@
       onePerm: {
         type: Number,
         default: 0
+      },
+      isOnlyPerm: {
+        type: Boolean,
+        default: false
       },
       isAllDelete: {
         type: Boolean,
@@ -156,6 +160,18 @@
             .slot-content {
                 padding: 0 30px 0 30px;
             }
+        }
+        &.only-perm-item-wrapper {
+          margin-bottom: 0 !important;
+          box-shadow: none;
+          .content {
+            .slot-content {
+              padding: 0;
+            }
+            .expand-action {
+              display: none;
+            }
+          }
         }
     }
 </style>

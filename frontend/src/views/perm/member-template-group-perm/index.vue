@@ -12,7 +12,8 @@
           { 'iam-perm-ext-reset-cls': index === memberTempPermData.length - 1 }
         ]"
         :perm-length="item.pagination.count"
-        :one-perm="formatPermLength"
+        :one-perm="isOnlyPerm ? 1 : formatPermLength"
+        :is-only-perm="isOnlyPerm"
         :is-all-delete="false"
         @on-expanded="handleExpanded(...arguments, item)"
       >
@@ -107,6 +108,10 @@
         type: Boolean,
         default: false
       },
+      isOnlyPerm: {
+        type: Boolean,
+        default: false
+      },
       totalCount: {
         type: Number
       },
@@ -174,6 +179,9 @@
       ...mapGetters(['user', 'externalSystemId', 'mainContentLoading']),
       formatExtCls () {
         return (index) => {
+          if (this.isOnlyPerm) {
+            return 'only-perm-item-wrapper';
+          }
           const isOnePerm = this.memberTempPermData.filter((item) => item.pagination.count > 0).length;
           if (isOnePerm < 2) {
             return 'iam-perm-no-border';
