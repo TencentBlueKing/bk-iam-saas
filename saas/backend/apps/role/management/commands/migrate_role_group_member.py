@@ -8,49 +8,105 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from typing import Dict, Tuple
+
 from django.core.management.base import BaseCommand
 from django.core.paginator import Paginator
+from django.db import transaction
 
-from backend.apps.role.models import Role, RoleGroupMember, RoleRelatedObject, RoleRelation
-from backend.component.iam import list_all_subject_member
-from backend.service.constants import RoleRelatedObjectType, RoleType, SubjectType
+from backend.apps.organization.models import Department, User
+from backend.apps.role.models import RoleGroupMember, RoleRelatedObject, RoleRelation
+from backend.component.iam import list_all_subject_groups
+from backend.service.constants import RoleRelatedObjectType
+from backend.service.models.subject import Subject
 
 
 class Command(BaseCommand):
     help = "migrate role group member"
 
-    def handle(self, *args, **options):
-        queryset = Role.objects.order_by("id")
+    _cache: Dict[int, Tuple[int, int]] = {}
 
-        paginator = Paginator(queryset, 100)
-
+    def handler_user(self):
+        queryset = User.objects.order_by("id")
+        paginator = Paginator(queryset, 1000)
         for i in paginator.page_range:
-            for role in paginator.page(i):
-                # 如果role类型为二级管理员, 需要查询到二级管理员对应的一级管理员
-                if role.type == RoleType.SUBSET_MANAGER.value:
-                    role_id = RoleRelation.objects.filter(role_id=role.id).first().parent_id
-                    subset_id = role.id
-                else:
-                    role_id = role.id
-                    subset_id = 0
+            for user in paginator.page(i):
+                subject = Subject.from_username(user.username)
+                groups = list_all_subject_groups(subject.type, subject.id)
 
-                # 遍历role创建每一个group
-                for group_id in RoleRelatedObject.objects.filter(
-                    role_id=role_id, object_type=RoleRelatedObjectType.GROUP.value
-                ).values_list("object_id", flat=True):
-                    # 查询group的所有成员
-                    members = list_all_subject_member(SubjectType.GROUP.value, str(group_id))
-                    # 创建role group member
-                    role_group_member = [
+                role_group_member = []
+                for group in groups:
+                    group_id = group["id"]
+                    role_id, subset_id = self._get_role_and_subset_id(group_id)
+                    if role_id == 0:
+                        continue
+
+                    role_group_member.append(
                         RoleGroupMember(
                             role_id=role_id,
                             subset_id=subset_id,
                             group_id=group_id,
-                            subject_type=one["type"],
-                            subject_id=one["id"],
+                            subject_type=subject.type,
+                            subject_id=subject.id,
                         )
-                        for one in members
-                    ]
+                    )
 
-                    if role_group_member:
+                if role_group_member:
+                    with transaction.atomic():
                         RoleGroupMember.objects.bulk_create(role_group_member, batch_size=100, ignore_conflicts=True)
+
+    def handler_department(self):
+        queryset = Department.objects.order_by("id")
+        paginator = Paginator(queryset, 1000)
+        for i in paginator.page_range:
+            for department in paginator.page(i):
+                subject = Subject.from_department_id(department.id)
+                groups = list_all_subject_groups(subject.type, subject.id)
+
+                role_group_member = []
+                for group in groups:
+                    group_id = group["id"]
+                    role_id, subset_id = self._get_role_and_subset_id(group_id)
+                    if role_id == 0:
+                        continue
+
+                    role_group_member.append(
+                        RoleGroupMember(
+                            role_id=role_id,
+                            subset_id=subset_id,
+                            group_id=group_id,
+                            subject_type=subject.type,
+                            subject_id=subject.id,
+                        )
+                    )
+
+                if role_group_member:
+                    with transaction.atomic():
+                        RoleGroupMember.objects.bulk_create(role_group_member, batch_size=100, ignore_conflicts=True)
+
+    def _get_role_and_subset_id(self, group_id):
+        if group_id in self._cache:
+            return self._cache[group_id]
+
+        obj = RoleRelatedObject.objects.filter(
+            object_id=group_id, object_type=RoleRelatedObjectType.GROUP.value
+        ).first()
+        if not obj:
+            self._cache[group_id] = (0, 0)
+            return self._cache[group_id]
+
+        role_id = obj.role_id
+        relation = RoleRelation.objects.filter(role_id=role_id).first()
+        if not relation:
+            self._cache[group_id] = (role_id, 0)
+            return self._cache[group_id]
+
+        subset_id = role_id
+        role_id = relation.parent_id
+
+        self._cache[group_id] = (role_id, subset_id)
+        return self._cache[group_id]
+
+    def handle(self, *args, **options):
+        self.handler_user()
+        self.handler_department()

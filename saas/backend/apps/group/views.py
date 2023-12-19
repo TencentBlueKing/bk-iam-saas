@@ -1059,7 +1059,7 @@ class GroupSearchViewSet(mixins.ListModelMixin, GenericViewSet):
 
         # 通过实例或操作查询用户组
         data["permission_type"] = PermissionTypeEnum.RESOURCE_INSTANCE.value
-        data["limit"] = 1000
+        data["limit"] = 10000
         subjects = QueryAuthorizedSubjects(data).query_by_resource_instance(subject_type="group")
         if not subjects:
             queryset = queryset.none()

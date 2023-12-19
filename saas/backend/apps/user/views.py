@@ -455,7 +455,7 @@ def search_group_ids(data) -> Optional[List[int]]:
     if data["system_id"] and data["action_id"]:
         # 通过实例或操作查询用户组
         data["permission_type"] = PermissionTypeEnum.RESOURCE_INSTANCE.value
-        data["limit"] = 1000
+        data["limit"] = 10000
         subjects = QueryAuthorizedSubjects(data).query_by_resource_instance(subject_type="group")
         group_ids = list({int(s["id"]) for s in subjects})
     return group_ids
@@ -508,14 +508,7 @@ class UserDepartmentSubjectTemplateGroupViewSet(GenericViewSet):
         return Response({"count": count, "results": slz.data})
 
     def search_group_ids(self, request, kwargs, data):
-        group_ids = None
-        if data["system_id"] and data["action_id"]:
-            # 通过实例或操作查询用户组
-            data["permission_type"] = PermissionTypeEnum.RESOURCE_INSTANCE.value
-            data["limit"] = 1000
-            subjects = QueryAuthorizedSubjects(data).query_by_resource_instance(subject_type="group")
-            group_ids = list({int(s["id"]) for s in subjects})
-        return group_ids
+        return search_group_ids(data)
 
     def get_subject(self, request, kwargs):
         subject = Subject.from_username(request.user.username)
