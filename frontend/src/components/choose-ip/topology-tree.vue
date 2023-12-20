@@ -544,7 +544,9 @@
       },
       emptyData: {
         handler (value) {
-          this.curSearchMode === 'tree' ? this.emptyTreeData = Object.assign({}, value) : this.emptyTableData = Object.assign({}, value);
+          this.curSearchMode === 'tree'
+            ? this.emptyTreeData = Object.assign({}, value)
+            : this.emptyTableData = Object.assign({}, value);
         },
         immediate: true
       },
@@ -588,6 +590,7 @@
     },
     methods: {
       fetchLevelTree (value) {
+        console.log(111);
         if (this.curKeyword) {
           this.$nextTick(() => {
             this.treeKeyWord = this.curKeyword;
@@ -797,16 +800,16 @@
             let childrenIdList = [];
             const result = !(defaultSelectList.includes(`${payload.id}&${this.curChain[payload.level].id}`)
               || defaultSelectList.includes(`${this.selectNodeData.id}&${this.curChain[payload.level - 1].id}`));
-            if (this.curSelectTreeNode.children && this.curSelectTreeNode.children.length) {
-              childrenIdList = this.curSelectTreeNode.children.filter((v) => v.checked).map((v) => `${v.name}&${v.id}`);
-            }
             // 处理多层资源权限搜索只支持单选
-            if (this.resourceValue) {
+            if (this.resourceValue
+              || (this.curSelectTreeNode.children
+                && this.curSelectTreeNode.children.length)) {
               // 处理子集表格disabled
-              childrenIdList = this.curSelectTreeNode.children.filter((v) => v.checked).map((v) => `${v.name}&${v.id}`);
+              console.log('设置只读', defaultSelectList);
+              childrenIdList = this.curSelectTreeNode.children.filter((v) => v.disabled).map((v) => `${v.name}&${v.id}`);
               return !childrenIdList.includes(`${payload.name}&${payload.id}`);
             }
-            return result;
+            return result || !childrenIdList.includes(`${payload.name}&${payload.id}`);
           }
         }
         const list = [...this.allTreeData].filter((item) => item.type === 'node');
@@ -1204,6 +1207,7 @@
               this.$refs.topologyTableRef.toggleRowSelection(item, newVal);
               if (defaultCheckedList.includes(item.id)) {
                 item.disabled = true;
+                item.checked = true;
                 list.push(item);
                 this.$refs.topologyTableRef.toggleRowSelection(item, true);
               }

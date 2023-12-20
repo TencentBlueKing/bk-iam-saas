@@ -116,12 +116,12 @@
           tip: '',
           tipType: ''
         },
-        manualTableListStorage: [{
+        manualTableList: [{
           id: 1,
           display_name: 'admin',
           child_type: ''
         }],
-        manualTableList: [],
+        manualTableListStorage: [],
         hasSelectedInstances: [],
         curSelectedValues: []
       };
@@ -150,12 +150,8 @@
       fetchSelectedGroups (type, payload, row) {
         const typeMap = {
           multiple: () => {
-            let allTreeData = [...this.manualTableList];
-            if (!allTreeData.length && !this.isOnlyLevel && this.curKeyword) {
-              allTreeData = [...this.curTreeTableData.children || []];
-            }
             const isChecked = payload.length && payload.indexOf(row) !== -1;
-            const curNode = allTreeData.find((item) => `${row.name}&${row.id}` === `${item.name}&${item.id}`);
+            const curNode = this.manualTableList.find((item) => `${row.display_name}&${row.id}` === `${item.display_name}&${item.id}`);
             if (isChecked) {
               this.$set(row, 'checked', true);
               if (curNode) {
@@ -164,7 +160,7 @@
               }
             } else {
               this.currentSelectedNode = this.currentSelectedNode.filter(
-                (item) => `${item.name}&${item.id}` !== `${row.name}&${row.id}`
+                (item) => `${item.display_name}&${item.id}` !== `${row.display_name}&${row.id}`
               );
               this.$set(row, 'checked', false);
               if (curNode) {
@@ -176,17 +172,14 @@
           all: () => {
             // 针对资源权限搜索单选特殊处理
             const resourceList = this.resourceValue ? [...payload].slice(0, 1) : [...payload];
-            let allTreeData = [...this.allTreeData];
-            if (!allTreeData.length && !this.isOnlyLevel && this.curKeyword) {
-              allTreeData = [...this.curTreeTableData.children || []];
-            }
-            const tableIdList = cloneDeep(this.renderTopologyData.map((v) => `${v.name}&${v.id}`));
+            const allTreeData = [...this.allTreeData];
+            const tableIdList = cloneDeep(this.manualTableList.map((v) => `${v.display_name}&${v.id}`));
             const selectNode = this.currentSelectedNode.filter(
-              (item) => !tableIdList.includes(`${item.name}&${item.id}`)
+              (item) => !tableIdList.includes(`${item.display_name}&${item.id}`)
             );
             this.currentSelectedNode = [...selectNode, ...resourceList];
             const currentSelect = allTreeData.filter(
-              (item) => resourceList.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`) && !item.disabled
+              (item) => resourceList.map((v) => `${v.display__name}&${v.id}`).includes(`${item.display_name}&${item.id}`) && !item.disabled
             );
             // 如果currentSelect有内容， 代表当前是勾选，否则就取从总数据里取当前页不是disabled的数据
             let noDisabledData = [];
@@ -201,22 +194,22 @@
             } else {
               noDisabledData = allTreeData.filter(
                 (item) =>
-                  !resourceList.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`)
-                  && this.renderTopologyData.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`)
+                  !resourceList.map((v) => `${v.display__name}&${v.id}`).includes(`${item.display_name}&${item.id}`)
+                  && this.manualTableList.map((v) => `${v.display_name}&${v.id}`).includes(`${item.display_name}&${item.id}`)
               );
             }
             const nodes = currentSelect.length ? currentSelect : noDisabledData;
-            this.renderTopologyData.forEach((item) => {
+            this.manualTableList.forEach((item) => {
               if (!item.disabled) {
-                this.$set(item, 'checked', resourceList.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`));
+                this.$set(item, 'checked', resourceList.map((v) => `${v.display__name}&${v.id}`).includes(`${item.display_name}&${item.id}`));
                 if (resourceList.length && !currentSelect.length) {
                   this.$set(
                     item,
                     'disabled',
-                    resourceList.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`)
+                    resourceList.map((v) => `${v.display__name}&${v.id}`).includes(`${item.display_name}&${item.id}`)
                   );
                 }
-                this.$refs.topologyTableRef && this.$refs.topologyTableRef.toggleRowSelection(item, item.checked);
+                this.$refs.manualTableRef && this.$refs.manualTableRef.toggleRowSelection(item, item.checked);
               }
             });
             this.$store.commit('setTreeSelectedNode', this.currentSelectedNode);
@@ -308,6 +301,7 @@
           this.emptyTableData = formatCodeData(code, this.emptyTableData);
         } catch (e) {
           this.manualTableList = [];
+          this.manualTableListStorage = [];
           this.emptyTableData = formatCodeData(e.code, this.emptyTableData);
           this.messageAdvancedError(e);
         } finally {

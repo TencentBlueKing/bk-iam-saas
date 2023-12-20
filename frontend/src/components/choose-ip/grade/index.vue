@@ -145,6 +145,8 @@
           :resource-value="resourceValue"
           :cur-selected-chain="curSelectedChain"
           :has-selected-values="hasSelectedValues"
+          @on-select="handleTreeSelect"
+          @on-select-all="handleTreeSelectAll"
         />
       </div>
     </div>
