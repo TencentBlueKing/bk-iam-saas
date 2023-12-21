@@ -171,8 +171,8 @@
           }
         }
         this.handleValidate();
-        if (this.isShowError) return;
-        this.isEditable = false;
+        // if (this.isShowError) {return};
+        // this.isEditable = false;
       },
       triggerChange () {
         this.isEditable = false;
