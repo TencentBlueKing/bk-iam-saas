@@ -14,6 +14,7 @@ from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, views
 
+from backend.apps.user.models import UserProfile
 from backend.biz.resource_type import ResourceTypeBiz
 from backend.biz.role import RoleListQuery
 from backend.biz.system import SystemBiz
@@ -51,6 +52,18 @@ class SystemViewSet(GenericViewSet):
             ]  # NOTE: 屏蔽掉需要隐藏的系统
         else:
             data = [i.dict(include={"id", "name", "name_en"}) for i in systems]
+
+        # 处理系统收藏
+        user_favorite_systems = UserProfile.objects.list_favorite_systems(request.user.username)
+        for i in data:
+            if i["id"] in user_favorite_systems:
+                i["is_favorite"] = True
+            else:
+                i["is_favorite"] = False
+
+        # 把is_favorite系统排序到前面
+        data.sort(key=lambda x: x["is_favorite"], reverse=True)
+
         return Response(data)
 
 

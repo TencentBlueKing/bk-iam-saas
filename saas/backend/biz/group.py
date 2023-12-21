@@ -524,6 +524,8 @@ class GroupBiz:
             self.template_biz.delete_template_auth_by_subject(subject)
             # 删除所有的自定义策略
             PolicyModel.objects.filter(subject_type=subject.type, subject_id=subject.id).delete()
+            # 删除冗余的用户组关联的角色
+            RoleGroupMember.objects.filter(group_id=group_id).delete()
 
             # 删除用户组关联的人员模版
             for subject_template_id in SubjectTemplateGroup.objects.filter(group_id=group_id).values_list(

@@ -9,11 +9,13 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import logging
+from typing import List
 
 from celery import shared_task
 from django.core.paginator import Paginator
+from pydantic import parse_obj_as
 
-from backend.biz.application import ApplicationBiz
+from backend.biz.application import ApplicationBiz, ApplicationRenewPolicyInfoBean
 from backend.service.constants import ApplicationStatus
 
 from .models import Application
@@ -57,3 +59,16 @@ def check_or_update_application_status():
                 biz.handle_application_result(application, status)
             except Exception:  # pylint: disable=broad-except
                 logger.exception("check_or_update_application_status: handle_application_result fail")
+
+
+@shared_task(ignore_result=True)
+def create_policies_renew_applications(data, username):
+    """
+    创建用户自定义权限续期申请
+
+    由于用户可能一次renew很多个权限, 并且单个操作有很多的资源实例, 查询资源审批人可能会很慢, 需要异步处理
+    """
+    biz = ApplicationBiz()
+    biz.create_for_renew_policy(
+        parse_obj_as(List[ApplicationRenewPolicyInfoBean], data["policies"]), username, data["reason"]
+    )

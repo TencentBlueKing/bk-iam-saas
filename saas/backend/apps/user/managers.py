@@ -17,7 +17,7 @@ from backend.apps.user.constants import NewbieSceneEnum
 
 class UserProfileManager(models.Manager):
     def update_newbie(self, username: str, scene: str, status: bool):
-        profile, _ = self.get_or_create(username=username, defaults={"_newbie": "{}"})
+        profile, _ = self.get_or_create(username=username, defaults={"_newbie": "{}", "_favorite_systems": "[]"})
         # 存在则修改数据后再保存
         newbie_dict = profile.newbie
         newbie_dict[scene] = status
@@ -32,3 +32,28 @@ class UserProfileManager(models.Manager):
 
         # 遍历所有新手指引的场景返回
         return [{"scene": scene.value, "status": newbie_dict.get(scene.value, False)} for scene in NewbieSceneEnum]
+
+    def list_favorite_systems(self, username: str) -> List[str]:
+        """列出某个用户收藏的系统"""
+        profile = self.filter(username=username).first()
+        if not profile:
+            return []
+        return profile.favorite_systems
+
+    def add_favorite_systems(self, username: str, systems: List[str]):
+        profile, _ = self.get_or_create(username=username, defaults={"_newbie": "{}", "_favorite_systems": "[]"})
+        favorite_systems = profile.favorite_systems
+        for system in systems:
+            if system not in favorite_systems:
+                favorite_systems.append(system)
+        profile.favorite_systems = favorite_systems
+        profile.save()
+
+    def remove_favorite_systems(self, username: str, systems: List[str]):
+        profile, _ = self.get_or_create(username=username, defaults={"_newbie": "{}", "_favorite_systems": "[]"})
+        favorite_systems = profile.favorite_systems
+        for system in systems:
+            if system in favorite_systems:
+                favorite_systems.remove(system)
+        profile.favorite_systems = favorite_systems
+        profile.save()
