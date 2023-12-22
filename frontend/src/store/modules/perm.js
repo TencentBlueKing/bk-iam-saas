@@ -930,6 +930,34 @@ export default {
         params,
         config
       );
+    },
+
+    /**
+     *  添加收藏系统
+     *
+     * @param {Function} commit store commit mutation handler
+     * @param {Object} state store state
+     * @param {Function} dispatch store dispatch action handler
+     * @param {Object?} config http config
+     *
+     * @return {Promise} promise 对象
+     */
+    updateCollectSystem ({ commit, state, dispatch }, params, config) {
+      return http.post(`${AJAX_URL_PREFIX}/users/favorite_systems/`, params, config);
+    },
+
+    /**
+     *  删除收藏系统
+     *
+     * @param {Function} commit store commit mutation handler
+     * @param {Object} state store state
+     * @param {Function} dispatch store dispatch action handler
+     * @param {Object?} config http config
+     *
+     * @return {Promise} promise 对象
+     */
+    deleteCollectSystem ({ commit, state, dispatch }, params, config) {
+      return http.delete(`${AJAX_URL_PREFIX}/users/favorite_systems/`, { data: params }, config);
     }
   }
 };
