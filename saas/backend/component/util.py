@@ -70,9 +70,15 @@ def _remove_sensitive_info(info: Optional[Dict]) -> str:
 
 
 def do_blueking_http_request(
-    component: str, http_func, url: str, data: Dict = None, headers: Dict = None, timeout: int = None
+    component: str,
+    http_func,
+    url: str,
+    data: Dict = None,
+    headers: Dict = None,
+    timeout: int = None,
+    request_session=None,
 ):
-    kwargs = {"url": url, "data": data, "headers": headers, "timeout": timeout}
+    kwargs = {"url": url, "data": data, "headers": headers, "timeout": timeout, "request_session": request_session}
 
     ok, resp_data = http_func(**kwargs)
     if not ok:

@@ -86,7 +86,7 @@ class Syncer:
         3. 小于一定数量的新增用户，则直接单用户同步
         """
         # 查询5分钟内新增用户
-        users = usermgr.list_new_user(datetime.datetime.utcnow(), 5)
+        users = usermgr.list_new_user(datetime.datetime.utcnow(), 20)
         # 如果没有则无需执行
         if not users:
             return

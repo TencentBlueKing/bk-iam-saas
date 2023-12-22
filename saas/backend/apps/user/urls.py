@@ -52,4 +52,9 @@ urlpatterns = [
         views.UserDepartmentSubjectTemplateGroupViewSet.as_view({"post": "list"}),
         name="user.department.subject_template_group",
     ),
+    path(
+        "favorite_systems/",
+        views.UserFavoriteSystemViewSet.as_view({"post": "create", "delete": "destroy"}),
+        name="user.favorite_system",
+    ),
 ]

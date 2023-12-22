@@ -513,3 +513,37 @@ class UserDepartmentSubjectTemplateGroupViewSet(GenericViewSet):
     def get_subject(self, request, kwargs):
         subject = Subject.from_username(request.user.username)
         return subject
+
+
+class UserFavoriteSystemViewSet(GenericViewSet):
+    """
+    用户添加或删除收藏的系统
+    """
+
+    @swagger_auto_schema(
+        operation_description="添加收藏系统",
+        request_body=serializers.ListSerializer(child=serializers.CharField(label="系统ID")),
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["user"],
+    )
+    def create(self, request, *args, **kwargs):
+        slz = serializers.ListSerializer(data=request.data, child=serializers.CharField(label="系统ID"))
+        slz.is_valid(raise_exception=True)
+
+        UserProfile.objects.add_favorite_systems(request.user.username, slz.validated_data)
+
+        return Response({})
+
+    @swagger_auto_schema(
+        operation_description="移除收藏系统",
+        request_body=serializers.ListSerializer(child=serializers.CharField(label="系统ID")),
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["user"],
+    )
+    def destroy(self, request, *args, **kwargs):
+        slz = serializers.ListSerializer(data=request.data, child=serializers.CharField(label="系统ID"))
+        slz.is_valid(raise_exception=True)
+
+        UserProfile.objects.remove_favorite_systems(request.user.username, slz.validated_data)
+
+        return Response({})
