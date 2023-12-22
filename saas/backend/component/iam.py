@@ -316,6 +316,21 @@ def list_all_subject_groups(_type: str, id: str, expired_at: int = 0) -> List[Di
     return list_all_data_by_paging(list_paging_subject_groups, 1000)
 
 
+def list_all_system_subject_groups(system_id: str, _type: str, id: str, expired_at: int = 0) -> List[Dict]:
+    """
+    分页查询subject的所有系统下的关系列表
+    """
+
+    def list_paging_subject_groups(page: int, page_size: int) -> Tuple[int, List[Dict]]:
+        """[分页]获取subject-group"""
+        limit = page_size
+        offset = (page - 1) * page_size
+        data = get_system_subject_groups(system_id, _type, id, expired_at, limit, offset)
+        return data["count"], data["results"]
+
+    return list_all_data_by_paging(list_paging_subject_groups, 1000)
+
+
 def delete_subject_members(_type: str, id: str, members: List[dict]) -> Dict[str, int]:
     """
     批量删除subject的成员
