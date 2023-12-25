@@ -109,7 +109,7 @@
         if (this.rules.length > 0) {
           for (let i = 0; i < this.rules.length; i++) {
             const validate = this.rules[i];
-            if (validate.required && this.newVal === '') {
+            if (validate.required && this.newVal.trim() === '') {
               this.isShowError = true;
               this.errorTips = validate.message;
               break;
@@ -138,18 +138,26 @@
           this.$emit('handleShow');
         }
       },
-      handleInput () {
-        this.isShowError = false;
+      handleInput (value) {
+        const iconRule = /[\uD83C|\uD83D|\uD83E][\uDC00-\uDFFF][\u200D|\uFE0F]|[\uD83C|\uD83D|\uD83E][\uDC00-\uDFFF]|[0-9|*|#]\uFE0F\u20E3|[0-9|#]\u20E3|[\u203C-\u3299]\uFE0F\u200D|[\u203C-\u3299]\uFE0F|[\u2122-\u2B55]|\u303D|[\A9|\AE]\u3030|\uA9|\uAE|\u3030/gi;
+        if (iconRule.test(value)) {
+          this.newVal = this.newVal.replace(iconRule, '');
+          this.isShowError = true;
+          return;
+        }
+        if (value) {
+          this.isShowError = false;
+        }
         this.errorTips = '';
       },
       handleBlur () {
-        if (!this.isEditable) return;
         this.handleValidate();
-        if (this.isShowError) return;
+        if (this.isShowError || !this.isEditable) return;
         this.triggerChange();
       },
       handleEnter (value, event) {
-        if (!this.isEditable) return;
+        this.handleValidate();
+        if (this.isShowError || !this.isEditable) return;
         if (event.key === 'Enter' && event.keyCode === 13) {
           this.triggerChange();
         }
@@ -163,10 +171,7 @@
             }
           }
         }
-
         this.handleValidate();
-        if (this.isShowError) return;
-        this.isEditable = false;
       },
       triggerChange () {
         this.isEditable = false;

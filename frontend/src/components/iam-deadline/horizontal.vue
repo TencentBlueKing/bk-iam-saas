@@ -170,8 +170,9 @@
             position: relative;
             width: 62px;
             height: 32px;
-            border: 1px solid #c3cdd7;
+            border: 1px solid #c4c6cc;
             vertical-align: bottom;
+            box-sizing: border-box;
             &.is-focus {
                 border-color: #3a84ff;
             }
@@ -187,7 +188,7 @@
                 padding-top: 1px;
                 border-radius: 0;
                 border: 0px;
-                border-right: 1px solid #c3cdd7;
+                border-right: 1px solid #c4c6cc;
             }
             .unit {
                 position: relative;
@@ -198,14 +199,14 @@
                 line-height: 32px;
                 font-size: 14px;
                 text-align: center;
-                border: 1px solid #c3cdd7;
+                border: 1px solid #c4c6cc;
                 float: right;
                 &.is-focus {
                     border-left-color: #3a84ff;
                 }
             }
             input.custom-time:focus {
-                border-color: #c3cdd7 !important;
+                border-color: #c4c6cc !important;
                 outline: none !important;
                 box-shadow: none !important;
             }
