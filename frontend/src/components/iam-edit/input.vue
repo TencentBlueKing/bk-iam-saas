@@ -151,13 +151,13 @@
         this.errorTips = '';
       },
       handleBlur () {
-        if (!this.isEditable) return;
         this.handleValidate();
-        if (this.isShowError) return;
+        if (this.isShowError || !this.isEditable) return;
         this.triggerChange();
       },
       handleEnter (value, event) {
-        if (!this.isEditable) return;
+        this.handleValidate();
+        if (this.isShowError || !this.isEditable) return;
         if (event.key === 'Enter' && event.keyCode === 13) {
           this.triggerChange();
         }
@@ -171,10 +171,7 @@
             }
           }
         }
-
         this.handleValidate();
-        if (this.isShowError) return;
-        this.isEditable = false;
       },
       triggerChange () {
         this.isEditable = false;
