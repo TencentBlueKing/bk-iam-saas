@@ -62,6 +62,20 @@
               @click="handleAddMember(row)">
               {{ $t(`m.common['添加成员']`) }}
             </bk-button>
+            <bk-popover
+              :content="row.readonly ? $t(`m.memberTemplate['只读人员模板不能添加成员']`) : ''"
+              :disabled="row.readonly">
+              <bk-button
+                theme="primary"
+                text
+                :disabled="row.readonly"
+                class="actions-btn-item"
+                :title="row.readonly ? $t(`m.memberTemplate['只读人员模板不能添加成员']`) : ''"
+                @click="handleAddMember(row)"
+              >
+                {{ $t(`m.common['添加成员']`) }}
+              </bk-button>
+            </bk-popover>
             <bk-popconfirm trigger="click" placement="bottom-end" ext-popover-cls="delete-confirm"
               :confirm-text="$t(`m.common['删除-dialog']`)" @confirm="handleConfirmDelete(row.id)">
               <div slot="content">
@@ -80,13 +94,18 @@
                   </div>
                 </div>
               </div>
-              <bk-button
-                theme="primary"
-                text class="actions-btn-item"
-                :disabled="formatDelAction(row, 'disabled')"
-                :title="formatDelAction(row, 'title')">
-                {{ $t(`m.common['删除']`) }}
-              </bk-button>
+              <bk-popover
+                :content="formatDelAction(row, 'title')"
+                :disabled="formatDelAction(row, 'title') ? false : true">
+                <bk-button
+                  theme="primary"
+                  text
+                  class="actions-btn-item"
+                  :disabled="formatDelAction(row, 'disabled')"
+                >
+                  {{ $t(`m.common['删除']`) }}
+                </bk-button>
+              </bk-popover>
             </bk-popconfirm>
           </div>
         </template>

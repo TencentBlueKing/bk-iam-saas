@@ -2507,6 +2507,7 @@
             try {
               const { code } = await this.$store.dispatch('perm/updateCollectSystem', params);
               if (code === 0) {
+                this.messageSuccess(this.$t(`m.pemApply['收藏成功']`), 3000);
                 await this.fetchSystems();
               }
             } catch (e) {
@@ -2517,6 +2518,7 @@
             try {
               const { code } = await this.$store.dispatch('perm/deleteCollectSystem', params);
               if (code === 0) {
+                this.messageSuccess(this.$t(`m.pemApply['取消收藏成功']`), 3000);
                 await this.fetchSystems();
               }
             } catch (e) {

@@ -685,7 +685,9 @@ export const m = {
         '选择权限获得者': 'Select permission recipient',
         '请选择权限获得者': 'Please select permission recipient',
         '请输入权限获得者': 'Please enter the permission recipient',
-        '可代他人申请加入用户组获取权限': 'You can apply to join the user group for permission on behalf of others'
+        '可代他人申请加入用户组获取权限': 'You can apply to join the user group for permission on behalf of others',
+        '收藏成功': 'Collection successful',
+        '取消收藏成功': 'Cancel collection successful'
     },
     myApply: {
         '申请列表': 'Apply List',
