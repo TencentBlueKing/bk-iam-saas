@@ -111,6 +111,7 @@
         isShowAddMemberDialog: false,
         isShowNameError: false,
         isShowSubjectError: false,
+        isAll: false,
         width: 640,
         formData: {
           name: '',
