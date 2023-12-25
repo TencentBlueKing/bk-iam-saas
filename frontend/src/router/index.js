@@ -177,7 +177,7 @@ export const beforeEach = async (to, from, next) => {
         const noFrom = !from.name;
         // 说明是刷新页面
         if (noFrom) {
-          if (existValue('externalApp')) {
+          if (existValue('externalApp') || to.query.noFrom) {
             next();
           } else {
             // next();

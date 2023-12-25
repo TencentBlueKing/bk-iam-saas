@@ -113,6 +113,7 @@ class RoleInfo(PartialModel):
     type: str = RoleType.GRADE_MANAGER.value
     inherit_subject_scope: bool = False
     sync_perm: bool = False
+    sync_subject_template: bool = False
 
     members: List[RoleMember]
     subject_scopes: List[Subject] = []
@@ -562,6 +563,14 @@ class RoleService:
         )
         # 查询角色
         return Role.objects.get(id=role_related_object.role_id)
+
+    def get_parent_id(self, role_id: int) -> int:
+        """获取角色的父角色ID"""
+        relation = RoleRelation.objects.filter(role_id=role_id).first()
+        if not relation:
+            return 0
+
+        return relation.parent_id
 
     def list_user_role_for_system(self, user_id: str, system_id: str) -> List[UserRole]:
         """

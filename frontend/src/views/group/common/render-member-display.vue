@@ -21,8 +21,11 @@
         <template v-if="isDepartment">
           <span class="count">({{ item.count }})</span>
         </template>
-        <template v-if="!isDepartment && item.name !== ''">
+        <template v-if="!isDepartment && !isTemplate && item.name !== ''">
           <span class="display_name">({{ item.name }})</span>
+        </template>
+        <template v-if="isTemplate">
+          <span class="display_name">{{ item.name }}</span>
         </template>
         <Icon type="close-fill" class="remove-icon" v-if="isEdit" @click="handleDelete(index)" />
       </div>
@@ -49,13 +52,28 @@
     },
     computed: {
       icon () {
-        return this.type === 'user' ? 'personal-user' : 'organization-fill';
+        if (this.type === 'user') {
+          return 'personal-user';
+        }
+        if (this.type === 'template') {
+          return 'renyuanmuban';
+        }
+        return 'organization-fill';
       },
       title () {
-        return this.type === 'user' ? this.$t(`m.common['用户']`) : this.$t(`m.common['组织']`);
+        if (this.type === 'user') {
+          return this.$t(`m.common['用户']`);
+        }
+        if (this.type === 'template') {
+          return this.$t(`m.memberTemplate['人员模板']`);
+        }
+        return this.$t(`m.common['组织']`);
       },
       isDepartment () {
         return this.type === 'department' && window.ENABLE_ORGANIZATION_COUNT.toLowerCase() === 'true';
+      },
+      isTemplate () {
+        return this.type === 'template';
       },
       isEdit () {
         return this.mode === 'edit';
@@ -76,6 +94,9 @@
             },
             depart: () => {
               return fullName || payload.fullName || `${username}(${name})`;
+            },
+            template: () => {
+              return name;
             }
           };
           return typeMap[type] ? typeMap[type]() : typeMap['user']();
@@ -97,6 +118,8 @@
             display: inline-block;
             margin-bottom: 9px;
             font-size: 12px;
+            min-width: 120px;
+            width: 130px;
             .icon {
                 display: inline-block;
                 color: #3a84ff;

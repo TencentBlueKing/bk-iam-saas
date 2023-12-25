@@ -25,6 +25,7 @@ class UserProfile(BaseModel):
 
     username = models.CharField("用户名", max_length=255, unique=True, db_index=True)
     _newbie = models.TextField("新手指引", db_column="newbie", default="{}")
+    _favorite_systems = models.TextField("收藏的系统", default="[]")
 
     objects = UserProfileManager()
 
@@ -39,6 +40,14 @@ class UserProfile(BaseModel):
     @newbie.setter
     def newbie(self, newbie):
         self._newbie = json_dumps(newbie)
+
+    @property
+    def favorite_systems(self):
+        return json.loads(self._favorite_systems)
+
+    @favorite_systems.setter
+    def favorite_systems(self, favorite_systems):
+        self._favorite_systems = json_dumps(favorite_systems)
 
 
 class UserPermissionCleanupRecord(BaseModel):

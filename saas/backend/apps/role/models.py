@@ -221,7 +221,10 @@ class ScopeSubject(models.Model):
     class Meta:
         verbose_name = "subject限制"
         verbose_name_plural = "subject限制"
-        index_together = [("subject_id", "subject_type", "role_id")]
+        index_together = [
+            ("subject_id", "subject_type", "role_id"),
+            ("role_id", "role_scope_id"),
+        ]
 
 
 class RoleRelatedObject(BaseModel):
@@ -400,3 +403,23 @@ class AnonymousRole:
     @property
     def permissions(self):
         return []
+
+
+class RoleGroupMember(models.Model):
+    """
+    角色用户组成员冗余数据表
+    """
+
+    role_id = models.IntegerField("角色ID")
+    subset_id = models.IntegerField("二级角色ID", default=0)
+    group_id = models.IntegerField("用户组ID", db_index=True)
+    subject_template_id = models.IntegerField("用户模板ID", default=0, db_index=True)
+    subject_type = models.CharField("用户类型", max_length=32, choices=SubjectType.get_choices())
+    subject_id = models.CharField("用户ID", max_length=32)
+
+    class Meta:
+        verbose_name = "角色用户组成员"
+        verbose_name_plural = "角色用户组成员"
+        unique_together = [
+            ["role_id", "subject_type", "subject_id", "group_id", "subject_template_id"],
+        ]

@@ -150,82 +150,85 @@
       };
     },
     computed: {
-            ...mapGetters(['externalSystemsLayout']),
-            ghostStyle () {
-                return {
-                    height: this.visiableData.length * this.itemHeight + 'px'
-                };
-            },
-            // allData 中 visiable 为 true 的数据，visiable 属性辅助设置展开收起的
-            // 当父节点收起时，子节点的 visiable 为 false
-            visiableData () {
-                return this.allData.filter(item => item.visiable);
-            },
-            // 页面渲染的数据
-            renderData () {
-                // 渲染 visiable 为 true 并且在可视区的，这里要注意，必须要先 filter visiable 然后 slice，不能反过来
-                return this.visiableData.slice(this.startIndex, this.endIndex);
-            },
-            isExistDialog () {
-                return this.location === 'dialog';
-            },
-            nameStyle () {
-                return (payload) => {
-                    if (payload.type === 'user') {
-                        return {
-                            'maxWidth': 'calc(100% - 50px)'
-                        };
-                    }
-                    let otherOffset = 14 + 17 + 22 + 33 + 35;
-                    // loading 时需计算loading的宽度
-                    if (payload.loading) {
-                        otherOffset += 20;
-                    }
-                    if (payload.async) {
-                        otherOffset += 14;
-                    }
-                    return {
-                        'maxWidth': `calc(100% - ${otherOffset}px)`
-                    };
-                };
-            },
-            nameType () {
-                return (payload) => {
-                    const { name, type, username, full_name: fullName } = payload;
-                    const typeMap = {
-                        user: () => {
-                           // eslint-disable-next-line camelcase
-                           if (fullName) {
-                            return fullName;
-                           } else {
-                            return name ? `${username}(${name})` : username;
-                           }
-                        },
-                        depart: () => {
-                            // eslint-disable-next-line camelcase
-                            return fullName || name;
-                        }
-                    };
-                    return typeMap[type]();
-                };
-            },
-            disabledNode () {
-                return (payload) => {
-                    const isDisabled = payload.disabled || this.isDisabled;
-                    return this.getGroupAttributes ? isDisabled || (this.getGroupAttributes().source_from_role && payload.type === 'depart') : isDisabled;
-                };
-            },
-            selectedNode () {
-                return (payload) => {
-                    if (this.hasSelectedDepartments.length || this.hasSelectedUsers.length) {
-                      payload.is_selected = this.hasSelectedDepartments.map(
-                        item => item.id.toString()).includes(payload.id.toString())
-                        || this.hasSelectedUsers.map(
-                        item => item.username).includes(payload.username);
-                        return payload.is_selected;
-                    }
-                };
-            }
+      ...mapGetters(['externalSystemsLayout']),
+      ghostStyle () {
+        return {
+            height: this.visiableData.length * this.itemHeight + 'px'
+        };
+      },
+      // allData 中 visiable 为 true 的数据，visiable 属性辅助设置展开收起的
+      // 当父节点收起时，子节点的 visiable 为 false
+      visiableData () {
+        return this.allData.filter(item => item.visiable);
+      },
+      // 页面渲染的数据
+      renderData () {
+        // 渲染 visiable 为 true 并且在可视区的，这里要注意，必须要先 filter visiable 然后 slice，不能反过来
+        return this.visiableData.slice(this.startIndex, this.endIndex);
+      },
+      isExistDialog () {
+        return this.location === 'dialog';
+      },
+      nameStyle () {
+        return (payload) => {
+          if (payload.type === 'user') {
+              return {
+                  'maxWidth': 'calc(100% - 50px)'
+              };
+          }
+          let otherOffset = 14 + 17 + 22 + 33 + 35;
+          // loading 时需计算loading的宽度
+          if (payload.loading) {
+              otherOffset += 20;
+          }
+          if (payload.async) {
+              otherOffset += 14;
+          }
+          return {
+              'maxWidth': `calc(100% - ${otherOffset}px)`
+          };
+        };
+      },
+      nameType () {
+        return (payload) => {
+          const { name, type, username, full_name: fullName } = payload;
+          const typeMap = {
+              user: () => {
+                  // eslint-disable-next-line camelcase
+                  if (fullName) {
+                  return fullName;
+                  } else {
+                  return name ? `${username}(${name})` : username;
+                  }
+              },
+              depart: () => {
+                  // eslint-disable-next-line camelcase
+                  return fullName || name;
+              }
+          };
+          return typeMap[type]();
+        };
+      },
+      disabledNode () {
+        return (payload) => {
+          const isDisabled = payload.disabled || this.isDisabled;
+          return this.getGroupAttributes ? isDisabled || (this.getGroupAttributes().source_from_role && payload.type === 'depart') : isDisabled;
+        };
+      },
+      selectedNode () {
+        return (payload) => {
+          if (payload.disabled) {
+            return true;
+          }
+          if (this.hasSelectedDepartments.length || this.hasSelectedUsers.length) {
+            payload.is_selected = this.hasSelectedDepartments.map(
+              item => item.id.toString()).includes(payload.id.toString())
+              || this.hasSelectedUsers.map(
+              item => item.username).includes(payload.username);
+              return payload.is_selected;
+          }
+        };
+      }
     },
     watch: {
       clickTriggerType (val) {
@@ -550,7 +553,7 @@
                 height: 16px;
                 margin: 0 6px 0 0;
                 border: 1px solid #979ba5;
-                /* border-radius: 50%; */
+                border-radius: 2px;
                 &.is-checked {
                     border-color: #3a84ff;
                     background-color: #3a84ff;

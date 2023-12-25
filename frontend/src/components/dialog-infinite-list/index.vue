@@ -120,64 +120,64 @@
       };
     },
     computed: {
-            ...mapGetters(['user', 'externalSystemsLayout']),
-            ghostStyle () {
-                return {
-                    height: this.allData.length * this.itemHeight + 'px'
-                };
-            },
-            // 页面渲染的数据
-            renderData () {
-                // 渲染在可视区的数据
-                return this.allData.slice(this.startIndex, this.endIndex);
-            },
-            renderOrganizationList () {
-                return this.renderData.filter(item => item.type === 'depart');
-            },
-            renderUserList () {
-                return this.renderData.filter(item => item.type === 'user');
-            },
-            disabledNode () {
-                return (payload) => {
-                    const isDisabled = payload.disabled || this.isDisabled;
-                    return this.getGroupAttributes ? isDisabled || (this.getGroupAttributes().source_from_role && payload.type === 'depart') : isDisabled;
-                };
-            },
-            isStaff () {
-                return this.user.role.type === 'staff';
-            },
-            nameType () {
-                return (payload) => {
-                    const { name, type, username, full_name: fullName } = payload;
-                    const typeMap = {
-                        user: () => {
-                            if (fullName) {
-                                return fullName;
-                            } else {
-                                return name ? `${username}(${name})` : username;
-                            }
-                        },
-                        depart: () => {
-                            return fullName || name;
-                        }
-                    };
-                    return typeMap[type] ? typeMap[type]() : typeMap['user']();
-                };
-            },
-            selectedNode () {
-                return (payload) => {
-                  if (payload.disabled) {
-                    return true;
-                  }
-                    if (this.hasSelectedDepartments.length || this.hasSelectedUsers.length) {
-                      payload.is_selected = this.hasSelectedDepartments.map(
-                        item => item.id.toString()).includes(payload.id.toString())
-                        || this.hasSelectedUsers.map(
-                        item => item.username).includes(payload.username);
-                        return payload.is_selected;
+      ...mapGetters(['user', 'externalSystemsLayout']),
+      ghostStyle () {
+        return {
+            height: this.allData.length * this.itemHeight + 'px'
+        };
+      },
+      // 页面渲染的数据
+      renderData () {
+        // 渲染在可视区的数据
+        return this.allData.slice(this.startIndex, this.endIndex);
+      },
+      renderOrganizationList () {
+        return this.renderData.filter(item => item.type === 'depart');
+      },
+      renderUserList () {
+        return this.renderData.filter(item => item.type === 'user');
+      },
+      disabledNode () {
+        return (payload) => {
+          const isDisabled = payload.disabled || this.isDisabled;
+          return this.getGroupAttributes ? isDisabled || (this.getGroupAttributes().source_from_role && payload.type === 'depart') : isDisabled;
+        };
+      },
+      isStaff () {
+        return this.user.role.type === 'staff';
+      },
+      nameType () {
+        return (payload) => {
+            const { name, type, username, full_name: fullName } = payload;
+            const typeMap = {
+                user: () => {
+                    if (fullName) {
+                        return fullName;
+                    } else {
+                        return name ? `${username}(${name})` : username;
                     }
-                };
-            }
+                },
+                depart: () => {
+                    return fullName || name;
+                }
+            };
+            return typeMap[type] ? typeMap[type]() : typeMap['user']();
+        };
+      },
+      selectedNode () {
+        return (payload) => {
+          if (payload.disabled) {
+            return true;
+          }
+          if (this.hasSelectedDepartments.length || this.hasSelectedUsers.length) {
+            payload.is_selected = this.hasSelectedDepartments.map(
+              item => item.id.toString()).includes(payload.id.toString())
+              || this.hasSelectedUsers.map(
+              item => item.username).includes(payload.username);
+              return payload.is_selected;
+          }
+        };
+      }
     },
     watch: {
       focusIndex (value) {
@@ -496,7 +496,7 @@
             height: 16px;
             margin: 0 6px 0 0;
             border: 1px solid #979ba5;
-            /* border-radius: 50%; */
+            border-radius: 2px;
             &.is-checked {
                 border-color: #3a84ff;
                 background-color: #3a84ff;

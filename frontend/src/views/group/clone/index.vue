@@ -6,18 +6,27 @@
           :data="formData"
           ref="basicInfoRef"
           @on-change="handleBasicInfoChange" />
-        <bk-checkbox
-          class="select-wrap-checkbox"
-          v-model="formData.apply_disable"
-          :disabled="userGroupAttributes.apply_disable"
-        >
-          <span
-            class="checkbox-sync-perm"
-            v-bk-tooltips="$t(`m.userGroup['设置不可被申请，则无法申请加入此用户组']`)">
-            {{ $t(`m.userGroup['不可被申请']`) }}
-          </span>
-          <span>({{ $t(`m.userGroup['该组只能管理员主动授权，用户无法主动申请']`) }})</span>
-        </bk-checkbox>
+       
+        <div class="select-wrap-checkbox">
+          <bk-checkbox
+            v-model="formData.apply_disable"
+            :disabled="userGroupAttributes.apply_disable"
+          >
+            <span class="checkbox-sync-perm no-border">
+              {{ $t(`m.userGroup['不可被申请']`) }}
+            </span>
+            <span>({{ $t(`m.userGroup['设置后该组只能管理员主动授权，用户无法主动申请']`) }})</span>
+          </bk-checkbox>
+        </div>
+        <div class="select-wrap-checkbox" v-if="isShowTemplate">
+          <bk-checkbox
+            v-model="formData.sync_subject_template"
+          >
+            <span class="checkbox-sync-perm no-border">
+              {{ $t(`m.userGroup['自动生成同名人员模板']`) }}
+            </span>
+          </bk-checkbox>
+        </div>
       </section>
     </render-horizontal-block>
     <render-action
@@ -97,6 +106,7 @@
       <render-member
         :users="users"
         :departments="departments"
+        :templates="templates"
         :expired-at-error="isShowExpiredError"
         @on-change="handleExpiredAtChange"
         @on-add="handleAddMember"
@@ -114,8 +124,9 @@
     <add-member-dialog
       :show.sync="isShowAddMemberDialog"
       :users="users"
-      :is-rating-manager="isRatingManager"
       :departments="departments"
+      :templates="templates"
+      :is-rating-manager="isRatingManager"
       @on-cancel="handleCancelAdd"
       @on-sumbit="handleSubmitAdd" />
 
@@ -191,13 +202,15 @@
           name: '',
           approval_process_id: 1,
           description: '',
-          apply_disable: false
+          apply_disable: false,
+          sync_subject_template: false
         },
         isShowAddMemberDialog: false,
         isShowMemberAdd: true,
         expired_at: SIX_MONTH_TIMESTAMP,
         users: [],
         departments: [],
+        templates: [],
         submitLoading: false,
         isShowExpiredError: false,
         isShowAddSideslider: false,
@@ -234,7 +247,8 @@
           source_from_role: false
         },
         userGroupAttributes: {
-          apply_disable: false
+          apply_disable: false,
+          sync_subject_template: false
         }
       };
     },
@@ -294,6 +308,14 @@
                   };
               }));
           }
+          if (this.templates.length > 0) {
+              arr.push(...this.templates.map(item => {
+                  return {
+                      id: item.id,
+                      type: 'template'
+                  };
+              }));
+          }
           return arr;
       },
       defaultValue () {
@@ -333,6 +355,9 @@
             this.authorizationDataClone);
           return data;
         };
+      },
+      isShowTemplate () {
+        return !['staff', 'subset_manager'].includes(this.user.role.type);
       }
     },
     watch: {
@@ -410,7 +435,12 @@
           try {
             const { data } = await this.$store.dispatch('userGroupSetting/getUserGroupSetConfig');
             if (data) {
-              this.userGroupAttributes = Object.assign({}, { apply_disable: data.apply_disable });
+              this.userGroupAttributes = Object.assign(
+                {},
+                {
+                  apply_disable: data.apply_disable,
+                  sync_subject_template: data.sync_subject_template || false
+                });
             }
           } catch (e) {
             console.error(e);
@@ -428,12 +458,14 @@
             params.hidden = false;
           }
           const { data } = await this.$store.dispatch('userGroup/getUserGroupDetail', params);
-          const { name, description, attributes, apply_disable } = data;
+          const { name, description, attributes, apply_disable, sync_subject_template } = data;
           this.groupAttributes = Object.assign(this.groupAttributes, attributes);
           this.formData = Object.assign(this.formData, {
             name: `${name}_${this.$t(`m.grading['克隆']`)}`,
             // eslint-disable-next-line camelcase
             apply_disable: apply_disable || false,
+            // eslint-disable-next-line camelcase
+            sync_subject_template: sync_subject_template || false,
             description
           });
         } catch (e) {
@@ -1305,10 +1337,12 @@
         window.changeDialog = true;
         if (type === 'user') {
           this.users.splice(payload, 1);
+        } else if (type === 'template') {
+          this.templates.splice(payload, 1);
         } else {
           this.departments.splice(payload, 1);
         }
-        this.isShowMemberAdd = this.users.length < 1 && this.departments.length < 1;
+        this.isShowMemberAdd = this.users.length < 1 && this.departments.length < 1 && this.templates.length < 1;
       },
 
       /**
@@ -1335,9 +1369,10 @@
        */
       handleSubmitAdd (payload) {
         window.changeDialog = true;
-        const { users, departments } = payload;
+        const { users, departments, templates } = payload;
         this.users = _.cloneDeep(users);
         this.departments = _.cloneDeep(departments);
+        this.templates = _.cloneDeep(templates);
         this.isShowMemberAdd = false;
         this.isShowAddMemberDialog = false;
       }

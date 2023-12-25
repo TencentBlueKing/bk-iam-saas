@@ -73,4 +73,14 @@ urlpatterns = [
         views.GroupCustomPolicyConditionCompareView.as_view({"post": "create"}),
         name="group.custom_policy_condition_compare",
     ),
+    path(
+        "<str:id>/subject_templates/",
+        views.GroupSubjectTemplateViewSet.as_view({"get": "list"}),
+        name="group.subject_template",
+    ),
+    path(
+        "<str:id>/template-members/",
+        views.GroupTemplateMemberViewSet.as_view({"get": "list"}),
+        name="group.template_member",
+    ),
 ]

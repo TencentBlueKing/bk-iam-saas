@@ -1,0 +1,43 @@
+.iam-user-group-member {
+  .user-group-member-table {
+    margin-top: 16px;
+    border: none;
+    tr:hover {
+      .user,
+      .depart {
+        background: #fff;
+      }
+    }
+    .user,
+    .depart,
+    .member-template {
+      padding: 4px 6px;
+      background: #f0f1f5;
+      width: max-content;
+      border-radius: 2px;
+      i {
+        font-size: 14px;
+        color: #c4c6cc;
+      }
+      .name {
+        display: inline-block;
+        max-width: 350px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        vertical-align: bottom;
+      }
+    }
+    .member-template {
+      background-color: #f0f5ff;
+      color: #3a84ff;
+      i {
+        color: #699df4;
+      }
+      &:hover {
+        color: #699df4;
+        cursor: pointer;
+      }
+    }
+  }
+}

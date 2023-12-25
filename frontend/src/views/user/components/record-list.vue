@@ -177,13 +177,9 @@
           text: '',
           tip: '',
           tipType: ''
-        }
+        },
+        tableHeight: getWindowHeight() - 185
       };
-    },
-    computed: {
-      tableHeight () {
-        return getWindowHeight() - 185;
-      }
     },
     watch: {
       'pagination.current' (value) {
@@ -191,6 +187,9 @@
       }
     },
     created () {
+      window.addEventListener('resize', () => {
+        this.tableHeight = getWindowHeight() - 185;
+      });
       this.fetchPageData();
     },
     methods: {

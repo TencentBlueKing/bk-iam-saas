@@ -22,7 +22,7 @@ from .http import http_get, http_post
 from .util import do_blueking_http_request
 
 
-def _call_esb_api(http_func, url_path, data, timeout=30):
+def _call_esb_api(http_func, url_path, data, timeout=30, request_session=None):
     # 默认请求头
     headers = {
         "Content-Type": "application/json",
@@ -38,7 +38,7 @@ def _call_esb_api(http_func, url_path, data, timeout=30):
     }
 
     url = url_join(settings.BK_COMPONENT_INNER_API_URL, url_path)
-    return do_blueking_http_request(ComponentEnum.ESB.value, http_func, url, data, headers, timeout)
+    return do_blueking_http_request(ComponentEnum.ESB.value, http_func, url, data, headers, timeout, request_session)
 
 
 def get_api_public_key() -> Dict:

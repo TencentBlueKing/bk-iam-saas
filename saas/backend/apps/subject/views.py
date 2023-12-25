@@ -19,8 +19,13 @@ from backend.apps.group.audit import GroupMemberDeleteAuditProvider
 from backend.apps.group.models import Group
 from backend.apps.group.serializers import GroupSearchSLZ
 from backend.apps.policy.serializers import PolicyDeleteSLZ, PolicyPartDeleteSLZ, PolicySLZ, PolicySystemSLZ
-from backend.apps.user.serializers import GroupSLZ, UserPolicySearchSLZ
-from backend.apps.user.views import SubjectGroupSearchMixin, UserPolicySearchViewSet
+from backend.apps.user.serializers import GroupSLZ, SubjectTemplateGroupSLZ, UserPolicySearchSLZ
+from backend.apps.user.views import (
+    SubjectGroupSearchMixin,
+    UserDepartmentSubjectTemplateGroupViewSet,
+    UserPolicySearchViewSet,
+    UserSubjectTemplateGroupViewSet,
+)
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.group import GroupBiz
 from backend.biz.policy import ConditionBean, PolicyOperationBiz, PolicyQueryBiz
@@ -387,6 +392,36 @@ class SubjectPolicySearchViewSet(UserPolicySearchViewSet):
     )
     def search(self, request, *args, **kwargs):
         return super().search(request, *args, **kwargs)
+
+    def get_subject(self, request, kwargs):
+        subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
+        return subject
+
+
+class SubjectTemplateGroupViewSet(UserSubjectTemplateGroupViewSet):
+    @swagger_auto_schema(
+        operation_description="我的权限-人员模版用户组列表",
+        request_body=GroupSearchSLZ(label="用户组搜索"),
+        responses={status.HTTP_200_OK: SubjectTemplateGroupSLZ(label="用户组", many=True)},
+        tags=["subject"],
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    def get_subject(self, request, kwargs):
+        subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
+        return subject
+
+
+class DepartmentSubjectTemplateGroupViewSet(UserDepartmentSubjectTemplateGroupViewSet):
+    @swagger_auto_schema(
+        operation_description="我的权限-部门人员模版用户组列表",
+        request_body=GroupSearchSLZ(label="用户组搜索"),
+        responses={status.HTTP_200_OK: SubjectTemplateGroupSLZ(label="用户组", many=True)},
+        tags=["subject"],
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
     def get_subject(self, request, kwargs):
         subject = Subject(type=kwargs["subject_type"], id=kwargs["subject_id"])
