@@ -53,24 +53,14 @@
       <bk-table-column :label="$t(`m.common['操作-table']`)">
         <template slot-scope="{ row }">
           <div class="actions-btn">
-            <bk-button
-              theme="primary"
-              text
-              :disabled="row.readonly"
-              class="actions-btn-item"
-              :title="row.readonly ? $t(`m.memberTemplate['只读人员模板不能添加成员']`) : ''"
-              @click="handleAddMember(row)">
-              {{ $t(`m.common['添加成员']`) }}
-            </bk-button>
             <bk-popover
               :content="row.readonly ? $t(`m.memberTemplate['只读人员模板不能添加成员']`) : ''"
-              :disabled="row.readonly">
+              :disabled="!row.readonly">
               <bk-button
                 theme="primary"
                 text
                 :disabled="row.readonly"
                 class="actions-btn-item"
-                :title="row.readonly ? $t(`m.memberTemplate['只读人员模板不能添加成员']`) : ''"
                 @click="handleAddMember(row)"
               >
                 {{ $t(`m.common['添加成员']`) }}
