@@ -373,6 +373,7 @@ export const m = {
         '请选择用户组成员复制': 'Please select user group member copy',
         '模板名称不能为空': 'Template name cannot be empty',
         '模板成员不能为空': 'Template member cannot be empty',
+        '请填写模板名称, 且不可以空格开头或输入表情字符': 'Please fill in the template name, and it cannot start with a space or enter emoticons'
     },
     info: {
         '加入用户组申请成功': 'Apply to join the group successfully',
