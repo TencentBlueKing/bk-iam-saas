@@ -23,6 +23,7 @@
         ref="input"
         v-model="newVal"
         :placeholder="placeholder"
+        :ext-cls="isShowError ? 'iam-input-error' : ''"
         @input="handleInput"
         @blur="handleBlur"
         @keyup="handleEnter" />
@@ -244,6 +245,12 @@
         .validate-error-tips {
             font-size: 12px;
             color: #ff4d4d;
+        }
+
+        /deep/ .iam-input-error {
+          .bk-form-input {
+            border-color: #ff5656;
+          }
         }
     }
 </style>

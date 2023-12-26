@@ -23,7 +23,7 @@
                 @input="handleNameInput"
                 @blur="handleNameBlur"
               />
-              <p class="verify-field-error" v-if="isShowNameError">{{ $t(`m.verify['模板名称必填']`) }}</p>
+              <p class="verify-field-error" v-if="isShowNameError">{{ $t(`m.verify['请填写模板名称, 且不可以空格开头或输入表情字符']`) }}</p>
             </bk-form-item>
             <bk-form-item
               :label="$t(`m.common['描述']`)"

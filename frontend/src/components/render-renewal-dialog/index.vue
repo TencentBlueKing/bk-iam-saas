@@ -14,7 +14,7 @@
           <label :class="{ 'en': !curLanguageIsCn }">{{ curLabel }}</label>
           <span class="name">
             {{ data.name || '--' }}
-            <template v-if="data.id">
+            <template v-if="data.id && ['user'].includes(data.type)">
               ({{ data.id }})
             </template>
           </span>
@@ -167,7 +167,7 @@
           return this.$t(`m.common['成员']`);
       },
       formatNoRenewal () {
-        return this.selectNoRenewalList.map((item) => item.id ? `${item.name}(${item.id})` : item.name);
+        return this.selectNoRenewalList.map((item) => item.id && ['user'].includes(item.type) ? `${item.name}(${item.id})` : item.name);
       }
     },
     watch: {
@@ -181,7 +181,7 @@
             this.selectList.forEach((item) => {
               labelList.forEach((v) => {
                 if (item.type === v.type) {
-                  v.values.push(item.id ? `${item.name}(${item.id})` : item.name);
+                  v.values.push(item.id && ['user'].includes(item.type) ? `${item.name}(${item.id})` : item.name);
                 }
               });
             });

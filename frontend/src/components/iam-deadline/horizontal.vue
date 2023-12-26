@@ -191,8 +191,11 @@
                 border-right: 1px solid #c4c6cc;
             }
             .unit {
-                position: relative;
-                top: -31px;
+                /* position: relative;
+                top: -31px; */
+                position: absolute;
+                top: -1px;
+                right: -40px;
                 right: -40px;
                 width: 40px;
                 height: 32px;
@@ -200,7 +203,7 @@
                 font-size: 14px;
                 text-align: center;
                 border: 1px solid #c4c6cc;
-                float: right;
+                /* float: right; */
                 &.is-focus {
                     border-left-color: #3a84ff;
                 }

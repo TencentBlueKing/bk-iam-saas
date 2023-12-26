@@ -72,7 +72,7 @@
         rules: [
           {
             required: true,
-            message: this.$t(`m.verify['请填写名称']`),
+            message: this.$t(`m.verify['请填写模板名称, 且不可以空格开头或输入表情字符']`),
             trigger: 'blur'
           }
         ]
