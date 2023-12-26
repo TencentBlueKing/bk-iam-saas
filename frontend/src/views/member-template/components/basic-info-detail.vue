@@ -73,7 +73,7 @@
         rules: [
           {
             required: true,
-            message: this.$t(`m.verify['请填写模板名称, 且不能输入表情字符']`),
+            message: this.$t(`m.verify['模板名称必填, 不允许输入表情字符']`),
             trigger: 'blur',
             validator: (value) => {
               return !isEmojiCharacter(value);
