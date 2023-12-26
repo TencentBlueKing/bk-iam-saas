@@ -8,14 +8,17 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import json
 import logging
 import traceback
 
 from celery import shared_task
+from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 
-from backend.apps.organization.models import SyncErrorLog, SyncRecord
+from backend.apps.organization.models import SubjectToDelete, SyncErrorLog, SyncRecord
+from backend.apps.role.models import RoleGroupMember, RoleScope, RoleUser, ScopeSubject
 from backend.biz.org_sync.department import DBDepartmentSyncExactInfo, DBDepartmentSyncService
 from backend.biz.org_sync.department_member import DBDepartmentMemberSyncService
 from backend.biz.org_sync.iam_department import IAMBackendDepartmentSyncService
@@ -25,6 +28,9 @@ from backend.biz.org_sync.syncer import Syncer
 from backend.biz.org_sync.user import DBUserSyncService
 from backend.biz.org_sync.user_leader import DBUserLeaderSyncService
 from backend.common.lock import gen_organization_sync_lock
+from backend.component import iam
+from backend.service.constants import SubjectType
+from backend.util.json import json_dumps
 
 from .constants import SYNC_TASK_DEFAULT_EXECUTOR, SyncTaskStatus, SyncType
 
@@ -121,3 +127,86 @@ def sync_new_users():
         Syncer().sync_new_users()
     except Exception:  # pylint: disable=broad-except
         logger.exception("sync_new_users error")
+
+
+@shared_task(ignore_result=True)
+def clean_subject_to_delete():
+    """
+    定时清理被删除的用户
+    """
+    max_create_time = timezone.now() - timezone.timedelta(days=settings.SUBJECT_DELETE_DAYS)
+    subjects = list(SubjectToDelete.objects.filter(created_time__lt=max_create_time))
+
+    # TODO 校验用户管理是不是真的已经删除对应的subject
+
+    # 分割对应的subject
+    usernames = [one.subject_id for one in subjects if one.subject_type == SubjectType.USER.value]
+    department_ids = [one.subject_id for one in subjects if one.subject_type == SubjectType.DEPARTMENT.value]
+
+    # 清理用户相关数据
+    if usernames:
+        # 删除用户所属角色的成员
+        RoleUser.objects.filter(username__in=usernames).delete()
+
+        # 删除用户属于角色的授权范围
+        role_scope_ids = list(
+            ScopeSubject.objects.filter(subject_type=SubjectType.USER.value, subject_id__in=usernames).values_list(
+                "role_scope_id", flat=True
+            )
+        )
+        if role_scope_ids:
+            scopes = list(RoleScope.objects.filter(id__in=role_scope_ids))
+            for scope in scopes:
+                scope_subjects = json.loads(scope.content)
+                scope.content = json_dumps(
+                    [
+                        one
+                        for one in scope_subjects
+                        if one["type"] != SubjectType.USER.value or one["id"] not in usernames
+                    ]
+                )
+
+            RoleScope.objects.bulk_update(scopes, ["content"], batch_size=100)
+            ScopeSubject.objects.filter(subject_type=SubjectType.USER.value, subject_id__in=usernames).delete()
+
+        # 删除冗余用户组关系表
+        RoleGroupMember.objects.filter(subject_type=SubjectType.USER.value, subject_id__in=usernames).delete()
+
+    # 清理部门相关数据
+    if department_ids:
+        # 删除用户属于角色的授权范围
+        role_scope_ids = list(
+            ScopeSubject.objects.filter(
+                subject_type=SubjectType.DEPARTMENT.value, subject_id__in=department_ids
+            ).values_list("role_scope_id", flat=True)
+        )
+        if role_scope_ids:
+            scopes = list(RoleScope.objects.filter(id__in=role_scope_ids))
+            for scope in scopes:
+                scope_subjects = json.loads(scope.content)
+                scope.content = json_dumps(
+                    [
+                        one
+                        for one in scope_subjects
+                        if one["type"] != SubjectType.DEPARTMENT.value or one["id"] not in department_ids
+                    ]
+                )
+
+            RoleScope.objects.bulk_update(scopes, ["content"], batch_size=100)
+            ScopeSubject.objects.filter(subject_type=SubjectType.USER.value, subject_id__in=usernames).delete()
+
+        # 删除冗余用户组关系表
+        RoleGroupMember.objects.filter(
+            subject_type=SubjectType.DEPARTMENT.value, subject_id__in=department_ids
+        ).delete()
+
+    if subjects:
+        # 删除待删除的subject
+        SubjectToDelete.objects.filter(id__in=[one.id for one in subjects]).delete()
+
+        # 清理后台subject数据
+        deleted_subjects = [{"type": one.subject_type, "id": one.subject_id} for one in subjects]
+        iam.delete_subjects_by_auto_paging(deleted_subjects)
+
+    # TODO 处理事务
+    # TODO 确认后台在subject template group相关数据被删除
