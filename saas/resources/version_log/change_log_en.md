@@ -1,3 +1,24 @@
+<!-- 2023-12-26 -->
+# V1.10.19 Version Update Log
+
+### New Features
+
+* Added a personnel template menu under the management space navigation bar.
+* Added the ability to associate personnel templates in user group details.
+* Added the ability to associate personnel templates in "My Permissions" under the personal workspace.
+* Added the ability to associate personnel templates and join permissions of the corresponding user group in the organization details under the "User" menu in platform management.
+* Custom permission dropdown list now supports bookmarking commonly used systems.
+* Modified the error message when attempting to add more than 100 members to an applied user group.
+* Added a personnel template option to the organization member selector, and manually input options now support special character separation as defined, with support for a maximum of 100 members at a time.
+* Added the option for full authorization scope in the embedded Blue Shield maximum authorization range dialog page, supporting authorization scope for all members.
+
+### Bug Fixes
+
+* Fixed the issue where the total number of items in the transfer list interface was not synchronized with the total number obtained in the interface after searching for sensitivity levels.
+* Fixed the issue where clicking any placeholder in the textarea component triggers a blur event.
+
+---
+
 <!-- 2023-11-28 -->
 # V1.10.18 Version Update Log
 
