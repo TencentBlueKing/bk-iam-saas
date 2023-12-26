@@ -653,12 +653,12 @@ class TestPolicyBean:
 
     def test_list_resource_type_instance_count(self, policy_bean: PolicyBean):
         counts = policy_bean.list_resource_type_instance_count()
-        assert counts == [ResourceTypeInstanceCount(type="type", count=1)]
+        assert counts == [ResourceTypeInstanceCount(system_id="system_id", type="type", count=1)]
 
         policy_bean.resource_groups = ResourceGroupBeanList(__root__=[])
 
         counts = policy_bean.list_resource_type_instance_count()
-        assert counts == [ResourceTypeInstanceCount(type="", count=0)]
+        assert counts == [ResourceTypeInstanceCount(system_id="", type="", count=0)]
 
     @pytest.mark.parametrize(
         "renamed_resources, result",

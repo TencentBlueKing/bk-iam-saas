@@ -316,6 +316,21 @@ def list_all_subject_groups(_type: str, id: str, expired_at: int = 0) -> List[Di
     return list_all_data_by_paging(list_paging_subject_groups, 1000)
 
 
+def list_all_system_subject_groups(system_id: str, _type: str, id: str, expired_at: int = 0) -> List[Dict]:
+    """
+    分页查询subject的所有系统下的关系列表
+    """
+
+    def list_paging_subject_groups(page: int, page_size: int) -> Tuple[int, List[Dict]]:
+        """[分页]获取subject-group"""
+        limit = page_size
+        offset = (page - 1) * page_size
+        data = get_system_subject_groups(system_id, _type, id, expired_at, limit, offset)
+        return data["count"], data["results"]
+
+    return list_all_data_by_paging(list_paging_subject_groups, 1000)
+
+
 def delete_subject_members(_type: str, id: str, members: List[dict]) -> Dict[str, int]:
     """
     批量删除subject的成员
@@ -693,3 +708,36 @@ def query_rbac_group_by_resource(
     }
     result = _call_iam_api(http_post, url_path, data=data)
     return result
+
+
+def add_subject_template_groups(subjects: List[Dict]) -> Dict[str, int]:
+    """
+    批量添加subject的成员
+    """
+    url_path = "/api/v1/web/subject-template-groups"
+    return _call_iam_api(http_post, url_path, data=subjects)
+
+
+def delete_subject_template_groups(subjects: List[Dict]) -> Dict[str, int]:
+    """
+    批量添加subject的成员
+    """
+    url_path = "/api/v1/web/subject-template-groups"
+    return _call_iam_api(http_delete, url_path, data=subjects)
+
+
+def list_template_group_member(_type: str, id: str, template_id: int, limit: int = 10, offset: int = 0) -> Dict:
+    """
+    获取template的group成员列表
+    """
+    url_path = "/api/v1/web/template-group-members"
+    params = {"type": _type, "id": id, "template_id": template_id, "limit": limit, "offset": offset}
+    return _call_iam_api(http_get, url_path, data=params)
+
+
+def update_subject_template_group_expired_at(subjects: List[Dict]) -> Dict[str, int]:
+    """
+    批量添加subject的成员
+    """
+    url_path = "/api/v1/web/subject-template-groups/expired_at"
+    return _call_iam_api(http_put, url_path, data=subjects)

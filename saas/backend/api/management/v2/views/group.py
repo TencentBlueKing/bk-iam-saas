@@ -103,6 +103,7 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
         serializer = ManagementGradeManagerGroupCreateSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
         groups_data = serializer.validated_data["groups"]
+        sync_subject_template = serializer.validated_data["sync_subject_template"]
 
         # 用户组数量在角色内是否超限
         self.group_check_biz.check_role_group_limit(role, len(groups_data))
@@ -125,10 +126,11 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
             self.group_check_biz.batch_check_role_group_names_unique(role.id, group_names)
 
             groups = self.group_biz.batch_create(
-                role.id,
+                role,
                 infos,
                 request.user.username,
                 attrs=attrs,
+                sync_subject_template=sync_subject_template,
             )
 
         # 添加审计信息

@@ -9,7 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import logging
-from typing import List
+from typing import List, Optional
 
 from rest_framework import exceptions
 from rest_framework.response import Response
@@ -156,8 +156,11 @@ class AuthViewMixin:
         # NOTE: 临时处理: 自动扩张管理员的授权范围
         self.role_biz.incr_update_auth_scope(role, [self.role_auth_scope_trans.from_policy_list(policy_list)])
 
-    def policy_response(self, policy: PolicyBean):
+    def policy_response(self, policy: Optional[PolicyBean]):
         """所有返回单一策略的接口都统一返回的结构"""
+        if not policy:
+            return Response({})
+
         return Response(
             # TODO: 这个PolicyID是否去除呢？这里已经调整为SaaS Policy ID了，对于调用方没什么意义
             {"policy_id": policy.policy_id, "statistics": {"instance_count": policy.count_all_type_instance()}}

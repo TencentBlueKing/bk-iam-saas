@@ -37,7 +37,7 @@ class Application(BaseModel, BaseSystemHiddenModel):
         verbose_name = "权限申请"
         verbose_name_plural = "权限申请"
         ordering = ["-id"]
-        index_together = ["created_time"]
+        index_together = [["created_time"], ["callback_id", "sn"]]
 
     @property
     def data(self):

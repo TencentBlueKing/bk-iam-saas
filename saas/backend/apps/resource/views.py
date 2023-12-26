@@ -15,7 +15,13 @@ from rest_framework.viewsets import ViewSet
 
 from backend.biz.resource import ResourceBiz
 
-from .serializers import BaseInfoSLZ, ResourceAttributeQuerySLZ, ResourceAttributeValueQuerySLZ, ResourceQuerySLZ
+from .serializers import (
+    BaseInfoSLZ,
+    ResourceAttributeQuerySLZ,
+    ResourceAttributeValueQuerySLZ,
+    ResourceQueryByDisplayNameSLZ,
+    ResourceQuerySLZ,
+)
 
 
 class ResourceViewSet(ViewSet):
@@ -106,5 +112,33 @@ class ResourceViewSet(ViewSet):
         offset = slz.validated_data["offset"]
 
         count, results = self.biz.list_attr_value(system_id, resource_type_id, attr, keyword, limit, offset)
+
+        return Response({"count": count, "results": [i.dict() for i in results]})
+
+
+class ResourceListFilterByDisplayNameViewSet(ViewSet):
+
+    biz = ResourceBiz()
+
+    @swagger_auto_schema(
+        operation_description="资源实例名称筛选列表",
+        request_body=ResourceQueryByDisplayNameSLZ(label="资源查询参数"),
+        responses={status.HTTP_200_OK: BaseInfoSLZ(many=True)},
+        force_page_response=True,
+        tags=["resource"],
+    )
+    def list(self, request, *args, **kwargs):
+        slz = ResourceQueryByDisplayNameSLZ(data=request.data)
+        slz.is_valid(raise_exception=True)
+
+        system_id = slz.validated_data["system_id"]
+        resource_type_id = slz.validated_data["type"]
+        display_names = slz.validated_data["display_names"]
+        action_system_id = slz.validated_data.get("action_system_id") or ""
+        action_id = slz.validated_data.get("action_id") or ""
+
+        count, results = self.biz.list_instance_by_display_names(
+            system_id, resource_type_id, display_names, action_system_id, action_id
+        )
 
         return Response({"count": count, "results": [i.dict() for i in results]})

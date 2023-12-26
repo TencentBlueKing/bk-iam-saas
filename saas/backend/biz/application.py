@@ -334,7 +334,11 @@ class ApprovedPassApplicationBiz:
                     attrs[GroupSaaSAttributeEnum.SOURCE_TYPE.value] = AuditSourceType.OPENAPI.value
 
                 self.group_biz.create_sync_perm_group_by_role(
-                    role, application.applicant, group_name=application.data.get("group_name", ""), attrs=attrs
+                    role,
+                    application.applicant,
+                    group_name=application.data.get("group_name", ""),
+                    attrs=attrs,
+                    sync_subject_template=info.sync_subject_template,
                 )
 
             if application.source_system_id:

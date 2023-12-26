@@ -9,6 +9,13 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 
+from .group_member import (
+    RoleGroupMemberDepartmentGroupViewSet,
+    RoleGroupMemberDepartmentTemplateGroupViewSet,
+    RoleGroupMemberGroupViewSet,
+    RoleGroupMemberTemplateGroupViewSet,
+    RoleGroupMemberViewSet,
+)
 from .permission_audit import QueryAuthorizedSubjectsViewSet
 from .role import (
     AuthScopeIncludeUserRoleView,
@@ -51,4 +58,9 @@ __all__ = [
     "SubsetManagerViewSet",
     "UserSubsetManagerViewSet",
     "RoleSubjectScopCheckView",
+    "RoleGroupMemberViewSet",
+    "RoleGroupMemberTemplateGroupViewSet",
+    "RoleGroupMemberDepartmentTemplateGroupViewSet",
+    "RoleGroupMemberGroupViewSet",
+    "RoleGroupMemberDepartmentGroupViewSet",
 ]

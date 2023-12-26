@@ -31,8 +31,8 @@
                   <span style="color: #c4c6cc;">({{ option.id }})</span>
                 </div>
                 <bk-star
-                  v-if="(hoverId === option.id || option.collection)"
-                  :rate="option.collection"
+                  v-if="(hoverId === option.id || option.is_favorite)"
+                  :rate="option.is_favorite"
                   :max-stars="1"
                   @click.native.stop="handleCollection(option)">
                 </bk-star>
@@ -2227,7 +2227,7 @@
           const res = await this.$store.dispatch('system/getSystems', params);
           (res.data || []).forEach(item => {
             item.displayName = `${item.name}(${item.id})`;
-            item.collection = item.collection ? 1 : 0;
+            item.is_favorite = item.is_favorite ? 1 : 0;
           });
           this.systemList = res.data || [];
           if (!this.systemValue) {
@@ -2501,14 +2501,39 @@
       },
 
       handleCollection (option) {
-        option.collection = option.collection > 0 ? 0 : 1;
+        const params = [option.id];
+        const typeMap = {
+          0: async () => {
+            try {
+              const { code } = await this.$store.dispatch('perm/updateCollectSystem', params);
+              if (code === 0) {
+                this.messageSuccess(this.$t(`m.pemApply['收藏成功']`), 3000);
+                await this.fetchSystems();
+              }
+            } catch (e) {
+              this.messageAdvancedError(e);
+            }
+          },
+          1: async () => {
+            try {
+              const { code } = await this.$store.dispatch('perm/deleteCollectSystem', params);
+              if (code === 0) {
+                this.messageSuccess(this.$t(`m.pemApply['取消收藏成功']`), 3000);
+                await this.fetchSystems();
+              }
+            } catch (e) {
+              this.messageAdvancedError(e);
+            }
+          }
+        };
+        return typeMap[option.is_favorite]();
       },
 
       // 收藏置顶
       handleToggle () {
-        this.systemList = this.systemList.sort((pre, next) => {
-          return next.collection - pre.collection;
-        });
+        // this.systemList = this.systemList.sort((pre, next) => {
+        //   return next.is_favorite - pre.is_favorite;
+        // });
       },
             
       // 申请期限逻辑
@@ -2573,14 +2598,14 @@
             this.isShowConfirmDialog = true;
             return;
           }
-          if (applyCount >= 100) {
+          if (applyCount > 100) {
             this.messageAdvancedError(
               e,
               8000,
               3,
               this.$t(
-                `m.info['申请加入失败，用户组数量超出上限（100个），请在“我的权限”中退出用户组后重试']`,
-                { value: applyCount - 100 }
+                `m.info['已加入用户组数量 ， 新申请数量，总数超过上限：100，请减少申请或退出部分用户组后重试']`,
+                { applyCount: this.personalUserGroup.length, newApplyCount: this.currentSelectList.length }
               ));
             return;
           }

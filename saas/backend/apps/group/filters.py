@@ -12,6 +12,7 @@ from django_filters import rest_framework as filters
 
 from backend.apps.group.models import Group
 from backend.apps.policy.models import Policy
+from backend.apps.subject_template.models import SubjectTemplate
 from backend.apps.template.models import PermTemplatePolicyAuthorized
 from backend.biz.group import GroupBiz
 from backend.biz.open import ApplicationPolicyListCache
@@ -99,3 +100,11 @@ class GroupTemplateSystemFilter(filters.FilterSet):
     class Meta:
         model = PermTemplatePolicyAuthorized
         fields = ["system_id"]
+
+
+class GroupSubjectTemplateFilter(filters.FilterSet):
+    name = filters.CharFilter(label="名字", lookup_expr="icontains")
+
+    class Meta:
+        model = SubjectTemplate
+        fields = ["name"]

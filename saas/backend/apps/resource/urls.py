@@ -27,4 +27,10 @@ urlpatterns = [
         views.ResourceViewSet.as_view({"get": "list_resource_attribute_value"}),
         name="resource.list_resource_attribute_value",
     ),
+    # 获取资源实例列表
+    path(
+        "filter_by_display_name/",
+        views.ResourceListFilterByDisplayNameViewSet.as_view({"post": "list"}),
+        name="resource.list_resource_filter_by_display_name",
+    ),
 ]

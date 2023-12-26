@@ -14,7 +14,7 @@
               data-test-id="permTemplate_input_templateName"
               clearable
               :placeholder="$t(`m.common['模板名称可随时修改']`)"
-              :ext-cls="isShowNameError ? 'tempalte-name-error' : ''"
+              :ext-cls="isShowNameError ? 'template-name-error' : ''"
               @input="handleNameInput"
               @blur="handleNameBlur">
             </bk-input>
@@ -595,6 +595,7 @@
 
       handleNameBlur (payload) {
         const maxLength = 128;
+        payload = payload.trim();
         if (payload === '') {
           this.nameValidateText = this.$t(`m.verify['模板名称必填']`);
           this.isShowNameError = true;
@@ -865,7 +866,7 @@
                 font-size: 14px;
             }
         }
-        .tempalte-name-error {
+        /deep/ .template-name-error {
             .bk-form-input {
                 border-color: #ff5656;
             }

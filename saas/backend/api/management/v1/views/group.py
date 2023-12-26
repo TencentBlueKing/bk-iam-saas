@@ -100,7 +100,7 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
             self.group_check_biz.batch_check_role_group_names_unique(role.id, group_names)
 
             groups = self.group_biz.batch_create(
-                role.id,
+                role,
                 infos,
                 request.user.username,
                 attrs={

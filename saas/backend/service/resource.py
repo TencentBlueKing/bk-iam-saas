@@ -206,6 +206,31 @@ class ResourceProvider:
 
         return count, instance_results
 
+    def list_instance_by_display_names(
+        self,
+        display_names: List[str],
+        action_system_id: str = "",
+        action_id: str = "",
+    ) -> Tuple[int, List[ResourceInstanceBaseInfo]]:
+        """根据显示名称获取某个资源实例列表"""
+        filter_condition: Dict[str, Any] = {
+            "display_names": display_names,
+        }
+
+        if action_system_id and action_id:
+            filter_condition["action"] = {"system": action_system_id, "id": action_id}
+
+        page = self._get_page_params(len(display_names), 0)
+        count, results = self.client.list_instance(filter_condition, page)
+
+        # 转换成需要的数据
+        instance_results = [ResourceInstanceBaseInfo(**i) for i in results]
+        # Cache 查询到的信息
+        if instance_results:
+            self.id_name_cache.set({i.id: i.display_name for i in instance_results})
+
+        return count, instance_results
+
     def search_instance(
         self,
         keyword: str,
