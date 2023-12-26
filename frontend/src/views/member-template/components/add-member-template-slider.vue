@@ -23,7 +23,7 @@
                 @input="handleNameInput"
                 @blur="handleNameBlur"
               />
-              <p class="verify-field-error" v-if="isShowNameError">{{ $t(`m.verify['请填写模板名称, 且不可以空格开头或输入表情字符']`) }}</p>
+              <p class="verify-field-error" v-if="isShowNameError">{{ $t(`m.verify['模板名称必填, 不允许输入表情字符']`) }}</p>
             </bk-form-item>
             <bk-form-item
               :label="$t(`m.common['描述']`)"
@@ -92,6 +92,7 @@
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
   import { leaveConfirm } from '@/common/leave-confirm';
+  import { isEmojiCharacter } from '@/common/util';
   import RenderMember from '@/views/grading-admin/components/render-member';
   import AddMemberDialog from '@/views/group/components/iam-add-member.vue';
   export default {
@@ -175,13 +176,10 @@
       },
 
       handleNameInput (payload) {
-        const iconRule = /[\uD83C|\uD83D|\uD83E][\uDC00-\uDFFF][\u200D|\uFE0F]|[\uD83C|\uD83D|\uD83E][\uDC00-\uDFFF]|[0-9|*|#]\uFE0F\u20E3|[0-9|#]\u20E3|[\u203C-\u3299]\uFE0F\u200D|[\u203C-\u3299]\uFE0F|[\u2122-\u2B55]|\u303D|[\A9|\AE]\u3030|\uA9|\uAE|\u3030/gi;
-        if (iconRule.test(payload)) {
-          this.formData.name = this.formData.name.replace(iconRule, '');
-          this.isShowNameError = !this.formData.name.trim();
-          return;
+        this.isShowNameError = !this.formData.name.trim();
+        if (isEmojiCharacter(this.formData.name)) {
+          this.isShowNameError = true;
         }
-        this.isShowNameError = false;
         if (payload) {
           window.changeAlert = true;
         }
@@ -189,7 +187,7 @@
 
       handleNameBlur (payload) {
         const inputValue = payload.trim();
-        if (!inputValue) {
+        if (!inputValue || isEmojiCharacter(inputValue)) {
           this.isShowNameError = true;
         }
       },
@@ -203,6 +201,10 @@
       handleSubmit () {
         const { name, subjects } = this.formData;
         this.isShowNameError = !name.trim();
+        if (isEmojiCharacter(name)) {
+          this.isShowNameError = true;
+          return;
+        }
         this.isShowSubjectError = !subjects.length;
         const isVerify = this.isShowNameError || this.isShowSubjectError;
         if (isVerify) {
