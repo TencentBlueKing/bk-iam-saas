@@ -218,6 +218,10 @@ CELERYBEAT_SCHEDULE = {
         "task": "backend.apps.organization.tasks.sync_organization",
         "schedule": crontab(minute=0, hour=0),  # 每天凌晨执行
     },
+    "periodic_sync_organization": {
+        "task": "backend.apps.organization.tasks.clean_subject_to_delete",
+        "schedule": crontab(minute=0, hour=2),  # 每天凌晨2时执行
+    },
     "periodic_sync_new_users": {
         "task": "backend.apps.organization.tasks.sync_new_users",
         "schedule": crontab(),  # 每1分钟执行一次
