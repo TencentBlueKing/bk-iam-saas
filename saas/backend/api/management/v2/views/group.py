@@ -194,9 +194,14 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
         """
         筛选有自定义权限的用户组
         """
+        exists_ids = [str(_id) for _id in queryset.values_list("id", flat=True)]
+
         group_ids = list(
             Policy.objects.filter(
-                subject_type=SubjectType.GROUP.value, system_id=system_id, action_id=action_id
+                subject_type=SubjectType.GROUP.value,
+                system_id=system_id,
+                action_id=action_id,
+                subject_id__in=exists_ids,
             ).values_list("subject_id", flat=True)
         )
         if not group_ids:
