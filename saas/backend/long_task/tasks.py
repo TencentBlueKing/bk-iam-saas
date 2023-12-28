@@ -243,6 +243,6 @@ def retry_long_task():
     )
     for t in qs:
         if t.status == TaskStatus.RUNNING.value:
-            StepTask().delay(t.id)
+            SubTask().delay(t.id)
         else:
             TaskFactory().run(t.id)
