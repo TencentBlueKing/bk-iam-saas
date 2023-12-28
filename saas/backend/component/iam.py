@@ -172,17 +172,15 @@ def delete_subjects(subjects: List[dict]) -> None:
     return result
 
 
-# Note: 对于SaaS已删除部门，由于不确定是用户管理本身有bug导致的还是部门真实不存在了，所以为了避免影响部门权限，这里将不删除后端部门
-# 后续将会通过SaaS标记已删除部门，然后发起审批流程等方式再进行后端用户权限的删除
-# def delete_subjects_by_auto_paging(subjects: List[Dict[str, str]]) -> None:
-#     """通过自动分页批量删除Subject"""
+def delete_subjects_by_auto_paging(subjects: List[Dict[str, str]]) -> None:
+    """通过自动分页批量删除Subject"""
 
-#     def delete_paging_subjects(paging_data):
-#         """[分页]删除Subject"""
-#         url_path = "/api/v1/web/subjects"
-#         _call_iam_api(http_delete, url_path, data=paging_data)
+    def delete_paging_subjects(paging_data):
+        """[分页]删除Subject"""
+        url_path = "/api/v1/web/subjects"
+        _call_iam_api(http_delete, url_path, data=paging_data)
 
-#     return execute_all_data_by_paging(delete_paging_subjects, subjects, 3000)
+    return execute_all_data_by_paging(delete_paging_subjects, subjects, 3000)
 
 
 def list_all_subject(_type: str) -> List[Dict]:
