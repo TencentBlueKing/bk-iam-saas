@@ -119,9 +119,16 @@ class UserDepartmentGroupViewSet(GenericViewSet):
         tags=["user"],
     )
     def list(self, request, *args, **kwargs):
+        slz = QueryGroupSLZ(data=request.query_params)
+        slz.is_valid(raise_exception=True)
+        system_id = slz.validated_data["system_id"]
+
         subject = Subject.from_username(request.user.username)
-        # 目前只能查询所有的, 暂时不支持分页, 如果有性能问题, 需要考虑优化
-        relations = self.biz.list_all_user_department_group(subject)
+        if system_id:
+            relations = self.biz.list_all_system_user_department_group(system_id, subject)
+        else:
+            # 目前只能查询所有的, 暂时不支持分页, 如果有性能问题, 需要考虑优化
+            relations = self.biz.list_all_user_department_group(subject)
         slz = GroupSLZ(instance=relations, many=True)
         return Response(slz.data)
 
@@ -427,6 +434,7 @@ class UserSubjectTemplateGroupViewSet(GenericViewSet):
             description=data["description"],
             hidden=data["hidden"],
             group_ids=group_ids,
+            system_id=query_slz.validated_data["system_id"],
         )
         relations = self.biz.list_paging_subject_template_group(
             subject,
@@ -435,6 +443,7 @@ class UserSubjectTemplateGroupViewSet(GenericViewSet):
             description=data["description"],
             hidden=data["hidden"],
             group_ids=group_ids,
+            system_id=query_slz.validated_data["system_id"],
             limit=query_slz.validated_data["limit"],
             offset=query_slz.validated_data["offset"],
         )
@@ -492,6 +501,7 @@ class UserDepartmentSubjectTemplateGroupViewSet(GenericViewSet):
             description=data["description"],
             hidden=data["hidden"],
             group_ids=group_ids,
+            system_id=query_slz.validated_data["system_id"],
         )
         relations = self.biz.list_paging_subject_department_template_group(
             subject,
@@ -500,6 +510,7 @@ class UserDepartmentSubjectTemplateGroupViewSet(GenericViewSet):
             description=data["description"],
             hidden=data["hidden"],
             group_ids=group_ids,
+            system_id=query_slz.validated_data["system_id"],
             limit=query_slz.validated_data["limit"],
             offset=query_slz.validated_data["offset"],
         )
@@ -513,3 +524,37 @@ class UserDepartmentSubjectTemplateGroupViewSet(GenericViewSet):
     def get_subject(self, request, kwargs):
         subject = Subject.from_username(request.user.username)
         return subject
+
+
+class UserFavoriteSystemViewSet(GenericViewSet):
+    """
+    用户添加或删除收藏的系统
+    """
+
+    @swagger_auto_schema(
+        operation_description="添加收藏系统",
+        request_body=serializers.ListSerializer(child=serializers.CharField(label="系统ID")),
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["user"],
+    )
+    def create(self, request, *args, **kwargs):
+        slz = serializers.ListSerializer(data=request.data, child=serializers.CharField(label="系统ID"))
+        slz.is_valid(raise_exception=True)
+
+        UserProfile.objects.add_favorite_systems(request.user.username, slz.validated_data)
+
+        return Response({})
+
+    @swagger_auto_schema(
+        operation_description="移除收藏系统",
+        request_body=serializers.ListSerializer(child=serializers.CharField(label="系统ID")),
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["user"],
+    )
+    def destroy(self, request, *args, **kwargs):
+        slz = serializers.ListSerializer(data=request.data, child=serializers.CharField(label="系统ID"))
+        slz.is_valid(raise_exception=True)
+
+        UserProfile.objects.remove_favorite_systems(request.user.username, slz.validated_data)
+
+        return Response({})

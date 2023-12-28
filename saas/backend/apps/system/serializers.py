@@ -17,6 +17,7 @@ class SystemSLZ(serializers.Serializer):
     id = serializers.CharField()
     name = serializers.CharField()
     description = serializers.CharField()
+    is_favorite = serializers.BooleanField(default=False)
 
 
 class NodeSLZ(serializers.Serializer):

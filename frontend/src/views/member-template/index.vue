@@ -53,15 +53,19 @@
       <bk-table-column :label="$t(`m.common['操作-table']`)">
         <template slot-scope="{ row }">
           <div class="actions-btn">
-            <bk-button
-              theme="primary"
-              text
-              :disabled="row.readonly"
-              class="actions-btn-item"
-              :title="row.readonly ? $t(`m.memberTemplate['只读人员模板不能添加成员']`) : ''"
-              @click="handleAddMember(row)">
-              {{ $t(`m.common['添加成员']`) }}
-            </bk-button>
+            <bk-popover
+              :content="row.readonly ? $t(`m.memberTemplate['只读人员模板不能添加成员']`) : ''"
+              :disabled="!row.readonly">
+              <bk-button
+                theme="primary"
+                text
+                :disabled="row.readonly"
+                class="actions-btn-item"
+                @click="handleAddMember(row)"
+              >
+                {{ $t(`m.common['添加成员']`) }}
+              </bk-button>
+            </bk-popover>
             <bk-popconfirm trigger="click" placement="bottom-end" ext-popover-cls="delete-confirm"
               :confirm-text="$t(`m.common['删除-dialog']`)" @confirm="handleConfirmDelete(row.id)">
               <div slot="content">
@@ -80,10 +84,18 @@
                   </div>
                 </div>
               </div>
-              <bk-button theme="primary" text class="actions-btn-item" :disabled="row.readonly"
-                :title="row.readonly ? $t(`m.memberTemplate['只读人员模板不可删除']`) : ''">
-                {{ $t(`m.common['删除']`) }}
-              </bk-button>
+              <bk-popover
+                :content="formatDelAction(row, 'title')"
+                :disabled="formatDelAction(row, 'title') ? false : true">
+                <bk-button
+                  theme="primary"
+                  text
+                  class="actions-btn-item"
+                  :disabled="formatDelAction(row, 'disabled')"
+                >
+                  {{ $t(`m.common['删除']`) }}
+                </bk-button>
+              </bk-popover>
             </bk-popconfirm>
           </div>
         </template>
@@ -230,6 +242,30 @@
       },
       curSelectIds () {
         return this.currentSelectList.map((item) => item.id);
+      },
+      formatDelAction () {
+        return ({ readonly, group_count }, type) => {
+          const typeMap = {
+            title: () => {
+              if (readonly) {
+                return this.$t(`m.memberTemplate['只读人员模板不可删除']`);
+              }
+              // eslint-disable-next-line camelcase
+              if (group_count > 0) {
+                return this.$t(`m.info['有关联的用户组, 无法删除']`);
+              }
+              return '';
+            },
+            disabled: () => {
+              // eslint-disable-next-line camelcase
+              if (readonly || group_count > 0) {
+                return true;
+              }
+              return false;
+            }
+          };
+          return typeMap[type]();
+        };
       }
     },
     watch: {

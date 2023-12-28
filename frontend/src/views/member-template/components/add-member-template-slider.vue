@@ -23,7 +23,7 @@
                 @input="handleNameInput"
                 @blur="handleNameBlur"
               />
-              <p class="verify-field-error" v-if="isShowNameError">{{ $t(`m.verify['模板名称必填']`) }}</p>
+              <p class="verify-field-error" v-if="isShowNameError">{{ $t(`m.verify['模板名称必填, 不允许输入表情字符']`) }}</p>
             </bk-form-item>
             <bk-form-item
               :label="$t(`m.common['描述']`)"
@@ -92,6 +92,7 @@
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
   import { leaveConfirm } from '@/common/leave-confirm';
+  import { isEmojiCharacter } from '@/common/util';
   import RenderMember from '@/views/grading-admin/components/render-member';
   import AddMemberDialog from '@/views/group/components/iam-add-member.vue';
   export default {
@@ -111,6 +112,7 @@
         isShowAddMemberDialog: false,
         isShowNameError: false,
         isShowSubjectError: false,
+        isAll: false,
         width: 640,
         formData: {
           name: '',
@@ -174,7 +176,10 @@
       },
 
       handleNameInput (payload) {
-        this.isShowNameError = false;
+        this.isShowNameError = !this.formData.name.trim();
+        if (isEmojiCharacter(this.formData.name)) {
+          this.isShowNameError = true;
+        }
         if (payload) {
           window.changeAlert = true;
         }
@@ -182,7 +187,7 @@
 
       handleNameBlur (payload) {
         const inputValue = payload.trim();
-        if (!inputValue) {
+        if (!inputValue || isEmojiCharacter(inputValue)) {
           this.isShowNameError = true;
         }
       },
@@ -195,7 +200,11 @@
 
       handleSubmit () {
         const { name, subjects } = this.formData;
-        this.isShowNameError = !name;
+        this.isShowNameError = !name.trim();
+        if (isEmojiCharacter(name)) {
+          this.isShowNameError = true;
+          return;
+        }
         this.isShowSubjectError = !subjects.length;
         const isVerify = this.isShowNameError || this.isShowSubjectError;
         if (isVerify) {

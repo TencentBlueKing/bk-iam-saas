@@ -828,9 +828,9 @@
           });
           if (totalPage > 1 && data.results.length > 0) {
             const loadItem = {
-                            ...LOAD_ITEM,
-                            totalPage: totalPage,
-                            current: 1
+              ...LOAD_ITEM,
+              totalPage: totalPage,
+              current: 1
             };
             this.treeData.push(new Node(loadItem, 0, isAsync, 'load'));
           }
@@ -873,6 +873,7 @@
       },
 
       handleTreeSelect (value, node, resourceLen) {
+        console.log(value, node, resourceLen, 555);
         const parentChain = _.cloneDeep(node.parentChain);
         // const isNeedAny = node.level < this.curChain.length - 1
         const isNeedAny = node.async;

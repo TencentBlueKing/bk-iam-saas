@@ -86,7 +86,7 @@
           <span :title="row.description !== '' ? row.description : ''">{{ row.description || '--' }}</span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.common['操作']`)" width="100">
+      <bk-table-column :label="$t(`m.common['操作-table']`)" width="100">
         <template slot-scope="{ row }">
           <section>
             <!-- <bk-button
@@ -98,12 +98,23 @@
             <bk-button theme="primary" text v-if="row.subject_count < 1" @click="handleTemplateDelete(row)">
               {{ $t(`m.common['删除']`) }}
             </bk-button>
-            <bk-button theme="primary" disabled text v-else>
-              <span :title="$t(`m.permTemplate['有关联的组时不能删除']`)">
+            <!-- <bk-button theme="primary" disabled text v-else>
+              <span :title="$t(`m.info['有关联的用户组, 无法删除']`)">
                 {{ $t(`m.common['删除']`) }}
               </span>
-            </bk-button>
-          </section>
+            </bk-button> -->
+            <bk-popover
+              v-else
+              :content="$t(`m.info['有关联的用户组, 无法删除']`)"
+            >
+              <bk-button
+                theme="primary"
+                :disabled="true"
+                :text="true"
+              >
+                {{ $t(`m.common['删除']`) }}
+              </bk-button>
+            </bk-popover></section>
         </template>
       </bk-table-column>
       <template slot="empty">

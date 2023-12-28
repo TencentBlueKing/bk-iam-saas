@@ -24,11 +24,13 @@ from backend.apps.organization.constants import StaffStatus
 from backend.apps.organization.models import User
 from backend.apps.policy.models import Policy
 from backend.apps.subject.audit import log_user_cleanup_policy_audit_event
+from backend.apps.subject_template.models import SubjectTemplateRelation
 from backend.apps.user.models import UserPermissionCleanupRecord
 from backend.biz.group import GroupBiz
 from backend.biz.helper import RoleWithPermGroupBiz
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleBiz
+from backend.biz.subject_template import SubjectTemplateBiz
 from backend.biz.system import SystemBiz
 from backend.common.time import db_time, get_soon_expire_ts
 from backend.component import esb
@@ -192,6 +194,7 @@ class UserPermissionCleaner:
     group_biz = GroupBiz()
     role_biz = RoleBiz()
     role_with_perm_group_biz = RoleWithPermGroupBiz()
+    subject_template_biz = SubjectTemplateBiz()
 
     def __init__(self, username: str) -> None:
         record = UserPermissionCleanupRecord.objects.get(username=username)
@@ -213,6 +216,7 @@ class UserPermissionCleaner:
         try:
             self._clean_policy()
             self._clean_group()
+            self._clean_subject_group()
             self._clean_role()
         except Exception as e:  # pylint: disable=broad-except
             self._record.status = UserPermissionCleanupRecordStatusEnum.FAILED.value
@@ -243,6 +247,19 @@ class UserPermissionCleaner:
                 self.policy_operation_biz.delete_temporary_policies_by_ids(
                     system_id, self._subject, [p.policy_id for p in temporary_policies]
                 )
+
+    def _clean_subject_group(self):
+        """
+        清理人员模版
+        """
+        template_ids = list(
+            SubjectTemplateRelation.objects.filter(
+                subject_type=self._subject.type, subject_id=self._subject.id
+            ).values_list("template_id", flat=True)
+        )
+
+        for template_id in template_ids:
+            self.subject_template_biz.delete_members(template_id, [self._subject])
 
     def _clean_group(self):
         """

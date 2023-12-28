@@ -76,7 +76,44 @@
 
 <script>
   import { cloneDeep } from 'lodash';
-  import { formatCodeData } from '@/common/util';
+  import { guid, formatCodeData } from '@/common/util';
+
+  class Node {
+    constructor (payload, level = 0, isAsync = true, type = 'node') {
+      this.disabled = payload.disabled || false;
+      this.checked = payload.checked || false;
+      this.expanded = false;
+      this.loading = false;
+      this.loadingMore = false;
+      this.current = payload.current || 0;
+      this.totalPage = payload.totalPage || 0;
+      this.id = payload.id;
+      this.name = payload.display_name || '';
+      this.parentId = level > 0 ? payload.parentId : '';
+      this.parentSyncId = level > 0 ? payload.parentSyncId : '';
+      this.level = level;
+      this.nodeId = guid();
+      this.async = isAsync;
+      this.children = [];
+      this.parentChain = payload.parentChain || [];
+      this.type = type;
+      this.childType = payload.child_type || '';
+      this.isRemote = payload.isRemote || false;
+      this.isFilter = payload.isFilter || false;
+      this.placeholder = payload.placeholder || '';
+      // 是否存在未带下一级的无限制数据
+      this.isExistNoCarryLimit = payload.isExistNoCarryLimit || false;
+      this.initVisiable(payload);
+    }
+    initVisiable (payload) {
+      if (payload.hasOwnProperty('visiable')) {
+        this.visiable = payload.visiable;
+        return;
+      }
+      this.visiable = true;
+    }
+  }
+
   export default {
     props: {
       resourceValue: {
@@ -93,6 +130,10 @@
         type: Object
       },
       hasSelectedValues: {
+        type: Array,
+        default: () => []
+      },
+      curChain: {
         type: Array,
         default: () => []
       }
@@ -155,11 +196,11 @@
             if (isChecked) {
               this.$set(row, 'checked', true);
               if (curNode) {
-                this.currentSelectedNode.push(curNode);
+                this.curSelectedValues.push(curNode);
                 this.$emit('on-select', true, curNode);
               }
             } else {
-              this.currentSelectedNode = this.currentSelectedNode.filter(
+              this.curSelectedValues = this.curSelectedValues.filter(
                 (item) => `${item.display_name}&${item.id}` !== `${row.display_name}&${row.id}`
               );
               this.$set(row, 'checked', false);
@@ -167,17 +208,16 @@
                 this.$emit('on-select', false, curNode);
               }
             }
-            this.$store.commit('setTreeSelectedNode', this.currentSelectedNode);
           },
           all: () => {
             // 针对资源权限搜索单选特殊处理
             const resourceList = this.resourceValue ? [...payload].slice(0, 1) : [...payload];
             const allTreeData = [...this.allTreeData];
             const tableIdList = cloneDeep(this.manualTableList.map((v) => `${v.display_name}&${v.id}`));
-            const selectNode = this.currentSelectedNode.filter(
+            const selectNode = this.curSelectedValues.filter(
               (item) => !tableIdList.includes(`${item.display_name}&${item.id}`)
             );
-            this.currentSelectedNode = [...selectNode, ...resourceList];
+            this.curSelectedValues = [...selectNode, ...resourceList];
             const currentSelect = allTreeData.filter(
               (item) => resourceList.map((v) => `${v.display__name}&${v.id}`).includes(`${item.display_name}&${item.id}`) && !item.disabled
             );
@@ -212,7 +252,7 @@
                 this.$refs.manualTableRef && this.$refs.manualTableRef.toggleRowSelection(item, item.checked);
               }
             });
-            this.$store.commit('setTreeSelectedNode', this.currentSelectedNode);
+            this.$store.commit('setTreeSelectedNode', this.curSelectedValues);
             this.$emit('on-select-all', nodes, currentSelect.length > 0);
           }
         };
@@ -290,11 +330,58 @@
             display_names: this.manualValue.split(this.regValue).filter(item => item !== '')
           };
           const { code, data } = await this.$store.dispatch('permApply/getResourceInstanceManual', params);
+          data.results = [{
+            id: 1,
+            display_name: 'admin',
+            child_type: ''
+          }];
           const list = data.results.filter((item) => {
             return !this.hasSelectedInstances.map((v) => `${v.id}${v.display_name}`).includes(`${item.id}${item.display_name}`);
           });
           this.manualTableListStorage = data.results.filter((item) => {
             return !this.manualTableList.map((v) => `${v.id}${v.display_name}`).includes(`${item.id}${item.display_name}`);
+          });
+          const isAsync = this.curChain.length > 1;
+          this.manualTableListStorage = this.manualTableListStorage.map(item => {
+            let checked = false;
+            let disabled = false;
+            let isRemote = false;
+            let isExistNoCarryLimit = false;
+            if (this.hasSelectedValues.length > 0) {
+              let noCarryLimitData = {};
+              let normalSelectedData = {};
+              this.hasSelectedValues.forEach(val => {
+                const curKey = `${item.id}&${params.type}`;
+                if (isAsync) {
+                  const curIdChain = `${curKey}#*&${this.curChain[1].id}`;
+                  if (val.idChain === curIdChain) {
+                    normalSelectedData = val;
+                  }
+                  if (val.idChain === curKey) {
+                    noCarryLimitData = val;
+                  }
+                } else {
+                  if (val.idChain === curKey) {
+                    normalSelectedData = val;
+                  }
+                }
+              });
+
+              isExistNoCarryLimit = Object.keys(noCarryLimitData).length > 0;
+              if (isExistNoCarryLimit && Object.keys(normalSelectedData).length > 0) {
+                checked = true;
+                disabled = normalSelectedData.disabled && noCarryLimitData.disabled;
+                isRemote = disabled;
+              } else {
+                if (isExistNoCarryLimit || Object.keys(normalSelectedData).length > 0) {
+                  checked = true;
+                  disabled = normalSelectedData.disabled || noCarryLimitData.disabled;
+                  isRemote = disabled;
+                }
+              }
+            }
+            const isAsyncFlag = isAsync || item.child_type !== '';
+            return new Node({ ...item, checked, disabled, isRemote, isExistNoCarryLimit }, 0, isAsyncFlag);
           });
           this.manualTableList = cloneDeep(this.manualTableListStorage);
           this.hasSelectedInstances.push(...list);

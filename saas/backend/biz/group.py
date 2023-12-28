@@ -503,6 +503,13 @@ class GroupBiz:
         relations = self.group_svc.list_user_department_group(subject)
         return self._convert_to_subject_group_beans(relations)
 
+    def list_all_system_user_department_group(self, system_id: str, subject: Subject) -> List[SubjectGroupBean]:
+        """
+        查询指定用户继承的所有用户组列表(即, 继承来自于部门的用户组列表)
+        """
+        relations = self.group_svc.list_system_user_department_group(system_id, subject)
+        return self._convert_to_subject_group_beans(relations)
+
     def update_members_expired_at(self, group_id: int, members: List[GroupMemberExpiredAtBean]):
         """
         更新用户组成员的过期时间
@@ -524,6 +531,8 @@ class GroupBiz:
             self.template_biz.delete_template_auth_by_subject(subject)
             # 删除所有的自定义策略
             PolicyModel.objects.filter(subject_type=subject.type, subject_id=subject.id).delete()
+            # 删除冗余的用户组关联的角色
+            RoleGroupMember.objects.filter(group_id=group_id).delete()
 
             # 删除用户组关联的人员模版
             for subject_template_id in SubjectTemplateGroup.objects.filter(group_id=group_id).values_list(

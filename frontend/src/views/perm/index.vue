@@ -395,8 +395,6 @@
             = formatCodeData(departmentGroupCode, this.emptyDepartmentGroupData, this.departmentGroupList.length === 0);
 
           this.formatCheckGroups();
-          this.isEmpty = personalGroupList.length < 1 && systemList.length < 1
-            && teporarySystemList.length < 1 && departmentGroupList.length < 1;
           this.soonGroupLength = data3 && data3.results ? data3.results.length : 0;
           this.soonPermLength = data4 ? data4.length : 0;
           this.isNoRenewal = this.soonGroupLength < 1 && this.soonPermLength < 1;
@@ -405,6 +403,9 @@
             : (!personalGroupList.length && !systemList.length && !this.roleList.length);
 
           await this.fetchMemberTempPermData(userGroupParams);
+          this.isEmpty = personalGroupList.length < 1 && systemList.length < 1
+            && teporarySystemList.length < 1 && departmentGroupList.length < 1
+            && this.memberTempByUserList.length < 1 && this.memberTempByDepartList.length < 1;
         } catch (e) {
           console.error(e);
           this.messageAdvancedError(e);
@@ -964,12 +965,12 @@
         }
     }
 
-    .custom-perm-wrapper {
-      &.custom-perm-wrapper-no-perm {
+    .custom-footer-wrapper-no-perm {
+      .footer-content {
         position: absolute;
         left: 50%;
-        bottom: 0;
-        transform: translate(-50%, 10px);
-       }
+        bottom: 30px;
+        transform: translate(-50%, 0px);
+      }
     }
 </style>

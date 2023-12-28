@@ -262,6 +262,7 @@ class SubjectTemplateBiz:
         description: str = "",
         hidden: bool = True,
         group_ids: Optional[List[int]] = None,
+        system_id: str = "",
     ) -> int:
         if group_ids is not None and len(group_ids) == 0:
             return 0
@@ -283,6 +284,9 @@ class SubjectTemplateBiz:
         if group_ids:
             where_conditions.append("a.id IN %s")
             params.append(tuple(group_ids))
+        if system_id:
+            where_conditions.append("a.source_system_id = %s")
+            params.append(system_id)
 
         sql_query = """
             SELECT
@@ -315,6 +319,7 @@ class SubjectTemplateBiz:
         description: str = "",
         hidden: bool = True,
         group_ids: Optional[List[int]] = None,
+        system_id: str = "",
     ) -> int:
         if subject.type != SubjectType.USER.value:
             return 0
@@ -345,6 +350,9 @@ class SubjectTemplateBiz:
         if group_ids:
             where_conditions.append("a.id IN %s")
             params.append(tuple(group_ids))
+        if system_id:
+            where_conditions.append("a.source_system_id = %s")
+            params.append(system_id)
 
         sql_query = """
             SELECT
@@ -377,6 +385,7 @@ class SubjectTemplateBiz:
         description: str = "",
         hidden: bool = True,
         group_ids: Optional[List[int]] = None,
+        system_id: str = "",
         limit: int = 10,
         offset: int = 0,
     ) -> List[SubjectTemplateGroupBean]:
@@ -400,6 +409,9 @@ class SubjectTemplateBiz:
         if group_ids:
             where_conditions.append("a.id IN %s")
             params.append(tuple(group_ids))
+        if system_id:
+            where_conditions.append("a.source_system_id = %s")
+            params.append(system_id)
 
         params.extend([limit, offset])
 
@@ -459,6 +471,7 @@ class SubjectTemplateBiz:
         description: str = "",
         hidden: bool = True,
         group_ids: Optional[List[int]] = None,
+        system_id: str = "",
         limit: int = 10,
         offset: int = 0,
     ) -> List[SubjectTemplateGroupBean]:
@@ -491,6 +504,9 @@ class SubjectTemplateBiz:
         if group_ids:
             where_conditions.append("a.id IN %s")
             params.append(tuple(group_ids))
+        if system_id:
+            where_conditions.append("a.source_system_id = %s")
+            params.append(system_id)
 
         params.extend([limit, offset])
 

@@ -42,6 +42,7 @@
 
 <script>
   import { bus } from '@/common/bus';
+  import { isEmojiCharacter } from '@/common/util';
   import RenderLayout from '@/views/group/common/render-layout';
   import DetailLayout from '@/components/detail-layout';
   import DetailItem from '@/components/detail-layout/item';
@@ -72,8 +73,11 @@
         rules: [
           {
             required: true,
-            message: this.$t(`m.verify['请填写名称']`),
-            trigger: 'blur'
+            message: this.$t(`m.verify['模板名称必填, 不允许输入表情字符']`),
+            trigger: 'blur',
+            validator: (value) => {
+              return !isEmojiCharacter(value);
+            }
           }
         ]
       };

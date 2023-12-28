@@ -12,6 +12,7 @@ from typing import List, Optional
 
 from django.db import transaction
 
+from backend.apps.role.models import RoleGroupMember
 from backend.apps.subject_template.models import SubjectTemplate, SubjectTemplateGroup, SubjectTemplateRelation
 from backend.component import iam
 from backend.service.constants import SubjectType
@@ -62,6 +63,7 @@ class SubjectTemplateService:
         with transaction.atomic():
             SubjectTemplate.objects.filter(id=template_id).delete()
             SubjectTemplateRelation.objects.filter(template_id=template_id).delete()
+            RoleGroupMember.objects.filter(subject_template_id=template_id).delete()
 
     def delete_group(self, template_id: int, group_id: int, subjects: Optional[List[Subject]] = None):
         # 查询所有成员

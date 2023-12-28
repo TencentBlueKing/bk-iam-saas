@@ -218,6 +218,10 @@ CELERYBEAT_SCHEDULE = {
         "task": "backend.apps.organization.tasks.sync_organization",
         "schedule": crontab(minute=0, hour=0),  # 每天凌晨执行
     },
+    "periodic_sync_organization": {
+        "task": "backend.apps.organization.tasks.clean_subject_to_delete",
+        "schedule": crontab(minute=0, hour=2),  # 每天凌晨2时执行
+    },
     "periodic_sync_new_users": {
         "task": "backend.apps.organization.tasks.sync_new_users",
         "schedule": crontab(),  # 每1分钟执行一次
@@ -403,6 +407,8 @@ MAX_EXPIRED_POLICY_DELETE_TIME = 365 * 24 * 60 * 60  # 1年
 MAX_EXPIRED_TEMPORARY_POLICY_DELETE_TIME = 3 * 24 * 60 * 60  # 3 Days
 # 接入系统的资源实例ID最大长度，默认36（已存在长度为36的数据）
 MAX_LENGTH_OF_RESOURCE_ID = env.int("BKAPP_MAX_LENGTH_OF_RESOURCE_ID", default=36)
+# 被删除的subject最长保留天数
+SUBJECT_DELETE_DAYS = env.int("BKAPP_SUBJECT_DELETE_DAYS", default=30)
 
 # 前端页面功能开关
 ENABLE_FRONT_END_FEATURES = {
@@ -429,6 +435,7 @@ BK_APIGW_RESOURCE_DOCS_BASE_DIR = os.path.join(BASE_DIR, "resources/apigateway/d
 # Requests pool config
 REQUESTS_POOL_CONNECTIONS = env.int("REQUESTS_POOL_CONNECTIONS", default=20)
 REQUESTS_POOL_MAXSIZE = env.int("REQUESTS_POOL_MAXSIZE", default=20)
+REQUESTS_MAX_RETRIES = env.int("REQUESTS_MAX_RETRIES", default=3)
 
 # Init Grade Manger system list
 INIT_GRADE_MANAGER_SYSTEM_LIST = env.list(
