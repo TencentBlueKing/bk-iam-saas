@@ -171,7 +171,12 @@
         const isUpdate = JSON.stringify(this.displayValue) !== JSON.stringify(this.value);
         if (key === 'Enter' && keyCode === 13) {
           this.handleDefaultEmpty();
-          isUpdate ? this.handleEmptyChange() : this.isEditable = false;
+          if (isUpdate) {
+            this.handleEmptyChange();
+            this.isEditable = false;
+          } else {
+            this.isEditable = false;
+          }
         }
       },
 
@@ -231,9 +236,25 @@
       // 判空校验
       handleEmptyChange () {
         if (this.displayValue.length < 1 && !this.allowEmpty) {
-          this.displayValue = [...this.value];
-          this.messageWarn(this.$t(`m.verify['管理员不能为空']`), 3000);
-          return;
+          let editValue = [];
+          if (this.editValue.length) {
+            if (!this.editValue.some((v) => v.username)) {
+              editValue = this.editValue.reduce((p, v) => {
+                p.push({
+                  username: v,
+                  readonly: false
+                });
+                return p;
+              }, []);
+              this.displayValue = [...this.disabledValue, ...editValue];
+            } else {
+              this.displayValue = [...this.disabledValue, ...this.editValue];
+            }
+          } else {
+            this.displayValue = [...this.value];
+            this.messageWarn(this.$t(`m.verify['管理员不能为空']`), 3000);
+            return;
+          }
         }
         this.triggerChange();
       },
