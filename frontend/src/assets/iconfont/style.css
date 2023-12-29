@@ -155,6 +155,9 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .iamcenter-resource-approver-manage:before {
 	content: "\e1b3";
 }
+.iamcenter-jump-link:before {
+	content: "\e226";
+}
 .iamcenter-check-small:before {
 	content: "\e1b4";
 }
@@ -430,4 +433,7 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 }
 .iamcenter-all:before {
 	content: "\e224";
+}
+.iamcenter-renyuanmuban:before {
+	content: "\e225";
 }

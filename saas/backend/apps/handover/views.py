@@ -26,12 +26,19 @@ from backend.util.json import json_dumps
 from .constants import HandoverObjectType
 from .serializers import HandoverRecordSLZ, HandoverSLZ, HandoverTaskSLZ
 from .tasks import execute_handover_task
-from .validation import BaseHandoverDataProcessor, GroupInfoProcessor, GustomPolicyProcessor, RoleInfoProcessor
+from .validation import (
+    BaseHandoverDataProcessor,
+    GroupInfoProcessor,
+    GustomPolicyProcessor,
+    RoleInfoProcessor,
+    SubjectTemplateProcessor,
+)
 
 HANDOVER_VALIDATOR_MAP: Dict[str, Type[BaseHandoverDataProcessor]] = {
     HandoverObjectType.GROUP_IDS.value: GroupInfoProcessor,
     HandoverObjectType.CUSTOM_POLICIES.value: GustomPolicyProcessor,
     HandoverObjectType.ROLE_IDS.value: RoleInfoProcessor,
+    HandoverObjectType.SUBJECT_TEMPLATE_IDS.value: SubjectTemplateProcessor,
 }
 
 

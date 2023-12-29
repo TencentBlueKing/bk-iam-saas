@@ -57,11 +57,13 @@ class HandoverObjectType(ChoicesEnum, LowerStrEnum):
     GROUP_IDS = auto()
     CUSTOM_POLICIES = auto()
     ROLE_IDS = auto()
+    SUBJECT_TEMPLATE_IDS = auto()
 
     _choices_labels = skip(
         (
             (GROUP_IDS, _("用户组权限")),
             (CUSTOM_POLICIES, _("自定义权限")),
             (ROLE_IDS, _("管理员权限")),
+            (SUBJECT_TEMPLATE_IDS, _("人员模版权限")),
         )
     )

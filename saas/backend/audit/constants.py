@@ -33,6 +33,7 @@ class AuditObjectType(ChoicesEnum, LowerStrEnum):
     USER = auto()
     DEPARTMENT = auto()
     TEMPLATE = auto()
+    SUBJECT_TEMPLATE = auto()
     ROLE = auto()
     TASK = auto()
     EVENT = auto()
@@ -89,6 +90,13 @@ class AuditType(ChoicesEnum, StrEnum):
     TEMPLATE_UPDATE_COMMIT = auto()
     TEMPLATE_VERSION_SYNC = auto()  # unused
     TEMPLATE_VERSION_UPDATE = auto()  # unused
+
+    SUBJECT_TEMPLATE_CREATE = auto()
+    SUBJECT_TEMPLATE_UPDATE = auto()
+    SUBJECT_TEMPLATE_DELETE = auto()
+    SUBJECT_TEMPLATE_MEMBER_CREATE = auto()
+    SUBJECT_TEMPLATE_MEMBER_DELETE = auto()
+    SUBJECT_TEMPLATE_GROUP_DELETE = auto()
 
     ROLE_CREATE = auto()
     ROLE_UPDATE = auto()

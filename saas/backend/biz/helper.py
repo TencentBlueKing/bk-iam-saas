@@ -25,6 +25,7 @@ from backend.apps.role.models import (
     ScopeSubject,
 )
 from backend.apps.template.models import PermTemplatePolicyAuthorized
+from backend.biz.subject_template import SubjectTemplateBiz
 from backend.common.error_codes import error_codes
 from backend.service.constants import ADMIN_USER, RoleRelatedObjectType, RoleType
 
@@ -83,11 +84,13 @@ class RoleDeleteHelper:
     5. 删除分级管理员的授权范围数据
     6. 删除分级管理员的所有成员
     7. 删除分级管理员的role_source
+    8. 删除分级管理员的人员模版
     """
 
     role_biz = RoleBiz()
     group_biz = GroupBiz()
     template_biz = TemplateBiz()
+    subject_template_biz = SubjectTemplateBiz()
 
     def __init__(self, role_id: int) -> None:
         # 1. 校验是否为分级管理员/子集管理员
@@ -107,6 +110,7 @@ class RoleDeleteHelper:
             self._delete_subset_manager()
 
         self._delete_role_group()
+        self._delete_role_subject_template()
         self._delete_role_template()
         self._delete_role()
 
@@ -123,6 +127,19 @@ class RoleDeleteHelper:
         for group_id in group_ids:
             GroupAuthorizeLock.objects.filter(group_id=group_id).delete()
             self.group_biz.delete(group_id)
+
+    def _delete_role_subject_template(self):
+        """
+        删除角色创建的用户组
+        """
+        template_ids = list(
+            RoleRelatedObject.objects.filter(
+                role_id=self._role.id, object_type=RoleRelatedObjectType.SUBJECT_TEMPLATE.value
+            ).values_list("object_id", flat=True)
+        )
+
+        for template_id in template_ids:
+            self.subject_template_biz.delete(template_id)
 
     def _delete_role_template(self):
         """

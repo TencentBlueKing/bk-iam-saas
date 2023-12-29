@@ -24,7 +24,6 @@ from backend.apps.role.models import Role
 from backend.biz.application import (
     ApplicationBiz,
     ApplicationGroupInfoBean,
-    ApplicationRenewPolicyInfoBean,
     GradeManagerApplicationDataBean,
     GroupApplicationDataBean,
 )
@@ -54,6 +53,7 @@ from .serializers import (
     RenewGroupApplicationSLZ,
     RenewPolicyApplicationSLZ,
 )
+from .tasks import create_policies_renew_applications
 
 
 def admin_not_need_apply_check(func):
@@ -391,9 +391,8 @@ class ApplicationByRenewPolicyView(views.APIView):
 
         data = serializer.validated_data
 
-        self.biz.create_for_renew_policy(
-            parse_obj_as(List[ApplicationRenewPolicyInfoBean], data["policies"]), request.user.username, data["reason"]
-        )
+        # 异步处理避免超时
+        create_policies_renew_applications.delay(data, request.user.username)
 
         return Response({}, status=status.HTTP_201_CREATED)
 

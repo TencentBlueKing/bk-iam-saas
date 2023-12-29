@@ -33,7 +33,9 @@
         :maxlength="maxLength"
         :rows="3"
         @input="handleInput"
-        @blur="handleBlur" />
+        @blur="handleBlur"
+        @enter="handleEnter"
+      />
       <p class="validate-error-tips" v-if="isShowError">{{ errorTips }}</p>
     </template>
   </div>
@@ -155,6 +157,7 @@
       handleEnter (value, event) {
         if (!this.isEditable) return;
         if (event.key === 'Enter' && event.keyCode === 13) {
+          this.newVal = this.newVal.trim();
           this.triggerChange();
         }
       },
@@ -168,8 +171,8 @@
           }
         }
         this.handleValidate();
-        if (this.isShowError) return;
-        this.isEditable = false;
+        // if (this.isShowError) {return};
+        // this.isEditable = false;
       },
       triggerChange () {
         this.isEditable = false;

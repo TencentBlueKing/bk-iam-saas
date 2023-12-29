@@ -37,7 +37,7 @@ class HandoverTask(TimestampedModel):
     """
 
     handover_record_id = models.IntegerField("交接记录ID")
-    object_type = models.CharField("权限类别", choices=HandoverObjectType.get_choices(), max_length=16)
+    object_type = models.CharField("权限类别", choices=HandoverObjectType.get_choices(), max_length=32)
 
     # TODO 用户组的是int 系统ID是char 角色ID是int
     object_id = models.CharField("交接对象ID", max_length=60)  # 用户组ID/系统ID/角色ID

@@ -48,32 +48,37 @@ session.mount("https://", adapter)
 session.mount("http://", adapter)
 
 
-def _http_request(method, url, headers=None, data=None, timeout=None, verify=False, cert=None, cookies=None):
+def _http_request(
+    method, url, headers=None, data=None, timeout=None, verify=False, cert=None, cookies=None, request_session=None
+):
     trace_func = partial(http_trace, method=method, url=url, data=data)
+
+    if request_session is None:
+        request_session = session
 
     request_id = headers.get("X-Request-Id", "-") if headers else "-"
     st = time.time()
     try:
         if method == "GET":
-            resp = session.get(
+            resp = request_session.get(
                 url=url, headers=headers, params=data, timeout=timeout, verify=verify, cert=cert, cookies=cookies
             )
         elif method == "HEAD":
-            resp = session.head(url=url, headers=headers, verify=verify, cert=cert, cookies=cookies)
+            resp = request_session.head(url=url, headers=headers, verify=verify, cert=cert, cookies=cookies)
         elif method == "POST":
-            resp = session.post(
+            resp = request_session.post(
                 url=url, headers=headers, json=data, timeout=timeout, verify=verify, cert=cert, cookies=cookies
             )
         elif method == "DELETE":
-            resp = session.delete(
+            resp = request_session.delete(
                 url=url, headers=headers, json=data, timeout=timeout, verify=verify, cert=cert, cookies=cookies
             )
         elif method == "PUT":
-            resp = session.put(
+            resp = request_session.put(
                 url=url, headers=headers, json=data, timeout=timeout, verify=verify, cert=cert, cookies=cookies
             )
         elif method == "PATCH":
-            resp = session.patch(
+            resp = request_session.patch(
                 url=url, headers=headers, json=data, timeout=timeout, verify=verify, cert=cert, cookies=cookies
             )
         else:
@@ -115,39 +120,71 @@ def _http_request(method, url, headers=None, data=None, timeout=None, verify=Fal
         return True, resp.json()
 
 
-def http_get(url, data, headers=None, verify=False, cert=None, timeout=None, cookies=None):
+def http_get(url, data, headers=None, verify=False, cert=None, timeout=None, cookies=None, request_session=None):
     if not headers:
         headers = _gen_header()
     return _http_request(
-        method="GET", url=url, headers=headers, data=data, verify=verify, cert=cert, timeout=timeout, cookies=cookies
+        method="GET",
+        url=url,
+        headers=headers,
+        data=data,
+        verify=verify,
+        cert=cert,
+        timeout=timeout,
+        cookies=cookies,
+        request_session=request_session,
     )
 
 
-def http_post(url, data, headers=None, verify=False, cert=None, timeout=None, cookies=None):
+def http_post(url, data, headers=None, verify=False, cert=None, timeout=None, cookies=None, request_session=None):
     if not headers:
         headers = _gen_header()
     return _http_request(
-        method="POST", url=url, headers=headers, data=data, timeout=timeout, verify=verify, cert=cert, cookies=cookies
+        method="POST",
+        url=url,
+        headers=headers,
+        data=data,
+        timeout=timeout,
+        verify=verify,
+        cert=cert,
+        cookies=cookies,
+        request_session=request_session,
     )
 
 
-def http_put(url, data, headers=None, verify=False, cert=None, timeout=None, cookies=None):
+def http_put(url, data, headers=None, verify=False, cert=None, timeout=None, cookies=None, request_session=None):
     if not headers:
         headers = _gen_header()
     return _http_request(
-        method="PUT", url=url, headers=headers, data=data, timeout=timeout, verify=verify, cert=cert, cookies=cookies
+        method="PUT",
+        url=url,
+        headers=headers,
+        data=data,
+        timeout=timeout,
+        verify=verify,
+        cert=cert,
+        cookies=cookies,
+        request_session=request_session,
     )
 
 
-def http_patch(url, data, headers=None, verify=False, cert=None, timeout=None, cookies=None):
+def http_patch(url, data, headers=None, verify=False, cert=None, timeout=None, cookies=None, request_session=None):
     if not headers:
         headers = _gen_header()
     return _http_request(
-        method="PATCH", url=url, headers=headers, data=data, timeout=timeout, verify=verify, cert=cert, cookies=cookies
+        method="PATCH",
+        url=url,
+        headers=headers,
+        data=data,
+        timeout=timeout,
+        verify=verify,
+        cert=cert,
+        cookies=cookies,
+        request_session=request_session,
     )
 
 
-def http_delete(url, data, headers=None, verify=False, cert=None, timeout=None, cookies=None):
+def http_delete(url, data, headers=None, verify=False, cert=None, timeout=None, cookies=None, request_session=None):
     if not headers:
         headers = _gen_header()
     return _http_request(
@@ -159,4 +196,5 @@ def http_delete(url, data, headers=None, verify=False, cert=None, timeout=None, 
         verify=verify,
         cert=cert,
         cookies=cookies,
+        request_session=request_session,
     )

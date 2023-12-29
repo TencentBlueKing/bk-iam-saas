@@ -26,6 +26,7 @@ from backend.apps.application.models import Application
 from backend.apps.group.models import Group
 from backend.apps.organization.models import Department, DepartmentMember, User
 from backend.apps.role.models import Role, RoleRelatedObject, RoleRelation, RoleResourceRelation, RoleSource, RoleUser
+from backend.apps.subject_template.models import SubjectTemplate
 from backend.apps.template.models import PermTemplate
 from backend.common.cache import cached
 from backend.common.error_codes import error_codes
@@ -800,6 +801,43 @@ class RoleListQuery:
             return Role.objects.filter(type=RoleType.SUBSET_MANAGER.value)
 
         return Role.objects.none()
+
+    def query_subject_template(self):
+        """
+        查询人员模板列表
+        """
+        if self.role.type == RoleType.STAFF.value:
+            return SubjectTemplate.objects.all()
+
+        subject_template_ids = self.query_subject_template_id()
+        return SubjectTemplate.objects.filter(id__in=subject_template_ids)
+
+    def query_subject_template_id(self):
+        if self.role.type == RoleType.SUBSET_MANAGER.value:
+            subject_template_ids = self._query_subset_manager_subject_template_id()
+        else:
+            subject_template_ids = self._get_role_related_object_ids(
+                RoleRelatedObjectType.SUBJECT_TEMPLATE.value, inherit=False
+            )
+
+        return subject_template_ids
+
+    def _query_subset_manager_subject_template_id(self) -> List[int]:
+        """
+        查询子集管理员可授权的人员模版列表
+        """
+        assert self.role.type == RoleType.SUBSET_MANAGER.value
+
+        # 1. 查询子集管理员的父级分级管理员
+        parent_role_id = RoleRelation.objects.get_parent_role_id(self.role.id)
+        if not parent_role_id:
+            return []
+
+        return list(
+            RoleRelatedObject.objects.filter(
+                role_id=parent_role_id, object_type=RoleRelatedObjectType.SUBJECT_TEMPLATE.value
+            ).values_list("object_id", flat=True)
+        )
 
 
 class RoleObjectRelationChecker:

@@ -15,12 +15,13 @@ from typing import List
 from backend.apps.handover.constants import HandoverTaskStatus
 from backend.apps.handover.models import HandoverTask
 from backend.apps.role.models import Role
-from backend.audit.audit import log_group_event, log_role_event, log_user_event
+from backend.audit.audit import log_group_event, log_role_event, log_subject_template_event, log_user_event
 from backend.audit.constants import AuditSourceType, AuditType
 from backend.biz.group import GroupBiz
 from backend.biz.helper import RoleWithPermGroupBiz
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleBiz
+from backend.biz.subject_template import SubjectTemplateBiz
 from backend.service.constants import RoleType
 from backend.service.models import Subject
 
@@ -49,7 +50,7 @@ class BaseHandoverHandler(ABC):
         pass
 
 
-class GroupHandoverhandler(BaseHandoverHandler):
+class GroupHandoverHandler(BaseHandoverHandler):
     biz = GroupBiz()
 
     def __init__(self, handover_task_id, handover_from, handover_to, object_detail):
@@ -167,3 +168,30 @@ class RoleHandoverHandler(BaseHandoverHandler):
         if self.role_type != RoleType.SYSTEM_MANAGER.value:
             return []
         return self.biz.list_members_by_role_id(self.role_id)
+
+
+class SubjectTemplateHandoverHandler(BaseHandoverHandler):
+    biz = SubjectTemplateBiz()
+
+    def __init__(self, handover_task_id, handover_from, handover_to, object_detail):
+        self.handover_task_id = handover_task_id
+
+        self.grant_subject = Subject.from_username(handover_to)
+        self.remove_subject = Subject.from_username(handover_from)
+
+        self.template_id = object_detail["id"]
+
+    def grant_permission(self):
+        self.biz.add_members(self.template_id, members=[self.grant_subject])
+
+        # 审计
+        log_subject_template_event(
+            AuditType.SUBJECT_TEMPLATE_MEMBER_CREATE.value,
+            self.grant_subject,
+            [self.template_id],
+            username=self.remove_subject.id,
+            source_type=AuditSourceType.HANDOVER.value,
+        )
+
+    def revoke_permission(self):
+        self.biz.delete_members(self.template_id, members=[self.remove_subject])

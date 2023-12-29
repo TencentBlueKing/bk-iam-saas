@@ -210,3 +210,33 @@ export const SENSITIVITY_LEVEL_ENUM = [
     disabled: false
   }
 ];
+
+// 人员模板配置项表格
+export const MEMBERS_TEMPLATE_FIELDS = [
+  {
+    id: 'name',
+    label: il8n('memberTemplate', '模板名称'),
+    sortable: true,
+    disabled: true
+  },
+  {
+    id: 'description',
+    label: il8n('common', '描述'),
+    disabled: false
+  },
+  {
+    id: 'group_count',
+    label: il8n('memberTemplate', '关联用户组'),
+    disabled: false
+  },
+  {
+    id: 'creator',
+    label: il8n('memberTemplate', '创建人'),
+    disabled: false
+  },
+  {
+    id: 'created_time',
+    label: il8n('common', '创建时间'),
+    disabled: false
+  }
+];
