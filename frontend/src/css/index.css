@@ -207,18 +207,30 @@
         }
     }
 
-    .iam-topology-search-input-cls.bk-form-control {
-        .bk-form-input {
-            border: none !important;
-            border-bottom: 1px solid #dcdee5 !important;
-            background: transparent !important;
-            &:focus {
-                border-color: #dcdee5 !important;
-                background-color: transparent !important;
+    .iam-topology-search-input-cls {
+        .bk-form-control {
+            .bk-form-input {
+                /* border: none !important;
+                border-bottom: 1px solid #dcdee5 !important; */
+                background: transparent !important;
+                border-color: #C4C6CC;
+                &:focus {
+                    border-color: #dcdee5 !important;
+                    background-color: transparent !important;
+                }
+                &[disabled] {
+                    border-color: #dcdee5 !important;
+                    background-color: transparent !important;
+                }
             }
-            &[disabled] {
-                border-color: #dcdee5 !important;
-                background-color: transparent !important;
+        }
+    }
+
+    .iam-topology-input-side {
+        .bk-form-control {
+            .bk-form-input {
+                border: none !important;
+                border-bottom: 1px solid #dcdee5 !important;
             }
         }
     }

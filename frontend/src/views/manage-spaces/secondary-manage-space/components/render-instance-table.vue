@@ -182,7 +182,7 @@
     <bk-sideslider
       :is-show="isShowResourceInstanceSideslider"
       :title="resourceInstanceSidesliderTitle"
-      :width="960"
+      :width="resourceSliderWidth"
       quick-close
       transfer
       :ext-cls="'relate-instance-sideslider'"
@@ -264,6 +264,11 @@
   // import store from '@/store'
   export default {
     name: 'resource-instance-table',
+    provide: function () {
+      return {
+        getResourceSliderWidth: () => this.resourceSliderWidth
+      };
+    },
     components: {
       RenderAggregateSideslider,
       RenderResource,
@@ -312,7 +317,7 @@
         default: 'action'
       },
       groupId: {
-        type: String,
+        type: [String, Number],
         default: ''
       },
       authorization: {
@@ -379,7 +384,9 @@
         curCopyDataId: '',
         emptyResourceGroupsList: [],
         isExpandTable: false,
-        isAggregateEmptyMessage: false
+        isAggregateEmptyMessage: false,
+        resourceSliderWidth: Math.ceil(window.innerWidth * 0.67 - 7) < 960
+          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7)
       };
     },
     computed: {
@@ -563,7 +570,18 @@
       //     deep: true
       // }
     },
+    mounted () {
+      window.addEventListener('resize', (this.formatFormItemWidth));
+      this.$once('hook:beforeDestroy', () => {
+        window.removeEventListener('resize', this.formatFormItemWidth);
+      });
+    },
     methods: {
+      formatFormItemWidth () {
+        this.resourceSliderWidth = Math.ceil(window.innerWidth * 0.67 - 7) < 960
+          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7);
+      },
+      
       handleSpanMethod ({ row, column, rowIndex, columnIndex }) {
         if (this.isCreateMode) {
           if (columnIndex === 0) {

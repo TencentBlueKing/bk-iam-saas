@@ -5,42 +5,151 @@
         <resource-select
           :list="selectList"
           :value="selectValue"
+          :cur-selected-chain="curSelectedChain"
           @on-select="handleResourceSelect" />
       </div>
-      <topology-input
-        ref="headerInput"
-        :is-filter="isFilter"
-        :placeholder="curPlaceholder"
-        @on-search="handleSearch" />
-      <div class="topology-tree-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
-        <template v-if="treeData.length > 0 && !isLoading">
-          <topology-tree
-            ref="topologyRef"
-            :all-data="treeData"
-            :search-value="hasSearchValues"
-            @on-expanded="handleOnExpanded"
-            @on-search="handleTreeSearch"
-            @on-select="handleTreeSelect"
-            @on-load-more="handleLoadMore"
-            @async-load-nodes="handleAsyncNodes" />
-        </template>
-        <template v-if="treeData.length < 1 && !isLoading">
-          <div class="empty-wrapper">
-            <!-- <iam-svg />
-                        <section class="search-text-wrapper" v-if="searchDisplayText !== ''">
-                            {{ searchDisplayText }}
-                        </section> -->
-            <ExceptionEmpty
-              style="background: #fafbfd"
-              :type="emptyData.type"
-              :empty-text="emptyData.text"
-              :tip-text="emptyData.tip"
-              :tip-type="emptyData.tipType"
-              @on-clear="handleEmptyClear"
-              @on-refresh="handleEmptyRefresh"
-            />
+      <template v-if="!isManualInput">
+        <template v-if="isOnlyLevel">
+          <topology-input
+            ref="headerInput"
+            :is-filter="isFilter"
+            :placeholder="curPlaceholder"
+            @on-search="handleSearch" />
+          <div class="topology-tree-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
+            <template v-if="renderTopologyData.length > 0 && !isLoading">
+              <topology-tree
+                ref="topologyRef"
+                :all-data="renderTopologyData"
+                :search-value="hasSearchValues"
+                :is-filter="isFilter"
+                :cur-chain="curChain"
+                :cur-placeholder="curPlaceholder"
+                :cur-selected-chain="curSelectedChain"
+                :resource-total="resourceTotal"
+                :sub-resource-total="subResourceTotal"
+                :resource-value="resourceValue"
+                :has-selected-values="hasSelectedValues"
+                @on-expanded="handleOnExpanded"
+                @on-search="handleSearch"
+                @on-table-search="handleTableSearch"
+                @on-select="handleTreeSelect"
+                @on-select-all="handleTreeSelectAll"
+                @on-load-more="handleLoadMore"
+                @on-page-change="handlePageChange"
+                @on-table-page-change="handleTablePageChange"
+                @async-load-nodes="handleAsyncNodes"
+                @async-load-table-nodes="handleAsyncNodes" />
+            </template>
+            <template v-if="renderTopologyData.length < 1 && !isLoading">
+              <div class="empty-wrapper">
+                <ExceptionEmpty
+                  :type="emptyData.type"
+                  :empty-text="emptyData.text"
+                  :tip-text="emptyData.tip"
+                  :tip-type="emptyData.tipType"
+                  @on-clear="handleEmptyClear"
+                  @on-refresh="handleEmptyRefresh"
+                />
+              </div>
+            </template>
           </div>
         </template>
+        <template v-if="!isOnlyLevel">
+          <div class="topology-tree-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
+            <template v-if="renderTopologyData.length > 0 && !isLoading">
+              <topology-tree
+                ref="topologyRef"
+                :all-data="renderTopologyData"
+                :is-filter="isFilter"
+                :search-value="hasSearchValues"
+                :search-display-text="searchDisplayText"
+                :cur-chain="curChain"
+                :cur-placeholder="curPlaceholder"
+                :cur-selected-chain="curSelectedChain"
+                :cur-table-data="curTableData"
+                :cur-keyword="curKeyword"
+                :cur-table-key-word="curTableKeyWord"
+                :resource-total="resourceTotal"
+                :sub-resource-total="subResourceTotal"
+                :empty-data="emptyTreeData"
+                :has-selected-values="hasSelectedValues"
+                :resource-value="resourceValue"
+                @on-expanded="handleOnExpanded"
+                @on-search="handleSearch"
+                @on-table-search="handleTableSearch"
+                @on-tree-search="handleTreeSearch"
+                @on-select="handleTreeSelect"
+                @on-select-all="handleTreeSelectAll"
+                @on-load-more="handleLoadMore"
+                @on-page-change="handlePageChange"
+                @on-table-page-change="handleTablePageChange"
+                @async-load-nodes="handleAsyncNodes"
+                @async-load-table-nodes="handleAsyncNodes"
+              />
+            </template>
+            <template v-if="renderTopologyData.length < 1 && !isLoading">
+              <div
+                v-if="[500].includes(emptyData.type)"
+                class="empty-wrapper"
+              >
+                <ExceptionEmpty
+                  :type="emptyData.type"
+                  :empty-text="emptyData.text"
+                  :tip-text="emptyData.tip"
+                  :tip-type="emptyData.tipType"
+                  @on-clear="handleEmptyClear"
+                  @on-refresh="handleEmptyRefresh"
+                />
+              </div>
+              <template v-else>
+                <topology-tree
+                  ref="topologyRef"
+                  :all-data="renderTopologyData"
+                  :search-value="hasSearchValues"
+                  :search-display-text="searchDisplayText"
+                  :cur-chain="curChain"
+                  :cur-keyword="curKeyword"
+                  :cur-table-key-word="curTableKeyWord"
+                  :cur-placeholder="curPlaceholder"
+                  :cur-selected-chain="curSelectedChain"
+                  :cur-table-data="curTableData"
+                  :resource-total="resourceTotal"
+                  :is-filter="isFilter"
+                  :sub-resource-total="subResourceTotal"
+                  :empty-data="emptyTreeData"
+                  :has-selected-values="hasSelectedValues"
+                  :resource-value="resourceValue"
+                  @on-expanded="handleOnExpanded"
+                  @on-search="handleSearch"
+                  @on-table-search="handleTableSearch"
+                  @on-select="handleTreeSelect"
+                  @on-select-all="handleTreeSelectAll"
+                  @on-load-more="handleLoadMore"
+                  @on-page-change="handlePageChange"
+                  @on-table-page-change="handleTablePageChange"
+                  @async-load-nodes="handleAsyncNodes"
+                  @async-load-table-nodes="handleAsyncNodes"
+                  @on-tree-search="handleTreeSearch"
+                  @on-clear="handleEmptyClear"
+                  @on-refresh="handleEmptyRefresh"
+                />
+              </template>
+            </template>
+          </div>
+        </template>
+      </template>
+      <div v-else>
+        <TopologyManualInput
+          ref="topologyManualInputRef"
+          :selection-mode="selectionMode"
+          :system-params="systemParams"
+          :resource-value="resourceValue"
+          :cur-chain="curChain"
+          :cur-selected-chain="curSelectedChain"
+          :has-selected-values="hasSelectedValues"
+          @on-select="handleTreeSelect"
+          @on-select-all="handleTreeSelectAll"
+        />
       </div>
     </div>
   </div>
@@ -48,10 +157,12 @@
 <script>
   import _ from 'lodash';
   import { formatCodeData, guid } from '@/common/util';
+  import { bus } from '@/common/bus';
   import il8n from '@/language';
   import ResourceSelect from './resource-select';
   import TopologyInput from './topology-input';
   import TopologyTree from './topology-tree';
+  import TopologyManualInput from './manualInput.vue';
 
   const LOAD_ITEM = {
     nodeId: guid(),
@@ -136,7 +247,8 @@
     components: {
       ResourceSelect,
       TopologyInput,
-      TopologyTree
+      TopologyTree,
+      TopologyManualInput
     },
     props: {
       selectList: {
@@ -184,8 +296,30 @@
           text: '',
           tip: '',
           tipType: ''
-        }
+        },
+        curTableData: [],
+        treeDataStorage: [],
+        curSelectedChain: {}
       };
+    },
+    computed: {
+      isOnlyLevel () {
+        return this.treeData.every((item) => item.level === 0 && item.visiable) && this.curChain.length < 2;
+      },
+      renderTopologyData () {
+        const hasNode = {};
+        const treeData = [...this.treeData];
+        const list = treeData.reduce((curr, next) => {
+          // eslint-disable-next-line no-unused-expressions
+          hasNode[`${next.name}&${next.id}`] ? '' : hasNode[`${next.name}&${next.id}`] = true && curr.push(next);
+          // hasNode[next.name] ? '' : hasNode[next.name] = true && curr.push(next);
+          return curr;
+        }, []);
+        return list;
+      },
+      isManualInput () {
+        return this.curSelectedChain.id === 'manualInput';
+      }
     },
     watch: {
       treeValue: {
@@ -524,9 +658,16 @@
           }
           return false;
         });
+        bus.$emit('update-manualInput-toggleRowSelection', { idChain: payload, isChecked: false });
         if (curNode && !curNode.disabled) {
           curNode.checked = false;
           this.setNodeNoChecked(false, curNode);
+          this.$nextTick(() => {
+            this.$refs.topologyRef.$refs.topologyTableRef.toggleRowSelection(curNode, false);
+            if (!this.isOnlyLevel) {
+              bus.$emit('update-table-toggleRowSelection', { node: curNode, isChecked: false });
+            }
+          });
         }
       },
 
@@ -556,10 +697,16 @@
           }
           return false;
         });
+        bus.$emit('update-manualInput-toggleRowSelection', { idChain: payload, isChecked: true });
         if (curNode && !curNode.disabled) {
           curNode.checked = true;
-          curNode.disabled = true;
           this.setNodeChecked(true, curNode);
+          this.$nextTick(() => {
+            this.$refs.topologyRef.$refs.topologyTableRef.toggleRowSelection(curNode, true);
+            if (!this.isOnlyLevel) {
+              bus.$emit('update-table-toggleRowSelection', { node: curNode, isChecked: true });
+            }
+          });
         }
       },
 
@@ -731,6 +878,13 @@
         }
 
         this.$emit('on-tree-select', value, node, params);
+      },
+
+      // 单页全选
+      handleTreeSelectAll (nodes, isAll) {
+        nodes.forEach((item) => {
+          this.handleTreeSelect(isAll, item, nodes.length);
+        });
       },
 
       async handleAsyncNodes (node, index, flag) {
@@ -1111,7 +1265,8 @@
                     }
                 }
                 .bk-loading {
-                    background: #fafbfd !important;
+                    /* background: #fafbfd !important; */
+                    background: #ffffff !important;
                 }
             }
         }

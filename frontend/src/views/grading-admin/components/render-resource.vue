@@ -43,6 +43,7 @@
                   :ref="`${index}TreeRef`"
                   mode="grade"
                   :tree-value="condition.instance"
+                  :selection-mode="selectionMode"
                   :select-list="selectList"
                   :select-value="selectValue"
                   :system-params="params"
@@ -58,15 +59,52 @@
                 </div>
               </div>
               <div class="right-layout">
-                <template v-if="condition.instance && condition.instance.length > 0">
+                <div class="flex-between right-layout-header">
+                  <div class="right-layout-title">{{ $t(`m.common['结果预览']`) }}</div>
+                  <div
+                    :class="[
+                      'clear-all'
+                    ]"
+                    @click.stop=""
+                  >
+                    <bk-dropdown-menu
+                      ref="dropdownInstance"
+                      :position-fixed="true"
+                      align="left"
+                      :disabled="formatClearDisabled(condition.instance)"
+                    >
+                      <template slot="dropdown-trigger">
+                        <Icon bk type="more" />
+                      </template>
+                      <ul
+                        slot="dropdown-content"
+                        class="bk-dropdown-list"
+                      >
+                        <li>
+                          <a @click.stop="handleConditionClearAll(condition.instance, index)">
+                            {{ $t(`m.common['清除所有']`) }}
+                          </a>
+                        </li>
+                      </ul>
+                    </bk-dropdown-menu>
+                  </div>
+                </div>
+                <div
+                  v-if="condition.instance && condition.instance.length > 0"
+                  :style="{ maxHeight: 'calc(100vh - 600px)' }"
+                >
                   <instance-view
+                    :select-list="selectList"
+                    :select-value="selectValue"
                     :data="condition.instance"
-                    @on-delete="handleIntanceDelete(...arguments, index)"
+                    @on-delete="handleInstanceDelete(...arguments, index)"
                     @on-clear="handleInstanceClearAll(...arguments, index)" />
-                </template>
+                </div>
                 <template v-else>
                   <div class="empty-wrapper">
-                    <ExceptionEmpty />
+                    <ExceptionEmpty
+                      style="background: #fafbfd"
+                    />
                   </div>
                 </template>
               </div>
@@ -141,6 +179,9 @@
         getDragDynamicWidth: () => this.dragWidth
       };
     },
+    inject: {
+      getResourceSliderWidth: { value: 'getResourceSliderWidth', default: null }
+    },
     components: {
       renderResourceInstance,
       renderOrderNumber,
@@ -189,8 +230,8 @@
         attributes: [],
         isHide: false,
         // isEmptyResource: false,
-        dragWidth: 220,
-        dragRealityWidth: 220,
+        dragWidth: this.getResourceSliderWidth ? this.getResourceSliderWidth() * 0.67 : 600,
+        dragRealityWidth: this.getResourceSliderWidth ? this.getResourceSliderWidth() * 0.67 : 600,
         isDrag: false
       };
     },
@@ -219,12 +260,36 @@
         };
       },
       leftLayoutStyle () {
-        if (this.dragWidth >= 220) {
+        const sliderWidth = this.getResourceSliderWidth ? this.getResourceSliderWidth() * 0.67 : 600;
+        if (this.dragWidth >= sliderWidth) {
           return {
             'min-width': `${this.dragWidth}px`
           };
         }
         return {};
+      },
+      formatClearDisabled () {
+        return (payload) => {
+          let curPaths = [];
+          if (payload.length) {
+            curPaths = payload.reduce((prev, next) => {
+              prev.push(
+                ...next.path.map(v => {
+                  const paths = { ...v, ...next };
+                  delete paths.instance;
+                  delete paths.path;
+                  return paths[0];
+                })
+              );
+              return prev;
+            }, []);
+            return curPaths.some(v => v.disabled);
+          }
+          return true;
+        };
+      },
+      dynamicsSliderWidth () {
+        return this.getResourceSliderWidth ? this.getResourceSliderWidth() - 400 : 600;
       }
     },
     watch: {
@@ -322,10 +387,11 @@
           return;
         }
         // 可拖拽范围
-        const MIN_OFFSET_WIDTH = 220;
+        const MIN_OFFSET_WIDTH = this.dynamicsSliderWidth;
         const minWidth = MIN_OFFSET_WIDTH;
         const maxWidth = MIN_OFFSET_WIDTH + 120;
-        const offsetX = e.clientX - (document.body.clientWidth - 960);
+        const sliderWidth = this.getResourceSliderWidth ? this.getResourceSliderWidth() : 960;
+        const offsetX = e.clientX - (document.body.clientWidth - sliderWidth);
         if (offsetX < minWidth || offsetX >= maxWidth) {
           return;
         }
@@ -515,6 +581,15 @@
         };
       },
 
+      handleConditionClearAll (payload, index) {
+        payload.forEach((item, i) => {
+          this.handleInstanceClearAll(item, i, index);
+        });
+        this.$nextTick(() => {
+          this.$refs.dropdownInstance && this.$refs.dropdownInstance[0].hide();
+        });
+      },
+
       handleInstanceClearAll (payload, payloadIndex, index) {
         window.changeAlert = true;
         const { displayPath } = payload;
@@ -548,7 +623,7 @@
         }
       },
 
-      handleIntanceDelete (payload, payloadIndex, childIndex, index) {
+      handleInstanceDelete (payload, payloadIndex, childIndex, index) {
         window.changeAlert = true;
         const curIds = payload.parentChain.map(v => `${v.id}&${v.type}`);
         const isCarryNextNoLimit = payload.id === '*';
@@ -703,7 +778,7 @@
         });
       },
 
-      handlePathSelect (value, node, payload, index) {
+      handlePathSelect (value, node, payload, resourceLen, index) {
         window.changeAlert = true;
         const { type, path, paths } = payload[0];
         const tempPath = path[0];
@@ -732,23 +807,82 @@
           }
         } else {
           // const noCarryNoLimitPath = payload[1]
-          const deleteInstanceItem = curInstance.find(item => item.type === type);
+          // const deleteInstanceItem = curInstance.find(item => item.type === type);
 
-          // const arr = path[0]
-          // const tempPath = arr.filter(item => item.id !== '*')
+          /// const arr = path[0]
+          //  const tempPath = arr.filter(item => item.id !== '*')
 
           // const deleteIndex = deleteInstanceItem.path.findIndex(item => item.map(v => v.id).join('') === tempPath.map(v => v.id).join(''))
-          const deleteIndex = deleteInstanceItem.path.findIndex(item => item.map(v => `${v.id}&${v.type}`).join('') === tempPath.map(v => `${v.id}&${v.type}`).join(''));
+          // const deleteIndex = deleteInstanceItem.path.findIndex(item => item.map(v => `${v.id}&${v.type}`).join('') === tempPath.map(v => `${v.id}&${v.type}`).join(''));
 
-          // const curChildreIds = node.children.map(item => item.id)
-          const curChildreIds = node.children.map(item => `${item.id}&${item.type}`);
+          //  const curChildreIds = node.children.map(item => item.id)
+          // const curChildreIds = node.children.map(item => `${item.id}&${item.type}`);
 
-          // deleteInstanceItem.path.splice(deleteIndex, 1)
+          //  deleteInstanceItem.path.splice(deleteIndex, 1)
+          // let isDisabled = false;
+          // if (deleteIndex > -1) {
+          //   isDisabled = deleteInstanceItem.path[deleteIndex].some(_ => _.disabled);
+          //   if (!isDisabled) {
+          //     deleteInstanceItem.path.splice(deleteIndex, 1);
+          //   }
+          // }
           let isDisabled = false;
-          if (deleteIndex > -1) {
-            isDisabled = deleteInstanceItem.path[deleteIndex].some(_ => _.disabled);
-            if (!isDisabled) {
-              deleteInstanceItem.path.splice(deleteIndex, 1);
+          let curChildrenIds = [];
+          const deleteIndex = -1;
+          let deleteInstanceItem = curInstance.find(item => item.type === type);
+          if (!deleteInstanceItem) {
+            const hasSelectData = [];
+            curInstance.forEach(item => {
+              item.path.forEach(pathItem => {
+                hasSelectData.push({
+                  ids: pathItem.map(v => `${v.id}&${v.type}`),
+                  idChain: pathItem.map(v => `${v.id}&${v.type}`).join('#'),
+                  childTypes: pathItem.map(v => v.type),
+                  disabled: pathItem.some(subItem => subItem.disabled)
+                });
+              });
+            });
+            this.hasSelectData = _.cloneDeep(hasSelectData);
+            const hasData = this.hasSelectData.find((item) => item.childTypes.includes(type));
+            if (hasData) {
+              deleteInstanceItem = curInstance.find(item => hasData.childTypes.includes(item.type) && hasData.childTypes.includes(type));
+            }
+          }
+          if (resourceLen) {
+            for (let i = 0; i < resourceLen; i++) {
+              // const noCarryNoLimitPath = payload[1]
+          
+              // const arr = path[0]
+              // const tempPath = arr.filter(item => item.id !== '*')
+          
+              // const deleteIndex = deleteInstanceItem.path.findIndex(item => item.map(v => v.id).join('') === tempPath.map(v => v.id).join(''))
+              const deleteIndex = deleteInstanceItem.path.findIndex(item => item.map(v => `${v.id}&${v.type}`).join('') === tempPath.map(v => `${v.id}&${v.type}`).join(''));
+          
+              // const curChildrenIds = node.children.map(item => item.id)
+              curChildrenIds = node.children.map(item => `${item.id}&${item.type}`);
+          
+              // deleteInstanceItem.path.splice(deleteIndex, 1)
+              if (deleteIndex > -1) {
+                isDisabled = deleteInstanceItem.path[deleteIndex].some(_ => _.disabled);
+                if (!isDisabled) {
+                  deleteInstanceItem.path.splice(deleteIndex, 1);
+                }
+              }
+            }
+          } else {
+            const deleteIndex = deleteInstanceItem.path.findIndex(item => item.map(v => `${v.id}&${v.type}`).join('') === tempPath.map(v => `${v.id}&${v.type}`).join(''));
+            const deleteItem = deleteInstanceItem.path.filter(item => item.map(v => `${v.id}&${v.type}`).join('') === tempPath.map(v => `${v.id}&${v.type}`).join(''));
+            curChildrenIds = node.children.map(item => `${item.id}&${item.type}`);
+            console.log(deleteIndex, deleteInstanceItem, deleteItem);
+            if (deleteIndex > -1) {
+              isDisabled = deleteInstanceItem.path[deleteIndex].some(_ => _.disabled);
+              if (!isDisabled) {
+                deleteInstanceItem.path.splice(deleteIndex, 1);
+                // 处理半选之后再全选会造成有重叠的数据
+                if (deleteItem.length > 1) {
+                  deleteInstanceItem.path = deleteInstanceItem.path.filter((item) => !deleteItem.includes(item));
+                }
+              }
             }
           }
 
@@ -778,7 +912,7 @@
               // if (curChildreIds.includes(instanceItem.path[0][0].id)) {
               //     curInstance.splice(i, 1)
               // }
-              if (curChildreIds.includes(`${instanceItem.path[0][0].id}&${instanceItem.path[0][0].type}`)) {
+              if (curChildrenIds.includes(`${instanceItem.path[0][0].id}&${instanceItem.path[0][0].type}`)) {
                 curInstance.splice(i, 1);
                 break;
               }
@@ -861,7 +995,9 @@
                 height: 100%;
                 .left-layout {
                     position: relative;
-                    min-width: 220px;
+                    /* min-width: 220px; */
+                    min-width: 600px;
+                    background-color: #ffffff;
                     .drag-dotted-line {
                         position: absolute;
                         top: 0;
@@ -890,26 +1026,51 @@
                 }
                 .right-layout {
                     position: relative;
-                    width: calc(100% - 180px);
+                    /* width: calc(100% - 180px); */
+                    width: 100%;
                     overflow-y: auto;
                     &::-webkit-scrollbar {
-                        width: 4px;
-                        background-color: lighten(transparent, 80%);
+                      width: 4px;
+                      background-color: lighten(transparent, 80%);
                     }
                     &::-webkit-scrollbar-thumb {
-                        height: 5px;
-                        border-radius: 2px;
-                        background-color: #e6e9ea;
+                      height: 5px;
+                      border-radius: 2px;
+                      background-color: #e6e9ea;
                     }
-                    .empty-wrapper {
-                        position: absolute;
-                        top: 50%;
-                        left: 50%;
-                        transform: translate(-50%, -50%);
-                        img {
-                            width: 120px;
+                    &-header {
+                      font-size: 14px;
+                      padding: 10px;
+                      position: sticky;
+                      top: 0;
+                      background-color: #ffffff;
+                      z-index: 1;
+                      .clear-all {
+                        .icon-more {
+                          font-size: 15px;
+                          color: #3a84ff;
+                          cursor: pointer;
+                          &:hover {
+                            color: #699df4;
+                          }
                         }
-                    }
+                        .disabled {
+                          .icon-more {
+                            color: #c4c6cc;
+                            cursor: not-allowed;
+                          }
+                        }
+                      }
+                  }
+                  .empty-wrapper {
+                      position: absolute;
+                      top: 50%;
+                      left: 50%;
+                      transform: translate(-50%, -50%);
+                      img {
+                          width: 120px;
+                      }
+                  }
                 }
             }
         }

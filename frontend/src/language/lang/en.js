@@ -279,12 +279,17 @@ export const m = {
         '管理员组不能添加部门': 'The administrator group cannot add department',
         '管理员组不能添加人员模板': 'The administrator group cannot add member template',
         '批量退出': 'Multi-quit',
+        '结果预览': 'Result preview',
+        '清除所有': 'Clear all',
         '批量处理': 'Multi-process',
         '用户名': 'User name',
         '结果预览': 'Result preview',
         '解析并添加': 'Parse and add',
         '搜索解析结果': 'Search parsing results',
-        '请先从左侧输入并解析': 'Please input and parse from the left first'
+        '请先从左侧输入并解析': 'Please input and parse from the left first',
+        '实例名称输入错误或不存在于授权资源实例范围内': 'Instance name input error or does not exist within the authorized resource instance scope',
+        '实例名称': 'Instance name',
+        '请输入实例名称，以回车/逗号/分号/空格分割': 'Please enter the instance name, separated by carriage return, comma, semicolon, or space'
     },
     // 校验
     verify: {
@@ -535,6 +540,7 @@ export const m = {
          '用户组为只读用户组不能添加成员': '{value} is read-only user groups and cannot add members',
          '用户组属性为只读属性': '{value} is read-only user group attribute',
          '不可续期的用户组成员如下': 'The non renewable user group members are as follows: {value}',
+         '搜索动态key值': 'Search {value}',
          '管理员组不能添加权限': 'Administrators group cannot add permissions',
          '只读用户组不能添加权限': 'Read only user groups cannot add permissions',
          '只读人员模板不能添加成员': 'Read-only member templates [{value}] cannot add members',
@@ -687,6 +693,7 @@ export const m = {
         '请选择权限获得者': 'Please select permission recipient',
         '请输入权限获得者': 'Please enter the permission recipient',
         '可代他人申请加入用户组获取权限': 'You can apply to join the user group for permission on behalf of others',
+        '（标签只读：含只读操作）': '({name} read-only: including {value} actions)',
         '收藏成功': 'Collection successful',
         '取消收藏成功': 'Cancel collection successful'
     },

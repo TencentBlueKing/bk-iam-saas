@@ -665,7 +665,7 @@
     data () {
       return {
         userApi: window.BK_USER_API,
-        systemValue: '',
+        systemValue: 'bk_job',
         systemList: [],
         buttonLoading: false,
         originalCustomTmplList: [],
@@ -1488,6 +1488,7 @@
           if (!item.disabled) {
             if (!item.checked && newVal) {
               ++count;
+              ++item.hasAddCount;
             }
             item.checked = newVal;
             tempActionIds.push(item.id);
@@ -1547,6 +1548,7 @@
           if (!item.disabled) {
             if (!item.checked && newVal) {
               ++count;
+              ++item.hasAddCount;
             }
             item.checked = newVal;
             tempActionIds.push(item.id);
@@ -2023,6 +2025,7 @@
 
         this.handleRelatedActions(actData, true);
         payload.count++;
+
         if (this.isAllExpanded) {
           this.handleAggregateActionChange(false);
         }
@@ -2144,6 +2147,7 @@
           this.$set(item, 'expanded', index === 0);
           let allCount = 0;
           let count = 0;
+          let hasCheckedCount = 0;
           if (!item.actions) {
             this.$set(item, 'actions', []);
           }
@@ -2154,6 +2158,9 @@
             linearActions.push(act);
             if (act.checked) {
               ++count;
+              if (['readonly'].includes(act.tag)) {
+                ++hasCheckedCount;
+              }
             }
           });
           allCount = allCount + item.actions.length;
@@ -2170,6 +2177,9 @@
               linearActions.push(act);
               if (act.checked) {
                 ++count;
+                if (['readonly'].includes(act.tag)) {
+                  ++hasCheckedCount;
+                }
               }
             });
 
@@ -2191,6 +2201,7 @@
           this.$set(item, 'allChecked', isAllChecked);
           this.$set(item, 'allCount', allCount);
           this.$set(item, 'count', count);
+          this.$set(item, 'hasCheckedCount', hasCheckedCount);
           if (item.sub_groups && item.sub_groups.length > 0) {
             this.$set(item, 'actionsAllChecked', isAllChecked && item.sub_groups.every(v => v.allChecked));
             this.$set(item, 'actionsAllDisabled', isAllDisabled && item.sub_groups.every(v => {
@@ -2683,10 +2694,7 @@
 .action-hover {
     color: #3a84ff;
 }
-.iam-action-cls {
-    margin-right: 5px;
-    margin-bottom: 5px;
-}
+
 .iam-action-hover {
     background: #E7EFFE;
     color: #3a84ff;

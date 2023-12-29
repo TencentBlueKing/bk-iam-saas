@@ -5,53 +5,165 @@
         <resource-select
           :list="selectList"
           :value="selectValue"
+          :cur-selected-chain="curSelectedChain"
+          :selection-mode="selectionMode"
           @on-select="handleResourceSelect" />
       </div>
-      <topology-input
-        ref="headerInput"
-        :is-filter="isFilter"
-        :placeholder="curPlaceholder"
-        @on-search="handleSearch" />
-      <div class="topology-tree-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
-        <template v-if="treeData.length > 0 && !isLoading">
-          <topology-tree
-            ref="topologyRef"
-            :all-data="treeData"
-            :search-value="hasSearchValues"
-            @on-expanded="handleOnExpanded"
-            @on-search="handleTreeSearch"
-            @on-select="handleTreeSelect"
-            @on-load-more="handleLoadMore"
-            @async-load-nodes="handleAsyncNodes" />
-        </template>
-        <template v-if="treeData.length < 1 && !isLoading">
-          <div class="empty-wrapper">
-            <!-- <iam-svg />
-                        <section class="search-text-wrapper" v-if="searchDisplayText !== ''">
-                            {{ searchDisplayText }}
-                        </section> -->
-            <ExceptionEmpty
-              style="background: #fafbfd"
-              :type="emptyData.type"
-              :empty-text="emptyData.text"
-              :tip-text="emptyData.tip"
-              :tip-type="emptyData.tipType"
-              @on-clear="handleEmptyClear"
-              @on-refresh="handleEmptyRefresh"
-            />
+      <template v-if="!isManualInput">
+        <template v-if="isOnlyLevel">
+          <topology-input
+            ref="headerInput"
+            :is-filter="isFilter"
+            :placeholder="curPlaceholder"
+            @on-search="handleSearch" />
+          <div class="topology-tree-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
+            <template v-if="renderTopologyData.length > 0 && !isLoading">
+              <topology-tree
+                ref="topologyRef"
+                :all-data="renderTopologyData"
+                :search-value="hasSearchValues"
+                :is-filter="isFilter"
+                :cur-chain="curChain"
+                :cur-placeholder="curPlaceholder"
+                :cur-selected-chain="curSelectedChain"
+                :resource-total="resourceTotal"
+                :sub-resource-total="subResourceTotal"
+                :resource-value="resourceValue"
+                :has-selected-values="hasSelectedValues"
+                @on-expanded="handleOnExpanded"
+                @on-search="handleSearch"
+                @on-table-search="handleTableSearch"
+                @on-select="handleTreeSelect"
+                @on-select-all="handleTreeSelectAll"
+                @on-load-more="handleLoadMore"
+                @on-page-change="handlePageChange"
+                @on-table-page-change="handleTablePageChange"
+                @async-load-nodes="handleAsyncNodes"
+                @async-load-table-nodes="handleAsyncNodes" />
+            </template>
+            <template v-if="renderTopologyData.length < 1 && !isLoading">
+              <div class="empty-wrapper">
+                <ExceptionEmpty
+                  :type="emptyData.type"
+                  :empty-text="emptyData.text"
+                  :tip-text="emptyData.tip"
+                  :tip-type="emptyData.tipType"
+                  @on-clear="handleEmptyClear"
+                  @on-refresh="handleEmptyRefresh"
+                />
+              </div>
+            </template>
           </div>
         </template>
+        <template v-if="!isOnlyLevel">
+          <div class="topology-tree-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
+            <template v-if="renderTopologyData.length > 0 && !isLoading">
+              <topology-tree
+                ref="topologyRef"
+                :all-data="renderTopologyData"
+                :is-filter="isFilter"
+                :search-value="hasSearchValues"
+                :search-display-text="searchDisplayText"
+                :cur-chain="curChain"
+                :cur-placeholder="curPlaceholder"
+                :cur-selected-chain="curSelectedChain"
+                :cur-table-data="curTableData"
+                :cur-keyword="curKeyword"
+                :cur-table-key-word="curTableKeyWord"
+                :resource-total="resourceTotal"
+                :sub-resource-total="subResourceTotal"
+                :empty-data="emptyTreeData"
+                :has-selected-values="hasSelectedValues"
+                :resource-value="resourceValue"
+                @on-expanded="handleOnExpanded"
+                @on-search="handleSearch"
+                @on-table-search="handleTableSearch"
+                @on-tree-search="handleTreeSearch"
+                @on-select="handleTreeSelect"
+                @on-select-all="handleTreeSelectAll"
+                @on-load-more="handleLoadMore"
+                @on-page-change="handlePageChange"
+                @on-table-page-change="handleTablePageChange"
+                @async-load-nodes="handleAsyncNodes"
+                @async-load-table-nodes="handleAsyncNodes"
+              />
+            </template>
+            <template v-if="renderTopologyData.length < 1 && !isLoading">
+              <div
+                v-if="[500].includes(emptyData.type)"
+                class="empty-wrapper"
+              >
+                <ExceptionEmpty
+                  :type="emptyData.type"
+                  :empty-text="emptyData.text"
+                  :tip-text="emptyData.tip"
+                  :tip-type="emptyData.tipType"
+                  @on-clear="handleEmptyClear"
+                  @on-refresh="handleEmptyRefresh"
+                />
+              </div>
+              <template v-else>
+                <topology-tree
+                  ref="topologyRef"
+                  :all-data="renderTopologyData"
+                  :search-value="hasSearchValues"
+                  :search-display-text="searchDisplayText"
+                  :cur-chain="curChain"
+                  :cur-keyword="curKeyword"
+                  :cur-table-key-word="curTableKeyWord"
+                  :cur-placeholder="curPlaceholder"
+                  :cur-selected-chain="curSelectedChain"
+                  :cur-table-data="curTableData"
+                  :resource-total="resourceTotal"
+                  :is-filter="isFilter"
+                  :sub-resource-total="subResourceTotal"
+                  :empty-data="emptyTreeData"
+                  :has-selected-values="hasSelectedValues"
+                  :resource-value="resourceValue"
+                  @on-expanded="handleOnExpanded"
+                  @on-search="handleSearch"
+                  @on-table-search="handleTableSearch"
+                  @on-select="handleTreeSelect"
+                  @on-select-all="handleTreeSelectAll"
+                  @on-load-more="handleLoadMore"
+                  @on-page-change="handlePageChange"
+                  @on-table-page-change="handleTablePageChange"
+                  @async-load-nodes="handleAsyncNodes"
+                  @async-load-table-nodes="handleAsyncNodes"
+                  @on-tree-search="handleTreeSearch"
+                  @on-clear="handleEmptyClear"
+                  @on-refresh="handleEmptyRefresh"
+                />
+              </template>
+            </template>
+          </div>
+        </template>
+      </template>
+      <div v-else>
+        <TopologyManualInput
+          ref="topologyManualInputRef"
+          :selection-mode="selectionMode"
+          :system-params="systemParams"
+          :resource-value="resourceValue"
+          :cur-chain="curChain"
+          :cur-selected-chain="curSelectedChain"
+          :has-selected-values="hasSelectedValues"
+          @on-select="handleTreeSelect"
+          @on-select-all="handleTreeSelectAll"
+        />
       </div>
     </div>
   </div>
 </template>
 <script>
   import _ from 'lodash';
+  import { bus } from '@/common/bus';
   import { guid, formatCodeData } from '@/common/util';
   import il8n from '@/language';
   import ResourceSelect from './resource-select';
   import TopologyInput from './topology-input';
   import TopologyTree from './topology-tree';
+  import TopologyManualInput from './topology-manual-input.vue';
 
   const LOAD_ITEM = {
     nodeId: guid(),
@@ -136,7 +248,8 @@
     components: {
       ResourceSelect,
       TopologyInput,
-      TopologyTree
+      TopologyTree,
+      TopologyManualInput
     },
     props: {
       selectList: {
@@ -162,12 +275,17 @@
             action_id: ''
           };
         }
+      },
+      selectionMode: {
+        type: String
       }
     },
     data () {
       return {
         isLoading: false,
         limit: 100,
+        resourceTotal: 0,
+        subResourceTotal: 0,
         // 当前选择的链路
         curChain: [],
         treeData: [],
@@ -180,6 +298,7 @@
         // 是否存在忽略标识
         isExistIgnore: false,
         curKeyword: '',
+        curTableKeyWord: '',
         isFilter: false,
         curSearchObj: {},
         curPlaceholder: '',
@@ -198,27 +317,35 @@
           text: '',
           tip: '',
           tipType: ''
-        }
+        },
+        curTableData: [],
+        treeDataStorage: [],
+        curSelectedChain: {}
       };
+    },
+    computed: {
+      isOnlyLevel () {
+        return this.treeData.every((item) => item.level === 0 && item.visiable) && this.curChain.length < 2;
+      },
+      isManualInput () {
+        return ['manualInput'].includes(this.curSelectedChain.id) && ['instance:paste'].includes(this.selectionMode);
+      },
+      renderTopologyData () {
+        const hasNode = {};
+        const treeData = [...this.treeData];
+        const list = treeData.reduce((curr, next) => {
+          // eslint-disable-next-line no-unused-expressions
+          hasNode[`${next.name}&${next.id}`] ? '' : hasNode[`${next.name}&${next.id}`] = true && curr.push(next);
+          // hasNode[next.name] ? '' : hasNode[next.name] = true && curr.push(next);
+          return curr;
+        }, []);
+        return list;
+      }
     },
     watch: {
       treeValue: {
         handler (value) {
-          if (value.length) {
-            const hasSelecteds = [];
-            value.forEach(item => {
-              item.path.forEach(pathItem => {
-                hasSelecteds.push({
-                  ids: pathItem.map(v => `${v.id}&${v.type}`),
-                  idChain: pathItem.map(v => `${v.id}&${v.type}`).join('#'),
-                  disabled: pathItem.some(subItem => subItem.disabled)
-                });
-              });
-            });
-            this.hasSelectedValues = _.cloneDeep(hasSelecteds);
-          } else {
-            this.hasSelectedValues = [];
-          }
+          this.getHasSelectedValues(value);
         },
         deep: true,
         immediate: true
@@ -226,36 +353,63 @@
       selectValue: {
         handler (value) {
           if (value) {
+            this.curSelectedChain = this.selectList.find(item => item.id === value);
             this.curChain = _.cloneDeep(this.selectList[0].resource_type_chain);
             this.ignorePathFlag = this.selectList[0].ignore_iam_path;
             this.isExistIgnore = this.selectList.some(item => item.ignore_iam_path);
-            this.curPlaceholder = `${this.$t(`m.common['搜索']`)} ${this.curChain[0].name}`;
+            this.curPlaceholder = this.curLanguageIsCn ? `${this.$t(`m.common['搜索']`)}${this.curChain[0].name}` : `${this.$t(`m.common['搜索']`)} ${this.curChain[0].name}`;
             this.firstFetchResources();
+          }
+        },
+        immediate: true
+      },
+      treeData: {
+        handler (value) {
+          if (!['search'].includes(this.emptyData.tipType) && !this.searchDisplayText) {
+            this.treeDataStorage = [...value];
           }
         },
         immediate: true
       }
     },
     methods: {
+      getHasSelectedValues (value) {
+        if (value.length) {
+          const hasSelected = [];
+          value.forEach(item => {
+            item.path.forEach(pathItem => {
+              hasSelected.push({
+                ids: pathItem.map(v => `${v.id}&${v.type}`),
+                idChain: pathItem.map(v => `${v.id}&${v.type}`).join('#'),
+                disabled: pathItem.some(subItem => subItem.disabled)
+              });
+            });
+          });
+          this.hasSelectedValues = _.cloneDeep(hasSelected);
+        } else {
+          this.hasSelectedValues = [];
+        }
+      },
+
       handleSearch (payload) {
         this.curKeyword = payload;
-        if (this.isFilter && payload === '') {
-          this.isFilter = false;
-        } else {
-          this.isFilter = true;
-        }
+        this.isFilter = !(this.isFilter && !payload);
         this.emptyData.tipType = 'search';
+        this.searchDisplayText = '';
         this.firstFetchResources();
       },
 
       handleEmptyRefresh () {
+        if (this.$refs.headerInput) {
+          this.$refs.headerInput.value = '';
+        }
+        this.emptyData.tipType = '';
+        this.searchDisplayText = '';
         this.firstFetchResources();
       },
 
       handleEmptyClear () {
-        this.$refs.headerInput.value = '';
-        this.emptyData.tipType = '';
-        this.firstFetchResources();
+        this.handleEmptyRefresh();
       },
 
       handleOnExpanded (index, expanded) {
@@ -265,33 +419,34 @@
         }
       },
 
+      handleTableSearch (payload) {
+        const { value } = payload;
+        this.curTableKeyWord = value;
+        this.handleTreeSearch(payload);
+      },
+
       async handleTreeSearch (payload) {
         window.changeAlert = true;
         const { index, node, value } = payload;
-
         this.curSearchObj = Object.assign({}, {
           value,
           parentId: node.parentId
         });
-
         if (node.isFilter && value === '') {
           node.isFilter = false;
         } else {
           node.isFilter = true;
         }
-
         this.treeData = this.treeData.filter(item => item.type !== 'search-empty');
-
         const searchLoadingItem = {
-                    ...SEARCH_LOAD_ITEM,
-                    parentId: node.parentId,
-                    parentSyncId: node.id,
-                    parentChain: _.cloneDeep(node.parentChain),
-                    level: node.level
+          ...SEARCH_LOAD_ITEM,
+          parentId: node.parentId,
+          parentSyncId: node.id,
+          parentChain: _.cloneDeep(node.parentChain),
+          level: node.level
         };
         const searchLoadingData = new Node(searchLoadingItem, node.level, false, 'search-loading');
         this.treeData.splice((index + 1), 0, searchLoadingData);
-
         const chainLen = this.curChain.length;
         const params = {
           limit: this.limit,
@@ -299,7 +454,6 @@
           ancestors: [],
           keyword: value
         };
-
         if (node.level > chainLen - 1) {
           params.system_id = this.curChain[chainLen - 1].system_id;
           params.type = this.curChain[chainLen - 1].id;
@@ -326,35 +480,36 @@
         }
         try {
           const { code, data } = await this.$store.dispatch('permApply/getResources', params);
-          const parentNode = this.treeData.find(item => item.nodeId === node.parentId);
-          if (parentNode || !parentNode.children) {
+          this.emptyTreeData.tipType = 'search';
+          this.emptyTreeData = formatCodeData(code, this.emptyTreeData, data.results.length === 0);
+          this.subResourceTotal = data.count || 0;
+          this.curTableData = data.results || [];
+          const treeData = this.treeData;
+          const parentNode = treeData.find(item => item.nodeId === node.parentId);
+          if (parentNode || (parentNode && !parentNode.children)) {
             parentNode.children = [];
           }
-          this.treeData = this.treeData.filter(item => {
+          this.treeData = treeData.filter(item => {
             const flag = item.type === 'search' && item.parentId === node.parentId;
             return flag || !item.parentChain.map(v => v.id).includes(node.parentSyncId);
           });
-          this.emptyData = formatCodeData(code, this.emptyData, data.results.length === 0);
           if (data.results.length < 1) {
             const searchEmptyItem = {
-                            ...SEARCH_EMPTY_ITEM,
-                            parentId: node.parentId,
-                            parentSyncId: node.id,
-                            parentChain: _.cloneDeep(node.parentChain),
-                            level: node.level,
-                            display_name: RESULT_TIP[code]
+              ...SEARCH_EMPTY_ITEM,
+              parentId: node.parentId,
+              parentSyncId: node.id,
+              parentChain: _.cloneDeep(node.parentChain),
+              level: node.level,
+              display_name: RESULT_TIP[code]
             };
             const searchEmptyData = new Node(searchEmptyItem, node.level, false, 'search-empty');
             this.treeData.splice((index + 1), 0, searchEmptyData);
             return;
           }
-
           const totalPage = Math.ceil(data.count / this.limit);
-
           let isAsync = this.curChain.length > (node.level + 1);
           const loadNodes = data.results.map(item => {
             let tempItem = _.cloneDeep(item);
-
             let checked = false;
             let disabled = false;
             let isRemote = false;
@@ -413,14 +568,14 @@
 
             if (node.level > 0) {
               tempItem = {
-                                ...item,
-                                parentId: node.parentId,
-                                parentSyncId: node.id,
-                                disabled: parentNode.checked || disabled,
-                                checked: checked || parentNode.checked,
-                                parentChain: _.cloneDeep(node.parentChain),
-                                isRemote,
-                                isExistNoCarryLimit
+                ...item,
+                parentId: node.parentId,
+                parentSyncId: node.id,
+                disabled: (parentNode && parentNode.checked) || disabled,
+                checked: checked || (parentNode && parentNode.checked),
+                parentChain: _.cloneDeep(node.parentChain),
+                isRemote,
+                isExistNoCarryLimit
               };
             } else {
               tempItem.checked = checked;
@@ -434,22 +589,25 @@
           this.treeData.splice((index + 1), 0, ...loadNodes);
 
           // 将新加载的节点push到父级点的children中
-          parentNode.children.splice(0, parentNode.children.length, ...loadNodes);
+          if (parentNode) {
+            parentNode.children.splice(0, parentNode.children.length, ...loadNodes);
+          }
 
           if (totalPage > 1) {
             const loadItem = {
-                            ...LOAD_ITEM,
-                            totalPage: totalPage,
-                            current: 1,
-                            parentSyncId: node.id,
-                            parentId: node.parentId,
-                            parentChain: _.cloneDeep(node.parentChain)
+              ...LOAD_ITEM,
+              totalPage: totalPage,
+              current: 1,
+              parentSyncId: node.id,
+              parentId: node.parentId,
+              parentChain: _.cloneDeep(node.parentChain)
             };
             const loadData = new Node(loadItem, node.level, isAsync, 'load');
             this.treeData.splice((index + loadNodes.length + 1), 0, loadData);
-            parentNode.children.push(loadData);
+            if (parentNode) {
+              parentNode.children.push(loadData);
+            }
           }
-
           if (this.resourceValue) {
             this.handlerResourceNode();
           }
@@ -460,14 +618,14 @@
           }
           const message = e.code !== 1902206 ? RESULT_TIP[e.code] : e.message;
           const searchEmptyItem = {
-                        ...SEARCH_EMPTY_ITEM,
-                        parentId: node.parentId,
-                        parentSyncId: node.id,
-                        parentChain: _.cloneDeep(node.parentChain),
-                        level: node.level,
-                        display_name: message
+            ...SEARCH_EMPTY_ITEM,
+            parentId: node.parentId,
+            parentSyncId: node.id,
+            parentChain: _.cloneDeep(node.parentChain),
+            level: node.level,
+            display_name: message
           };
-          this.emptyData = formatCodeData(e.code, this.emptyData);
+          this.emptyTreeData = formatCodeData(e.code, this.emptyTreeData);
           const searchEmptyData = new Node(searchEmptyItem, node.level, false, 'search-empty');
           this.treeData.splice((index + 1), 0, searchEmptyData);
         } finally {
@@ -510,7 +668,8 @@
       },
 
       handeCancelChecked (payload) {
-        const curNode = this.treeData.find(item => {
+        const treeData = this.treeData.length ? this.treeData : this.treeDataStorage;
+        const curNode = treeData.find(item => {
           const { parentChain, id, async, childType } = item;
           // const curIds = parentChain.map(v => v.id)
           const curIds = parentChain.map(v => `${v.id}&${v.type}`);
@@ -543,14 +702,33 @@
           }
           return false;
         });
+        // 处理手动输入交互
+        bus.$emit('update-manualInput-toggleRowSelection', { idChain: payload, isChecked: false });
+        // 处理单选交互
+        if (this.resourceValue && curNode) {
+          this.$nextTick(() => {
+            treeData.forEach((v) => {
+              v.checked = false;
+              v.disabled = false;
+              this.$refs.topologyRef.$refs.topologyTableRef.toggleRowSelection(v, false);
+            });
+          });
+        }
         if (curNode && !curNode.disabled) {
           curNode.checked = false;
           this.setNodeNoChecked(false, curNode);
+          this.$nextTick(() => {
+            this.$refs.topologyRef.$refs.topologyTableRef.toggleRowSelection(curNode, false);
+            if (!this.isOnlyLevel) {
+              bus.$emit('update-table-toggleRowSelection', { node: curNode, isChecked: false });
+            }
+          });
         }
       },
 
       handeSetChecked (payload) {
-        const curNode = this.treeData.find(item => {
+        const treeData = this.treeData.length ? this.treeData : this.treeDataStorage;
+        const curNode = treeData.find(item => {
           const { parentChain, id, async, childType } = item;
           const curIds = parentChain.map(v => `${v.id}&${v.type}`);
           let type = '';
@@ -575,10 +753,17 @@
           }
           return false;
         });
+        // 处理手动输入交互
+        bus.$emit('update-manualInput-toggleRowSelection', { idChain: payload, isChecked: true });
         if (curNode && !curNode.disabled) {
           curNode.checked = true;
-          curNode.disabled = true;
           this.setNodeChecked(true, curNode);
+          this.$nextTick(() => {
+            this.$refs.topologyRef.$refs.topologyTableRef.toggleRowSelection(curNode, true);
+            if (!this.isOnlyLevel) {
+              bus.$emit('update-table-toggleRowSelection', { node: curNode, isChecked: true });
+            }
+          });
         }
       },
 
@@ -604,6 +789,7 @@
             this.searchDisplayText = RESULT_TIP[code];
             return;
           }
+          this.resourceTotal = data.count || 0;
           const totalPage = Math.ceil(data.count / this.limit);
           const isAsync = this.curChain.length > 1;
           this.treeData = data.results.map(item => {
@@ -649,9 +835,9 @@
           });
           if (totalPage > 1 && data.results.length > 0) {
             const loadItem = {
-                            ...LOAD_ITEM,
-                            totalPage: totalPage,
-                            current: 1
+              ...LOAD_ITEM,
+              totalPage: totalPage,
+              current: 1
             };
             this.treeData.push(new Node(loadItem, 0, isAsync, 'load'));
           }
@@ -673,14 +859,28 @@
       },
 
       async handleResourceSelect (value) {
-        const curSelected = this.selectList.find(item => item.id === value);
-        this.curChain = _.cloneDeep(curSelected.resource_type_chain);
-        this.ignorePathFlag = curSelected.ignore_iam_path;
-        this.curPlaceholder = `${this.$t(`m.common['搜索']`)} ${this.curChain[0].name}`;
-        await this.firstFetchResources();
+        this.curSelectedChain = this.selectList.find(item => item.id === value);
+        if (!['manualInput'].includes(value)) {
+          this.curChain = _.cloneDeep(this.curSelectedChain.resource_type_chain);
+          this.ignorePathFlag = this.curSelectedChain.ignore_iam_path;
+          this.curPlaceholder = `${this.$t(`m.common['搜索']`)} ${this.curChain[0].name}`;
+          this.handleResetParams();
+          await this.firstFetchResources();
+        }
       },
 
-      handleTreeSelect (value, node) {
+      // 重置缓存数据和搜索参数
+      handleResetParams  () {
+        if (this.$refs.headerInput) {
+          this.$refs.headerInput.value = '';
+        }
+        this.curKeyword = '';
+        this.curTableKeyWord = '';
+        this.searchDisplayText = '';
+      },
+
+      handleTreeSelect (value, node, resourceLen) {
+        console.log(value, node, resourceLen, 555);
         const parentChain = _.cloneDeep(node.parentChain);
         // const isNeedAny = node.level < this.curChain.length - 1
         const isNeedAny = node.async;
@@ -755,8 +955,8 @@
             paths: p
           });
         }
-
-        this.$emit('on-tree-select', value, node, params);
+        // console.log(value, node, params, resourceLen, 555);
+        this.$emit('on-tree-select', value, node, params, resourceLen);
         // 针对资源权限特殊处理
         if (this.resourceValue) {
           if (value) {
@@ -777,6 +977,13 @@
         }
       },
 
+      // 单页全选
+      handleTreeSelectAll (nodes, isAll) {
+        nodes.forEach((item) => {
+          this.handleTreeSelect(isAll, item, nodes.length);
+        });
+      },
+
       // 针对资源权限特殊处理
       handlerResourceNode () {
         if (this.treeData.some(item => item.checked)) {
@@ -787,17 +994,15 @@
       },
 
       async handleAsyncNodes (node, index, flag) {
-        console.log('handleAsyncNodes', node);
+        console.log('handleAsyncNodes', node, index);
         window.changeAlert = true;
         const asyncItem = {
-                    ...ASYNC_ITEM,
-                    parentId: node.nodeId,
-                    parentSyncId: node.id
+          ...ASYNC_ITEM,
+          parentId: node.nodeId,
+          parentSyncId: node.id
         };
-
         const asyncData = new Node(asyncItem, node.level + 1, false, 'async');
         this.treeData.splice((index + 1), 0, asyncData);
-
         const chainLen = this.curChain.length;
         const params = {
           limit: this.limit,
@@ -806,18 +1011,15 @@
           ancestors: [],
           keyword: ''
         };
-
         if (Object.keys(this.curSearchObj).length) {
           if (node.nodeId === this.curSearchObj.parentId) {
             this.curSearchObj = {};
           }
         }
-
         let placeholder = '';
         let parentType = '';
         let parentData = [];
         const ancestorItem = {};
-
         if (node.childType !== '') {
           params.system_id = this.curChain[chainLen - 1].system_id;
           params.type = node.childType;
@@ -826,7 +1028,6 @@
           params.action_id = this.systemParams.action_id || '';
           parentType = this.curChain[chainLen - 1].id;
           placeholder = this.curChain[chainLen - 1].name;
-                    
           ancestorItem.system_id = this.curChain[chainLen - 1].system_id;
           ancestorItem.type = this.curChain[chainLen - 1].id;
         } else {
@@ -842,18 +1043,14 @@
           params.type = isExistNextChain
             ? this.curChain[node.level + 1].id
             : this.curChain[chainLen - 1].id;
-
           parentType = this.curChain[node.level].id;
-
           placeholder = isExistNextChain
             ? this.curChain[node.level + 1].name
             : this.curChain[chainLen - 1].name;
-                    
           ancestorItem.system_id = this.curChain[node.level].system_id;
           ancestorItem.type = this.curChain[node.level].id;
         }
         ancestorItem.id = node.id;
-                
         if (node.parentChain.length) {
           parentData = node.parentChain.reduce((p, e) => {
             p.push({
@@ -868,7 +1065,8 @@
 
         try {
           const { code, data } = await this.$store.dispatch('permApply/getResources', params);
-          this.emptyData = formatCodeData(code, this.emptyData, data.results.length === 0);
+          this.emptyTreeData = formatCodeData(code, this.emptyData, data.results.length === 0);
+          this.subResourceTotal = data.count || 0;
           if (data.results.length < 1) {
             this.removeAsyncNode();
             node.expanded = false;
@@ -984,6 +1182,8 @@
           };
 
           const searchData = new Node(searchItem, curLevel, false, 'search');
+          // 保存当前页条数用于自定义分页
+          this.curTableData = [...childNodes];
           this.treeData.splice((index + 1), 0, searchData);
           if (flag) {
             this.$nextTick(() => {
@@ -995,7 +1195,7 @@
           console.error(e);
           const { code } = e;
           this.removeAsyncNode();
-          this.emptyData = formatCodeData(code, this.emptyData);
+          this.emptyTreeData = formatCodeData(code, this.emptyData);
           this.messageAdvancedError(e);
         }
       },
@@ -1010,7 +1210,6 @@
         window.changeAlert = true;
         node.current = node.current + 1;
         node.loadingMore = true;
-
         const chainLen = this.curChain.length;
         let keyword = this.curKeyword;
         if (Object.keys(this.curSearchObj).length) {
@@ -1147,7 +1346,8 @@
               parentNode.children.push(...loadNodes);
             }
           }
-
+          // 保存当前页条数用于自定义分页
+          this.curTableData = [...loadNodes];
           // 针对资源权限特殊处理
           if (this.resourceValue && this.resourceNeedDisable) {
             this.treeData.forEach(item => {
@@ -1164,39 +1364,176 @@
         } finally {
           node.loadingMore = false;
         }
+      },
+
+      // 单层拓扑分页
+      async handlePageChange (page, node) {
+        const chainLen = this.curChain.length;
+        let keyword = this.curKeyword;
+        if (Object.keys(this.curSearchObj).length) {
+          if (node.parentId === this.curSearchObj.parentId) {
+            keyword = this.curSearchObj.value;
+          }
+        }
+        const params = {
+          limit: this.limit,
+          offset: this.limit * (page - 1),
+          ancestors: [],
+          keyword
+        };
+        if (node.level > chainLen - 1) {
+          params.system_id = this.curChain[chainLen - 1].system_id;
+          params.type = this.curChain[chainLen - 1].id;
+          params.action_system_id = this.systemParams.system_id || '';
+          params.action_id = this.systemParams.action_id || '';
+        } else {
+          params.system_id = this.curChain[node.level].system_id;
+          params.type = this.curChain[node.level].id;
+          params.action_system_id = this.systemParams.system_id || '';
+          params.action_id = this.systemParams.action_id || '';
+        }
+        try {
+          const { code, data } = await this.$store.dispatch('permApply/getResources', params);
+          let isAsync = this.curChain.length > (node.level + 1);
+          const list = data.results || [];
+          const loadNodes = list.map(item => {
+            let tempItem = _.cloneDeep(item);
+            let checked = false;
+            let disabled = false;
+            let isRemote = false;
+            let isExistNoCarryLimit = false;
+            if (!isAsync && tempItem.child_type !== '') {
+              isAsync = true;
+            }
+            if (this.hasSelectedValues.length > 0) {
+              // 父级链路id + 当前id = 整条链路id
+              const curIds = node.parentChain.map(v => `${v.id}&${v.type}`);
+              // 取当前的请求的type
+              curIds.push(`${item.id}&${params.type}`);
+              const tempData = [...curIds];
+              if (isAsync) {
+                const nextLevelId = (() => {
+                  const nextLevelData = this.curChain[node.level + 1];
+                  if (nextLevelData) {
+                    return nextLevelData.id;
+                  }
+                  return this.curChain[chainLen - 1].id;
+                })();
+                curIds.push(`*&${nextLevelId}`);
+              }
+              let noCarryLimitData = {};
+              let normalSelectedData = {};
+              this.hasSelectedValues.forEach(val => {
+                if (isAsync && val.idChain === tempData.join('#')) {
+                  noCarryLimitData = val;
+                } else {
+                  if (!isAsync && val.ids.length === 1 && this.ignorePathFlag && val.ids[0] === `${item.id}&${params.type}`) {
+                    normalSelectedData = val;
+                  } else {
+                    if (val.idChain === curIds.join('#')) {
+                      normalSelectedData = val;
+                    }
+                  }
+                }
+              });
+              isExistNoCarryLimit = Object.keys(noCarryLimitData).length > 0;
+              if (isExistNoCarryLimit && Object.keys(normalSelectedData).length > 0) {
+                checked = true;
+                disabled = normalSelectedData.disabled && noCarryLimitData.disabled;
+                isRemote = disabled;
+              } else {
+                if (isExistNoCarryLimit || Object.keys(normalSelectedData).length > 0) {
+                  checked = true;
+                  disabled = normalSelectedData.disabled || noCarryLimitData.disabled;
+                  isRemote = disabled;
+                }
+              }
+            }
+            if (node.level > 0) {
+              const parentData = this.treeData.find(sub => sub.nodeId === node.parentId);
+              tempItem = {
+                  ...item,
+                  parentId: node.parentId,
+                  parentSyncId: node.id,
+                  disabled: parentData.checked || disabled,
+                  checked: checked || parentData.checked,
+                  parentChain: _.cloneDeep(node.parentChain),
+                  isRemote,
+                  isExistNoCarryLimit
+              };
+            } else {
+              tempItem.checked = checked;
+              tempItem.disabled = disabled;
+              tempItem.isExistNoCarryLimit = isExistNoCarryLimit;
+            }
+
+            const isAsyncFlag = isAsync || item.child_type !== '';
+            return new Node(tempItem, node.level, isAsyncFlag);
+          });
+          this.treeData.splice(0, this.treeData.length, ...loadNodes);
+          // 将新加载的节点push到父级点的children中
+          if (node.level > 0) {
+            const parentNode = this.treeData.find(item => item.nodeId === node.parentId);
+            if (parentNode.children.length > 0) {
+              parentNode.children.push(...loadNodes);
+            }
+          }
+          // 针对资源权限特殊处理
+          if (this.resourceValue && this.resourceNeedDisable) {
+            this.treeData.forEach(item => {
+              if (item.id !== this.resourceNode.id) {
+                item.disabled = true;
+              }
+            });
+          }
+          this.emptyData = formatCodeData(code, this.emptyData, list.length === 0);
+        } catch (e) {
+          console.error(e);
+          this.emptyData = formatCodeData(e.code, this.emptyData);
+          this.messageAdvancedError(e);
+        } finally {
+          node.loadingMore = false;
+        }
+      },
+
+      // 多层拓扑分页
+      async handleTablePageChange (node, index) {
+        this.handleLoadMore(node, index);
       }
     }
   };
 </script>
 <style lang="postcss">
-    .iam-choose-ip {
-        height: 100%;
-        .topology-wrapper {
-            height: calc(100% - 74px);
-            .topology-tree-wrapper {
-                position: relative;
-                height: 100%;
-                .empty-wrapper {
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    img {
-                        width: 120px;
-                    }
-                    /* .search-text-wrapper {
-                        position: relative;
-                        top: -20px;
-                        font-size: 12px;
-                        color: #c4c6cc;
-                        word-break: break-all;
-                        text-align: center;
-                    } */
-                }
-                .bk-loading {
-                    background: #fafbfd !important;
-                }
-            }
-        }
-    }
+  .iam-choose-ip {
+      height: 100%;
+      .topology-wrapper {
+          height: calc(100% - 74px);
+          .topology-tree-wrapper {
+              position: relative;
+              height: 100%;
+              min-height: 450px;
+              .empty-wrapper {
+                  position: absolute;
+                  top: 50%;
+                  left: 50%;
+                  transform: translate(-50%, -50%);
+                  img {
+                      width: 120px;
+                  }
+                  /* .search-text-wrapper {
+                      position: relative;
+                      top: -20px;
+                      font-size: 12px;
+                      color: #c4c6cc;
+                      word-break: break-all;
+                      text-align: center;
+                  } */
+              }
+              .bk-loading {
+                  /* background: #fafbfd !important; */
+                  background: #ffffff !important;
+              }
+          }
+      }
+  }
 </style>

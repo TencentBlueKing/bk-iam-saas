@@ -139,6 +139,20 @@ export default {
     },
 
     /**
+         * 获取手动输入资源实例搜索数据
+         *
+         * @param {Function} commit store commit mutation handler
+         * @param {Object} state store state
+         * @param {Function} dispatch store dispatch action handler
+         * @param {Object} params 查询参数
+         *
+         * @return {Promise} promise 对象
+         */
+    getResourceInstanceManual ({ commit, state, dispatch }, params, config) {
+      return http.post(`${AJAX_URL_PREFIX}/resources/filter_by_display_name/`, params, config);
+    },
+
+    /**
          * 获取有权限的所有系统列表
          *
          * @param {Function} commit store commit mutation handler

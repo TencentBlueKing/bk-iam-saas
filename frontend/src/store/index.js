@@ -444,7 +444,12 @@ const store = new Vuex.Store({
         customFooterClass: false, // 设置项目最大可授权范围, 底部插槽自定义样式
         hideInfiniteTreeCount: false // 隐藏设置项目最大可授权范围左边拓扑树显示成员个数
       }
-    }
+    },
+    curTreeTableDataIndex: 0,
+    curTreeTableData: {},
+    curAllTreeNode: [],
+    curTreeTableChecked: [],
+    curTreeSelectedNode: []
   },
   getters: {
     mainContentLoading: state => state.mainContentLoading,
@@ -473,6 +478,11 @@ const store = new Vuex.Store({
     curRoleId: state => state.curRoleId,
     externalSystemsLayout: state => state.externalSystemsLayout,
     externalSystemId: state => state.externalSystemId,
+    curTreeTableData: state => state.curTreeTableData,
+    curTreeTableDataIndex: state => state.curTreeTableDataIndex,
+    curAllTreeNode: state => state.curAllTreeNode,
+    curTreeTableChecked: state => state.curTreeTableChecked,
+    curTreeSelectedNode: state => state.curTreeSelectedNode,
     allSystemList: state => state.allSystemList
   },
   mutations: {
@@ -660,6 +670,27 @@ const store = new Vuex.Store({
 
     },
 
+    // 用于保存父级搜索为空数据时，表格回显
+    setTreeTableData (state, payload) {
+      state.curTreeTableData = payload;
+    },
+
+    setTreeTableDataIndex (state, payload) {
+      state.curTreeTableDataIndex = payload;
+    },
+
+    setToPoTreeData (state, payload) {
+      state.curAllTreeNode = payload;
+    },
+
+    setTreeTableChecked (state, payload) {
+      state.curTreeTableChecked = payload;
+    },
+
+    setTreeSelectedNode (state, payload) {
+      state.curTreeSelectedNode = payload;
+    },
+    
     updateSystemList (state, list) {
       state.allSystemList = [...list];
     }
