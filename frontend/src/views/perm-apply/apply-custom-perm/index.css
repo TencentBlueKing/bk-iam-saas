@@ -6,7 +6,6 @@
         .bk-checkbox-text {
             font-size: 12px;
             .text {
-                font-size: 12px;
                 display: inline-block;
                 max-width: 135px;
                 overflow: hidden;
@@ -17,14 +16,9 @@
             }
         }
         .action-item {
-            /* padding: 10px 0; */
+            padding: 10px 0;
             &.set-border {
                 border-bottom: 1px solid #dcdee5;
-            }
-            &.action-item-expand {
-                &.set-border {
-                    border-bottom: 0;
-                }
             }
             &.action-item-none {
                 display: none;
@@ -35,21 +29,7 @@
                 justify-content: space-between;
                 font-size: 12px;
             }
-            &-title {
-                position: relative;
-                display: flex;
-                justify-content: space-between;
-                font-size: 12px;
-                padding: 16px;
-                padding-left: 0;
-                cursor: pointer;
-                &-expand {
-                    padding-left: 16px;
-                    background-color: #EAEBF0;
-                    border-bottom: 0 !important;
-                }
-            }
-            &-name {
+            .action-group-name {
                 color: #313238;
                 font-weight: bold;
                 &.set-cursor {
@@ -67,26 +47,6 @@
                     color: #979ba5;
                 }
             }
-            .action-group-name {
-                color: #313238;
-                font-weight: bold;
-                &.set-cursor {
-                    cursor: pointer;
-                }
-                i {
-                    position: relative;
-                    /* top: 2px; */
-                    top: 0;
-                    color: #63656E;
-                    font-size: 13px;
-                }
-
-                .count {
-                    margin-left: 10px;
-                    font-weight: 700;
-                    color: #63656E;
-                }
-            }
             .check-all {
                 position: relative;
                 top: 4px;
@@ -99,27 +59,25 @@
             }
             .action-content {
                 /* margin: 14px 0 0 20px; */
-                /* margin: 14px 0 0 0; */
-                margin: 0 !important;
-                min-height: 46px;
+                margin: 14px 0 0 0;
+                min-height: 50px;
                 background: #f5f6fa;
                 border-radius: 2px;
                 .self-action-content {
                     position: relative;
-                    padding: 16px 16px 16px 40px;
+                    padding: 20px;
                     &.set-border-bottom {
                         border-bottom: 1px solid #fff;
                     }
                 }
                 .sub-group-action-content {
-                    /* padding: 20px; */
+                    padding: 20px;
                     .sub-action-item {
                         display: flex;
                         justify-content: space-between;
                         position: relative;
-                        padding: 6px 16px 16px 40px;
-                        &:not(&:last-child) {
-                            border-bottom: 1px solid #fff;
+                        &.set-margin {
+                            margin-top: 10px;
                         }
                         .sub-action-wrapper {
                             display: flex;
@@ -127,9 +85,8 @@
                             width: 100%;
                             .name {
                                 display: inline-block;
-                                flex: 0 0 160px;
-                                margin-top: 10px;
-                                margin-right: 8px;
+                                flex: 0 0 130px;
+                                line-height: 36px;
                                 font-size: 12px;
                                 color: #313238;
                                 font-weight: 700;
@@ -145,25 +102,19 @@
                 }
                 .iam-action-cls {
                     width: 175px;
-                    margin-right: 5px;
-                    margin-top: 10px;
+                    line-height: 36px;
                 }
                 .iam-action-all-cls {
                     position: absolute;
-                    top: 16px;
-                    right: 16px;
-                    /deep/ .bk-checkbox-text {
-                       font-size: 12px;
-                    }
+                    top: 20px;
+                    right: 20px;
+                    line-height: 36px;
                 }
                 .iam-sub-action-all-cls {
-                    font-size: 12px;
                     display: inline-block;
                     position: absolute;
-                    right: 16px;
-                    /deep/ .bk-checkbox-text {
-                        font-size: 12px;
-                    }
+                    right: 0;
+                    line-height: 36px;
                 }
             }
         }

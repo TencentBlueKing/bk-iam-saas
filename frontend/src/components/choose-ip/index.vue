@@ -141,9 +141,11 @@
       </template>
       <div v-else>
         <TopologyManualInput
+          ref="topologyManualInputRef"
           :selection-mode="selectionMode"
           :system-params="systemParams"
           :resource-value="resourceValue"
+          :cur-chain="curChain"
           :cur-selected-chain="curSelectedChain"
           :has-selected-values="hasSelectedValues"
           @on-select="handleTreeSelect"
@@ -326,7 +328,7 @@
         return this.treeData.every((item) => item.level === 0 && item.visiable) && this.curChain.length < 2;
       },
       isManualInput () {
-        return ['manualInput'].includes(this.curSelectedChain.id) && !['instance:paste'].includes(this.selectionMode);
+        return ['manualInput'].includes(this.curSelectedChain.id) && ['instance:paste'].includes(this.selectionMode);
       },
       renderTopologyData () {
         const hasNode = {};
@@ -700,6 +702,9 @@
           }
           return false;
         });
+        // 处理手动输入交互
+        bus.$emit('update-manualInput-toggleRowSelection', { idChain: payload, isChecked: false });
+        // 处理单选交互
         if (this.resourceValue && curNode) {
           this.$nextTick(() => {
             treeData.forEach((v) => {
@@ -748,6 +753,8 @@
           }
           return false;
         });
+        // 处理手动输入交互
+        bus.$emit('update-manualInput-toggleRowSelection', { idChain: payload, isChecked: true });
         if (curNode && !curNode.disabled) {
           curNode.checked = true;
           this.setNodeChecked(true, curNode);

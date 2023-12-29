@@ -78,45 +78,18 @@
                     :class="[
                       'action-item',
                       { 'set-border': originalCustomTmplList.length > 1 },
-                      { 'action-item-expand': item.expanded },
                       { 'action-item-none': !isShowGroupTitle(item) }
-                    ]"
-                  >
-                    <p
-                      v-if="isShowGroupTitle(item)"
-                      :class="['action-item-title', { 'action-item-title-expand': item.expanded }]"
-                      @click.stop="handleExpanded(item)"
-                    >
+                    ]">
+                    <p style="cursor: pointer;" @click.stop="handleExpanded(item)" v-if="isShowGroupTitle(item)">
                       <section :class="['action-group-name', { 'set-cursor': originalCustomTmplList.length > 1 }]">
-                        <Icon
-                          v-if="originalCustomTmplList.length > 1"
-                          bk
-                          :type="item.expanded ? 'down-shape' : 'right-shape'"
-                        />
-                        <span :class="[
-                          'action-item-name',
-                          { 'action-hover': handleFormatTitleHover(item) }
-                        ]">
+                        <Icon :type="item.expanded ? 'down-angle' : 'right-angle'" v-if="originalCustomTmplList.length > 1" />
+                        <span :class="[{ 'action-hover': handleFormatTitleHover(item) }]">
                           {{ item.name }}
                         </span>
-                        <!-- <span class="count">{{$t(`m.common['已选']`)}} {{ item.count }} / {{ item.allCount }} {{ $t(`m.common['个']`) }}</span> -->
-                        <span class="count">
-                          <span>{{ item.hasCheckedCount }}</span>
-                          <template v-if="item.count - item.hasCheckedCount > 0">
-                            <span>+</span>
-                            <span style="color: #3A84FF;">{{ item.count - item.hasCheckedCount }}</span>
-                          </template>
-                          <span>/{{ item.allCount }} {{ $t(`m.common['个']`) }}</span>
-                          <span
-                            v-if="item.hasCheckedCount > 0 && handleFormatTitleHover(item)"
-                            style="color: #3A84FF;"
-                          >
-                            {{ $t(`m.permApply['（标签只读：含只读操作）']`, { name: item.name, value: item.hasCheckedCount }) }}
-                          </span>
-                        </span>
+                        <span class="count">{{$t(`m.common['已选']`)}} {{ item.count }} / {{ item.allCount }} {{ $t(`m.common['个']`) }}</span>
                       </section>
                       <span :class="['check-all', { 'is-disabled': item.actionsAllDisabled }]" @click.stop="handleCheckAll(item)">
-                        {{ item.actionsAllChecked ? $t(`m.common['取消全选']`) : $t(`m.common['全选']`) }}
+                        {{ item.actionsAllChecked ? $t(`m.common['取消全选']`) : $t(`m.common['选择全部']`) }}
                       </span>
                     </p>
                     <div class="action-content" v-if="item.expanded">

@@ -804,6 +804,12 @@
               || (this.curSelectTreeNode.children
                 && this.curSelectTreeNode.children.length)) {
               // 处理子集表格disabled
+              if (this.curSelectTreeNode.checked) {
+                this.curSelectTreeNode.children.forEach((v) => {
+                  v.checked = true;
+                  v.disabled = true;
+                });
+              }
               childrenIdList = this.curSelectTreeNode.children.filter((v) => v.disabled).map((v) => `${v.name}&${v.id}`);
               return !childrenIdList.includes(`${payload.name}&${payload.id}`);
             }
@@ -1188,7 +1194,6 @@
         this.handleNodeChecked(newVal, node);
         this.getChildrenChecked(newVal, node);
         // this.$store.commit('setTreeSelectedNode');
-        console.log(node, 555);
         this.$emit('on-select', newVal, node);
       },
 
@@ -1203,6 +1208,8 @@
           const list = [];
           this.renderTopologyData.forEach((item) => {
             if (childrenIdList.includes(item.id) && this.$refs.topologyTableRef) {
+              item.disabled = newVal;
+              item.checked = newVal;
               this.$refs.topologyTableRef.toggleRowSelection(item, newVal);
               if (defaultCheckedList.includes(item.id)) {
                 item.disabled = true;

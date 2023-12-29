@@ -54,8 +54,8 @@
           <bk-table-column type="selection" align="center" :selectable="getDefaultSelect" />
           <bk-table-column :label="$t(`m.common['实例名称']`)" prop="name">
             <template slot-scope="{ row }">
-              <span :title="row.display_name">
-                {{ row.display_name }}
+              <span :title="row.name">
+                {{ row.name }}
               </span>
             </template>
           </bk-table-column>
@@ -77,6 +77,7 @@
 <script>
   import { cloneDeep } from 'lodash';
   import { guid, formatCodeData } from '@/common/util';
+  import { bus } from '@/common/bus';
 
   class Node {
     constructor (payload, level = 0, isAsync = true, type = 'node') {
@@ -88,7 +89,7 @@
       this.current = payload.current || 0;
       this.totalPage = payload.totalPage || 0;
       this.id = payload.id;
-      this.name = payload.display_name || '';
+      this.name = payload.name || '';
       this.parentId = level > 0 ? payload.parentId : '';
       this.parentSyncId = level > 0 ? payload.parentSyncId : '';
       this.level = level;
@@ -103,9 +104,9 @@
       this.placeholder = payload.placeholder || '';
       // 是否存在未带下一级的无限制数据
       this.isExistNoCarryLimit = payload.isExistNoCarryLimit || false;
-      this.initVisiable(payload);
+      this.initVisible(payload);
     }
-    initVisiable (payload) {
+    initVisible (payload) {
       if (payload.hasOwnProperty('visiable')) {
         this.visiable = payload.visiable;
         return;
@@ -157,11 +158,7 @@
           tip: '',
           tipType: ''
         },
-        manualTableList: [{
-          id: 1,
-          display_name: 'admin',
-          child_type: ''
-        }],
+        manualTableList: [],
         manualTableListStorage: [],
         hasSelectedInstances: [],
         curSelectedValues: []
@@ -187,12 +184,30 @@
         immediate: true
       }
     },
+    mounted () {
+      this.$once('hook:beforeDestroy', () => {
+        bus.$off('update-manualInput-toggleRowSelection');
+      });
+      bus.$on('update-manualInput-toggleRowSelection', ({ isChecked, idChain }) => {
+        this.$nextTick(() => {
+          const curId = idChain.substring(0, idChain.indexOf('&'));
+          this.manualTableList.forEach((item) => {
+            if (String(item.id) === String(curId)) {
+              this.$refs.manualTableRef.toggleRowSelection(item, isChecked);
+            }
+            if (!isChecked) {
+              this.curSelectedValues = this.curSelectedValues.filter((v) => String(item.id) !== String(curId));
+            }
+          });
+        });
+      });
+    },
     methods: {
       fetchSelectedGroups (type, payload, row) {
         const typeMap = {
           multiple: () => {
             const isChecked = payload.length && payload.indexOf(row) !== -1;
-            const curNode = this.manualTableList.find((item) => `${row.display_name}&${row.id}` === `${item.display_name}&${item.id}`);
+            const curNode = this.manualTableList.find((item) => `${row.name}&${row.id}` === `${item.name}&${item.id}`);
             if (isChecked) {
               this.$set(row, 'checked', true);
               if (curNode) {
@@ -201,7 +216,7 @@
               }
             } else {
               this.curSelectedValues = this.curSelectedValues.filter(
-                (item) => `${item.display_name}&${item.id}` !== `${row.display_name}&${row.id}`
+                (item) => `${item.name}&${item.id}` !== `${row.name}&${row.id}`
               );
               this.$set(row, 'checked', false);
               if (curNode) {
@@ -212,14 +227,14 @@
           all: () => {
             // 针对资源权限搜索单选特殊处理
             const resourceList = this.resourceValue ? [...payload].slice(0, 1) : [...payload];
-            const allTreeData = [...this.allTreeData];
-            const tableIdList = cloneDeep(this.manualTableList.map((v) => `${v.display_name}&${v.id}`));
+            const allTreeData = [...this.manualTableList];
+            const tableIdList = cloneDeep(this.manualTableList.map((v) => `${v.name}&${v.id}`));
             const selectNode = this.curSelectedValues.filter(
-              (item) => !tableIdList.includes(`${item.display_name}&${item.id}`)
+              (item) => !tableIdList.includes(`${item.name}&${item.id}`)
             );
             this.curSelectedValues = [...selectNode, ...resourceList];
             const currentSelect = allTreeData.filter(
-              (item) => resourceList.map((v) => `${v.display__name}&${v.id}`).includes(`${item.display_name}&${item.id}`) && !item.disabled
+              (item) => resourceList.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`) && !item.disabled
             );
             // 如果currentSelect有内容， 代表当前是勾选，否则就取从总数据里取当前页不是disabled的数据
             let noDisabledData = [];
@@ -234,25 +249,24 @@
             } else {
               noDisabledData = allTreeData.filter(
                 (item) =>
-                  !resourceList.map((v) => `${v.display__name}&${v.id}`).includes(`${item.display_name}&${item.id}`)
-                  && this.manualTableList.map((v) => `${v.display_name}&${v.id}`).includes(`${item.display_name}&${item.id}`)
+                  !resourceList.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`)
+                  && this.manualTableList.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`)
               );
             }
             const nodes = currentSelect.length ? currentSelect : noDisabledData;
             this.manualTableList.forEach((item) => {
               if (!item.disabled) {
-                this.$set(item, 'checked', resourceList.map((v) => `${v.display__name}&${v.id}`).includes(`${item.display_name}&${item.id}`));
+                this.$set(item, 'checked', resourceList.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`));
                 if (resourceList.length && !currentSelect.length) {
                   this.$set(
                     item,
                     'disabled',
-                    resourceList.map((v) => `${v.display__name}&${v.id}`).includes(`${item.display_name}&${item.id}`)
+                    resourceList.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`)
                   );
                 }
                 this.$refs.manualTableRef && this.$refs.manualTableRef.toggleRowSelection(item, item.checked);
               }
             });
-            this.$store.commit('setTreeSelectedNode', this.curSelectedValues);
             this.$emit('on-select-all', nodes, currentSelect.length > 0);
           }
         };
@@ -263,10 +277,10 @@
         this.$nextTick(() => {
           this.manualTableList.forEach((item) => {
             if (this.$refs.manualTableRef) {
-              const hasSelectedInstances = [...this.hasSelectedInstances].map((v) => `${v.id}${v.display_name}`);
+              const hasSelectedInstances = [...this.hasSelectedInstances].map((v) => `${v.id}${v.name}`);
               this.$refs.manualTableRef.toggleRowSelection(
                 item,
-                (hasSelectedInstances.includes(`${item.id}${item.display_name}`))
+                (hasSelectedInstances.includes(`${item.id}${item.name}`))
               );
             }
           });
@@ -284,7 +298,7 @@
       handleTableSearch () {
         this.emptyTableData.tipType = 'search';
         this.manualTableList = this.manualTableListStorage.filter((item) => {
-          return item.display_name.indexOf(this.tableKeyWord) > -1;
+          return item.name.indexOf(this.tableKeyWord) > -1;
         });
         if (!this.manualTableList.length) {
           this.emptyTableData = formatCodeData(0, this.emptyTableData, true);
@@ -330,61 +344,60 @@
             display_names: this.manualValue.split(this.regValue).filter(item => item !== '')
           };
           const { code, data } = await this.$store.dispatch('permApply/getResourceInstanceManual', params);
-          data.results = [{
-            id: 1,
-            display_name: 'admin',
-            child_type: ''
-          }];
-          const list = data.results.filter((item) => {
-            return !this.hasSelectedInstances.map((v) => `${v.id}${v.display_name}`).includes(`${item.id}${item.display_name}`);
-          });
-          this.manualTableListStorage = data.results.filter((item) => {
-            return !this.manualTableList.map((v) => `${v.id}${v.display_name}`).includes(`${item.id}${item.display_name}`);
-          });
           const isAsync = this.curChain.length > 1;
-          this.manualTableListStorage = this.manualTableListStorage.map(item => {
-            let checked = false;
-            let disabled = false;
-            let isRemote = false;
-            let isExistNoCarryLimit = false;
-            if (this.hasSelectedValues.length > 0) {
-              let noCarryLimitData = {};
-              let normalSelectedData = {};
-              this.hasSelectedValues.forEach(val => {
-                const curKey = `${item.id}&${params.type}`;
-                if (isAsync) {
-                  const curIdChain = `${curKey}#*&${this.curChain[1].id}`;
-                  if (val.idChain === curIdChain) {
-                    normalSelectedData = val;
+          const results = data.results || [];
+          if (results.length) {
+            const list = data.results.map(item => {
+              let checked = false;
+              let disabled = false;
+              let isRemote = false;
+              let isExistNoCarryLimit = false;
+              if (this.curSelectedValues.length) {
+                let noCarryLimitData = {};
+                let normalSelectedData = {};
+                this.curSelectedValues.forEach(val => {
+                  const curKey = `${item.id}&${params.type}`;
+                  if (isAsync) {
+                    const curIdChain = `${curKey}#*&${this.curChain[1].id}`;
+                    if (val.idChain === curIdChain) {
+                      normalSelectedData = val;
+                    }
+                    if (val.idChain === curKey) {
+                      noCarryLimitData = val;
+                    }
+                  } else {
+                    if (val.idChain === curKey) {
+                      normalSelectedData = val;
+                    }
                   }
-                  if (val.idChain === curKey) {
-                    noCarryLimitData = val;
-                  }
-                } else {
-                  if (val.idChain === curKey) {
-                    normalSelectedData = val;
-                  }
-                }
-              });
-
-              isExistNoCarryLimit = Object.keys(noCarryLimitData).length > 0;
-              if (isExistNoCarryLimit && Object.keys(normalSelectedData).length > 0) {
-                checked = true;
-                disabled = normalSelectedData.disabled && noCarryLimitData.disabled;
-                isRemote = disabled;
-              } else {
-                if (isExistNoCarryLimit || Object.keys(normalSelectedData).length > 0) {
+                });
+                isExistNoCarryLimit = Object.keys(noCarryLimitData).length > 0;
+                if (isExistNoCarryLimit && Object.keys(normalSelectedData).length > 0) {
                   checked = true;
-                  disabled = normalSelectedData.disabled || noCarryLimitData.disabled;
+                  disabled = normalSelectedData.disabled && noCarryLimitData.disabled;
                   isRemote = disabled;
+                } else {
+                  if (isExistNoCarryLimit || Object.keys(normalSelectedData).length > 0) {
+                    checked = true;
+                    disabled = normalSelectedData.disabled || noCarryLimitData.disabled;
+                    isRemote = disabled;
+                  }
                 }
               }
-            }
-            const isAsyncFlag = isAsync || item.child_type !== '';
-            return new Node({ ...item, checked, disabled, isRemote, isExistNoCarryLimit }, 0, isAsyncFlag);
-          });
-          this.manualTableList = cloneDeep(this.manualTableListStorage);
-          this.hasSelectedInstances.push(...list);
+              const isAsyncFlag = isAsync || item.child_type !== '';
+              return new Node({ ...item, checked, disabled, isRemote, isExistNoCarryLimit }, 0, isAsyncFlag);
+            });
+            const hasSelectedInstances = list.filter((item) => {
+              return !this.hasSelectedInstances.map((v) => `${v.id}${v.name}`).includes(`${item.id}${item.name}`);
+            });
+            this.manualTableListStorage = list.filter((item) => {
+              return !this.manualTableList.map((v) => `${v.id}${v.name}`).includes(`${item.id}${item.name}`);
+            });
+            this.manualTableList = cloneDeep(this.manualTableListStorage);
+            this.hasSelectedInstances.push(...hasSelectedInstances);
+            this.fetchManualTableData();
+            this.$emit('on-select-all', hasSelectedInstances, true);
+          }
           this.emptyTableData = formatCodeData(code, this.emptyTableData);
         } catch (e) {
           this.manualTableList = [];

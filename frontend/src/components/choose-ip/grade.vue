@@ -140,8 +140,15 @@
       </template>
       <div v-else>
         <TopologyManualInput
-          :cur-selected-chain="curSelectedChain"
+          ref="topologyManualInputRef"
           :selection-mode="selectionMode"
+          :system-params="systemParams"
+          :resource-value="resourceValue"
+          :cur-chain="curChain"
+          :cur-selected-chain="curSelectedChain"
+          :has-selected-values="hasSelectedValues"
+          @on-select="handleTreeSelect"
+          @on-select-all="handleTreeSelectAll"
         />
       </div>
     </div>
@@ -651,6 +658,7 @@
           }
           return false;
         });
+        bus.$emit('update-manualInput-toggleRowSelection', { idChain: payload, isChecked: false });
         if (curNode && !curNode.disabled) {
           curNode.checked = false;
           this.setNodeNoChecked(false, curNode);
@@ -689,6 +697,7 @@
           }
           return false;
         });
+        bus.$emit('update-manualInput-toggleRowSelection', { idChain: payload, isChecked: true });
         if (curNode && !curNode.disabled) {
           curNode.checked = true;
           this.setNodeChecked(true, curNode);
