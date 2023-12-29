@@ -163,6 +163,14 @@ const currentNav = [
     children: [
       {
         icon: 'user-group',
+        id: 'userOrgPermNav',
+        rkey: 'userOrgPerm',
+        name: il8n('nav', '用户/组织'),
+        path: `${SITE_URL}user-org-perm`,
+        disabled: false
+      },
+      {
+        icon: 'user-group',
         id: 'userGroupNav',
         rkey: 'userGroup',
         name: il8n('nav', '用户组'),

@@ -186,6 +186,9 @@ const SensitivityLevel = () => import(/* webpackChunkName: 'sensitivityLevel' */
 // 人员模板
 const MemberTemplate = () => import(/* webpackChunkName: 'memberTemplate' */ '../views/member-template/index.vue');
 
+// 用户/组织
+const userOrgPerm = () => import(/* webpackChunkName: 'userOrgPerm' */ '../views/user-org-perm/index.vue');
+
 const TemplatePermDetail = () =>
   import(/* webpackChunkName: 'my-perm-template-perm' */ '../views/perm/template-perm/detail');
 const GroupPermDetail = () => import(/* webpackChunkName: 'my-perm-group-perm' */ '../views/perm/group-perm/detail');
@@ -428,6 +431,14 @@ export const routes = [
           backRouter: -1
         },
         component: SecondaryManageSpaceDetail
+      },
+      {
+        path: 'user-org-perm',
+        name: 'userOrgPerm',
+        meta: {
+          headerTitle: il8n('nav', '用户/组织')
+        },
+        component: userOrgPerm
       },
       {
         path: 'user-group',

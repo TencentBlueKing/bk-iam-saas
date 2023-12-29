@@ -2,7 +2,11 @@
   <div>
     <div
       ref="selectTableRef"
-      class="iam-search-resource-form iam-search-resource-form-perm">
+      :class="[
+        'iam-search-resource-form',
+        'iam-search-resource-form-perm',
+        { [customClass]: customClass }
+      ]">
       <render-search v-if="enableGroupInstanceSearch">
         <div
           :class="[
@@ -139,6 +143,7 @@
             <bk-button
               class="ml20"
               theme="primary"
+              :outline="true"
               @click="handleSearchUserGroup(true, true)">
               {{ $t(`m.common['查询']`) }}
             </bk-button>
@@ -222,6 +227,10 @@
       maxSelectWidth: {
         type: String,
         default: '240px'
+      },
+      customClass: {
+        type: String,
+        default: ''
       }
     },
     data () {
@@ -866,5 +875,8 @@
  .iam-search-resource-form-perm {
     background-color: #ffffff;
     padding: 20px 20px 0 20px;
+    &.user-org-resource-perm {
+      padding: 12px 16px 16px 16px;
+    }
   }
 </style>

@@ -8,7 +8,6 @@
       <IamResourceCascadeSearch
         ref="iamResourceSearchRef"
         :active="active"
-        :custom-select-width="customSelectWidth"
         :min-select-width="'165px'"
         :max-select-width="'200px'"
         @on-remote-table="handleRemoteTable"
