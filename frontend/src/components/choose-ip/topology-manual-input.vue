@@ -89,7 +89,7 @@
       this.current = payload.current || 0;
       this.totalPage = payload.totalPage || 0;
       this.id = payload.id;
-      this.name = payload.name || '';
+      this.name = payload.name || payload.display_name || '';
       this.parentId = level > 0 ? payload.parentId : '';
       this.parentSyncId = level > 0 ? payload.parentSyncId : '';
       this.level = level;
@@ -390,9 +390,7 @@
             const hasSelectedInstances = list.filter((item) => {
               return !this.hasSelectedInstances.map((v) => `${v.id}${v.name}`).includes(`${item.id}${item.name}`);
             });
-            this.manualTableListStorage = list.filter((item) => {
-              return !this.manualTableList.map((v) => `${v.id}${v.name}`).includes(`${item.id}${item.name}`);
-            });
+            this.manualTableListStorage = [...list];
             this.manualTableList = cloneDeep(this.manualTableListStorage);
             this.hasSelectedInstances.push(...hasSelectedInstances);
             this.fetchManualTableData();
