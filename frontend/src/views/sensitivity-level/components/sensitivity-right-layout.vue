@@ -163,7 +163,7 @@
     },
     methods: {
       async fetchSystemLevelCount (payload) {
-        const { count, name, system_id, isSearch } = payload;
+        const { count, name, system_id, isSearch, isTransfer } = payload;
         if (isSearch) {
           const curIndex = this.panels.findIndex((item) => item.name === name);
           if (curIndex > -1) {
@@ -185,7 +185,12 @@
             if (data && code === 0) {
               this.$nextTick(() => {
                 this.panels.forEach((item) => {
-                  this.$set(item, 'count', data[item.name] || 0);
+                  // 处理搜索之后再单个或批量转移，列表接口与获取数量接口不同步问题
+                  if (item.name === name && isTransfer) {
+                    this.$set(item, 'count', count || 0);
+                  } else {
+                    this.$set(item, 'count', data[item.name] || 0);
+                  }
                 });
                 this.$refs.tabRef
                   && this.$refs.tabRef.$refs.tabLabel

@@ -42,4 +42,19 @@ urlpatterns = [
         views.UserPolicySearchViewSet.as_view({"post": "search"}),
         name="user.policy.group.search",
     ),
+    path(
+        "subject_template_groups/",
+        views.UserSubjectTemplateGroupViewSet.as_view({"post": "list"}),
+        name="user.subject_template_group",
+    ),
+    path(
+        "departments/-/subject_template_groups/",
+        views.UserDepartmentSubjectTemplateGroupViewSet.as_view({"post": "list"}),
+        name="user.department.subject_template_group",
+    ),
+    path(
+        "favorite_systems/",
+        views.UserFavoriteSystemViewSet.as_view({"post": "create", "delete": "destroy"}),
+        name="user.favorite_system",
+    ),
 ]

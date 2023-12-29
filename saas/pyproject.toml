@@ -91,7 +91,7 @@ dataclasses = "0.7"
 pydantic = "1.9.2"
 PyJWT = "1.7.1"
 cryptography = "3.3.2"
-django-prometheus = "2.0.0"
+django-prometheus = "2.2.0"
 pytz = "2022.6"
 aenum = "2.2.6"
 # django cache
@@ -125,6 +125,7 @@ bk-iam = "^1.2.2"
 bk-audit = "^1.0.1-rc.0"
 django-celery-beat = "2.2.1"
 importlib-metadata = "4.8.3"
+prometheus-client = "0.13.0"
 
 [tool.poetry.dev-dependencies]
 # For flake8 support pyproject.toml

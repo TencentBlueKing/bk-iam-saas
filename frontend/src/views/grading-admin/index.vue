@@ -51,7 +51,7 @@
             size="small"
             ext-cls="children-expand-cls"
             :data="row.children"
-            :row-key="row.id"
+            :row-key="row.id + '__' + row.name"
             :show-header="false"
             :border="false"
             :cell-class-name="getSubCellClass"
@@ -370,16 +370,14 @@
         ],
         searchData: [],
         searchList: [],
-        language: window.CUR_LANGUAGE
+        language: window.CUR_LANGUAGE,
+        tableHeight: getWindowHeight() - 185
       };
     },
     computed: {
             ...mapGetters(['user']),
             isStaff () {
                 return this.user.role.type === 'staff';
-            },
-            tableHeight () {
-                return getWindowHeight() - 185;
             },
             disabledPerm () {
                 return (payload) => {
@@ -401,6 +399,9 @@
       }
     },
     created () {
+      window.addEventListener('resize', () => {
+        this.tableHeight = getWindowHeight() - 185;
+      });
       this.searchData = _.cloneDeep(this.searchDefaultData);
       const currentQueryCache = this.getCurrentQueryCache();
       if (currentQueryCache && Object.keys(currentQueryCache).length) {

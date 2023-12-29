@@ -9,6 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import time
+from datetime import datetime
 from typing import List
 
 from django.conf import settings
@@ -23,12 +24,14 @@ from backend.apps.group.models import Group
 from backend.apps.policy.serializers import BasePolicyActionSLZ, ResourceTypeSLZ
 from backend.apps.role.models import Role, RoleRelatedObject, RoleRelation
 from backend.apps.role.serializers import ResourceInstancesSLZ
+from backend.apps.subject_template.models import SubjectTemplate
 from backend.apps.template.models import PermTemplatePolicyAuthorized
 from backend.biz.group import GroupBiz
 from backend.biz.policy import PolicyBean, PolicyBeanList
+from backend.biz.subject_template import SubjectTemplateBiz
 from backend.biz.system import SystemBiz
 from backend.biz.template import TemplateBiz
-from backend.common.time import PERMANENT_SECONDS
+from backend.common.time import PERMANENT_SECONDS, expired_at_display
 from backend.service.constants import ADMIN_USER, GroupMemberType, RoleRelatedObjectType
 from backend.service.group_saas_attribute import GroupAttributeService
 
@@ -39,7 +42,7 @@ class GroupMemberSLZ(serializers.Serializer):
 
 
 class SearchMemberSLZ(serializers.Serializer):
-    keyword = serializers.CharField(label="搜索关键词", min_length=3, allow_null=False, required=False)
+    keyword = serializers.CharField(label="搜索关键词", allow_null=False, required=False, default="")
 
 
 class GroupIdSLZ(serializers.Serializer):
@@ -54,6 +57,7 @@ class GroupSLZ(serializers.ModelSerializer):
     role = serializers.SerializerMethodField()
     attributes = serializers.SerializerMethodField()
     role_members = serializers.SerializerMethodField()
+    subject_template_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Group
@@ -62,6 +66,7 @@ class GroupSLZ(serializers.ModelSerializer):
             "name",
             "user_count",
             "department_count",
+            "subject_template_count",
             "description",
             "creator",
             "created_time",
@@ -76,14 +81,21 @@ class GroupSLZ(serializers.ModelSerializer):
         super().__init__(*args, **kwargs)
         self.group_role_dict = None
         self.group_attrs_dict = None
+        self.subject_template_count_dict = None
         if isinstance(self.instance, (QuerySet, list)) and self.instance:
             group_ids = [group.id for group in self.instance]
             self.group_role_dict = GroupBiz().get_group_role_dict_by_ids(group_ids)
 
             # 查询涉及到的用户组的属性
             self.group_attrs_dict = GroupAttributeService().batch_get_attributes(group_ids)
+
+            # 人员模版数量
+            self.subject_template_count_dict = SubjectTemplateBiz().get_group_template_count_dict(group_ids)
         elif isinstance(self.instance, Group):
             self.group_attrs_dict = GroupAttributeService().batch_get_attributes([self.instance.id])
+
+            # 人员模版数量
+            self.subject_template_count_dict = SubjectTemplateBiz().get_group_template_count_dict([self.instance.id])
 
     def get_role(self, obj):
         if not self.group_role_dict:
@@ -111,6 +123,11 @@ class GroupSLZ(serializers.ModelSerializer):
             return []
 
         return role.members
+
+    def get_subject_template_count(self, obj):
+        if not self.subject_template_count_dict:
+            return 0
+        return self.subject_template_count_dict.get(obj.id, 0)
 
 
 class MemberSLZ(serializers.Serializer):
@@ -318,6 +335,7 @@ class GroupCreateSLZ(serializers.Serializer):
     expired_at = serializers.IntegerField(label="过期时间", max_value=PERMANENT_SECONDS)
     templates = serializers.ListField(label="授权信息", child=TemplateAuthorizationSLZ(label="模板授权"), allow_empty=True)
     apply_disable = serializers.BooleanField(label="是否不可申请", default=False)
+    sync_subject_template = serializers.BooleanField(label="是否同步创建人员模板", default=False)
 
     def validate(self, data):
         """
@@ -361,3 +379,30 @@ class GroupSearchSLZ(serializers.Serializer):
     )
     apply_disable = serializers.BooleanField(label="是否不可申请", required=False)
     hidden = serializers.BooleanField(label="是否隐藏", default=True)
+
+
+class GroupSubjectTemplateListSLZ(serializers.ModelSerializer):
+    expired_at = serializers.SerializerMethodField(label="过期时间")
+    expired_at_display = serializers.SerializerMethodField(label="过期时间显示")
+    created_time = serializers.SerializerMethodField(label="创建时间")
+
+    class Meta:
+        model = SubjectTemplate
+        fields = ("id", "name", "description", "expired_at", "expired_at_display", "creator", "created_time")
+
+    def get_expired_at(self, obj):
+        return self.context["template_dict"].get(obj.id, {}).get("expired_at", 0)
+
+    def get_expired_at_display(self, obj):
+        return expired_at_display(self.get_expired_at(obj))
+
+    def get_created_time(self, obj):
+        t = self.context["template_dict"].get(obj.id, {}).get("created_time", "")
+        if not isinstance(t, datetime):
+            return t
+
+        return serializers.DateTimeField().to_representation(t)
+
+
+class SearchTemplateGroupMemberSLZ(SearchMemberSLZ):
+    template_id = serializers.IntegerField(label="模板ID", required=True)

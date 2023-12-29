@@ -155,90 +155,100 @@
                   </div>
                 </template>
               </div>
-              <div class="manual-wrapper" v-if="!isOrganization">
-                <div class="manual-wrapper-left">
-                  <bk-input
-                    :placeholder="$t(`m.common['手动输入提示']`)"
-                    data-test-id="group_addGroupMemberDialog_input_manualUser"
-                    type="textarea"
-                    class="manual-textarea"
-                    :rows="14"
-                    v-model="manualValue"
-                    :disabled="isAll"
-                    @input="handleManualInput"
-                  >
-                  </bk-input>
-                  <p class="manual-error-text" v-if="isManualInputOverLimit">
-                    {{ $t(`m.common['手动输入提示1']`) }}
-                  </p>
-                  <p class="manual-error-text pr10" v-if="manualInputError">
-                    {{ $t(`m.common['手动输入提示2']`) }}
-                    <template v-if="isHierarchicalAdmin.type === 'rating_manager'">
-                      {{ $t(`m.common['，']`) }}
-                      {{ $t(`m.common['请尝试']`)
-                      }}<span class="highlight" @click="handleSkip">
-                        {{ $t(`m.common['修改授权人员范围']`) }}
-                      </span>
-                    </template>
-                  </p>
-                  <div class="manual-bottom-btn">
-                    <bk-button
-                      theme="primary"
-                      :outline="true"
-                      style="width: 168px"
-                      :loading="manualAddLoading"
-                      :disabled="isManualDisabled || isAll"
-                      data-test-id="group_addGroupMemberDialog_btn_addManualUser"
-                      @click="handleAddManualUser"
-                    >
-                      {{ $t(`m.common['解析并添加']`) }}
-                    </bk-button>
-                    <bk-button style="margin-left: 10px" @click="handleClearManualUser">
-                      {{ $t(`m.common['清空']`) }}
-                    </bk-button>
-                  </div>
-                </div>
-                <div v class="manual-wrapper-right">
-                  <bk-input
-                    v-model="tableKeyWord"
-                    class="manual-input-wrapper"
-                    :placeholder="$t(`m.common['搜索解析结果']`)"
-                    :right-icon="'bk-icon icon-search'"
-                    :clearable="true"
-                    @clear="handleClearSearch"
-                    @enter="handleTableSearch"
-                    @right-icon-click="handleTableSearch"
+              <div v-if="!isOrganization">
+                <div class="manual-input-alert">
+                  <bk-alert
+                    type="info"
+
+                    :title="$t(`m.userGroupDetail['单次最多添加100个成员/组织，批量复制的内容不可随意编辑，如超过上限100个，可通过再次批量粘贴添加人员']`)"
                   />
-                  <div>
-                    <bk-table
-                      ref="manualTableRef"
-                      size="small"
-                      :data="manualTableList"
-                      :max-height="360"
-                      :ext-cls="'manual-table-wrapper'"
-                      :outer-border="false"
-                      :header-border="false"
-                      @select="handleSelectChange"
-                      @select-all="handleSelectAllChange"
+                </div>
+                <div class="manual-wrapper">
+                  <div class="manual-wrapper-left">
+                    <bk-input
+                      ref="manualInputRef"
+                      :placeholder="$t(`m.common['手动输入提示']`)"
+                      data-test-id="group_addGroupMemberDialog_input_manualUser"
+                      type="textarea"
+                      class="manual-textarea"
+                      :rows="14"
+                      v-model="manualValue"
+                      :disabled="isAll"
+                      @input="handleManualInput"
                     >
-                      <bk-table-column type="selection" align="center" :selectable="getDefaultSelect" />
-                      <bk-table-column :label="$t(`m.common['用户名']`)" prop="name">
-                        <template slot-scope="{ row }">
-                          <span :title="formatUserName(row)">
-                            {{ formatUserName(row) }}
-                          </span>
-                        </template>
-                      </bk-table-column>
-                      <template slot="empty">
-                        <ExceptionEmpty
-                          :type="emptyTableData.type"
-                          :empty-text="emptyTableData.text"
-                          :tip-text="emptyTableData.tip"
-                          :tip-type="emptyTableData.tipType"
-                          @on-clear="handleClearSearch"
-                        />
+                    </bk-input>
+                    <p class="manual-error-text" v-if="isManualInputOverLimit">
+                      {{ $t(`m.common['手动输入提示1']`) }}
+                    </p>
+                    <p class="manual-error-text pr10" v-if="manualInputError">
+                      {{ $t(`m.common['手动输入提示2']`) }}
+                      <template v-if="isHierarchicalAdmin.type === 'rating_manager'">
+                        {{ $t(`m.common['，']`) }}
+                        {{ $t(`m.common['请尝试']`)
+                        }}<span class="highlight" @click="handleSkip">
+                          {{ $t(`m.common['修改授权人员范围']`) }}
+                        </span>
                       </template>
-                    </bk-table>
+                    </p>
+                    <div class="manual-bottom-btn">
+                      <bk-button
+                        theme="primary"
+                        :outline="true"
+                        style="width: 168px"
+                        :loading="manualAddLoading"
+                        :disabled="isManualDisabled || isAll"
+                        data-test-id="group_addGroupMemberDialog_btn_addManualUser"
+                        @click="handleAddManualUser"
+                      >
+                        {{ $t(`m.common['解析并添加']`) }}
+                      </bk-button>
+                      <bk-button style="margin-left: 10px" @click="handleClearManualUser">
+                        {{ $t(`m.common['清空']`) }}
+                      </bk-button>
+                    </div>
+                  </div>
+                  <div v class="manual-wrapper-right">
+                    <bk-input
+                      v-model="tableKeyWord"
+                      class="manual-input-wrapper"
+                      :placeholder="$t(`m.common['搜索解析结果']`)"
+                      :right-icon="'bk-icon icon-search'"
+                      :clearable="true"
+                      @clear="handleClearSearch"
+                      @enter="handleTableSearch"
+                      @right-icon-click="handleTableSearch"
+                    />
+                    <div>
+                      <bk-table
+                        ref="manualTableRef"
+                        size="small"
+                        :data="manualTableList"
+                        :max-height="340"
+                        :ext-cls="'manual-table-wrapper'"
+                        :outer-border="false"
+                        :header-border="false"
+                        @select="handleSelectChange"
+                        @select-all="handleSelectAllChange"
+                      >
+                        <bk-table-column type="selection" align="center" :selectable="getDefaultSelect" />
+                        <bk-table-column :label="$t(`m.common['用户名']`)" prop="name">
+                          <template slot-scope="{ row }">
+                            <span :title="formatUserName(row)">
+                              {{ formatUserName(row) }}
+                            </span>
+                          </template>
+                        </bk-table-column>
+                        <template slot="empty">
+                          <ExceptionEmpty
+                            :type="emptyTableData.type"
+                            :empty-text="emptyTableData.text"
+                            :tip-text="emptyTableData.tip"
+                            :tip-type="emptyTableData.tipType"
+                            @on-clear="handleClearSearch"
+                          />
+                        </template>
+                      </bk-table>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -312,7 +322,7 @@
             </div>
           </template>
           <template v-else>
-            <div style="margin-top: 25px">
+            <div class="set-user-deadline">
               <iam-deadline :value="expiredAt" type="dialog" @on-change="handleDeadlineChange" />
             </div>
           </template>
@@ -480,7 +490,7 @@
         usernameList: [],
         isAll: false,
         isAllFlag: false,
-        showLimit: false,
+        showLimit: true,
         showExpiredAt: false,
         disabled: false,
         loading: false,
@@ -512,7 +522,8 @@
         manualTableListStorage: [],
         hasSelectedManualDepartments: [],
         hasSelectedManualUsers: [],
-        noVerifyRoutes: ['authorBoundaryEditFirstLevel', 'authorBoundaryEditSecondLevel', 'applyJoinUserGroup', 'addMemberBoundary', 'gradingAdminCreate', 'gradingAdminEdit']
+        noVerifyRoutes: ['authorBoundaryEditFirstLevel', 'authorBoundaryEditSecondLevel', 'applyJoinUserGroup', 'addMemberBoundary', 'gradingAdminCreate', 'gradingAdminEdit'],
+        regValue: /，|,|；|;|、|\\|\n|\s/
       };
     },
     computed: {
@@ -566,13 +577,13 @@
           return false;
         }
         const MAX_LEN = 100;
-        return this.manualValue.split(';').filter((item) => item !== '').length > MAX_LEN;
+        return this.manualValue.split(this.regValue).filter((item) => item !== '').length > MAX_LEN;
       },
       isManualDisabled () {
         return !this.manualValue || this.isManualInputOverLimit;
       },
       manualValueActual () {
-        return this.manualValue.replace(/\n|\s+/g, ';');
+        return this.manualValue.replace(/，|,|；|;|、|\\|\n|\s+/g, ';');
       },
       curIsRatingManager () {
         if (this.isAllFlag) {
@@ -718,7 +729,7 @@
           this.hasSelectedDepartments.splice(0, this.hasSelectedDepartments.length, ...this.departments);
         }
         this.isAll = isAll || false;
-        this.showLimit = showLimit || false;
+        this.showLimit = showLimit || this.showLimit;
         this.showExpiredAt = showExpiredAt || false;
         this.disabled = disabled || false;
         this.loading = loading || false;
@@ -794,8 +805,10 @@
             && (inputValue.includes('&type=department') || inputValue.includes('&type=user'))
           ) {
             this.$nextTick(() => {
-              this.manualValue = '';
-              this.$refs.manualInputRef.curValue = '';
+              if (this.$refs.manualInputRef) {
+                this.manualValue = '';
+                this.$refs.manualInputRef.curValue = '';
+              }
             });
             const splitValue = value.split(/\n/).map((item) => {
               const str = item.slice(item.indexOf('{') + 1, item.indexOf('}'));
@@ -823,7 +836,7 @@
       },
 
       fetchRegOrgData () {
-        const manualList = this.manualValueActual.split(';').filter((item) => item !== '');
+        const manualList = this.manualValueActual.split(this.regValue).filter((item) => item !== '');
         this.filterDepartList = manualList.filter((item) => {
           if (item.indexOf('{') > -1 && item.indexOf('}') > -1) {
             const str = item.slice(item.indexOf('{') + 1, item.indexOf('}'));
@@ -863,12 +876,12 @@
               usernameList.forEach((item) => {
                 // 处理既有部门又有用户且不连续相同类型的展示数据
                 formatStr = formatStr
-                  .replace(this.evil('/' + item + '(;\\n|\\s\\n|)/'), '')
+                  .replace(this.evil('/' + item + '(，|,|；|;|、|\\||\\n|\\s\\n|)/'), '')
                   .replace(/(\s*\r?\n\s*)+/g, '\n')
                   .replace(';;', '');
                 // 处理复制全部用户不相连的两个不在授权范围内的用户存在空字符
                 formatStr = formatStr
-                  .split(/;|\n|\s/)
+                  .split(this.regValue)
                   .filter((item) => item !== '' && item !== curData)
                   .join('\n');
               });
@@ -896,7 +909,7 @@
               let clipboardValue = _.cloneDeep(this.manualValue);
               // 处理不相连的数据之间存在特殊符号的情况
               clipboardValue = clipboardValue
-                .split(/;|\n|\s/)
+                .split(this.regValue)
                 .filter((item) => item !== '' && item !== curData)
                 .join('\n');
               this.manualValue = _.cloneDeep(clipboardValue);
@@ -906,7 +919,7 @@
       },
 
       async handleSearchOrgAndUser () {
-        let manualInputValue = _.cloneDeep(this.manualValue.split(/;|\n|\s/));
+        let manualInputValue = _.cloneDeep(this.manualValue.split(this.regValue));
         manualInputValue = manualInputValue.filter((item) => item !== '');
         for (let i = 0; i < manualInputValue.length; i++) {
           const params = {
@@ -968,14 +981,14 @@
 
               // 处理既有部门又有用户且不连续相同类型的展示数据
               formatStr = formatStr
-                .replace(this.evil('/' + item + '(;\\n|\\s\\n|)/'), '')
+                .replace(this.evil('/' + item + '(，|,|；|;|、|\\||\\n|\\s\\n|)/'), '')
                 // .replace('\n\n', '\n')
                 // .replace('\s\s', '\s')
                 .replace(/(\s*\r?\n\s*)+/g, '\n')
                 .replace(';;', '');
               // 处理复制全部用户不相连的两个不在授权范围内的用户存在空字符
               formatStr = formatStr
-                .split(/;|\n|\s/)
+                .split(this.regValue)
                 .filter((item) => item !== '')
                 .join('\n');
             });
@@ -1008,7 +1021,7 @@
       async formatOrgAndUser () {
         if (this.manualValue && !this.isStaff) {
           // 校验查验失败的数据是不是属于部门
-          const departData = _.cloneDeep(this.manualValue.split(/;|\n|\s/));
+          const departData = _.cloneDeep(this.manualValue.split(this.regValue));
           const departGroups = this.filterDepartList.filter((item) => departData.includes(item));
           if (departGroups.length) {
             if (this.getGroupAttributes && this.getGroupAttributes().source_from_role) {
@@ -1049,13 +1062,13 @@
                 const isScopeOrg = result
                   .map((depart) => String(depart.id))
                   .includes(item.slice(item.indexOf('{') + 1, item.indexOf('}')));
-                if (clipboardValue.split(/;|\n|\s/).includes(displayValue) && isScopeOrg) {
+                if (clipboardValue.split(this.regValue).includes(displayValue) && isScopeOrg) {
                   clipboardValue = clipboardValue.replace(displayValue, '');
                 }
               });
               // 处理不相连的数据之间存在特殊符号的情况
               clipboardValue = clipboardValue
-                .split(/;|\n|\s/)
+                .split(this.regValue)
                 .filter((item) => item !== '')
                 .join('\n');
               this.manualValue = _.cloneDeep(clipboardValue);
@@ -1738,34 +1751,41 @@
       },
 
       handleSave () {
-        let users = [];
-        let departments = [];
-        if (this.hasSelectedUsers.length) {
-          users = this.hasSelectedUsers.map((item) => {
-            return {
-              id: item.id || '',
-              type: 'user',
-              name: item.name,
-              username: item.username || item.id,
-              full_name: item.full_name || item.username
-            };
+        let subjects = [];
+        if (this.isAll) {
+          subjects.push({
+            id: '*',
+            type: '*',
+            name: '',
+            username: '',
+            full_name: ''
           });
+        } else {
+          if (this.hasSelectedUsers.length) {
+            subjects = this.hasSelectedUsers.map((item) => {
+              return {
+                id: item.id || '',
+                type: 'user',
+                name: item.name,
+                username: item.username || item.id,
+                full_name: item.full_name || item.username
+              };
+            });
+          }
+          if (this.hasSelectedDepartments.length) {
+            subjects = this.hasSelectedDepartments.map((item) => {
+              return {
+                id: item.id,
+                type: 'depart',
+                name: item.name,
+                full_name: item.full_name,
+                username: item.name
+              };
+            });
+          }
         }
-        if (this.hasSelectedDepartments.length) {
-          departments = this.hasSelectedDepartments.map((item) => {
-            return {
-              id: item.id,
-              type: 'depart',
-              name: item.name,
-              full_name: item.full_name,
-              username: item.name
-            };
-          });
-        }
-        // eslint-disable-next-line camelcase
-        const subject_scopes = [...users, ...departments];
         const params = {
-          subject_scopes
+          subject_scopes: subjects
         };
         if (this.showExpiredAt) {
           if (this.expiredAt !== 4102444800) {
@@ -2139,6 +2159,11 @@
           }
         }
       }
+
+      .manual-input-alert {
+        padding: 0 24px;
+        margin-bottom: 10px;
+      }
     }
 
     .right {
@@ -2289,6 +2314,10 @@
     cursor: pointer;
     user-select: none;
   }
+
+  .set-user-deadline {
+    padding: 0 24px;
+  }
 }
 
 .horizontal-item {
@@ -2346,7 +2375,7 @@
   width: 248px;
   .bk-textarea-wrapper {
     .bk-form-textarea {
-      min-height: 360px;
+      min-height: 300px;
       &::-webkit-scrollbar {
         width: 6px;
         background-color: lighten(transparent, 80%);

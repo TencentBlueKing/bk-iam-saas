@@ -720,6 +720,94 @@ export default {
     },
 
     /**
+     *  通过用户加入人员模板的用户组权限
+     *
+     * @param {Function} commit store commit mutation handler
+     * @param {Object} state store state
+     * @param {Function} dispatch store dispatch action handler
+     * @param {Object?} config http config
+     *
+     * @return {Promise} promise 对象
+     */
+    getMemberTempByUser ({ commit, state, dispatch }, params, config) {
+      const { offset, limit, hidden, system_id: systemId } = params;
+      const queryParams = Object.assign({}, { offset, limit });
+      if (params.hasOwnProperty('hidden')) {
+        queryParams.hidden = hidden;
+      }
+      if (params.hasOwnProperty('system_id')) {
+        queryParams.system_id = systemId;
+      }
+      return http.post(`${AJAX_URL_PREFIX}/users/subject_template_groups/?${json2Query(queryParams)}`, params, config);
+    },
+      
+    /**
+     *  通过组织加入人员模板的用户组权限
+     *
+     * @param {Function} commit store commit mutation handler
+     * @param {Object} state store state
+     * @param {Function} dispatch store dispatch action handler
+     * @param {Object?} config http config
+     *
+     * @return {Promise} promise 对象
+     */
+    getMemberTempByDepart ({ commit, state, dispatch }, params, config) {
+      const { offset, limit, hidden, system_id: systemId } = params;
+      const queryParams = Object.assign({}, { offset, limit });
+      if (params.hasOwnProperty('hidden')) {
+        queryParams.hidden = hidden;
+      }
+      if (params.hasOwnProperty('system_id')) {
+        queryParams.system_id = systemId;
+      }
+      return http.post(`${AJAX_URL_PREFIX}/users/departments/-/subject_template_groups/?${json2Query(queryParams)}`, params, config);
+    },
+
+    /**
+     *  通过用户加入人员模板的用户组权限搜索
+     *
+     * @param {Function} commit store commit mutation handler
+     * @param {Object} state store state
+     * @param {Function} dispatch store dispatch action handler
+     * @param {Object?} config http config
+     *
+     * @return {Promise} promise 对象
+     */
+    getMemberTempByUserSearch ({ commit, state, dispatch }, params, config) {
+      const { offset, limit, hidden, system_id: systemId } = params;
+      const queryParams = Object.assign({}, { offset, limit });
+      if (params.hasOwnProperty('hidden')) {
+        queryParams.hidden = hidden;
+      }
+      if (params.hasOwnProperty('system_id')) {
+        queryParams.system_id = systemId;
+      }
+      return http.post(`${AJAX_URL_PREFIX}/users/subject_template_groups/?${json2Query(queryParams)}`, params, config);
+    },
+
+    /**
+     *  通过组织加入人员模板的用户组权限搜索
+     *
+     * @param {Function} commit store commit mutation handler
+     * @param {Object} state store state
+     * @param {Function} dispatch store dispatch action handler
+     * @param {Object?} config http config
+     *
+     * @return {Promise} promise 对象
+     */
+    getMemberTempByDepartSearch ({ commit, state, dispatch }, params, config) {
+      const { offset, limit, hidden, system_id: systemId } = params;
+      const queryParams = Object.assign({}, { offset, limit });
+      if (params.hasOwnProperty('hidden')) {
+        queryParams.hidden = hidden;
+      }
+      if (params.hasOwnProperty('system_id')) {
+        queryParams.system_id = systemId;
+      }
+      return http.post(`${AJAX_URL_PREFIX}/users/departments/-/subject_template_groups/?${json2Query(queryParams)}`, params, config);
+    },
+
+    /**
      *  用户模块用户组权限搜索
      *
      * @param {Function} commit store commit mutation handler
@@ -730,8 +818,14 @@ export default {
      * @return {Promise} promise 对象
      */
     getPermGroupsSearch ({ commit, state, dispatch }, params, config) {
-      const { offset, limit } = params;
+      const { offset, limit, hidden, system_id: systemId } = params;
       const queryParams = Object.assign({}, { offset, limit });
+      if (params.hasOwnProperty('hidden')) {
+        queryParams.hidden = hidden;
+      }
+      if (params.hasOwnProperty('system_id')) {
+        queryParams.system_id = systemId;
+      }
       return http.post(
         `${AJAX_URL_PREFIX}/subjects/${params.subjectType}/${params.subjectId}/groups/search/?${json2Query(
           queryParams
@@ -752,8 +846,14 @@ export default {
      * @return {Promise} promise 对象
      */
     getDepartPermGroupsSearch ({ commit, state, dispatch }, params, config) {
-      const { offset, limit } = params;
+      const { offset, limit, hidden, system_id: systemId } = params;
       const queryParams = Object.assign({}, { offset, limit });
+      if (params.hasOwnProperty('hidden')) {
+        queryParams.hidden = hidden;
+      }
+      if (params.hasOwnProperty('system_id')) {
+        queryParams.system_id = systemId;
+      }
       return http.post(
         `${AJAX_URL_PREFIX}/subjects/${params.subjectType}/${
           params.subjectId
@@ -784,6 +884,140 @@ export default {
         params,
         config
       );
+    },
+
+    /**
+     * 用户模块——>通过用户加入人员模板的用户组权限
+     *
+     * @param {Function} commit store commit mutation handler
+     * @param {Object} state store state
+     * @param {Function} dispatch store dispatch action handler
+     * @param {Object} params 请求参数
+     * @param {Object?} config http config
+     *
+     * @return {Promise} promise 对象
+     */
+    getPermGroupsByTemp ({ commit, state, dispatch }, params = {}, config) {
+      const { offset, limit, hidden, system_id: systemId } = params;
+      const queryParams = Object.assign({}, { offset, limit });
+      if (params.hasOwnProperty('hidden')) {
+        queryParams.hidden = hidden;
+      }
+      if (params.hasOwnProperty('system_id')) {
+        queryParams.system_id = systemId;
+      }
+      return http.post(
+        `${AJAX_URL_PREFIX}/subjects/${params.subjectType}/${params.subjectId}/subject_template_groups/?${json2Query(queryParams)}`,
+        params,
+        config
+      );
+    },
+  
+    /**
+       * 用户模块——>通过组织加入人员模板的用户组权限
+       *
+       * @param {Function} commit store commit mutation handler
+       * @param {Object} state store state
+       * @param {Function} dispatch store dispatch action handler
+       * @param {Object} params 请求参数
+       * @param {Object?} config http config
+       *
+       * @return {Promise} promise 对象
+       */
+    getDepartPermGroupsByTemp ({ commit, state, dispatch }, params = {}, config) {
+      const { offset, limit, hidden, system_id: systemId } = params;
+      const queryParams = Object.assign({}, { offset, limit });
+      if (params.hasOwnProperty('hidden')) {
+        queryParams.hidden = hidden;
+      }
+      if (params.hasOwnProperty('system_id')) {
+        queryParams.system_id = systemId;
+      }
+      return http.post(
+        `${AJAX_URL_PREFIX}/subjects/${params.subjectType}/${params.subjectId}/departments/-/subject_template_groups/?${json2Query(queryParams)}`,
+        params,
+        config
+      );
+    },
+
+    /**
+     *  用户模块通过用户加入人员模板的用户组权限搜索
+     *
+     * @param {Function} commit store commit mutation handler
+     * @param {Object} state store state
+     * @param {Function} dispatch store dispatch action handler
+     * @param {Object?} config http config
+     *
+     * @return {Promise} promise 对象
+     */
+    getPermGroupsByTempSearch ({ commit, state, dispatch }, params, config) {
+      const { offset, limit, hidden, system_id: systemId } = params;
+      const queryParams = Object.assign({}, { offset, limit });
+      if (params.hasOwnProperty('hidden')) {
+        queryParams.hidden = hidden;
+      }
+      if (params.hasOwnProperty('system_id')) {
+        queryParams.system_id = systemId;
+      }
+      return http.post(
+        `${AJAX_URL_PREFIX}/subjects/${params.subjectType}/${params.subjectId}/subject_template_groups/?${json2Query(queryParams)}`,
+        params,
+        config
+      );
+    },
+
+    /**
+     *  用户模块通过组织加入人员模板的用户组权限搜索
+     *
+     * @param {Function} commit store commit mutation handler
+     * @param {Object} state store state
+     * @param {Function} dispatch store dispatch action handler
+     * @param {Object?} config http config
+     *
+     * @return {Promise} promise 对象
+     */
+    getDepartPermGroupsByTempSearch ({ commit, state, dispatch }, params, config) {
+      const { offset, limit, hidden, system_id: systemId } = params;
+      const queryParams = Object.assign({}, { offset, limit });
+      if (params.hasOwnProperty('hidden')) {
+        queryParams.hidden = hidden;
+      }
+      if (params.hasOwnProperty('system_id')) {
+        queryParams.system_id = systemId;
+      }
+      return http.post(
+        `${AJAX_URL_PREFIX}/subjects/${params.subjectType}/${params.subjectId}/departments/-/subject_template_groups/?${json2Query(queryParams)}`,
+        params,
+        config
+      );
+    },
+
+    /**
+     *  添加收藏系统
+     *
+     * @param {Function} commit store commit mutation handler
+     * @param {Object} state store state
+     * @param {Function} dispatch store dispatch action handler
+     * @param {Object?} config http config
+     *
+     * @return {Promise} promise 对象
+     */
+    updateCollectSystem ({ commit, state, dispatch }, params, config) {
+      return http.post(`${AJAX_URL_PREFIX}/users/favorite_systems/`, params, config);
+    },
+
+    /**
+     *  删除收藏系统
+     *
+     * @param {Function} commit store commit mutation handler
+     * @param {Object} state store state
+     * @param {Function} dispatch store dispatch action handler
+     * @param {Object?} config http config
+     *
+     * @return {Promise} promise 对象
+     */
+    deleteCollectSystem ({ commit, state, dispatch }, params, config) {
+      return http.delete(`${AJAX_URL_PREFIX}/users/favorite_systems/`, { data: params }, config);
     }
   }
 };

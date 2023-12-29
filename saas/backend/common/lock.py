@@ -27,6 +27,7 @@ class LockTypeEnum(LowerStrEnum):
     GROUP_UPSERT = auto()
     TEMPLATE_UPSERT = auto()
     ROLE_UPSERT = auto()
+    SUBJECT_TEMPLATE_UPSERT = auto()
 
 
 class RedisLock:
@@ -91,6 +92,10 @@ def gen_init_grade_manager_lock() -> RedisLock:
 
 def gen_group_upsert_lock(role_id: int) -> RedisLock:
     return RedisLock(LockTypeEnum.GROUP_UPSERT.value, suffix=str(role_id), timeout=10)
+
+
+def gen_subject_template_upsert_lock(role_id: int) -> RedisLock:
+    return RedisLock(LockTypeEnum.SUBJECT_TEMPLATE_UPSERT.value, suffix=str(role_id), timeout=10)
 
 
 def gen_template_upsert_lock(role_id: int, name: str) -> RedisLock:

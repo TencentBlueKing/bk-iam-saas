@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     "backend.apps.approval",
     "backend.apps.group",
     "backend.apps.subject",
+    "backend.apps.subject_template",
     "backend.apps.template",
     "backend.apps.organization",
     "backend.apps.role",
@@ -217,6 +218,10 @@ CELERYBEAT_SCHEDULE = {
         "task": "backend.apps.organization.tasks.sync_organization",
         "schedule": crontab(minute=0, hour=0),  # 每天凌晨执行
     },
+    "periodic_sync_organization": {
+        "task": "backend.apps.organization.tasks.clean_subject_to_delete",
+        "schedule": crontab(minute=0, hour=2),  # 每天凌晨2时执行
+    },
     "periodic_sync_new_users": {
         "task": "backend.apps.organization.tasks.sync_new_users",
         "schedule": crontab(),  # 每1分钟执行一次
@@ -233,10 +238,10 @@ CELERYBEAT_SCHEDULE = {
         "task": "backend.apps.user.tasks.user_group_policy_expire_remind",
         "schedule": crontab(minute=0, hour=11),  # 每天早上11时执行
     },
-    "periodic_role_group_expire_remind": {
-        "task": "backend.apps.role.tasks.role_group_expire_remind",
-        "schedule": crontab(minute=0, hour=11),  # 每天早上11时执行
-    },
+    # "periodic_role_group_expire_remind": {
+    #     "task": "backend.apps.role.tasks.role_group_expire_remind",
+    #     "schedule": crontab(minute=0, hour=11),  # 每天早上11时执行
+    # },
     "periodic_user_expired_policy_cleanup": {
         "task": "backend.apps.user.tasks.user_cleanup_expired_policy",
         "schedule": crontab(minute=0, hour=2),  # 每天凌晨2时执行
@@ -367,7 +372,7 @@ SUBJECT_AUTHORIZATION_LIMIT = {
         # key: system_id, value: int
     },  # 系统可自定义配置的 用户组能加入同一个系统的权限模板的最大数量
     # 用户组成员最大数量
-    "group_member_limit": env.int("BKAPP_GROUP_MEMBER_LIMIT", default=500),
+    "group_member_limit": env.int("BKAPP_GROUP_MEMBER_LIMIT", default=1000),
     # 用户组单次授权模板数
     "group_auth_template_once_limit": env.int("BKAPP_GROUP_AUTH_TEMPLATE_ONCE_LIMIT", default=10),
     # 用户组单次授权的系统数
@@ -383,6 +388,10 @@ SUBJECT_AUTHORIZATION_LIMIT = {
     "grade_manager_of_specified_systems_limit": env.str(
         "BKAPP_GRADE_MANAGER_OF_SPECIFIED_SYSTEMS_LIMIT", default="bk_ci_rbac:30000,bk_lesscode:5000"
     ),
+    # 人员模版最大成员数量
+    "subject_template_member_limit": env.int("BKAPP_SUBJECT_TEMPLATE_MEMBER_LIMIT", default=1000),
+    # 一个分级管理员可创建的人员模版个数
+    "grade_manager_subject_template_limit": env.int("BKAPP_GRADE_MANAGER_SUBJECT_TEMPLATE_LIMIT", default=10000),
 }
 # 授权的实例最大数量限制
 AUTHORIZATION_INSTANCE_LIMIT = env.int("BKAPP_AUTHORIZATION_INSTANCE_LIMIT", default=200)
@@ -398,6 +407,8 @@ MAX_EXPIRED_POLICY_DELETE_TIME = 365 * 24 * 60 * 60  # 1年
 MAX_EXPIRED_TEMPORARY_POLICY_DELETE_TIME = 3 * 24 * 60 * 60  # 3 Days
 # 接入系统的资源实例ID最大长度，默认36（已存在长度为36的数据）
 MAX_LENGTH_OF_RESOURCE_ID = env.int("BKAPP_MAX_LENGTH_OF_RESOURCE_ID", default=36)
+# 被删除的subject最长保留天数
+SUBJECT_DELETE_DAYS = env.int("BKAPP_SUBJECT_DELETE_DAYS", default=30)
 
 # 前端页面功能开关
 ENABLE_FRONT_END_FEATURES = {
@@ -424,6 +435,7 @@ BK_APIGW_RESOURCE_DOCS_BASE_DIR = os.path.join(BASE_DIR, "resources/apigateway/d
 # Requests pool config
 REQUESTS_POOL_CONNECTIONS = env.int("REQUESTS_POOL_CONNECTIONS", default=20)
 REQUESTS_POOL_MAXSIZE = env.int("REQUESTS_POOL_MAXSIZE", default=20)
+REQUESTS_MAX_RETRIES = env.int("REQUESTS_MAX_RETRIES", default=3)
 
 # Init Grade Manger system list
 INIT_GRADE_MANAGER_SYSTEM_LIST = env.list(

@@ -839,6 +839,7 @@ class ResourceGroupBeanList(ResourceGroupList):
 
 
 class ResourceTypeInstanceCount(BaseModel):
+    system_id: str
     type: str
     count: int
 
@@ -968,11 +969,11 @@ class PolicyBean(Policy):
         查询资源类型的实例数量
         """
         if len(self.resource_groups) == 0:
-            return [ResourceTypeInstanceCount(type="", count=0)]
+            return [ResourceTypeInstanceCount(system_id="", type="", count=0)]
 
         counts = []
         for i, resource_type in enumerate(self.list_thin_resource_type()):
-            c = ResourceTypeInstanceCount(type=resource_type.type, count=0)
+            c = ResourceTypeInstanceCount(system_id=resource_type.system_id, type=resource_type.type, count=0)
 
             for rg in self.resource_groups:
                 c.count += rg.related_resource_types[i].count_instance()
@@ -1441,6 +1442,9 @@ class PolicyQueryBiz:
         # 填充action, system
         expired_policies = []
         for p in backend_policies:
+            if p.system == "bk_ci":
+                continue
+
             action = (
                 action_list_dict[p.system].get(p.action_id) if p.system in action_list_dict else None
             ) or ThinAction(id="", name="", name_en="")

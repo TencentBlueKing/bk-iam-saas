@@ -44,6 +44,7 @@
           :name="basicInfo.name"
           :read-only="readOnly"
           :data="memberList"
+          :show-expired-at="true"
           :count="pagination.count" />
       </render-horizontal-block>
     </template>

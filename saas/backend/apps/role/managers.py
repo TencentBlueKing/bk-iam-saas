@@ -52,6 +52,12 @@ class RoleRelatedObjectManager(models.Manager):
         """
         return self.create_object_relation(role_id, template_id, RoleRelatedObjectType.TEMPLATE.value)
 
+    def create_subject_template_relation(self, role_id: int, template_id: int):
+        """
+        创建角色与角色创建的人员模板关系
+        """
+        return self.create_object_relation(role_id, template_id, RoleRelatedObjectType.SUBJECT_TEMPLATE.value)
+
     def delete_template_relation(self, template_id: int):
         """
         移除角色与角色创建的模板关系

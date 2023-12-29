@@ -23,6 +23,7 @@
         ref="input"
         v-model="newVal"
         :placeholder="placeholder"
+        :ext-cls="isShowError ? 'iam-input-error' : ''"
         @input="handleInput"
         @blur="handleBlur"
         @keyup="handleEnter" />
@@ -109,12 +110,10 @@
         if (this.rules.length > 0) {
           for (let i = 0; i < this.rules.length; i++) {
             const validate = this.rules[i];
-            if (validate.required && this.newVal === '') {
-              this.isShowError = true;
-              this.errorTips = validate.message;
-              break;
-            }
-            if (validate.validator && !validate.validator(this.newVal)) {
+            if (
+              (validate.required && this.newVal.trim() === '')
+              || (validate.validator && !validate.validator(this.newVal))
+            ) {
               this.isShowError = true;
               this.errorTips = validate.message;
               break;
@@ -138,18 +137,20 @@
           this.$emit('handleShow');
         }
       },
-      handleInput () {
-        this.isShowError = false;
+      handleInput (value) {
+        if (value) {
+          this.isShowError = false;
+        }
         this.errorTips = '';
       },
       handleBlur () {
-        if (!this.isEditable) return;
         this.handleValidate();
-        if (this.isShowError) return;
+        if (this.isShowError || !this.isEditable) return;
         this.triggerChange();
       },
       handleEnter (value, event) {
-        if (!this.isEditable) return;
+        this.handleValidate();
+        if (this.isShowError || !this.isEditable) return;
         if (event.key === 'Enter' && event.keyCode === 13) {
           this.triggerChange();
         }
@@ -163,10 +164,7 @@
             }
           }
         }
-
         this.handleValidate();
-        if (this.isShowError) return;
-        this.isEditable = false;
       },
       triggerChange () {
         this.isEditable = false;
@@ -239,6 +237,12 @@
         .validate-error-tips {
             font-size: 12px;
             color: #ff4d4d;
+        }
+
+        /deep/ .iam-input-error {
+          .bk-form-input {
+            border-color: #ff5656;
+          }
         }
     }
 </style>
