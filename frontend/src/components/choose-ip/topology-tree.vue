@@ -64,11 +64,12 @@
                     { 'can-hover': item.type === 'node' && !item.loading }
                   ]"
                   :style="getNodeStyle(item)"
+                  v-show="item.visiable"
                   @click.stop="handleSelectNode(item, index)"
                 >
-                  <template v-if="item.type === 'node' && item.level < curChain.length - 1">
+                  <template v-if="item.type === 'node' && (item.level < curChain.length - 1 || !isTwoLevel)">
                     <Icon
-                      v-if="!isTwoLevel"
+                      v-if="!isTwoLevel && item.async"
                       bk
                       :type="item.expanded ? 'down-shape' : 'right-shape'"
                       :class="[
@@ -79,7 +80,12 @@
                       ]"
                       @click.stop="expandNode(item, index)"
                     />
-                    <div class="node-radio" @click.stop>
+                    <div
+                      :class="[
+                        'node-radio',
+                        { 'node-radio-no-icon': !(!isTwoLevel && item.async) }
+                      ]"
+                      @click.stop>
                       <bk-checkbox
                         :true-value="true"
                         :false-value="false"
@@ -173,7 +179,7 @@
               </template>
             </div>
           </div>
-          <div class="multiple-topology-tree-right">
+          <div class="multiple-topology-tree-right" :style="formatRightStyle">
             <topology-input
               ref="topologyTableInputRef"
               :placeholder="formatPlaceHolder('input') || ''"
@@ -275,7 +281,7 @@
       // 子节点左侧偏移的基础值
       leftBaseIndent: {
         type: Number,
-        default: 12
+        default: 16
       },
       resourceTotal: {
         type: Number
@@ -424,7 +430,6 @@
           const flag = !payload.async && isSameLevelExistSync;
           const asyncIconWidth = 5;
           const asyncLevelWidth = 30;
-          const searchIconWidth = 12;
           if (!payload.level) {
             if (flag) {
               return {
@@ -438,7 +443,7 @@
             }
             if (payload.async) {
               return {
-                maxWidth: `${offsetWidth - asyncLevelWidth - searchIconWidth}px`
+                maxWidth: `${offsetWidth - asyncLevelWidth}px`
               };
             }
             return {
@@ -447,7 +452,7 @@
           }
           if (payload.async) {
             return {
-              maxWidth: offsetWidth - (payload.level + 1) * this.leftBaseIndent - asyncLevelWidth - searchIconWidth + 'px'
+              maxWidth: offsetWidth - (payload.level + 1) * this.leftBaseIndent - asyncLevelWidth + 'px'
             };
           }
           if (isSameLevelExistSync && ['search', 'search-empty'].includes(payload.type)) {
@@ -482,7 +487,13 @@
       },
       formatLeftStyle () {
         return {
-          width: this.getDragDynamicWidth ? `${this.getDragDynamicWidth() - 200}px` : '600px'
+          width: this.getDragDynamicWidth ? `${this.getDragDynamicWidth() - 300}px` : '600px'
+        };
+      },
+      formatRightStyle () {
+        const leftWidth = this.getDragDynamicWidth ? `${this.getDragDynamicWidth() - 600}px` : '600px';
+        return {
+          width: `calc(100% - ${leftWidth})`
         };
       },
       formatLoadMore () {
@@ -795,6 +806,7 @@
           const defaultSelectList = this.curSelectedValues
             .filter((item) => item.disabled)
             .map((v) => v.ids).flat(this.curChain.length);
+          console.log(7477, this.curSelectedValues);
           if (defaultSelectList.length) {
             let childrenIdList = [];
             const result = !(defaultSelectList.includes(`${payload.id}&${this.curChain[payload.level].id}`)
@@ -1012,31 +1024,31 @@
         if (!node.level) {
           // if (flag) {
           //   return {
-          //     paddingLeft: `${this.leftBaseIndent + asyncIconWidth}px`
+          //     marginLeft: `${this.leftBaseIndent + asyncIconWidth}px`
           //   };
           // }
           return {
-            paddingLeft: `${this.leftBaseIndent}px`
+            marginLeft: `${this.leftBaseIndent}px`
           };
         }
         if (node.async) {
           // console.log(node, 5565);
           return {
-            paddingLeft: (node.level + 1) * this.leftBaseIndent + 'px'
+            marginLeft: (node.level + 1) * this.leftBaseIndent + 'px'
           };
         }
         if (isSameLevelExistSync && ['search', 'search-empty'].includes(node.type)) {
           return {
-            paddingLeft: (node.level + 1) * this.leftBaseIndent + 'px'
+            marginLeft: (node.level + 1) * this.leftBaseIndent + 'px'
           };
         }
         if (flag) {
           return {
-            paddingLeft: (node.level + 1) * this.leftBaseIndent + asyncIconWidth + 'px'
+            marginLeft: (node.level + 1) * this.leftBaseIndent + asyncIconWidth + 'px'
           };
         }
         return {
-          paddingLeft: (node.level + 1) * this.leftBaseIndent + 14 + 'px'
+          marginLeft: (node.level + 1) * this.leftBaseIndent + 14 + 'px'
         };
       },
 
@@ -1078,7 +1090,6 @@
        * @param {Boolean} isExpand 是否展开
        */
       expandNode (node, index, isExpand) {
-        console.log(isExpand, node.expanded);
         const flag = this.getExpandedDisabled(index);
         const canExpanded = this.isExistAsync(node) ? node.children && node.children.length : true;
         if (flag || !canExpanded) {
@@ -1377,6 +1388,7 @@
     display: flex;
     position: relative;
     margin: 0;
+    /* margin-right: 10px; */
     line-height: 32px;
     text-align: left;
     &.active {
@@ -1400,6 +1412,10 @@
         color: #3a84ff;
       }
     }
+    /* &::before {
+      content: '';
+      border: 1px dashed #C4C6CC;
+    } */
   }
   .search-empty-wrapper {
     padding-left: 3px;
@@ -1430,7 +1446,8 @@
   }
 
   .arrow-icon {
-    margin-right: 5px;
+    margin-left: 5px;
+    margin-right: 10px;
     line-height: 32px;
     color: #c0c4cc;
     cursor: pointer;
@@ -1470,6 +1487,9 @@
   .node-radio {
     /* display: inline-block; */
     display: flex;
+    &-no-icon {
+      padding-left: 12px;
+    }
     .bk-form-checkbox {
       position: relative;
       margin-right: 0;
@@ -1559,11 +1579,12 @@
 
 .multiple-topology-tree {
   display: flex;
+  background-color: #ffffff;
   &-left {
     border-right: 1px solid #dcdee5;
-  }
-  &-right {
-    width: calc(100% - 20px);
+    &-content {
+      margin-right: 16px;
+    }
   }
 }
 
