@@ -41,7 +41,7 @@
               </iam-form-item>
               <iam-form-item
                 :label="$t(`m.common['操作']`)"
-                class="pr20"
+                class="pr20 form-item-resource"
               >
                 <bk-select
                   :style="{ width: contentWidth }"
@@ -96,13 +96,13 @@
                     </iam-form-item>
                   </div>
                   <iam-form-item
-                    :style="{ width: contentWidth }"
                     class="form-item-resource"
                     :label="$t(`m.common['资源实例']`)">
                     <div class="relation-content-item"
                       v-for="(content, contentIndex) in _.related_resource_types"
                       :key="contentIndex">
                       <div class="content"
+                        :style="{ width: contentWidth }"
                       >
                         <render-condition
                           :ref="`condition_${index}_${contentIndex}_ref`"
@@ -231,6 +231,10 @@
       customClass: {
         type: String,
         default: ''
+      },
+      isFullWidth: {
+        type: Boolean,
+        default: false
       }
     },
     data () {
@@ -341,11 +345,13 @@
         resourceInstanceSideSliderTitle: '',
         curSelectMenu: '',
         curInputText: '',
-        contentWidth: ''
+        contentWidth: '',
+        defaultWidth: '',
+        gridWidth: ''
       };
     },
     computed: {
-      ...mapGetters(['externalSystemsLayout', 'externalSystemId']),
+      ...mapGetters(['externalSystemsLayout', 'externalSystemId', 'navStick']),
       condition () {
           if (this.curResIndex === -1 || this.groupIndex === -1) {
               return [];
@@ -392,7 +398,7 @@
       }
     },
     async created () {
-      this.contentWidth = window.innerWidth <= 1520 ? this.minSelectWidth : this.maxSelectWidth;
+      this.formatFormItemWidth();
       this.searchData = this.enableGroupInstanceSearch
         ? this.initSearchData.filter(item => ['name', 'id', 'description'].includes(item.id))
         : this.initSearchData;
@@ -814,7 +820,10 @@
       },
 
       formatFormItemWidth () {
-        this.contentWidth = window.innerWidth <= 1520 ? this.minSelectWidth : this.maxSelectWidth;
+        this.defaultWidth = window.innerWidth <= 1520 ? this.minSelectWidth : this.maxSelectWidth;
+        this.gridWidth = (window.innerWidth - (this.navStick ? 284 : 84) - 64) / 4;
+        this.contentWidth = this.isFullWidth ? `${this.gridWidth}px` : this.defaultWidth;
+        console.log(this.contentWidth);
       },
 
       handleQuickSearchMethod (value) {
@@ -877,6 +886,15 @@
     padding: 20px 20px 0 20px;
     &.user-org-resource-perm {
       padding: 12px 16px 16px 16px;
+      .left {
+        .resource-action-form {
+          .form-item-resource {
+            &:not(&:last-child) {
+              padding-right: 16px !important;
+            }
+          }
+        }
+      }
     }
   }
 </style>

@@ -56,7 +56,8 @@ export const getRouterDiff = (payload) => {
       'secondaryManageSpaceCreate',
       'userGroupSetting',
       'sensitivityLevel',
-      'memberTemplate'
+      'memberTemplate',
+      'userOrgPerm'
     ];
   }
   if (payload === 'super_manager') {

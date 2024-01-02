@@ -3,10 +3,9 @@
     <div class="IamResourceCascadeSearch">
       <IamResourceCascadeSearch
         ref="iamResourceSearchRef"
-        :min-select-width="'165px'"
-        :max-select-width="'350px'"
         :custom-class="'user-org-resource-perm'"
         :active="active"
+        :is-full-width="true"
         @on-remote-table="handleRemoteTable"
         @on-refresh-table="handleRefreshTable"
         @on-input-value="handleInputValue"
@@ -31,6 +30,7 @@
           count: 0,
           limit: 10
         },
+        active: 'GroupPerm',
         customSelectWidth: window.innerWidth <= 1520 ? '160px' : '3000px'
       };
     },
@@ -65,6 +65,8 @@
           this.formatCheckGroups();
         }
       },
+
+      handleRefreshTable () {},
 
       formatCheckGroups () {
         const selectList = this.panels[0].selectList.map(item => item.id.toString());
@@ -101,5 +103,8 @@
 <style lang="postcss" scoped>
 .user-org-perm-wrapper {
   padding: 0;
+  .left {
+    width: calc(100% - 20px);
+  }
 }
 </style>
