@@ -158,7 +158,7 @@
     <bk-sideslider
       :is-show="isShowInstanceSideslider"
       :title="instanceSidesliderTitle"
-      :width="960"
+      :width="resourceSliderWidth"
       quick-close
       transfer
       ext-cls="relate-instance-sideslider"
@@ -196,6 +196,11 @@
   import RenderResource from '../components/render-resource';
   export default {
     name: '',
+    provide: function () {
+      return {
+        getResourceSliderWidth: () => this.resourceSliderWidth
+      };
+    },
     components: {
       RenderResourcePopover,
       RenderCondition,
@@ -244,7 +249,9 @@
         nextLoading: false,
         isLastPage: false,
         prevLoading: false,
-        curCopyParams: {}
+        curCopyParams: {},
+        resourceSliderWidth: Math.ceil(window.innerWidth * 0.67 - 7) < 960
+          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7)
       };
     },
     computed: {
@@ -379,7 +386,18 @@
       this.fetchData();
       this.fetchAuthorizationScopeActions();
     },
+    mounted () {
+      this.$once('hook:beforeDestroy', () => {
+        window.removeEventListener('resize', this.formatFormItemWidth);
+      });
+      window.addEventListener('resize', (this.formatFormItemWidth));
+    },
     methods: {
+      formatFormItemWidth () {
+        this.resourceSliderWidth = Math.ceil(window.innerWidth * 0.67 - 7) < 960
+          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7);
+      },
+      
       async fetchData () {
         try {
           const res = await this.$store.dispatch('permTemplate/getGroupsPreview', {

@@ -90,7 +90,7 @@
 </script>
 <style lang="postcss">
     .iam-topology-input {
-        padding: 16px 10px;
+        padding: 16px 16px 8px 16px;
         background: #ffffff;
         &.reset-padding {
           padding: 0 0 0 3px;
