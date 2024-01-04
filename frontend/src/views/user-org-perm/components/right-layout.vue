@@ -1,28 +1,258 @@
 <template>
-  <div>
-    565455555
+  <div class="user-org-right-wrapper">
+    <div class="user-name">{{ formatUserName }}</div>
+    <div class="header-operate">
+      <div>
+        <bk-button theme="primary">
+          {{ $t(`m.userOrOrg['加入用户组']`) }}
+        </bk-button>
+      </div>
+      <div class="group-detail-dropdown">
+        <bk-dropdown-menu
+          ref="batchDropdown"
+          v-bk-tooltips="{ content: $t(`m.userOrOrg['请先勾选用户组权限']`), disabled: selectedGroups.length }"
+          :disabled="isBatchDisabled"
+          @show="handleDropdownShow"
+          @hide="handleDropdownHide"
+        >
+          <div class="group-dropdown-trigger-btn" slot="dropdown-trigger">
+            <span class="group-dropdown-text">{{ $t(`m.userOrOrg['批量操作']`) }}</span>
+            <i :class="['bk-icon icon-angle-down', { 'icon-flip': isDropdownShow }]" />
+          </div>
+          <ul class="bk-dropdown-list" slot="dropdown-content">
+            <li>
+              <a @click.stop="handleBatch('reset')">
+                {{ $t(`m.userOrOrg['移出']`) }}
+              </a>
+            </li>
+            <li>
+              <a
+                :class="[{ 'renewal-disabled': isNoBatchRenewal() }]"
+                :title="renewalGroupTitle"
+                @click.stop="handleBatch('clear')">
+                {{ $t(`m.renewal['续期']`) }}
+              </a>
+            </li>
+          </ul>
+        </bk-dropdown-menu>
+      </div>
+    </div>
+    <div class="group-detail-table">
+      <component
+        ref="childPermRef"
+        :key="componentsKey"
+        :is="curCom"
+        :group-data="queryGroupData"
+        :empty-data="curEmptyData"
+        :cur-search-params="curSearchParams"
+        :cur-search-pagination="curSearchPagination"
+        :is-search-perm="isSearchPerm"
+        @on-clear="handleEmptyClear"
+        @on-refresh="handleEmptyRefresh"
+      />
+    </div>
   </div>
 </template>
 
 <script>
-  export default {
+  import { cloneDeep } from 'lodash';
+  import { PERMANENT_TIMESTAMP } from '@/common/constants';
+  import MultiTypeGroupPerm from './multi-type-group-perm.vue';
 
+  const COM_MAP = new Map([
+    [['user', 'department'], 'MultiTypeGroupPerm']
+  ]);
+
+  export default {
+    components: {
+      MultiTypeGroupPerm
+    },
+    props: {
+      groupData: {
+        type: Object
+      },
+      isSearchPerm: {
+        type: Boolean,
+        default: false
+      },
+      curSearchParams: {
+        type: Object,
+        default: () => {}
+      },
+      curSearchPagination: {
+        type: Object,
+        default: () => {
+          return {
+            current: 1,
+            limit: 10,
+            count: 0
+          };
+        }
+      }
+    },
     data () {
       return {
-            
+        isDropdownShow: false,
+        renewalGroupTitle: '',
+        componentsKey: -1,
+        selectedGroups: [],
+        // personalGroupList: [],
+        // departmentGroupList: [],
+        // memberTempByUserList: [],
+        // memberTempByDepartList: [],
+        queryGroupData: {},
+        curEmptyData: {
+          type: 'empty',
+          text: '暂无数据',
+          tip: '',
+          tipType: ''
+        }
       };
     },
-
-    created () {
-        
+    computed: {
+      formatUserName () {
+        const { id, name } = this.groupData;
+        const typeMap = {
+          user: () => {
+            return `${id} (${name})`;
+          },
+          department: () => {
+            return name;
+          }
+        };
+        if (typeMap[this.groupData.type]) {
+          return typeMap[this.groupData.type]();
+        }
+        return '';
+      },
+      isBatchDisabled () {
+        return !this.selectedGroups.length;
+      },
+      isNoBatchRenewal () {
+        return () => {
+          const hasData = this.selectedGroups.length > 0;
+          if (hasData) {
+            const list = this.selectedGroups.filter((item) => item.expired_at === PERMANENT_TIMESTAMP);
+            if (this.selectedGroups.length === list.length) {
+              this.renewalGroupTitle = this.$t(`m.userGroup['已选择的用户组成员不需要续期']`);
+              return true;
+            }
+          }
+          return !hasData;
+        };
+      },
+      curCom () {
+        let com = '';
+        for (const [key, value] of this.comMap.entries()) {
+          if (Object.keys(this.groupData).length && key.includes(this.groupData.type)) {
+            com = value;
+            break;
+          }
+        }
+        return com;
+      }
     },
-
+    watch: {
+      groupData: {
+        handler (value) {
+          if (Object.keys(value).length > 0) {
+            this.comMap = COM_MAP;
+            this.fetchDetailData(value);
+          }
+        },
+        immediate: true
+      }
+    },
     methods: {
-        
+      async fetchDetailData (value) {
+        this.curEmptyData.tipType = '';
+        this.handleEmptyClear();
+        this.componentsKey = +new Date();
+        this.queryGroupData = cloneDeep(value);
+      },
+
+      fetchInitInterFace () {
+        Promise.all([this.fetchUserGroupSearch(), this.fetchDepartGroupSearch()]);
+      },
+
+      handleDropdownShow () {
+        this.isDropdownShow = true;
+      },
+
+      handleDropdownHide () {
+        this.isDropdownShow = false;
+      },
+
+      handleEmptyRefresh () {
+        this.isSearchPerm = false;
+        this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyRefresh();
+      },
+
+      handleEmptyClear () {
+        this.isSearchPerm = false;
+        this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyClear();
+      }
     }
   };
 </script>
 
 <style lang="postcss" scoped>
+.user-org-right-wrapper {
+  .user-name {
+    width: 100%;
+    font-size: 14px;
+    line-height: 22px;
+    word-break: break-all;
+  }
 
+  .header-operate {
+    display: flex;
+    padding: 12px 0;
+    .group-detail-dropdown {
+      margin-left: 8px;
+      .group-dropdown-trigger-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #c4c6cc;
+        min-width: 102px;
+        height: 32px;
+        border-radius: 2px;
+        padding-left: 10px;
+        padding-right: 5px;
+        color: #63656e;
+
+        &:hover {
+          cursor: pointer;
+          border-color: #979ba5;
+        }
+
+        .group-dropdown-text {
+          font-size: 12px;
+        }
+
+        .bk-icon {
+          font-size: 22px;
+        }
+      }
+    }
+  }
+}
+
+/deep/ .bk-dropdown-menu {
+  .bk-dropdown-content {
+    padding-top: 0;
+    cursor: pointer;
+  }
+
+  &.disabled,
+  &.disabled *,
+  .remove-disabled,
+  .renewal-disabled {
+    background-color: #f5f6fa;
+    border-color: #dcdee5 !important;
+    color: #c4c6cc !important;
+    cursor: not-allowed;
+  }
+}
 </style>

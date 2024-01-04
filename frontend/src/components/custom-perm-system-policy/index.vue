@@ -1,12 +1,21 @@
 <template>
-  <div :class="['iam-perm-item', extCls]" v-if="permLength > 0">
+  <div v-if="permLength > 0" :class="['iam-perm-item', extCls, `${$route.name}-perm-item`]">
     <div class="header" @click="handleExpanded" v-if="!isOnlyPerm">
       <Icon bk class="expanded-icon" :type="isExpanded ? 'down-shape' : 'right-shape'" />
       <label class="title">{{ title }}</label>
+      <template>
+      </template>
       <div class="sub-title">
-        {{ $t(`m.common['共']`) }}
-        <span class="number">{{ permLength }}</span>
-        {{ $t(`m.common['个']`) }}{{ typeTitle }}
+        <template v-if="['userOrgPerm'].includes($route.name)">
+          ({{ $t(`m.common['共']`) }}
+          <span class="number">{{ permLength }}</span>
+          {{ $t(`m.common['条']`) }})
+        </template>
+        <template v-else>
+          {{ $t(`m.common['共']`) }}
+          <span class="number">{{ permLength }}</span>
+          {{ $t(`m.common['个']`) }}{{ typeTitle }}
+        </template>
         <span
           v-if="isAllDelete"
           class="del-all-icon">
@@ -170,6 +179,37 @@
             }
             .expand-action {
               display: none;
+            }
+          }
+        }
+
+        &.userOrgPerm-perm-item {
+          box-shadow: 0 2px 4px 0 #1919290d;
+          .header {
+            display: flex;
+            align-items: center;
+            height: 46px;
+            line-height: 46px;
+            padding: 0 32px;
+            .expanded-icon {
+              top: 18px;
+            }
+          }
+          .title {
+            color: #313238;
+            font-weight: 700;
+          }
+          .sub-title {
+            margin-left: 4px;
+            color: #63656e;
+          }
+          .number {
+            color: #3a84ff;
+            font-weight: 700;
+          }
+          .content {
+            .slot-content {
+              padding: 0 24px;
             }
           }
         }

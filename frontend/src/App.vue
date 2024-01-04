@@ -388,4 +388,9 @@
       }
     }
 
+    .user-org-perm-container {
+      .main-scroller {
+        height: calc(100% + 210px);
+      }
+    }
 </style>

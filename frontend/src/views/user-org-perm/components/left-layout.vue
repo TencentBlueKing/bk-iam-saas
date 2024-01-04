@@ -33,10 +33,9 @@
     </div>
     <div class="group-list">
       <div
-        v-if="groupList.length"
-        :style="formatSystemsHeight"
+        v-if="list.length"
         v-bkloading="{
-          isLoading: listLoading,
+          isLoading: loading,
           opacity: 1,
           color: '#f5f6fa'
         }"
@@ -44,7 +43,7 @@
         @scroll="handleScroll"
       >
         <div
-          v-for="item in groupList"
+          v-for="item in list"
           :key="item.id"
           :class="['group-list-item', { active: `${item.id}&${item.name}` === selectActive }]"
           @click.stop="handleSelect(item)"
@@ -55,9 +54,19 @@
               :type="formatTypeIcon(item.type)"
               :class="['group-type-icon', { active: `${item.id}&${item.name}` === selectActive }]"
             />
-            <div class="single-hide group-name" :title="item.name">
-              <span>{{ item.name }}</span>
-              <span v-if="['user'].includes(item.type)">{{ item.id }}</span>
+            <div
+              v-if="['user'].includes(item.type)"
+              v-bk-tooltips="{ content: `${item.id} (${item.name})` }"
+              class="single-hide group-name"
+            >
+              <span>{{ item.id }}</span>
+              <span style="margin-left: 5px;">({{ item.name }})</span>
+            </div>
+            <div
+              v-if="['department'].includes(item.type)"
+              v-bk-tooltips="{ content: item.name }"
+              class="single-hide group-name">
+              {{ item.name }}
             </div>
           </div>
         </div>
@@ -67,9 +76,12 @@
 </template>
 
 <script>
-  import { getWindowHeight } from '@/common/util';
   export default {
     props: {
+      loading: {
+        type: Boolean,
+        default: false
+      },
       currentActive: {
         type: String,
         default: ''
@@ -138,19 +150,17 @@
       },
       formatDragWidth () {
         return {
-          minWidth: '240px'
+          minWidth: '224px'
         };
-      },
-      formatSystemsHeight () {
-        return `${getWindowHeight() - 51 - 51 - 157 - 2}px`;
       }
     },
     watch: {
       list: {
         handler (value) {
           if (value.length) {
-            if (!value.some(item => item.id === this.currentActive)) {
-              this.selectActive = value[0].id;
+            if (!value.some((item) => item.id === this.currentActive)) {
+              const { id, name } = value[0];
+              this.selectActive = `${id}&${name}`;
             }
           } else {
             this.selectActive = -1;
@@ -159,19 +169,9 @@
         immediate: true
       }
     },
-    async created () {
-      this.pageConf.limit = Math.ceil(this.listHeight / 36);
-      await this.fetchInitData();
-    },
     methods: {
-      async fetchInitData () {
-        await this.fetchGroupMemberList();
-        if (this.groupList.length) {
-          this.handleSelect(this.groupList[0]);
-        }
-      },
-
       handleChecked (newVal, oldVal, val, row) {
+        row.checked = newVal;
         if (newVal) {
           this.currentSelectList.push(row);
         } else {
@@ -181,6 +181,7 @@
 
       handleSelect (payload) {
         this.selectActive = `${payload.id}&${payload.name}`;
+        this.$emit('on-select', payload);
       },
 
       handleBatch (payload) {
@@ -188,6 +189,23 @@
           showSlider: true,
           list: this.currentSelectList
         });
+      },
+
+      handleScroll (event) {
+        if (this.isLoading) {
+          this.handleResetScrollLoading();
+          return;
+        }
+        if (!this.canScrollLoad) {
+          this.isShowNoDataTips = true;
+          this.isScrollLoading = false;
+          return;
+        }
+        if (event.target.scrollTop + event.target.offsetHeight >= event.target.scrollHeight - 1) {
+          this.isScrollLoading = true;
+          this.isShowNoDataTips = false;
+          this.$emit('on-load');
+        }
       },
 
       handleDropdownShow () {
@@ -203,12 +221,6 @@
 
 <style lang="postcss" scoped>
 .user-org-perm-left-layout {
-  position: relative;
-  flex-basis: 240px;
-  width: 240px;
-  border-right: 1px solid#dcdee5;
-  z-index: 1;
-
   .group-operate-dropdown {
     padding-top: 16px;
     margin-bottom: 8px;
@@ -243,6 +255,8 @@
   .group-list {
     padding-right: 16px;
     &-content {
+      position: relative;
+      height: calc(100% - 43px);
       overflow-y: auto;
       &::-webkit-scrollbar {
         width: 6px;
@@ -287,6 +301,7 @@
       &.active {
         background-color: #e1ecff;
         color: #3a84ff;
+        border-radius: 2px;
       }
     }
   }
@@ -299,9 +314,7 @@
   }
 
   &.disabled,
-  &.disabled *,
-  .remove-disabled,
-  .renewal-disabled {
+  &.disabled * {
     background-color: #f5f6fa;
     border-color: #dcdee5 !important;
     color: #c4c6cc !important;
