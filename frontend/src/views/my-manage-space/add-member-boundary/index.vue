@@ -1752,6 +1752,8 @@
 
       handleSave () {
         let subjects = [];
+        let users = [];
+        let departments = [];
         if (this.isAll) {
           subjects.push({
             id: '*',
@@ -1762,7 +1764,7 @@
           });
         } else {
           if (this.hasSelectedUsers.length) {
-            subjects = this.hasSelectedUsers.map((item) => {
+            users = this.hasSelectedUsers.map((item) => {
               return {
                 id: item.id || '',
                 type: 'user',
@@ -1773,7 +1775,7 @@
             });
           }
           if (this.hasSelectedDepartments.length) {
-            subjects = this.hasSelectedDepartments.map((item) => {
+            departments = this.hasSelectedDepartments.map((item) => {
               return {
                 id: item.id,
                 type: 'depart',
@@ -1783,6 +1785,7 @@
               };
             });
           }
+          subjects = [...users, ...departments];
         }
         const params = {
           subject_scopes: subjects
