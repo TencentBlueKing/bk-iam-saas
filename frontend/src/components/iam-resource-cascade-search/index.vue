@@ -128,13 +128,13 @@
               </template>
             </bk-form>
           </div>
-          <div class="group-search-select pb20">
+          <div class="group-search-select">
             <iam-search-select
               style="width: calc(100% - 20px)"
               ref="searchSelectRef"
               :data="searchData"
               :value="searchValue"
-              :placeholder="$t(`m.applyEntrance['申请加入用户组搜索提示']`)"
+              :placeholder="searchSelectPlaceHolder"
               :quick-search-method="handleQuickSearchMethod"
               @on-change="handleSearch"
               @on-click-menu="handleClickMenu"
@@ -164,7 +164,7 @@
           @on-change="handleSearch"
           :data="searchData"
           :value="searchValue"
-          :placeholder="$t(`m.applyEntrance['申请加入用户组搜索提示']`)"
+          :placeholder="searchSelectPlaceHolder"
           :quick-search-method="handleQuickSearchMethod" />
       </div>
     </div>
@@ -201,6 +201,7 @@
 
 <script>
   import _ from 'lodash';
+  import il8n from '@/language';
   import Policy from '@/model/policy';
   import RenderCondition from '@/views/resource-permiss/components/render-condition';
   import RenderResource from '@/views/resource-permiss/components/render-resource';
@@ -232,9 +233,17 @@
         type: String,
         default: ''
       },
-      isFullWidth: {
+      isFullScreen: {
         type: Boolean,
         default: false
+      },
+      searchSelectPlaceHolder: {
+        type: String,
+        default: il8n('applyEntrance', '申请加入用户组搜索提示')
+      },
+      curSearchData: {
+        type: Array,
+        default: () => []
       }
     },
     data () {
@@ -399,18 +408,32 @@
     },
     async created () {
       this.formatFormItemWidth();
-      this.searchData = this.enableGroupInstanceSearch
-        ? this.initSearchData.filter(item => ['name', 'id', 'description'].includes(item.id))
-        : this.initSearchData;
+      this.formatSearchData();
       await this.fetchPermData();
     },
     mounted () {
-      window.addEventListener('resize', (this.formatFormItemWidth));
+      window.addEventListener('resize', this.formatFormItemWidth);
       this.$once('hook:beforeDestroy', () => {
         window.removeEventListener('resize', this.formatFormItemWidth);
       });
     },
     methods: {
+      formatSearchData () {
+        // 处理不同页面自定义搜索字段
+        const isOtherRoute = ['userOrgPerm'].includes(this.$route.name);
+        const routeMap = {
+          true: () => {
+            this.searchData = [...this.curSearchData];
+          },
+          false: () => {
+            this.searchData = this.enableGroupInstanceSearch
+              ? this.initSearchData.filter(item => ['name', 'id', 'description'].includes(item.id))
+              : this.initSearchData;
+          }
+        };
+        return routeMap[isOtherRoute]();
+      },
+
       async fetchPermData () {
         this.fetchSystemList();
         const isSearch = this.applyGroupData.system_id || Object.keys(this.searchParams).length > 0;
@@ -822,8 +845,7 @@
       formatFormItemWidth () {
         this.defaultWidth = window.innerWidth <= 1520 ? this.minSelectWidth : this.maxSelectWidth;
         this.gridWidth = (window.innerWidth - (this.navStick ? 284 : 84) - 64) / 4;
-        this.contentWidth = this.isFullWidth ? `${this.gridWidth}px` : this.defaultWidth;
-        console.log(this.contentWidth);
+        this.contentWidth = this.isFullScreen ? `${this.gridWidth}px` : this.defaultWidth;
       },
 
       handleQuickSearchMethod (value) {
@@ -883,9 +905,9 @@
  @import '@/css/mixins/apply-join-group-search.css';
  .iam-search-resource-form-perm {
     background-color: #ffffff;
-    padding: 20px 20px 0 20px;
+    padding: 20px;
     &.user-org-resource-perm {
-      padding: 12px 16px 16px 16px;
+      padding: 12px 16px 22px 16px;
       .left {
         .resource-action-form {
           .form-item-resource {
