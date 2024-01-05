@@ -1,9 +1,9 @@
 <template>
-  <div class="my-template-group-perm">
+  <div class="user-org-group-perm">
     <template v-if="hasPerm">
       <MemberTempPermPolicy
         v-for="(item, index) in memberTempPermData"
-        :key="item.id"
+        :key="index"
         :title="item.name"
         :type-title="$t(`m.userGroup['用户组']`)"
         :expanded.sync="item.expanded"
@@ -15,6 +15,7 @@
         :one-perm="isOnlyPerm ? 1 : formatPermLength"
         :is-only-perm="isOnlyPerm"
         :is-all-delete="false"
+        :show-collapse="false"
         @on-expanded="handleExpanded(...arguments, item)"
       >
         <TemplatePermTable
@@ -23,6 +24,7 @@
           :is-loading="item.loading"
           :is-search-perm="isSearchPerm"
           :pagination="item.pagination"
+          :group-data="groupData"
           :list="item.list"
           :empty-data="item.emptyData"
           @on-page-change="handlePageChange(...arguments, item)"
@@ -33,7 +35,7 @@
       </MemberTempPermPolicy>
     </template>
     <template v-else>
-      <div class="my-perm-custom-perm-empty-wrapper">
+      <div class="perm-empty-wrapper">
         <ExceptionEmpty
           :type="emptyPermData.type"
           :empty-text="emptyPermData.text"
@@ -52,31 +54,13 @@
   import { mapGetters } from 'vuex';
   import { formatCodeData, sleep } from '@/common/util';
   import MemberTempPermPolicy from '@/components/custom-perm-system-policy/index.vue';
-  import TemplatePermTable from './template-perm-table.vue';
+  import TemplatePermTable from './group-perm-table.vue';
   export default {
     components: {
       MemberTempPermPolicy,
       TemplatePermTable
     },
     props: {
-      personalGroupList: {
-        type: Array,
-        default: () => []
-      },
-      memberTempByUserList: {
-        type: Array,
-        default: () => []
-      },
-      memberTempByDepartList: {
-        type: Array,
-        default: () => []
-      },
-      memberTempByUserCount: {
-        type: Number
-      },
-      memberTempByDepartCount: {
-        type: Number
-      },
       groupData: {
         type: Object,
         default: () => {
@@ -116,9 +100,6 @@
         type: Boolean,
         default: false
       },
-      totalCount: {
-        type: Number
-      },
       componentLoading: {
         type: Boolean,
         default: false
@@ -128,9 +109,10 @@
       return {
         hasPerm: false,
         onePerm: 0,
-        memberTempPermData: [
+        totalCount: 0,
+        initMemberTempPermData: [
           {
-            id: 'user',
+            id: 'personalOrDepartPerm',
             name: this.$t(`m.userOrOrg['个人用户组权限']`),
             loading: false,
             expanded: false,
@@ -148,8 +130,9 @@
             },
             list: []
           },
+
           {
-            id: 'user',
+            id: 'departPerm',
             name: this.$t(`m.userOrOrg['组织用户组权限']`),
             loading: false,
             expanded: false,
@@ -168,7 +151,26 @@
             list: []
           },
           {
-            id: 'depart',
+            id: 'userTempPerm',
+            name: this.$t(`m.userOrOrg['人员模板用户组权限']`),
+            loading: false,
+            expanded: false,
+            pagination: {
+              current: 1,
+              limit: 10,
+              count: 0,
+              showTotalCount: true
+            },
+            emptyData: {
+              type: 'empty',
+              text: '暂无数据',
+              tip: '',
+              tipType: ''
+            },
+            list: []
+          },
+          {
+            id: 'departTempPerm',
             name: this.$t(`m.userOrOrg['人员模板用户组权限']`),
             loading: false,
             expanded: false,
@@ -187,8 +189,7 @@
             list: []
           }
         ],
-        userList: [],
-        departList: [],
+        memberTempPermData: [],
         currentSelectGroupList: [],
         queryGroupData: [],
         emptyPermData: {
@@ -237,29 +238,30 @@
       groupData: {
         handler (value) {
           if (Object.keys(value).length > 0) {
-            this.fetchDetailData(value);
+            this.fetchResetData(value);
           }
         },
         immediate: true
       }
     },
     methods: {
-      async fetchDetailData (value) {
+      async fetchResetData (value) {
         this.emptyPermData.tipType = '';
         this.handleEmptyClear();
         this.queryGroupData = cloneDeep(value);
         this.fetchInitData();
       },
 
-      // 获取个人用户组
+      // 获取个人/部门用户组
       async fetchUserGroupSearch () {
         const { id, type } = this.queryGroupData;
-        let curData = ['user'].includes(type) ? this.memberTempPermData[0] : this.memberTempPermData[1];
+        console.log(this.curSearchParams, 555);
+        let curData = this.memberTempPermData[0];
         const { emptyData, pagination } = curData;
         try {
           curData.loading = true;
           const { current, limit } = pagination;
-          const url = 'userOrOrg/getUserGroupList';
+          const url = 'userOrOrg/getUserOrDepartGroupList';
           let params = {
             limit,
             offset: limit * (current - 1)
@@ -282,7 +284,7 @@
                 subject_id: id
               }
           });
-          const totalCount = data.count;
+          const totalCount = data.count || 0;
           curData = Object.assign(curData, {
             list: data.results || [],
             emptyData: formatCodeData(code, emptyData, totalCount === 0),
@@ -308,11 +310,14 @@
         }
       },
 
-      // 获取部门用户组
+      // 获取用户所属部门用户组
       async fetchDepartGroupSearch () {
+        const { id, type } = this.queryGroupData;
+        const curData = this.memberTempPermData[1];
+        const { emptyData, pagination } = curData;
         try {
-          const { current, limit } = this.curSearchPagination;
-          const { id, type } = this.queryGroupData;
+          curData.loading = true;
+          const { current, limit } = pagination;
           const params = {
             ...this.curSearchParams,
             ...{
@@ -326,36 +331,49 @@
             params.system_id = this.externalSystemId;
             params.hidden = false;
           }
+          // 'userOrOrg/getUserGroupByDepartList',
           const { code, data } = await this.$store.dispatch(
-            'userOrOrg/getUserGroupByDepartList',
+            'userOrOrg/getUserOrDepartGroupList',
             params
           );
-          this.de = data.results || [];
-          // this.$set(this.panels[0], 'count', data.count || 0);
-          this.curEmptyData = formatCodeData(code, this.curEmptyData, data.count === 0);
+          const totalCount = data.count || 0;
+          this.memberTempPermData[1] = Object.assign(this.memberTempPermData[1], {
+            list: data.results || [],
+            emptyData: formatCodeData(code, emptyData, totalCount === 0),
+            pagination: { ...pagination, ...{ count: totalCount } }
+          });
+          this.$nextTick(() => {
+            this.memberTempPermData[1].list.forEach(item => {
+              item.role_members = this.formatRoleMembers(item.role_members);
+            });
+          });
         } catch (e) {
           console.error(e);
-          const { code } = e;
-          this.personalGroupList = [];
-          this.curEmptyData = formatCodeData(code, this.curEmptyData);
+          this.memberTempPermData[1] = Object.assign(this.memberTempPermData[1], {
+            list: [],
+            emptyData: formatCodeData(e.code, emptyData),
+            pagination: { ...pagination, ...{ count: 0 } }
+          });
           this.messageAdvancedError(e);
         } finally {
-          this.componentLoading = false;
+          curData.loading = false;
         }
       },
   
-      async fetchPermGroupsByDepart () {
-        const { emptyData, pagination } = this.memberTempPermData[1];
+      // 用户人员模板用户组权限
+      async fetchPermByTempSearch () {
+        const { emptyData, pagination } = this.memberTempPermData[2];
+        const { id, type } = this.queryGroupData;
         try {
-          this.memberTempPermData[1].loading = true;
+          this.memberTempPermData[2].loading = true;
           const { current, limit } = pagination;
-          let url = 'perm/getDepartPermGroupsByTemp';
+          let url = 'userOrOrg/getUserMemberTempList';
           let params = {
             limit,
             offset: limit * (current - 1)
           };
           if (this.isSearchPerm) {
-            url = 'perm/getDepartPermGroupsByTempSearch';
+            url = 'userOrOrg/getUserMemberTempList';
             params = {
                 ...this.curSearchParams,
                 limit,
@@ -366,12 +384,68 @@
             params.system_id = this.externalSystemId;
             params.hidden = false;
           }
-          const { id, type, username } = this.groupData;
           const { code, data } = await this.$store.dispatch(url, {
               ...params,
               ...{
-                subject_type: type === 'user' ? type : 'department',
-                subject_id: type === 'user' ? username : id
+                subject_type: type,
+                subject_id: id
+              }
+          });
+          const totalCount = data.count;
+          this.memberTempPermData[2] = Object.assign(this.memberTempPermData[2], {
+            list: data.results || [],
+            emptyData: formatCodeData(code, emptyData, totalCount === 0),
+            pagination: { ...pagination, ...{ count: totalCount } }
+          });
+          this.emptyPermData = cloneDeep(this.memberTempPermData[2].emptyData);
+          this.$nextTick(() => {
+            this.memberTempPermData[2].list.forEach(item => {
+              item.role_members = this.formatRoleMembers(item.role_members);
+            });
+          });
+        } catch (e) {
+          console.error(e);
+          this.memberTempPermData[2] = Object.assign(this.memberTempPermData[2], {
+            list: [],
+            emptyData: formatCodeData(e.code, emptyData),
+            pagination: { ...pagination, ...{ count: 0 } }
+          });
+          this.emptyPermData = formatCodeData(e.code, emptyData);
+          this.messageAdvancedError(e);
+        } finally {
+          this.memberTempPermData[2].loading = false;
+        }
+      },
+
+      // 部门人员模版用户组权限
+      async fetchDepartPermByTempSearch () {
+        const { emptyData, pagination } = this.memberTempPermData[1];
+        const { id, type } = this.queryGroupData;
+        try {
+          this.memberTempPermData[1].loading = true;
+          const { current, limit } = pagination;
+          let url = 'userOrOrg/getDepartMemberTempList';
+          let params = {
+            limit,
+            offset: limit * (current - 1)
+          };
+          if (this.isSearchPerm) {
+            url = 'userOrOrg/getDepartMemberTempList';
+            params = {
+                ...this.curSearchParams,
+                limit,
+                offset: limit * (current - 1)
+            };
+          }
+          if (this.externalSystemId) {
+            params.system_id = this.externalSystemId;
+            params.hidden = false;
+          }
+          const { code, data } = await this.$store.dispatch(url, {
+              ...params,
+              ...{
+                subject_type: type,
+                subject_id: id
               }
           });
           const totalCount = data.count;
@@ -402,15 +476,33 @@
   
       fetchInitData () {
         const routeMap = {
-          userOrgPerm: async () => {
-            this.groupData.type !== 'user'
-              ? await this.fetchUserGroupSearch()
-              : await Promise.all([this.fetchUserGroupSearch(), this.fetchPermGroupsByDepart()]);
-            this.hasPerm = this.memberTempPermData.some((v) => v.pagination.count > 0);
+          userOrgPerm: () => {
+            const typeMap = {
+              user: async () => {
+                this.memberTempPermData = this.initMemberTempPermData.filter((item) => ['personalOrDepartPerm', 'departPerm', 'userTempPerm'].includes(item.id));
+                this.memberTempPermData[0] = Object.assign(this.memberTempPermData[0], { name: this.$t(`m.userOrOrg['个人用户组权限']`) });
+                await Promise.all([
+                  this.fetchUserGroupSearch(),
+                  this.fetchDepartGroupSearch(),
+                  this.fetchPermByTempSearch()
+                ]);
+                this.hasPerm = this.memberTempPermData.some((v) => v.pagination.count > 0);
+              },
+              department: async () => {
+                this.memberTempPermData = this.initMemberTempPermData.filter((item) => ['personalOrDepartPerm', 'departTempPerm'].includes(item.id));
+                this.memberTempPermData[0] = Object.assign(this.memberTempPermData[0], { name: this.$t(`m.userOrOrg['用户组权限']`) });
+                await Promise.all([
+                  this.fetchUserGroupSearch(),
+                  this.fetchDepartPermByTempSearch()
+                ]);
+                this.hasPerm = this.memberTempPermData.some((v) => v.pagination.count > 0);
+              }
+            };
+            return typeMap[this.queryGroupData.type]();
           }
         };
         if (routeMap[this.$route.name]) {
-          return routeMap[this.$route.name]();
+          routeMap[this.$route.name]();
         }
       },
         
@@ -436,32 +528,38 @@
         });
       },
   
-      formatPaginationData (payload, current, limit) {
-        const typeMap = {
-          user: async () => {
-            this.memberTempPermData[0].pagination
-              = Object.assign(this.memberTempPermData[0].pagination, { current, limit });
-            if (['myPerm'].includes(this.$route.name)) {
-              await this.fetchDataByUser();
-              return;
+      async formatPaginationData (payload, current, limit) {
+        console.log(payload, 55555);
+        const curData = this.memberTempPermData.find((item) => item.id === payload.id);
+        if (curData) {
+          const typeMap = {
+            personalOrDepartPerm: async () => {
+              curData.pagination = Object.assign(curData, { current, limit });
+              if (['userOrgPerm'].includes(this.$route.name)) {
+                await this.fetchUserGroupSearch();
+              }
+            },
+            departPerm: async () => {
+              curData.pagination = Object.assign(curData, { current, limit });
+              if (['userOrgPerm'].includes(this.$route.name)) {
+                await this.fetchUserGroupSearch();
+              }
+            },
+            userTempPerm: async () => {
+              curData.pagination = Object.assign(curData, { current, limit });
+              if (['userOrgPerm'].includes(this.$route.name)) {
+                await this.fetchUserGroupSearch();
+              }
+            },
+            departTempPerm: async () => {
+              curData.pagination = Object.assign(curData, { current, limit });
+              if (['userOrgPerm'].includes(this.$route.name)) {
+                await this.fetchUserGroupSearch();
+              }
             }
-            if (['user'].includes(this.$route.name)) {
-              await this.fetchUserGroupSearch();
-            }
-          },
-          depart: async () => {
-            this.memberTempPermData[1].pagination
-              = Object.assign(this.memberTempPermData[1].pagination, { current, limit });
-            if (['myPerm'].includes(this.$route.name)) {
-              await this.fetchDataByDepart();
-              return;
-            }
-            if (['user'].includes(this.$route.name)) {
-              this.groupData.type === 'user' ? await this.fetchPermGroupsByDepart() : await this.fetchUserGroupSearch();
-            }
-          }
-        };
-        return typeMap[payload.id]();
+          };
+          return typeMap[payload.id]();
+        }
       },
   
       handlePageChange (current, payload) {
@@ -494,7 +592,7 @@
   </script>
   
   <style lang="postcss" scoped>
-  .my-template-group-perm {
+  .user-org-group-perm {
     width: 100%;
     position: relative;
     .iam-perm-ext-cls {
@@ -506,11 +604,11 @@
     .iam-perm-no-border {
       border: none;
     }
-    .my-perm-custom-perm-empty-wrapper {
+    .perm-empty-wrapper {
         position: absolute;
         left: 50%;
         top: 50%;
-        transform: translate(50%, 50%);
+        transform: translate(-50%, 50%);
     }
   }
   </style>

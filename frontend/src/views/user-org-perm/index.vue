@@ -27,8 +27,12 @@
           <component
             :key="comKey"
             :is="curCom"
+            :is-search-perm="isSearchPerm"
             :group-data="currentGroupData"
+            :cur-search-params="curSearchParams"
             :cur-search-pagination="curSearchPagination"
+            @on-clear="handleEmptyClear"
+            @on-refresh="handleEmptyRefresh"
           />
         </div>
       </Layout>
@@ -108,8 +112,14 @@
           tip: '',
           tipType: ''
         },
+        curEmptyData: {
+          type: '',
+          text: '',
+          tip: '',
+          tipType: ''
+        },
         currentGroupData: {},
-        dragWidth: 240
+        dragWidth: 224
       };
     },
     computed: {
@@ -132,7 +142,7 @@
       curCom () {
         let com = '';
         for (const [key, value] of this.comMap.entries()) {
-          if (Object.keys(this.currentGroupData).length && key.includes(this.currentGroupData.type)) { // 根据后台返回值渲染动态组件
+          if (Object.keys(this.currentGroupData).length && key.includes(this.currentGroupData.type)) {
             com = value;
             break;
           }
@@ -193,7 +203,6 @@
         if (!isNoTag) {
           this.curEmptyData = cloneDeep(emptyData);
           await this.fetchRemoteTable();
-          this.formatCheckGroups();
         }
       },
 
@@ -208,7 +217,6 @@
           this.isSearchPerm = true;
           this.$set(this.curSearchParams, 'name', payload);
           await this.fetchRemoteTable();
-          this.formatCheckGroups();
         }
       },
 
@@ -223,35 +231,15 @@
         this.curSearchParams = {};
       // this.fetchData(true);
       },
+      
+      handleEmptyRefresh () {
+        this.isSearchPerm = false;
+        this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyRefresh();
+      },
 
-      formatCheckGroups () {
-        const selectList = this.panels[0].selectList.map((item) => item.id.toString());
-        setTimeout(() => {
-          this.personalGroupList.length
-            && this.personalGroupList.forEach((item) => {
-              item.role_members = this.formatRoleMembers(item.role_members);
-              if (selectList.includes(item.id.toString())
-                && this.$refs.childPermRef
-                && this.$refs.childPermRef.length) {
-                this.$refs.childPermRef[0].$refs.groupPermTableRef.toggleRowSelection(item, true);
-              }
-            });
-          if (this.departmentGroupList && this.departmentGroupList.length) {
-            this.departmentGroupList.forEach((item) => {
-              item.role_members = this.formatRoleMembers(item.role_members);
-            });
-          }
-          if (this.memberTempByUserList && this.memberTempByUserList.length) {
-            this.memberTempByUserList.forEach((item) => {
-              item.role_members = this.formatRoleMembers(item.role_members);
-            });
-          }
-          if (this.memberTempByDepartList && this.memberTempByDepartList.length) {
-            this.memberTempByDepartList.forEach((item) => {
-              item.role_members = this.formatRoleMembers(item.role_members);
-            });
-          }
-        }, 0);
+      handleEmptyClear () {
+        this.isSearchPerm = false;
+        this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyClear();
       }
     }
   };
@@ -274,9 +262,9 @@
       border-right: 1px solid#dcdee5;
       height: 100%;
     }
-  }
-  .group-search-select {
-    padding-bottom: 0;
+    &-right {
+      height: 100%;
+    }
   }
 }
 </style>

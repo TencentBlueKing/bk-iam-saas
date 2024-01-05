@@ -1,0 +1,20 @@
+.my-perm-group-perm {
+  height: 100%;
+  &-header {
+    margin-bottom: 16px;
+  }
+  .iam-perm-ext-cls {
+    margin-top: 1px;
+  }
+  .user-org-perm-table {
+    border: none;
+    color: #63656E !important;
+    .can-view-name {
+      color: #3a84ff;
+      cursor: pointer;
+      &:hover {
+        color: #699df4;
+      }
+    }
+  }
+}

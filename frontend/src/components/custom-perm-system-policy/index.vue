@@ -2,7 +2,7 @@
   <div v-if="permLength > 0" :class="['iam-perm-item', extCls, `${$route.name}-perm-item`]">
     <div class="header" @click="handleExpanded" v-if="!isOnlyPerm">
       <Icon bk class="expanded-icon" :type="isExpanded ? 'down-shape' : 'right-shape'" />
-      <label class="title">{{ title }}</label>
+      <span class="title">{{ title }}</span>
       <template>
       </template>
       <div class="sub-title">
@@ -27,7 +27,7 @@
       <div class="slot-content">
         <slot />
       </div>
-      <p class="expand-action" @click="handleCollapse">
+      <p v-if="showCollapse" class="expand-action" @click="handleCollapse">
         <Icon :type="isExpanded ? 'up-angle' : 'down-angle'" />
         {{ $t(`m.common['点击收起']`) }}
       </p>
@@ -70,6 +70,10 @@
       isAllDelete: {
         type: Boolean,
         default: false
+      },
+      showCollapse: {
+        type: Boolean,
+        default: true
       }
     },
     data () {
@@ -185,6 +189,7 @@
 
         &.userOrgPerm-perm-item {
           box-shadow: 0 2px 4px 0 #1919290d;
+          margin-bottom: 12px;
           .header {
             display: flex;
             align-items: center;
@@ -210,6 +215,7 @@
           .content {
             .slot-content {
               padding: 0 24px;
+              padding-bottom: 10px;
             }
           }
         }

@@ -51,6 +51,32 @@ export default {
     },
 
     /**
+     * 角色用户组成员-用户组列表
+     *
+     * @param {Function} commit store commit mutation handler
+     * @param {Object} state store state
+     * @param {Function} dispatch store dispatch action handler
+     * @param {Object} params 请求参数
+     * @param {Object?} config http config
+     *
+     * @return {Promise} promise 对象
+    */
+    getUserOrDepartGroupList ({ commit, state, dispatch }, params, config) {
+      const { offset, limit, hidden, system_id: systemId } = params;
+      const requestParams = Object.assign({}, params);
+      const queryParams = Object.assign({}, { offset, limit });
+      if (params.hasOwnProperty('hidden')) {
+        queryParams.hidden = hidden;
+      }
+      if (params.hasOwnProperty('system_id')) {
+        queryParams.system_id = systemId;
+      }
+      delete params.subject_type;
+      delete params.subject_id;
+      return http.post(`${AJAX_URL_PREFIX}/roles/group_members/${requestParams.subject_type}/${requestParams.subject_id}/groups/?${json2Query(queryParams)}`, params, config);
+    },
+    
+    /**
      * 角色用户组成员-部门用户组列表
      *
      * @param {Function} commit store commit mutation handler
@@ -62,14 +88,22 @@ export default {
      * @return {Promise} promise 对象
     */
     getUserGroupByDepartList ({ commit, state, dispatch }, params, config) {
+      const { offset, limit, hidden, system_id: systemId } = params;
       const requestParams = Object.assign({}, params);
+      const queryParams = Object.assign({}, { offset, limit });
+      if (params.hasOwnProperty('hidden')) {
+        queryParams.hidden = hidden;
+      }
+      if (params.hasOwnProperty('system_id')) {
+        queryParams.system_id = systemId;
+      }
       delete params.subject_type;
       delete params.subject_id;
-      return http.post(`${AJAX_URL_PREFIX}/roles/group_members/${requestParams.subject_type}/${requestParams.subject_id}/departments/-/groups/`, params, config);
+      return http.post(`${AJAX_URL_PREFIX}/roles/group_members/${requestParams.subject_type}/${requestParams.subject_id}/departments/-/groups/?${json2Query(queryParams)}`, params, config);
     },
-    
+
     /**
-     * 角色用户组成员-用户组列表
+     * 角色用户组成员-人员模版用户组列表
      *
      * @param {Function} commit store commit mutation handler
      * @param {Object} state store state
@@ -79,11 +113,19 @@ export default {
      *
      * @return {Promise} promise 对象
     */
-    getUserGroupByUserList ({ commit, state, dispatch }, params, config) {
+    getUserMemberTempList ({ commit, state, dispatch }, params, config) {
+      const { offset, limit, hidden, system_id: systemId } = params;
       const requestParams = Object.assign({}, params);
+      const queryParams = Object.assign({}, { offset, limit });
+      if (params.hasOwnProperty('hidden')) {
+        queryParams.hidden = hidden;
+      }
+      if (params.hasOwnProperty('system_id')) {
+        queryParams.system_id = systemId;
+      }
       delete params.subject_type;
       delete params.subject_id;
-      return http.post(`${AJAX_URL_PREFIX}/roles/group_members/${requestParams.subject_type}/${requestParams.subject_id}/departments/-/subject_template_groups/`, params, config);
+      return http.post(`${AJAX_URL_PREFIX}/roles/group_members/${requestParams.subject_type}/${requestParams.subject_id}/subject_template_groups/?${json2Query(queryParams)}`, params, config);
     },
 
     /**
@@ -98,46 +140,18 @@ export default {
      * @return {Promise} promise 对象
     */
     getDepartMemberTempList ({ commit, state, dispatch }, params, config) {
+      const { offset, limit, hidden, system_id: systemId } = params;
       const requestParams = Object.assign({}, params);
+      const queryParams = Object.assign({}, { offset, limit });
+      if (params.hasOwnProperty('hidden')) {
+        queryParams.hidden = hidden;
+      }
+      if (params.hasOwnProperty('system_id')) {
+        queryParams.system_id = systemId;
+      }
       delete params.subject_type;
       delete params.subject_id;
-      return http.post(`${AJAX_URL_PREFIX}/roles/group_members/${requestParams.subject_type}/${requestParams.subject_id}/departments/-/subject_template_groups/`, params, config);
-    },
-
-    /**
-     * 角色用户组成员-用户组列表
-     *
-     * @param {Function} commit store commit mutation handler
-     * @param {Object} state store state
-     * @param {Function} dispatch store dispatch action handler
-     * @param {Object} params 请求参数
-     * @param {Object?} config http config
-     *
-     * @return {Promise} promise 对象
-    */
-    getUserGroupList ({ commit, state, dispatch }, params, config) {
-      const requestParams = Object.assign({}, params);
-      delete params.subject_type;
-      delete params.subject_id;
-      return http.post(`${AJAX_URL_PREFIX}/roles/group_members/${requestParams.subject_type}/${requestParams.subject_id}/groups/`, params, config);
-    },
-
-    /**
-     * 角色用户组成员-人员模版用户组列表
-     *
-     * @param {Function} commit store commit mutation handler
-     * @param {Object} state store state
-     * @param {Function} dispatch store dispatch action handler
-     * @param {Object} params 请求参数
-     * @param {Object?} config http config
-     *
-     * @return {Promise} promise 对象
-    */
-    getMemberTempUserGroupList ({ commit, state, dispatch }, params, config) {
-      const requestParams = Object.assign({}, params);
-      delete params.subject_type;
-      delete params.subject_id;
-      return http.post(`${AJAX_URL_PREFIX}/roles/group_members/${requestParams.subject_type}/${requestParams.subject_id}/subject_template_groups/`, params, config);
+      return http.post(`${AJAX_URL_PREFIX}/roles/group_members/${requestParams.subject_type}/${requestParams.subject_id}/departments/-/subject_template_groups/?${json2Query(queryParams)}`, params, config);
     }
   }
 };

@@ -165,7 +165,7 @@ const currentNav = [
     rkey: 'managePermission',
     children: [
       {
-        icon: 'user-group',
+        icon: 'personal-user',
         id: 'userOrgPermNav',
         rkey: 'userOrgPerm',
         name: il8n('nav', '用户/组织'),

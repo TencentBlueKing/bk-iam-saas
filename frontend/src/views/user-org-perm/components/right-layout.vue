@@ -184,13 +184,11 @@
       },
 
       handleEmptyRefresh () {
-        this.isSearchPerm = false;
-        this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyRefresh();
+        this.$emit('on-refresh');
       },
 
       handleEmptyClear () {
-        this.isSearchPerm = false;
-        this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyClear();
+        this.$emit('on-clear');
       }
     }
   };
