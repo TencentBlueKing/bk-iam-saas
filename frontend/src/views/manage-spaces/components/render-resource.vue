@@ -346,7 +346,7 @@
               );
               return prev;
             }, []);
-            return curPaths.some(v => v.disabled);
+            return curPaths.every(v => v.disabled);
           }
           // return curPaths.every(v => v.disabled);
           return true;

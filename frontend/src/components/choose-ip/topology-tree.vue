@@ -11,6 +11,7 @@
           ext-cls="topology-tree-table"
           :header-border="false"
           :outer-border="false"
+          :max-height="formatTableHeight"
           :data="renderTopologyData"
           @select="handleSelectChange"
           @select-all="handleSelectAllChange"
@@ -25,7 +26,8 @@
             <ExceptionEmpty />
           </template>
         </bk-table>
-        <template v-if="pagination.count > 0">
+        <div v-if="pagination.count > 0" class="topology-table-pagination">
+          <div class="custom-largest-count">{{ $t(`m.info['ip选择器每页最大条数']`, { value: 100 }) }}{{ $t(`m.common['，']`) }}</div>
           <bk-pagination
             size="small"
             align="right"
@@ -38,7 +40,7 @@
             :limit="pagination.limit"
             @change="handlePageChange"
           />
-        </template>
+        </div>
       </template>
       <template v-else>
         <div class="multiple-topology-tree">
@@ -92,7 +94,7 @@
                         :disabled="formatRadioDisabled(item)"
                         v-model="item.checked"
                         ext-cls="iam-topology-title-cls"
-                        :title="`ID: ${item.id}`"
+                        :title="`ID: ${item.id}; ${$t(`m.levelSpace['名称']`)}: ${item.name}`"
                         data-test-id="topology_checkbox_chooseip"
                         @change="handleNodeChange(...arguments, item, index)"
                       >
@@ -201,7 +203,7 @@
                 <bk-table-column type="selection" align="center" :selectable="setDefaultSelect" />
                 <bk-table-column :label="formatPlaceHolder('table')">
                   <template slot-scope="{ row }">
-                    <span :title="`ID: ${row.id}`">{{ row.name }}</span>
+                    <span :title="`ID: ${row.id}; ${$t(`m.levelSpace['名称']`)}: ${row.name}`">{{ row.name }}</span>
                   </template>
                 </bk-table-column>
                 <template v-if="!tableLoading && subPagination.count === 0">
@@ -216,7 +218,8 @@
                   </template>
                 </template>
               </bk-table>
-              <template v-if="subPagination.count > 0">
+              <div v-if="subPagination.count > 0" class="topology-table-pagination">
+                <div class="custom-largest-count">{{ $t(`m.info['ip选择器每页最大条数']`, { value: 100 }) }}{{ $t(`m.common['，']`) }}</div>
                 <bk-pagination
                   size="small"
                   align="right"
@@ -229,7 +232,7 @@
                   :limit="subPagination.limit"
                   @change="handleTablePageChange"
                 />
-              </template>
+              </div>
             </div>
           </div>
         </div>
@@ -242,7 +245,7 @@
   import _ from 'lodash';
   import TopologyInput from './topology-input';
   import { bus } from '@/common/bus';
-  import { formatCodeData } from '@/common/util';
+  import { getWindowHeight, formatCodeData } from '@/common/util';
   import { mapGetters } from 'vuex';
 
   export default {
@@ -500,6 +503,12 @@
         return (payload) => {
           return payload.type === 'load' && payload.level < this.curChain.length - 1;
         };
+      },
+      formatTableHeight () {
+        if (this.isOnlyLevel) {
+          return getWindowHeight() - 550;
+        }
+        return `calc(100% - 550px)`;
       },
       formatRadioDisabled () {
         return (payload) => {
@@ -806,7 +815,7 @@
           const defaultSelectList = this.curSelectedValues
             .filter((item) => item.disabled)
             .map((v) => v.ids).flat(this.curChain.length);
-          console.log(7477, this.curSelectedValues);
+          // console.log(7477, this.curSelectedValues);
           if (defaultSelectList.length) {
             let childrenIdList = [];
             const result = !(defaultSelectList.includes(`${payload.id}&${this.curChain[payload.level].id}`)
@@ -1569,11 +1578,12 @@
 <style lang="postcss" scoped>
 .topology-tree-table {
   border: 0;
+  padding: 0 16px;
   .bk-table-empty-block {
     height: calc(100vh - 450px);
   }
   .bk-page.bk-page-align-right {
-    padding: 10px;
+    padding: 16px;
   }
 }
 
@@ -1581,9 +1591,18 @@
   display: flex;
   background-color: #ffffff;
   &-left {
-    border-right: 1px solid #dcdee5;
+    position: relative;
     &-content {
       margin-right: 16px;
+    }
+    &::after {
+      content: '';
+      position: absolute;
+      top: 16px;
+      right: 0;
+      width: 1px;
+      height: 100%;
+      background-color: #dcdee5;
     }
   }
 }
@@ -1592,7 +1611,7 @@
 .multiple-topology-tree-left-content,
 .multiple-topology-tree-right-content {
   height: calc(100vh - 550px);
-  overflow: auto;
+  /* overflow: auto; */
   z-index: 2;
   &::-webkit-scrollbar {
     width: 6px;
@@ -1612,12 +1631,23 @@
   height: calc(100vh - 450px);
 }
 
-/deep/ .topology-tree-pagination-cls {
-  padding: 10px 20px;
-  .bk-page-small-jump {
-    .jump-input {
-      outline: none;
-      min-width: 0;
+.topology-table-pagination {
+  display: flex;
+  padding: 16px;
+  position: relative;
+  .custom-largest-count {
+    font-size: 12px;
+    color: #989dab;
+    line-height: 36px;
+  }
+  /deep/ .topology-tree-pagination-cls {
+    .bk-page-small-jump {
+      position: absolute;
+      right: 16px;
+      .jump-input {
+        outline: none;
+        min-width: 0;
+      }
     }
   }
 }

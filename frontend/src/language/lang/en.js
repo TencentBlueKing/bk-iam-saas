@@ -548,7 +548,8 @@ export const m = {
          '已加入用户组数量 ， 新申请数量，总数超过上限：100，请减少申请或退出部分用户组后重试': 'Number of added user groups: {applyCount}, number of new applications: {newApplyCount}, total exceeds the limit of 100. Please reduce the number of applications or exit some user groups and try again',
          '最多添加一个管理员': 'Add at most one administrator',
          '管理员不可重复添加': 'Administrators cannot be added repeatedly',
-         '有关联的用户组, 无法删除': 'Associated user groups cannot be deleted'
+         '有关联的用户组, 无法删除': 'Associated user groups cannot be deleted',
+         'ip选择器每页最大条数': 'items {value}/page'
     },
     // 二次确认弹窗相关
     dialog: {

@@ -35,7 +35,8 @@
           </div>
           <div slot="content" class="instance-content">
             <p class="instance-item" v-for="(child, childIndex) in item.displayPath" :key="childIndex">
-              <span class="name" :title="`ID: ${child.id}`">{{ child.display_name }}</span>
+              <!-- <span class="name" :title="`ID: ${child.id}`">{{ child.display_name }}</span> -->
+              <span class="name" :title="`ID: ${child.id}; ${$t(`m.levelSpace['名称']`)}: ${child.display_name}`">{{ child.display_name }}</span>
               <bk-button
                 text
                 size="small"
@@ -84,12 +85,12 @@
         if (this.curLanguageIsCn) {
           return {
             // 'min-width': '48px',
-            'line-height': '42px'
+            'line-height': '32px'
           };
         }
         return {
           // 'min-width': '70px',
-          'line-height': '42px'
+          'line-height': '32px'
         };
       },
       formatChain () {
@@ -107,6 +108,7 @@
       },
       formatClearDisabled () {
         return (payload) => {
+          console.log(payload.displayPath, 555);
           return payload.displayPath.every(v => v.disabled);
         };
       }
@@ -198,7 +200,7 @@
               padding: 0 20px;
               display: flex;
               justify-content: space-between;
-              line-height: 42px;
+              line-height: 32px;
               border-bottom: 1px solid #F4F4F4;
               border-radius: 2px;
               background: #ffffff;
