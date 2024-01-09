@@ -260,7 +260,7 @@
     .sensitivity-level-select-tag {
         margin: 0 6px 0 0;
         &-custom {
-          background-color: #c02121;
+          background-color: #c02121 !important;
         }
     }
 }

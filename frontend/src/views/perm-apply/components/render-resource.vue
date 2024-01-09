@@ -46,6 +46,7 @@
                   :selection-mode="selectionMode"
                   :select-list="selectList"
                   :select-value="selectValue"
+                  :has-attribute="condition.hasOwnProperty('attribute')"
                   :system-params="params"
                   @on-tree-select="handlePathSelect(...arguments, index)" />
                 <div class="drag-dotted-line" v-if="isDrag" :style="dottedLineStyle"></div>
@@ -113,7 +114,7 @@
           </render-resource-instance>
           <!-- 属性 -->
           <render-resource-instance
-            v-if="condition.hasOwnProperty('attribute')"
+
             type="property"
             mode="edit"
             :can-delete="condition.attributeCanDelete"

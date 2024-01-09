@@ -29,6 +29,7 @@
                 :sub-resource-total="subResourceTotal"
                 :resource-value="resourceValue"
                 :has-selected-values="hasSelectedValues"
+                :has-attribute="hasAttribute"
                 @on-expanded="handleOnExpanded"
                 @on-search="handleSearch"
                 @on-table-search="handleTableSearch"
@@ -73,6 +74,7 @@
                 :sub-resource-total="subResourceTotal"
                 :empty-data="emptyTreeData"
                 :has-selected-values="hasSelectedValues"
+                :has-attribute="hasAttribute"
                 :resource-value="resourceValue"
                 @on-expanded="handleOnExpanded"
                 @on-search="handleSearch"
@@ -118,6 +120,7 @@
                   :sub-resource-total="subResourceTotal"
                   :empty-data="emptyTreeData"
                   :has-selected-values="hasSelectedValues"
+                  :has-attribute="hasAttribute"
                   :resource-value="resourceValue"
                   @on-expanded="handleOnExpanded"
                   @on-search="handleSearch"
@@ -290,6 +293,11 @@
       },
       selectionMode: {
         type: String
+      },
+      // 处理有自定义属性条件场景
+      hasAttribute: {
+        type: Boolean,
+        default: false
       }
     },
     data () {

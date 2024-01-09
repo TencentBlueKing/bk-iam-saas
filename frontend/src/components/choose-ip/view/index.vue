@@ -108,7 +108,6 @@
       },
       formatClearDisabled () {
         return (payload) => {
-          console.log(payload.displayPath, 555);
           return payload.displayPath.every(v => v.disabled);
         };
       }

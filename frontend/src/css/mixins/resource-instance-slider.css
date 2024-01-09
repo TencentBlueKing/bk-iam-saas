@@ -170,7 +170,8 @@
     line-height: 42px;
     cursor: pointer;
   }
+  &.disabled,
   &.disabled * {
-    background-color: #ffffff !important;
+    background-color: transparent !important;
   }
 }
