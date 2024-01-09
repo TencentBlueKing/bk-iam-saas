@@ -1,6 +1,6 @@
 <template>
   <bk-sideslider
-    :is-show.sync="isShow"
+    :is-show="isShow"
     :width="960"
     :title="$t(`m.permTemplate['模板详情']`)"
     ext-cls="iam-tempate-detail-sideslider"
@@ -50,6 +50,7 @@
     methods: {
       handleCancel () {
         this.$emit('update:isShow', false);
+        this.$emit('on-cancel');
       },
 
       async fetchTemplateDetail () {
