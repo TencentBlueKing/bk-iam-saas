@@ -77,7 +77,7 @@
               :placeholder="curPlaceholder"
               @on-search="handleTreeSearch(...arguments)"
             />
-            <div class="multiple-topology-tree-left-content" :style="formatLevelStyle">
+            <div class="multiple-topology-tree-left-content" :style="formatLeftContentStyle">
               <template v-if="!isTreeEmpty">
                 <div
                   v-for="(item, index) in allTreeData"
@@ -92,7 +92,7 @@
                     { 'can-hover': item.type === 'node' && !item.loading }
                   ]"
                   :style="getNodeStyle(item)"
-                  v-show="item.visiable"
+                  v-if="item.visiable"
                   @click.stop="handleSelectNode(item, index)"
                 >
                   <template v-if="item.type === 'node'">
@@ -112,7 +112,8 @@
                       :class="[
                         'node-radio',
                         { 'node-radio-no-icon': !(!isTwoLevel && item.async) },
-                        { 'node-radio-none': item.level === 1 }
+                        { 'node-radio-no-icon-two-level': (!(!isTwoLevel && item.async)) && isTwoLevel },
+                        { 'node-radio-none': isTwoLevel && item.level === 1 }
                       ]"
                       @click.stop>
                       <bk-checkbox
@@ -388,6 +389,21 @@
       hasAttribute: {
         type: Boolean,
         default: false
+      },
+      // 处理有bar的场景
+      hasStatusBar: {
+        type: Boolean,
+        default: false
+      },
+      // 处理可以添加新的拓扑实例组的场景
+      hasAddInstance: {
+        type: Boolean,
+        default: false
+      },
+      // 是否显示添加属性或者拓扑实例bar
+      isShowEditAction: {
+        type: Boolean,
+        default: false
       }
     },
     data () {
@@ -528,20 +544,6 @@
           };
         };
       },
-      formatLevelStyle () {
-        if (this.isOnlyLevel) {
-          console.log(this.hasAttribute, 66);
-          if (this.hasAttribute) {
-            return {
-            'height': 'calc(100vh - 467px)'
-          };
-          }
-          return {
-            'height': 'calc(100vh - 405px)'
-          };
-        }
-        return '';
-      },
       formatPlaceHolder () {
         return (payload) => {
           const typeMap = {
@@ -557,9 +559,45 @@
           return typeMap[payload]();
         };
       },
+      formatLevelStyle () {
+        const hasOther = this.hasAddInstance || this.hasAttribute || this.hasStatusBar || this.isShowEditAction;
+        if (this.isOnlyLevel) {
+          if (hasOther) {
+            return {
+             'height': 'calc(100vh - 467px)'
+            };
+          }
+          return {
+            'height': 'calc(100vh - 405px)'
+          };
+        } else {
+          if (hasOther) {
+            return {
+              'height': 'calc(100vh - 350px)'
+            };
+          } else {
+            return {
+              'height': 'calc(100vh - 340px)'
+            };
+          }
+        }
+      },
       formatLeftStyle () {
         return {
           width: this.getDragDynamicWidth ? `${this.getDragDynamicWidth() * 0.37}px` : '600px'
+        };
+      },
+      formatLeftContentStyle () {
+        const hasOther = this.hasAddInstance || this.hasAttribute || this.hasStatusBar || this.isShowEditAction;
+        if (hasOther) {
+          return {
+            'height': 'calc(100vh - 415px)',
+            'overflow': 'auto'
+          };
+        }
+        return {
+          'height': 'calc(100vh - 415px)',
+          'overflow': 'auto'
         };
       },
       formatRightStyle () {
@@ -568,18 +606,13 @@
           width: `calc(100% - ${leftWidth})`
         };
       },
-      formatLoadMore () {
-        return (payload) => {
-          return payload.type === 'load' && payload.level < this.curChain.length - 1;
-        };
-      },
       formatTableHeight () {
         const tipHeight = this.formatSelectCount.length ? 44 : 0;
         if (this.isOnlyLevel) {
-          const tableHeight = getWindowHeight() - 462;
+          const tableHeight = getWindowHeight() - 460;
           return this.formatSelectCount.length ? tableHeight - tipHeight : tableHeight;
         }
-        return getWindowHeight() - 520 - tipHeight;
+        return getWindowHeight() - 478 - tipHeight;
       },
       formatRadioDisabled () {
         return (payload) => {
@@ -591,6 +624,11 @@
       },
       formatSelectCount () {
         return this.renderTopologyData.filter((item) => item.checked);
+      },
+            formatLoadMore () {
+        return (payload) => {
+          return payload.type === 'load' && payload.level < this.curChain.length - 1;
+        };
       },
       isTreeEmpty () {
         return this.allTreeData.filter((item) => item.type === 'node').length === 0 || this.searchDisplayText === this.$t(`m.common['搜索结果为空']`);
@@ -619,6 +657,7 @@
       allData: {
         handler (value) {
           this.allTreeData = [...value];
+          console.log(value, '拓扑数据');
           this.fetchLevelTree(value);
         },
         immediate: true
@@ -670,6 +709,9 @@
             this.renderTopologyData.forEach((item) => {
               if (`${item.name}&${item.id}` === `${node.name}&${node.id}`) {
                 this.$refs.topologyTableRef.toggleRowSelection(item, isChecked);
+                if (!item.disabled) {
+                  item.checked = isChecked;
+                }
               }
               if (!isChecked) {
                 this.currentSelectedNode = this.currentSelectedNode.filter((v) => `${v.name}&${v.id}` !== `${node.name}&${node.id}`);
@@ -824,7 +866,6 @@
             return typeMap[type]();
           },
           table: () => {
-            console.log(payload, 555);
             const typeMap = {
               type: () => {
                 if (Object.keys(payload).length) {
@@ -869,7 +910,6 @@
             return typeMap[type]();
           }
         };
-        console.log(mode, 55);
         return modeMap[mode]();
       },
 
@@ -1072,32 +1112,6 @@
         this.handleEmptyClear(payload, node, index);
       },
 
-      handleOpenSearch (node, index) {
-        if (
-          (this.allTreeData[index + 1]
-            && this.allTreeData[index + 1].type === 'search'
-            && this.allTreeData[index + 1].visiable)
-          || this.isExistAsync(node)
-        ) {
-          return;
-        }
-        node.expanded = true;
-        if (node.children && node.children.length) {
-          const children = this.allTreeData.filter((item) => item.parentId === node.nodeId);
-          children.forEach((child) => {
-            child.visiable = node.expanded;
-            if (child.async && !node.expanded) {
-              this.collapseNode(child);
-            }
-          });
-          this.$nextTick(() => {
-            this.handleSetFocus(index + 1);
-          });
-        } else {
-          this.$emit('async-load-nodes', node, index, true);
-        }
-      },
-
       /**
        * 获取节点的样式
        *
@@ -1120,7 +1134,6 @@
           };
         }
         if (node.async) {
-          // console.log(node, 5565);
           return {
             marginLeft: (node.level + 1) * this.leftBaseIndent + 'px'
           };
@@ -1240,6 +1253,7 @@
       // 选择当前节点，展示右侧表格数据
       handleSelectNode (node, index) {
         this.tableLoading = true;
+        this.renderTopologyData = [];
         if (node.id !== this.selectNodeData.id) {
           this.handleEmptyClear('table', node, index);
         }
@@ -1598,7 +1612,10 @@
     /* display: inline-block; */
     display: flex;
     &-no-icon {
-      padding-left: 12px;
+      padding-left: 15px;
+      &-two-level {
+        padding-left: 12px;
+      }
     }
     &-none {
       display: none;
@@ -1610,7 +1627,7 @@
       /* top: -2px; */
     }
     .tree-node-name {
-      margin-left: 10px;
+      padding-left: 10px;
       font-size: 12px;
     }
     /* .bk-checkbox-text {
@@ -1645,12 +1662,14 @@
   }
 
   .load-more-wrapper {
+    width: 100%;
     position: relative;
-    padding: 0 18px;
+    /* padding: 0 18px; */
     line-height: 26px;
     .load-item {
       width: 140px;
       text-align: center;
+      margin: 0 auto;
       background: #f0f1f5;
       font-size: 12px;
       color: #979ba5;
@@ -1729,11 +1748,6 @@
   }
 }
 
-.multiple-topology-tree-left-content {
-  height: calc(100vh - 470px);
-  overflow: auto;
-}
-
 .page-count-tip {
   background-color: #EAEBF0;
   color: #63656e;
@@ -1756,7 +1770,7 @@
 
 .topology-table-pagination {
   display: flex;
-  padding: 16px;
+  padding: 16px 16px 0 16px;
   position: relative;
 
   .custom-largest-count {

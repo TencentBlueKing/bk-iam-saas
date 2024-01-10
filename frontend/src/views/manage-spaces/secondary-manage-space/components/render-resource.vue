@@ -51,6 +51,7 @@
                   :has-attribute="condition.hasOwnProperty('attribute')"
                   :has-status-bar="conditionData.length > 1 && index !== conditionData.length - 1"
                   :has-add-instance="!isHide && !isLoading && selectionMode !== 'instance'"
+                  :is-show-edit-action="!handleComputedIsGroup(condition) && ['all'].includes(selectionMode)"
                   @on-tree-select="handlePathSelect(...arguments, index)" />
                 <div class="drag-dotted-line" v-if="isDrag" :style="dottedLineStyle"></div>
                 <div class="drag-line"

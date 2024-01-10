@@ -30,6 +30,9 @@
                 :resource-value="resourceValue"
                 :has-selected-values="hasSelectedValues"
                 :has-attribute="hasAttribute"
+                :has-status-bar="hasStatusBar"
+                :has-add-instance="hasAddInstance"
+                :is-show-edit-action="isShowEditAction"
                 @on-expanded="handleOnExpanded"
                 @on-search="handleSearch"
                 @on-table-search="handleTableSearch"
@@ -75,6 +78,9 @@
                 :empty-data="emptyTreeData"
                 :has-selected-values="hasSelectedValues"
                 :has-attribute="hasAttribute"
+                :has-status-bar="hasStatusBar"
+                :has-add-instance="hasAddInstance"
+                :is-show-edit-action="isShowEditAction"
                 :resource-value="resourceValue"
                 @on-expanded="handleOnExpanded"
                 @on-search="handleSearch"
@@ -121,6 +127,9 @@
                   :empty-data="emptyTreeData"
                   :has-selected-values="hasSelectedValues"
                   :has-attribute="hasAttribute"
+                  :has-status-bar="hasStatusBar"
+                  :has-add-instance="hasAddInstance"
+                  :is-show-edit-action="isShowEditAction"
                   :resource-value="resourceValue"
                   @on-expanded="handleOnExpanded"
                   @on-search="handleSearch"
@@ -294,8 +303,18 @@
       selectionMode: {
         type: String
       },
-      // 处理有自定义属性条件场景
-      hasAttribute: {
+      // 处理有bar的场景
+      hasStatusBar: {
+        type: Boolean,
+        default: false
+      },
+      // 处理可以添加新的拓扑实例组的场景
+      hasAddInstance: {
+        type: Boolean,
+        default: false
+      },
+      // 是否显示添加属性或者拓扑实例bar
+      isShowEditAction: {
         type: Boolean,
         default: false
       }
@@ -1923,7 +1942,7 @@
           .topology-tree-wrapper {
               position: relative;
               height: 100%;
-              min-height: 450px;
+              /* min-height: 450px; */
               .empty-wrapper {
                   position: absolute;
                   top: 50%;
