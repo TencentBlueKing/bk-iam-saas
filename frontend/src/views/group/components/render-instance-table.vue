@@ -143,7 +143,7 @@
         <bk-table-column
           :resizable="true"
           :label="$t(`m.common['操作-table']`)"
-          :width="curLanguageIsCn ? 200 : 400"
+          :width="formateOperateWidth"
         >
           <template slot-scope="{ row }">
             <bk-button
@@ -175,7 +175,7 @@
     <bk-sideslider
       :is-show="isShowResourceInstanceSideslider"
       :title="resourceInstanceSidesliderTitle"
-      :width="resourceSliderWidth"
+      :width="960"
       quick-close
       transfer
       :ext-cls="'relate-instance-sideslider'"
@@ -297,11 +297,6 @@
   // import store from '@/store'
   export default {
     name: 'resource-instance-table',
-    provide: function () {
-      return {
-        getResourceSliderWidth: () => this.resourceSliderWidth
-      };
-    },
     components: {
       RenderAggregateSideslider,
       RenderResource,
@@ -436,9 +431,7 @@
         currentActionName: '',
         delActionDialogTitle: '',
         delActionDialogTip: '',
-        isAggregateEmptyMessage: false,
-        resourceSliderWidth: Math.ceil(window.innerWidth * 0.67 - 7) < 960
-          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7)
+        isAggregateEmptyMessage: false
       };
     },
     computed: {
@@ -551,6 +544,23 @@
             return displayValue;
           }
         };
+      },
+      formateOperateWidth () {
+        const langMap = {
+          true: () => {
+            if (!this.isUserGroupDetail ? false : true && this.isShowDeleteAction) {
+              return 200;
+            }
+            return 130;
+          },
+          false: () => {
+            if (!this.isUserGroupDetail ? false : true && this.isShowDeleteAction) {
+              return 400;
+            }
+            return 192;
+          }
+        };
+        return langMap[this.curLanguageIsCn]();
       }
     },
     watch: {
@@ -627,18 +637,7 @@
       //     deep: true
       // }
     },
-    mounted () {
-      window.addEventListener('resize', (this.formatFormItemWidth));
-      this.$once('hook:beforeDestroy', () => {
-        window.removeEventListener('resize', this.formatFormItemWidth);
-      });
-    },
     methods: {
-      formatFormItemWidth () {
-        this.resourceSliderWidth = Math.ceil(window.innerWidth * 0.67 - 7) < 960
-          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7);
-      },
-
       handleSpanMethod ({ row, column, rowIndex, columnIndex }) {
         if (this.isCreateMode) {
           if (columnIndex === 0) {

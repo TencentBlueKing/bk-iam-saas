@@ -48,6 +48,9 @@
                   :select-list="selectList"
                   :select-value="selectValue"
                   :system-params="params"
+                  :has-attribute="condition.hasOwnProperty('attribute')"
+                  :has-status-bar="conditionData.length > 1 && index !== conditionData.length - 1"
+                  :has-add-instance="!isHide && !isLoading && selectionMode !== 'instance'"
                   @on-tree-select="handlePathSelect(...arguments, index)"
                 />
                 <div class="drag-dotted-line" v-if="isDrag" :style="dottedLineStyle"></div>
@@ -303,7 +306,7 @@
               this.requestQueue = ['instanceSelection', 'resourceAttr'];
               this.fetchInstanceSelection(value);
               this.fetchResourceAttrs();
-            } else if (this.selectionMode === 'instance') {
+            } else if (['instance', 'instance:paste'].includes(this.selectionMode)) {
               this.requestQueue = ['instanceSelection'];
               this.fetchInstanceSelection(value);
             } else {
