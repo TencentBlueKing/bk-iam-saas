@@ -185,8 +185,10 @@ BROKER_CONNECTION_TIMEOUT = 1  # 单位秒
 BROKER_HEARTBEAT = 60
 # CELERY 并发数，默认为 2，可以通过环境变量或者 Procfile 设置
 CELERYD_CONCURRENCY = env.int("BK_CELERYD_CONCURRENCY", default=2)
-# 与周期任务配置的定时相关UTC
+# 与周期任务配置的定时时区相关
 CELERY_ENABLE_UTC = False
+CELERY_TIMEZONE = "Asia/Shanghai"
+DJANGO_CELERY_BEAT_TZ_AWARE = False
 # 周期任务beat生产者来源
 CELERYBEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 # Celery队列名称
@@ -381,7 +383,7 @@ SUBJECT_AUTHORIZATION_LIMIT = {
     # 一个分级管理员可创建的用户组个数
     "grade_manager_group_limit": env.int("BKAPP_GRADE_MANAGER_GROUP_LIMIT", default=10000),
     # 一个分级管理员可添加的成员个数
-    "grade_manager_member_limit": env.int("BKAPP_GRADE_MANAGER_MEMBER_LIMIT", default=100),
+    "grade_manager_member_limit": env.int("BKAPP_GRADE_MANAGER_MEMBER_LIMIT", default=1000),
     # 默认每个系统可创建的分级管理数量
     "default_grade_manager_of_system_limit": env.int("BKAPP_DEFAULT_GRADE_MANAGER_OF_SYSTEM_LIMIT", default=500),
     # 可配置单独指定某些系统可创建的分级管理员数量 其值的格式为：system_id1:number1,system_id2:number2,...

@@ -155,7 +155,9 @@
 
     <render-template-sideslider
       :is-show.sync="templateDetailSideslider.isShow"
-      :id="templateDetailSideslider.id" />
+      :id="templateDetailSideslider.id"
+      @on-cancel="handleSelectCancel"
+    />
   </smart-action>
 </template>
 <script>
@@ -714,6 +716,7 @@
       handleViewDetail ({ id }) {
         this.templateDetailSideslider.id = id;
         this.templateDetailSideslider.isShow = true;
+        this.permSideWidth = 1160;
       },
 
       /**
@@ -735,10 +738,18 @@
           const intersection = templates.filter(
             item => this.tempalteDetailList.map(sub => sub.id).includes(item.id)
           );
-          hasDeleteTemplateList = this.tempalteDetailList.filter(
-            item => !intersection.map(sub => sub.id).includes(item.id)
-          );
-          hasAddTemplateList = templates.filter(item => !intersection.map(sub => sub.id).includes(item.id));
+          // 判断权限模板数量没做任何变动时
+          if (JSON.stringify(this.tempalteDetailList) === JSON.stringify(templates)) {
+            hasAddTemplateList = _.cloneDeep(templates);
+          } else {
+            hasDeleteTemplateList = this.tempalteDetailList.filter(
+              item => !intersection.map(sub => sub.id).includes(item.id)
+            );
+            hasAddTemplateList = [
+              ...intersection,
+              ...templates.filter(item => !intersection.map(sub => sub.id).includes(item.id))
+            ];
+          }
         } else {
           hasAddTemplateList = templates;
         }
@@ -1349,12 +1360,8 @@
        * handleAddPerm
        */
       handleAddPerm () {
-        if (this.externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn) {
-          this.isShowAddActionSideslider = true;
-        } else {
-          this.isShowAddSideslider = true;
-          this.permSideWidth = 1160;
-        }
+        this.externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn
+          ? this.isShowAddActionSideslider = true : this.isShowAddSideslider = true;
       },
 
       /**
