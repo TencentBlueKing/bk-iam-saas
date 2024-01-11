@@ -347,7 +347,25 @@
           const isAsync = this.curChain.length > 1;
           const results = data.results || [];
           if (results.length) {
-            const list = data.results.map(item => {
+            const usernameList = results.map((item) => item.display_name);
+            // 保存原有格式
+            let formatStr = cloneDeep(this.manualValue);
+            usernameList.forEach((item) => {
+              formatStr = formatStr
+                .replace(this.evil('/' + item + '(，|,|；|;|、|\\||\\n|\\s\\n|)/'), '')
+                .replace(/(\s*\r?\n\s*)+/g, '\n')
+                .replace(';;', '');
+              formatStr = formatStr
+                .split(this.regValue)
+                .filter((item) => item !== '')
+                .join('\n');
+            });
+            if (formatStr === '\n' || formatStr === '\s' || formatStr === ';') {
+              formatStr = '';
+            }
+            console.log(formatStr);
+            this.manualValue = cloneDeep(formatStr);
+            const list = results.map(item => {
               let checked = false;
               let disabled = false;
               let isRemote = false;

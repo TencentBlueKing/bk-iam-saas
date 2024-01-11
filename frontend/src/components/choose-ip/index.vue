@@ -1173,29 +1173,30 @@
             }
 
             const childItem = {
-                            ...item,
-                            parentId: node.nodeId,
-                            parentSyncId: node.id,
-                            disabled: node.checked || disabled,
-                            checked: checked || node.checked,
-                            parentChain,
-                            isRemote,
-                            isExistNoCarryLimit
+              ...item,
+              parentId: node.nodeId,
+              parentSyncId: node.id,
+              disabled: node.checked || disabled,
+              checked: checked || node.checked,
+              parentChain,
+              isRemote,
+              isExistNoCarryLimit
             };
-
             const isAsyncFlag = isAsync || item.child_type !== '';
             return new Node(childItem, curLevel, isAsyncFlag);
           });
           this.treeData.splice((index + 1), 0, ...childNodes);
+          // 子集数据拼装避免脏数据，需要过滤掉name为空的节点
+          this.treeData = this.treeData.filter(item => item.name);
           node.children = [...data.results.map(item => new Node(item, curLevel, false))];
           if (totalPage > 1) {
             const loadItem = {
-                            ...LOAD_ITEM,
-                            totalPage: totalPage,
-                            current: 1,
-                            parentSyncId: node.id,
-                            parentId: node.nodeId,
-                            parentChain
+              ...LOAD_ITEM,
+              totalPage: totalPage,
+              current: 1,
+              parentSyncId: node.id,
+              parentId: node.nodeId,
+              parentChain
             };
             const loadData = new Node(loadItem, curLevel, isAsync, 'load');
             this.treeData.splice((index + childNodes.length + 1), 0, loadData);
@@ -1203,13 +1204,13 @@
           }
 
           const searchItem = {
-                        ...SEARCH_ITEM,
-                        totalPage: totalPage,
-                        parentSyncId: node.id,
-                        parentId: node.nodeId,
-                        parentChain,
-                        visiable: flag,
-                        placeholder: `${this.$t(`m.common['搜索']`)} ${placeholder}`
+            ...SEARCH_ITEM,
+            totalPage: totalPage,
+            parentSyncId: node.id,
+            parentId: node.nodeId,
+            parentChain,
+            visiable: flag,
+            placeholder: `${this.$t(`m.common['搜索']`)} ${placeholder}`
           };
 
           const searchData = new Node(searchItem, curLevel, false, 'search');
@@ -1346,14 +1347,14 @@
             if (node.level > 0) {
               const parentData = this.treeData.find(sub => sub.nodeId === node.parentId);
               tempItem = {
-                                ...item,
-                                parentId: node.parentId,
-                                parentSyncId: node.id,
-                                disabled: parentData.checked || disabled,
-                                checked: checked || parentData.checked,
-                                parentChain: _.cloneDeep(node.parentChain),
-                                isRemote,
-                                isExistNoCarryLimit
+                ...item,
+                parentId: node.parentId,
+                parentSyncId: node.id,
+                disabled: parentData.checked || disabled,
+                checked: checked || parentData.checked,
+                parentChain: _.cloneDeep(node.parentChain),
+                isRemote,
+                isExistNoCarryLimit
               };
             } else {
               tempItem.checked = checked;

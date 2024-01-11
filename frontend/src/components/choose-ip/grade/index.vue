@@ -1593,6 +1593,7 @@
             return new Node(childItem, curLevel, isAsyncFlag);
           });
           this.treeData.splice(index + 1, 0, ...childNodes);
+          this.treeData = this.treeData.filter(item => item.name);
           node.children = [...data.results.map((item) => new Node(item, curLevel, false))];
           if (totalPage > 1) {
             const loadItem = {

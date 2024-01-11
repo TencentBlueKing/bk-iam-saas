@@ -912,9 +912,9 @@
       async handleAsyncNodes (node, index, flag) {
         window.changeAlert = true;
         const asyncItem = {
-                    ...ASYNC_ITEM,
-                    parentId: node.nodeId,
-                    parentSyncId: node.id
+          ...ASYNC_ITEM,
+          parentId: node.nodeId,
+          parentSyncId: node.id
         };
 
         const asyncData = new Node(asyncItem, node.level + 1, false, 'async');
@@ -1009,20 +1009,7 @@
               const curIds = parentChain.map(v => `${v.id}&${v.type}`);
               // 取当前的请求的type
               curIds.push(`${item.id}&${params.type}`);
-
               const tempData = [...curIds];
-
-              // if (isAsync) {
-              //     const nextLevelId = (() => {
-              //         const nextLevelData = this.curChain[curLevel + 1]
-              //         if (nextLevelData) {
-              //             return nextLevelData.id
-              //         }
-              //         return this.curChain[chainLen - 1].id
-              //     })()
-              //     curIds.push(`*&${nextLevelId}`)
-              // }
-
               let noCarryLimitData = {};
               let normalSelectedData = {};
               this.hasSelectedValues.forEach(val => {
@@ -1038,7 +1025,6 @@
                   }
                 }
               });
-
               isExistNoCarryLimit = Object.keys(noCarryLimitData).length > 0;
               if (isExistNoCarryLimit && Object.keys(normalSelectedData).length > 0) {
                 checked = true;
@@ -1052,31 +1038,30 @@
                 }
               }
             }
-
             const childItem = {
-                            ...item,
-                            parentId: node.nodeId,
-                            parentSyncId: node.id,
-                            disabled: node.checked || disabled,
-                            checked: checked || node.checked,
-                            parentChain,
-                            isRemote,
-                            isExistNoCarryLimit
+              ...item,
+              parentId: node.nodeId,
+              parentSyncId: node.id,
+              disabled: node.checked || disabled,
+              checked: checked || node.checked,
+              parentChain,
+              isRemote,
+              isExistNoCarryLimit
             };
-
             const isAsyncFlag = isAsync || item.child_type !== '';
             return new Node(childItem, curLevel, isAsyncFlag);
           });
           this.treeData.splice((index + 1), 0, ...childNodes);
+          this.treeData = this.treeData.filter(item => item.name);
           node.children = [...data.results.map(item => new Node(item, curLevel, false))];
           if (totalPage > 1) {
             const loadItem = {
-                            ...LOAD_ITEM,
-                            totalPage: totalPage,
-                            current: 1,
-                            parentSyncId: node.id,
-                            parentId: node.nodeId,
-                            parentChain
+              ...LOAD_ITEM,
+              totalPage: totalPage,
+              current: 1,
+              parentSyncId: node.id,
+              parentId: node.nodeId,
+              parentChain
             };
             const loadData = new Node(loadItem, curLevel, isAsync, 'load');
             this.treeData.splice((index + childNodes.length + 1), 0, loadData);
@@ -1084,15 +1069,14 @@
           }
 
           const searchItem = {
-                        ...SEARCH_ITEM,
-                        totalPage: totalPage,
-                        parentSyncId: node.id,
-                        parentId: node.nodeId,
-                        parentChain,
-                        visiable: flag,
-                        placeholder: `${this.$t(`m.common['搜索']`)} ${placeholder}`
+              ...SEARCH_ITEM,
+              totalPage: totalPage,
+              parentSyncId: node.id,
+              parentId: node.nodeId,
+              parentChain,
+              visiable: flag,
+              placeholder: `${this.$t(`m.common['搜索']`)} ${placeholder}`
           };
-
           const searchData = new Node(searchItem, curLevel, false, 'search');
           this.treeData.splice((index + 1), 0, searchData);
           if (flag) {
