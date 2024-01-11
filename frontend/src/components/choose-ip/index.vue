@@ -1186,8 +1186,6 @@
             return new Node(childItem, curLevel, isAsyncFlag);
           });
           this.treeData.splice((index + 1), 0, ...childNodes);
-          // 子集数据拼装避免脏数据，需要过滤掉name为空的节点
-          this.treeData = this.treeData.filter(item => item.name);
           node.children = [...data.results.map(item => new Node(item, curLevel, false))];
           if (totalPage > 1) {
             const loadItem = {
@@ -1233,6 +1231,14 @@
       },
 
       removeAsyncNode () {
+        // 需要过滤掉name为空以及反复切换选中造成的重复数据的节点
+        const obj = {};
+        const treeList = _.cloneDeep(this.treeData.filter(item => item.name));
+        this.treeData = treeList.reduce((pre, item) => {
+          // eslint-disable-next-line no-unused-expressions
+          obj[`${item.id}${item.name}`] ? '' : obj[`${item.id}${item.name}`] = true && pre.push(item);
+          return pre;
+        }, []);
         const index = this.treeData.findIndex(item => item.type === 'async');
         if (index > -1) this.treeData.splice(index, 1);
       },

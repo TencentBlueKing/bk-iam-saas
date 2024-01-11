@@ -1638,6 +1638,14 @@
       },
 
       removeAsyncNode () {
+        // 需要过滤掉name为空以及反复切换选中造成的重复数据的节点
+        const obj = {};
+        const treeList = _.cloneDeep(this.treeData.filter(item => item.name));
+        this.treeData = treeList.reduce((pre, item) => {
+          // eslint-disable-next-line no-unused-expressions
+          obj[`${item.id}${item.name}`] ? '' : obj[`${item.id}${item.name}`] = true && pre.push(item);
+          return pre;
+        }, []);
         const index = this.treeData.findIndex((item) => item.type === 'async');
         if (index > -1) this.treeData.splice(index, 1);
       },
