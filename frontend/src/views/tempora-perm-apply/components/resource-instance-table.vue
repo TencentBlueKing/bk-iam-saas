@@ -207,7 +207,7 @@
     <bk-sideslider
       :is-show="isShowResourceInstanceSideslider"
       :title="resourceInstanceSidesliderTitle"
-      :width="960"
+      :width="resourceSliderWidth"
       quick-close
       transfer
       :ext-cls="'relate-instance-sideslider'"
@@ -225,7 +225,7 @@
           @on-init="handleOnInit" />
       </div>
       <div slot="footer" style="margin-left: 25px;">
-        <bk-button theme="primary" :loading="sliderLoading" :disabled="disabled" @click="handleResourceSumit">{{ $t(`m.common['保存']`) }}</bk-button>
+        <bk-button theme="primary" :loading="sliderLoading" :disabled="disabled" @click="handleResourceSubmit">{{ $t(`m.common['保存']`) }}</bk-button>
         <bk-button style="margin-left: 10px;" :disabled="disabled" @click="handleResourcePreview" v-if="isShowPreview">{{ $t(`m.common['预览']`) }}</bk-button>
         <bk-button style="margin-left: 10px;" :disabled="disabled" @click="handleResourceCancel">{{ $t(`m.common['取消']`) }}</bk-button>
       </div>
@@ -285,6 +285,11 @@
 
   export default {
     name: 'resource-instance-table',
+    provide: function () {
+      return {
+        getResourceSliderWidth: () => this.resourceSliderWidth
+      };
+    },
     components: {
       RenderAggregateSideslider,
       RenderResource,
@@ -309,6 +314,12 @@
       cacheId: {
         type: String,
         default: ''
+      },
+      isRecommend: {
+        type: Boolean,
+        default: () => {
+          return false;
+        }
       },
       isAllExpanded: {
         type: Boolean,
@@ -362,7 +373,9 @@
         selectedIndex: 0,
         instanceKey: '',
         resourceInstanceEffectTimeTitle: '',
-        originalList: []
+        originalList: [],
+        resourceSliderWidth: Math.ceil(window.innerWidth * 0.67 - 7) < 960
+          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7)
       };
     },
     computed: {
@@ -489,6 +502,7 @@
             this.tableList = value;
           }
           this.originalList = _.cloneDeep(this.tableList);
+          this.fetchInstanceDefaultCheck(false);
         },
         immediate: true
       },
@@ -518,9 +532,51 @@
         immediate: true
       }
     },
-    created () {
+    mounted () {
+      window.addEventListener('resize', (this.formatFormItemWidth));
+      this.$once('hook:beforeDestroy', () => {
+        window.removeEventListener('resize', this.formatFormItemWidth);
+      });
     },
     methods: {
+      formatFormItemWidth () {
+        this.resourceSliderWidth = Math.ceil(window.innerWidth * 0.67 - 7) < 960
+          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7);
+      },
+      
+      fetchInstanceDefaultCheck (payload) {
+        if (this.isRecommend) {
+          this.$nextTick(() => {
+            const recommendList = [];
+            this.tableList.forEach((item, index) => {
+              item.resource_groups && item.resource_groups.forEach(resource => {
+                resource.related_resource_types && resource.related_resource_types.forEach(types => {
+                  if (types.condition && types.condition.length) {
+                    if (types.condition.length === 1 && types.condition[0] === 'none') {
+                      types.isError = !!this.resourceSelectData.includes(item.name);
+                      return;
+                    }
+                    if (types.empty) {
+                      types.isError = !!this.resourceSelectData.includes(item.name);
+                    }
+                    // 处理单个操作实例勾选项
+                    if (payload && payload === index) {
+                      this.$refs.permApplyTableRef.toggleRowSelection(this.tableList[index], true);
+                    }
+                    // 处理初始化页面默认勾选有实例的操作和粘贴实例默认勾选
+                    if (!payload) {
+                      this.$refs.permApplyTableRef.toggleRowSelection(item, true);
+                    }
+                    recommendList.push(item.name);
+                  }
+                });
+              });
+            });
+            this.resourceSelectData = Array.from(new Set([...this.resourceSelectData, ...recommendList]));
+          });
+        }
+      },
+
       handleOpenRenewal (row, index) {
         row.isShowRenewal = false;
         row.customValueBackup = row.customValue;
@@ -694,6 +750,7 @@
         this.curCopyData = ['none'];
         this.$refs[`condition_${index}_aggregateRef`] && this.$refs[`condition_${index}_aggregateRef`].setImmediatelyShow(false);
         this.showMessage(this.$t(`m.info['批量粘贴成功']`));
+        this.fetchInstanceDefaultCheck(false);
       },
 
       // 设置instances
@@ -942,7 +999,7 @@
         });
       },
 
-      async handleResourceSumit () {
+      async handleResourceSubmit () {
         const conditionData = this.$refs.renderResourceRef.handleGetValue();
         const { isEmpty, data } = conditionData;
         if (isEmpty) {
@@ -990,7 +1047,7 @@
             resItem.isLimitExceeded = false;
           }
         }
-
+        this.fetchInstanceDefaultCheck(this.curIndex);
         this.curIndex = -1;
         this.curResIndex = -1;
         this.curGroupIndex = -1;
@@ -1328,6 +1385,7 @@
         this.$refs[`condition_${index}_${subIndex}_ref`][0] && this.$refs[`condition_${index}_${subIndex}_ref`][0].setImmediatelyShow(false);
         this.curCopyData = ['none'];
         this.showMessage(this.$t(`m.info['批量粘贴成功']`));
+        this.fetchInstanceDefaultCheck(false);
       },
 
       handlePreviewDialogClose () {
@@ -1632,5 +1690,5 @@
 </script>
 
 <style>
-    @import './resource-instance-table.css';
+  @import './resource-instance-table.css';
 </style>

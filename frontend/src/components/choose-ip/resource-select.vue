@@ -20,6 +20,7 @@
       :active.sync="active"
       type="card"
       ext-cls="iam-topology-tab-cls"
+      :label-height="48"
       @tab-change="handleSelected"
     >
       <bk-tab-panel

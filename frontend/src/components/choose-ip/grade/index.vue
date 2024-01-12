@@ -29,6 +29,10 @@
                 :sub-resource-total="subResourceTotal"
                 :resource-value="resourceValue"
                 :has-selected-values="hasSelectedValues"
+                :has-attribute="hasAttribute"
+                :has-status-bar="hasStatusBar"
+                :has-add-instance="hasAddInstance"
+                :is-show-edit-action="isShowEditAction"
                 @on-expanded="handleOnExpanded"
                 @on-search="handleSearch"
                 @on-table-search="handleTableSearch"
@@ -73,6 +77,10 @@
                 :sub-resource-total="subResourceTotal"
                 :empty-data="emptyTreeData"
                 :has-selected-values="hasSelectedValues"
+                :has-attribute="hasAttribute"
+                :has-status-bar="hasStatusBar"
+                :has-add-instance="hasAddInstance"
+                :is-show-edit-action="isShowEditAction"
                 :resource-value="resourceValue"
                 @on-expanded="handleOnExpanded"
                 @on-search="handleSearch"
@@ -118,6 +126,10 @@
                   :sub-resource-total="subResourceTotal"
                   :empty-data="emptyTreeData"
                   :has-selected-values="hasSelectedValues"
+                  :has-attribute="hasAttribute"
+                  :has-status-bar="hasStatusBar"
+                  :has-add-instance="hasAddInstance"
+                  :is-show-edit-action="isShowEditAction"
                   :resource-value="resourceValue"
                   @on-expanded="handleOnExpanded"
                   @on-search="handleSearch"
@@ -290,6 +302,21 @@
       },
       selectionMode: {
         type: String
+      },
+      // 处理有bar的场景
+      hasStatusBar: {
+        type: Boolean,
+        default: false
+      },
+      // 处理可以添加新的拓扑实例组的场景
+      hasAddInstance: {
+        type: Boolean,
+        default: false
+      },
+      // 是否显示添加属性或者拓扑实例bar
+      isShowEditAction: {
+        type: Boolean,
+        default: false
       }
     },
     data () {
@@ -1566,6 +1593,7 @@
             return new Node(childItem, curLevel, isAsyncFlag);
           });
           this.treeData.splice(index + 1, 0, ...childNodes);
+          this.treeData = this.treeData.filter(item => item.name);
           node.children = [...data.results.map((item) => new Node(item, curLevel, false))];
           if (totalPage > 1) {
             const loadItem = {
@@ -1610,6 +1638,14 @@
       },
 
       removeAsyncNode () {
+        // 需要过滤掉name为空以及反复切换选中造成的重复数据的节点
+        const obj = {};
+        const treeList = _.cloneDeep(this.treeData.filter(item => item.name));
+        this.treeData = treeList.reduce((pre, item) => {
+          // eslint-disable-next-line no-unused-expressions
+          obj[`${item.id}${item.name}`] ? '' : obj[`${item.id}${item.name}`] = true && pre.push(item);
+          return pre;
+        }, []);
         const index = this.treeData.findIndex((item) => item.type === 'async');
         if (index > -1) this.treeData.splice(index, 1);
       },
@@ -1915,7 +1951,7 @@
           .topology-tree-wrapper {
               position: relative;
               height: 100%;
-              min-height: 450px;
+              /* min-height: 450px; */
               .empty-wrapper {
                   position: absolute;
                   top: 50%;

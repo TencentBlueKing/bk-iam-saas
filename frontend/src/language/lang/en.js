@@ -289,7 +289,11 @@ export const m = {
         '请先从左侧输入并解析': 'Please input and parse from the left first',
         '实例名称输入错误或不存在于授权资源实例范围内': 'Instance name input error or does not exist within the authorized resource instance scope',
         '实例名称': 'Instance name',
-        '请输入实例名称，以回车/逗号/分号/空格分割': 'Please enter the instance name, separated by carriage return, comma, semicolon, or space'
+        '请输入实例名称，以回车/逗号/分号/空格分割': 'Please enter the instance name, separated by carriage return, comma, semicolon, or space',
+        '本页': 'page',
+        '每页': 'Page',
+        '清除选择': 'Clear',
+        '暂无可清空数据': 'No data clear'
     },
     // 校验
     verify: {
@@ -548,7 +552,8 @@ export const m = {
          '已加入用户组数量 ， 新申请数量，总数超过上限：100，请减少申请或退出部分用户组后重试': 'Number of added user groups: {applyCount}, number of new applications: {newApplyCount}, total exceeds the limit of 100. Please reduce the number of applications or exit some user groups and try again',
          '最多添加一个管理员': 'Add at most one administrator',
          '管理员不可重复添加': 'Administrators cannot be added repeatedly',
-         '有关联的用户组, 无法删除': 'Associated user groups cannot be deleted'
+         '有关联的用户组, 无法删除': 'Associated user groups cannot be deleted',
+         'ip选择器每页最大条数': 'items {value}/page'
     },
     // 二次确认弹窗相关
     dialog: {

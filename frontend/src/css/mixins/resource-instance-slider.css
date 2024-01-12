@@ -106,7 +106,9 @@
                 }
                 &-header {
                   font-size: 14px;
-                  padding: 12px 16px 14px 16px;
+                  padding: 0 16px;
+                  height: 47px;
+                  line-height: 47px;
                   margin-bottom: 16px;
                   position: -webkit-sticky;
                   position: sticky;
@@ -168,7 +170,8 @@
     line-height: 42px;
     cursor: pointer;
   }
+  &.disabled,
   &.disabled * {
-    background-color: #ffffff !important;
+    background-color: transparent !important;
   }
 }

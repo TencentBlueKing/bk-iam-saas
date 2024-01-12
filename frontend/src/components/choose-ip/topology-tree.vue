@@ -1,9 +1,31 @@
 <template>
-  <div :class="['iam-topology-tree', { 'iam-topology-tree-only': isOnlyLevel }, { 'bk-has-border-tree': isBorder }]">
-    <!-- eslint-disable max-len -->
+  <div
+    :class="[
+      'iam-topology-tree',
+      { 'iam-topology-tree-only': isOnlyLevel },
+      { 'bk-has-border-tree': isBorder }
+    ]"
+    :style="formatLevelStyle"
+  >
     <!-- <div class="ghost-wrapper" :style="ghostStyle" v-if="!isOnlyLevel"></div> -->
     <div class="render-wrapper" ref="content">
       <template v-if="isOnlyLevel">
+        <div class="page-count-tip" v-if="formatSelectCount.length">
+          <span>{{ $t(`m.common['已选择']`) }}</span>
+          <span>{{ $t(`m.common['本页']`) }}</span>
+          <span class="selected-count">{{ formatSelectCount.length }}</span>
+          <span>{{ $t(`m.common['条']`) }}{{$t(`m.common['，']`)}}</span>
+          <span
+            :class="[
+              'clear-select-tip',
+              { 'is-disabled': !currentSelectedNode.length }
+            ]"
+            v-bk-tooltips="{ content: $t(`m.common['暂无可清空数据']`), disabled: currentSelectedNode.length > 0 }"
+            @click.stop="handleClearPageAll"
+          >
+            {{ $t(`m.common['清除选择']`) }}
+          </span>
+        </div>
         <bk-table
           ref="topologyTableRef"
           size="small"
@@ -11,6 +33,7 @@
           ext-cls="topology-tree-table"
           :header-border="false"
           :outer-border="false"
+          :max-height="formatTableHeight"
           :data="renderTopologyData"
           @select="handleSelectChange"
           @select-all="handleSelectAllChange"
@@ -25,7 +48,12 @@
             <ExceptionEmpty />
           </template>
         </bk-table>
-        <template v-if="pagination.count > 0">
+        <div v-if="pagination.count > 0" class="topology-table-pagination">
+          <div class="custom-largest-count">
+            <span>{{ $t(`m.common['每页']`) }}</span>
+            <span class="max-count">{{maxPageCount}}</span>
+            <span>{{ $t(`m.common['条']`) }}{{ $t(`m.common['，']`) }}</span>
+          </div>
           <bk-pagination
             size="small"
             align="right"
@@ -38,7 +66,7 @@
             :limit="pagination.limit"
             @change="handlePageChange"
           />
-        </template>
+        </div>
       </template>
       <template v-else>
         <div class="multiple-topology-tree">
@@ -49,7 +77,7 @@
               :placeholder="curPlaceholder"
               @on-search="handleTreeSearch(...arguments)"
             />
-            <div class="multiple-topology-tree-left-content">
+            <div class="multiple-topology-tree-left-content" :style="formatLeftContentStyle">
               <template v-if="!isTreeEmpty">
                 <div
                   v-for="(item, index) in allTreeData"
@@ -67,24 +95,24 @@
                   v-show="item.visiable"
                   @click.stop="handleSelectNode(item, index)"
                 >
-                  <template v-if="item.type === 'node' && (item.level < curChain.length - 1 || !isTwoLevel)">
+                  <template v-if="item.type === 'node'">
                     <Icon
                       v-if="!isTwoLevel && item.async"
                       bk
                       :type="item.expanded ? 'down-shape' : 'right-shape'"
                       :class="[
-                        'arrow-icon',
-                        {
-                          'is-disabled': getExpandedDisabled(index) || isExistAsync(item)
-                        }
+                        'arrow-icon'
                       ]"
                       @click.stop="expandNode(item, index)"
                     />
                     <div
                       :class="[
                         'node-radio',
-                        { 'node-radio-no-icon': !(!isTwoLevel && item.async) }
+                        { 'node-radio-no-icon': !(!isTwoLevel && item.async) },
+                        { 'node-radio-no-icon-two-level': (!(!isTwoLevel && item.async)) && isTwoLevel },
+                        { 'node-radio-none': isTwoLevel && item.level === 1 }
                       ]"
+                      :style="formatNoIcon(item)"
                       @click.stop>
                       <bk-checkbox
                         :true-value="true"
@@ -92,7 +120,7 @@
                         :disabled="formatRadioDisabled(item)"
                         v-model="item.checked"
                         ext-cls="iam-topology-title-cls"
-                        :title="`ID: ${item.id}`"
+                        :title="`ID: ${item.id}; ${$t(`m.levelSpace['名称']`)}: ${item.name}`"
                         data-test-id="topology_checkbox_chooseip"
                         @change="handleNodeChange(...arguments, item, index)"
                       >
@@ -146,26 +174,6 @@
                       />
                     </div>
                   </template>
-                  <!-- <template v-else-if="item.type === 'search-loading'">
-                  <div
-                    class="search-loading-wrapper"
-                    v-bkloading="{ isLoading: true, opacity: 1, theme: 'primary', size: 'mini' }"
-                  ></div>
-                </template>
-                <div class="node-loading" v-else-if="item.type === 'async'">
-                  <spin-loading ext-cls="loading" />
-                  <span class="loading-text">{{ $t(`m.common['加载中']`) }}</span>
-                </div>
-                <template v-else>
-                  <topology-input
-                    :ref="`topologyInputRef${index}`"
-                    :scene="'tree'"
-                    :placeholder="item.placeholder"
-                    :is-filter="item.isFilter"
-                    :disabled="getSearchDisabled(item)"
-                    @on-search="handleTreeSearch(...arguments, item, index)"
-                  />
-                </template> -->
                 </div>
               </template>
               <template v-else>
@@ -186,6 +194,22 @@
               @on-search="handleTableSearch(...arguments, selectNodeData, selectNodeDataIndex)"
             />
             <div class="multiple-topology-tree-right-content">
+              <div class="page-count-tip" v-if="formatSelectCount.length">
+                <span>{{ $t(`m.common['已选择']`) }}</span>
+                <span>{{ $t(`m.common['本页']`) }}</span>
+                <span class="selected-count">{{ formatSelectCount.length }}</span>
+                <span>{{ $t(`m.common['条']`) }}{{$t(`m.common['，']`)}}</span>
+                <span
+                  :class="[
+                    'clear-select-tip',
+                    { 'is-disabled': !currentSelectedNode.length }
+                  ]"
+                  v-bk-tooltips="{ content: $t(`m.common['暂无可清空数据']`), disabled: currentSelectedNode.length > 0 }"
+                  @click.stop="handleClearPageAll"
+                >
+                  {{ $t(`m.common['清除选择']`) }}
+                </span>
+              </div>
               <bk-table
                 ref="topologyTableRef"
                 size="small"
@@ -194,6 +218,7 @@
                 :header-border="false"
                 :outer-border="false"
                 :data="renderTopologyData"
+                :max-height="formatTableHeight"
                 @select="handleSelectChange"
                 @select-all="handleSelectAllChange"
                 v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
@@ -201,7 +226,7 @@
                 <bk-table-column type="selection" align="center" :selectable="setDefaultSelect" />
                 <bk-table-column :label="formatPlaceHolder('table')">
                   <template slot-scope="{ row }">
-                    <span :title="`ID: ${row.id}`">{{ row.name }}</span>
+                    <span :title="`ID: ${row.id}; ${$t(`m.levelSpace['名称']`)}: ${row.name}`">{{ row.name }}</span>
                   </template>
                 </bk-table-column>
                 <template v-if="!tableLoading && subPagination.count === 0">
@@ -216,7 +241,12 @@
                   </template>
                 </template>
               </bk-table>
-              <template v-if="subPagination.count > 0">
+              <div v-if="subPagination.count > 0" class="topology-table-pagination">
+                <div class="custom-largest-count">
+                  <span>{{ $t(`m.common['每页']`) }}</span>
+                  <span class="max-count">{{maxPageCount}}</span>
+                  <span>{{ $t(`m.common['条']`) }}{{ $t(`m.common['，']`) }}</span>
+                </div>
                 <bk-pagination
                   size="small"
                   align="right"
@@ -229,7 +259,7 @@
                   :limit="subPagination.limit"
                   @change="handleTablePageChange"
                 />
-              </template>
+              </div>
             </div>
           </div>
         </div>
@@ -242,7 +272,7 @@
   import _ from 'lodash';
   import TopologyInput from './topology-input';
   import { bus } from '@/common/bus';
-  import { formatCodeData } from '@/common/util';
+  import { getWindowHeight, formatCodeData } from '@/common/util';
   import { mapGetters } from 'vuex';
 
   export default {
@@ -290,6 +320,10 @@
         type: Number,
         default: 0
       },
+      maxPageCount: {
+        type: Number,
+        default: 100
+      },
       isBorder: {
         type: Boolean,
         default: false
@@ -330,6 +364,26 @@
         type: String
       },
       resourceValue: {
+        type: Boolean,
+        default: false
+      },
+      // 处理有自定义属性条件场景
+      hasAttribute: {
+        type: Boolean,
+        default: false
+      },
+      // 处理有bar的场景
+      hasStatusBar: {
+        type: Boolean,
+        default: false
+      },
+      // 处理可以添加新的拓扑实例组的场景
+      hasAddInstance: {
+        type: Boolean,
+        default: false
+      },
+      // 是否显示添加属性或者拓扑实例bar
+      isShowEditAction: {
         type: Boolean,
         default: false
       }
@@ -381,7 +435,9 @@
         selectNodeDataIndex: -1,
         curSearchMode: 'tree',
         treeKeyWord: '',
-        tableKeyWord: ''
+        tableKeyWord: '',
+        maxCountContent: '',
+        curExpandNode: {}
       };
     },
     computed: {
@@ -392,11 +448,11 @@
         'curTreeTableChecked',
         'curTreeSelectedNode'
       ]),
-      ghostStyle () {
-        return {
-          height: this.visiableData.length * this.itemHeight + 'px'
-        };
-      },
+      // ghostStyle () {
+      //   return {
+      //     height: this.visiableData.length * this.itemHeight + 'px'
+      //   };
+      // },
       // allTreeData 中 visiable 为 true 的数据，visiable 属性辅助设置展开收起的
       // 当父节点收起时，子节点的 visiable 为 false
       visiableData () {
@@ -421,52 +477,41 @@
       dragDynamicWidth () {
         return (payload) => {
           // const offsetWidth = this.getDragDynamicWidth() > 600 ? 560 + this.getDragDynamicWidth() - 600 : 560;
-          const offsetWidth = this.getDragDynamicWidth
-            ? this.getDragDynamicWidth() - 500
-            : 460 + this.getDragDynamicWidth() - 500;
-          const isSameLevelExistSync = this.allTreeData
-            .filter((item) => item.level === payload.level)
-            .some((item) => item.type === 'node' && item.async);
+          const offsetWidth = this.getDragDynamicWidth ? this.getDragDynamicWidth() * 0.37 : 500;
+          const isSameLevelExistSync = this.allTreeData.filter((item) => item.level === payload.level).some((item) => item.type === 'node' && item.async);
+          // flag点击展开后没有子集数据的场景
           const flag = !payload.async && isSameLevelExistSync;
-          const asyncIconWidth = 5;
           const asyncLevelWidth = 30;
+          // 左右边距各16px加上距离复选框的编剧以及当前item的padding
+          const paddingWidth = 32 + 10 + 12;
           if (!payload.level) {
-            if (flag) {
-              return {
-                maxWidth: `${offsetWidth - this.leftBaseIndent + asyncIconWidth}px`
-              };
-            }
             if (payload.loading) {
               return {
                 maxWidth: `${offsetWidth - 20}px`
               };
             }
-            if (payload.async) {
+            if (payload.async || flag) {
               return {
-                maxWidth: `${offsetWidth - asyncLevelWidth}px`
+                maxWidth: `${offsetWidth - asyncLevelWidth - paddingWidth}px`
               };
             }
             return {
               maxWidth: `${offsetWidth}px`
             };
-          }
-          if (payload.async) {
-            return {
-              maxWidth: offsetWidth - (payload.level + 1) * this.leftBaseIndent - asyncLevelWidth + 'px'
-            };
+          } else {
+            if (payload.async || flag) {
+              return {
+                maxWidth: `${offsetWidth - (payload.level + 1) * this.leftBaseIndent - asyncLevelWidth - paddingWidth}px`
+              };
+            }
           }
           if (isSameLevelExistSync && ['search', 'search-empty'].includes(payload.type)) {
             return {
-              maxWidth: offsetWidth - (payload.level + 1) * this.leftBaseIndent + 'px'
-            };
-          }
-          if (flag) {
-            return {
-              maxWidth: offsetWidth - ((payload.level + 1) * this.leftBaseIndent + asyncIconWidth) + 'px'
+              maxWidth: `${offsetWidth - (payload.level + 1) * this.leftBaseIndent - paddingWidth}px`
             };
           }
           return {
-            maxWidth: offsetWidth - ((payload.level + 1) * this.leftBaseIndent + 14) + 'px'
+            maxWidth: `${offsetWidth - (payload.level + 1) * this.leftBaseIndent - asyncLevelWidth - paddingWidth}px`
           };
         };
       },
@@ -485,21 +530,60 @@
           return typeMap[payload]();
         };
       },
+      formatLevelStyle () {
+        const hasOther = this.hasAddInstance || this.hasAttribute || this.hasStatusBar || this.isShowEditAction;
+        if (this.isOnlyLevel) {
+          if (hasOther) {
+            return {
+             'height': 'calc(100vh - 410px)'
+            };
+          }
+          return {
+            'height': 'calc(100vh - 405px)'
+          };
+        } else {
+          if (hasOther) {
+            return {
+              'height': 'calc(100vh - 350px)'
+            };
+          } else {
+            return {
+              'height': 'calc(100vh - 342px)'
+            };
+          }
+        }
+      },
       formatLeftStyle () {
         return {
-          width: this.getDragDynamicWidth ? `${this.getDragDynamicWidth() - 300}px` : '600px'
+          width: this.getDragDynamicWidth ? `${this.getDragDynamicWidth() * 0.37}px` : '600px'
+        };
+      },
+      formatLeftContentStyle () {
+        const hasOther = this.hasAddInstance || this.hasAttribute || this.hasStatusBar || this.isShowEditAction;
+        if (hasOther) {
+          return {
+            'height': 'calc(100vh - 415px)',
+            'overflow': 'auto'
+          };
+        }
+        return {
+          'height': 'calc(100vh - 415px)',
+          'overflow': 'auto'
         };
       },
       formatRightStyle () {
-        const leftWidth = this.getDragDynamicWidth ? `${this.getDragDynamicWidth() - 600}px` : '600px';
+        const leftWidth = this.getDragDynamicWidth ? `${this.getDragDynamicWidth() * 0.37}px` : '600px';
         return {
           width: `calc(100% - ${leftWidth})`
         };
       },
-      formatLoadMore () {
-        return (payload) => {
-          return payload.type === 'load' && payload.level < this.curChain.length - 1;
-        };
+      formatTableHeight () {
+        const tipHeight = this.formatSelectCount.length ? 44 : 0;
+        if (this.isOnlyLevel) {
+          const tableHeight = getWindowHeight() - 460;
+          return this.formatSelectCount.length ? tableHeight - tipHeight : tableHeight;
+        }
+        return getWindowHeight() - 468 - tipHeight;
       },
       formatRadioDisabled () {
         return (payload) => {
@@ -507,6 +591,31 @@
             return !payload.checked;
           }
           return payload.disabled;
+        };
+      },
+      formatSelectCount () {
+        return this.renderTopologyData.filter((item) => item.checked);
+      },
+      formatLoadMore () {
+        return (payload) => {
+          return payload.type === 'load' && payload.level < this.curChain.length - 1;
+        };
+      },
+      formatNoIcon () {
+        return (payload) => {
+          const { async, expanded, level } = payload;
+          const hasData = this.allTreeData.find((v) => v.level === level);
+          if (!async && !expanded && !this.isTwoLevel) {
+            if (hasData && hasData.async && level < 3) {
+              return {
+                'paddingLeft': `29px`
+              };
+            } else {
+              return {
+                'paddingLeft': `${16 + level * 8}px`
+              };
+            }
+          }
         };
       },
       isTreeEmpty () {
@@ -587,6 +696,9 @@
             this.renderTopologyData.forEach((item) => {
               if (`${item.name}&${item.id}` === `${node.name}&${node.id}`) {
                 this.$refs.topologyTableRef.toggleRowSelection(item, isChecked);
+                if (!item.disabled) {
+                  item.checked = isChecked;
+                }
               }
               if (!isChecked) {
                 this.currentSelectedNode = this.currentSelectedNode.filter((v) => `${v.name}&${v.id}` !== `${node.name}&${node.id}`);
@@ -607,9 +719,6 @@
             this.$refs.topologyTreeInputRef.value = this.treeKeyWord;
           });
         }
-        this.subPagination = Object.assign(this.subPagination, {
-          count: this.subResourceTotal
-        });
         if (value.length) {
           if (this.isOnlyLevel) {
             this.renderTopologyData = value.filter((item) => item.type === 'node');
@@ -635,6 +744,11 @@
               // 判断搜索无数据
               const searchData = value.find((item) => ['search-empty', 'search-loading'].includes(item.type));
               if (curNode) {
+                if (`${this.selectNodeData.name}&${this.selectNodeData.id}` === `${this.curExpandNode.name}&${this.curExpandNode.id}`) {
+                  this.subPagination = Object.assign(this.subPagination, {
+                    count: this.subResourceTotal
+                  });
+                }
                 this.tablePageData = [...this.curTableData];
                 const list = [...(curNode.children || [])].filter((item) => item.type === 'node');
                 curNode.current = this.subPagination.current;
@@ -694,6 +808,9 @@
                     this.emptyTreeData = formatCodeData(0, { tipType: 'search' });
                   }
                 }
+              }
+              if (!this.renderTopologyData.length) {
+                this.subPagination.count = 0;
               }
             }
           }
@@ -806,7 +923,6 @@
           const defaultSelectList = this.curSelectedValues
             .filter((item) => item.disabled)
             .map((v) => v.ids).flat(this.curChain.length);
-          console.log(7477, this.curSelectedValues);
           if (defaultSelectList.length) {
             let childrenIdList = [];
             const result = !(defaultSelectList.includes(`${payload.id}&${this.curChain[payload.level].id}`)
@@ -984,32 +1100,6 @@
         this.handleEmptyClear(payload, node, index);
       },
 
-      handleOpenSearch (node, index) {
-        if (
-          (this.allTreeData[index + 1]
-            && this.allTreeData[index + 1].type === 'search'
-            && this.allTreeData[index + 1].visiable)
-          || this.isExistAsync(node)
-        ) {
-          return;
-        }
-        node.expanded = true;
-        if (node.children && node.children.length) {
-          const children = this.allTreeData.filter((item) => item.parentId === node.nodeId);
-          children.forEach((child) => {
-            child.visiable = node.expanded;
-            if (child.async && !node.expanded) {
-              this.collapseNode(child);
-            }
-          });
-          this.$nextTick(() => {
-            this.handleSetFocus(index + 1);
-          });
-        } else {
-          this.$emit('async-load-nodes', node, index, true);
-        }
-      },
-
       /**
        * 获取节点的样式
        *
@@ -1032,7 +1122,6 @@
           };
         }
         if (node.async) {
-          // console.log(node, 5565);
           return {
             marginLeft: (node.level + 1) * this.leftBaseIndent + 'px'
           };
@@ -1050,13 +1139,6 @@
         return {
           marginLeft: (node.level + 1) * this.leftBaseIndent + 14 + 'px'
         };
-      },
-
-      getComputedDisplay (node) {
-        const isSameLevelExistSync = this.allTreeData
-          .filter((item) => item.level === node.level)
-          .some((item) => item.type === 'node' && item.async);
-        return isSameLevelExistSync && !node.async;
       },
 
       /**
@@ -1090,6 +1172,8 @@
        * @param {Boolean} isExpand 是否展开
        */
       expandNode (node, index, isExpand) {
+        // 处理当前不是选中项，点击的时候会刷新接口重置表格数量
+        this.curExpandNode = _.cloneDeep(node);
         const flag = this.getExpandedDisabled(index);
         const canExpanded = this.isExistAsync(node) ? node.children && node.children.length : true;
         if (flag || !canExpanded) {
@@ -1152,6 +1236,7 @@
       // 选择当前节点，展示右侧表格数据
       handleSelectNode (node, index) {
         this.tableLoading = true;
+        this.renderTopologyData = [];
         if (node.id !== this.selectNodeData.id) {
           this.handleEmptyClear('table', node, index);
         }
@@ -1159,6 +1244,7 @@
           node.expanded = true;
           this.selectNodeDataIndex = index;
           this.selectNodeData = Object.assign({}, node);
+          this.curExpandNode = _.cloneDeep(node);
           // 当存在多层拓扑时，获取当前选中节点方便处理子集数据
           this.$store.commit('setTreeTableData', node);
           this.$store.commit('setTreeTableDataIndex', index);
@@ -1206,6 +1292,28 @@
         this.getChildrenChecked(newVal, node);
         // this.$store.commit('setTreeSelectedNode');
         this.$emit('on-select', newVal, node);
+      },
+
+      handleClearPageAll () {
+        if (!this.currentSelectedNode.length) {
+          return;
+        }
+        const tableData = this.renderTopologyData.filter((item) => !item.disabled).map((v) => `${v.id}${v.name}`);
+        this.currentSelectedNode = this.currentSelectedNode.filter((item) => !tableData.includes(`${item.id}${item.name}`));
+        this.renderTopologyData.forEach((item) => {
+          if (!item.disabled) {
+            let allTreeData = [...this.allTreeData];
+            if (!allTreeData.length && !this.isOnlyLevel && this.curKeyword) {
+              allTreeData = [...this.curTreeTableData.children || []];
+            }
+            const curNode = allTreeData.find((v) => `${v.name}&${v.id}` === `${item.name}&${item.id}`);
+            if (curNode) {
+              item.checked = false;
+              this.$emit('on-select', false, curNode);
+            }
+            this.$refs.topologyTableRef.toggleRowSelection(item, false);
+          }
+        });
       },
 
       // 获取子集默认选中的数据
@@ -1488,7 +1596,13 @@
     /* display: inline-block; */
     display: flex;
     &-no-icon {
-      padding-left: 12px;
+      padding-left: 29px;
+      &-two-level {
+        padding-left: 12px;
+      }
+    }
+    &-none {
+      display: none;
     }
     .bk-form-checkbox {
       position: relative;
@@ -1497,7 +1611,7 @@
       /* top: -2px; */
     }
     .tree-node-name {
-      margin-left: 10px;
+      padding-left: 10px;
       font-size: 12px;
     }
     /* .bk-checkbox-text {
@@ -1532,12 +1646,14 @@
   }
 
   .load-more-wrapper {
+    width: 100%;
     position: relative;
-    padding: 0 18px;
+    /* padding: 0 18px; */
     line-height: 26px;
     .load-item {
       width: 140px;
       text-align: center;
+      margin: 0 auto;
       background: #f0f1f5;
       font-size: 12px;
       color: #979ba5;
@@ -1569,11 +1685,12 @@
 <style lang="postcss" scoped>
 .topology-tree-table {
   border: 0;
+  padding: 0 16px;
   .bk-table-empty-block {
     height: calc(100vh - 450px);
   }
   .bk-page.bk-page-align-right {
-    padding: 10px;
+    padding: 16px;
   }
 }
 
@@ -1581,9 +1698,18 @@
   display: flex;
   background-color: #ffffff;
   &-left {
-    border-right: 1px solid #dcdee5;
+    position: relative;
     &-content {
       margin-right: 16px;
+    }
+    &::after {
+      content: '';
+      position: absolute;
+      top: 16px;
+      right: 0;
+      width: 1px;
+      height: 100%;
+      background-color: #dcdee5;
     }
   }
 }
@@ -1591,8 +1717,6 @@
 .iam-topology-tree-only,
 .multiple-topology-tree-left-content,
 .multiple-topology-tree-right-content {
-  height: calc(100vh - 550px);
-  overflow: auto;
   z-index: 2;
   &::-webkit-scrollbar {
     width: 6px;
@@ -1608,16 +1732,46 @@
   }
 }
 
-.iam-topology-tree-only {
-  height: calc(100vh - 450px);
+.page-count-tip {
+  background-color: #EAEBF0;
+  color: #63656e;
+  margin-bottom: 8px;
+  padding: 8px 0;
+  margin: 0 16px 8px 16px;
+  text-align: center;
+  .selected-count {
+    font-weight: 700;
+  }
+  .clear-select-tip {
+    color: #3a84ff;
+    cursor: pointer;
+    &.is-disabled {
+      color: #c4c6cc;
+      cursor: not-allowed;
+    }
+  }
 }
 
-/deep/ .topology-tree-pagination-cls {
-  padding: 10px 20px;
-  .bk-page-small-jump {
-    .jump-input {
-      outline: none;
-      min-width: 0;
+.topology-table-pagination {
+  display: flex;
+  padding: 16px 16px 0 16px;
+  position: relative;
+
+  .custom-largest-count {
+    line-height: 36px;
+  }
+  /deep/ .topology-tree-pagination-cls {
+   .bk-page-total-count {
+      color: #3f4046;
+      font-size: 14px;
+    }
+    .bk-page-small-jump {
+      position: absolute;
+      right: 16px;
+      .jump-input {
+        outline: none;
+        min-width: 0;
+      }
     }
   }
 }

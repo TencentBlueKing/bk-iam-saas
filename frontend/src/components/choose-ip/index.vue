@@ -30,6 +30,10 @@
                 :sub-resource-total="subResourceTotal"
                 :resource-value="resourceValue"
                 :has-selected-values="hasSelectedValues"
+                :has-attribute="hasAttribute"
+                :has-status-bar="hasStatusBar"
+                :has-add-instance="hasAddInstance"
+                :is-show-edit-action="isShowEditAction"
                 @on-expanded="handleOnExpanded"
                 @on-search="handleSearch"
                 @on-table-search="handleTableSearch"
@@ -74,6 +78,10 @@
                 :sub-resource-total="subResourceTotal"
                 :empty-data="emptyTreeData"
                 :has-selected-values="hasSelectedValues"
+                :has-attribute="hasAttribute"
+                :has-status-bar="hasStatusBar"
+                :has-add-instance="hasAddInstance"
+                :is-show-edit-action="isShowEditAction"
                 :resource-value="resourceValue"
                 @on-expanded="handleOnExpanded"
                 @on-search="handleSearch"
@@ -119,6 +127,10 @@
                   :sub-resource-total="subResourceTotal"
                   :empty-data="emptyTreeData"
                   :has-selected-values="hasSelectedValues"
+                  :has-attribute="hasAttribute"
+                  :has-status-bar="hasStatusBar"
+                  :has-add-instance="hasAddInstance"
+                  :is-show-edit-action="isShowEditAction"
                   :resource-value="resourceValue"
                   @on-expanded="handleOnExpanded"
                   @on-search="handleSearch"
@@ -278,6 +290,26 @@
       },
       selectionMode: {
         type: String
+      },
+      // 处理有自定义属性条件场景
+      hasAttribute: {
+        type: Boolean,
+        default: false
+      },
+      // 处理有bar的场景
+      hasStatusBar: {
+        type: Boolean,
+        default: false
+      },
+      // 处理可以添加新的拓扑实例组的场景
+      hasAddInstance: {
+        type: Boolean,
+        default: false
+      },
+      // 是否显示添加属性或者拓扑实例bar
+      isShowEditAction: {
+        type: Boolean,
+        default: false
       }
     },
     data () {
@@ -880,7 +912,6 @@
       },
 
       handleTreeSelect (value, node, resourceLen) {
-        console.log(value, node, resourceLen, 555);
         const parentChain = _.cloneDeep(node.parentChain);
         // const isNeedAny = node.level < this.curChain.length - 1
         const isNeedAny = node.async;
@@ -1142,16 +1173,15 @@
             }
 
             const childItem = {
-                            ...item,
-                            parentId: node.nodeId,
-                            parentSyncId: node.id,
-                            disabled: node.checked || disabled,
-                            checked: checked || node.checked,
-                            parentChain,
-                            isRemote,
-                            isExistNoCarryLimit
+              ...item,
+              parentId: node.nodeId,
+              parentSyncId: node.id,
+              disabled: node.checked || disabled,
+              checked: checked || node.checked,
+              parentChain,
+              isRemote,
+              isExistNoCarryLimit
             };
-
             const isAsyncFlag = isAsync || item.child_type !== '';
             return new Node(childItem, curLevel, isAsyncFlag);
           });
@@ -1159,12 +1189,12 @@
           node.children = [...data.results.map(item => new Node(item, curLevel, false))];
           if (totalPage > 1) {
             const loadItem = {
-                            ...LOAD_ITEM,
-                            totalPage: totalPage,
-                            current: 1,
-                            parentSyncId: node.id,
-                            parentId: node.nodeId,
-                            parentChain
+              ...LOAD_ITEM,
+              totalPage: totalPage,
+              current: 1,
+              parentSyncId: node.id,
+              parentId: node.nodeId,
+              parentChain
             };
             const loadData = new Node(loadItem, curLevel, isAsync, 'load');
             this.treeData.splice((index + childNodes.length + 1), 0, loadData);
@@ -1172,13 +1202,13 @@
           }
 
           const searchItem = {
-                        ...SEARCH_ITEM,
-                        totalPage: totalPage,
-                        parentSyncId: node.id,
-                        parentId: node.nodeId,
-                        parentChain,
-                        visiable: flag,
-                        placeholder: `${this.$t(`m.common['搜索']`)} ${placeholder}`
+            ...SEARCH_ITEM,
+            totalPage: totalPage,
+            parentSyncId: node.id,
+            parentId: node.nodeId,
+            parentChain,
+            visiable: flag,
+            placeholder: `${this.$t(`m.common['搜索']`)} ${placeholder}`
           };
 
           const searchData = new Node(searchItem, curLevel, false, 'search');
@@ -1201,6 +1231,14 @@
       },
 
       removeAsyncNode () {
+        // 需要过滤掉name为空以及反复切换选中造成的重复数据的节点
+        const obj = {};
+        const treeList = _.cloneDeep(this.treeData.filter(item => item.name));
+        this.treeData = treeList.reduce((pre, item) => {
+          // eslint-disable-next-line no-unused-expressions
+          obj[`${item.id}${item.name}`] ? '' : obj[`${item.id}${item.name}`] = true && pre.push(item);
+          return pre;
+        }, []);
         const index = this.treeData.findIndex(item => item.type === 'async');
         if (index > -1) this.treeData.splice(index, 1);
       },
@@ -1315,14 +1353,14 @@
             if (node.level > 0) {
               const parentData = this.treeData.find(sub => sub.nodeId === node.parentId);
               tempItem = {
-                                ...item,
-                                parentId: node.parentId,
-                                parentSyncId: node.id,
-                                disabled: parentData.checked || disabled,
-                                checked: checked || parentData.checked,
-                                parentChain: _.cloneDeep(node.parentChain),
-                                isRemote,
-                                isExistNoCarryLimit
+                ...item,
+                parentId: node.parentId,
+                parentSyncId: node.id,
+                disabled: parentData.checked || disabled,
+                checked: checked || parentData.checked,
+                parentChain: _.cloneDeep(node.parentChain),
+                isRemote,
+                isExistNoCarryLimit
               };
             } else {
               tempItem.checked = checked;
@@ -1511,7 +1549,7 @@
           .topology-tree-wrapper {
               position: relative;
               height: 100%;
-              min-height: 450px;
+              /* min-height: 450px; */
               .empty-wrapper {
                   position: absolute;
                   top: 50%;

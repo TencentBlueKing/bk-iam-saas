@@ -265,10 +265,18 @@
           const intersection = templates.filter(
             item => this.tempalteDetailList.map(sub => sub.id).includes(item.id)
           );
-          hasDeleteTemplateList = this.tempalteDetailList.filter(
-            item => !intersection.map(sub => sub.id).includes(item.id)
-          );
-          hasAddTemplateList = templates.filter(item => !intersection.map(sub => sub.id).includes(item.id));
+          // 判断权限模板数量没做任何变动时
+          if (JSON.stringify(this.tempalteDetailList) === JSON.stringify(templates)) {
+            hasAddTemplateList = _.cloneDeep(templates);
+          } else {
+            hasDeleteTemplateList = this.tempalteDetailList.filter(
+              item => !intersection.map(sub => sub.id).includes(item.id)
+            );
+            hasAddTemplateList = [
+              ...intersection,
+              ...templates.filter(item => !intersection.map(sub => sub.id).includes(item.id))
+            ];
+          }
         } else {
           hasAddTemplateList = templates;
         }

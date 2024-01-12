@@ -331,7 +331,7 @@
       ];
     },
     mounted () {
-      window.addEventListener('resize', (this.formatFormItemWidth));
+      window.addEventListener('resize', this.formatFormItemWidth);
       this.$once('hook:beforeDestroy', () => {
         window.removeEventListener('resize', this.formatFormItemWidth);
       });
