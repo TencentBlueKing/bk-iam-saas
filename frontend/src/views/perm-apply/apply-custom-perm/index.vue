@@ -665,7 +665,7 @@
     data () {
       return {
         userApi: window.BK_USER_API,
-        systemValue: 'bk_job',
+        systemValue: '',
         systemList: [],
         buttonLoading: false,
         originalCustomTmplList: [],

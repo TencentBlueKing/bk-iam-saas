@@ -356,7 +356,7 @@
         };
       },
       dynamicsSliderWidth () {
-        return this.getResourceSliderWidth ? this.getResourceSliderWidth() - 400 : 600;
+        return this.getResourceSliderWidth ? this.getResourceSliderWidth() * 0.67 : 600;
       }
     },
     watch: {
