@@ -1465,7 +1465,7 @@
                   && this.renderTopologyData.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`)
               );
             }
-            const nodes = currentSelect.length ? currentSelect : noDisabledData;
+            let nodes = currentSelect.length ? currentSelect : noDisabledData;
             this.renderTopologyData.forEach((item) => {
               if (!item.disabled) {
                 this.$set(item, 'checked', resourceList.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`));
@@ -1482,7 +1482,8 @@
             // 处理三层及以上拓扑不展开的场景下直接勾选同步右侧表格勾选状态
             if (!this.isOnlyLevel && !this.isTwoLevel) {
               const curSelectList = nodes.map((item) => `${item.id}&${item.name}`);
-              // const defaultSelectList = this.curSelectedValues.map((v) => v.ids).flat(this.curChain.length);
+              const defaultSelectList = this.curSelectedValues.map((v) => v.ids).flat(this.curChain.length);
+              nodes = nodes.filter((item) => !defaultSelectList.includes(`${item.id}&${this.curChain[item.level].id}`));
               this.allTreeData.forEach((item) => {
                 if (curSelectList.includes(`${item.id}&${item.name}`) && !item.disabled) {
                   item.checked = currentSelect.length > 0;
