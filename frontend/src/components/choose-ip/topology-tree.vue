@@ -10,17 +10,17 @@
     <!-- <div class="ghost-wrapper" :style="ghostStyle" v-if="!isOnlyLevel"></div> -->
     <div class="render-wrapper" ref="content">
       <template v-if="isOnlyLevel">
-        <div class="page-count-tip" v-if="formatSelectCount.length">
+        <div class="page-count-tip" v-if="formatSelectedCount.length">
           <span>{{ $t(`m.common['已选择']`) }}</span>
           <span>{{ $t(`m.common['本页']`) }}</span>
-          <span class="selected-count">{{ formatSelectCount.length }}</span>
+          <span class="selected-count">{{ formatSelectedCount.length }}</span>
           <span>{{ $t(`m.common['条']`) }}{{$t(`m.common['，']`)}}</span>
           <span
             :class="[
               'clear-select-tip',
-              { 'is-disabled': !currentSelectedNode.length }
+              { 'is-disabled': !formatAllowClearCount.length }
             ]"
-            v-bk-tooltips="{ content: $t(`m.common['暂无可清空数据']`), disabled: currentSelectedNode.length > 0 }"
+            v-bk-tooltips="{ content: $t(`m.common['暂无可清空数据']`), disabled: formatAllowClearCount.length > 0 }"
             @click.stop="handleClearPageAll"
           >
             {{ $t(`m.common['清除选择']`) }}
@@ -194,17 +194,17 @@
               @on-search="handleTableSearch(...arguments, selectNodeData, selectNodeDataIndex)"
             />
             <div class="multiple-topology-tree-right-content">
-              <div class="page-count-tip" v-if="formatSelectCount.length">
+              <div class="page-count-tip" v-if="formatSelectedCount.length">
                 <span>{{ $t(`m.common['已选择']`) }}</span>
                 <span>{{ $t(`m.common['本页']`) }}</span>
-                <span class="selected-count">{{ formatSelectCount.length }}</span>
+                <span class="selected-count">{{ formatSelectedCount.length }}</span>
                 <span>{{ $t(`m.common['条']`) }}{{$t(`m.common['，']`)}}</span>
                 <span
                   :class="[
                     'clear-select-tip',
-                    { 'is-disabled': !currentSelectedNode.length }
+                    { 'is-disabled': !formatAllowClearCount.length }
                   ]"
-                  v-bk-tooltips="{ content: $t(`m.common['暂无可清空数据']`), disabled: currentSelectedNode.length > 0 }"
+                  v-bk-tooltips="{ content: $t(`m.common['暂无可清空数据']`), disabled: formatAllowClearCount.length > 0 }"
                   @click.stop="handleClearPageAll"
                 >
                   {{ $t(`m.common['清除选择']`) }}
@@ -578,10 +578,10 @@
         };
       },
       formatTableHeight () {
-        const tipHeight = this.formatSelectCount.length ? 44 : 0;
+        const tipHeight = this.formatSelectedCount.length ? 44 : 0;
         if (this.isOnlyLevel) {
           const tableHeight = getWindowHeight() - 460;
-          return this.formatSelectCount.length ? tableHeight - tipHeight : tableHeight;
+          return this.formatSelectedCount.length ? tableHeight - tipHeight : tableHeight;
         }
         return getWindowHeight() - 468 - tipHeight;
       },
@@ -593,8 +593,17 @@
           return payload.disabled;
         };
       },
-      formatSelectCount () {
-        return this.renderTopologyData.filter((item) => item.checked);
+      formatSelectedCount () {
+        const curTableData = this.renderTopologyData.filter(
+          (item) => item.checked || (item.disabled && item.parentChain.length));
+        return curTableData;
+      },
+      formatAllowClearCount () {
+        const curTableData = this.renderTopologyData.map((item) => `${item.name}${item.id}`);
+        const result = this.allTreeData.filter((item) =>
+          (item.checked && !item.disabled)
+           && curTableData.includes(`${item.name}${item.id}`));
+        return result;
       },
       formatLoadMore () {
         return (payload) => {
@@ -689,6 +698,7 @@
         document.removeEventListener('keydown', this.handleKeydown);
         bus.$off('update-table-toggleRowSelection');
       });
+      document.addEventListener('resize', this.handleResize);
       bus.$on('update-table-toggleRowSelection', ({ isChecked, node }) => {
         const childData = this.renderTopologyData.find((item) => `${item.name}&${item.id}` === `${node.name}&${node.id}`);
         if (childData) {
@@ -1266,6 +1276,14 @@
       },
 
       handleNodeChecked (value, node) {
+        // 处理三层及以上拓扑不展开的场景下直接勾选同步右侧表格勾选状态
+        if (!this.isOnlyLevel && !this.isTwoLevel) {
+          this.renderTopologyData.forEach((item) => {
+            if (`${item.id}&${item.name}` === `${node.id}&${node.name}`) {
+              this.$refs.topologyTableRef.toggleRowSelection(item, value);
+            }
+          });
+        }
         if (node.children && node.children.length > 0) {
           const children = this.allTreeData.filter((item) => item.parentId === node.nodeId);
           children.forEach((item) => {
@@ -1295,7 +1313,7 @@
       },
 
       handleClearPageAll () {
-        if (!this.currentSelectedNode.length) {
+        if (!this.formatSelectedCount.length) {
           return;
         }
         const tableData = this.renderTopologyData.filter((item) => !item.disabled).map((v) => `${v.id}${v.name}`);
@@ -1308,6 +1326,9 @@
             }
             const curNode = allTreeData.find((v) => `${v.name}&${v.id}` === `${item.name}&${item.id}`);
             if (curNode) {
+              if (!curNode.disabled) {
+                curNode.checked = false;
+              }
               item.checked = false;
               this.$emit('on-select', false, curNode);
             }
@@ -1380,11 +1401,20 @@
       fetchSelectedGroups (type, payload, row) {
         const typeMap = {
           multiple: () => {
+            const isChecked = payload.length && payload.indexOf(row) !== -1;
+            // 处理三层及以上拓扑不展开的场景下直接勾选同步右侧表格勾选状态
+            if (!this.isOnlyLevel && !this.isTwoLevel) {
+              this.allTreeData.forEach((item) => {
+                if ((`${item.id}&${item.name}` === `${row.id}&${row.name}`) && !item.disabled) {
+                  item.checked = !!isChecked;
+                  this.handleNodeChecked(!!isChecked, item);
+                }
+              });
+            }
             let allTreeData = [...this.allTreeData];
             if (!allTreeData.length && !this.isOnlyLevel && this.curKeyword) {
               allTreeData = [...this.curTreeTableData.children || []];
             }
-            const isChecked = payload.length && payload.indexOf(row) !== -1;
             const curNode = allTreeData.find((item) => `${row.name}&${row.id}` === `${item.name}&${item.id}`);
             if (isChecked) {
               this.$set(row, 'checked', true);
@@ -1449,6 +1479,17 @@
                 this.$refs.topologyTableRef && this.$refs.topologyTableRef.toggleRowSelection(item, item.checked);
               }
             });
+            // 处理三层及以上拓扑不展开的场景下直接勾选同步右侧表格勾选状态
+            if (!this.isOnlyLevel && !this.isTwoLevel) {
+              const curSelectList = nodes.map((item) => `${item.id}&${item.name}`);
+              // const defaultSelectList = this.curSelectedValues.map((v) => v.ids).flat(this.curChain.length);
+              this.allTreeData.forEach((item) => {
+                if (curSelectList.includes(`${item.id}&${item.name}`) && !item.disabled) {
+                  item.checked = currentSelect.length > 0;
+                  this.handleNodeChecked(currentSelect.length > 0, item);
+                }
+              });
+            }
             this.$store.commit('setTreeSelectedNode', this.currentSelectedNode);
             this.$emit('on-select-all', nodes, currentSelect.length > 0);
           }
@@ -1735,9 +1776,9 @@
 .page-count-tip {
   background-color: #EAEBF0;
   color: #63656e;
-  margin-bottom: 8px;
   padding: 8px 0;
   margin: 0 16px 8px 16px;
+  font-size: 12px;
   text-align: center;
   .selected-count {
     font-weight: 700;
@@ -1758,12 +1799,13 @@
   position: relative;
 
   .custom-largest-count {
+    font-size: 12px;
     line-height: 36px;
   }
   /deep/ .topology-tree-pagination-cls {
    .bk-page-total-count {
       color: #3f4046;
-      font-size: 14px;
+      font-size: 12px;
     }
     .bk-page-small-jump {
       position: absolute;

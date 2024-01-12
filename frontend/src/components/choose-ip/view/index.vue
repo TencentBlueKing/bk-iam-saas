@@ -8,12 +8,10 @@
           :key="index"
           :name="item.name"
           :hide-arrow="true"
-          ext-cls="iam-instance-panel-collapse"
+          :ext-cls="formatCollapseCls(item, index)"
         >
           <div class="title flex-between">
-            <div
-              class="single-hide"
-              style="width: calc(100% - 20px)">
+            <div class="single-hide">
               <Icon bk class="expanded-icon" :type="activePanel.includes(item.name) ? 'down-shape' : 'right-shape'" />
               <!-- <span>{{ formatChain(item) }}: </span> -->
               <span>{{ $t(`m.common['已选']`) }}</span>
@@ -110,6 +108,13 @@
         return (payload) => {
           return payload.displayPath.every(v => v.disabled);
         };
+      },
+      formatCollapseCls () {
+        return (payload, index) => {
+          return !this.activePanel.includes(payload.name) && this.instanceData.length - 1 !== index
+            ? 'iam-instance-panel-collapse is-shrink'
+            : 'iam-instance-panel-collapse';
+        };
       }
     },
     watch: {
@@ -148,16 +153,19 @@
           padding: 0;
       }
       /deep/ .bk-collapse-item {
-      .bk-collapse-item-header {
-          font-size: 12px;
-          /* border-bottom: 1px solid #dcdee5; */
-          .fr {
-            display: none;
-          }
-          &:hover {
-            color: #63656e;
-          }
-      }
+        .bk-collapse-item-header {
+            font-size: 12px;
+            /* border-bottom: 1px solid #dcdee5; */
+            .fr {
+              display: none;
+            }
+            &:hover {
+              color: #63656e;
+            }
+        }
+        &.is-shrink {
+          margin-bottom: 8px;
+        }
       }
       .number {
         color: #3A84FF;
