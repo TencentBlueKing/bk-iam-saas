@@ -600,9 +600,11 @@
       },
       formatAllowClearCount () {
         const curTableData = this.renderTopologyData.map((item) => `${item.name}${item.id}`);
+        // 处理多层拓扑第一次无法在computed里更新checked值
+        const curSelectedTableData = this.renderTopologyData.filter((item) => item.checked && !item.disabled).map((item) => `${item.name}${item.id}`);
         const result = this.allTreeData.filter((item) =>
-          (item.checked && !item.disabled)
-           && curTableData.includes(`${item.name}${item.id}`));
+          ((item.checked && !item.disabled) && curTableData.includes(`${item.name}${item.id}`))
+          || curSelectedTableData.includes(`${item.name}${item.id}`));
         return result;
       },
       formatLoadMore () {
@@ -1276,14 +1278,6 @@
       },
 
       handleNodeChecked (value, node) {
-        // 处理三层及以上拓扑不展开的场景下直接勾选同步右侧表格勾选状态
-        if (!this.isOnlyLevel && !this.isTwoLevel) {
-          this.renderTopologyData.forEach((item) => {
-            if (`${item.id}&${item.name}` === `${node.id}&${node.name}`) {
-              this.$refs.topologyTableRef.toggleRowSelection(item, value);
-            }
-          });
-        }
         if (node.children && node.children.length > 0) {
           const children = this.allTreeData.filter((item) => item.parentId === node.nodeId);
           children.forEach((item) => {
@@ -1296,6 +1290,22 @@
             }
             if (item.children && item.children.length > 0) {
               this.handleNodeChecked(value, item);
+            }
+          });
+        }
+        // 处理三层及以上拓扑不展开的场景下直接勾选同步右侧表格勾选状态
+        if (!this.isOnlyLevel && !this.isTwoLevel) {
+          let selectChildrenList = [];
+          if (this.curSelectTreeNode.children.length) {
+            selectChildrenList = this.curSelectTreeNode.children.map((item) => `${item.id}&${item.name}`);
+          }
+          this.renderTopologyData.forEach((item) => {
+            if ((`${item.id}&${item.name}` === `${node.id}&${node.name}`)
+              || selectChildrenList.includes(`${item.id}&${item.name}`)) {
+              this.$refs.topologyTableRef.toggleRowSelection(item, value);
+              // 如果上级数据checked， 子集默认disabled
+              item.disabled = this.curSelectTreeNode.checked;
+              item.checked = value;
             }
           });
         }
