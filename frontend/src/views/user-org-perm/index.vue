@@ -19,8 +19,10 @@
           <LeftLayout
             :loading="listLoading"
             :list="groupList"
+            :can-scroll-load="canScrollLoad"
             :empty-data="emptyData"
             @on-select="handleSelectUser"
+            @on-load-more="handleLoadMore"
           />
         </div>
         <div slot="right" class="user-org-wrapper-content-right">
@@ -42,6 +44,7 @@
 
 <script>
   import { cloneDeep } from 'lodash';
+  import { bus } from '@/common/bus';
   import { formatCodeData } from '@/common/util';
   import IamResourceCascadeSearch from '@/components/iam-resource-cascade-search';
   import Layout from './components/page-layout';
@@ -192,6 +195,11 @@
         }
       },
 
+      async handleLoadMore () {
+        this.pageConf.current++;
+        await this.fetchGroupMemberList(false, true);
+      },
+
       async handleRemoteTable (payload) {
         if (!this.mainContentLoading) {
           this.componentLoading = true;
@@ -229,7 +237,8 @@
         this.curEmptyData.tipType = '';
         this.isSearchPerm = false;
         this.curSearchParams = {};
-      // this.fetchData(true);
+        console.log(555, this.$refs);
+        bus.$emit('on-refresh-table');
       },
       
       handleEmptyRefresh () {
@@ -260,11 +269,11 @@
       padding: 0 16px;
       background-color: #FAFBFD;
       border-right: 1px solid#dcdee5;
-      height: 100%;
+      /* height: 100%; */
     }
-    &-right {
+    /* &-right {
       height: 100%;
-    }
+    } */
   }
 }
 </style>

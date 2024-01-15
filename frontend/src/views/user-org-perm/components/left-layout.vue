@@ -82,6 +82,10 @@
         type: Boolean,
         default: false
       },
+      canScrollLoad: {
+        type: Boolean,
+        default: false
+      },
       currentActive: {
         type: String,
         default: ''
@@ -99,6 +103,7 @@
         selectActive: '',
         listLoading: false,
         isDropdownShow: false,
+        isScrollLoading: false,
         currentSelectList: [],
         sliderData: {
           reset: {
@@ -192,6 +197,7 @@
       },
 
       handleScroll (event) {
+        console.log(4555);
         if (this.isLoading) {
           this.handleResetScrollLoading();
           return;
@@ -201,10 +207,11 @@
           this.isScrollLoading = false;
           return;
         }
-        if (event.target.scrollTop + event.target.offsetHeight >= event.target.scrollHeight - 1) {
+        const { offsetHeight, scrollTop, scrollHeight } = event.target;
+        if (scrollTop + offsetHeight >= scrollHeight - 1) {
           this.isScrollLoading = true;
           this.isShowNoDataTips = false;
-          this.$emit('on-load');
+          this.$emit('on-load-more');
         }
       },
 
@@ -254,9 +261,11 @@
 
   .group-list {
     padding-right: 16px;
+    position: relative;
     &-content {
       position: relative;
       height: calc(100% - 43px);
+      overflow-x: hidden;
       overflow-y: auto;
       &::-webkit-scrollbar {
         width: 6px;
