@@ -432,7 +432,7 @@ class GroupColumnValue(BaseModel):
     desc: BaseDictStrValue
     expired_display: BaseDictStrValue
     group_info: GroupInfo
-    role_name = BaseDictStrValue
+    role_name: BaseDictStrValue
     highest_sensitivity_level: BaseDictStrValue  # 最高敏感等级
 
     @classmethod
