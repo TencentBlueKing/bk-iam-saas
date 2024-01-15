@@ -594,15 +594,29 @@
         };
       },
       formatSelectedCount () {
-        const curTableData = this.renderTopologyData.filter(
-          (item) => item.checked || (item.disabled && item.parentChain.length));
+        const hasNode = {};
+        let list = [...this.renderTopologyData];
+        if (
+          this.curSelectTreeNode.children
+          && this.curSelectTreeNode.children.length
+          && !this.isOnlyLevel && !this.isTwoLevel) {
+          list = [...this.renderTopologyData, ...this.curSelectTreeNode.children];
+        }
+        const tableData = list.reduce((curr, next) => {
+          // eslint-disable-next-line no-unused-expressions
+          hasNode[`${next.name}&${next.id}`] ? '' : hasNode[`${next.name}&${next.id}`] = true && curr.push(next);
+          return curr;
+        }, []);
+        const curTableData = tableData.filter((item) => item.checked || (item.disabled && item.parentChain.length));
         return curTableData;
       },
       formatAllowClearCount () {
         const curTableData = this.renderTopologyData.map((item) => `${item.name}${item.id}`);
+        // 处理多层拓扑第一次无法在computed里更新checked值
+        const curSelectedTableData = this.renderTopologyData.filter((item) => item.checked && !item.disabled).map((item) => `${item.name}${item.id}`);
         const result = this.allTreeData.filter((item) =>
-          (item.checked && !item.disabled)
-           && curTableData.includes(`${item.name}${item.id}`));
+          ((item.checked && !item.disabled) && curTableData.includes(`${item.name}${item.id}`))
+          || curSelectedTableData.includes(`${item.name}${item.id}`));
         return result;
       },
       formatLoadMore () {
@@ -929,6 +943,8 @@
 
       setDefaultSelect (payload) {
         let singleCheckedData = [];
+        const list = [...this.allTreeData].filter((item) => item.type === 'node');
+        const allTreeData = list.filter((item) => item.disabled).map((item) => `${item.name}&${item.id}`);
         if (this.curSelectedValues.length && !this.isOnlyLevel) {
           const defaultSelectList = this.curSelectedValues
             .filter((item) => item.disabled)
@@ -942,10 +958,14 @@
               || (this.curSelectTreeNode.children
                 && this.curSelectTreeNode.children.length)) {
               // 处理子集表格disabled
-              if (this.curSelectTreeNode.checked) {
+              if (this.curSelectTreeNode.children.length) {
                 this.curSelectTreeNode.children.forEach((v) => {
-                  v.checked = true;
-                  v.disabled = true;
+                  if (this.curSelectTreeNode.checked) {
+                    v.checked = true;
+                    v.disabled = true;
+                  } else {
+                    v.disabled = allTreeData.includes(`${v.name}&${v.id}`);
+                  }
                 });
               }
               childrenIdList = this.curSelectTreeNode.children.filter((v) => v.disabled).map((v) => `${v.name}&${v.id}`);
@@ -954,8 +974,6 @@
             return result || !childrenIdList.includes(`${payload.name}&${payload.id}`);
           }
         }
-        const list = [...this.allTreeData].filter((item) => item.type === 'node');
-        const allTreeData = list.filter((item) => item.disabled && item.type === 'node').map((item) => `${item.name}&${item.id}`);
         const selectNodeList = [...allTreeData, ...singleCheckedData];
         // 处理有的资源全选只能勾选一项
         if (this.resourceValue && this.curSelectedValues.length) {
@@ -1252,6 +1270,7 @@
         }
         if (Object.keys(node).length > 0) {
           node.expanded = true;
+          this.subPagination.current = 1;
           this.selectNodeDataIndex = index;
           this.selectNodeData = Object.assign({}, node);
           this.curExpandNode = _.cloneDeep(node);
@@ -1276,14 +1295,6 @@
       },
 
       handleNodeChecked (value, node) {
-        // 处理三层及以上拓扑不展开的场景下直接勾选同步右侧表格勾选状态
-        if (!this.isOnlyLevel && !this.isTwoLevel) {
-          this.renderTopologyData.forEach((item) => {
-            if (`${item.id}&${item.name}` === `${node.id}&${node.name}`) {
-              this.$refs.topologyTableRef.toggleRowSelection(item, value);
-            }
-          });
-        }
         if (node.children && node.children.length > 0) {
           const children = this.allTreeData.filter((item) => item.parentId === node.nodeId);
           children.forEach((item) => {
@@ -1296,6 +1307,22 @@
             }
             if (item.children && item.children.length > 0) {
               this.handleNodeChecked(value, item);
+            }
+          });
+        }
+        // 处理三层及以上拓扑不展开的场景下直接勾选同步右侧表格勾选状态
+        if (!this.isOnlyLevel && !this.isTwoLevel) {
+          let selectChildrenList = [];
+          if (this.curSelectTreeNode.children.length) {
+            selectChildrenList = this.curSelectTreeNode.children.map((item) => `${item.id}&${item.name}`);
+          }
+          this.renderTopologyData.forEach((item) => {
+            if ((`${item.id}&${item.name}` === `${node.id}&${node.name}`)
+              || selectChildrenList.includes(`${item.id}&${item.name}`)) {
+              this.$refs.topologyTableRef.toggleRowSelection(item, value);
+              // 如果上级数据checked， 子集默认disabled
+              item.disabled = this.curSelectTreeNode.checked;
+              item.checked = value;
             }
           });
         }
@@ -1372,8 +1399,10 @@
         if (!this.allTreeData.length) {
           this.allTreeData = _.cloneDeep(this.curAllTreeNode);
         }
-        const index = this.allTreeData.findIndex(
-          (item) => item.parentId === this.selectNodeData.nodeId && item.type === 'load'
+        const { id, name, nodeId } = this.selectNodeData;
+        const index = this.allTreeData.findIndex((item) =>
+          ((item.parentChain && item.parentChain.map((v) => `${v.id}&${v.name}`).includes(`${id}&${name}`)) || item.parentId === nodeId)
+          && item.type === 'load'
         );
         if (index > -1) {
           this.$set(this.allTreeData[index], 'current', current - 1);
