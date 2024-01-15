@@ -25,7 +25,7 @@ from backend.apps.group.models import Group
 from backend.apps.organization.constants import StaffStatus
 from backend.apps.organization.models import User as UserModel
 from backend.apps.policy.models import Policy
-from backend.apps.role.models import Role, RoleSource
+from backend.apps.role.models import Role, RoleRelatedObject, RoleSource
 from backend.apps.role.tasks import sync_subset_manager_subject_scope
 from backend.apps.template.models import PermTemplatePolicyAuthorized
 from backend.audit.audit import log_group_event, log_role_event, log_user_event
@@ -39,6 +39,7 @@ from backend.service.constants import (
     ApplicationStatus,
     ApplicationType,
     GroupSaaSAttributeEnum,
+    RoleRelatedObjectType,
     RoleSourceType,
     RoleType,
     SubjectType,
@@ -666,7 +667,18 @@ class ApplicationBiz:
         # 1. 用户组基本信息
         groups = Group.objects.filter(id__in=[g.id for g in group_infos])
         group_expired_at_dict = {g.id: g.expired_at for g in group_infos}
-        # 2. 组装用户组相关数据
+        # 2. 查询用户组所属的管理员
+        q = RoleRelatedObject.objects.filter(
+            object_type=RoleRelatedObjectType.GROUP.value, object_id__in=[g.id for g in group_infos]
+        ).values("role_id", "object_id")
+        group_role = {one["object_id"]: one["role_id"] for one in q}
+        role_name = {}
+
+        if group_role:
+            q = Role.objects.filter(id__in=group_role.values()).values("id", "name")
+            role_name = {one["id"]: one["name"] for one in q}
+
+        # 3. 组装用户组相关数据
         group_infos = [
             ApplicationGroupInfo(
                 id=group.id,
@@ -675,6 +687,7 @@ class ApplicationBiz:
                 expired_at=group_expired_at_dict[group.id],
                 expired_display=expired_at_display(group_expired_at_dict[group.id]),
                 templates=self._gen_group_permission_data(group.id),
+                role_name=role_name.get(group_role.get(group.id, 0), ""),
             )
             for group in groups
         ]
