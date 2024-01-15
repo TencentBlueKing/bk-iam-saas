@@ -598,7 +598,7 @@
         let list = [...this.renderTopologyData];
         if (
           this.curSelectTreeNode.children
-          && this.curSelectTreeNode.children
+          && this.curSelectTreeNode.children.length
           && !this.isOnlyLevel && !this.isTwoLevel) {
           list = [...this.renderTopologyData, ...this.curSelectTreeNode.children];
         }
