@@ -594,8 +594,20 @@
         };
       },
       formatSelectedCount () {
-        const curTableData = this.renderTopologyData.filter(
-          (item) => item.checked || (item.disabled && item.parentChain.length));
+        const hasNode = {};
+        let list = [...this.renderTopologyData];
+        if (
+          this.curSelectTreeNode.children
+          && this.curSelectTreeNode.children
+          && !this.isOnlyLevel && !this.isTwoLevel) {
+          list = [...this.renderTopologyData, ...this.curSelectTreeNode.children];
+        }
+        const tableData = list.reduce((curr, next) => {
+          // eslint-disable-next-line no-unused-expressions
+          hasNode[`${next.name}&${next.id}`] ? '' : hasNode[`${next.name}&${next.id}`] = true && curr.push(next);
+          return curr;
+        }, []);
+        const curTableData = tableData.filter((item) => item.checked || (item.disabled && item.parentChain.length));
         return curTableData;
       },
       formatAllowClearCount () {
@@ -931,6 +943,8 @@
 
       setDefaultSelect (payload) {
         let singleCheckedData = [];
+        const list = [...this.allTreeData].filter((item) => item.type === 'node');
+        const allTreeData = list.filter((item) => item.disabled).map((item) => `${item.name}&${item.id}`);
         if (this.curSelectedValues.length && !this.isOnlyLevel) {
           const defaultSelectList = this.curSelectedValues
             .filter((item) => item.disabled)
@@ -944,10 +958,14 @@
               || (this.curSelectTreeNode.children
                 && this.curSelectTreeNode.children.length)) {
               // 处理子集表格disabled
-              if (this.curSelectTreeNode.checked) {
+              if (this.curSelectTreeNode.children.length) {
                 this.curSelectTreeNode.children.forEach((v) => {
-                  v.checked = true;
-                  v.disabled = true;
+                  if (this.curSelectTreeNode.checked) {
+                    v.checked = true;
+                    v.disabled = true;
+                  } else {
+                    v.disabled = allTreeData.includes(`${v.name}&${v.id}`);
+                  }
                 });
               }
               childrenIdList = this.curSelectTreeNode.children.filter((v) => v.disabled).map((v) => `${v.name}&${v.id}`);
@@ -956,8 +974,6 @@
             return result || !childrenIdList.includes(`${payload.name}&${payload.id}`);
           }
         }
-        const list = [...this.allTreeData].filter((item) => item.type === 'node');
-        const allTreeData = list.filter((item) => item.disabled && item.type === 'node').map((item) => `${item.name}&${item.id}`);
         const selectNodeList = [...allTreeData, ...singleCheckedData];
         // 处理有的资源全选只能勾选一项
         if (this.resourceValue && this.curSelectedValues.length) {
