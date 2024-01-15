@@ -332,7 +332,7 @@ class ResourceGroupInfo(BaseModel):
                         for instance in c.instances:
                             resource_count += len(instance.path)
                             if resource_name == "":
-                                resource_name = instance.path[0].name
+                                resource_name = instance.path[0][-1].name
                         attribute_count += len(c.attributes)
 
                     if attribute_count == 0 and resource_count == 1:
