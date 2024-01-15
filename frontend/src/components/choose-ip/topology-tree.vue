@@ -1270,6 +1270,7 @@
         }
         if (Object.keys(node).length > 0) {
           node.expanded = true;
+          this.subPagination.current = 1;
           this.selectNodeDataIndex = index;
           this.selectNodeData = Object.assign({}, node);
           this.curExpandNode = _.cloneDeep(node);
@@ -1398,8 +1399,10 @@
         if (!this.allTreeData.length) {
           this.allTreeData = _.cloneDeep(this.curAllTreeNode);
         }
-        const index = this.allTreeData.findIndex(
-          (item) => item.parentId === this.selectNodeData.nodeId && item.type === 'load'
+        const { id, name, nodeId } = this.selectNodeData;
+        const index = this.allTreeData.findIndex((item) =>
+          ((item.parentChain && item.parentChain.map((v) => `${v.id}&${v.name}`).includes(`${id}&${name}`)) || item.parentId === nodeId)
+          && item.type === 'load'
         );
         if (index > -1) {
           this.$set(this.allTreeData[index], 'current', current - 1);
