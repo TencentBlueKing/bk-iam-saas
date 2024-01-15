@@ -336,13 +336,13 @@ class ResourceGroupInfo(BaseModel):
                         attribute_count += len(c.attributes)
 
                     if attribute_count == 0 and resource_count == 1:
-                        value = f"{resource_name}1个{resource_type_name}"
+                        value = f"{resource_type_name}: {resource_name}"
                     elif attribute_count == 0 and resource_count > 1:
-                        value = f"{resource_name}等{resource_count}个{resource_type_name}"
+                        value = f"{resource_type_name}: {resource_name}等{resource_count}个实例"
                     elif attribute_count > 0 and resource_count == 0:
                         value = f"{resource_type_name}: {attribute_count}个属性"
                     else:
-                        value = f"{resource_count}个{resource_type_name}({attribute_count}个属性)"
+                        value = f"{resource_type_name}: {resource_count}个实例({attribute_count}个属性)"
 
                 summary.append(value)
 
