@@ -12,7 +12,14 @@ from typing import List
 
 from pydantic import BaseModel
 
-from backend.service.constants import PolicyEnvConditionType, PolicyEnvType, SensitivityLevel, SubjectType, WeekDayEnum
+from backend.service.constants import (
+    ANY_ID,
+    PolicyEnvConditionType,
+    PolicyEnvType,
+    SensitivityLevel,
+    SubjectType,
+    WeekDayEnum,
+)
 from backend.service.models import (
     ApplicationAuthorizationScope,
     ApplicationEnvironment,
@@ -332,7 +339,10 @@ class ResourceGroupInfo(BaseModel):
                         for instance in c.instances:
                             resource_count += len(instance.path)
                             if resource_name == "":
-                                resource_name = instance.path[0][-1].name
+                                if instance.path[0][-1].id == ANY_ID and len(instance.path[0]) > 1:
+                                    resource_name = instance.path[0][-2].name
+                                else:
+                                    resource_name = instance.path[0][-1].name
                         attribute_count += len(c.attributes)
 
                     if attribute_count == 0 and resource_count == 1:
