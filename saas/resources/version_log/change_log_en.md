@@ -1,3 +1,18 @@
+<!-- 2024-01-16 -->
+# V1.10.20 Version Update Log
+
+### Optimization Updates
+
+* Optimized content for permission application forms.
+
+### Bug Fixes
+
+* Fixed an issue where the maximum authorization scope selection within the Blue Ocean embedded page did not allow user selection after choosing an organization.
+* Fixed an problem where adding group permissions - adding operations and permission templates first, then canceling operations or reducing the number of permission templates, resulted in no display.
+* Fixed an issue where the content of the personnel selector editing component was empty, and re-adding would reset the data from the previous instance.
+
+---
+
 <!-- 2023-12-26 -->
 # V1.10.19 Version Update Log
 
