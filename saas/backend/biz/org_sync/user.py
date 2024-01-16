@@ -8,8 +8,9 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from backend.apps.organization.models import User
+from backend.apps.organization.models import SubjectToDelete, User
 from backend.component import usermgr
+from backend.service.constants import SubjectType
 
 from .base import BaseSyncDBService
 
@@ -54,6 +55,11 @@ class DBUserSyncService(BaseSyncDBService):
         # 对于新增用户，执行对应变更
         User.objects.bulk_create(created_users, batch_size=1000)
 
+        # 移除待删除的用户
+        SubjectToDelete.objects.filter(
+            subject_type=SubjectType.USER.value, subject_id__in=[u.username for u in created_users]
+        ).delete()
+
     def updated_handler(self):
         """关于更新用户，DB的处理"""
         # 只更新变更了的 display_name、staff_status、category_id的用户
@@ -95,6 +101,14 @@ class DBUserSyncService(BaseSyncDBService):
 
         # TODO 删除用户所属角色的成员
         # TODO 删除用户属于角色的授权范围
+
+        # 以上TODO都在延迟删除的任务中处理, 这里只记录待删除的用户
+        subject_to_delete = [
+            SubjectToDelete(subject_id=user.username, subject_type=SubjectType.USER.value)
+            for user in self.old_users
+            if user.id not in new_user_id_set
+        ]
+        SubjectToDelete.objects.bulk_create(subject_to_delete, batch_size=100, ignore_conflicts=True)
 
     def sync_to_db(self):
         """SaaS DB 相关变更"""

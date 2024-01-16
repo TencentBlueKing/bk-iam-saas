@@ -13,8 +13,9 @@ specific language governing permissions and limitations under the License.
 import datetime
 
 from backend.apps.organization.constants import NEW_USER_AUTO_SYNC_COUNT_LIMIT
-from backend.apps.organization.models import Department, DepartmentMember, User
+from backend.apps.organization.models import Department, DepartmentMember, SubjectToDelete, User
 from backend.component import iam, usermgr
+from backend.service.constants import SubjectType
 
 
 class Syncer:
@@ -112,6 +113,11 @@ class Syncer:
         User.objects.bulk_create(created_users, batch_size=1000)
         # 后台新建
         iam.create_subjects([{"type": "user", "id": user["username"], "name": user["display_name"]} for user in users])
+
+        # 移除待删除的用户
+        SubjectToDelete.objects.filter(
+            subject_type=SubjectType.USER.value, subject_id__in=[u.username for u in created_users]
+        ).delete()
 
         # 如果用户大于一定量，则直接全量同步
         if len(created_users) > NEW_USER_AUTO_SYNC_COUNT_LIMIT:

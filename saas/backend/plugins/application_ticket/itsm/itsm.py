@@ -127,7 +127,7 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
                 if data.type == ApplicationType.JOIN_GROUP
                 else f"申请续期 {len(data.content.groups)} 个用户组"
             )
-        title = "{}：{}".format(title_prefix, "、".join([one.name for one in data.content.groups]))
+        title = "{}：{}".format(title_prefix, "、".join([f"({one.role_name}){one.name}" for one in data.content.groups]))
         if len(title) > 64:
             title = title[:64] + "..."
 
