@@ -80,11 +80,27 @@
         @on-refresh="handleEmptyRefresh"
       />
     </div>
+    
+    <!-- 加入用户组slider -->
+    <JoinUserGroupSlider
+      :slider-width="960"
+      :show.sync="sliderData['add'].showSlider"
+      :is-batch="true"
+      :user-list="userList"
+      :depart-list="departList"
+      :title="$t(`m.userOrOrg['批量追加用户组']`)"
+      :group-data="queryGroupData"
+    />
   </div>
 </template>
 
 <script>
+  import JoinUserGroupSlider from './join-user-group-slider.vue';
+
   export default {
+    components: {
+      JoinUserGroupSlider
+    },
     props: {
       loading: {
         type: Boolean,
@@ -97,6 +113,9 @@
       curSelectActive: {
         type: String,
         default: ''
+      },
+      groupData: {
+        type: Object
       },
       emptyData: {
         type: Object
@@ -131,6 +150,8 @@
           }
         },
         groupList: [],
+        userList: [],
+        departList: [],
         pageConf: {
           current: 1,
           limit: 18,
@@ -174,6 +195,12 @@
         },
         immediate: true
       },
+      groupData: {
+        handler (value) {
+          this.queryGroupData = Object.assign({}, value);
+        },
+        immediate: true
+      },
       emptyData: {
         handler (value) {
           this.groupEmptyData = Object.assign({}, value);
@@ -192,12 +219,15 @@
       },
 
       handleSelect (payload) {
-        console.log(555);
         this.selectActive = `${payload.id}&${payload.name}`;
         this.$emit('on-select', payload);
       },
 
       handleBatch (payload) {
+        if (['add'].includes(payload)) {
+          this.userList = this.currentSelectList.filter((item) => ['user'].includes(item.type));
+          this.departList = this.currentSelectList.filter((item) => ['department'].includes(item.type));
+        }
         this.sliderData[payload] = Object.assign(this.sliderData[payload], {
           showSlider: true,
           list: this.currentSelectList

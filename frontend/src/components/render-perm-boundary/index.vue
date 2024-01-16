@@ -36,7 +36,7 @@
         </div>
         <div v-if="modules.includes('membersPerm')" class="render-form-item">
           <div class="perm-boundary-title">
-            {{ $t(`m.levelSpace["${BOUNDARY_KEYS_ENUM["membersPerm"].title}"]`) }}:
+            {{ customTitle || `${$t(`m.levelSpace["${BOUNDARY_KEYS_ENUM["membersPerm"].title}"]`)}: ` }}
           </div>
           <div
             :class="['iam-resource-expand']"
@@ -56,18 +56,23 @@
                   class="iam-resource-header-left-title"
                   v-if="userLength > 0 || departLength > 0"
                 >
-                  <template v-if="userLength > 0">
-                    {{ $t(`m.common['共']`) }}
-                    <span class="number">{{ userLength }}</span>
-                    {{ $t(`m.common['个用户']`) }}
+                  <template v-if="customSlotName">
+                    <slot :name="customSlotName" />
                   </template>
-                  <template v-if="userLength && departLength">
-                    {{ $t(`m.common['，']`) }}
-                  </template>
-                  <template v-if="departLength > 0">
-                    {{ $t(`m.common['共']`) }}
-                    <span class="number">{{ departLength }}</span>
-                    {{ $t(`m.common['个组织']`) }}
+                  <template v-else>
+                    <template v-if="userLength > 0">
+                      {{ $t(`m.common['共']`) }}
+                      <span class="number">{{ userLength }}</span>
+                      {{ $t(`m.common['个用户']`) }}
+                    </template>
+                    <template v-if="userLength && departLength">
+                      {{ $t(`m.common['，']`) }}
+                    </template>
+                    <template v-if="departLength > 0">
+                      {{ $t(`m.common['共']`) }}
+                      <span class="number">{{ departLength }}</span>
+                      {{ $t(`m.common['个组织']`) }}
+                    </template>
                   </template>
                 </div>
               </div>
@@ -184,6 +189,12 @@
       isShowClear: {
         type: Boolean,
         default: false
+      },
+      customTitle: {
+        type: String
+      },
+      customSlotName: {
+        type: String
       }
     },
     data () {

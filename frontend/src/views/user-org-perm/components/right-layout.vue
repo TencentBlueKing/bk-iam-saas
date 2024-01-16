@@ -53,7 +53,11 @@
     </div>
     <!-- 加入用户组slider -->
     <JoinUserGroupSlider
+      :slider-width="960"
       :show.sync="isShowAddGroupSlider"
+      :is-batch="false"
+      :user-list="userList"
+      :depart-list="departList"
       :title="$t(`m.userOrOrg['加入用户组']`)"
       :group-data="queryGroupData"
     />
@@ -105,6 +109,8 @@
         renewalGroupTitle: '',
         componentsKey: -1,
         selectedGroups: [],
+        userList: [],
+        departList: [],
         queryGroupData: {},
         curEmptyData: {
           type: 'empty',
@@ -181,6 +187,20 @@
       },
 
       handleAddGroup () {
+        console.log(this.queryGroupData);
+        const userList = [];
+        const departList = [];
+        const typeMap = {
+          user: () => {
+            userList.push(this.queryGroupData);
+          },
+          department: () => {
+            departList.push(this.queryGroupData);
+          }
+        };
+        typeMap[this.queryGroupData.type]();
+        this.userList = [...userList];
+        this.departList = [...departList];
         this.isShowAddGroupSlider = true;
       },
 

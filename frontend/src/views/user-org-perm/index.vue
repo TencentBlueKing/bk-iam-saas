@@ -19,6 +19,7 @@
           <LeftLayout
             :loading="listLoading"
             :list="groupList"
+            :group-data="currentGroupData"
             :cur-select-active="curSelectActive"
             :can-scroll-load="canScrollLoad"
             :empty-data="emptyData"
