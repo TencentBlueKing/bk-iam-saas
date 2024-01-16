@@ -31,9 +31,8 @@
         </ul>
       </bk-dropdown-menu>
     </div>
-    <div class="group-list">
+    <div v-if="list.length" class="group-list">
       <div
-        v-if="list.length"
         v-bkloading="{
           isLoading: loading,
           opacity: 1,
@@ -46,10 +45,9 @@
           v-for="item in list"
           :key="item.id"
           :class="['group-list-item', { active: `${item.id}&${item.name}` === selectActive }]"
-          @click.stop="handleSelect(item)"
         >
           <bk-checkbox v-model="item.checked" @change="handleChecked(...arguments, item)" />
-          <div class="group-content">
+          <div class="group-content" @click.stop="handleSelect(item)">
             <Icon
               :type="formatTypeIcon(item.type)"
               :class="['group-type-icon', { active: `${item.id}&${item.name}` === selectActive }]"
@@ -72,6 +70,16 @@
         </div>
       </div>
     </div>
+    <div v-else class="user-org-empty-wrapper">
+      <ExceptionEmpty
+        :type="groupEmptyData.type"
+        :empty-text="groupEmptyData.text"
+        :tip-text="groupEmptyData.tip"
+        :tip-type="groupEmptyData.tipType"
+        @on-clear="handleEmptyClear"
+        @on-refresh="handleEmptyRefresh"
+      />
+    </div>
   </div>
 </template>
 
@@ -86,7 +94,7 @@
         type: Boolean,
         default: false
       },
-      currentActive: {
+      curSelectActive: {
         type: String,
         default: ''
       },
@@ -160,18 +168,17 @@
       }
     },
     watch: {
-      list: {
+      curSelectActive: {
         handler (value) {
-          if (value.length) {
-            if (!value.some((item) => item.id === this.currentActive)) {
-              const { id, name } = value[0];
-              this.selectActive = `${id}&${name}`;
-            }
-          } else {
-            this.selectActive = -1;
-          }
+          this.selectActive = value;
         },
         immediate: true
+      },
+      emptyData: {
+        handler (value) {
+          this.groupEmptyData = Object.assign({}, value);
+        },
+        deep: true
       }
     },
     methods: {
@@ -185,6 +192,7 @@
       },
 
       handleSelect (payload) {
+        console.log(555);
         this.selectActive = `${payload.id}&${payload.name}`;
         this.$emit('on-select', payload);
       },
@@ -221,6 +229,15 @@
 
       handleDropdownHide () {
         this.isDropdownShow = false;
+      },
+
+      handleEmptyClear () {
+        this.groupEmptyData.tipType = '';
+        this.$emit('on-clear');
+      },
+
+      handleEmptyRefresh () {
+        this.$emit('on-refresh');
       }
     }
   };
@@ -228,6 +245,7 @@
 
 <style lang="postcss" scoped>
 .user-org-perm-left-layout {
+  position: relative;
   .group-operate-dropdown {
     padding-top: 16px;
     margin-bottom: 8px;
@@ -289,6 +307,7 @@
       cursor: pointer;
 
       .group-content {
+        width: calc(100% - 10px);
         display: flex;
         align-items: center;
 
@@ -313,6 +332,13 @@
         border-radius: 2px;
       }
     }
+  }
+
+  .user-org-empty-wrapper  {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, 50%);
   }
 }
 

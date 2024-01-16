@@ -19,10 +19,13 @@
           <LeftLayout
             :loading="listLoading"
             :list="groupList"
+            :cur-select-active="curSelectActive"
             :can-scroll-load="canScrollLoad"
             :empty-data="emptyData"
             @on-select="handleSelectUser"
             @on-load-more="handleLoadMore"
+            @on-clear="handleEmptyUserClear"
+            @on-refresh="handleEmptyUserRefresh"
           />
         </div>
         <div slot="right" class="user-org-wrapper-content-right">
@@ -74,26 +77,17 @@
           limit: 10
         },
         active: '',
+        curSelectActive: '',
         groupList: [],
         searchData: [
           {
             id: 'name',
-            name: this.$t(`m.userGroup['用户组名']`),
+            name: this.$t(`m.userGroup['用户/组织名']`),
             default: true
           },
           {
             id: 'id',
             name: 'ID',
-            default: true
-          },
-          {
-            id: 'user_name',
-            name: this.$t(`m.common['用户名']`),
-            default: true
-          },
-          {
-            id: 'department_name',
-            name: this.$t(`m.common['组织名']`),
             default: true
           },
           {
@@ -157,22 +151,35 @@
     async created () {
       this.comMap = COM_MAP;
       this.pageConf.limit = Math.ceil(this.listHeight / 36);
-      await this.fetchInitData(true);
+      await this.fetchInitData();
     },
 
     methods: {
       async fetchInitData () {
-        await this.fetchGroupMemberList();
+        this.pageConf.current = 1;
+        await this.fetchGroupMemberList(true, false);
+        if (this.groupList.length) {
+          const { id, name } = this.groupList[0];
+          this.curSelectActive = `${id}&${name}`;
+        }
       },
 
       async fetchGroupMemberList (isLoading = false, isScrollLoad = false) {
         this.listLoading = isLoading;
         try {
           const { current, limit } = this.pageConf;
-          const params = {
+          let params = {
             page: current,
             page_size: limit
           };
+          if (this.isSearchPerm) {
+            params = {
+              ...params,
+              ...{
+                name: this.curSearchParams.name || ''
+              }
+            };
+          }
           const { code, data } = await this.$store.dispatch('userOrOrg/getUserGroupMemberList', params);
           const { count, results } = data;
           const list = results || [];
@@ -185,9 +192,11 @@
             this.currentBackup++;
             this.groupList.push(...results);
           }
+          this.handleRefreshTipType('emptyData');
           this.emptyData = formatCodeData(code, this.emptyData, this.groupList.length === 0);
         } catch (e) {
           this.groupList = [];
+          this.handleRefreshTipType('emptyData');
           this.emptyData = formatCodeData(e.code, this.emptyData);
           this.messageAdvancedError(e);
         } finally {
@@ -201,9 +210,6 @@
       },
 
       async handleRemoteTable (payload) {
-        if (!this.mainContentLoading) {
-          this.componentLoading = true;
-        }
         const { emptyData, pagination, searchParams, isNoTag } = payload;
         this.isSearchPerm = emptyData.tipType === 'search';
         this.curSearchParams = cloneDeep(searchParams);
@@ -214,8 +220,13 @@
         }
       },
 
-      async fetchRemoteTable (isRefreshCurCount = false) {
-        this.comKey = +new Date();
+      async fetchRemoteTable () {
+        await this.fetchInitData();
+        bus.$emit('on-refresh-resource-search', {
+          isSearchPerm: true,
+          curSearchParams: this.curSearchParams,
+          curSearchPagination: this.curSearchPagination
+        });
       },
 
       // 处理只输入纯文本，不生成tag情况
@@ -229,7 +240,6 @@
       },
 
       handleSelectUser (payload) {
-        this.comKey = +new Date();
         this.currentGroupData = payload;
       },
 
@@ -237,8 +247,20 @@
         this.curEmptyData.tipType = '';
         this.isSearchPerm = false;
         this.curSearchParams = {};
-        console.log(555, this.$refs);
-        bus.$emit('on-refresh-table');
+        bus.$emit('on-refresh-resource-search', {
+          isSearchPerm: false
+        });
+      },
+
+      handleRefreshTipType (payload) {
+        let tipType = '';
+        if (this.isSearchPerm) {
+          tipType = 'search';
+        }
+        if (this[payload].type === 500) {
+          tipType = 'refresh';
+        }
+        this.emptyData = Object.assign({}, this[payload], { tipType });
       },
       
       handleEmptyRefresh () {
@@ -249,6 +271,17 @@
       handleEmptyClear () {
         this.isSearchPerm = false;
         this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyClear();
+      },
+
+      handleEmptyUserClear () {
+        this.emptyData.tipType = 'search';
+        this.isSearchPerm = false;
+        this.pageConf.current = 1;
+        this.fetchGroupMemberList(true, false);
+      },
+
+      handleEmptyUserRefresh () {
+        this.handleEmptyUserClear();
       }
     }
   };
@@ -269,7 +302,7 @@
       padding: 0 16px;
       background-color: #FAFBFD;
       border-right: 1px solid#dcdee5;
-      /* height: 100%; */
+      height: 100%;
     }
     /* &-right {
       height: 100%;

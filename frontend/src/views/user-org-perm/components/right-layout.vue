@@ -3,7 +3,7 @@
     <div class="user-name">{{ formatUserName }}</div>
     <div class="header-operate">
       <div>
-        <bk-button theme="primary">
+        <bk-button theme="primary" @click="handleAddGroup">
           {{ $t(`m.userOrOrg['加入用户组']`) }}
         </bk-button>
       </div>
@@ -51,6 +51,12 @@
         @on-refresh="handleEmptyRefresh"
       />
     </div>
+    <!-- 加入用户组slider -->
+    <JoinUserGroupSlider
+      :show.sync="isShowAddGroupSlider"
+      :title="$t(`m.userOrOrg['加入用户组']`)"
+      :group-data="queryGroupData"
+    />
   </div>
 </template>
 
@@ -58,6 +64,7 @@
   import { cloneDeep } from 'lodash';
   import { PERMANENT_TIMESTAMP } from '@/common/constants';
   import MultiTypeGroupPerm from './multi-type-group-perm.vue';
+  import JoinUserGroupSlider from './join-user-group-slider.vue';
 
   const COM_MAP = new Map([
     [['user', 'department'], 'MultiTypeGroupPerm']
@@ -65,7 +72,8 @@
 
   export default {
     components: {
-      MultiTypeGroupPerm
+      MultiTypeGroupPerm,
+      JoinUserGroupSlider
     },
     props: {
       groupData: {
@@ -93,13 +101,10 @@
     data () {
       return {
         isDropdownShow: false,
+        isShowAddGroupSlider: false,
         renewalGroupTitle: '',
         componentsKey: -1,
         selectedGroups: [],
-        // personalGroupList: [],
-        // departmentGroupList: [],
-        // memberTempByUserList: [],
-        // memberTempByDepartList: [],
         queryGroupData: {},
         curEmptyData: {
           type: 'empty',
@@ -173,6 +178,10 @@
 
       fetchInitInterFace () {
         Promise.all([this.fetchUserGroupSearch(), this.fetchDepartGroupSearch()]);
+      },
+
+      handleAddGroup () {
+        this.isShowAddGroupSlider = true;
       },
 
       handleDropdownShow () {

@@ -22,7 +22,7 @@
           v-if="item.pagination.count > 0"
           :mode="item.id"
           :is-loading="item.loading"
-          :is-search-perm="isSearchPerm"
+          :is-search-perm="isSearchResource"
           :pagination="item.pagination"
           :group-data="groupData"
           :list="item.list"
@@ -52,6 +52,7 @@
   <script>
   import { cloneDeep } from 'lodash';
   import { mapGetters } from 'vuex';
+  import { bus } from '@/common/bus';
   import { formatCodeData, sleep } from '@/common/util';
   import MemberTempPermPolicy from '@/components/custom-perm-system-policy/index.vue';
   import TemplatePermTable from './group-perm-table.vue';
@@ -77,20 +78,7 @@
             tipType: ''
           };
         }
-      },
-      curSearchParams: {
-        type: Object,
-        default: () => {}
-      },
-      curSearchPagination: {
-        type: Object,
-        default: () => {
-          return {
-            current: 1,
-            limit: 10,
-            count: 0
-          };
-        }
+      
       },
       isSearchPerm: {
         type: Boolean,
@@ -108,6 +96,7 @@
     data () {
       return {
         hasPerm: false,
+        isSearchResource: false,
         onePerm: 0,
         totalCount: 0,
         initMemberTempPermData: [
@@ -192,6 +181,7 @@
         memberTempPermData: [],
         currentSelectGroupList: [],
         queryGroupData: [],
+        curSearchParams: {},
         emptyPermData: {
           type: 'empty',
           text: '暂无数据',
@@ -242,7 +232,25 @@
           }
         },
         immediate: true
+      },
+      isSearchPerm: {
+        handler (value) {
+          this.isSearchResource = value;
+        },
+        immediate: true
       }
+    },
+    mounted () {
+      this.$once('hook:beforeDestroy', () => {
+        bus.$off('on-refresh-resource-search');
+      });
+      bus.$on('on-refresh-resource-search', (payload) => {
+        const { isSearchPerm, curSearchParams } = payload;
+        this.curSearchParams = curSearchParams || {};
+        this.isSearchResource = isSearchPerm || false;
+        this.resetPagination();
+        this.fetchInitData();
+      });
     },
     methods: {
       async fetchResetData (value) {
@@ -255,7 +263,6 @@
       // 获取个人/部门用户组
       async fetchUserGroupSearch () {
         const { id, type } = this.queryGroupData;
-        console.log(this.curSearchParams, 555);
         let curData = this.memberTempPermData[0];
         const { emptyData, pagination } = curData;
         try {
@@ -266,7 +273,7 @@
             limit,
             offset: limit * (current - 1)
           };
-          if (this.isSearchPerm) {
+          if (this.isSearchResource) {
             params = {
                 ...this.curSearchParams,
                 limit,
@@ -372,7 +379,7 @@
             limit,
             offset: limit * (current - 1)
           };
-          if (this.isSearchPerm) {
+          if (this.isSearchResource) {
             url = 'userOrOrg/getUserMemberTempList';
             params = {
                 ...this.curSearchParams,
@@ -429,7 +436,7 @@
             limit,
             offset: limit * (current - 1)
           };
-          if (this.isSearchPerm) {
+          if (this.isSearchResource) {
             url = 'userOrOrg/getDepartMemberTempList';
             params = {
                 ...this.curSearchParams,
@@ -474,7 +481,7 @@
         }
       },
   
-      fetchInitData () {
+      async fetchInitData () {
         const routeMap = {
           userOrgPerm: () => {
             const typeMap = {
@@ -502,7 +509,7 @@
           }
         };
         if (routeMap[this.$route.name]) {
-          routeMap[this.$route.name]();
+          await routeMap[this.$route.name]();
         }
       },
         
@@ -529,7 +536,6 @@
       },
   
       async formatPaginationData (payload, current, limit) {
-        console.log(payload, 55555);
         const curData = this.memberTempPermData.find((item) => item.id === payload.id);
         if (curData) {
           const typeMap = {

@@ -1451,7 +1451,13 @@ export const m = {
         '最多只能选择10个人员模板' : 'You can only select up to 10 member templates'
     },
     userOrOrg: {
-        '输入ID、用户组名、用户名、组织名、描述等按回车进行搜索': 'Enter ID, user group name, username, organization name, description, etc. and press enter to search'
+        '输入ID、用户组名、用户名、组织名、描述等按回车进行搜索': 'Enter ID, user group name, username, organization name, description, etc. and press enter to search',
+        '批量操作': 'Multi-operate',
+        '请先勾选用户': 'Please check the user first',
+        '重置用户组': 'Reset user group',
+        '追加用户组': 'Append user group',
+        '加入用户组': 'Join user group',
+        '清空用户组并移出（管理空间）': 'Empty user groups and move them out (management space)',
     }
 }
 export default {

@@ -428,7 +428,7 @@
           false: () => {
             this.searchData = this.enableGroupInstanceSearch
               ? this.initSearchData.filter(item => ['name', 'id', 'description'].includes(item.id))
-              : this.initSearchData;
+              : _.cloneDeep(this.initSearchData);
           }
         };
         return routeMap[isOtherRoute]();
@@ -493,10 +493,11 @@
               });
               return prev;
             }, []);
+            const hasResourceGroup = this.resourceTypeData.resource_groups[this.groupIndex];
             if (this.curResourceData.type
               && !resourceInstances.length
-              && this.resourceTypeData.resource_groups[this.groupIndex]
-                .related_resource_types.some(e => e.empty)) {
+              && hasResourceGroup
+              && hasResourceGroup.related_resource_types.some(e => e.empty)) {
               this.resourceInstanceError = true;
               return;
             }
@@ -506,6 +507,7 @@
           }
           await this.fetchSearchUserGroup(resourceInstances, isNoTag);
         } else {
+          console.log(555, isNoTag);
           if (isNoTag) {
             return;
           }
@@ -582,6 +584,7 @@
           this.resetPagination();
           this.resetLocationHref();
         }
+        console.log(this.searchParams, '搜索参数');
         this.handleSearchUserGroup(true, false);
       },
 
@@ -907,13 +910,19 @@
     background-color: #ffffff;
     padding: 20px;
     &.user-org-resource-perm {
-      padding: 12px 16px 22px 16px;
+      padding: 16px;
       .left {
         .resource-action-form {
           .form-item-resource {
             &:not(&:last-child) {
               padding-right: 16px !important;
             }
+          }
+          .error-tips {
+            position: absolute;
+            line-height: 16px;
+            font-size: 10px;
+            color: #ea3636;
           }
         }
       }
