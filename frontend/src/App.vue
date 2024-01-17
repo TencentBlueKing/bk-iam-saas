@@ -390,7 +390,7 @@
 
     .user-org-perm-container {
       .main-scroller {
-        height: calc(100% + 210px);
+        height: calc(100% + 215px);
       }
     }
 </style>

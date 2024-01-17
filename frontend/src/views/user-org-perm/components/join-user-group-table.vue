@@ -1,183 +1,175 @@
 <template>
-  <div ref="selectTableRef" class="user-org-table-form">
-    <div class="search-wrapper">
-      <iam-search-select
-        ref="searchSelectRef"
-        @on-change="handleSearch"
-        :data="searchData"
-        :value="searchValue"
-        :placeholder="$t(`m.applyEntrance['申请加入用户组搜索提示']`)"
-        :quick-search-method="quickSearchMethod"
-      />
-    </div>
-    <bk-table
-      ref="groupTableRef"
-      size="small"
-      ext-cls="user-group-table"
-      :class="{ 'set-border': tableLoading }"
-      :data="tableList"
-      :max-height="pagination.count > 0 ? 500 : 280"
-      :cell-attributes="handleCellAttributes"
-      :pagination="pagination"
-      @page-change="pageChange"
-      @page-limit-change="limitChange"
-      @select="handlerChange"
-      @select-all="handlerAllChange"
-      v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
-    >
-      <bk-table-column type="selection" align="center" :selectable="setDefaultSelect" />
-      <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
-        <template slot-scope="{ row }">
-          <div class="user-group-name">
-            <span
-              :class="[
-                'single-hide',
-                'user-group-name-label',
-                { 'user-group-name-label-expired': user.timestamp > row.expired_at }
-              ]"
-              :title="row.name"
-              @click="handleView(row)"
-            >
-              {{ row.name }}
-            </span>
-            <span v-if="row.expired_at_display" class="user-group-name-expired">
-              <template v-if="user.timestamp > row.expired_at">
-                <span>({{ row.expired_at_display }}{{ $t(`m.common['，']`) }}</span>
-                <bk-button size="small" theme="primary" :text="true" style="padding: 0" @click="handleBatchRenewal">
-                  {{ $t(`m.permApply['去续期']`) }}
-                </bk-button>
-                )
-              </template>
-              <span v-else>
-                {{
-                  row.expired_at === 4102444800
-                    ? `(${row.expired_at_display})`
-                    : `(${$t(`m.common['有效期']`)} ${row.expired_at_display})`
-                }}
-              </span>
-            </span>
-          </div>
-        </template>
-      </bk-table-column>
-      <bk-table-column :label="$t(`m.common['描述']`)">
-        <template slot-scope="{ row }">
-          <span :title="row.description !== '' ? row.description : ''">
-            {{ row.description || '--' }}
-          </span>
-        </template>
-      </bk-table-column>
-      <bk-table-column :label="$t(`m.grading['管理空间']`)">
-        <template slot-scope="{ row }">
-          <span :title="row.role && row.role.name ? row.role.name : ''">
-            {{ row.role ? row.role.name : '--' }}
-          </span>
-        </template>
-      </bk-table-column>
-      <bk-table-column :label="$t(`m.levelSpace['管理员']`)">
-        <template slot-scope="{ row, $index }">
-          <iam-edit-member-selector
-            mode="detail"
-            field="members"
-            width="200"
-            :placeholder="$t(`m.verify['请输入']`)"
-            :value="row.role_members"
-            :index="$index"
+  <div ref="selectTableRef" class="user-org-table-slider">
+    <div class="joined-user-group-wrapper">
+      <div class="joined-user-group-left">
+        <div class="search-wrapper">
+          <iam-search-select
+            ref="searchSelectRef"
+            :data="searchData"
+            :value="searchValue"
+            :placeholder="$t(`m.userOrOrg['搜索用户组名、描述']`)"
+            @on-input="handleSearchInput"
+            @on-change="handleSearch"
+            @on-click-menu="handleClickMenu"
           />
-        </template>
-      </bk-table-column>
-      <template slot="empty">
-        <ExceptionEmpty
-          :type="emptyData.type"
-          :empty-text="emptyData.text"
-          :tip-text="emptyData.tip"
-          :tip-type="emptyData.tipType"
-          @on-clear="handleEmptyClear"
-          @on-refresh="handleEmptyRefresh"
-        />
-      </template>
-    </bk-table>
-    <div class="apply-selected-groups">
-      <div v-if="currentSelectedGroups.length" class="apply-selected-groups-header">
-        <span>{{ $t(`m.common['已选择']`) }}</span>
-        <span class="apply-selected-groups-header-count">{{ currentSelectedGroups.length }}</span>
-        <span>{{ $t(`m.common['个用户组#']`) }}</span>
-        <span>{{ $t(`m.common['，']`) }}</span>
-        <span class="apply-selected-groups-header-clear" @click.stop="handleClearGroups">
-          {{ $t(`m.permApply['清空选择']`) }}:
-        </span>
+        </div>
+        <bk-table
+          ref="groupTableRef"
+          size="small"
+          ext-cls="group-table"
+          :outer-border="false"
+          :header-border="false"
+          :class="{ 'set-border': tableLoading }"
+          :data="tableList"
+          :max-height="pagination.count > 0 ? 527 : 280"
+          :cell-attributes="handleCellAttributes"
+          :pagination="pagination"
+          @page-change="handlePageChange"
+          @page-limit-change="handleLimitChange"
+          @select="handleSelectedChange"
+          @select-all="handleSelectedAllChange"
+          v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
+        >
+          <bk-table-column type="selection" align="center" :selectable="setDefaultSelect" />
+          <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
+            <template slot-scope="{ row }">
+              <div class="user-group-name">
+                <span
+                  :class="[
+                    'single-hide',
+                    'user-group-name-label',
+                    { 'user-group-name-label-expired': user.timestamp > row.expired_at }
+                  ]"
+                  :title="row.name"
+                  @click="handleView(row)"
+                >
+                  {{ row.name }}
+                </span>
+                <span v-if="row.expired_at_display" class="user-group-name-expired">
+                  <template v-if="user.timestamp > row.expired_at">
+                    <span>({{ row.expired_at_display }}{{ $t(`m.common['，']`) }}</span>
+                    <bk-button
+                      size="small"
+                      theme="primary"
+                      :text="true"
+                      style="padding: 0" @click.stop="handleBatchRenewal">
+                      {{ $t(`m.permApply['去续期']`) }}
+                    </bk-button>
+                    )
+                  </template>
+                  <span v-else>
+                    {{
+                      row.expired_at === 4102444800
+                        ? `(${row.expired_at_display})`
+                        : `(${$t(`m.common['有效期']`)} ${row.expired_at_display})`
+                    }}
+                  </span>
+                </span>
+              </div>
+            </template>
+          </bk-table-column>
+          <bk-table-column :label="$t(`m.common['描述']`)">
+            <template slot-scope="{ row }">
+              <span :title="row.description">
+                {{ row.description || '--' }}
+              </span>
+            </template>
+          </bk-table-column>
+          <template slot="empty">
+            <ExceptionEmpty
+              :type="emptyData.type"
+              :empty-text="emptyData.text"
+              :tip-text="emptyData.tip"
+              :tip-type="emptyData.tipType"
+              @on-clear="handleEmptyClear"
+              @on-refresh="handleEmptyRefresh"
+            />
+          </template>
+        </bk-table>
       </div>
-      <bk-tag
-        class="group-tag-close"
-        v-for="item in currentSelectedGroups"
-        :key="item.id"
-        :closable="true"
-        @close="handleCloseTag(item)"
-      >
-        {{ item.name }}
-      </bk-tag>
+      <div class="joined-user-group-right">
+        <div class="result-preview">
+          <div>{{ $t(`m.common['结果预览']`) }}</div>
+        </div>
+        <div class="has-selected" v-if="!isSelectedEmpty">
+          <div class="has-selected-title">
+            <span>{{ $t(`m.common['已选择']`) }}</span>
+            <span class="count">{{ currentSelectedGroups.length }}</span>
+            <span>{{ $t(`m.common['个用户组#']`) }}</span>
+          </div>
+          <bk-button
+            size="small"
+            theme="primary"
+            text
+            class="has-selected-clear"
+            @click="handleClearGroups"
+          >
+            {{ $t(`m.common['清空']`) }}
+          </bk-button>
+        </div>
+        <div class="content" v-if="!isSelectedEmpty">
+          <div class="selected-group-content">
+            <div class="selected-group-item" v-for="item in currentSelectedGroups" :key="item.id">
+              <div class="selected-group-item-left">
+                <span
+                  :class="[
+                    'single-hide',
+                    'selected-group-name'
+                  ]"
+                  :title="item.name"
+                >
+                  {{ item.name }}
+                </span>
+              </div>
+              <Icon bk type="close" class="delete-depart-icon" @click="handleDelete(item, 'organization')" />
+            </div>
+          </div>
+        </div>
+        <div class="selected-empty-wrapper" v-if="isSelectedEmpty">
+          <ExceptionEmpty />
+        </div>
+      </div>
     </div>
-    <p class="user-group-error" v-if="isShowGroupError">{{ $t(`m.permApply['请选择用户组']`) }}</p>
   </div>
 </template>
 
 <script>
   import _ from 'lodash';
-  import Policy from '@/model/policy';
   import { mapGetters } from 'vuex';
-  import { buildURLParams } from '@/common/url';
-  import { formatCodeData, delLocationHref } from '@/common/util';
-  import { PERMANENT_TIMESTAMP } from '@/common/constants';
-  import { leaveConfirm } from '@/common/leave-confirm';
+  import { formatCodeData } from '@/common/util';
   import IamSearchSelect from '@/components/iam-search-select';
-  import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
 
   export default {
     components: {
-      IamSearchSelect,
-      IamEditMemberSelector
+      IamSearchSelect
     },
     data () {
       return {
-        userApi: window.BK_USER_API,
-        reason: '',
         expiredAt: 15552000,
         expiredAtUse: 15552000,
-        isShowReasonError: false,
-        submitLoading: false,
-        isShowAddMemberDialog: false,
-        isShowExpiredError: false,
+        tableLoading: false,
         isShowGroupError: false,
-        isShowMemberError: false,
-        isShowMemberAdd: false,
-        isShowMemberEmptyError: false,
+        isShowPermSideSlider: false,
         tableList: [],
         currentSelectList: [],
         curUserGroup: [],
         currentSelectedGroups: [],
         defaultSelectedGroups: [],
-        defaultSelectedIds: [],
         searchParams: {},
         searchList: [],
         searchValue: [],
-        tableLoading: false,
         pagination: {
           current: 1,
           count: 0,
-          limit: 10
+          limit: 10,
+          type: 'compact',
+          showTotalCount: true
         },
         currentBackup: 1,
-        isShowPermSideSlider: false,
         curGroupName: '',
         curGroupId: '',
-        sliderLoading: false,
-        curRole: '',
-        users: [],
-        departments: [],
-        isAll: false,
-        addMemberTitle: this.$t(`m.myApply['权限获得者']`),
-        addMemberText: this.$t(`m.permApply['选择权限获得者']`),
-        addMemberTips: this.$t(`m.permApply['可代他人申请加入用户组获取权限']`),
-        curCopyParams: {},
+        curSelectMenu: '',
+        curInputText: '',
         queryParams: {},
         emptyData: {
           type: '',
@@ -185,221 +177,33 @@
           tip: '',
           tipType: ''
         },
-        applyGroupData: {
-          system_id: '',
-          action_id: ''
-        },
-        systemList: [],
-        processesList: [],
-        resourceInstances: [],
-        isShowConfirmDialog: false,
-        confirmDialogTitle: this.$t(`m.verify['admin无需申请权限']`),
-        actionIdError: false,
-        searchTypeError: false,
-        resourceTypeError: false,
-        resourceInstanceError: false,
-        isShowResourceInstanceSideSlider: false,
-        resourceTypeData: {
-          resource_groups: [
-            {
-              related_resource_types: [
-                {
-                  type: '',
-                  system_id: '',
-                  name: '',
-                  canPaste: false,
-                  action: {
-                    name: '',
-                    type: ''
-                  },
-                  isError: false,
-                  tag: '',
-                  flag: '',
-                  isChange: false,
-                  isNew: true,
-                  selectionMode: '',
-                  condition: [],
-                  conditionBackup: []
-                }
-              ],
-              related_resource_types_list: []
-            }
-          ],
-          isEmpty: true
-        },
-        defaultResourceTypeList: [
-          {
-            type: '',
-            system_id: '',
-            name: '',
-            canPaste: false,
-            action: {
-              name: '',
-              type: ''
-            },
-            isError: false,
-            tag: '',
-            flag: '',
-            isChange: false,
-            isNew: true,
-            selectionMode: '',
-            condition: [],
-            conditionBackup: []
-          }
-        ],
-        curResourceData: {
-          type: ''
-        },
-        curResourceTypeList: [],
-        resourceInstanceSideSliderTitle: '',
-        params: {},
-        curResIndex: -1,
-        groupIndex: -1,
-        systemIdError: false,
-        actionError: false,
-        isSearchSystem: false,
-        initSearchData: [
+        searchData: [
           {
             id: 'name',
             name: this.$t(`m.userGroup['用户组名']`),
             default: true
           },
           {
-            id: 'id',
-            name: 'ID',
-            default: true
-          // validate (values, item) {
-          //     const validate = (values || []).every(_ => /^(\d*)$/.test(_.name))
-          //     return !validate ? '' : true
-          // }
-          },
-          {
             id: 'description',
             name: this.$t(`m.common['描述']`),
             disabled: true
-          },
-          {
-            id: 'system_id',
-            name: this.$t(`m.common['系统包含']`),
-            remoteMethod: this.handleRemoteSystem
-          },
-          // 管理空间
-          {
-            id: 'role_id',
-            name: this.$t(`m.grading['管理空间']`),
-            remoteMethod: this.handleGradeAdmin
           }
         ],
-        enableGroupInstanceSearch: window.ENABLE_GROUP_INSTANCE_SEARCH.toLowerCase() === 'true',
-        curSelectMenu: '',
-        curInputText: '',
         contentWidth: window.innerWidth <= 1440 ? '200px' : '240px'
       };
     },
     computed: {
-    ...mapGetters(['user', 'externalSystemId']),
-    condition () {
-      if (this.curResIndex === -1 || this.groupIndex === -1) {
-        return [];
+      ...mapGetters(['user', 'externalSystemId']),
+      isSelectedEmpty () {
+        return this.currentSelectedGroups.length < 1;
       }
-      this.curResourceData
-        = this.resourceTypeData.resource_groups[this.groupIndex].related_resource_types[this.curResIndex];
-      if (!this.curResourceData) {
-        return [];
-      }
-      if (this.curResourceData.condition.length === 0) this.curResourceData.condition = ['none'];
-      return _.cloneDeep(this.curResourceData.condition);
-    },
-    curSelectionMode () {
-      if (this.curResIndex === -1 || this.groupIndex === -1) {
-        return 'all';
-      }
-      this.curResourceData
-        = this.resourceTypeData.resource_groups[this.groupIndex].related_resource_types[this.curResIndex];
-      return this.curResourceData.selectionMode;
-    },
-    originalCondition () {
-      return _.cloneDeep(this.condition);
-    }
     },
     watch: {
-      reason () {
-        this.isShowReasonError = false;
-      },
       'pagination.current' (value) {
         this.currentBackup = value;
       }
     },
     async created () {
-      this.searchParams = this.$route.query;
-      // delete this.searchParams.limit;
-      // delete this.searchParams.current;
-      const { role, name, username } = this.user;
-      this.curRole = role.type;
-      this.users = [
-        {
-          username: username,
-          name: name || username,
-          showRadio: true,
-          type: 'user',
-          is_selected: true
-        }
-      ];
-      this.searchData = this.enableGroupInstanceSearch
-        ? this.initSearchData.filter((item) => ['name', 'id', 'description'].includes(item.id))
-        : this.initSearchData;
-      this.setCurrentQueryCache(this.refreshCurrentQuery());
-      const isObject = (payload) => {
-        return Object.prototype.toString.call(payload) === '[object Object]';
-      };
-      const currentQueryCache = await this.getCurrentQueryCache();
-      if (currentQueryCache && Object.keys(currentQueryCache).length) {
-        this.pagination = Object.assign(this.pagination, {
-          current: currentQueryCache.current ? Number(currentQueryCache.current) : this.pagination.current,
-          limit: currentQueryCache.limit ? Number(currentQueryCache.limit) : this.pagination.limit
-        });
-        for (const key in currentQueryCache) {
-          if (key !== 'limit' && key !== 'current') {
-            const curData = currentQueryCache[key];
-            const tempData = this.searchData.find((item) => item.id === key);
-            if (isObject(curData)) {
-              if (tempData) {
-                this.searchValue.push({
-                  id: key,
-                  name: tempData.name,
-                  values: [curData]
-                });
-                this.searchList.push(..._.cloneDeep(this.searchValue));
-                this.searchParams[key] = curData.id;
-                if (this.applyGroupData.hasOwnProperty(key)) {
-                  this.applyGroupData[key] = curData.id;
-                }
-              }
-            } else if (tempData) {
-              this.searchValue.push({
-                id: key,
-                name: tempData.name,
-                values: [
-                  {
-                    id: curData,
-                    name: curData
-                  }
-                ]
-              });
-              this.searchList.push(..._.cloneDeep(this.searchValue));
-              this.searchParams[key] = curData;
-              if (this.applyGroupData.hasOwnProperty(key)) {
-                this.applyGroupData[key] = curData;
-              }
-            } else {
-              this.searchParams[key] = curData;
-              if (this.applyGroupData.hasOwnProperty(key)) {
-                this.applyGroupData[key] = curData;
-              }
-            }
-          }
-        }
-      }
       this.fetchDefaultData();
     },
     mounted () {
@@ -416,185 +220,8 @@
        * 获取页面数据
        */
       async fetchDefaultData () {
-        this.fetchSystemList();
         await this.fetchCurUserGroup();
         await this.fetchUserGroupList();
-        const { system_id } = this.applyGroupData;
-        // eslint-disable-next-line camelcase
-        if (system_id) {
-          await this.handleSearchUserGroup();
-        }
-      },
-
-      async handleCascadeChange () {
-        this.systemIdError = false;
-        this.actionError = false;
-        this.resourceTypeError = false;
-        this.resourceInstanceError = false;
-        this.resourceActionData = [];
-        this.processesList = [];
-        this.applyGroupData.action_id = '';
-        this.curResourceData.type = '';
-        this.handleResetResourceData();
-        if (this.applyGroupData.system_id) {
-          try {
-            const { data } = await this.$store.dispatch('approvalProcess/getActionGroups', {
-              system_id: this.applyGroupData.system_id
-            });
-            this.handleFormatRecursion(data || []);
-          } catch (e) {
-            console.error(e);
-            this.messageAdvancedError(e);
-          }
-        }
-      },
-
-      handleResourceTypeChange (index) {
-        this.resourceTypeError = false;
-        this.groupIndex = index;
-        this.resourceInstances = [];
-        if (
-          this.resourceTypeData
-          && this.resourceTypeData.resource_groups
-          && this.resourceTypeData.resource_groups.length
-        ) {
-          const resourceGroups = this.resourceTypeData.resource_groups[index];
-          const typesList = _.cloneDeep(resourceGroups.related_resource_types_list);
-          resourceGroups.related_resource_types = typesList.filter((item) => item.type === this.curResourceData.type);
-          if (typesList.length && !resourceGroups.related_resource_types.length) {
-            this.$set(
-              this.resourceTypeData.resource_groups[index],
-              'related_resource_types',
-              this.defaultResourceTypeList
-            );
-          }
-        }
-        if (!this.applyGroupData.system_id || !this.resourceTypeData.resource_groups.length) {
-          this.handleResetResourceData();
-        }
-      },
-
-      handleSelectedAction () {
-        this.actionIdError = false;
-        this.resourceTypeError = false;
-        this.resourceInstanceError = false;
-        this.curResourceData.type = '';
-        this.resourceInstances = [];
-        // 处理操作下是否有无关联资源
-        this.curResourceTypeList = [];
-        this.resourceTypeData = _.cloneDeep(this.processesList.find((e) => e.id === this.applyGroupData.action_id));
-        if (this.resourceTypeData && this.resourceTypeData.resource_groups) {
-          if (this.resourceTypeData.resource_groups.length) {
-            const resourceGroups = this.resourceTypeData.resource_groups;
-            this.resourceTypeData.resource_groups.forEach((item) => {
-              // 避免切换操作时，把默认数据代入，从而导致下拉框出现空白项
-              if (item.related_resource_types.length && item.related_resource_types[0].system_id) {
-                this.$set(item, 'related_resource_types_list', _.cloneDeep(item.related_resource_types));
-                this.curResourceTypeList = _.cloneDeep(item.related_resource_types);
-                // 默认选中只有一条资源类型数据，改变当前索引值
-                if (item.related_resource_types.length === 1) {
-                  this.curResourceData.type = item.related_resource_types[0].type;
-                  this.handleResourceTypeChange(0);
-                }
-              }
-            });
-            if (!this.curResourceData.type) {
-              this.$set(this.resourceTypeData.resource_groups[0], 'related_resource_types', []);
-            }
-            // 如果related_resource_types和related_resource_types_list都为空，则需要填充默认数据显示资源实例下路拉框
-            if (
-              (resourceGroups[0].related_resource_types_list
-                && resourceGroups[0].related_resource_types_list.length
-                && !resourceGroups[0].related_resource_types.length)
-              || (!resourceGroups[0].related_resource_types.length
-                && !resourceGroups[0].related_resource_types_list.length)
-            ) {
-              this.$set(this.resourceTypeData.resource_groups[0], 'related_resource_types', this.defaultResourceTypeList);
-            }
-          } else {
-            this.handleResetResourceData();
-          }
-        }
-      },
-
-      handleFormatRecursion (list) {
-        list.forEach((data) => {
-          if (data.actions && data.actions.length) {
-            data.actions.forEach((e) => {
-              this.resourceActionData.push(e);
-            });
-          }
-          if (data.sub_groups && data.sub_groups.length) {
-            data.sub_groups.forEach((item) => {
-              if (item.actions && item.actions.length) {
-                item.actions.forEach((e) => {
-                  this.resourceActionData.push(e);
-                });
-              }
-            });
-          }
-        });
-        this.resourceActionData = this.resourceActionData.filter((e, index, self) => self.indexOf(e) === index);
-        this.resourceActionData.forEach((item) => {
-          if (!item.resource_groups || !item.resource_groups.length) {
-            item.resource_groups = item.related_resource_types.length
-              ? [{ id: '', related_resource_types: item.related_resource_types }]
-              : [];
-          }
-          this.processesList.push(new Policy({ ...item, tag: 'add' }, 'custom'));
-        });
-        if (this.processesList.length) {
-          this.applyGroupData.action_id = this.processesList[0].id;
-          this.handleSelectedAction();
-        }
-      },
-
-      handlePathData (data, type) {
-        if (data.resourceInstancesPath && data.resourceInstancesPath.length) {
-          const lastIndex = data.resourceInstancesPath.length - 1;
-          const path = data.resourceInstancesPath[lastIndex];
-          let id = '';
-          let resourceInstancesPath = [];
-          if (type === path.type) {
-            id = path.id;
-            data.resourceInstancesPath.splice(lastIndex, 1);
-          } else {
-            id = '*';
-          }
-          resourceInstancesPath = data.resourceInstancesPath.reduce((p, e) => {
-            p.push({
-              type: e.type,
-              id: e.id,
-              name: e.name
-            });
-            return p;
-          }, []);
-          return { id, resourceInstancesPath };
-        }
-        return { id: '*', resourceInstancesPath: [] };
-      },
-
-      // 显示资源实例
-      handleShowResourceInstance (data, resItem, resIndex, groupIndex) {
-        this.params = {
-          system_id: this.applyGroupData.system_id,
-          action_id: data.id,
-          resource_type_system: resItem.system_id,
-          resource_type_id: resItem.type
-        };
-        this.curResIndex = resIndex;
-        this.groupIndex = groupIndex;
-        this.resourceInstanceSidesliderTitle = this.$t(`m.info['关联侧边栏操作的资源实例']`, {
-          value: `${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}`
-        });
-        window.changeAlert = 'iamSidesider';
-        this.isShowResourceInstanceSideSlider = true;
-      },
-
-      handleToCustomApply () {
-        this.$router.push({
-          name: 'applyCustomPerm'
-        });
       },
 
       handleEmptyRefresh () {
@@ -603,7 +230,6 @@
         this.searchValue = [];
         this.emptyData.tipType = '';
         this.resetPagination();
-        this.resetSearchParams();
         this.fetchUserGroupList(false);
       },
 
@@ -616,32 +242,12 @@
           this.$refs.searchSelectRef.$refs.searchSelect.localValue = '';
         }
         this.resetPagination();
-        this.resetSearchParams();
         this.fetchUserGroupList(false);
       },
 
       // 处理手动输入各种场景
       handleManualInput () {
         if (this.curSelectMenu) {
-          // let inputText = _.cloneDeep(this.curInputText);
-          // const curItem = this.initSearchData.find(item => item.id === this.curSelectMenu);
-          // const isHasName = this.curInputText.indexOf(`${curItem.name}：`) > -1;
-          // if (isHasName) {
-          //   inputText = this.curInputText.split(`${curItem.name}：`);
-          // }
-          // const textValue = _.isArray(inputText) ? inputText[1] : inputText;
-          // this.$set(this.searchParams, this.curSelectMenu, textValue);
-          // this.searchList.push({
-          //   id: this.curSelectMenu,
-          //   name: curItem.name,
-          //   values: [
-          //     {
-          //       id: textValue,
-          //       name: textValue
-          //     }
-          //   ]
-          // });
-          // this.searchValue = _.cloneDeep(this.searchList);
           // 转换为tag标签后,需要清空输入框的值
           if (this.$refs.searchSelectRef && this.$refs.searchSelectRef.$refs.searchSelect) {
             this.$refs.searchSelectRef.$refs.searchSelect.keySubmit();
@@ -671,48 +277,7 @@
 
       async handleSearchUserGroup (isClick = false) {
         this.handleManualInput();
-        if (this.applyGroupData.system_id && this.enableGroupInstanceSearch) {
-          if (!this.applyGroupData.system_id) {
-            this.systemIdError = true;
-            return;
-          }
-          if (!this.applyGroupData.action_id) {
-            this.actionError = true;
-            return;
-          }
-          if (this.curResourceTypeList.length && !this.curResourceData.type) {
-            this.resourceTypeError = true;
-            return;
-          }
-          let resourceInstances = _.cloneDeep(this.resourceInstances);
-          resourceInstances = resourceInstances.reduce((prev, item) => {
-            const { id, resourceInstancesPath } = this.handlePathData(item, item.type);
-            prev.push({
-              system_id: item.system_id,
-              id: id,
-              type: item.type,
-              name: item.name,
-              path: resourceInstancesPath
-            });
-            return prev;
-          }, []);
-          if (
-            this.curResourceData.type
-            && !resourceInstances.length
-            && this.resourceTypeData.resource_groups[this.groupIndex].related_resource_types.some((e) => e.empty)
-          ) {
-            this.resourceInstanceError = true;
-            return;
-          }
-          this.isSearchSystem = true;
-          if (isClick) {
-            this.resetPagination();
-          }
-          await this.fetchSearchUserGroup(resourceInstances, true);
-        } else {
-          this.isSearchSystem = false;
-          await this.fetchUserGroupList(true);
-        }
+        await this.fetchUserGroupList(true);
       },
 
       async fetchSearchUserGroup (resourceInstances, isTableLoading = true) {
@@ -724,12 +289,11 @@
           }
         }
         const params = {
-        ...this.applyGroupData,
-        ...this.searchParams,
-        limit,
-        offset: limit * (current - 1),
-        resource_instances: resourceInstances || [],
-        apply_disable: false
+          ...this.searchParams,
+          limit,
+          offset: limit * (current - 1),
+          resource_instances: resourceInstances || [],
+          apply_disable: false
         };
         try {
           const { code, data } = await this.$store.dispatch('permApply/getJoinGroupSearch', params);
@@ -737,38 +301,8 @@
           this.pagination.count = count || 0;
           this.tableList.splice(0, this.tableList.length, ...(results || []));
           this.emptyData.tipType = 'search';
-          this.$nextTick(() => {
-            const currentSelectedGroups = this.currentSelectedGroups.length
-              ? this.currentSelectedGroups.map((item) => item.id.toString())
-              : [];
-            this.tableList.forEach((item) => {
-              if (item.role_members && item.role_members.length) {
-                const hasName = item.role_members.some((v) => v.username);
-                if (!hasName) {
-                  item.role_members = item.role_members.map((v) => {
-                    return {
-                      username: v,
-                      readonly: false
-                    };
-                  });
-                }
-              }
-              if (this.defaultSelectedGroups.length) {
-                const hasSelected = this.defaultSelectedGroups.find((v) => String(v.id) === String(item.id));
-                if (hasSelected) {
-                  this.$set(item, 'expired_at', hasSelected.expired_at);
-                  this.$set(item, 'expired_at_display', hasSelected.expired_at_display);
-                  this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
-                }
-              }
-              if (currentSelectedGroups.includes(item.id.toString())
-                || this.curUserGroup.includes(item.id.toString())) {
-                this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
-                this.currentSelectList.push(item);
-              }
-            });
-          });
-          this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
+          this.emptyData = formatCodeData(code, this.emptyData, count === 0);
+          this.formatTableData();
         } catch (e) {
           console.error(e);
           const { code } = e;
@@ -784,53 +318,21 @@
 
       async fetchUserGroupList (isTableLoading = true) {
         this.tableLoading = isTableLoading;
-        this.setCurrentQueryCache(this.refreshCurrentQuery());
         const { current, limit } = this.pagination;
-        // 删除接口无用字段
         delete this.searchParams.current;
         const params = {
-        ...this.searchParams,
-        limit,
-        offset: limit * (current - 1),
-        apply_disable: false
+          ...this.searchParams,
+          limit,
+          offset: limit * (current - 1),
+          apply_disable: false
         };
         try {
           const { code, data } = await this.$store.dispatch('userGroup/getUserGroupList', params);
           const { count, results } = data;
           this.pagination.count = count || 0;
           this.tableList.splice(0, this.tableList.length, ...(results || []));
-          this.$nextTick(() => {
-            const currentSelectedGroups = this.currentSelectedGroups.length
-              ? this.currentSelectedGroups.map((item) => item.id.toString())
-              : [];
-            this.tableList.forEach((item) => {
-              if (item.role_members && item.role_members.length) {
-                const hasName = item.role_members.some((v) => v.username);
-                if (!hasName) {
-                  item.role_members = item.role_members.map((v) => {
-                    return {
-                      username: v,
-                      readonly: false
-                    };
-                  });
-                }
-              }
-              if (this.defaultSelectedGroups.length) {
-                const hasSelected = this.defaultSelectedGroups.find((v) => String(v.id) === String(item.id));
-                if (hasSelected) {
-                  this.$set(item, 'expired_at', hasSelected.expired_at);
-                  this.$set(item, 'expired_at_display', hasSelected.expired_at_display);
-                  this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
-                }
-              }
-              if (currentSelectedGroups.includes(item.id.toString())
-                || this.curUserGroup.includes(item.id.toString())) {
-                this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
-                this.currentSelectList.push(item);
-              }
-            });
-          });
           this.emptyData = formatCodeData(code, this.emptyData, count === 0);
+          this.formatTableData();
         } catch (e) {
           console.error(e);
           this.emptyData = formatCodeData(e.code, this.emptyData);
@@ -841,11 +343,45 @@
         }
       },
 
+      formatTableData () {
+        this.$nextTick(() => {
+          const currentSelectedGroups = this.currentSelectedGroups.length
+            ? this.currentSelectedGroups.map((item) => String(item.id))
+            : [];
+          this.tableList.forEach((item) => {
+            if (item.role_members && item.role_members.length) {
+              const hasName = item.role_members.some((v) => v.username);
+              if (!hasName) {
+                item.role_members = item.role_members.map((v) => {
+                  return {
+                    username: v,
+                    readonly: false
+                  };
+                });
+              }
+            }
+            if (this.defaultSelectedGroups.length) {
+              const hasSelected = this.defaultSelectedGroups.find((v) => String(v.id) === String(item.id));
+              if (hasSelected) {
+                this.$set(item, 'expired_at', hasSelected.expired_at);
+                this.$set(item, 'expired_at_display', hasSelected.expired_at_display);
+                this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
+              }
+            }
+            const hasSelectedData = [...currentSelectedGroups, ...this.curUserGroup].includes(String(item.id));
+            if (hasSelectedData) {
+              this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
+              this.currentSelectList.push(item);
+            }
+          });
+        });
+      },
+
       handleCellAttributes ({ rowIndex, cellIndex, row, column }) {
         if (cellIndex === 0) {
-          if (this.curUserGroup.includes(row.id.toString())) {
+          if (this.curUserGroup.includes(String(row.id))) {
             return {
-              title: this.$t(`m.info['你已加入该组']`)
+              title: this.$t(`m.userOrOrg['已加入该用户组']`)
             };
           }
           return {};
@@ -853,146 +389,19 @@
         return {};
       },
 
-      handleAddMember () {
-        this.isShowAddMemberDialog = true;
-      },
-
-      handleCancelAdd () {
-        this.isShowAddMemberDialog = false;
-      },
-
-      handleMemberDelete (type, payload) {
-        window.changeDialog = true;
-        type === 'user' ? this.users.splice(payload, 1) : this.departments.splice(payload, 1);
-      // this.isShowMemberAdd = this.users.length < 1 && this.departments.length < 1;
-      // 先注释掉此方法，新版交互用得到
-      // this.formatCheckedUserGroup();
-      },
-
-      handleSubmitAdd (payload) {
-        window.changeDialog = true;
-        const { users, departments } = payload;
-        this.isAll = false;
-        this.users = _.cloneDeep(users);
-        this.departments = _.cloneDeep(departments);
-        // this.isShowMemberAdd = false;
-        this.isShowAddMemberDialog = false;
-        this.isShowMemberEmptyError = false;
-      // this.formatCheckedUserGroup();
-      },
-
-      // 处理权限获得者是非空并且不包含自己，不勾选个人已申请的用户组
-      formatCheckedUserGroup () {
-        const allList = [...this.users, ...this.departments];
-        const isMine = allList.find((item) => item.username === this.user.username);
-        const currentSelectedGroups = this.currentSelectedGroups.map((item) => item.id.toString());
-        this.curUserGroup = _.cloneDeep(this.defaultSelectedIds);
-        this.tableList.forEach((item) => {
-          if (isMine || !allList.length) {
-            this.currentSelectedGroups = this.currentSelectedGroups.filter(
-              (v) => !this.curUserGroup.includes(v.id.toString())
-            );
-            if (currentSelectedGroups.includes(item.id.toString()) || this.curUserGroup.includes(item.id.toString())) {
-              this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
-            }
-          } else {
-            if (this.curUserGroup.includes(item.id.toString())) {
-              this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, false);
-            }
-          }
-        });
-        // 处理有选择权限获得者并不包含自己的情况
-        if (!isMine && allList.length) {
-          this.curUserGroup = [];
-        }
-      },
-
-      setDefaultSelect (payload) {
-        return !this.curUserGroup.includes(payload.id.toString());
-      },
-
-      resetPagination () {
-        this.currentSelectList = [];
-        this.pagination = Object.assign(
-          {},
-          {
-            limit: 10,
-            current: 1,
-            count: 0
-          }
-        );
-      },
-
-      resetSearchParams () {
-        this.applyGroupData = Object.assign(
-          {},
-          {
-            system_id: '',
-            action_id: ''
-          }
-        );
-        this.curResourceData = Object.assign(
-          {},
-          {
-            type: ''
-          }
-        );
-        this.systemIdError = false;
-        this.actionError = false;
-        this.resourceTypeError = false;
-        this.resourceInstanceError = false;
-        this.isSearchSystem = false;
-        this.resourceInstances = [];
-        this.resetLocationHref();
-      },
-
-      resetLocationHref () {
-        // 需要删除的url上的字段
-        const urlFields = [...this.initSearchData.map((item) => item.id), ...['current', 'limit']];
-        delLocationHref(urlFields);
-      },
-
-      pageChange (page) {
+      handlePageChange (page) {
         if (this.currentBackup === page) {
           return;
         }
         this.pagination = Object.assign(this.pagination, { current: page });
         this.queryParams = Object.assign(this.queryParams, { current: page });
         this.handleSearchUserGroup();
-      // this.isSearchSystem ? this.fetchSearchUserGroup() : this.fetchUserGroupList(true);
       },
 
-      limitChange (currentLimit, prevLimit) {
+      handleLimitChange (currentLimit, prevLimit) {
         this.pagination = Object.assign(this.pagination, { current: 1, limit: currentLimit });
         this.queryParams = Object.assign(this.queryParams, { current: 1, limit: currentLimit });
         this.handleSearchUserGroup();
-      // this.isSearchSystem ? this.fetchSearchUserGroup() : this.fetchUserGroupList(true);
-      },
-
-      async fetchSystemList () {
-        try {
-          const params = {};
-          if (this.externalSystemId) {
-            params.hidden = false;
-          }
-          const { data } = await this.$store.dispatch('system/getSystems', params);
-          this.systemList = data || [];
-        } catch (e) {
-          console.error(e);
-          this.messageAdvancedError(e);
-        } finally {
-        // this.requestQueue.shift()
-        }
-      },
-
-      // 管理空间数据
-      handleGradeAdmin (value) {
-        return this.$store.dispatch('role/getScopeHasUser').then(({ data }) => {
-          const val = value.toLowerCase();
-          return !val
-            ? data.map(({ id, name }) => ({ id, name }))
-            : data.map(({ id, name }) => ({ id, name })).filter((item) => item.name.toLowerCase().indexOf(val) > -1);
-        });
       },
 
       handleClickMenu (payload) {
@@ -1016,15 +425,9 @@
         this.emptyData.tipType = 'search';
         this.resetPagination();
         this.handleSearchUserGroup();
-        if (!result.length) {
-          this.resetLocationHref();
-        }
       },
 
       async handleClearSearch () {
-        this.applyGroupData.action_id = '';
-        this.curResourceData.type = '';
-        this.resourceInstances = [];
         this.emptyData.tipType = '';
         this.resetPagination();
         this.handleSearchUserGroup();
@@ -1035,13 +438,7 @@
         this.curGroupId = payload.id;
         this.isShowPermSideSlider = true;
       },
-
-      handleAnimationEnd () {
-        this.curGroupName = '';
-        this.curGroupId = '';
-        this.isShowPermSideSlider = false;
-      },
-
+      
       fetchSelectedGroups (type, payload, row) {
         this.isShowGroupError = false;
         const typeMap = {
@@ -1054,6 +451,7 @@
                 (item) => item.id.toString() !== row.id.toString()
               );
             }
+            this.$emit('on-selected-group', this.currentSelectedGroups);
           },
           all: () => {
             const list = payload.filter((item) => !this.curUserGroup.includes(item.id.toString()));
@@ -1063,17 +461,18 @@
               (item) => !tableList.map((v) => v.id.toString()).includes(item.id.toString())
             );
             this.currentSelectedGroups = [...selectGroups, ...list];
+            this.$emit('on-selected-group', this.currentSelectedGroups);
           }
         };
         return typeMap[type]();
       },
 
-      handlerAllChange (selection) {
-        this.fetchSelectedGroups('all', selection);
+      handleSelectedChange (selection, row) {
+        this.fetchSelectedGroups('multiple', selection, row);
       },
 
-      handlerChange (selection, row) {
-        this.fetchSelectedGroups('multiple', selection, row);
+      handleSelectedAllChange (selection) {
+        this.fetchSelectedGroups('all', selection);
       },
 
       handleClearGroups () {
@@ -1116,7 +515,6 @@
               }
             });
             this.curUserGroup = _.cloneDeep(groupIdList);
-            this.defaultSelectedIds = _.cloneDeep(groupIdList);
             this.defaultSelectedGroups = _.cloneDeep(tableData || []);
           }
           this.emptyData = formatCodeData(code, this.emptyData, this.curUserGroup.length === 0);
@@ -1131,176 +529,6 @@
         }
       },
 
-      handleReasonInput (payload) {
-        this.isShowReasonError = false;
-      },
-
-      handleReasonBlur (payload) {
-        if (payload === '') {
-          this.isShowReasonError = true;
-        }
-      },
-
-      handleDeadlineChange (payload) {
-        if (payload) {
-          this.isShowExpiredError = false;
-        }
-        if (payload !== PERMANENT_TIMESTAMP && payload) {
-          const nowTimestamp = +new Date() / 1000;
-          const tempArr = String(nowTimestamp).split('');
-          const dotIndex = tempArr.findIndex((item) => item === '.');
-          const nowSecond = parseInt(tempArr.splice(0, dotIndex).join(''), 10);
-          this.expiredAtUse = payload + nowSecond;
-          return;
-        }
-        this.expiredAtUse = payload;
-      },
-
-      handleExpiredAt () {
-        const nowTimestamp = +new Date() / 1000;
-        const tempArr = String(nowTimestamp).split('');
-        const dotIndex = tempArr.findIndex((item) => item === '.');
-        const nowSecond = parseInt(tempArr.splice(0, dotIndex).join(''), 10);
-        const expiredAt = this.expiredAtUse + nowSecond;
-        return expiredAt;
-      },
-
-      async handleResourceSubmit () {
-        const conditionData = this.$refs.renderResourceRef.handleGetValue();
-        const { isEmpty, data } = conditionData;
-        if (isEmpty) {
-          return;
-        }
-        const resItem = this.resourceTypeData.resource_groups[this.groupIndex].related_resource_types[this.curResIndex];
-        const isConditionEmpty = data.length === 1 && data[0] === 'none';
-        if (isConditionEmpty) {
-          resItem.condition = ['none'];
-          resItem.isLimitExceeded = false;
-          this.resourceInstances = [];
-        } else {
-          resItem.condition = data;
-          if (data.length) {
-            data.forEach((item) => {
-              item.instance.forEach((e) => {
-                resItem.resourceInstancesPath = e.path[0];
-              });
-            });
-          } else {
-            delete resItem.resourceInstancesPath;
-          }
-          if (this.curResIndex !== -1) {
-            this.resourceInstances.splice(this.curResIndex, 1, resItem);
-          }
-        }
-        window.changeAlert = false;
-        this.resourceInstanceSideSliderTitle = '';
-        this.isShowResourceInstanceSideSlider = false;
-        this.curResIndex = -1;
-        this.resourceInstanceError = false;
-      },
-
-      async handleSubmit () {
-        const subjects = [];
-        const groupsList = [...this.currentSelectedGroups];
-        this.users.forEach((item) => {
-          subjects.push({
-            type: 'user',
-            id: item.username
-          });
-        });
-        this.departments.forEach((item) => {
-          subjects.push({
-            type: 'department',
-            id: item.id
-          });
-        });
-        // 新版交互前，先采取只提交手动勾选的数据的临时方案
-        // if (subjects.length) {
-        //   const isOther = subjects.filter(item => item.id !== this.user.username);
-        //   if (isOther.length) {
-        //     // 如果权限获得者既包含了自己也包含了他人，就提交已申请过的加上勾选的
-        //     const isMine = subjects.find(item => item.id === this.user.username);
-        //     if (isMine) {
-        //       // 这里需要产品优化既包含了自己也包含了他人，单独提交已申请过了的用户组会报错，所以这里还需要判断下有没有勾选
-        //       if (!this.currentSelectedGroups.length) {
-        //         this.isShowGroupError = true;
-        //         this.scrollToLocation(this.$refs.selectTableRef);
-        //         return;
-        //       }
-        //       groupsList = [...this.defaultSelectedGroups, ...this.currentSelectedGroups];
-        //     }
-        //   }
-        // }
-        if (!groupsList.length) {
-          this.isShowGroupError = true;
-          this.scrollToLocation(this.$refs.selectTableRef);
-          return;
-        }
-        if (!this.reason) {
-          this.isShowReasonError = true;
-          this.scrollToLocation(this.$refs.reasonRef);
-          return;
-        }
-        if (this.expiredAtUse === 0) {
-          this.isShowExpiredError = true;
-          this.scrollToLocation(this.$refs.expiredAtRef);
-          return;
-        }
-        this.submitLoading = true;
-        if (this.expiredAtUse === 15552000) {
-          this.expiredAtUse = this.handleExpiredAt();
-        }
-        const params = {
-          expired_at: this.expiredAtUse,
-          reason: this.reason,
-          groups: groupsList.map(({ id, name, description }) => ({ id, name, description })),
-          // groups: this.currentSelectList.map(({ id, name, description }) => ({ id, name, description })),
-          applicants: subjects
-        };
-        try {
-          await this.$store.dispatch('permApply/applyJoinGroup', params);
-          this.messageSuccess(this.$t(`m.info['申请已提交']`), 3000);
-          this.$router.push({
-            name: 'apply'
-          });
-        } catch (e) {
-          console.error(e);
-          const applyCount = this.defaultSelectedGroups.length + this.currentSelectedGroups.length;
-          if (['admin'].includes(this.user.username)) {
-            this.isShowConfirmDialog = true;
-            return;
-          }
-          if (applyCount > 100) {
-            this.messageAdvancedError(
-              e,
-              8000,
-              3,
-              this.$t(`m.info['已加入用户组数量 ， 新申请数量，总数超过上限：100，请减少申请或退出部分用户组后重试']`, {
-                applyCount: this.defaultSelectedGroups.length,
-                newApplyCount: this.currentSelectedGroups.length
-              })
-            );
-            return;
-          }
-        } finally {
-          this.submitLoading = false;
-        }
-      },
-
-      handleResourceCancel () {
-        let cancelHandler = Promise.resolve();
-        if (window.changeAlert) {
-          cancelHandler = leaveConfirm();
-        }
-        cancelHandler.then(
-          () => {
-            this.isShowResourceInstanceSideSlider = false;
-            this.resetDataAfterClose();
-          },
-          (_) => _
-        );
-      },
-
       handleBatchRenewal () {
         this.$router.push({
           name: 'permRenewal',
@@ -1309,108 +537,179 @@
           }
         });
       },
+      
+      setDefaultSelect (payload) {
+        return !this.curUserGroup.includes(payload.id.toString());
+      },
+
+      resetPagination () {
+        this.currentSelectList = [];
+        this.pagination = Object.assign(
+          this.pagination,
+          {
+            limit: 10,
+            current: 1,
+            count: 0
+          }
+        );
+      },
 
       resetDataAfterClose () {
         this.curResIndex = -1;
         this.groupIndex = -1;
         this.params = {};
         this.resourceInstanceSideSliderTitle = '';
-      },
-
-      refreshCurrentQuery () {
-        const params = {};
-        const queryParams = {
-        ...this.searchParams,
-        // ...this.$route.query,
-        ...this.queryParams
-        };
-        if (Object.keys(queryParams).length) {
-          window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
-        }
-        for (const key in this.searchParams) {
-          const tempObj = this.searchData.find((item) => key === item.id);
-          if (tempObj && tempObj.remoteMethod && typeof tempObj.remoteMethod === 'function') {
-            if (this.searchList.length) {
-              const tempData = this.searchList.find((item) => item.id === key);
-              if (tempData) {
-                params[key] = tempData.values[0];
-              }
-            }
-          } else {
-            params[key] = this.searchParams[key];
-          }
-        }
-        this.emptyData = Object.assign(this.emptyData, {
-          tipType: Object.keys(this.searchParams).length > 0 ? 'search' : ''
-        });
-        return {
-        ...queryParams
-        };
-      },
-
-      setCurrentQueryCache (payload) {
-        window.localStorage.setItem('applyGroupList', JSON.stringify(payload));
-      },
-
-      getCurrentQueryCache () {
-        return JSON.parse(window.localStorage.getItem('applyGroupList'));
-      },
-
-      quickSearchMethod (value) {
-        return {
-          name: this.$t(`m.common['关键字']`),
-          id: 'keyword',
-          values: [value]
-        };
-      },
-
-      handleCancel () {
-        this.$router.push({
-          name: 'permApply'
-        });
-      },
-
-      handleResetResourceData () {
-        if (this.resourceTypeData.resource_groups && !this.resourceTypeData.resource_groups.length) {
-          this.resourceTypeData.resource_groups = [].concat([{ isEmpty: true }]);
-        }
-        this.$set(this.resourceTypeData.resource_groups[0], 'related_resource_types', this.defaultResourceTypeList);
-        this.$set(this.resourceTypeData.resource_groups[0], 'related_resource_types_list', []);
-        this.$set(this.resourceTypeData.resource_groups[0], 'isEmpty', true);
       }
     }
   };
 </script>
 
 <style lang="postcss" scoped>
-.user-org-table-form {
-  .search-wrapper {
-    padding-bottom: 12px;
-  }
-  .user-group-name {
+.user-org-table-slider {
+  .joined-user-group-wrapper {
     display: flex;
-    align-items: center;
-    &-label {
-      color: #3a84ff;
-      max-width: calc(100% - 120px);
-      word-break: break-all;
-      cursor: pointer;
-      &:hover {
-        color: #699df4;
+    .joined-user-group-left {
+      width: calc(100% - 280px);
+      padding: 16px;
+      padding-bottom: 0;
+      /deep/ .search-wrapper {
+        padding-bottom: 12px;
+        .search-nextfix {
+          top: 0;
+        }
       }
-      &-expired {
-        max-width: calc(100% - 150px);
+      .group-table {
+        border: none;
+        .user-group-name {
+          display: flex;
+          align-items: center;
+          &-label {
+            color: #3a84ff;
+            max-width: calc(100% - 120px);
+            word-break: break-all;
+            cursor: pointer;
+            &:hover {
+              color: #699df4;
+            }
+            &-expired {
+              max-width: calc(100% - 150px);
+            }
+          }
+          &-expired {
+            line-height: 1;
+            margin-left: 5px;
+          }
+        }
       }
     }
-    &-expired {
-      line-height: 1;
-      margin-left: 5px;
+    .joined-user-group-right {
+      width: 280px;
+      padding: 0 16px;
+      color: #313238;
+      background: #F5F7FA;
+      position: relative;
+      .result-preview {
+        display: flex;
+        font-size: 14px;
+        line-height: 19px;
+        padding-top: 16px;
+        padding-bottom: 12px;
+      }
+      .has-selected {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        line-height: 16px;
+        &-title {
+          .count {
+            color: #3a84ff;
+            font-weight: 700;
+          }
+        }
+        &-clear {
+          padding: 0;
+          height: 16px;
+          line-height: 16px;
+        }
+      }
+
+      .content {
+        position: relative;
+        margin: 12px 0 16px 0;
+        max-height: 510px;
+        overflow: auto;
+        &::-webkit-scrollbar {
+          width: 4px;
+          background-color: lighten(transparent, 80%);
+        }
+        &::-webkit-scrollbar-thumb {
+          height: 5px;
+          border-radius: 2px;
+          background-color: #e6e9ea;
+        }
+        .selected-group-content {
+            background-color: #ffffff;
+            .selected-group-item {
+              padding: 0 8px;
+              line-height: 32px;
+              box-shadow: 0 1px 1px 0 #00000014;
+              border-radius: 2px;
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              &:last-child {
+                margin-bottom: 1px;
+              }
+              &-left {
+                width: calc(100% - 30px);
+                display: flex;
+                align-items: center;
+              }
+              .selected-group-name {
+                display: inline-block;
+                margin-left: 5px;
+                font-size: 12px;
+                vertical-align: top;
+                word-break: break-all;
+              }
+              .delete-depart-icon {
+                display: block;
+                font-size: 18px;
+                margin: 4px 6px 0 0;
+                color: #c4c6cc;
+                cursor: pointer;
+                float: right;
+                &:hover {
+                  color: #3a84ff;
+                }
+              }
+              .user-count {
+                color: #c4c6cc;
+              }
+            }
+            .folder-icon {
+              font-size: 17px;
+              color: #a3c5fd;
+            }
+        }
+      }
+      .selected-empty-wrapper {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
     }
   }
 }
-/deep/ .bk-page.bk-page-align-right {
-  .bk-page-selection-count-left {
-    display: none;
+
+/deep/ .bk-table-pagination-wrapper {
+  padding: 15px 0;
+  .bk-page.bk-page-align-right {
+    .bk-page-selection-count-left {
+      display: none;
+    }
   }
 }
+
 </style>

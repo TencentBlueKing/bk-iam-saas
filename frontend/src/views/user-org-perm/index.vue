@@ -14,7 +14,7 @@
       />
     </div>
     <div class="user-org-wrapper-content">
-      <Layout>
+      <Layout :is-expand="isExpand">
         <div class="user-org-wrapper-content-left" :style="leftStyle">
           <LeftLayout
             :loading="listLoading"
@@ -29,7 +29,17 @@
             @on-refresh="handleEmptyUserRefresh"
           />
         </div>
-        <div slot="right" class="user-org-wrapper-content-right">
+        <div slot="expand-icon" class="user-org-wrapper-content-center">
+          <div class="expand-icon" @click.stop="handleToggleExpand">
+            <bk-icon :type="isExpand ? 'angle-left' : 'angle-right'" class="icon" />
+          </div>
+        </div>
+        <div
+          slot="right"
+          :class="[
+            'user-org-wrapper-content-right',
+            { 'no-expand': !isExpand }
+          ]">
           <component
             :key="comKey"
             :is="curCom"
@@ -70,6 +80,7 @@
       return {
         listLoading: false,
         isSearchPerm: false,
+        isExpand: true,
         comKey: -1,
         curSearchParams: {},
         curSearchPagination: {
@@ -240,6 +251,10 @@
         }
       },
 
+      handleToggleExpand () {
+        this.isExpand = !this.isExpand;
+      },
+
       handleSelectUser (payload) {
         this.currentGroupData = payload;
       },
@@ -303,11 +318,36 @@
       padding: 0 16px;
       background-color: #FAFBFD;
       border-right: 1px solid#dcdee5;
-      height: 100%;
+      height: calc(100vh - 61px);
     }
-    /* &-right {
-      height: 100%;
-    } */
+    &-center {
+      width: 16px;
+      height: calc(100vh - 520px);
+      position: relative;
+      .expand-icon {
+        width: 16px;
+        height: 64px;
+        background-color: #dcdee5;
+        border-radius: 0 4px 4px 0;
+        position: relative;
+        top: 50%;
+        cursor: pointer;
+        .icon {
+          color: #ffffff;
+          font-size: 20px !important;
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+        }
+      }
+    }
+    &-right {
+      padding-right: 16px;
+      &.no-expand {
+        padding-right: 0;
+      }
+    }
   }
 }
 </style>

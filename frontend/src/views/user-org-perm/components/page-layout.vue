@@ -1,8 +1,13 @@
 <template>
   <div class="page-layout">
-    <div :class="['left-layout', { 'external-left-height': externalLeftLayoutHeight }]">
+    <div :class="[
+      'left-layout',
+      { 'external-left-height': externalLeftLayoutHeight },
+      { 'no-expand': !isExpand }
+    ]">
       <slot />
     </div>
+    <slot name="expand-icon" />
     <div :class="['right-layout', { 'external-right-height': externalRightLayoutHeight }]">
       <slot name="right" />
     </div>
@@ -20,6 +25,10 @@
       externalRightLayoutHeight: {
         type: Boolean,
         default: false
+      },
+      isExpand: {
+        type: Boolean,
+        default: true
       }
     }
   };
@@ -32,15 +41,19 @@
   .left-layout {
     flex: 0 0 240px;
     height: calc(100vh - 61px);
-    background: #fff;
+    background-color: #ffffff;
     overflow: hidden;
+    &.no-expand {
+      display: none;
+    }
   }
   .right-layout {
     padding: 16px;
+    padding-left: 0;
     flex: 1 0 auto;
     width: calc(100% - 240px);
     height: calc(100vh - 61px);
-    background: #f5f6fa;
+    background-color: #f5f6fa;
     overflow-y: auto;
     &::-webkit-scrollbar {
       width: 4px;
@@ -51,10 +64,6 @@
       border-radius: 2px;
       background-color: #e6e9ea;
     }
-  }
-
-  .external-left-height {
-    height: calc(100vh);
   }
 
   .external-right-height {

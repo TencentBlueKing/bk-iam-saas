@@ -497,7 +497,7 @@
               },
               department: async () => {
                 this.memberTempPermData = this.initMemberTempPermData.filter((item) => ['personalOrDepartPerm', 'departTempPerm'].includes(item.id));
-                this.memberTempPermData[0] = Object.assign(this.memberTempPermData[0], { name: this.$t(`m.userOrOrg['用户组权限']`) });
+                this.memberTempPermData[0] = Object.assign(this.memberTempPermData[0], { name: this.$t(`m.perm['用户组权限']`) });
                 await Promise.all([
                   this.fetchUserGroupSearch(),
                   this.fetchDepartPermByTempSearch()

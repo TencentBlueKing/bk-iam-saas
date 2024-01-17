@@ -60,6 +60,7 @@
       :depart-list="departList"
       :title="$t(`m.userOrOrg['加入用户组']`)"
       :group-data="queryGroupData"
+      @on-submit="handleAddGroupSubmit"
     />
   </div>
 </template>
@@ -67,6 +68,7 @@
 <script>
   import { cloneDeep } from 'lodash';
   import { PERMANENT_TIMESTAMP } from '@/common/constants';
+  import { bus } from '@/common/bus';
   import MultiTypeGroupPerm from './multi-type-group-perm.vue';
   import JoinUserGroupSlider from './join-user-group-slider.vue';
 
@@ -202,6 +204,14 @@
         this.userList = [...userList];
         this.departList = [...departList];
         this.isShowAddGroupSlider = true;
+      },
+
+      handleAddGroupSubmit () {
+        bus.$emit('on-refresh-resource-search', {
+          isSearchPerm: this.isSearchPerm,
+          curSearchParams: this.curSearchParams,
+          curSearchPagination: this.curSearchPagination
+        });
       },
 
       handleDropdownShow () {

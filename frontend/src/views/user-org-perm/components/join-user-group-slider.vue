@@ -12,10 +12,7 @@
         <div class="join-user-group-content">
           <bk-form form-type="vertical">
             <bk-form-item
-              :class="[
-                'operate-object',
-                { 'operate-object-single': !isBatch }
-              ]"
+              :class="['operate-object', { 'operate-object-single': !isBatch }]"
               :label="!isBatch ? $t(`m.userOrOrg['操作对象']`) : ''"
             >
               <template v-if="isBatch">
@@ -42,61 +39,34 @@
                       {{ $t(`m.common['个组织']`) }}
                     </template>
                   </div>
-                  <div
-                    slot="membersPerm"
-                    class="members-boundary-detail"
-                  >
+                  <div slot="membersPerm" class="members-boundary-detail">
                     <template>
-                      <render-member-item
-                        v-if="isHasUser"
-                        mode="view"
-                        type="user"
-                        :data="userList"
-                      />
-                      <render-member-item
-                        v-if="isHasDepartment"
-                        mode="view"
-                        type="department"
-                        :data="departList"
-                      />
+                      <render-member-item v-if="isHasUser" mode="view" type="user" :data="userList" />
+                      <render-member-item v-if="isHasDepartment" mode="view" type="department" :data="departList" />
                     </template>
                   </div>
                 </RenderPermBoundary>
               </template>
               <template v-else>
-                <render-member-item
-                  v-if="isHasUser"
-                  mode="view"
-                  type="user"
-                  :data="userList"
-                />
-                <render-member-item
-                  v-if="isHasDepartment"
-                  mode="view"
-                  type="department"
-                  :data="departList"
-                />
+                <render-member-item v-if="isHasUser" mode="view" type="user" :data="userList" />
+                <render-member-item v-if="isHasDepartment" mode="view" type="department" :data="departList" />
               </template>
             </bk-form-item>
-            <div class="joined-user-group">
-              <bk-form-item
-                :label="formatGroupTitle"
-                :label-width="0"
-                :required="true">
-                <JoinedUserGroupTable />
-              </bk-form-item>
-              <div class="joined-user-group-tip">
-                <bk-icon type="info-circle-shape" class="joined-user-group-tip-icon" />
-                <span>{{ $t(`m.userOrOrg['在已有用户组的基础上，追加以下所选的用户组']`) }}</span>
+            <bk-form-item :label-width="0" :required="true">
+              <div v-html="formatGroupTitle" />
+              <div class="joined-user-group" ref="selectTableRef">
+                <div class="joined-user-group-list">
+                  <JoinedUserGroupTable ref="joinedUserGroupRef" @on-selected-group="handleSelectedGroup" />
+                </div>
               </div>
-            </div>
+              <p class="user-group-error" v-if="isShowGroupError">{{ $t(`m.permApply['请选择用户组']`) }}</p>
+            </bk-form-item>
             <bk-form-item
               :label="$t(`m.userOrOrg['申请时长']`)"
               :label-width="300"
-              :class="[
-                'apply-expired-at'
-              ]"
-              :required="true">
+              class="apply-expired-at"
+              :required="true"
+            >
               <iam-deadline :value="expiredAt" @on-change="handleDeadlineChange" :cur-role="curRole" />
               <p class="expired-at-error" v-if="isShowExpiredError">{{ $t(`m.userOrOrg['请选择申请时长']`) }}</p>
             </bk-form-item>
@@ -118,7 +88,6 @@
 </template>
 
 <script>
-  import _ from 'lodash';
   import { mapGetters } from 'vuex';
   import { PERMANENT_TIMESTAMP } from '@/common/constants';
   import { leaveConfirm } from '@/common/leave-confirm';
@@ -164,22 +133,13 @@
     data () {
       return {
         submitLoading: false,
-        isShowAddMemberDialog: false,
-        isShowSubjectError: false,
+        isShowGroupError: false,
         isShowExpiredError: false,
-        isAll: false,
-        expiredAt: 2592000,
-        expiredAtUse: 2592000,
-        formData: {
-          name: '',
-          description: '',
-          subjects: []
-        },
+        expiredAt: 15552000,
+        expiredAtUse: 15552000,
         customButtonStyle: {
           width: '160px'
         },
-        users: [],
-        departments: [],
         selectTableList: []
       };
     },
@@ -203,43 +163,18 @@
         return this.departList.length > 0;
       },
       formatGroupTitle () {
-        return this.isBatch ? `${this.$t(`m.userOrOrg['追加的用户组']`)}` : this.$t(`m.userOrOrg['加入的用户组']`);
+        return this.isBatch
+          ? ` <div class="render-join">
+                <span class="render-join-label">${this.$t(`m.userOrOrg['追加的用户组']`)}</span>
+                <div class="render-join-tip">
+                  <bk-icon type="info-circle-shape" class="render-join-tip-icon"></bk-icon>
+                  <span>${this.$t(`m.userOrOrg['在已有用户组的基础上，追加以下所选的用户组']`)}</span>
+                </div>    
+              </div>`
+          : `<div class="render-join-label">${this.$t(`m.userOrOrg['加入的用户组']`)}</div>`;
       }
     },
     methods: {
-      handleMemberDelete (type, payload) {
-        window.changeDialog = true;
-        if (type === 'user') {
-          this.users.splice(payload, 1);
-        } else {
-          this.departments.splice(payload, 1);
-        }
-        this.$set(this.formData, 'subjects', [...this.users, ...this.departments]);
-      },
-
-      handleDeleteAll () {
-        this.isAll = false;
-      },
-
-      handleAddMember () {
-        this.isShowAddMemberDialog = true;
-      },
-
-      handleCancelAdd () {
-        this.isShowAddMemberDialog = false;
-      },
-
-      handleSubmitAdd (payload) {
-        window.changeAlert = true;
-        const { users, departments, isAll } = payload;
-        this.isAll = isAll;
-        this.users = _.cloneDeep(users);
-        this.departments = _.cloneDeep(departments);
-        this.$set(this.formData, 'subjects', [...this.users, ...this.departments]);
-        this.isShowAddMemberDialog = false;
-        this.isShowSubjectError = false;
-      },
-
       handleExpiredAt () {
         const nowTimestamp = +new Date() / 1000;
         const tempArr = String(nowTimestamp).split('');
@@ -264,15 +199,39 @@
         this.expiredAtUse = payload;
       },
 
-      handleSubmit () {
+      handleSelectedGroup (payload) {
+        this.selectTableList = [...payload];
+      },
+
+      async handleSubmit () {
+        const groupsList = this.$refs.joinedUserGroupRef.currentSelectedGroups;
+        if (!groupsList.length) {
+          this.isShowGroupError = true;
+          this.scrollToLocation(this.$refs.selectTableRef);
+          return;
+        }
+        this.submitLoading = true;
         if (this.expiredAtUse === 15552000) {
           this.expiredAtUse = this.handleExpiredAt();
         }
-        const isVerify = this.isShowNameError || this.isShowSubjectError;
-        if (isVerify) {
-          return;
+        const params = {
+          expired_at: this.expiredAtUse,
+          group_ids: groupsList.map((item) => item.id),
+          members: [...this.userList, ...this.departList]
+        };
+        try {
+          const { code } = await this.$store.dispatch('userGroup/batchAddUserGroupMember', params);
+          if (code === 0) {
+            this.messageSuccess(this.$t(`m.info['添加用户组成功']`), 3000);
+            this.$emit('on-submit', params);
+            this.$emit('update:show', false);
+          }
+        } catch (e) {
+          console.error(e);
+          this.messageAdvancedError(e);
+        } finally {
+          this.submitLoading = false;
         }
-        this.$emit('on-submit', this.formData);
       },
 
       handleCancel (payload) {
@@ -296,18 +255,8 @@
 
       resetData () {
         this.selectTableList = [];
-        this.users = [];
-        this.departments = [];
-        this.formData = Object.assign(
-          {},
-          {
-            name: '',
-            description: '',
-            subjects: []
-          }
-        );
-        this.isShowNameError = false;
-        this.isShowSubjectError = false;
+        this.isShowGroupError = false;
+        this.isShowExpiredError = false;
       }
     }
   };
@@ -331,7 +280,6 @@
           color: #ff4d4d;
         }
       }
-
       .user-group-error,
       .expired-at-error {
         margin-top: 5px;
@@ -350,13 +298,18 @@
     .horizontal-item {
       width: 100%;
       padding: 0;
+      margin-bottom: 0;
       box-shadow: none;
       display: inline-block;
-    }
-    .perm-boundary-title {
-      font-weight: 700;
-      font-size: 14px;
-      color: #313238;
+      .perm-boundary-title {
+        font-weight: 700;
+        font-size: 14px;
+        color: #313238;
+        margin-bottom: 0 !important;
+      }
+      .render-form-item {
+        margin-bottom: 0 !important;
+      }
     }
 
     .members-boundary-detail {
@@ -380,18 +333,45 @@
   }
 
   /deep/ .joined-user-group {
-    /* display: flex; */
     .bk-label {
       width: 100% !important;
     }
+    &-list {
+      border: 1px solid #dcdee5;
+      border-radius: 2px;
+    }
+  }
+
+  /deep/ .render-join {
+    display: flex;
+    &-label {
+      position: relative;
+      font-weight: 700;
+      font-size: 14px;
+      line-height: 32px;
+      color: #313238;
+      margin-bottom: 0 !important;
+      &::after {
+        content: "*";
+        height: 8px;
+        line-height: 1;
+        font-size: 12px;
+        color: #ea3636;
+        display: inline-block;
+        vertical-align: middle;
+        position: absolute;
+        top: 50%;
+        transform: translate(3px,-50%);
+      }
+    }
     &-tip {
-      margin-top: 24px;
+      margin-left: 20px;
       line-height: 32px;
       font-size: 12px;
-      color: #979BA5;
+      color: #979ba5;
       &-icon {
         font-size: 13px;
-        color: #C4C6CC;
+        color: #c4c6cc;
       }
     }
   }

@@ -84,11 +84,11 @@
     <!-- 加入用户组slider -->
     <JoinUserGroupSlider
       :slider-width="960"
-      :show.sync="sliderData['add'].showSlider"
+      :show.sync="sliderData[curSliderName].showSlider"
       :is-batch="true"
       :user-list="userList"
       :depart-list="departList"
-      :title="$t(`m.userOrOrg['批量追加用户组']`)"
+      :title="formatSliderTitle"
       :group-data="queryGroupData"
     />
   </div>
@@ -128,9 +128,11 @@
     data () {
       return {
         selectActive: '',
+        curSliderName: 'add',
         listLoading: false,
         isDropdownShow: false,
         isScrollLoading: false,
+        isShowNoDataTips: false,
         currentSelectList: [],
         sliderData: {
           reset: {
@@ -186,6 +188,17 @@
         return {
           minWidth: '224px'
         };
+      },
+      formatSliderTitle () {
+        const nameMap = {
+          add: () => {
+            return this.$t(`m.userOrOrg['批量追加用户组']`);
+          },
+          reset: () => {
+            return this.$t(`m.userOrOrg['批量重置用户组']`);
+          }
+        };
+        return nameMap[this.curSliderName]();
       }
     },
     watch: {
@@ -224,7 +237,8 @@
       },
 
       handleBatch (payload) {
-        if (['add'].includes(payload)) {
+        this.curSliderName = payload;
+        if (['add', 'reset'].includes(payload)) {
           this.userList = this.currentSelectList.filter((item) => ['user'].includes(item.type));
           this.departList = this.currentSelectList.filter((item) => ['department'].includes(item.type));
         }
@@ -234,8 +248,12 @@
         });
       },
 
+      handleResetScrollLoading () {
+        this.isShowNoDataTips = false;
+        this.isScrollLoading = false;
+      },
+
       handleScroll (event) {
-        console.log(4555);
         if (this.isLoading) {
           this.handleResetScrollLoading();
           return;
@@ -246,7 +264,8 @@
           return;
         }
         const { offsetHeight, scrollTop, scrollHeight } = event.target;
-        if (scrollTop + offsetHeight >= scrollHeight - 1) {
+        console.log(scrollTop, offsetHeight, scrollHeight);
+        if (scrollTop + offsetHeight >= scrollHeight) {
           this.isScrollLoading = true;
           this.isShowNoDataTips = false;
           this.$emit('on-load-more');
@@ -311,8 +330,7 @@
     padding-right: 16px;
     position: relative;
     &-content {
-      position: relative;
-      height: calc(100% - 43px);
+      height: calc(100vh - 310px);
       overflow-x: hidden;
       overflow-y: auto;
       &::-webkit-scrollbar {
