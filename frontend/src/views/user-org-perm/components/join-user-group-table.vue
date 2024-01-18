@@ -52,7 +52,9 @@
                       size="small"
                       theme="primary"
                       :text="true"
-                      style="padding: 0" @click.stop="handleBatchRenewal">
+                      style="padding: 0"
+                      @click.stop="handleBatchRenewal"
+                    >
                       {{ $t(`m.permApply['去续期']`) }}
                     </bk-button>
                     )
@@ -149,7 +151,6 @@
         expiredAtUse: 15552000,
         tableLoading: false,
         isShowGroupError: false,
-        isShowPermSideSlider: false,
         tableList: [],
         currentSelectList: [],
         curUserGroup: [],
@@ -433,10 +434,17 @@
         this.handleSearchUserGroup();
       },
 
-      handleView (payload) {
-        this.curGroupName = payload.name;
-        this.curGroupId = payload.id;
-        this.isShowPermSideSlider = true;
+      handleNavGroup ({ id, name }) {
+        this.curGroupName = name;
+        this.curGroupId = id;
+        const routeData = this.$router.resolve({
+          path: `user-group-detail/${id}`,
+          query: {
+            tab: 'GroupPerm',
+            noFrom: true
+          }
+        });
+        window.open(routeData.href, '_blank');
       },
       
       fetchSelectedGroups (type, payload, row) {
@@ -552,13 +560,6 @@
             count: 0
           }
         );
-      },
-
-      resetDataAfterClose () {
-        this.curResIndex = -1;
-        this.groupIndex = -1;
-        this.params = {};
-        this.resourceInstanceSideSliderTitle = '';
       }
     }
   };

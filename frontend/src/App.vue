@@ -392,5 +392,9 @@
       .main-scroller {
         height: calc(100% + 215px);
       }
+      .views-layout {
+        min-width: 100%;
+        overflow: hidden;
+      }
     }
 </style>

@@ -33,11 +33,6 @@
     </div>
     <div v-if="list.length" class="group-list">
       <div
-        v-bkloading="{
-          isLoading: loading,
-          opacity: 1,
-          color: '#f5f6fa'
-        }"
         class="group-list-content"
         @scroll="handleScroll"
       >
@@ -68,6 +63,11 @@
             </div>
           </div>
         </div>
+        <div
+          v-if="isScrollLoading"
+          v-bkloading="{ isLoading: isScrollLoading, opacity: 1, color: '#fff' }"
+          class="load-more-wrapper"
+        />
       </div>
     </div>
     <div v-else class="user-org-empty-wrapper">
@@ -81,10 +81,10 @@
       />
     </div>
     
-    <!-- 加入用户组slider -->
     <JoinUserGroupSlider
       :slider-width="960"
       :show.sync="sliderData[curSliderName].showSlider"
+      :cur-slider-name="curSliderName"
       :is-batch="true"
       :user-list="userList"
       :depart-list="departList"

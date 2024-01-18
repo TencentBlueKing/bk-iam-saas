@@ -118,6 +118,9 @@
       title: {
         type: String
       },
+      curSliderName: {
+        type: String
+      },
       groupData: {
         type: Object
       },
@@ -163,15 +166,31 @@
         return this.departList.length > 0;
       },
       formatGroupTitle () {
-        return this.isBatch
-          ? ` <div class="render-join">
-                <span class="render-join-label">${this.$t(`m.userOrOrg['追加的用户组']`)}</span>
-                <div class="render-join-tip">
-                  <bk-icon type="info-circle-shape" class="render-join-tip-icon"></bk-icon>
-                  <span>${this.$t(`m.userOrOrg['在已有用户组的基础上，追加以下所选的用户组']`)}</span>
-                </div>    
-              </div>`
-          : `<div class="render-join-label">${this.$t(`m.userOrOrg['加入的用户组']`)}</div>`;
+        const modeMap = {
+          add: () => {
+            return this.isBatch
+              ? `<div class="render-join">
+                    <span class="render-join-label">${this.$t(`m.userOrOrg['追加的用户组']`)}</span>
+                    <div class="render-join-tip">
+                      <Icon bk type="info-circle-shape" class="render-join-tip-icon"></Icon>
+                      <span>${this.$t(`m.userOrOrg['在已有用户组的基础上，追加以下所选的用户组']`)}</span>
+                    </div>    
+                  </div>`
+              : `<div class="render-join-label">${this.$t(`m.userOrOrg['加入的用户组']`)}</div>`;
+          },
+          reset: () => {
+            return this.isBatch
+              ? `<div class="render-join">
+                    <span class="render-join-label">${this.$t(`m.userOrOrg['重置的用户组']`)}</span>
+                    <div class="render-join-tip">
+                      <bk-icon type="info-circle-shape" class="render-join-tip-icon"></bk-icon>
+                      <span>${this.$t(`m.userOrOrg['已选对象的权限将被清空，替换为以下所选的用户组']`)}</span>
+                    </div>    
+                  </div>`
+              : `<div class="render-join-label">${this.$t(`m.userOrOrg['重置的用户组']`)}</div>`;
+          }
+        };
+        return modeMap[this.curSliderName]();
       }
     },
     methods: {

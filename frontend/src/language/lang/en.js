@@ -1451,9 +1451,7 @@ export const m = {
         '最多只能选择10个人员模板' : 'You can only select up to 10 member templates'
     },
     userOrOrg: {
-        '输入ID、用户组名、用户名、组织名、描述等按回车进行搜索': 'Enter ID, user group name, username, organization name, description, etc. and press enter to search',
         '批量操作': 'Multi-operate',
-        '请先勾选用户': 'Please check the user first',
         '重置用户组': 'Reset user group',
         '追加用户组': 'Append user group',
         '加入用户组': 'Join user group',
@@ -1464,10 +1462,13 @@ export const m = {
         '加入的用户组': 'Joined user group',
         '申请时长': 'Application duration',
         '清空用户组并移出（管理空间）': 'Empty user groups and move them out (management space)',
+        '请先勾选用户': 'Please check the user first',
         '请先勾选用户组权限': 'Please check user group permissions first',
         '请先勾选用户/组织': 'Please check the user/organization first',
         '搜索用户组名、描述': 'Search for user group name and description',
-        '在已有用户组的基础上，追加以下所选的用户组': 'On the basis of existing user groups, add the following selected user groups'
+        '输入ID、用户组名、用户名、组织名、描述等按回车进行搜索': 'Enter ID, user group name, username, organization name, description, etc. and press enter to search',
+        '在已有用户组的基础上，追加以下所选的用户组': 'On the basis of existing user groups, add the following selected user groups',
+        '已选对象的权限将被清空，替换为以下所选的用户组': 'The permissions of the selected objects will be cleared and replaced with the following selected user groups'
     }
 }
 export default {
