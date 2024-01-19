@@ -46,7 +46,7 @@ FORM_SCHEMES = {
         "attrs": {
             "column": [
                 {"name": "ID", "type": "text", "key": "id"},
-                {"name": "管理员", "type": "text", "key": "role_name"},
+                {"name": "管理空间", "type": "text", "key": "role_name"},
                 {"name": "用户组", "key": "group_info", "scheme": FormSchemeEnum.BASE_TABLE_TEXT.value},
                 {"name": "最高敏感等级", "type": "text", "key": "highest_sensitivity_level"},
                 {"name": "描述", "type": "text", "key": "desc"},
