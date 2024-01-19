@@ -97,7 +97,7 @@
                 >
                   <template v-if="item.type === 'node'">
                     <Icon
-                      v-if="!isTwoLevel && item.async"
+                      v-if="item.async"
                       bk
                       :type="item.expanded ? 'down-shape' : 'right-shape'"
                       :class="[
@@ -105,12 +105,18 @@
                       ]"
                       @click.stop="expandNode(item, index)"
                     />
-                    <div
+                    <!-- <div
                       :class="[
                         'node-radio',
                         { 'node-radio-no-icon': !(!isTwoLevel && item.async) },
                         { 'node-radio-no-icon-two-level': (!(!isTwoLevel && item.async)) && isTwoLevel },
                         { 'node-radio-none': isTwoLevel && item.level === 1 }
+                      ]"
+                      :style="formatNoIcon(item)"
+                      @click.stop> -->
+                    <div
+                      :class="[
+                        'node-radio'
                       ]"
                       :style="formatNoIcon(item)"
                       @click.stop>
@@ -219,6 +225,7 @@
                 :outer-border="false"
                 :data="renderTopologyData"
                 :max-height="formatTableHeight"
+                :cell-attributes="handleCellAttributes"
                 @select="handleSelectChange"
                 @select-all="handleSelectAllChange"
                 v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
@@ -599,7 +606,8 @@
         if (
           this.curSelectTreeNode.children
           && this.curSelectTreeNode.children.length
-          && !this.isOnlyLevel && !this.isTwoLevel) {
+          && !this.isOnlyLevel) {
+          // && !this.isOnlyLevel && !this.isTwoLevel) {
           list = [...this.renderTopologyData, ...this.curSelectTreeNode.children];
         }
         const tableData = list.reduce((curr, next) => {
@@ -607,7 +615,12 @@
           hasNode[`${next.name}&${next.id}`] ? '' : hasNode[`${next.name}&${next.id}`] = true && curr.push(next);
           return curr;
         }, []);
-        const curTableData = tableData.filter((item) => item.checked || (item.disabled && item.parentChain.length));
+        const curTableData = tableData.filter((item) => item.type === 'node' && (item.checked || (item.disabled && item.parentChain.length)));
+        console.log(this.curSelectTreeNode, 4444);
+        // 如果有多层，且当层选中层状态为checked时，代表子集checked状态为父级勾选
+        if (!this.isOnlyLevel && this.curSelectTreeNode.checked) {
+         return [];
+        }
         return curTableData;
       },
       formatAllowClearCount () {
@@ -621,14 +634,14 @@
       },
       formatLoadMore () {
         return (payload) => {
-          return payload.type === 'load' && payload.level < this.curChain.length - 1;
+          return payload.type === 'load';
         };
       },
       formatNoIcon () {
         return (payload) => {
           const { async, expanded, level } = payload;
           const hasData = this.allTreeData.find((v) => v.level === level);
-          if (!async && !expanded && !this.isTwoLevel) {
+          if (!async && !expanded) {
             if (hasData && hasData.async && level < 3) {
               return {
                 'paddingLeft': `29px`
@@ -638,6 +651,11 @@
                 'paddingLeft': `${16 + level * 8}px`
               };
             }
+          }
+          if (!async && expanded) {
+            return {
+              'paddingLeft': `${16 + level * 8}px`
+            };
           }
         };
       },
@@ -1310,15 +1328,15 @@
             }
           });
         }
-        // 处理三层及以上拓扑不展开的场景下直接勾选同步右侧表格勾选状态
-        if (!this.isOnlyLevel && !this.isTwoLevel) {
-          let selectChildrenList = [];
-          if (this.curSelectTreeNode.children.length) {
-            selectChildrenList = this.curSelectTreeNode.children.map((item) => `${item.id}&${item.name}`);
-          }
+        // 处理多层及以上拓扑不展开的场景下直接勾选同步右侧表格勾选状态
+        // if (!this.isOnlyLevel && !this.isTwoLevel) {
+        if (!this.isOnlyLevel) {
+          // const selectChildrenList = [];
+          // if (this.curSelectTreeNode.children.length) {
+          //   selectChildrenList = this.curSelectTreeNode.children.map((item) => `${item.id}&${item.name}`);
+          // }
           this.renderTopologyData.forEach((item) => {
-            if ((`${item.id}&${item.name}` === `${node.id}&${node.name}`)
-              || selectChildrenList.includes(`${item.id}&${item.name}`)) {
+            if ((`${item.id}&${item.name}` === `${node.id}&${node.name}`)) {
               this.$refs.topologyTableRef.toggleRowSelection(item, value);
               // 如果上级数据checked， 子集默认disabled
               item.disabled = this.curSelectTreeNode.checked;
@@ -1431,8 +1449,9 @@
         const typeMap = {
           multiple: () => {
             const isChecked = payload.length && payload.indexOf(row) !== -1;
-            // 处理三层及以上拓扑不展开的场景下直接勾选同步右侧表格勾选状态
-            if (!this.isOnlyLevel && !this.isTwoLevel) {
+            // 处理多层及以上拓扑不展开的场景下直接勾选同步右侧表格勾选状态
+            if (!this.isOnlyLevel) {
+              // if (!this.isOnlyLevel && !this.isTwoLevel) {
               this.allTreeData.forEach((item) => {
                 if ((`${item.id}&${item.name}` === `${row.id}&${row.name}`) && !item.disabled) {
                   item.checked = !!isChecked;
@@ -1508,8 +1527,8 @@
                 this.$refs.topologyTableRef && this.$refs.topologyTableRef.toggleRowSelection(item, item.checked);
               }
             });
-            // 处理三层及以上拓扑不展开的场景下直接勾选同步右侧表格勾选状态
-            if (!this.isOnlyLevel && !this.isTwoLevel) {
+            // 处理多层及以上拓扑不展开的场景下直接勾选同步右侧表格勾选状态
+            if (!this.isOnlyLevel) {
               const curSelectList = nodes.map((item) => `${item.id}&${item.name}`);
               const defaultSelectList = this.curSelectedValues.map((v) => v.ids).flat(this.curChain.length);
               nodes = nodes.filter((item) => !defaultSelectList.includes(`${item.id}&${this.curChain[item.level].id}`));
@@ -1537,6 +1556,24 @@
 
       handleSelectAllChange (selection) {
         this.fetchSelectedGroups('all', selection);
+      },
+      
+      handleCellAttributes ({ rowIndex, cellIndex, row, column }) {
+        if (cellIndex === 0) {
+          const { id, name, nodeId } = this.selectNodeData;
+          const curSelectedTableData = this.renderTopologyData.filter((item) => item.checked && item.disabled).map((item) => `${item.name}${item.id}`);
+          const list = this.allTreeData.filter((item) =>
+            curSelectedTableData.includes(`${item.name}${item.id}`)
+            && ((item.parentChain && item.parentChain.map((v) => `${v.id}&${v.name}`).includes(`${id}&${name}`)) || item.parentId === nodeId)
+          );
+          const result = list.map((item) => `${item.name}${item.id}`);
+          if (result.includes(`${row.name}${row.id}`)) {
+            return {
+              title: this.$t(`m.common['已选父级']`)
+            };
+          }
+        }
+        return {};
       }
     }
   };
