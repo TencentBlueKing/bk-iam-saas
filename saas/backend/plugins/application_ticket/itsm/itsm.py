@@ -29,6 +29,8 @@ from .serializers import ApprovalSLZ
 from .ticket_content import ActionTable, GradeManagerForm, GroupTable
 from .ticket_content_tpl import FORM_SCHEMES
 
+DEFAULT_TAG = "bk_iam"
+
 
 class ITSMApplicationTicketProvider(ApplicationTicketProvider):
     def list_by_sns(self, sns: List[str]) -> List[ApplicationTicket]:
@@ -104,6 +106,7 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
             },
         ]
 
+        params["tag"] = DEFAULT_TAG
         ticket = itsm.create_ticket(**params)
         return ticket["sn"]
 
@@ -127,7 +130,7 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
                 if data.type == ApplicationType.JOIN_GROUP
                 else f"申请续期 {len(data.content.groups)} 个用户组"
             )
-        title = "{}：{}".format(title_prefix, "、".join([one.name for one in data.content.groups]))
+        title = "{}：{}".format(title_prefix, "、".join([f"({one.role_name}){one.name}" for one in data.content.groups]))
         if len(title) > 64:
             title = title[:64] + "..."
 
@@ -157,7 +160,7 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
             },
         ]
 
-        params["tag"] = tag
+        params["tag"] = tag or DEFAULT_TAG
         ticket = itsm.create_ticket(**params)
         return ticket["sn"]
 
@@ -187,7 +190,7 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
                 "form_data": GradeManagerForm.from_application(data.content).form_data,
             }
 
-        params["tag"] = tag
+        params["tag"] = tag or DEFAULT_TAG
         ticket = itsm.create_ticket(**params)
         return ticket["sn"]
 
