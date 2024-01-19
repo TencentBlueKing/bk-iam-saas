@@ -402,6 +402,7 @@ const store = new Vuex.Store({
       hideIamSlider: false, // 第一层级侧边导航
       hideIamBreadCrumbs: false, // 第一层级面包屑
       hideIamGuide: false, // 隐藏所有guide的tooltip
+      hideNoticeAlert: false, // 隐藏跑马灯组件
       myPerm: { // 我的权限
         hideCustomTab: false, // 自定义权限tab - 1
         hideApplyBtn: false, // 申请权限按钮 - 1
@@ -859,6 +860,7 @@ const store = new Vuex.Store({
         hideIamSlider: true, // 第一层级侧边导航
         hideIamBreadCrumbs: true, // 第一层级面包屑
         hideIamGuide: true, // 隐藏所有guide的tooltip
+        hideNoticeAlert: true, // 隐藏跑马灯组件
         myPerm: { // 我的权限
           hideCustomTab: true, // 自定义权限tab - 1
           hideApplyBtn: true, // 申请权限按钮 - 1
