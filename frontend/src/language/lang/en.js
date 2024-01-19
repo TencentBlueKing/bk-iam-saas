@@ -293,7 +293,8 @@ export const m = {
         '本页': 'page',
         '每页': 'Page',
         '清除选择': 'Clear',
-        '暂无可清空数据': 'No data clear'
+        '暂无可清空数据': 'No data clear',
+        '已选父级': 'Selected parent level'
     },
     // 校验
     verify: {

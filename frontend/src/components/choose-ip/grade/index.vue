@@ -44,8 +44,8 @@
                 @async-load-nodes="handleAsyncNodes"
                 @async-load-table-nodes="handleAsyncNodes" />
             </template>
-            <template v-if="renderTopologyData.length < 1 && !isLoading">
-              <div class="empty-wrapper">
+            <div v-if="renderTopologyData.length < 1 && !isLoading" class="empty-wrapper">
+              <div class="empty-wrapper-content">
                 <ExceptionEmpty
                   :type="emptyData.type"
                   :empty-text="emptyData.text"
@@ -55,7 +55,7 @@
                   @on-refresh="handleEmptyRefresh"
                 />
               </div>
-            </template>
+            </div>
           </div>
         </template>
         <template v-if="!isOnlyLevel">
@@ -95,10 +95,10 @@
                 @async-load-table-nodes="handleAsyncNodes"
               />
             </template>
-            <template v-if="renderTopologyData.length < 1 && !isLoading">
+            <div v-if="renderTopologyData.length < 1 && !isLoading" class="empty-wrapper">
               <div
                 v-if="[500].includes(emptyData.type)"
-                class="empty-wrapper"
+                class="empty-wrapper-content"
               >
                 <ExceptionEmpty
                   :type="emptyData.type"
@@ -146,7 +146,7 @@
                   @on-refresh="handleEmptyRefresh"
                 />
               </template>
-            </template>
+            </div>
           </div>
         </template>
       </template>
@@ -1953,6 +1953,8 @@
               height: 100%;
               /* min-height: 450px; */
               .empty-wrapper {
+                min-height: 280px;
+                .empty-wrapper-content {
                   position: absolute;
                   top: 50%;
                   left: 50%;
@@ -1960,14 +1962,7 @@
                   img {
                       width: 120px;
                   }
-                  /* .search-text-wrapper {
-                      position: relative;
-                      top: -20px;
-                      font-size: 12px;
-                      color: #c4c6cc;
-                      word-break: break-all;
-                      text-align: center;
-                  } */
+                }
               }
               .bk-loading {
                   /* background: #fafbfd !important; */

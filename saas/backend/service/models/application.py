@@ -228,6 +228,8 @@ class ApplicationGroupInfo(BaseModel):
     expired_display: str = ""
     # 用户组自身的权限信息(包含权限模板和自定义权限)
     templates: List[ApplicationGroupPermTemplate]
+    # 管理员名称
+    role_name: str = ""
     # 最高敏感等级
     highest_sensitivity_level: str = ""
 
