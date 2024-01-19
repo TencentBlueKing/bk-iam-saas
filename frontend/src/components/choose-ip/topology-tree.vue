@@ -616,7 +616,6 @@
           return curr;
         }, []);
         const curTableData = tableData.filter((item) => item.type === 'node' && (item.checked || (item.disabled && item.parentChain.length)));
-        console.log(this.curSelectTreeNode, 4444);
         // 如果有多层，且当层选中层状态为checked时，代表子集checked状态为父级勾选
         if (!this.isOnlyLevel && this.curSelectTreeNode.checked) {
          return [];
