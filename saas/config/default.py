@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "django_celery_beat",
     "apigw_manager.apigw",
     "iam.contrib.iam_migration",
+    "bk_notice_sdk",
     "backend.common",
     "backend.long_task",
     "backend.audit",
@@ -420,6 +421,7 @@ ENABLE_FRONT_END_FEATURES = {
     "enable_group_instance_search": env.bool("BKAPP_ENABLE_FRONT_END_GROUP_INSTANCE_SEARCH", default=False),
     "enable_organization_count": env.bool("BKAPP_ENABLE_FRONT_END_ORGANIZATION_COUNT", default=False),
     "enable_assistant": env.bool("BKAPP_ENABLE_FRONT_END_ASSISTANT", default=False),
+    "enable_bk_notice": env.bool("BKAPP_ENABLE_BK_NOTICE", default=False),
 }
 
 # Open API接入APIGW后，需要对APIGW请求来源认证，使用公钥解开jwt
@@ -428,7 +430,7 @@ BK_APIGW_PUBLIC_KEY = env.str("BKAPP_APIGW_PUBLIC_KEY", default="")
 # apigateway 相关配置
 # NOTE: it sdk will read settings.APP_CODE and settings.APP_SECRET, so you should set it
 BK_APIGW_NAME = "bk-iam"
-BK_API_URL_TMPL = env.str("BK_API_URL_TMPL", default="")
+BK_API_URL_TMPL = env.str("BK_API_URL_TMPL", default="http://localhost:8080/api/{api_name}/")
 BK_IAM_BACKEND_SVC = env.str("BK_IAM_BACKEND_SVC", default="bkiam-web")
 BK_IAM_SAAS_API_SVC = env.str("BK_IAM_SAAS_API_SVC", default="bkiam-saas-api")
 BK_IAM_ENGINE_SVC = env.str("BK_IAM_ENGINE_SVC", default="bkiam-search-engine")
