@@ -120,7 +120,7 @@
     computed: {
       ...mapGetters(['mainContentLoading', 'user', 'externalSystemsLayout']),
       isShowNoticeAlert () {
-        return this.isShowNotice && !this.externalSystemsLayout.hideIamGuide;
+        return this.isShowNotice && !this.externalSystemsLayout.hideNoticeAlert;
       }
     },
     watch: {
