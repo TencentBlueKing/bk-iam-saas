@@ -225,12 +225,22 @@
                 :outer-border="false"
                 :data="renderTopologyData"
                 :max-height="formatTableHeight"
-                :cell-attributes="handleCellAttributes"
                 @select="handleSelectChange"
                 @select-all="handleSelectAllChange"
                 v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
               >
-                <bk-table-column type="selection" align="center" :selectable="setDefaultSelect" />
+                <bk-table-column type="selection" align="center" :selectable="setDefaultSelect">
+                  <template slot-scope="{ row }">
+                    <span v-bk-tooltips="{ content: $t(`m.common['已选父级']`), disabled: !isParentChecked(row) }">
+                      <bk-checkbox
+                        :value="formatCheckBoxStatus(row, 'checked')"
+                        :disabled="formatCheckBoxStatus(row, 'disabled')"
+                        @change="handleChildNodeChange(...arguments, row)"
+                      />
+                    </span>
+                  </template>
+                </bk-table-column>
+                <!-- <bk-table-column type="selection" align="center" :selectable="setDefaultSelect" /> -->
                 <bk-table-column :label="formatPlaceHolder('table')">
                   <template slot-scope="{ row }">
                     <span :title="`ID: ${row.id}; ${$t(`m.levelSpace['名称']`)}: ${row.name}`">{{ row.name }}</span>
@@ -595,7 +605,7 @@
       formatRadioDisabled () {
         return (payload) => {
           if (this.resourceValue && this.curSelectedValues.length) {
-            return !payload.checked;
+            return !payload.checked || payload.disabled;
           }
           return payload.disabled;
         };
@@ -656,6 +666,27 @@
               'paddingLeft': `${16 + level * 8}px`
             };
           }
+        };
+      },
+      isParentChecked () {
+        return (payload) => {
+          const { id, name, nodeId } = this.selectNodeData;
+          const curSelectedTableData = this.renderTopologyData.filter((item) => item.checked && item.disabled).map((item) => `${item.name}${item.id}`);
+          const list = this.allTreeData.filter((item) =>
+            curSelectedTableData.includes(`${item.name}${item.id}`)
+            && ((item.parentChain && item.parentChain.map((v) => `${v.id}&${v.name}`).includes(`${id}&${name}`)) || item.parentId === nodeId)
+          );
+          const result = list.map((item) => `${item.name}${item.id}`);
+          return result.includes(`${payload.name}${payload.id}`);
+        };
+      },
+      formatCheckBoxStatus () {
+        return (payload, type) => {
+          const hasData = this.allTreeData.find((item) => `${item.id}&${item.name}` === `${payload.id}&${payload.name}`);
+          if (hasData) {
+            return hasData[type];
+          }
+          return false;
         };
       },
       isTreeEmpty () {
@@ -1356,6 +1387,15 @@
         this.$emit('on-select', newVal, node);
       },
 
+      handleChildNodeChange (newVal, oldVal, localVal, node) {
+        const list = [];
+        if (newVal) {
+          list.push(node);
+        }
+        node.checked = newVal;
+        this.handleSelectChange(list, node);
+      },
+
       handleClearPageAll () {
         if (!this.formatSelectedCount.length) {
           return;
@@ -1512,7 +1552,7 @@
                   && this.renderTopologyData.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`)
               );
             }
-            let nodes = currentSelect.length ? currentSelect : noDisabledData;
+            const nodes = currentSelect.length ? currentSelect : noDisabledData;
             this.renderTopologyData.forEach((item) => {
               if (!item.disabled) {
                 this.$set(item, 'checked', resourceList.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`));
@@ -1529,8 +1569,8 @@
             // 处理多层及以上拓扑不展开的场景下直接勾选同步右侧表格勾选状态
             if (!this.isOnlyLevel) {
               const curSelectList = nodes.map((item) => `${item.id}&${item.name}`);
-              const defaultSelectList = this.curSelectedValues.map((v) => v.ids).flat(this.curChain.length);
-              nodes = nodes.filter((item) => !defaultSelectList.includes(`${item.id}&${this.curChain[item.level].id}`));
+              // const defaultSelectList = this.curSelectedValues.map((v) => v.ids).flat(this.curChain.length);
+              // nodes = nodes.filter((item) => !defaultSelectList.includes(`${item.id}&${this.curChain[item.level].id}`));
               this.allTreeData.forEach((item) => {
                 if (curSelectList.includes(`${item.id}&${item.name}`) && !item.disabled) {
                   item.checked = currentSelect.length > 0;
@@ -1555,24 +1595,6 @@
 
       handleSelectAllChange (selection) {
         this.fetchSelectedGroups('all', selection);
-      },
-      
-      handleCellAttributes ({ rowIndex, cellIndex, row, column }) {
-        if (cellIndex === 0) {
-          const { id, name, nodeId } = this.selectNodeData;
-          const curSelectedTableData = this.renderTopologyData.filter((item) => item.checked && item.disabled).map((item) => `${item.name}${item.id}`);
-          const list = this.allTreeData.filter((item) =>
-            curSelectedTableData.includes(`${item.name}${item.id}`)
-            && ((item.parentChain && item.parentChain.map((v) => `${v.id}&${v.name}`).includes(`${id}&${name}`)) || item.parentId === nodeId)
-          );
-          const result = list.map((item) => `${item.name}${item.id}`);
-          if (result.includes(`${row.name}${row.id}`)) {
-            return {
-              title: this.$t(`m.common['已选父级']`)
-            };
-          }
-        }
-        return {};
       }
     }
   };
