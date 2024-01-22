@@ -15,11 +15,3 @@ if "BKPAAS_ENVIRONMENT" in os.environ:
 else:
     # V2 Smart 配置
     from .v2 import *  # noqa
-
-
-BK_NOTICE_STAGE = env.str("BK_NOTICE_STAGE", default="")
-if BK_NOTICE_STAGE:
-    from bk_notice_sdk import config
-
-    config.STAGE = BK_NOTICE_STAGE
-    config.BK_NOTICE["STAGE"] = BK_NOTICE_STAGE
