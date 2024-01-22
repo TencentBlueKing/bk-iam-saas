@@ -290,9 +290,10 @@
       },
 
       handleEmptyUserClear () {
-        this.emptyData.tipType = 'search';
+        this.emptyData.tipType = '';
         this.isSearchPerm = false;
         this.pageConf.current = 1;
+        this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyClear();
         this.fetchGroupMemberList(true, false);
       },
 

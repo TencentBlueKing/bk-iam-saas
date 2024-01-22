@@ -47,6 +47,7 @@
         :cur-search-params="curSearchParams"
         :cur-search-pagination="curSearchPagination"
         :is-search-perm="isSearchPerm"
+        @on-selected-group="handleSelectedGroup"
         @on-clear="handleEmptyClear"
         @on-refresh="handleEmptyRefresh"
       />
@@ -56,6 +57,7 @@
       :slider-width="960"
       :show.sync="isShowAddGroupSlider"
       :is-batch="false"
+      :cur-slider-name="curSliderName"
       :user-list="userList"
       :depart-list="departList"
       :title="$t(`m.userOrOrg['加入用户组']`)"
@@ -109,6 +111,7 @@
         isDropdownShow: false,
         isShowAddGroupSlider: false,
         renewalGroupTitle: '',
+        curSliderName: '',
         componentsKey: -1,
         selectedGroups: [],
         userList: [],
@@ -203,6 +206,7 @@
         typeMap[this.queryGroupData.type]();
         this.userList = [...userList];
         this.departList = [...departList];
+        this.curSliderName = 'add';
         this.isShowAddGroupSlider = true;
       },
 
@@ -212,6 +216,10 @@
           curSearchParams: this.curSearchParams,
           curSearchPagination: this.curSearchPagination
         });
+      },
+
+      handleSelectedGroup (payload) {
+        this.selectedGroups = [...payload];
       },
 
       handleDropdownShow () {

@@ -48,11 +48,10 @@
     }
   }
   .right-layout {
-    padding: 16px;
-    padding-left: 0;
+    padding: 16px 16px 0 0;
     flex: 1 0 auto;
     width: calc(100% - 240px);
-    height: calc(100vh - 61px);
+    height: calc(100vh - 260px);
     background-color: #f5f6fa;
     overflow-y: auto;
     &::-webkit-scrollbar {

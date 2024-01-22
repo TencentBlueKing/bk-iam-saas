@@ -18,7 +18,7 @@
         :show-collapse="false"
         @on-expanded="handleExpanded(...arguments, item)"
       >
-        <TemplatePermTable
+        <GroupPermTable
           v-if="item.pagination.count > 0"
           :mode="item.id"
           :is-loading="item.loading"
@@ -29,6 +29,8 @@
           :empty-data="item.emptyData"
           @on-page-change="handlePageChange(...arguments, item)"
           @on-limit-change="handleLimitChange(...arguments, item)"
+          @on-selected-group="handleSelectedGroup"
+          @on-remove-group="handleRemoveGroup"
           @on-clear="handleEmptyClear"
           @on-refresh="handleEmptyRefresh"
         />
@@ -55,11 +57,11 @@
   import { bus } from '@/common/bus';
   import { formatCodeData, sleep } from '@/common/util';
   import MemberTempPermPolicy from '@/components/custom-perm-system-policy/index.vue';
-  import TemplatePermTable from './group-perm-table.vue';
+  import GroupPermTable from './group-perm-table.vue';
   export default {
     components: {
       MemberTempPermPolicy,
-      TemplatePermTable
+      GroupPermTable
     },
     props: {
       groupData: {
@@ -527,14 +529,6 @@
         }
         return payload || [];
       },
-  
-      handleExpanded (value, payload) {
-        payload.loading = value;
-        sleep(300).then(() => {
-          payload.loading = false;
-        });
-      },
-  
       async formatPaginationData (payload, current, limit) {
         const curData = this.memberTempPermData.find((item) => item.id === payload.id);
         if (curData) {
@@ -554,18 +548,35 @@
             userTempPerm: async () => {
               curData.pagination = Object.assign(curData, { current, limit });
               if (['userOrgPerm'].includes(this.$route.name)) {
-                await this.fetchUserGroupSearch();
+                await this.fetchPermByTempSearch();
               }
             },
             departTempPerm: async () => {
               curData.pagination = Object.assign(curData, { current, limit });
               if (['userOrgPerm'].includes(this.$route.name)) {
-                await this.fetchUserGroupSearch();
+                await this.fetchDepartPermByTempSearch();
               }
             }
           };
           return typeMap[payload.id]();
         }
+      },
+
+      handleExpanded (value, payload) {
+        payload.loading = value;
+        sleep(300).then(() => {
+          payload.loading = false;
+        });
+      },
+
+      handleSelectedGroup (payload) {
+        this.$emit('on-selected-group', payload);
+      },
+
+      handleRemoveGroup (payload) {
+        const curData = this.memberTempPermData.find((item) => item.id === payload.mode);
+        this.formatPaginationData(curData, 1, curData.pagination.limit);
+        this.$emit('on-selected-group', []);
       },
   
       handlePageChange (current, payload) {
@@ -578,12 +589,6 @@
         this.formatPaginationData(payload, curData.pagination.current, limit);
       },
   
-      resetPagination (limit = 10) {
-        this.memberTempPermData.forEach((item) => {
-          item.pagination = Object.assign(item.pagination, { current: 1, limit });
-        });
-      },
-  
       handleEmptyRefresh () {
         this.resetPagination();
         this.$emit('on-refresh');
@@ -592,6 +597,12 @@
       handleEmptyClear () {
         this.resetPagination();
         this.$emit('on-clear');
+      },
+
+      resetPagination (limit = 10) {
+        this.memberTempPermData.forEach((item) => {
+          item.pagination = Object.assign(item.pagination, { current: 1, limit });
+        });
       }
     }
   };

@@ -676,10 +676,8 @@
               .delete-depart-icon {
                 display: block;
                 font-size: 18px;
-                margin: 4px 6px 0 0;
                 color: #c4c6cc;
                 cursor: pointer;
-                float: right;
                 &:hover {
                   color: #3a84ff;
                 }
@@ -687,10 +685,6 @@
               .user-count {
                 color: #c4c6cc;
               }
-            }
-            .folder-icon {
-              font-size: 17px;
-              color: #a3c5fd;
             }
         }
       }

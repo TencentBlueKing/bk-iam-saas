@@ -355,7 +355,7 @@
       cursor: pointer;
 
       .group-content {
-        width: calc(100% - 10px);
+        width: calc(100% - 20px);
         display: flex;
         align-items: center;
 

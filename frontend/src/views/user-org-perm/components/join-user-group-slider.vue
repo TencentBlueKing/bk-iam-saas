@@ -4,9 +4,11 @@
       :is-show="isShowSideSlider"
       :title="title"
       :width="sliderWidth"
-      ext-cls="iam-join-user-group-side"
       :quick-close="true"
+      :show-mask="true"
+      ext-cls="iam-join-user-group-side"
       @update:isShow="handleCancel('dialog')"
+
     >
       <div slot="content" class="iam-join-user-group-side-content">
         <div class="join-user-group-content">
@@ -190,7 +192,10 @@
               : `<div class="render-join-label">${this.$t(`m.userOrOrg['重置的用户组']`)}</div>`;
           }
         };
-        return modeMap[this.curSliderName]();
+        if (modeMap[this.curSliderName]) {
+          return modeMap[this.curSliderName]();
+        }
+        return '';
       }
     },
     methods: {

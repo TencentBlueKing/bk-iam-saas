@@ -10,8 +10,8 @@
       :pagination="pagination"
       @page-change="handlePageChange"
       @page-limit-change="handleLimitChange"
-      @select="handlerChange"
-      @select-all="handlerAllChange"
+      @select="handleChange"
+      @select-all="handleAllChange"
       v-bkloading="{ isLoading: isLoading, opacity: 1 }"
     >
       <bk-table-column
@@ -71,13 +71,43 @@
             :width="'auto'">
             <template slot-scope="{ row }">
               <template>
-                <bk-button
-                  text
-                  theme="primary"
-                  @click="handleDelete(row)"
+                <bk-popconfirm
+                  trigger="click"
+                  placement="bottom-start"
+                  ext-popover-cls="user-org-remove-confirm"
+                  :confirm-text="$t(`m.common['移除']`)"
+                  @confirm="handleRemove(row)"
                 >
-                  {{ $t(`m.common['移除']`) }}
-                </bk-button>
+                  <div slot="content">
+                    <div class="popover-title">
+                      <div class="popover-title-text">
+                        {{ $t(`m.dialog['确认把用户移出该用户组？']`) }}
+                      </div>
+                    </div>
+                    <div class="popover-content">
+                      <div class="popover-content-item">
+                        <span class="popover-content-item-label">
+                          {{ $t(`m.userOrOrg['操作对象']`) }}:
+                        </span>
+                        <span class="popover-content-item-value"> {{ formatUserName }}</span>
+                      </div>
+                      <div class="popover-content-item">
+                        <span class="popover-content-item-label">
+                          {{ $t(`m.userOrOrg['用户组名']`) }}:
+                        </span>
+                        <span class="popover-content-item-value"> {{ row.name }}</span>
+                      </div>
+                      <div class="popover-content-tip">
+                        {{
+                          $t(`m.userOrOrg['移出后，该人员将不再继承该组的权限。']`)
+                        }}
+                      </div>
+                    </div>
+                  </div>
+                  <bk-button theme="primary" text>
+                    {{ $t(`m.common['移除']`) }}
+                  </bk-button>
+                </bk-popconfirm>
                 <bk-button
                   v-if="row.expired_at !== PERMANENT_TIMESTAMP"
                   theme="primary"
@@ -114,20 +144,13 @@
         />
       </template>
     </bk-table>
-  
-    <!-- <RenderGroupPermSideSlider
-      :show="isShowPermSideSlider"
-      :name="curGroupName"
-      :group-id="curGroupId"
-      @animation-end="handleAnimationEnd"
-    /> -->
   </div>
 </template>
   
   <script>
   import { cloneDeep } from 'lodash';
   import { PERMANENT_TIMESTAMP } from '@/common/constants';
-  // import RenderGroupPermSideSlider from '../components/render-group-perm-sideslider';
+
   export default {
     components: {
       // RenderGroupPermSideSlider
@@ -209,6 +232,21 @@
           }
           return '';
         };
+      },
+      formatUserName () {
+        const { id, name } = this.groupData;
+        const typeMap = {
+          user: () => {
+            return `${id} (${name})`;
+          },
+          department: () => {
+            return name;
+          }
+        };
+        if (typeMap[this.groupData.type]) {
+          return typeMap[this.groupData.type]();
+        }
+        return '';
       }
     },
     watch: {
@@ -291,8 +329,28 @@
         return routeMap[type]();
       },
 
-      handleDelete (payload) {
-        
+      async handleRemove (payload) {
+        const { type, id } = this.groupData;
+        try {
+          const params = {
+            type: 'group',
+            subjectType: type,
+            subjectId: id,
+            id: payload.id
+          };
+          const emitParams = {
+            ...payload,
+            ...{
+              mode: this.mode
+            }
+          };
+          await this.$store.dispatch('perm/quitGroupTemplates', params);
+          this.messageSuccess(this.$t(`m.info['移除成功']`), 3000);
+          this.$emit('on-remove-group', emitParams);
+        } catch (e) {
+          console.error(e);
+          this.messageAdvancedError(e);
+        }
       },
 
       handleViewDetail ({ id, name }) {
@@ -309,11 +367,11 @@
         this.$emit('on-limit-change', limit);
       },
 
-      handlerAllChange (selection) {
+      handleAllChange (selection) {
         this.fetchSelectedGroups('all', selection);
       },
 
-      handlerChange (selection, row) {
+      handleChange (selection, row) {
         this.fetchSelectedGroups('multiple', selection, row);
       },
   
@@ -324,11 +382,10 @@
             if (isChecked) {
               this.currentSelectList.push(row);
             } else {
-              this.currentSelectList = this.currentSelectList.filter(
-                (item) => item.id.toString() !== row.id.toString()
-              );
+              this.currentSelectList = this.currentSelectList.filter((item) => String(item.id) !== String(row.id));
             }
             this.fetchCustomTotal();
+            this.$emit('on-selected-group', this.currentSelectList);
           },
           all: async () => {
             const tableList = cloneDeep(this.list);
@@ -337,6 +394,7 @@
             );
             this.currentSelectList = [...selectGroups, ...payload];
             this.fetchCustomTotal();
+            this.$emit('on-selected-group', this.currentSelectList);
           }
         };
         return typeMap[type]();
