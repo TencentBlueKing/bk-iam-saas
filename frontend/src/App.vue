@@ -11,6 +11,7 @@
       v-if="isShowNoticeAlert"
       :api-url="noticeApi"
       @show-alert-change="handleShowAlertChange"
+      style="min-height: 40px"
     />
     <!-- <iam-guide
             v-if="groupGuideShow"
