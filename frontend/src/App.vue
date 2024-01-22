@@ -113,7 +113,7 @@
         userGroupId: '',
         isRouterAlive: true,
         showNoticeAlert: false,
-        noticeApi: '',
+        noticeApi: `${location.origin}/notice/announcements/`,
         isShowNotice: window.ENABLE_BK_NOTICE.toLowerCase() === 'true'
       };
     },
