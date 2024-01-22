@@ -205,7 +205,7 @@ class InstanceApproverMergeHandler(InstanceApproverHandler):
         if self.system_manager_approver:
             policy_process.process.set_node_approver(
                 ProcessorNodeType.INSTANCE_APPROVER_MERGE.value,
-                self.system_manager_approver[0],
+                [self.system_manager_approver[0]],
             )
 
         if len(policy_process.policy.list_thin_resource_type()) != 1:
