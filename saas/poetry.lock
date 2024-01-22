@@ -160,6 +160,17 @@ requests = "*"
 six = ">=1.11.0"
 
 [[package]]
+name = "bk-notice-sdk"
+version = "1.2.0"
+description = "A project for fetching and displaying announcement notifications."
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+bkapi-client-core = ">=1.0.2,<2.0.0"
+
+[[package]]
 name = "bkapi-bk-apigateway"
 version = "1.0.6"
 description = "蓝鲸API网关"
@@ -1936,7 +1947,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = "3.6.6"
-content-hash = "f9a8d465b3db414899c62143bacd80062bb5f188d2e2633f497917126b4551cb"
+content-hash = "391d2b592400593add8682f32c572fb876350b91a72ec8454d544575eb03a6ac"
 
 [metadata.files]
 aenum = [
@@ -1993,6 +2004,9 @@ bk-audit = [
 bk-iam = [
     {file = "bk-iam-1.2.2.tar.gz", hash = "sha256:34e4ec694197c86204e2be8fddbc4d155f6d6e31b327dd1414db4b1e2e69b4b7"},
     {file = "bk_iam-1.2.2-py2.py3-none-any.whl", hash = "sha256:4a5d7ef6e4dcd35b8bf4d9d8c88177dcf45ea39db1fc59ac02220048ca7bd7c9"},
+]
+bk-notice-sdk = [
+    {file = "bk-notice-sdk-1.2.0.tar.gz", hash = "sha256:e013a45e15259b78c12242401c7d2aa36f9e8407aab00fd301d1f034c9ad47ca"},
 ]
 bkapi-bk-apigateway = [
     {file = "bkapi-bk-apigateway-1.0.6.tar.gz", hash = "sha256:561bca6fcdb84f7cc9e7b3aee2b70318859b4bd8d374995df68f7dc394ea8a5d"},
