@@ -11,7 +11,6 @@
       v-if="isShowNoticeAlert"
       :api-url="noticeApi"
       @show-alert-change="handleShowAlertChange"
-      style="height: 40px"
     />
     <!-- <iam-guide
             v-if="groupGuideShow"
@@ -112,15 +111,15 @@
         routeName: '',
         userGroupId: '',
         isRouterAlive: true,
-        showNoticeAlert: false,
+        showNoticeAlert: true,
         noticeApi: `${location.origin}/notice/announcements/`,
-        isShowNotice: window.ENABLE_BK_NOTICE.toLowerCase() === 'true'
+        enableNotice: window.ENABLE_BK_NOTICE.toLowerCase() === 'true'
       };
     },
     computed: {
       ...mapGetters(['mainContentLoading', 'user', 'externalSystemsLayout']),
       isShowNoticeAlert () {
-        return this.isShowNotice && !this.externalSystemsLayout.hideNoticeAlert;
+        return this.enableNotice && this.showNoticeAlert && !this.externalSystemsLayout.hideNoticeAlert;
       }
     },
     watch: {
