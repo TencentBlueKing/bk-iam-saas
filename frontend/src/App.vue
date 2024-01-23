@@ -11,7 +11,6 @@
       v-if="isShowNoticeAlert"
       :api-url="noticeApi"
       @show-alert-change="handleShowAlertChange"
-      style="min-height: 40px"
     />
     <!-- <iam-guide
             v-if="groupGuideShow"
@@ -112,7 +111,7 @@
         routeName: '',
         userGroupId: '',
         isRouterAlive: true,
-        showNoticeAlert: false,
+        showNoticeAlert: true,
         noticeApi: `${location.origin}/notice/announcements/`,
         enableNotice: window.ENABLE_BK_NOTICE.toLowerCase() === 'true'
       };
