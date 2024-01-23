@@ -41,7 +41,7 @@
                     { 'user-group-name-label-expired': user.timestamp > row.expired_at }
                   ]"
                   :title="row.name"
-                  @click="handleView(row)"
+                  @click="handleNavGroup(row)"
                 >
                   {{ row.name }}
                 </span>
@@ -492,7 +492,7 @@
         this.currentSelectedGroups = [];
       },
 
-      handleCloseTag (payload) {
+      handleDelete (payload) {
         const index = this.currentSelectedGroups.findIndex((item) => item.id === payload.id);
         const tableIndex = this.tableList.findIndex((item) => item.id === payload.id);
         this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(this.tableList[tableIndex], false);

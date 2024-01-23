@@ -21,7 +21,7 @@
           </div>
           <ul class="bk-dropdown-list" slot="dropdown-content">
             <li>
-              <a @click.stop="handleBatch('reset')">
+              <a @click.stop="handleBatch('remove')">
                 {{ $t(`m.userOrOrg['移出']`) }}
               </a>
             </li>
@@ -29,7 +29,7 @@
               <a
                 :class="[{ 'renewal-disabled': isNoBatchRenewal() }]"
                 :title="renewalGroupTitle"
-                @click.stop="handleBatch('clear')">
+                @click.stop="handleBatch('renewal')">
                 {{ $t(`m.renewal['续期']`) }}
               </a>
             </li>
@@ -64,6 +64,18 @@
       :group-data="queryGroupData"
       @on-submit="handleAddGroupSubmit"
     />
+
+    <BatchOperateSlider
+      :slider-width="960"
+      :show.sync="isShowBatchSlider"
+      :is-batch="false"
+      :cur-slider-name="curSliderName"
+      :user-list="userList"
+      :depart-list="departList"
+      :title="batchSliderTitle"
+      :group-data="queryGroupData"
+      @on-submit="handleAddGroupSubmit"
+    />
   </div>
 </template>
 
@@ -73,6 +85,7 @@
   import { bus } from '@/common/bus';
   import MultiTypeGroupPerm from './multi-type-group-perm.vue';
   import JoinUserGroupSlider from './join-user-group-slider.vue';
+  import BatchOperateSlider from './batch-operate-slider.vue';
 
   const COM_MAP = new Map([
     [['user', 'department'], 'MultiTypeGroupPerm']
@@ -81,7 +94,8 @@
   export default {
     components: {
       MultiTypeGroupPerm,
-      JoinUserGroupSlider
+      JoinUserGroupSlider,
+      BatchOperateSlider
     },
     props: {
       groupData: {
@@ -110,6 +124,8 @@
       return {
         isDropdownShow: false,
         isShowAddGroupSlider: false,
+        isShowBatchSlider: false,
+        batchSliderTitle: '',
         renewalGroupTitle: '',
         curSliderName: '',
         componentsKey: -1,
@@ -191,21 +207,23 @@
         Promise.all([this.fetchUserGroupSearch(), this.fetchDepartGroupSearch()]);
       },
 
-      handleAddGroup () {
-        console.log(this.queryGroupData);
-        const userList = [];
-        const departList = [];
+      handleBatch (payload) {
         const typeMap = {
-          user: () => {
-            userList.push(this.queryGroupData);
+          remove: () => {
+            this.batchSliderTitle = this.$t(`m.userOrOrg['批量移出用户组']`);
           },
-          department: () => {
-            departList.push(this.queryGroupData);
+          renewal: () => {
+            this.batchSliderTitle = this.$t(`m.userOrOrg['批量续期']`);
           }
         };
-        typeMap[this.queryGroupData.type]();
-        this.userList = [...userList];
-        this.departList = [...departList];
+        typeMap[payload]();
+        this.curSliderName = payload;
+        this.handleGetMembers();
+        this.isShowBatchSlider = true;
+      },
+
+      handleAddGroup () {
+        this.handleGetMembers();
         this.curSliderName = 'add';
         this.isShowAddGroupSlider = true;
       },
@@ -220,6 +238,22 @@
 
       handleSelectedGroup (payload) {
         this.selectedGroups = [...payload];
+      },
+      
+      handleGetMembers () {
+        const userList = [];
+        const departList = [];
+        const typeMap = {
+          user: () => {
+            userList.push(this.queryGroupData);
+          },
+          department: () => {
+            departList.push(this.queryGroupData);
+          }
+        };
+        typeMap[this.queryGroupData.type]();
+        this.userList = [...userList];
+        this.departList = [...departList];
       },
 
       handleDropdownShow () {
