@@ -111,7 +111,7 @@
         routeName: '',
         userGroupId: '',
         isRouterAlive: true,
-        showNoticeAlert: false,
+        showNoticeAlert: true,
         noticeApi: `${location.origin}/notice/announcements/`,
         enableNotice: window.ENABLE_BK_NOTICE.toLowerCase() === 'true'
       };
