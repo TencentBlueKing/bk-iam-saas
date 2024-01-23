@@ -112,7 +112,7 @@
         userGroupId: '',
         isRouterAlive: true,
         showNoticeAlert: true,
-        noticeApi: `${location.origin}/notice/announcements/`,
+        noticeApi: `${window.AJAX_URL_PREFIX}/notice/announcements/`,
         enableNotice: window.ENABLE_BK_NOTICE.toLowerCase() === 'true'
       };
     },
