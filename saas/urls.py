@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from bk_notice_sdk import config
 from django.conf import settings
 from django.conf.urls import include, url
 from django.views.decorators.cache import never_cache
@@ -62,6 +63,8 @@ urlpatterns = [
                 url(r"^mgmt/", include("backend.apps.mgmt.urls")),
                 url(r"^temporary_policies/", include("backend.apps.temporary_policy.urls")),
                 url(r"^iam/", include("backend.iam.urls")),
+                # notice
+                url(r"^{}".format(config.ENTRANCE_URL), include(("bk_notice_sdk.urls", "notice"), namespace="notice")),
             ]
         ),
     ),
