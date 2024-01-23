@@ -1,3 +1,13 @@
+<!-- 2024-01-32 -->
+# V1.10.21 Version Update Log
+
+### Feature Enhancements
+
+* Integrated with the BlueKing Message Notification Center
+
+---
+
+
 <!-- 2024-01-16 -->
 # V1.10.20 Version Update Log
 

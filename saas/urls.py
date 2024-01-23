@@ -63,6 +63,8 @@ urlpatterns = [
                 url(r"^mgmt/", include("backend.apps.mgmt.urls")),
                 url(r"^temporary_policies/", include("backend.apps.temporary_policy.urls")),
                 url(r"^iam/", include("backend.iam.urls")),
+                # notice
+                url(r"^{}".format(config.ENTRANCE_URL), include(("bk_notice_sdk.urls", "notice"), namespace="notice")),
             ]
         ),
     ),
@@ -74,8 +76,6 @@ urlpatterns = [
             ]
         ),
     ),
-    # notice
-    url(r"^{}".format(config.ENTRANCE_URL), include(("bk_notice_sdk.urls", "notice"), namespace="notice")),
     # healthz
     url("", include("backend.healthz.urls")),
     # prometheus
