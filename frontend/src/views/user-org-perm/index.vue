@@ -8,10 +8,14 @@
         :is-full-screen="true"
         :search-select-place-holder="$t(`m.userOrOrg['输入ID、用户组名、用户名、组织名、描述等按回车进行搜索']`)"
         :cur-search-data="searchData"
+        :is-custom-search="true"
         @on-remote-table="handleRemoteTable"
         @on-refresh-table="handleRefreshTable"
         @on-input-value="handleInputValue"
       />
+    </div>
+    <div class="user-org-wrapper-expand" @click.stop="handleToggleExpand">
+      <bk-icon :type="isExpand ? 'angle-up' : 'angle-down'" class="icon" />
     </div>
     <div class="user-org-wrapper-content">
       <Layout :is-expand="isExpand">
@@ -314,7 +318,26 @@
     top: 0;
     z-index: 1;
   }
-  .user-org-wrapper-content {
+  &-expand {
+      width: 64px;
+      height: 16px;
+      background-color: #dcdee5;
+      border-radius: 0 4px 4px 0;
+      position: relative;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      .icon {
+        color: #ffffff;
+        font-size: 22px !important;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+  }
+  &-content {
     &-left {
       padding: 0 16px;
       background-color: #FAFBFD;
@@ -323,8 +346,7 @@
     }
     &-center {
       width: 16px;
-      height: calc(100vh - 520px);
-      position: relative;
+      height: calc(100vh - 234px);
       .expand-icon {
         width: 16px;
         height: 64px;
@@ -332,10 +354,11 @@
         border-radius: 0 4px 4px 0;
         position: relative;
         top: 50%;
+        transform: translateY(-50%);
         cursor: pointer;
         .icon {
           color: #ffffff;
-          font-size: 20px !important;
+          font-size: 22px !important;
           position: absolute;
           top: 50%;
           left: 50%;

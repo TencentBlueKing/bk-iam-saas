@@ -16,10 +16,10 @@
           <div>
             <bk-form
               form-type="vertical"
-              class="pb30 resource-action-form">
+              class="resource-action-form">
               <iam-form-item
                 :label="$t(`m.common['系统']`)"
-                class="pr20 form-item-resource">
+                class="form-item-resource">
                 <bk-select
                   :style="{ width: contentWidth }"
                   v-model="applyGroupData.system_id"
@@ -41,7 +41,7 @@
               </iam-form-item>
               <iam-form-item
                 :label="$t(`m.common['操作']`)"
-                class="pr20 form-item-resource"
+                class="form-item-resource"
               >
                 <bk-select
                   :style="{ width: contentWidth }"
@@ -68,33 +68,31 @@
                   v-for="(_, index) in resourceTypeData.resource_groups"
                   :key="_.id"
                   class="resource-group-container">
-                  <div>
-                    <iam-form-item
-                      :label="$t(`m.permApply['资源类型']`)"
-                      class="pr20 form-item-resource">
-                      <bk-select
-                        :style="{ width: contentWidth }"
-                        v-model="curResourceData.type"
-                        :clearable="false"
-                        :allow-enter="false"
-                        :placeholder="$t(`m.verify['请选择']`)"
-                        :disabled="!applyGroupData.action_id"
-                        :title="!applyGroupData.action_id ?
-                          $t(`m.verify['请选择操作']`) : ''"
-                        @change="handleResourceTypeChange(index)"
-                      >
-                        <bk-option
-                          v-for="related in _.related_resource_types_list"
-                          :key="related.type"
-                          :id="related.type"
-                          :name="related.name">
-                        </bk-option>
-                      </bk-select>
-                      <p class="error-tips" v-if="resourceTypeError">
-                        {{$t(`m.verify['请选择资源类型']`)}}
-                      </p>
-                    </iam-form-item>
-                  </div>
+                  <iam-form-item
+                    :label="$t(`m.permApply['资源类型']`)"
+                    class="form-item-resource">
+                    <bk-select
+                      :style="{ width: contentWidth }"
+                      v-model="curResourceData.type"
+                      :clearable="false"
+                      :allow-enter="false"
+                      :placeholder="$t(`m.verify['请选择']`)"
+                      :disabled="!applyGroupData.action_id"
+                      :title="!applyGroupData.action_id ?
+                        $t(`m.verify['请选择操作']`) : ''"
+                      @change="handleResourceTypeChange(index)"
+                    >
+                      <bk-option
+                        v-for="related in _.related_resource_types_list"
+                        :key="related.type"
+                        :id="related.type"
+                        :name="related.name">
+                      </bk-option>
+                    </bk-select>
+                    <p class="error-tips" v-if="resourceTypeError">
+                      {{$t(`m.verify['请选择资源类型']`)}}
+                    </p>
+                  </iam-form-item>
                   <iam-form-item
                     class="form-item-resource"
                     :label="$t(`m.common['资源实例']`)">
@@ -128,37 +126,42 @@
               </template>
             </bk-form>
           </div>
-          <div class="group-search-select">
-            <iam-search-select
-              style="width: calc(100% - 20px)"
-              ref="searchSelectRef"
-              :data="searchData"
-              :value="searchValue"
-              :placeholder="searchSelectPlaceHolder"
-              :quick-search-method="handleQuickSearchMethod"
-              @on-change="handleSearch"
-              @on-click-menu="handleClickMenu"
-              @on-input="handleSearchInput"
-            />
-            <bk-button
-              class="ml20"
-              theme="primary"
-              :outline="true"
-              @click="handleSearchUserGroup(true, true)">
-              {{ $t(`m.common['查询']`) }}
-            </bk-button>
-            <bk-button
-              class="ml20"
-              theme="default"
-              @click="handleEmptyClear">
-              {{ $t(`m.common['重置']`) }}
-            </bk-button>
-          </div>
+          <template>
+            <div class="group-search-select" v-if="isCustomSearch">
+              <slot name="custom" />
+            </div>
+            <div class="group-search-select" v-else>
+              <iam-search-select
+                style="width: calc(100% - 20px)"
+                ref="searchSelectRef"
+                :data="searchData"
+                :value="searchValue"
+                :placeholder="searchSelectPlaceHolder"
+                :quick-search-method="handleQuickSearchMethod"
+                @on-change="handleSearch"
+                @on-click-menu="handleClickMenu"
+                @on-input="handleSearchInput"
+              />
+              <bk-button
+                class="ml20"
+                theme="primary"
+                :outline="true"
+                @click="handleSearchUserGroup(true, true)">
+                {{ $t(`m.common['查询']`) }}
+              </bk-button>
+              <bk-button
+                class="ml20"
+                theme="default"
+                @click="handleEmptyClear">
+                {{ $t(`m.common['重置']`) }}
+              </bk-button>
+            </div>
+          </template>
         </div>
       </render-search>
       <div
         v-else
-        style="padding-bottom: 20px;">
+        style="padding-bottom: 16px;">
         <iam-search-select
           ref="searchSelectRef"
           @on-change="handleSearch"
@@ -240,6 +243,10 @@
       searchSelectPlaceHolder: {
         type: String,
         default: il8n('applyEntrance', '申请加入用户组搜索提示')
+      },
+      isCustomSearch: {
+        type: Boolean,
+        default: false
       },
       curSearchData: {
         type: Array,
@@ -909,15 +916,25 @@
  .iam-search-resource-form-perm {
     background-color: #ffffff;
     padding: 20px;
+    .resource-action-form {
+      .form-item-resource {
+        padding-right: 12px !important;
+      }
+      .resource-group-container {
+        .form-item-resource {
+          &:last-child {
+            padding-right: 0 !important;
+          }
+        }
+      }
+    }
+    .group-search-select {
+      padding-top: 12px;
+    }
     &.user-org-resource-perm {
       padding: 16px;
       .left {
         .resource-action-form {
-          .form-item-resource {
-            &:not(&:last-child) {
-              padding-right: 16px !important;
-            }
-          }
           .error-tips {
             position: absolute;
             line-height: 16px;

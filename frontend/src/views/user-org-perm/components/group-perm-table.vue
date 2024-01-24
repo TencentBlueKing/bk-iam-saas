@@ -1,7 +1,7 @@
 <template>
   <div class="my-perm-group-perm">
     <bk-table
-      ref="groupMemberRef"
+      ref="groupPermRef"
       size="small"
       ext-cls="user-org-perm-table"
       :data="list"
@@ -104,7 +104,12 @@
                       </div>
                     </div>
                   </div>
-                  <bk-button theme="primary" text>
+                  <bk-button
+                    theme="primary"
+                    text
+                    :title="formatAdminGroup(row) ? $t(`m.perm['唯一管理员不可退出']`) : ''"
+                    :disabled="formatAdminGroup(row)"
+                  >
                     {{ $t(`m.common['移除']`) }}
                   </bk-button>
                 </bk-popconfirm>
@@ -144,16 +149,31 @@
         />
       </template>
     </bk-table>
+
+    <BatchOperateSlider
+      :slider-width="960"
+      :show.sync="isShowRenewalSlider"
+      :is-batch="false"
+      :cur-slider-name="curSliderName"
+      :user-list="userList"
+      :depart-list="departList"
+      :title="$t(`m.renewal['续期']`)"
+      :group-data="queryGroupData"
+      :group-list="singleList"
+      @on-submit="handleAddGroupSubmit"
+    />
   </div>
 </template>
   
   <script>
   import { cloneDeep } from 'lodash';
   import { PERMANENT_TIMESTAMP } from '@/common/constants';
+  import { bus } from '@/common/bus';
+  import BatchOperateSlider from './batch-operate-slider.vue';
 
   export default {
     components: {
-      // RenderGroupPermSideSlider
+      BatchOperateSlider
     },
     props: {
       mode: {
@@ -164,6 +184,10 @@
         default: false
       },
       list: {
+        type: Array,
+        default: () => []
+      },
+      curSelectedGroup: {
         type: Array,
         default: () => []
       },
@@ -197,11 +221,16 @@
       return {
         PERMANENT_TIMESTAMP,
         isShowPermSideSlider: false,
+        isShowRenewalSlider: false,
         tabActive: 'userOrOrg',
-        curGroupName: '',
-        curGroupId: '',
+        renewalSliderTitle: '',
+        curSliderName: '',
         tableProps: [],
+        userList: [],
+        departList: [],
+        singleList: [],
         currentSelectList: [],
+        queryGroupData: {},
         tableEmptyData: {
           type: '',
           text: '',
@@ -247,6 +276,17 @@
           return typeMap[this.groupData.type]();
         }
         return '';
+      },
+      formatAdminGroup () {
+        return (payload) => {
+          if (payload) {
+            const { attributes, role_members } = payload;
+            if (attributes && attributes.source_from_role && role_members.length === 1) {
+              return true;
+            }
+            return false;
+          }
+        };
       }
     },
     watch: {
@@ -261,7 +301,35 @@
           this.tableProps = this.getTableProps(value);
         },
         immediate: true
+      },
+      groupData: {
+        handler (value) {
+          this.queryGroupData = cloneDeep(value);
+        },
+        immediate: true
+      },
+      curSelectedGroup: {
+        handler (value) {
+          this.currentSelectList = [...value];
+        },
+        deep: true
       }
+    },
+    mounted () {
+      this.$once('hook:beforeDestroy', () => {
+        bus.$off('on-remove-user-group');
+      });
+      // 同步更新checkbox状态
+      bus.$on('on-remove-user-group', (payload) => {
+        this.$nextTick(() => {
+          this.$emit('on-selected-group', payload);
+          this.list.forEach((item) => {
+            if (this.$refs.groupPermRef && !payload.map((v) => v.id).includes(item.id)) {
+              this.$refs.groupPermRef.toggleRowSelection(item, false);
+            }
+          });
+        });
+      });
     },
     methods: {
       getTableProps (payload) {
@@ -304,7 +372,7 @@
         return tabMap[payload] ? tabMap[payload]() : tabMap['personalOrDepartPerm']();
       },
 
-      handleOpenTag ({ id }, type) {
+      handleOpenTag ({ id, template_name }, type) {
         const routeMap = {
           userGroupDetail: () => {
             const routeData = this.$router.resolve({
@@ -319,7 +387,7 @@
             const routeData = this.$router.resolve({
               path: `member-template`,
               query: {
-                template_name: '十点四十',
+                template_name: template_name,
                 tab_active: 'template_member'
               }
             });
@@ -353,10 +421,38 @@
         }
       },
 
-      handleViewDetail ({ id, name }) {
-        this.curGroupName = name;
-        this.curGroupId = id;
-        this.isShowPermSideSlider = true;
+      handleShowRenewal (payload) {
+        this.curSliderName = 'renewal';
+        this.handleGetMembers();
+        this.renewalSliderTitle = this.$t(`m.common['续期']`);
+        this.singleList = [payload];
+        this.isShowRenewalSlider = true;
+      },
+
+      handleGetMembers () {
+        const userList = [];
+        const departList = [];
+        const typeMap = {
+          user: () => {
+            userList.push(this.queryGroupData);
+          },
+          department: () => {
+            departList.push(this.queryGroupData);
+          }
+        };
+        typeMap[this.queryGroupData.type]();
+        this.userList = [...userList];
+        this.departList = [...departList];
+      },
+
+      handleAddGroupSubmit (payload) {
+        const emitParams = {
+          ...payload,
+          ...{
+            mode: this.mode
+          }
+        };
+        this.$emit('on-add-group', emitParams);
       },
         
       handlePageChange (page) {
@@ -378,33 +474,46 @@
       fetchSelectedGroups (type, payload, row) {
         const typeMap = {
           multiple: async () => {
+            const hasData = {};
+            const selectList = [...this.currentSelectList, ...this.curSelectedGroup].reduce((curr, next) => {
+              // eslint-disable-next-line no-unused-expressions
+              hasData[`${next.name}&${next.id}`] ? '' : hasData[`${next.name}&${next.id}`] = true && curr.push(next);
+              return curr;
+            }, []);
             const isChecked = payload.length && payload.indexOf(row) !== -1;
             if (isChecked) {
-              this.currentSelectList.push(row);
+              selectList.push(row);
+              this.currentSelectList = [...selectList];
             } else {
-              this.currentSelectList = this.currentSelectList.filter((item) => String(item.id) !== String(row.id));
+              this.currentSelectList = selectList.filter((item) => String(item.id) !== String(row.id));
             }
-            this.fetchCustomTotal();
+            this.fetchCustomTotal(this.currentSelectList);
             this.$emit('on-selected-group', this.currentSelectList);
           },
           all: async () => {
             const tableList = cloneDeep(this.list);
-            const selectGroups = this.currentSelectList.filter(
-              (item) => !tableList.map((v) => v.id.toString()).includes(item.id.toString())
+            const hasData = {};
+            const selectList = [...this.currentSelectList, ...this.curSelectedGroup].reduce((curr, next) => {
+              // eslint-disable-next-line no-unused-expressions
+              hasData[`${next.name}&${next.id}`] ? '' : hasData[`${next.name}&${next.id}`] = true && curr.push(next);
+              return curr;
+            }, []);
+            const selectGroups = selectList.filter(
+              (item) => !tableList.map((v) => String(v.id)).includes(String(item.id))
             );
             this.currentSelectList = [...selectGroups, ...payload];
-            this.fetchCustomTotal();
+            this.fetchCustomTotal(this.currentSelectList);
             this.$emit('on-selected-group', this.currentSelectList);
           }
         };
         return typeMap[type]();
       },
       
-      fetchCustomTotal () {
+      fetchCustomTotal (payload) {
         this.$nextTick(() => {
           const selectionCount = document.getElementsByClassName('bk-page-selection-count');
-          if (this.$refs.groupMemberRef && selectionCount && selectionCount.length) {
-            selectionCount[0].children[0].innerHTML = this.currentSelectList.length;
+          if (this.$refs.groupPermRef && selectionCount && selectionCount.length) {
+            selectionCount[0].children[0].innerHTML = payload.length;
           }
         });
       },
@@ -415,12 +524,6 @@
   
       handleEmptyRefresh () {
         this.$emit('on-refresh');
-      },
-  
-      handleAnimationEnd () {
-        this.curGroupName = '';
-        this.curGroupId = '';
-        this.isShowPermSideSlider = false;
       },
 
       getDefaultSelect () {

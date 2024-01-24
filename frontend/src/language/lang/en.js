@@ -1463,6 +1463,11 @@ export const m = {
         '操作对象': 'Operating object',
         '加入的用户组': 'Joined user group',
         '申请时长': 'Application duration',
+        '移出': 'Remove',
+        '续期时长': 'Renewal duration',
+        '续期预览': 'Renewal preview',
+        '移出用户组名': 'Remove user group name',
+        '批量移出用户组': 'Multi-remove user group',
         '清空用户组并移出（管理空间）': 'Empty user groups and move them out (management space)',
         '请先勾选用户': 'Please check the user first',
         '请先勾选用户组权限': 'Please check user group permissions first',
@@ -1471,7 +1476,9 @@ export const m = {
         '输入ID、用户组名、用户名、组织名、描述等按回车进行搜索': 'Enter ID, user group name, username, organization name, description, etc. and press enter to search',
         '在已有用户组的基础上，追加以下所选的用户组': 'On the basis of existing user groups, add the following selected user groups',
         '已选对象的权限将被清空，替换为以下所选的用户组': 'The permissions of the selected objects will be cleared and replaced with the following selected user groups',
-        '移出后，该人员将不再继承该组的权限。': 'After removal, the person will no longer inherit the permissions of the group.'
+        '移出后，该人员将不再继承该组的权限。': 'After removal, the person will no longer inherit the permissions of the group.',
+        '用户组不能为空': 'User group cannot be empty',
+        '的用户组': " 's Groups"
     }
 }
 export default {

@@ -1,5 +1,8 @@
 <template>
   <div class="user-org-perm-left-layout" :style="formatDragWidth">
+    <div class="title">
+      {{ $t(`m.userOrOrg['用户 / 组织列表']`) }}
+    </div>
     <div class="group-operate-dropdown">
       <bk-dropdown-menu
         ref="batchDropdown"
@@ -295,8 +298,13 @@
 <style lang="postcss" scoped>
 .user-org-perm-left-layout {
   position: relative;
-  .group-operate-dropdown {
+  .title {
+    font-size: 14px;
+    color: #313238;
     padding-top: 16px;
+  }
+  .group-operate-dropdown {
+    padding-top: 12px;
     margin-bottom: 8px;
 
     .group-dropdown-trigger-btn {

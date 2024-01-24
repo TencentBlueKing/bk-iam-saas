@@ -20,17 +20,21 @@
       >
         <GroupPermTable
           v-if="item.pagination.count > 0"
+          ref="childPermTable"
           :mode="item.id"
           :is-loading="item.loading"
           :is-search-perm="isSearchResource"
           :pagination="item.pagination"
+          :cur-search-params="searchParams"
           :group-data="groupData"
           :list="item.list"
+          :cur-selected-group="curSelectedGroup"
           :empty-data="item.emptyData"
           @on-page-change="handlePageChange(...arguments, item)"
           @on-limit-change="handleLimitChange(...arguments, item)"
           @on-selected-group="handleSelectedGroup"
           @on-remove-group="handleRemoveGroup"
+          @on-add-group="handleAddGroup"
           @on-clear="handleEmptyClear"
           @on-refresh="handleEmptyRefresh"
         />
@@ -93,6 +97,9 @@
       componentLoading: {
         type: Boolean,
         default: false
+      },
+      searchParams: {
+        type: Object
       }
     },
     data () {
@@ -181,7 +188,7 @@
           }
         ],
         memberTempPermData: [],
-        currentSelectGroupList: [],
+        curSelectedGroup: [],
         queryGroupData: [],
         curSearchParams: {},
         emptyPermData: {
@@ -301,8 +308,14 @@
           });
           this.emptyPermData = cloneDeep(curData.emptyData);
           this.$nextTick(() => {
-            curData.list.forEach(item => {
-              item.role_members = this.formatRoleMembers(item.role_members);
+            const curSelectedId = this.curSelectedGroup.map((item) => item.id);
+            this.memberTempPermData[0].list.forEach((item) => {
+              if (this.$refs.childPermTable && this.$refs.childPermTable.length) {
+                if (curSelectedId.includes(item.id)) {
+                  this.$refs.childPermTable[0].$refs.groupPermRef.toggleRowSelection(item, true);
+                }
+                this.$refs.childPermTable[0].fetchCustomTotal(this.curSelectedGroup);
+              }
             });
           });
         } catch (e) {
@@ -350,11 +363,6 @@
             list: data.results || [],
             emptyData: formatCodeData(code, emptyData, totalCount === 0),
             pagination: { ...pagination, ...{ count: totalCount } }
-          });
-          this.$nextTick(() => {
-            this.memberTempPermData[1].list.forEach(item => {
-              item.role_members = this.formatRoleMembers(item.role_members);
-            });
           });
         } catch (e) {
           console.error(e);
@@ -464,11 +472,6 @@
             pagination: { ...pagination, ...{ count: totalCount } }
           });
           this.emptyPermData = cloneDeep(this.memberTempPermData[1].emptyData);
-          this.$nextTick(() => {
-            this.memberTempPermData[1].list.forEach(item => {
-              item.role_members = this.formatRoleMembers(item.role_members);
-            });
-          });
         } catch (e) {
           console.error(e);
           this.memberTempPermData[1] = Object.assign(this.memberTempPermData[1], {
@@ -529,6 +532,7 @@
         }
         return payload || [];
       },
+
       async formatPaginationData (payload, current, limit) {
         const curData = this.memberTempPermData.find((item) => item.id === payload.id);
         if (curData) {
@@ -571,6 +575,13 @@
 
       handleSelectedGroup (payload) {
         this.$emit('on-selected-group', payload);
+        this.curSelectedGroup = [...payload];
+      },
+
+      handleAddGroup (payload) {
+        const curData = this.memberTempPermData.find((item) => item.id === payload.mode);
+        this.formatPaginationData(curData, 1, curData.pagination.limit);
+        this.$emit('on-selected-group', []);
       },
 
       handleRemoveGroup (payload) {

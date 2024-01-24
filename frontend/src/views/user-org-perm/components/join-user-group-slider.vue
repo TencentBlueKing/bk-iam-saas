@@ -315,6 +315,7 @@
   &-footer {
     margin-left: 40px;
     .member-footer-btn {
+      min-width: 88px;
       margin-right: 8px;
     }
   }
@@ -374,7 +375,7 @@
       font-size: 14px;
       line-height: 32px;
       color: #313238;
-      margin-bottom: 0 !important;
+      margin-bottom: 8px !important;
       &::after {
         content: "*";
         height: 8px;

@@ -37,15 +37,14 @@
                 <span
                   :class="[
                     'single-hide',
-                    'user-group-name-label',
-                    { 'user-group-name-label-expired': user.timestamp > row.expired_at }
+                    'user-group-name-label'
                   ]"
                   :title="row.name"
                   @click="handleNavGroup(row)"
                 >
                   {{ row.name }}
                 </span>
-                <span v-if="row.expired_at_display" class="user-group-name-expired">
+                <!-- <span v-if="row.expired_at_display" class="user-group-name-expired">
                   <template v-if="user.timestamp > row.expired_at">
                     <span>({{ row.expired_at_display }}{{ $t(`m.common['，']`) }}</span>
                     <bk-button
@@ -66,7 +65,7 @@
                         : `(${$t(`m.common['有效期']`)} ${row.expired_at_display})`
                     }}
                   </span>
-                </span>
+                </span> -->
               </div>
             </template>
           </bk-table-column>
@@ -440,8 +439,8 @@
         const routeData = this.$router.resolve({
           path: `user-group-detail/${id}`,
           query: {
-            tab: 'GroupPerm',
-            noFrom: true
+            noFrom: true,
+            tab: 'group_perm'
           }
         });
         window.open(routeData.href, '_blank');
@@ -586,7 +585,7 @@
           align-items: center;
           &-label {
             color: #3a84ff;
-            max-width: calc(100% - 120px);
+            /* max-width: calc(100% - 120px); */
             word-break: break-all;
             cursor: pointer;
             &:hover {

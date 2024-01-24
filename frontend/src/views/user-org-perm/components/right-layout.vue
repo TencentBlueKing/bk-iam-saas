@@ -44,8 +44,8 @@
         :is="curCom"
         :group-data="queryGroupData"
         :empty-data="curEmptyData"
-        :cur-search-params="curSearchParams"
-        :cur-search-pagination="curSearchPagination"
+        :search-params="curSearchParams"
+        :search-pagination="curSearchPagination"
         :is-search-perm="isSearchPerm"
         @on-selected-group="handleSelectedGroup"
         @on-clear="handleEmptyClear"
@@ -74,6 +74,7 @@
       :depart-list="departList"
       :title="batchSliderTitle"
       :group-data="queryGroupData"
+      :group-list="selectedGroups"
       @on-submit="handleAddGroupSubmit"
     />
   </div>
@@ -146,10 +147,10 @@
         const { id, name } = this.groupData;
         const typeMap = {
           user: () => {
-            return `${id} (${name})`;
+            return `${id}${this.$t(`m.common['（']`)}${name}${this.$t(`m.common['）']`)}${this.$t(`m.userOrOrg['的用户组']`)}`;
           },
           department: () => {
-            return name;
+            return `${name}${this.$t(`m.userOrOrg['的用户组']`)}`;
           }
         };
         if (typeMap[this.groupData.type]) {
@@ -208,18 +209,18 @@
       },
 
       handleBatch (payload) {
+        this.curSliderName = payload;
+        this.handleGetMembers();
+        this.isShowBatchSlider = true;
         const typeMap = {
           remove: () => {
             this.batchSliderTitle = this.$t(`m.userOrOrg['批量移出用户组']`);
           },
           renewal: () => {
-            this.batchSliderTitle = this.$t(`m.userOrOrg['批量续期']`);
+            this.batchSliderTitle = this.$t(`m.renewal['批量续期']`);
           }
         };
         typeMap[payload]();
-        this.curSliderName = payload;
-        this.handleGetMembers();
-        this.isShowBatchSlider = true;
       },
 
       handleAddGroup () {

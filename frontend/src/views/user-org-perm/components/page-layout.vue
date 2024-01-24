@@ -51,7 +51,7 @@
     padding: 16px 16px 0 0;
     flex: 1 0 auto;
     width: calc(100% - 240px);
-    height: calc(100vh - 260px);
+    height: calc(100vh - 210px);
     background-color: #f5f6fa;
     overflow-y: auto;
     &::-webkit-scrollbar {
