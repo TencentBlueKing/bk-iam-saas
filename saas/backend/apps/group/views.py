@@ -382,7 +382,7 @@ class GroupMemberViewSet(GroupPermissionMixin, GenericViewSet):
             self.group_biz.grant_subject_template(group.id, _id, expired_at, request.user.username)
 
         # 写入审计上下文
-        audit_context_setter(group=group, members=[m.dict() for m in members])
+        audit_context_setter(group=group, members=members_data)
 
         return Response({}, status=status.HTTP_201_CREATED)
 

@@ -1,0 +1,48 @@
+### 查询分级管理员下人员模版列表
+
+#### Parameters
+| 字段 | 类型 | 位置 | 必须 | 描述 |
+|---|---|---|---|---|
+| name | string | query | 否 | 人员模版名称筛选 |
+| id | int | query | 否 | 人员模版id筛选 |
+| description | string | query | 否 | 人员模版描述筛选 |
+| page_size | int | query | 是 | 分页大小, 最大500 |
+| page | int | query | 是 | 分页 |
+
+#### Request
+```json
+GET /api/v2/open/management/systems/demo/grade_managers/1/subject_templates/?page_size=100&page=1
+```
+
+#### Response
+
+> Status: 200 OK
+
+| 字段 | 类型 | 描述 |
+|---|---|---|
+| id| int | 人员模版ID |
+| name| string | 人员模版名称 |
+| description| string | 人员模版描述 |
+| readonly| bool| 是否是只读人员模版|
+| source_group_id| int| 来源用户组ID |
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {
+    "count": 1,
+    "results": [
+      {
+        "id": 1,
+        "name": "人员模版",
+        "description": "人员模版",
+        "readonly": false,
+        "source_group_id": 0
+      }
+    ]
+  }
+}
+```
+
+{% include '_api_v2_status_code.md.j2' %}

@@ -144,4 +144,10 @@ urlpatterns = [
         views.ManagementSubsetManagerViewSet.as_view({"get": "retrieve", "post": "update", "delete": "destroy"}),
         name="open.management.v2.subset_manager",
     ),
+    # -------------- Subject Template --------------
+    path(
+        "grade_managers/<int:id>/subject_templates/",
+        views.ManagementGradeManagerSubjectTemplateViewSet.as_view({"get": "list"}),
+        name="open.management.v2.grade_manager_subject_template",
+    ),
 ]
