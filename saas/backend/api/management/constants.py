@@ -82,6 +82,8 @@ class ManagementAPIEnum(BaseAPIEnum):
     # 审批
     V2_APPLICATION_APPROVAL = auto()
     V2_APPLICATION_CANCEL = auto()
+    # 人员模版
+    V2_SUBJECT_TEMPLATE_LIST = auto()
 
     _choices_labels = skip(
         (

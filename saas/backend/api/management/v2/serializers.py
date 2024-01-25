@@ -16,6 +16,7 @@ from backend.apps.application.serializers import ExpiredAtSLZ, ReasonSLZ
 from backend.apps.group.models import Group
 from backend.apps.role.models import Role, RoleUser
 from backend.apps.role.serializers import GradeMangerBaseInfoSLZ, RoleScopeSubjectSLZ
+from backend.apps.subject_template.models import SubjectTemplate
 from backend.biz.role import RoleCheckBiz
 from backend.service.constants import GroupMemberType
 from backend.service.models import Subject
@@ -328,3 +329,9 @@ class ManagementGradeMangerDetailSLZ(serializers.ModelSerializer):
 
     def get_members(self, obj):
         return [one.username for one in RoleUser.objects.filter(role_id=obj.id)]
+
+
+class ManagementSubjectTemplateSLZ(serializers.ModelSerializer):
+    class Meta:
+        model = SubjectTemplate
+        fields = ("id", "name", "description", "readonly", "source_group_id", "creator", "created_time")
