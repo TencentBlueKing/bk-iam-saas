@@ -400,10 +400,25 @@
 
     }
 
+    .user-org-perm-container {
+      .main-scroller {
+        height: calc(100% + 278px);
+      }
+      .views-layout {
+        min-width: 100%;
+        overflow: hidden;
+      }
+    }
+
     .notice-app-layout {
       height: calc(100% - 101px) !important;
       .main-scroller {
         height: calc(100% + 91px);
+      }
+      .user-org-perm-container {
+        .main-scroller {
+          height: calc(100% + 312px);
+        }
       }
     }
 
@@ -412,16 +427,6 @@
       &-main-layout {
         height: 100% !important;
         background-color: #ffffff;
-      }
-    }
-
-    .user-org-perm-container {
-      .main-scroller {
-        height: calc(100% + 215px);
-      }
-      .views-layout {
-        min-width: 100%;
-        overflow: hidden;
       }
     }
 </style>

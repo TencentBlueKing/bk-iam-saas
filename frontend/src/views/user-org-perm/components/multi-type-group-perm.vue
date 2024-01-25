@@ -258,7 +258,7 @@
         this.curSearchParams = curSearchParams || {};
         this.isSearchResource = isSearchPerm || false;
         this.resetPagination();
-        this.fetchInitData();
+        // this.fetchInitData();
       });
     },
     methods: {
@@ -384,7 +384,8 @@
         try {
           this.memberTempPermData[2].loading = true;
           const { current, limit } = pagination;
-          let url = 'userOrOrg/getUserMemberTempList';
+          let url = 'userOrOrg/getUserOrDepartGroupList';
+          // let url = 'userOrOrg/getUserMemberTempList';
           let params = {
             limit,
             offset: limit * (current - 1)
@@ -535,6 +536,7 @@
 
       async formatPaginationData (payload, current, limit) {
         const curData = this.memberTempPermData.find((item) => item.id === payload.id);
+        console.log(payload.id);
         if (curData) {
           const typeMap = {
             personalOrDepartPerm: async () => {
@@ -546,7 +548,7 @@
             departPerm: async () => {
               curData.pagination = Object.assign(curData, { current, limit });
               if (['userOrgPerm'].includes(this.$route.name)) {
-                await this.fetchUserGroupSearch();
+                await this.fetchDepartGroupSearch();
               }
             },
             userTempPerm: async () => {

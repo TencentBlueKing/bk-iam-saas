@@ -127,8 +127,8 @@
             </bk-form>
           </div>
           <template>
-            <div class="group-search-select" v-if="isCustomSearch">
-              <slot name="custom" />
+            <div :class="['custom-slot-content']" v-if="isCustomSearch">
+              <slot name="custom-content" />
             </div>
             <div class="group-search-select" v-else>
               <iam-search-select
@@ -161,14 +161,20 @@
       </render-search>
       <div
         v-else
-        style="padding-bottom: 16px;">
-        <iam-search-select
-          ref="searchSelectRef"
-          @on-change="handleSearch"
-          :data="searchData"
-          :value="searchValue"
-          :placeholder="searchSelectPlaceHolder"
-          :quick-search-method="handleQuickSearchMethod" />
+        class="no-resource-search-wrapper">
+        <template v-if="isCustomSearch">
+          <slot name="custom-content" />
+        </template>
+        <template v-else>
+          <iam-search-select
+            ref="searchSelectRef"
+            @on-change="handleSearch"
+            :data="searchData"
+            :value="searchValue"
+            :placeholder="searchSelectPlaceHolder"
+            :quick-search-method="handleQuickSearchMethod"
+          />
+        </template>
       </div>
     </div>
     
@@ -247,6 +253,10 @@
       isCustomSearch: {
         type: Boolean,
         default: false
+      },
+      gridCount: {
+        type: Number,
+        default: 4
       },
       curSearchData: {
         type: Array,
@@ -411,6 +421,9 @@
           }
         },
         immediate: true
+      },
+      navStick () {
+        this.formatFormItemWidth();
       }
     },
     async created () {
@@ -471,9 +484,14 @@
         // isTagInput是处理未生成tag的内容
         this.systemIdError = false;
         this.handleManualInput(isTagInput);
-        const isSearch = this.applyGroupData.system_id || Object.keys(this.searchParams).length > 0;
+        let isSearch = this.applyGroupData.system_id || Object.keys(this.searchParams).length > 0;
         // 处理搜索框没有生成tag，下拉框也没有选择任务数据，但实际有输入内容情况
-        const isNoTag = isTagInput && this.searchList.length < 1 && !this.applyGroupData.system_id;
+        let isNoTag = isTagInput && this.searchList.length < 1 && !this.applyGroupData.system_id;
+        // 处理自定义搜索slot，searchList为空情况
+        if (this.isCustomSearch) {
+          isSearch = true;
+          isNoTag = false;
+        }
         if (isSearch) {
           // if (!this.applyGroupData.system_id && ['CustomPerm'].includes(this.active)) {
           //   this.systemIdError = true;
@@ -514,7 +532,6 @@
           }
           await this.fetchSearchUserGroup(resourceInstances, isNoTag);
         } else {
-          console.log(555, isNoTag);
           if (isNoTag) {
             return;
           }
@@ -853,8 +870,9 @@
       },
 
       formatFormItemWidth () {
+        // 276代表菜单栏展开的宽度加16px内边距， 76代表菜单栏收缩的宽度加16px内边距
         this.defaultWidth = window.innerWidth <= 1520 ? this.minSelectWidth : this.maxSelectWidth;
-        this.gridWidth = (window.innerWidth - (this.navStick ? 284 : 84) - 64) / 4;
+        this.gridWidth = (window.innerWidth - (this.navStick ? 276 : 76) - this.gridCount * 16) / this.gridCount;
         this.contentWidth = this.isFullScreen ? `${this.gridWidth}px` : this.defaultWidth;
       },
 
@@ -918,21 +936,25 @@
     padding: 20px;
     .resource-action-form {
       .form-item-resource {
-        padding-right: 12px !important;
+        margin-right: 16px !important;
       }
       .resource-group-container {
         .form-item-resource {
           &:last-child {
-            padding-right: 0 !important;
+            margin-right: 0 !important;
           }
         }
       }
     }
+    .no-resource-search-wrapper {
+      padding-bottom: 16px;
+    }
     .group-search-select {
-      padding-top: 12px;
+      padding-top: 16px;
     }
     &.user-org-resource-perm {
       padding: 16px;
+      padding-top: 12px;
       .left {
         .resource-action-form {
           .error-tips {

@@ -37,6 +37,7 @@
     <div v-if="list.length" class="group-list">
       <div
         class="group-list-content"
+        :style="formatListHeight"
         @scroll="handleScroll"
       >
         <div
@@ -101,11 +102,16 @@
   import JoinUserGroupSlider from './join-user-group-slider.vue';
 
   export default {
+    inject: ['showNoticeAlert'],
     components: {
       JoinUserGroupSlider
     },
     props: {
       loading: {
+        type: Boolean,
+        default: false
+      },
+      isNoExpandSearch: {
         type: Boolean,
         default: false
       },
@@ -202,6 +208,26 @@
           }
         };
         return nameMap[this.curSliderName]();
+      },
+      formatListHeight () {
+        if (this.showNoticeAlert) {
+          if (this.isNoExpandSearch) {
+            return {
+              height: 'calc(100vh - 186px)'
+            };
+          }
+          return {
+            height: 'calc(100vh - 450px)'
+          };
+        }
+        if (this.isNoExpandSearch) {
+          return {
+            height: 'calc(100vh - 186px)'
+          };
+        }
+        return {
+          height: 'calc(100vh - 410px)'
+        };
       }
     },
     watch: {
@@ -257,10 +283,6 @@
       },
 
       handleScroll (event) {
-        if (this.isLoading) {
-          this.handleResetScrollLoading();
-          return;
-        }
         if (!this.canScrollLoad) {
           this.isShowNoDataTips = true;
           this.isScrollLoading = false;
@@ -338,12 +360,11 @@
     padding-right: 16px;
     position: relative;
     &-content {
-      height: calc(100vh - 310px);
       overflow-x: hidden;
       overflow-y: auto;
       &::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
+        width: 3px;
+        height: 3px;
       }
       &::-webkit-scrollbar-thumb {
         background: #dcdee5;

@@ -1,27 +1,88 @@
 <template>
   <div class="user-org-wrapper">
-    <div class="user-org-wrapper-search">
+    <div
+      :class="[
+        'user-org-wrapper-search',
+        { 'no-search-data': !expandData['search'].isExpand }
+      ]"
+    >
       <IamResourceCascadeSearch
         ref="iamResourceSearchRef"
         :custom-class="'user-org-resource-perm'"
         :active="active"
         :is-full-screen="true"
-        :search-select-place-holder="$t(`m.userOrOrg['输入ID、用户组名、用户名、组织名、描述等按回车进行搜索']`)"
         :cur-search-data="searchData"
+        :grid-count="gridCount"
         :is-custom-search="true"
         @on-remote-table="handleRemoteTable"
         @on-refresh-table="handleRefreshTable"
-        @on-input-value="handleInputValue"
-      />
+      >
+        <div slot="custom-content" class="custom-content">
+          <bk-form form-type="vertical" class="custom-content-form">
+            <iam-form-item
+              :label="$t(`m.userGroup['用户组名']`)"
+              :style="{ width: formItemWidth }"
+              class="custom-form-item"
+            >
+              <bk-input :placeholder="$t(`m.verify['请输入']`)" v-model="formData.group_name" />
+            </iam-form-item>
+            <iam-form-item
+              :label="$t(`m.userOrOrg['用户组 ID']`)"
+              :style="{ width: formItemWidth }"
+              class="custom-form-item"
+            >
+              <bk-input :placeholder="$t(`m.verify['请输入']`)" v-model="formData.group_id" />
+            </iam-form-item>
+            <iam-form-item
+              :label="$t(`m.common['用户名']`)"
+              :style="{ width: formItemWidth }"
+              class="custom-form-item"
+            >
+              <bk-input :placeholder="$t(`m.verify['请输入']`)" v-model="formData.name" />
+            </iam-form-item>
+            <iam-form-item
+              :label="$t(`m.perm['组织名']`)"
+              :style="{ width: formItemWidth }"
+              class="custom-form-item"
+            >
+              <bk-input :placeholder="$t(`m.verify['请输入']`)" v-model="formData.department_name" />
+            </iam-form-item>
+          </bk-form>
+          <div class="custom-content-footer">
+            <bk-button
+              theme="primary"
+              :outline="true"
+              @click="handleSearch(true, true)">
+              {{ $t(`m.common['查询']`) }}
+            </bk-button>
+            <bk-button
+              style="margin-left: 8px;"
+              theme="default"
+              @click="handleEmptyUserClear">
+              {{ $t(`m.common['取消']`) }}
+            </bk-button>
+          </div>
+        </div>
+      </IamResourceCascadeSearch>
     </div>
-    <div class="user-org-wrapper-expand" @click.stop="handleToggleExpand">
-      <bk-icon :type="isExpand ? 'angle-up' : 'angle-down'" class="icon" />
+    <div
+      :class="[
+        'user-org-wrapper-expand',
+        { 'no-expand-search': isNoSearchData }
+      ]"
+      @click.stop="handleToggleExpand('search')"
+    >
+      <bk-icon :type="expandData['search'].isExpand ? 'angle-up' : 'angle-down'" class="icon" />
     </div>
     <div class="user-org-wrapper-content">
-      <Layout :is-expand="isExpand">
+      <Layout
+        :is-expand="expandData['slider'].isExpand"
+        :is-no-expand-search="isNoSearchData"
+      >
         <div class="user-org-wrapper-content-left" :style="leftStyle">
           <LeftLayout
             :loading="listLoading"
+            :is-no-expand-search="isNoSearchData"
             :list="groupList"
             :group-data="currentGroupData"
             :cur-select-active="curSelectActive"
@@ -34,15 +95,15 @@
           />
         </div>
         <div slot="expand-icon" class="user-org-wrapper-content-center">
-          <div class="expand-icon" @click.stop="handleToggleExpand">
-            <bk-icon :type="isExpand ? 'angle-left' : 'angle-right'" class="icon" />
+          <div class="expand-icon" @click.stop="handleToggleExpand('slider')">
+            <bk-icon :type="expandData['slider'].isExpand ? 'angle-left' : 'angle-right'" class="icon" />
           </div>
         </div>
         <div
           slot="right"
           :class="[
             'user-org-wrapper-content-right',
-            { 'no-expand': !isExpand }
+            { 'no-expand': !expandData['slider'].isExpand }
           ]">
           <component
             :key="comKey"
@@ -61,6 +122,7 @@
 </template>
 
 <script>
+  import { mapGetters } from 'vuex';
   import { cloneDeep } from 'lodash';
   import { bus } from '@/common/bus';
   import { formatCodeData } from '@/common/util';
@@ -84,7 +146,14 @@
       return {
         listLoading: false,
         isSearchPerm: false,
-        isExpand: true,
+        expandData: {
+          search: {
+            isExpand: true
+          },
+          slider: {
+            isExpand: true
+          }
+        },
         comKey: -1,
         curSearchParams: {},
         curSearchPagination: {
@@ -112,7 +181,12 @@
             default: true
           }
         ],
-        currentBackup: 1,
+        formData: {
+          group_name: '',
+          group_id: '',
+          name: '',
+          department_name: ''
+        },
         pageConf: {
           current: 1,
           limit: 10,
@@ -132,10 +206,15 @@
           tipType: ''
         },
         currentGroupData: {},
-        dragWidth: 224
+        currentBackup: 1,
+        gridCount: 4,
+        dragWidth: 224,
+        formItemWidth: '',
+        listHeight: window.innerHeight - 51 - 51 - 157 - 42 - 8
       };
     },
     computed: {
+      ...mapGetters(['navStick']),
       leftStyle () {
         if (this.dragWidth > 0) {
           return {
@@ -146,11 +225,11 @@
           flexBasis: '224px'
         };
       },
+      isNoSearchData () {
+        return Object.keys(this.curSearchParams).length === 0 && !this.expandData['search'].isExpand;
+      },
       canScrollLoad () {
         return this.pageConf.totalPage > this.currentBackup;
-      },
-      listHeight () {
-        return window.innerHeight - 51 - 51 - 157 - 42 - 8;
       },
       curCom () {
         let com = '';
@@ -167,12 +246,21 @@
     async created () {
       this.comMap = COM_MAP;
       this.pageConf.limit = Math.ceil(this.listHeight / 36);
+      this.formatFormItemWidth();
       await this.fetchInitData();
+    },
+
+    mounted () {
+      window.addEventListener('resize', this.formatFormItemWidth);
+      this.$once('hook:beforeDestroy', () => {
+        window.removeEventListener('resize', this.formatFormItemWidth);
+      });
     },
 
     methods: {
       async fetchInitData () {
         this.pageConf.current = 1;
+        this.currentBackup = 1;
         await this.fetchGroupMemberList(true, false);
         if (this.groupList.length) {
           const { id, name } = this.groupList[0];
@@ -188,14 +276,14 @@
             page: current,
             page_size: limit
           };
+          console.log(this.isSearchPerm, 444);
           if (this.isSearchPerm) {
             params = {
               ...params,
-              ...{
-                name: this.curSearchParams.name || ''
-              }
+              ...this.formData
             };
           }
+          console.log(this.formData);
           const { code, data } = await this.$store.dispatch('userOrOrg/getUserGroupMemberList', params);
           const { count, results } = data;
           const list = results || [];
@@ -226,47 +314,60 @@
       },
 
       async handleRemoteTable (payload) {
-        const { emptyData, pagination, searchParams, isNoTag } = payload;
+        const { emptyData, pagination, searchParams } = payload;
         this.isSearchPerm = emptyData.tipType === 'search';
         this.curSearchParams = cloneDeep(searchParams);
         this.curSearchPagination = cloneDeep(pagination);
-        if (!isNoTag) {
-          this.curEmptyData = cloneDeep(emptyData);
-          await this.fetchRemoteTable();
-        }
+        this.curEmptyData = cloneDeep(emptyData);
+        await this.fetchRemoteTable();
       },
 
       async fetchRemoteTable () {
         await this.fetchInitData();
+        const params = {
+          ...this.curSearchParams,
+          ...this.formData
+        };
         bus.$emit('on-refresh-resource-search', {
           isSearchPerm: true,
-          curSearchParams: this.curSearchParams,
+          curSearchParams: params,
           curSearchPagination: this.curSearchPagination
         });
       },
 
-      // 处理只输入纯文本，不生成tag情况
-      async handleInputValue (payload) {
-        this.curEmptyData.tipType = payload ? 'search' : '';
-        if (payload && !this.curSearchParams.system_id) {
-          this.isSearchPerm = true;
-          this.$set(this.curSearchParams, 'name', payload);
-          await this.fetchRemoteTable();
+      async handleToggleExpand (payload) {
+        this.expandData[payload].isExpand = !this.expandData[payload].isExpand;
+        if (['search'].includes(payload)) {
+          this.listHeight = this.expandData[payload].isExpand
+            ? window.innerHeight - 51 - 51 - 157 - 42 - 8
+            : window.innerHeight - 51 - 51 - 42 - 8;
+          this.pageConf = Object.assign(this.pageConf, {
+            current: 1,
+            totalPage: 1,
+            limit: Math.ceil(this.listHeight / 36)
+          });
+          this.groupList = [];
+          await this.fetchInitData();
         }
       },
 
-      handleToggleExpand () {
-        this.isExpand = !this.isExpand;
+      handleSearch () {
+        this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleSearchUserGroup(true, true);
       },
 
       handleSelectUser (payload) {
+        this.curSelectActive = `${payload.id}&${payload.name}`;
         this.currentGroupData = payload;
       },
 
-      handleRefreshTable () {
+      async handleRefreshTable () {
         this.curEmptyData.tipType = '';
+        this.emptyData.tipType = '';
         this.isSearchPerm = false;
+        this.pageConf.current = 1;
         this.curSearchParams = {};
+        this.formData.name = '';
+        await this.fetchInitData();
         bus.$emit('on-refresh-resource-search', {
           isSearchPerm: false
         });
@@ -290,19 +391,25 @@
 
       handleEmptyClear () {
         this.isSearchPerm = false;
-        this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyClear();
+        // this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyClear();
       },
 
       handleEmptyUserClear () {
+        this.curEmptyData.tipType = '';
         this.emptyData.tipType = '';
         this.isSearchPerm = false;
         this.pageConf.current = 1;
+        this.curSearchParams = {};
+        this.formData.name = '';
         this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyClear();
-        this.fetchGroupMemberList(true, false);
       },
 
       handleEmptyUserRefresh () {
         this.handleEmptyUserClear();
+      },
+
+      async formatFormItemWidth () {
+        this.formItemWidth = `${(window.innerWidth - (this.navStick ? 276 : 76) - this.gridCount * 16) / this.gridCount}px`;
       }
     }
   };
@@ -312,30 +419,52 @@
 .user-org-wrapper {
   padding: 0;
   color: #313238;
+  position: relative;
   &-search {
     box-shadow: 0 2px 3px 0 #0000000a;
     position: sticky;
     top: 0;
     z-index: 1;
+    .custom-content {
+      &-form {
+        display: flex;
+        .custom-form-item {
+          margin-top: 12px;
+          &:not(&:last-child) {
+            margin-right: 16px;
+          }
+        }
+      }
+      &-footer {
+        margin-top: 16px;
+      }
+    }
+    &.no-search-data {
+      display: none;
+    }
   }
   &-expand {
-      width: 64px;
-      height: 16px;
-      background-color: #dcdee5;
-      border-radius: 0 4px 4px 0;
-      position: relative;
+    width: 64px;
+    height: 16px;
+    background-color: #dcdee5;
+    border-radius: 0 4px 4px 0;
+    position: absolute;
+    top: 223px;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+    cursor: pointer;
+    .icon {
+      color: #ffffff;
+      font-size: 22px !important;
+      position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      cursor: pointer;
-      .icon {
-        color: #ffffff;
-        font-size: 22px !important;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-      }
+    }
+    &.no-expand-search {
+      top: 8px;
+    }
   }
   &-content {
     &-left {
