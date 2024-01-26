@@ -1586,7 +1586,7 @@
                           ? instance.map(({ name, type, path, paths }) => {
                             // 这里paths和path存在数据不同步问题，所以当paths为空时，需要判断path是否存在数据
                             let tempPath = _.cloneDeep(paths);
-                            if (!tempPath.length && path.length) {
+                            if (!tempPath.length && path && path.length) {
                               tempPath = _.cloneDeep(path);
                             }
                             tempPath.forEach(pathItem => {
