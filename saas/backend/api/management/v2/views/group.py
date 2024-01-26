@@ -386,7 +386,7 @@ class ManagementGroupMemberViewSet(GenericViewSet):
         self.group_check_biz.check_member_count(group.id, len(members))
 
         # 检查人员模版是否在role的授权范围内
-        self.group_check_biz.check_subject_template(request.role, subject_template_ids)
+        self.group_check_biz.check_subject_template(role, subject_template_ids)
 
         if members:
             # 添加成员
