@@ -499,8 +499,11 @@
                           : [];
         
                         const instanceList = (instance && instance.length > 0)
-                          ? instance.map(({ name, type, paths }) => {
-                            const tempPath = _.cloneDeep(paths);
+                          ? instance.map(({ name, type, path, paths }) => {
+                            let tempPath = _.cloneDeep(paths);
+                            if (!tempPath.length && path && path.length) {
+                              tempPath = _.cloneDeep(path);
+                            }
                             tempPath.forEach(pathItem => {
                               pathItem.forEach(pathSubItem => {
                                 delete pathSubItem.disabled;
