@@ -291,15 +291,20 @@
                 <template v-if="curLanguageIsCn">
                   <template v-if="isShowSelectedText">
                     {{ $t(`m.common['已选择']`) }}
-                    <span class="organization-count">{{ hasSelectedDepartments.length }}</span
-                    >{{ $t(`m.common['个']`) }}{{ $t(`m.common['组织']`) }}
-                    {{ $t(`m.common['，']`) }}
-                    <span class="user-count">{{ hasSelectedUsers.length }}</span
-                    >{{ $t(`m.common['个']`) }}{{ $t(`m.common['用户']`) }}
-                    <span v-if="isExistMemberTemplate">
-                      {{ $t(`m.common['，']`) }}
-                      <span class="template-count">{{ hasSelectedTemplates.length }}</span>{{ $t(`m.common['个']`) }}{{ $t(`m.memberTemplate['人员模板']`) }}
-                    </span>
+                    <template v-if="hasSelectedDepartments.length">
+                      <span class="organization-count">{{ hasSelectedDepartments.length }}</span>
+                      {{ $t(`m.common['个']`) }}{{ $t(`m.common['组织']`) }}
+                    </template>
+                    <span v-if="isShowComma">{{ $t(`m.common['，']`) }}</span>
+                    <template v-if="hasSelectedUsers.length > 0">
+                      <span class="user-count">{{ hasSelectedUsers.length }}</span>
+                      {{ $t(`m.common['个']`) }}{{ $t(`m.common['用户']`) }}
+                    </template>
+                    <template v-if="isExistMemberTemplate && hasSelectedTemplates.length > 0">
+                      <span v-if="hasSelectedUsers.length > 0">{{ $t(`m.common['，']`) }}</span>
+                      <span class="template-count">{{ hasSelectedTemplates.length }}</span>
+                      {{ $t(`m.common['个']`) }}{{ $t(`m.memberTemplate['人员模板']`) }}
+                    </template>
                   </template>
                   <!-- <template v-else>
                     <span class="user-count">0</span>
@@ -307,17 +312,18 @@
                 </template>
                 <template v-else>
                   <template v-if="isShowSelectedText">
-                    <span class="organization-count">{{ hasSelectedDepartments.length }}</span
-                    >Org{{ $t(`m.common['，']`) }} <span class="user-count">{{ hasSelectedUsers.length }}</span
-                    >User
-                    <span v-if="isExistMemberTemplate">
-                      {{ $t(`m.common['，']`) }}
+                    <span class="organization-count">{{ hasSelectedDepartments.length }}</span>
+                    <span>Org</span>
+                    <span v-if="isShowComma">{{ $t(`m.common['，']`) }}</span>
+                    <template v-if="hasSelectedUsers.length > 0">
+                      <span class="user-count">{{ hasSelectedUsers.length }}</span>
+                      <span>User</span>
+                    </template>
+                    <template v-if="isExistMemberTemplate && hasSelectedTemplates.length > 0">
+                      <span v-if="hasSelectedUsers.length > 0">{{ $t(`m.common['，']`) }}</span>
                       <span class="template-count">{{ hasSelectedTemplates.length }}</span>
-                      Member template
-                    </span>
-                  </template>
-                  <template v-else>
-                    <span class="user-count">0</span>
+                      <span>Member template</span>
+                    </template>
                   </template>
                   {{ $t(`m.common['已选择']`) }}
                 </template>
@@ -750,6 +756,10 @@
       // 蓝盾场景
       isShowExternalMemberTemplate () {
         return !['staff', 'rating_manager'].includes(this.user.role.type) && this.needMemberTempRoutes.includes(this.$route.name) && !this.isAdminGroup;
+      },
+      isShowComma () {
+        return this.hasSelectedDepartments.length > 0
+         && (this.hasSelectedUsers.length > 0 || (this.hasSelectedTemplates.length > 0 && this.isExistMemberTemplate));
       }
     },
     watch: {
@@ -2244,7 +2254,7 @@
         .organization-count,
         .user-count,
         .template-count {
-          margin-right: 3px;
+          /* margin-right: 3px; */
           color: #3a84ff;
           font-weight: 700;
         }

@@ -502,7 +502,7 @@
             position: relative;
             font-size: 16px;
             color: #a3c5fd;
-            margin-right: 5px;
+            margin: 0 5px;
             &.active {
                 color: #3a84ff;
             }

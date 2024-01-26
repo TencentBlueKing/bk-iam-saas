@@ -29,7 +29,7 @@ class CustomProfilerMiddleware(ProfilerMiddleware):
     def __call__(self, request):
         response = None
         # 仅仅统计API请求的性能
-        api_url_prefix = f"{settings.SITE_URL}api/v1"
+        api_url_prefix = f"{settings.SITE_URL}api/"
         # 开启了统计性能并且请求为API请求，则统计
         if getattr(settings, "ENABLE_PYINSTRUMENT", False) and request.path.startswith(api_url_prefix):
             response = self.process_request(request)
