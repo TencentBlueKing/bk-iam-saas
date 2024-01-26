@@ -794,24 +794,27 @@
         curSelectActions () {
             const allActionIds = [];
             this.originalCustomTmplList.forEach(payload => {
-                if (!payload.actionsAllDisabled) {
-                    payload.actions.forEach(item => {
-                        if (item.checked) {
-                            allActionIds.push(item.id);
+              if (!payload.actionsAllDisabled) {
+                payload.actions.forEach(item => {
+                    if (item.checked) {
+                        allActionIds.push(item.id);
+                    }
+                });
+                (payload.sub_groups || []).forEach(subItem => {
+                    (subItem.actions || []).forEach(act => {
+                        if (act.checked) {
+                            allActionIds.push(act.id);
                         }
-                    })
-                    ;(payload.sub_groups || []).forEach(subItem => {
-                        (subItem.actions || []).forEach(act => {
-                            if (act.checked) {
-                                allActionIds.push(act.id);
-                            }
-                        });
                     });
-                }
+                });
+              }
             });
             // 监听新增或移除的操作，重新组装数据
             this.getFilterAggregateAction();
-            this.handleUnlimitedActionChange(this.isAllUnlimited);
+            // 这里是为了处理无限制和无资源实例后台都是空数据的情况，所以为了兼容编辑回显状态下为空的数据，首次加载不需要调用批量无限制
+            if (this.isAllUnlimited) {
+              this.handleUnlimitedActionChange(this.isAllUnlimited);
+            }
             return allActionIds;
         }
     },
@@ -2292,9 +2295,9 @@
             }
             // 此处处理related_resource_types中value的赋值
             return new Policy({
-                            ...item,
-                            related_actions: relatedActions,
-                            tid: this.routerQuery.cache_id ? this.routerQuery.cache_id : ''
+              ...item,
+              related_actions: relatedActions,
+              tid: this.routerQuery.cache_id ? this.routerQuery.cache_id : ''
             });
           });
           this.tableData = data;

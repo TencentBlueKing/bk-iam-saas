@@ -11,6 +11,7 @@ from django_filters import rest_framework as filters
 
 from backend.apps.group.models import Group
 from backend.apps.role.models import Role
+from backend.apps.subject_template.models import SubjectTemplate
 
 
 class GroupFilter(filters.FilterSet):
@@ -34,4 +35,18 @@ class GradeManagerFilter(filters.FilterSet):
         model = Role
         fields = [
             "name",
+        ]
+
+
+class SubjectTemplateFilter(filters.FilterSet):
+    id = filters.NumberFilter(label="ID")
+    name = filters.CharFilter(label="名字", lookup_expr="icontains")
+    description = filters.CharFilter(label="描述", lookup_expr="icontains")
+
+    class Meta:
+        model = SubjectTemplate
+        fields = [
+            "name",
+            "id",
+            "description",
         ]
