@@ -327,6 +327,7 @@
       data: {
         handler (val) {
           const len = val.length;
+          console.log(val, 4474);
           // 此时是无权限状态
           if (len === 1 && val[0] === 'none') {
             this.conditionData = [new Condition({ selection_mode: this.selectionMode }, 'init', 'add')];
@@ -710,6 +711,7 @@
             item.attribute = item.attribute.filter(attr => attr.values.length > 0);
           }
         });
+        console.log(this.conditionData, 5555);
         return {
           isEmpty: false,
           data: tempConditionData
