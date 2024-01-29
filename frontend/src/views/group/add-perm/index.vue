@@ -849,7 +849,7 @@
           this.isShowAddActionSideslider = true;
         } else {
           this.isShowAddSideslider = true;
-          this.permSideWidth = 1160;
+          this.permSideWidth = 960;
         }
       }
     }
