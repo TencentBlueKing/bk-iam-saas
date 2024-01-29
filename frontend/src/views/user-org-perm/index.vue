@@ -11,9 +11,9 @@
         :custom-class="'user-org-resource-perm'"
         :active="active"
         :is-full-screen="true"
+        :is-custom-search="true"
         :cur-search-data="searchData"
         :grid-count="gridCount"
-        :is-custom-search="true"
         @on-remote-table="handleRemoteTable"
         @on-refresh-table="handleRefreshTable"
       >
@@ -105,16 +105,28 @@
             'user-org-wrapper-content-right',
             { 'no-expand': !expandData['slider'].isExpand }
           ]">
-          <component
-            :key="comKey"
-            :is="curCom"
-            :is-search-perm="isSearchPerm"
-            :group-data="currentGroupData"
-            :cur-search-params="curSearchParams"
-            :cur-search-pagination="curSearchPagination"
-            @on-clear="handleEmptyClear"
-            @on-refresh="handleEmptyRefresh"
-          />
+          <template v-if="groupList.length">
+            <component
+              :key="comKey"
+              :is="curCom"
+              :is-search-perm="isSearchPerm"
+              :group-data="currentGroupData"
+              :cur-search-params="curSearchParams"
+              :cur-search-pagination="curSearchPagination"
+              @on-clear="handleEmptyClear"
+              @on-refresh="handleEmptyRefresh"
+            />
+          </template>
+          <div v-else class="right-empty-data">
+            <ExceptionEmpty
+              :type="emptyData.type"
+              :empty-text="emptyData.text"
+              :tip-text="emptyData.tip"
+              :tip-type="emptyData.tipType"
+              @on-clear="handleEmptyUserClear"
+              @on-refresh="handleEmptyUserRefresh"
+            />
+          </div>
         </div>
       </Layout>
     </div>
@@ -226,7 +238,7 @@
         };
       },
       isNoSearchData () {
-        return Object.keys(this.curSearchParams).length === 0 && !this.expandData['search'].isExpand;
+        return Object.values(this.curSearchParams).filter((item) => item !== '') && !this.expandData['search'].isExpand;
       },
       canScrollLoad () {
         return this.pageConf.totalPage > this.currentBackup;
@@ -276,14 +288,12 @@
             page: current,
             page_size: limit
           };
-          console.log(this.isSearchPerm, 444);
           if (this.isSearchPerm) {
             params = {
               ...params,
               ...this.formData
             };
           }
-          console.log(this.formData);
           const { code, data } = await this.$store.dispatch('userOrOrg/getUserGroupMemberList', params);
           const { count, results } = data;
           const list = results || [];
@@ -316,7 +326,11 @@
       async handleRemoteTable (payload) {
         const { emptyData, pagination, searchParams } = payload;
         this.isSearchPerm = emptyData.tipType === 'search';
-        this.curSearchParams = cloneDeep(searchParams);
+        const params = {
+          ...searchParams,
+          ...this.formData
+        };
+        this.curSearchParams = cloneDeep(params);
         this.curSearchPagination = cloneDeep(pagination);
         this.curEmptyData = cloneDeep(emptyData);
         await this.fetchRemoteTable();
@@ -497,8 +511,16 @@
     }
     &-right {
       padding-right: 16px;
+      position: relative;
+      height: 100%;
       &.no-expand {
         padding-right: 0;
+      }
+      .right-empty-data {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
       }
     }
   }

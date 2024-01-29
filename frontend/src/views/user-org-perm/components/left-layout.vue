@@ -7,6 +7,7 @@
       <bk-dropdown-menu
         ref="batchDropdown"
         v-bk-tooltips="{ content: $t(`m.userOrOrg['请先勾选用户/组织']`), disabled: currentSelectList.length }"
+        :ext-cls="formatDropDownClass"
         :disabled="isBatchDisabled"
         @show="handleDropdownShow"
         @hide="handleDropdownHide"
@@ -95,16 +96,28 @@
       :title="formatSliderTitle"
       :group-data="queryGroupData"
     />
+
+    <ClearUserGroupSlider
+      :slider-width="960"
+      :show.sync="sliderData['clear'].showSlider"
+      :title="formatSliderTitle"
+      :cur-slider-name="curSliderName"
+      :user-list="userList"
+      :depart-list="departList"
+      :group-data="queryGroupData"
+    />
   </div>
 </template>
 
 <script>
   import JoinUserGroupSlider from './join-user-group-slider.vue';
+  import ClearUserGroupSlider from './clear-user-group-slider.vue';
 
   export default {
     inject: ['showNoticeAlert'],
     components: {
-      JoinUserGroupSlider
+      JoinUserGroupSlider,
+      ClearUserGroupSlider
     },
     props: {
       loading: {
@@ -205,6 +218,9 @@
           },
           reset: () => {
             return this.$t(`m.userOrOrg['批量重置用户组']`);
+          },
+          clear: () => {
+            return this.$t(`m.userOrOrg['清空用户组并移出（管理空间）']`);
           }
         };
         return nameMap[this.curSliderName]();
@@ -226,8 +242,14 @@
           };
         }
         return {
-          height: 'calc(100vh - 410px)'
+          height: 'calc(100vh - 405px)'
         };
+      },
+      formatDropDownClass () {
+        if (!this.curLanguageIsCn) {
+          return 'drop-down-operate drop-down-operate-lang';
+        }
+        return 'drop-down-operate';
       }
     },
     watch: {
@@ -267,10 +289,8 @@
 
       handleBatch (payload) {
         this.curSliderName = payload;
-        if (['add', 'reset'].includes(payload)) {
-          this.userList = this.currentSelectList.filter((item) => ['user'].includes(item.type));
-          this.departList = this.currentSelectList.filter((item) => ['department'].includes(item.type));
-        }
+        this.userList = this.currentSelectList.filter((item) => ['user'].includes(item.type));
+        this.departList = this.currentSelectList.filter((item) => ['department'].includes(item.type));
         this.sliderData[payload] = Object.assign(this.sliderData[payload], {
           showSlider: true,
           list: this.currentSelectList
@@ -419,7 +439,7 @@
   }
 }
 
-/deep/ .bk-dropdown-menu {
+/deep/ .drop-down-operate {
   .bk-dropdown-content {
     padding-top: 0;
     cursor: pointer;

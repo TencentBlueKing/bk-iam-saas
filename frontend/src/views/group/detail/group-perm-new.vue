@@ -235,8 +235,9 @@
       async fetchDetail (payload) {
         if (this.$parent.fetchDetail) {
           const { data } = await this.$parent.fetchDetail(payload);
-          const { attributes, readonly } = data;
+          const { attributes, name, readonly } = data;
           this.readonly = readonly;
+          this.$store.commit('setHeaderTitle', name);
           if (Object.keys(attributes).length) {
             this.groupAttributes = Object.assign(this.groupAttributes, attributes);
           }

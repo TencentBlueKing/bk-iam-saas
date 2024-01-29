@@ -289,7 +289,6 @@
 <style lang="postcss" scoped>
 .iam-join-user-group-side {
   &-content {
-    height: calc(100vh - 140px);
     .join-user-group-content {
       padding: 0 40px 16px 40px;
       /deep/ .bk-form-item {
@@ -318,6 +317,9 @@
       min-width: 88px;
       margin-right: 8px;
     }
+  }
+  /deep/ .bk-sideslider-footer {
+    background-color: #ffffff !important;
   }
   /deep/ .operate-object {
     .horizontal-item {

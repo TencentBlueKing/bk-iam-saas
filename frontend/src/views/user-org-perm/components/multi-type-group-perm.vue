@@ -258,7 +258,7 @@
         this.curSearchParams = curSearchParams || {};
         this.isSearchResource = isSearchPerm || false;
         this.resetPagination();
-        // this.fetchInitData();
+        this.fetchInitData();
       });
     },
     methods: {

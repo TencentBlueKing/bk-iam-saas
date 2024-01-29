@@ -6,11 +6,11 @@
       :width="sliderWidth"
       :quick-close="true"
       :show-mask="true"
-      ext-cls="iam-join-user-group-side"
+      ext-cls="iam-batch-operate-side"
       @update:isShow="handleCancel('dialog')"
     >
-      <div slot="content" class="iam-join-user-group-side-content">
-        <div class="join-user-group-content">
+      <div slot="content" class="iam-batch-operate-side-content">
+        <div class="batch-operate-content">
           <bk-form form-type="vertical">
             <bk-form-item
               :class="['operate-object', { 'operate-object-single': !isBatch }]"
@@ -87,7 +87,7 @@
         </div>
       </div>
       <div slot="footer">
-        <div class="iam-join-user-group-side-footer">
+        <div class="iam-batch-operate-side-footer">
           <bk-button theme="primary" class="member-footer-btn" :loading="submitLoading" @click="handleSubmit">
             {{ $t(`m.common['提交']`) }}
           </bk-button>
@@ -339,10 +339,9 @@
 </script>
 
 <style lang="postcss" scoped>
-.iam-join-user-group-side {
+.iam-batch-operate-side {
   &-content {
-    height: calc(100vh - 140px);
-    .join-user-group-content {
+    .batch-operate-content {
       padding: 0 40px 16px 40px;
       /deep/ .bk-form-item {
         margin-top: 24px;
@@ -370,6 +369,11 @@
       min-width: 88px;
       margin-right: 8px;
     }
+  }
+
+  /deep/ .bk-sideslider-footer {
+    border-top: 0;
+    background-color: #ffffff !important;
   }
 
   /deep/ .operate-object,

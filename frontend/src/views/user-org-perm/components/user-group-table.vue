@@ -21,6 +21,18 @@
             </template>
           </bk-table-column>
         </template>
+        <template v-else-if="item.prop === 'expired_at_display'">
+          <bk-table-column :key="item.prop" :label="item.label" :prop="item.prop">
+            <template slot-scope="{ row }">
+              <div class="renewal-expired-at">
+                <render-expire-display
+                  selected :renewal-time="expiredAt"
+                  :cur-time="row.expired_at || 0"
+                  :line-height="'22px'" />
+              </div>
+            </template>
+          </bk-table-column>
+        </template>
         <template v-else-if="item.prop === 'operate'">
           <bk-table-column :key="item.prop" :label="item.label" :prop="item.prop" :width="'auto'">
             <template slot-scope="{ row }">
@@ -53,7 +65,11 @@
 <script>
   import { bus } from '@/common/bus';
   import { formatCodeData } from '@/common/util';
+  import renderExpireDisplay from '@/components/render-renewal-dialog/display';
   export default {
+    components: {
+      renderExpireDisplay
+    },
     props: {
       mode: {
         type: String
@@ -65,6 +81,7 @@
     },
     data () {
       return {
+        expiredAt: 15552000,
         curPageData: [],
         tableList: [],
         tableProps: [],
@@ -188,6 +205,23 @@
   .can-view-name {
     color: #3A84FF;
     cursor: pointer;
+  }
+  .renewal-expired-at {
+    .iam-expire-time-wrapper {
+      .cur-text {
+        background-color: #FFF1DB;
+        color: #FE9C00;
+        font-size: 12px;
+        padding: 0 8px;
+        border-radius: 2px;
+      }
+      .after-renewal-icon {
+        font-size: 20px;
+      }
+      .after-renewal-text {
+        font-size: 14px;
+      }
+    }
   }
 }
 </style>

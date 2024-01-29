@@ -1481,7 +1481,12 @@ export const m = {
         '已选对象的权限将被清空，替换为以下所选的用户组': 'The permissions of the selected objects will be cleared and replaced with the following selected user groups',
         '移出后，该人员将不再继承该组的权限。': 'After removal, the person will no longer inherit the permissions of the group.',
         '用户组不能为空': 'User group cannot be empty',
-        '的用户组': " 's Groups"
+        '的用户组': " 's Groups",
+        '清空预览': 'Clear preview',
+        '清空的个人用户组权限': 'Cleared individual user group permissions',
+        '清空的组织用户组权限': 'Cleared are organizational user group permissions',
+        '清空的是个人用户组权限；': 'Cleared individual user group permissions;',
+        '清空的是组织用户组权限。': 'Cleared are organizational user group permissions.'
     }
 }
 export default {
