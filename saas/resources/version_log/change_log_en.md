@@ -1,4 +1,15 @@
-<!-- 2024-01-32 -->
+<!-- 2024-01-30 -->
+# V1.10.22 Version Update Log
+
+### Bug Fixes
+
+* Fixed an issue in custom permission requests where the edit display fails to show selected resources instances of unlimited type data.
+* Fixed a problem in user groups where adding group permissions with varying path quantities resulted in an error message indicating that the hierarchical link list cannot be empty.
+* Improved the organization structure personnel selector to hide the selected count when it is 0.
+
+---
+
+<!-- 2024-01-22 -->
 # V1.10.21 Version Update Log
 
 ### Feature Enhancements

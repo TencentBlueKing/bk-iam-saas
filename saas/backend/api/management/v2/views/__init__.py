@@ -28,6 +28,7 @@ from .group import (
     ManagementSystemManagerGroupViewSet,
 )
 from .subject import ManagementDepartmentGroupBelongViewSet, ManagementUserGroupBelongViewSet
+from .subject_template import ManagementGradeManagerSubjectTemplateViewSet
 from .subset_manager import ManagementSubsetManagerCreateListViewSet, ManagementSubsetManagerViewSet
 
 __all__ = [
@@ -50,4 +51,5 @@ __all__ = [
     "ManagementApplicationCancelView",
     "ManagementGradeManagerViewSet",
     "ManagementSubsetManagerViewSet",
+    "ManagementGradeManagerSubjectTemplateViewSet",
 ]
