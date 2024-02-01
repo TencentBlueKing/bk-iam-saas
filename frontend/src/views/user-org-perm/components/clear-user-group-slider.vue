@@ -145,36 +145,70 @@
             this.tabList = cloneDeep(this.initTabList);
             this.tabList.forEach((item) => {
               const typeMap = {
-                user: () => {
-                  item = Object.assign(item, {
-                    list: cloneDeep(this.userList),
-                    pagination: {
-                      current: 1,
-                      limit: 10,
-                      count: this.userList.length
-                    }
-                  });
+                user: async () => {
+                  if (this.userList.length) {
+                    const list = cloneDeep(this.userList);
+                    item = await this.fetchUserGroupSearch(item, list);
+                  }
+                  this.selectData = cloneDeep(item);
                 },
-                department: () => {
-                  item = Object.assign(item, {
-                    list: cloneDeep(this.departList),
-                    pagination: {
-                      current: 1,
-                      limit: 10,
-                      count: this.departList.length
-                    }
-                  });
+                department: async () => {
+                  if (this.departList.length) {
+                    const list = cloneDeep(this.departList);
+                    item = await this.fetchUserGroupSearch(item, list);
+                  }
                 }
               };
               return typeMap[item.id]();
             });
-            this.selectData = cloneDeep(this.tabList[0]);
           }
         },
         deep: true
       }
     },
     methods: {
+      // 获取个人/部门用户组
+      async fetchUserGroupSearch (payload, list) {
+        payload = Object.assign(payload, {
+          list: list,
+          pagination: {
+            current: 1,
+            limit: 10,
+            count: list.length
+          }
+        });
+        for (let i = 0; i < payload.list.length; i++) {
+          const { id, type } = payload.list[i];
+          try {
+            const params = {
+              offset: 1,
+              limit: 5
+            };
+            if (this.externalSystemId) {
+              params.system_id = this.externalSystemId;
+              params.hidden = false;
+            }
+            const { data } = await this.$store.dispatch(
+              'userOrOrg/getUserOrDepartGroupList',
+              {
+                ...params,
+                ...{
+                  subject_type: type,
+                  subject_id: id
+                }
+              });
+            this.$set(payload.list[i], 'perm_list', data.results || []);
+            this.$set(payload.list[i], 'count', data.count || 0);
+            return payload;
+          } catch (e) {
+            console.error(e);
+            this.$set(payload.list[i], 'perm_list', []);
+            this.$set(payload.list[i], 'count', 0);
+            this.messageAdvancedError(e);
+          }
+        }
+      },
+      
       handleTabChange (payload) {
         this.tabActive = payload.id;
         this.selectData = payload;
@@ -195,10 +229,12 @@
       handleLimitChange (payload) {
         const typeMap = {
           user: () => {
-            this.tabList[0].pagination = Object.assign(this.tabList[0].pagination, { limit: payload });
+            this.tabList[0].pagination = Object.assign(this.tabList[0].pagination, { current: 1, limit: payload });
+            this.selectData.pagination = cloneDeep(this.tabList[0].pagination);
           },
           department: () => {
             this.tabList[1].pagination = Object.assign(this.tabList[1].pagination, { current: 1, limit: payload });
+            this.selectData.pagination = cloneDeep(this.tabList[1].pagination);
           }
         };
         return typeMap[this.tabActive]();

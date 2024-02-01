@@ -16,11 +16,41 @@
           <bk-table-column
             :key="item.prop"
             :label="item.label"
+            :prop="item.prop"
+            :width="200">
+            <template slot-scope="{ row }">
+              <span v-bk-tooltips="{ content: formatName(row) }">
+                {{ formatName(row) }}
+              </span>
+            </template>
+          </bk-table-column>
+        </template>
+        <template v-else-if="item.prop === 'group_perm'">
+          <bk-table-column
+            :key="item.prop"
+            :label="item.label"
             :prop="item.prop">
             <template slot-scope="{ row }">
-              <div>
-                {{ formatName(row) }}
-              </div>
+              <template v-if="row.perm_list && row.perm_list.length">
+                <div class="perm-tag-list">
+                  <div
+                    ref="permTag"
+                    class="single-hide perm-tag-item"
+                    v-bk-tooltips="{ content: row.perm_list.map((v) => v.name) }"
+                  >
+                    <bk-tag
+                      theme="danger"
+                      v-for="tag in row.perm_list"
+                      :key="tag.id">
+                      {{tag.name}}
+                    </bk-tag>
+                  </div>
+                  <div class="total-count-tag">
+                    <bk-tag theme="danger" v-if="row.count > 5">+{{ row.count - 5}}</bk-tag>
+                  </div>
+                </div>
+              </template>
+              <template v-else>--</template>
             </template>
           </bk-table-column>
         </template>
@@ -49,9 +79,14 @@
 </template>
 
 <script>
+  import { cloneDeep } from 'lodash';
+  import { mapGetters } from 'vuex';
   export default {
     props: {
       mode: {
+        type: String
+      },
+      curType: {
         type: String
       },
       pagination: {
@@ -75,6 +110,12 @@
         tableProps: [],
         tableList: [],
         curPageData: [],
+        curPageConfig: {
+          current: 1,
+          limit: 10,
+          count: 0,
+          showTotalCount: true
+        },
         tableEmptyData: {
           type: 'empty',
           text: '暂无数据',
@@ -84,6 +125,7 @@
       };
     },
     computed: {
+      ...mapGetters(['externalSystemId']),
       formatName () {
         return (payload) => {
           const { id, type, name } = payload;
@@ -100,6 +142,11 @@
           }
           return '';
         };
+      },
+      formatPerm () {
+        return (payload) => {
+          console.log(payload);
+        };
       }
     },
     watch: {
@@ -109,10 +156,17 @@
         },
         immediate: true
       },
+      pagination: {
+        handler (value) {
+          this.curPageConfig = cloneDeep(value);
+        },
+        immediate: true
+      },
       list: {
         handler (value) {
           this.tableList = [...value];
-          this.curPageData = this.getDataByPage(this.pagination.current);
+          this.curPageData = this.getDataByPage(this.curPageConfig.current);
+          // console.log()
         },
         immediate: true
       }
@@ -123,13 +177,13 @@
           user: () => {
             return [
               { label: this.$t(`m.common['用户名']`), prop: 'name' },
-              { label: this.$t(`m.userOrOrg['清空的个人用户组权限']`), prop: 'clear_perm' }
+              { label: this.$t(`m.userOrOrg['清空的个人用户组权限']`), prop: 'group_perm' }
             ];
           },
           department: () => {
             return [
               { label: this.$t(`m.common['用户名']`), prop: 'name' },
-              { label: this.$t(`m.userOrOrg['清空的组织用户组权限']`), prop: 'clear_perm' }
+              { label: this.$t(`m.userOrOrg['清空的组织用户组权限']`), prop: 'group_perm' }
             ];
           }
         };
@@ -140,25 +194,30 @@
         if (!page) {
           page = 1;
         }
-        let startIndex = (page - 1) * this.pagination.limit;
-        let endIndex = page * this.pagination.limit;
+        const { limit } = this.curPageConfig;
+        let startIndex = (page - 1) * limit;
+        let endIndex = page * limit;
         if (startIndex < 0) {
           startIndex = 0;
         }
         if (endIndex > this.tableList.length) {
           endIndex = this.tableList.length;
         }
-        return this.tableList.slice(startIndex, endIndex);
+        const result = this.tableList.slice(startIndex, endIndex);
+        return result;
       },
 
       handlePageChange (current) {
+        this.curPageConfig = Object.assign(this.curPageConfig, { current });
         const list = this.getDataByPage(current);
         this.curPageData.splice(0, this.curPageData.length, ...list);
         this.$emit('on-page-change', current);
       },
 
       handleLimitChange (limit) {
-        this.handlePageChange(1);
+        this.curPageConfig = Object.assign(this.curPageConfig, { current: 1, limit });
+        const list = this.getDataByPage(1);
+        this.curPageData.splice(0, this.curPageData.length, ...list);
         this.$emit('on-limit-change', limit);
       }
     }
@@ -166,5 +225,22 @@
 </script>
 
 <style lang="postcss" scoped>
-
+/deep/ .user-org-perm-table {
+  border-top: 0;
+  .perm-tag-list {
+    display: flex;
+    .perm-tag-item {
+      max-width: 580px;
+      .bk-tag {
+        &:first-child {
+          margin-left: 0;
+        }
+      }
+    }
+    .total-count-tag {
+      min-width: 50px;
+      margin-left: 4px;
+    }
+  }
+}
 </style>

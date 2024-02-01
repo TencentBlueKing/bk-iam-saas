@@ -86,16 +86,18 @@
       />
     </div>
     
-    <JoinUserGroupSlider
-      :slider-width="960"
-      :show.sync="sliderData[curSliderName].showSlider"
-      :cur-slider-name="curSliderName"
-      :is-batch="true"
-      :user-list="userList"
-      :depart-list="departList"
-      :title="formatSliderTitle"
-      :group-data="queryGroupData"
-    />
+    <template v-if="!['clear'].includes(curSliderName)">
+      <JoinUserGroupSlider
+        :slider-width="960"
+        :show.sync="sliderData[curSliderName].showSlider"
+        :cur-slider-name="curSliderName"
+        :is-batch="true"
+        :user-list="userList"
+        :depart-list="departList"
+        :title="formatSliderTitle"
+        :group-data="queryGroupData"
+      />
+    </template>
 
     <ClearUserGroupSlider
       :slider-width="960"

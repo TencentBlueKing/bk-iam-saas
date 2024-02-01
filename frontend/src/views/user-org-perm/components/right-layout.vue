@@ -301,6 +301,7 @@
         border-radius: 2px;
         padding-left: 10px;
         padding-right: 5px;
+        background-color: #ffffff;
         color: #63656e;
 
         &:hover {
