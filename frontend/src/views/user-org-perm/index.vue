@@ -65,7 +65,6 @@
         </div>
       </IamResourceCascadeSearch>
     </div>
-    {{ isHasDataNoExpand }}
     <template v-if="isHasDataNoExpand">
       <!-- 处理有值的情况下折叠场景 -->
       <div class="no-expand-list">
@@ -245,7 +244,8 @@
         };
       },
       isNoSearchData () {
-        return Object.values(this.curSearchParams).filter((item) => item !== '') && !this.expandData['search'].isExpand;
+        console.log(Object.values(this.curSearchParams).filter((item) => item !== ''));
+        return Object.values(this.curSearchParams).filter((item) => item !== '').length === 0 && !this.expandData['search'].isExpand;
       },
       isHasDataNoExpand () {
         console.log(Object.values(this.curSearchParams).filter((item) => item !== ''));
