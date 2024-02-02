@@ -1,3 +1,39 @@
+<!-- 2024-01-30 -->
+# V1.10.22 Version Update Log
+
+### Bug Fixes
+
+* Fixed an issue in custom permission requests where the edit display fails to show selected resources instances of unlimited type data.
+* Fixed a problem in user groups where adding group permissions with varying path quantities resulted in an error message indicating that the hierarchical link list cannot be empty.
+* Improved the organization structure personnel selector to hide the selected count when it is 0.
+
+---
+
+<!-- 2024-01-22 -->
+# V1.10.21 Version Update Log
+
+### Feature Enhancements
+
+* Integrated with the BlueKing Message Notification Center
+
+---
+
+
+<!-- 2024-01-16 -->
+# V1.10.20 Version Update Log
+
+### Optimization Updates
+
+* Optimized content for permission application forms.
+
+### Bug Fixes
+
+* Fixed an issue where the maximum authorization scope selection within the Blue Ocean embedded page did not allow user selection after choosing an organization.
+* Fixed an problem where adding group permissions - adding operations and permission templates first, then canceling operations or reducing the number of permission templates, resulted in no display.
+* Fixed an issue where the content of the personnel selector editing component was empty, and re-adding would reset the data from the previous instance.
+
+---
+
 <!-- 2023-12-26 -->
 # V1.10.19 Version Update Log
 

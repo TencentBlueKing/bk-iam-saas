@@ -4,8 +4,14 @@
       systemCls,
       { 'external-system-layout': externalSystemsLayout.userGroup.groupDetail.setMainLayoutHeight },
       { 'external-app-layout': $route.name === 'addMemberBoundary' },
+      { 'notice-app-layout': isShowNoticeAlert },
       { 'no-perm-app-layout': ['403'].includes(routeName) }
     ]">
+    <NoticeComponent
+      v-if="isShowNoticeAlert"
+      :api-url="noticeApi"
+      @show-alert-change="handleShowAlertChange"
+    />
     <!-- <iam-guide
             v-if="groupGuideShow"
             type="create_group"
@@ -60,6 +66,8 @@
   import HeaderNav from '@/components/header-nav/index.vue';
   import theHeader from '@/components/header/index.vue';
   import theNav from '@/components/nav/index.vue';
+  import NoticeComponent from '@blueking/notice-component-vue2';
+  import '@blueking/notice-component-vue2/dist/style.css';
   // import IamGuide from '@/components/iam-guide/index.vue';
   import { existValue, formatI18nKey } from '@/common/util';
   import { bus } from '@/common/bus';
@@ -71,14 +79,16 @@
     name: 'app',
     provide () {
       return {
-        reload: this.reload
+        reload: this.reload,
+        showNoticeAlert: this.isShowNoticeAlert
       };
     },
     components: {
       // IamGuide,
       theHeader,
       theNav,
-      HeaderNav
+      HeaderNav,
+      NoticeComponent
     },
     data () {
       return {
@@ -100,11 +110,17 @@
         groupGuideShow: false,
         routeName: '',
         userGroupId: '',
-        isRouterAlive: true
+        isRouterAlive: true,
+        showNoticeAlert: true,
+        noticeApi: `${window.AJAX_URL_PREFIX}/notice/announcements/`,
+        enableNotice: window.ENABLE_BK_NOTICE.toLowerCase() === 'true'
       };
     },
     computed: {
-            ...mapGetters(['mainContentLoading', 'user', 'externalSystemsLayout'])
+      ...mapGetters(['mainContentLoading', 'user', 'externalSystemsLayout']),
+      isShowNoticeAlert () {
+        return this.enableNotice && this.showNoticeAlert && !this.externalSystemsLayout.hideNoticeAlert;
+      }
     },
     watch: {
       '$route' (to, from) {
@@ -310,8 +326,12 @@
           }
         }
         return false;
-      }
+      },
 
+      handleShowAlertChange (isShow) {
+        console.log(444, isShow);
+        this.showNoticeAlert = isShow;
+      }
     }
   };
 </script>
@@ -380,6 +400,28 @@
 
     }
 
+    .user-org-perm-container {
+      .main-scroller {
+        height: calc(100% + 278px);
+      }
+      .views-layout {
+        min-width: 100%;
+        overflow: hidden;
+      }
+    }
+
+    .notice-app-layout {
+      height: calc(100% - 101px) !important;
+      .main-scroller {
+        height: calc(100% + 91px);
+      }
+      .user-org-perm-container {
+        .main-scroller {
+          height: calc(100% + 312px);
+        }
+      }
+    }
+
     .no-perm {
       &-app-layout,
       &-main-layout {
@@ -387,5 +429,4 @@
         background-color: #ffffff;
       }
     }
-
 </style>

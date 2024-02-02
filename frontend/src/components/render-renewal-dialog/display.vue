@@ -1,8 +1,8 @@
 <template>
   <div class="iam-expire-time-wrapper" :style="{ lineHeight: `${lineHeight}` }">
     <span :class="['cur-text', status]">{{ curDisplay }}</span>
-    <template v-if="ischeck">
-      <Icon type="arrows-left" :style="{ lineHeight: `${lineHeight}` }" />
+    <template v-if="isCheck">
+      <Icon type="arrows-left" class="after-renewal-icon" :style="{ lineHeight: `${lineHeight}` }" />
       <span class="after-renewal-text">{{ afterRenewalDisplay }}</span>
     </template>
   </div>
@@ -35,7 +35,7 @@
     },
     data () {
       return {
-        ischeck: true
+        isCheck: true
       };
     },
     computed: {

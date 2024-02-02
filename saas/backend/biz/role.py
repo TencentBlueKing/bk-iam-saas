@@ -550,7 +550,7 @@ class RoleListQuery:
 
     def __init__(self, role: Role, user: Optional[User] = None) -> None:
         self.role = role
-        self.user = User.objects.get(username=user.username) if user else None
+        self.user = User.objects.filter(username=user.username).first() if user else None
 
     def list_system(self) -> List[System]:
         """

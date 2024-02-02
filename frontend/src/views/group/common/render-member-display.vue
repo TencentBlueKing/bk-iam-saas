@@ -16,9 +16,9 @@
         class="member-item"
         :title="nameType(item)">
         <span class="member-name">
-          {{ isDepartment ? item.name : item.username }}
+          {{ isDepartment ? item.name : item.username || item.id }}
         </span>
-        <template v-if="isDepartment">
+        <template v-if="isDepartment && item.count">
           <span class="count">({{ item.count }})</span>
         </template>
         <template v-if="!isDepartment && !isTemplate && item.name !== ''">
@@ -80,20 +80,21 @@
       },
       nameType () {
         return (payload) => {
-          const { name, type, username, full_name: fullName } = payload;
+          const { name, type, id, username, full_name: fullName } = payload;
           const typeMap = {
             user: () => {
               if (fullName) {
                 return fullName;
               } else {
-                return name ? `${username}(${name})` : username;
+                const curName = username || id;
+                return name ? `${curName}(${name})` : curName;
               }
             },
             department: () => {
-              return fullName || payload.fullName || `${username}(${name})`;
+              return fullName || payload.fullName || (username ? `${username}(${name})` : name);
             },
             depart: () => {
-              return fullName || payload.fullName || `${username}(${name})`;
+              return fullName || payload.fullName || (username ? `${username}(${name})` : name);
             },
             template: () => {
               return name;

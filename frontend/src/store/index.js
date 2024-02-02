@@ -85,11 +85,14 @@ import spaceManage from './modules/space-manage';
 // 用户组设置模块
 import userGroupSetting from './modules/user-group-setting';
 
-// 敏感等级
+// 敏感等级模块
 import sensitivityLevel from './modules/sensitivity-level';
 
-// 人员模板
+// 人员模板模块
 import memberTemplate from './modules/member-template';
+
+// 用户/组织模块
+import userOrOrg from './modules/user-org';
 
 Vue.use(Vuex);
 
@@ -161,6 +164,14 @@ const currentNav = [
     name: il8n('nav', '权限管理'),
     rkey: 'managePermission',
     children: [
+      {
+        icon: 'personal-user',
+        id: 'userOrgPermNav',
+        rkey: 'userOrgPerm',
+        name: il8n('nav', '用户/组织'),
+        path: `${SITE_URL}user-org-perm`,
+        disabled: false
+      },
       {
         icon: 'user-group',
         id: 'userGroupNav',
@@ -340,7 +351,8 @@ const store = new Vuex.Store({
     spaceManage,
     userGroupSetting,
     sensitivityLevel,
-    memberTemplate
+    memberTemplate,
+    userOrOrg
   },
   state: {
     mainContentLoading: false,
@@ -402,6 +414,7 @@ const store = new Vuex.Store({
       hideIamSlider: false, // 第一层级侧边导航
       hideIamBreadCrumbs: false, // 第一层级面包屑
       hideIamGuide: false, // 隐藏所有guide的tooltip
+      hideNoticeAlert: false, // 隐藏跑马灯组件
       myPerm: { // 我的权限
         hideCustomTab: false, // 自定义权限tab - 1
         hideApplyBtn: false, // 申请权限按钮 - 1
@@ -859,6 +872,7 @@ const store = new Vuex.Store({
         hideIamSlider: true, // 第一层级侧边导航
         hideIamBreadCrumbs: true, // 第一层级面包屑
         hideIamGuide: true, // 隐藏所有guide的tooltip
+        hideNoticeAlert: true, // 隐藏跑马灯组件
         myPerm: { // 我的权限
           hideCustomTab: true, // 自定义权限tab - 1
           hideApplyBtn: true, // 申请权限按钮 - 1

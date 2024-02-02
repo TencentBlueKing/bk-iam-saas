@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "django_celery_beat",
     "apigw_manager.apigw",
     "iam.contrib.iam_migration",
+    "bk_notice_sdk",
     "backend.common",
     "backend.long_task",
     "backend.audit",
@@ -185,8 +186,10 @@ BROKER_CONNECTION_TIMEOUT = 1  # 单位秒
 BROKER_HEARTBEAT = 60
 # CELERY 并发数，默认为 2，可以通过环境变量或者 Procfile 设置
 CELERYD_CONCURRENCY = env.int("BK_CELERYD_CONCURRENCY", default=2)
-# 与周期任务配置的定时相关UTC
+# 与周期任务配置的定时时区相关
 CELERY_ENABLE_UTC = False
+CELERY_TIMEZONE = "Asia/Shanghai"
+DJANGO_CELERY_BEAT_TZ_AWARE = False
 # 周期任务beat生产者来源
 CELERYBEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 # Celery队列名称
@@ -217,6 +220,10 @@ CELERYBEAT_SCHEDULE = {
     "periodic_sync_organization": {
         "task": "backend.apps.organization.tasks.sync_organization",
         "schedule": crontab(minute=0, hour=0),  # 每天凌晨执行
+    },
+    "periodic_sync_organization": {
+        "task": "backend.apps.organization.tasks.clean_subject_to_delete",
+        "schedule": crontab(minute=0, hour=2),  # 每天凌晨2时执行
     },
     "periodic_sync_new_users": {
         "task": "backend.apps.organization.tasks.sync_new_users",
@@ -377,7 +384,7 @@ SUBJECT_AUTHORIZATION_LIMIT = {
     # 一个分级管理员可创建的用户组个数
     "grade_manager_group_limit": env.int("BKAPP_GRADE_MANAGER_GROUP_LIMIT", default=10000),
     # 一个分级管理员可添加的成员个数
-    "grade_manager_member_limit": env.int("BKAPP_GRADE_MANAGER_MEMBER_LIMIT", default=100),
+    "grade_manager_member_limit": env.int("BKAPP_GRADE_MANAGER_MEMBER_LIMIT", default=1000),
     # 默认每个系统可创建的分级管理数量
     "default_grade_manager_of_system_limit": env.int("BKAPP_DEFAULT_GRADE_MANAGER_OF_SYSTEM_LIMIT", default=500),
     # 可配置单独指定某些系统可创建的分级管理员数量 其值的格式为：system_id1:number1,system_id2:number2,...
@@ -403,6 +410,8 @@ MAX_EXPIRED_POLICY_DELETE_TIME = 365 * 24 * 60 * 60  # 1年
 MAX_EXPIRED_TEMPORARY_POLICY_DELETE_TIME = 3 * 24 * 60 * 60  # 3 Days
 # 接入系统的资源实例ID最大长度，默认36（已存在长度为36的数据）
 MAX_LENGTH_OF_RESOURCE_ID = env.int("BKAPP_MAX_LENGTH_OF_RESOURCE_ID", default=36)
+# 被删除的subject最长保留天数
+SUBJECT_DELETE_DAYS = env.int("BKAPP_SUBJECT_DELETE_DAYS", default=30)
 
 # 前端页面功能开关
 ENABLE_FRONT_END_FEATURES = {
@@ -412,6 +421,7 @@ ENABLE_FRONT_END_FEATURES = {
     "enable_group_instance_search": env.bool("BKAPP_ENABLE_FRONT_END_GROUP_INSTANCE_SEARCH", default=False),
     "enable_organization_count": env.bool("BKAPP_ENABLE_FRONT_END_ORGANIZATION_COUNT", default=False),
     "enable_assistant": env.bool("BKAPP_ENABLE_FRONT_END_ASSISTANT", default=False),
+    "enable_bk_notice": env.bool("BKAPP_ENABLE_BK_NOTICE", default=False),
 }
 
 # Open API接入APIGW后，需要对APIGW请求来源认证，使用公钥解开jwt
@@ -420,7 +430,7 @@ BK_APIGW_PUBLIC_KEY = env.str("BKAPP_APIGW_PUBLIC_KEY", default="")
 # apigateway 相关配置
 # NOTE: it sdk will read settings.APP_CODE and settings.APP_SECRET, so you should set it
 BK_APIGW_NAME = "bk-iam"
-BK_API_URL_TMPL = env.str("BK_API_URL_TMPL", default="")
+BK_API_URL_TMPL = env.str("BK_API_URL_TMPL", default="http://localhost:8080/api/{api_name}/")
 BK_IAM_BACKEND_SVC = env.str("BK_IAM_BACKEND_SVC", default="bkiam-web")
 BK_IAM_SAAS_API_SVC = env.str("BK_IAM_SAAS_API_SVC", default="bkiam-saas-api")
 BK_IAM_ENGINE_SVC = env.str("BK_IAM_ENGINE_SVC", default="bkiam-search-engine")
@@ -434,7 +444,7 @@ REQUESTS_MAX_RETRIES = env.int("REQUESTS_MAX_RETRIES", default=3)
 # Init Grade Manger system list
 INIT_GRADE_MANAGER_SYSTEM_LIST = env.list(
     "INIT_GRADE_MANAGER_SYSTEM_LIST",
-    default=["bk_job", "bk_cmdb", "bk_monitorv3", "bk_log_search", "bk_sops", "bk_nodeman", "bk_gsekit"],
+    default=["bk_job", "bk_cmdb", "bk_monitorv3", "bk_log_search", "bk_sops", "bk_nodeman", "bk_gsekit", "bk-bscp"],
 )
 
 # disable display systems

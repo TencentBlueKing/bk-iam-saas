@@ -565,7 +565,8 @@ export const m = {
         '确认批量退出所选的用户组吗？': 'Are you sure to batch quit the selected user groups?',
         '确认删除该人员模板？': 'Are you sure to delete the member template?',
         '确认解除与该用户组的关联？': 'Are you sure to dissociate from this user group?',
-        '确认批量删除所选的人员模板吗？': 'Are you sure to batch delete the selected member templates?'
+        '确认批量删除所选的人员模板吗？': 'Are you sure to batch delete the selected member templates?',
+        '确认把用户移出该用户组？': 'Are you sure to move the user out of this user group?'
     },
     nav: {
         '蓝鲸权限中心': 'BlueKing-IAM',
@@ -623,7 +624,8 @@ export const m = {
         '克隆二级管理空间': 'Clone Secondary management space',
         '用户组设置': 'User Group Setting',
         '敏感等级': 'Sensitivity Level',
-        '人员模板': 'Members Template'
+        '人员模板': 'Members Template',
+        '用户/组织': 'User/Organization'
     },
     applyEntrance: {
         '立刻申请': 'Apply now',
@@ -1448,6 +1450,43 @@ export const m = {
         '只读人员模板不能移除': 'The read-only member template cannot be removed',
         '只读人员模板不能添加、删除、复制成员': 'Read-only member template cannot add, delete, or copy members',
         '最多只能选择10个人员模板' : 'You can only select up to 10 member templates'
+    },
+    userOrOrg: {
+        '用户组名': 'User group name',
+        '批量操作': 'Multi-operate',
+        '重置用户组': 'Reset user group',
+        '追加用户组': 'Append user group',
+        '加入用户组': 'Join user group',
+        '追加的用户组': 'Append user group',
+        '批量追加用户组': 'Batch add user groups',
+        '批量重置用户组': 'Batch reset user groups',
+        '操作对象': 'Operating object',
+        '加入的用户组': 'Joined user group',
+        '重置的用户组': 'Reset user group',
+        '申请时长': 'Application duration',
+        '移出': 'Remove',
+        '续期时长': 'Renewal duration',
+        '续期预览': 'Renewal preview',
+        '用户组 ID': 'User group ID',
+        '用户 / 组织列表': 'User/Organization list',
+        '移出用户组名': 'Remove user group name',
+        '批量移出用户组': 'Multi-remove user group',
+        '清空用户组并移出（管理空间）': 'Empty user groups and move them out (management space)',
+        '请先勾选用户': 'Please check the user first',
+        '请先勾选用户组权限': 'Please check user group permissions first',
+        '请先勾选用户/组织': 'Please check the user/organization first',
+        '搜索用户组名、描述': 'Search for user group name and description',
+        '输入ID、用户组名、用户名、组织名、描述等按回车进行搜索': 'Enter ID, user group name, username, organization name, description, etc. and press enter to search',
+        '在已有用户组的基础上，追加以下所选的用户组': 'On the basis of existing user groups, add the following selected user groups',
+        '已选对象的权限将被清空，替换为以下所选的用户组': 'The permissions of the selected objects will be cleared and replaced with the following selected user groups',
+        '移出后，该人员将不再继承该组的权限。': 'After removal, the person will no longer inherit the permissions of the group.',
+        '用户组不能为空': 'User group cannot be empty',
+        '的用户组': " 's Groups",
+        '清空预览': 'Clear preview',
+        '清空的个人用户组权限': 'Cleared individual user group permissions',
+        '清空的组织用户组权限': 'Cleared are organizational user group permissions',
+        '清空的是个人用户组权限；': 'Cleared individual user group permissions;',
+        '清空的是组织用户组权限。': 'Cleared are organizational user group permissions.'
     }
 }
 export default {

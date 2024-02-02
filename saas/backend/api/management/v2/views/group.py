@@ -45,6 +45,7 @@ from backend.apps.group.audit import (
 )
 from backend.apps.group.models import Group
 from backend.apps.group.serializers import GroupAddMemberSLZ
+from backend.apps.group.views import split_members_to_subject_and_template
 from backend.apps.policy.models import Policy
 from backend.apps.policy.serializers import PolicySLZ
 from backend.apps.role.models import Role
@@ -59,6 +60,7 @@ from backend.biz.group import (
 )
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleBiz, RoleListQuery
+from backend.biz.subject_template import SubjectTemplateBiz
 from backend.common.filters import NoCheckModelFilterBackend
 from backend.common.lock import gen_group_upsert_lock
 from backend.common.pagination import CompatiblePagination
@@ -194,9 +196,14 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
         """
         筛选有自定义权限的用户组
         """
+        exists_ids = [str(_id) for _id in queryset.values_list("id", flat=True)]
+
         group_ids = list(
             Policy.objects.filter(
-                subject_type=SubjectType.GROUP.value, system_id=system_id, action_id=action_id
+                subject_type=SubjectType.GROUP.value,
+                system_id=system_id,
+                action_id=action_id,
+                subject_id__in=exists_ids,
             ).values_list("subject_id", flat=True)
         )
         if not group_ids:
@@ -337,6 +344,7 @@ class ManagementGroupMemberViewSet(GenericViewSet):
     biz = GroupBiz()
     group_check_biz = GroupCheckBiz()
     role_biz = RoleBiz()
+    subject_template_biz = SubjectTemplateBiz()
 
     @swagger_auto_schema(
         operation_description="用户组成员列表",
@@ -370,18 +378,26 @@ class ManagementGroupMemberViewSet(GenericViewSet):
         members_data = data["members"]
         expired_at = data["expired_at"]
         # 成员Dict结构转换为Subject结构，并去重
-        members = list(set(parse_obj_as(List[Subject], members_data)))
+        members, subject_template_ids = split_members_to_subject_and_template(members_data)
 
         # 检测成员是否满足管理的授权范围
         role = self.role_biz.get_role_by_group_id(group.id)
         self.group_check_biz.check_role_subject_scope(role, members)
         self.group_check_biz.check_member_count(group.id, len(members))
 
-        # 添加成员
-        self.biz.add_members(group.id, members, expired_at)
+        # 检查人员模版是否在role的授权范围内
+        self.group_check_biz.check_subject_template(role, subject_template_ids)
+
+        if members:
+            # 添加成员
+            self.biz.add_members(group.id, members, expired_at)
+
+        # 增加人员模版授权操作
+        for _id in subject_template_ids:
+            self.biz.grant_subject_template(group.id, _id, expired_at, request.user.username)
 
         # 写入审计上下文
-        audit_context_setter(group=group, members=[m.dict() for m in members])
+        audit_context_setter(group=group, members=members_data)
 
         return Response({})
 
@@ -399,11 +415,18 @@ class ManagementGroupMemberViewSet(GenericViewSet):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        members = [Subject(**{"type": data["type"], "id": _id}) for _id in data["ids"]]
-        self.biz.remove_members(str(group.id), members)
+        members_data = [{"type": data["type"], "id": _id} for _id in data["ids"]]
+        # 成员Dict结构转换为Subject结构，并去重
+        members, subject_template_ids = split_members_to_subject_and_template(members_data)
+
+        if members:
+            self.biz.remove_members(str(group.id), members)
+
+        for _id in subject_template_ids:
+            self.subject_template_biz.delete_group(_id, group.id)
 
         # 写入审计上下文
-        audit_context_setter(group=group, members=[m.dict() for m in members])
+        audit_context_setter(group=group, members=members_data)
 
         return Response({})
 

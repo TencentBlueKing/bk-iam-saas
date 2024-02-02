@@ -274,12 +274,19 @@
           this.curRole = value.role.type || 'staff';
         },
         immediate: true
+      },
+      '$route': {
+        handler (value) {
+    
+        },
+        immediate: true
       }
     },
     async created () {
       window.addEventListener('resize', () => {
         this.tableHeight = getWindowHeight() - 185;
       });
+      this.handleFilterSearchByOther();
       await this.fetchMemberTemplateList(true);
     },
     mounted () {
@@ -315,7 +322,7 @@
           const params = {
             page: current,
             page_size: limit,
-          ...this.searchParams
+            ...this.searchParams
           };
           const { data } = await this.$store.dispatch('memberTemplate/getSubjectTemplateList', params);
           const { count, results } = data;
@@ -334,6 +341,7 @@
             }
           });
           this.fetchSelectedGroupCount();
+          this.handleOpenDetail();
         } catch (e) {
           console.error(e);
         } finally {
@@ -341,7 +349,39 @@
         }
       },
 
+      // 处理从其他页面传递参数进行数据过滤
+      handleFilterSearchByOther () {
+        if (this.$route.query.template_name) {
+          this.searchParams.name = this.$route.query.template_name;
+          this.searchValue.push({
+            id: 'name',
+            name: this.$t(`m.memberTemplate['模板名称']`),
+            values: [{
+              id: this.searchParams.name,
+              name: this.searchParams.name
+            }]
+          });
+        }
+      },
+
+      // 处理从人员模板加入的用户组跳转
+      handleOpenDetail () {
+        const { template_name: templateName, tab_active: tabActive } = this.$route.query;
+        if (this.memberTemplateList.length && templateName && tabActive) {
+          this.curDetailData = Object.assign(
+            {},
+            {
+                ...this.memberTemplateList[0],
+                ...{
+                  tabActive
+                }
+            });
+          // this.isShowDetailSlider = true;
+        }
+      },
+
       async handleSearch (payload, result) {
+        console.log(payload, result);
         this.searchParams = payload;
         this.searchList = result;
         this.emptyData.tipType = 'search';

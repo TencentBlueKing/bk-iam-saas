@@ -222,3 +222,15 @@ class SyncErrorLog(models.Model):
     @log.setter
     def log(self, log):
         self._log = json_dumps(log)
+
+
+class SubjectToDelete(TimestampedModel):
+    """待删除的Subject"""
+
+    subject_id = models.CharField("Subject ID", max_length=255)
+    subject_type = models.CharField("Subject Type", max_length=64)
+
+    class Meta:
+        verbose_name = "待删除的Subject"
+        verbose_name_plural = "待删除的Subject"
+        unique_together = ["subject_type", "subject_id"]

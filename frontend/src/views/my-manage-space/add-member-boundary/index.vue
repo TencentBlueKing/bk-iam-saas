@@ -271,21 +271,26 @@
                   <template v-if="curLanguageIsCn">
                     <template v-if="isShowSelectedText">
                       {{ $t(`m.common['已选择']`) }}
-                      <span class="organization-count">{{ hasSelectedDepartments.length }}</span
-                      >{{ $t(`m.common['个']`) }}{{ $t(`m.common['组织']`) }}
-                      {{ $t(`m.common['，']`) }}
-                      <span class="user-count">{{ hasSelectedUsers.length }}</span
-                      >{{ $t(`m.common['个']`) }}{{ $t(`m.common['用户']`) }}
+                      <template v-if="hasSelectedDepartments.length">
+                        <span class="organization-count">{{ hasSelectedDepartments.length }}</span>
+                        {{ $t(`m.common['个']`) }}{{ $t(`m.common['组织']`) }}
+                      </template>
+                      <span v-if="isShowComma">{{ $t(`m.common['，']`) }}</span>
+                      <template v-if="hasSelectedUsers.length > 0">
+                        <span class="user-count">{{ hasSelectedUsers.length }}</span>
+                        {{ $t(`m.common['个']`) }}{{ $t(`m.common['用户']`) }}
+                      </template>
                     </template>
                   </template>
                   <template v-else>
                     <template v-if="isShowSelectedText">
-                      <span class="organization-count">{{ hasSelectedDepartments.length }}</span
-                      >Org{{ $t(`m.common['，']`) }} <span class="user-count">{{ hasSelectedUsers.length }}</span
-                      >User
-                    </template>
-                    <template v-else>
-                      <span class="user-count">0</span>
+                      <span class="organization-count">{{ hasSelectedDepartments.length }}</span>
+                      <span>Org</span>
+                      <span v-if="isShowComma">{{ $t(`m.common['，']`) }}</span>
+                      <template v-if="hasSelectedUsers.length > 0">
+                        <span class="user-count">{{ hasSelectedUsers.length }}</span>
+                        <span>User</span>
+                      </template>
                     </template>
                     {{ $t(`m.common['已选择']`) }}
                   </template>
@@ -626,6 +631,9 @@
       },
       isStaff () {
         return this.user.role.type === 'staff';
+      },
+      isShowComma () {
+        return this.hasSelectedDepartments.length > 0 && this.hasSelectedUsers.length > 0;
       }
     },
     watch: {
@@ -1752,6 +1760,8 @@
 
       handleSave () {
         let subjects = [];
+        let users = [];
+        let departments = [];
         if (this.isAll) {
           subjects.push({
             id: '*',
@@ -1762,7 +1772,7 @@
           });
         } else {
           if (this.hasSelectedUsers.length) {
-            subjects = this.hasSelectedUsers.map((item) => {
+            users = this.hasSelectedUsers.map((item) => {
               return {
                 id: item.id || '',
                 type: 'user',
@@ -1773,7 +1783,7 @@
             });
           }
           if (this.hasSelectedDepartments.length) {
-            subjects = this.hasSelectedDepartments.map((item) => {
+            departments = this.hasSelectedDepartments.map((item) => {
               return {
                 id: item.id,
                 type: 'depart',
@@ -1783,6 +1793,7 @@
               };
             });
           }
+          subjects = [...users, ...departments];
         }
         const params = {
           subject_scopes: subjects
@@ -2187,12 +2198,12 @@
         /* padding: 8px 24px 8px 14px; */
         font-size: 12px;
         .organization-count {
-          margin-right: 3px;
+          /* margin-right: 3px; */
           color: #3a84ff;
           font-weight: 700;
         }
         .user-count {
-          margin-right: 3px;
+          /* margin-right: 3px; */
           color: #3a84ff;
           font-weight: 700;
         }

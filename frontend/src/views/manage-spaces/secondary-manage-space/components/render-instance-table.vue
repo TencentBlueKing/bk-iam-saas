@@ -1583,8 +1583,12 @@
                           ? attribute.map(({ id, name, values }) => ({ id, name, values }))
                           : [];
                         const instanceList = (instance && instance.length > 0)
-                          ? instance.map(({ name, type, paths }) => {
-                            const tempPath = _.cloneDeep(paths);
+                          ? instance.map(({ name, type, path, paths }) => {
+                            // 这里paths和path存在数据不同步问题，所以当paths为空时，需要判断path是否存在数据
+                            let tempPath = _.cloneDeep(paths);
+                            if (!tempPath.length && path && path.length) {
+                              tempPath = _.cloneDeep(path);
+                            }
                             tempPath.forEach(pathItem => {
                               pathItem.forEach(pathSubItem => {
                                 delete pathSubItem.disabled;
@@ -1725,8 +1729,12 @@
                           ? attribute.map(({ id, name, values }) => ({ id, name, values }))
                           : [];
                         const instanceList = (instance && instance.length > 0)
-                          ? instance.map(({ name, type, paths }) => {
-                            const tempPath = _.cloneDeep(paths);
+                          ? instance.map(({ name, type, path, paths }) => {
+                            // 这里paths和path存在数据不同步问题，所以当paths为空时，需要判断path是否存在数据
+                            let tempPath = _.cloneDeep(paths);
+                            if (!tempPath.length && path && path.length) {
+                              tempPath = _.cloneDeep(path);
+                            }
                             tempPath.forEach(pathItem => {
                               pathItem.forEach(pathSubItem => {
                                 delete pathSubItem.disabled;
@@ -1849,8 +1857,11 @@
                           ? attribute.map(({ id, name, values }) => ({ id, name, values })) : [];
         
                         const instanceList = (instance && instance.length > 0)
-                          ? instance.map(({ name, type, path }) => {
-                            const tempPath = _.cloneDeep(path);
+                          ? instance.map(({ name, type, path, paths }) => {
+                            let tempPath = _.cloneDeep(paths);
+                            if (!tempPath.length && path && path.length) {
+                              tempPath = _.cloneDeep(path);
+                            }
                             tempPath.forEach(pathItem => {
                               pathItem.forEach(pathSubItem => {
                                 delete pathSubItem.disabled;

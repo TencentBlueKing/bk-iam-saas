@@ -13,8 +13,9 @@ import logging
 from collections import defaultdict
 from typing import Dict, List, Set, Tuple
 
-from backend.apps.organization.models import Department, DepartmentMember
+from backend.apps.organization.models import Department, DepartmentMember, SubjectToDelete
 from backend.component import usermgr
+from backend.service.constants import SubjectType
 
 from .base import BaseSyncDBService
 from .util import convert_list_for_mptt
@@ -69,6 +70,11 @@ class DBDepartmentSyncService(BaseSyncDBService):
             dept.parent = parent_department
             dept.save()
 
+        # 移除待删除的部门
+        SubjectToDelete.objects.filter(
+            subject_type=SubjectType.DEPARTMENT.value, subject_id__in=[str(i.id) for i in created_departments]
+        ).delete()
+
     def deleted_handler(self):
         """关于删除部门，DB的处理"""
         # 新老数据对比 => 需要删除的部门
@@ -88,6 +94,13 @@ class DBDepartmentSyncService(BaseSyncDBService):
             created_department_dict[dept_id].delete()
 
         # TODO: DB里其他表存在了被删的记录如何处理？不处理可能展示有些问题，比如权限模板授权表等等
+
+        # 记录待删除的部门
+        subject_to_delete = [
+            SubjectToDelete(subject_id=str(dept_id), subject_type=SubjectType.DEPARTMENT.value)
+            for dept_id in sorted_departments
+        ]
+        SubjectToDelete.objects.bulk_create(subject_to_delete, batch_size=100, ignore_conflicts=True)
 
     def updated_parent_handler(self):
         """关于更新部门拓扑，DB的处理"""
