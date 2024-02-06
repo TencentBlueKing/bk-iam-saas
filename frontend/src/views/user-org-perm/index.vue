@@ -1,6 +1,7 @@
 <template>
   <div class="user-org-wrapper">
     <div
+      v-if="!isHasDataNoExpand"
       :class="[
         'user-org-wrapper-search',
         { 'no-search-data': !expandData['search'].isExpand }
@@ -16,6 +17,8 @@
         :grid-count="gridCount"
         @on-remote-table="handleRemoteTable"
         @on-refresh-table="handleRefreshTable"
+        @on-select-system="handleSelectSystem"
+        @on-select-resource="handleSelectResource"
       >
         <div slot="custom-content" class="custom-content">
           <bk-form form-type="vertical" class="custom-content-form">
@@ -52,7 +55,7 @@
             <bk-button
               theme="primary"
               :outline="true"
-              @click="handleSearch(true, true)">
+              @click="handleSearch">
               {{ $t(`m.common['查询']`) }}
             </bk-button>
             <bk-button
@@ -65,16 +68,44 @@
         </div>
       </IamResourceCascadeSearch>
     </div>
-    <template v-if="isHasDataNoExpand">
+    <div v-if="isHasDataNoExpand" class="search-data-no-expand">
       <!-- 处理有值的情况下折叠场景 -->
-      <div class="no-expand-list">
-        444
+      <div class="no-expand-search-list">
+        <div class="search-data-content">
+          <div class="funnel">
+            <Icon bk type="funnel" class="funnel-icon" />
+          </div>
+          <div
+            v-for="tag in searchTagList"
+            :key="tag"
+            class="tag-list"
+          >
+            <bk-tag
+              closable
+              :key="tag"
+              @close="handleCloseTag(tag)">
+              {{tag}}
+            </bk-tag>
+          </div>
+          <div
+            class="delete-all"
+            v-if="searchTagList.length"
+            v-bk-tooltips="{ content: $t(`m.common['清空搜索条件']`) }">
+            <Icon
+              bk
+              type="close-circle-shape"
+              class="delete-all-icon"
+              @click.stop="handleClearAll"
+            />
+          </div>
+        </div>
       </div>
-    </template>
+    </div>
     <div
       :class="[
         'user-org-wrapper-expand',
-        { 'no-expand-search': isNoSearchData }
+        { 'no-expand-no-search-data': isNoSearchData },
+        { 'no-expand-has-search-data': isHasDataNoExpand }
       ]"
       @click.stop="handleToggleExpand('search')"
     >
@@ -83,16 +114,20 @@
     <div class="user-org-wrapper-content">
       <Layout
         :is-expand="expandData['slider'].isExpand"
-        :is-no-expand-search="isNoSearchData"
+        :is-no-expand-no-search-data="isNoSearchData"
+        :is-no-expand-has-search-data="isHasDataNoExpand"
       >
         <div class="user-org-wrapper-content-left" :style="leftStyle">
           <LeftLayout
             :loading="listLoading"
-            :is-no-expand-search="isNoSearchData"
+            :is-no-expand-no-search-data="isNoSearchData"
+            :is-no-expand-has-search-data="isHasDataNoExpand"
             :list="groupList"
             :group-data="currentGroupData"
             :cur-select-active="curSelectActive"
             :can-scroll-load="canScrollLoad"
+            :is-search-perm="isHasSearch"
+            :cur-search-params="querySearchParams"
             :empty-data="emptyData"
             @on-select="handleSelectUser"
             @on-load-more="handleLoadMore"
@@ -115,9 +150,9 @@
             <component
               :key="comKey"
               :is="curCom"
-              :is-search-perm="isSearchPerm"
+              :is-search-perm="isHasSearch"
               :group-data="currentGroupData"
-              :cur-search-params="curSearchParams"
+              :cur-search-params="querySearchParams"
               :cur-search-pagination="curSearchPagination"
               @on-clear="handleEmptyClear"
               @on-refresh="handleEmptyRefresh"
@@ -160,6 +195,7 @@
       LeftLayout,
       RightLayout
     },
+
     data () {
       return {
         listLoading: false,
@@ -224,13 +260,20 @@
           tipType: ''
         },
         currentGroupData: {},
+        curSystemAction: {},
+        curResourceData: {
+          type: '',
+          condition: []
+        },
         currentBackup: 1,
         gridCount: 4,
         dragWidth: 224,
         formItemWidth: '',
-        listHeight: window.innerHeight - 51 - 51 - 157 - 42 - 8
+        listHeight: window.innerHeight - 51 - 51 - 157 - 42 - 8,
+        searchTagList: []
       };
     },
+
     computed: {
       ...mapGetters(['navStick']),
       leftStyle () {
@@ -243,13 +286,24 @@
           flexBasis: '224px'
         };
       },
+      isHasSearch () {
+        const searchParams = { ...this.curSystemAction, ...this.formData };
+        const hasData = Object.values(searchParams).filter((item) => item !== '');
+        const { condition, type } = this.curResourceData;
+        console.log(555);
+        if (hasData.length) {
+          console.log(hasData);
+        }
+        return !!(hasData.length > 0 || (condition && condition.length > 0) || type);
+      },
       isNoSearchData () {
-        console.log(Object.values(this.curSearchParams).filter((item) => item !== ''));
-        return Object.values(this.curSearchParams).filter((item) => item !== '').length === 0 && !this.expandData['search'].isExpand;
+        const searchParams = { ...this.curSystemAction, ...this.formData };
+        const hasData = Object.values(searchParams).filter((item) => item !== '');
+        const { condition, type } = this.curResourceData;
+        return !hasData.length && (condition && !condition.length) && !type && !this.expandData['search'].isExpand;
       },
       isHasDataNoExpand () {
-        console.log(Object.values(this.curSearchParams).filter((item) => item !== ''));
-        return Object.values(this.curSearchParams).filter((item) => item !== '').length > 0 && !this.expandData['search'].isExpand;
+        return this.isHasSearch && !this.expandData['search'].isExpand;
       },
       canScrollLoad () {
         return this.pageConf.totalPage > this.currentBackup;
@@ -263,6 +317,9 @@
           }
         }
         return com;
+      },
+      querySearchParams () {
+        return { ...this.curSearchParams, ...this.formData };
       }
     },
 
@@ -271,6 +328,7 @@
       this.pageConf.limit = Math.ceil(this.listHeight / 36);
       this.formatFormItemWidth();
       await this.fetchInitData();
+      await this.fetchDefaultSelectData();
     },
 
     mounted () {
@@ -288,6 +346,23 @@
         if (this.groupList.length) {
           const { id, name } = this.groupList[0];
           this.curSelectActive = `${id}&${name}`;
+        }
+      },
+
+      async fetchDefaultSelectData () {
+        if (this.groupList.length) {
+          const { id, name } = this.groupList[0];
+          this.curSelectActive = `${id}&${name}`;
+          const params = {
+            ...this.curSearchParams,
+            ...this.formData
+          };
+          bus.$emit('on-refresh-resource-search', {
+            isSearchPerm: this.isSearchPerm,
+            curSearchParams: params,
+            curSearchPagination: this.curSearchPagination,
+            groupData: this.groupList[0]
+          });
         }
       },
 
@@ -373,16 +448,8 @@
           });
           this.groupList = [];
           await this.fetchInitData();
+          await this.fetchDefaultSelectData();
         }
-      },
-
-      handleSearch () {
-        this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleSearchUserGroup(true, true);
-      },
-
-      handleSelectUser (payload) {
-        this.curSelectActive = `${payload.id}&${payload.name}`;
-        this.currentGroupData = payload;
       },
 
       async handleRefreshTable () {
@@ -397,6 +464,34 @@
           isSearchPerm: false
         });
       },
+
+      handleSelectSystem (payload) {
+        this.curSystemAction = { ...payload };
+      },
+
+      handleSelectResource (payload) {
+        this.curResourceData = { ...payload };
+      },
+
+      handleSearch () {
+        this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleSearchUserGroup(true, true);
+      },
+
+      handleSelectUser (payload) {
+        this.curSelectActive = `${payload.id}&${payload.name}`;
+        this.currentGroupData = {
+          ...payload,
+          ...{
+            isClick: true
+          }
+        };
+      },
+
+      handleCloseTag () {
+
+      },
+
+      handleClearAll () {},
 
       handleRefreshTipType (payload) {
         let tipType = '';
@@ -487,8 +582,11 @@
       left: 50%;
       transform: translate(-50%, -50%);
     }
-    &.no-expand-search {
+    &.no-expand-no-search-data {
       top: 8px;
+    }
+    &.no-expand-has-search-data {
+      top: 50px;
     }
   }
   &-content {
@@ -532,6 +630,33 @@
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
+      }
+    }
+  }
+  .search-data-no-expand {
+    min-height: 42px;
+    line-height: 42px;
+    background-color: #ffffff;
+    .no-expand-search-list {
+      padding: 0 24px;
+      .search-data-content {
+        display: flex;
+        align-items: center;
+        .funnel-icon {
+          color: #979BA5;
+        }
+        .delete-all {
+          margin-left: 8px;
+          &-icon {
+            color: #C4C6CC;
+            font-size: 14px;
+            cursor: pointer;
+            vertical-align: middle;
+            &:hover {
+              color: #979BA5;
+            }
+          }
+        }
       }
     }
   }

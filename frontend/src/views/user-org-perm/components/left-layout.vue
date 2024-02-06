@@ -126,7 +126,11 @@
         type: Boolean,
         default: false
       },
-      isNoExpandSearch: {
+      isNoExpandNoSearchData: {
+        type: Boolean,
+        default: false
+      },
+      isNoExpandHasSearchData: {
         type: Boolean,
         default: false
       },
@@ -178,9 +182,10 @@
         groupList: [],
         userList: [],
         departList: [],
+        queryGroupData: {},
         pageConf: {
           current: 1,
-          limit: 18,
+          limit: 1,
           count: 0
         },
         groupEmptyData: {
@@ -229,7 +234,12 @@
       },
       formatListHeight () {
         if (this.showNoticeAlert) {
-          if (this.isNoExpandSearch) {
+          if (this.isNoExpandNoSearchData) {
+            return {
+              height: 'calc(100vh - 186px)'
+            };
+          }
+          if (this.isNoExpandHasSearchData) {
             return {
               height: 'calc(100vh - 186px)'
             };
@@ -238,9 +248,15 @@
             height: 'calc(100vh - 450px)'
           };
         }
-        if (this.isNoExpandSearch) {
+        if (this.isNoExpandNoSearchData) {
           return {
             height: 'calc(100vh - 186px)'
+          };
+        }
+        console.log(this.isNoExpandHasSearchData);
+        if (this.isNoExpandHasSearchData) {
+          return {
+            height: 'calc(100vh - 170px)'
           };
         }
         return {
@@ -361,6 +377,7 @@
       border-radius: 2px;
       padding-left: 10px;
       padding-right: 5px;
+      background-color: #ffffff;
       color: #63656e;
 
       &:hover {

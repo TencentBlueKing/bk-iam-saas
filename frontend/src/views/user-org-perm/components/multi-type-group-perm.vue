@@ -1,6 +1,6 @@
 <template>
   <div class="user-org-group-perm">
-    <template v-if="hasPerm">
+    <template v-if="permData.hasPerm">
       <MemberTempPermPolicy
         v-for="(item, index) in memberTempPermData"
         :key="index"
@@ -86,10 +86,6 @@
         }
       
       },
-      isSearchPerm: {
-        type: Boolean,
-        default: false
-      },
       isOnlyPerm: {
         type: Boolean,
         default: false
@@ -104,7 +100,9 @@
     },
     data () {
       return {
-        hasPerm: false,
+        permData: {
+          hasPerm: false
+        },
         isSearchResource: false,
         onePerm: 0,
         totalCount: 0,
@@ -189,7 +187,7 @@
         ],
         memberTempPermData: [],
         curSelectedGroup: [],
-        queryGroupData: [],
+        queryGroupData: {},
         curSearchParams: {},
         emptyPermData: {
           type: 'empty',
@@ -219,32 +217,19 @@
         }
     },
     watch: {
-      emptyData: {
-        handler (value) {
-          this.emptyPermData = Object.assign({}, value);
-        },
-        immediate: true
-      },
-      totalCount: {
-        handler (value) {
-          this.hasPerm = value > 0;
-        },
-        immediate: true
-      },
-      hasPerm (value) {
-        return value || this.totalCount > 0;
-      },
       groupData: {
         handler (value) {
-          if (Object.keys(value).length > 0) {
-            this.fetchResetData(value);
+          this.queryGroupData = cloneDeep(value);
+          // 只有手动切换组织架构成员时才重置数据，默认以兄弟组件通信处理交互
+          if (value.isClick) {
+            this.fetchResetData();
           }
         },
         immediate: true
       },
-      isSearchPerm: {
+      emptyData: {
         handler (value) {
-          this.isSearchResource = value;
+          this.emptyPermData = Object.assign({}, value);
         },
         immediate: true
       }
@@ -262,20 +247,18 @@
       });
     },
     methods: {
-      async fetchResetData (value) {
+      async fetchResetData () {
         this.emptyPermData.tipType = '';
         this.handleEmptyClear();
-        this.queryGroupData = cloneDeep(value);
-        this.fetchInitData();
+        await this.fetchInitData();
       },
 
       // 获取个人/部门用户组
       async fetchUserGroupSearch () {
         const { id, type } = this.queryGroupData;
-        let curData = this.memberTempPermData[0];
-        const { emptyData, pagination } = curData;
+        const { emptyData, pagination } = this.memberTempPermData[0];
         try {
-          curData.loading = true;
+          this.memberTempPermData[0].loading = true;
           const { current, limit } = pagination;
           const url = 'userOrOrg/getUserOrDepartGroupList';
           let params = {
@@ -284,9 +267,9 @@
           };
           if (this.isSearchResource) {
             params = {
-                ...this.curSearchParams,
-                limit,
-                offset: limit * (current - 1)
+              ...this.curSearchParams,
+              limit,
+              offset: limit * (current - 1)
             };
           }
           if (this.externalSystemId) {
@@ -301,12 +284,12 @@
               }
           });
           const totalCount = data.count || 0;
-          curData = Object.assign(curData, {
+          this.memberTempPermData[0] = Object.assign(this.memberTempPermData[0], {
             list: data.results || [],
             emptyData: formatCodeData(code, emptyData, totalCount === 0),
             pagination: { ...pagination, ...{ count: totalCount } }
           });
-          this.emptyPermData = cloneDeep(curData.emptyData);
+          this.emptyPermData = cloneDeep(this.memberTempPermData[0].emptyData);
           this.$nextTick(() => {
             const curSelectedId = this.curSelectedGroup.map((item) => item.id);
             this.memberTempPermData[0].list.forEach((item) => {
@@ -321,14 +304,14 @@
         } catch (e) {
           console.error(e);
           this.emptyPermData = formatCodeData(e.code, emptyData);
-          curData = Object.assign(curData, {
+          this.memberTempPermData[0] = Object.assign(this.memberTempPermData[0], {
             list: [],
             emptyData: formatCodeData(e.code, emptyData),
             pagination: { ...pagination, ...{ count: 0 } }
           });
           this.messageAdvancedError(e);
         } finally {
-          curData.loading = false;
+          this.memberTempPermData[0].loading = false;
         }
       },
 
@@ -499,7 +482,7 @@
                   this.fetchDepartGroupSearch(),
                   this.fetchPermByTempSearch()
                 ]);
-                this.hasPerm = this.memberTempPermData.some((v) => v.pagination.count > 0);
+                this.$set(this.permData, 'hasPerm', this.memberTempPermData.some((v) => v.pagination.count > 0));
               },
               department: async () => {
                 this.memberTempPermData = this.initMemberTempPermData.filter((item) => ['personalOrDepartPerm', 'departTempPerm'].includes(item.id));
@@ -508,7 +491,7 @@
                   this.fetchUserGroupSearch(),
                   this.fetchDepartPermByTempSearch()
                 ]);
-                this.hasPerm = this.memberTempPermData.some((v) => v.pagination.count > 0);
+                this.$set(this.permData, 'hasPerm', this.memberTempPermData.some((v) => v.pagination.count > 0));
               }
             };
             return typeMap[this.queryGroupData.type]();
@@ -536,7 +519,6 @@
 
       async formatPaginationData (payload, current, limit) {
         const curData = this.memberTempPermData.find((item) => item.id === payload.id);
-        console.log(payload.id);
         if (curData) {
           const typeMap = {
             personalOrDepartPerm: async () => {

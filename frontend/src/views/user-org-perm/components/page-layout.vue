@@ -9,9 +9,9 @@
     <slot name="expand-icon" />
     <div :class="[
       'right-layout',
-      { 'no-expand': isNoExpandSearch },
-      { 'expand-show-notice': !isNoExpandSearch && showNoticeAlert },
-      { 'no-expand-show-notice': isNoExpandSearch && showNoticeAlert }
+      { 'no-expand': isNoExpandNoSearchData },
+      { 'expand-show-notice': !isNoExpandNoSearchData && showNoticeAlert },
+      { 'no-expand-show-notice': isNoExpandNoSearchData && showNoticeAlert }
     ]">
       <slot name="right" />
     </div>
@@ -26,7 +26,11 @@
         type: Boolean,
         default: true
       },
-      isNoExpandSearch: {
+      isNoExpandNoSearchData: {
+        type: Boolean,
+        default: false
+      },
+      isNoExpandHasSearchData: {
         type: Boolean,
         default: false
       }

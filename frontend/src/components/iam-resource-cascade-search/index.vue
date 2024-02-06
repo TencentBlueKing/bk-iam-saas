@@ -422,6 +422,20 @@
         },
         immediate: true
       },
+      applyGroupData: {
+        handler (value) {
+          // 用于判断自定义slot场景下，同步更新选中值
+          this.$emit('on-select-system', value);
+        },
+        deep: true
+      },
+      curResourceData: {
+        handler (value) {
+          // 用于判断自定义slot场景下，同步更新选中值
+          this.$emit('on-select-resource', value);
+        },
+        deep: true
+      },
       navStick () {
         this.formatFormItemWidth();
       }
@@ -608,7 +622,6 @@
           this.resetPagination();
           this.resetLocationHref();
         }
-        console.log(this.searchParams, '搜索参数');
         this.handleSearchUserGroup(true, false);
       },
 
