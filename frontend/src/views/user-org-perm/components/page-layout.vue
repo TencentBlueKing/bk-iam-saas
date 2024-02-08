@@ -10,8 +10,9 @@
     <div :class="[
       'right-layout',
       { 'no-expand': isNoExpandNoSearchData },
+      { 'no-expand-has-search': isNoExpandHasSearchData },
       { 'expand-show-notice': !isNoExpandNoSearchData && showNoticeAlert },
-      { 'no-expand-show-notice': isNoExpandNoSearchData && showNoticeAlert }
+      { 'no-expand-show-notice': (isNoExpandNoSearchData || isNoExpandHasSearchData ) && showNoticeAlert }
     ]">
       <slot name="right" />
     </div>
@@ -68,6 +69,9 @@
       background-color: #e6e9ea;
     }
     &.no-expand {
+      height: calc(100vh - 112px);
+    }
+    &.no-expand-has-search {
       height: calc(100vh - 112px);
     }
     &.expand-show-notice {

@@ -236,12 +236,12 @@
         if (this.showNoticeAlert) {
           if (this.isNoExpandNoSearchData) {
             return {
-              height: 'calc(100vh - 186px)'
+              height: 'calc(100vh - 225px)'
             };
           }
           if (this.isNoExpandHasSearchData) {
             return {
-              height: 'calc(100vh - 186px)'
+              height: 'calc(100vh - 268px)'
             };
           }
           return {
@@ -253,10 +253,9 @@
             height: 'calc(100vh - 186px)'
           };
         }
-        console.log(this.isNoExpandHasSearchData);
         if (this.isNoExpandHasSearchData) {
           return {
-            height: 'calc(100vh - 170px)'
+            height: 'calc(100vh - 228px)'
           };
         }
         return {

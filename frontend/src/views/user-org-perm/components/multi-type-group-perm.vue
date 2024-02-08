@@ -13,7 +13,6 @@
         ]"
         :perm-length="item.pagination.count"
         :one-perm="isOnlyPerm ? 1 : formatPermLength"
-        :is-only-perm="isOnlyPerm"
         :is-all-delete="false"
         :show-collapse="false"
         @on-expanded="handleExpanded(...arguments, item)"
@@ -86,10 +85,6 @@
         }
       
       },
-      isOnlyPerm: {
-        type: Boolean,
-        default: false
-      },
       componentLoading: {
         type: Boolean,
         default: false
@@ -103,6 +98,7 @@
         permData: {
           hasPerm: false
         },
+        isOnlyPerm: false,
         isSearchResource: false,
         onePerm: 0,
         totalCount: 0,
@@ -483,6 +479,7 @@
                   this.fetchPermByTempSearch()
                 ]);
                 this.$set(this.permData, 'hasPerm', this.memberTempPermData.some((v) => v.pagination.count > 0));
+                this.isOnlyPerm = this.memberTempPermData.filter((v) => v.pagination.count > 0).length === 1;
               },
               department: async () => {
                 this.memberTempPermData = this.initMemberTempPermData.filter((item) => ['personalOrDepartPerm', 'departTempPerm'].includes(item.id));
@@ -492,6 +489,7 @@
                   this.fetchDepartPermByTempSearch()
                 ]);
                 this.$set(this.permData, 'hasPerm', this.memberTempPermData.some((v) => v.pagination.count > 0));
+                this.isOnlyPerm = this.memberTempPermData.filter((v) => v.pagination.count > 0).length === 1;
               }
             };
             return typeMap[this.queryGroupData.type]();

@@ -77,14 +77,14 @@
           </div>
           <div
             v-for="tag in searchTagList"
-            :key="tag"
+            :key="tag.id"
             class="tag-list"
           >
             <bk-tag
               closable
-              :key="tag"
+              :key="tag.id"
               @close="handleCloseTag(tag)">
-              {{tag}}
+              {{tag.label}}:{{ tag.value }}
             </bk-tag>
           </div>
           <div
@@ -189,6 +189,7 @@
   ]);
 
   export default {
+    inject: ['showNoticeAlert'],
     components: {
       IamResourceCascadeSearch,
       Layout,
@@ -270,7 +271,48 @@
         dragWidth: 224,
         formItemWidth: '',
         listHeight: window.innerHeight - 51 - 51 - 157 - 42 - 8,
-        searchTagList: []
+        searchTagList: [
+          {
+            name: 'system_id',
+            label: this.$t(`m.common['系统']`),
+            value: ''
+          },
+          {
+            name: 'action_id',
+            label: this.$t(`m.common['操作']`),
+            value: ''
+          },
+          {
+            name: 'resource_type',
+            label: this.$t(`m.permApply['资源类型']`),
+            value: ''
+          },
+          {
+            name: 'resource_instance',
+            label: this.$t(`m.common['资源实例']`),
+            value: ''
+          },
+          {
+            name: 'user_group_name',
+            label: this.$t(`m.userGroup['用户组名']`),
+            value: ''
+          },
+          {
+            name: 'user_group_id',
+            label: this.$t(`m.userOrOrg['用户组 ID']`),
+            value: ''
+          },
+          {
+            name: 'user_name',
+            label: this.$t(`m.common['用户名']`),
+            value: ''
+          },
+          {
+            name: 'department_name',
+            label: this.$t(`m.perm['组织名']`),
+            value: ''
+          }
+        ]
       };
     },
 
@@ -290,9 +332,18 @@
         const searchParams = { ...this.curSystemAction, ...this.formData };
         const hasData = Object.values(searchParams).filter((item) => item !== '');
         const { condition, type } = this.curResourceData;
-        console.log(555);
-        if (hasData.length) {
-          console.log(hasData);
+        // this.searchTagList = [];
+        if (Object.keys(searchParams).length) {
+          Object.keys(searchParams).forEach((item) => {
+            if (searchParams[item]) {
+              // this.searchTagList.push({
+              //   label:
+              // });
+            }
+          });
+        }
+        if (condition && condition.length) {
+          console.log(condition);
         }
         return !!(hasData.length > 0 || (condition && condition.length > 0) || type);
       },
@@ -300,7 +351,7 @@
         const searchParams = { ...this.curSystemAction, ...this.formData };
         const hasData = Object.values(searchParams).filter((item) => item !== '');
         const { condition, type } = this.curResourceData;
-        return !hasData.length && (condition && !condition.length) && !type && !this.expandData['search'].isExpand;
+        return !hasData.length && (!condition || (condition && !condition.length)) && !type && !this.expandData['search'].isExpand;
       },
       isHasDataNoExpand () {
         return this.isHasSearch && !this.expandData['search'].isExpand;
@@ -405,6 +456,10 @@
       },
 
       async handleLoadMore () {
+        const { totalPage } = this.pageConf;
+        if (this.pageConf.current + 1 > totalPage) {
+          return;
+        }
         this.pageConf.current++;
         await this.fetchGroupMemberList(false, true);
       },
@@ -437,10 +492,13 @@
 
       async handleToggleExpand (payload) {
         this.expandData[payload].isExpand = !this.expandData[payload].isExpand;
+        const distances = window.innerHeight - 51 - 51 - 42 - 8;
         if (['search'].includes(payload)) {
-          this.listHeight = this.expandData[payload].isExpand
-            ? window.innerHeight - 51 - 51 - 157 - 42 - 8
-            : window.innerHeight - 51 - 51 - 42 - 8;
+          if (this.expandData[payload].isExpand) {
+            this.listHeight = this.showNoticeAlert ? distances - 157 - 40 : distances - 157;
+          } else {
+            this.listHeight = this.showNoticeAlert ? distances - 40 : distances;
+          }
           this.pageConf = Object.assign(this.pageConf, {
             current: 1,
             totalPage: 1,
@@ -520,7 +578,12 @@
         this.isSearchPerm = false;
         this.pageConf.current = 1;
         this.curSearchParams = {};
-        this.formData.name = '';
+        this.formData = {
+          group_name: '',
+          group_id: '',
+          name: '',
+          department_name: ''
+        };
         this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyClear();
       },
 

@@ -201,7 +201,6 @@
         this.curEmptyData.tipType = '';
         this.selectedGroups = [];
         this.handleEmptyClear();
-        this.componentsKey = +new Date();
         this.queryGroupData = cloneDeep(value);
       },
 
