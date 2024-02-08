@@ -424,15 +424,55 @@
       },
       applyGroupData: {
         handler (value) {
+          const params = {};
+          if (value.system_id) {
+            const curData = this.systemSelectList.find((item) => item.id === value.system_id);
+            if (curData) {
+              params.system_id = {
+                label: curData.name,
+                value: curData.id
+              };
+            }
+          }
+          if (value.action_id) {
+            const curData = this.processesList.find((item) => item.id === value.action_id);
+            if (curData) {
+              params.action_id = {
+                label: curData.name,
+                value: curData.id
+              };
+            }
+          }
           // 用于判断自定义slot场景下，同步更新选中值
-          this.$emit('on-select-system', value);
+          this.$emit('on-select-system', params);
         },
         deep: true
       },
       curResourceData: {
         handler (value) {
           // 用于判断自定义slot场景下，同步更新选中值
-          this.$emit('on-select-resource', value);
+          // 处理资源类型数据
+          const params = {};
+          const { type, condition } = value;
+          const { resource_groups: resourceGroups } = this.resourceTypeData;
+          if (resourceGroups && resourceGroups.length) {
+            if (type && resourceGroups[0].related_resource_types_list
+              && resourceGroups[0].related_resource_types_list.length
+            ) {
+              const curData = resourceGroups[0].related_resource_types_list.find((item) => item.type === type);
+              if (curData) {
+                params.resource_type = {
+                  label: curData.name,
+                  value: curData.type
+                };
+              }
+            }
+          }
+          // 处理资源实例数据
+          if (condition && condition.length) {
+            console.log(condition, params);
+          }
+          this.$emit('on-select-resource', params);
         },
         deep: true
       },

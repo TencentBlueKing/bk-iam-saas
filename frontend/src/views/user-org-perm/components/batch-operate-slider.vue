@@ -467,6 +467,7 @@
   }
 
   /deep/ .apply-expired-at {
+    margin-top: 18px !important;
     .custom-time {
       height: 26px;
     }

@@ -24,7 +24,7 @@
           :is-loading="item.loading"
           :is-search-perm="isSearchResource"
           :pagination="item.pagination"
-          :cur-search-params="searchParams"
+          :cur-search-params="curSearchParams"
           :group-data="groupData"
           :list="item.list"
           :cur-selected-group="curSelectedGroup"
@@ -220,6 +220,12 @@
           if (value.isClick) {
             this.fetchResetData();
           }
+        },
+        immediate: true
+      },
+      searchParams: {
+        handler (value) {
+          this.curSearchParams = { ...value };
         },
         immediate: true
       },

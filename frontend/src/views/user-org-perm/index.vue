@@ -17,7 +17,7 @@
         :grid-count="gridCount"
         @on-remote-table="handleRemoteTable"
         @on-refresh-table="handleRefreshTable"
-        @on-select-system="handleSelectSystem"
+        @on-select-system="handleSelectSystemAction"
         @on-select-resource="handleSelectResource"
       >
         <div slot="custom-content" class="custom-content">
@@ -81,15 +81,18 @@
             class="tag-list"
           >
             <bk-tag
+              v-if="tag.value"
               closable
+              class="tag-item"
               :key="tag.id"
               @close="handleCloseTag(tag)">
-              {{tag.label}}:{{ tag.value }}
+              <span>{{tag.label}}:</span>
+              <span class="tag-item-value">{{ tag.value }}</span>
             </bk-tag>
           </div>
           <div
             class="delete-all"
-            v-if="searchTagList.length"
+            v-if="hasTagData"
             v-bk-tooltips="{ content: $t(`m.common['清空搜索条件']`) }">
             <Icon
               bk
@@ -263,7 +266,7 @@
         currentGroupData: {},
         curSystemAction: {},
         curResourceData: {
-          type: '',
+          resource_type: '',
           condition: []
         },
         currentBackup: 1,
@@ -293,17 +296,17 @@
             value: ''
           },
           {
-            name: 'user_group_name',
+            name: 'group_name',
             label: this.$t(`m.userGroup['用户组名']`),
             value: ''
           },
           {
-            name: 'user_group_id',
+            name: 'group_id',
             label: this.$t(`m.userOrOrg['用户组 ID']`),
             value: ''
           },
           {
-            name: 'user_name',
+            name: 'name',
             label: this.$t(`m.common['用户名']`),
             value: ''
           },
@@ -329,29 +332,17 @@
         };
       },
       isHasSearch () {
+        // 这里之所以把资源类型、实例与系统、操作区分开，是因为有选了操作，但是没有资源数据的业务场景
         const searchParams = { ...this.curSystemAction, ...this.formData };
         const hasData = Object.values(searchParams).filter((item) => item !== '');
-        const { condition, type } = this.curResourceData;
-        // this.searchTagList = [];
-        if (Object.keys(searchParams).length) {
-          Object.keys(searchParams).forEach((item) => {
-            if (searchParams[item]) {
-              // this.searchTagList.push({
-              //   label:
-              // });
-            }
-          });
-        }
-        if (condition && condition.length) {
-          console.log(condition);
-        }
-        return !!(hasData.length > 0 || (condition && condition.length > 0) || type);
+        const { condition, resource_type: resourceType } = this.curResourceData;
+        return !!(hasData.length > 0 || (condition && condition.length > 0) || resourceType);
       },
       isNoSearchData () {
         const searchParams = { ...this.curSystemAction, ...this.formData };
         const hasData = Object.values(searchParams).filter((item) => item !== '');
-        const { condition, type } = this.curResourceData;
-        return !hasData.length && (!condition || (condition && !condition.length)) && !type && !this.expandData['search'].isExpand;
+        const { condition, resource_type: resourceType } = this.curResourceData;
+        return !hasData.length && (!condition || (condition && !condition.length)) && !resourceType && !this.expandData['search'].isExpand;
       },
       isHasDataNoExpand () {
         return this.isHasSearch && !this.expandData['search'].isExpand;
@@ -371,6 +362,9 @@
       },
       querySearchParams () {
         return { ...this.curSearchParams, ...this.formData };
+      },
+      hasTagData () {
+        return this.searchTagList.filter((item) => item.value !== '').length > 0;
       }
     },
 
@@ -378,8 +372,7 @@
       this.comMap = COM_MAP;
       this.pageConf.limit = Math.ceil(this.listHeight / 36);
       this.formatFormItemWidth();
-      await this.fetchInitData();
-      await this.fetchDefaultSelectData();
+      await this.fetchFirstData();
     },
 
     mounted () {
@@ -417,6 +410,11 @@
         }
       },
 
+      async fetchFirstData () {
+        await this.fetchInitData();
+        await this.fetchDefaultSelectData();
+      },
+
       async fetchGroupMemberList (isLoading = false, isScrollLoad = false) {
         this.listLoading = isLoading;
         try {
@@ -427,8 +425,9 @@
           };
           if (this.isSearchPerm) {
             params = {
-              ...params,
-              ...this.formData
+              ...this.curSearchParams,
+              ...this.formData,
+              ...params
             };
           }
           const { code, data } = await this.$store.dispatch('userOrOrg/getUserGroupMemberList', params);
@@ -504,9 +503,12 @@
             totalPage: 1,
             limit: Math.ceil(this.listHeight / 36)
           });
+          if (this.isHasSearch) {
+            this.fetchHasSearchData();
+            return;
+          }
           this.groupList = [];
-          await this.fetchInitData();
-          await this.fetchDefaultSelectData();
+          await this.fetchFirstData();
         }
       },
 
@@ -522,9 +524,52 @@
           isSearchPerm: false
         });
       },
+      
+      // 处理折叠有搜索参数的业务场景
+      async fetchHasSearchData () {
+        const searchParams = { ...this.curSystemAction, ...this.curResourceData, ...this.formData };
+        const { condition } = this.curResourceData;
+        this.isSearchPerm = true;
+        // 处理频繁切换展开场景下资源实例搜索值被清空了的业务场景
+        if (!this.isHasDataNoExpand) {
+          this.$nextTick(async () => {
+            const { applyGroupData } = this.$refs.iamResourceSearchRef;
+            Object.keys(searchParams).forEach((item) => {
+              const curData = this.searchTagList.find((v) => v.name === item && searchParams[item]);
+              if (curData) {
+                if (['system_id', 'action_id'].includes(item)) {
+                  applyGroupData[item] = searchParams[item].value;
+                }
+              }
+            });
+            await this.fetchFirstData();
+          });
+        } else {
+          Object.keys(searchParams).forEach((item) => {
+            const curData = this.searchTagList.find((v) => v.name === item && searchParams[item]);
+            if (curData) {
+              if (['system_id', 'action_id', 'resource_type'].includes(item)) {
+                curData.value = searchParams[item].label;
+              } else {
+                curData.value = searchParams[item];
+              }
+            }
+          });
+          if (condition && condition.length) {
+            console.log(condition);
+          }
+          await this.fetchFirstData();
+        }
+      },
 
-      handleSelectSystem (payload) {
+      handleSelectSystemAction (payload) {
         this.curSystemAction = { ...payload };
+        if (this.curSystemAction.system_id) {
+          this.$set(this.curSearchParams, 'system_id', this.curSystemAction.system_id.value);
+        }
+        if (this.curSystemAction.action_id) {
+          this.$set(this.curSearchParams, 'action_id', this.curSystemAction.action_id.value);
+        }
       },
 
       handleSelectResource (payload) {
@@ -545,11 +590,61 @@
         };
       },
 
-      handleCloseTag () {
-
+      async handleCloseTag (payload) {
+        payload.value = '';
+        this.pageConf.current = 1;
+        if (this.curSystemAction[payload.name]) {
+          this.curSystemAction[payload.name] = '';
+        }
+        if (this.formData[payload.name]) {
+          this.formData[payload.name] = '';
+        }
+        if (this.curResourceData[payload.name]) {
+          this.curResourceData[payload.name] = '';
+        }
+        if (this.curSearchParams[payload.name]) {
+          this.curSearchParams[payload.name] = '';
+        }
+        // 删除有关联数据的tag
+        if (['system_id'].includes(payload.name)) {
+          this.searchTagList.forEach((item) => {
+            if (['system_id', 'action_id', 'resource_type'].includes(item.name)) {
+              item.value = '';
+            }
+          });
+          await this.fetchFirstData();
+          this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyClear();
+          return;
+        }
+        if (['action_id'].includes(payload.name)) {
+          this.searchTagList.forEach((item) => {
+            if (['action_id', 'resource_type'].includes(item.name)) {
+              item.value = '';
+            }
+          });
+          await this.fetchFirstData();
+          return;
+        }
+        await this.fetchFirstData();
       },
 
-      handleClearAll () {},
+      async handleClearAll () {
+        this.searchTagList.forEach((item) => {
+          if (item.value) {
+            item.value = '';
+            if (this.curSystemAction[item.name]) {
+              this.curSystemAction[item.name] = '';
+            }
+            if (this.formData[item.name]) {
+              this.formData[item.name] = '';
+            }
+            if (this.curResourceData[item.name]) {
+              this.curResourceData[item.name] = '';
+            }
+          }
+        });
+        await this.handleEmptyUserClear();
+      },
 
       handleRefreshTipType (payload) {
         let tipType = '';
@@ -563,13 +658,20 @@
       },
       
       handleEmptyRefresh () {
-        this.isSearchPerm = false;
-        this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyRefresh();
+        if (this.isHasDataNoExpand) {
+          this.fetchFirstData();
+        } else {
+          this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyRefresh();
+        }
       },
 
       handleEmptyClear () {
         this.isSearchPerm = false;
-        // this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyClear();
+        if (this.isHasDataNoExpand) {
+          this.fetchFirstData();
+        } else {
+          this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyClear();
+        }
       },
 
       handleEmptyUserClear () {
@@ -584,6 +686,7 @@
           name: '',
           department_name: ''
         };
+        this.fetchFirstData();
         this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyClear();
       },
 
@@ -707,6 +810,15 @@
         align-items: center;
         .funnel-icon {
           color: #979BA5;
+        }
+        .tag-list {
+          .tag-item {
+            display: flex;
+            align-items: center;
+            &-value {
+              margin-left: 8px;
+            }
+          }
         }
         .delete-all {
           margin-left: 8px;

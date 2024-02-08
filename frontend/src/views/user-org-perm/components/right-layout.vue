@@ -200,7 +200,7 @@
       async fetchDetailData (value) {
         this.curEmptyData.tipType = '';
         this.selectedGroups = [];
-        this.handleEmptyClear();
+        // this.handleEmptyClear();
         this.queryGroupData = cloneDeep(value);
       },
 
