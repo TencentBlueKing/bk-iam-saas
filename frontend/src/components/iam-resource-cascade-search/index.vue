@@ -952,7 +952,7 @@
 
       resetPagination () {
         this.pagination = Object.assign(
-          {},
+          this.pagination,
           {
             limit: 10,
             current: 1,
@@ -976,7 +976,6 @@
         this.resourceInstances = [];
         this.resetLocationHref();
       }
-
     }
   };
 
