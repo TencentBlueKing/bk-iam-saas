@@ -387,10 +387,6 @@
         this.pageConf.current = 1;
         this.currentBackup = 1;
         await this.fetchGroupMemberList(true, false);
-        if (this.groupList.length) {
-          const { id, name } = this.groupList[0];
-          this.curSelectActive = `${id}&${name}`;
-        }
       },
 
       async fetchDefaultSelectData () {
@@ -465,11 +461,11 @@
 
       async handleRemoteTable (payload) {
         const { emptyData, pagination, searchParams } = payload;
-        this.isSearchPerm = emptyData.tipType === 'search';
         const params = {
           ...searchParams,
           ...this.formData
         };
+        this.isSearchPerm = emptyData.tipType === 'search';
         this.curSearchParams = cloneDeep(params);
         this.curSearchPagination = cloneDeep(pagination);
         this.curEmptyData = cloneDeep(emptyData);
@@ -675,6 +671,7 @@
       },
 
       handleEmptyUserClear () {
+        console.log(4444);
         this.curEmptyData.tipType = '';
         this.emptyData.tipType = '';
         this.isSearchPerm = false;

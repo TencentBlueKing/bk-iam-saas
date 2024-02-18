@@ -250,8 +250,8 @@
     },
     methods: {
       async fetchResetData () {
-        this.emptyPermData.tipType = '';
-        this.handleEmptyClear();
+        // this.emptyPermData.tipType = '';
+        // this.handleEmptyClear();
         await this.fetchInitData();
       },
 
@@ -338,9 +338,9 @@
             params.system_id = this.externalSystemId;
             params.hidden = false;
           }
-          // 'userOrOrg/getUserGroupByDepartList',
+          // 'userOrOrg/getUserOrDepartGroupList',
           const { code, data } = await this.$store.dispatch(
-            'userOrOrg/getUserOrDepartGroupList',
+            'userOrOrg/getUserGroupByDepartList',
             params
           );
           const totalCount = data.count || 0;
@@ -369,8 +369,8 @@
         try {
           this.memberTempPermData[2].loading = true;
           const { current, limit } = pagination;
-          let url = 'userOrOrg/getUserOrDepartGroupList';
-          // let url = 'userOrOrg/getUserMemberTempList';
+          let url = 'userOrOrg/getUserMemberTempList';
+          // let url = 'userOrOrg/getUserOrDepartGroupList';
           let params = {
             limit,
             offset: limit * (current - 1)
