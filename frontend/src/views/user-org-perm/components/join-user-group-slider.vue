@@ -48,7 +48,7 @@
                   </div>
                 </RenderPermBoundary>
               </template>
-              <div class="single-object">
+              <div v-else class="single-object">
                 <render-member-item v-if="isHasUser" mode="view" type="user" :data="userList" />
                 <render-member-item v-if="isHasDepartment" mode="view" type="department" :data="departList" />
               </div>

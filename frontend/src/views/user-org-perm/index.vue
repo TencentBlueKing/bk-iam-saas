@@ -19,6 +19,7 @@
         @on-refresh-table="handleRefreshTable"
         @on-select-system="handleSelectSystemAction"
         @on-select-resource="handleSelectResource"
+        @on-select-instance="handleSelectInstance"
       >
         <div slot="custom-content" class="custom-content">
           <bk-form form-type="vertical" class="custom-content-form">
@@ -315,7 +316,8 @@
             label: this.$t(`m.perm['组织名']`),
             value: ''
           }
-        ]
+        ],
+        resourceInstances: []
       };
     },
 
@@ -421,7 +423,6 @@
           };
           if (this.isSearchPerm) {
             params = {
-              ...this.curSearchParams,
               ...this.formData,
               ...params
             };
@@ -524,25 +525,40 @@
       // 处理折叠有搜索参数的业务场景
       async fetchHasSearchData () {
         const searchParams = { ...this.curSystemAction, ...this.curResourceData, ...this.formData };
-        const { condition } = this.curResourceData;
         this.isSearchPerm = true;
+        const { condition } = this.curResourceData;
+        const resourceInstances = this.resourceInstances.reduce((prev, item) => {
+          const { id, resourceInstancesPath } = this.handlePathData(item, item.type);
+          prev.push({
+            system_id: item.system_id,
+            id: id,
+            type: item.type,
+            name: item.name,
+            path: resourceInstancesPath
+          });
+          return prev;
+        }, []);
+        this.curSearchParams.resourceInstances = resourceInstances || [];
         // 处理频繁切换展开场景下资源实例搜索值被清空了的业务场景
         if (!this.isHasDataNoExpand) {
           this.$nextTick(async () => {
-            const { applyGroupData } = this.$refs.iamResourceSearchRef;
             Object.keys(searchParams).forEach((item) => {
-              const curData = this.searchTagList.find((v) => v.name === item && searchParams[item]);
+              const curData = this.searchTagList.find((v) => v.name === item);
               if (curData) {
                 if (['system_id', 'action_id'].includes(item)) {
-                  applyGroupData[item] = searchParams[item].value;
+                  this.$refs.iamResourceSearchRef.applyGroupData[item] = searchParams[item].value;
+                  // 操作为空时重置关联数据
+                  if (!this.$refs.iamResourceSearchRef.applyGroupData[item]) {
+                    this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.resetSearchParams();
+                  }
                 }
               }
             });
-            await this.fetchFirstData();
+            await this.fetchRemoteTable();
           });
         } else {
           Object.keys(searchParams).forEach((item) => {
-            const curData = this.searchTagList.find((v) => v.name === item && searchParams[item]);
+            const curData = this.searchTagList.find((v) => v.name === item);
             if (curData) {
               if (['system_id', 'action_id', 'resource_type'].includes(item)) {
                 curData.value = searchParams[item].label;
@@ -551,11 +567,46 @@
               }
             }
           });
-          if (condition && condition.length) {
-            console.log(condition);
-          }
           await this.fetchFirstData();
+          const params = {
+            ...this.curSearchParams,
+            ...this.formData
+          };
+          bus.$emit('on-refresh-resource-search', {
+            isSearchPerm: true,
+            curSearchParams: params,
+            curSearchPagination: this.curSearchPagination
+          });
         }
+      },
+      
+      handlePathData (data, type) {
+        if (data.resourceInstancesPath && data.resourceInstancesPath.length) {
+          const lastIndex = data.resourceInstancesPath.length - 1;
+          const path = data.resourceInstancesPath[lastIndex];
+          let id = '';
+          let resourceInstancesPath = [];
+          if (type === path.type) {
+            id = path.id;
+            data.resourceInstancesPath.splice(lastIndex, 1);
+          } else {
+            id = '*';
+          }
+          resourceInstancesPath = data.resourceInstancesPath.reduce((p, e) => {
+            p.push({
+              type: e.type,
+              id: e.id,
+              name: e.name
+            });
+            return p;
+          }, []);
+          return { id, resourceInstancesPath };
+        }
+        return { id: '*', resourceInstancesPath: [] };
+      },
+
+      handleSelectInstance (payload) {
+        this.resourceInstances = payload || [];
       },
 
       handleSelectSystemAction (payload) {
@@ -569,6 +620,29 @@
       },
 
       handleSelectResource (payload) {
+        const { condition } = payload;
+        // 处理资源实例数据格式化
+        if (condition) {
+          const curData = this.searchTagList.find((v) => v.name === 'resource_instance');
+          // 如果资源实例为none，则为空
+          if (condition.length) {
+            if (condition.length === 1 && condition[0] === 'none') {
+              curData.value = '';
+              return;
+            }
+            if (condition[0].instance && condition[0].instance.length) {
+              const list = condition[0].instance[0].path[0] || [];
+              list.forEach((item, index) => {
+                if (list.length === 1) {
+                  curData.value = `${item.name}`;
+                }
+                curData.value += index !== list.length - 1 ? `${item.name}/` : item.name;
+              });
+            }
+          } else {
+            curData.value = this.$t(`m.common['无限制']`);
+          }
+        }
         this.curResourceData = { ...payload };
       },
 
@@ -602,24 +676,22 @@
           this.curSearchParams[payload.name] = '';
         }
         // 删除有关联数据的tag
-        if (['system_id'].includes(payload.name)) {
+        if (['system_id', 'action_id'].includes(payload.name)) {
           this.searchTagList.forEach((item) => {
-            if (['system_id', 'action_id', 'resource_type'].includes(item.name)) {
-              item.value = '';
-            }
+            item.value = '';
+            this.curSearchParams[item.name] = '';
+            this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyClear();
           });
           await this.fetchFirstData();
-          this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyClear();
           return;
         }
-        if (['action_id'].includes(payload.name)) {
+        if (['resource_type'].includes(payload.name)) {
+          this.$set(this.curSearchParams, 'resource_instances', []);
           this.searchTagList.forEach((item) => {
-            if (['action_id', 'resource_type'].includes(item.name)) {
+            if (['resource_type', 'resource_instance'].includes(item.name)) {
               item.value = '';
             }
           });
-          await this.fetchFirstData();
-          return;
         }
         await this.fetchFirstData();
       },
@@ -671,7 +743,6 @@
       },
 
       handleEmptyUserClear () {
-        console.log(4444);
         this.curEmptyData.tipType = '';
         this.emptyData.tipType = '';
         this.isSearchPerm = false;

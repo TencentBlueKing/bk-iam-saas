@@ -341,6 +341,7 @@
             default: true
           }
         ],
+        searchData: [],
         curResourceData: {
           type: ''
         },
@@ -351,6 +352,7 @@
         systemSelectList: [],
         processesList: [],
         resourceInstances: [],
+        resourceActionData: [],
         isShowConfirmDialog: false,
         confirmDialogTitle: this.$t(`m.verify['admin无需申请权限']`),
         systemIdError: false,
@@ -911,6 +913,10 @@
         this.isShowResourceInstanceSideSlider = false;
         this.curResIndex = -1;
         this.resourceInstanceError = false;
+        // 抛出选择后的实例数据处理自定义组件场景
+        if (this.isCustomSearch) {
+          this.$emit('on-select-instance', this.resourceInstances);
+        }
       },
 
       handleResourceCancel () {
