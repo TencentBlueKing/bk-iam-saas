@@ -387,7 +387,7 @@
           if (!this.curResourceData) {
               return [];
           }
-          if (this.curResourceData.condition.length === 0) this.curResourceData.condition = ['none'];
+          // if (this.curResourceData.condition.length === 0) this.curResourceData.condition = ['none'];
           return _.cloneDeep(this.curResourceData.condition);
       },
       curSelectionMode () {
@@ -452,7 +452,7 @@
         handler (value) {
           // 用于判断自定义slot场景下，同步更新选中值
           // 处理资源类型数据
-          const params = {};
+          let params = {};
           const { type, condition } = value;
           const { resource_groups: resourceGroups } = this.resourceTypeData;
           if (resourceGroups && resourceGroups.length) {
@@ -469,8 +469,10 @@
             }
           }
           // 处理资源实例数据
-          if (condition && condition.length) {
-            console.log(condition, params);
+          if (condition) {
+            params = Object.assign(params, {
+              condition
+            });
           }
           this.$emit('on-select-resource', params);
         },

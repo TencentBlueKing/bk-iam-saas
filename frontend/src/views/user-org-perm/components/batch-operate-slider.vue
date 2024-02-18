@@ -103,6 +103,7 @@
 <script>
   import { mapGetters } from 'vuex';
   import { PERMANENT_TIMESTAMP } from '@/common/constants';
+  import { cloneDeep } from 'lodash';
   import { leaveConfirm } from '@/common/leave-confirm';
   import { bus } from '@/common/bus';
   import IamDeadline from '@/components/iam-deadline/horizontal';
@@ -161,7 +162,9 @@
         customButtonStyle: {
           width: '160px'
         },
-        selectTableList: []
+        selectTableList: [],
+        submitFormData: {},
+        submitFormDataBack: {}
       };
     },
     computed: {
@@ -203,6 +206,11 @@
         handler (value) {
           if (value) {
             this.selectTableList = [...this.groupList];
+            this.submitFormData = Object.assign({}, {
+              expiredAtUse: this.expiredAtUse,
+              selectTableList: this.selectTableList
+            });
+            this.submitFormDataBack = cloneDeep(this.submitFormData);
           }
         },
         deep: true
@@ -215,6 +223,7 @@
       // 同步更新checkbox状态
       bus.$on('on-remove-user-group', (payload) => {
         this.selectTableList = [...payload];
+        this.submitFormData = Object.assign({}, { selectTableList: this.selectTableList });
       });
     },
     methods: {
@@ -237,9 +246,11 @@
           const dotIndex = tempArr.findIndex((item) => item === '.');
           const nowSecond = parseInt(tempArr.splice(0, dotIndex).join(''), 10);
           this.expiredAtUse = payload + nowSecond;
+          this.submitFormData = Object.assign(this.submitFormData, { expiredAtUse: payload });
           return;
         }
         this.expiredAtUse = payload;
+        this.submitFormData = Object.assign(this.submitFormData, { expiredAtUse: payload });
       },
 
       async handleSubmit () {
@@ -316,6 +327,7 @@
           this.resetData();
         } else {
           let cancelHandler = Promise.resolve();
+          window.changeAlert = JSON.stringify(this.submitFormData) !== JSON.stringify(this.submitFormDataBack);
           if (window.changeAlert) {
             cancelHandler = leaveConfirm();
           }
@@ -330,6 +342,8 @@
       },
 
       resetData () {
+        this.submitFormData = {};
+        this.submitFormDataBack = {};
         this.selectTableList = [];
         this.isShowGroupError = false;
         this.isShowExpiredError = false;

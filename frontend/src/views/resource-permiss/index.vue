@@ -283,7 +283,7 @@
           if (!curData) {
               return [];
           }
-          if (curData.condition.length === 0) curData.condition = ['none'];
+          // if (curData.condition.length === 0) curData.condition = ['none'];
           return _.cloneDeep(curData.condition);
       },
       curSelectionMode () {
