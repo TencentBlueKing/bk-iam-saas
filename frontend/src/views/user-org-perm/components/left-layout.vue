@@ -86,18 +86,17 @@
       />
     </div>
     
-    <template v-if="!['clear'].includes(curSliderName)">
-      <JoinUserGroupSlider
-        :slider-width="960"
-        :show.sync="sliderData[curSliderName].showSlider"
-        :cur-slider-name="curSliderName"
-        :is-batch="true"
-        :user-list="userList"
-        :depart-list="departList"
-        :title="formatSliderTitle"
-        :group-data="queryGroupData"
-      />
-    </template>
+    <JoinUserGroupSlider
+      :slider-width="960"
+      :show.sync="sliderData[curSliderName].showSlider"
+      :cur-slider-name="curSliderName"
+      :is-batch="true"
+      :user-list="userList"
+      :depart-list="departList"
+      :title="formatSliderTitle"
+      :group-data="queryGroupData"
+      @on-submit="handleAddGroupSubmit"
+    />
 
     <ClearUserGroupSlider
       :slider-width="960"
@@ -112,6 +111,7 @@
 </template>
 
 <script>
+  import { bus } from '@/common/bus';
   import JoinUserGroupSlider from './join-user-group-slider.vue';
   import ClearUserGroupSlider from './clear-user-group-slider.vue';
 
@@ -144,6 +144,24 @@
       },
       groupData: {
         type: Object
+      },
+      isSearchPerm: {
+        type: Boolean,
+        default: false
+      },
+      curSearchParams: {
+        type: Object,
+        default: () => {}
+      },
+      curSearchPagination: {
+        type: Object,
+        default: () => {
+          return {
+            current: 1,
+            limit: 10,
+            count: 0
+          };
+        }
       },
       emptyData: {
         type: Object
@@ -311,6 +329,14 @@
         this.sliderData[payload] = Object.assign(this.sliderData[payload], {
           showSlider: true,
           list: this.currentSelectList
+        });
+      },
+
+      handleAddGroupSubmit () {
+        bus.$emit('on-refresh-resource-search', {
+          isSearchPerm: this.isSearchPerm,
+          curSearchParams: this.curSearchParams,
+          curSearchPagination: this.curSearchPagination
         });
       },
 

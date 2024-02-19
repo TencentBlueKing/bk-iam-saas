@@ -915,7 +915,10 @@
         this.resourceInstanceError = false;
         // 抛出选择后的实例数据处理自定义组件场景
         if (this.isCustomSearch) {
-          this.$emit('on-select-instance', this.resourceInstances);
+          this.$emit('on-select-instance', {
+            resourceInstances: this.resourceInstances,
+            resourceTypeData: this.resourceTypeData
+          });
         }
       },
 

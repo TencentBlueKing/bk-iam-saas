@@ -1,10 +1,9 @@
 <template>
   <div class="user-org-wrapper">
     <div
-      v-if="!isHasDataNoExpand"
       :class="[
         'user-org-wrapper-search',
-        { 'no-search-data': !expandData['search'].isExpand }
+        { 'no-search-data': !expandData['search'].isExpand || isHasDataNoExpand }
       ]"
     >
       <IamResourceCascadeSearch
@@ -83,9 +82,9 @@
           >
             <bk-tag
               v-if="tag.value"
-              closable
+              :closable="formatAllowClose(tag.name)"
               class="tag-item"
-              :key="tag.id"
+              :key="tag.name"
               @close="handleCloseTag(tag)">
               <span>{{tag.label}}:</span>
               <span class="tag-item-value">{{ tag.value }}</span>
@@ -132,6 +131,7 @@
             :can-scroll-load="canScrollLoad"
             :is-search-perm="isHasSearch"
             :cur-search-params="querySearchParams"
+            :cur-search-pagination="curSearchPagination"
             :empty-data="emptyData"
             @on-select="handleSelectUser"
             @on-load-more="handleLoadMore"
@@ -270,6 +270,7 @@
           resource_type: '',
           condition: []
         },
+        resourceTypeData: {},
         currentBackup: 1,
         gridCount: 4,
         dragWidth: 224,
@@ -367,6 +368,11 @@
       },
       hasTagData () {
         return this.searchTagList.filter((item) => item.value !== '').length > 0;
+      },
+      formatAllowClose () {
+        return (payload) => {
+          return !['action_id', 'resource_type', 'resource_instance'].includes(payload);
+        };
       }
     },
 
@@ -524,9 +530,8 @@
       
       // 处理折叠有搜索参数的业务场景
       async fetchHasSearchData () {
-        const searchParams = { ...this.curSystemAction, ...this.curResourceData, ...this.formData };
         this.isSearchPerm = true;
-        const { condition } = this.curResourceData;
+        const searchParams = { ...this.curSystemAction, ...this.curResourceData, ...this.formData };
         const resourceInstances = this.resourceInstances.reduce((prev, item) => {
           const { id, resourceInstancesPath } = this.handlePathData(item, item.type);
           prev.push({
@@ -538,7 +543,7 @@
           });
           return prev;
         }, []);
-        this.curSearchParams.resourceInstances = resourceInstances || [];
+        this.curSearchParams.resource_instances = resourceInstances || [];
         // 处理频繁切换展开场景下资源实例搜索值被清空了的业务场景
         if (!this.isHasDataNoExpand) {
           this.$nextTick(async () => {
@@ -546,9 +551,8 @@
               const curData = this.searchTagList.find((v) => v.name === item);
               if (curData) {
                 if (['system_id', 'action_id'].includes(item)) {
-                  this.$refs.iamResourceSearchRef.applyGroupData[item] = searchParams[item].value;
                   // 操作为空时重置关联数据
-                  if (!this.$refs.iamResourceSearchRef.applyGroupData[item]) {
+                  if (!searchParams[item].value) {
                     this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.resetSearchParams();
                   }
                 }
@@ -605,8 +609,10 @@
         return { id: '*', resourceInstancesPath: [] };
       },
 
-      handleSelectInstance (payload) {
-        this.resourceInstances = payload || [];
+      handleSelectInstance ({ resourceInstances, resourceTypeData }) {
+        // 在切换展开收缩时，备份下之前的数据
+        this.resourceInstances = cloneDeep(resourceInstances || []);
+        this.resourceTypeData = cloneDeep(resourceTypeData);
       },
 
       handleSelectSystemAction (payload) {
@@ -621,13 +627,19 @@
 
       handleSelectResource (payload) {
         const { condition } = payload;
+        console.log(payload, 55555);
+        this.curResourceData = { ...payload };
         // 处理资源实例数据格式化
+        const curData = this.searchTagList.find((v) => v.name === 'resource_instance');
         if (condition) {
-          const curData = this.searchTagList.find((v) => v.name === 'resource_instance');
           // 如果资源实例为none，则为空
           if (condition.length) {
             if (condition.length === 1 && condition[0] === 'none') {
               curData.value = '';
+              if (!this.curResourceData.resource_type) {
+                const resourceType = this.searchTagList.find((v) => v.name === 'resource_type');
+                resourceType.value = '';
+              }
               return;
             }
             if (condition[0].instance && condition[0].instance.length) {
@@ -635,15 +647,24 @@
               list.forEach((item, index) => {
                 if (list.length === 1) {
                   curData.value = `${item.name}`;
+                } else {
+                  curData.value += index !== list.length - 1 ? `${item.name}/` : item.name;
                 }
-                curData.value += index !== list.length - 1 ? `${item.name}/` : item.name;
               });
             }
           } else {
             curData.value = this.$t(`m.common['无限制']`);
           }
+        } else {
+          curData.value = '';
         }
-        this.curResourceData = { ...payload };
+        if (!Object.keys(payload).length) {
+          this.searchTagList.forEach((item) => {
+            if (['resource_type', 'resource_instance'].includes(item.name)) {
+              item.value = '';
+            }
+          });
+        }
       },
 
       handleSearch () {
@@ -678,7 +699,9 @@
         // 删除有关联数据的tag
         if (['system_id', 'action_id'].includes(payload.name)) {
           this.searchTagList.forEach((item) => {
-            item.value = '';
+            if (!['group_name', 'group_id', 'name', 'department_name'].includes(item.name)) {
+              item.value = '';
+            }
             this.curSearchParams[item.name] = '';
             this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyClear();
           });
@@ -872,7 +895,7 @@
     line-height: 42px;
     background-color: #ffffff;
     .no-expand-search-list {
-      padding: 0 24px;
+      padding: 0 16px;
       .search-data-content {
         display: flex;
         align-items: center;

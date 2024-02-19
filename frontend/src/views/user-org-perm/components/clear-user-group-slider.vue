@@ -5,7 +5,6 @@
       :title="title"
       :width="sliderWidth"
       :quick-close="true"
-      :show-mask="true"
       ext-cls="iam-clear-user-group-side"
       @update:isShow="handleCancel"
     >
