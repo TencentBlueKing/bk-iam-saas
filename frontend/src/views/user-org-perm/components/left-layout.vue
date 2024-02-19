@@ -54,7 +54,6 @@
             />
             <div
               v-if="['user'].includes(item.type)"
-              v-bk-tooltips="{ content: `${item.id} (${item.name})` }"
               class="single-hide group-name"
             >
               <span>{{ item.id }}</span>
@@ -62,7 +61,6 @@
             </div>
             <div
               v-if="['department'].includes(item.type)"
-              v-bk-tooltips="{ content: item.name }"
               class="single-hide group-name">
               {{ item.name }}
             </div>

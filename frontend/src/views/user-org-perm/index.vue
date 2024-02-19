@@ -543,6 +543,7 @@
           });
           return prev;
         }, []);
+        console.log(this.querySearchParams);
         this.curSearchParams.resource_instances = resourceInstances || [];
         // 处理频繁切换展开场景下资源实例搜索值被清空了的业务场景
         if (!this.isHasDataNoExpand) {
@@ -618,16 +619,29 @@
       handleSelectSystemAction (payload) {
         this.curSystemAction = { ...payload };
         if (this.curSystemAction.system_id) {
+          if (this.curSystemAction.system_id.value !== this.curSearchParams.system_id) {
+            this.searchTagList.forEach((item) => {
+              if (['resource_type', 'resource_instance'].includes(item.name)) {
+                item.value = '';
+              }
+            });
+          }
           this.$set(this.curSearchParams, 'system_id', this.curSystemAction.system_id.value);
         }
         if (this.curSystemAction.action_id) {
+          if (this.curSystemAction.action_id.value !== this.curSearchParams.action_id) {
+            this.searchTagList.forEach((item) => {
+              if (['resource_type', 'resource_instance'].includes(item.name)) {
+                item.value = '';
+              }
+            });
+          }
           this.$set(this.curSearchParams, 'action_id', this.curSystemAction.action_id.value);
         }
       },
 
       handleSelectResource (payload) {
         const { condition } = payload;
-        console.log(payload, 55555);
         this.curResourceData = { ...payload };
         // 处理资源实例数据格式化
         const curData = this.searchTagList.find((v) => v.name === 'resource_instance');
