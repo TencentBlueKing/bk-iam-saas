@@ -80,15 +80,42 @@
             :key="tag.id"
             class="tag-list"
           >
-            <bk-tag
+            <bk-popconfirm
               v-if="tag.value"
-              :closable="formatAllowClose(tag.name)"
-              class="tag-item"
-              :key="tag.name"
-              @close="handleCloseTag(tag)">
-              <span>{{tag.label}}:</span>
-              <span class="tag-item-value">{{ tag.value }}</span>
-            </bk-tag>
+              trigger="click"
+              placement="bottom-start"
+              :ext-cls="formatPopover(tag)"
+              :confirm-text="$t(`m.common['确认']`)"
+              :width="320"
+              @confirm="handlePopoverChange"
+            >
+              <div slot="content">
+                <div class="popover-title">{{ tag.label }}</div>
+                <div class="popover-tag-input">
+                  <bk-tag-input
+                    :value="[tag.value]"
+                    :placeholder="$t(`m.verify['请输入']`)"
+                    :has-delete-icon="true"
+                    :list="[{ id: tag.value, name: tag.value }]"
+                    :max-data="1"
+                    :allow-create="true"
+                    :allow-auto-match="true"
+                    @change="handleInputChange(...arguments, tag.name)"
+                  />
+                </div>
+              </div>
+              <bk-tag
+                v-if="tag.value"
+                :closable="formatAllowClose(tag.name)"
+                class="tag-item"
+                :key="tag.name"
+                @close="handleCloseTag(tag)">
+                <div>
+                  <span>{{tag.label}}:</span>
+                  <span class="tag-item-value">{{ tag.value }}</span>
+                </div>
+              </bk-tag>
+            </bk-popconfirm>
           </div>
           <div
             class="delete-all"
@@ -369,6 +396,15 @@
       hasTagData () {
         return this.searchTagList.filter((item) => item.value !== '').length > 0;
       },
+      formatPopover () {
+        return (payload) => {
+          const { name } = payload;
+          if (['system_id', 'action_id', 'resource_type', 'resource_instance'].includes(name)) {
+            return 'user-org-popover-tag-edit user-org-popover-tag-edit-none';
+          }
+          return 'user-org-popover-tag-edit';
+        };
+      },
       formatAllowClose () {
         return (payload) => {
           return !['action_id', 'resource_type', 'resource_instance'].includes(payload);
@@ -543,7 +579,6 @@
           });
           return prev;
         }, []);
-        console.log(this.querySearchParams);
         this.curSearchParams.resource_instances = resourceInstances || [];
         // 处理频繁切换展开场景下资源实例搜索值被清空了的业务场景
         if (!this.isHasDataNoExpand) {
@@ -583,6 +618,20 @@
             curSearchPagination: this.curSearchPagination
           });
         }
+      },
+
+      handleInputChange (payload, type) {
+        console.log(payload, type);
+        const text = payload.length ? payload[0] : '';
+        this.formData[type] = text;
+        const curData = this.searchTagList.find((item) => item.name === type);
+        if (curData) {
+          curData.value = text;
+        }
+      },
+
+      async handlePopoverChange () {
+        await this.fetchFirstData();
       },
       
       handlePathData (data, type) {
@@ -805,6 +854,20 @@
     }
   };
 </script>
+<style lang="postcss">
+.user-org-popover-tag-edit {
+  color: #63656E;
+  .popover-title {
+    margin-bottom: 6px;
+  }
+  .popover-tag-input {
+    margin-bottom: 12px;
+  }
+  &-none {
+    display: none;
+  }
+}
+</style>
 
 <style lang="postcss" scoped>
 .user-org-wrapper {
@@ -920,6 +983,7 @@
           .tag-item {
             display: flex;
             align-items: center;
+            cursor: pointer;
             &-value {
               margin-left: 8px;
             }
