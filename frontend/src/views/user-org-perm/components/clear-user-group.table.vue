@@ -7,9 +7,10 @@
       :data="curPageData"
       :outer-border="false"
       :header-border="false"
-      :pagination="pagination"
+      :pagination="curPageConfig"
       @page-change="handlePageChange"
       @page-limit-change="handleLimitChange"
+      v-bkloading="{ isLoading: loading, opacity: 1, zIndex: 1000 }"
     >
       <template v-for="item in tableProps">
         <template v-if="item.prop === 'name'">
@@ -89,6 +90,10 @@
       curType: {
         type: String
       },
+      loading: {
+        type: Boolean,
+        default: false
+      },
       pagination: {
         type: Object,
         default: () => {
@@ -158,15 +163,15 @@
       },
       pagination: {
         handler (value) {
-          this.curPageConfig = cloneDeep(value);
+          this.curPageConfig = cloneDeep({ ...value, ...{ showTotalCount: true } });
         },
+        deep: true,
         immediate: true
       },
       list: {
         handler (value) {
           this.tableList = [...value];
           this.curPageData = this.getDataByPage(this.curPageConfig.current);
-          // console.log()
         },
         immediate: true
       }

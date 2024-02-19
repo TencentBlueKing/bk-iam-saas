@@ -30,10 +30,11 @@
               @click.stop="handleTabChange(item)"
             >
               <span class="name">{{ item.name }}</span>
-              <span class="count">{{ item.pagination.count }}</span>
+              <span class="count">{{ item.count }}</span>
             </div>
           </div>
           <ClearUserGroupTable
+            :loading="tableLoading"
             :list="selectData.list"
             :cur-type="tabActive"
             :pagination="selectData.pagination"
@@ -86,13 +87,14 @@
     data () {
       return {
         submitLoading: false,
+        tableLoading: false,
         isShowGroupError: false,
         selectTableList: [],
         initTabList: [
           {
             name: this.$t(`m.common['用户']`),
             id: 'user',
-            count: 1000,
+            count: 0,
             list: [],
             pagination: {
               current: 1,
@@ -142,27 +144,10 @@
         handler (value) {
           if (value) {
             this.tabList = cloneDeep(this.initTabList);
-            this.tabList.forEach((item) => {
-              const typeMap = {
-                user: async () => {
-                  if (this.userList.length) {
-                    const list = cloneDeep(this.userList);
-                    item = await this.fetchUserGroupSearch(item, list);
-                  }
-                  this.selectData = cloneDeep(item);
-                },
-                department: async () => {
-                  if (this.departList.length) {
-                    const list = cloneDeep(this.departList);
-                    item = await this.fetchUserGroupSearch(item, list);
-                  }
-                }
-              };
-              return typeMap[item.id]();
-            });
+            this.fetchTabTableData();
           }
         },
-        deep: true
+        immediate: true
       }
     },
     methods: {
@@ -198,7 +183,6 @@
               });
             this.$set(payload.list[i], 'perm_list', data.results || []);
             this.$set(payload.list[i], 'count', data.count || 0);
-            return payload;
           } catch (e) {
             console.error(e);
             this.$set(payload.list[i], 'perm_list', []);
@@ -207,10 +191,37 @@
           }
         }
       },
+
+      // 获取tab数据
+      fetchTabTableData () {
+        this.tabList.forEach((item) => {
+          item.count = ['user'].includes(item.id) ? this.userList.length : this.departList.length;
+          const typeMap = {
+            user: async () => {
+              const list = cloneDeep(this.userList);
+              if (this.userList.length) {
+                await this.fetchUserGroupSearch(item, list);
+              }
+              this.selectData = cloneDeep(item);
+              this.tableLoading = false;
+            },
+            department: async () => {
+              const list = cloneDeep(this.departList);
+              if (this.departList.length) {
+                await this.fetchUserGroupSearch(item, list);
+              }
+              this.selectData = cloneDeep(item);
+              this.tableLoading = false;
+            }
+          };
+          typeMap[this.tabActive]();
+        });
+      },
       
-      handleTabChange (payload) {
+      async handleTabChange (payload) {
+        this.tableLoading = true;
         this.tabActive = payload.id;
-        this.selectData = payload;
+        await this.fetchTabTableData();
       },
 
       handlePageChange (payload) {
