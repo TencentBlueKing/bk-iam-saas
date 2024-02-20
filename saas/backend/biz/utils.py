@@ -14,7 +14,10 @@ from typing import Any, Dict, List
 
 from blue_krill.web.std_error import APIError
 
+from backend.apps.organization.models import Department, User
 from backend.biz.resource import ResourceInfoBean, ResourceInfoDictBean
+from backend.service.constants import SubjectType
+from backend.service.models import Subject
 from backend.service.resource import ResourceProvider
 
 
@@ -89,3 +92,29 @@ def fill_resources_attribute(resources: List[Dict[str, Any]]):
 
     for key, parts in groupby(need_fetch_resources, key=lambda resource: (resource["system"], resource["type"])):
         exec_fill_resources_attribute(key[0], key[1], list(parts))
+
+
+def remove_not_exist_subject(subjects: List[Subject]) -> List[Subject]:
+    """
+    移除组织架构中不存在的subject
+    """
+    usernames = {subject.id for subject in subjects if subject.type == SubjectType.USER.value}
+    if usernames:
+        usernames = set(User.objects.filter(username__in=usernames).values_list("username", flat=True))
+
+    department_ids = {
+        subject.id for subject in subjects if subject.type == SubjectType.DEPARTMENT.value and subject.id.isdigit()
+    }
+    if department_ids:
+        department_ids = {
+            str(one) for one in Department.objects.filter(id__in=department_ids).values_list("id", flat=True)
+        }
+
+    return [
+        subject
+        for subject in subjects
+        if subject.type == SubjectType.USER.value
+        and subject.id in usernames
+        or subject.type == SubjectType.DEPARTMENT.value
+        and subject.id in department_ids
+    ]
