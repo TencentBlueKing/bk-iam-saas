@@ -16,8 +16,13 @@ urlpatterns = [
     path("", views.GroupViewSet.as_view({"get": "list", "post": "create"}), name="group.group"),
     path(
         "members/",
-        views.GroupsMemberViewSet.as_view({"post": "create", "delete": "destroy"}),
+        views.GroupsMemberViewSet.as_view({"post": "create"}),
         name="group.members",
+    ),
+    path(
+        "members/delete/",
+        views.GroupsMemberViewSet.as_view({"post": "destroy"}),
+        name="group.members_delete",
     ),
     path("transfer/", views.GroupTransferView.as_view(), name="group.transfer"),
     path("search/", views.GroupSearchViewSet.as_view({"post": "search"}), name="group.search"),
