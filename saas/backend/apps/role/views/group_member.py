@@ -309,7 +309,7 @@ class RoleGroupMemberCleanViewSet(GenericViewSet):
         for subject in members:
             group_ids = list(
                 RoleGroupMember.objects.filter(
-                    subject_type=subject.type, subject_id=subject.id, role_id__in=role_ids
+                    subject_type=subject.type, subject_id=subject.id, role_id__in=role_ids, subject_template_id=0
                 ).values_list("group_id", flat=True)
             )
             group_id_set = group_id_set | set(group_ids)
