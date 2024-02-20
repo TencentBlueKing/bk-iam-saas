@@ -16,7 +16,7 @@ urlpatterns = [
     path("", views.GroupViewSet.as_view({"get": "list", "post": "create"}), name="group.group"),
     path(
         "members/",
-        views.GroupsMemberViewSet.as_view({"post": "create"}),
+        views.GroupsMemberViewSet.as_view({"post": "create", "delete": "destroy"}),
         name="group.members",
     ),
     path("transfer/", views.GroupTransferView.as_view(), name="group.transfer"),
