@@ -362,6 +362,9 @@
     margin-left: 40px;
     .footer-btn {
       min-width: 88px;
+      &:not(&:first-child) {
+        margin-left: 8px;
+      }
     }
   }
   /deep/ .bk-sideslider-footer {
