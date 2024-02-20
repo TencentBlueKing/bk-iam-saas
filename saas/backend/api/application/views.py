@@ -89,7 +89,7 @@ class ApplicationDetailView(views.APIView):
         responses={status.HTTP_200_OK: ApplicationDetailSchemaSLZ(label="申请详情")},
         tags=["open"],
     )
-    def retrieve(self, request, *args, **kwargs):
+    def get(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = ApplicationDetailSLZ(instance)
         return Response(serializer.data)
