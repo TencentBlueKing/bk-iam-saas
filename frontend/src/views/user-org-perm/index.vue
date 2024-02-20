@@ -96,7 +96,6 @@
                     :value="[tag.value]"
                     :placeholder="$t(`m.verify['请输入']`)"
                     :has-delete-icon="true"
-                    :list="[{ id: tag.value, name: tag.value }]"
                     :max-data="1"
                     :allow-create="true"
                     :allow-auto-match="true"
@@ -345,7 +344,8 @@
             value: ''
           }
         ],
-        resourceInstances: []
+        resourceInstances: [],
+        tagInputValue: {}
       };
     },
 
@@ -621,17 +621,33 @@
       },
 
       handleInputChange (payload, type) {
-        console.log(payload, type);
         const text = payload.length ? payload[0] : '';
-        this.formData[type] = text;
-        const curData = this.searchTagList.find((item) => item.name === type);
-        if (curData) {
-          curData.value = text;
-        }
+        console.log(payload, text, type);
+        this.tagInputValue = {
+          id: type,
+          value: text
+        };
       },
 
       async handlePopoverChange () {
+        const { id, value } = this.tagInputValue;
+        if (id) {
+          this.formData[id] = value;
+          const curData = this.searchTagList.find((item) => item.name === id);
+          if (curData) {
+            curData.value = value;
+          }
+        }
         await this.fetchFirstData();
+        const params = {
+            ...this.curSearchParams,
+            ...this.formData
+        };
+        bus.$emit('on-refresh-resource-search', {
+          isSearchPerm: true,
+          curSearchParams: params,
+          curSearchPagination: this.curSearchPagination
+        });
       },
       
       handlePathData (data, type) {
