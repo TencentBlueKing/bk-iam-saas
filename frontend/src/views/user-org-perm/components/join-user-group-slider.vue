@@ -27,7 +27,7 @@
                   :is-custom-title-style="true"
                 >
                   <div slot="operateObject">
-                    <span>{{ $t(`m.common['已选择']`) }}</span>
+                    <span>{{ $t(`m.common['已选']`) }}</span>
                     <template v-if="isHasUser">
                       <span class="number">{{ userList.length }}</span>
                       {{ $t(`m.common['个用户']`) }}
