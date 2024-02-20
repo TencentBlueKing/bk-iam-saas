@@ -512,7 +512,7 @@
         this.curSearchParams = cloneDeep(params);
         this.curSearchPagination = cloneDeep(pagination);
         this.curEmptyData = cloneDeep(emptyData);
-        await this.fetchRemoteTable();
+        await this.fetchFirstData();
       },
 
       async fetchRemoteTable () {
