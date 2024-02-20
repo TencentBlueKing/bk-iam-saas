@@ -60,20 +60,23 @@ class RoleSearchFilter(GradeMangerFilter):
 
 
 class RoleGroupSubjectFilter(filters.FilterSet):
-    name = filters.CharFilter(method="name_filter", label="名称")
+    username = filters.CharFilter(method="username_filter", label="用户名")
+    department_name = filters.CharFilter(method="department_name_filter", label="部门名称")
 
     class Meta:
         model = RoleGroupMember
-        fields = ["name"]
+        fields = ["username", "department_name"]
 
-    def name_filter(self, queryset, name, value):
+    def username_filter(self, queryset, name, value):
         # 查询相关的部门与成员
         usernames = list(
             User.objects.filter(Q(username__icontains=value) | Q(display_name__icontains=value)).values_list(
                 "username", flat=True
             )
         )
-        department_ids = list(Department.objects.filter(name__icontains=value).values_list("id", flat=True))
+        return queryset.filter(subject_id__in=usernames)
 
-        subject_ids = usernames + [str(one) for one in department_ids]
-        return queryset.filter(subject_id__in=subject_ids)
+    def department_name_filter(self, queryset, name, value):
+        # 查询相关的部门与成员
+        department_ids = list(Department.objects.filter(name__icontains=value).values_list("id", flat=True))
+        return queryset.filter(subject_id__in=[str(one) for one in department_ids])

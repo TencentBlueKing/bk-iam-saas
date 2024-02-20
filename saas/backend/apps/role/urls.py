@@ -105,7 +105,17 @@ urlpatterns = [
     path("subject_scope_check/", views.RoleSubjectScopCheckView.as_view(), name="role.subject_scope_check"),
     path("search/", views.RoleSearchViewSet.as_view({"get": "list"}), name="role.role_search"),
     path("group_config/", views.RoleGroupConfigView.as_view(), name="role.group_config"),
-    path("group_members/", views.RoleGroupMemberViewSet.as_view({"get": "list"}), name="role.group_member"),
+    path("group_members/", views.RoleGroupMemberViewSet.as_view({"post": "list"}), name="role.group_member"),
+    path(
+        "group_members/clean/",
+        views.RoleGroupMemberCleanViewSet.as_view({"post": "list"}),
+        name="role.group_member_clean",
+    ),
+    path(
+        "group_members/reset/",
+        views.RoleGroupMemberResetViewSet.as_view({"post": "list"}),
+        name="role.group_member_reset",
+    ),
     path(
         "group_members/<str:subject_type>/<str:subject_id>/",
         include(

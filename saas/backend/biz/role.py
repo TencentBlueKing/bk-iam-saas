@@ -848,7 +848,7 @@ class RoleObjectRelationChecker:
     def __init__(self, role: Role):
         self.role = role
 
-    def _list_relation_role_id(self):
+    def list_relation_role_id(self):
         """
         查询出role关联的所有role id
 
@@ -868,7 +868,7 @@ class RoleObjectRelationChecker:
             return True
 
         return RoleRelatedObject.objects.filter(
-            role_id__in=self._list_relation_role_id(), object_type=obj_type, object_id=obj_id
+            role_id__in=self.list_relation_role_id(), object_type=obj_type, object_id=obj_id
         ).exists()
 
     def _check_object_ids(self, obj_type: str, obj_ids: List[int]) -> bool:
@@ -877,7 +877,7 @@ class RoleObjectRelationChecker:
             return True
 
         count = RoleRelatedObject.objects.filter(
-            role_id__in=self._list_relation_role_id(), object_type=obj_type, object_id__in=obj_ids
+            role_id__in=self.list_relation_role_id(), object_type=obj_type, object_id__in=obj_ids
         ).count()
         return count == len(set(obj_ids))
 
