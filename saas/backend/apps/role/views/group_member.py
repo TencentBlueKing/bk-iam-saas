@@ -286,7 +286,7 @@ class RoleGroupMemberCleanViewSet(GenericViewSet):
         operation_description="批量清理用户组成员",
         request_body=RoleGroupMemberCleanSLZ(label="成员"),
         responses={status.HTTP_200_OK: serializers.Serializer()},
-        tags=["group"],
+        tags=["role"],
     )
     def create(self, request, *args, **kwargs):
         serializer = RoleGroupMemberCleanSLZ(data=request.data)

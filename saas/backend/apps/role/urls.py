@@ -108,12 +108,12 @@ urlpatterns = [
     path("group_members/", views.RoleGroupMemberViewSet.as_view({"post": "list"}), name="role.group_member"),
     path(
         "group_members/clean/",
-        views.RoleGroupMemberCleanViewSet.as_view({"post": "list"}),
+        views.RoleGroupMemberCleanViewSet.as_view({"post": "create"}),
         name="role.group_member_clean",
     ),
     path(
         "group_members/reset/",
-        views.RoleGroupMemberResetViewSet.as_view({"post": "list"}),
+        views.RoleGroupMemberResetViewSet.as_view({"post": "create"}),
         name="role.group_member_reset",
     ),
     path(

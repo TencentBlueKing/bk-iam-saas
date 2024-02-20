@@ -486,8 +486,8 @@ class RoleGroupSubjectSLZ(serializers.Serializer):
 
 
 class RoleGroupMemberSearchSLZ(GroupSearchSLZ):
-    department_name = serializers.CharField(label="部门名称")
-    username = serializers.CharField(label="用户名")
+    department_name = serializers.CharField(label="部门名称", required=False, default="", allow_blank=True)
+    username = serializers.CharField(label="用户名", required=False, default="", allow_blank=True)
 
 
 class RoleGroupMemberCleanSLZ(serializers.Serializer):
