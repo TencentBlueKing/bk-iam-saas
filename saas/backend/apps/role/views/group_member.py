@@ -23,7 +23,7 @@ from backend.apps.group.models import Group
 from backend.apps.group.serializers import GroupsAddMemberSLZ, GroupSearchSLZ
 from backend.apps.group.views import GroupsMemberViewSet, split_members_to_subject_and_template
 from backend.apps.role.filters import RoleGroupSubjectFilter
-from backend.apps.role.models import RoleGroupMember
+from backend.apps.role.models import RoleGroupMember, RoleRelatedObject
 from backend.apps.role.serializers import RoleGroupMemberCleanSLZ, RoleGroupMemberSearchSLZ, RoleGroupSubjectSLZ
 from backend.apps.subject.serializers import SubjectGroupSLZ
 from backend.apps.subject.views import (
@@ -37,7 +37,7 @@ from backend.apps.user.views import SubjectGroupSearchMixin
 from backend.audit.audit import audit_context_setter, log_api_event
 from backend.biz.group import GroupBiz
 from backend.biz.role import RoleObjectRelationChecker
-from backend.service.constants import PermissionCodeEnum, SubjectType
+from backend.service.constants import PermissionCodeEnum, RoleRelatedObjectType, SubjectType
 
 logger = logging.getLogger("app")
 
@@ -61,10 +61,13 @@ class RoleSubjectGroupSearchMixin(SubjectGroupSearchMixin):
         )
         queryset = f.qs
 
-        subject = self.get_subject(request, kwargs)
-        # 查询用户加入的所有用户组
-        group_dict = self.get_group_dict(subject)
-        ids = sorted(group_dict.keys())
+        # 查询role关联的所有用户组
+        role_ids = RoleObjectRelationChecker(request.role).list_relation_role_id()
+        ids = list(
+            RoleRelatedObject.objects.filter(role_id__in=role_ids, object_type=RoleRelatedObjectType.GROUP.value)
+            .values_list("object_id", flat=True)
+            .distinct()
+        )
 
         search_group_ids = self.search_group_ids(request, kwargs, data)
         if search_group_ids is not None:
@@ -309,7 +312,7 @@ class RoleGroupMemberCleanViewSet(GenericViewSet):
                     subject_type=subject.type, subject_id=subject.id, role_id__in=role_ids
                 ).values_list("group_id", flat=True)
             )
-            group_id_set = group_id_set & set(group_ids)
+            group_id_set = group_id_set | set(group_ids)
 
         for group_id in group_id_set:
             self.group_biz.remove_members(str(group_id), members)
