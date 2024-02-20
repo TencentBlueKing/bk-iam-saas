@@ -537,7 +537,7 @@ class GroupsMemberViewSet(GenericViewSet):
                     )
                 if members:
                     # 移除成员
-                    self.group_biz.remove_members(group.id, members)
+                    self.group_biz.remove_members(str(group.id), members)
 
                 # 移除人员模版授权操作
                 for _id in subject_template_ids:
