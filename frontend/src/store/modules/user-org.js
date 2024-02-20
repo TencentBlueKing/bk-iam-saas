@@ -46,6 +46,11 @@ export default {
      * @return {Promise} promise 对象
     */
     getUserGroupMemberList ({ commit, state, dispatch }, params = {}, config) {
+      Object.keys(params).forEach((item) => {
+        if (['group_name', 'group_id'].includes(item)) {
+          delete params[item];
+        }
+      });
       const queryParams = Object.keys(params).length ? `/?${json2Query(params)}` : '/';
       return http.get(`${AJAX_URL_PREFIX}/roles/group_members${queryParams}`, config);
     },
@@ -62,17 +67,17 @@ export default {
      * @return {Promise} promise 对象
     */
     getUserOrDepartGroupList ({ commit, state, dispatch }, params, config) {
-      const { offset, limit, hidden, system_id: systemId } = params;
+      const { offset, limit, hidden } = params;
       const requestParams = Object.assign({}, params);
       const queryParams = Object.assign({}, { offset, limit });
       if (params.hasOwnProperty('hidden')) {
         queryParams.hidden = hidden;
       }
-      if (params.hasOwnProperty('system_id')) {
-        queryParams.system_id = systemId;
-      }
-      delete params.subject_type;
-      delete params.subject_id;
+      Object.keys(params).forEach((item) => {
+        if (['subject_type', 'subject_id', 'name', 'department_name'].includes(item)) {
+          delete params[item];
+        }
+      });
       return http.post(`${AJAX_URL_PREFIX}/roles/group_members/${requestParams.subject_type}/${requestParams.subject_id}/groups/?${json2Query(queryParams)}`, params, config);
     },
     
@@ -88,17 +93,17 @@ export default {
      * @return {Promise} promise 对象
     */
     getUserGroupByDepartList ({ commit, state, dispatch }, params, config) {
-      const { offset, limit, hidden, system_id: systemId } = params;
+      const { offset, limit, hidden } = params;
       const requestParams = Object.assign({}, params);
       const queryParams = Object.assign({}, { offset, limit });
       if (params.hasOwnProperty('hidden')) {
         queryParams.hidden = hidden;
       }
-      if (params.hasOwnProperty('system_id')) {
-        queryParams.system_id = systemId;
-      }
-      delete params.subject_type;
-      delete params.subject_id;
+      Object.keys(params).forEach((item) => {
+        if (['subject_type', 'subject_id', 'name', 'department_name'].includes(item)) {
+          delete params[item];
+        }
+      });
       return http.post(`${AJAX_URL_PREFIX}/roles/group_members/${requestParams.subject_type}/${requestParams.subject_id}/departments/-/groups/?${json2Query(queryParams)}`, params, config);
     },
 
@@ -114,17 +119,17 @@ export default {
      * @return {Promise} promise 对象
     */
     getUserMemberTempList ({ commit, state, dispatch }, params, config) {
-      const { offset, limit, hidden, system_id: systemId } = params;
+      const { offset, limit, hidden } = params;
       const requestParams = Object.assign({}, params);
       const queryParams = Object.assign({}, { offset, limit });
       if (params.hasOwnProperty('hidden')) {
         queryParams.hidden = hidden;
       }
-      if (params.hasOwnProperty('system_id')) {
-        queryParams.system_id = systemId;
-      }
-      delete params.subject_type;
-      delete params.subject_id;
+      Object.keys(params).forEach((item) => {
+        if (['subject_type', 'subject_id', 'name', 'department_name'].includes(item)) {
+          delete params[item];
+        }
+      });
       return http.post(`${AJAX_URL_PREFIX}/roles/group_members/${requestParams.subject_type}/${requestParams.subject_id}/subject_template_groups/?${json2Query(queryParams)}`, params, config);
     },
 
@@ -140,17 +145,17 @@ export default {
      * @return {Promise} promise 对象
     */
     getDepartMemberTempList ({ commit, state, dispatch }, params, config) {
-      const { offset, limit, hidden, system_id: systemId } = params;
+      const { offset, limit, hidden } = params;
       const requestParams = Object.assign({}, params);
       const queryParams = Object.assign({}, { offset, limit });
       if (params.hasOwnProperty('hidden')) {
         queryParams.hidden = hidden;
       }
-      if (params.hasOwnProperty('system_id')) {
-        queryParams.system_id = systemId;
-      }
-      delete params.subject_type;
-      delete params.subject_id;
+      Object.keys(params).forEach((item) => {
+        if (['subject_type', 'subject_id', 'name', 'department_name'].includes(item)) {
+          delete params[item];
+        }
+      });
       return http.post(`${AJAX_URL_PREFIX}/roles/group_members/${requestParams.subject_type}/${requestParams.subject_id}/departments/-/subject_template_groups/?${json2Query(queryParams)}`, params, config);
     }
   }
