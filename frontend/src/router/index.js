@@ -138,7 +138,8 @@ export const beforeEach = async (to, from, next) => {
   }
 
   // 如果进入没有权限，重新找roleList, 蓝盾交互不需要判断
-  if (['', 'staff'].includes(curRole) && navIndex > 0 && !existValue('externalApp')) {
+  const isEXternal = !(existValue('externalApp') || to.query.hasOwnProperty('role_id'));
+  if (['', 'staff'].includes(curRole) && navIndex > 0 && isEXternal) {
     const roleList = await store.dispatch('roleList', {
       cancelWhenRouteChange: false,
       cancelPrevious: false
