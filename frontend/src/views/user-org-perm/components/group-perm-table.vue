@@ -367,6 +367,24 @@
               { label: this.$t(`m.perm['加入方式']`), prop: 'join_type' },
               { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' }
             ];
+          },
+          userTempPerm: () => {
+            return [
+              { label: this.$t(`m.userGroup['用户组名']`), prop: 'name' },
+              { label: this.$t(`m.common['描述']`), prop: 'description' },
+              { label: this.$t(`m.common['加入时间']`), prop: 'created_time' },
+              { label: this.$t(`m.perm['加入方式']`), prop: 'join_type' },
+              { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' }
+            ];
+          },
+          departTempPerm: () => {
+            return [
+              { label: this.$t(`m.userGroup['用户组名']`), prop: 'name' },
+              { label: this.$t(`m.common['描述']`), prop: 'description' },
+              { label: this.$t(`m.common['加入时间']`), prop: 'created_time' },
+              { label: this.$t(`m.perm['加入方式']`), prop: 'join_type' },
+              { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' }
+            ];
           }
         };
         return tabMap[payload] ? tabMap[payload]() : tabMap['personalOrDepartPerm']();

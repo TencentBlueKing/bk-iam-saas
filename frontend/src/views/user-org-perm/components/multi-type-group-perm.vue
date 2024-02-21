@@ -257,7 +257,6 @@
         await this.fetchInitData();
         if (this.isOnlyPerm) {
           this.$nextTick(() => {
-            console.log(this.$refs.memberTempPermPolicyRef);
             this.$refs.memberTempPermPolicyRef && this.$refs.memberTempPermPolicyRef[0].handleExpanded(false);
           });
         }
