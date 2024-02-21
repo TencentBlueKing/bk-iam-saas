@@ -67,6 +67,7 @@ from .audit import (
 from .constants import OperateEnum
 from .filters import GroupFilter, GroupSubjectTemplateFilter, GroupTemplateSystemFilter
 from .serializers import (
+    BatchGroupDeleteMemberSLZ,
     GradeManagerGroupTransferSLZ,
     GroupAddMemberSLZ,
     GroupAuthorizationSLZ,
@@ -423,6 +424,7 @@ class GroupsMemberViewSet(GenericViewSet):
     group_biz = GroupBiz()
     role_biz = RoleBiz()
     group_check_biz = GroupCheckBiz()
+    subject_template_biz = SubjectTemplateBiz()
 
     @swagger_auto_schema(
         operation_description="批量用户组添加成员",
@@ -490,6 +492,65 @@ class GroupsMemberViewSet(GenericViewSet):
                     # 写入审计上下文
                     audit_context_setter(group=group, members=[m.dict() for m in members])
                     provider = GroupMemberCreateAuditProvider(request)
+                    log_api_event(request, provider)
+                except Exception:  # pylint: disable=broad-except
+                    logger.exception("save audit event fail")
+
+        if not failed_info:
+            return Response({}, status=status.HTTP_201_CREATED)
+
+        raise error_codes.ACTIONS_PARTIAL_FAILED.format(failed_info)
+
+    @swagger_auto_schema(
+        operation_description="批量用户组删除成员",
+        request_body=BatchGroupDeleteMemberSLZ(label="成员"),
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["group"],
+    )
+    def destroy(self, request, *args, **kwargs):
+        serializer = BatchGroupDeleteMemberSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        members_data = data["members"]
+        group_ids = data["group_ids"]
+
+        # 添加成员 异常信息记录
+        failed_info = {}
+        # 成员Dict结构转换为Subject结构，并去重
+        members, subject_template_ids = split_members_to_subject_and_template(members_data)
+
+        role_checker = RoleObjectRelationChecker(request.role)
+        groups = self.queryset.filter(id__in=group_ids)
+        for group in groups:
+            try:
+                if not role_checker.check_group(group):
+                    self.permission_denied(
+                        request, message=f"{request.role.type} role can not access group {group.id}"
+                    )
+                # 只读用户组检测
+                readonly = group.readonly
+                if readonly:
+                    raise error_codes.FORBIDDEN.format(
+                        message=_("只读用户组({})无法进行({})操作！").format(group.id, OperateEnum.GROUP_MEMBER_CREATE.label),
+                        replace=True,
+                    )
+                if members:
+                    # 移除成员
+                    self.group_biz.remove_members(str(group.id), members)
+
+                # 移除人员模版授权操作
+                for _id in subject_template_ids:
+                    self.subject_template_biz.delete_group(_id, group.id)
+
+            except Exception as e:  # pylint: disable=broad-except noqa
+                failed_info.update({group.name: "{}".format(e)})
+
+            else:
+                try:
+                    # 写入审计上下文
+                    audit_context_setter(group=group, members=[m.dict() for m in members])
+                    provider = GroupMemberDeleteAuditProvider(request)
                     log_api_event(request, provider)
                 except Exception:  # pylint: disable=broad-except
                     logger.exception("save audit event fail")
