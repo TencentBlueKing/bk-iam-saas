@@ -71,7 +71,7 @@
               class="apply-expired-at"
               :required="true"
             >
-              <iam-deadline :value="expiredAt" @on-change="handleDeadlineChange" :cur-role="curRole" />
+              <iam-deadline ref="expiredRef" :value="expiredAt" @on-change="handleDeadlineChange" :cur-role="curRole" />
               <p class="expired-at-error" v-if="isShowExpiredError">{{ $t(`m.userOrOrg['请选择申请时长']`) }}</p>
             </bk-form-item>
           </bk-form>
@@ -245,6 +245,7 @@
       },
 
       handleSelectedGroup (payload) {
+        this.isShowGroupError = false;
         this.selectTableList = [...payload];
         this.submitFormData = Object.assign(this.submitFormData, { selectTableList: payload });
       },
@@ -256,6 +257,11 @@
           this.scrollToLocation(this.$refs.selectTableRef);
           return;
         }
+        if (!this.expiredAtUse) {
+          this.isShowExpiredError = true;
+          this.scrollToLocation(this.$refs.expiredRef);
+          return;
+        }
         this.submitLoading = true;
         if (this.expiredAtUse === 15552000) {
           this.expiredAtUse = this.handleExpiredAt();
@@ -263,12 +269,25 @@
         const params = {
           expired_at: this.expiredAtUse,
           group_ids: groupsList.map((item) => item.id),
-          members: [...this.userList, ...this.departList]
+          members: [...this.userList, ...this.departList].map(({ id, type }) => ({ id, type }))
         };
+        let url = '';
+        let msg = '';
+        const typeMap = {
+          add: () => {
+            url = 'userGroup/batchAddUserGroupMember';
+            msg = this.$t(`m.info['添加用户组成功']`);
+          },
+          reset: () => {
+            url = 'userOrOrg/resetGroupMembers';
+            msg = this.$t(`m.info['重置用户组成功']`);
+          }
+        };
+        typeMap[this.curSliderName]();
         try {
-          const { code } = await this.$store.dispatch('userGroup/batchAddUserGroupMember', params);
+          const { code } = await this.$store.dispatch(url, params);
           if (code === 0) {
-            this.messageSuccess(this.$t(`m.info['添加用户组成功']`), 3000);
+            this.messageSuccess(msg, 3000);
             this.$emit('on-submit', params);
             this.$emit('update:show', false);
           }

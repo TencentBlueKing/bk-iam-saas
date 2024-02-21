@@ -218,10 +218,10 @@
     },
     mounted () {
       this.$once('hook:beforeDestroy', () => {
-        bus.$off('on-remove-user-group');
+        bus.$off('on-remove-toggle-checkbox');
       });
       // 同步更新checkbox状态
-      bus.$on('on-remove-user-group', (payload) => {
+      bus.$on('on-remove-toggle-checkbox', (payload) => {
         this.selectTableList = [...payload];
         this.submitFormData = Object.assign({}, { selectTableList: this.selectTableList });
       });
@@ -258,7 +258,6 @@
           this.isShowGroupError = true;
           return;
         }
-        this.submitLoading = true;
         const { type, id } = this.groupData;
         const params = {
           group_ids: this.selectTableList.map((item) => item.id),
@@ -267,6 +266,7 @@
         const modeMap = {
           remove: async () => {
             try {
+              this.submitLoading = true;
               const adminGroups = this.selectTableList.filter(
                 (item) =>
                   item.attributes
@@ -293,8 +293,8 @@
               };
               const { code } = await this.$store.dispatch('userOrOrg/deleteGroupMembers', deleteParams);
               if (code === 0) {
-                this.messageSuccess(this.$t(`m.info['移除成功']`), 3000);
-                bus.$emit('on-remove-user-group', this.selectTableList);
+                this.messageSuccess(this.$t(`m.info['移出成功']`), 3000);
+                bus.$emit('on-remove-toggle-checkbox', this.selectTableList);
                 this.$emit('on-submit', params);
                 this.$emit('update:show', false);
               }
@@ -310,11 +310,15 @@
               if (this.expiredAtUse === 15552000) {
                 this.expiredAtUse = this.handleExpiredAt();
               }
+              if (!this.expiredAtUse) {
+                this.isShowExpiredError = true;
+                return;
+              }
+              this.submitLoading = true;
               params.expired_at = this.expiredAtUse;
               const { code } = await this.$store.dispatch('userGroup/batchAddUserGroupMember', params);
               if (code === 0) {
                 this.messageSuccess(this.$t(`m.renewal['续期成功']`), 3000);
-                bus.$emit('on-remove-user-group', []);
                 this.$emit('on-submit', params);
                 this.$emit('update:show', false);
               }

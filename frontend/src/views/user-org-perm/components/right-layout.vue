@@ -230,6 +230,8 @@
       },
 
       handleAddGroupSubmit () {
+        this.selectedGroups = [];
+        bus.$emit('on-remove-toggle-checkbox', []);
         bus.$emit('on-refresh-resource-search', {
           isSearchPerm: this.isSearchPerm,
           curSearchParams: this.curSearchParams,

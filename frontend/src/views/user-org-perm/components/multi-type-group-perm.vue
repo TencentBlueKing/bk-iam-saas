@@ -567,16 +567,19 @@
         this.curSelectedGroup = [...payload];
       },
 
-      handleAddGroup (payload) {
+      handleRefreshGroup (payload) {
         const curData = this.memberTempPermData.find((item) => item.id === payload.mode);
         this.formatPaginationData(curData, 1, curData.pagination.limit);
+        this.curSelectedGroup = [];
         this.$emit('on-selected-group', []);
       },
 
+      handleAddGroup (payload) {
+        this.handleRefreshGroup(payload);
+      },
+
       handleRemoveGroup (payload) {
-        const curData = this.memberTempPermData.find((item) => item.id === payload.mode);
-        this.formatPaginationData(curData, 1, curData.pagination.limit);
-        this.$emit('on-selected-group', []);
+        this.handleRefreshGroup(payload);
       },
   
       handlePageChange (current, payload) {

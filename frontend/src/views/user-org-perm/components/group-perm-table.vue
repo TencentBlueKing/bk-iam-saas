@@ -317,13 +317,12 @@
     },
     mounted () {
       this.$once('hook:beforeDestroy', () => {
-        bus.$off('on-remove-user-group');
+        bus.$off('on-remove-toggle-checkbox');
       });
       // 同步更新checkbox状态
-      bus.$on('on-remove-user-group', (payload) => {
+      bus.$on('on-remove-toggle-checkbox', (payload) => {
         this.$nextTick(() => {
           this.$emit('on-selected-group', payload);
-          console.log(555);
           this.list.forEach((item) => {
             if (this.$refs.groupPermRef && !payload.map((v) => v.id).includes(item.id)) {
               this.$refs.groupPermRef.toggleRowSelection(item, false);

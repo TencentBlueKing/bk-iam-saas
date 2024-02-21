@@ -389,6 +389,7 @@ export const m = {
         '关联成员将不再继承该模板的权限': 'Associated members will no longer inherit the permissions of the template',
         '该用户组已关联': 'The group has been associated',
         '添加用户组成功': 'Group Added',
+        '重置用户组成功': 'Group reset',
         '添加成员成功': 'Members Added',
         '移出成功': 'Removed',
         '移除成功': 'Removed',

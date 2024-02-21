@@ -178,7 +178,7 @@
         }
         this.$emit('on-remove-group', this.tableList);
         // 同步更新checkbox状态
-        bus.$emit('on-remove-user-group', this.tableList);
+        bus.$emit('on-remove-toggle-checkbox', this.tableList);
       },
 
       handlePageChange (page = 1) {

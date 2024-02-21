@@ -174,7 +174,21 @@
       }
     },
     methods: {
-      handleSubmit () {},
+      async handleSubmit () {
+        const params = {
+          members: [...this.userList, ...this.departList].map(({ id, type }) => ({ id, type }))
+        };
+        try {
+          const { code } = await this.$store.dispatch('userOrOrg/cleanGroupMembers', params);
+          if (code === 0) {
+            this.messageSuccess(this.$t(`m.info['清空用户组成功']`), 3000);
+            this.$emit('on-submit', params);
+            this.$emit('update:show', false);
+          }
+        } catch (e) {
+          this.messageAdvancedError(e);
+        }
+      },
 
       handleCancel () {
         this.$emit('update:show', false);

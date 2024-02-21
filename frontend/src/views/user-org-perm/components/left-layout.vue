@@ -93,7 +93,7 @@
       :depart-list="departList"
       :title="formatSliderTitle"
       :group-data="queryGroupData"
-      @on-submit="handleAddGroupSubmit"
+      @on-submit="handleGroupSubmit"
     />
 
     <ClearUserGroupSlider
@@ -104,6 +104,7 @@
       :user-list="userList"
       :depart-list="departList"
       :group-data="queryGroupData"
+      @on-submit="handleGroupSubmit"
     />
   </div>
 </template>
@@ -330,7 +331,7 @@
         });
       },
 
-      handleAddGroupSubmit () {
+      handleGroupSubmit () {
         bus.$emit('on-refresh-resource-search', {
           isSearchPerm: this.isSearchPerm,
           curSearchParams: this.curSearchParams,

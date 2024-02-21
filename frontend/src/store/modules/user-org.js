@@ -51,14 +51,14 @@ export default {
           delete params[item];
         }
       });
-      // const queryParams = Object.keys(params).length ? `/?${json2Query(params)}` : '/';
-      // return http.get(`${AJAX_URL_PREFIX}/roles/group_members${queryParams}`, config);
-      const { page, page_size, hidden } = params;
-      const queryParams = Object.assign({}, { page, page_size });
-      if (params.hasOwnProperty('hidden')) {
-        queryParams.hidden = hidden;
-      }
-      return http.post(`${AJAX_URL_PREFIX}/roles/group_members/?${json2Query(queryParams)}`, params, config);
+      const queryParams = Object.keys(params).length ? `/?${json2Query(params)}` : '/';
+      return http.get(`${AJAX_URL_PREFIX}/roles/group_members${queryParams}`, config);
+      // const { page, page_size, hidden } = params;
+      // const queryParams = Object.assign({}, { page, page_size });
+      // if (params.hasOwnProperty('hidden')) {
+      //   queryParams.hidden = hidden;
+      // }
+      // return http.post(`${AJAX_URL_PREFIX}/roles/group_members/?${json2Query(queryParams)}`, params, config);
     },
 
     /**
@@ -178,6 +178,36 @@ export default {
     */
     deleteGroupMembers ({ commit, state, dispatch }, params, config) {
       return http.post(`${AJAX_URL_PREFIX}/groups/members/delete/`, params, config);
+    },
+
+    /**
+     * 批量重置用户组成员
+     *
+     * @param {Function} commit store commit mutation handler
+     * @param {Object} state store state
+     * @param {Function} dispatch store dispatch action handler
+     * @param {Object} params 请求参数
+     * @param {Object?} config http config
+     *
+     * @return {Promise} promise 对象
+    */
+    resetGroupMembers ({ commit, state, dispatch }, params, config) {
+      return http.post(`${AJAX_URL_PREFIX}/roles/group_members/reset/`, params, config);
+    },
+
+    /**
+     * 批量清空用户组成员
+     *
+     * @param {Function} commit store commit mutation handler
+     * @param {Object} state store state
+     * @param {Function} dispatch store dispatch action handler
+     * @param {Object} params 请求参数
+     * @param {Object?} config http config
+     *
+     * @return {Promise} promise 对象
+    */
+    cleanGroupMembers ({ commit, state, dispatch }, params, config) {
+      return http.post(`${AJAX_URL_PREFIX}/roles/group_members/clean/`, params, config);
     }
   }
 };
