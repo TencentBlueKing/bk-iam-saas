@@ -98,6 +98,8 @@ export const beforeEach = async (to, from, next) => {
 
   async function getExternalRole () {
     const { role_id: externalRoleId } = to.query;
+    currentRoleId = externalRoleId;
+    curRoleId = externalRoleId;
     try {
       await store.dispatch('role/updateCurrentRole', { id: Number(externalRoleId) });
       await store.dispatch('userInfo');
@@ -135,8 +137,8 @@ export const beforeEach = async (to, from, next) => {
     window.localStorage.setItem('index', index);
   }
 
-  // 如果进入没有权限，重新找roleList
-  if (['', 'staff'].includes(curRole) && navIndex > 0) {
+  // 如果进入没有权限，重新找roleList, 蓝盾交互不需要判断
+  if (['', 'staff'].includes(curRole) && navIndex > 0 && !existValue('externalApp')) {
     const roleList = await store.dispatch('roleList', {
       cancelWhenRouteChange: false,
       cancelPrevious: false
