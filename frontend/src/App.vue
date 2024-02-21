@@ -329,7 +329,6 @@
       },
 
       handleShowAlertChange (isShow) {
-        console.log(444, isShow);
         this.showNoticeAlert = isShow;
       }
     }

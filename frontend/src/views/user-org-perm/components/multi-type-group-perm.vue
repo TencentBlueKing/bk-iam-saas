@@ -1,7 +1,8 @@
 <template>
   <div class="user-org-group-perm">
-    <template v-if="hasPerm">
+    <template v-if="permData.hasPerm">
       <MemberTempPermPolicy
+        ref="memberTempPermPolicyRef"
         v-for="(item, index) in memberTempPermData"
         :key="index"
         :title="item.name"
@@ -13,7 +14,6 @@
         ]"
         :perm-length="item.pagination.count"
         :one-perm="isOnlyPerm ? 1 : formatPermLength"
-        :is-only-perm="isOnlyPerm"
         :is-all-delete="false"
         :show-collapse="false"
         @on-expanded="handleExpanded(...arguments, item)"
@@ -25,7 +25,7 @@
           :is-loading="item.loading"
           :is-search-perm="isSearchResource"
           :pagination="item.pagination"
-          :cur-search-params="searchParams"
+          :cur-search-params="curSearchParams"
           :group-data="groupData"
           :list="item.list"
           :cur-selected-group="curSelectedGroup"
@@ -86,14 +86,6 @@
         }
       
       },
-      isSearchPerm: {
-        type: Boolean,
-        default: false
-      },
-      isOnlyPerm: {
-        type: Boolean,
-        default: false
-      },
       componentLoading: {
         type: Boolean,
         default: false
@@ -104,7 +96,10 @@
     },
     data () {
       return {
-        hasPerm: false,
+        permData: {
+          hasPerm: false
+        },
+        isOnlyPerm: false,
         isSearchResource: false,
         onePerm: 0,
         totalCount: 0,
@@ -189,7 +184,7 @@
         ],
         memberTempPermData: [],
         curSelectedGroup: [],
-        queryGroupData: [],
+        queryGroupData: {},
         curSearchParams: {},
         emptyPermData: {
           type: 'empty',
@@ -219,32 +214,26 @@
         }
     },
     watch: {
-      emptyData: {
-        handler (value) {
-          this.emptyPermData = Object.assign({}, value);
-        },
-        immediate: true
-      },
-      totalCount: {
-        handler (value) {
-          this.hasPerm = value > 0;
-        },
-        immediate: true
-      },
-      hasPerm (value) {
-        return value || this.totalCount > 0;
-      },
       groupData: {
         handler (value) {
-          if (Object.keys(value).length > 0) {
-            this.fetchResetData(value);
+          this.curSelectedGroup = [];
+          this.queryGroupData = cloneDeep(value);
+          // 只有手动切换组织架构成员时才重置数据，默认以兄弟组件通信处理交互
+          if (value.isClick) {
+            this.fetchResetData();
           }
         },
         immediate: true
       },
-      isSearchPerm: {
+      searchParams: {
         handler (value) {
-          this.isSearchResource = value;
+          this.curSearchParams = { ...value };
+        },
+        immediate: true
+      },
+      emptyData: {
+        handler (value) {
+          this.emptyPermData = Object.assign({}, value);
         },
         immediate: true
       }
@@ -262,20 +251,24 @@
       });
     },
     methods: {
-      async fetchResetData (value) {
-        this.emptyPermData.tipType = '';
-        this.handleEmptyClear();
-        this.queryGroupData = cloneDeep(value);
-        this.fetchInitData();
+      async fetchResetData () {
+        // this.emptyPermData.tipType = '';
+        // this.handleEmptyClear();
+        await this.fetchInitData();
+        if (this.isOnlyPerm) {
+          this.$nextTick(() => {
+            console.log(this.$refs.memberTempPermPolicyRef);
+            this.$refs.memberTempPermPolicyRef && this.$refs.memberTempPermPolicyRef[0].handleExpanded(false);
+          });
+        }
       },
 
       // 获取个人/部门用户组
       async fetchUserGroupSearch () {
         const { id, type } = this.queryGroupData;
-        let curData = this.memberTempPermData[0];
-        const { emptyData, pagination } = curData;
+        const { emptyData, pagination } = this.memberTempPermData[0];
         try {
-          curData.loading = true;
+          this.memberTempPermData[0].loading = true;
           const { current, limit } = pagination;
           const url = 'userOrOrg/getUserOrDepartGroupList';
           let params = {
@@ -284,9 +277,9 @@
           };
           if (this.isSearchResource) {
             params = {
-                ...this.curSearchParams,
-                limit,
-                offset: limit * (current - 1)
+              ...this.curSearchParams,
+              limit,
+              offset: limit * (current - 1)
             };
           }
           if (this.externalSystemId) {
@@ -301,12 +294,12 @@
               }
           });
           const totalCount = data.count || 0;
-          curData = Object.assign(curData, {
+          this.memberTempPermData[0] = Object.assign(this.memberTempPermData[0], {
             list: data.results || [],
             emptyData: formatCodeData(code, emptyData, totalCount === 0),
             pagination: { ...pagination, ...{ count: totalCount } }
           });
-          this.emptyPermData = cloneDeep(curData.emptyData);
+          this.emptyPermData = cloneDeep(this.memberTempPermData[0].emptyData);
           this.$nextTick(() => {
             const curSelectedId = this.curSelectedGroup.map((item) => item.id);
             this.memberTempPermData[0].list.forEach((item) => {
@@ -321,14 +314,14 @@
         } catch (e) {
           console.error(e);
           this.emptyPermData = formatCodeData(e.code, emptyData);
-          curData = Object.assign(curData, {
+          this.memberTempPermData[0] = Object.assign(this.memberTempPermData[0], {
             list: [],
             emptyData: formatCodeData(e.code, emptyData),
             pagination: { ...pagination, ...{ count: 0 } }
           });
           this.messageAdvancedError(e);
         } finally {
-          curData.loading = false;
+          this.memberTempPermData[0].loading = false;
         }
       },
 
@@ -353,9 +346,9 @@
             params.system_id = this.externalSystemId;
             params.hidden = false;
           }
-          // 'userOrOrg/getUserGroupByDepartList',
+          // 'userOrOrg/getUserOrDepartGroupList',
           const { code, data } = await this.$store.dispatch(
-            'userOrOrg/getUserOrDepartGroupList',
+            'userOrOrg/getUserGroupByDepartList',
             params
           );
           const totalCount = data.count || 0;
@@ -384,8 +377,8 @@
         try {
           this.memberTempPermData[2].loading = true;
           const { current, limit } = pagination;
-          let url = 'userOrOrg/getUserOrDepartGroupList';
-          // let url = 'userOrOrg/getUserMemberTempList';
+          let url = 'userOrOrg/getUserMemberTempList';
+          // let url = 'userOrOrg/getUserOrDepartGroupList';
           let params = {
             limit,
             offset: limit * (current - 1)
@@ -499,7 +492,8 @@
                   this.fetchDepartGroupSearch(),
                   this.fetchPermByTempSearch()
                 ]);
-                this.hasPerm = this.memberTempPermData.some((v) => v.pagination.count > 0);
+                this.$set(this.permData, 'hasPerm', this.memberTempPermData.some((v) => v.pagination.count > 0));
+                this.isOnlyPerm = this.memberTempPermData.filter((v) => v.pagination.count > 0).length === 1;
               },
               department: async () => {
                 this.memberTempPermData = this.initMemberTempPermData.filter((item) => ['personalOrDepartPerm', 'departTempPerm'].includes(item.id));
@@ -508,7 +502,8 @@
                   this.fetchUserGroupSearch(),
                   this.fetchDepartPermByTempSearch()
                 ]);
-                this.hasPerm = this.memberTempPermData.some((v) => v.pagination.count > 0);
+                this.$set(this.permData, 'hasPerm', this.memberTempPermData.some((v) => v.pagination.count > 0));
+                this.isOnlyPerm = this.memberTempPermData.filter((v) => v.pagination.count > 0).length === 1;
               }
             };
             return typeMap[this.queryGroupData.type]();
@@ -536,7 +531,6 @@
 
       async formatPaginationData (payload, current, limit) {
         const curData = this.memberTempPermData.find((item) => item.id === payload.id);
-        console.log(payload.id);
         if (curData) {
           const typeMap = {
             personalOrDepartPerm: async () => {
@@ -580,16 +574,19 @@
         this.curSelectedGroup = [...payload];
       },
 
-      handleAddGroup (payload) {
+      handleRefreshGroup (payload) {
         const curData = this.memberTempPermData.find((item) => item.id === payload.mode);
         this.formatPaginationData(curData, 1, curData.pagination.limit);
+        this.curSelectedGroup = [];
         this.$emit('on-selected-group', []);
       },
 
+      handleAddGroup (payload) {
+        this.handleRefreshGroup(payload);
+      },
+
       handleRemoveGroup (payload) {
-        const curData = this.memberTempPermData.find((item) => item.id === payload.mode);
-        this.formatPaginationData(curData, 1, curData.pagination.limit);
-        this.$emit('on-selected-group', []);
+        this.handleRefreshGroup(payload);
       },
   
       handlePageChange (current, payload) {

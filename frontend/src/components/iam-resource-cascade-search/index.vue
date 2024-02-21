@@ -341,6 +341,7 @@
             default: true
           }
         ],
+        searchData: [],
         curResourceData: {
           type: ''
         },
@@ -351,6 +352,7 @@
         systemSelectList: [],
         processesList: [],
         resourceInstances: [],
+        resourceActionData: [],
         isShowConfirmDialog: false,
         confirmDialogTitle: this.$t(`m.verify['admin无需申请权限']`),
         systemIdError: false,
@@ -387,7 +389,7 @@
           if (!this.curResourceData) {
               return [];
           }
-          if (this.curResourceData.condition.length === 0) this.curResourceData.condition = ['none'];
+          // if (this.curResourceData.condition.length === 0) this.curResourceData.condition = ['none'];
           return _.cloneDeep(this.curResourceData.condition);
       },
       curSelectionMode () {
@@ -421,6 +423,62 @@
           }
         },
         immediate: true
+      },
+      applyGroupData: {
+        handler (value) {
+          const params = {};
+          if (value.system_id) {
+            const curData = this.systemSelectList.find((item) => item.id === value.system_id);
+            if (curData) {
+              params.system_id = {
+                label: curData.name,
+                value: curData.id
+              };
+            }
+          }
+          if (value.action_id) {
+            const curData = this.processesList.find((item) => item.id === value.action_id);
+            if (curData) {
+              params.action_id = {
+                label: curData.name,
+                value: curData.id
+              };
+            }
+          }
+          // 用于判断自定义slot场景下，同步更新选中值
+          this.$emit('on-select-system', params);
+        },
+        deep: true
+      },
+      curResourceData: {
+        handler (value) {
+          // 用于判断自定义slot场景下，同步更新选中值
+          // 处理资源类型数据
+          let params = {};
+          const { type, condition } = value;
+          const { resource_groups: resourceGroups } = this.resourceTypeData;
+          if (resourceGroups && resourceGroups.length) {
+            if (type && resourceGroups[0].related_resource_types_list
+              && resourceGroups[0].related_resource_types_list.length
+            ) {
+              const curData = resourceGroups[0].related_resource_types_list.find((item) => item.type === type);
+              if (curData) {
+                params.resource_type = {
+                  label: curData.name,
+                  value: curData.type
+                };
+              }
+            }
+          }
+          // 处理资源实例数据
+          if (condition) {
+            params = Object.assign(params, {
+              condition
+            });
+          }
+          this.$emit('on-select-resource', params);
+        },
+        deep: true
       },
       navStick () {
         this.formatFormItemWidth();
@@ -608,7 +666,6 @@
           this.resetPagination();
           this.resetLocationHref();
         }
-        console.log(this.searchParams, '搜索参数');
         this.handleSearchUserGroup(true, false);
       },
 
@@ -856,6 +913,13 @@
         this.isShowResourceInstanceSideSlider = false;
         this.curResIndex = -1;
         this.resourceInstanceError = false;
+        // 抛出选择后的实例数据处理自定义组件场景
+        if (this.isCustomSearch) {
+          this.$emit('on-select-instance', {
+            resourceInstances: this.resourceInstances,
+            resourceTypeData: this.resourceTypeData
+          });
+        }
       },
 
       handleResourceCancel () {
@@ -899,7 +963,7 @@
 
       resetPagination () {
         this.pagination = Object.assign(
-          {},
+          this.pagination,
           {
             limit: 10,
             current: 1,
@@ -923,7 +987,6 @@
         this.resourceInstances = [];
         this.resetLocationHref();
       }
-
     }
   };
 

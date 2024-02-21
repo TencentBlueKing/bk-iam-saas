@@ -54,7 +54,6 @@
             />
             <div
               v-if="['user'].includes(item.type)"
-              v-bk-tooltips="{ content: `${item.id} (${item.name})` }"
               class="single-hide group-name"
             >
               <span>{{ item.id }}</span>
@@ -62,7 +61,6 @@
             </div>
             <div
               v-if="['department'].includes(item.type)"
-              v-bk-tooltips="{ content: item.name }"
               class="single-hide group-name">
               {{ item.name }}
             </div>
@@ -86,18 +84,17 @@
       />
     </div>
     
-    <template v-if="!['clear'].includes(curSliderName)">
-      <JoinUserGroupSlider
-        :slider-width="960"
-        :show.sync="sliderData[curSliderName].showSlider"
-        :cur-slider-name="curSliderName"
-        :is-batch="true"
-        :user-list="userList"
-        :depart-list="departList"
-        :title="formatSliderTitle"
-        :group-data="queryGroupData"
-      />
-    </template>
+    <JoinUserGroupSlider
+      :slider-width="960"
+      :show.sync="sliderData[curSliderName].showSlider"
+      :cur-slider-name="curSliderName"
+      :is-batch="true"
+      :user-list="userList"
+      :depart-list="departList"
+      :title="formatSliderTitle"
+      :group-data="queryGroupData"
+      @on-submit="handleGroupSubmit"
+    />
 
     <ClearUserGroupSlider
       :slider-width="960"
@@ -107,11 +104,13 @@
       :user-list="userList"
       :depart-list="departList"
       :group-data="queryGroupData"
+      @on-submit="handleGroupSubmit"
     />
   </div>
 </template>
 
 <script>
+  import { bus } from '@/common/bus';
   import JoinUserGroupSlider from './join-user-group-slider.vue';
   import ClearUserGroupSlider from './clear-user-group-slider.vue';
 
@@ -126,7 +125,11 @@
         type: Boolean,
         default: false
       },
-      isNoExpandSearch: {
+      isNoExpandNoSearchData: {
+        type: Boolean,
+        default: false
+      },
+      isNoExpandHasSearchData: {
         type: Boolean,
         default: false
       },
@@ -140,6 +143,24 @@
       },
       groupData: {
         type: Object
+      },
+      isSearchPerm: {
+        type: Boolean,
+        default: false
+      },
+      curSearchParams: {
+        type: Object,
+        default: () => {}
+      },
+      curSearchPagination: {
+        type: Object,
+        default: () => {
+          return {
+            current: 1,
+            limit: 10,
+            count: 0
+          };
+        }
       },
       emptyData: {
         type: Object
@@ -178,9 +199,10 @@
         groupList: [],
         userList: [],
         departList: [],
+        queryGroupData: {},
         pageConf: {
           current: 1,
-          limit: 18,
+          limit: 1,
           count: 0
         },
         groupEmptyData: {
@@ -229,18 +251,28 @@
       },
       formatListHeight () {
         if (this.showNoticeAlert) {
-          if (this.isNoExpandSearch) {
+          if (this.isNoExpandNoSearchData) {
             return {
-              height: 'calc(100vh - 186px)'
+              height: 'calc(100vh - 225px)'
+            };
+          }
+          if (this.isNoExpandHasSearchData) {
+            return {
+              height: 'calc(100vh - 268px)'
             };
           }
           return {
             height: 'calc(100vh - 450px)'
           };
         }
-        if (this.isNoExpandSearch) {
+        if (this.isNoExpandNoSearchData) {
           return {
             height: 'calc(100vh - 186px)'
+          };
+        }
+        if (this.isNoExpandHasSearchData) {
+          return {
+            height: 'calc(100vh - 228px)'
           };
         }
         return {
@@ -296,6 +328,14 @@
         this.sliderData[payload] = Object.assign(this.sliderData[payload], {
           showSlider: true,
           list: this.currentSelectList
+        });
+      },
+
+      handleGroupSubmit () {
+        bus.$emit('on-refresh-resource-search', {
+          isSearchPerm: this.isSearchPerm,
+          curSearchParams: this.curSearchParams,
+          curSearchPagination: this.curSearchPagination
         });
       },
 
@@ -361,6 +401,7 @@
       border-radius: 2px;
       padding-left: 10px;
       padding-right: 5px;
+      background-color: #ffffff;
       color: #63656e;
 
       &:hover {

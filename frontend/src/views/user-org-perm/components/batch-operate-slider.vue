@@ -26,7 +26,7 @@
                   :is-custom-title-style="true"
                 >
                   <div slot="operateObject">
-                    <span>{{ $t(`m.common['已选择']`) }}</span>
+                    <span>{{ $t(`m.common['已选']`) }}</span>
                     <template v-if="isHasUser">
                       <span class="number">{{ userList.length }}</span>
                       {{ $t(`m.common['个用户']`) }}
@@ -103,6 +103,7 @@
 <script>
   import { mapGetters } from 'vuex';
   import { PERMANENT_TIMESTAMP } from '@/common/constants';
+  import { cloneDeep } from 'lodash';
   import { leaveConfirm } from '@/common/leave-confirm';
   import { bus } from '@/common/bus';
   import IamDeadline from '@/components/iam-deadline/horizontal';
@@ -161,7 +162,9 @@
         customButtonStyle: {
           width: '160px'
         },
-        selectTableList: []
+        selectTableList: [],
+        submitFormData: {},
+        submitFormDataBack: {}
       };
     },
     computed: {
@@ -203,6 +206,11 @@
         handler (value) {
           if (value) {
             this.selectTableList = [...this.groupList];
+            this.submitFormData = Object.assign({}, {
+              expiredAtUse: this.expiredAtUse,
+              selectTableList: this.selectTableList
+            });
+            this.submitFormDataBack = cloneDeep(this.submitFormData);
           }
         },
         deep: true
@@ -210,11 +218,12 @@
     },
     mounted () {
       this.$once('hook:beforeDestroy', () => {
-        bus.$off('on-remove-user-group');
+        bus.$off('on-remove-toggle-checkbox');
       });
       // 同步更新checkbox状态
-      bus.$on('on-remove-user-group', (payload) => {
+      bus.$on('on-remove-toggle-checkbox', (payload) => {
         this.selectTableList = [...payload];
+        this.submitFormData = Object.assign({}, { selectTableList: this.selectTableList });
       });
     },
     methods: {
@@ -237,9 +246,11 @@
           const dotIndex = tempArr.findIndex((item) => item === '.');
           const nowSecond = parseInt(tempArr.splice(0, dotIndex).join(''), 10);
           this.expiredAtUse = payload + nowSecond;
+          this.submitFormData = Object.assign(this.submitFormData, { expiredAtUse: payload });
           return;
         }
         this.expiredAtUse = payload;
+        this.submitFormData = Object.assign(this.submitFormData, { expiredAtUse: payload });
       },
 
       async handleSubmit () {
@@ -247,7 +258,6 @@
           this.isShowGroupError = true;
           return;
         }
-        this.submitLoading = true;
         const { type, id } = this.groupData;
         const params = {
           group_ids: this.selectTableList.map((item) => item.id),
@@ -256,6 +266,7 @@
         const modeMap = {
           remove: async () => {
             try {
+              this.submitLoading = true;
               const adminGroups = this.selectTableList.filter(
                 (item) =>
                   item.attributes
@@ -273,19 +284,20 @@
                 );
                 return;
               }
-              for (let i = 0; i < selectGroups.length; i++) {
-                await this.$store.dispatch('perm/quitGroupTemplates', {
-                  type: 'group',
-                  subjectType: type,
-                  subjectId: id,
-                  id: selectGroups[i].id
-                });
+              const deleteParams = {
+                members: [{
+                  type,
+                  id
+                }],
+                group_ids: selectGroups.map((item) => item.id)
+              };
+              const { code } = await this.$store.dispatch('userOrOrg/deleteGroupMembers', deleteParams);
+              if (code === 0) {
+                this.messageSuccess(this.$t(`m.info['移出成功']`), 3000);
+                bus.$emit('on-remove-toggle-checkbox', this.selectTableList);
+                this.$emit('on-submit', params);
+                this.$emit('update:show', false);
               }
-              this.messageSuccess(this.$t(`m.info['移除成功']`), 3000);
-              this.selectTableList = [];
-              bus.$emit('on-remove-user-group', this.selectTableList);
-              this.$emit('on-submit', params);
-              this.$emit('update:show', false);
             } catch (e) {
               console.error(e);
               this.messageAdvancedError(e);
@@ -293,12 +305,23 @@
               this.submitLoading = false;
             }
           },
-          renewal: () => {
+          renewal: async () => {
             try {
               if (this.expiredAtUse === 15552000) {
                 this.expiredAtUse = this.handleExpiredAt();
               }
+              if (!this.expiredAtUse) {
+                this.isShowExpiredError = true;
+                return;
+              }
+              this.submitLoading = true;
               params.expired_at = this.expiredAtUse;
+              const { code } = await this.$store.dispatch('userGroup/batchAddUserGroupMember', params);
+              if (code === 0) {
+                this.messageSuccess(this.$t(`m.renewal['续期成功']`), 3000);
+                this.$emit('on-submit', params);
+                this.$emit('update:show', false);
+              }
             } catch (e) {
               console.error(e);
               this.messageAdvancedError(e);
@@ -316,6 +339,7 @@
           this.resetData();
         } else {
           let cancelHandler = Promise.resolve();
+          window.changeAlert = JSON.stringify(this.submitFormData) !== JSON.stringify(this.submitFormDataBack);
           if (window.changeAlert) {
             cancelHandler = leaveConfirm();
           }
@@ -330,6 +354,8 @@
       },
 
       resetData () {
+        this.submitFormData = {};
+        this.submitFormDataBack = {};
         this.selectTableList = [];
         this.isShowGroupError = false;
         this.isShowExpiredError = false;
@@ -416,6 +442,7 @@
   }
 
   /deep/ .group-table-content {
+    margin-top: 18px !important;
     .iam-resource-expand {
       background-color: #eaebf0;
     }
@@ -467,6 +494,7 @@
   }
 
   /deep/ .apply-expired-at {
+    margin-top: 18px !important;
     .custom-time {
       height: 26px;
     }

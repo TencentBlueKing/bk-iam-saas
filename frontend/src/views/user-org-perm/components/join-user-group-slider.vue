@@ -5,7 +5,6 @@
       :title="title"
       :width="sliderWidth"
       :quick-close="true"
-      :show-mask="true"
       ext-cls="iam-join-user-group-side"
       @update:isShow="handleCancel('dialog')"
 
@@ -28,7 +27,7 @@
                   :is-custom-title-style="true"
                 >
                   <div slot="operateObject">
-                    <span>{{ $t(`m.common['已选择']`) }}</span>
+                    <span>{{ $t(`m.common['已选']`) }}</span>
                     <template v-if="isHasUser">
                       <span class="number">{{ userList.length }}</span>
                       {{ $t(`m.common['个用户']`) }}
@@ -49,14 +48,17 @@
                   </div>
                 </RenderPermBoundary>
               </template>
-              <template v-else>
+              <div v-else class="single-object">
                 <render-member-item v-if="isHasUser" mode="view" type="user" :data="userList" />
                 <render-member-item v-if="isHasDepartment" mode="view" type="department" :data="departList" />
-              </template>
+              </div>
             </bk-form-item>
-            <bk-form-item :label-width="0" :required="true">
+            <bk-form-item
+              :label-width="0"
+              :required="true"
+              class="joined-user-group">
               <div v-html="formatGroupTitle" />
-              <div class="joined-user-group" ref="selectTableRef">
+              <div ref="selectTableRef">
                 <div class="joined-user-group-list">
                   <JoinedUserGroupTable ref="joinedUserGroupRef" @on-selected-group="handleSelectedGroup" />
                 </div>
@@ -69,7 +71,7 @@
               class="apply-expired-at"
               :required="true"
             >
-              <iam-deadline :value="expiredAt" @on-change="handleDeadlineChange" :cur-role="curRole" />
+              <iam-deadline ref="expiredRef" :value="expiredAt" @on-change="handleDeadlineChange" :cur-role="curRole" />
               <p class="expired-at-error" v-if="isShowExpiredError">{{ $t(`m.userOrOrg['请选择申请时长']`) }}</p>
             </bk-form-item>
           </bk-form>
@@ -92,6 +94,7 @@
 <script>
   import { mapGetters } from 'vuex';
   import { PERMANENT_TIMESTAMP } from '@/common/constants';
+  import { cloneDeep } from 'lodash';
   import { leaveConfirm } from '@/common/leave-confirm';
   import IamDeadline from '@/components/iam-deadline/horizontal';
   import RenderPermBoundary from '@/components/render-perm-boundary';
@@ -145,7 +148,9 @@
         customButtonStyle: {
           width: '160px'
         },
-        selectTableList: []
+        selectTableList: [],
+        submitFormData: {},
+        submitFormDataBack: {}
       };
     },
     computed: {
@@ -198,6 +203,20 @@
         return '';
       }
     },
+    watch: {
+      isShow: {
+        handler (value) {
+          if (value) {
+            this.submitFormData = Object.assign({}, {
+              expiredAtUse: this.expiredAtUse,
+              selectTableList: this.selectTableList
+            });
+            this.submitFormDataBack = cloneDeep(this.submitFormData);
+          }
+        },
+        immediate: true
+      }
+    },
     methods: {
       handleExpiredAt () {
         const nowTimestamp = +new Date() / 1000;
@@ -218,13 +237,17 @@
           const dotIndex = tempArr.findIndex((item) => item === '.');
           const nowSecond = parseInt(tempArr.splice(0, dotIndex).join(''), 10);
           this.expiredAtUse = payload + nowSecond;
+          this.submitFormData = Object.assign(this.submitFormData, { expiredAtUse: payload });
           return;
         }
         this.expiredAtUse = payload;
+        this.submitFormData = Object.assign(this.submitFormData, { expiredAtUse: payload });
       },
 
       handleSelectedGroup (payload) {
+        this.isShowGroupError = false;
         this.selectTableList = [...payload];
+        this.submitFormData = Object.assign(this.submitFormData, { selectTableList: payload });
       },
 
       async handleSubmit () {
@@ -234,6 +257,11 @@
           this.scrollToLocation(this.$refs.selectTableRef);
           return;
         }
+        if (!this.expiredAtUse) {
+          this.isShowExpiredError = true;
+          this.scrollToLocation(this.$refs.expiredRef);
+          return;
+        }
         this.submitLoading = true;
         if (this.expiredAtUse === 15552000) {
           this.expiredAtUse = this.handleExpiredAt();
@@ -241,12 +269,25 @@
         const params = {
           expired_at: this.expiredAtUse,
           group_ids: groupsList.map((item) => item.id),
-          members: [...this.userList, ...this.departList]
+          members: [...this.userList, ...this.departList].map(({ id, type }) => ({ id, type }))
         };
+        let url = '';
+        let msg = '';
+        const typeMap = {
+          add: () => {
+            url = 'userGroup/batchAddUserGroupMember';
+            msg = this.$t(`m.info['添加用户组成功']`);
+          },
+          reset: () => {
+            url = 'userOrOrg/resetGroupMembers';
+            msg = this.$t(`m.info['重置用户组成功']`);
+          }
+        };
+        typeMap[this.curSliderName]();
         try {
-          const { code } = await this.$store.dispatch('userGroup/batchAddUserGroupMember', params);
+          const { code } = await this.$store.dispatch(url, params);
           if (code === 0) {
-            this.messageSuccess(this.$t(`m.info['添加用户组成功']`), 3000);
+            this.messageSuccess(msg, 3000);
             this.$emit('on-submit', params);
             this.$emit('update:show', false);
           }
@@ -263,6 +304,7 @@
           this.$emit('update:show', false);
           this.resetData();
         } else {
+          window.changeAlert = JSON.stringify(this.submitFormData) !== JSON.stringify(this.submitFormDataBack);
           let cancelHandler = Promise.resolve();
           if (window.changeAlert) {
             cancelHandler = leaveConfirm();
@@ -278,6 +320,8 @@
       },
 
       resetData () {
+        this.submitFormData = {};
+        this.submitFormDataBack = {};
         this.selectTableList = [];
         this.isShowGroupError = false;
         this.isShowExpiredError = false;
@@ -354,6 +398,11 @@
       .iam-member-display-wrapper {
         .label {
           display: none;
+        }
+        .content {
+          .member-item {
+            margin-bottom: 0;
+          }
         }
       }
     }
