@@ -145,7 +145,7 @@
           },
           {
             id: 'userTempPerm',
-            name: this.$t(`m.userOrOrg['人员模板用户组权限']`),
+            name: this.$t(`m.perm['直接加入人员模板的用户组权限']`),
             loading: false,
             expanded: false,
             pagination: {
@@ -164,7 +164,7 @@
           },
           {
             id: 'departTempPerm',
-            name: this.$t(`m.userOrOrg['人员模板用户组权限']`),
+            name: this.$t(`m.perm['通过组织加入人员模板的用户组权限']`),
             loading: false,
             expanded: false,
             pagination: {
@@ -484,12 +484,13 @@
           userOrgPerm: () => {
             const typeMap = {
               user: async () => {
-                this.memberTempPermData = this.initMemberTempPermData.filter((item) => ['personalOrDepartPerm', 'departPerm', 'userTempPerm'].includes(item.id));
+                this.memberTempPermData = cloneDeep(this.initMemberTempPermData);
                 this.memberTempPermData[0] = Object.assign(this.memberTempPermData[0], { name: this.$t(`m.userOrOrg['个人用户组权限']`) });
                 await Promise.all([
                   this.fetchUserGroupSearch(),
                   this.fetchDepartGroupSearch(),
-                  this.fetchPermByTempSearch()
+                  this.fetchPermByTempSearch(),
+                  this.fetchDepartPermByTempSearch()
                 ]);
                 this.$set(this.permData, 'hasPerm', this.memberTempPermData.some((v) => v.pagination.count > 0));
                 this.isOnlyPerm = this.memberTempPermData.filter((v) => v.pagination.count > 0).length === 1;
