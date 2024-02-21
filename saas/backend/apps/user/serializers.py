@@ -11,11 +11,11 @@ specific language governing permissions and limitations under the License.
 from rest_framework import serializers
 
 from backend.apps.group.models import Group
-from backend.apps.role.serializers import ResourceInstancesSLZ
 from backend.apps.subject.serializers import SubjectGroupSLZ
 from backend.apps.subject_template.models import SubjectTemplate
 from backend.biz.group import GroupBiz
 from backend.biz.subject_template import SubjectTemplateBiz
+from backend.common.serializers import ResourceInstancesSLZ
 from backend.service.group_saas_attribute import GroupAttributeService
 
 from .constants import NewbieSceneEnum

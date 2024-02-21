@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
@@ -18,7 +19,7 @@ from rest_framework.viewsets import GenericViewSet, mixins
 from backend.account.permissions import role_perm_class
 from backend.apps.organization.constants import SyncType
 from backend.apps.organization.filters import SyncRecordFilter
-from backend.apps.organization.models import Department, SyncRecord, User
+from backend.apps.organization.models import Department, SyncErrorLog, SyncRecord, User
 from backend.apps.organization.serializers import (
     DepartmentSLZ,
     OrganizationCategorySLZ,
@@ -253,6 +254,18 @@ class OrganizationSyncRecordViewSet(mixins.ListModelMixin, mixins.RetrieveModelM
         sync_record = self.get_object()
         response_slz = OrganizationSyncErrorLogSLZ(sync_record.detail)
         return Response(response_slz.data)
+
+    @swagger_auto_schema(
+        operation_description="删除同步记录",
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["organization"],
+    )
+    @transaction.atomic
+    def destroy(self, request, *args, **kwargs):
+        sync_record = self.get_object()
+        SyncRecord.objects.filter(id=sync_record.id).delete()
+        SyncErrorLog.objects.filter(sync_record_id=sync_record.id).delete()
+        return Response({})
 
 
 class UserDepartmentView(views.APIView):

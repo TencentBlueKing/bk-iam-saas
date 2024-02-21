@@ -21,6 +21,7 @@ from backend.apps.policy.serializers import ConditionSLZ, InstanceSLZ, ResourceG
 from backend.apps.role.models import Role, RoleCommonAction, RoleRelation, RoleUser
 from backend.biz.role import RoleBiz
 from backend.biz.subject import SubjectInfoList
+from backend.common.serializers import GroupMemberSLZ, GroupSearchSLZ, ResourceInstancesSLZ
 from backend.common.time import PERMANENT_SECONDS
 from backend.service.constants import (
     ADMIN_USER,
@@ -379,22 +380,6 @@ class RoleGroupMembersRenewSLZ(serializers.Serializer):
     members = serializers.ListField(label="续期成员", child=RoleGroupMemberRenewSLZ(), allow_empty=False)
 
 
-class ResourceInstancePathSLZ(serializers.Serializer):
-    id = serializers.CharField(label="资源实例ID", max_length=settings.MAX_LENGTH_OF_RESOURCE_ID)
-    type = serializers.CharField(label="资源实例类型")
-    name = serializers.CharField(label="资源实例名")
-
-
-class ResourceInstancesSLZ(serializers.Serializer):
-    system_id = serializers.CharField(label="系统ID", required=True)
-    id = serializers.CharField(label="资源实例ID", required=True, max_length=settings.MAX_LENGTH_OF_RESOURCE_ID)
-    type = serializers.CharField(label="资源实例类型", required=True)
-    name = serializers.CharField(label="资源实例名", required=True)
-    path = serializers.ListField(
-        label="资源实例路径", required=False, child=ResourceInstancePathSLZ(label="资源实例路径"), default=list
-    )
-
-
 class QueryAuthorizedSubjectsSLZ(serializers.Serializer):
     system_id = serializers.CharField(label="系统ID")
     action_id = serializers.CharField(label="操作ID")
@@ -498,3 +483,12 @@ class RoleGroupSubjectSLZ(serializers.Serializer):
             return self.user_name_dict.get(obj["subject_id"], "") if self.user_name_dict else ""
         if obj["subject_type"] == SubjectType.DEPARTMENT.value:
             return self.department_name_dict.get(obj["subject_id"], "") if self.department_name_dict else ""
+
+
+class RoleGroupMemberSearchSLZ(GroupSearchSLZ):
+    department_name = serializers.CharField(label="部门名称", required=False, default="", allow_blank=True)
+    username = serializers.CharField(label="用户名", required=False, default="", allow_blank=True)
+
+
+class RoleGroupMemberCleanSLZ(serializers.Serializer):
+    members = serializers.ListField(label="成员列表", child=GroupMemberSLZ(label="成员"), allow_empty=False)

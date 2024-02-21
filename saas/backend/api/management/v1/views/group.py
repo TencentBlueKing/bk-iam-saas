@@ -47,6 +47,7 @@ from backend.audit.constants import AuditSourceType
 from backend.biz.group import GroupBiz, GroupCheckBiz, GroupCreationBean, GroupTemplateGrantBean
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleBiz, RoleListQuery
+from backend.biz.utils import remove_not_exist_subject
 from backend.common.lock import gen_group_upsert_lock
 from backend.common.pagination import CompatiblePagination
 from backend.service.constants import GroupSaaSAttributeEnum, RoleType
@@ -275,8 +276,11 @@ class ManagementGroupMemberViewSet(GenericViewSet):
         self.group_check_biz.check_role_subject_scope(role, members)
         self.group_check_biz.check_member_count(group.id, len(members))
 
-        # 添加成员
-        self.biz.add_members(group.id, members, expired_at)
+        # 排除组织架构中不存在的成员
+        members = remove_not_exist_subject(members)
+        if members:
+            # 添加成员
+            self.biz.add_members(group.id, members, expired_at)
 
         # 写入审计上下文
         audit_context_setter(group=group, members=[m.dict() for m in members])

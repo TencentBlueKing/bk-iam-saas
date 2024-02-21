@@ -15,4 +15,5 @@ from . import views
 urlpatterns = [
     path("", views.ApplicationView.as_view(), name="open.application"),
     path("policies/", views.ApplicationCustomPolicyView.as_view(), name="open.application_policy"),
+    path("<str:sn>/", views.ApplicationDetailView.as_view(), name="open.application_detail"),
 ]
