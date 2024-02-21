@@ -145,7 +145,7 @@ class RoleGroupMemberTemplateGroupViewSet(SubjectTemplateGroupViewSet):
         tags=["role"],
     )
     def list(self, request, *args, **kwargs):
-        super().list(request, *args, **kwargs)
+        return super().list(request, *args, **kwargs)
 
     def search_group_ids(self, request, kwargs, data) -> Optional[List[int]]:
         search_group_ids = super().search_group_ids(request, kwargs, data)
