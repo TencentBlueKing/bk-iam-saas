@@ -46,11 +46,11 @@ export default {
      * @return {Promise} promise 对象
     */
     getUserGroupMemberList ({ commit, state, dispatch }, params = {}, config) {
-      // Object.keys(params).forEach((item) => {
-      //   if (['offset', 'limit'].includes(item) || params[item] === '') {
-      //     delete params[item];
-      //   }
-      // });
+      Object.keys(params).forEach((item) => {
+        if (['offset', 'limit'].includes(item) || params[item] === '') {
+          delete params[item];
+        }
+      });
       // const queryParams = Object.keys(params).length ? `/?${json2Query(params)}` : '/';
       // return http.get(`${AJAX_URL_PREFIX}/roles/group_members${queryParams}`, config);
       const { page, page_size, hidden } = params;
