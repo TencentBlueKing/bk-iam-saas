@@ -220,7 +220,6 @@
        * 获取页面数据
        */
       async fetchDefaultData () {
-        await this.fetchCurUserGroup();
         await this.fetchUserGroupList();
       },
 
@@ -496,44 +495,6 @@
         const tableIndex = this.tableList.findIndex((item) => item.id === payload.id);
         this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(this.tableList[tableIndex], false);
         this.currentSelectedGroups.splice(index, 1);
-      },
-
-      async fetchCurUserGroup () {
-        try {
-          const { data, code } = await this.$store.dispatch('perm/getPersonalGroups', {
-            page_size: 10000,
-            page: 1
-          });
-          if (data.results && data.results.length) {
-            const groupIdList = [];
-            const tableData = data.results.filter((item) => item.department_id === 0);
-            tableData.forEach((item) => {
-              groupIdList.push(item.id);
-              if (item.role_members && item.role_members.length) {
-                const hasName = item.role_members.some((v) => v.username);
-                if (!hasName) {
-                  item.role_members = item.role_members.map((v) => {
-                    return {
-                      username: v,
-                      readonly: false
-                    };
-                  });
-                }
-              }
-            });
-            this.curUserGroup = _.cloneDeep(groupIdList);
-            this.defaultSelectedGroups = _.cloneDeep(tableData || []);
-          }
-          this.emptyData = formatCodeData(code, this.emptyData, this.curUserGroup.length === 0);
-        } catch (e) {
-          this.$emit('toggle-loading', false);
-          this.emptyData = formatCodeData(e.code, this.emptyData);
-          console.error(e);
-          this.curUserGroup = [];
-          this.currentSelectedGroups = [];
-          this.defaultSelectedGroups = [];
-          this.messageAdvancedError(e);
-        }
       },
 
       handleBatchRenewal () {

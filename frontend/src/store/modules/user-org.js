@@ -46,19 +46,19 @@ export default {
      * @return {Promise} promise 对象
     */
     getUserGroupMemberList ({ commit, state, dispatch }, params = {}, config) {
-      Object.keys(params).forEach((item) => {
-        if (['offset', 'limit'].includes(item) || params[item] === '') {
-          delete params[item];
-        }
-      });
-      const queryParams = Object.keys(params).length ? `/?${json2Query(params)}` : '/';
-      return http.get(`${AJAX_URL_PREFIX}/roles/group_members${queryParams}`, config);
-      // const { page, page_size, hidden } = params;
-      // const queryParams = Object.assign({}, { page, page_size });
-      // if (params.hasOwnProperty('hidden')) {
-      //   queryParams.hidden = hidden;
-      // }
-      // return http.post(`${AJAX_URL_PREFIX}/roles/group_members/?${json2Query(queryParams)}`, params, config);
+      // Object.keys(params).forEach((item) => {
+      //   if (['offset', 'limit'].includes(item) || params[item] === '') {
+      //     delete params[item];
+      //   }
+      // });
+      // const queryParams = Object.keys(params).length ? `/?${json2Query(params)}` : '/';
+      // return http.get(`${AJAX_URL_PREFIX}/roles/group_members${queryParams}`, config);
+      const { page, page_size, hidden } = params;
+      const queryParams = Object.assign({}, { page, page_size });
+      if (params.hasOwnProperty('hidden')) {
+        queryParams.hidden = hidden;
+      }
+      return http.post(`${AJAX_URL_PREFIX}/roles/group_members/?${json2Query(queryParams)}`, params, config);
     },
 
     /**
