@@ -567,4 +567,8 @@ class SubjectTemplateBiz:
         if not u:
             return []
 
-        return list(u.departments)
+        department_ids = u.ancestor_department_ids
+        if not department_ids:
+            return []
+
+        return list(Department.objects.filter(id__in=department_ids))
