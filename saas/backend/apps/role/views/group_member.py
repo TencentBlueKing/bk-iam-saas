@@ -37,6 +37,7 @@ from backend.apps.user.views import SubjectGroupSearchMixin
 from backend.audit.audit import audit_context_setter, log_api_event
 from backend.biz.group import GroupBiz
 from backend.biz.role import RoleObjectRelationChecker
+from backend.biz.subject_template import SubjectTemplateBiz
 from backend.service.constants import PermissionCodeEnum, RoleRelatedObjectType, SubjectType
 
 logger = logging.getLogger("app")
@@ -144,7 +145,7 @@ class RoleGroupMemberTemplateGroupViewSet(SubjectTemplateGroupViewSet):
         tags=["role"],
     )
     def list(self, request, *args, **kwargs):
-        super().list(request, *args, **kwargs)
+        return super().list(request, *args, **kwargs)
 
     def search_group_ids(self, request, kwargs, data) -> Optional[List[int]]:
         search_group_ids = super().search_group_ids(request, kwargs, data)
@@ -241,6 +242,9 @@ class RoleGroupMemberGroupViewSet(SubjectGroupSearchViewSet):
 
 
 class RoleGroupMemberDepartmentGroupViewSet(SubjectDepartmentGroupSearchViewSet):
+
+    subject_template_biz = SubjectTemplateBiz()
+
     @swagger_auto_schema(
         operation_description="角色用户组成员-部门用户组列表",
         request_body=GroupSearchSLZ(label="用户组搜索"),
@@ -256,7 +260,7 @@ class RoleGroupMemberDepartmentGroupViewSet(SubjectDepartmentGroupSearchViewSet)
         if subject.type != SubjectType.USER.value:
             return []
 
-        departments = self.biz.get_user_departments(subject.id)
+        departments = self.subject_template_biz.get_user_departments(subject.id)
         if not departments:
             return []
 
