@@ -1,6 +1,6 @@
 <template>
   <div v-if="permLength > 0" :class="['iam-perm-item', extCls, `${$route.name}-perm-item`]">
-    <div class="header" @click="handleExpanded" v-if="!isOnlyPerm">
+    <div class="header" @click.stop="handleExpanded(isExpanded)" v-if="!isOnlyPerm">
       <Icon bk class="expanded-icon" :type="isExpanded ? 'down-shape' : 'right-shape'" />
       <span class="title">{{ title }}</span>
       <template>
@@ -89,7 +89,7 @@
     created () {
       if (this.onePerm === 1) {
         this.$nextTick(() => {
-          this.handleExpanded();
+          this.handleExpanded(false);
         });
       }
     },
@@ -100,10 +100,10 @@
         this.$emit('on-expanded', false);
       },
 
-      handleExpanded () {
-        this.isExpanded = !this.isExpanded;
-        this.$emit('update:expanded', true);
-        this.$emit('on-expanded', true);
+      handleExpanded (payload) {
+        this.isExpanded = !payload;
+        this.$emit('update:expanded', this.isExpanded);
+        this.$emit('on-expanded', this.isExpanded);
       },
       handleDeleteAll () {
         this.$emit('on-delete-all');

@@ -2,6 +2,7 @@
   <div class="user-org-group-perm">
     <template v-if="permData.hasPerm">
       <MemberTempPermPolicy
+        ref="memberTempPermPolicyRef"
         v-for="(item, index) in memberTempPermData"
         :key="index"
         :title="item.name"
@@ -254,6 +255,12 @@
         // this.emptyPermData.tipType = '';
         // this.handleEmptyClear();
         await this.fetchInitData();
+        if (this.isOnlyPerm) {
+          this.$nextTick(() => {
+            console.log(this.$refs.memberTempPermPolicyRef);
+            this.$refs.memberTempPermPolicyRef && this.$refs.memberTempPermPolicyRef[0].handleExpanded(false);
+          });
+        }
       },
 
       // 获取个人/部门用户组
