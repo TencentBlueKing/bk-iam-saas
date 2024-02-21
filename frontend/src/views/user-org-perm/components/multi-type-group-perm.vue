@@ -215,6 +215,7 @@
     watch: {
       groupData: {
         handler (value) {
+          this.curSelectedGroup = [];
           this.queryGroupData = cloneDeep(value);
           // 只有手动切换组织架构成员时才重置数据，默认以兄弟组件通信处理交互
           if (value.isClick) {

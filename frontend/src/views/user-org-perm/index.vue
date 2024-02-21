@@ -27,21 +27,21 @@
               :style="{ width: formItemWidth }"
               class="custom-form-item"
             >
-              <bk-input :placeholder="$t(`m.verify['请输入']`)" v-model="formData.group_name" />
+              <bk-input :placeholder="$t(`m.verify['请输入']`)" v-model="formData.name" />
             </iam-form-item>
             <iam-form-item
               :label="$t(`m.userOrOrg['用户组 ID']`)"
               :style="{ width: formItemWidth }"
               class="custom-form-item"
             >
-              <bk-input :placeholder="$t(`m.verify['请输入']`)" v-model="formData.group_id" />
+              <bk-input :placeholder="$t(`m.verify['请输入']`)" v-model="formData.id" />
             </iam-form-item>
             <iam-form-item
               :label="$t(`m.common['用户名']`)"
               :style="{ width: formItemWidth }"
               class="custom-form-item"
             >
-              <bk-input :placeholder="$t(`m.verify['请输入']`)" v-model="formData.name" />
+              <bk-input :placeholder="$t(`m.verify['请输入']`)" v-model="formData.username" />
             </iam-form-item>
             <iam-form-item
               :label="$t(`m.perm['组织名']`)"
@@ -267,9 +267,9 @@
           }
         ],
         formData: {
-          group_name: '',
-          group_id: '',
           name: '',
+          id: '',
+          username: '',
           department_name: ''
         },
         pageConf: {
@@ -324,17 +324,17 @@
             value: ''
           },
           {
-            name: 'group_name',
+            name: 'name',
             label: this.$t(`m.userGroup['用户组名']`),
             value: ''
           },
           {
-            name: 'group_id',
+            name: 'id',
             label: this.$t(`m.userOrOrg['用户组 ID']`),
             value: ''
           },
           {
-            name: 'name',
+            name: 'username',
             label: this.$t(`m.common['用户名']`),
             value: ''
           },
@@ -461,10 +461,12 @@
           const { current, limit } = this.pageConf;
           let params = {
             page: current,
-            page_size: limit
+            page_size: limit,
+            apply_disable: false
           };
           if (this.isSearchPerm) {
             params = {
+              ...this.curSearchParams,
               ...this.formData,
               ...params
             };
@@ -778,7 +780,7 @@
         // 删除有关联数据的tag
         if (['system_id', 'action_id'].includes(payload.name)) {
           this.searchTagList.forEach((item) => {
-            if (!['group_name', 'group_id', 'name', 'department_name'].includes(item.name)) {
+            if (!['name', 'id', 'username', 'department_name'].includes(item.name)) {
               item.value = '';
             }
             this.curSearchParams[item.name] = '';
@@ -851,9 +853,9 @@
         this.pageConf.current = 1;
         this.curSearchParams = {};
         this.formData = {
-          group_name: '',
-          group_id: '',
           name: '',
+          id: '',
+          username: '',
           department_name: ''
         };
         this.fetchFirstData();

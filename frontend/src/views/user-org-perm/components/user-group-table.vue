@@ -199,8 +199,7 @@
 /deep/ .user-group-perm-table {
   border: 0;
   .bk-table-empty-block {
-    border: 1px solid #e6e6e6;
-    border-top: 0;
+    border: none;
   }
   .can-view-name {
     color: #3A84FF;

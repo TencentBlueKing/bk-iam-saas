@@ -284,19 +284,20 @@
                 );
                 return;
               }
-              for (let i = 0; i < selectGroups.length; i++) {
-                await this.$store.dispatch('perm/quitGroupTemplates', {
-                  type: 'group',
-                  subjectType: type,
-                  subjectId: id,
-                  id: selectGroups[i].id
-                });
+              const deleteParams = {
+                members: [{
+                  type,
+                  id
+                }],
+                group_ids: selectGroups.map((item) => item.id)
+              };
+              const { code } = await this.$store.dispatch('userOrOrg/deleteGroupMembers', deleteParams);
+              if (code === 0) {
+                this.messageSuccess(this.$t(`m.info['移除成功']`), 3000);
+                bus.$emit('on-remove-user-group', this.selectTableList);
+                this.$emit('on-submit', params);
+                this.$emit('update:show', false);
               }
-              this.messageSuccess(this.$t(`m.info['移除成功']`), 3000);
-              this.selectTableList = [];
-              bus.$emit('on-remove-user-group', this.selectTableList);
-              this.$emit('on-submit', params);
-              this.$emit('update:show', false);
             } catch (e) {
               console.error(e);
               this.messageAdvancedError(e);
@@ -304,12 +305,19 @@
               this.submitLoading = false;
             }
           },
-          renewal: () => {
+          renewal: async () => {
             try {
               if (this.expiredAtUse === 15552000) {
                 this.expiredAtUse = this.handleExpiredAt();
               }
               params.expired_at = this.expiredAtUse;
+              const { code } = await this.$store.dispatch('userGroup/batchAddUserGroupMember', params);
+              if (code === 0) {
+                this.messageSuccess(this.$t(`m.renewal['续期成功']`), 3000);
+                bus.$emit('on-remove-user-group', []);
+                this.$emit('on-submit', params);
+                this.$emit('update:show', false);
+              }
             } catch (e) {
               console.error(e);
               this.messageAdvancedError(e);
@@ -430,6 +438,7 @@
   }
 
   /deep/ .group-table-content {
+    margin-top: 18px !important;
     .iam-resource-expand {
       background-color: #eaebf0;
     }

@@ -75,7 +75,7 @@
                   trigger="click"
                   placement="bottom-start"
                   ext-popover-cls="user-org-remove-confirm"
-                  :confirm-text="$t(`m.common['移除']`)"
+                  :confirm-text="$t(`m.userOrOrg['移出']`)"
                   @confirm="handleRemove(row)"
                 >
                   <div slot="content">
@@ -110,7 +110,7 @@
                     :title="formatAdminGroup(row) ? $t(`m.perm['唯一管理员不可退出']`) : ''"
                     :disabled="formatAdminGroup(row)"
                   >
-                    {{ $t(`m.common['移除']`) }}
+                    {{ $t(`m.userOrOrg['移出']`) }}
                   </bk-button>
                 </bk-popconfirm>
                 <bk-button
@@ -323,6 +323,7 @@
       bus.$on('on-remove-user-group', (payload) => {
         this.$nextTick(() => {
           this.$emit('on-selected-group', payload);
+          console.log(555);
           this.list.forEach((item) => {
             if (this.$refs.groupPermRef && !payload.map((v) => v.id).includes(item.id)) {
               this.$refs.groupPermRef.toggleRowSelection(item, false);
@@ -401,10 +402,11 @@
         const { type, id } = this.groupData;
         try {
           const params = {
-            type: 'group',
-            subjectType: type,
-            subjectId: id,
-            id: payload.id
+            members: [{
+              type,
+              id
+            }],
+            group_ids: [payload.id]
           };
           const emitParams = {
             ...payload,
@@ -412,8 +414,8 @@
               mode: this.mode
             }
           };
-          await this.$store.dispatch('perm/quitGroupTemplates', params);
-          this.messageSuccess(this.$t(`m.info['移除成功']`), 3000);
+          await this.$store.dispatch('userOrOrg/deleteGroupMembers', params);
+          this.messageSuccess(this.$t(`m.info['移出成功']`), 3000);
           this.$emit('on-remove-group', emitParams);
         } catch (e) {
           console.error(e);

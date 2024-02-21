@@ -111,6 +111,7 @@ export const m = {
         '的关联': 'association',
         '添加成员': 'Add members',
         '添加成员至': 'Add members to',
+        '已选': 'Selected',
         '已选择': 'Selected',
         '清空': 'Clear',
         '保存': 'Save',
@@ -389,6 +390,7 @@ export const m = {
         '该用户组已关联': 'The group has been associated',
         '添加用户组成功': 'Group Added',
         '添加成员成功': 'Members Added',
+        '移出成功': 'Removed',
         '移除成功': 'Removed',
         '该用户组将不再继承对应模板的权限': 'The group will no longer inherit the permissions of the template',
         '该成员将不再继承对应模板的权限': 'The member will no longer inherit the permissions of the template',
@@ -1482,11 +1484,10 @@ export const m = {
         '移出后，该人员将不再继承该组的权限。': 'After removal, the person will no longer inherit the permissions of the group.',
         '用户组不能为空': 'User group cannot be empty',
         '的用户组': " 's Groups",
-        '清空预览': 'Clear preview',
-        '清空的个人用户组权限': 'Cleared individual user group permissions',
-        '清空的组织用户组权限': 'Cleared are organizational user group permissions',
-        '清空的是个人用户组权限；': 'Cleared individual user group permissions;',
-        '清空的是组织用户组权限。': 'Cleared are organizational user group permissions.'
+        '清空对象': 'Clear object',
+        '个人': 'Personal',
+        '个人用户组权限': 'Personal user group perm',
+        '用户组权限（不影响因所属组织而拥有的用户组权限）': 'User group permissions (do not affect user group permissions owned by the organization)'
     }
 }
 export default {
