@@ -175,6 +175,7 @@
     },
     methods: {
       async handleSubmit () {
+        this.submitLoading = true;
         const params = {
           members: [...this.userList, ...this.departList].map(({ id, type }) => ({ id, type }))
         };
@@ -187,6 +188,8 @@
           }
         } catch (e) {
           this.messageAdvancedError(e);
+        } finally {
+          this.submitLoading = false;
         }
       },
 
