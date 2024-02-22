@@ -335,7 +335,7 @@
       getTableProps (payload) {
         const tabMap = {
           personalOrDepartPerm: () => {
-            const { type } = this.groupData;
+            const { type } = this.queryGroupData;
             const typeMap = {
               user: () => {
                 return [
