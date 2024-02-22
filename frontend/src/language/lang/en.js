@@ -1488,7 +1488,9 @@ export const m = {
         '清空对象': 'Clear object',
         '个人': 'Personal',
         '个人用户组权限': 'Personal user group perm',
-        '用户组权限（不影响因所属组织而拥有的用户组权限）': 'User group permissions (do not affect user group permissions owned by the organization)'
+        '用户组权限（不影响因所属组织而拥有的用户组权限）': 'User group permissions (do not affect user group permissions owned by the organization)',
+        '请选择申请时长': 'Please select the application duration',
+        '请选择续期时长': 'Please select the renewal duration'
     }
 }
 export default {

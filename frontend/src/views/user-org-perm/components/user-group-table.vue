@@ -79,6 +79,9 @@
       list: {
         type: Array,
         default: () => []
+      },
+      expiredAtNew: {
+        type: Number
       }
     },
     data () {
@@ -112,6 +115,13 @@
       mode: {
         handler (value) {
           this.tableProps = this.getTableProps(value);
+        },
+        immediate: true
+      },
+      expiredAtNew: {
+        handler (value) {
+          console.log(value, 5555);
+          this.expiredAt = value;
         },
         immediate: true
       }

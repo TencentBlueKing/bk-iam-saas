@@ -52,14 +52,14 @@
             :prop="item.prop">
             <template slot-scope="{ row }">
               <span>{{ formatJoinType(row) }}</span>
-              <span
+              (<span
                 v-if="row.template_id > 0 || row.department_id > 0"
                 v-bk-tooltips="{ content: formatJoinTypeTip(row), disabled: !formatJoinTypeTip(row) }"
                 class="can-view-name"
                 @click.stop="handleOpenTag(row, row.template_id > 0 ? 'memberTemplate' : 'userGroupDetail')"
               >
-                ({{ row.template_name || row.department_name}})
-              </span>
+                {{ row.template_name || row.department_name}}
+              </span>)
             </template>
           </bk-table-column>
         </template>
