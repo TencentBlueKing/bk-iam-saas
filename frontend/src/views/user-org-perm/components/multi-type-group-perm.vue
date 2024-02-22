@@ -565,6 +565,10 @@
       },
 
       handleExpanded (value, payload) {
+        if (!value) {
+          this.handleSelectedGroup([]);
+          bus.$emit('on-remove-toggle-checkbox', this.curSelectedGroup);
+        }
         payload.loading = value;
         sleep(300).then(() => {
           payload.loading = false;
