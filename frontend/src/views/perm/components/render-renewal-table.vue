@@ -262,7 +262,7 @@
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
   import { PERMANENT_TIMESTAMP } from '@/common/constants';
-  import { formatCodeData } from '@/common/util';
+  import { formatCodeData, existValue } from '@/common/util';
   import RenderExpireDisplay from '@/components/render-renewal-dialog/display';
   import RenderResourcePopover from '../components/prem-view-resource-popover';
   import RenderDetail from './render-detail';
@@ -942,12 +942,16 @@
       handleActionLinearData () {
         const linearActions = [];
         this.originalCustomTmplList.forEach((item) => {
-          // item.actions = item.actions.filter(v => !v.hidden);
+          if (existValue('externalApp') || this.externalSystemId) {
+            item.actions = item.actions.filter(v => !v.hidden);
+          }
           item.actions.forEach(act => {
             linearActions.push(act);
           });
           (item.sub_groups || []).forEach(sub => {
-            // sub.actions = sub.actions.filter(v => !v.hidden);
+            if (existValue('externalApp') || this.externalSystemId) {
+              sub.actions = sub.actions.filter(v => !v.hidden);
+            }
             sub.actions.forEach(act => {
               linearActions.push(act);
             });
