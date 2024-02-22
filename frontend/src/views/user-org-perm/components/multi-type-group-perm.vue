@@ -123,7 +123,6 @@
             },
             list: []
           },
-
           {
             id: 'departPerm',
             name: this.$t(`m.userOrOrg['组织用户组权限']`),
@@ -371,10 +370,11 @@
   
       // 用户人员模板用户组权限
       async fetchPermByTempSearch () {
-        const { emptyData, pagination } = this.memberTempPermData[2];
+        let curData = this.memberTempPermData.find((item) => item.id === 'userTempPerm');
+        const { emptyData, pagination } = curData;
         const { id, type } = this.queryGroupData;
         try {
-          this.memberTempPermData[2].loading = true;
+          curData.loading = true;
           const { current, limit } = pagination;
           let url = 'userOrOrg/getUserMemberTempList';
           // let url = 'userOrOrg/getUserOrDepartGroupList';
@@ -402,20 +402,20 @@
               }
           });
           const totalCount = data.count;
-          this.memberTempPermData[2] = Object.assign(this.memberTempPermData[2], {
+          curData = Object.assign(curData, {
             list: data.results || [],
             emptyData: formatCodeData(code, emptyData, totalCount === 0),
             pagination: { ...pagination, ...{ count: totalCount } }
           });
-          this.emptyPermData = cloneDeep(this.memberTempPermData[2].emptyData);
+          this.emptyPermData = cloneDeep(curData.emptyData);
           this.$nextTick(() => {
-            this.memberTempPermData[2].list.forEach(item => {
+            curData.list.forEach(item => {
               item.role_members = this.formatRoleMembers(item.role_members);
             });
           });
         } catch (e) {
           console.error(e);
-          this.memberTempPermData[2] = Object.assign(this.memberTempPermData[2], {
+          curData = Object.assign(curData, {
             list: [],
             emptyData: formatCodeData(e.code, emptyData),
             pagination: { ...pagination, ...{ count: 0 } }
@@ -423,18 +423,20 @@
           this.emptyPermData = formatCodeData(e.code, emptyData);
           this.messageAdvancedError(e);
         } finally {
-          this.memberTempPermData[2].loading = false;
+          curData.loading = false;
         }
       },
 
       // 部门人员模版用户组权限
       async fetchDepartPermByTempSearch () {
-        const { emptyData, pagination } = this.memberTempPermData[1];
+        let curData = this.memberTempPermData.find((item) => item.id === 'departTempPerm');
+        const { emptyData, pagination } = curData;
         const { id, type } = this.queryGroupData;
         try {
-          this.memberTempPermData[1].loading = true;
+          curData.loading = true;
           const { current, limit } = pagination;
           let url = 'userOrOrg/getDepartMemberTempList';
+          // let url = 'userOrOrg/getUserOrDepartGroupList';
           let params = {
             limit,
             offset: limit * (current - 1)
@@ -459,15 +461,15 @@
               }
           });
           const totalCount = data.count;
-          this.memberTempPermData[1] = Object.assign(this.memberTempPermData[1], {
+          curData = Object.assign(curData, {
             list: data.results || [],
             emptyData: formatCodeData(code, emptyData, totalCount === 0),
             pagination: { ...pagination, ...{ count: totalCount } }
           });
-          this.emptyPermData = cloneDeep(this.memberTempPermData[1].emptyData);
+          this.emptyPermData = cloneDeep(curData.emptyData);
         } catch (e) {
           console.error(e);
-          this.memberTempPermData[1] = Object.assign(this.memberTempPermData[1], {
+          curData = Object.assign(curData, {
             list: [],
             emptyData: formatCodeData(e.code, emptyData),
             pagination: { ...pagination, ...{ count: 0 } }
@@ -475,7 +477,7 @@
           this.emptyPermData = formatCodeData(e.code, emptyData);
           this.messageAdvancedError(e);
         } finally {
-          this.memberTempPermData[1].loading = false;
+          curData.loading = false;
         }
       },
   
@@ -496,11 +498,11 @@
                 this.isOnlyPerm = this.memberTempPermData.filter((v) => v.pagination.count > 0).length === 1;
               },
               department: async () => {
-                this.memberTempPermData = this.initMemberTempPermData.filter((item) => ['personalOrDepartPerm', 'departTempPerm'].includes(item.id));
+                this.memberTempPermData = this.initMemberTempPermData.filter((item) => ['personalOrDepartPerm', 'userTempPerm'].includes(item.id));
                 this.memberTempPermData[0] = Object.assign(this.memberTempPermData[0], { name: this.$t(`m.perm['用户组权限']`) });
                 await Promise.all([
                   this.fetchUserGroupSearch(),
-                  this.fetchDepartPermByTempSearch()
+                  this.fetchPermByTempSearch()
                 ]);
                 this.$set(this.permData, 'hasPerm', this.memberTempPermData.some((v) => v.pagination.count > 0));
                 this.isOnlyPerm = this.memberTempPermData.filter((v) => v.pagination.count > 0).length === 1;
