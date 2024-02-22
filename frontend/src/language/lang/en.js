@@ -569,7 +569,7 @@ export const m = {
         '确认删除该人员模板？': 'Are you sure to delete the member template?',
         '确认解除与该用户组的关联？': 'Are you sure to dissociate from this user group?',
         '确认批量删除所选的人员模板吗？': 'Are you sure to batch delete the selected member templates?',
-        '确认把用户移出该用户组？': 'Are you sure to move the user out of this user group?'
+        '确认把用户/组织移出该用户组？': 'Are you sure to move the user/organization out of this user group?'
     },
     nav: {
         '蓝鲸权限中心': 'BlueKing-IAM',
@@ -1482,7 +1482,7 @@ export const m = {
         '输入ID、用户组名、用户名、组织名、描述等按回车进行搜索': 'Enter ID, user group name, username, organization name, description, etc. and press enter to search',
         '在已有用户组的基础上，追加以下所选的用户组': 'On the basis of existing user groups, add the following selected user groups',
         '已选对象的权限将被清空，替换为以下所选的用户组': 'The permissions of the selected objects will be cleared and replaced with the following selected user groups',
-        '移出后，该人员将不再继承该组的权限。': 'After removal, the person will no longer inherit the permissions of the group.',
+        '移出后，该人员将不再继承该组的权限。': 'After removal, the user/organization will no longer inherit the permissions of the group.',
         '用户组不能为空': 'User group cannot be empty',
         '的用户组': " 's Groups",
         '清空对象': 'Clear object',

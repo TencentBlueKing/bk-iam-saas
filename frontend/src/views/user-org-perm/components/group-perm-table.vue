@@ -81,7 +81,7 @@
                   <div slot="content">
                     <div class="popover-title">
                       <div class="popover-title-text">
-                        {{ $t(`m.dialog['确认把用户移出该用户组？']`) }}
+                        {{ $t(`m.dialog['确认把用户/组织移出该用户组？']`) }}
                       </div>
                     </div>
                     <div class="popover-content">
@@ -99,7 +99,7 @@
                       </div>
                       <div class="popover-content-tip">
                         {{
-                          $t(`m.userOrOrg['移出后，该人员将不再继承该组的权限。']`)
+                          $t(`m.userOrOrg['移出后，该用户/组织将不再继承该组的权限。']`)
                         }}
                       </div>
                     </div>
