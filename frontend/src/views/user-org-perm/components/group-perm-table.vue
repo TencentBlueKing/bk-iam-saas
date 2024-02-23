@@ -56,7 +56,7 @@
                 v-if="row.template_id > 0 || row.department_id > 0"
                 v-bk-tooltips="{ content: formatJoinTypeTip(row), disabled: !formatJoinTypeTip(row) }"
                 class="can-view-name"
-                @click.stop="handleOpenTag(row, row.template_id > 0 ? 'memberTemplate' : 'userGroupDetail')"
+                @click.stop="handleOpenTag(row, row.template_id > 0 ? 'memberTemplate' : 'userOrgPerm')"
               >
                 {{ row.template_name || row.department_name}}
               </span>)
@@ -254,10 +254,10 @@
       formatJoinTypeTip () {
         return (payload) => {
           if (payload.template_id) {
-            return this.$t(`m.userOrOrg['查看该组织的用户组详情页']`);
+            return this.$t(`m.userOrOrg['查看人员模板详情']`);
           }
           if (payload.department_id) {
-            return this.$t(`m.userOrOrg['查看人员模板详情']`);
+            return this.$t(`m.userOrOrg['查看该组织的用户组详情页']`);
           }
           return '';
         };
@@ -390,7 +390,7 @@
         return tabMap[payload] ? tabMap[payload]() : tabMap['personalOrDepartPerm']();
       },
 
-      handleOpenTag ({ id, template_name }, type) {
+      handleOpenTag ({ id, department_name, template_name }, type) {
         const routeMap = {
           userGroupDetail: () => {
             const routeData = this.$router.resolve({
@@ -407,6 +407,15 @@
               query: {
                 template_name: template_name,
                 tab_active: 'template_member'
+              }
+            });
+            window.open(routeData.href, '_blank');
+          },
+          userOrgPerm: () => {
+            const routeData = this.$router.resolve({
+              path: `user-org-perm`,
+              query: {
+                department_name
               }
             });
             window.open(routeData.href, '_blank');

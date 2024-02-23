@@ -267,7 +267,7 @@
         const { type, id } = this.groupData;
         const params = {
           group_ids: this.selectTableList.map((item) => item.id),
-          members: [...this.userList, ...this.departList]
+          members: [...this.userList, ...this.departList].map(({ id, type }) => ({ id, type }))
         };
         const modeMap = {
           remove: async () => {

@@ -376,7 +376,7 @@
                   tabActive
                 }
             });
-          // this.isShowDetailSlider = true;
+          this.isShowDetailSlider = true;
         }
       },
 

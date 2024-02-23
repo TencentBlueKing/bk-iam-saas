@@ -29,7 +29,7 @@
           </li>
           <li>
             <a @click.stop="handleBatch('clear')">
-              {{ $t(`m.userOrOrg['清空用户组并移出（管理空间）']`) }}
+              {{ $t(`m.userOrOrg['清空用户组']`) }}
             </a>
           </li>
         </ul>
@@ -37,6 +37,7 @@
     </div>
     <div v-if="list.length" class="group-list">
       <div
+        ref="memberRef"
         class="group-list-content"
         :style="formatListHeight"
         @scroll="handleScroll"
@@ -83,10 +84,10 @@
         @on-refresh="handleEmptyRefresh"
       />
     </div>
-    
+
     <JoinUserGroupSlider
       :slider-width="960"
-      :show.sync="sliderData[curSliderName].showSlider"
+      :show.sync="['clear'].includes(curSliderName) ? false : sliderData[curSliderName].showSlider"
       :cur-slider-name="curSliderName"
       :is-batch="true"
       :user-list="userList"
@@ -110,7 +111,6 @@
 </template>
 
 <script>
-  import { bus } from '@/common/bus';
   import JoinUserGroupSlider from './join-user-group-slider.vue';
   import ClearUserGroupSlider from './clear-user-group-slider.vue';
 
@@ -244,7 +244,7 @@
             return this.$t(`m.userOrOrg['批量重置用户组']`);
           },
           clear: () => {
-            return this.$t(`m.userOrOrg['清空用户组并移出（管理空间）']`);
+            return this.$t(`m.userOrOrg['清空用户组']`);
           }
         };
         return nameMap[this.curSliderName]();
@@ -331,12 +331,16 @@
         });
       },
 
-      handleGroupSubmit () {
-        bus.$emit('on-refresh-resource-search', {
-          isSearchPerm: this.isSearchPerm,
-          curSearchParams: this.curSearchParams,
-          curSearchPagination: this.curSearchPagination
-        });
+      async handleGroupSubmit () {
+        if (['clear'].includes(this.curSliderName)) {
+          this.currentSelectList = [];
+          this.$nextTick(() => {
+            if (this.$refs.memberRef) {
+              this.$refs.memberRef.scrollTop = 0;
+            }
+          });
+        }
+        this.$emit('on-batch-operate', this.curSliderName);
       },
 
       handleResetScrollLoading () {
@@ -352,7 +356,7 @@
         }
         const { offsetHeight, scrollTop, scrollHeight } = event.target;
         console.log(scrollTop, offsetHeight, scrollHeight);
-        if (scrollTop + offsetHeight >= scrollHeight) {
+        if (scrollTop + offsetHeight >= scrollHeight - 5) {
           this.isScrollLoading = true;
           this.isShowNoDataTips = false;
           this.$emit('on-load-more');

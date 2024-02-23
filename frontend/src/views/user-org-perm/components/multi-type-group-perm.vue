@@ -13,7 +13,7 @@
           { 'iam-perm-ext-reset-cls': index === memberTempPermData.length - 1 }
         ]"
         :perm-length="item.pagination.count"
-        :one-perm="isOnlyPerm ? 1 : formatPermLength"
+        :one-perm="formatPermLength"
         :is-all-delete="false"
         :show-collapse="false"
         @on-expanded="handleExpanded(...arguments, item)"
@@ -226,6 +226,9 @@
       },
       searchParams: {
         handler (value) {
+          if (!value.action_id) {
+            delete value.resource_instances;
+          }
           this.curSearchParams = { ...value };
         },
         immediate: true
@@ -244,6 +247,9 @@
       bus.$on('on-refresh-resource-search', (payload) => {
         const { isSearchPerm, curSearchParams } = payload;
         this.curSearchParams = curSearchParams || {};
+        if (!this.curSearchParams.action_id) {
+          delete this.curSearchParams.resource_instances;
+        }
         this.isSearchResource = isSearchPerm || false;
         this.resetPagination();
         this.fetchInitData();
@@ -253,12 +259,10 @@
       async fetchResetData () {
         // this.emptyPermData.tipType = '';
         // this.handleEmptyClear();
+        this.memberTempPermData.forEach((item) => {
+          item.expanded = false;
+        });
         await this.fetchInitData();
-        if (this.isOnlyPerm) {
-          this.$nextTick(() => {
-            this.$refs.memberTempPermPolicyRef && this.$refs.memberTempPermPolicyRef[0].handleExpanded(false);
-          });
-        }
       },
 
       // 获取个人/部门用户组
@@ -269,17 +273,11 @@
           this.memberTempPermData[0].loading = true;
           const { current, limit } = pagination;
           const url = 'userOrOrg/getUserOrDepartGroupList';
-          let params = {
+          const params = {
+            ...this.curSearchParams,
             limit,
             offset: limit * (current - 1)
           };
-          if (this.isSearchResource) {
-            params = {
-              ...this.curSearchParams,
-              limit,
-              offset: limit * (current - 1)
-            };
-          }
           if (this.externalSystemId) {
             params.system_id = this.externalSystemId;
             params.hidden = false;
@@ -326,7 +324,7 @@
       // 获取用户所属部门用户组
       async fetchDepartGroupSearch () {
         const { id, type } = this.queryGroupData;
-        const curData = this.memberTempPermData[1];
+        const curData = this.memberTempPermData.find((item) => item.id === 'departPerm');
         const { emptyData, pagination } = curData;
         try {
           curData.loading = true;
@@ -376,20 +374,13 @@
         try {
           curData.loading = true;
           const { current, limit } = pagination;
-          let url = 'userOrOrg/getUserMemberTempList';
+          const url = 'userOrOrg/getUserMemberTempList';
           // let url = 'userOrOrg/getUserOrDepartGroupList';
-          let params = {
+          const params = {
+            ...this.curSearchParams,
             limit,
             offset: limit * (current - 1)
           };
-          if (this.isSearchResource) {
-            url = 'userOrOrg/getUserMemberTempList';
-            params = {
-                ...this.curSearchParams,
-                limit,
-                offset: limit * (current - 1)
-            };
-          }
           if (this.externalSystemId) {
             params.system_id = this.externalSystemId;
             params.hidden = false;
@@ -435,20 +426,13 @@
         try {
           curData.loading = true;
           const { current, limit } = pagination;
-          let url = 'userOrOrg/getDepartMemberTempList';
+          const url = 'userOrOrg/getDepartMemberTempList';
           // let url = 'userOrOrg/getUserOrDepartGroupList';
-          let params = {
+          const params = {
+            ...this.curSearchParams,
             limit,
             offset: limit * (current - 1)
           };
-          if (this.isSearchResource) {
-            url = 'userOrOrg/getDepartMemberTempList';
-            params = {
-                ...this.curSearchParams,
-                limit,
-                offset: limit * (current - 1)
-            };
-          }
           if (this.externalSystemId) {
             params.system_id = this.externalSystemId;
             params.hidden = false;

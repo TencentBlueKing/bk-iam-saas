@@ -84,13 +84,19 @@
     watch: {
       expanded (value) {
         this.isExpanded = !!value;
-      }
-    },
-    created () {
-      if (this.onePerm === 1) {
-        this.$nextTick(() => {
-          this.handleExpanded(false);
-        });
+      },
+      onePerm: {
+        handler (value) {
+          if (value === 1) {
+            this.$nextTick(() => {
+              this.handleExpanded(false);
+            });
+          } else {
+            this.isExpanded = false;
+          }
+        },
+        immediate: true,
+        deep: true
       }
     },
     methods: {
@@ -105,6 +111,7 @@
         this.$emit('update:expanded', this.isExpanded);
         this.$emit('on-expanded', this.isExpanded);
       },
+      
       handleDeleteAll () {
         this.$emit('on-delete-all');
       }
