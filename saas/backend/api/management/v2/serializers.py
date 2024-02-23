@@ -9,6 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from django.conf import settings
+from django.db.models import QuerySet
 from django.utils.translation import gettext as _
 from rest_framework import serializers
 
@@ -18,6 +19,7 @@ from backend.apps.role.models import Role, RoleUser
 from backend.apps.role.serializers import GradeMangerBaseInfoSLZ, RoleScopeSubjectSLZ
 from backend.apps.subject_template.models import SubjectTemplate
 from backend.biz.role import RoleCheckBiz
+from backend.biz.subject_template import SubjectTemplateBiz
 from backend.service.constants import GroupMemberType
 from backend.service.models import Subject
 
@@ -277,6 +279,8 @@ class ManagementSubsetMangerCreateSLZ(GradeMangerBaseInfoSLZ):
 
 
 class ManagementGroupSLZ(serializers.ModelSerializer):
+    subject_template_count = serializers.SerializerMethodField()
+
     class Meta:
         model = Group
         fields = (
@@ -284,11 +288,28 @@ class ManagementGroupSLZ(serializers.ModelSerializer):
             "name",
             "user_count",
             "department_count",
+            "subject_template_count",
             "description",
             "creator",
             "created_time",
             "readonly",
         )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.subject_template_count_dict = None
+        if isinstance(self.instance, (QuerySet, list)) and self.instance:
+            group_ids = [int(group.id) for group in self.instance]
+            # 人员模版数量
+            self.subject_template_count_dict = SubjectTemplateBiz().get_group_template_count_dict(group_ids)
+        elif isinstance(self.instance, Group):
+            # 人员模版数量
+            self.subject_template_count_dict = SubjectTemplateBiz().get_group_template_count_dict([self.instance.id])
+
+    def get_subject_template_count(self, obj):
+        if not self.subject_template_count_dict:
+            return 0
+        return self.subject_template_count_dict.get(obj.id, 0)
 
 
 class ManagementQueryGroupSLZ(serializers.Serializer):
