@@ -77,16 +77,17 @@
           </div>
           <div
             v-for="tag in searchTagList"
-            :key="tag.id"
+            :key="tag.name"
             class="tag-list"
           >
             <bk-popconfirm
               v-if="tag.value"
+              :ref="`popoverConfirm_${tag.name}`"
               trigger="click"
               placement="bottom-start"
+              :width="320"
               :ext-cls="formatPopover(tag)"
               :confirm-text="$t(`m.common['确认']`)"
-              :width="320"
               @confirm="handlePopoverChange"
             >
               <div slot="content">
@@ -98,22 +99,22 @@
                     :has-delete-icon="true"
                     :max-data="1"
                     :allow-create="true"
-                    :allow-auto-match="true"
                     @change="handleInputChange(...arguments, tag.name)"
                   />
                 </div>
               </div>
-              <bk-tag
-                v-if="tag.value"
-                :closable="formatAllowClose(tag.name)"
-                class="tag-item"
-                :key="tag.name"
-                @close="handleCloseTag(tag)">
-                <div>
-                  <span>{{tag.label}}:</span>
-                  <span class="tag-item-value">{{ tag.value }}</span>
-                </div>
-              </bk-tag>
+              <template v-if="tag.value">
+                <bk-tag
+                  :closable="formatAllowClose(tag.name)"
+                  class="tag-item"
+                  :key="tag.name"
+                  @close="handleCloseTag(tag)">
+                  <div @click.stop="handleShowPopover(tag)">
+                    <span>{{tag.label}}:</span>
+                    <span class="tag-item-value">{{ tag.value }}</span>
+                  </div>
+                </bk-tag>
+              </template>
             </bk-popconfirm>
           </div>
           <div
@@ -346,6 +347,7 @@
           }
         ],
         resourceInstances: [],
+        noPopoverList: ['system_id', 'action_id', 'resource_type', 'resource_instance'],
         tagInputValue: {}
       };
     },
@@ -400,7 +402,7 @@
       formatPopover () {
         return (payload) => {
           const { name } = payload;
-          if (['system_id', 'action_id', 'resource_type', 'resource_instance'].includes(name)) {
+          if (this.noPopoverList.includes(name)) {
             return 'user-org-popover-tag-edit user-org-popover-tag-edit-none';
           }
           return 'user-org-popover-tag-edit';
@@ -459,11 +461,12 @@
             ...this.curSearchParams,
             ...this.formData
           };
+          const groupData = { ...this.groupList[0], ...{ isClick: true } };
           bus.$emit('on-refresh-resource-search', {
             isSearchPerm: this.isSearchPerm,
             curSearchParams: params,
             curSearchPagination: this.curSearchPagination,
-            groupData: this.groupList[0]
+            groupData
           });
         }
       },
@@ -633,6 +636,18 @@
             curSearchPagination: this.curSearchPagination
           });
         }
+      },
+
+      handleShowPopover (payload) {
+        if (this.noPopoverList.includes(payload.name)) {
+          return;
+        }
+        this.tagInputValue = { ...payload };
+        this.$nextTick(() => {
+          if (this.$refs[`popoverConfirm_${payload.name}`] && this.$refs[`popoverConfirm_${payload.name}`].length) {
+            this.$refs[`popoverConfirm_${payload.name}`][0].$refs.popover.showHandler();
+          }
+        });
       },
 
       async handlePopoverChange () {
