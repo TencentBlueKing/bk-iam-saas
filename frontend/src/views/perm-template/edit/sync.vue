@@ -814,11 +814,20 @@
             item.add_actions.forEach(subItem => {
               const curPasteData = payload.data.find(_ => _.id === subItem.id);
               if (curPasteData) {
-                subItem.related_resource_types.forEach(resItem => {
-                  if (`${resItem.system_id}${resItem.type}` === `${curPasteData.resource_type.system_id}${curPasteData.resource_type.type}`) {
-                    resItem.condition = curPasteData.resource_type.condition.map(conditionItem => new Condition(conditionItem, '', 'add'));
-                    resItem.isError = false;
-                  }
+                // subItem.related_resource_types.forEach(resItem => {
+                //   if (`${resItem.system_id}${resItem.type}` === `${curPasteData.resource_type.system_id}${curPasteData.resource_type.type}`) {
+                //     resItem.condition = curPasteData.resource_type.condition.map(conditionItem => new Condition(conditionItem, '', 'add'));
+                //     resItem.isError = false;
+                //     resItem.isEmpty = false;
+                //   }
+                // });
+                subItem.resource_groups && subItem.resource_groups.forEach(groupItem => {
+                  groupItem.related_resource_types.forEach(subItem => {
+                    if (`${subItem.system_id}${subItem.type}` === this.curCopyKey) {
+                      subItem.condition = curPasteData.resource_type.condition.map(conditionItem => new Condition(conditionItem, '', 'add'));
+                      subItem.isError = false;
+                    }
+                  });
                 });
               }
             });

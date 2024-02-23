@@ -1,4 +1,27 @@
-<!-- 2024-01-32 -->
+<!-- 2024-02-23 -->
+# V1.10.23 Version Update Log
+
+### Bug Fixes
+
+* Fixed an issue where the user group only added permission templates, and the table data was cleared after quick close.
+* Fixed an issue where adding instances to permission templates couldn't be pasted in bulk.
+* Fixed role_id error for some secondary administrators on the Blue Shield embedded page.
+* Added hidden field filtering for system operations hidden in Blue Shield user group embedded pages.
+
+---
+
+<!-- 2024-01-30 -->
+# V1.10.22 Version Update Log
+
+### Bug Fixes
+
+* Fixed an issue in custom permission requests where the edit display fails to show selected resources instances of unlimited type data.
+* Fixed a problem in user groups where adding group permissions with varying path quantities resulted in an error message indicating that the hierarchical link list cannot be empty.
+* Improved the organization structure personnel selector to hide the selected count when it is 0.
+
+---
+
+<!-- 2024-01-22 -->
 # V1.10.21 Version Update Log
 
 ### Feature Enhancements

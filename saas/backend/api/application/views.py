@@ -18,6 +18,8 @@ from rest_framework.response import Response
 from rest_framework.viewsets import views
 
 from backend.api.authentication import ESBAuthentication
+from backend.apps.application.models import Application
+from backend.apps.application.serializers import ApplicationDetailSchemaSLZ, ApplicationDetailSLZ
 from backend.biz.application import ApplicationBiz
 from backend.biz.open import ApplicationPolicyListCache
 from backend.service.constants import ApplicationType
@@ -69,6 +71,28 @@ class ApplicationView(views.APIView):
         url = url + "?" + urlencode(params)
 
         return Response({"url": url})
+
+
+class ApplicationDetailView(views.APIView):
+    """
+    接入系统申请详情
+    """
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    queryset = Application.objects.all()
+    lookup_field = "sn"
+
+    @swagger_auto_schema(
+        operation_description="权限申请详情",
+        responses={status.HTTP_200_OK: ApplicationDetailSchemaSLZ(label="申请详情")},
+        tags=["open"],
+    )
+    def get(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = ApplicationDetailSLZ(instance)
+        return Response(serializer.data)
 
 
 class ApplicationCustomPolicyView(views.APIView):

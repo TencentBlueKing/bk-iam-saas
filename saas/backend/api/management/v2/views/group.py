@@ -61,6 +61,7 @@ from backend.biz.group import (
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleBiz, RoleListQuery
 from backend.biz.subject_template import SubjectTemplateBiz
+from backend.biz.utils import remove_not_exist_subject
 from backend.common.filters import NoCheckModelFilterBackend
 from backend.common.lock import gen_group_upsert_lock
 from backend.common.pagination import CompatiblePagination
@@ -379,6 +380,8 @@ class ManagementGroupMemberViewSet(GenericViewSet):
         expired_at = data["expired_at"]
         # 成员Dict结构转换为Subject结构，并去重
         members, subject_template_ids = split_members_to_subject_and_template(members_data)
+        # 排除组织架构中不存在的成员
+        members = remove_not_exist_subject(members)
 
         # 检测成员是否满足管理的授权范围
         role = self.role_biz.get_role_by_group_id(group.id)
