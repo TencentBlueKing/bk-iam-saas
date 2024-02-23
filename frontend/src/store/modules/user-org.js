@@ -80,7 +80,7 @@ export default {
         queryParams.hidden = hidden;
       }
       Object.keys(params).forEach((item) => {
-        if (['subject_type', 'subject_id', 'name', 'department_name'].includes(item) || params[item] === '') {
+        if (['subject_type', 'subject_id'].includes(item) || params[item] === '') {
           delete params[item];
         }
       });
@@ -106,7 +106,7 @@ export default {
         queryParams.hidden = hidden;
       }
       Object.keys(params).forEach((item) => {
-        if (['subject_type', 'subject_id', 'name', 'department_name'].includes(item) || params[item] === '') {
+        if (['subject_type', 'subject_id'].includes(item) || params[item] === '') {
           delete params[item];
         }
       });
@@ -132,7 +132,7 @@ export default {
         queryParams.hidden = hidden;
       }
       Object.keys(params).forEach((item) => {
-        if (['subject_type', 'subject_id', 'name', 'department_name'].includes(item) || params[item] === '') {
+        if (['subject_type', 'subject_id'].includes(item) || params[item] === '') {
           delete params[item];
         }
       });
@@ -158,7 +158,7 @@ export default {
         queryParams.hidden = hidden;
       }
       Object.keys(params).forEach((item) => {
-        if (['subject_type', 'subject_id', 'name', 'department_name'].includes(item) || params[item] === '') {
+        if (['subject_type', 'subject_id'].includes(item) || params[item] === '') {
           delete params[item];
         }
       });

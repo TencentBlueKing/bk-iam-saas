@@ -52,14 +52,14 @@
             :prop="item.prop">
             <template slot-scope="{ row }">
               <span>{{ formatJoinType(row) }}</span>
-              <span
+              (<span
                 v-if="row.template_id > 0 || row.department_id > 0"
                 v-bk-tooltips="{ content: formatJoinTypeTip(row), disabled: !formatJoinTypeTip(row) }"
                 class="can-view-name"
-                @click.stop="handleOpenTag(row, row.template_id > 0 ? 'memberTemplate' : 'userGroupDetail')"
+                @click.stop="handleOpenTag(row, row.template_id > 0 ? 'memberTemplate' : 'userOrgPerm')"
               >
-                ({{ row.template_name || row.department_name}})
-              </span>
+                {{ row.template_name || row.department_name}}
+              </span>)
             </template>
           </bk-table-column>
         </template>
@@ -81,7 +81,7 @@
                   <div slot="content">
                     <div class="popover-title">
                       <div class="popover-title-text">
-                        {{ $t(`m.dialog['确认把用户移出该用户组？']`) }}
+                        {{ $t(`m.dialog['确认把用户/组织移出该用户组？']`) }}
                       </div>
                     </div>
                     <div class="popover-content">
@@ -99,7 +99,7 @@
                       </div>
                       <div class="popover-content-tip">
                         {{
-                          $t(`m.userOrOrg['移出后，该人员将不再继承该组的权限。']`)
+                          $t(`m.userOrOrg['移出后，该用户/组织将不再继承该组的权限。']`)
                         }}
                       </div>
                     </div>
@@ -254,10 +254,10 @@
       formatJoinTypeTip () {
         return (payload) => {
           if (payload.template_id) {
-            return this.$t(`m.userOrOrg['查看该组织的用户组详情页']`);
+            return this.$t(`m.userOrOrg['查看人员模板详情']`);
           }
           if (payload.department_id) {
-            return this.$t(`m.userOrOrg['查看人员模板详情']`);
+            return this.$t(`m.userOrOrg['查看该组织的用户组详情页']`);
           }
           return '';
         };
@@ -335,7 +335,7 @@
       getTableProps (payload) {
         const tabMap = {
           personalOrDepartPerm: () => {
-            const { type } = this.groupData;
+            const { type } = this.queryGroupData;
             const typeMap = {
               user: () => {
                 return [
@@ -367,12 +367,30 @@
               { label: this.$t(`m.perm['加入方式']`), prop: 'join_type' },
               { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' }
             ];
+          },
+          userTempPerm: () => {
+            return [
+              { label: this.$t(`m.userGroup['用户组名']`), prop: 'name' },
+              { label: this.$t(`m.common['描述']`), prop: 'description' },
+              { label: this.$t(`m.common['加入时间']`), prop: 'created_time' },
+              { label: this.$t(`m.perm['加入方式']`), prop: 'join_type' },
+              { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' }
+            ];
+          },
+          departTempPerm: () => {
+            return [
+              { label: this.$t(`m.userGroup['用户组名']`), prop: 'name' },
+              { label: this.$t(`m.common['描述']`), prop: 'description' },
+              { label: this.$t(`m.common['加入时间']`), prop: 'created_time' },
+              { label: this.$t(`m.perm['加入方式']`), prop: 'join_type' },
+              { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' }
+            ];
           }
         };
         return tabMap[payload] ? tabMap[payload]() : tabMap['personalOrDepartPerm']();
       },
 
-      handleOpenTag ({ id, template_name }, type) {
+      handleOpenTag ({ id, department_name, template_name }, type) {
         const routeMap = {
           userGroupDetail: () => {
             const routeData = this.$router.resolve({
@@ -389,6 +407,15 @@
               query: {
                 template_name: template_name,
                 tab_active: 'template_member'
+              }
+            });
+            window.open(routeData.href, '_blank');
+          },
+          userOrgPerm: () => {
+            const routeData = this.$router.resolve({
+              path: `user-org-perm`,
+              query: {
+                department_name
               }
             });
             window.open(routeData.href, '_blank');

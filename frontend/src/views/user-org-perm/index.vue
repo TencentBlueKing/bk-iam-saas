@@ -77,16 +77,17 @@
           </div>
           <div
             v-for="tag in searchTagList"
-            :key="tag.id"
+            :key="tag.name"
             class="tag-list"
           >
             <bk-popconfirm
               v-if="tag.value"
+              :ref="`popoverConfirm_${tag.name}`"
               trigger="click"
               placement="bottom-start"
+              :width="320"
               :ext-cls="formatPopover(tag)"
               :confirm-text="$t(`m.common['确认']`)"
-              :width="320"
               @confirm="handlePopoverChange"
             >
               <div slot="content">
@@ -98,22 +99,22 @@
                     :has-delete-icon="true"
                     :max-data="1"
                     :allow-create="true"
-                    :allow-auto-match="true"
                     @change="handleInputChange(...arguments, tag.name)"
                   />
                 </div>
               </div>
-              <bk-tag
-                v-if="tag.value"
-                :closable="formatAllowClose(tag.name)"
-                class="tag-item"
-                :key="tag.name"
-                @close="handleCloseTag(tag)">
-                <div>
-                  <span>{{tag.label}}:</span>
-                  <span class="tag-item-value">{{ tag.value }}</span>
-                </div>
-              </bk-tag>
+              <template v-if="tag.value">
+                <bk-tag
+                  :closable="formatAllowClose(tag.name)"
+                  class="tag-item"
+                  :key="tag.name"
+                  @close="handleCloseTag(tag)">
+                  <div @click.stop="handleShowPopover(tag)">
+                    <span>{{tag.label}}:</span>
+                    <span class="tag-item-value">{{ tag.value }}</span>
+                  </div>
+                </bk-tag>
+              </template>
             </bk-popconfirm>
           </div>
           <div
@@ -161,6 +162,7 @@
             :empty-data="emptyData"
             @on-select="handleSelectUser"
             @on-load-more="handleLoadMore"
+            @on-batch-operate="handleBatchOperate"
             @on-clear="handleEmptyUserClear"
             @on-refresh="handleEmptyUserRefresh"
           />
@@ -208,7 +210,7 @@
   import { mapGetters } from 'vuex';
   import { cloneDeep } from 'lodash';
   import { bus } from '@/common/bus';
-  import { formatCodeData } from '@/common/util';
+  import { delLocationHref, formatCodeData } from '@/common/util';
   import IamResourceCascadeSearch from '@/components/iam-resource-cascade-search';
   import Layout from './components/page-layout';
   import LeftLayout from './components/left-layout.vue';
@@ -345,6 +347,7 @@
           }
         ],
         resourceInstances: [],
+        noPopoverList: ['system_id', 'action_id', 'resource_type', 'resource_instance'],
         tagInputValue: {}
       };
     },
@@ -399,7 +402,7 @@
       formatPopover () {
         return (payload) => {
           const { name } = payload;
-          if (['system_id', 'action_id', 'resource_type', 'resource_instance'].includes(name)) {
+          if (this.noPopoverList.includes(name)) {
             return 'user-org-popover-tag-edit user-org-popover-tag-edit-none';
           }
           return 'user-org-popover-tag-edit';
@@ -412,10 +415,27 @@
       }
     },
 
+    watch: {
+      formData: {
+        handler (value) {
+          // 监听表单输入框数据变化，同步删除url上的参数
+          const queryParams = { ...this.$route.query, ...this.$route.params };
+          Object.keys(this.formData).forEach((item) => {
+            if (queryParams[item] && !value[item]) {
+              this.formData[item] = queryParams[item];
+              delLocationHref([item]);
+            }
+          });
+        },
+        deep: true
+      }
+    },
+
     async created () {
       this.comMap = COM_MAP;
       this.pageConf.limit = Math.ceil(this.listHeight / 36);
       this.formatFormItemWidth();
+      this.getRouteParams();
       await this.fetchFirstData();
     },
 
@@ -441,11 +461,12 @@
             ...this.curSearchParams,
             ...this.formData
           };
+          const groupData = { ...this.groupList[0], ...{ isClick: true } };
           bus.$emit('on-refresh-resource-search', {
             isSearchPerm: this.isSearchPerm,
             curSearchParams: params,
             curSearchPagination: this.curSearchPagination,
-            groupData: this.groupList[0]
+            groupData
           });
         }
       },
@@ -459,18 +480,13 @@
         this.listLoading = isLoading;
         try {
           const { current, limit } = this.pageConf;
-          let params = {
+          const params = {
+            ...this.curSearchParams,
+              ...this.formData,
             page: current,
             page_size: limit,
             apply_disable: false
           };
-          if (this.isSearchPerm) {
-            params = {
-              ...this.curSearchParams,
-              ...this.formData,
-              ...params
-            };
-          }
           const { code, data } = await this.$store.dispatch('userOrOrg/getUserGroupMemberList', params);
           const { count, results } = data;
           const list = results || [];
@@ -622,12 +638,16 @@
         }
       },
 
-      handleInputChange (payload, type) {
-        const text = payload.length ? payload[0] : '';
-        this.tagInputValue = {
-          id: type,
-          value: text
-        };
+      handleShowPopover (payload) {
+        if (this.noPopoverList.includes(payload.name)) {
+          return;
+        }
+        this.tagInputValue = { ...payload };
+        this.$nextTick(() => {
+          if (this.$refs[`popoverConfirm_${payload.name}`] && this.$refs[`popoverConfirm_${payload.name}`].length) {
+            this.$refs[`popoverConfirm_${payload.name}`][0].$refs.popover.showHandler();
+          }
+        });
       },
 
       async handlePopoverChange () {
@@ -649,6 +669,24 @@
           curSearchParams: params,
           curSearchPagination: this.curSearchPagination
         });
+      },
+
+      // 获取跳转数据
+      getRouteParams () {
+        const queryParams = { ...this.$route.query, ...this.$route.params };
+        Object.keys(this.formData).forEach((item) => {
+          if (queryParams[item]) {
+            this.formData[item] = queryParams[item];
+          }
+        });
+      },
+
+      handleInputChange (payload, type) {
+        const text = payload.length ? payload[0] : '';
+        this.tagInputValue = {
+          id: type,
+          value: text
+        };
       },
       
       handlePathData (data, type) {
@@ -759,6 +797,17 @@
             isClick: true
           }
         };
+      },
+
+      async handleBatchOperate (payload) {
+        if (!['add'].includes(payload)) {
+          await this.fetchFirstData();
+        }
+        bus.$emit('on-refresh-resource-search', {
+          isSearchPerm: this.isSearchPerm,
+          curSearchParams: this.curSearchParams,
+          curSearchPagination: this.curSearchPagination
+        });
       },
 
       async handleCloseTag (payload) {

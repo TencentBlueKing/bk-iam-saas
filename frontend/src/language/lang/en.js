@@ -569,7 +569,7 @@ export const m = {
         '确认删除该人员模板？': 'Are you sure to delete the member template?',
         '确认解除与该用户组的关联？': 'Are you sure to dissociate from this user group?',
         '确认批量删除所选的人员模板吗？': 'Are you sure to batch delete the selected member templates?',
-        '确认把用户移出该用户组？': 'Are you sure to move the user out of this user group?'
+        '确认把用户/组织移出该用户组？': 'Are you sure to move the user/organization out of this user group?'
     },
     nav: {
         '蓝鲸权限中心': 'BlueKing-IAM',
@@ -1474,7 +1474,7 @@ export const m = {
         '用户 / 组织列表': 'User/Organization list',
         '移出用户组名': 'Remove user group name',
         '批量移出用户组': 'Multi-remove user group',
-        '清空用户组并移出（管理空间）': 'Empty user groups and move them out (management space)',
+        '清空用户组': 'Empty user groups',
         '请先勾选用户': 'Please check the user first',
         '请先勾选用户组权限': 'Please check user group permissions first',
         '请先勾选用户/组织': 'Please check the user/organization first',
@@ -1482,13 +1482,19 @@ export const m = {
         '输入ID、用户组名、用户名、组织名、描述等按回车进行搜索': 'Enter ID, user group name, username, organization name, description, etc. and press enter to search',
         '在已有用户组的基础上，追加以下所选的用户组': 'On the basis of existing user groups, add the following selected user groups',
         '已选对象的权限将被清空，替换为以下所选的用户组': 'The permissions of the selected objects will be cleared and replaced with the following selected user groups',
-        '移出后，该人员将不再继承该组的权限。': 'After removal, the person will no longer inherit the permissions of the group.',
+        '移出后，该用户/组织将不再继承该组的权限。': 'After removal, the user/organization will no longer inherit the permissions of the group.',
         '用户组不能为空': 'User group cannot be empty',
         '的用户组': " 's Groups",
         '清空对象': 'Clear object',
         '个人': 'Personal',
         '个人用户组权限': 'Personal user group perm',
-        '用户组权限（不影响因所属组织而拥有的用户组权限）': 'User group permissions (do not affect user group permissions owned by the organization)'
+        '用户组权限（不影响因所属组织而拥有的用户组权限）': 'User group permissions (do not affect user group permissions owned by the organization)',
+        '请选择申请时长': 'Please select the application duration',
+        '请选择续期时长': 'Please select the renewal duration',
+        '通过组织': 'Through organization',
+        '通过人员模板': 'Through member template',
+        '查看人员模板详情': 'View member template details',
+        '查看该组织的用户组详情页': 'View the user group details page of the organization'
     }
 }
 export default {

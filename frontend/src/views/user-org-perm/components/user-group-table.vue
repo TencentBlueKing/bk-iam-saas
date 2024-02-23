@@ -26,9 +26,11 @@
             <template slot-scope="{ row }">
               <div class="renewal-expired-at">
                 <render-expire-display
-                  selected :renewal-time="expiredAt"
+                  selected
+                  :renewal-time="expiredAt"
                   :cur-time="row.expired_at || 0"
-                  :line-height="'22px'" />
+                  :line-height="'22px'"
+                />
               </div>
             </template>
           </bk-table-column>
@@ -77,6 +79,9 @@
       list: {
         type: Array,
         default: () => []
+      },
+      expiredAtNew: {
+        type: Number
       }
     },
     data () {
@@ -110,6 +115,12 @@
       mode: {
         handler (value) {
           this.tableProps = this.getTableProps(value);
+        },
+        immediate: true
+      },
+      expiredAtNew: {
+        handler (value) {
+          this.expiredAt = value;
         },
         immediate: true
       }

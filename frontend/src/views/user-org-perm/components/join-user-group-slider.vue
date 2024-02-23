@@ -231,6 +231,7 @@
         if (payload) {
           this.isShowExpiredError = false;
         }
+        this.expiredAt = payload;
         if (payload && payload !== PERMANENT_TIMESTAMP) {
           const nowTimestamp = +new Date() / 1000;
           const tempArr = String(nowTimestamp).split('');

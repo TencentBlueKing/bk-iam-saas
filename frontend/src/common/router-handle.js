@@ -194,7 +194,8 @@ export const getRouterDiff = (payload) => {
       'permTemplate',
       'userGroupSetting',
       'sensitivityLevel',
-      'memberTemplate'
+      'memberTemplate',
+      'userOrgPerm'
     ];
   }
   // payload其它取值默认返回全部菜单

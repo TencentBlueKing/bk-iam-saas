@@ -60,7 +60,7 @@
               :required="true"
             >
               <IamDeadline :value="expiredAt" @on-change="handleDeadlineChange" :cur-role="curRole" />
-              <p class="expired-at-error" v-if="isShowExpiredError">{{ $t(`m.userOrOrg['请选择申请时长']`) }}</p>
+              <p class="expired-at-error" v-if="isShowExpiredError">{{ $t(`m.userOrOrg['请选择续期时长']`) }}</p>
             </bk-form-item>
             <bk-form-item class="group-table-content" :label-width="0" :required="false">
               <RenderPermBoundary
@@ -78,7 +78,12 @@
                   </template>
                 </div>
                 <div slot="transferPreview">
-                  <IamUserGroupTable ref="joinedUserGroupRef" :mode="curSliderName" :list="selectTableList" />
+                  <IamUserGroupTable
+                    ref="joinedUserGroupRef"
+                    :mode="curSliderName"
+                    :list="selectTableList"
+                    :expired-at-new="expiredAt"
+                  />
                 </div>
               </RenderPermBoundary>
               <p class="user-group-error" v-if="isShowGroupError">{{ $t(`m.userOrOrg['用户组不能为空']`) }}</p>
@@ -240,6 +245,7 @@
         if (payload) {
           this.isShowExpiredError = false;
         }
+        this.expiredAt = payload;
         if (payload && payload !== PERMANENT_TIMESTAMP) {
           const nowTimestamp = +new Date() / 1000;
           const tempArr = String(nowTimestamp).split('');
@@ -261,7 +267,7 @@
         const { type, id } = this.groupData;
         const params = {
           group_ids: this.selectTableList.map((item) => item.id),
-          members: [...this.userList, ...this.departList]
+          members: [...this.userList, ...this.departList].map(({ id, type }) => ({ id, type }))
         };
         const modeMap = {
           remove: async () => {
