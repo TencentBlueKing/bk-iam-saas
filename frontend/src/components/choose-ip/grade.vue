@@ -953,13 +953,14 @@
             ? this.curChain[node.level + 1].system_id
             : this.curChain[chainLen - 1].system_id;
           params.type = isExistNextChain ? this.curChain[node.level + 1].id : this.curChain[chainLen - 1].id;
-          parentType = this.curChain[node.level].id;
           placeholder = isExistNextChain
             ? this.curChain[node.level + 1].name
             : this.curChain[chainLen - 1].name;
-                    
-          ancestorItem.system_id = this.curChain[node.level].system_id;
-          ancestorItem.type = this.curChain[node.level].id;
+          if (this.curChain[node.level]) {
+            parentType = this.curChain[node.level].id;
+            ancestorItem.system_id = this.curChain[node.level].system_id;
+            ancestorItem.type = this.curChain[node.level].id;
+          }
         }
         ancestorItem.id = node.id;
 
