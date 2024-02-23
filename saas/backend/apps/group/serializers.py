@@ -23,7 +23,6 @@ from backend.apps.application.serializers import ExpiredAtSLZ, SystemInfoSLZ
 from backend.apps.group.models import Group
 from backend.apps.policy.serializers import BasePolicyActionSLZ, ResourceTypeSLZ
 from backend.apps.role.models import Role, RoleRelatedObject, RoleRelation
-from backend.apps.role.serializers import ResourceInstancesSLZ
 from backend.apps.subject_template.models import SubjectTemplate
 from backend.apps.template.models import PermTemplatePolicyAuthorized
 from backend.biz.group import GroupBiz
@@ -31,14 +30,10 @@ from backend.biz.policy import PolicyBean, PolicyBeanList
 from backend.biz.subject_template import SubjectTemplateBiz
 from backend.biz.system import SystemBiz
 from backend.biz.template import TemplateBiz
+from backend.common.serializers import GroupMemberSLZ, GroupSearchSLZ  # noqa
 from backend.common.time import PERMANENT_SECONDS, expired_at_display
 from backend.service.constants import ADMIN_USER, GroupMemberType, RoleRelatedObjectType
 from backend.service.group_saas_attribute import GroupAttributeService
-
-
-class GroupMemberSLZ(serializers.Serializer):
-    type = serializers.ChoiceField(label="成员类型", choices=GroupMemberType.get_choices())
-    id = serializers.CharField(label="成员id")
 
 
 class SearchMemberSLZ(serializers.Serializer):
@@ -177,6 +172,10 @@ class GroupUpdateSLZ(serializers.Serializer):
 
 class GroupDeleteMemberSLZ(serializers.Serializer):
     members = serializers.ListField(label="成员列表", child=GroupMemberSLZ(label="成员"), allow_empty=False)
+
+
+class BatchGroupDeleteMemberSLZ(GroupDeleteMemberSLZ):
+    group_ids = serializers.ListField(label="用户组ID列表")
 
 
 class GroupTemplateSchemaSLZ(serializers.Serializer):
@@ -366,19 +365,6 @@ class GradeManagerGroupTransferSLZ(serializers.Serializer):
         if not RoleRelation.objects.filter(parent_id=role.id, role_id=value).exists():
             raise serializers.ValidationError(f"subset manager id {value} not exists")
         return value
-
-
-class GroupSearchSLZ(serializers.Serializer):
-    name = serializers.CharField(label="用户组名称", required=False, default="", allow_blank=True)
-    id = serializers.IntegerField(label="ID", required=False, default=0)
-    description = serializers.CharField(label="描述", required=False, default="", allow_blank=True)
-    system_id = serializers.CharField(label="系统ID", required=False, default="", allow_blank=True)
-    action_id = serializers.CharField(label="操作ID", required=False, default="", allow_blank=True)
-    resource_instances = serializers.ListField(
-        label="资源实例", required=False, child=ResourceInstancesSLZ(label="资源实例信息"), default=list
-    )
-    apply_disable = serializers.BooleanField(label="是否不可申请", required=False)
-    hidden = serializers.BooleanField(label="是否隐藏", default=True)
 
 
 class GroupSubjectTemplateListSLZ(serializers.ModelSerializer):

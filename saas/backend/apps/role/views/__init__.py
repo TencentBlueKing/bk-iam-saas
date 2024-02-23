@@ -10,9 +10,11 @@ specific language governing permissions and limitations under the License.
 """
 
 from .group_member import (
+    RoleGroupMemberCleanViewSet,
     RoleGroupMemberDepartmentGroupViewSet,
     RoleGroupMemberDepartmentTemplateGroupViewSet,
     RoleGroupMemberGroupViewSet,
+    RoleGroupMemberResetViewSet,
     RoleGroupMemberTemplateGroupViewSet,
     RoleGroupMemberViewSet,
 )
@@ -63,4 +65,6 @@ __all__ = [
     "RoleGroupMemberDepartmentTemplateGroupViewSet",
     "RoleGroupMemberGroupViewSet",
     "RoleGroupMemberDepartmentGroupViewSet",
+    "RoleGroupMemberCleanViewSet",
+    "RoleGroupMemberResetViewSet",
 ]

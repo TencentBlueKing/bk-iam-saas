@@ -393,11 +393,11 @@
           }
           cancelHandler.then(() => {
             this.$emit('update:isShow', false);
-            this.$emit('on-cancel', { customPerm: this.customPerm });
+            this.$emit('on-cancel', { customPerm: this.customPerm, templateList: this.tempalteDetailList });
             this.resetData();
           }, _ => _);
         } else {
-          this.$emit('on-cancel', { customPerm: this.customPerm });
+          this.$emit('on-cancel', { customPerm: this.customPerm, templateList: this.tempalteDetailList });
           this.$emit('update:isShow', false);
         }
       },
