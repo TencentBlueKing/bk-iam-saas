@@ -103,8 +103,11 @@
     .no-expand-search-list {
       padding: 0 16px;
       .search-data-content {
-        display: flex;
-        align-items: center;
+        /* display: flex;
+        align-items: center; */
+        overflow-x: auto;
+        white-space: nowrap;
+        word-break: break-all;
         .funnel-icon {
           color: #979BA5;
         }
