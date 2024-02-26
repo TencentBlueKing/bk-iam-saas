@@ -2,7 +2,7 @@
   <div class="user-org-group-perm">
     <template v-if="permData.hasPerm">
       <MemberTempPermPolicy
-        ref="memberTempPermPolicyRef"
+        :ref="`memberTempPermPolicyRef_${item.id}`"
         v-for="(item, index) in memberTempPermData"
         :key="index"
         :title="item.name"
@@ -259,9 +259,6 @@
       async fetchResetData () {
         // this.emptyPermData.tipType = '';
         // this.handleEmptyClear();
-        this.memberTempPermData.forEach((item) => {
-          item.expanded = false;
-        });
         await this.fetchInitData();
       },
 
@@ -480,6 +477,7 @@
                 ]);
                 this.$set(this.permData, 'hasPerm', this.memberTempPermData.some((v) => v.pagination.count > 0));
                 this.isOnlyPerm = this.memberTempPermData.filter((v) => v.pagination.count > 0).length === 1;
+                this.formatDefaultExpand();
               },
               department: async () => {
                 this.memberTempPermData = this.initMemberTempPermData.filter((item) => ['personalOrDepartPerm', 'userTempPerm'].includes(item.id));
@@ -490,6 +488,7 @@
                 ]);
                 this.$set(this.permData, 'hasPerm', this.memberTempPermData.some((v) => v.pagination.count > 0));
                 this.isOnlyPerm = this.memberTempPermData.filter((v) => v.pagination.count > 0).length === 1;
+                this.formatDefaultExpand();
               }
             };
             return typeMap[this.queryGroupData.type]();
@@ -498,6 +497,20 @@
         if (routeMap[this.$route.name]) {
           await routeMap[this.$route.name]();
         }
+      },
+
+      formatDefaultExpand () {
+        const curData = this.memberTempPermData.find((v) => v.pagination.count > 0);
+        this.$nextTick(() => {
+          this.memberTempPermData.forEach((item) => {
+            if (curData && curData.id === item.id) {
+              this.$refs[`memberTempPermPolicyRef_${item.id}`][0].handleExpanded(false);
+              item.expanded = true;
+            } else {
+              item.expanded = false;
+            }
+          });
+        });
       },
         
       formatRoleMembers (payload) {

@@ -72,10 +72,10 @@
       <!-- 处理有值的情况下折叠场景 -->
       <div class="no-expand-search-list">
         <div class="search-data-content">
-          <div class="funnel">
+          <span class="funnel">
             <Icon bk type="funnel" class="funnel-icon" />
-          </div>
-          <div
+          </span>
+          <span
             v-for="tag in searchTagList"
             :key="tag.name"
             class="tag-list"
@@ -116,8 +116,8 @@
                 </bk-tag>
               </template>
             </bk-popconfirm>
-          </div>
-          <div
+          </span>
+          <span
             class="delete-all"
             v-if="hasTagData"
             v-bk-tooltips="{ content: $t(`m.common['清空搜索条件']`) }">
@@ -127,7 +127,7 @@
               class="delete-all-icon"
               @click.stop="handleClearAll"
             />
-          </div>
+          </span>
         </div>
       </div>
     </div>
