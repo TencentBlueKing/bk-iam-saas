@@ -24,7 +24,10 @@
         <template v-else-if="item.prop === 'expired_at_display'">
           <bk-table-column :key="item.prop" :label="item.label" :prop="item.prop">
             <template slot-scope="{ row }">
-              <div class="renewal-expired-at">
+              <div :class="[
+                'renewal-expired-at',
+                { 'renewal-expired-at-near': formatHasExpired(row) }
+              ]">
                 <render-expire-display
                   selected
                   :renewal-time="expiredAt"
@@ -47,7 +50,9 @@
         <template v-else>
           <bk-table-column :key="item.prop" :label="item.label" :prop="item.prop">
             <template slot-scope="{ row }">
-              <span :title="row[item.prop] || ''">{{ row[item.prop] || '--' }}</span>
+              <span v-bk-tooltips="{ content: row[item.prop], disabled: !row[item.prop] }">
+                {{ row[item.prop] || '--' }}
+              </span>
             </template>
           </bk-table-column>
         </template>
@@ -65,6 +70,7 @@
 </template>
 
 <script>
+  import { mapGetters } from 'vuex';
   import { bus } from '@/common/bus';
   import { formatCodeData } from '@/common/util';
   import renderExpireDisplay from '@/components/render-renewal-dialog/display';
@@ -102,6 +108,19 @@
           tipType: ''
         }
       };
+    },
+    computed: {
+      ...mapGetters(['user']),
+      formatHasExpired () {
+        return (payload) => {
+          const diff = payload.expired_at - this.user.timestamp;
+          if (diff < 1) {
+            return true;
+          }
+         const days = Math.round(diff / (24 * 3600));
+         return payload.expired_at < this.user.timestamp || days < 16;
+        };
+      }
     },
     watch: {
       list: {
@@ -219,17 +238,24 @@
   .renewal-expired-at {
     .iam-expire-time-wrapper {
       .cur-text {
-        background-color: #FFF1DB;
-        color: #FE9C00;
         font-size: 12px;
-        padding: 0 8px;
-        border-radius: 2px;
       }
       .after-renewal-icon {
         font-size: 20px;
       }
       .after-renewal-text {
-        font-size: 14px;
+        font-size: 12px;
+        color: #3a84ff;
+      }
+    }
+    &-near {
+      .iam-expire-time-wrapper {
+        .cur-text {
+          background-color: #FFF1DB;
+          color: #FE9C00;
+          padding: 0 8px;
+          border-radius: 2px;
+        }
       }
     }
   }

@@ -62,7 +62,7 @@
               style="margin-left: 8px;"
               theme="default"
               @click="handleEmptyUserClear">
-              {{ $t(`m.common['取消']`) }}
+              {{ $t(`m.common['清空']`) }}
             </bk-button>
           </div>
         </div>
@@ -428,6 +428,9 @@
           });
         },
         deep: true
+      },
+      navStick () {
+        this.formatFormItemWidth();
       }
     },
 
@@ -800,7 +803,8 @@
       },
 
       async handleBatchOperate (payload) {
-        if (!['add'].includes(payload)) {
+        const { name, isRefreshUser } = payload;
+        if (['clear'].includes(name) && isRefreshUser) {
           await this.fetchFirstData();
         }
         bus.$emit('on-refresh-resource-search', {
@@ -914,7 +918,7 @@
         this.handleEmptyUserClear();
       },
 
-      async formatFormItemWidth () {
+      formatFormItemWidth () {
         this.formItemWidth = `${(window.innerWidth - (this.navStick ? 276 : 76) - this.gridCount * 16) / this.gridCount}px`;
       }
     }

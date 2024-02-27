@@ -55,6 +55,7 @@
             />
             <div
               v-if="['user'].includes(item.type)"
+              v-bk-tooltips="{ content: `${item.id} (${item.name})` }"
               class="single-hide group-name"
             >
               <span>{{ item.id }}</span>
@@ -62,7 +63,9 @@
             </div>
             <div
               v-if="['department'].includes(item.type)"
-              class="single-hide group-name">
+              v-bk-tooltips="{ content: item.name }"
+              class="single-hide group-name"
+            >
               {{ item.name }}
             </div>
           </div>
@@ -276,7 +279,7 @@
           };
         }
         return {
-          height: 'calc(100vh - 405px)'
+          height: 'calc(100vh - 400px)'
         };
       },
       formatDropDownClass () {
@@ -331,16 +334,21 @@
         });
       },
 
-      async handleGroupSubmit () {
+      async handleGroupSubmit (payload) {
         if (['clear'].includes(this.curSliderName)) {
-          this.currentSelectList = [];
-          this.$nextTick(() => {
-            if (this.$refs.memberRef) {
-              this.$refs.memberRef.scrollTop = 0;
-            }
-          });
+          if (payload && payload.isRefreshUser) {
+            this.currentSelectList = [];
+            this.$nextTick(() => {
+              if (this.$refs.memberRef) {
+                this.$refs.memberRef.scrollTop = 0;
+              }
+            });
+          }
         }
-        this.$emit('on-batch-operate', this.curSliderName);
+        this.$emit('on-batch-operate', {
+          name: this.curSliderName,
+          isRefreshUser: payload.isRefreshUser || false
+        });
       },
 
       handleResetScrollLoading () {
@@ -390,9 +398,11 @@
     font-size: 14px;
     color: #313238;
     padding-top: 16px;
+    padding-left: 8px;
   }
   .group-operate-dropdown {
     padding-top: 12px;
+    padding-left: 8px;
     margin-bottom: 8px;
 
     .group-dropdown-trigger-btn {
@@ -401,7 +411,7 @@
       justify-content: center;
       border: 1px solid #c4c6cc;
       min-width: 92px;
-      height: 26px;
+      height: 32px;
       border-radius: 2px;
       padding-left: 10px;
       padding-right: 5px;
@@ -414,7 +424,7 @@
       }
 
       .group-dropdown-text {
-        font-size: 12px;
+        font-size: 14px;
       }
 
       .bk-icon {
@@ -424,7 +434,7 @@
   }
 
   .group-list {
-    padding-right: 16px;
+    /* padding-right: 16px; */
     position: relative;
     &-content {
       overflow-x: hidden;
@@ -466,7 +476,8 @@
         }
 
         .group-name {
-          max-width: 140px;
+          max-width: 168px;
+          word-break: break-all;
         }
       }
 

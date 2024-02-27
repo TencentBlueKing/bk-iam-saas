@@ -196,7 +196,9 @@
 
         &.userOrgPerm-perm-item {
           box-shadow: 0 2px 4px 0 #1919290d;
-          margin-bottom: 12px;
+          &:not(&:last-of-type) {
+            margin-bottom: 12px;
+          }
           .header {
             display: flex;
             align-items: center;

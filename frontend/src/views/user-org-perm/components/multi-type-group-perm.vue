@@ -243,6 +243,7 @@
     mounted () {
       this.$once('hook:beforeDestroy', () => {
         bus.$off('on-refresh-resource-search');
+        bus.$off('on-info-change');
       });
       bus.$on('on-refresh-resource-search', (payload) => {
         const { isSearchPerm, curSearchParams } = payload;
@@ -254,11 +255,25 @@
         this.resetPagination();
         this.fetchInitData();
       });
+      bus.$on('on-info-change', ({ mode }) => {
+        const modeMap = {
+          userTempPerm: async () => {
+            await this.fetchPermByTempSearch();
+          },
+          departTempPerm: async () => {
+            await this.fetchDepartPermByTempSearch();
+          }
+        };
+        if (modeMap[mode]) {
+          modeMap[mode]();
+        }
+      });
     },
     methods: {
       async fetchResetData () {
         // this.emptyPermData.tipType = '';
         // this.handleEmptyClear();
+        this.resetPagination();
         await this.fetchInitData();
       },
 
@@ -478,6 +493,9 @@
                 this.$set(this.permData, 'hasPerm', this.memberTempPermData.some((v) => v.pagination.count > 0));
                 this.isOnlyPerm = this.memberTempPermData.filter((v) => v.pagination.count > 0).length === 1;
                 this.formatDefaultExpand();
+                // 清空用户组需要判断如果有组织或者人员模板权限则代表左侧选中的数据还存在，不需要取第一条数据
+                const hasData = this.memberTempPermData.filter((item) => !['personalOrDepartPerm'].includes(item.id)).some((v) => v.pagination.count > 0);
+                bus.$emit('on-exist-other-perm', { isRefreshUser: !hasData });
               },
               department: async () => {
                 this.memberTempPermData = this.initMemberTempPermData.filter((item) => ['personalOrDepartPerm', 'userTempPerm'].includes(item.id));
@@ -489,6 +507,9 @@
                 this.$set(this.permData, 'hasPerm', this.memberTempPermData.some((v) => v.pagination.count > 0));
                 this.isOnlyPerm = this.memberTempPermData.filter((v) => v.pagination.count > 0).length === 1;
                 this.formatDefaultExpand();
+                // 清空用户组需要判断如果有组织或者人员模板权限则代表左侧选中的数据还存在，不需要取第一条数据
+                const hasData = this.memberTempPermData.filter((item) => !['personalOrDepartPerm'].includes(item.id)).some((v) => v.pagination.count > 0);
+                bus.$emit('on-exist-other-perm', { isRefreshUser: !hasData });
               }
             };
             return typeMap[this.queryGroupData.type]();
@@ -503,7 +524,7 @@
         const curData = this.memberTempPermData.find((v) => v.pagination.count > 0);
         this.$nextTick(() => {
           this.memberTempPermData.forEach((item) => {
-            if (curData && curData.id === item.id) {
+            if ((curData && curData.id === item.id)) {
               this.$refs[`memberTempPermPolicyRef_${item.id}`][0].handleExpanded(false);
               item.expanded = true;
             } else {
@@ -512,7 +533,17 @@
           });
         });
       },
-        
+
+      formatExpandedData (payload) {
+        setTimeout(() => {
+          this.memberTempPermData.forEach((item) => {
+            if (item.expanded) {
+              this.$refs[`memberTempPermPolicyRef_${item.id}`][0].handleExpanded(false);
+            }
+          });
+        }, 0);
+      },
+
       formatRoleMembers (payload) {
         if (payload && payload.length) {
           const hasName = payload.some((v) => v.username);
@@ -536,28 +567,32 @@
               curData.pagination = Object.assign(curData, { current, limit });
               if (['userOrgPerm'].includes(this.$route.name)) {
                 await this.fetchUserGroupSearch();
+                this.formatExpandedData(curData);
               }
             },
             departPerm: async () => {
               curData.pagination = Object.assign(curData, { current, limit });
               if (['userOrgPerm'].includes(this.$route.name)) {
                 await this.fetchDepartGroupSearch();
+                this.formatExpandedData(curData);
               }
             },
             userTempPerm: async () => {
               curData.pagination = Object.assign(curData, { current, limit });
               if (['userOrgPerm'].includes(this.$route.name)) {
                 await this.fetchPermByTempSearch();
+                this.formatExpandedData(curData);
               }
             },
             departTempPerm: async () => {
               curData.pagination = Object.assign(curData, { current, limit });
               if (['userOrgPerm'].includes(this.$route.name)) {
                 await this.fetchDepartPermByTempSearch();
+                this.formatExpandedData(curData);
               }
             }
           };
-          return typeMap[payload.id]();
+          typeMap[payload.id]();
         }
       },
 
@@ -577,19 +612,20 @@
         this.curSelectedGroup = [...payload];
       },
 
-      handleRefreshGroup (payload) {
+      handleRefreshGroup (payload, current) {
         const curData = this.memberTempPermData.find((item) => item.id === payload.mode);
-        this.formatPaginationData(curData, 1, curData.pagination.limit);
+        this.formatPaginationData(curData, current, curData.pagination.limit);
         this.curSelectedGroup = [];
         this.$emit('on-selected-group', []);
       },
 
       handleAddGroup (payload) {
-        this.handleRefreshGroup(payload);
+        const curData = this.memberTempPermData.find((item) => item.id === payload.mode);
+        this.handleRefreshGroup(payload, curData.pagination.current);
       },
 
       handleRemoveGroup (payload) {
-        this.handleRefreshGroup(payload);
+        this.handleRefreshGroup(payload, 1);
       },
   
       handlePageChange (current, payload) {
