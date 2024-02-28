@@ -530,7 +530,7 @@
     width: 100%;
     font-size: 12px;
     color: #979ba5;
-    background-color: #F5F7FA;
+    background-color: #ffffff;
     height: 40px;
     line-height: 40px;
     text-align: center;
