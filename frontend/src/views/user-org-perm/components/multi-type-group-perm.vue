@@ -308,7 +308,7 @@
             pagination: { ...pagination, ...{ count: totalCount } }
           });
           this.emptyPermData = cloneDeep(this.memberTempPermData[0].emptyData);
-          this.$nextTick(() => {
+          setTimeout(() => {
             const curSelectedId = this.curSelectedGroup.map((item) => item.id);
             this.memberTempPermData[0].list.forEach((item) => {
               if (this.$refs.childPermTable && this.$refs.childPermTable.length) {
@@ -318,7 +318,7 @@
                 this.$refs.childPermTable[0].fetchCustomTotal(this.curSelectedGroup);
               }
             });
-          });
+          }, 0);
         } catch (e) {
           console.error(e);
           this.emptyPermData = formatCodeData(e.code, emptyData);
@@ -524,7 +524,7 @@
         const curData = this.memberTempPermData.find((v) => v.pagination.count > 0);
         this.$nextTick(() => {
           this.memberTempPermData.forEach((item) => {
-            if ((curData && curData.id === item.id)) {
+            if (curData && curData.id === item.id) {
               this.$refs[`memberTempPermPolicyRef_${item.id}`][0].handleExpanded(false);
               item.expanded = true;
             } else {
@@ -537,8 +537,10 @@
       formatExpandedData (payload) {
         setTimeout(() => {
           this.memberTempPermData.forEach((item) => {
-            if (item.expanded) {
+            if (item.expanded && payload && payload.id === item.id) {
               this.$refs[`memberTempPermPolicyRef_${item.id}`][0].handleExpanded(false);
+            } else {
+              item.expanded = false;
             }
           });
         }, 0);
