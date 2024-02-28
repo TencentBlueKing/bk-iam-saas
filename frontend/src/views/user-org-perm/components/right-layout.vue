@@ -311,7 +311,7 @@
         }
 
         .group-dropdown-text {
-          font-size: 12px;
+          font-size: 14px;
         }
 
         .bk-icon {
@@ -332,10 +332,13 @@
   &.disabled *,
   .remove-disabled,
   .renewal-disabled {
-    background-color: #f5f6fa;
+    background-color: #ffffff !important;
     border-color: #dcdee5 !important;
     color: #c4c6cc !important;
     cursor: not-allowed;
+    div:nth-child(2) {
+      height: 0 !important;
+    }
   }
 }
 </style>

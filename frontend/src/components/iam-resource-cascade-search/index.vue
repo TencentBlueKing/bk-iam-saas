@@ -1001,10 +1001,16 @@
       .form-item-resource {
         margin-right: 16px !important;
       }
-      .resource-group-container {
-        .form-item-resource {
-          &:last-child {
-            margin-right: 0 !important;
+    }
+    /deep/ .resource-group-container {
+      .form-item-resource {
+        &:last-child {
+          margin-right: 0 !important;
+        }
+        .relation-content-item {
+          .iam-condition-input {
+            height: 30px !important;
+            line-height: 30px;
           }
         }
       }

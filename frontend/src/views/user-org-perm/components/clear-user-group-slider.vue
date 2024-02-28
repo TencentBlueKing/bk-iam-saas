@@ -85,6 +85,7 @@
 </template>
 
 <script>
+  import { bus } from '@/common/bus';
   import RenderPermBoundary from '@/components/render-perm-boundary';
   import RenderMemberItem from '@/views/group/common/render-member-display';
   export default {
@@ -117,6 +118,7 @@
         submitLoading: false,
         tableLoading: false,
         isShowGroupError: false,
+        isRefreshUser: false,
         selectTableList: [],
         initTabList: [
           {
@@ -173,6 +175,15 @@
         return this.departList.length > 0;
       }
     },
+    mounted () {
+      this.$once('hook:beforeDestroy', () => {
+        bus.$off('on-exist-other-perm');
+      });
+      // 处理如果有组织加入或者人员模板加入的权限则不需要刷新左侧列表
+      bus.$on('on-exist-other-perm', ({ isRefreshUser }) => {
+        this.isRefreshUser = isRefreshUser;
+      });
+    },
     methods: {
       async handleSubmit () {
         this.submitLoading = true;
@@ -183,7 +194,13 @@
           const { code } = await this.$store.dispatch('userOrOrg/cleanGroupMembers', params);
           if (code === 0) {
             this.messageSuccess(this.$t(`m.info['清空用户组成功']`), 3000);
-            this.$emit('on-submit', params);
+            const emitParams = {
+              ...params,
+              ...{
+                isRefreshUser: this.isRefreshUser
+              }
+            };
+            this.$emit('on-submit', emitParams);
             this.$emit('update:show', false);
           }
         } catch (e) {

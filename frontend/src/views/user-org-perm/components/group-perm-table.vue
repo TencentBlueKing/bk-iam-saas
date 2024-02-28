@@ -58,8 +58,10 @@
                 class="can-view-name"
                 @click.stop="handleOpenTag(row, row.template_id > 0 ? 'memberTemplate' : 'userOrgPerm')"
               >
-                {{ row.template_name || row.department_name}}
-              </span>)
+                {{ row.template_name || row.department_name }}
+              </span>
+              <span v-if="row.template_name && row.department_name">{{ ` - ${row.department_name}` }}</span>
+              )
             </template>
           </bk-table-column>
         </template>
@@ -162,6 +164,8 @@
       :group-list="singleList"
       @on-submit="handleAddGroupSubmit"
     />
+
+    <MemberTemplateDetailSlider :show.sync="isShowTempSlider" :cur-detail-data="tempDetailData" />
   </div>
 </template>
   
@@ -170,10 +174,12 @@
   import { PERMANENT_TIMESTAMP } from '@/common/constants';
   import { bus } from '@/common/bus';
   import BatchOperateSlider from './batch-operate-slider.vue';
+  import MemberTemplateDetailSlider from '@/views/member-template/components/member-template-detail-slider.vue';
 
   export default {
     components: {
-      BatchOperateSlider
+      BatchOperateSlider,
+      MemberTemplateDetailSlider
     },
     props: {
       mode: {
@@ -222,6 +228,7 @@
         PERMANENT_TIMESTAMP,
         isShowPermSideSlider: false,
         isShowRenewalSlider: false,
+        isShowTempSlider: false,
         tabActive: 'userOrOrg',
         renewalSliderTitle: '',
         curSliderName: '',
@@ -231,6 +238,7 @@
         singleList: [],
         currentSelectList: [],
         queryGroupData: {},
+        tempDetailData: {},
         tableEmptyData: {
           type: '',
           text: '',
@@ -318,6 +326,7 @@
     mounted () {
       this.$once('hook:beforeDestroy', () => {
         bus.$off('on-remove-toggle-checkbox');
+        bus.$off('on-info-change');
       });
       // 同步更新checkbox状态
       bus.$on('on-remove-toggle-checkbox', (payload) => {
@@ -390,7 +399,7 @@
         return tabMap[payload] ? tabMap[payload]() : tabMap['personalOrDepartPerm']();
       },
 
-      handleOpenTag ({ id, department_name, template_name }, type) {
+      handleOpenTag ({ id, department_name, template_id }, type) {
         const routeMap = {
           userGroupDetail: () => {
             const routeData = this.$router.resolve({
@@ -402,14 +411,12 @@
             window.open(routeData.href, '_blank');
           },
           memberTemplate: () => {
-            const routeData = this.$router.resolve({
-              path: `member-template`,
-              query: {
-                template_name: template_name,
-                tab_active: 'template_member'
-              }
-            });
-            window.open(routeData.href, '_blank');
+            this.tempDetailData = {
+              mode: this.mode,
+              id: template_id,
+              tabActive: 'template_member'
+            };
+            this.isShowTempSlider = true;
           },
           userOrgPerm: () => {
             const routeData = this.$router.resolve({
