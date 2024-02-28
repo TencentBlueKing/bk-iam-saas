@@ -1005,8 +1005,8 @@
             .map((v) => v.ids).flat(this.curChain.length);
           if (defaultSelectList.length) {
             let childrenIdList = [];
-            const result = !(defaultSelectList.includes(`${payload.id}&${this.curChain[payload.level].id}`)
-              || defaultSelectList.includes(`${this.selectNodeData.id}&${this.curChain[payload.level - 1].id}`));
+            const result = !(defaultSelectList.includes(`${payload.id}&${this.curChain[payload.level] ? this.curChain[payload.level].id : this.curChain[this.curChain.length - 1]}`)
+              || defaultSelectList.includes(`${this.selectNodeData.id}&${this.curChain[payload.level - 1] ? this.curChain[payload.level - 1].id : this.curChain[this.curChain.length - 1].id}`));
             // 处理多层资源权限搜索只支持单选
             if (this.resourceValue
               || (this.curSelectTreeNode.children
@@ -1032,7 +1032,9 @@
         // 处理有的资源全选只能勾选一项
         if (this.resourceValue && this.curSelectedValues.length) {
           singleCheckedData = this.curSelectedValues.map((v) => v.ids).flat(this.curChain.length);
-          return singleCheckedData.includes(`${payload.id}&${this.curChain[payload.level].id}`);
+          const curLevelNodeId = this.curChain[payload.level]
+            ? this.curChain[payload.level].id : this.curChain[this.curChain.length - 1].id;
+          return singleCheckedData.includes(`${payload.id}&${curLevelNodeId}`);
         }
         return !selectNodeList.includes(`${payload.name}&${payload.id}`);
       },
@@ -1126,7 +1128,9 @@
           if (this.curTreeTableData.children && this.curTreeTableData.children.length) {
             const nodeItem = _.cloneDeep(this.curTreeTableData.children[0]);
             if (!nodeItem.parentChain.length) {
-              const { id, system_id } = this.curChain[this.curTreeTableData.level];
+              const curLevelNode
+                = this.curChain[this.curTreeTableData.level] || this.curChain[this.curChain.length - 1];
+              const { id, system_id } = curLevelNode;
               nodeItem.parentChain = [
                 {
                   name: this.curTreeTableData.name,

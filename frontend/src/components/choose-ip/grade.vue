@@ -448,9 +448,10 @@
           params.action_system_id = this.curChain[chainLen - 1].system_id;
           params.action_id = '';
         } else {
-          params.system_id = this.curChain[node.level].system_id;
-          params.type = this.curChain[node.level].id;
-          params.action_system_id = this.curChain[node.level].system_id;
+          const curLevelNode = this.curChain[node.level] || this.curChain[chainLen - 1];
+          params.system_id = curLevelNode.system_id;
+          params.type = curLevelNode.id;
+          params.action_system_id = curLevelNode.system_id;
           params.action_id = '';
         }
         if (node.parentChain.length) {
@@ -994,7 +995,8 @@
             name: node.name,
             id: node.id,
             type: parentType,
-            system_id: node.childType !== '' ? this.curChain[chainLen - 1].system_id : this.curChain[node.level].system_id,
+            system_id: !node.childType && this.curChain[node.level]
+              ? this.curChain[node.level].system_id : this.curChain[chainLen - 1].system_id,
             child_type: node.childType || ''
           });
           const childNodes = data.results.map(item => {
@@ -1132,8 +1134,9 @@
           params.type = this.curChain[chainLen - 1].id;
           // params.parent_type = this.curChain[chainLen - 1].id || '';
         } else {
-          params.system_id = this.curChain[node.level].system_id;
-          params.type = this.curChain[node.level].id;
+          const curLevelNode = this.curChain[node.level] || this.curChain[chainLen - 1];
+          params.system_id = curLevelNode.system_id;
+          params.type = curLevelNode.id;
         }
         if (node.parentChain.length) {
           const parentData = node.parentChain.reduce((p, e) => {

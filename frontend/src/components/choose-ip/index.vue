@@ -1112,11 +1112,12 @@
           const totalPage = Math.ceil(data.count / this.limit);
           let isAsync = this.curChain.length > (curLevel + 1);
           const parentChain = _.cloneDeep(node.parentChain);
+          const curLevelNode = this.curChain[node.level] || this.curChain[chainLen - 1];
           parentChain.push({
             name: node.name,
             id: node.id,
             type: parentType,
-            system_id: node.childType !== '' ? this.curChain[chainLen - 1].system_id : this.curChain[node.level].system_id,
+            system_id: node.childType !== '' ? this.curChain[chainLen - 1].system_id : curLevelNode.system_id,
             child_type: node.childType || ''
           });
           const childNodes = data.results.map(item => {
@@ -1275,8 +1276,9 @@
           params.action_id = this.systemParams.action_id || '';
           // params.parent_type = this.curChain[chainLen - 1].id || '';
         } else {
-          params.system_id = this.curChain[node.level].system_id;
-          params.type = this.curChain[node.level].id;
+          const curNode = this.curChain[node.level] ? this.curChain[node.level] : this.curChain[chainLen - 1];
+          params.system_id = curNode.system_id;
+          params.type = curNode.id;
           // params.action_system_id = this.curChain[node.level].system_id;
           params.action_system_id = this.systemParams.system_id || '';
           params.action_id = this.systemParams.action_id || '';
