@@ -1,3 +1,15 @@
+<!-- 2024-02-23 -->
+# V1.10.23 Version Update Log
+
+### Bug Fixes
+
+* Fixed an issue where the user group only added permission templates, and the table data was cleared after quick close.
+* Fixed an issue where adding instances to permission templates couldn't be pasted in bulk.
+* Fixed role_id error for some secondary administrators on the Blue Shield embedded page.
+* Added hidden field filtering for system operations hidden in Blue Shield user group embedded pages.
+
+---
+
 <!-- 2024-01-30 -->
 # V1.10.22 Version Update Log
 

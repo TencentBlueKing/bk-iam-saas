@@ -1,0 +1,67 @@
+### 申请单详情
+
+#### Parameters
+
+| 字段 | 类型 | 是否必须 | 位置 | 描述 |
+| :--- | :--- | :--- |:--- |:--- |
+| sn | string | 是 | path | 申请单sn |
+
+#### Response
+
+
+```json
+{
+    "data": {
+        "id": 155889,
+        "sn": "REQ20240130003766",
+        "type": "grant_action",
+        "applicant": "tianyizhu",
+        "organizations": [
+            {
+                "id": 36434,
+                "name": "PaaS平台组",
+                "full_name": "腾讯: 腾讯公司/IEG互动娱乐事业群/技术运营部/计算资源中心/PaaS平台组"
+            }
+        ],
+        "status": "cancelled",
+        "data": {
+            "system": {
+                "id": "test-o2-woa-com",
+                "name": "test-O2广告系统"
+            },
+            "actions": [
+                {
+                    "id": "o2_config_user",
+                    "resource_groups": [],
+                    "expired_at": 1722156334,
+                    "expired_display": "180 天",
+                    "name": "O2用户管理(仅限超管用户申请)",
+                    "sensitivity_level": "L4"
+                },
+                {
+                    "id": "o2_config_comm",
+                    "resource_groups": [],
+                    "expired_at": 1722156334,
+                    "expired_display": "180 天",
+                    "name": "O2常规配置操作",
+                    "sensitivity_level": "L4"
+                }
+            ],
+            "applicants": [
+                {
+                    "type": "user",
+                    "id": "tianyizhu",
+                    "display_name": "朱添一"
+                }
+            ],
+            "action_sensitivity_level": "包含2个高敏感等级操作"
+        },
+        "created_time": "2024-01-30 16:46:04",
+        "reason": "1",
+        "ticket_url": "https://bkc-itsm-prod.woa.com/#/ticket/detail?id=641304"
+    },
+    "result": true,
+    "code": 0,
+    "message": "OK"
+}
+```
