@@ -154,7 +154,7 @@ export const m = {
         '已获得': 'Acquired',
         '未选择': 'Not Selected',
         '选择全部': 'All',
-        '加载中': 'Loading...',
+        '加载中': 'Loading',
         '返回': 'Back',
         '期限选择提示': '1-365',
         '临时期限选择提示': '1-24',
@@ -285,7 +285,9 @@ export const m = {
         '结果预览': 'Result preview',
         '解析并添加': 'Parse and add',
         '搜索解析结果': 'Search parsing results',
-        '请先从左侧输入并解析': 'Please input and parse from the left first'
+        '请先从左侧输入并解析': 'Please input and parse from the left first',
+        '剩余加载数据': 'Remaining {value} pieces of data',
+        '已加载全部数据': 'All data loaded'
     },
     // 校验
     verify: {

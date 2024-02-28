@@ -149,10 +149,11 @@
       >
         <div class="user-org-wrapper-content-left" :style="leftStyle">
           <LeftLayout
-            :loading="listLoading"
+            :is-loading="listLoading"
             :is-no-expand-no-search-data="isNoSearchData"
             :is-no-expand-has-search-data="isHasDataNoExpand"
             :list="groupList"
+            :page-conf="pageConf"
             :group-data="currentGroupData"
             :cur-select-active="curSelectActive"
             :can-scroll-load="canScrollLoad"

@@ -70,12 +70,31 @@
             </div>
           </div>
         </div>
-        <div
-          v-if="isScrollLoading"
-          v-bkloading="{ isLoading: isScrollLoading, opacity: 1, color: '#fff' }"
-          class="load-more-wrapper"
-        />
       </div>
+    </div>
+    <div
+      v-if="isScrollLoading"
+      class="load-more-wrapper"
+    >
+      <span
+        v-bkloading="{
+          isLoading: isScrollLoading,
+          opacity: 1,
+          color: '#979ba5',
+          mode: 'spin',
+          size: 'mini'
+        }"
+      />
+      <span class="loading-text">{{ $t(`m.common['加载中']`) }}</span>
+    </div>
+    <div v-if="!isScrollLoading && list.length && pagination.count - list.length > 0" class="total-count-display">
+      <span>{{ $t(`m.common['剩余加载数据']`, { value: pagination.count - list.length }) }}</span>
+    </div>
+    <div
+      v-if="!isScrollLoading && pagination.count - list.length === 0 && pagination.current > 1"
+      class="total-count-display"
+    >
+      <span>{{ $t(`m.common['已加载全部数据']`, { value: pagination.count - list.length }) }}</span>
     </div>
     <div v-else class="user-org-empty-wrapper">
       <ExceptionEmpty
@@ -114,6 +133,7 @@
 </template>
 
 <script>
+  import { sleep } from '@/common/util';
   import JoinUserGroupSlider from './join-user-group-slider.vue';
   import ClearUserGroupSlider from './clear-user-group-slider.vue';
 
@@ -124,7 +144,7 @@
       ClearUserGroupSlider
     },
     props: {
-      loading: {
+      isLoading: {
         type: Boolean,
         default: false
       },
@@ -135,6 +155,9 @@
       isNoExpandHasSearchData: {
         type: Boolean,
         default: false
+      },
+      totalCount: {
+        type: Number
       },
       canScrollLoad: {
         type: Boolean,
@@ -165,6 +188,9 @@
           };
         }
       },
+      pageConf: {
+        type: Object
+      },
       emptyData: {
         type: Object
       },
@@ -177,10 +203,8 @@
       return {
         selectActive: '',
         curSliderName: 'add',
-        listLoading: false,
         isDropdownShow: false,
         isScrollLoading: false,
-        isShowNoDataTips: false,
         currentSelectList: [],
         sliderData: {
           reset: {
@@ -203,9 +227,10 @@
         userList: [],
         departList: [],
         queryGroupData: {},
-        pageConf: {
+        pagination: {
           current: 1,
-          limit: 1,
+          limit: 10,
+          totalPage: 1,
           count: 0
         },
         groupEmptyData: {
@@ -256,30 +281,36 @@
         if (this.showNoticeAlert) {
           if (this.isNoExpandNoSearchData) {
             return {
-              height: 'calc(100vh - 225px)'
+              // height: 'calc(100vh - 225px)'
+              height: 'calc(100vh - 265px)'
             };
           }
           if (this.isNoExpandHasSearchData) {
             return {
-              height: 'calc(100vh - 268px)'
+              // height: 'calc(100vh - 268px)'
+              height: 'calc(100vh - 308px)'
             };
           }
           return {
-            height: 'calc(100vh - 450px)'
+            // height: 'calc(100vh - 450px)'
+            height: 'calc(100vh - 490px)'
           };
         }
         if (this.isNoExpandNoSearchData) {
           return {
-            height: 'calc(100vh - 186px)'
+            // height: 'calc(100vh - 186px)'
+            height: 'calc(100vh - 226px)'
           };
         }
         if (this.isNoExpandHasSearchData) {
           return {
-            height: 'calc(100vh - 228px)'
+            // height: 'calc(100vh - 228px)'
+            height: 'calc(100vh - 268px)'
           };
         }
         return {
-          height: 'calc(100vh - 400px)'
+          // height: 'calc(100vh - 400px)'
+          height: 'calc(100vh - 435px)'
         };
       },
       formatDropDownClass () {
@@ -305,6 +336,12 @@
       emptyData: {
         handler (value) {
           this.groupEmptyData = Object.assign({}, value);
+        },
+        deep: true
+      },
+      pageConf: {
+        handler (value) {
+          this.pagination = Object.assign({}, value);
         },
         deep: true
       }
@@ -352,21 +389,20 @@
       },
 
       handleResetScrollLoading () {
-        this.isShowNoDataTips = false;
-        this.isScrollLoading = false;
+        sleep(2000).then(() => {
+          this.isScrollLoading = false;
+        });
       },
 
       handleScroll (event) {
+        this.handleResetScrollLoading();
         if (!this.canScrollLoad) {
-          this.isShowNoDataTips = true;
-          this.isScrollLoading = false;
           return;
         }
         const { offsetHeight, scrollTop, scrollHeight } = event.target;
         console.log(scrollTop, offsetHeight, scrollHeight);
         if (scrollTop + offsetHeight >= scrollHeight - 5) {
           this.isScrollLoading = true;
-          this.isShowNoDataTips = false;
           this.$emit('on-load-more');
         }
       },
@@ -486,6 +522,20 @@
         color: #3a84ff;
         border-radius: 2px;
       }
+    }
+  }
+
+  .load-more-wrapper,
+  .total-count-display  {
+    width: 100%;
+    font-size: 12px;
+    color: #979ba5;
+    background-color: #F5F7FA;
+    height: 40px;
+    line-height: 40px;
+    text-align: center;
+    .loading-text {
+      margin-left: 10px;
     }
   }
 
