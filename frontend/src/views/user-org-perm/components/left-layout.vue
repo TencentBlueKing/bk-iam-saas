@@ -518,6 +518,11 @@
   padding-top: 12px;
   padding-left: 8px;
   margin-bottom: 8px;
+  .bk-dropdown-content {
+    padding-top: 0;
+    cursor: pointer;
+  }
+
   .drop-down-operate {
     .group-dropdown-trigger-btn {
       display: flex;
