@@ -10,11 +10,12 @@
         <div class="content" v-if="rateExpanded">
           <div class="slot-content">
             <bk-table
+              ref="manageTableRef"
               :style="{ maxHeight: managerShowAll ? 'none' : '254px' }"
               border
               :data="managerList"
               size="small"
-              :class="{ 'set-border': isLoading }"
+              :class="['manager-table', { 'set-border': isLoading }]"
               :header-cell-class-name="getCellClass"
               :cell-class-name="getCellClass"
               :pagination="pagination"
@@ -127,6 +128,19 @@
           this.managerList.splice(0, this.managerList.length, ...managerList);
           this.isEmpty = managerList.length < 1;
           this.emptyData = formatCodeData(0, this.emptyData, this.isEmpty);
+          const selectGroup = this.managerSelectData.length
+            ? this.managerSelectData.map(item => String(item.id)) : [];
+          setTimeout(() => {
+            this.managerList.forEach(item => {
+              if (selectGroup.includes(String(item.id))) {
+                this.$refs.manageTableRef && this.$refs.manageTableRef.toggleRowSelection(item, true);
+              }
+              if (this.managerSelectData.length < 1) {
+                this.$refs.manageTableRef && this.$refs.manageTableRef.clearSelection();
+              }
+            });
+          }, 0);
+          this.fetchSelectedGroupCount();
         } catch (e) {
           console.error(e);
           const { code } = e;
@@ -139,6 +153,9 @@
 
       handleRateExpanded () {
         this.rateExpanded = !this.rateExpanded;
+        if (this.rateExpanded) {
+          this.fetchData();
+        }
       },
 
       handleManagerShowAll () {
@@ -159,25 +176,44 @@
         }
       },
 
-      handleSelectAll (selection) {
-        this.isSelectAllChecked = !!selection.length;
-        if (this.isSelectAllChecked) {
-          this.managerSelectData.splice(
-            0,
-            this.managerSelectData.length,
-            ...this.managerList
-          );
-        } else {
-          this.managerSelectData.splice(0, this.managerSelectData.length, ...[]);
-        }
+      fetchSelectedGroupCount () {
+        setTimeout(() => {
+          const paginationWrapper = this.$refs.manageTableRef.$refs.paginationWrapper;
+          const selectCount = paginationWrapper.getElementsByClassName('bk-page-selection-count');
+          if (selectCount.length && selectCount[0].children && selectCount[0].children.length) {
+            selectCount[0].children[0].innerHTML = this.managerSelectData.length;
+          }
+        }, 0);
+      },
 
+      fetchSelectedGroups (type, payload, row) {
+        const typeMap = {
+          multiple: () => {
+            const isChecked = payload.length && payload.indexOf(row) !== -1;
+            if (isChecked) {
+              this.managerSelectData.push(row);
+            } else {
+              this.managerSelectData = this.managerSelectData.filter((item) => item.id !== row.id);
+            }
+            this.fetchSelectedGroupCount();
+          },
+          all: () => {
+            const selectGroups = this.managerSelectData.filter((item) =>
+              !this.managerList.map((v) => v.id).includes(item.id));
+            this.managerSelectData = [...selectGroups, ...payload];
+            this.fetchSelectedGroupCount();
+          }
+        };
+        return typeMap[type]();
+      },
+
+      handleSelectAll (selection) {
+        this.fetchSelectedGroups('all', selection);
         this.$emit('manager-selection-change', this.managerSelectData);
       },
 
-      handleSelect (selection) {
-        this.isSelectAllChecked = selection.length === this.managerList.length;
-        this.managerSelectData.splice(0, this.managerSelectData.length, ...selection);
-
+      handleSelect (selection, row) {
+        this.fetchSelectedGroups('multiple', selection, row);
         this.$emit('manager-selection-change', this.managerSelectData);
       },
 

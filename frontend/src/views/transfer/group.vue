@@ -177,6 +177,9 @@
 
       handleGroupExpanded () {
         this.groupExpanded = !this.groupExpanded;
+        if (this.groupExpanded) {
+          this.fetchData();
+        }
       },
 
       handleGroupShowAll () {
@@ -199,10 +202,12 @@
 
       fetchSelectedGroupCount () {
         setTimeout(() => {
-          const selectionCount = document.getElementsByClassName('bk-page-selection-count');
-          console.log(this.groupSelectData);
-          if (this.$refs.groupTableRef && selectionCount && selectionCount.length && selectionCount[0].children) {
-            selectionCount[0].children[0].innerHTML = this.groupSelectData.length;
+          const paginationWrapper = this.$refs.groupTableRef.$refs.paginationWrapper;
+          if (paginationWrapper && paginationWrapper.getElementsByClassName('bk-page-selection-count')) {
+            const selectCount = paginationWrapper.getElementsByClassName('bk-page-selection-count');
+            if (selectCount.length && selectCount[0].children && selectCount[0].children.length) {
+              selectCount[0].children[0].innerHTML = this.groupSelectData.length;
+            }
           }
         }, 0);
       },
@@ -222,20 +227,7 @@
             const validGroupList = payload.filter(item => !item.canNotTransfer);
             const selectGroups = this.groupSelectData.filter((item) =>
               !this.groupList.map((v) => v.id).includes(item.id));
-            console.log(selectGroups, validGroupList);
             this.groupSelectData = [...selectGroups, ...validGroupList];
-            // this.isSelectAllChecked = !!payload.length;
-            // if (this.isSelectAllChecked) {
-            //   const validGroupList = this.groupList.filter(item => !item.canNotTransfer);
-            //   this.groupSelectData.splice(
-            //     0,
-            //     this.groupSelectData.length,
-            //     ...validGroupList
-            //   );
-            // } else {
-            //   this.groupSelectData.splice(0, this.groupSelectData.length, ...[]);
-            // }
-            console.log(this.groupSelectData);
             this.fetchSelectedGroupCount();
           }
         };
