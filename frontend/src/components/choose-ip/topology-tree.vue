@@ -501,6 +501,7 @@
           const asyncLevelWidth = 30;
           // 左右边距各16px加上距离复选框的编剧以及当前item的padding
           const paddingWidth = 32 + 10 + 12;
+          const distance = offsetWidth - ((payload.level + 1) * this.leftBaseIndent) - paddingWidth;
           if (!payload.level) {
             if (payload.loading) {
               return {
@@ -518,17 +519,22 @@
           } else {
             if (payload.async || flag) {
               return {
-                maxWidth: `${offsetWidth - (payload.level + 1) * this.leftBaseIndent - asyncLevelWidth - paddingWidth}px`
+                maxWidth: `${distance - asyncLevelWidth}px`
               };
             }
           }
           if (isSameLevelExistSync && ['search', 'search-empty'].includes(payload.type)) {
             return {
-              maxWidth: `${offsetWidth - (payload.level + 1) * this.leftBaseIndent - paddingWidth}px`
+              maxWidth: `${distance}px`
+            };
+          }
+          if (payload.level + 1 >= 4) {
+            return {
+              maxWidth: `${distance - asyncLevelWidth - 10}px`
             };
           }
           return {
-            maxWidth: `${offsetWidth - (payload.level + 1) * this.leftBaseIndent - asyncLevelWidth - paddingWidth}px`
+            maxWidth: `${distance - asyncLevelWidth}px`
           };
         };
       },
