@@ -8,7 +8,7 @@
       { 'no-perm-app-layout': ['403'].includes(routeName) }
     ]">
     <NoticeComponent
-      v-if="isShowNoticeAlert"
+      v-if="isEnableNoticeAlert"
       :api-url="noticeApi"
       @show-alert-change="handleShowAlertChange"
     />
@@ -111,7 +111,7 @@
         routeName: '',
         userGroupId: '',
         isRouterAlive: true,
-        showNoticeAlert: true,
+        showNoticeAlert: false,
         noticeApi: `${window.AJAX_URL_PREFIX}/notice/announcements/`,
         enableNotice: window.ENABLE_BK_NOTICE.toLowerCase() === 'true'
       };
@@ -119,7 +119,10 @@
     computed: {
       ...mapGetters(['mainContentLoading', 'user', 'externalSystemsLayout']),
       isShowNoticeAlert () {
-        return this.enableNotice && this.showNoticeAlert && !this.externalSystemsLayout.hideNoticeAlert;
+        return this.showNoticeAlert && this.isEnableNoticeAlert;
+      },
+      isEnableNoticeAlert () {
+        return this.enableNotice && !this.externalSystemsLayout.hideNoticeAlert;
       }
     },
     watch: {
