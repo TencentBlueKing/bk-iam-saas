@@ -55,7 +55,12 @@
             />
             <div
               v-if="['user'].includes(item.type)"
-              v-bk-tooltips="{ content: `${item.id} (${item.name})` }"
+              v-bk-tooltips="{
+                content: `${item.id} (${item.name})`,
+                placements: ['right'],
+                disabled: formatShowToolTip(item)
+              }"
+              :ref="`userOrg_${item.id}`"
               class="single-hide group-name"
             >
               <span>{{ item.id }}</span>
@@ -63,7 +68,8 @@
             </div>
             <div
               v-if="['department'].includes(item.type)"
-              v-bk-tooltips="{ content: item.name }"
+              :ref="`userOrg_${item.id}`"
+              v-bk-tooltips="{ content: item.name, placements: ['right'], disabled: formatShowToolTip(item) }"
               class="single-hide group-name"
             >
               {{ item.name }}
@@ -293,7 +299,7 @@
           }
           return {
             // height: 'calc(100vh - 450px)'
-            height: 'calc(100vh - 490px)'
+            height: 'calc(100vh - 480px)'
           };
         }
         if (this.isNoExpandNoSearchData) {
@@ -347,6 +353,13 @@
       }
     },
     methods: {
+      formatShowToolTip (payload) {
+        if (this.$refs[`userOrg_${payload.id}`] && this.$refs[`userOrg_${payload.id}`].length) {
+          const offsetWidth = this.$refs[`userOrg_${payload.id}`][0].offsetWidth;
+          return !(offsetWidth > 167);
+        }
+      },
+
       handleChecked (newVal, oldVal, val, row) {
         row.checked = newVal;
         if (newVal) {
@@ -434,7 +447,7 @@
     font-size: 14px;
     color: #313238;
     padding-top: 16px;
-    padding-left: 8px;
+    padding-left: 16px;
   }
 
   .group-list {
@@ -461,7 +474,8 @@
       align-items: center;
       line-height: 36px;
       font-size: 13px;
-      padding: 0 8px;
+      /* padding: 0 8px; */
+      padding-left: 16px;
       cursor: pointer;
 
       .group-content {
@@ -516,7 +530,7 @@
 }
 /deep/ .group-operate-dropdown {
   padding-top: 12px;
-  padding-left: 8px;
+  padding-left: 16px;
   margin-bottom: 8px;
   .bk-dropdown-content {
     padding-top: 0;

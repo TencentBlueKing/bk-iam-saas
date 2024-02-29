@@ -33,45 +33,24 @@
           <bk-table-column type="selection" align="center" :selectable="setDefaultSelect" />
           <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
             <template slot-scope="{ row }">
-              <div class="user-group-name">
-                <span
-                  :class="[
-                    'single-hide',
-                    'user-group-name-label'
-                  ]"
-                  :title="row.name"
-                  @click="handleNavGroup(row)"
-                >
-                  {{ row.name }}
-                </span>
-                <!-- <span v-if="row.expired_at_display" class="user-group-name-expired">
-                  <template v-if="user.timestamp > row.expired_at">
-                    <span>({{ row.expired_at_display }}{{ $t(`m.common['，']`) }}</span>
-                    <bk-button
-                      size="small"
-                      theme="primary"
-                      :text="true"
-                      style="padding: 0"
-                      @click.stop="handleBatchRenewal"
-                    >
-                      {{ $t(`m.permApply['去续期']`) }}
-                    </bk-button>
-                    )
-                  </template>
-                  <span v-else>
-                    {{
-                      row.expired_at === 4102444800
-                        ? `(${row.expired_at_display})`
-                        : `(${$t(`m.common['有效期']`)} ${row.expired_at_display})`
-                    }}
-                  </span>
-                </span> -->
-              </div>
+              <span
+                :class="[
+                  'single-hide',
+                  'user-group-name-label'
+                ]"
+                v-bk-tooltips="{
+                  content: row.name,
+                  placements: ['right']
+                }"
+                @click="handleNavGroup(row)"
+              >
+                {{ row.name }}
+              </span>
             </template>
           </bk-table-column>
           <bk-table-column :label="$t(`m.common['描述']`)">
             <template slot-scope="{ row }">
-              <span :title="row.description">
+              <span>
                 {{ row.description || '--' }}
               </span>
             </template>
