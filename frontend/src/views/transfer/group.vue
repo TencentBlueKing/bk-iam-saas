@@ -17,7 +17,7 @@
             <bk-table
               :style="{ maxHeight: groupShowAll ? 'none' : '254px' }"
               border
-              ref="groupTable"
+              ref="groupTableRef"
               :data="groupList"
               size="small"
               :class="{ 'set-border': isLoading }"
@@ -141,15 +141,10 @@
           const { code, data } = await this.$store.dispatch('perm/getPersonalGroups', userGroupParams);
           const groupList = data.results || [];
           this.pagination.count = data.count || 0;
-          groupList.forEach(item => {
-            if (String(item.department_id) !== '0' || item.expired_at < this.user.timestamp) {
-              this.groupNotTransferCount += 1;
-              item.canNotTransfer = true;
-            }
-          });
           this.groupList.splice(0, this.groupList.length, ...groupList);
           this.isEmpty = groupList.length < 1;
           this.emptyData = formatCodeData(code, this.emptyData, this.isEmpty);
+          this.handleGetCheckData();
         } catch (e) {
           console.error(e);
           this.emptyData = formatCodeData(e.code, this.emptyData);
@@ -159,6 +154,26 @@
         }
       },
 
+      handleGetCheckData () {
+        const selectGroup = this.groupSelectData.length
+          ? this.groupSelectData.map(item => String(item.id)) : [];
+        this.groupList.forEach(item => {
+          if (String(item.department_id) !== '0' || item.expired_at < this.user.timestamp) {
+            this.groupNotTransferCount += 1;
+            item.canNotTransfer = true;
+          }
+          setTimeout(() => {
+            if (selectGroup.includes(String(item.id))) {
+              this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
+            }
+            if (this.groupSelectData.length < 1) {
+              this.$refs.groupTableRef && this.$refs.groupTableRef.clearSelection();
+            }
+          }, 0);
+        });
+        this.fetchSelectedGroupCount();
+      },
+
       handleEmptyRefresh () {
         this.pagination = Object.assign(this.pagination, { current: 1, limit: 10 });
         this.fetchData();
@@ -166,6 +181,9 @@
 
       handleGroupExpanded () {
         this.groupExpanded = !this.groupExpanded;
+        if (this.groupExpanded) {
+          this.handleGetCheckData();
+        }
       },
 
       handleGroupShowAll () {
@@ -186,26 +204,50 @@
         }
       },
 
-      handleSelectAll (selection) {
-        this.isSelectAllChecked = !!selection.length;
-        if (this.isSelectAllChecked) {
-          const validGroupList = this.groupList.filter(item => !item.canNotTransfer);
-          this.groupSelectData.splice(
-            0,
-            this.groupSelectData.length,
-            ...validGroupList
-          );
-        } else {
-          this.groupSelectData.splice(0, this.groupSelectData.length, ...[]);
-        }
+      fetchSelectedGroupCount () {
+        setTimeout(() => {
+          const paginationWrapper = this.$refs.groupTableRef.$refs.paginationWrapper;
+          if (paginationWrapper && paginationWrapper.getElementsByClassName('bk-page-selection-count')) {
+            const selectCount = paginationWrapper.getElementsByClassName('bk-page-selection-count');
+            if (selectCount.length && selectCount[0].children && selectCount[0].children.length) {
+              selectCount[0].children[0].innerHTML = this.groupSelectData.length;
+            }
+          }
+        }, 0);
+      },
 
+      fetchSelectedGroups (type, payload, row) {
+        const typeMap = {
+          multiple: () => {
+            const isChecked = payload.length && payload.indexOf(row) !== -1;
+            if (isChecked) {
+              this.groupSelectData.push(row);
+            } else {
+              this.groupSelectData = this.groupSelectData.filter((item) => item.id !== row.id);
+            }
+            this.fetchSelectedGroupCount();
+          },
+          all: () => {
+            const validGroupList = payload.filter(item => !item.canNotTransfer);
+            const selectGroups = this.groupSelectData.filter((item) =>
+              !this.groupList.map((v) => v.id).includes(item.id));
+            this.groupSelectData = [...selectGroups, ...validGroupList];
+            this.fetchSelectedGroupCount();
+          }
+        };
+        return typeMap[type]();
+      },
+
+      handleSelectAll (selection) {
+        // this.isSelectAllChecked = !!selection.length;
+        this.fetchSelectedGroups('all', selection);
         this.$emit('group-selection-change', this.groupSelectData);
       },
 
-      handleSelect (selection) {
-        const validGroupList = this.groupList.filter(item => !item.canNotTransfer);
-        this.isSelectAllChecked = selection.length === validGroupList.length;
-        this.groupSelectData.splice(0, this.groupSelectData.length, ...selection);
+      handleSelect (selection, row) {
+        // const validGroupList = this.groupList.filter(item => !item.canNotTransfer);
+        // this.isSelectAllChecked = selection.length === validGroupList.length;
+        this.fetchSelectedGroups('multiple', selection, row);
         this.$emit('group-selection-change', this.groupSelectData);
       },
 
