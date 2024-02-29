@@ -1079,11 +1079,11 @@
           placeholder = isExistNextChain
             ? this.curChain[node.level + 1].name
             : this.curChain[chainLen - 1].name;
-          if (this.curChain[node.level]) {
-            parentType = this.curChain[node.level].id;
-            ancestorItem.system_id = this.curChain[node.level].system_id;
-            ancestorItem.type = this.curChain[node.level].id;
-          }
+          const curLevelNode = node.level > this.curChain.length - 1
+            ? this.curChain[chainLen - 1] : this.curChain[node.level];
+          parentType = curLevelNode.id;
+          ancestorItem.system_id = curLevelNode.system_id;
+          ancestorItem.type = curLevelNode.id;
         }
         ancestorItem.id = node.id;
         if (node.parentChain.length) {
