@@ -399,7 +399,7 @@
         return tabMap[payload] ? tabMap[payload]() : tabMap['personalOrDepartPerm']();
       },
 
-      handleOpenTag ({ id, department_name, template_id }, type) {
+      handleOpenTag ({ id, department_name, template_name, template_id }, type) {
         const routeMap = {
           userGroupDetail: () => {
             const routeData = this.$router.resolve({
@@ -412,9 +412,10 @@
           },
           memberTemplate: () => {
             this.tempDetailData = {
+              tabActive: 'template_member',
               mode: this.mode,
               id: template_id,
-              tabActive: 'template_member'
+              name: template_name
             };
             this.isShowTempSlider = true;
           },

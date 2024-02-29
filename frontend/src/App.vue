@@ -329,6 +329,7 @@
       },
 
       handleShowAlertChange (isShow) {
+        console.log(isShow, '跑马灯回调');
         this.showNoticeAlert = isShow;
       }
     }

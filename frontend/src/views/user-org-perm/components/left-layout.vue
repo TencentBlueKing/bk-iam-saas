@@ -293,7 +293,7 @@
           }
           return {
             // height: 'calc(100vh - 450px)'
-            height: 'calc(100vh - 490px)'
+            height: 'calc(100vh - 480px)'
           };
         }
         if (this.isNoExpandNoSearchData) {
@@ -434,7 +434,7 @@
     font-size: 14px;
     color: #313238;
     padding-top: 16px;
-    padding-left: 8px;
+    padding-left: 16px;
   }
 
   .group-list {
@@ -461,7 +461,8 @@
       align-items: center;
       line-height: 36px;
       font-size: 13px;
-      padding: 0 8px;
+      /* padding: 0 8px; */
+      padding-left: 16px;
       cursor: pointer;
 
       .group-content {
@@ -516,7 +517,7 @@
 }
 /deep/ .group-operate-dropdown {
   padding-top: 12px;
-  padding-left: 8px;
+  padding-left: 16px;
   margin-bottom: 8px;
   .bk-dropdown-content {
     padding-top: 0;
