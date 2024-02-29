@@ -663,7 +663,7 @@
               };
             } else {
               return {
-                'paddingLeft': `${16 + level * 8}px`
+                'paddingLeft': `16px`
               };
             }
           }
