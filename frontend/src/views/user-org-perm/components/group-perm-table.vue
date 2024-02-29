@@ -27,9 +27,16 @@
             :label="item.label"
             :prop="item.prop">
             <template slot-scope="{ row }">
-              <div class="can-view-name" @click.stop="handleOpenTag(row, 'userGroupDetail')">
+              <span
+                :ref="`name_${row.id}`"
+                class="can-view-name"
+                v-bk-tooltips="{
+                  content: row.name,
+                  placements: ['right']
+                }"
+                @click.stop="handleOpenTag(row, 'userGroupDetail')">
                 {{ row.name || "--" }}
-              </div>
+              </span>
             </template>
           </bk-table-column>
         </template>
@@ -135,7 +142,15 @@
             :prop="item.prop"
           >
             <template slot-scope="{ row }">
-              <span :title="row[item.prop] || ''">{{ row[item.prop] || '--'}}</span>
+              <span
+                v-bk-tooltips="{
+                  content: row[item.prop],
+                  disabled: !row[item.prop],
+                  placements: ['right']
+                }"
+              >
+                {{ row[item.prop] || '--'}}
+              </span>
             </template>
           </bk-table-column>
         </template>

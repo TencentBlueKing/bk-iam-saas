@@ -55,7 +55,12 @@
             />
             <div
               v-if="['user'].includes(item.type)"
-              v-bk-tooltips="{ content: `${item.id} (${item.name})` }"
+              v-bk-tooltips="{
+                content: `${item.id} (${item.name})`,
+                placements: ['right'],
+                disabled: formatShowToolTip(item)
+              }"
+              :ref="`userOrg_${item.id}`"
               class="single-hide group-name"
             >
               <span>{{ item.id }}</span>
@@ -63,7 +68,8 @@
             </div>
             <div
               v-if="['department'].includes(item.type)"
-              v-bk-tooltips="{ content: item.name }"
+              :ref="`userOrg_${item.id}`"
+              v-bk-tooltips="{ content: item.name, placements: ['right'], disabled: formatShowToolTip(item) }"
               class="single-hide group-name"
             >
               {{ item.name }}
@@ -347,6 +353,13 @@
       }
     },
     methods: {
+      formatShowToolTip (payload) {
+        if (this.$refs[`userOrg_${payload.id}`] && this.$refs[`userOrg_${payload.id}`].length) {
+          const offsetWidth = this.$refs[`userOrg_${payload.id}`][0].offsetWidth;
+          return !(offsetWidth > 167);
+        }
+      },
+
       handleChecked (newVal, oldVal, val, row) {
         row.checked = newVal;
         if (newVal) {
