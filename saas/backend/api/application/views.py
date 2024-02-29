@@ -15,7 +15,7 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.viewsets import views
+from rest_framework.viewsets import GenericViewSet, views
 
 from backend.api.authentication import ESBAuthentication
 from backend.apps.application.models import Application
@@ -73,7 +73,7 @@ class ApplicationView(views.APIView):
         return Response({"url": url})
 
 
-class ApplicationDetailView(views.APIView):
+class ApplicationDetailView(GenericViewSet):
     """
     接入系统申请详情
     """
@@ -89,7 +89,7 @@ class ApplicationDetailView(views.APIView):
         responses={status.HTTP_200_OK: ApplicationDetailSchemaSLZ(label="申请详情")},
         tags=["open"],
     )
-    def get(self, request, *args, **kwargs):
+    def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = ApplicationDetailSLZ(instance)
         return Response(serializer.data)
