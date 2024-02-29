@@ -224,10 +224,10 @@
       },
 
       handleAddCancel (payload) {
-        const { customPerm } = payload;
+        const { customPerm, templateList } = payload;
         if (customPerm) {
           this.hasAddCustomList = [...customPerm];
-          if (!customPerm.length) {
+          if (!customPerm.length && !templateList.length) {
             this.tableList = [];
             this.tableListBackup = [];
           }
@@ -849,7 +849,7 @@
           this.isShowAddActionSideslider = true;
         } else {
           this.isShowAddSideslider = true;
-          this.permSideWidth = 1160;
+          this.permSideWidth = 960;
         }
       }
     }

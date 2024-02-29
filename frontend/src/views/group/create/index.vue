@@ -387,10 +387,10 @@
        * handleAddCancel
        */
       handleAddCancel (payload) {
-        const { customPerm } = payload;
+        const { customPerm, templateList } = payload;
         if (customPerm) {
           this.hasAddCustomList = [...customPerm];
-          if (!customPerm.length) {
+          if (!customPerm.length && !templateList.length) {
             this.tableList = [];
             this.tableListBackup = [];
           }

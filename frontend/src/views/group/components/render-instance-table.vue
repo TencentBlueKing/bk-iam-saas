@@ -11,12 +11,12 @@
       @row-mouse-enter="handleRowMouseEnter"
       @row-mouse-leave="handleRowMouseLeave">
       <!-- eslint-disable max-len -->
-      <bk-table-column :resizable="false" :label="$t(`m.common['模板名称']`)" width="180" v-if="isCreateMode">
+      <bk-table-column :resizable="false" :label="$t(`m.common['模板名称']`)" v-if="isCreateMode">
         <template slot-scope="{ row }">
           <span>{{ !!row.isAggregate ? row.actions[0].detail.name || row.actions[0].displayName : row.displayName }}</span>
         </template>
       </bk-table-column>
-      <bk-table-column :resizable="false" :label="$t(`m.common['操作']`)" width="180">
+      <bk-table-column :resizable="false" :label="$t(`m.common['操作']`)">
         <template slot-scope="{ row }">
           <div v-if="!!row.isAggregate" style="padding: 10px 0;">
             <span class="action-name" :title="row.name">{{ row.name }}</span>
@@ -26,12 +26,12 @@
           </div>
         </template>
       </bk-table-column>
-      <bk-table-column :resizable="false" :label="$t(`m.common['所属系统']`)" width="180" v-if="isCreateMode">
+      <bk-table-column :resizable="false" :label="$t(`m.common['所属系统']`)" v-if="isCreateMode">
         <template slot-scope="{ row }">
           <span>{{ !!row.isAggregate ? row.system_name : row.detail.system.name }}</span>
         </template>
       </bk-table-column>
-      <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)" min-width="450">
+      <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)" :min-width="450">
         <template slot-scope="{ row, $index }">
           <template v-if="!isEdit">
             <template v-if="!row.isEmpty">
@@ -851,8 +851,7 @@
           if (customData) {
             const curCondition = customData.resource_groups[this.curGroupIndex]
               .related_resource_types[this.curResIndex].conditionBackup;
-            // conditionBackup代表的是接口返回的缓存数据，处理新增未提交的资源实例删除
-            console.log(curCondition, 5655);
+            // conditionBackup代表的是接口返回的缓存数据，处理新增未提交的资源实例删
             const curPaths
               = curCondition.length
                 && curCondition.reduce((prev, next) => {
@@ -1854,8 +1853,12 @@
                           ? attribute.map(({ id, name, values }) => ({ id, name, values }))
                           : [];
                         const instanceList = (instance && instance.length > 0)
-                          ? instance.map(({ name, type, paths }) => {
-                            const tempPath = _.cloneDeep(paths);
+                          ? instance.map(({ name, type, path, paths }) => {
+                            // 这里paths和path存在数据不同步问题，所以当paths为空时，需要判断path是否存在数据
+                            let tempPath = _.cloneDeep(paths);
+                            if (!tempPath.length && path && path.length) {
+                              tempPath = _.cloneDeep(path);
+                            }
                             tempPath.forEach(pathItem => {
                               pathItem.forEach(pathSubItem => {
                                 delete pathSubItem.disabled;
@@ -1998,8 +2001,11 @@
                           ? attribute.map(({ id, name, values }) => ({ id, name, values }))
                           : [];
                         const instanceList = (instance && instance.length > 0)
-                          ? instance.map(({ name, type, paths }) => {
-                            const tempPath = _.cloneDeep(paths);
+                          ? instance.map(({ name, type, path, paths }) => {
+                            let tempPath = _.cloneDeep(paths);
+                            if (!tempPath.length && path && path.length) {
+                              tempPath = _.cloneDeep(path);
+                            }
                             tempPath.forEach(pathItem => {
                               pathItem.forEach(pathSubItem => {
                                 delete pathSubItem.disabled;

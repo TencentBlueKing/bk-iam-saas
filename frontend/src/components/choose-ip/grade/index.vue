@@ -1341,15 +1341,16 @@
         } else {
           // 针对用户管理的自身递归的逻辑做的兼容处理
           const tempData = this.curChain[node.level + 1] ? this.curChain[node.level + 1] : this.curChain[chainLen - 1];
+          const curLevelNode = this.curChain[node.level] || this.curChain[chainLen - 1];
           params.system_id = tempData.system_id;
           params.type = tempData.id;
           // params.action_system_id = tempData.system_id;
           params.action_system_id = this.systemParams.system_id || '';
           params.action_id = this.systemParams.action_id || '';
-          parentType = this.curChain[node.level] ? this.curChain[node.level].id : this.curChain[chainLen - 1].id;
+          parentType = curLevelNode.id;
           placeholder = tempData.name;
-          ancestorItem.system_id = this.curChain[node.level].system_id;
-          ancestorItem.type = this.curChain[node.level].id;
+          ancestorItem.system_id = curLevelNode.system_id;
+          ancestorItem.type = curLevelNode.id;
         }
         ancestorItem.id = node.id;
         if (node.parentChain.length) {
