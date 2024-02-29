@@ -128,19 +128,7 @@
           this.managerList.splice(0, this.managerList.length, ...managerList);
           this.isEmpty = managerList.length < 1;
           this.emptyData = formatCodeData(0, this.emptyData, this.isEmpty);
-          const selectGroup = this.managerSelectData.length
-            ? this.managerSelectData.map(item => String(item.id)) : [];
-          setTimeout(() => {
-            this.managerList.forEach(item => {
-              if (selectGroup.includes(String(item.id))) {
-                this.$refs.manageTableRef && this.$refs.manageTableRef.toggleRowSelection(item, true);
-              }
-              if (this.managerSelectData.length < 1) {
-                this.$refs.manageTableRef && this.$refs.manageTableRef.clearSelection();
-              }
-            });
-          }, 0);
-          this.fetchSelectedGroupCount();
+          this.handleGetCheckData();
         } catch (e) {
           console.error(e);
           const { code } = e;
@@ -151,10 +139,26 @@
         }
       },
 
+      handleGetCheckData () {
+        const selectGroup = this.managerSelectData.length
+          ? this.managerSelectData.map(item => String(item.id)) : [];
+        setTimeout(() => {
+          this.managerList.forEach(item => {
+            if (selectGroup.includes(String(item.id))) {
+              this.$refs.manageTableRef && this.$refs.manageTableRef.toggleRowSelection(item, true);
+            }
+            if (this.managerSelectData.length < 1) {
+              this.$refs.manageTableRef && this.$refs.manageTableRef.clearSelection();
+            }
+          });
+        }, 0);
+        this.fetchSelectedGroupCount();
+      },
+
       handleRateExpanded () {
         this.rateExpanded = !this.rateExpanded;
         if (this.rateExpanded) {
-          this.fetchData();
+          this.handleGetCheckData();
         }
       },
 

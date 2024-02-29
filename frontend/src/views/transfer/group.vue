@@ -144,23 +144,7 @@
           this.groupList.splice(0, this.groupList.length, ...groupList);
           this.isEmpty = groupList.length < 1;
           this.emptyData = formatCodeData(code, this.emptyData, this.isEmpty);
-          const selectGroup = this.groupSelectData.length
-            ? this.groupSelectData.map(item => String(item.id)) : [];
-          this.groupList.forEach(item => {
-            if (String(item.department_id) !== '0' || item.expired_at < this.user.timestamp) {
-              this.groupNotTransferCount += 1;
-              item.canNotTransfer = true;
-            }
-            setTimeout(() => {
-              if (selectGroup.includes(String(item.id))) {
-                this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
-              }
-              if (this.groupSelectData.length < 1) {
-                this.$refs.groupTableRef && this.$refs.groupTableRef.clearSelection();
-              }
-            }, 0);
-          });
-          this.fetchSelectedGroupCount();
+          this.handleGetCheckData();
         } catch (e) {
           console.error(e);
           this.emptyData = formatCodeData(e.code, this.emptyData);
@@ -168,6 +152,26 @@
         } finally {
           this.isLoading = false;
         }
+      },
+
+      handleGetCheckData () {
+        const selectGroup = this.groupSelectData.length
+          ? this.groupSelectData.map(item => String(item.id)) : [];
+        this.groupList.forEach(item => {
+          if (String(item.department_id) !== '0' || item.expired_at < this.user.timestamp) {
+            this.groupNotTransferCount += 1;
+            item.canNotTransfer = true;
+          }
+          setTimeout(() => {
+            if (selectGroup.includes(String(item.id))) {
+              this.$refs.groupTableRef && this.$refs.groupTableRef.toggleRowSelection(item, true);
+            }
+            if (this.groupSelectData.length < 1) {
+              this.$refs.groupTableRef && this.$refs.groupTableRef.clearSelection();
+            }
+          }, 0);
+        });
+        this.fetchSelectedGroupCount();
       },
 
       handleEmptyRefresh () {
@@ -178,7 +182,7 @@
       handleGroupExpanded () {
         this.groupExpanded = !this.groupExpanded;
         if (this.groupExpanded) {
-          this.fetchData();
+          this.handleGetCheckData();
         }
       },
 
