@@ -234,7 +234,7 @@
                     <span v-bk-tooltips="{ content: $t(`m.common['已选父级']`), disabled: !isParentChecked(row) }">
                       <bk-checkbox
                         :value="formatCheckBoxStatus(row, 'checked')"
-                        :disabled="formatCheckBoxStatus(row, 'disabled')"
+                        :disabled="formatCheckBoxStatus(row, 'disabled') || formatRadioDisabled(row)"
                         @change="handleChildNodeChange(...arguments, row)"
                       />
                     </span>
@@ -669,7 +669,7 @@
           }
           if (!async && expanded) {
             return {
-              'paddingLeft': `${16 + level * 8}px`
+              'paddingLeft': `16px`
             };
           }
         };
