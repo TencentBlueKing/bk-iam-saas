@@ -120,7 +120,8 @@ export default class Instance {
         if (this.instanceNotDisabled) {
           disabled = false;
         } else {
-          disabled = ['', 'custom'].includes(this.flag) ? !item.some(v => v.tag === 'add') : false;
+          // disabled = ['', 'custom'].includes(this.flag) ? !item.some(v => v.tag === 'add') : false;
+          disabled = item.some(v => v.tag === 'add') ? false : item.some(subItem => subItem.disabled);
         }
         tempList.push({
           name: item[len - 1].name,

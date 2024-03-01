@@ -672,6 +672,10 @@ export function delLocationHref (list) {
  *
  */
 export function isEmojiCharacter (str) {
+  const emojiReg = /(\ud83c[\udf00-\udfff])|(\ud83d[\udc00-\ude4f\ude80-\udeff])|[\u2600-\u2B55]/g;
+  if (str.match(emojiReg)) {
+    return true;
+  }
   for (let i = 0; i < str.length; i++) {
     const hs = str.charCodeAt(i);
     if (hs >= 0xd800 && hs <= 0xdbff) {

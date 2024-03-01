@@ -1978,10 +1978,9 @@
     }
   };
 </script>
-<style>
-    @import './index.css';
-</style>
+
 <style lang="postcss" scoped>
+@import './index.css';
 .action-hover {
     color: #3a84ff;
 }

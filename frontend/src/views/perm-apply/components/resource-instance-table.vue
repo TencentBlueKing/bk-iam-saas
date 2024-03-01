@@ -218,7 +218,7 @@
     <bk-sideslider
       :is-show="isShowResourceInstanceSideslider"
       :title="resourceInstanceSidesliderTitle"
-      :width="960"
+      :width="resourceSliderWidth"
       quick-close
       transfer
       :ext-cls="'relate-instance-sideslider'"
@@ -305,6 +305,12 @@
 
   export default {
     name: 'resource-instance-table',
+    // 这里用箭头函数会改变this
+    provide: function () {
+      return {
+        getResourceSliderWidth: () => this.resourceSliderWidth
+      };
+    },
     components: {
       RenderAggregateSideslider,
       RenderResource,
@@ -392,7 +398,9 @@
         resourceSelectData: [],
         emptyResourceGroupsList: [],
         emptyResourceGroupsName: [],
-        originalList: []
+        originalList: [],
+        resourceSliderWidth: Math.ceil(window.innerWidth * 0.67 - 7) < 960
+          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7)
       };
     },
     computed: {
@@ -468,7 +476,7 @@
               return 'all';
           }
           const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-              .related_resource_types[this.curResIndex];
+          .related_resource_types[this.curResIndex];
           return curData.selectionMode;
       },
       curAggregateDisabled () {
@@ -572,7 +580,18 @@
         immediate: true
       }
     },
+    mounted () {
+      window.addEventListener('resize', (this.formatFormItemWidth));
+      this.$once('hook:beforeDestroy', () => {
+        window.removeEventListener('resize', this.formatFormItemWidth);
+      });
+    },
     methods: {
+      formatFormItemWidth () {
+        this.resourceSliderWidth = Math.ceil(window.innerWidth * 0.67 - 7) < 960
+          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7);
+      },
+
       fetchInstanceDefaultCheck (payload) {
         if (this.isRecommend) {
           this.$nextTick(() => {
@@ -605,6 +624,7 @@
           });
         }
       },
+      
       handleOpenRenewal (row, index) {
         row.isShowRenewal = false;
         row.customValueBackup = row.customValue;

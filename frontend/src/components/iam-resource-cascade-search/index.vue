@@ -167,7 +167,7 @@
     <bk-sideslider
       :is-show="isShowResourceInstanceSideSlider"
       :title="resourceInstanceSideSliderTitle"
-      :width="960"
+      :width="resourceSliderWidth"
       quick-close
       transfer
       :ext-cls="'relate-instance-sideslider'"
@@ -205,6 +205,11 @@
   import { delLocationHref } from '@/common/util';
   
   export default {
+    provide: function () {
+      return {
+        getResourceSliderWidth: () => this.resourceSliderWidth
+      };
+    },
     components: {
       RenderResource,
       RenderCondition,
@@ -332,7 +337,9 @@
         resourceInstanceSideSliderTitle: '',
         curSelectMenu: '',
         curInputText: '',
-        contentWidth: ''
+        contentWidth: '',
+        resourceSliderWidth: Math.ceil(window.innerWidth * 0.67 - 7) < 960
+          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7)
       };
     },
     computed: {
@@ -391,11 +398,18 @@
     },
     mounted () {
       window.addEventListener('resize', (this.formatFormItemWidth));
+      window.addEventListener('resize', (this.formatResourceSliderWidth));
       this.$once('hook:beforeDestroy', () => {
         window.removeEventListener('resize', this.formatFormItemWidth);
+        window.removeEventListener('resize', this.formatResourceSliderWidth);
       });
     },
     methods: {
+      formatResourceSliderWidth () {
+        this.resourceSliderWidth = Math.ceil(window.innerWidth * 0.67 - 7) < 960
+          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7);
+      },
+
       async fetchPermData () {
         this.fetchSystemList();
         const isSearch = this.applyGroupData.system_id || Object.keys(this.searchParams).length > 0;
@@ -457,6 +471,7 @@
             }, []);
             if (this.curResourceData.type
               && !resourceInstances.length
+              && this.resourceTypeData.resource_groups[this.groupIndex]
               && this.resourceTypeData.resource_groups[this.groupIndex]
                 .related_resource_types.some(e => e.empty)) {
               this.resourceInstanceError = true;
