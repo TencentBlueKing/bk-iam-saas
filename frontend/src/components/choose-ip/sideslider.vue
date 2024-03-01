@@ -43,8 +43,8 @@
             <topology-input
               ref="topologyInput"
               :is-filter="isFilter"
+              :custom-class="'iam-topology-input-side'"
               :placeholder="curPlaceholder"
-              :custom-style="{ padding: 0 }"
               @on-search="handleSearch" />
             <div class="list-wrapper"
               v-bkloading="{ isLoading: listLoading, opacity: 1 }"

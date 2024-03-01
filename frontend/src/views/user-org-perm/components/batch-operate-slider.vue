@@ -10,6 +10,13 @@
       @update:isShow="handleCancel('dialog')"
     >
       <div slot="content" class="iam-batch-operate-side-content">
+        <div
+          v-if="noSelectTableList.length"
+          class="no-renewal-tip"
+        >
+          <Icon bk type="info-circle-shape" class="warn" />
+          <span class="no-renewal-name">{{ formatTypeTip() }}</span>
+        </div>
         <div class="batch-operate-content">
           <bk-form form-type="vertical">
             <bk-form-item
@@ -73,7 +80,7 @@
                 <div slot="renewalPreview">
                   <span>{{ $t(`m.common['已选']`) }}</span>
                   <template>
-                    <span class="number">{{ selectTableList.length }}</span>
+                    <span class="number">{{ formatSelectedGroup }}</span>
                     {{ $t(`m.common['个用户组']`) }}
                   </template>
                 </div>
@@ -168,43 +175,81 @@
           width: '160px'
         },
         selectTableList: [],
+        noSelectTableList: [],
         submitFormData: {},
         submitFormDataBack: {}
       };
     },
     computed: {
-    ...mapGetters(['user']),
-    isShowSideSlider: {
-      get () {
-        return this.show;
-      },
-      set (newValue) {
-        this.$emit('update:show', newValue);
-      }
-    },
-    curRole () {
-      return this.user.role.type;
-    },
-    isHasUser () {
-      return this.userList.length > 0;
-    },
-    isHasDepartment () {
-      return this.departList.length > 0;
-    },
-    formatTableTitle () {
-      const typeMap = {
-        remove: () => {
-          return this.$t(`m.userOrOrg['移出用户组名']`);
+      ...mapGetters(['user']),
+      isShowSideSlider: {
+        get () {
+          return this.show;
         },
-        renewal: () => {
-          return this.$t(`m.userOrOrg['续期预览']`);
+        set (newValue) {
+          this.$emit('update:show', newValue);
         }
-      };
-      if (typeMap[this.curSliderName]) {
-        return typeMap[this.curSliderName]();
+      },
+      curRole () {
+        return this.user.role.type;
+      },
+      isHasUser () {
+        return this.userList.length > 0;
+      },
+      isHasDepartment () {
+        return this.departList.length > 0;
+      },
+      formatTableTitle () {
+        const typeMap = {
+          remove: () => {
+            return this.$t(`m.userOrOrg['移出用户组名']`);
+          },
+          renewal: () => {
+            return this.$t(`m.userOrOrg['续期预览']`);
+          }
+        };
+        if (typeMap[this.curSliderName]) {
+          return typeMap[this.curSliderName]();
+        }
+        return typeMap[this.curSliderName] ? typeMap[this.curSliderName]() : '';
+      },
+      formatSelectedGroup () {
+        const modeMap = {
+            remove: () => {
+              const list = cloneDeep(this.selectTableList);
+              this.noSelectTableList = list.filter((item) =>
+                item.role_members.length === 1
+                && item.attributes
+                && item.attributes.source_from_role
+              );
+              this.selectTableList = list.filter(
+                (item) => !this.noSelectTableList.map((v) => v.id).includes(item.id));
+              return this.selectTableList.length;
+            },
+            renewal: () => {
+              const list = cloneDeep(this.selectTableList);
+              this.noSelectTableList = list.filter((item) => item.expired_at === PERMANENT_TIMESTAMP);
+              this.selectTableList = list.filter(
+                (item) => !this.noSelectTableList.map((v) => v.id).includes(item.id));
+               return this.selectTableList.length;
+            }
+          };
+         return modeMap[this.curSliderName] ? modeMap[this.curSliderName]() : '';
+      },
+      formatTypeTip () {
+        return () => {
+          const list = this.noSelectTableList.map((item) => item.name);
+          const modeMap = {
+            remove: () => {
+              return this.$t(`m.info['不可移出的用户组如下']`, { value: list });
+            },
+            renewal: () => {
+              return this.$t(`m.info['不可续期的用户组如下']`, { value: list });
+            }
+          };
+          return modeMap[this.curSliderName] ? modeMap[this.curSliderName]() : '';
+        };
       }
-      return typeMap[this.curSliderName] ? typeMap[this.curSliderName]() : '';
-    }
     },
     watch: {
       show: {
@@ -265,7 +310,7 @@
           return;
         }
         const { type, id } = this.groupData;
-        const params = {
+        let params = {
           group_ids: this.selectTableList.map((item) => item.id),
           members: [...this.userList, ...this.departList].map(({ id, type }) => ({ id, type }))
         };
@@ -273,29 +318,12 @@
           remove: async () => {
             try {
               this.submitLoading = true;
-              const adminGroups = this.selectTableList.filter(
-                (item) =>
-                  item.attributes
-                  && item.attributes.source_from_role
-                  && item.role_members.length === 1
-                  && item.department_id === 0
-              );
-              const selectGroups = this.selectTableList.filter((item) =>
-                !adminGroups.map((v) => String(v.id)).includes(String(item.id))
-              );
-              if (!selectGroups.length) {
-                this.messageWarn(
-                  this.$t(`m.perm['当前勾选项都为不可退出的用户组（唯一管理员不能退出）']`),
-                  3000
-                );
-                return;
-              }
               const deleteParams = {
                 members: [{
                   type,
                   id
                 }],
-                group_ids: selectGroups.map((item) => item.id)
+                group_ids: this.selectTableList.map((item) => item.id)
               };
               const { code } = await this.$store.dispatch('userOrOrg/deleteGroupMembers', deleteParams);
               if (code === 0) {
@@ -321,8 +349,23 @@
                 return;
               }
               this.submitLoading = true;
-              params.expired_at = this.expiredAtUse;
-              const { code } = await this.$store.dispatch('userGroup/batchAddUserGroupMember', params);
+              const batchMembers = cloneDeep([...this.userList, ...this.departList]);
+              const result = batchMembers.map((item) => {
+                return this.selectTableList.map((subItem) => {
+                  return {
+                    id: item.id,
+                    type: item.type,
+                    group_id: subItem.id,
+                    expired_at: this.user.timestamp > subItem.expired_at
+                      ? this.expiredAtUse : this.expiredAtUse + (subItem.expired_at - this.user.timestamp)
+                  };
+                });
+              });
+              const groupMembers = result.flat(Infinity);
+              params = {
+                group_members: groupMembers
+              };
+              const { code } = await this.$store.dispatch('userOrOrg/batchJoinOrRenewal', params);
               if (code === 0) {
                 this.messageSuccess(this.$t(`m.renewal['续期成功']`), 3000);
                 this.$emit('on-submit', params);
@@ -363,6 +406,8 @@
         this.submitFormData = {};
         this.submitFormDataBack = {};
         this.selectTableList = [];
+        this.expiredAt = 15552000;
+        this.expiredAtUse = 15552000;
         this.isShowGroupError = false;
         this.isShowExpiredError = false;
       }
@@ -373,6 +418,16 @@
 <style lang="postcss" scoped>
 .iam-batch-operate-side {
   &-content {
+    .no-renewal-tip {
+      padding: 24px 40px 0 40px;
+      .warn {
+        color: #ffb848;
+      }
+      .no-renewal-name {
+        font-size: 12px;
+        word-break: break-all;
+      }
+    }
     .batch-operate-content {
       padding: 0 40px 16px 40px;
       /deep/ .bk-form-item {

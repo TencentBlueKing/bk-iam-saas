@@ -1,3 +1,17 @@
+<!-- 2024-03-01 -->
+# V1.10.24 Version Update Log
+
+### Feature Enhancements
+
+* Resource instance IP selector revision
+
+### Bug Fixes
+
+* Fixed my permissions ->Add cross page selection to user group permissions
+* Fixed my permissions ->Add cross page selection for administrator handover
+
+---
+
 <!-- 2024-02-23 -->
 # V1.10.23 Version Update Log
 

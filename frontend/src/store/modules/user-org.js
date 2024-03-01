@@ -208,6 +208,21 @@ export default {
     */
     cleanGroupMembers ({ commit, state, dispatch }, params, config) {
       return http.post(`${AJAX_URL_PREFIX}/roles/group_members/clean/`, params, config);
+    },
+
+    /**
+     * 批量加入用户组/批量续期
+     *
+     * @param {Function} commit store commit mutation handler
+     * @param {Object} state store state
+     * @param {Function} dispatch store dispatch action handler
+     * @param {Object} params 请求参数
+     * @param {Object?} config http config
+     *
+     * @return {Promise} promise 对象
+    */
+    batchJoinOrRenewal ({ commit, state, dispatch }, params, config) {
+      return http.post(`${AJAX_URL_PREFIX}/groups/members/renew/`, params, config);
     }
   }
 };

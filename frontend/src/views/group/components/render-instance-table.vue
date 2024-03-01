@@ -143,7 +143,7 @@
         <bk-table-column
           :resizable="true"
           :label="$t(`m.common['操作-table']`)"
-          :width="curLanguageIsCn ? 200 : 400"
+          :width="formateOperateWidth"
         >
           <template slot-scope="{ row }">
             <bk-button
@@ -544,6 +544,23 @@
             return displayValue;
           }
         };
+      },
+      formateOperateWidth () {
+        const langMap = {
+          true: () => {
+            if (!this.isUserGroupDetail ? false : true && this.isShowDeleteAction) {
+              return 200;
+            }
+            return 130;
+          },
+          false: () => {
+            if (!this.isUserGroupDetail ? false : true && this.isShowDeleteAction) {
+              return 400;
+            }
+            return 192;
+          }
+        };
+        return langMap[this.curLanguageIsCn]();
       }
     },
     watch: {

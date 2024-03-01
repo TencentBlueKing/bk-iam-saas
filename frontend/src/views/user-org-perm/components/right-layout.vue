@@ -21,14 +21,18 @@
           </div>
           <ul class="bk-dropdown-list" slot="dropdown-content">
             <li>
-              <a @click.stop="handleBatch('remove')">
+              <a
+                :class="[{ 'remove-disabled': isNoBatchRemove() }]"
+                v-bk-tooltips="{ content: removeGroupTitle, disabled: !removeGroupTitle, placements: ['right'] }"
+                @click.stop="handleBatch('remove')"
+              >
                 {{ $t(`m.userOrOrg['移出']`) }}
               </a>
             </li>
             <li>
               <a
                 :class="[{ 'renewal-disabled': isNoBatchRenewal() }]"
-                :title="renewalGroupTitle"
+                v-bk-tooltips="{ content: renewalGroupTitle, disabled: !renewalGroupTitle, placements: ['right'] }"
                 @click.stop="handleBatch('renewal')">
                 {{ $t(`m.renewal['续期']`) }}
               </a>
@@ -127,6 +131,7 @@
         isShowAddGroupSlider: false,
         isShowBatchSlider: false,
         batchSliderTitle: '',
+        removeGroupTitle: '',
         renewalGroupTitle: '',
         curSliderName: '',
         componentsKey: -1,
@@ -161,15 +166,30 @@
       isBatchDisabled () {
         return !this.selectedGroups.length;
       },
+      isNoBatchRemove () {
+        return () => {
+          const hasData = this.selectedGroups.length > 0;
+          if (hasData) {
+            const list = this.selectedGroups.filter((item) =>
+              item.role_members.length === 1
+              && item.attributes
+              && item.attributes.source_from_role
+            );
+            const result = this.selectedGroups.length === list.length;
+            this.removeGroupTitle = result ? this.$t(`m.userOrOrg['当前勾选项都为不可移出的管理员组']`) : '';
+            return result;
+          }
+          return !hasData;
+        };
+      },
       isNoBatchRenewal () {
         return () => {
           const hasData = this.selectedGroups.length > 0;
           if (hasData) {
             const list = this.selectedGroups.filter((item) => item.expired_at === PERMANENT_TIMESTAMP);
-            if (this.selectedGroups.length === list.length) {
-              this.renewalGroupTitle = this.$t(`m.userGroup['已选择的用户组成员不需要续期']`);
-              return true;
-            }
+            const result = this.selectedGroups.length === list.length;
+            this.renewalGroupTitle = result ? this.$t(`m.userOrOrg['当前勾选项都为不可移出的管理员组']`) : '';
+            return result;
           }
           return !hasData;
         };
@@ -211,13 +231,18 @@
       handleBatch (payload) {
         this.curSliderName = payload;
         this.handleGetMembers();
-        this.isShowBatchSlider = true;
         const typeMap = {
           remove: () => {
-            this.batchSliderTitle = this.$t(`m.userOrOrg['批量移出用户组']`);
+            if (!this.isNoBatchRemove()) {
+              this.batchSliderTitle = this.$t(`m.userOrOrg['批量移出用户组']`);
+              this.isShowBatchSlider = true;
+            }
           },
           renewal: () => {
-            this.batchSliderTitle = this.$t(`m.renewal['批量续期']`);
+            if (!this.isNoBatchRenewal()) {
+              this.batchSliderTitle = this.$t(`m.renewal['批量续期']`);
+              this.isShowBatchSlider = true;
+            }
           }
         };
         typeMap[payload]();
