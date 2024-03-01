@@ -756,7 +756,7 @@ export const m = {
         '加入用户组的时间': 'Joined at',
         '加入方式': 'Joined type',
         '退出该组': 'Quit Group',
-        '组织名': 'Organization Name',
+        '组织名': 'Organization name',
         '加入的用户组': 'Joined Groups',
         '加入的组织': 'Joined Organizations',
         '通过组织加入的组无法退出': 'Joined through organization cannot be quit',

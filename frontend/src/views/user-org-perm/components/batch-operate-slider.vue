@@ -265,7 +265,7 @@
           return;
         }
         const { type, id } = this.groupData;
-        const params = {
+        let params = {
           group_ids: this.selectTableList.map((item) => item.id),
           members: [...this.userList, ...this.departList].map(({ id, type }) => ({ id, type }))
         };
@@ -321,8 +321,23 @@
                 return;
               }
               this.submitLoading = true;
-              params.expired_at = this.expiredAtUse;
-              const { code } = await this.$store.dispatch('userGroup/batchAddUserGroupMember', params);
+              // params.expired_at = this.expiredAtUse;
+              const batchMembers = cloneDeep([...this.userList, ...this.departList]);
+              const result = batchMembers.map((item) => {
+                return this.selectTableList.map((subItem) => {
+                  return {
+                    id: item.id,
+                    type: item.type,
+                    group_id: subItem.id,
+                    expired_at: this.expiredAtUse
+                  };
+                });
+              });
+              const groupMembers = result.flat(Infinity);
+              params = {
+                group_members: groupMembers
+              };
+              const { code } = await this.$store.dispatch('userOrOrg/batchJoinOrRenewal', params);
               if (code === 0) {
                 this.messageSuccess(this.$t(`m.renewal['续期成功']`), 3000);
                 this.$emit('on-submit', params);
