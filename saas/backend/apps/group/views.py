@@ -68,6 +68,7 @@ from .constants import OperateEnum
 from .filters import GroupFilter, GroupSubjectTemplateFilter, GroupTemplateSystemFilter
 from .serializers import (
     BatchGroupDeleteMemberSLZ,
+    BatchGroupMemberUpdateExpiredAtSLZ,
     GradeManagerGroupTransferSLZ,
     GroupAddMemberSLZ,
     GroupAuthorizationSLZ,
@@ -559,6 +560,47 @@ class GroupsMemberViewSet(GenericViewSet):
             return Response({}, status=status.HTTP_201_CREATED)
 
         raise error_codes.ACTIONS_PARTIAL_FAILED.format(failed_info)
+
+
+class GroupsMemberRenewViewSet(GenericViewSet):
+
+    group_biz = GroupBiz()
+
+    @swagger_auto_schema(
+        operation_description="批量用户组添加成员",
+        request_body=BatchGroupMemberUpdateExpiredAtSLZ(label="成员"),
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["group"],
+    )
+    def create(self, request, *args, **kwargs):
+        serializer = BatchGroupMemberUpdateExpiredAtSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        data = serializer.validated_data
+
+        role_checker = RoleObjectRelationChecker(request.role)
+        for group_member in data["group_members"]:
+            group = Group.objects.filter(id=group_member["group_id"]).first()
+            if not group:
+                continue
+
+            if not role_checker.check_group(group):
+                self.permission_denied(request, message=f"{request.role.type} role can not access group {group.id}")
+
+            if group_member["type"] != GroupMemberType.TEMPLATE.value:
+                member = parse_obj_as(GroupMemberExpiredAtBean, group_member)
+                self.group_biz.update_members_expired_at(group.id, [member])
+
+            # 处理人员模版的续期
+            if group_member["type"] == GroupMemberType.TEMPLATE.value:
+                self.group_biz.update_subject_template_expired_at(
+                    group.id, int(group_member["id"]), group_member["expired_at"]
+                )
+
+            # 写入审计上下文
+            audit_context_setter(group=group, members=data["members"])
+
+        return Response({})
 
 
 class GroupMemberUpdateExpiredAtViewSet(GroupPermissionMixin, GenericViewSet):
