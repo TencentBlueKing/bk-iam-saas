@@ -547,7 +547,9 @@ export const m = {
          '已加入用户组数量 ， 新申请数量，总数超过上限：100，请减少申请或退出部分用户组后重试': 'Number of added user groups: {applyCount}, number of new applications: {newApplyCount}, total exceeds the limit of 100. Please reduce the number of applications or exit some user groups and try again',
          '最多添加一个管理员': 'Add at most one administrator',
          '管理员不可重复添加': 'Administrators cannot be added repeatedly',
-         '有关联的用户组, 无法删除': 'Associated user groups cannot be deleted'
+         '有关联的用户组, 无法删除': 'Associated user groups cannot be deleted',
+         '不可续期的用户组如下': 'The non renewable user groups are as follows: {value}',
+         '不可移出的用户组如下': 'The user groups that cannot be removed are as follows'
     },
     // 二次确认弹窗相关
     dialog: {
@@ -1496,7 +1498,8 @@ export const m = {
         '通过组织': 'Through organization',
         '通过人员模板': 'Through member template',
         '查看人员模板详情': 'View member template details',
-        '查看该组织的用户组详情页': 'View the user group details page of the organization'
+        '查看该组织的用户组详情页': 'View the user group details page of the organization',
+        '当前勾选项都为不可移出的管理员组': 'The current check boxes are all administrator groups that cannot be removed'
     }
 }
 export default {
