@@ -7,7 +7,7 @@
                 { 'is-not-expanded': !isExpanded },
                 { 'is-group-instance': isInstanceByGroup },
                 { 'is-group-property': isProPertyByGroup },
-                { 'is-instance-hover': isInsanceHover },
+                { 'is-instance-hover': isInstanceHover },
                 { 'normal': !isDisabled },
                 { 'disabled': isDisabled },
                 { 'is-show-order-number': needOrder }]"
@@ -22,11 +22,13 @@
           <iam-svg name="icon-new" ext-cls="new-icon" v-if="isNew && curLanguageIsCn" />
           <iam-svg name="icon-new-en" ext-cls="new-icon" v-if="isNew && !curLanguageIsCn" />
         </p>
-        <template v-if="isEdit">
-          <p v-html="subTitle"></p>
-        </template>
-        <template v-else>
-          <p v-if="!isExpanded" v-html="subTitle"></p>
+        <template>
+          <template v-if="isEdit">
+            <p v-html="subTitle"></p>
+          </template>
+          <template v-else>
+            <p v-if="!isExpanded" v-html="subTitle"></p>
+          </template>
         </template>
       </div>
       <div class="expand-action">
@@ -141,14 +143,14 @@
       isProPertyByGroup () {
         return this.isGroup && this.type === 'property';
       },
-      isInsanceHover () {
+      isInstanceHover () {
         return this.isGroup && this.type === 'property' && this.isHovering;
       },
       displayTitle () {
         if (this.type === 'instance') {
-          return this.title || `${this.$t(`m.resource['拓扑实例']`)}：`;
+          return this.title || `${this.$t(`m.resource['拓扑实例']`)}: `;
         }
-        return this.title || `${this.$t(`m.resource['属性条件']`)}：`;
+        return this.title || `${this.$t(`m.resource['属性条件']`)}: `;
       }
     },
     watch: {
@@ -309,7 +311,7 @@
             }
         }
         .header {
-            padding: 19px 20px;
+            padding: 20px;
             display: flex;
             justify-content: space-between;
             cursor: pointer;
@@ -332,10 +334,12 @@
                     line-height: 16px;
                     color: #313238;
                     font-weight: 700;
+                    font-size: 14px;
                 }
                 p:nth-child(2) {
                     line-height: 16px;
                     color: #63656e;
+                    margin-top: 4px;
                 }
                 .new-icon {
                     position: relative;
@@ -362,7 +366,7 @@
             }
             &.set-instance-style {
                 /* height: 330px; */
-                height: 450px;;
+                height: calc(100% - 50px);
                 padding: 0;
                 /* background: #f5f6fa; */
                 background: #fafbfd;

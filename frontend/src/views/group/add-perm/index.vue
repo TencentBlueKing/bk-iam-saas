@@ -443,6 +443,7 @@
         this.allAggregationData = data;
         this.tableList.forEach(item => {
           if (this.allAggregationData[item.detail.system.id]) {
+            console.log(data, item.detail.system.id, 564554);
             const aggregationData = this.allAggregationData[item.detail.system.id];
             aggregationData.forEach(aggItem => {
               if (aggItem.actions.map(act => act.id).includes(item.id)) {

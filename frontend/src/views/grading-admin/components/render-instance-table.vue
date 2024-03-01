@@ -147,7 +147,7 @@
     <bk-sideslider
       :is-show="isShowResourceInstanceSideslider"
       :title="resourceInstanceSidesliderTitle"
-      :width="960"
+      :width="resourceSliderWidth"
       quick-close
       transfer
       ext-cls="relate-instance-sideslider"
@@ -200,6 +200,11 @@
 
   export default {
     name: 'resource-instance-table',
+    provide: function () {
+      return {
+        getResourceSliderWidth: () => this.resourceSliderWidth
+      };
+    },
     components: {
       RenderResource,
       RenderCondition,
@@ -271,7 +276,9 @@
         curSystemActions: [],
         relatedActionsList: [],
         isExpandTable: false,
-        curFilterSystem: ''
+        curFilterSystem: '',
+        resourceSliderWidth: Math.ceil(window.innerWidth * 0.67 - 7) < 960
+          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7)
       };
     },
     computed: {
@@ -395,7 +402,18 @@
         return false;
       };
     },
+    mounted () {
+      window.addEventListener('resize', (this.formatFormItemWidth));
+      this.$once('hook:beforeDestroy', () => {
+        window.removeEventListener('resize', this.formatFormItemWidth);
+      });
+    },
     methods: {
+      formatFormItemWidth () {
+        this.resourceSliderWidth = Math.ceil(window.innerWidth * 0.67 - 7) < 960
+          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7);
+      },
+
       async fetchActions (systemId) {
         const params = {
           system_id: systemId,
