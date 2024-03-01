@@ -354,6 +354,7 @@
       }
     },
     async created () {
+      // await this.fetchUserGroupSet();
       this.formData = Object.assign(this.formData, { sync_subject_template: !!this.externalSystemId });
       await this.fetchUserGroupSet();
     },

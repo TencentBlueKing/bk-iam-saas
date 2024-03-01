@@ -181,7 +181,7 @@
     <bk-sideslider
       :is-show="isShowResourceInstanceSideSlider"
       :title="resourceInstanceSideSliderTitle"
-      :width="960"
+      :width="resourceSliderWidth"
       quick-close
       transfer
       :ext-cls="'relate-instance-sideslider'"
@@ -220,6 +220,11 @@
   import { delLocationHref } from '@/common/util';
   
   export default {
+    provide: function () {
+      return {
+        getResourceSliderWidth: () => this.resourceSliderWidth
+      };
+    },
     components: {
       RenderResource,
       RenderCondition,
@@ -374,8 +379,8 @@
         curSelectMenu: '',
         curInputText: '',
         contentWidth: '',
-        defaultWidth: '',
-        gridWidth: ''
+        resourceSliderWidth: Math.ceil(window.innerWidth * 0.67 - 7) < 960
+          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7)
       };
     },
     computed: {
@@ -490,9 +495,11 @@
       await this.fetchPermData();
     },
     mounted () {
-      window.addEventListener('resize', this.formatFormItemWidth);
+      window.addEventListener('resize', (this.formatFormItemWidth));
+      window.addEventListener('resize', (this.formatResourceSliderWidth));
       this.$once('hook:beforeDestroy', () => {
         window.removeEventListener('resize', this.formatFormItemWidth);
+        window.removeEventListener('resize', this.formatResourceSliderWidth);
       });
     },
     methods: {
@@ -931,6 +938,11 @@
           this.isShowResourceInstanceSideSlider = false;
           this.resetDataAfterClose();
         }, _ => _);
+      },
+
+      formatResourceSliderWidth () {
+        this.resourceSliderWidth = Math.ceil(window.innerWidth * 0.67 - 7) < 960
+          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7);
       },
 
       formatFormItemWidth () {
