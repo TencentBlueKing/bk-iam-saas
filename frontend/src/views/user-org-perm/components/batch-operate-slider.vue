@@ -117,6 +117,7 @@
   import { PERMANENT_TIMESTAMP } from '@/common/constants';
   import { cloneDeep } from 'lodash';
   import { leaveConfirm } from '@/common/leave-confirm';
+  import { getNowTimeExpired } from '@/common/util';
   import { bus } from '@/common/bus';
   import IamDeadline from '@/components/iam-deadline/horizontal';
   import RenderPermBoundary from '@/components/render-perm-boundary';
@@ -277,26 +278,20 @@
       });
     },
     methods: {
-      handleExpiredAt () {
-        const nowTimestamp = +new Date() / 1000;
-        const tempArr = String(nowTimestamp).split('');
-        const dotIndex = tempArr.findIndex((item) => item === '.');
-        const nowSecond = parseInt(tempArr.splice(0, dotIndex).join(''), 10);
-        const expiredAt = this.expiredAtUse + nowSecond;
+      async handleExpiredAt () {
+        const nowTimestamp = await getNowTimeExpired();
+        const expiredAt = this.expiredAtUse + nowTimestamp;
         return expiredAt;
       },
 
-      handleDeadlineChange (payload) {
+      async handleDeadlineChange (payload) {
         if (payload) {
           this.isShowExpiredError = false;
         }
         this.expiredAt = payload;
         if (payload && payload !== PERMANENT_TIMESTAMP) {
-          const nowTimestamp = +new Date() / 1000;
-          const tempArr = String(nowTimestamp).split('');
-          const dotIndex = tempArr.findIndex((item) => item === '.');
-          const nowSecond = parseInt(tempArr.splice(0, dotIndex).join(''), 10);
-          this.expiredAtUse = payload + nowSecond;
+          const nowTimestamp = await getNowTimeExpired();
+          this.expiredAtUse = payload + nowTimestamp;
           this.submitFormData = Object.assign(this.submitFormData, { expiredAtUse: payload });
           return;
         }
@@ -342,7 +337,7 @@
           renewal: async () => {
             try {
               if (this.expiredAtUse === 15552000) {
-                this.expiredAtUse = this.handleExpiredAt();
+                this.expiredAtUse = await this.handleExpiredAt();
               }
               if (!this.expiredAtUse) {
                 this.isShowExpiredError = true;
@@ -356,8 +351,8 @@
                     id: item.id,
                     type: item.type,
                     group_id: subItem.id,
-                    expired_at: this.user.timestamp > subItem.expired_at
-                      ? this.expiredAtUse : this.expiredAtUse + (subItem.expired_at - this.user.timestamp)
+                    expired_at: getNowTimeExpired() > subItem.expired_at
+                      ? this.expiredAtUse : this.expiredAtUse + (subItem.expired_at - getNowTimeExpired())
                   };
                 });
               });

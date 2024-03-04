@@ -79,7 +79,7 @@
 <script>
   import { mapGetters } from 'vuex';
   import { bus } from '@/common/bus';
-  import { formatCodeData } from '@/common/util';
+  import { formatCodeData, getNowTimeExpired } from '@/common/util';
   import renderExpireDisplay from '@/components/render-renewal-dialog/display';
   export default {
     components: {
@@ -120,12 +120,12 @@
       ...mapGetters(['user']),
       formatHasExpired () {
         return (payload) => {
-          const diff = payload.expired_at - this.user.timestamp;
+          const diff = payload.expired_at - getNowTimeExpired();
           if (diff < 1) {
             return true;
           }
          const days = Math.round(diff / (24 * 3600));
-         return payload.expired_at < this.user.timestamp || days < 16;
+         return payload.expired_at < getNowTimeExpired() || days < 16;
         };
       }
     },

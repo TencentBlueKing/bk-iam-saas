@@ -10,6 +10,7 @@
 <script>
   import { mapGetters } from 'vuex';
   import { PERMANENT_TIMESTAMP } from '@/common/constants';
+  import { getNowTimeExpired } from '@/common/util';
   // 过期时间的天数区间
   const EXPIRED_DISTRICT = 15;
   export default {
@@ -39,39 +40,40 @@
       };
     },
     computed: {
-            ...mapGetters(['user']),
-            curRestDays () {
-                const dif = this.curTime - this.user.timestamp;
-                if (dif < 1) {
-                  return 0;
-                }
-                return Math.round(dif / (24 * 3600));
-            },
-            status () {
-                if (!this.curRestDays) {
-                    return 'yet';
-                }
-                if (this.curRestDays < EXPIRED_DISTRICT) {
-                    return 'immediately';
-                }
-                return 'normal';
-            },
-            curDisplay () {
-                if (this.status === 'yet') {
-                    return this.$t(`m.common['已过期']`);
-                }
-                return this.$t(`m.info['天数']`, { value: this.curRestDays });
-            },
-            afterRenewalDisplay () {
-                if (this.renewalTime === PERMANENT_TIMESTAMP) {
-                    return this.$t(`m.common['永久']`);
-                }
-                const days = Math.floor(this.renewalTime / (24 * 60 * 60));
-                if (this.status === 'yet') {
-                    return this.$t(`m.info['天数']`, { value: days });
-                }
-                return this.$t(`m.info['天数']`, { value: days + this.curRestDays });
-            }
+      ...mapGetters(['user']),
+      curRestDays () {
+        const dif = this.curTime - getNowTimeExpired();
+        if (dif < 1) {
+          return 0;
+        }
+        return Math.ceil(dif / (24 * 3600));
+      },
+      status () {
+          if (!this.curRestDays) {
+              return 'yet';
+          }
+          if (this.curRestDays < EXPIRED_DISTRICT) {
+              return 'immediately';
+          }
+          return 'normal';
+      },
+      curDisplay () {
+          if (this.status === 'yet') {
+              return this.$t(`m.common['已过期']`);
+          }
+          return this.$t(`m.info['天数']`, { value: this.curRestDays });
+      },
+      afterRenewalDisplay () {
+          if (this.renewalTime === PERMANENT_TIMESTAMP) {
+              return this.$t(`m.common['永久']`);
+          }
+          // const days = Math.floor(this.renewalTime / (24 * 60 * 60));
+          const days = Math.ceil(this.renewalTime / (24 * 60 * 60));
+          if (this.status === 'yet') {
+              return this.$t(`m.info['天数']`, { value: days });
+          }
+          return this.$t(`m.info['天数']`, { value: days + this.curRestDays });
+      }
     }
   };
 </script>
