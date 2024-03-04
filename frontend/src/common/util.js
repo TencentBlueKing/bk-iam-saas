@@ -709,3 +709,12 @@ export function isEmojiCharacter (str) {
     }
   }
 }
+
+// 获取当前unix时间戳
+export function getNowTimeExpired () {
+  const nowTimestamp = +new Date() / 1000;
+  const timeList = String(nowTimestamp).split('');
+  const timeIndex = timeList.findIndex((item) => item === '.');
+  const timestamp = parseInt(timeList.splice(0, timeIndex).join(''), 10);
+  return timestamp;
+}

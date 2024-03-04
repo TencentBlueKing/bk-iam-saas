@@ -25,7 +25,8 @@
           <bk-table-column
             :key="item.prop"
             :label="item.label"
-            :prop="item.prop">
+            :prop="item.prop"
+            :min-width="200">
             <template slot-scope="{ row }">
               <span
                 :ref="`name_${row.id}`"
@@ -44,9 +45,10 @@
           <bk-table-column
             :key="item.prop"
             :label="item.label"
-            :prop="item.prop">
+            :prop="item.prop"
+            :min-width="150">
             <template slot-scope="{ row }">
-              <span :title="row.created_time.replace(/T/, ' ')">
+              <span>
                 {{ row.created_time.replace(/T/, " ") }}
               </span>
             </template>
@@ -77,7 +79,8 @@
             :key="item.prop"
             :label="item.label"
             :prop="item.prop"
-            :width="'auto'">
+            :width="150"
+          >
             <template slot-scope="{ row }">
               <template>
                 <bk-popconfirm
@@ -116,7 +119,11 @@
                   <bk-button
                     theme="primary"
                     text
-                    :title="formatAdminGroup(row) ? $t(`m.perm['唯一管理员不可退出']`) : ''"
+                    v-bk-tooltips="{
+                      content: $t(`m.perm['唯一管理员不可退出']`),
+                      disabled: !formatAdminGroup(row),
+                      placements: ['right']
+                    }"
                     :disabled="formatAdminGroup(row)"
                   >
                     {{ $t(`m.userOrOrg['移出']`) }}
@@ -145,7 +152,7 @@
               <span
                 v-bk-tooltips="{
                   content: row[item.prop],
-                  disabled: !row[item.prop],
+                  disabled: !row[item.prop] || ['created_time', 'expired_at_display'].includes(item.prop),
                   placements: ['right']
                 }"
               >
