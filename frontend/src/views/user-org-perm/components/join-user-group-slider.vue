@@ -267,38 +267,22 @@
         if (this.expiredAtUse === 15552000) {
           this.expiredAtUse = this.handleExpiredAt();
         }
-        let params = {};
+        const members = [...this.userList, ...this.departList];
+        const params = {
+          expired_at: this.expiredAtUse,
+          group_ids: groupsList.map((item) => item.id),
+          members: members.map(({ id, type }) => ({ id, type }))
+        };
         let url = '';
         let msg = '';
-        const members = [...this.userList, ...this.departList];
         const typeMap = {
           add: () => {
-            url = 'userOrOrg/batchJoinOrRenewal';
+            url = 'userGroup/batchAddUserGroupMember';
             msg = this.$t(`m.info['添加用户组成功']`);
-            const batchMembers = cloneDeep(members);
-            const result = batchMembers.map((item) => {
-              return groupsList.map((subItem) => {
-                return {
-                  id: item.id,
-                  type: item.type,
-                  group_id: subItem.id,
-                  expired_at: this.expiredAtUse
-                };
-              });
-            });
-            const groupMembers = result.flat(Infinity);
-            params = {
-              group_members: groupMembers
-            };
           },
           reset: () => {
             url = 'userOrOrg/resetGroupMembers';
             msg = this.$t(`m.info['重置用户组成功']`);
-            params = {
-              expired_at: this.expiredAtUse,
-              group_ids: groupsList.map((item) => item.id),
-              members: members.map(({ id, type }) => ({ id, type }))
-            };
           }
         };
         typeMap[this.curSliderName]();
