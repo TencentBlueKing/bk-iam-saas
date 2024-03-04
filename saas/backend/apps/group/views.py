@@ -567,7 +567,7 @@ class GroupsMemberRenewViewSet(GenericViewSet):
     group_biz = GroupBiz()
 
     @swagger_auto_schema(
-        operation_description="批量用户组添加成员",
+        operation_description="批量用户组成员续期",
         request_body=BatchGroupMemberUpdateExpiredAtSLZ(label="成员"),
         responses={status.HTTP_200_OK: serializers.Serializer()},
         tags=["group"],
@@ -598,7 +598,9 @@ class GroupsMemberRenewViewSet(GenericViewSet):
                 )
 
             # 写入审计上下文
-            audit_context_setter(group=group, members=data["members"])
+            audit_context_setter(group=group, members=group_member)
+            provider = GroupMemberRenewAuditProvider(request)
+            log_api_event(request, provider)
 
         return Response({})
 
