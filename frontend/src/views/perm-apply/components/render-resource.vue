@@ -399,7 +399,6 @@
         const maxWidth = MIN_OFFSET_WIDTH + 120;
         const sliderWidth = this.getResourceSliderWidth ? this.getResourceSliderWidth() : 960;
         const offsetX = e.clientX - (document.body.clientWidth - sliderWidth);
-        console.log(offsetX, minWidth, maxWidth, '计算偏移量');
         if (offsetX < minWidth || offsetX >= maxWidth) {
           return;
         }
@@ -712,7 +711,7 @@
                 const tempPathItem = _.cloneDeep(item.paths[pathIndex]);
                 if (tempPathItem.map(sub => sub.id).filter(v => curIdChain.includes(v)).length > 0) {
                   obj.childChain = tempPathItem.map(chain => chain.type);
-                  obj.childChainId = tempPathItem.map(chain => chain.id);
+                  obj.childChainId = tempPathItem.map(chain => `${chain.id}&${chain.name}`);
                   obj.id = tempPathItem[tempPathItem.length - 1].id;
                   obj.pathIndex = pathIndex;
                   allChain.push(_.cloneDeep(obj));
@@ -721,7 +720,7 @@
               if (pathItem.length > 1) {
                 if (pathItem.map(sub => sub.id).filter(v => curIdChain.includes(v)).length > 0) {
                   obj.childChain = pathItem.map(chain => chain.type);
-                  obj.childChainId = pathItem.map(chain => chain.id);
+                  obj.childChainId = pathItem.map(chain => `${chain.id}&${chain.name}`);
                   obj.id = pathItem[pathItem.length - 1].id;
                   obj.pathIndex = pathIndex;
                   allChain.push(_.cloneDeep(obj));
@@ -732,7 +731,7 @@
               if (templatePathItem.length > 1) {
                 if (templatePathItem.map(sub => sub.id).filter(v => curIdChain.includes(v)).length > 0) {
                   obj.childChain = templatePathItem.map(chain => chain.type);
-                  obj.childChainId = templatePathItem.map(chain => chain.id);
+                  obj.childChainId = templatePathItem.map(chain => `${chain.id}&${chain.name}`);
                   obj.id = templatePathItem[templatePathItem.length - 1].id;
                   obj.pathIndex = pathIndex;
                   allChain.push(_.cloneDeep(obj));
@@ -774,14 +773,15 @@
             // 禁用的不做移除
             if (curPathIndex > -1) {
               if (!curPath[curPathIndex].every(v => v.disabled) && !getFlag()) {
+                console.log(curPath, curPathIndex, '索引');
                 curPath.splice(curPathIndex, 1);
               }
             }
           }
           // if (item.childChain.join('').includes(curChain.join(''))) {
-          //     const curPath = currentInstance[item.instanceIndex].path
-          //     const curPathIndex = curPath.findIndex(sub => item.id === sub[sub.length - 1].id)
-          //     curPath.splice(curPathIndex, 1)
+          //   const curPath = currentInstance[item.instanceIndex].path;
+          //   const curPathIndex = curPath.findIndex(sub => item.id === sub[sub.length - 1].id);
+          //   curPath.splice(curPathIndex, 1);
           // }
         });
       },

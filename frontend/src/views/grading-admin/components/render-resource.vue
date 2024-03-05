@@ -709,6 +709,7 @@
                 if (tempPathItem.map(sub => sub.id).filter(v => curIdChain.includes(v)).length > 0) {
                   obj.childChain = tempPathItem.map(chain => chain.type);
                   obj.childChainId = tempPathItem.map(chain => chain.id);
+                  obj.childChainId = tempPathItem.map(chain => `${chain.id}&${chain.name}`);
                   obj.id = tempPathItem[tempPathItem.length - 1].id;
                   obj.pathIndex = pathIndex;
                   allChain.push(_.cloneDeep(obj));
@@ -718,6 +719,7 @@
                 if (pathItem.map(sub => sub.id).filter(v => curIdChain.includes(v)).length > 0) {
                   obj.childChain = pathItem.map(chain => chain.type);
                   obj.childChainId = pathItem.map(chain => chain.id);
+                  obj.childChainId = pathItem.map(chain => `${chain.id}&${chain.name}`);
                   obj.id = pathItem[pathItem.length - 1].id;
                   obj.pathIndex = pathIndex;
                   allChain.push(_.cloneDeep(obj));
@@ -729,6 +731,7 @@
                 if (templatePathItem.map(sub => sub.id).filter(v => curIdChain.includes(v)).length > 0) {
                   obj.childChain = templatePathItem.map(chain => chain.type);
                   obj.childChainId = templatePathItem.map(chain => chain.id);
+                  obj.childChainId = templatePathItem.map(chain => `${chain.id}&${chain.name}`);
                   obj.id = templatePathItem[templatePathItem.length - 1].id;
                   obj.pathIndex = pathIndex;
                   allChain.push(_.cloneDeep(obj));

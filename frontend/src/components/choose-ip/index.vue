@@ -819,11 +819,11 @@
         try {
           const { code, data } = await this.$store.dispatch('permApply/getResources', params);
           this.emptyData = formatCodeData(code, this.emptyData, data.results.length === 0);
+          this.resourceTotal = data.count || 0;
           if (data.results.length < 1) {
             this.searchDisplayText = RESULT_TIP[code];
             return;
           }
-          this.resourceTotal = data.count || 0;
           const totalPage = Math.ceil(data.count / this.limit);
           const isAsync = this.curChain.length > 1;
           this.treeData = data.results.map(item => {
@@ -988,7 +988,6 @@
             paths: p
           });
         }
-        // console.log(value, node, params, resourceLen, 555);
         this.$emit('on-tree-select', value, node, params, resourceLen);
         // 针对资源权限特殊处理
         if (this.resourceValue) {

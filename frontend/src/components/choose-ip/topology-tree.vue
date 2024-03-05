@@ -147,7 +147,7 @@
                         :class="[
                           'load-item',
                           { 'loading-more': item.loadingMore },
-                          { normal: !item.loadingMore && !isExistNodeLoadMore },
+                          { 'normal': !item.loadingMore && !isExistNodeLoadMore },
                           { 'exist-load-more': isExistNodeLoadMore }
                         ]"
                         @click.stop="loadMore(item, index)"

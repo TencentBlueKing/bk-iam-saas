@@ -465,14 +465,11 @@
 
       handleSearch (payload) {
         this.curKeyword = payload;
+        this.isFilter = !(this.isFilter && !payload);
         this.emptyData.tipType = 'search';
-        if (this.isFilter && payload === '') {
-          this.isFilter = false;
-        } else {
-          this.isFilter = true;
-        }
+        this.emptyTreeData.tipType = 'search';
+        this.searchDisplayText = '';
         if (this.isExistLimitValue) {
-          this.emptyData.tipType = 'search';
           this.handleFrontendSearch();
           return;
         }
@@ -614,13 +611,10 @@
       async handleTreeSearch (payload) {
         window.changeAlert = true;
         const { index, node, value } = payload;
-        this.curSearchObj = Object.assign(
-          {},
-          {
-            value,
-            parentId: node.parentId
-          }
-        );
+        this.curSearchObj = Object.assign({}, {
+          value,
+          parentId: node.parentId
+        });
         if (node.isFilter && value === '') {
           node.isFilter = false;
         } else {
@@ -920,7 +914,6 @@
             display_name: message
           };
           const searchEmptyData = new Node(searchEmptyItem, node.level, false, 'search-empty');
-          this.emptyData = formatCodeData(e.code, this.emptyData);
           this.emptyTreeData = formatCodeData(e.code, this.emptyTreeData);
           this.treeData.splice(index + 1, 0, searchEmptyData);
         } finally {
@@ -1066,11 +1059,13 @@
             data.results = [...this.curSelectionCondition];
             data.count = data.results.length;
           }
+          this.resourceTotal = data.count || 0;
+          this.emptyData = formatCodeData(code, this.emptyData, data.results.length === 0);
+          this.emptyTreeData = formatCodeData(code, this.emptyTreeData, data.results.length === 0);
           if (data.results.length < 1) {
             this.searchDisplayText = RESULT_TIP[code];
             return;
           }
-          this.resourceTotal = data.count || 0;
           const totalPage = Math.ceil(data.count / this.limit);
           const isAsync = this.curChain.length > 1;
           this.treeData = data.results.map((item) => {
@@ -1121,11 +1116,11 @@
             };
             this.treeData.push(new Node(loadItem, 0, isAsync, 'load'));
           }
-          this.emptyData = formatCodeData(code, this.emptyData, this.treeData.length === 0);
         } catch (e) {
           console.error(e);
           const { code } = e;
           this.emptyData = formatCodeData(code, this.emptyData);
+          this.emptyTreeData = formatCodeData(code, this.emptyTreeData);
           this.treeData = [];
           this.messageAdvancedError(e);
         } finally {
@@ -1637,7 +1632,6 @@
           console.error(e);
           const { code } = e;
           this.removeAsyncNode();
-          this.emptyData = formatCodeData(code, this.emptyData);
           this.emptyTreeData = formatCodeData(code, this.emptyTreeData);
           this.messageAdvancedError(e);
         }
