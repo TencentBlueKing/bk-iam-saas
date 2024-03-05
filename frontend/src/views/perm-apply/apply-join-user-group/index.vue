@@ -426,6 +426,11 @@
 
   export default {
     name: '',
+    provide: function () {
+      return {
+        getResourceSliderWidth: () => this.resourceSliderWidth
+      };
+    },
     components: {
       // IamGuide,
       IamDeadline,

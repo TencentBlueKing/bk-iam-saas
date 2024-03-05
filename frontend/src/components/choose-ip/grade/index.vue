@@ -303,6 +303,11 @@
       selectionMode: {
         type: String
       },
+      // 处理有自定义属性条件场景
+      hasAttribute: {
+        type: Boolean,
+        default: false
+      },
       // 处理有bar的场景
       hasStatusBar: {
         type: Boolean,

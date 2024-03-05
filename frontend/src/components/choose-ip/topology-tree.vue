@@ -172,9 +172,9 @@
                   <template v-else-if="item.type === 'search-empty' && curChain[curChain.length - 1] === item.level">
                     <div class="search-empty-wrapper">
                       <ExceptionEmpty
-                        :type="item.name === $t(`m.common['搜索结果为空']`) ? 'search-empty' : 500"
-                        :tip-type="item.name === $t(`m.common['搜索结果为空']`) ? 'search' : 'refresh'"
-                        :empty-text="item.name === $t(`m.common['搜索结果为空']`) ? item.name : '数据不存在'"
+                        :type="formatTreeEmpty(emptyTreeData, 'tree', 'type')"
+                        :tip-type="formatTreeEmpty(emptyTreeData, 'tree', 'tipType')"
+                        :empty-text="formatTreeEmpty(emptyTreeData, 'tree', 'emptyText')"
                         @on-clear="handleEmptyClear('tree', item, index)"
                         @on-refresh="handleEmptyRefresh('tree', item, index)"
                       />
@@ -540,10 +540,11 @@
       },
       formatPlaceHolder () {
         let title = '';
-        if (this.curChain.length && this.selectNodeData) {
-            title = this.selectNodeData.level + 1 > this.curChain.length - 1
-            ? this.curChain[this.curChain.length - 1].name
-            : this.curChain[this.selectNodeData.level + 1].name;
+        if (this.curChain.length) {
+          title = this.curChain[this.curChain.length - 1].name;
+          if (this.selectNodeData.hasOwnProperty('level') && this.selectNodeData.level + 1 <= this.curChain.length - 1 && !this.isOnlyLevel) {
+            title = this.curChain[this.selectNodeData.level + 1].name;
+          }
         }
         return (payload) => {
           const typeMap = {
@@ -836,7 +837,8 @@
                 this.tablePageData = [...this.curTableData];
                 const list = [...(curNode.children || [])].filter((item) => item.type === 'node');
                 curNode.current = this.subPagination.current;
-                this.renderTopologyData = list.length ? this.getDataByPage(curNode.current, list) : [];
+                this.renderTopologyData = list.length && !this.isTreeEmpty
+                  ? this.getDataByPage(curNode.current, list) : [];
                 // 这里要兼容判断父级全选和直接点击子集表格全选
                 const childSelectedNodes = this.currentSelectedNode.map((item) => `${item.name}&${item.id}`);
                 this.checkedNodeIdList = value
@@ -1098,6 +1100,7 @@
         // 如果没有node，代表是最外层的搜索
         this.curSearchMode = 'tree';
         this.treeKeyWord = value;
+        this.emptyTreeData.tipType = value ? 'search' : '';
         if (node) {
           this.$emit('on-tree-search', { value, node, index });
         } else {
@@ -1167,6 +1170,11 @@
               this.tableKeyWord = '';
               this.$refs.topologyTableInputRef.value = '';
               this.emptyTableData = Object.assign({}, formatCodeData(0, { tipType: '' }));
+              if (this.isTreeEmpty) {
+                this.treeKeyWord = '';
+                this.$refs.topologyTreeInputRef.value = '';
+                return;
+              }
               // 如果父级搜索了没数据，此时搜索表格需要提供当前父级下的children
               if (!this.allTreeData.length && this.curTreeTableData.children && this.curTreeTableData.children.length) {
                 this.$emit('on-table-search', {
