@@ -539,15 +539,21 @@
         };
       },
       formatPlaceHolder () {
+        let title = '';
+        if (this.curChain.length && this.selectNodeData) {
+            title = this.selectNodeData.level + 1 > this.curChain.length - 1
+            ? this.curChain[this.curChain.length - 1].name
+            : this.curChain[this.selectNodeData.level + 1].name;
+        }
         return (payload) => {
           const typeMap = {
             input: () => {
               return this.$t(`m.info['搜索动态key值']`, {
-                value: this.curChain.length ? this.curChain[this.curChain.length - 1].name : ''
+                value: title
               });
             },
             table: () => {
-              return this.curChain.length ? this.curChain[this.curChain.length - 1].name : '';
+              return title;
             }
           };
           return typeMap[payload]();
