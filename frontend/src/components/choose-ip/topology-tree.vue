@@ -663,8 +663,13 @@
         return (payload) => {
           const { async, expanded, level } = payload;
           const hasData = this.allTreeData.find((v) => v.level === level);
+          if (payload.isExpandNoData) {
+            return {
+                'paddingLeft': `29px`
+              };
+          }
           if (!async && !expanded) {
-            if (hasData && hasData.async && level < 3) {
+            if (hasData && ((hasData.async && level < 3) || payload.isExpandNoData)) {
               return {
                 'paddingLeft': `29px`
               };

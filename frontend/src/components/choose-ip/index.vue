@@ -1105,6 +1105,12 @@
             this.removeAsyncNode();
             node.expanded = false;
             node.async = false;
+            const curNode = this.treeData.find((item) => `${item.id}&${item.name}` === `${node.id}&${node.name}`);
+            if (curNode) {
+              curNode.expanded = false;
+              curNode.async = false;
+              this.$set(curNode, 'isExpandNoData', true);
+            }
             return;
           }
           const curLevel = node.level + 1;

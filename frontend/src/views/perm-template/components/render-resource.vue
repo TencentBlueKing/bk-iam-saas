@@ -920,7 +920,6 @@
               if (pathItem.length > 1) {
                 if (pathItem.map(sub => sub.id).filter(v => curIdChain.includes(v)).length > 0) {
                   obj.childChain = pathItem.map(chain => chain.type);
-                  obj.childChainId = pathItem.map(chain => chain.id);
                   obj.childChainId = pathItem.map(chain => `${chain.id}&${chain.name}`);
                   obj.id = pathItem[pathItem.length - 1].id;
                   obj.pathIndex = pathIndex;

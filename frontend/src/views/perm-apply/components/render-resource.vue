@@ -773,7 +773,6 @@
             // 禁用的不做移除
             if (curPathIndex > -1) {
               if (!curPath[curPathIndex].every(v => v.disabled) && !getFlag()) {
-                console.log(curPath, curPathIndex, '索引');
                 curPath.splice(curPathIndex, 1);
               }
             }
