@@ -1510,15 +1510,21 @@
           const { code, data } = await this.$store.dispatch('permApply/getResources', params);
           this.emptyTreeData = formatCodeData(code, this.emptyTreeData, data.results.length === 0);
           this.subResourceTotal = data.count || 0;
+          const curNode = this.treeData.find((item) => `${item.id}&${item.name}` === `${node.id}&${node.name}`);
+          if (curNode) {
+            this.$set(curNode, 'childCount', this.subResourceTotal);
+          }
           if (data.results.length < 1) {
             this.removeAsyncNode();
             node.expanded = false;
             node.async = false;
             const curNode = this.treeData.find((item) => `${item.id}&${item.name}` === `${node.id}&${node.name}`);
             if (curNode) {
+              if (curNode.async) {
+                this.$set(curNode, 'isExpandNoData', true);
+              }
               curNode.expanded = false;
               curNode.async = false;
-              this.$set(curNode, 'isExpandNoData', true);
             }
             return;
           }
@@ -1656,13 +1662,12 @@
         if (index > -1) this.treeData.splice(index, 1);
       },
 
-      async handleLoadMore (node, index) {
+      async handleLoadMore (node, index, isTable = false) {
         window.changeAlert = true;
         node.current = node.current + 1;
         node.loadingMore = true;
-
         const chainLen = this.curChain.length;
-        let keyword = this.curKeyword;
+        let keyword = !isTable ? this.curKeyword : '';
         if (Object.keys(this.curSearchObj).length) {
           if (node.parentId === this.curSearchObj.parentId) {
             keyword = this.curSearchObj.value;
@@ -1943,7 +1948,7 @@
 
       // 多层拓扑分页
       async handleTablePageChange (node, index) {
-        this.handleLoadMore(node, index);
+        this.handleLoadMore(node, index, true);
       }
     }
   };

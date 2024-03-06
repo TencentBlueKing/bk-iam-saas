@@ -625,6 +625,7 @@
       },
       formatSelectedCount () {
         const hasNode = {};
+        let addSelectList = [];
         let list = [...this.renderTopologyData];
         if (
           this.curSelectTreeNode.children
@@ -638,7 +639,17 @@
           hasNode[`${next.name}&${next.id}`] ? '' : hasNode[`${next.name}&${next.id}`] = true && curr.push(next);
           return curr;
         }, []);
-        const curTableData = tableData.filter((item) => item.type === 'node' && (item.checked || (item.disabled && item.parentChain.length)));
+        // 点击左侧tree刷新的时候根据已新增的数据回显已选tip
+        if (!this.isOnlyLevel && this.curSelectedValues.length) {
+           addSelectList = this.curSelectedValues
+            .filter((item) => !item.disabled)
+            .map((v) => v.ids).flat(this.curChain.length);
+        }
+        const curTableData = tableData.filter((item) =>
+        item.type === 'node' && (item.checked
+         || (item.disabled && item.parentChain.length)
+         || (addSelectList.includes(`${item.id}&${item.level > this.curChain.length - 1
+        ? this.curChain[this.curChain.length - 1].id : this.curChain[item.level].id}`))));
         // 如果有多层，且当层选中层状态为checked时，代表子集checked状态为父级勾选
         if (!this.isOnlyLevel && this.curSelectTreeNode.checked) {
          return [];
@@ -655,21 +666,26 @@
         return result;
       },
       formatLoadMore () {
-        return (payload) => {
-          return payload.type === 'load';
+        return ({ name, type, children, childCount }) => {
+          // console.log(name, type, children.length, childCount);
+          if (childCount) {
+            return children.length < childCount;
+          }
+          return type === 'load';
         };
       },
       formatNoIcon () {
         return (payload) => {
           const { async, expanded, level } = payload;
           const hasData = this.allTreeData.find((v) => v.level === level);
+          // isExpandNoData处理展开后无数据后隐藏展开icon的场景
           if (payload.isExpandNoData) {
             return {
                 'paddingLeft': `29px`
               };
           }
           if (!async && !expanded) {
-            if (hasData && ((hasData.async && level < 3) || payload.isExpandNoData)) {
+            if (hasData && hasData.async && level < 3) {
               return {
                 'paddingLeft': `29px`
               };
@@ -1018,8 +1034,10 @@
             .map((v) => v.ids).flat(this.curChain.length);
           if (defaultSelectList.length) {
             let childrenIdList = [];
-            const result = !(defaultSelectList.includes(`${payload.id}&${this.curChain[payload.level] ? this.curChain[payload.level].id : this.curChain[this.curChain.length - 1]}`)
-              || defaultSelectList.includes(`${this.selectNodeData.id}&${this.curChain[payload.level - 1] ? this.curChain[payload.level - 1].id : this.curChain[this.curChain.length - 1].id}`));
+            const curChainId = payload.level > this.curChain.length - 1
+              ? this.curChain[this.curChain.length - 1].id : this.curChain[payload.level].id;
+            const result = !(defaultSelectList.includes(`${payload.id}&${curChainId}`)
+              || defaultSelectList.includes(`${this.selectNodeData.id}&${curChainId}`));
             // 处理多层资源权限搜索只支持单选
             if (this.resourceValue
               || (this.curSelectTreeNode.children
@@ -1045,8 +1063,8 @@
         // 处理有的资源全选只能勾选一项
         if (this.resourceValue && this.curSelectedValues.length) {
           singleCheckedData = this.curSelectedValues.map((v) => v.ids).flat(this.curChain.length);
-          const curLevelNodeId = this.curChain[payload.level]
-            ? this.curChain[payload.level].id : this.curChain[this.curChain.length - 1].id;
+          const curLevelNodeId = payload.level > this.curChain.length - 1
+            ? this.curChain[this.curChain.length - 1].id : this.curChain[payload.level].id;
           return singleCheckedData.includes(`${payload.id}&${curLevelNodeId}`);
         }
         return !selectNodeList.includes(`${payload.name}&${payload.id}`);
@@ -1488,7 +1506,7 @@
         const { id, name, nodeId } = this.selectNodeData;
         const index = this.allTreeData.findIndex((item) =>
           ((item.parentChain && item.parentChain.map((v) => `${v.id}&${v.name}`).includes(`${id}&${name}`)) || item.parentId === nodeId)
-          && item.type === 'load'
+          // && item.type === 'load'
         );
         if (index > -1) {
           this.$set(this.allTreeData[index], 'current', current - 1);
