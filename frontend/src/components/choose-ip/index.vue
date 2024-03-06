@@ -1101,9 +1101,11 @@
           const { code, data } = await this.$store.dispatch('permApply/getResources', params);
           this.emptyTreeData = formatCodeData(code, this.emptyData, data.results.length === 0);
           this.subResourceTotal = data.count || 0;
+          const totalPage = Math.ceil(this.subResourceTotal / this.limit);
           const curNode = this.treeData.find((item) => `${item.id}&${item.name}` === `${node.id}&${node.name}`);
           if (curNode) {
             this.$set(curNode, 'childCount', this.subResourceTotal);
+            this.$set(curNode, 'childPage', totalPage);
           }
           if (data.results.length < 1) {
             this.removeAsyncNode();
@@ -1120,7 +1122,6 @@
             return;
           }
           const curLevel = node.level + 1;
-          const totalPage = Math.ceil(data.count / this.limit);
           let isAsync = this.curChain.length > (curLevel + 1);
           const parentChain = _.cloneDeep(node.parentChain);
           const curLevelNode = this.curChain[node.level] || this.curChain[chainLen - 1];

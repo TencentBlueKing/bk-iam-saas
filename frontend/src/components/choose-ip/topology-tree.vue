@@ -639,20 +639,31 @@
           hasNode[`${next.name}&${next.id}`] ? '' : hasNode[`${next.name}&${next.id}`] = true && curr.push(next);
           return curr;
         }, []);
-        // 点击左侧tree刷新的时候根据已新增的数据回显已选tip
+        // 点击左侧tree刷新的时候根据已新增的数据回显当前页已选tip
         if (!this.isOnlyLevel && this.curSelectedValues.length) {
-           addSelectList = this.curSelectedValues
+           const selectList = this.curSelectedValues
             .filter((item) => !item.disabled)
             .map((v) => v.ids).flat(this.curChain.length);
+            const tableData = this.renderTopologyData.filter((v) => selectList.includes(`${v.id}&${v.level > this.curChain.length - 1
+                ? this.curChain[this.curChain.length - 1].id : this.curChain[v.level].id}`));
+              if (tableData.length) {
+                addSelectList = tableData.map((v) => `${v.id}&${v.level > this.curChain.length - 1
+                ? this.curChain[this.curChain.length - 1].id
+                  : this.curChain[v.level].id}`);
+              }
         }
-        const curTableData = tableData.filter((item) =>
-        item.type === 'node' && (item.checked
-         || (item.disabled && item.parentChain.length)
-         || (addSelectList.includes(`${item.id}&${item.level > this.curChain.length - 1
-        ? this.curChain[this.curChain.length - 1].id : this.curChain[item.level].id}`))));
+        const curTableData = tableData.filter((item) => item.type === 'node' && ((item.checked
+            || (item.disabled && item.parentChain.length))
+            || (
+              addSelectList.includes(`${item.id}&${item.level > this.curChain.length - 1
+                ? this.curChain[this.curChain.length - 1].id
+                  : this.curChain[item.level].id}`
+                )
+            )
+        ));
         // 如果有多层，且当层选中层状态为checked时，代表子集checked状态为父级勾选
         if (!this.isOnlyLevel && this.curSelectTreeNode.checked) {
-         return [];
+          return [];
         }
         return curTableData;
       },
@@ -666,10 +677,24 @@
         return result;
       },
       formatLoadMore () {
-        return ({ name, type, children, childCount }) => {
-          // console.log(name, type, children.length, childCount);
-          if (childCount) {
-            return children.length < childCount;
+        return (payload) => {
+          const { type, childPage, children } = payload;
+          if (childPage) {
+            const loadData = children.find((item) => item.type === 'load');
+            if (loadData) {
+              const curData = this.allTreeData.find((item) =>
+                (loadData.parentChain && loadData.parentChain.map((v) => `${v.id}&${v.name}`).includes(`${item.id}&${item.name}`))
+                || loadData.parentId === item.nodeId
+              );
+              if (curData && loadData.totalPage <= curData.current) {
+                // 处理如果表格分页是最后一个，左边查看更多按钮需要隐藏
+                this.allTreeData.forEach((item) => {
+                if (item.type === 'load' && JSON.stringify(loadData.parentChain) === JSON.stringify(item.parentChain)) {
+                  item.visiable = false;
+                }
+               });
+              }
+            }
           }
           return type === 'load';
         };

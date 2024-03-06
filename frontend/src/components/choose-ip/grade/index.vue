@@ -1510,9 +1510,11 @@
           const { code, data } = await this.$store.dispatch('permApply/getResources', params);
           this.emptyTreeData = formatCodeData(code, this.emptyTreeData, data.results.length === 0);
           this.subResourceTotal = data.count || 0;
+          const totalPage = Math.ceil(this.subResourceTotal / this.limit);
           const curNode = this.treeData.find((item) => `${item.id}&${item.name}` === `${node.id}&${node.name}`);
           if (curNode) {
             this.$set(curNode, 'childCount', this.subResourceTotal);
+            this.$set(curNode, 'childPage', totalPage);
           }
           if (data.results.length < 1) {
             this.removeAsyncNode();
@@ -1528,7 +1530,6 @@
             }
             return;
           }
-          const totalPage = Math.ceil(data.count / this.limit);
           const childNodes = data.results.map((item) => {
             let checked = false;
             let disabled = false;
