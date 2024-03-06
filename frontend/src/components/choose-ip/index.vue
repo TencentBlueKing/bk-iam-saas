@@ -456,10 +456,10 @@
       handleTableSearch (payload) {
         const { value } = payload;
         this.curTableKeyWord = value;
-        this.handleTreeSearch(payload);
+        this.handleTreeSearch(payload, true);
       },
 
-      async handleTreeSearch (payload) {
+      async handleTreeSearch (payload, isTable = false) {
         window.changeAlert = true;
         const { index, node, value } = payload;
         this.curSearchObj = Object.assign({}, {
@@ -518,15 +518,11 @@
           this.emptyTreeData = formatCodeData(code, this.emptyTreeData, data.results.length === 0);
           this.subResourceTotal = data.count || 0;
           this.curTableData = data.results || [];
-          const treeData = this.treeData;
+          const treeData = _.cloneDeep(this.treeData);
           const parentNode = treeData.find(item => item.nodeId === node.parentId);
           if (parentNode || (parentNode && !parentNode.children)) {
             parentNode.children = [];
           }
-          this.treeData = treeData.filter(item => {
-            const flag = item.type === 'search' && item.parentId === node.parentId;
-            return flag || !item.parentChain.map(v => v.id).includes(node.parentSyncId);
-          });
           if (data.results.length < 1) {
             const searchEmptyItem = {
               ...SEARCH_EMPTY_ITEM,
@@ -540,6 +536,10 @@
             this.treeData.splice((index + 1), 0, searchEmptyData);
             return;
           }
+          this.treeData = treeData.filter(item => {
+            const flag = item.type === 'search' && item.parentId === node.parentId;
+            return flag || !item.parentChain.map(v => v.id).includes(node.parentSyncId);
+          });
           const totalPage = Math.ceil(data.count / this.limit);
           let isAsync = this.curChain.length > (node.level + 1);
           const loadNodes = data.results.map(item => {
@@ -713,7 +713,10 @@
             type = childType;
             curIds.push(`${id}&${type}`);
           } else {
-            type = this.curChain[item.level].id;
+            const curChainId = item.level > this.curChain.length - 1
+              ? this.curChain[this.curChain.length - 1].id
+              : this.curChain[item.level].id;
+            type = curChainId;
             curIds.push(`${id}&${type}`);
           }
 
@@ -770,7 +773,10 @@
             type = childType;
             curIds.push(`${id}&${type}`);
           } else {
-            type = this.curChain[item.level].id;
+            const curChainId = item.level > this.curChain.length - 1
+              ? this.curChain[this.curChain.length - 1].id
+              : this.curChain[item.level].id;
+            type = curChainId;
             curIds.push(`${id}&${type}`);
           }
           const chainCheckedFlag = curIds.join('#') === payload;

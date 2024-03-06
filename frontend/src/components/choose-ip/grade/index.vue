@@ -665,12 +665,6 @@
             (item) => item.name.toLowerCase().indexOf(value.trim().toLowerCase()) !== -1
           );
           const isAsync = this.curChain.length > node.level + 1;
-
-          this.treeData = this.treeData.filter((item) => {
-            const flag = item.type === 'search' && item.parentId === node.parentId;
-            return flag || !item.parentChain.map((v) => v.id).includes(node.parentSyncId);
-          });
-
           if (childrenNodes.length < 1) {
             const searchEmptyItem = {
             ...SEARCH_EMPTY_ITEM,
@@ -684,7 +678,10 @@
             this.treeData.splice(index + 1, 0, searchEmptyData);
             return;
           }
-
+          this.treeData = this.treeData.filter((item) => {
+            const flag = item.type === 'search' && item.parentId === node.parentId;
+            return flag || !item.parentChain.map((v) => v.id).includes(node.parentSyncId);
+          });
           const loadNodes = childrenNodes.map((item) => {
             let tempItem = _.cloneDeep(item);
             let checked = false;
@@ -756,7 +753,6 @@
             const isAsyncFlag = isAsync || item.child_type !== '';
             return new Node(tempItem, node.level, isAsyncFlag);
           });
-
           this.treeData.splice(index + 1, 0, ...loadNodes);
           return;
         }
@@ -772,34 +768,31 @@
         this.treeData.splice(index + 1, 0, searchLoadingData);
         try {
           const { code, data } = await this.$store.dispatch('permApply/getResources', params);
-          this.treeData = this.treeData.filter((item) => {
-            const flag = item.type === 'search' && item.parentId === node.parentId;
-            return flag || !item.parentChain.map((v) => v.id).includes(node.parentSyncId);
-          });
           this.emptyTreeData.tipType = 'search';
           this.emptyTreeData = formatCodeData(code, this.emptyTreeData, data.results.length === 0);
           this.subResourceTotal = data.count || 0;
           this.curTableData = data.results || [];
           if (data.results.length < 1) {
             const searchEmptyItem = {
-            ...SEARCH_EMPTY_ITEM,
-            parentId: node.parentId,
-            parentSyncId: node.id,
-            parentChain: _.cloneDeep(node.parentChain),
-            level: node.level,
-            display_name: RESULT_TIP[code]
+              ...SEARCH_EMPTY_ITEM,
+              parentId: node.parentId,
+              parentSyncId: node.id,
+              parentChain: _.cloneDeep(node.parentChain),
+              level: node.level,
+              display_name: RESULT_TIP[code]
             };
             const searchEmptyData = new Node(searchEmptyItem, node.level, false, 'search-empty');
             this.treeData.splice(index + 1, 0, searchEmptyData);
             return;
           }
-
+          this.treeData = this.treeData.filter((item) => {
+            const flag = item.type === 'search' && item.parentId === node.parentId;
+            return flag || !item.parentChain.map((v) => v.id).includes(node.parentSyncId);
+          });
           const totalPage = Math.ceil(data.count / this.limit);
-
           let isAsync = this.curChain.length > node.level + 1;
           const loadNodes = data.results.map((item) => {
             let tempItem = _.cloneDeep(item);
-
             let checked = false;
             let disabled = false;
             let isRemote = false;
@@ -965,7 +958,10 @@
             type = childType;
             curIds.push(`${id}&${type}`);
           } else {
-            type = this.curChain[item.level].id;
+            const curChainId = item.level > this.curChain.length - 1
+              ? this.curChain[this.curChain.length - 1].id
+              : this.curChain[item.level].id;
+            type = curChainId;
             curIds.push(`${id}&${type}`);
           }
 
@@ -1006,7 +1002,10 @@
             type = childType;
             curIds.push(`${id}&${type}`);
           } else {
-            type = this.curChain[item.level].id;
+            const curChainId = item.level > this.curChain.length - 1
+              ? this.curChain[this.curChain.length - 1].id
+              : this.curChain[item.level].id;
+            type = curChainId;
             curIds.push(`${id}&${type}`);
           }
           const chainCheckedFlag = curIds.join('#') === payload;

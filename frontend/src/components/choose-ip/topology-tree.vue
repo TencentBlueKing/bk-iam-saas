@@ -1038,12 +1038,14 @@
         const defaultSelectList = this.curSelectedValues.map((v) => v.ids).flat(this.curChain.length);
         this.$nextTick(() => {
           this.renderTopologyData.forEach((item) => {
+            const curChainId = item.level > this.curChain.length - 1
+              ? this.curChain[this.curChain.length - 1].id : this.curChain[item.level].id;
             this.$refs.topologyTableRef
               && this.$refs.topologyTableRef.toggleRowSelection(
                 item,
                 this.curTreeTableChecked.includes(`${this.selectNodeData.nodeId}&${item.id}`)
                   || this.curTreeSelectedNode.map((item) => `${item.name}&${item.id}`).includes(`${item.name}&${item.id}`)
-                  || defaultSelectList.includes(`${item.id}&${this.curChain[item.level].id}`)
+                  || defaultSelectList.includes(`${item.id}&${curChainId}`)
               );
           });
         });
@@ -1386,7 +1388,13 @@
         this.tableLoading = true;
         this.renderTopologyData = [];
         if (node.id !== this.selectNodeData.id) {
-          this.handleEmptyClear('table', node, index);
+          this.emptyTableData.tipType = '';
+          this.tableKeyWord = '';
+          if (this.$refs.topologyTableInputRef) {
+            this.$refs.topologyTableInputRef.value = '';
+          }
+          this.emptyTableData = Object.assign({}, formatCodeData(0, { tipType: '' }));
+          // this.handleEmptyClear('table', node, index);
         }
         if (Object.keys(node).length > 0) {
           node.expanded = true;
