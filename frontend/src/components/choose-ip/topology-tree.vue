@@ -641,18 +641,17 @@
         }, []);
         // 点击左侧tree刷新的时候根据已新增的数据回显当前页已选tip
         if (!this.isOnlyLevel && this.curSelectedValues.length) {
-           const selectList = this.curSelectedValues
-            .filter((item) => !item.disabled)
-            .map((v) => v.ids).flat(this.curChain.length);
-            const tableData = this.renderTopologyData.filter((v) => selectList.includes(`${v.id}&${v.level > this.curChain.length - 1
-                ? this.curChain[this.curChain.length - 1].id : this.curChain[v.level].id}`));
-              if (tableData.length) {
-                addSelectList = tableData.map((v) => `${v.id}&${v.level > this.curChain.length - 1
-                ? this.curChain[this.curChain.length - 1].id
-                  : this.curChain[v.level].id}`);
-              }
+           const selectList
+           = this.curSelectedValues.filter((item) => !item.disabled).map((v) => v.ids).flat(this.curChain.length);
+          const tableData = this.renderTopologyData.filter((v) => selectList.includes(`${v.id}&${v.level > this.curChain.length - 1
+              ? this.curChain[this.curChain.length - 1].id : this.curChain[v.level].id}`));
+            if (tableData.length) {
+              addSelectList = tableData.map((v) => `${v.id}&${v.level > this.curChain.length - 1
+              ? this.curChain[this.curChain.length - 1].id
+                : this.curChain[v.level].id}`);
+            }
         }
-        const curTableData = tableData.filter((item) => item.type === 'node' && ((item.checked
+        let curTableData = tableData.filter((item) => item.type === 'node' && ((item.checked
             || (item.disabled && item.parentChain.length))
             || (
               addSelectList.includes(`${item.id}&${item.level > this.curChain.length - 1
@@ -661,6 +660,9 @@
                 )
             )
         ));
+        if (this.renderTopologyData.length) {
+          curTableData = curTableData.filter((item) => this.renderTopologyData.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`));
+        }
         // 如果有多层，且当层选中层状态为checked时，代表子集checked状态为父级勾选
         if (!this.isOnlyLevel && this.curSelectTreeNode.checked) {
           return [];
