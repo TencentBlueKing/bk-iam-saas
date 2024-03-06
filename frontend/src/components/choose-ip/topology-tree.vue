@@ -1603,8 +1603,19 @@
             this.$store.commit('setTreeSelectedNode', this.currentSelectedNode);
           },
           all: () => {
+            let resourceList = [];
+            const defaultSelectList = this.curSelectedValues
+              .filter((item) => !item.disabled)
+              .map((v) => v.ids).flat(this.curChain.length);
+            resourceList = [...payload].filter((v) => !defaultSelectList.includes(`${v.id}&${v.level > this.curChain.length - 1
+              ? this.curChain[this.curChain.length - 1].id
+              : this.curChain[v.level].id}`));
+            // if (payload.length) {
+            // }
             // 针对资源权限搜索单选特殊处理
-            const resourceList = this.resourceValue ? [...payload].slice(0, 1) : [...payload];
+            if (this.resourceValue) {
+              resourceList = [...payload].slice(0, 1);
+            }
             let allTreeData = [...this.allTreeData];
             if (!allTreeData.length && !this.isOnlyLevel && this.curKeyword) {
               allTreeData = [...this.curTreeTableData.children || []];
@@ -1621,11 +1632,10 @@
             let noDisabledData = [];
             if (this.resourceValue) {
               // 处理单选业务
-              const defaultSelectList = this.curSelectedValues
-                .filter((item) => !item.disabled)
-                .map((v) => v.ids).flat(this.curChain.length);
               noDisabledData = allTreeData.filter(
-                (item) => defaultSelectList.includes(`${item.id}&${this.curChain[item.level].id}`)
+                (item) => defaultSelectList.includes(`${item.id}&${item.level > this.curChain.length - 1
+                  ? this.curChain[this.curChain.length - 1].id
+                  : this.curChain[item.level].id}`)
               );
             } else {
               noDisabledData = allTreeData.filter(
@@ -1637,13 +1647,26 @@
             const nodes = currentSelect.length ? currentSelect : noDisabledData;
             this.renderTopologyData.forEach((item) => {
               if (!item.disabled) {
-                this.$set(item, 'checked', resourceList.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`));
+                // 已选的节点
+                const isHasSelected = defaultSelectList.includes(`${item.id}&${item.level > this.curChain.length - 1
+                  ? this.curChain[this.curChain.length - 1].id
+                  : this.curChain[item.level].id}`);
+                // 新加的节点
+                const isNewSelect = resourceList.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`);
+                let isChecked = isNewSelect || isHasSelected;
+                if (!payload.length) {
+                  isChecked = isNewSelect || !isHasSelected;
+                }
+                this.$set(item, 'checked', isChecked);
                 if (resourceList.length && !currentSelect.length) {
-                  this.$set(
-                    item,
-                    'disabled',
-                    resourceList.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`)
-                  );
+                  // 只读状态的节点
+                  const disableSelectList = this.curSelectedValues
+                    .filter((item) => item.disabled)
+                    .map((v) => v.ids).flat(this.curChain.length);
+                  const isDisableSelected = disableSelectList.includes(`${item.id}&${item.level > this.curChain.length - 1
+                    ? this.curChain[this.curChain.length - 1].id
+                    : this.curChain[item.level].id}`);
+                  this.$set(item, 'disabled', isNewSelect || isDisableSelected);
                 }
                 this.$refs.topologyTableRef && this.$refs.topologyTableRef.toggleRowSelection(item, item.checked);
               }
