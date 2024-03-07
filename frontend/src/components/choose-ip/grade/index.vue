@@ -5,6 +5,7 @@
         <resource-select
           :list="selectList"
           :value="selectValue"
+          :selection-mode="selectionMode"
           :cur-selected-chain="curSelectedChain"
           @on-select="handleResourceSelect" />
       </div>

@@ -203,6 +203,11 @@
       });
     },
     methods: {
+      evil (fn) {
+        const Fn = Function;
+        return new Fn('return ' + fn)();
+      },
+      
       fetchSelectedGroups (type, payload, row) {
         const typeMap = {
           multiple: () => {

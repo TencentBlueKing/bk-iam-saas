@@ -51,7 +51,7 @@ export default class Condition {
     if (this.selectionMode === 'all') {
       this.initIntance(payload, type, this.flag, instanceCanDelete, instanceNotDisabled);
       this.initAttribute(payload, type, this.flag, attributeCanDelete);
-    } else if (this.selectionMode === 'instance') {
+    } else if (['instance', 'instance:paste'].includes(this.selectionMode)) {
       this.initIntance(payload, type, this.flag, false, instanceNotDisabled);
       this.instanceCanDelete = flag !== '';
     } else {
