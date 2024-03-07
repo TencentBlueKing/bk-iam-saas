@@ -867,6 +867,10 @@
                   );
               });
             });
+            // 处理分级管理员授权范围没调resource, 走的授权范围接口total为0情况
+            if (!this.resourceTotal && this.renderTopologyData.length) {
+              this.resourceTotal = this.renderTopologyData.length;
+            }
           } else {
             if (Object.keys(this.selectNodeData).length) {
               this.curSelectTreeNode = value.find((v) =>

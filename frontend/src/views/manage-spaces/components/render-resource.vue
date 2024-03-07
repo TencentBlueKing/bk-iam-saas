@@ -263,7 +263,8 @@
         conditionLimitData: [],
         selectListMap: {},
         selectValueMap: {},
-        selectionModeMap: {}
+        selectionModeMap: {},
+        hasSelectedCondition: []
       };
     },
     computed: {
@@ -399,6 +400,8 @@
             if (selectionMode !== 'all') {
               this.conditionData[0].instanceCanDelete = false;
             }
+            // 备份已选数据，与最新数据做对比判断要不要展示离开确认框
+            this.hasSelectedCondition = _.cloneDeep(val);
             return;
           }
           if (len > 0) {
@@ -418,10 +421,14 @@
             }
             this.notLimitValue = false;
             this.isHide = false;
+            // 备份已选数据，与最新数据做对比判断要不要展示离开确认框
+            this.hasSelectedCondition = _.cloneDeep(this.conditionData);
           } else {
             this.notLimitValue = true;
             this.isHide = true;
             this.conditionData = [];
+            // 备份已选数据，与最新数据做对比判断要不要展示离开确认框
+            this.hasSelectedCondition = _.cloneDeep(this.conditionData);
           }
         },
         deep: true,
