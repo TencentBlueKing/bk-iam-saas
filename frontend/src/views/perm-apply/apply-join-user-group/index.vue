@@ -366,13 +366,13 @@
       @on-sumbit="handleSubmitAdd" />
 
     <bk-sideslider
-      :is-show="isShowResourceInstanceSideSlider"
+      :is-show="isShowResourceInstanceSideslider"
       :title="resourceInstanceSideSliderTitle"
       :width="resourceSliderWidth"
       quick-close
       transfer
       :ext-cls="'relate-instance-sideslider'"
-      @update:isShow="handleResourceCancel">
+      @update:isShow="handleResourceCancel('mask')">
       <div slot="content"
         class="sideslider-content">
         <render-resource
@@ -387,7 +387,7 @@
         <bk-button theme="primary" :loading="sliderLoading" @click="handleResourceSubmit">
           {{ $t(`m.common['保存']`) }}
         </bk-button>
-        <bk-button style="margin-left: 10px;" @click="handleResourceCancel">
+        <bk-button style="margin-left: 10px;" @click="handleResourceCancel('cancel')">
           {{ $t(`m.common['取消']`) }}
         </bk-button>
       </div>
@@ -426,6 +426,11 @@
 
   export default {
     name: '',
+    provide: function () {
+      return {
+        getResourceSliderWidth: () => this.resourceSliderWidth
+      };
+    },
     components: {
       // IamGuide,
       IamDeadline,
@@ -502,7 +507,7 @@
         searchTypeError: false,
         resourceTypeError: false,
         resourceInstanceError: false,
-        isShowResourceInstanceSideSlider: false,
+        isShowResourceInstanceSideslider: false,
         resourceTypeData: {
           resource_groups: [{
             'related_resource_types': [{
@@ -882,7 +887,7 @@
         this.groupIndex = groupIndex;
         this.resourceInstanceSidesliderTitle = this.$t(`m.info['关联侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}` });
         window.changeAlert = 'iamSidesider';
-        this.isShowResourceInstanceSideSlider = true;
+        this.isShowResourceInstanceSideslider = true;
       },
 
       handleToCustomApply () {
@@ -1481,7 +1486,7 @@
         }
         window.changeAlert = false;
         this.resourceInstanceSideSliderTitle = '';
-        this.isShowResourceInstanceSideSlider = false;
+        this.isShowResourceInstanceSideslider = false;
         this.curResIndex = -1;
         this.resourceInstanceError = false;
       },
@@ -1573,15 +1578,26 @@
         }
       },
 
-      handleResourceCancel () {
-        let cancelHandler = Promise.resolve();
-        if (window.changeAlert) {
-          cancelHandler = leaveConfirm();
-        }
-        cancelHandler.then(() => {
-          this.isShowResourceInstanceSideSlider = false;
-          this.resetDataAfterClose();
-        }, _ => _);
+      handleResourceCancel (payload) {
+        const typeMap = {
+          mask: () => {
+            const { data } = this.$refs.renderResourceRef.handleGetValue();
+            const { hasSelectedCondition } = this.$refs.renderResourceRef;
+            let cancelHandler = Promise.resolve();
+            if (JSON.stringify(data) !== JSON.stringify(hasSelectedCondition)) {
+              cancelHandler = leaveConfirm();
+            }
+            cancelHandler.then(() => {
+              this.isShowResourceInstanceSideslider = false;
+              this.resetDataAfterClose();
+            }, _ => _);
+          },
+          cancel: () => {
+            this.resetDataAfterClose();
+            this.isShowResourceInstanceSideslider = false;
+          }
+        };
+        return typeMap[payload]();
       },
 
       handleBatchRenewal () {

@@ -5,6 +5,7 @@
         <resource-select
           :list="selectList"
           :value="selectValue"
+          :selection-mode="selectionMode"
           :cur-selected-chain="curSelectedChain"
           @on-select="handleResourceSelect" />
       </div>
@@ -303,6 +304,11 @@
       selectionMode: {
         type: String
       },
+      // 处理有自定义属性条件场景
+      hasAttribute: {
+        type: Boolean,
+        default: false
+      },
       // 处理有bar的场景
       hasStatusBar: {
         type: Boolean,
@@ -460,14 +466,11 @@
 
       handleSearch (payload) {
         this.curKeyword = payload;
+        this.isFilter = !(this.isFilter && !payload);
         this.emptyData.tipType = 'search';
-        if (this.isFilter && payload === '') {
-          this.isFilter = false;
-        } else {
-          this.isFilter = true;
-        }
+        this.emptyTreeData.tipType = 'search';
+        this.searchDisplayText = '';
         if (this.isExistLimitValue) {
-          this.emptyData.tipType = 'search';
           this.handleFrontendSearch();
           return;
         }
@@ -609,13 +612,10 @@
       async handleTreeSearch (payload) {
         window.changeAlert = true;
         const { index, node, value } = payload;
-        this.curSearchObj = Object.assign(
-          {},
-          {
-            value,
-            parentId: node.parentId
-          }
-        );
+        this.curSearchObj = Object.assign({}, {
+          value,
+          parentId: node.parentId
+        });
         if (node.isFilter && value === '') {
           node.isFilter = false;
         } else {
@@ -666,12 +666,6 @@
             (item) => item.name.toLowerCase().indexOf(value.trim().toLowerCase()) !== -1
           );
           const isAsync = this.curChain.length > node.level + 1;
-
-          this.treeData = this.treeData.filter((item) => {
-            const flag = item.type === 'search' && item.parentId === node.parentId;
-            return flag || !item.parentChain.map((v) => v.id).includes(node.parentSyncId);
-          });
-
           if (childrenNodes.length < 1) {
             const searchEmptyItem = {
             ...SEARCH_EMPTY_ITEM,
@@ -685,7 +679,10 @@
             this.treeData.splice(index + 1, 0, searchEmptyData);
             return;
           }
-
+          this.treeData = this.treeData.filter((item) => {
+            const flag = item.type === 'search' && item.parentId === node.parentId;
+            return flag || !item.parentChain.map((v) => v.id).includes(node.parentSyncId);
+          });
           const loadNodes = childrenNodes.map((item) => {
             let tempItem = _.cloneDeep(item);
             let checked = false;
@@ -757,7 +754,6 @@
             const isAsyncFlag = isAsync || item.child_type !== '';
             return new Node(tempItem, node.level, isAsyncFlag);
           });
-
           this.treeData.splice(index + 1, 0, ...loadNodes);
           return;
         }
@@ -773,34 +769,31 @@
         this.treeData.splice(index + 1, 0, searchLoadingData);
         try {
           const { code, data } = await this.$store.dispatch('permApply/getResources', params);
-          this.treeData = this.treeData.filter((item) => {
-            const flag = item.type === 'search' && item.parentId === node.parentId;
-            return flag || !item.parentChain.map((v) => v.id).includes(node.parentSyncId);
-          });
           this.emptyTreeData.tipType = 'search';
           this.emptyTreeData = formatCodeData(code, this.emptyTreeData, data.results.length === 0);
           this.subResourceTotal = data.count || 0;
           this.curTableData = data.results || [];
           if (data.results.length < 1) {
             const searchEmptyItem = {
-            ...SEARCH_EMPTY_ITEM,
-            parentId: node.parentId,
-            parentSyncId: node.id,
-            parentChain: _.cloneDeep(node.parentChain),
-            level: node.level,
-            display_name: RESULT_TIP[code]
+              ...SEARCH_EMPTY_ITEM,
+              parentId: node.parentId,
+              parentSyncId: node.id,
+              parentChain: _.cloneDeep(node.parentChain),
+              level: node.level,
+              display_name: RESULT_TIP[code]
             };
             const searchEmptyData = new Node(searchEmptyItem, node.level, false, 'search-empty');
             this.treeData.splice(index + 1, 0, searchEmptyData);
             return;
           }
-
+          this.treeData = this.treeData.filter((item) => {
+            const flag = item.type === 'search' && item.parentId === node.parentId;
+            return flag || !item.parentChain.map((v) => v.id).includes(node.parentSyncId);
+          });
           const totalPage = Math.ceil(data.count / this.limit);
-
           let isAsync = this.curChain.length > node.level + 1;
           const loadNodes = data.results.map((item) => {
             let tempItem = _.cloneDeep(item);
-
             let checked = false;
             let disabled = false;
             let isRemote = false;
@@ -915,7 +908,6 @@
             display_name: message
           };
           const searchEmptyData = new Node(searchEmptyItem, node.level, false, 'search-empty');
-          this.emptyData = formatCodeData(e.code, this.emptyData);
           this.emptyTreeData = formatCodeData(e.code, this.emptyTreeData);
           this.treeData.splice(index + 1, 0, searchEmptyData);
         } finally {
@@ -967,7 +959,10 @@
             type = childType;
             curIds.push(`${id}&${type}`);
           } else {
-            type = this.curChain[item.level].id;
+            const curChainId = item.level > this.curChain.length - 1
+              ? this.curChain[this.curChain.length - 1].id
+              : this.curChain[item.level].id;
+            type = curChainId;
             curIds.push(`${id}&${type}`);
           }
 
@@ -1008,7 +1003,10 @@
             type = childType;
             curIds.push(`${id}&${type}`);
           } else {
-            type = this.curChain[item.level].id;
+            const curChainId = item.level > this.curChain.length - 1
+              ? this.curChain[this.curChain.length - 1].id
+              : this.curChain[item.level].id;
+            type = curChainId;
             curIds.push(`${id}&${type}`);
           }
           const chainCheckedFlag = curIds.join('#') === payload;
@@ -1061,11 +1059,13 @@
             data.results = [...this.curSelectionCondition];
             data.count = data.results.length;
           }
+          this.resourceTotal = data.count || 0;
+          this.emptyData = formatCodeData(code, this.emptyData, data.results.length === 0);
+          this.emptyTreeData = formatCodeData(code, this.emptyTreeData, data.results.length === 0);
           if (data.results.length < 1) {
             this.searchDisplayText = RESULT_TIP[code];
             return;
           }
-          this.resourceTotal = data.count || 0;
           const totalPage = Math.ceil(data.count / this.limit);
           const isAsync = this.curChain.length > 1;
           this.treeData = data.results.map((item) => {
@@ -1116,11 +1116,11 @@
             };
             this.treeData.push(new Node(loadItem, 0, isAsync, 'load'));
           }
-          this.emptyData = formatCodeData(code, this.emptyData, this.treeData.length === 0);
         } catch (e) {
           console.error(e);
           const { code } = e;
           this.emptyData = formatCodeData(code, this.emptyData);
+          this.emptyTreeData = formatCodeData(code, this.emptyTreeData);
           this.treeData = [];
           this.messageAdvancedError(e);
         } finally {
@@ -1510,13 +1510,26 @@
           const { code, data } = await this.$store.dispatch('permApply/getResources', params);
           this.emptyTreeData = formatCodeData(code, this.emptyTreeData, data.results.length === 0);
           this.subResourceTotal = data.count || 0;
+          const totalPage = Math.ceil(this.subResourceTotal / this.limit);
+          const curNode = this.treeData.find((item) => `${item.id}&${item.name}` === `${node.id}&${node.name}`);
+          if (curNode) {
+            this.$set(curNode, 'childCount', this.subResourceTotal);
+            this.$set(curNode, 'childPage', totalPage);
+          }
           if (data.results.length < 1) {
             this.removeAsyncNode();
             node.expanded = false;
             node.async = false;
+            const curNode = this.treeData.find((item) => `${item.id}&${item.name}` === `${node.id}&${node.name}`);
+            if (curNode) {
+              if (curNode.async) {
+                this.$set(curNode, 'isExpandNoData', true);
+              }
+              curNode.expanded = false;
+              curNode.async = false;
+            }
             return;
           }
-          const totalPage = Math.ceil(data.count / this.limit);
           const childNodes = data.results.map((item) => {
             let checked = false;
             let disabled = false;
@@ -1632,7 +1645,6 @@
           console.error(e);
           const { code } = e;
           this.removeAsyncNode();
-          this.emptyData = formatCodeData(code, this.emptyData);
           this.emptyTreeData = formatCodeData(code, this.emptyTreeData);
           this.messageAdvancedError(e);
         }
@@ -1651,13 +1663,12 @@
         if (index > -1) this.treeData.splice(index, 1);
       },
 
-      async handleLoadMore (node, index) {
+      async handleLoadMore (node, index, isTable = false) {
         window.changeAlert = true;
         node.current = node.current + 1;
         node.loadingMore = true;
-
         const chainLen = this.curChain.length;
-        let keyword = this.curKeyword;
+        let keyword = !isTable ? this.curKeyword : '';
         if (Object.keys(this.curSearchObj).length) {
           if (node.parentId === this.curSearchObj.parentId) {
             keyword = this.curSearchObj.value;
@@ -1938,7 +1949,7 @@
 
       // 多层拓扑分页
       async handleTablePageChange (node, index) {
-        this.handleLoadMore(node, index);
+        this.handleLoadMore(node, index, true);
       }
     }
   };

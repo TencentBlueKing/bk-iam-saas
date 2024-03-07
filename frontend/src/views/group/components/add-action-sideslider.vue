@@ -1012,14 +1012,8 @@
             }, _ => _);
           },
           cancel: () => {
-            let cancelHandler = Promise.resolve();
-            if (window.changeAlert) {
-              cancelHandler = leaveConfirm();
-            }
-            cancelHandler.then(() => {
-              this.aggregationData = _.cloneDeep(this.aggregation);
-              this.handleCloseSide();
-            }, _ => _);
+            this.aggregationData = _.cloneDeep(this.aggregation);
+            this.handleCloseSide();
           }
         };
         operateMap[payload]();

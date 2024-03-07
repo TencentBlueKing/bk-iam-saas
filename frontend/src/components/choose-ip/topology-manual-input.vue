@@ -66,6 +66,7 @@
               :tip-text="emptyTableData.tip"
               :tip-type="emptyTableData.tipType"
               @on-clear="handleClearSearch"
+              @on-refresh="handleClearSearch"
             />
           </template>
         </bk-table>
@@ -203,6 +204,11 @@
       });
     },
     methods: {
+      evil (fn) {
+        const Fn = Function;
+        return new Fn('return ' + fn)();
+      },
+
       fetchSelectedGroups (type, payload, row) {
         const typeMap = {
           multiple: () => {

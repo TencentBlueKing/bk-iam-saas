@@ -147,7 +147,7 @@
                         :class="[
                           'load-item',
                           { 'loading-more': item.loadingMore },
-                          { normal: !item.loadingMore && !isExistNodeLoadMore },
+                          { 'normal': !item.loadingMore && !isExistNodeLoadMore },
                           { 'exist-load-more': isExistNodeLoadMore }
                         ]"
                         @click.stop="loadMore(item, index)"
@@ -172,9 +172,9 @@
                   <template v-else-if="item.type === 'search-empty' && curChain[curChain.length - 1] === item.level">
                     <div class="search-empty-wrapper">
                       <ExceptionEmpty
-                        :type="item.name === $t(`m.common['搜索结果为空']`) ? 'search-empty' : 500"
-                        :tip-type="item.name === $t(`m.common['搜索结果为空']`) ? 'search' : 'refresh'"
-                        :empty-text="item.name === $t(`m.common['搜索结果为空']`) ? item.name : '数据不存在'"
+                        :type="formatTreeEmpty(emptyTreeData, 'tree', 'type')"
+                        :tip-type="formatTreeEmpty(emptyTreeData, 'tree', 'tipType')"
+                        :empty-text="formatTreeEmpty(emptyTreeData, 'tree', 'emptyText')"
                         @on-clear="handleEmptyClear('tree', item, index)"
                         @on-refresh="handleEmptyRefresh('tree', item, index)"
                       />
@@ -539,15 +539,22 @@
         };
       },
       formatPlaceHolder () {
+        let title = '';
+        if (this.curChain.length) {
+          title = this.curChain[this.curChain.length - 1].name;
+          if (this.selectNodeData.hasOwnProperty('level') && this.selectNodeData.level + 1 <= this.curChain.length - 1 && !this.isOnlyLevel) {
+            title = this.curChain[this.selectNodeData.level + 1].name;
+          }
+        }
         return (payload) => {
           const typeMap = {
             input: () => {
               return this.$t(`m.info['搜索动态key值']`, {
-                value: this.curChain.length ? this.curChain[this.curChain.length - 1].name : ''
+                value: title
               });
             },
             table: () => {
-              return this.curChain.length ? this.curChain[this.curChain.length - 1].name : '';
+              return title;
             }
           };
           return typeMap[payload]();
@@ -618,6 +625,7 @@
       },
       formatSelectedCount () {
         const hasNode = {};
+        let addSelectList = [];
         let list = [...this.renderTopologyData];
         if (
           this.curSelectTreeNode.children
@@ -631,10 +639,33 @@
           hasNode[`${next.name}&${next.id}`] ? '' : hasNode[`${next.name}&${next.id}`] = true && curr.push(next);
           return curr;
         }, []);
-        const curTableData = tableData.filter((item) => item.type === 'node' && (item.checked || (item.disabled && item.parentChain.length)));
+        // 点击左侧tree刷新的时候根据已新增的数据回显当前页已选tip
+        if (!this.isOnlyLevel && this.curSelectedValues.length) {
+           const selectList
+           = this.curSelectedValues.filter((item) => !item.disabled).map((v) => v.ids).flat(this.curChain.length);
+          const tableData = this.renderTopologyData.filter((v) => selectList.includes(`${v.id}&${v.level > this.curChain.length - 1
+              ? this.curChain[this.curChain.length - 1].id : this.curChain[v.level].id}`));
+            if (tableData.length) {
+              addSelectList = tableData.map((v) => `${v.id}&${v.level > this.curChain.length - 1
+              ? this.curChain[this.curChain.length - 1].id
+                : this.curChain[v.level].id}`);
+            }
+        }
+        let curTableData = tableData.filter((item) => item.type === 'node' && ((item.checked
+            || (item.disabled && item.parentChain.length))
+            || (
+              addSelectList.includes(`${item.id}&${item.level > this.curChain.length - 1
+                ? this.curChain[this.curChain.length - 1].id
+                  : this.curChain[item.level].id}`
+                )
+            )
+        ));
+        if (this.renderTopologyData.length) {
+          curTableData = curTableData.filter((item) => this.renderTopologyData.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`));
+        }
         // 如果有多层，且当层选中层状态为checked时，代表子集checked状态为父级勾选
         if (!this.isOnlyLevel && this.curSelectTreeNode.checked) {
-         return [];
+          return [];
         }
         return curTableData;
       },
@@ -649,13 +680,37 @@
       },
       formatLoadMore () {
         return (payload) => {
-          return payload.type === 'load';
+          const { type, childPage, children } = payload;
+          if (childPage) {
+            const loadData = children.find((item) => item.type === 'load');
+            if (loadData) {
+              const curData = this.allTreeData.find((item) =>
+                (loadData.parentChain && loadData.parentChain.map((v) => `${v.id}&${v.name}`).includes(`${item.id}&${item.name}`))
+                || loadData.parentId === item.nodeId
+              );
+              if (curData && loadData.totalPage <= curData.current) {
+                // 处理如果表格分页是最后一个，左边查看更多按钮需要隐藏
+                this.allTreeData.forEach((item) => {
+                if (item.type === 'load' && JSON.stringify(loadData.parentChain) === JSON.stringify(item.parentChain)) {
+                  item.visiable = false;
+                }
+               });
+              }
+            }
+          }
+          return type === 'load';
         };
       },
       formatNoIcon () {
         return (payload) => {
           const { async, expanded, level } = payload;
           const hasData = this.allTreeData.find((v) => v.level === level);
+          // isExpandNoData处理展开后无数据后隐藏展开icon的场景
+          if (payload.isExpandNoData) {
+            return {
+                'paddingLeft': `29px`
+              };
+          }
           if (!async && !expanded) {
             if (hasData && hasData.async && level < 3) {
               return {
@@ -812,6 +867,10 @@
                   );
               });
             });
+            // 处理分级管理员授权范围没调resource, 走的授权范围接口total为0情况
+            if (!this.resourceTotal && this.renderTopologyData.length) {
+              this.pagination = Object.assign(this.pagination, { count: this.renderTopologyData.length });
+            }
           } else {
             if (Object.keys(this.selectNodeData).length) {
               this.curSelectTreeNode = value.find((v) =>
@@ -830,7 +889,8 @@
                 this.tablePageData = [...this.curTableData];
                 const list = [...(curNode.children || [])].filter((item) => item.type === 'node');
                 curNode.current = this.subPagination.current;
-                this.renderTopologyData = list.length ? this.getDataByPage(curNode.current, list) : [];
+                this.renderTopologyData = list.length && !this.isTreeEmpty
+                  ? this.getDataByPage(curNode.current, list) : [];
                 // 这里要兼容判断父级全选和直接点击子集表格全选
                 const childSelectedNodes = this.currentSelectedNode.map((item) => `${item.name}&${item.id}`);
                 this.checkedNodeIdList = value
@@ -984,12 +1044,14 @@
         const defaultSelectList = this.curSelectedValues.map((v) => v.ids).flat(this.curChain.length);
         this.$nextTick(() => {
           this.renderTopologyData.forEach((item) => {
+            const curChainId = item.level > this.curChain.length - 1
+              ? this.curChain[this.curChain.length - 1].id : this.curChain[item.level].id;
             this.$refs.topologyTableRef
               && this.$refs.topologyTableRef.toggleRowSelection(
                 item,
                 this.curTreeTableChecked.includes(`${this.selectNodeData.nodeId}&${item.id}`)
                   || this.curTreeSelectedNode.map((item) => `${item.name}&${item.id}`).includes(`${item.name}&${item.id}`)
-                  || defaultSelectList.includes(`${item.id}&${this.curChain[item.level].id}`)
+                  || defaultSelectList.includes(`${item.id}&${curChainId}`)
               );
           });
         });
@@ -1005,8 +1067,10 @@
             .map((v) => v.ids).flat(this.curChain.length);
           if (defaultSelectList.length) {
             let childrenIdList = [];
-            const result = !(defaultSelectList.includes(`${payload.id}&${this.curChain[payload.level] ? this.curChain[payload.level].id : this.curChain[this.curChain.length - 1]}`)
-              || defaultSelectList.includes(`${this.selectNodeData.id}&${this.curChain[payload.level - 1] ? this.curChain[payload.level - 1].id : this.curChain[this.curChain.length - 1].id}`));
+            const curChainId = payload.level > this.curChain.length - 1
+              ? this.curChain[this.curChain.length - 1].id : this.curChain[payload.level].id;
+            const result = !(defaultSelectList.includes(`${payload.id}&${curChainId}`)
+              || defaultSelectList.includes(`${this.selectNodeData.id}&${curChainId}`));
             // 处理多层资源权限搜索只支持单选
             if (this.resourceValue
               || (this.curSelectTreeNode.children
@@ -1032,8 +1096,8 @@
         // 处理有的资源全选只能勾选一项
         if (this.resourceValue && this.curSelectedValues.length) {
           singleCheckedData = this.curSelectedValues.map((v) => v.ids).flat(this.curChain.length);
-          const curLevelNodeId = this.curChain[payload.level]
-            ? this.curChain[payload.level].id : this.curChain[this.curChain.length - 1].id;
+          const curLevelNodeId = payload.level > this.curChain.length - 1
+            ? this.curChain[this.curChain.length - 1].id : this.curChain[payload.level].id;
           return singleCheckedData.includes(`${payload.id}&${curLevelNodeId}`);
         }
         return !selectNodeList.includes(`${payload.name}&${payload.id}`);
@@ -1092,6 +1156,7 @@
         // 如果没有node，代表是最外层的搜索
         this.curSearchMode = 'tree';
         this.treeKeyWord = value;
+        this.emptyTreeData.tipType = value ? 'search' : '';
         if (node) {
           this.$emit('on-tree-search', { value, node, index });
         } else {
@@ -1161,6 +1226,11 @@
               this.tableKeyWord = '';
               this.$refs.topologyTableInputRef.value = '';
               this.emptyTableData = Object.assign({}, formatCodeData(0, { tipType: '' }));
+              if (this.isTreeEmpty) {
+                this.treeKeyWord = '';
+                this.$refs.topologyTreeInputRef.value = '';
+                return;
+              }
               // 如果父级搜索了没数据，此时搜索表格需要提供当前父级下的children
               if (!this.allTreeData.length && this.curTreeTableData.children && this.curTreeTableData.children.length) {
                 this.$emit('on-table-search', {
@@ -1324,7 +1394,13 @@
         this.tableLoading = true;
         this.renderTopologyData = [];
         if (node.id !== this.selectNodeData.id) {
-          this.handleEmptyClear('table', node, index);
+          this.emptyTableData.tipType = '';
+          this.tableKeyWord = '';
+          if (this.$refs.topologyTableInputRef) {
+            this.$refs.topologyTableInputRef.value = '';
+          }
+          this.emptyTableData = Object.assign({}, formatCodeData(0, { tipType: '' }));
+          // this.handleEmptyClear('table', node, index);
         }
         if (Object.keys(node).length > 0) {
           node.expanded = true;
@@ -1469,7 +1545,7 @@
         const { id, name, nodeId } = this.selectNodeData;
         const index = this.allTreeData.findIndex((item) =>
           ((item.parentChain && item.parentChain.map((v) => `${v.id}&${v.name}`).includes(`${id}&${name}`)) || item.parentId === nodeId)
-          && item.type === 'load'
+          // && item.type === 'load'
         );
         if (index > -1) {
           this.$set(this.allTreeData[index], 'current', current - 1);
@@ -1531,8 +1607,19 @@
             this.$store.commit('setTreeSelectedNode', this.currentSelectedNode);
           },
           all: () => {
+            let resourceList = [];
+            const defaultSelectList = this.curSelectedValues
+              .filter((item) => !item.disabled)
+              .map((v) => v.ids).flat(this.curChain.length);
+            resourceList = [...payload].filter((v) => !defaultSelectList.includes(`${v.id}&${v.level > this.curChain.length - 1
+              ? this.curChain[this.curChain.length - 1].id
+              : this.curChain[v.level].id}`));
+            // if (payload.length) {
+            // }
             // 针对资源权限搜索单选特殊处理
-            const resourceList = this.resourceValue ? [...payload].slice(0, 1) : [...payload];
+            if (this.resourceValue) {
+              resourceList = [...payload].slice(0, 1);
+            }
             let allTreeData = [...this.allTreeData];
             if (!allTreeData.length && !this.isOnlyLevel && this.curKeyword) {
               allTreeData = [...this.curTreeTableData.children || []];
@@ -1549,11 +1636,10 @@
             let noDisabledData = [];
             if (this.resourceValue) {
               // 处理单选业务
-              const defaultSelectList = this.curSelectedValues
-                .filter((item) => !item.disabled)
-                .map((v) => v.ids).flat(this.curChain.length);
               noDisabledData = allTreeData.filter(
-                (item) => defaultSelectList.includes(`${item.id}&${this.curChain[item.level].id}`)
+                (item) => defaultSelectList.includes(`${item.id}&${item.level > this.curChain.length - 1
+                  ? this.curChain[this.curChain.length - 1].id
+                  : this.curChain[item.level].id}`)
               );
             } else {
               noDisabledData = allTreeData.filter(
@@ -1565,13 +1651,26 @@
             const nodes = currentSelect.length ? currentSelect : noDisabledData;
             this.renderTopologyData.forEach((item) => {
               if (!item.disabled) {
-                this.$set(item, 'checked', resourceList.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`));
+                // 已选的节点
+                const isHasSelected = defaultSelectList.includes(`${item.id}&${item.level > this.curChain.length - 1
+                  ? this.curChain[this.curChain.length - 1].id
+                  : this.curChain[item.level].id}`);
+                // 新加的节点
+                const isNewSelect = resourceList.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`);
+                let isChecked = isNewSelect || isHasSelected;
+                if (!payload.length) {
+                  isChecked = isNewSelect || !isHasSelected;
+                }
+                this.$set(item, 'checked', isChecked);
                 if (resourceList.length && !currentSelect.length) {
-                  this.$set(
-                    item,
-                    'disabled',
-                    resourceList.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`)
-                  );
+                  // 只读状态的节点
+                  const disableSelectList = this.curSelectedValues
+                    .filter((item) => item.disabled)
+                    .map((v) => v.ids).flat(this.curChain.length);
+                  const isDisableSelected = disableSelectList.includes(`${item.id}&${item.level > this.curChain.length - 1
+                    ? this.curChain[this.curChain.length - 1].id
+                    : this.curChain[item.level].id}`);
+                  this.$set(item, 'disabled', isNewSelect || isDisableSelected);
                 }
                 this.$refs.topologyTableRef && this.$refs.topologyTableRef.toggleRowSelection(item, item.checked);
               }

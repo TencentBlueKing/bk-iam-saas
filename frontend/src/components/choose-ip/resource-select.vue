@@ -49,6 +49,9 @@
       isShowManual: {
         type: Boolean,
         default: true
+      },
+      selectionMode: {
+        type: String
       }
     },
     data () {

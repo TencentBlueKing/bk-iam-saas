@@ -7,7 +7,7 @@
     :width="960"
     ext-cls="iam-add-action-sideslider"
     :title="$t(`m.grading['添加系统和操作']`)"
-    @update:isShow="handleCancel">
+    @update:isShow="handleCancel('leave')">
     <div slot="content"
       class="content-wrapper"
       v-bkloading="{ isLoading, opacity: 1 }">
@@ -187,7 +187,7 @@
     </div>
     <div slot="footer" style="padding-left: 30px;">
       <bk-button theme="primary" @click="handleSubmit">{{ $t(`m.common['确定']`) }}</bk-button>
-      <bk-button style="margin-left: 10px;" @click="handleCancel">{{ $t(`m.common['取消']`) }}</bk-button>
+      <bk-button style="margin-left: 10px;" @click="handleCancel('cancel')">{{ $t(`m.common['取消']`) }}</bk-button>
     </div>
   </bk-sideslider>
 </template>
@@ -255,6 +255,7 @@
         authorizationData: {},
         linearAction: [],
         tagActionList: [],
+        hasSelectedActions: [],
         systemListIsLoading: false,
         emptyData: {
           type: 'empty',
@@ -309,6 +310,7 @@
         handler (value) {
           if (value) {
             this.pageChangeAlertMemo = window.changeAlert;
+            this.hasSelectedActions = _.cloneDeep(this.defaultValue);
             this.linearAction = [];
             window.changeAlert = 'iamSidesider';
             this.fetchSystems();
@@ -978,16 +980,26 @@
         this.messageAdvancedError(payload);
       },
 
-      handleCancel () {
-        let cancelHandler = Promise.resolve();
-        if (window.changeAlert) {
-          cancelHandler = leaveConfirm();
-        }
-        cancelHandler.then(() => {
-          this.$emit('update:isShow', false);
-          this.aggregationData = _.cloneDeep(this.aggregation);
-          this.resetData();
-        }, _ => _);
+      handleCancel (payload) {
+        const typeMap = {
+          leave: () => {
+            let cancelHandler = Promise.resolve();
+            if (JSON.stringify(this.hasSelectedActions) !== JSON.stringify(this.curSelectValue)) {
+              cancelHandler = leaveConfirm();
+            }
+            cancelHandler.then(() => {
+              this.$emit('update:isShow', false);
+              this.aggregationData = _.cloneDeep(this.aggregation);
+              this.resetData();
+            }, _ => _);
+          },
+          cancel: () => {
+            this.$emit('update:isShow', false);
+            this.aggregationData = _.cloneDeep(this.aggregation);
+            this.resetData();
+          }
+        };
+        return typeMap[payload]();
       },
 
       async handleSkip () {
