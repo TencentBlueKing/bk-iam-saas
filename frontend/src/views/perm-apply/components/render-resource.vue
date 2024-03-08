@@ -24,7 +24,7 @@
         <div class="resource-instance-wrapper" :class="conditionData.length > 1 ? 'set-padding' : ''">
           <!-- 实例 -->
           <render-resource-instance
-            v-if="condition.hasOwnProperty('instance')"
+            v-if="condition.hasOwnProperty('instance') || ['instance:paste'].includes(condition.selectionMode)"
             :expanded.sync="condition.instanceExpanded"
             :is-group="handleComputedIsGroup(condition)"
             :sub-title="condition.instanceTitle"
@@ -366,6 +366,7 @@
             // 备份已选数据，与最新数据做对比判断要不要展示离开确认框
             this.hasSelectedCondition = _.cloneDeep(this.conditionData);
           }
+          console.log(this.conditionData, '当前实例数据');
         },
         deep: true,
         immediate: true

@@ -17,7 +17,7 @@
         <div class="resource-instance-wrapper">
           <render-resource-instance
             key="instance"
-            v-if="condition.hasOwnProperty('instance')"
+            v-if="condition.hasOwnProperty('instance') || ['instance:paste'].includes(condition.selectionMode)"
             :expanded.sync="condition.instanceExpanded"
             :is-group="computedIsGroup(condition)"
             :need-order="conditionData.length > 1"
