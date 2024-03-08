@@ -554,14 +554,24 @@
               const isHasInstance = item.instance && item.instance.length > 0;
               const isHasAttribute = item.attribute && item.attribute.length > 0;
               let curSelectMode = '';
-              if (!isHasInstance && isHasAttribute) {
-                curSelectMode = 'attribute';
-                this.$delete(this.conditionData[index], 'instance');
-              } else if (isHasInstance && !isHasAttribute) {
-                curSelectMode = 'instance';
-                this.$delete(this.conditionData[index], 'attribute');
+              if (['instance:paste'].includes(this.selectionMode)) {
+                curSelectMode = this.selectionMode;
+                if (!isHasInstance) {
+                  this.$delete(this.conditionData[index], 'instance');
+                }
+                if (!isHasAttribute) {
+                  this.$delete(this.conditionData[index], 'attribute');
+                }
               } else {
-                curSelectMode = 'all';
+                if (!isHasInstance && isHasAttribute) {
+                  curSelectMode = 'attribute';
+                  this.$delete(this.conditionData[index], 'instance');
+                } else if (isHasInstance && !isHasAttribute) {
+                  curSelectMode = 'instance';
+                  this.$delete(this.conditionData[index], 'attribute');
+                } else {
+                  curSelectMode = 'all';
+                }
               }
               this.$set(this.selectionModeMap, index, curSelectMode);
             });
