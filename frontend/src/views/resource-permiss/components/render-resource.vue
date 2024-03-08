@@ -24,7 +24,7 @@
         <div class="resource-instance-wrapper" :class="conditionData.length > 1 ? 'set-padding' : ''">
           <!-- 实例 -->
           <render-resource-instance
-            v-if="condition.hasOwnProperty('instance')"
+            v-if="condition.hasOwnProperty('instance') || ['instance:paste'].includes(condition.selectionMode)"
             :expanded.sync="condition.instanceExpanded"
             :is-group="handleComputedIsGroup(condition)"
             :sub-title="condition.instanceTitle"

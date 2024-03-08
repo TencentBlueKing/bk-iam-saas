@@ -11,7 +11,7 @@
         <render-order-number v-if="curCondition.length > 1" :number="`${conIndex + 1 }`" />
         <div class="resource-instance-wrapper">
           <render-resource-instance
-            v-if="condition.hasOwnProperty('instance')"
+            v-if="condition.hasOwnProperty('instance') || ['instance:paste'].includes(condition.selectionMode)"
             :expanded.sync="condition.instanceExpanded"
             :is-group="computedIsGroup(condition)"
             :need-order="curCondition.length > 1"
