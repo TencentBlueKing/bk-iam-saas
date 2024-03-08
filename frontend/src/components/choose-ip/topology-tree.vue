@@ -623,6 +623,13 @@
           return payload.disabled;
         };
       },
+      formatCurLevelType () {
+        return (payload) => {
+          return payload.level > this.curChain.length - 1
+           ? this.curChain[this.curChain.length - 1].id
+           : this.curChain[payload.level].id;
+        };
+      },
       formatSelectedCount () {
         const hasNode = {};
         let addSelectList = [];
@@ -634,31 +641,32 @@
           // && !this.isOnlyLevel && !this.isTwoLevel) {
           list = [...this.renderTopologyData, ...this.curSelectTreeNode.children];
         }
-        const tableData = list.reduce((curr, next) => {
+        let tableData = list.reduce((curr, next) => {
           // eslint-disable-next-line no-unused-expressions
           hasNode[`${next.name}&${next.id}`] ? '' : hasNode[`${next.name}&${next.id}`] = true && curr.push(next);
           return curr;
         }, []);
         // 点击左侧tree刷新的时候根据已新增的数据回显当前页已选tip
         if (!this.isOnlyLevel && this.curSelectedValues.length) {
-           const selectList
-           = this.curSelectedValues.filter((item) => !item.disabled).map((v) => v.ids).flat(this.curChain.length);
-          const tableData = this.renderTopologyData.filter((v) => selectList.includes(`${v.id}&${v.level > this.curChain.length - 1
-              ? this.curChain[this.curChain.length - 1].id : this.curChain[v.level].id}`));
-            if (tableData.length) {
-              addSelectList = tableData.map((v) => `${v.id}&${v.level > this.curChain.length - 1
-              ? this.curChain[this.curChain.length - 1].id
-                : this.curChain[v.level].id}`);
-            }
+          const parentChain = this.curSelectedValues.find((item) =>
+            item.ids.find((v) => v === `${this.selectNodeData.id}&${this.formatCurLevelType(this.selectNodeData)}`));
+          const selectList = this.curSelectedValues
+           .filter((item) => !item.disabled || (item.disabled && parentChain && parentChain.ids.includes(`${this.selectNodeData.id}&${this.formatCurLevelType(this.selectNodeData)}`)))
+           .map((v) => v.ids).flat(this.curChain.length);
+           //  获取当前页已选数据
+           const curPageList = this.renderTopologyData.filter((v) => selectList.includes(`${v.id}&${this.formatCurLevelType(v)}`));
+          if (curPageList.length) {
+            tableData = this.allTreeData.filter((item) => curPageList.map((v) => `${v.id}&${this.formatCurLevelType(v)}`).includes(`${item.id}&${this.formatCurLevelType(item)}`));
+            // 过滤掉disabled的数据
+            addSelectList = tableData.filter((item) => item.checked && !item.disabled).map((v) => `${v.id}&${this.formatCurLevelType(v)}`);
+          }
         }
-        let curTableData = tableData.filter((item) => item.type === 'node' && ((item.checked
-            || (item.disabled && item.parentChain.length))
-            || (
-              addSelectList.includes(`${item.id}&${item.level > this.curChain.length - 1
-                ? this.curChain[this.curChain.length - 1].id
-                  : this.curChain[item.level].id}`
-                )
-            )
+        let curTableData = tableData.filter((item) =>
+        item.type === 'node'
+          && ((item.checked
+              || (item.disabled && (item.parentChain.length || item.level > 0))
+              || (addSelectList.includes(`${item.id}&${this.formatCurLevelType(item)}`)
+            ))
         ));
         if (this.renderTopologyData.length) {
           curTableData = curTableData.filter((item) => this.renderTopologyData.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`));
@@ -1044,8 +1052,7 @@
         const defaultSelectList = this.curSelectedValues.map((v) => v.ids).flat(this.curChain.length);
         this.$nextTick(() => {
           this.renderTopologyData.forEach((item) => {
-            const curChainId = item.level > this.curChain.length - 1
-              ? this.curChain[this.curChain.length - 1].id : this.curChain[item.level].id;
+            const curChainId = this.formatCurLevelType(item);
             this.$refs.topologyTableRef
               && this.$refs.topologyTableRef.toggleRowSelection(
                 item,
@@ -1067,8 +1074,7 @@
             .map((v) => v.ids).flat(this.curChain.length);
           if (defaultSelectList.length) {
             let childrenIdList = [];
-            const curChainId = payload.level > this.curChain.length - 1
-              ? this.curChain[this.curChain.length - 1].id : this.curChain[payload.level].id;
+            const curChainId = this.formatCurLevelType(payload);
             const result = !(defaultSelectList.includes(`${payload.id}&${curChainId}`)
               || defaultSelectList.includes(`${this.selectNodeData.id}&${curChainId}`));
             // 处理多层资源权限搜索只支持单选
@@ -1096,8 +1102,7 @@
         // 处理有的资源全选只能勾选一项
         if (this.resourceValue && this.curSelectedValues.length) {
           singleCheckedData = this.curSelectedValues.map((v) => v.ids).flat(this.curChain.length);
-          const curLevelNodeId = payload.level > this.curChain.length - 1
-            ? this.curChain[this.curChain.length - 1].id : this.curChain[payload.level].id;
+          const curLevelNodeId = this.formatCurLevelType(payload);
           return singleCheckedData.includes(`${payload.id}&${curLevelNodeId}`);
         }
         return !selectNodeList.includes(`${payload.name}&${payload.id}`);
@@ -1611,11 +1616,7 @@
             const defaultSelectList = this.curSelectedValues
               .filter((item) => !item.disabled)
               .map((v) => v.ids).flat(this.curChain.length);
-            resourceList = [...payload].filter((v) => !defaultSelectList.includes(`${v.id}&${v.level > this.curChain.length - 1
-              ? this.curChain[this.curChain.length - 1].id
-              : this.curChain[v.level].id}`));
-            // if (payload.length) {
-            // }
+            resourceList = [...payload].filter((v) => !defaultSelectList.includes(`${v.id}&${this.formatCurLevelType(v)}`));
             // 针对资源权限搜索单选特殊处理
             if (this.resourceValue) {
               resourceList = [...payload].slice(0, 1);
@@ -1637,9 +1638,7 @@
             if (this.resourceValue) {
               // 处理单选业务
               noDisabledData = allTreeData.filter(
-                (item) => defaultSelectList.includes(`${item.id}&${item.level > this.curChain.length - 1
-                  ? this.curChain[this.curChain.length - 1].id
-                  : this.curChain[item.level].id}`)
+                (item) => defaultSelectList.includes(`${item.id}&${this.formatCurLevelType(item)}`)
               );
             } else {
               noDisabledData = allTreeData.filter(
@@ -1652,9 +1651,7 @@
             this.renderTopologyData.forEach((item) => {
               if (!item.disabled) {
                 // 已选的节点
-                const isHasSelected = defaultSelectList.includes(`${item.id}&${item.level > this.curChain.length - 1
-                  ? this.curChain[this.curChain.length - 1].id
-                  : this.curChain[item.level].id}`);
+                const isHasSelected = defaultSelectList.includes(`${item.id}&${this.formatCurLevelType(item)}`);
                 // 新加的节点
                 const isNewSelect = resourceList.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`);
                 let isChecked = isNewSelect || isHasSelected;
@@ -1667,9 +1664,7 @@
                   const disableSelectList = this.curSelectedValues
                     .filter((item) => item.disabled)
                     .map((v) => v.ids).flat(this.curChain.length);
-                  const isDisableSelected = disableSelectList.includes(`${item.id}&${item.level > this.curChain.length - 1
-                    ? this.curChain[this.curChain.length - 1].id
-                    : this.curChain[item.level].id}`);
+                  const isDisableSelected = disableSelectList.includes(`${item.id}&${this.formatCurLevelType(item)}`);
                   this.$set(item, 'disabled', isNewSelect || isDisableSelected);
                 }
                 this.$refs.topologyTableRef && this.$refs.topologyTableRef.toggleRowSelection(item, item.checked);
