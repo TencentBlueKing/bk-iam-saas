@@ -542,8 +542,8 @@
         let title = '';
         if (this.curChain.length) {
           title = this.curChain[this.curChain.length - 1].name;
-          if (this.selectNodeData.hasOwnProperty('level') && this.selectNodeData.level + 1 <= this.curChain.length - 1 && !this.isOnlyLevel) {
-            title = this.curChain[this.selectNodeData.level + 1].name;
+          if (this.selectNodeData.hasOwnProperty('level') && this.selectNodeData.level <= this.curChain.length - 1 && !this.isOnlyLevel) {
+            title = this.curChain[this.selectNodeData.level].name;
           }
         }
         return (payload) => {
