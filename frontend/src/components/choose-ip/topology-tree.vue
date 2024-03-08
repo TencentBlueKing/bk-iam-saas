@@ -1271,7 +1271,7 @@
           .filter((item) => item.level === node.level)
           .some((item) => item.type === 'node' && item.async);
         const flag = !node.async && isSameLevelExistSync;
-        const asyncIconWidth = 5;
+        // const asyncIconWidth = 5;
         if (!node.level) {
           // if (flag) {
           //   return {
@@ -1294,7 +1294,7 @@
         }
         if (flag) {
           return {
-            marginLeft: (node.level + 1) * this.leftBaseIndent + asyncIconWidth + 'px'
+            marginLeft: (node.level + 1) * this.leftBaseIndent + 'px'
           };
         }
         return {
