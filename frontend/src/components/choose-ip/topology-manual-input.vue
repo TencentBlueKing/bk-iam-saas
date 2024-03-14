@@ -46,8 +46,10 @@
           size="small"
           :data="manualTableList"
           :ext-cls="'manual-table-wrapper'"
+          :max-height="380"
           :outer-border="false"
           :header-border="false"
+          :pagination="pagination"
           @select="handleSelectChange"
           @select-all="handleSelectAllChange">
 
@@ -338,16 +340,28 @@
         this.manualInputError = false;
       },
 
+      getUsername (str) {
+        const array = str.split('');
+        const index = array.findIndex((item) => item === '(');
+        if (index !== -1) {
+          return array.splice(0, index).join('');
+        }
+        return str;
+      },
+
       async handleAddManualUser () {
         this.manualAddLoading = true;
         try {
           const { system_id, action_id, resource_type_system, resource_type_id } = this.systemParams;
+          const nameList = this.manualValue.split(this.regValue).filter(item => item !== '');
           const params = {
             type: resource_type_id,
             system_id,
             action_id,
             action_system_id: resource_type_system,
-            display_names: this.manualValue.split(this.regValue).filter(item => item !== '')
+            display_names: nameList.map((item) => {
+              return this.getUsername(item);
+            })
           };
           const { code, data } = await this.$store.dispatch('permApply/getResourceInstanceManual', params);
           const isAsync = this.curChain.length > 1;
@@ -417,6 +431,7 @@
             this.manualTableListStorage = [...list];
             this.manualTableList = cloneDeep(this.manualTableListStorage);
             this.hasSelectedInstances.push(...hasSelectedInstances);
+            console.log(hasSelectedInstances);
             this.fetchManualTableData();
             this.$emit('on-select-all', hasSelectedInstances, true);
           }
@@ -469,7 +484,6 @@
           margin-bottom: 10px;
         }
         .manual-table-wrapper {
-          height: 360px;
           border: none;
         }
     }
@@ -489,6 +503,15 @@
         border-radius: 2px;
         background-color: #e6e9ea;
       }
+    }
+  }
+}
+
+/deep/ .bk-table-pagination-wrapper {
+  padding: 15px 0;
+  .bk-page.bk-page-align-right {
+    .bk-page-selection-count-left {
+      display: none;
     }
   }
 }

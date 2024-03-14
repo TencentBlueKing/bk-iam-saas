@@ -350,12 +350,10 @@
         previewResourceParams: {},
         curCopyData: ['none'],
         curCopyType: '',
-
+        curInstanceMode: '',
         curId: '',
         isLoading: false,
-
         isShowAggregateSideslider: false,
-
         aggregateResourceParams: {},
         aggregateIndex: -1,
         aggregateValue: [],
@@ -1005,10 +1003,14 @@
         if (isEmpty) {
           return;
         }
-
         const resItem = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
           .related_resource_types[this.curResIndex];
         const isConditionEmpty = data.length === 1 && data[0] === 'none';
+        this.curInstanceMode = resItem.selectionMode || '';
+        if (['instance:paste'].includes(resItem.selectionMode)) {
+          resItem.isLimitExceeded = false;
+          resItem.isError = false;
+        }
         if (isConditionEmpty) {
           resItem.condition = ['none'];
           resItem.isLimitExceeded = false;
@@ -1552,7 +1554,7 @@
                       })
                       : [];
                     console.warn('newResourceCount: ' + newResourceCount);
-                    if (newResourceCount > RESOURCE_MAX_LEN) {
+                    if (newResourceCount > RESOURCE_MAX_LEN && !['instance:paste'].includes(this.curInstanceMode)) {
                       resItem.isLimitExceeded = true;
                       flag = true;
                     }
