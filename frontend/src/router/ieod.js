@@ -186,6 +186,9 @@ const SensitivityLevel = () => import(/* webpackChunkName: 'sensitivityLevel' */
 // 人员模板
 const MemberTemplate = () => import(/* webpackChunkName: 'memberTemplate' */ '../views/member-template/index.vue');
 
+// 系统管理员下的资源权限管理
+const ResourcePermManage = () => import(/* webpackChunkName: 'grading-admin' */ '../views/resource-permiss');
+
 const TemplatePermDetail = () =>
   import(/* webpackChunkName: 'my-perm-template-perm' */ '../views/perm/template-perm/detail');
 const GroupPermDetail = () => import(/* webpackChunkName: 'my-perm-group-perm' */ '../views/perm/group-perm/detail');
@@ -535,6 +538,14 @@ export const routes = [
           headerTitle: il8n('nav', '人员模板')
         },
         component: MemberTemplate
+      },
+      {
+        path: 'resource-perm-manage',
+        name: 'resourcePermManage',
+        meta: {
+          headerTitle: il8n('nav', '资源权限管理')
+        },
+        component: ResourcePermManage
       },
       {
         path: 'apply-custom-perm',

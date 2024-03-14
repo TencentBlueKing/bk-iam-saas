@@ -56,7 +56,8 @@ export const getRouterDiff = (payload) => {
       'secondaryManageSpaceCreate',
       'userGroupSetting',
       'sensitivityLevel',
-      'memberTemplate'
+      'memberTemplate',
+      'resourcePermManage'
     ];
   }
   if (payload === 'super_manager') {
@@ -93,7 +94,8 @@ export const getRouterDiff = (payload) => {
       'myManageSpaceCreate',
       'permTransfer',
       'myManageSpaceSubDetail',
-      'sensitivityLevel'
+      'sensitivityLevel',
+      'resourcePermManage'
     ];
   }
   if (payload === 'system_manager') {
@@ -156,7 +158,8 @@ export const getRouterDiff = (payload) => {
       'myManageSpace',
       'resourcePermiss',
       'firstManageSpace',
-      'sensitivityLevel'
+      'sensitivityLevel',
+      'resourcePermManage'
     ];
   }
   if (payload === 'subset_manager') {
@@ -193,7 +196,8 @@ export const getRouterDiff = (payload) => {
       'permTemplate',
       'userGroupSetting',
       'sensitivityLevel',
-      'memberTemplate'
+      'memberTemplate',
+      'resourcePermManage'
     ];
   }
   // payload其它取值默认返回全部菜单
@@ -239,7 +243,8 @@ export const getRouterDiff = (payload) => {
     'authorBoundaryEditSecondLevel',
     'secondaryManageSpace',
     'myManageSpace',
-    'MyManageSpaceCreate'
+    'MyManageSpaceCreate',
+    'ResourcePermManage'
   ];
 };
 
@@ -268,7 +273,8 @@ export const getNavRouterDiff = (navIndex) => {
       'secondaryManageSpace',
       'userGroupSetting',
       'sensitivityLevel',
-      'memberTemplate'
+      'memberTemplate',
+      'resourcePermManage'
     ];
   }
 
@@ -318,7 +324,8 @@ export const getNavRouterDiff = (navIndex) => {
       'secondaryManageSpaceDetail',
       'userGroupSetting',
       'sensitivityLevel',
-      'memberTemplate'
+      'memberTemplate',
+      'resourcePermManage'
     ];
   }
 
@@ -355,7 +362,8 @@ export const getNavRouterDiff = (navIndex) => {
       'secondaryManageSpaceCreate',
       'secondaryManageSpaceDetail',
       'userGroupSetting',
-      'memberTemplate'
+      'memberTemplate',
+      'resourcePermManage'
     ];
   }
 };

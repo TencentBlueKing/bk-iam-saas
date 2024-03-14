@@ -11,7 +11,7 @@
               v-model="searchType"
               :clearable="true"
               :placeholder="$t(`m.verify['请选择']`)"
-              @change="handlSearchChange">
+              @change="handleSearchChange">
               <bk-option v-for="option in searchTypeList"
                 :key="option.value"
                 :id="option.value"
@@ -30,7 +30,8 @@
               v-model="systemId"
               :clearable="true"
               :placeholder="$t(`m.verify['请选择']`)"
-              @change="handleCascadeChange">
+              @change="handleCascadeChange"
+              @clear="handleSystemClear">
               <bk-option v-for="option in systemList"
                 :key="option.id"
                 :id="option.id"
@@ -46,6 +47,7 @@
               :clearable="true"
               :placeholder="$t(`m.verify['请选择']`)"
               @selected="handleSelected"
+              @clear="handleActionClear"
               searchable>
               <bk-option v-for="option in processesList"
                 :key="option.id"
@@ -91,7 +93,7 @@
                     :is-error="content.isLimitExceeded || content.isError"
                     @on-click="showResourceInstance(resourceTypeData, content, contentIndex, _index)" />
                 </div>
-                <p class="error-tips" v-if="resourceTypeError && content.empty">{{$t(`m.resourcePermiss['请选择资源实例']`)}}</p>
+                <!-- <p class="error-tips" v-if="resourceTypeError && content.empty">{{$t(`m.resourcePermiss['请选择资源实例']`)}}</p> -->
               </div>
             </div>
           </iam-form-item>
@@ -104,9 +106,10 @@
           <iam-form-item :label="$t(`m.resourcePermiss['条数展示']`)" class="pb20 pr20">
             <bk-select
               style="width: 200px; background: #fff"
-              v-model="limit"
-              :clearable="true"
-              :placeholder="$t(`m.verify['请选择']`)">
+              v-model="pagination.limit"
+              :clearable="false"
+              :placeholder="$t(`m.verify['请选择']`)"
+              @change="limitChange">
               <bk-option v-for="option in limitList"
                 :key="option"
                 :id="option"
@@ -124,7 +127,7 @@
     <div class="resource-flex">
       <div>
         <bk-button class="mr10" theme="default" @click="handleReset">{{ $t(`m.common['重置']`) }}</bk-button>
-        <bk-button theme="default" @click="handleSearchAndExport(true)" :disabled="!systemId || !actionId">
+        <bk-button v-if="isShowExport" theme="default" @click="handleSearchAndExport(true)" :disabled="!systemId || !actionId">
           {{ $t(`m.common['导出']`) }}</bk-button>
       </div>
 
@@ -190,7 +193,7 @@
         />
       </div>
       <div slot="footer" style="margin-left: 25px;">
-        <bk-button theme="primary" :loading="sliderLoading" @click="handleResourceSumit">{{ $t(`m.common['保存']`) }}</bk-button>
+        <bk-button theme="primary" :loading="sliderLoading" @click="handleResourceSubmit">{{ $t(`m.common['保存']`) }}</bk-button>
         <bk-button style="margin-left: 10px;" @click="handleResourceCancel('cancel')">{{ $t(`m.common['取消']`) }}</bk-button>
       </div>
     </bk-sideslider>
@@ -211,7 +214,6 @@
   // 单次申请的最大实例数
   // const RESOURCE_MAX_LEN = 20
   export default {
-    name: 'resource-permiss',
     provide: function () {
       return {
         getResourceSliderWidth: () => this.resourceSliderWidth
@@ -239,7 +241,7 @@
         permissionType: '',
         groupValue: '1-1',
         limit: 100,
-        limitList: [10, 20, 50, 100, 200, 500, 1000],
+        limitList: [10, 20, 50, 100],
         resourceActionId: 0,
         resourceActionSystemId: '',
         resourceSystemId: '',
@@ -266,7 +268,7 @@
         pagination: {
           current: 1,
           count: 0,
-          limit: 10
+          limit: 100
         },
         currentBackup: 1,
         emptyData: {
@@ -303,6 +305,9 @@
       },
       originalCondition () {
           return _.cloneDeep(this.condition);
+      },
+      isShowExport () {
+        return ['resource-permiss'].includes(this.$route.name);
       }
     },
     watch: {
@@ -350,11 +355,12 @@
           }
           const res = await this.$store.dispatch('system/getSystems', params);
           this.systemList = res.data;
+          if (this.systemList.length && ['resourcePermManage'].includes(this.$route.name)) {
+            this.systemId = this.systemList[0].id;
+          }
         } catch (e) {
           console.error(e);
           this.messageAdvancedError(e);
-        } finally {
-          // this.requestQueue.shift()
         }
       },
 
@@ -375,8 +381,17 @@
         }
       },
 
+      handleSystemClear () {
+        this.actionId = '';
+        this.resourceTypeData = { isEmpty: true };
+        this.resourceActionData = [];
+        this.processesList = [];
+        this.systemIdError = true;
+        this.actionIdError = true;
+      },
+
       // 查询类型选择
-      handlSearchChange (value) {
+      handleSearchChange (value) {
         this.searchTypeError = false;
         this.resourceTypeData = { isEmpty: true };
         this.systemId = '';
@@ -395,6 +410,13 @@
         this.resourceTypeData = this.processesList.find(e => e.id === this.actionId);
       },
 
+      handleActionClear () {
+        this.actionId = '';
+        this.actionIdError = true;
+        this.resourceTypeData = { isEmpty: true };
+        this.resourceActionData = [];
+      },
+
       // 查询和导入
       async handleSearchAndExport (isExport = false) {
         if (!this.searchType) {
@@ -409,13 +431,13 @@
           this.actionIdError = true;
           return;
         }
-        if (!this.resourceTypeData.isEmpty && this.searchType !== 'operate'
-          && this.resourceTypeData.resource_groups[this.groupIndex]
-          && this.resourceTypeData.resource_groups[this.groupIndex]
-            .related_resource_types.some(e => e.empty)) {
-          this.resourceTypeError = true;
-          return;
-        }
+        // if (!this.resourceTypeData.isEmpty && this.searchType !== 'operate'
+        //   && this.resourceTypeData.resource_groups[this.groupIndex]
+        //   && this.resourceTypeData.resource_groups[this.groupIndex]
+        //     .related_resource_types.some(e => e.empty)) {
+        //   this.resourceTypeError = true;
+        //   return;
+        // }
         this.tableLoading = !isExport;
         let resourceInstances = _.cloneDeep(this.resourceInstances);
         resourceInstances = resourceInstances.reduce((prev, item) => {
@@ -429,49 +451,74 @@
           });
           return prev;
         }, []);
+        // 区分管理空间下和平台管理下的资源权限管理的业务
+        const { current, limit } = this.pagination;
         const params = {
+          limit,
           system_id: this.systemId || '',
           action_id: this.actionId,
-          resource_instances: resourceInstances || [],
-          permission_type: this.searchType === 'resource_instance' ? 'resource_instance' : this.permissionType,
-          limit: this.limit
+          resource_instances: resourceInstances || []
         };
-        try {
-          const fetchUrl = isExport ? 'resourcePermiss/exportResourceManager' : 'resourcePermiss/getResourceManager';
-          const res = await this.$store.dispatch(fetchUrl, params);
-          if (isExport) {
-            if (res.ok) {
-              const blob = await res.blob();
-              const url = URL.createObjectURL(blob);
-              const elment = document.createElement('a');
-              elment.download = '资源权限管理.xlsx';
-              elment.href = url;
-              elment.click();
-              URL.revokeObjectURL(blob);
-
-              this.$bkMessage({
-                theme: 'success',
-                message: '导出成功！'
-              });
+        const routeMap = {
+          resourcePermManage: async () => {
+            params.apply_disable = false;
+            params.offset = limit * (current - 1);
+            try {
+              const { code, data } = await this.$store.dispatch('permApply/getJoinGroupSearch', params);
+              this.pagination.count = data.count || 0;
+              this.tableList = data.results || [];
+              this.tableListClone = _.cloneDeep(this.tableList);
+              this.emptyData.tipType = 'search';
+              this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
+            } catch (e) {
+              console.error(e);
+              this.tableList = [];
+              this.emptyData = formatCodeData(e.code, this.emptyData);
+              this.messageAdvancedError(e);
+            } finally {
+              this.tableLoading = false;
             }
-          } else {
-            this.tableList = res.data || [];
-            this.tableListClone = _.cloneDeep(this.tableList);
-            this.pagination.count = res.data.length;
-            const data = this.getDataByPage();
-            this.tableList.splice(0, this.tableList.length, ...data);
-            this.emptyData.tipType = 'search';
-            this.emptyData = formatCodeData(res.code, this.emptyData, this.tableList.length === 0);
+          },
+          resourcePermiss: async () => {
+            params.permission_type = this.searchType === 'resource_instance' ? 'resource_instance' : this.permissionType;
+            try {
+              const fetchUrl = isExport ? 'resourcePermiss/exportResourceManager' : 'resourcePermiss/getResourceManager';
+              const res = await this.$store.dispatch(fetchUrl, params);
+              if (isExport) {
+                if (res.ok) {
+                  const blob = await res.blob();
+                  const url = URL.createObjectURL(blob);
+                  const element = document.createElement('a');
+                  element.download = '资源权限管理.xlsx';
+                  element.href = url;
+                  element.click();
+                  URL.revokeObjectURL(blob);
+
+                  this.$bkMessage({
+                    theme: 'success',
+                    message: '导出成功！'
+                  });
+                }
+              } else {
+                this.tableList = res.data || [];
+                this.tableListClone = _.cloneDeep(this.tableList);
+                this.pagination.count = res.data.length;
+                const data = this.getDataByPage();
+                this.tableList.splice(0, this.tableList.length, ...data);
+                this.emptyData.tipType = 'search';
+                this.emptyData = formatCodeData(res.code, this.emptyData, this.tableList.length === 0);
+              }
+            } catch (e) {
+              console.error(e);
+              this.tableList = [];
+              this.emptyData = formatCodeData(e.code, this.emptyData);
+              this.messageAdvancedError(e);
+            } finally {
+              this.tableLoading = false;
+            }
           }
-        } catch (e) {
-          console.error(e);
-          const { code } = e;
-          this.tableList = [];
-          this.emptyData = formatCodeData(code, this.emptyData);
-          this.messageAdvancedError(e);
-        } finally {
-          this.tableLoading = false;
-        }
+        };
+        return routeMap[this.$route.name]();
       },
 
       handlePathData (data, type) {
@@ -501,7 +548,6 @@
 
       // 重置
       handleReset () {
-        this.limit = 100;
         this.searchType = 'resource_instance';
         this.systemId = '';
         this.actionId = '';
@@ -509,7 +555,7 @@
         this.tableList = [];
         this.resourceInstances = [];
         this.resourceTypeData = { isEmpty: true };
-        this.pagination = Object.assign(this.pagination, { current: 1, limit: 10 });
+        this.pagination = Object.assign(this.pagination, { current: 1, limit: 100, showTotalCount: true });
         this.emptyData = {
           type: 'empty',
           text: '暂无数据',
@@ -553,7 +599,6 @@
           resource_type_system: resItem.system_id,
           resource_type_id: resItem.type
         };
-
         this.curResIndex = resIndex;
         this.groupIndex = groupIndex;
         this.resourceInstanceSidesliderTitle = this.$t(`m.info['关联侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}` });
@@ -590,7 +635,7 @@
         this.resourceInstanceSidesliderTitle = '';
       },
 
-      async handleResourceSumit () {
+      async handleResourceSubmit () {
         const conditionData = this.$refs.renderResourceRef.handleGetValue();
         const { isEmpty, data } = conditionData;
         if (isEmpty) {
@@ -627,11 +672,30 @@
             
       // 搜索
       handleSearch () {
-        if (this.searchValue) {
-          this.emptyData = formatCodeData(0, Object.assign(this.emptyData, { tipType: 'search' }));
-          this.tableList = _.cloneDeep(this.tableListClone).filter(item =>
-            item.name.indexOf(this.searchValue) !== -1);
-        }
+        const routeMap = {
+          resourcePermManage: async () => {
+            this.pagination = Object.assign(this.pagination, { current: 1, limit: 100 });
+            await this.handleSearchAndExport();
+          },
+          resourcePermiss: () => {
+            if (this.searchValue) {
+              this.emptyData = formatCodeData(0, Object.assign(this.emptyData, { tipType: 'search' }));
+              this.tableList = _.cloneDeep(this.tableListClone).filter(item => {
+                if (['user'].includes(item.type)) {
+                  return item.id.indexOf(this.searchValue) > -1
+                    || item.name.indexOf(this.searchValue) > -1
+                    || `${item.id} (${item.name})`.indexOf(this.searchValue) > -1;
+                } else {
+                  return item.name.indexOf(this.searchValue) > -1;
+                }
+              }
+              );
+            } else {
+              this.tableList = _.cloneDeep(this.tableListClone);
+            }
+          }
+        };
+        routeMap[this.$route.name]();
       },
 
       quickSearchMethod (value) {
@@ -643,12 +707,12 @@
       },
 
       handleEmptyClear () {
-        if (!this.searchValue) {
-          this.handleReset();
-          this.resourceTypeData = Object.assign({}, { isEmpty: true });
-        }
         this.searchValue = '';
+        this.handleReset();
         this.emptyData = formatCodeData(0, Object.assign(this.emptyData, { type: 'empty', text: '', tipType: '' }));
+        if (['resourcePermManage'].includes(this.$route.name)) {
+          this.handleSearchAndExport();
+        }
       },
 
       handleEmptyRefresh () {
@@ -663,19 +727,35 @@
       },
 
       pageChange (page) {
-        if (this.currentBackup === page) {
-          return;
-        }
-        this.pagination.current = page;
-        const data = this.getDataByPage(page);
-        this.tableList.splice(0, this.tableList.length, ...data);
+        const routeMap = {
+          resourcePermManage: async () => {
+            this.pagination.current = page;
+            await this.handleSearchAndExport();
+          },
+          resourcePermiss: () => {
+            if (this.currentBackup === page) {
+              return;
+            }
+            this.pagination.current = page;
+            const data = this.getDataByPage(page);
+            this.tableList.splice(0, this.tableList.length, ...data);
+          }
+        };
+        return routeMap[this.$route.name]();
       },
 
-      limitChange (currentLimit, prevLimit) {
-        this.pagination.limit = currentLimit;
-        this.pagination.current = 1;
-        const data = this.getDataByPage(this.pagination.current);
-        this.tableList.splice(0, this.tableList.length, ...data);
+      limitChange (limit) {
+        this.pagination = Object.assign(this.pagination, { current: 1, limit });
+        const routeMap = {
+          resourcePermManage: async () => {
+            await this.handleSearchAndExport();
+          },
+          resourcePermiss: () => {
+            const data = this.getDataByPage(this.pagination.current);
+            this.tableList.splice(0, this.tableList.length, ...data);
+          }
+        };
+        return routeMap[this.$route.name]();
       },
 
       getDataByPage (page) {

@@ -193,6 +193,14 @@ const currentNav = [
         path: `${SITE_URL}member-template`,
         disabled: false
       }
+      // {
+      //   icon: 'resource-perm-manage',
+      //   id: 'resourcePermManageNav',
+      //   rkey: 'resourcePermManage',
+      //   name: il8n('nav', '资源权限管理'),
+      //   path: `${SITE_URL}resource-perm-manage`,
+      //   disabled: false
+      // }
     ]
   },
   {
