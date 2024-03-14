@@ -11,7 +11,7 @@
               v-model="searchType"
               :clearable="true"
               :placeholder="$t(`m.verify['请选择']`)"
-              @change="handlSearchChange">
+              @change="handleSearchChange">
               <bk-option v-for="option in searchTypeList"
                 :key="option.value"
                 :id="option.value"
@@ -30,7 +30,8 @@
               v-model="systemId"
               :clearable="true"
               :placeholder="$t(`m.verify['请选择']`)"
-              @change="handleCascadeChange">
+              @change="handleCascadeChange"
+              @clear="handleSystemClear">
               <bk-option v-for="option in systemList"
                 :key="option.id"
                 :id="option.id"
@@ -46,6 +47,7 @@
               :clearable="true"
               :placeholder="$t(`m.verify['请选择']`)"
               @selected="handleSelected"
+              @clear="handleActionClear"
               searchable>
               <bk-option v-for="option in processesList"
                 :key="option.id"
@@ -91,7 +93,7 @@
                     :is-error="content.isLimitExceeded || content.isError"
                     @on-click="showResourceInstance(resourceTypeData, content, contentIndex, _index)" />
                 </div>
-                <p class="error-tips" v-if="resourceTypeError && content.empty">{{$t(`m.resourcePermiss['请选择资源实例']`)}}</p>
+                <!-- <p class="error-tips" v-if="resourceTypeError && content.empty">{{$t(`m.resourcePermiss['请选择资源实例']`)}}</p> -->
               </div>
             </div>
           </iam-form-item>
@@ -150,9 +152,9 @@
       @page-limit-change="limitChange">
       <bk-table-column :label="$t(`m.resourcePermiss['有权限的成员']`)">
         <template slot-scope="{ row }">
-          <span :title="row.type === 'user' ? `${row.id} (${row.name})` : `${row.name}`">
+          <bk-button text theme="primary" :title="row.type === 'user' ? `${row.id} (${row.name})` : `${row.name}`">
             {{row.type === 'user' ? `${row.id} (${row.name})` : `${row.name}`}}
-          </span>
+          </bk-button>
         </template>
       </bk-table-column>
       <bk-table-column :label="$t(`m.resourcePermiss['用户类型']`)">
@@ -190,7 +192,7 @@
         />
       </div>
       <div slot="footer" style="margin-left: 25px;">
-        <bk-button theme="primary" :loading="sliderLoading" @click="handleResourceSumit">{{ $t(`m.common['保存']`) }}</bk-button>
+        <bk-button theme="primary" :loading="sliderLoading" @click="handleResourceSubmit">{{ $t(`m.common['保存']`) }}</bk-button>
         <bk-button style="margin-left: 10px;" @click="handleResourceCancel('cancel')">{{ $t(`m.common['取消']`) }}</bk-button>
       </div>
     </bk-sideslider>
@@ -375,8 +377,17 @@
         }
       },
 
+      handleSystemClear () {
+        this.actionId = '';
+        this.resourceTypeData = { isEmpty: true };
+        this.resourceActionData = [];
+        this.processesList = [];
+        this.systemIdError = true;
+        this.actionIdError = true;
+      },
+
       // 查询类型选择
-      handlSearchChange (value) {
+      handleSearchChange (value) {
         this.searchTypeError = false;
         this.resourceTypeData = { isEmpty: true };
         this.systemId = '';
@@ -395,6 +406,13 @@
         this.resourceTypeData = this.processesList.find(e => e.id === this.actionId);
       },
 
+      handleActionClear () {
+        this.actionId = '';
+        this.actionIdError = true;
+        this.resourceTypeData = { isEmpty: true };
+        this.resourceActionData = [];
+      },
+
       // 查询和导入
       async handleSearchAndExport (isExport = false) {
         if (!this.searchType) {
@@ -409,13 +427,13 @@
           this.actionIdError = true;
           return;
         }
-        if (!this.resourceTypeData.isEmpty && this.searchType !== 'operate'
-          && this.resourceTypeData.resource_groups[this.groupIndex]
-          && this.resourceTypeData.resource_groups[this.groupIndex]
-            .related_resource_types.some(e => e.empty)) {
-          this.resourceTypeError = true;
-          return;
-        }
+        // if (!this.resourceTypeData.isEmpty && this.searchType !== 'operate'
+        //   && this.resourceTypeData.resource_groups[this.groupIndex]
+        //   && this.resourceTypeData.resource_groups[this.groupIndex]
+        //     .related_resource_types.some(e => e.empty)) {
+        //   this.resourceTypeError = true;
+        //   return;
+        // }
         this.tableLoading = !isExport;
         let resourceInstances = _.cloneDeep(this.resourceInstances);
         resourceInstances = resourceInstances.reduce((prev, item) => {
@@ -590,7 +608,7 @@
         this.resourceInstanceSidesliderTitle = '';
       },
 
-      async handleResourceSumit () {
+      async handleResourceSubmit () {
         const conditionData = this.$refs.renderResourceRef.handleGetValue();
         const { isEmpty, data } = conditionData;
         if (isEmpty) {
