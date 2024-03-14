@@ -46,10 +46,9 @@
           size="small"
           :data="manualTableList"
           :ext-cls="'manual-table-wrapper'"
-          :max-height="380"
+          :max-height="360"
           :outer-border="false"
           :header-border="false"
-          :pagination="pagination"
           @select="handleSelectChange"
           @select-all="handleSelectAllChange">
 

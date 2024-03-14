@@ -501,12 +501,21 @@
 
       // 重置
       handleReset () {
-        this.searchType = '';
+        this.limit = 100;
+        this.searchType = 'resource_instance';
         this.systemId = '';
         this.actionId = '';
-        this.resourceInstances = [];
         this.permissionType = '';
-        this.limit = 100;
+        this.tableList = [];
+        this.resourceInstances = [];
+        this.resourceTypeData = { isEmpty: true };
+        this.pagination = Object.assign(this.pagination, { current: 1, limit: 10 });
+        this.emptyData = {
+          type: 'empty',
+          text: '暂无数据',
+          tip: '',
+          tipType: ''
+        };
       },
 
       // 求值
