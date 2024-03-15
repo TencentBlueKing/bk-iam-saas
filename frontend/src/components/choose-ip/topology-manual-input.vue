@@ -385,7 +385,9 @@
             }
             console.log(formatStr);
             this.manualValue = cloneDeep(formatStr);
-            const list = results.map(item => {
+            // 处理手动输入输入多个资源实例，但是是单选的业务场景
+            const result = this.resourceValue ? [].concat([results[0]]) : results;
+            const list = result.map(item => {
               let checked = false;
               let disabled = false;
               let isRemote = false;
