@@ -351,10 +351,10 @@
       async handleAddManualUser () {
         this.manualAddLoading = true;
         try {
-          const { system_id, action_id, resource_type_system, resource_type_id } = this.systemParams;
+          const { system_id, action_id, resource_type_system, type } = this.systemParams;
           const nameList = this.manualValue.split(this.regValue).filter(item => item !== '');
           const params = {
-            type: resource_type_id,
+            type,
             system_id,
             action_id,
             action_system_id: resource_type_system,

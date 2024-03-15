@@ -155,7 +155,7 @@
         <TopologyManualInput
           ref="topologyManualInputRef"
           :selection-mode="selectionMode"
-          :system-params="systemParams"
+          :system-params="getSystemParams"
           :resource-value="resourceValue"
           :cur-chain="curChain"
           :cur-selected-chain="curSelectedChain"
@@ -356,6 +356,10 @@
       },
       isManualInput () {
         return ['manualInput'].includes(this.curSelectedChain.id) && ['instance:paste'].includes(this.selectionMode);
+      },
+      getSystemParams () {
+        const curChainId = this.curChain.length ? this.curChain[0].id : '';
+        return { ...this.systemParams, ...{ type: curChainId } };
       }
     },
     watch: {
