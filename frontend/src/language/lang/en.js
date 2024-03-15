@@ -289,7 +289,7 @@ export const m = {
         '请先从左侧输入并解析': 'Please input and parse from the left first',
         '实例名称输入错误或不存在于授权资源实例范围内': 'Instance name input error or does not exist within the authorized resource instance scope',
         '实例名称': 'Instance name',
-        '请输入实例名称，以回车/逗号/分号/空格分割': 'Please enter the instance name, separated by carriage return, comma, semicolon, or space',
+        '请输入实例名称，以回车/逗号/分号/空格分割': 'Please enter the instance name, separated by carriage return, comma, or semicolon',
         '本页': 'page',
         '每页': 'Page',
         '清除选择': 'Clear',

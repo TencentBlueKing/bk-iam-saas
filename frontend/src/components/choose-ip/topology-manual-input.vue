@@ -6,7 +6,7 @@
         type="textarea"
         class="manual-textarea"
         v-model="manualValue"
-        :placeholder="$t(`m.common['请输入实例名称，以回车/逗号/分号/空格分割']`)"
+        :placeholder="$t(`m.common['请输入实例名称，以回车/逗号/分号分割']`)"
         :rows="14"
         :disabled="isInputDisabled"
         @input="handleManualInput"
@@ -145,7 +145,7 @@
       return {
         tableKeyWord: '',
         manualValue: '',
-        regValue: /，|,|；|;|、|\\|\n|\s/,
+        regValue: /，|,|；|;|、|\\|\n/,
         manualAddLoading: false,
         manualInputError: false,
         pagination: {
@@ -175,7 +175,7 @@
         return this.manualValue.split(this.regValue).filter(item => item !== '').length === 0;
       },
       isInputDisabled () {
-        return this.resourceValue && this.hasSelectedValues.length;
+        return this.resourceValue && this.hasSelectedValues.length > 0;
       }
     },
     watch: {
@@ -342,7 +342,8 @@
       getUsername (str) {
         const array = str.split('');
         const index = array.findIndex((item) => item === '(');
-        if (index !== -1) {
+        const isAll = array.filter(item => ['(', ')'].includes(item)).length === array.length;
+        if (index !== -1 && isAll) {
           return array.splice(0, index).join('');
         }
         return str;
@@ -384,7 +385,9 @@
             }
             console.log(formatStr);
             this.manualValue = cloneDeep(formatStr);
-            const list = results.map(item => {
+            // 处理手动输入输入多个资源实例，但是是单选的业务场景
+            const result = this.resourceValue ? [].concat([results[0]]) : results;
+            const list = result.map(item => {
               let checked = false;
               let disabled = false;
               let isRemote = false;
@@ -424,13 +427,13 @@
               const isAsyncFlag = isAsync || item.child_type !== '';
               return new Node({ ...item, checked, disabled, isRemote, isExistNoCarryLimit }, 0, isAsyncFlag);
             });
-            const hasSelectedInstances = list.filter((item) => {
-              return !this.hasSelectedInstances.map((v) => `${v.id}${v.name}`).includes(`${item.id}${item.name}`);
-            });
-            this.manualTableListStorage = [...list];
-            this.manualTableList = cloneDeep(this.manualTableListStorage);
+            const defaultSelectList = this.curSelectedValues.map((v) => v.ids).flat(this.curChain.length);
+            const curChainId = this.curChain.length > 0 ? this.curChain[0].id : '';
+            const hasSelectedInstances = [...list || []].filter((v) => !defaultSelectList.includes(`${v.id}&${curChainId}`));
+            this.manualTableListStorage = cloneDeep(hasSelectedInstances);
+            this.manualTableList = cloneDeep(hasSelectedInstances);
+            console.log(this.curSelectedValues, defaultSelectList, hasSelectedInstances, '已有资源实例');
             this.hasSelectedInstances.push(...hasSelectedInstances);
-            console.log(hasSelectedInstances);
             this.fetchManualTableData();
             this.$emit('on-select-all', hasSelectedInstances, true);
           }
