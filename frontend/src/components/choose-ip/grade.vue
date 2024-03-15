@@ -705,7 +705,9 @@
           curNode.checked = false;
           this.setNodeNoChecked(false, curNode);
           this.$nextTick(() => {
-            this.$refs.topologyRef.$refs.topologyTableRef.toggleRowSelection(curNode, false);
+            this.$refs.topologyRef
+              && this.$refs.topologyRef.$refs
+              && this.$refs.topologyRef.$refs.topologyTableRef.toggleRowSelection(curNode, false);
             if (!this.isOnlyLevel) {
               bus.$emit('update-table-toggleRowSelection', { node: curNode, isChecked: false });
             }
@@ -744,7 +746,9 @@
           curNode.checked = true;
           this.setNodeChecked(true, curNode);
           this.$nextTick(() => {
-            this.$refs.topologyRef.$refs.topologyTableRef.toggleRowSelection(curNode, true);
+            this.$refs.topologyRef
+              && this.$refs.topologyRef.$refs
+              && this.$refs.topologyRef.$refs.topologyTableRef.toggleRowSelection(curNode, true);
             if (!this.isOnlyLevel) {
               bus.$emit('update-table-toggleRowSelection', { node: curNode, isChecked: true });
             }

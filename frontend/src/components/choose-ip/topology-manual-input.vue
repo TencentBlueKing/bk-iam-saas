@@ -6,7 +6,7 @@
         type="textarea"
         class="manual-textarea"
         v-model="manualValue"
-        :placeholder="$t(`m.common['请输入实例名称，以回车/逗号/分号/空格分割']`)"
+        :placeholder="$t(`m.common['请输入实例名称，以回车/逗号/分号分割']`)"
         :rows="14"
         :disabled="isInputDisabled"
         @input="handleManualInput"
@@ -145,7 +145,7 @@
       return {
         tableKeyWord: '',
         manualValue: '',
-        regValue: /，|,|；|;|、|\\|\n|\s/,
+        regValue: /，|,|；|;|、|\\|\n/,
         manualAddLoading: false,
         manualInputError: false,
         pagination: {
@@ -342,7 +342,8 @@
       getUsername (str) {
         const array = str.split('');
         const index = array.findIndex((item) => item === '(');
-        if (index !== -1) {
+        const isAll = array.filter(item => ['(', ')'].includes(item)).length === array.length;
+        if (index !== -1 && isAll) {
           return array.splice(0, index).join('');
         }
         return str;

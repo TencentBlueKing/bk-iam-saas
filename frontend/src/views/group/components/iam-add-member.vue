@@ -451,7 +451,8 @@
   const getUsername = (str) => {
     const array = str.split('');
     const index = array.findIndex((item) => item === '(');
-    if (index !== -1) {
+    const isAll = array.filter(item => ['(', ')'].includes(item)).length === array.length;
+    if (index !== -1 && isAll) {
       return array.splice(0, index).join('');
     }
     return str;

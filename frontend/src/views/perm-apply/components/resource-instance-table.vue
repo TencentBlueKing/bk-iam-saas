@@ -478,7 +478,7 @@
           }
           const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
           .related_resource_types[this.curResIndex];
-          return 'instance:paste' || curData.selectionMode;
+          return curData.selectionMode;
       },
       curAggregateDisabled () {
           if (this.aggregateIndex === -1) {
