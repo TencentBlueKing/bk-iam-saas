@@ -175,7 +175,7 @@
         return this.manualValue.split(this.regValue).filter(item => item !== '').length === 0;
       },
       isInputDisabled () {
-        return this.resourceValue && this.hasSelectedValues.length;
+        return this.resourceValue && this.hasSelectedValues.length > 0;
       }
     },
     watch: {
@@ -425,13 +425,13 @@
               const isAsyncFlag = isAsync || item.child_type !== '';
               return new Node({ ...item, checked, disabled, isRemote, isExistNoCarryLimit }, 0, isAsyncFlag);
             });
-            const hasSelectedInstances = list.filter((item) => {
-              return !this.hasSelectedInstances.map((v) => `${v.id}${v.name}`).includes(`${item.id}${item.name}`);
-            });
-            this.manualTableListStorage = [...list];
-            this.manualTableList = cloneDeep(this.manualTableListStorage);
+            const defaultSelectList = this.curSelectedValues.map((v) => v.ids).flat(this.curChain.length);
+            const curChainId = this.curChain.length > 0 ? this.curChain[0].id : '';
+            const hasSelectedInstances = [...list || []].filter((v) => !defaultSelectList.includes(`${v.id}&${curChainId}`));
+            this.manualTableListStorage = cloneDeep(hasSelectedInstances);
+            this.manualTableList = cloneDeep(hasSelectedInstances);
+            console.log(this.curSelectedValues, defaultSelectList, hasSelectedInstances, '已有资源实例');
             this.hasSelectedInstances.push(...hasSelectedInstances);
-            console.log(hasSelectedInstances);
             this.fetchManualTableData();
             this.$emit('on-select-all', hasSelectedInstances, true);
           }
