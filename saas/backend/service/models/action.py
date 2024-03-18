@@ -59,7 +59,7 @@ class Action(BaseModel):
     related_resource_types: List[RelatedResourceType] = []
     related_actions: List[str] = []  # 依赖操作
     related_environments: List[RelatedEnvironment] = []
-    sensitivity: int = 0
+    sensitivity: int = 1
 
     def __init__(self, **data: Any):
         if "related_actions" in data and data["related_actions"] is None:

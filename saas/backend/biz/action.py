@@ -47,9 +47,9 @@ class ActionBean(Action):
             "sensitivity" in data
             and data["sensitivity"]
             and isinstance(data["sensitivity"], int)
-            and data["sensitivity"] < 5
+            and 1 < data["sensitivity"] < 6
         ):
-            self.sensitivity_level = SensitivityLevel.get_choices()[data["sensitivity"]][0]
+            self.sensitivity_level = SensitivityLevel.get_choices()[data["sensitivity"] - 1][0]
 
 
 class ActionSearchCondition(BaseModel):
