@@ -607,7 +607,7 @@
       },
         
       handleChangeLocale (language) {
-        Cookie.remove('blueking_language', { path: '' });
+        Cookie.remove('blueking_language', { domain: window.BK_DOMAIN || `.${location.host}` });
         Cookie.set('blueking_language', language, {
           domain: window.BK_DOMAIN
         });
