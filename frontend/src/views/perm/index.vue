@@ -108,7 +108,6 @@
                 <span class="panel-name">
                   <span>{{ panel.label }}</span>
                   <span
-                    style="color:##3a84ff;"
                     v-if="curSearchParams && Object.keys(curSearchParams).length">
                     ({{panel.count}})
                   </span>

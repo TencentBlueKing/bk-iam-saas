@@ -662,8 +662,11 @@
 
 <style lang="postcss" scoped>
 .iam-member-template-wrapper {
-  .member-template-table {
+  /deep/ .member-template-table {
     margin-top: 20px;
+    &.bk-table-dark-header th {
+      background-color: #fafbfd;
+    }
 
     .member-template-name {
       display: flex;

@@ -9,21 +9,21 @@
       @page-limit-change="handleLimitChange"
       v-bkloading="{ isLoading: isLoading, opacity: 1 }"
     >
-      <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
+      <bk-table-column :label="$t(`m.userGroup['用户组名']`)" :min-width="200" fixed="left">
         <template slot-scope="{ row }">
           <span class="user-group-name" :title="row.name" @click="handleViewDetail(row)">
             {{ row.name }}
           </span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.common['描述']`)">
+      <bk-table-column :label="$t(`m.common['描述']`)" :min-width="200">
         <template slot-scope="{ row }">
           <span :title="row.description || ''">
             {{ row.description || '--' }}
           </span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.grading['管理空间']`)">
+      <bk-table-column :label="$t(`m.grading['管理空间']`)" :min-width="200">
         <template slot-scope="{ row }">
           <span :title="row.role && row.role.name ? row.role.name : ''">
             {{ row.role ? row.role.name : '--' }}
@@ -55,7 +55,7 @@
         </template>
       </bk-table-column>
       <bk-table-column :label="$t(`m.common['有效期']`)" prop="expired_at_display" />
-      <bk-table-column :label="$t(`m.common['操作-table']`)">
+      <bk-table-column :label="$t(`m.common['操作-table']`)" width="100" fixed="right">
         <template>
           <bk-button
             class="mr10"
