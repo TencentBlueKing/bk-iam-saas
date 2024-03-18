@@ -470,6 +470,7 @@
                     :list="newTableList"
                     :original-table-list="tableDataBackup"
                     :system-id="systemValue"
+                    :system-list="systemList"
                     ref="resInstanceTableRef"
                     @on-select="handleResourceSelect"
                     @on-realted-change="handleRelatedChange" />
@@ -486,6 +487,7 @@
                     :list="newRecommendTableList"
                     :original-table-list="tableRecommendDataBackup"
                     :system-id="systemValue"
+                    :system-list="systemList"
                     ref="resInstanceRecommendTableRef"
                     @on-select="handleResourceSelect"
                     @on-realted-change="handleRelatedChange" />
@@ -562,10 +564,12 @@
           class="tableData"
         >
           <resource-instance-table
+            :has-system="true"
             :cache-id="routerQuery.cache_id"
             :list="newTableList"
             :original-table-list="tableDataBackup"
             :system-id="systemValue"
+            :system-list="systemList"
             ref="resInstanceTableRef"
             @on-select="handleResourceSelect"
             @on-realted-change="handleRelatedChange" />
@@ -577,11 +581,13 @@
           class="tableData"
         >
           <resource-instance-table
+            :has-system="true"
             :is-recommend="isRecommend"
             :cache-id="routerQuery.cache_id"
             :list="newRecommendTableList"
             :original-table-list="tableRecommendDataBackup"
             :system-id="systemValue"
+            :system-list="systemList"
             ref="resInstanceRecommendTableRef"
             @on-select="handleResourceSelect"
             @on-realted-change="handleRelatedChange" />
