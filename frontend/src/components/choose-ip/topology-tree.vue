@@ -1635,6 +1635,7 @@
             );
             // 如果currentSelect有内容， 代表当前是勾选，否则就取从总数据里取当前页不是disabled的数据
             let noDisabledData = [];
+            const hasNoDisableData = [...resourceList].filter((item) => !item.disabled);
             if (this.resourceValue) {
               // 处理单选业务
               noDisabledData = allTreeData.filter(
@@ -1643,19 +1644,19 @@
             } else {
               noDisabledData = allTreeData.filter(
                 (item) =>
-                  !resourceList.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`)
+                  !hasNoDisableData.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`)
                   && this.renderTopologyData.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`)
               );
             }
-            const nodes = currentSelect.length ? currentSelect : noDisabledData;
+            const nodes = Object.freeze(currentSelect.length ? currentSelect : noDisabledData);
             this.renderTopologyData.forEach((item) => {
               if (!item.disabled) {
                 // 已选的节点
                 const isHasSelected = defaultSelectList.includes(`${item.id}&${this.formatCurLevelType(item)}`);
                 // 新加的节点
-                const isNewSelect = resourceList.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`);
+                const isNewSelect = hasNoDisableData.map((v) => `${v.name}&${v.id}`).includes(`${item.name}&${item.id}`);
                 let isChecked = isNewSelect || isHasSelected;
-                if (!payload.length) {
+                if (!hasNoDisableData.length) {
                   isChecked = isNewSelect || !isHasSelected;
                 }
                 this.$set(item, 'checked', isChecked);
@@ -1673,8 +1674,6 @@
             // 处理多层及以上拓扑不展开的场景下直接勾选同步右侧表格勾选状态
             if (!this.isOnlyLevel) {
               const curSelectList = nodes.map((item) => `${item.id}&${item.name}`);
-              // const defaultSelectList = this.curSelectedValues.map((v) => v.ids).flat(this.curChain.length);
-              // nodes = nodes.filter((item) => !defaultSelectList.includes(`${item.id}&${this.curChain[item.level].id}`));
               this.allTreeData.forEach((item) => {
                 if (curSelectList.includes(`${item.id}&${item.name}`) && !item.disabled) {
                   item.checked = currentSelect.length > 0;
