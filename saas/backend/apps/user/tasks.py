@@ -20,12 +20,12 @@ from django.db.models import F, Q
 from django.template.loader import render_to_string
 from django.utils import timezone
 
-from backend.apps.organization.constants import StaffStatus
 from backend.apps.organization.models import User
 from backend.apps.policy.models import Policy
 from backend.apps.subject.audit import log_user_cleanup_policy_audit_event
 from backend.apps.subject_template.models import SubjectTemplateRelation
 from backend.apps.user.models import UserPermissionCleanupRecord
+from backend.biz.constants import StaffStatus
 from backend.biz.group import GroupBiz
 from backend.biz.helper import RoleWithPermGroupBiz
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz

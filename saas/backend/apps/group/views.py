@@ -26,7 +26,6 @@ from backend.apps.application.serializers import ConditionCompareSLZ, ConditionT
 from backend.apps.group import tasks  # noqa
 from backend.apps.group.models import Group
 from backend.apps.policy.serializers import PolicyDeleteSLZ, PolicySLZ, PolicySystemSLZ
-from backend.apps.role.constants import PermissionTypeEnum
 from backend.apps.role.models import Role, RoleRelatedObject
 from backend.apps.subject_template.models import SubjectTemplate, SubjectTemplateGroup
 from backend.apps.template.audit import TemplateMemberDeleteAuditProvider
@@ -34,6 +33,7 @@ from backend.apps.template.filters import TemplateFilter
 from backend.apps.template.models import PermTemplate, PermTemplatePolicyAuthorized, PermTemplatePreUpdateLock
 from backend.apps.template.serializers import TemplateListSchemaSLZ, TemplateListSLZ
 from backend.audit.audit import audit_context_setter, log_api_event, view_audit_decorator
+from backend.biz.constants import PermissionTypeEnum
 from backend.biz.group import GroupBiz, GroupCheckBiz, GroupMemberExpiredAtBean
 from backend.biz.permission_audit import QueryAuthorizedSubjects
 from backend.biz.policy import PolicyBean, PolicyOperationBiz, PolicyQueryBiz

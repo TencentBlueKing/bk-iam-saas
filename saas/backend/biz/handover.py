@@ -12,11 +12,11 @@ specific language governing permissions and limitations under the License.
 from abc import ABC, abstractmethod
 from typing import List
 
-from backend.apps.handover.constants import HandoverTaskStatus
 from backend.apps.handover.models import HandoverTask
 from backend.apps.role.models import Role
 from backend.audit.audit import log_group_event, log_role_event, log_subject_template_event, log_user_event
 from backend.audit.constants import AuditSourceType, AuditType
+from backend.biz.constants import HandoverTaskStatus
 from backend.biz.group import GroupBiz
 from backend.biz.helper import RoleWithPermGroupBiz
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz

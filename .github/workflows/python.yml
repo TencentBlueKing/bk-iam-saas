@@ -37,5 +37,7 @@ jobs:
       run: bandit -c saas/pyproject.toml -r saas
     - name: Lint with mypy
       run:  mypy --config-file=saas/pyproject.toml saas
+    - name: Import Linter
+      run: cd saas && lint-imports --config=./.importlinter && cd ..
     - name: Test with pytest
       run: pytest -c saas/pyproject.toml saas

@@ -32,25 +32,6 @@ class HandoverStatus(ChoicesEnum, LowerStrEnum):
     )
 
 
-class HandoverTaskStatus(ChoicesEnum, LowerStrEnum):
-    """权限交接具体任务的执行状态"""
-
-    RUNNING = auto()
-    SUCCEED = auto()
-    FAILED = auto()
-
-    _choices_labels = skip(
-        (
-            (RUNNING, _("正在交接")),
-            (SUCCEED, _("交接成功")),
-            (
-                FAILED,
-                _("交接失败"),
-            ),
-        )
-    )
-
-
 class HandoverObjectType(ChoicesEnum, LowerStrEnum):
     """交接的权限类型"""
 
