@@ -11,6 +11,11 @@
       @select="handlerChange"
       @select-all="handlerAllChange">
       <bk-table-column v-if="isRecommend" fixed="left" type="selection" width="60"></bk-table-column>
+      <bk-table-column v-if="hasSystem && systemId" :resizable="false" :label="$t(`m.common['系统']`)">
+        <span>
+          {{ formatSystemLabel }}
+        </span>
+      </bk-table-column>
       <bk-table-column :resizable="false" :label="$t(`m.common['操作']`)" :width="isRecommend ? '240' : '300'">
         <template slot-scope="{ row }">
           <div v-if="!!row.isAggregate" style="padding: 10px 0;"
@@ -328,6 +333,10 @@
         type: Array,
         default: () => []
       },
+      systemList: {
+        type: Array,
+        default: () => []
+      },
       systemId: {
         type: String,
         default: ''
@@ -347,6 +356,10 @@
         }
       },
       isAllExpanded: {
+        type: Boolean,
+        default: false
+      },
+      hasSystem: {
         type: Boolean,
         default: false
       }
@@ -519,6 +532,15 @@
             return displayValue;
           }
         };
+      },
+      formatSystemLabel () {
+       if (this.systemId) {
+         const curSystem = this.systemList.find((item) => item.id === this.systemId);
+         if (curSystem) {
+          return curSystem.name;
+         }
+       }
+       return '';
       }
     },
     watch: {
@@ -1865,6 +1887,6 @@
        
 </script>
 
-<style>
+<style scoped>
   @import './resource-instance-table.css';
 </style>

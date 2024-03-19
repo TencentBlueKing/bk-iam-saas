@@ -869,7 +869,6 @@
             const deleteIndex = deleteInstanceItem.path.findIndex(item => item.map(v => `${v.id}&${v.type}`).join('') === tempPath.map(v => `${v.id}&${v.type}`).join(''));
             const deleteItem = deleteInstanceItem.path.filter(item => item.map(v => `${v.id}&${v.type}`).join('') === tempPath.map(v => `${v.id}&${v.type}`).join(''));
             curChildrenIds = node.children.map(item => `${item.id}&${item.type}`);
-            console.log(deleteIndex, deleteInstanceItem, deleteItem);
             if (deleteIndex > -1) {
               isDisabled = deleteInstanceItem.path[deleteIndex].some(_ => _.disabled);
               if (!isDisabled) {

@@ -320,6 +320,9 @@
     }
     .tableData {
         padding:0px 30px 0px 22px;
+        /deep/ .bk-alert-wraper {
+            align-items: center;
+        }
     }
 
     .form-tab{

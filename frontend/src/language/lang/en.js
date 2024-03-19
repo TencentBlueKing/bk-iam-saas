@@ -1183,7 +1183,9 @@ export const m = {
         '任务': 'Task',
         '审计事件': 'Event',
         '对象实例': 'Object instance',
-        '用户组权限交接': 'User group permission handover'
+        '用户组权限交接': 'User group permission handover',
+        '审批': 'Approval',
+        '后台任务': 'Backend task'
     },
     access: {
         '接入系统': 'System Integration',

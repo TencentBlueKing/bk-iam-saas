@@ -1764,17 +1764,18 @@
   align-items: center;
   &-label {
     color: #3a84ff;
-    max-width: calc(100% - 120px);
+    /* max-width: calc(100% - 120px); */
     word-break: break-all;
     cursor: pointer;
     &:hover {
       color: #699df4;
     }
-    &-expired {
+    /* &-expired {
       max-width: calc(100% - 150px);
-    }
+    } */
   }
   &-expired {
+    min-width: 80px;
     line-height: 1;
     margin-left: 5px;
   }
