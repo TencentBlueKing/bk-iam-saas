@@ -19,8 +19,16 @@
       @select-all="handleSelectAllChange"
       v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
     >
-      <bk-table-column type="selection" align="center" :selectable="setDefaultSelect" fixed="left" />
-      <bk-table-column :label="$t(`m.userGroup['用户组名']`)" :min-width="200">
+      <bk-table-column
+        type="selection"
+        align="center"
+        :selectable="setDefaultSelect"
+        :fixed="curPageData.length > 0 ? 'left' : false"
+      />
+      <bk-table-column
+        :label="$t(`m.userGroup['用户组名']`)"
+        :min-width="200"
+        :fixed="curPageData.length > 0 ? 'left' : false">
         <template slot-scope="{ row }">
           <span class="user-group-name" :title="row.name" @click="goDetail(row)">{{ row.name }}</span>
         </template>
@@ -69,9 +77,13 @@
         </template>
       </bk-table-column>
       <!-- 有效期 -->
-      <bk-table-column :label="$t(`m.common['有效期']`)" prop="expired_at_display"></bk-table-column>
+      <bk-table-column :label="$t(`m.common['有效期']`)" prop="expired_at_display" width="120" />
       <!-- 操作 -->
-      <bk-table-column :label="$t(`m.common['操作-table']`)" width="100" fixed="right">
+      <bk-table-column
+        :label="$t(`m.common['操作-table']`)"
+        width="100"
+        :fixed="curPageData.length > 0 ? 'right' : false"
+      >
         <template slot-scope="props">
           <bk-button disabled text v-if="props.row.department_id !== 0">
             <span :title="$t(`m.perm['通过组织加入的组无法退出']`)">{{ $t(`m.common['退出']`) }}</span>

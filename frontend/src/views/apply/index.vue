@@ -173,6 +173,10 @@
       },
 
       handleLoadMore () {
+        const { totalPage } = this.pagination;
+        if (this.pagination.current + 1 > totalPage) {
+          return;
+        }
         this.pagination.current++;
         this.fetchApplyList(false, true);
       },

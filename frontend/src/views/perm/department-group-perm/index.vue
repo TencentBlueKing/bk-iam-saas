@@ -15,7 +15,7 @@
         </template>
       </bk-table-column>
       <!-- 描述 -->
-      <bk-table-column :label="$t(`m.common['描述']`)" :min-width="200">
+      <bk-table-column :label="$t(`m.common['描述']`)" width="200">
         <template slot-scope="{ row }">
           <span :title="row.description !== '' ? row.description : ''">
             {{ row.description !== '' ? row.description : '--'}}
@@ -50,7 +50,7 @@
         </template>
       </bk-table-column>
       <!-- 加入方式 -->
-      <bk-table-column :label="$t(`m.perm['加入方式']`)">
+      <bk-table-column :label="$t(`m.perm['加入方式']`)" :min-width="200">
         <template slot-scope="props">
           <span v-if="props.row.department_id === 0">{{ $t(`m.perm['直接加入']`) }}</span>
           <span v-else :title="`${$t(`m.perm['通过组织加入']`)}：${props.row.department_name}`">

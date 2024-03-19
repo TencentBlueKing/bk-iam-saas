@@ -9,21 +9,25 @@
       @page-limit-change="handlePageLimitChange"
       v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
     >
-      <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
+      <bk-table-column
+        :label="$t(`m.userGroup['用户组名']`)"
+        :min-width="200"
+        :fixed="curPageData.length > 0 ? 'left' : false"
+      >
         <template slot-scope="{ row }">
-          <span class="user-group-name" :title="row.name" @click="goDetail(row)">{{
-            row.name
-          }}</span>
+          <span class="user-group-name" :title="row.name" @click="goDetail(row)">
+            {{ row.name }}
+          </span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.common['描述']`)">
+      <bk-table-column :label="$t(`m.common['描述']`)" width="200">
         <template slot-scope="{ row }">
           <span :title="row.description">
             {{ row.description || "--" }}
           </span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.grading['管理空间']`)">
+      <bk-table-column :label="$t(`m.grading['管理空间']`)" width="200">
         <template slot-scope="{ row }">
           <span :title="row.role && row.role.name ? row.role.name : ''">
             {{ row.role ? row.role.name : "--" }}
@@ -49,7 +53,7 @@
         </template>
       </bk-table-column>
       <!-- 加入方式 -->
-      <bk-table-column :label="$t(`m.perm['加入方式']`)">
+      <bk-table-column :label="$t(`m.perm['加入方式']`)" :min-width="200">
         <template slot-scope="props">
           <span v-if="props.row.department_id === 0">{{ $t(`m.perm['直接加入']`) }}</span>
           <span
@@ -64,9 +68,14 @@
       <bk-table-column
         :label="$t(`m.common['有效期']`)"
         prop="expired_at_display"
-      ></bk-table-column>
+        width="120"
+      />
       <!-- 操作 -->
-      <bk-table-column :label="$t(`m.common['操作']`)" width="200">
+      <bk-table-column
+        width="100"
+        :label="$t(`m.common['操作-table']`)"
+        :fixed="curPageData.length > 0 ? 'right' : false"
+      >
         <template slot-scope="props">
           <bk-button disabled text v-if="props.row.department_id !== 0">
             <span :title="$t(`m.perm['通过组织加入的组无法退出']`)">{{

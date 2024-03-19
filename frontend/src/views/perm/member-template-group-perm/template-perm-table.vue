@@ -47,7 +47,7 @@
           <span :title="row.created_time">{{ row.created_time.replace(/T/, ' ') }}</span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.perm['加入方式']`)">
+      <bk-table-column :label="$t(`m.perm['加入方式']`)" :min-width="200">
         <template slot-scope="{ row }">
           <span :title="`${$t(`m.perm['通过人员模板加入']`)}: ${row.template_name}`">
             {{ $t(`m.perm['通过人员模板加入']`) }}: {{ row.template_name }}

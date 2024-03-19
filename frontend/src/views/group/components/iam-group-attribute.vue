@@ -183,6 +183,7 @@
 }
 .iam-select-property {
   position: relative;
+  width: 160px !important;
   .edit-wrapper {
     position: relative;
     display: flex;
