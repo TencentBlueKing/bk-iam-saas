@@ -10,11 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 from enum import Enum
 
-from aenum import LowerStrEnum, auto, skip
-from django.utils.translation import gettext as _
-
 from backend.service.constants import PermissionCodeEnum, RoleType
-from backend.util.enum import ChoicesEnum
 
 # 角色默认权限
 DEFAULT_ROLE_PERMISSIONS = {  # 超级管理员不能操作子集管理员
@@ -57,16 +53,6 @@ DEFAULT_ROLE_PERMISSIONS = {  # 超级管理员不能操作子集管理员
         PermissionCodeEnum.MANAGE_COMMON_ACTION.value,
     ],
 }
-
-
-class PermissionTypeEnum(ChoicesEnum, LowerStrEnum):
-    """权限类型"""
-
-    CUSTOM = auto()
-    TEMPLATE = auto()
-    RESOURCE_INSTANCE = auto()
-
-    _choices_labels = skip(((CUSTOM, _("自定义权限")), (TEMPLATE, _("模板权限")), (RESOURCE_INSTANCE, _("资源实例"))))
 
 
 class ManagementCommonActionNameEnum(Enum):

@@ -19,6 +19,7 @@ from backend.apps.application.base_serializers import BaseAggActionListSLZ, Syst
 from backend.apps.organization.models import Department, User
 from backend.apps.policy.serializers import ConditionSLZ, InstanceSLZ, ResourceGroupSLZ, ResourceSLZ, ResourceTypeSLZ
 from backend.apps.role.models import Role, RoleCommonAction, RoleRelation, RoleUser
+from backend.biz.constants import PermissionTypeEnum
 from backend.biz.role import RoleBiz
 from backend.biz.subject import SubjectInfoList
 from backend.common.serializers import GroupMemberSLZ, GroupSearchSLZ, ResourceInstancesSLZ
@@ -32,8 +33,6 @@ from backend.service.constants import (
     RoleScopeSubjectType,
     SubjectType,
 )
-
-from .constants import PermissionTypeEnum
 
 
 class RoleScopeSubjectSLZ(serializers.Serializer):

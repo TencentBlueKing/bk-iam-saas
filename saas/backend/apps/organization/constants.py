@@ -55,6 +55,3 @@ class TriggerType(ChoicesEnum, LowerStrEnum):
 
 
 SYNC_TASK_DEFAULT_EXECUTOR = "periodic_task"
-
-# 新用户自动同步的用户数量
-NEW_USER_AUTO_SYNC_COUNT_LIMIT = 50
