@@ -159,6 +159,7 @@
           :cur-chain="curChain"
           :cur-selected-chain="curSelectedChain"
           :has-selected-values="hasSelectedValues"
+          :type-list="selectList"
           @on-select="handleTreeSelect"
           @on-select-all="handleTreeSelectAll"
         />
