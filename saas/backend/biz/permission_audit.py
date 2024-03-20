@@ -15,8 +15,8 @@ from django.http import StreamingHttpResponse
 from openpyxl.styles import Font, colors
 
 from backend.apps.policy.models import Policy
-from backend.apps.role.constants import PermissionTypeEnum
 from backend.apps.template.models import PermTemplate, PermTemplatePolicyAuthorized
+from backend.biz.constants import PermissionTypeEnum
 from backend.biz.subject import SubjectInfoList
 from backend.biz.utils import fill_resources_attribute
 from backend.service.action import ActionService

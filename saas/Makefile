@@ -25,6 +25,7 @@ lint:
 	pflake8 --config=./pyproject.toml .
 	bandit -c ./pyproject.toml -r .
 	mypy --config-file=./pyproject.toml .
+	lint-imports --config .importlinter
 
 fmt:
 	isort --settings-path=./pyproject.toml .

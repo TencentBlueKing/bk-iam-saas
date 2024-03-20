@@ -10,7 +10,8 @@ specific language governing permissions and limitations under the License.
 """
 from django.db import models
 
-from backend.apps.handover.constants import HandoverObjectType, HandoverStatus, HandoverTaskStatus
+from backend.apps.handover.constants import HandoverObjectType, HandoverStatus
+from backend.biz.constants import HandoverTaskStatus
 from backend.common.models import TimestampedModel
 
 
