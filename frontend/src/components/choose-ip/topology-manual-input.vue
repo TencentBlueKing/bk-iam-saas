@@ -1,6 +1,25 @@
 <template>
   <div class="manual-wrapper">
     <div class="manual-wrapper-left">
+      <div class="manual-wrapper-left-select">
+        <bk-select
+          v-model="typeValue"
+          class="resource-type-list"
+          :clearable="false"
+          :searchable="true"
+          :placeholder="typePlaceHolder"
+          @change="handleTypeChange">
+          <bk-option
+            v-for="option in selectTypeList"
+            :key="`${option.id}&${option.system_id}`"
+            :id="option.id"
+            :name="option.name"
+          />
+        </bk-select>
+        <div class="manual-error-text pr10 mb10" v-if="isShowTypeError">
+          {{$t(`m.verify['请选择资源类型']`)}}
+        </div>
+      </div>
       <bk-input
         ref="manualInputRef"
         type="textarea"
@@ -80,6 +99,7 @@
   import { cloneDeep } from 'lodash';
   import { guid, formatCodeData } from '@/common/util';
   import { bus } from '@/common/bus';
+  import il8n from '@/language';
 
   class Node {
     constructor (payload, level = 0, isAsync = true, type = 'node') {
@@ -126,6 +146,10 @@
       selectionMode: {
         type: String
       },
+      typePlaceHolder: {
+        type: String,
+        default: il8n('access', '请选择资源类型')
+      },
       curSelectedChain: {
         type: Object
       },
@@ -139,15 +163,22 @@
       curChain: {
         type: Array,
         default: () => []
+      },
+      // 资源类型列表
+      typeList: {
+        type: Array,
+        default: () => []
       }
     },
     data () {
       return {
+        typeValue: '',
         tableKeyWord: '',
         manualValue: '',
         regValue: /，|,|；|;|、|\\|\n/,
         manualAddLoading: false,
         manualInputError: false,
+        isShowTypeError: false,
         pagination: {
           current: 1,
           limit: 10,
@@ -163,7 +194,8 @@
         manualTableList: [],
         manualTableListStorage: [],
         hasSelectedInstances: [],
-        curSelectedValues: []
+        curSelectedValues: [],
+        selectTypeList: []
       };
     },
     computed: {
@@ -179,6 +211,12 @@
       }
     },
     watch: {
+      typeList: {
+        handler (value) {
+          this.selectTypeList = [...value || []].filter((item) => !['manualInput'].includes(item.id));
+        },
+        immediate: true
+      },
       hasSelectedValues: {
         handler (value) {
           this.curSelectedValues = [...value];
@@ -294,6 +332,11 @@
         });
       },
 
+      handleTypeChange (payload) {
+        this.isShowTypeError = false;
+        this.typeValue = payload;
+      },
+
       handleSelectChange (selection, row) {
         this.fetchSelectedGroups('multiple', selection, row);
       },
@@ -350,12 +393,16 @@
       },
 
       async handleAddManualUser () {
+        if (!this.typeValue) {
+          this.isShowTypeError = true;
+          return;
+        }
         this.manualAddLoading = true;
         try {
-          const { system_id, action_id, resource_type_system, type } = this.systemParams;
+          const { system_id, action_id, resource_type_system } = this.systemParams;
           const nameList = this.manualValue.split(this.regValue).filter(item => item !== '');
           const params = {
-            type,
+            type: this.typeValue,
             system_id,
             action_id,
             action_system_id: resource_type_system,
@@ -465,18 +512,24 @@
       min-width: 300px;
       padding-left: 24px;
       padding-right: 10px;
-
-        .manual-error-text {
-          width: 248px;
-          margin-top: 4px;
-          font-size: 12px;
-          color: #ff4d4d;
-          line-height: 14px;
+      &-select {
+        width: 248px;
+        margin-bottom: 10px;
+        .resource-type-list {
+          width: 100%;
         }
+      }
+      .manual-error-text {
+        width: 248px;
+        margin-top: 4px;
+        font-size: 12px;
+        color: #ff4d4d;
+        line-height: 14px;
+      }
 
-        .manual-bottom-btn {
-          margin-top: 10px;
-        }
+      .manual-bottom-btn {
+        margin-top: 10px;
+      }
     }
 
     &-right {
