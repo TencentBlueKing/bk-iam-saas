@@ -450,9 +450,8 @@
   // 去除()以及之间的字符
   const getUsername = (str) => {
     const array = str.split('');
-    const index = array.findIndex((item) => item === '(');
-    const isAll = array.filter(item => ['(', ')'].includes(item)).length === array.length;
-    if (index !== -1 && isAll) {
+    const index = array.findIndex((item) => item.indexOf('(') > -1 || item.indexOf(')') > -1);
+    if (index !== -1) {
       return array.splice(0, index).join('');
     }
     return str;
