@@ -213,7 +213,15 @@
     watch: {
       typeList: {
         handler (value) {
-          this.selectTypeList = [...value || []].filter((item) => !['manualInput'].includes(item.id));
+          if (value.length) {
+            const curData = {};
+            const list = value.filter((item) => !['manualInput'].includes(item.id)).map((v) => v.resource_type_chain).flat(Infinity);
+            this.selectTypeList = list.reduce((prev, curr) => {
+              // eslint-disable-next-line no-unused-expressions
+              curData[`${curr.id}${curr.name}`] ? '' : curData[`${curr.id}${curr.name}`] = true && prev.push(curr);
+              return prev;
+            }, []);
+          }
         },
         immediate: true
       },
