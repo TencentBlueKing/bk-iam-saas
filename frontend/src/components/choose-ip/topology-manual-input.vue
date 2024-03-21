@@ -195,7 +195,8 @@
         manualTableListStorage: [],
         hasSelectedInstances: [],
         curSelectedValues: [],
-        selectTypeList: []
+        selectTypeList: [],
+        curAllViewChain: []
       };
     },
     computed: {
@@ -215,7 +216,8 @@
         handler (value) {
           if (value.length) {
             const curData = {};
-            const list = value.filter((item) => !['manualInput'].includes(item.id)).map((v) => v.resource_type_chain).flat(Infinity);
+            this.curAllViewChain = value.filter((item) => !['manualInput'].includes(item.id));
+            const list = this.curAllViewChain.map((v) => v.resource_type_chain).flat(Infinity);
             this.selectTypeList = list.reduce((prev, curr) => {
               // eslint-disable-next-line no-unused-expressions
               curData[`${curr.id}${curr.name}`] ? '' : curData[`${curr.id}${curr.name}`] = true && prev.push(curr);
@@ -400,6 +402,23 @@
         return str;
       },
 
+      // 处理在多维数组里找到符合数据的索引
+      findObjectIndex (arr, key, value) {
+        for (let i = 0; i < arr.length; i++) {
+          if (Array.isArray(arr[i])) {
+            const index = this.findObjectIndex(arr[i], key, value);
+            if (index !== -1) {
+              return index;
+            }
+          } else {
+            if (arr[i][key] === value) {
+              return i;
+            }
+          }
+        }
+        return -1;
+      },
+
       async handleAddManualUser () {
         if (!this.typeValue) {
           this.isShowTypeError = true;
@@ -438,8 +457,11 @@
             if (formatStr === '\n' || formatStr === '\s' || formatStr === ';') {
               formatStr = '';
             }
-            console.log(formatStr);
             this.manualValue = cloneDeep(formatStr);
+            const allViews = this.curAllViewChain.map((item) => item.resource_type_chain);
+            // 根据资源类型获取他当前层级
+            const curLevel = this.findObjectIndex(allViews, 'id', this.typeValue);
+            console.log(allViews, curLevel);
             // 处理手动输入输入多个资源实例，但是是单选的业务场景
             const result = this.resourceValue ? [].concat([results[0]]) : results;
             const list = result.map(item => {
@@ -480,7 +502,17 @@
                 }
               }
               const isAsyncFlag = isAsync || item.child_type !== '';
-              return new Node({ ...item, checked, disabled, isRemote, isExistNoCarryLimit }, 0, isAsyncFlag);
+              return new Node(
+                {
+                ...item,
+                  checked,
+                  disabled,
+                  isRemote,
+                  isExistNoCarryLimit
+                },
+                curLevel < 0 ? 0 : curLevel,
+                isAsyncFlag
+              );
             });
             const defaultSelectList = this.curSelectedValues.map((v) => v.ids).flat(this.curChain.length);
             const hasSelectedInstances = [...list || []].filter((v) => !defaultSelectList.includes(`${v.id}&${this.typeValue}`));
