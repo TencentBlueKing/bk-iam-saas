@@ -158,11 +158,11 @@
     <bk-sideslider
       :is-show="isShowInstanceSideslider"
       :title="instanceSidesliderTitle"
-      :width="960"
+      :width="resourceSliderWidth"
       quick-close
       transfer
       ext-cls="relate-instance-sideslider"
-      @update:isShow="handleResourceCancel">
+      @update:isShow="handleResourceCancel('mask')">
       <div slot="content" class="sideslider-content">
         <render-resource
           ref="renderResourceRef"
@@ -178,8 +178,8 @@
           @on-init="handleOnInit" />
       </div>
       <div slot="footer" style="margin-left: 25px;">
-        <bk-button theme="primary" :disabled="disabled" @click="handleResourceSumit">{{ $t(`m.common['保存']`) }}</bk-button>
-        <bk-button style="margin-left: 10px;" :disabled="disabled" @click="handleResourceCancel">{{ $t(`m.common['取消']`) }}</bk-button>
+        <bk-button theme="primary" :disabled="disabled" @click="handleResourceSubmit">{{ $t(`m.common['保存']`) }}</bk-button>
+        <bk-button style="margin-left: 10px;" :disabled="disabled" @click="handleResourceCancel('cancel')">{{ $t(`m.common['取消']`) }}</bk-button>
       </div>
     </bk-sideslider>
   </div>
@@ -196,6 +196,11 @@
   import RenderResource from '../components/render-resource';
   export default {
     name: '',
+    provide: function () {
+      return {
+        getResourceSliderWidth: () => this.resourceSliderWidth
+      };
+    },
     components: {
       RenderResourcePopover,
       RenderCondition,
@@ -244,7 +249,9 @@
         nextLoading: false,
         isLastPage: false,
         prevLoading: false,
-        curCopyParams: {}
+        curCopyParams: {},
+        resourceSliderWidth: Math.ceil(window.innerWidth * 0.67 - 7) < 960
+          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7)
       };
     },
     computed: {
@@ -379,7 +386,18 @@
       this.fetchData();
       this.fetchAuthorizationScopeActions();
     },
+    mounted () {
+      this.$once('hook:beforeDestroy', () => {
+        window.removeEventListener('resize', this.formatFormItemWidth);
+      });
+      window.addEventListener('resize', (this.formatFormItemWidth));
+    },
     methods: {
+      formatFormItemWidth () {
+        this.resourceSliderWidth = Math.ceil(window.innerWidth * 0.67 - 7) < 960
+          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7);
+      },
+      
       async fetchData () {
         try {
           const res = await this.$store.dispatch('permTemplate/getGroupsPreview', {
@@ -700,18 +718,29 @@
         this.instanceSidesliderTitle = '';
       },
 
-      handleResourceCancel () {
-        let cancelHandler = Promise.resolve();
-        if (window.changeAlert) {
-          cancelHandler = leaveConfirm();
-        }
-        cancelHandler.then(() => {
-          this.isShowInstanceSideslider = false;
-          this.resetDataAfterClose();
-        }, _ => _);
+      handleResourceCancel (payload) {
+        const typeMap = {
+          mask: () => {
+            const { data } = this.$refs.renderResourceRef.handleGetValue();
+            const { hasSelectedCondition } = this.$refs.renderResourceRef;
+            let cancelHandler = Promise.resolve();
+            if (JSON.stringify(data) !== JSON.stringify(hasSelectedCondition)) {
+              cancelHandler = leaveConfirm();
+            }
+            cancelHandler.then(() => {
+              this.isShowInstanceSideslider = false;
+              this.resetDataAfterClose();
+            }, _ => _);
+          },
+          cancel: () => {
+            this.resetDataAfterClose();
+            this.isShowInstanceSideslider = false;
+          }
+        };
+        return typeMap[payload]();
       },
 
-      handleResourceSumit () {
+      handleResourceSubmit () {
         const conditionData = this.$refs.renderResourceRef.handleGetValue();
         const { isEmpty, data } = conditionData;
         if (isEmpty) {

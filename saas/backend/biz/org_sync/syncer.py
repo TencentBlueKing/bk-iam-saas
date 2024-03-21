@@ -12,8 +12,8 @@ specific language governing permissions and limitations under the License.
 """
 import datetime
 
-from backend.apps.organization.constants import NEW_USER_AUTO_SYNC_COUNT_LIMIT
 from backend.apps.organization.models import Department, DepartmentMember, SubjectToDelete, User
+from backend.biz.constants import NEW_USER_AUTO_SYNC_COUNT_LIMIT
 from backend.component import iam, usermgr
 from backend.service.constants import SubjectType
 

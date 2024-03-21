@@ -366,13 +366,13 @@
       @on-sumbit="handleSubmitAdd" />
 
     <bk-sideslider
-      :is-show="isShowResourceInstanceSideSlider"
+      :is-show="isShowResourceInstanceSideslider"
       :title="resourceInstanceSideSliderTitle"
-      :width="960"
+      :width="resourceSliderWidth"
       quick-close
       transfer
       :ext-cls="'relate-instance-sideslider'"
-      @update:isShow="handleResourceCancel">
+      @update:isShow="handleResourceCancel('mask')">
       <div slot="content"
         class="sideslider-content">
         <render-resource
@@ -387,7 +387,7 @@
         <bk-button theme="primary" :loading="sliderLoading" @click="handleResourceSubmit">
           {{ $t(`m.common['保存']`) }}
         </bk-button>
-        <bk-button style="margin-left: 10px;" @click="handleResourceCancel">
+        <bk-button style="margin-left: 10px;" @click="handleResourceCancel('cancel')">
           {{ $t(`m.common['取消']`) }}
         </bk-button>
       </div>
@@ -426,6 +426,11 @@
 
   export default {
     name: '',
+    provide: function () {
+      return {
+        getResourceSliderWidth: () => this.resourceSliderWidth
+      };
+    },
     components: {
       // IamGuide,
       IamDeadline,
@@ -502,7 +507,7 @@
         searchTypeError: false,
         resourceTypeError: false,
         resourceInstanceError: false,
-        isShowResourceInstanceSideSlider: false,
+        isShowResourceInstanceSideslider: false,
         resourceTypeData: {
           resource_groups: [{
             'related_resource_types': [{
@@ -591,7 +596,9 @@
         enableGroupInstanceSearch: window.ENABLE_GROUP_INSTANCE_SEARCH.toLowerCase() === 'true',
         curSelectMenu: '',
         curInputText: '',
-        contentWidth: window.innerWidth <= 1440 ? '200px' : '240px'
+        contentWidth: window.innerWidth <= 1440 ? '200px' : '240px',
+        resourceSliderWidth: Math.ceil(window.innerWidth * 0.67 - 7) < 960
+          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7)
       };
     },
     computed: {
@@ -703,17 +710,22 @@
     },
     mounted () {
       window.addEventListener('resize', (this.formatFormItemWidth));
+      window.addEventListener('resize', (this.formatResourceSliderWidth));
       this.$once('hook:beforeDestroy', () => {
         window.removeEventListener('resize', this.formatFormItemWidth);
+        window.removeEventListener('resize', this.formatResourceSliderWidth);
       });
     },
     methods: {
       formatFormItemWidth () {
         this.contentWidth = window.innerWidth <= 1520 ? '200px' : '240px';
       },
-      /**
-       * 获取页面数据
-       */
+
+      formatResourceSliderWidth () {
+        this.resourceSliderWidth = Math.ceil(window.innerWidth * 0.67 - 7) < 960
+          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7);
+      },
+
       async fetchDefaultData () {
         this.fetchSystemList();
         await this.fetchCurUserGroup();
@@ -875,7 +887,7 @@
         this.groupIndex = groupIndex;
         this.resourceInstanceSidesliderTitle = this.$t(`m.info['关联侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}` });
         window.changeAlert = 'iamSidesider';
-        this.isShowResourceInstanceSideSlider = true;
+        this.isShowResourceInstanceSideslider = true;
       },
 
       handleToCustomApply () {
@@ -983,6 +995,7 @@
           }, []);
           if (this.curResourceData.type
             && !resourceInstances.length
+            && this.resourceTypeData.resource_groups[this.groupIndex]
             && this.resourceTypeData.resource_groups[this.groupIndex]
               .related_resource_types.some(e => e.empty)) {
             this.resourceInstanceError = true;
@@ -1473,7 +1486,7 @@
         }
         window.changeAlert = false;
         this.resourceInstanceSideSliderTitle = '';
-        this.isShowResourceInstanceSideSlider = false;
+        this.isShowResourceInstanceSideslider = false;
         this.curResIndex = -1;
         this.resourceInstanceError = false;
       },
@@ -1565,15 +1578,26 @@
         }
       },
 
-      handleResourceCancel () {
-        let cancelHandler = Promise.resolve();
-        if (window.changeAlert) {
-          cancelHandler = leaveConfirm();
-        }
-        cancelHandler.then(() => {
-          this.isShowResourceInstanceSideSlider = false;
-          this.resetDataAfterClose();
-        }, _ => _);
+      handleResourceCancel (payload) {
+        const typeMap = {
+          mask: () => {
+            const { data } = this.$refs.renderResourceRef.handleGetValue();
+            const { hasSelectedCondition } = this.$refs.renderResourceRef;
+            let cancelHandler = Promise.resolve();
+            if (JSON.stringify(data) !== JSON.stringify(hasSelectedCondition)) {
+              cancelHandler = leaveConfirm();
+            }
+            cancelHandler.then(() => {
+              this.isShowResourceInstanceSideslider = false;
+              this.resetDataAfterClose();
+            }, _ => _);
+          },
+          cancel: () => {
+            this.resetDataAfterClose();
+            this.isShowResourceInstanceSideslider = false;
+          }
+        };
+        return typeMap[payload]();
       },
 
       handleBatchRenewal () {
@@ -1740,17 +1764,18 @@
   align-items: center;
   &-label {
     color: #3a84ff;
-    max-width: calc(100% - 120px);
+    /* max-width: calc(100% - 120px); */
     word-break: break-all;
     cursor: pointer;
     &:hover {
       color: #699df4;
     }
-    &-expired {
+    /* &-expired {
       max-width: calc(100% - 150px);
-    }
+    } */
   }
   &-expired {
+    min-width: 80px;
     line-height: 1;
     margin-left: 5px;
   }

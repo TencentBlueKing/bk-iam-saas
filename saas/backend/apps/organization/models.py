@@ -25,11 +25,26 @@ from backend.apps.organization.constants import (
     TriggerType,
 )
 from backend.apps.organization.managers import SyncErrorLogManager
-from backend.biz.organization import get_category_name
+from backend.common.cache import cached
 from backend.common.models import TimestampedModel
+from backend.component import usermgr
 from backend.util.json import json_dumps
 
 logger = logging.getLogger("app")
+
+
+@cached(timeout=5 * 60)
+def _get_category_dict() -> Dict[int, str]:
+    """获取所有目录的ID与Name映射"""
+    # TODO: 需要修改为直接读取DB数据，避免因为usermgr的及时变更引起未同步前的数据不一致问题
+    categories = usermgr.list_category()
+    return {i["id"]: i["display_name"] for i in categories}
+
+
+def get_category_name(category_id: int):
+    """获取目录名称"""
+    category_dict = _get_category_dict()
+    return category_dict.get(category_id) or "默认目录"
 
 
 class Category(models.Model):

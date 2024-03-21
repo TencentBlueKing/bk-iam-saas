@@ -22,7 +22,6 @@ from rest_framework.request import Request
 
 from backend.apps.application.models import Application
 from backend.apps.group.models import Group
-from backend.apps.organization.constants import StaffStatus
 from backend.apps.organization.models import User as UserModel
 from backend.apps.policy.models import Policy
 from backend.apps.role.models import Role, RoleRelatedObject, RoleSource
@@ -30,6 +29,7 @@ from backend.apps.role.tasks import sync_subset_manager_subject_scope
 from backend.apps.template.models import PermTemplatePolicyAuthorized
 from backend.audit.audit import log_group_event, log_role_event, log_user_event
 from backend.audit.constants import AuditSourceType, AuditType
+from backend.biz.constants import StaffStatus
 from backend.common.cache import cachedmethod
 from backend.common.error_codes import error_codes
 from backend.common.time import expired_at_display

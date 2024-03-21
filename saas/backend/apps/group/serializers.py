@@ -276,6 +276,16 @@ class GroupMemberUpdateExpiredAtSLZ(serializers.Serializer):
     members = serializers.ListField(label="成员列表", child=GroupMemberExpiredAtSLZ(label="成员"), allow_empty=False)
 
 
+class GroupMemberExpiredAtItemSLZ(GroupMemberExpiredAtSLZ):
+    group_id = serializers.IntegerField(label="用户组ID")
+
+
+class BatchGroupMemberUpdateExpiredAtSLZ(serializers.Serializer):
+    group_members = serializers.ListField(
+        label="成员列表", child=GroupMemberExpiredAtItemSLZ(label="成员"), allow_empty=False
+    )
+
+
 class GroupPolicyUpdateSLZ(serializers.Serializer):
     system_id = serializers.CharField(label="系统ID")
     template_id = serializers.IntegerField(label="模板ID", required=False, default=0)

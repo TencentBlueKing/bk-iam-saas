@@ -272,7 +272,9 @@
     // 敏感等级
     [['sensitivityLevel'], 'sensitivityLevelNav'],
     // 人员模板
-    [['memberTemplate'], 'memberTemplateNav']
+    [['memberTemplate'], 'memberTemplateNav'],
+    // 管理空间下资源权限管理
+    [['resourcePermManage'], 'resourcePermManageNav']
   ]);
 
   export default {

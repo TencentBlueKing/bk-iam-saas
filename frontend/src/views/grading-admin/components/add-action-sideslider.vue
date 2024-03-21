@@ -246,6 +246,7 @@
         quickClose: false,
         tagActionList: [],
         tagActionListBackUp: [],
+        hasSelectedActions: [],
         systemListIsLoading: false,
         emptyData: {
           type: '',
@@ -308,6 +309,7 @@
         handler (value) {
           if (value) {
             this.pageChangeAlertMemo = window.changeAlert;
+            this.hasSelectedActions = _.cloneDeep(this.defaultValue);
             this.linearAction = [];
             window.changeAlert = 'iamSidesider';
             this.fetchSystems();
@@ -920,14 +922,8 @@
             }, _ => _);
           },
           cancel: () => {
-            let cancelHandler = Promise.resolve();
-            if (window.changeAlert) {
-              cancelHandler = leaveConfirm();
-            }
-            cancelHandler.then(() => {
-              this.$emit('update:isShow', false);
-              this.resetData();
-            }, _ => _);
+            this.$emit('update:isShow', false);
+            this.resetData();
           }
         };
         operateMap[payload]();

@@ -182,11 +182,11 @@
     <bk-sideslider
       :is-show="isShowResourceInstanceSideslider"
       :title="resourceInstanceSidesliderTitle"
-      :width="960"
+      :width="resourceSliderWidth"
       quick-close
       transfer
       :ext-cls="'relate-instance-sideslider'"
-      @update:isShow="handleResourceCancel">
+      @update:isShow="handleResourceCancel('mask')">
       <div slot="content" class="sideslider-content">
         <render-resource
           ref="renderResourceRef"
@@ -208,7 +208,7 @@
           {{ $t(`m.common['保存']`) }}
         </bk-button>
         <bk-button style="margin-left: 10px;" :disabled="disabled" v-if="isShowPreview" @click="handleResourcePreview">{{ $t(`m.common['预览']`) }}</bk-button>
-        <bk-button style="margin-left: 10px;" :disabled="disabled" @click="handleResourceCancel">{{ $t(`m.common['取消']`) }}</bk-button>
+        <bk-button style="margin-left: 10px;" :disabled="disabled" @click="handleResourceCancel('cancel')">{{ $t(`m.common['取消']`) }}</bk-button>
       </div>
     </bk-sideslider>
 
@@ -264,6 +264,11 @@
   // import store from '@/store'
   export default {
     name: 'resource-instance-table',
+    provide: function () {
+      return {
+        getResourceSliderWidth: () => this.resourceSliderWidth
+      };
+    },
     components: {
       RenderAggregateSideslider,
       RenderResource,
@@ -312,7 +317,7 @@
         default: 'action'
       },
       groupId: {
-        type: String,
+        type: [String, Number],
         default: ''
       },
       authorization: {
@@ -379,7 +384,9 @@
         curCopyDataId: '',
         emptyResourceGroupsList: [],
         isExpandTable: false,
-        isAggregateEmptyMessage: false
+        isAggregateEmptyMessage: false,
+        resourceSliderWidth: Math.ceil(window.innerWidth * 0.67 - 7) < 960
+          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7)
       };
     },
     computed: {
@@ -563,7 +570,18 @@
       //     deep: true
       // }
     },
+    mounted () {
+      window.addEventListener('resize', (this.formatFormItemWidth));
+      this.$once('hook:beforeDestroy', () => {
+        window.removeEventListener('resize', this.formatFormItemWidth);
+      });
+    },
     methods: {
+      formatFormItemWidth () {
+        this.resourceSliderWidth = Math.ceil(window.innerWidth * 0.67 - 7) < 960
+          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7);
+      },
+      
       handleSpanMethod ({ row, column, rowIndex, columnIndex }) {
         if (this.isCreateMode) {
           if (columnIndex === 0) {
@@ -1525,15 +1543,26 @@
         this.params = {};
         this.resourceInstanceSidesliderTitle = '';
       },
-      handleResourceCancel () {
-        let cancelHandler = Promise.resolve();
-        if (window.changeAlert) {
-          cancelHandler = leaveConfirm();
-        }
-        cancelHandler.then(() => {
-          this.isShowResourceInstanceSideslider = false;
-          this.resetDataAfterClose();
-        }, _ => _);
+      handleResourceCancel (payload) {
+        const typeMap = {
+          mask: () => {
+            const { data } = this.$refs.renderResourceRef.handleGetValue();
+            const { hasSelectedCondition } = this.$refs.renderResourceRef;
+            let cancelHandler = Promise.resolve();
+            if (JSON.stringify(data) !== JSON.stringify(hasSelectedCondition)) {
+              cancelHandler = leaveConfirm();
+            }
+            cancelHandler.then(() => {
+              this.isShowResourceInstanceSideslider = false;
+              this.resetDataAfterClose();
+            }, _ => _);
+          },
+          cancel: () => {
+            this.resetDataAfterClose();
+            this.isShowResourceInstanceSideslider = false;
+          }
+        };
+        return typeMap[payload]();
       },
       getData () {
         let flag = false;

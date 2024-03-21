@@ -5,42 +5,165 @@
         <resource-select
           :list="selectList"
           :value="selectValue"
+          :cur-selected-chain="curSelectedChain"
+          :selection-mode="selectionMode"
           @on-select="handleResourceSelect" />
       </div>
-      <topology-input
-        ref="headerInput"
-        :is-filter="isFilter"
-        :placeholder="curPlaceholder"
-        @on-search="handleSearch" />
-      <div class="topology-tree-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
-        <template v-if="treeData.length > 0 && !isLoading">
-          <topology-tree
-            ref="topologyRef"
-            :all-data="treeData"
-            :search-value="hasSearchValues"
-            @on-expanded="handleOnExpanded"
-            @on-search="handleTreeSearch"
-            @on-select="handleTreeSelect"
-            @on-load-more="handleLoadMore"
-            @async-load-nodes="handleAsyncNodes" />
-        </template>
-        <template v-if="treeData.length < 1 && !isLoading">
-          <div class="empty-wrapper">
-            <!-- <iam-svg />
-                        <section class="search-text-wrapper" v-if="searchDisplayText !== ''">
-                            {{ searchDisplayText }}
-                        </section> -->
-            <ExceptionEmpty
-              style="background: #fafbfd"
-              :type="emptyData.type"
-              :empty-text="emptyData.text"
-              :tip-text="emptyData.tip"
-              :tip-type="emptyData.tipType"
-              @on-clear="handleEmptyClear"
-              @on-refresh="handleEmptyRefresh"
-            />
+      <template v-if="!isManualInput">
+        <template v-if="isOnlyLevel">
+          <topology-input
+            ref="headerInput"
+            :is-filter="isFilter"
+            :placeholder="curPlaceholder"
+            @on-search="handleSearch" />
+          <div class="topology-tree-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
+            <template v-if="renderTopologyData.length > 0 && !isLoading">
+              <topology-tree
+                ref="topologyRef"
+                :all-data="renderTopologyData"
+                :search-value="hasSearchValues"
+                :is-filter="isFilter"
+                :cur-chain="curChain"
+                :cur-placeholder="curPlaceholder"
+                :cur-selected-chain="curSelectedChain"
+                :resource-total="resourceTotal"
+                :sub-resource-total="subResourceTotal"
+                :resource-value="resourceValue"
+                :has-selected-values="hasSelectedValues"
+                :has-attribute="hasAttribute"
+                :has-status-bar="hasStatusBar"
+                :has-add-instance="hasAddInstance"
+                :is-show-edit-action="isShowEditAction"
+                @on-expanded="handleOnExpanded"
+                @on-search="handleSearch"
+                @on-table-search="handleTableSearch"
+                @on-select="handleTreeSelect"
+                @on-select-all="handleTreeSelectAll"
+                @on-load-more="handleLoadMore"
+                @on-page-change="handlePageChange"
+                @on-table-page-change="handleTablePageChange"
+                @async-load-nodes="handleAsyncNodes"
+                @async-load-table-nodes="handleAsyncNodes" />
+            </template>
+            <div v-if="renderTopologyData.length < 1 && !isLoading" class="empty-wrapper">
+              <div class="empty-wrapper-content">
+                <ExceptionEmpty
+                  :type="emptyData.type"
+                  :empty-text="emptyData.text"
+                  :tip-text="emptyData.tip"
+                  :tip-type="emptyData.tipType"
+                  @on-clear="handleEmptyClear"
+                  @on-refresh="handleEmptyRefresh"
+                />
+              </div>
+            </div>
           </div>
         </template>
+        <template v-if="!isOnlyLevel">
+          <div class="topology-tree-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
+            <template v-if="renderTopologyData.length > 0 && !isLoading">
+              <topology-tree
+                ref="topologyRef"
+                :all-data="renderTopologyData"
+                :is-filter="isFilter"
+                :search-value="hasSearchValues"
+                :search-display-text="searchDisplayText"
+                :cur-chain="curChain"
+                :cur-placeholder="curPlaceholder"
+                :cur-selected-chain="curSelectedChain"
+                :cur-table-data="curTableData"
+                :cur-keyword="curKeyword"
+                :cur-table-key-word="curTableKeyWord"
+                :resource-total="resourceTotal"
+                :sub-resource-total="subResourceTotal"
+                :empty-data="emptyTreeData"
+                :has-selected-values="hasSelectedValues"
+                :has-attribute="hasAttribute"
+                :has-status-bar="hasStatusBar"
+                :has-add-instance="hasAddInstance"
+                :is-show-edit-action="isShowEditAction"
+                :resource-value="resourceValue"
+                @on-expanded="handleOnExpanded"
+                @on-search="handleSearch"
+                @on-table-search="handleTableSearch"
+                @on-tree-search="handleTreeSearch"
+                @on-select="handleTreeSelect"
+                @on-select-all="handleTreeSelectAll"
+                @on-load-more="handleLoadMore"
+                @on-page-change="handlePageChange"
+                @on-table-page-change="handleTablePageChange"
+                @async-load-nodes="handleAsyncNodes"
+                @async-load-table-nodes="handleAsyncNodes"
+              />
+            </template>
+            <div v-if="renderTopologyData.length < 1 && !isLoading" class="empty-wrapper">
+              <div
+                v-if="[500].includes(emptyData.type)"
+                class="empty-wrapper-content"
+              >
+                <ExceptionEmpty
+                  :type="emptyData.type"
+                  :empty-text="emptyData.text"
+                  :tip-text="emptyData.tip"
+                  :tip-type="emptyData.tipType"
+                  @on-clear="handleEmptyClear"
+                  @on-refresh="handleEmptyRefresh"
+                />
+              </div>
+              <template v-else>
+                <topology-tree
+                  ref="topologyRef"
+                  :all-data="renderTopologyData"
+                  :search-value="hasSearchValues"
+                  :search-display-text="searchDisplayText"
+                  :cur-chain="curChain"
+                  :cur-keyword="curKeyword"
+                  :cur-table-key-word="curTableKeyWord"
+                  :cur-placeholder="curPlaceholder"
+                  :cur-selected-chain="curSelectedChain"
+                  :cur-table-data="curTableData"
+                  :resource-total="resourceTotal"
+                  :is-filter="isFilter"
+                  :sub-resource-total="subResourceTotal"
+                  :empty-data="emptyTreeData"
+                  :has-selected-values="hasSelectedValues"
+                  :has-attribute="hasAttribute"
+                  :has-status-bar="hasStatusBar"
+                  :has-add-instance="hasAddInstance"
+                  :is-show-edit-action="isShowEditAction"
+                  :resource-value="resourceValue"
+                  @on-expanded="handleOnExpanded"
+                  @on-search="handleSearch"
+                  @on-table-search="handleTableSearch"
+                  @on-select="handleTreeSelect"
+                  @on-select-all="handleTreeSelectAll"
+                  @on-load-more="handleLoadMore"
+                  @on-page-change="handlePageChange"
+                  @on-table-page-change="handleTablePageChange"
+                  @async-load-nodes="handleAsyncNodes"
+                  @async-load-table-nodes="handleAsyncNodes"
+                  @on-tree-search="handleTreeSearch"
+                  @on-clear="handleEmptyClear"
+                  @on-refresh="handleEmptyRefresh"
+                />
+              </template>
+            </div>
+          </div>
+        </template>
+      </template>
+      <div v-else>
+        <TopologyManualInput
+          ref="topologyManualInputRef"
+          :selection-mode="selectionMode"
+          :system-params="getSystemParams"
+          :resource-value="resourceValue"
+          :cur-chain="curChain"
+          :cur-selected-chain="curSelectedChain"
+          :has-selected-values="hasSelectedValues"
+          :type-list="selectList"
+          @on-select="handleTreeSelect"
+          @on-select-all="handleTreeSelectAll"
+        />
       </div>
     </div>
   </div>
@@ -48,10 +171,12 @@
 <script>
   import _ from 'lodash';
   import { formatCodeData, guid } from '@/common/util';
+  import { bus } from '@/common/bus';
   import il8n from '@/language';
   import ResourceSelect from './resource-select';
   import TopologyInput from './topology-input';
   import TopologyTree from './topology-tree';
+  import TopologyManualInput from './manualInput.vue';
 
   const LOAD_ITEM = {
     nodeId: guid(),
@@ -136,7 +261,8 @@
     components: {
       ResourceSelect,
       TopologyInput,
-      TopologyTree
+      TopologyTree,
+      TopologyManualInput
     },
     props: {
       selectList: {
@@ -150,6 +276,30 @@
       treeValue: {
         type: Array,
         default: () => []
+      },
+      selectionMode: {
+        type: String,
+        default: ''
+      },
+      // 处理有自定义属性条件场景
+      hasAttribute: {
+        type: Boolean,
+        default: false
+      },
+      // 处理有bar的场景
+      hasStatusBar: {
+        type: Boolean,
+        default: false
+      },
+      // 处理可以添加新的拓扑实例组的场景
+      hasAddInstance: {
+        type: Boolean,
+        default: false
+      },
+      // 是否显示添加属性或者拓扑实例bar
+      isShowEditAction: {
+        type: Boolean,
+        default: false
       }
     },
     data () {
@@ -184,8 +334,34 @@
           text: '',
           tip: '',
           tipType: ''
-        }
+        },
+        curTableData: [],
+        treeDataStorage: [],
+        curSelectedChain: {}
       };
+    },
+    computed: {
+      isOnlyLevel () {
+        return this.treeData.every((item) => item.level === 0 && item.visiable) && this.curChain.length < 2;
+      },
+      renderTopologyData () {
+        const hasNode = {};
+        const treeData = [...this.treeData];
+        const list = treeData.reduce((curr, next) => {
+          // eslint-disable-next-line no-unused-expressions
+          hasNode[`${next.name}&${next.id}`] ? '' : hasNode[`${next.name}&${next.id}`] = true && curr.push(next);
+          // hasNode[next.name] ? '' : hasNode[next.name] = true && curr.push(next);
+          return curr;
+        }, []);
+        return list;
+      },
+      isManualInput () {
+        return ['manualInput'].includes(this.curSelectedChain.id) && ['instance:paste'].includes(this.selectionMode);
+      },
+      getSystemParams () {
+        const curChainId = this.curChain.length ? this.curChain[0].id : '';
+        return { ...this.systemParams, ...{ type: curChainId } };
+      }
     },
     watch: {
       treeValue: {
@@ -292,9 +468,10 @@
           params.action_system_id = this.curChain[chainLen - 1].system_id;
           params.action_id = '';
         } else {
-          params.system_id = this.curChain[node.level].system_id;
-          params.type = this.curChain[node.level].id;
-          params.action_system_id = this.curChain[node.level].system_id;
+          const curLevelNode = this.curChain[node.level] || this.curChain[chainLen - 1];
+          params.system_id = curLevelNode.system_id;
+          params.type = curLevelNode.id;
+          params.action_system_id = curLevelNode.system_id;
           params.action_id = '';
         }
         if (node.parentChain.length) {
@@ -524,9 +701,18 @@
           }
           return false;
         });
+        bus.$emit('update-manualInput-toggleRowSelection', { idChain: payload, isChecked: false });
         if (curNode && !curNode.disabled) {
           curNode.checked = false;
           this.setNodeNoChecked(false, curNode);
+          this.$nextTick(() => {
+            this.$refs.topologyRef
+              && this.$refs.topologyRef.$refs
+              && this.$refs.topologyRef.$refs.topologyTableRef.toggleRowSelection(curNode, false);
+            if (!this.isOnlyLevel) {
+              bus.$emit('update-table-toggleRowSelection', { node: curNode, isChecked: false });
+            }
+          });
         }
       },
 
@@ -556,10 +742,18 @@
           }
           return false;
         });
+        bus.$emit('update-manualInput-toggleRowSelection', { idChain: payload, isChecked: true });
         if (curNode && !curNode.disabled) {
           curNode.checked = true;
-          curNode.disabled = true;
           this.setNodeChecked(true, curNode);
+          this.$nextTick(() => {
+            this.$refs.topologyRef
+              && this.$refs.topologyRef.$refs
+              && this.$refs.topologyRef.$refs.topologyTableRef.toggleRowSelection(curNode, true);
+            if (!this.isOnlyLevel) {
+              bus.$emit('update-table-toggleRowSelection', { node: curNode, isChecked: true });
+            }
+          });
         }
       },
 
@@ -654,17 +848,8 @@
         await this.firstFetchResources();
       },
 
-      handleTreeSelect (value, node) {
+      handleTreeSelect (value, node, resourceLen) {
         const parentChain = _.cloneDeep(node.parentChain);
-        // const isNeedAny = node.async
-        // const anyData = (() => {
-        //     const data = this.curChain[node.level + 1]
-        //     if (data) {
-        //         return data
-        //     }
-        //     return this.curChain[this.curChain.length - 1]
-        // })()
-
         const curChainData = this.curChain[node.level];
         const chainLen = this.curChain.length;
         let id = '';
@@ -679,66 +864,126 @@
           name = curChainData.name;
           systemId = curChainData.system_id;
         }
-
-        parentChain.forEach((item, index) => {
-          let id = '';
-          if (this.curChain[index]) {
-            id = this.curChain[index].id;
-          } else {
-            id = this.curChain[this.curChain.length - 1].id;
-          }
-          item.type = id;
-          item.type_name = id;
-        });
-        parentChain.push({
-          type: id,
-          type_name: name,
-          id: node.id,
-          name: node.name,
-          system_id: systemId,
-          child_type: node.childType || ''
-        });
-        // if (isNeedAny) {
-        //     parentChain.push({
-        //         type: anyData.id,
-        //         type_name: anyData.name,
-        //         id: '*',
-        //         name: `${anyData.name}: ${this.$t(`m.common['无限制']`)}`,
-        //         system_id: anyData.system_id,
-        //         child_type: anyData.id
-        //     })
-        // }
-
-        // 判断是否忽略路径
-        // const isNeedIgnore = this.ignorePathFlag && !isNeedAny
-        // const isNeedIgnore = this.ignorePathFlag
-        const params = [{
-          type: id,
-          name,
-          // path: isNeedIgnore ? [parentChain.slice(parentChain.length - 1)] : [parentChain],
-          path: [parentChain],
-          paths: [parentChain]
-        }];
-
-        if (node.isExistNoCarryLimit) {
-          const p = [parentChain.slice(0, parentChain.length - 1)];
-          params.push({
+        if (this.isManualInput) {
+          parentChain.push({
+            type: id,
+            type_name: name,
+            id: node.id,
+            name: node.name,
+            system_id: systemId,
+            child_type: node.childType || ''
+          });
+          // 判断是否忽略路径
+          const curPath = this.ignorePathFlag ? [parentChain.slice(parentChain.length - 1)] : [parentChain];
+          const params = [{
             type: id,
             name,
-            path: p,
-            paths: p
+            path: curPath,
+            paths: curPath
+          }];
+          if (node.isExistNoCarryLimit) {
+            const p = [parentChain.slice(0, parentChain.length - 1)];
+            params.push({
+              type: id,
+              name,
+              path: p,
+              paths: p
+            });
+          }
+          console.log(value, node, parentChain, params, resourceLen);
+          this.$emit('on-tree-select', value, node, params, resourceLen);
+        } else {
+          // const isNeedAny = node.level < this.curChain.length - 1
+          const isNeedAny = node.async;
+          const anyData = (() => {
+            const data = this.curChain[node.level + 1];
+            if (data) {
+              return data;
+            }
+            return this.curChain[this.curChain.length - 1];
+          })();
+          parentChain.forEach((item, index) => {
+            let id = '';
+            if (this.curChain[index]) {
+              id = this.curChain[index].id;
+            } else {
+              id = this.curChain[this.curChain.length - 1].id;
+            }
+            item.type = id;
+            item.type_name = id;
           });
+          parentChain.push({
+            type: id,
+            type_name: name,
+            id: node.id,
+            name: node.name,
+            system_id: systemId,
+            child_type: node.childType || ''
+          });
+          if (isNeedAny) {
+            parentChain.push({
+              type: anyData.id,
+              type_name: anyData.name,
+              id: '*',
+              name: `${anyData.name}: ${this.$t(`m.common['无限制']`)}`,
+              system_id: anyData.system_id,
+              child_type: anyData.id
+            });
+          }
+          // 判断是否忽略路径
+          // const isNeedIgnore = this.ignorePathFlag && !isNeedAny
+          const params = [{
+            type: id,
+            name,
+            // path: isNeedIgnore ? [parentChain.slice(parentChain.length - 1)] : [parentChain],
+            path: [parentChain],
+            paths: [parentChain]
+          }];
+          if (node.isExistNoCarryLimit) {
+            const p = [parentChain.slice(0, parentChain.length - 1)];
+            params.push({
+              type: id,
+              name,
+              path: p,
+              paths: p
+            });
+          }
+          console.log(value, node, parentChain, params, resourceLen);
+          this.$emit('on-tree-select', value, node, params, resourceLen);
         }
+        // 针对资源权限特殊处理
+        if (this.resourceValue) {
+          if (value) {
+            this.treeData.forEach(item => {
+              if (item.id !== node.id) {
+                item.disabled = true;
+              }
+            });
+            this.resourceNode = node;
+            this.resourceNeedDisable = true;
+          } else {
+            this.treeData.forEach(item => {
+              item.disabled = false;
+            });
+            this.resourceNode = {};
+            this.resourceNeedDisable = false;
+          }
+        }
+      },
 
-        this.$emit('on-tree-select', value, node, params);
+      // 单页全选
+      handleTreeSelectAll (nodes, isAll) {
+        nodes.forEach((item) => {
+          this.handleTreeSelect(isAll, item, nodes.length);
+        });
       },
 
       async handleAsyncNodes (node, index, flag) {
         window.changeAlert = true;
         const asyncItem = {
-                    ...ASYNC_ITEM,
-                    parentId: node.nodeId,
-                    parentSyncId: node.id
+          ...ASYNC_ITEM,
+          parentId: node.nodeId,
+          parentSyncId: node.id
         };
 
         const asyncData = new Node(asyncItem, node.level + 1, false, 'async');
@@ -777,13 +1022,14 @@
             ? this.curChain[node.level + 1].system_id
             : this.curChain[chainLen - 1].system_id;
           params.type = isExistNextChain ? this.curChain[node.level + 1].id : this.curChain[chainLen - 1].id;
-          parentType = this.curChain[node.level].id;
           placeholder = isExistNextChain
             ? this.curChain[node.level + 1].name
             : this.curChain[chainLen - 1].name;
-                    
-          ancestorItem.system_id = this.curChain[node.level].system_id;
-          ancestorItem.type = this.curChain[node.level].id;
+          if (this.curChain[node.level]) {
+            parentType = this.curChain[node.level].id;
+            ancestorItem.system_id = this.curChain[node.level].system_id;
+            ancestorItem.type = this.curChain[node.level].id;
+          }
         }
         ancestorItem.id = node.id;
 
@@ -817,7 +1063,8 @@
             name: node.name,
             id: node.id,
             type: parentType,
-            system_id: node.childType !== '' ? this.curChain[chainLen - 1].system_id : this.curChain[node.level].system_id,
+            system_id: !node.childType && this.curChain[node.level]
+              ? this.curChain[node.level].system_id : this.curChain[chainLen - 1].system_id,
             child_type: node.childType || ''
           });
           const childNodes = data.results.map(item => {
@@ -833,20 +1080,7 @@
               const curIds = parentChain.map(v => `${v.id}&${v.type}`);
               // 取当前的请求的type
               curIds.push(`${item.id}&${params.type}`);
-
               const tempData = [...curIds];
-
-              // if (isAsync) {
-              //     const nextLevelId = (() => {
-              //         const nextLevelData = this.curChain[curLevel + 1]
-              //         if (nextLevelData) {
-              //             return nextLevelData.id
-              //         }
-              //         return this.curChain[chainLen - 1].id
-              //     })()
-              //     curIds.push(`*&${nextLevelId}`)
-              // }
-
               let noCarryLimitData = {};
               let normalSelectedData = {};
               this.hasSelectedValues.forEach(val => {
@@ -862,7 +1096,6 @@
                   }
                 }
               });
-
               isExistNoCarryLimit = Object.keys(noCarryLimitData).length > 0;
               if (isExistNoCarryLimit && Object.keys(normalSelectedData).length > 0) {
                 checked = true;
@@ -876,31 +1109,30 @@
                 }
               }
             }
-
             const childItem = {
-                            ...item,
-                            parentId: node.nodeId,
-                            parentSyncId: node.id,
-                            disabled: node.checked || disabled,
-                            checked: checked || node.checked,
-                            parentChain,
-                            isRemote,
-                            isExistNoCarryLimit
+              ...item,
+              parentId: node.nodeId,
+              parentSyncId: node.id,
+              disabled: node.checked || disabled,
+              checked: checked || node.checked,
+              parentChain,
+              isRemote,
+              isExistNoCarryLimit
             };
-
             const isAsyncFlag = isAsync || item.child_type !== '';
             return new Node(childItem, curLevel, isAsyncFlag);
           });
           this.treeData.splice((index + 1), 0, ...childNodes);
+          this.treeData = this.treeData.filter(item => item.name);
           node.children = [...data.results.map(item => new Node(item, curLevel, false))];
           if (totalPage > 1) {
             const loadItem = {
-                            ...LOAD_ITEM,
-                            totalPage: totalPage,
-                            current: 1,
-                            parentSyncId: node.id,
-                            parentId: node.nodeId,
-                            parentChain
+              ...LOAD_ITEM,
+              totalPage: totalPage,
+              current: 1,
+              parentSyncId: node.id,
+              parentId: node.nodeId,
+              parentChain
             };
             const loadData = new Node(loadItem, curLevel, isAsync, 'load');
             this.treeData.splice((index + childNodes.length + 1), 0, loadData);
@@ -908,15 +1140,14 @@
           }
 
           const searchItem = {
-                        ...SEARCH_ITEM,
-                        totalPage: totalPage,
-                        parentSyncId: node.id,
-                        parentId: node.nodeId,
-                        parentChain,
-                        visiable: flag,
-                        placeholder: `${this.$t(`m.common['搜索']`)} ${placeholder}`
+              ...SEARCH_ITEM,
+              totalPage: totalPage,
+              parentSyncId: node.id,
+              parentId: node.nodeId,
+              parentChain,
+              visiable: flag,
+              placeholder: `${this.$t(`m.common['搜索']`)} ${placeholder}`
           };
-
           const searchData = new Node(searchItem, curLevel, false, 'search');
           this.treeData.splice((index + 1), 0, searchData);
           if (flag) {
@@ -935,6 +1166,14 @@
       },
 
       removeAsyncNode () {
+        // 需要过滤掉name为空以及反复切换选中造成的重复数据的节点
+        const obj = {};
+        const treeList = _.cloneDeep(this.treeData.filter(item => item.name));
+        this.treeData = treeList.reduce((pre, item) => {
+          // eslint-disable-next-line no-unused-expressions
+          obj[`${item.id}${item.name}`] ? '' : obj[`${item.id}${item.name}`] = true && pre.push(item);
+          return pre;
+        }, []);
         const index = this.treeData.findIndex(item => item.type === 'async');
         if (index > -1) this.treeData.splice(index, 1);
       },
@@ -963,8 +1202,9 @@
           params.type = this.curChain[chainLen - 1].id;
           // params.parent_type = this.curChain[chainLen - 1].id || '';
         } else {
-          params.system_id = this.curChain[node.level].system_id;
-          params.type = this.curChain[node.level].id;
+          const curLevelNode = this.curChain[node.level] || this.curChain[chainLen - 1];
+          params.system_id = curLevelNode.system_id;
+          params.type = curLevelNode.id;
         }
         if (node.parentChain.length) {
           const parentData = node.parentChain.reduce((p, e) => {
@@ -1094,6 +1334,8 @@
                 position: relative;
                 height: 100%;
                 .empty-wrapper {
+                  min-height: 280px;
+                  .empty-wrapper-content {
                     position: absolute;
                     top: 50%;
                     left: 50%;
@@ -1101,17 +1343,11 @@
                     img {
                         width: 120px;
                     }
-                    .search-text-wrapper {
-                        position: relative;
-                        top: -20px;
-                        font-size: 12px;
-                        color: #c4c6cc;
-                        word-break: break-all;
-                        text-align: center;
-                    }
+                  }
                 }
                 .bk-loading {
-                    background: #fafbfd !important;
+                    /* background: #fafbfd !important; */
+                    background: #ffffff !important;
                 }
             }
         }

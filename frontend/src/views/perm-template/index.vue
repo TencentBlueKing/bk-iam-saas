@@ -147,7 +147,7 @@
   import IamGuide from '@/components/iam-guide/index.vue';
   import { fuzzyRtxSearch } from '@/common/rtx';
   import { buildURLParams } from '@/common/url';
-  import { formatCodeData, getWindowHeight } from '@/common/util';
+  import { formatCodeData, getWindowHeight, delLocationHref } from '@/common/util';
   export default {
     name: '',
     components: {
@@ -290,9 +290,8 @@
       refreshCurrentQuery () {
         const params = {};
         const queryParams = {
-                    ...this.searchParams,
-                    ...this.$route.query,
-                    ...this.queryParams
+          ...this.searchParams,
+          ...this.queryParams
         };
         if (Object.keys(queryParams).length) {
           window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
@@ -341,6 +340,11 @@
           count: 0
         });
       },
+      
+      resetLocationHref () {
+        const urlFields = [...this.searchData.map(item => item.id), ...['current', 'limit']];
+        delLocationHref(urlFields);
+      },
 
       async handleEmptyClear () {
         this.searchParams = {};
@@ -380,9 +384,9 @@
         this.tableLoading = isLoading;
         this.setCurrentQueryCache(this.refreshCurrentQuery());
         const params = {
-                    ...this.searchParams,
-                    limit: this.pagination.limit,
-                    offset: this.pagination.limit * (this.pagination.current - 1)
+            ...this.searchParams,
+            limit: this.pagination.limit,
+            offset: this.pagination.limit * (this.pagination.current - 1)
         };
         delete params.current;
         try {
@@ -475,7 +479,12 @@
         this.searchParams = payload;
         this.searchList = result;
         this.emptyData.tipType = 'search';
+        this.queryParams = Object.assign(this.queryParams, { current: 1, limit: 10 });
         this.resetPagination();
+        if (!result.length) {
+          this.resetLocationHref();
+          window.localStorage.removeItem('templateList');
+        }
         this.fetchTemplateList(true);
       },
 

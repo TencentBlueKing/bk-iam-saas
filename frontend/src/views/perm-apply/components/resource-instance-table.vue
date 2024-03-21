@@ -11,6 +11,11 @@
       @select="handlerChange"
       @select-all="handlerAllChange">
       <bk-table-column v-if="isRecommend" fixed="left" type="selection" width="60"></bk-table-column>
+      <bk-table-column v-if="hasSystem && systemId" :resizable="false" :label="$t(`m.common['系统']`)">
+        <span>
+          {{ formatSystemLabel }}
+        </span>
+      </bk-table-column>
       <bk-table-column :resizable="false" :label="$t(`m.common['操作']`)" :width="isRecommend ? '240' : '300'">
         <template slot-scope="{ row }">
           <div v-if="!!row.isAggregate" style="padding: 10px 0;"
@@ -218,11 +223,11 @@
     <bk-sideslider
       :is-show="isShowResourceInstanceSideslider"
       :title="resourceInstanceSidesliderTitle"
-      :width="960"
+      :width="resourceSliderWidth"
       quick-close
       transfer
       :ext-cls="'relate-instance-sideslider'"
-      @update:isShow="handleResourceCancel">
+      @update:isShow="handleResourceCancel('mask')">
       <div slot="content" class="sideslider-content">
         <render-resource
           ref="renderResourceRef"
@@ -238,7 +243,7 @@
       <div slot="footer" style="margin-left: 25px;">
         <bk-button theme="primary" :loading="sliderLoading" :disabled="disabled" @click="handleResourceSubmit">{{ $t(`m.common['保存']`) }}</bk-button>
         <bk-button style="margin-left: 10px;" :disabled="disabled" @click="handleResourcePreview" v-if="isShowPreview">{{ $t(`m.common['预览']`) }}</bk-button>
-        <bk-button style="margin-left: 10px;" :disabled="disabled" @click="handleResourceCancel">{{ $t(`m.common['取消']`) }}</bk-button>
+        <bk-button style="margin-left: 10px;" :disabled="disabled" @click="handleResourceCancel('cancel')">{{ $t(`m.common['取消']`) }}</bk-button>
       </div>
     </bk-sideslider>
 
@@ -255,7 +260,7 @@
         ></sideslider-effect-time>
       </div>
       <div slot="footer" style="margin-left: 25px;">
-        <bk-button theme="primary" :loading="sliderLoading" @click="handleResourceEffectTimeSumit">{{ $t(`m.common['保存']`) }}</bk-button>
+        <bk-button theme="primary" :loading="sliderLoading" @click="handleResourceEffectTimeSubmit">{{ $t(`m.common['保存']`) }}</bk-button>
         <bk-button style="margin-left: 10px;" @click="handleResourceEffectTimeCancel">{{ $t(`m.common['取消']`) }}</bk-button>
       </div>
     </bk-sideslider>
@@ -305,6 +310,12 @@
 
   export default {
     name: 'resource-instance-table',
+    // 这里用箭头函数会改变this
+    provide: function () {
+      return {
+        getResourceSliderWidth: () => this.resourceSliderWidth
+      };
+    },
     components: {
       RenderAggregateSideslider,
       RenderResource,
@@ -319,6 +330,10 @@
         default: () => []
       },
       originalTableList: {
+        type: Array,
+        default: () => []
+      },
+      systemList: {
         type: Array,
         default: () => []
       },
@@ -341,6 +356,10 @@
         }
       },
       isAllExpanded: {
+        type: Boolean,
+        default: false
+      },
+      hasSystem: {
         type: Boolean,
         default: false
       }
@@ -370,6 +389,7 @@
         curCopyData: ['none'],
         curCopyType: '',
         curId: '',
+        curInstanceMode: '',
         isLoading: false,
         isShowAggregateSideslider: false,
         aggregateResourceParams: {},
@@ -392,7 +412,9 @@
         resourceSelectData: [],
         emptyResourceGroupsList: [],
         emptyResourceGroupsName: [],
-        originalList: []
+        originalList: [],
+        resourceSliderWidth: Math.ceil(window.innerWidth * 0.67 - 7) < 960
+          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7)
       };
     },
     computed: {
@@ -468,7 +490,7 @@
               return 'all';
           }
           const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-              .related_resource_types[this.curResIndex];
+          .related_resource_types[this.curResIndex];
           return curData.selectionMode;
       },
       curAggregateDisabled () {
@@ -510,6 +532,15 @@
             return displayValue;
           }
         };
+      },
+      formatSystemLabel () {
+       if (this.systemId) {
+         const curSystem = this.systemList.find((item) => item.id === this.systemId);
+         if (curSystem) {
+          return curSystem.name;
+         }
+       }
+       return '';
       }
     },
     watch: {
@@ -572,7 +603,18 @@
         immediate: true
       }
     },
+    mounted () {
+      window.addEventListener('resize', (this.formatFormItemWidth));
+      this.$once('hook:beforeDestroy', () => {
+        window.removeEventListener('resize', this.formatFormItemWidth);
+      });
+    },
     methods: {
+      formatFormItemWidth () {
+        this.resourceSliderWidth = Math.ceil(window.innerWidth * 0.67 - 7) < 960
+          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7);
+      },
+
       fetchInstanceDefaultCheck (payload) {
         if (this.isRecommend) {
           this.$nextTick(() => {
@@ -605,6 +647,7 @@
           });
         }
       },
+      
       handleOpenRenewal (row, index) {
         row.isShowRenewal = false;
         row.customValueBackup = row.customValue;
@@ -942,7 +985,7 @@
         this.curResIndex = resIndex;
         this.curGroupIndex = groupIndex;
         this.resourceInstanceSidesliderTitle = this.$t(`m.info['关联侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}` });
-        window.changeAlert = 'iamSidesider';
+        // window.changeAlert = 'iamSidesider';
         this.isShowResourceInstanceSideslider = true;
       },
 
@@ -1082,12 +1125,15 @@
         if (isEmpty) {
           return;
         }
-
-        console.log('data', data);
-
         const resItem = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
           .related_resource_types[this.curResIndex];
+        console.log('data', data, resItem);
         const isConditionEmpty = data.length === 1 && data[0] === 'none';
+        this.curInstanceMode = resItem.selectionMode || '';
+        if (['instance:paste'].includes(resItem.selectionMode)) {
+          resItem.isLimitExceeded = false;
+          resItem.isError = false;
+        }
         if (isConditionEmpty) {
           resItem.condition = ['none'];
           resItem.isLimitExceeded = false;
@@ -1101,7 +1147,6 @@
           resItem.condition = data;
           resItem.isError = false;
         }
-
         window.changeAlert = false;
         this.resourceInstanceSidesliderTitle = '';
         this.isShowResourceInstanceSideslider = false;
@@ -1489,15 +1534,26 @@
         this.resourceInstanceEffectTimeTitle = '';
       },
 
-      handleResourceCancel () {
-        let cancelHandler = Promise.resolve();
-        if (window.changeAlert) {
-          cancelHandler = leaveConfirm();
-        }
-        cancelHandler.then(() => {
-          this.isShowResourceInstanceSideslider = false;
-          this.resetDataAfterClose();
-        }, _ => _);
+      handleResourceCancel (payload) {
+        const typeMap = {
+          mask: () => {
+            const { data } = this.$refs.renderResourceRef.handleGetValue();
+            const { hasSelectedCondition } = this.$refs.renderResourceRef;
+            let cancelHandler = Promise.resolve();
+            if (JSON.stringify(data) !== JSON.stringify(hasSelectedCondition)) {
+              cancelHandler = leaveConfirm();
+            }
+            cancelHandler.then(() => {
+              this.isShowResourceInstanceSideslider = false;
+              this.resetDataAfterClose();
+            }, _ => _);
+          },
+          cancel: () => {
+            this.resetDataAfterClose();
+            this.isShowResourceInstanceSideslider = false;
+          }
+        };
+        return typeMap[payload]();
       },
 
       handleExpiredToggle (value, row) {
@@ -1632,7 +1688,7 @@
                       })
                       : [];
                     console.warn('newResourceCount: ' + newResourceCount);
-                    if (newResourceCount > RESOURCE_MAX_LEN) {
+                    if (newResourceCount > RESOURCE_MAX_LEN && !['instance:paste'].includes(this.curInstanceMode)) {
                       resItem.isLimitExceeded = true;
                       flag = true;
                     }
@@ -1756,7 +1812,7 @@
       },
 
       // 生效条件保存
-      handleResourceEffectTimeSumit () {
+      handleResourceEffectTimeSubmit () {
         const environments = this.$refs.sidesliderRef.handleGetValue();
         if (!environments) return;
         console.log(this.curIndex, this.curGroupIndex);
@@ -1831,6 +1887,6 @@
        
 </script>
 
-<style>
+<style scoped>
   @import './resource-instance-table.css';
 </style>

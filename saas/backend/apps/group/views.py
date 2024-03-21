@@ -26,7 +26,6 @@ from backend.apps.application.serializers import ConditionCompareSLZ, ConditionT
 from backend.apps.group import tasks  # noqa
 from backend.apps.group.models import Group
 from backend.apps.policy.serializers import PolicyDeleteSLZ, PolicySLZ, PolicySystemSLZ
-from backend.apps.role.constants import PermissionTypeEnum
 from backend.apps.role.models import Role, RoleRelatedObject
 from backend.apps.subject_template.models import SubjectTemplate, SubjectTemplateGroup
 from backend.apps.template.audit import TemplateMemberDeleteAuditProvider
@@ -34,6 +33,7 @@ from backend.apps.template.filters import TemplateFilter
 from backend.apps.template.models import PermTemplate, PermTemplatePolicyAuthorized, PermTemplatePreUpdateLock
 from backend.apps.template.serializers import TemplateListSchemaSLZ, TemplateListSLZ
 from backend.audit.audit import audit_context_setter, log_api_event, view_audit_decorator
+from backend.biz.constants import PermissionTypeEnum
 from backend.biz.group import GroupBiz, GroupCheckBiz, GroupMemberExpiredAtBean
 from backend.biz.permission_audit import QueryAuthorizedSubjects
 from backend.biz.policy import PolicyBean, PolicyOperationBiz, PolicyQueryBiz
@@ -68,6 +68,7 @@ from .constants import OperateEnum
 from .filters import GroupFilter, GroupSubjectTemplateFilter, GroupTemplateSystemFilter
 from .serializers import (
     BatchGroupDeleteMemberSLZ,
+    BatchGroupMemberUpdateExpiredAtSLZ,
     GradeManagerGroupTransferSLZ,
     GroupAddMemberSLZ,
     GroupAuthorizationSLZ,
@@ -559,6 +560,49 @@ class GroupsMemberViewSet(GenericViewSet):
             return Response({}, status=status.HTTP_201_CREATED)
 
         raise error_codes.ACTIONS_PARTIAL_FAILED.format(failed_info)
+
+
+class GroupsMemberRenewViewSet(GenericViewSet):
+
+    group_biz = GroupBiz()
+
+    @swagger_auto_schema(
+        operation_description="批量用户组成员续期",
+        request_body=BatchGroupMemberUpdateExpiredAtSLZ(label="成员"),
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["group"],
+    )
+    def create(self, request, *args, **kwargs):
+        serializer = BatchGroupMemberUpdateExpiredAtSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        data = serializer.validated_data
+
+        role_checker = RoleObjectRelationChecker(request.role)
+        for group_member in data["group_members"]:
+            group = Group.objects.filter(id=group_member["group_id"]).first()
+            if not group:
+                continue
+
+            if not role_checker.check_group(group):
+                self.permission_denied(request, message=f"{request.role.type} role can not access group {group.id}")
+
+            if group_member["type"] != GroupMemberType.TEMPLATE.value:
+                member = parse_obj_as(GroupMemberExpiredAtBean, group_member)
+                self.group_biz.update_members_expired_at(group.id, [member])
+
+            # 处理人员模版的续期
+            if group_member["type"] == GroupMemberType.TEMPLATE.value:
+                self.group_biz.update_subject_template_expired_at(
+                    group.id, int(group_member["id"]), group_member["expired_at"]
+                )
+
+            # 写入审计上下文
+            audit_context_setter(group=group, members=group_member)
+            provider = GroupMemberRenewAuditProvider(request)
+            log_api_event(request, provider)
+
+        return Response({})
 
 
 class GroupMemberUpdateExpiredAtViewSet(GroupPermissionMixin, GenericViewSet):

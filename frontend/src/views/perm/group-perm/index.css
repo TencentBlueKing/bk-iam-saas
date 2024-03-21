@@ -21,7 +21,8 @@
             &:hover {
               .member-wrapper {
                 .user,
-                .depart {
+                .depart,
+                .template {
                     background: #ffffff;
                 }
               }
@@ -41,21 +42,18 @@
         justify-content: flex-start;
   
         .user,
-        .depart {
+        .depart,
+        .template {
             display: inline-block;
             min-width: 54px;
             padding: 4px 6px;
+            margin-right: 2px;
             background: #f0f1f5;
             border-radius: 2px;
-  
             i {
               font-size: 14px;
               color: #c4c6cc;
             }
-        }
-  
-        .depart {
-          margin-left: 2px;
         }
     }
 }

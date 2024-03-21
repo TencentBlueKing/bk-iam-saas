@@ -22,11 +22,11 @@ from backend.apps.group.filters import GroupFilter
 from backend.apps.group.models import Group
 from backend.apps.group.serializers import GroupSearchSLZ
 from backend.apps.policy.serializers import PolicySLZ
-from backend.apps.role.constants import PermissionTypeEnum
 from backend.apps.role.serializers import RoleCommonActionSLZ
 from backend.apps.subject.serializers import SubjectGroupSLZ, UserRelationSLZ
 from backend.apps.user.models import UserProfile
 from backend.audit.audit import audit_context_setter, view_audit_decorator
+from backend.biz.constants import PermissionTypeEnum
 from backend.biz.group import GroupBiz
 from backend.biz.permission_audit import QueryAuthorizedSubjects
 from backend.biz.policy import ConditionBean, InstanceBean, PathNodeBeanList, PolicyOperationBiz, PolicyQueryBiz

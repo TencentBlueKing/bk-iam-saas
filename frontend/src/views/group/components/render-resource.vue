@@ -23,7 +23,7 @@
         <render-order-number v-if="conditionData.length > 1" :number="`${index + 1 }`" />
         <div class="resource-instance-wrapper" :class="conditionData.length > 1 ? 'set-padding' : ''">
           <render-resource-instance
-            v-if="condition.hasOwnProperty('instance')"
+            v-if="condition.hasOwnProperty('instance') || ['instance:paste'].includes(condition.selectionMode)"
             :expanded.sync="condition.instanceExpanded"
             :is-group="handleComputedIsGroup(condition)"
             :sub-title="condition.instanceTitle"
@@ -46,7 +46,12 @@
                   :limit-value="getLimitInstance(conditionLimitData[index])"
                   :select-list="curSelectList(index)"
                   :select-value="curSelectValue(index)"
+                  :selection-mode="curSelectionMode(index)"
                   :system-params="params"
+                  :has-attribute="condition.hasOwnProperty('attribute')"
+                  :has-status-bar="conditionData.length > 1 && index !== conditionData.length - 1"
+                  :has-add-instance="!isHide && !isLoading && selectionMode !== 'instance'"
+                  :is-show-edit-action="!handleComputedIsGroup(condition) && ['all'].includes(selectionMode)"
                   @on-tree-select="handlePathSelect(...arguments, index)" />
                 <div class="drag-dotted-line" v-if="isDrag" :style="dottedLineStyle"></div>
                 <div class="drag-line"
@@ -59,15 +64,52 @@
                 </div>
               </div>
               <div class="right-layout">
-                <template v-if="condition.instance && condition.instance.length > 0">
+                <div class="flex-between right-layout-header">
+                  <div class="right-layout-title">{{ $t(`m.common['结果预览']`) }}</div>
+                  <div
+                    :class="[
+                      'clear-all'
+                    ]"
+                    @click.stop=""
+                  >
+                    <bk-dropdown-menu
+                      ref="dropdownInstance"
+                      :position-fixed="true"
+                      align="left"
+                      :disabled="formatClearDisabled(condition.instance)"
+                    >
+                      <template slot="dropdown-trigger">
+                        <Icon bk type="more" />
+                      </template>
+                      <ul
+                        slot="dropdown-content"
+                        class="bk-dropdown-list"
+                      >
+                        <li>
+                          <a @click.stop="handleConditionClearAll(condition.instance, index)">
+                            {{ $t(`m.common['清除所有']`) }}
+                          </a>
+                        </li>
+                      </ul>
+                    </bk-dropdown-menu>
+                  </div>
+                </div>
+                <div
+                  v-if="condition.instance && condition.instance.length > 0"
+                  :style="{ maxHeight: 'calc(100vh - 600px)' }"
+                >
                   <instance-view
+                    :select-list="selectList"
+                    :select-value="selectValue"
                     :data="condition.instance"
                     @on-delete="handleInstanceDelete(...arguments, index)"
                     @on-clear="handleInstanceClearAll(...arguments, index)" />
-                </template>
+                </div>
                 <template v-else>
                   <div class="empty-wrapper">
-                    <ExceptionEmpty />
+                    <ExceptionEmpty
+                      style="background: #fafbfd"
+                    />
                   </div>
                 </template>
               </div>
@@ -144,6 +186,9 @@
         getDragDynamicWidth: () => this.dragWidth
       };
     },
+    inject: {
+      getResourceSliderWidth: { value: 'getResourceSliderWidth', default: null }
+    },
     components: {
       renderResourceInstance,
       renderOrderNumber,
@@ -218,13 +263,14 @@
         attributes: [],
         isHide: false,
         // isEmptyResource: false,
-        dragWidth: 220,
-        dragRealityWidth: 220,
+        dragWidth: this.getResourceSliderWidth ? this.getResourceSliderWidth() * 0.67 : 600,
+        dragRealityWidth: this.getResourceSliderWidth ? this.getResourceSliderWidth() * 0.67 : 600,
         isDrag: false,
         conditionLimitData: [],
         selectListMap: {},
         selectValueMap: {},
-        selectionModeMap: {}
+        selectionModeMap: {},
+        hasSelectedCondition: []
       };
     },
     computed: {
@@ -261,7 +307,8 @@
         };
       },
       leftLayoutStyle () {
-        if (this.dragWidth >= 220) {
+        const sliderWidth = this.getResourceSliderWidth ? this.getResourceSliderWidth() * 0.67 : 600;
+        if (this.dragWidth >= sliderWidth) {
           return {
             'min-width': `${this.dragWidth}px`
           };
@@ -294,6 +341,29 @@
       },
       limitDisabled () {
         return this.disabled || this.conditionLimitData.length > 0;
+      },
+      formatClearDisabled () {
+        return (payload) => {
+          let curPaths = [];
+          if (payload.length) {
+            curPaths = payload.reduce((prev, next) => {
+              prev.push(
+                ...next.path.map(v => {
+                  const paths = { ...v, ...next };
+                  delete paths.instance;
+                  delete paths.path;
+                  return paths[0];
+                })
+              );
+              return prev;
+            }, []);
+            return curPaths.every(v => v.disabled);
+          }
+          return true;
+        };
+      },
+      dynamicsSliderWidth () {
+        return this.getResourceSliderWidth ? this.getResourceSliderWidth() * 0.67 : 600;
       }
     },
     watch: {
@@ -306,7 +376,7 @@
               this.requestQueue.push(...['instanceSelection', 'resourceAttr']);
               this.fetchInstanceSelection(value);
               this.fetchResourceAttrs();
-            } else if (this.selectionMode === 'instance') {
+            } else if (['instance', 'instance:paste'].includes(this.selectionMode)) {
               // this.requestQueue = ['instanceSelection']
               this.requestQueue.push('instanceSelection');
               this.fetchInstanceSelection(value);
@@ -335,6 +405,8 @@
             if (selectionMode !== 'all') {
               this.conditionData[0].instanceCanDelete = false;
             }
+            // 备份已选数据，与最新数据做对比判断要不要展示离开确认框
+            this.hasSelectedCondition = _.cloneDeep(val);
             return;
           }
           if (len > 0) {
@@ -354,10 +426,14 @@
             }
             this.notLimitValue = false;
             this.isHide = false;
+            // 备份已选数据，与最新数据做对比判断要不要展示离开确认框
+            this.hasSelectedCondition = _.cloneDeep(this.conditionData);
           } else {
             this.notLimitValue = true;
             this.isHide = true;
             this.conditionData = [];
+            // 备份已选数据，与最新数据做对比判断要不要展示离开确认框
+            this.hasSelectedCondition = _.cloneDeep(this.conditionData);
           }
         },
         deep: true,
@@ -421,10 +497,11 @@
           return;
         }
         // 可拖拽范围
-        const MIN_OFFSET_WIDTH = 220;
+        const MIN_OFFSET_WIDTH = this.dynamicsSliderWidth;
         const minWidth = MIN_OFFSET_WIDTH;
         const maxWidth = MIN_OFFSET_WIDTH + 120;
-        const offsetX = e.clientX - (document.body.clientWidth - 960);
+        const sliderWidth = this.getResourceSliderWidth ? this.getResourceSliderWidth() : 960;
+        const offsetX = e.clientX - (document.body.clientWidth - sliderWidth);
         if (offsetX < minWidth || offsetX >= maxWidth) {
           return;
         }
@@ -483,14 +560,24 @@
               const isHasInstance = item.instance && item.instance.length > 0;
               const isHasAttribute = item.attribute && item.attribute.length > 0;
               let curSelectMode = '';
-              if (!isHasInstance && isHasAttribute) {
-                curSelectMode = 'attribute';
-                this.$delete(this.conditionData[index], 'instance');
-              } else if (isHasInstance && !isHasAttribute) {
-                curSelectMode = 'instance';
-                this.$delete(this.conditionData[index], 'attribute');
+              if (['instance:paste'].includes(this.selectionMode)) {
+                curSelectMode = this.selectionMode;
+                if (!isHasInstance) {
+                  this.$delete(this.conditionData[index], 'instance');
+                }
+                if (!isHasAttribute) {
+                  this.$delete(this.conditionData[index], 'attribute');
+                }
               } else {
-                curSelectMode = 'all';
+                if (!isHasInstance && isHasAttribute) {
+                  curSelectMode = 'attribute';
+                  this.$delete(this.conditionData[index], 'instance');
+                } else if (isHasInstance && !isHasAttribute) {
+                  curSelectMode = 'instance';
+                  this.$delete(this.conditionData[index], 'attribute');
+                } else {
+                  curSelectMode = 'all';
+                }
               }
               this.$set(this.selectionModeMap, index, curSelectMode);
             });
@@ -716,6 +803,15 @@
         };
       },
 
+      handleConditionClearAll (payload, index) {
+        payload.forEach((item, i) => {
+          this.handleInstanceClearAll(item, i, index);
+        });
+        this.$nextTick(() => {
+          this.$refs.dropdownInstance && this.$refs.dropdownInstance[0].hide();
+        });
+      },
+
       handleInstanceClearAll (payload, payloadIndex, index) {
         window.changeAlert = true;
         const { displayPath } = payload;
@@ -851,7 +947,8 @@
                 const tempPathItem = _.cloneDeep(item.paths[pathIndex]);
                 if (tempPathItem.map(sub => sub.id).filter(v => curIdChain.includes(v)).length > 0) {
                   obj.childChain = tempPathItem.map(chain => chain.type);
-                  obj.childChainId = tempPathItem.map(chain => chain.id);
+                  // 因为扁平化会存在有相同id的数据，所以拼接ia和name确保唯一性
+                  obj.childChainId = tempPathItem.map(chain => `${chain.id}&${chain.name}`);
                   obj.id = tempPathItem[tempPathItem.length - 1].id;
                   obj.pathIndex = pathIndex;
                   allChain.push(_.cloneDeep(obj));
@@ -860,7 +957,7 @@
               if (pathItem.length > 1) {
                 if (pathItem.map(sub => sub.id).filter(v => curIdChain.includes(v)).length > 0) {
                   obj.childChain = pathItem.map(chain => chain.type);
-                  obj.childChainId = pathItem.map(chain => chain.id);
+                  obj.childChainId = pathItem.map(chain => `${chain.id}&${chain.name}`);
                   obj.id = pathItem[pathItem.length - 1].id;
                   obj.pathIndex = pathIndex;
                   allChain.push(_.cloneDeep(obj));
@@ -871,7 +968,7 @@
               if (templatePathItem.length > 1) {
                 if (templatePathItem.map(sub => sub.id).filter(v => curIdChain.includes(v)).length > 0) {
                   obj.childChain = templatePathItem.map(chain => chain.type);
-                  obj.childChainId = templatePathItem.map(chain => chain.id);
+                  obj.childChainId = templatePathItem.map(chain => `${chain.id}&${chain.name}`);
                   obj.id = templatePathItem[templatePathItem.length - 1].id;
                   obj.pathIndex = pathIndex;
                   allChain.push(_.cloneDeep(obj));
@@ -880,7 +977,6 @@
             }
           });
         });
-
         // 匹配的所有子级链路：
         const tempChain = allChain.filter(item => item.childChain.length > curChain.length);
         // console.warn('匹配的所有子级链路tempChain: ')
@@ -925,7 +1021,7 @@
         });
       },
 
-      handlePathSelect (value, node, payload, index) {
+      handlePathSelect (value, node, payload, resourceLen, index) {
         window.changeAlert = true;
         const { type, path, paths } = payload[0];
         const tempPath = path[0];
@@ -953,24 +1049,84 @@
             this.handleChain(tempPath, curInstance, index, node.async);
           }
         } else {
-          // const noCarryNoLimitPath = payload[1]
-          const deleteInstanceItem = curInstance.find(item => item.type === type);
+          // // const noCarryNoLimitPath = payload[1]
+          // const deleteInstanceItem = curInstance.find(item => item.type === type);
 
-          // const arr = path[0]
-          // const tempPath = arr.filter(item => item.id !== '*')
+          // // const arr = path[0]
+          // // const tempPath = arr.filter(item => item.id !== '*')
 
-          // const deleteIndex = deleteInstanceItem.path.findIndex(item => item.map(v => v.id).join('') === tempPath.map(v => v.id).join(''))
-          const deleteIndex = deleteInstanceItem.path.findIndex(item => item.map(v => `${v.id}&${v.type}`).join('') === tempPath.map(v => `${v.id}&${v.type}`).join(''));
+          // // const deleteIndex = deleteInstanceItem.path.findIndex(item => item.map(v => v.id).join('') === tempPath.map(v => v.id).join(''))
+          // const deleteIndex = deleteInstanceItem.path.findIndex(item => item.map(v => `${v.id}&${v.type}`).join('') === tempPath.map(v => `${v.id}&${v.type}`).join(''));
 
-          // const curChildreIds = node.children.map(item => item.id)
-          const curChildreIds = node.children.map(item => `${item.id}&${item.type}`);
+          // // const curChildreIds = node.children.map(item => item.id)
+          // const curChildrenIds = node.children.map(item => `${item.id}&${item.type}`);
 
-          // deleteInstanceItem.path.splice(deleteIndex, 1)
+          // // deleteInstanceItem.path.splice(deleteIndex, 1)
+          // let isDisabled = false;
+          // if (deleteIndex > -1) {
+          //   isDisabled = deleteInstanceItem.path[deleteIndex].some(_ => _.disabled);
+          //   if (!isDisabled) {
+          //     deleteInstanceItem.path.splice(deleteIndex, 1);
+          //   }
+          // }
           let isDisabled = false;
-          if (deleteIndex > -1) {
-            isDisabled = deleteInstanceItem.path[deleteIndex].some(_ => _.disabled);
-            if (!isDisabled) {
-              deleteInstanceItem.path.splice(deleteIndex, 1);
+          let curChildrenIds = [];
+          const deleteIndex = -1;
+          let deleteInstanceItem = curInstance.find(item => item.type === type);
+          if (!deleteInstanceItem) {
+            const hasSelectData = [];
+            curInstance.forEach(item => {
+              item.path.forEach(pathItem => {
+                hasSelectData.push({
+                  ids: pathItem.map(v => `${v.id}&${v.type}`),
+                  idChain: pathItem.map(v => `${v.id}&${v.type}`).join('#'),
+                  childTypes: pathItem.map(v => v.type),
+                  disabled: pathItem.some(subItem => subItem.disabled)
+                });
+              });
+            });
+            this.hasSelectData = _.cloneDeep(hasSelectData);
+            const hasData = this.hasSelectData.find((item) => item.childTypes.includes(type));
+            if (hasData) {
+              deleteInstanceItem = curInstance.find(item => hasData.childTypes.includes(item.type) && hasData.childTypes.includes(type));
+            }
+          }
+
+          if (resourceLen) {
+            for (let i = 0; i < resourceLen; i++) {
+              // const noCarryNoLimitPath = payload[1]
+          
+              // const arr = path[0]
+              // const tempPath = arr.filter(item => item.id !== '*')
+          
+              // const deleteIndex = deleteInstanceItem.path.findIndex(item => item.map(v => v.id).join('') === tempPath.map(v => v.id).join(''))
+              const deleteIndex = deleteInstanceItem.path.findIndex(item => item.map(v => `${v.id}&${v.type}`).join('') === tempPath.map(v => `${v.id}&${v.type}`).join(''));
+          
+              // const curChildrenIds = node.children.map(item => item.id)
+              curChildrenIds = node.children.map(item => `${item.id}&${item.type}`);
+          
+              // deleteInstanceItem.path.splice(deleteIndex, 1)
+              if (deleteIndex > -1) {
+                isDisabled = deleteInstanceItem.path[deleteIndex].some(_ => _.disabled);
+                if (!isDisabled) {
+                  deleteInstanceItem.path.splice(deleteIndex, 1);
+                }
+              }
+            }
+          } else {
+            const deleteIndex = deleteInstanceItem.path.findIndex(item => item.map(v => `${v.id}&${v.type}`).join('') === tempPath.map(v => `${v.id}&${v.type}`).join(''));
+            const deleteItem = deleteInstanceItem.path.filter(item => item.map(v => `${v.id}&${v.type}`).join('') === tempPath.map(v => `${v.id}&${v.type}`).join(''));
+            curChildrenIds = node.children.map(item => `${item.id}&${item.type}`);
+            console.log(deleteIndex, deleteInstanceItem, deleteItem);
+            if (deleteIndex > -1) {
+              isDisabled = deleteInstanceItem.path[deleteIndex].some(_ => _.disabled);
+              if (!isDisabled) {
+                deleteInstanceItem.path.splice(deleteIndex, 1);
+                // 处理半选之后再全选会造成有重叠的数据
+                if (deleteItem.length > 1) {
+                  deleteInstanceItem.path = deleteInstanceItem.path.filter((item) => !deleteItem.includes(item));
+                }
+              }
             }
           }
 
@@ -1000,7 +1156,7 @@
               // if (curChildreIds.includes(instanceItem.path[0][0].id)) {
               //     curInstance.splice(i, 1)
               // }
-              if (curChildreIds.includes(`${instanceItem.path[0][0].id}&${instanceItem.path[0][0].type}`)) {
+              if (curChildrenIds.includes(`${instanceItem.path[0][0].id}&${instanceItem.path[0][0].type}`)) {
                 curInstance.splice(i, 1);
                 break;
               }
@@ -1020,121 +1176,7 @@
     }
   };
 </script>
+
 <style lang="postcss" scoped>
-    .iam-slider-resource-wrapper {
-        height: calc(100vh - 114px);
-
-        .no-limit-wrapper {
-            padding: 20px 25px 0 25px;
-        }
-
-        .resource-error-tips {
-            padding-left: 25px;
-            font-size: 12px;
-            color: #ff4d4d;
-        }
-
-        .no-limit {
-            position: relative;
-            width: 100%;
-            height: 42px;
-            line-height: 39px;
-            font-size: 12px;
-            color: #63656e;
-            background-color: #fafbfd;
-            border: 1px solid #dcdee5;
-            padding: 0 21px 0 13px;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            overflow: hidden;
-            span.text {
-                display: inline-block;
-            }
-            span {
-                i {
-                    font-weight: 600;
-                    font-size: 14px;
-                }
-                .no-limit-checkbox {
-                    top: -28px;
-                    float: right;
-                    position: absolute;
-                    top: 10px;
-                    right: 30px;
-                    .bk-checkbox-text {
-                        font-size: 12px;
-                        position: relative;
-                        top: -1px;
-                    }
-                }
-            }
-        }
-
-        .is-one-resource-instance {
-            padding: 16px 25px 0 25px;
-        }
-
-        .resource-instance-wrapper {
-            &.set-padding {
-                padding: 0 25px;
-            }
-            .iam-instance-wrapper {
-                display: flex;
-                justify-content: flex-start;
-                height: 100%;
-                .left-layout {
-                    position: relative;
-                    min-width: 220px;
-                    .drag-dotted-line {
-                        position: absolute;
-                        top: 0;
-                        left: 220px;
-                        height: 100%;
-                        border-left: 1px solid #dcdee5;
-                        z-index: 1500;
-                    }
-                    .drag-line {
-                        position: absolute;
-                        top: 0;
-                        left: 220px;
-                        height: 100%;
-                        width: 1px;
-                        background: #dcdee5;
-                        z-index: 1500;
-                        .drag-bar {
-                            position: relative;
-                            top: calc(50% - 17px);
-                            left: 2px;
-                            width: 9px;
-                            background: transparent;
-                            cursor: col-resize;
-                        }
-                    }
-                }
-                .right-layout {
-                    position: relative;
-                    width: calc(100% - 180px);
-                    overflow-y: auto;
-                    &::-webkit-scrollbar {
-                        width: 4px;
-                        background-color: lighten(transparent, 80%);
-                    }
-                    &::-webkit-scrollbar-thumb {
-                        height: 5px;
-                        border-radius: 2px;
-                        background-color: #e6e9ea;
-                    }
-                    .empty-wrapper {
-                        position: absolute;
-                        top: 50%;
-                        left: 50%;
-                        transform: translate(-50%, -50%);
-                        img {
-                            width: 120px;
-                        }
-                    }
-                }
-            }
-        }
-    }
+  @import '@/css/mixins/resource-instance-slider.css';
 </style>

@@ -32,28 +32,47 @@
         @page-limit-change="handlePageLimitChange"
         @select="handleGroupChange"
         @select-all="handleAllGroupChange">
-        <bk-table-column type="selection" align="center" :selectable="setDefaultSelect" />
-        <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
+        <bk-table-column
+          type="selection"
+          align="center"
+          :selectable="setDefaultSelect"
+          :fixed="curPageData.length > 0 ? 'left' : false"
+        />
+        <bk-table-column
+          :label="$t(`m.userGroup['用户组名']`)"
+          :min-width="200"
+          :fixed="curPageData.length > 0 ? 'left' : false"
+        >
           <template slot-scope="{ row }">
-            <span class="user-group-name" :title="row.name" @click="goDetail(row)">{{ row.name }}</span>
+            <span class="user-group-name" :title="row.name" @click="goDetail(row)">
+              {{ row.name }}
+            </span>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t(`m.userGroup['用户/组织']`)" :min-width="140">
+        <bk-table-column :label="$t(`m.userGroup['用户/组织']`)" :min-width="200">
           <template slot-scope="{ row }">
-            <div class="member-wrapper">
-              <span class="user">
+            <div
+              v-if="row.user_count > 0 || row.department_count > 0 || row.subject_template_count > 0"
+              class="member-wrapper"
+            >
+              <span class="user" v-if="row.user_count > 0">
                 <Icon type="personal-user" />
-                {{ row.user_count || '--' }}
+                {{ row.user_count }}
               </span>
-              <span class="depart">
+              <span class="depart" v-if="row.department_count > 0">
                 <Icon type="organization-fill" />
-                {{ row.department_count || '--' }}
+                {{ row.department_count }}
+              </span>
+              <span class="template" v-if="row.subject_template_count > 0">
+                <Icon type="renyuanmuban" />
+                {{ row.subject_template_count }}
               </span>
             </div>
+            <div v-else>--</div>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t(`m.common['有效期']`)" prop="expired_at_display"></bk-table-column>
-        <bk-table-column :label="$t(`m.grading['管理空间']`)">
+        <bk-table-column :label="$t(`m.common['有效期']`)" prop="expired_at_display" width="120" />
+        <bk-table-column :label="$t(`m.grading['管理空间']`)" :min-width="200">
           <template slot-scope="{ row }">
             <span
               :title="row.role && row.role.name ? row.role.name : ''"
@@ -79,14 +98,14 @@
             <span :title="row.created_time">{{ row.created_time.replace(/T/, ' ') }}</span>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t(`m.common['描述']`)">
+        <bk-table-column :label="$t(`m.common['描述']`)" width="200">
           <template slot-scope="{ row }">
             <span :title="row.description !== '' ? row.description : ''">
               {{ row.description !== '' ? row.description : '--'}}
             </span>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t(`m.perm['加入方式']`)">
+        <bk-table-column :label="$t(`m.perm['加入方式']`)" :min-width="200">
           <template slot-scope="props">
             <span v-if="props.row.department_id === 0">{{ $t(`m.perm['直接加入']`) }}</span>
             <span v-else :title="`${$t(`m.perm['通过组织加入']`)}: ${props.row.department_name}`">
@@ -94,7 +113,11 @@
             </span>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t(`m.common['操作']`)" width="200">
+        <bk-table-column
+          :label="$t(`m.common['操作-table']`)"
+          :width="curLanguageIsCn ? 120 : 160"
+          :fixed="curPageData.length > 0 ? 'right' : ''"
+        >
           <template slot-scope="{ row }">
             <bk-button
               theme="primary"
@@ -1064,21 +1087,19 @@
           justify-content: flex-start;
     
           .user,
-          .depart {
+          .depart,
+          .template {
             display: inline-block;
             min-width: 54px;
             padding: 4px 6px;
             background: #f0f1f5;
             border-radius: 2px;
+            margin-right: 2px;
   
             i {
               font-size: 14px;
               color: #c4c6cc;
             }
-          }
-    
-          .depart {
-            margin-left: 2px;
           }
         }
 
@@ -1086,7 +1107,8 @@
           &:hover {
             .member-wrapper {
               .user,
-              .depart {
+              .depart,
+              .template {
                 background: #ffffff;
               }
             }

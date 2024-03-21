@@ -450,7 +450,7 @@
   // 去除()以及之间的字符
   const getUsername = (str) => {
     const array = str.split('');
-    const index = array.findIndex((item) => item === '(');
+    const index = array.findIndex((item) => ['(', ')'].includes(item));
     if (index !== -1) {
       return array.splice(0, index).join('');
     }
@@ -1028,10 +1028,11 @@
 
       async handleSearchOrgAndUser () {
         let manualInputValue = _.cloneDeep(this.manualValue.split(this.regValue));
-        manualInputValue = manualInputValue.filter((item) => item !== '');
+        manualInputValue = manualInputValue.filter((item) => item !== '' && getUsername(item) !== '');
         for (let i = 0; i < manualInputValue.length; i++) {
+          const keyword = getUsername(manualInputValue[i]);
           const params = {
-            keyword: manualInputValue[i],
+            keyword,
             is_exact: false
           };
           try {
@@ -1069,7 +1070,7 @@
           this.hasSelectedUsers.push(...temps);
           this.hasSelectedManualUsers.push(...temps);
           if (res.data.length) {
-            this.usernameList = res.data.map((item) => item.username);
+            this.usernameList = res.data.map((item) => `${item.username}(${item.name})`);
             // 分号拼接
             // const templateArr = [];
             // this.manualValueBackup = this.manualValueActual.split(';').filter(item => item !== '');
@@ -1082,7 +1083,7 @@
             // this.manualValue = templateArr.join(';');
 
             // 保存原有格式
-            let formatStr = _.cloneDeep(this.manualValue);
+            let formatStr = _.cloneDeep(getUsername(this.manualValue));
             this.usernameList.forEach((item) => {
               // 去掉之前有查全局的写法， 如果username有多个重复的item, 比如shengjieliu03@shengjietest.com、shengjieliu05的时候/g就会有问题
               // formatStr = formatStr.replace(this.evil('/' + item + '(;\\n|\\s\\n|)/g'), '');

@@ -332,7 +332,9 @@
         sourceMap: {
           web: this.$t(`m.audit['页面']`),
           api: 'API',
-          openapi: 'API'
+          openapi: 'API',
+          approval: this.$t(`m.audit['审批']`),
+          task: this.$t(`m.audit['后台任务']`)
         },
         typeMap: {
           'user.policy.create': this.$t(`m.audit['用户权限增加']`),

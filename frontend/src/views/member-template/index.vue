@@ -17,12 +17,30 @@
           :value="searchValue" :quick-search-method="quickSearchMethod" @on-change="handleSearch" />
       </div>
     </render-search>
-    <bk-table ref="memberTemplateRef" ext-cls="member-template-table" :size="setting.size" :data="memberTemplateList"
-      :row-class-name="getRowClass" :max-height="tableHeight" :pagination="pagination" :dark-header="true"
-      @page-change="handlePageChange" @page-limit-change="handleLimitChange" @select="handlerChange"
-      @select-all="handlerAllChange" v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
-      <bk-table-column type="selection" align="center" :selectable="getDefaultSelect" />
-      <bk-table-column v-for="field in setting.selectedFields" :key="field.id" :label="field.label" :prop="field.id">
+    <bk-table
+      ref="memberTemplateRef"
+      ext-cls="member-template-table"
+      :size="setting.size"
+      :data="memberTemplateList"
+      :custom-header-color="'#fafbfd'"
+      :dark-header="true"
+      :row-class-name="getRowClass"
+      :max-height="tableHeight"
+      :pagination="pagination"
+      @page-change="handlePageChange"
+      @page-limit-change="handleLimitChange"
+      @select="handlerChange"
+      @select-all="handlerAllChange"
+      v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
+    >
+      <bk-table-column type="selection" align="center" :selectable="getDefaultSelect" fixed="left" />
+      <bk-table-column
+        v-for="field in setting.selectedFields"
+        :key="field.id"
+        :label="field.label"
+        :prop="field.id"
+        :fixed="field.fixed"
+      >
         <template slot-scope="{ row }">
           <div v-if="['name'].includes(field.id)" class="member-template-name">
             <span
@@ -50,7 +68,7 @@
           </span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.common['操作-table']`)">
+      <bk-table-column :label="$t(`m.common['操作-table']`)" fixed="right">
         <template slot-scope="{ row }">
           <div class="actions-btn">
             <bk-popover
@@ -662,7 +680,7 @@
 
 <style lang="postcss" scoped>
 .iam-member-template-wrapper {
-  .member-template-table {
+  /deep/ .member-template-table {
     margin-top: 20px;
 
     .member-template-name {

@@ -87,32 +87,36 @@
       :pagination="pagination" ref="tableRef" row-key="id" @page-change="pageChange"
       @page-limit-change="limitChange" @select="handlerChange" @select-all="handlerAllChange"
       v-bkloading="{ isLoading: tableLoading, opacity: 1 }">
-      <bk-table-column type="selection" align="center" :selectable="getIsSelect" reserve-selection />
-      <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
+      <bk-table-column type="selection" align="center" :selectable="getIsSelect" reserve-selection fixed="left" />
+      <bk-table-column :label="$t(`m.userGroup['用户组名']`)" :min-width="240" fixed="left">
         <template slot-scope="{ row }">
           <span class="user-group-name" :title="row.name" @click="handleView(row)">{{ row.name }}</span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.userGroup['用户/组织']`)" min-width="200">
+      <bk-table-column :label="$t(`m.userGroup['用户/组织']`)" :min-width="200">
         <template slot-scope="{ row }">
-          <div class="member-wrapper">
-            <span class="user">
+          <div
+            v-if="row.user_count > 0 || row.department_count > 0 || row.subject_template_count > 0"
+            class="member-wrapper"
+          >
+            <span class="user" v-if="row.user_count > 0">
               <Icon type="personal-user" />
-              {{ row.user_count || '--' }}
+              {{ row.user_count }}
             </span>
-            <span class="depart">
+            <span class="depart" v-if="row.department_count > 0">
               <Icon type="organization-fill" />
-              {{ row.department_count || '--' }}
+              {{ row.department_count }}
             </span>
-            <span class="template">
+            <span class="template" v-if="row.subject_template_count > 0">
               <Icon type="renyuanmuban" />
-              {{ row.subject_template_count || '--' }}
+              {{ row.subject_template_count }}
             </span>
           </div>
+          <div v-else>--</div>
         </template>
       </bk-table-column>
       <template v-if="['rating_manager'].includes(curRole)">
-        <bk-table-column :label="$t(`m.info['二级管理空间']`)" width="240">
+        <bk-table-column :label="$t(`m.info['二级管理空间']`)" :min-width="200">
           <template slot-scope="{ row }">
             <div class="user-group-space">
               <Icon
@@ -132,10 +136,10 @@
           </template>
         </bk-table-column>
       </template>
-      <bk-table-column :label="$t(`m.userGroup['用户组属性']`)" width="300">
+      <bk-table-column :label="$t(`m.userGroup['用户组属性']`)" width="200">
         <template slot-scope="{ row, $index }">
           <IamGroupAttribute
-            style="width: 260px"
+            style="width: 200px"
             :value="row.apply_disable ? ['apply_disable'] : []"
             :list="userGroupAttributesList"
             :attributes="userGroupAttributes"
@@ -157,17 +161,17 @@
                     </span>
                 </template>
             </bk-table-column> -->
-      <bk-table-column :label="$t(`m.common['创建时间']`)" width="240">
+      <bk-table-column :label="$t(`m.common['创建时间']`)" width="160">
         <template slot-scope="{ row }">
           <span :title="row.created_time">{{ row.created_time }}</span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.common['描述']`)">
+      <bk-table-column :label="$t(`m.common['描述']`)" :min-width="100">
         <template slot-scope="{ row }">
           <span :title="row.description || ''">{{ row.description || '--' }}</span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.common['操作-table']`)" width="320" fixed="right">
+      <bk-table-column :label="$t(`m.common['操作-table']`)" :width="curLanguageIsCn ? 180 : 260" fixed="right">
         <template slot-scope="{ row }">
           <div>
             <bk-button
@@ -186,12 +190,30 @@
               @click="handleAddPerm(row)">
               {{ $t(`m.common['添加权限']`) }}
             </bk-button>
-            <bk-button theme="primary" text style="margin-left: 10px" @click="handleClone(row)">
-              {{ $t(`m.grading['克隆']`) }}
-            </bk-button>
-            <bk-button theme="primary" text style="margin-left: 10px" @click="handleDelete(row)">
-              {{ $t(`m.common['删除']`) }}
-            </bk-button>
+            <bk-popover
+              class="custom-table-dot-menu"
+              ext-cls="custom-table-dot-menu-tipper"
+              placement="bottom-start"
+              theme="dot-menu light"
+              trigger="click"
+              :arrow="false"
+              :offset="15"
+              :distance="0"
+            >
+              <span class="custom-table-dot-menu-trigger" />
+              <ul class="custom-table-dot-menu-list" slot="content">
+                <li class="custom-table-dot-menu-item">
+                  <bk-button theme="primary" text @click="handleClone(row)">
+                    {{ $t(`m.grading['克隆']`) }}
+                  </bk-button>
+                </li>
+                <li class="custom-table-dot-menu-item">
+                  <bk-button theme="primary" text @click="handleDelete(row)">
+                    {{ $t(`m.common['删除']`) }}
+                  </bk-button>
+                </li>
+              </ul>
+            </bk-popover>
           </div>
         </template>
       </bk-table-column>
@@ -941,6 +963,7 @@
   };
 </script>
 <style lang="postcss">
+@import '@/css/mixins/custom-table-dot.css';
 .iam-user-group-wrapper {
     .search_left {
       display: flex;
