@@ -848,17 +848,8 @@
         await this.firstFetchResources();
       },
 
-      handleTreeSelect (value, node) {
+      handleTreeSelect (value, node, resourceLen) {
         const parentChain = _.cloneDeep(node.parentChain);
-        // const isNeedAny = node.async
-        // const anyData = (() => {
-        //     const data = this.curChain[node.level + 1]
-        //     if (data) {
-        //         return data
-        //     }
-        //     return this.curChain[this.curChain.length - 1]
-        // })()
-
         const curChainData = this.curChain[node.level];
         const chainLen = this.curChain.length;
         let id = '';
@@ -873,58 +864,111 @@
           name = curChainData.name;
           systemId = curChainData.system_id;
         }
-
-        parentChain.forEach((item, index) => {
-          let id = '';
-          if (this.curChain[index]) {
-            id = this.curChain[index].id;
-          } else {
-            id = this.curChain[this.curChain.length - 1].id;
-          }
-          item.type = id;
-          item.type_name = id;
-        });
-        parentChain.push({
-          type: id,
-          type_name: name,
-          id: node.id,
-          name: node.name,
-          system_id: systemId,
-          child_type: node.childType || ''
-        });
-        // if (isNeedAny) {
-        //     parentChain.push({
-        //         type: anyData.id,
-        //         type_name: anyData.name,
-        //         id: '*',
-        //         name: `${anyData.name}: ${this.$t(`m.common['无限制']`)}`,
-        //         system_id: anyData.system_id,
-        //         child_type: anyData.id
-        //     })
-        // }
-
-        // 判断是否忽略路径
-        // const isNeedIgnore = this.ignorePathFlag && !isNeedAny
-        // const isNeedIgnore = this.ignorePathFlag
-        const params = [{
-          type: id,
-          name,
-          // path: isNeedIgnore ? [parentChain.slice(parentChain.length - 1)] : [parentChain],
-          path: [parentChain],
-          paths: [parentChain]
-        }];
-
-        if (node.isExistNoCarryLimit) {
-          const p = [parentChain.slice(0, parentChain.length - 1)];
-          params.push({
+        if (this.isManualInput) {
+          parentChain.push({
+            type: id,
+            type_name: name,
+            id: node.id,
+            name: node.name,
+            system_id: systemId,
+            child_type: node.childType || ''
+          });
+          // 判断是否忽略路径
+          const curPath = this.ignorePathFlag ? [parentChain.slice(parentChain.length - 1)] : [parentChain];
+          const params = [{
             type: id,
             name,
-            path: p,
-            paths: p
+            path: curPath,
+            paths: curPath
+          }];
+          if (node.isExistNoCarryLimit) {
+            const p = [parentChain.slice(0, parentChain.length - 1)];
+            params.push({
+              type: id,
+              name,
+              path: p,
+              paths: p
+            });
+          }
+          console.log(value, node, parentChain, params, resourceLen);
+          this.$emit('on-tree-select', value, node, params, resourceLen);
+        } else {
+          // const isNeedAny = node.level < this.curChain.length - 1
+          const isNeedAny = node.async;
+          const anyData = (() => {
+            const data = this.curChain[node.level + 1];
+            if (data) {
+              return data;
+            }
+            return this.curChain[this.curChain.length - 1];
+          })();
+          parentChain.forEach((item, index) => {
+            let id = '';
+            if (this.curChain[index]) {
+              id = this.curChain[index].id;
+            } else {
+              id = this.curChain[this.curChain.length - 1].id;
+            }
+            item.type = id;
+            item.type_name = id;
           });
+          parentChain.push({
+            type: id,
+            type_name: name,
+            id: node.id,
+            name: node.name,
+            system_id: systemId,
+            child_type: node.childType || ''
+          });
+          if (isNeedAny) {
+            parentChain.push({
+              type: anyData.id,
+              type_name: anyData.name,
+              id: '*',
+              name: `${anyData.name}: ${this.$t(`m.common['无限制']`)}`,
+              system_id: anyData.system_id,
+              child_type: anyData.id
+            });
+          }
+          // 判断是否忽略路径
+          // const isNeedIgnore = this.ignorePathFlag && !isNeedAny
+          const params = [{
+            type: id,
+            name,
+            // path: isNeedIgnore ? [parentChain.slice(parentChain.length - 1)] : [parentChain],
+            path: [parentChain],
+            paths: [parentChain]
+          }];
+          if (node.isExistNoCarryLimit) {
+            const p = [parentChain.slice(0, parentChain.length - 1)];
+            params.push({
+              type: id,
+              name,
+              path: p,
+              paths: p
+            });
+          }
+          console.log(value, node, parentChain, params, resourceLen);
+          this.$emit('on-tree-select', value, node, params, resourceLen);
         }
-
-        this.$emit('on-tree-select', value, node, params);
+        // 针对资源权限特殊处理
+        if (this.resourceValue) {
+          if (value) {
+            this.treeData.forEach(item => {
+              if (item.id !== node.id) {
+                item.disabled = true;
+              }
+            });
+            this.resourceNode = node;
+            this.resourceNeedDisable = true;
+          } else {
+            this.treeData.forEach(item => {
+              item.disabled = false;
+            });
+            this.resourceNode = {};
+            this.resourceNeedDisable = false;
+          }
+        }
       },
 
       // 单页全选

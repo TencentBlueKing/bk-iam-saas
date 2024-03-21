@@ -1160,78 +1160,92 @@
 
       handleTreeSelect (value, node, resourceLen) {
         const parentChain = _.cloneDeep(node.parentChain);
-        let isNeedAny = false;
-        // 用户组以及权限模板这里，除了子节点没有“无限制”，其他节点，包括顶级节点和中间节点都有“无限制”
-        // 如果顶级节点无数据，那么也有“无限制”
-        if (this.isTemplateMode) {
-          // 没有中间节点以及子节点，例如 业务访问
-          if (this.curChain.length === 1) {
-            isNeedAny = node.async;
-          } else {
-            // 有父节点
-            if (node.parentChain && node.parentChain.length && node.parentId) {
-              isNeedAny = node.async;
-            } else {
-              isNeedAny = node.async;
-              // 没有子节点并且已经点过展开了
-              if (!node.children.length && !node.async) {
-                isNeedAny = true;
-                // 这里需要把 node.async 设置为 true
-                // 下面的 if (node.level === 0 && !node.async) 这个逻辑需要
-                node.async = isNeedAny;
-              }
-            }
-          }
-        } else {
-          if (node.parentChain && node.parentChain.length && node.parentId) {
-            isNeedAny = node.async;
-          } else {
-            isNeedAny = false;
-          }
-        }
-        // const isNeedAny = node.async && this.isTemplateMode
-        const anyData = (() => {
-          const data = this.curChain[node.level + 1];
-          if (data) {
-            return data;
-          }
-          return this.curChain[this.curChain.length - 1];
-        })();
-
         const curChainData = this.curChain[node.level];
         const chainLen = this.curChain.length;
         let id = '';
         let name = '';
         let systemId = '';
-
-        let parentChainData = null;
         if (!curChainData) {
           id = this.curChain[chainLen - 1].id;
           name = this.curChain[chainLen - 1].name;
           systemId = this.curChain[chainLen - 1].system_id;
-
-          parentChainData = {
+        } else {
+          id = curChainData.id;
+          name = curChainData.name;
+          systemId = curChainData.system_id;
+        }
+        if (this.isManualInput) {
+          parentChain.push({
             type: id,
             type_name: name,
             id: node.id,
             name: node.name,
             system_id: systemId,
             child_type: node.childType || ''
-          };
+          });
+          // 判断是否忽略路径
+          const curPath = this.ignorePathFlag ? [parentChain.slice(parentChain.length - 1)] : [parentChain];
+          const params = [{
+            type: id,
+            name,
+            path: curPath,
+            paths: curPath
+          }];
+          if (node.isExistNoCarryLimit) {
+            const p = [parentChain.slice(0, parentChain.length - 1)];
+            params.push({
+              type: id,
+              name,
+              path: p,
+              paths: p
+            });
+          }
+          console.log(value, node, parentChain, params, resourceLen);
+          this.$emit('on-tree-select', value, node, params, resourceLen);
         } else {
-          id = curChainData.id;
-          name = curChainData.name;
-          systemId = curChainData.system_id;
-          if (node.level === 0 && !node.async) {
-            parentChainData = {
-              type: this.curChain[chainLen - 1].id,
-              type_name: this.curChain[chainLen - 1].name,
-              id: node.id,
-              name: node.name,
-              system_id: this.curChain[chainLen - 1].system_id,
-              child_type: node.childType || ''
-            };
+          let isNeedAny = false;
+          // 用户组以及权限模板这里，除了子节点没有“无限制”，其他节点，包括顶级节点和中间节点都有“无限制”
+          // 如果顶级节点无数据，那么也有“无限制”
+          if (this.isTemplateMode) {
+            // 没有中间节点以及子节点，例如 业务访问
+            if (this.curChain.length === 1) {
+              isNeedAny = node.async;
+            } else {
+              // 有父节点
+              if (node.parentChain && node.parentChain.length && node.parentId) {
+                isNeedAny = node.async;
+              } else {
+                isNeedAny = node.async;
+                // 没有子节点并且已经点过展开了
+                if (!node.children.length && !node.async) {
+                  isNeedAny = true;
+                  // 这里需要把 node.async 设置为 true
+                  // 下面的 if (node.level === 0 && !node.async) 这个逻辑需要
+                  node.async = isNeedAny;
+                }
+              }
+            }
           } else {
+            if (node.parentChain && node.parentChain.length && node.parentId) {
+              isNeedAny = node.async;
+            } else {
+              isNeedAny = false;
+            }
+          }
+          // const isNeedAny = node.async && this.isTemplateMode
+          const anyData = (() => {
+            const data = this.curChain[node.level + 1];
+            if (data) {
+              return data;
+            }
+            return this.curChain[this.curChain.length - 1];
+          })();
+          let parentChainData = null;
+          if (!curChainData) {
+            id = this.curChain[chainLen - 1].id;
+            name = this.curChain[chainLen - 1].name;
+            systemId = this.curChain[chainLen - 1].system_id;
+  
             parentChainData = {
               type: id,
               type_name: name,
@@ -1240,66 +1254,76 @@
               system_id: systemId,
               child_type: node.childType || ''
             };
-          }
-        }
-
-        parentChain.forEach((item, index) => {
-          let id = '';
-          if (this.curChain[index]) {
-            id = this.curChain[index].id;
           } else {
-            id = this.curChain[this.curChain.length - 1].id;
+            id = curChainData.id;
+            name = curChainData.name;
+            systemId = curChainData.system_id;
+            if (node.level === 0 && !node.async) {
+              parentChainData = {
+                type: this.curChain[chainLen - 1].id,
+                type_name: this.curChain[chainLen - 1].name,
+                id: node.id,
+                name: node.name,
+                system_id: this.curChain[chainLen - 1].system_id,
+                child_type: node.childType || ''
+              };
+            } else {
+              parentChainData = {
+                type: id,
+                type_name: name,
+                id: node.id,
+                name: node.name,
+                system_id: systemId,
+                child_type: node.childType || ''
+              };
+            }
           }
-          item.type = id;
-          item.type_name = id;
-        });
-
-        parentChain.push(parentChainData);
-        // parentChain.push({
-        //     type: id,
-        //     type_name: name,
-        //     id: node.id,
-        //     name: node.name,
-        //     system_id: systemId,
-        //     child_type: node.childType || ''
-        // })
-
-        console.log('isNeedAnyisNeedAnyisNeedAny', isNeedAny);
-
-        if (isNeedAny) {
-          parentChain.push({
-            type: anyData.id,
-            type_name: anyData.name,
-            id: '*',
-            name: `${anyData.name}: ${this.$t(`m.common['无限制']`)}`,
-            system_id: anyData.system_id,
-            child_type: anyData.id
+          parentChain.forEach((item, index) => {
+            let id = '';
+            if (this.curChain[index]) {
+              id = this.curChain[index].id;
+            } else {
+              id = this.curChain[this.curChain.length - 1].id;
+            }
+            item.type = id;
+            item.type_name = id;
           });
-        }
-
-        // 判断是否忽略路径
-        // const isNeedIgnore = this.ignorePathFlag && !isNeedAny
-        const params = [
-          {
-            type: id,
-            name,
-            // path: isNeedIgnore ? [parentChain.slice(parentChain.length - 1)] : [parentChain],
-            path: [parentChain],
-            paths: [parentChain]
+          parentChain.push(parentChainData);
+          console.log('isNeedAnyisNeedAnyisNeedAny', isNeedAny);
+          if (isNeedAny) {
+            parentChain.push({
+              type: anyData.id,
+              type_name: anyData.name,
+              id: '*',
+              name: `${anyData.name}: ${this.$t(`m.common['无限制']`)}`,
+              system_id: anyData.system_id,
+              child_type: anyData.id
+            });
           }
-        ];
 
-        if (node.isExistNoCarryLimit) {
-          const p = [parentChain.slice(0, parentChain.length - 1)];
-          params.push({
-            type: id,
-            name,
-            path: p,
-            paths: p
-          });
+          // 判断是否忽略路径
+          // const isNeedIgnore = this.ignorePathFlag && !isNeedAny
+          const params = [
+            {
+              type: id,
+              name,
+              // path: isNeedIgnore ? [parentChain.slice(parentChain.length - 1)] : [parentChain],
+              path: [parentChain],
+              paths: [parentChain]
+            }
+          ];
+  
+          if (node.isExistNoCarryLimit) {
+            const p = [parentChain.slice(0, parentChain.length - 1)];
+            params.push({
+              type: id,
+              name,
+              path: p,
+              paths: p
+            });
+          }
+          this.$emit('on-tree-select', value, node, params, resourceLen);
         }
-
-        this.$emit('on-tree-select', value, node, params, resourceLen);
       },
 
       // 单页全选
