@@ -8,9 +8,10 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from aenum import auto, skip
+from aenum import auto, skip, LowerStrEnum
 
 from backend.api.constants import BaseAPIEnum
+from backend.util.enum import ChoicesEnum
 
 
 class AdminAPIEnum(BaseAPIEnum):
@@ -44,6 +45,11 @@ class AdminAPIEnum(BaseAPIEnum):
     # 是否有权限数据
     SUBJECT_PERMISSION_EXISTS = auto()
 
+    # 分级管理员
+    GRADE_MANAGER_LIST = auto()
+    GRADE_MANAGER_CREATE = auto()
+    GRADE_MANAGER_UPDATE = auto()
+
     _choices_labels = skip(
         (
             (SYSTEM_LIST, "获取系统列表"),
@@ -57,5 +63,22 @@ class AdminAPIEnum(BaseAPIEnum):
             (SUBJECT_FREEZE_UNFREEZE, "冻结/解冻Subject"),
             (SUBJECT_PERMISSION_CLEANUP, "权限清理"),
             (SUBJECT_PERMISSION_EXISTS, "权限是否存在"),
+            (GRADE_MANAGER_LIST, "获取分级管理员列表"),
+            (GRADE_MANAGER_CREATE, "新建分级管理员"),
+            (GRADE_MANAGER_UPDATE, "更新分级管理员"),
+        )
+    )
+
+
+class VerifyApiParamLocationEnum(ChoicesEnum, LowerStrEnum):
+    ROLE_IN_PATH = auto()
+    SYSTEM_IN_BODY = auto()
+    SYSTEM_IN_QUERY = auto()
+
+    _choices_labels = skip(
+        (
+            (ROLE_IN_PATH, "在URL里的role id参数"),
+            (SYSTEM_IN_BODY, "在body data里的system参数"),
+            (SYSTEM_IN_QUERY, "在get请求query里的system参数"),
         )
     )

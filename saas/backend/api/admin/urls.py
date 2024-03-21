@@ -8,12 +8,28 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from django.urls import path
+from django.urls import path, include
 
 from . import views
 
 urlpatterns = [
-    # 用户组
+    path(
+        "super_managers/",
+        include(
+            [
+                path(
+                    "grade_managers/",
+                    views.SuperManagerGradeManagerViewSet.as_view({"get": "list", "post": "create"}),
+                    name="open.admin.super_manager.grade_manager",
+                ),
+                path(
+                    "grade_managers/<int:id>/",
+                    views.SuperManagerGradeManagerViewSet.as_view({"put": "update"}),
+                    name="open.admin.super_manager.grade_manager",
+                    ),
+            ]
+        ),
+    ),
     path("groups/", views.AdminGroupViewSet.as_view({"get": "list"}), name="open.admin.group"),
     # 用户组成员
     path(

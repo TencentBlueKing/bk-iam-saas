@@ -10,9 +10,17 @@ specific language governing permissions and limitations under the License.
 """
 from rest_framework import serializers
 
+from backend.api.management.v1.serializers import (
+    ManagementGradeManagerBasicInfoSLZ,
+    ManagementGradeManagerUpdateSLZ,
+    ManagementGradeManagerCreateSLZ,
+    ManagementSourceSystemSLZ,
+)
 from backend.apps.group.models import Group
 from backend.apps.role.models import Role
-from backend.apps.role.serializers import BaseGradeMangerSLZ
+from backend.apps.role.serializers import (
+    BaseGradeMangerSLZ,
+)
 from backend.service.constants import GroupMemberType, RoleType
 
 
@@ -73,3 +81,23 @@ class SubjectSLZ(serializers.Serializer):
 class FreezeSubjectResponseSLZ(serializers.Serializer):
     type = serializers.CharField(label="SubjectType")
     id = serializers.CharField(label="SubjectID")
+
+
+class SuperManagerSourceSystemSLZ(ManagementSourceSystemSLZ):
+    class Meta:
+        ref_name = "V1SuperManagerSourceSystemSLZ"
+
+
+class SuperManagerGradeManagerCreateSLZ(ManagementGradeManagerCreateSLZ):
+    class Meta:
+        ref_name = "V1SuperManagerGradeManagerCreateSLZ"
+
+
+class SuperManagerGradeManagerUpdateSLZ(ManagementGradeManagerUpdateSLZ):
+    class Meta:
+        ref_name = "V1SuperManagerGradeManagerUpdateSLZ"
+
+
+class SuperManagerGradeManagerBasicInfoSLZ(ManagementGradeManagerBasicInfoSLZ):
+    class Meta:
+        ref_name = "V1SuperManagerGradeManagerBasicInfoSLZ"

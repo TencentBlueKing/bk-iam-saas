@@ -11,7 +11,7 @@ specific language governing permissions and limitations under the License.
 from django_filters import rest_framework as filters
 
 from backend.apps.group.models import Group
-from backend.apps.role.models import RoleRelatedObject
+from backend.apps.role.models import RoleRelatedObject, Role
 from backend.service.constants import RoleRelatedObjectType
 
 
@@ -28,3 +28,13 @@ class GroupFilter(filters.FilterSet):
     def grade_manager_id_filter(self, queryset, name, value):
         group_ids = RoleRelatedObject.objects.list_role_object_ids(value, RoleRelatedObjectType.GROUP.value)
         return queryset.filter(id__in=group_ids)
+
+
+class GradeManagerFilter(filters.FilterSet):
+    name = filters.CharFilter(label="名字", lookup_expr="icontains")
+
+    class Meta:
+        model = Role
+        fields = [
+            "name",
+        ]
