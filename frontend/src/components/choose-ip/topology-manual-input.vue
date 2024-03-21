@@ -223,6 +223,9 @@
               curData[`${curr.id}${curr.name}`] ? '' : curData[`${curr.id}${curr.name}`] = true && prev.push(curr);
               return prev;
             }, []);
+            if (this.selectTypeList.length) {
+              this.typeValue = this.selectTypeList[0].id;
+            }
           }
         },
         immediate: true
@@ -461,7 +464,6 @@
             const allViews = this.curAllViewChain.map((item) => item.resource_type_chain);
             // 根据资源类型获取他当前层级
             const curLevel = this.findObjectIndex(allViews, 'id', this.typeValue);
-            console.log(allViews, curLevel);
             // 处理手动输入输入多个资源实例，但是是单选的业务场景
             const result = this.resourceValue ? [].concat([results[0]]) : results;
             const list = result.map(item => {
@@ -504,13 +506,13 @@
               const isAsyncFlag = isAsync || item.child_type !== '';
               return new Node(
                 {
-                ...item,
-                  checked,
-                  disabled,
-                  isRemote,
-                  isExistNoCarryLimit
+                  ...item,
+                    checked,
+                    disabled,
+                    isRemote,
+                    isExistNoCarryLimit
                 },
-                curLevel < 0 ? 0 : curLevel,
+                curLevel,
                 isAsyncFlag
               );
             });
