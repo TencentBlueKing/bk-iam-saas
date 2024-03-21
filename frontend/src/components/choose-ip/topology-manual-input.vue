@@ -297,7 +297,7 @@
                 .filter((item) => !item.disabled)
                 .map((v) => v.ids).flat(this.curChain.length);
               noDisabledData = allTreeData.filter(
-                (item) => defaultSelectList.includes(`${item.id}&${this.curChain[item.level].id}`)
+                (item) => defaultSelectList.includes(`${item.id}&${this.typeValue}`)
               );
             } else {
               noDisabledData = allTreeData.filter(
@@ -453,7 +453,7 @@
                 this.curSelectedValues.forEach(val => {
                   const curKey = `${item.id}&${params.type}`;
                   if (isAsync) {
-                    const curIdChain = `${curKey}#*&${this.curChain[1].id}`;
+                    const curIdChain = `${curKey}#*&${this.typeValue}`;
                     if (val.idChain === curIdChain) {
                       normalSelectedData = val;
                     }
@@ -483,8 +483,7 @@
               return new Node({ ...item, checked, disabled, isRemote, isExistNoCarryLimit }, 0, isAsyncFlag);
             });
             const defaultSelectList = this.curSelectedValues.map((v) => v.ids).flat(this.curChain.length);
-            const curChainId = this.curChain.length > 0 ? this.curChain[0].id : '';
-            const hasSelectedInstances = [...list || []].filter((v) => !defaultSelectList.includes(`${v.id}&${curChainId}`));
+            const hasSelectedInstances = [...list || []].filter((v) => !defaultSelectList.includes(`${v.id}&${this.typeValue}`));
             this.manualTableListStorage = cloneDeep(hasSelectedInstances);
             this.manualTableList = cloneDeep(hasSelectedInstances);
             console.log(this.curSelectedValues, defaultSelectList, hasSelectedInstances, '已有资源实例');

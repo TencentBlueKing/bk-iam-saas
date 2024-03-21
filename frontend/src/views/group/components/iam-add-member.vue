@@ -450,7 +450,7 @@
   // 去除()以及之间的字符
   const getUsername = (str) => {
     const array = str.split('');
-    const index = array.findIndex((item) => item.indexOf('(') > -1 || item.indexOf(')') > -1);
+    const index = array.findIndex((item) => ['(', ')'].includes(item));
     if (index !== -1) {
       return array.splice(0, index).join('');
     }
@@ -1030,8 +1030,9 @@
         let manualInputValue = _.cloneDeep(this.manualValue.split(this.regValue));
         manualInputValue = manualInputValue.filter((item) => item !== '');
         for (let i = 0; i < manualInputValue.length; i++) {
+          const keyword = getUsername(manualInputValue[i]);
           const params = {
-            keyword: manualInputValue[i],
+            keyword,
             is_exact: false
           };
           try {
