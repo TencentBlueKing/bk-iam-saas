@@ -49,7 +49,7 @@ class SuperManagerGradeManagerViewSet(SuperManagerAPIPermissionCheckMixin, Gener
     permission_classes = [AdminAPIPermission]
     admin_api_permission = {
         "create": (VerifyApiParamLocationEnum.SYSTEM_IN_BODY.value, AdminAPIEnum.GRADE_MANAGER_CREATE.value),
-        "list": (VerifyApiParamLocationEnum.SYSTEM_IN_QUERY.value,  AdminAPIEnum.GRADE_MANAGER_LIST.value),
+        "list": (VerifyApiParamLocationEnum.SYSTEM_IN_QUERY.value, AdminAPIEnum.GRADE_MANAGER_LIST.value),
         "update": (VerifyApiParamLocationEnum.ROLE_IN_PATH.value, AdminAPIEnum.GRADE_MANAGER_UPDATE.value),
     }
 

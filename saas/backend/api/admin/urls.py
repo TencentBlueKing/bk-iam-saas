@@ -26,7 +26,7 @@ urlpatterns = [
                     "grade_managers/<int:id>/",
                     views.SuperManagerGradeManagerViewSet.as_view({"put": "update"}),
                     name="open.admin.super_manager.grade_manager",
-                    ),
+                ),
             ]
         ),
     ),
