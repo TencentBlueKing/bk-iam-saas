@@ -451,7 +451,7 @@
                 let noCarryLimitData = {};
                 let normalSelectedData = {};
                 this.curSelectedValues.forEach(val => {
-                  const curKey = `${item.id}&${params.type}`;
+                  const curKey = `${item.id}&${this.typeValue}`;
                   if (isAsync) {
                     const curIdChain = `${curKey}#*&${this.typeValue}`;
                     if (val.idChain === curIdChain) {
@@ -486,7 +486,7 @@
             const hasSelectedInstances = [...list || []].filter((v) => !defaultSelectList.includes(`${v.id}&${this.typeValue}`));
             this.manualTableListStorage = cloneDeep(hasSelectedInstances);
             this.manualTableList = cloneDeep(hasSelectedInstances);
-            console.log(this.curSelectedValues, defaultSelectList, hasSelectedInstances, '已有资源实例');
+            console.log(this.curSelectedValues, defaultSelectList, hasSelectedInstances, list, '已有资源实例');
             this.hasSelectedInstances.push(...hasSelectedInstances);
             this.fetchManualTableData();
             this.$emit('on-select-all', hasSelectedInstances, true);
