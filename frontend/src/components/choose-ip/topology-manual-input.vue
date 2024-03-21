@@ -2,8 +2,7 @@
   <div class="manual-wrapper">
     <div class="manual-wrapper-left">
       <div class="manual-wrapper-left-select">
-      <!-- 先注释资源类型，后期待定 -->
-        <!-- <bk-select
+        <bk-select
           v-model="typeValue"
           class="resource-type-list"
           :clearable="false"
@@ -19,7 +18,7 @@
         </bk-select>
         <div class="manual-error-text pr10 mb10" v-if="isShowTypeError">
           {{$t(`m.verify['请选择资源类型']`)}}
-        </div> -->
+        </div>
       </div>
       <bk-input
         ref="manualInputRef"
@@ -219,12 +218,14 @@
             const curData = {};
             this.curAllViewChain = value.filter((item) => !['manualInput'].includes(item.id));
             const list = this.curAllViewChain.map((v) => v.resource_type_chain).flat(Infinity);
-            this.typeValue = this.curChain[0].id;
             this.selectTypeList = list.reduce((prev, curr) => {
               // eslint-disable-next-line no-unused-expressions
               curData[`${curr.id}${curr.name}`] ? '' : curData[`${curr.id}${curr.name}`] = true && prev.push(curr);
               return prev;
             }, []);
+            if (this.selectTypeList.length) {
+              this.typeValue = this.selectTypeList[0].id;
+            }
           }
         },
         immediate: true
@@ -460,9 +461,9 @@
               formatStr = '';
             }
             this.manualValue = cloneDeep(formatStr);
-            // const allViews = this.curAllViewChain.map((item) => item.resource_type_chain);
+            const allViews = this.curAllViewChain.map((item) => item.resource_type_chain);
             // 根据资源类型获取他当前层级
-            // const curLevel = this.findObjectIndex(allViews, 'id', this.typeValue);
+            const curLevel = this.findObjectIndex(allViews, 'id', this.typeValue);
             // 处理手动输入输入多个资源实例，但是是单选的业务场景
             const result = this.resourceValue ? [].concat([results[0]]) : results;
             const list = result.map(item => {
@@ -511,7 +512,7 @@
                     isRemote,
                     isExistNoCarryLimit
                 },
-                0,
+                curLevel,
                 isAsyncFlag
               );
             });
