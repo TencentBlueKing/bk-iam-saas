@@ -97,7 +97,7 @@
                 >
                   <template v-if="item.type === 'node'">
                     <Icon
-                      v-if="item.async"
+                      v-if="item.async && !item.isExpandNoData"
                       bk
                       :type="item.expanded ? 'down-shape' : 'right-shape'"
                       :class="[
@@ -1468,6 +1468,9 @@
       },
 
       handleNodeChange (newVal, oldVal, localVal, node, index) {
+        if (node.isExpandNoData) {
+          node.async = false;
+        }
         if (this.isShiftBeingPress) {
           this.pressIndex = index;
           this.pressLevels.push(node.level);
