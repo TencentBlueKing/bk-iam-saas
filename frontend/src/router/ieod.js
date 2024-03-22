@@ -189,6 +189,9 @@ const MemberTemplate = () => import(/* webpackChunkName: 'memberTemplate' */ '..
 // 系统管理员下的资源权限管理
 const ResourcePermManage = () => import(/* webpackChunkName: 'grading-admin' */ '../views/resource-permiss');
 
+// 用户/组织
+const userOrgPerm = () => import(/* webpackChunkName: 'userOrgPerm' */ '../views/user-org-perm/index.vue');
+
 const TemplatePermDetail = () =>
   import(/* webpackChunkName: 'my-perm-template-perm' */ '../views/perm/template-perm/detail');
 const GroupPermDetail = () => import(/* webpackChunkName: 'my-perm-group-perm' */ '../views/perm/group-perm/detail');
@@ -431,6 +434,14 @@ export const routes = [
           backRouter: -1
         },
         component: SecondaryManageSpaceDetail
+      },
+      {
+        path: 'user-org-perm',
+        name: 'userOrgPerm',
+        meta: {
+          headerTitle: il8n('nav', '用户/组织')
+        },
+        component: userOrgPerm
       },
       {
         path: 'user-group',
