@@ -598,7 +598,7 @@ class GroupsMemberRenewViewSet(GenericViewSet):
                 )
 
             # 写入审计上下文
-            audit_context_setter(group=group, members=group_member)
+            audit_context_setter(group=group, members=[group_member])
             provider = GroupMemberRenewAuditProvider(request)
             log_api_event(request, provider)
 

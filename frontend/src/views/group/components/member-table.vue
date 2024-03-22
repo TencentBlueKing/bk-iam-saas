@@ -321,6 +321,7 @@
   import { mapGetters } from 'vuex';
   import { PERMANENT_TIMESTAMP, COPY_KEYS_ENUM } from '@/common/constants';
   import { formatCodeData } from '@/common/util';
+  import { bus } from '@/common/bus';
   import renderRenewalDialog from '@/components/render-renewal-dialog';
   import DeleteDialog from '../common/iam-confirm-dialog';
   import AddMemberDialog from './iam-add-member';
@@ -1413,6 +1414,10 @@
             this.messageSuccess(this.$t(`m.info['移除成功']`), 3000);
             this.handleRefreshTab();
             this.fetchMemberListCount();
+            // 用户/组织模块在模板详情里移除成员需要同步更新加入人员模板的用户组列表数据
+            if (['userOrOrg'].includes(this.$route.name)) {
+              bus.$emit('on-refresh-template-table');
+            }
           }
         } catch (e) {
           console.error(e);

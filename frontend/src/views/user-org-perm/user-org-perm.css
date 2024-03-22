@@ -1,0 +1,203 @@
+.user-org-wrapper {
+  padding: 0;
+  color: #313238;
+  position: relative;
+  &-search {
+    box-shadow: 0 2px 3px 0 #0000000a;
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    .custom-content {
+      &-form {
+        display: flex;
+        .custom-form-item {
+          margin-top: 8px;
+          &:not(&:last-child) {
+            margin-right: 16px;
+          }
+        }
+      }
+      &-footer {
+        margin-top: 16px;
+      }
+      &-no-search {
+        .custom-content-form {
+          .custom-form-item {
+            margin-top: 0;
+          }
+        }
+      }
+    }
+    &.no-search-data {
+      display: none;
+    }
+  }
+  &-expand {
+    width: 64px;
+    height: 16px;
+    background-color: #dcdee5;
+    border-radius: 0 0px 4px 4px;
+    position: absolute;
+    top: 217px;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+    cursor: pointer;
+    .icon {
+      color: #ffffff;
+      font-size: 22px !important;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    &-no-search {
+      top: 150px;
+    }
+    &.no-expand-no-search-data {
+      top: 8px;
+    }
+    &.no-expand-has-search-data {
+      top: 51px;
+    }
+    &:hover {
+      background-color: #3a84ff;
+    }
+  }
+  &-content {
+    &-left {
+      /* padding: 0 16px; */
+      /* background-color: #FAFBFD; */
+      background-color: #ffffff;
+      border-right: 1px solid#dcdee5;
+      height: calc(100vh - 61px);
+    }
+    &-center {
+      width: 16px;
+      height: calc(100vh - 234px);
+      .expand-icon {
+        width: 16px;
+        height: 64px;
+        background-color: #dcdee5;
+        border-radius: 0 4px 4px 0;
+        position: relative;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        .icon {
+          color: #ffffff;
+          font-size: 22px !important;
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+        }
+        &:hover {
+          background-color: #3a84ff;
+        }
+      }
+    }
+    &-right {
+      padding-right: 16px;
+      position: relative;
+      height: 100%;
+      &.no-expand {
+        padding-right: 0;
+      }
+      .right-empty-data {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+    }
+  }
+  .search-data-no-expand {
+    min-height: 42px;
+    line-height: 42px;
+    background-color: #ffffff;
+    box-shadow: 0 2px 3px 0 #0000000f;
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    .no-expand-search-list {
+      padding: 0 16px;
+      .search-data-content {
+        /* display: flex;
+        align-items: center; */
+        overflow-x: auto;
+        white-space: nowrap;
+        word-break: break-all;
+        .funnel-icon {
+          color: #979BA5;
+        }
+        .tag-list {
+          .tag-item {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            &-value {
+              margin-left: 8px;
+            }
+          }
+        }
+        .delete-all {
+          margin-left: 8px;
+          &-icon {
+            color: #C4C6CC;
+            font-size: 14px;
+            cursor: pointer;
+            vertical-align: middle;
+            &:hover {
+              color: #979BA5;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+.my-perm-group-perm {
+  height: 100%;
+  &-header {
+    margin-bottom: 16px;
+  }
+  .iam-perm-ext-cls {
+    margin-top: 1px;
+  }
+  .user-org-perm-table {
+    border: none;
+    color: #63656E !important;
+    .can-view-name {
+      color: #3a84ff;
+      cursor: pointer;
+      &:hover {
+        color: #699df4;
+      }
+    }
+  }
+}
+.user-org-remove-confirm {
+  .popover-title {
+    font-size: 16px;
+    padding-bottom: 16px;
+    color: #313238;
+  }
+  .popover-content {
+    color: #63656e;
+    .popover-content-item {
+      display: flex;
+      margin-bottom: 8px;
+      &-value {
+        color: #313238;
+        margin-left: 8px;
+      }
+    }
+    &-tip {
+      padding-bottom: 20px;
+      color: #63656E;
+    }
+  }
+}

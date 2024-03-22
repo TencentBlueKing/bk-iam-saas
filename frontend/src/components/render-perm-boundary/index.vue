@@ -36,7 +36,7 @@
         </div>
         <div v-if="modules.includes('membersPerm')" class="render-form-item">
           <div class="perm-boundary-title">
-            {{ $t(`m.levelSpace["${BOUNDARY_KEYS_ENUM["membersPerm"].title}"]`) }}:
+            {{ customTitle || `${$t(`m.levelSpace["${BOUNDARY_KEYS_ENUM["membersPerm"].title}"]`)}: ` }}
           </div>
           <div
             :class="['iam-resource-expand']"
@@ -56,18 +56,23 @@
                   class="iam-resource-header-left-title"
                   v-if="userLength > 0 || departLength > 0"
                 >
-                  <template v-if="userLength > 0">
-                    {{ $t(`m.common['共']`) }}
-                    <span class="number">{{ userLength }}</span>
-                    {{ $t(`m.common['个用户']`) }}
+                  <template v-if="customSlotName">
+                    <slot :name="customSlotName" />
                   </template>
-                  <template v-if="userLength && departLength">
-                    {{ $t(`m.common['，']`) }}
-                  </template>
-                  <template v-if="departLength > 0">
-                    {{ $t(`m.common['共']`) }}
-                    <span class="number">{{ departLength }}</span>
-                    {{ $t(`m.common['个组织']`) }}
+                  <template v-else>
+                    <template v-if="userLength > 0">
+                      {{ $t(`m.common['共']`) }}
+                      <span class="number">{{ userLength }}</span>
+                      {{ $t(`m.common['个用户']`) }}
+                    </template>
+                    <template v-if="userLength && departLength">
+                      {{ $t(`m.common['，']`) }}
+                    </template>
+                    <template v-if="departLength > 0">
+                      {{ $t(`m.common['共']`) }}
+                      <span class="number">{{ departLength }}</span>
+                      {{ $t(`m.common['个组织']`) }}
+                    </template>
                   </template>
                 </div>
               </div>
@@ -86,9 +91,7 @@
               { 'perm-boundary-title-custom': isCustomTitleStyle }
             ]"
           >
-            {{
-              $t(`m.sensitivityLevel["${BOUNDARY_KEYS_ENUM["transferPreview"].title}"]`)
-            }}
+            {{ customTitle || $t(`m.sensitivityLevel["${BOUNDARY_KEYS_ENUM["transferPreview"].title}"]`) }}
           </div>
           <div
             :class="['iam-resource-expand']"
@@ -105,9 +108,14 @@
                   "
                 />
                 <div class="iam-resource-header-left-title">
-                  <span>{{ $t(`m.common['已选择']`) }}</span>
-                  <span class="number">{{ permLength }}</span>
-                  <span>{{ $t(`m.common['个']`) }}{{ $t(`m.common['操作']`) }}</span>
+                  <template v-if="customSlotName">
+                    <slot :name="customSlotName" />
+                  </template>
+                  <template v-else>
+                    <span>{{ $t(`m.common['已选择']`) }}</span>
+                    <span class="number">{{ permLength }}</span>
+                    <span>{{ $t(`m.common['个']`) }}{{ $t(`m.common['操作']`) }}</span>
+                  </template>
                 </div>
               </div>
               <div class="iam-resource-header-right">
@@ -184,6 +192,12 @@
       isShowClear: {
         type: Boolean,
         default: false
+      },
+      customTitle: {
+        type: String
+      },
+      customSlotName: {
+        type: String
       }
     },
     data () {
@@ -198,8 +212,14 @@
       }
     },
     watch: {
-      expanded (value) {
-        this.isExpanded = !!value;
+      expanded: {
+        handler (value) {
+          this.isExpanded = !!value;
+          if (this.modules.length === 1 && this.expanded) {
+            this.BOUNDARY_KEYS_ENUM[this.modules[0]].isExpanded = true;
+          }
+        },
+        immediate: true
       }
     },
     methods: {
@@ -249,12 +269,13 @@
 
   .iam-resource-expand {
     background-color: #f5f7fa;
+    border-radius: 2px 2px 0 0;
     .iam-resource-header-left {
-      padding: 0 10px !important;
+      padding: 0 16px !important;
       display: flex;
       align-items: center;
       &-title {
-        margin-left: 5px;
+        margin-left: 10px;
       }
     }
   }

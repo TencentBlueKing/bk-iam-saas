@@ -117,7 +117,7 @@
             name,
             description
           });
-          bus.$emit('on-info-change', { id, name, description });
+          bus.$emit('on-info-change', { id, name, description, mode: this.curDetailData.mode || '' });
         } catch (e) {
           console.warn('error');
           this.messageAdvancedError(e);

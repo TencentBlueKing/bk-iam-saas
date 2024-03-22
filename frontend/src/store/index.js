@@ -85,11 +85,14 @@ import spaceManage from './modules/space-manage';
 // 用户组设置模块
 import userGroupSetting from './modules/user-group-setting';
 
-// 敏感等级
+// 敏感等级模块
 import sensitivityLevel from './modules/sensitivity-level';
 
-// 人员模板
+// 人员模板模块
 import memberTemplate from './modules/member-template';
+
+// 用户/组织模块
+import userOrOrg from './modules/user-org';
 
 Vue.use(Vuex);
 
@@ -161,6 +164,14 @@ const currentNav = [
     name: il8n('nav', '权限管理'),
     rkey: 'managePermission',
     children: [
+      {
+        icon: 'personal-user',
+        id: 'userOrgPermNav',
+        rkey: 'userOrgPerm',
+        name: il8n('nav', '用户/组织'),
+        path: `${SITE_URL}user-org-perm`,
+        disabled: false
+      },
       {
         icon: 'user-group',
         id: 'userGroupNav',
@@ -348,7 +359,8 @@ const store = new Vuex.Store({
     spaceManage,
     userGroupSetting,
     sensitivityLevel,
-    memberTemplate
+    memberTemplate,
+    userOrOrg
   },
   state: {
     mainContentLoading: false,

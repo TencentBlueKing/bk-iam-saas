@@ -27,7 +27,7 @@
         </div>
         <div class="item">
           <label :class="{ 'en': !curLanguageIsCn }">{{ $t(`m.common['有效期']`) }}</label>
-          <render-expire-display selected :renewal-time="expiredAt" :cur-time="curTime" />
+          <render-expire-display selected :renewal-time="expiredAt" :cur-time="curTime" :line-height="lineHeight" />
         </div>
       </template>
       <template v-else>
@@ -116,6 +116,10 @@
       type: {
         type: String,
         default: 'department'
+      },
+      lineHeight: {
+        type: String,
+        default: '32px'
       },
       list: {
         type: Array,
