@@ -20,35 +20,65 @@
         @on-select-resource="handleSelectResource"
         @on-select-instance="handleSelectInstance"
       >
-        <div slot="custom-content" class="custom-content">
+        <div
+          slot="custom-content"
+          :class="['custom-content', { 'custom-content-no-search': !enableGroupInstanceSearch }]"
+        >
           <bk-form form-type="vertical" class="custom-content-form">
             <iam-form-item
               :label="$t(`m.userGroup['用户组名']`)"
               :style="{ width: formItemWidth }"
               class="custom-form-item"
             >
-              <bk-input :placeholder="$t(`m.verify['请输入']`)" v-model="formData.name" />
+              <bk-input
+                v-model="formData.name"
+                :clearable="true"
+                :placeholder="$t(`m.verify['请输入']`)"
+                :right-icon="'bk-icon icon-search'"
+                @right-icon-click="handleSearch"
+                @clear="handleClearSearch"
+              />
             </iam-form-item>
             <iam-form-item
               :label="$t(`m.userOrOrg['用户组 ID']`)"
               :style="{ width: formItemWidth }"
               class="custom-form-item"
             >
-              <bk-input :placeholder="$t(`m.verify['请输入']`)" v-model="formData.id" />
+              <bk-input
+                type="number"
+                v-model="formData.id"
+                :placeholder="$t(`m.verify['请输入']`)"
+                :show-controls="false"
+              />
             </iam-form-item>
             <iam-form-item
               :label="$t(`m.common['用户名']`)"
               :style="{ width: formItemWidth }"
               class="custom-form-item"
             >
-              <bk-input :placeholder="$t(`m.verify['请输入']`)" v-model="formData.username" />
+              <bk-input
+                v-model="formData.username"
+                :clearable="true"
+                :show-clear-only-hover="true"
+                :placeholder="$t(`m.verify['请输入']`)"
+                :right-icon="'bk-icon icon-search'"
+                @right-icon-click="handleSearch"
+                @clear="handleClearSearch"
+              />
             </iam-form-item>
             <iam-form-item
               :label="$t(`m.perm['组织名']`)"
               :style="{ width: formItemWidth }"
               class="custom-form-item"
             >
-              <bk-input :placeholder="$t(`m.verify['请输入']`)" v-model="formData.department_name" />
+              <bk-input
+                v-model="formData.department_name"
+                :clearable="true"
+                :placeholder="$t(`m.verify['请输入']`)"
+                :right-icon="'bk-icon icon-search'"
+                @right-icon-click="handleSearch"
+                @clear="handleClearSearch"
+              />
             </iam-form-item>
           </bk-form>
           <div class="custom-content-footer">
@@ -96,8 +126,8 @@
                   <bk-tag-input
                     :value="[tag.value]"
                     :placeholder="$t(`m.verify['请输入']`)"
-                    :has-delete-icon="true"
                     :max-data="1"
+                    :has-delete-icon="true"
                     :allow-create="true"
                     @change="handleInputChange(...arguments, tag.name)"
                   />
@@ -134,6 +164,7 @@
     <div
       :class="[
         'user-org-wrapper-expand',
+        { 'user-org-wrapper-expand-no-search': !enableGroupInstanceSearch },
         { 'no-expand-no-search-data': isNoSearchData },
         { 'no-expand-has-search-data': isHasDataNoExpand }
       ]"
@@ -149,6 +180,7 @@
       >
         <div class="user-org-wrapper-content-left" :style="leftStyle">
           <LeftLayout
+            ref="leftLayoutRef"
             :is-loading="listLoading"
             :is-no-expand-no-search-data="isNoSearchData"
             :is-no-expand-has-search-data="isHasDataNoExpand"
@@ -232,6 +264,7 @@
 
     data () {
       return {
+        enableGroupInstanceSearch: window.ENABLE_GROUP_INSTANCE_SEARCH.toLowerCase() === 'true',
         listLoading: false,
         isSearchPerm: false,
         expandData: {
@@ -558,6 +591,7 @@
             this.listHeight = this.showNoticeAlert ? distances - 157 - 40 : distances - 157;
           } else {
             this.listHeight = this.showNoticeAlert ? distances - 40 : distances;
+            this.$refs.leftLayoutRef.currentSelectList = [];
           }
           this.pageConf = Object.assign(this.pageConf, {
             current: 1,
@@ -793,6 +827,10 @@
         this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleSearchUserGroup(true, true);
       },
 
+      handleClearSearch () {
+        this.handleSearch();
+      },
+
       handleSelectUser (payload) {
         this.curSelectActive = `${payload.id}&${payload.name}`;
         this.currentGroupData = {
@@ -870,6 +908,13 @@
         });
         await this.handleEmptyUserClear();
       },
+
+      // handleGroupIdInput (payload) {
+      //   if (!/^[0-9]*$/.test(payload)) {
+      //     payload = payload.replace(/[^0-9]/g, '');
+      //     this.formData.id = payload.replace(/[^0-9]/g, '');
+      //   }
+      // },
 
       handleRefreshTipType (payload) {
         let tipType = '';

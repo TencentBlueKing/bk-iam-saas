@@ -57,7 +57,22 @@
               :label-width="0"
               :required="true"
               class="joined-user-group">
-              <div v-html="formatGroupTitle" />
+              <template>
+                <template v-if="isBatch">
+                  <div class="render-join">
+                    <span class="render-join-label">
+                      {{ formatGroupTitle }}
+                    </span>
+                    <div class="render-join-tip">
+                      <Icon bk type="info-circle-shape" class="render-join-tip-icon" />
+                      <span>{{ formatGroupTip }}</span>
+                    </div>
+                  </div>
+                </template>
+                <template v-else>
+                  <div class="render-join-label">{{ formatGroupTitle }}</div>
+                </template>
+              </template>
               <div ref="selectTableRef">
                 <div class="joined-user-group-list">
                   <JoinedUserGroupTable ref="joinedUserGroupRef" @on-selected-group="handleSelectedGroup" />
@@ -172,33 +187,31 @@
       isHasDepartment () {
         return this.departList.length > 0;
       },
-      formatGroupTitle () {
-        const modeMap = {
+      formatGroupTip () {
+        const typeMap = {
           add: () => {
-            return this.isBatch
-              ? `<div class="render-join">
-                    <span class="render-join-label">${this.$t(`m.userOrOrg['追加的用户组']`)}</span>
-                    <div class="render-join-tip">
-                      <Icon bk type="info-circle-shape" class="render-join-tip-icon"></Icon>
-                      <span>${this.$t(`m.userOrOrg['在已有用户组的基础上，追加以下所选的用户组']`)}</span>
-                    </div>    
-                  </div>`
-              : `<div class="render-join-label">${this.$t(`m.userOrOrg['加入的用户组']`)}</div>`;
+            return this.$t(`m.userOrOrg['在已有用户组的基础上，追加以下所选的用户组']`);
           },
           reset: () => {
-            return this.isBatch
-              ? `<div class="render-join">
-                    <span class="render-join-label">${this.$t(`m.userOrOrg['重置的用户组']`)}</span>
-                    <div class="render-join-tip">
-                      <bk-icon type="info-circle-shape" class="render-join-tip-icon"></bk-icon>
-                      <span>${this.$t(`m.userOrOrg['已选对象的权限将被清空，替换为以下所选的用户组']`)}</span>
-                    </div>    
-                  </div>`
-              : `<div class="render-join-label">${this.$t(`m.userOrOrg['重置的用户组']`)}</div>`;
+            return this.$t(`m.userOrOrg['已选对象的权限将被清空，替换为以下所选的用户组']`);
           }
         };
-        if (modeMap[this.curSliderName]) {
-          return modeMap[this.curSliderName]();
+        if (typeMap[this.curSliderName]) {
+          return typeMap[this.curSliderName]();
+        }
+        return '';
+      },
+      formatGroupTitle () {
+        const typeMap = {
+          add: () => {
+            return this.$t(`m.userOrOrg['追加的用户组']`);
+          },
+          reset: () => {
+            return this.$t(`m.userOrOrg['重置的用户组']`);
+          }
+        };
+        if (typeMap[this.curSliderName]) {
+          return typeMap[this.curSliderName]();
         }
         return '';
       }
@@ -327,6 +340,8 @@
         this.selectTableList = [];
         this.isShowGroupError = false;
         this.isShowExpiredError = false;
+        this.expiredAt = 15552000;
+        this.expiredAtUse = 15552000;
       }
     }
   };

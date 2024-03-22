@@ -1027,9 +1027,6 @@
         }
       }
     }
-    .no-resource-search-wrapper {
-      padding-bottom: 16px;
-    }
     .group-search-select {
       padding-top: 16px;
     }

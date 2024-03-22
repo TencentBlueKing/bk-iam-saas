@@ -9,6 +9,8 @@
     <slot name="expand-icon" />
     <div :class="[
       'right-layout',
+      { 'right-layout-no-search': !isShowResourceSearch },
+      { 'right-layout-no-search-show-notice': !isShowResourceSearch && showNoticeAlert },
       { 'no-expand': isNoExpandNoSearchData },
       { 'no-expand-has-search': isNoExpandHasSearchData },
       { 'expand-show-notice': !isNoExpandNoSearchData && showNoticeAlert },
@@ -35,6 +37,11 @@
         type: Boolean,
         default: false
       }
+    },
+    data () {
+      return {
+        isShowResourceSearch: window.ENABLE_GROUP_INSTANCE_SEARCH.toLowerCase() === 'true'
+      };
     }
   };
 </script>
@@ -68,6 +75,9 @@
       border-radius: 2px;
       background-color: #e6e9ea;
     }
+    &-no-search {
+      height: calc(100vh - 240px);
+    }
     &.no-expand {
       height: calc(100vh - 112px);
     }
@@ -79,6 +89,9 @@
     }
     &.no-expand-show-notice {
       height: calc(100vh - 146px);
+    }
+    &-no-search-show-notice {
+      height: calc(100vh - 295px);
     }
   }
 

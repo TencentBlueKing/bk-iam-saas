@@ -21,6 +21,13 @@
       &-footer {
         margin-top: 16px;
       }
+      &-no-search {
+        .custom-content-form {
+          .custom-form-item {
+            margin-top: 0;
+          }
+        }
+      }
     }
     &.no-search-data {
       display: none;
@@ -44,6 +51,9 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
+    }
+    &-no-search {
+      top: 150px;
     }
     &.no-expand-no-search-data {
       top: 8px;

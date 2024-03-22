@@ -243,6 +243,7 @@
     mounted () {
       this.$once('hook:beforeDestroy', () => {
         bus.$off('on-refresh-resource-search');
+        bus.$off('on-refresh-template-table');
         bus.$off('on-info-change');
       });
       bus.$on('on-refresh-resource-search', (payload) => {
@@ -267,6 +268,10 @@
         if (modeMap[mode]) {
           modeMap[mode]();
         }
+      });
+      bus.$on('on-refresh-template-table', () => {
+        this.resetPagination();
+        this.fetchInitData();
       });
     },
     methods: {
@@ -637,7 +642,8 @@
   
       handleLimitChange (limit, payload) {
         const curData = this.memberTempPermData.find((item) => item.id === payload.id);
-        this.formatPaginationData(payload, curData.pagination.current, limit);
+        curData.current = 1;
+        this.formatPaginationData(payload, curData.current, limit);
       },
   
       handleEmptyRefresh () {

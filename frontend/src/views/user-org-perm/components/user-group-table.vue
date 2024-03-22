@@ -13,7 +13,7 @@
     >
       <template v-for="item in tableProps">
         <template v-if="item.prop === 'name'">
-          <bk-table-column :key="item.prop" :label="item.label" :prop="item.prop">
+          <bk-table-column :key="item.prop" :label="item.label" :prop="item.prop" :min-width="200">
             <template slot-scope="{ row }">
               <span
                 v-bk-tooltips="{
@@ -90,6 +90,10 @@
         type: String
       },
       list: {
+        type: Array,
+        default: () => []
+      },
+      noShowList: {
         type: Array,
         default: () => []
       },
@@ -214,8 +218,10 @@
           this.tableEmptyData = formatCodeData(0, this.tableEmptyData, true);
         }
         this.$emit('on-remove-group', this.tableList);
+        // 需要处理不需要续期和不能移除的用户组权限
+        const list = [...this.tableList, ...this.noShowList];
         // 同步更新checkbox状态
-        bus.$emit('on-remove-toggle-checkbox', this.tableList);
+        bus.$emit('on-remove-toggle-checkbox', list);
       },
 
       handlePageChange (page = 1) {

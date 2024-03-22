@@ -207,6 +207,7 @@
     },
     data () {
       return {
+        enableGroupInstanceSearch: window.ENABLE_GROUP_INSTANCE_SEARCH.toLowerCase() === 'true',
         selectActive: '',
         curSliderName: 'add',
         isDropdownShow: false,
@@ -287,31 +288,36 @@
         if (this.showNoticeAlert) {
           if (this.isNoExpandNoSearchData) {
             return {
-              // height: 'calc(100vh - 225px)'
               height: 'calc(100vh - 265px)'
             };
           }
           if (this.isNoExpandHasSearchData) {
             return {
-              // height: 'calc(100vh - 268px)'
               height: 'calc(100vh - 308px)'
             };
           }
+          if (!this.enableGroupInstanceSearch) {
+            return {
+              height: 'calc(100vh - 405px)'
+            };
+          }
           return {
-            // height: 'calc(100vh - 450px)'
             height: 'calc(100vh - 480px)'
           };
         }
         if (this.isNoExpandNoSearchData) {
           return {
-            // height: 'calc(100vh - 186px)'
             height: 'calc(100vh - 226px)'
           };
         }
         if (this.isNoExpandHasSearchData) {
           return {
-            // height: 'calc(100vh - 228px)'
-            height: 'calc(100vh - 268px)'
+            height: 'calc(100vh - 280px)'
+          };
+        }
+        if (!this.enableGroupInstanceSearch) {
+          return {
+            height: 'calc(100vh - 370px)'
           };
         }
         return {

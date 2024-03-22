@@ -31,9 +31,9 @@
           v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
         >
           <bk-table-column type="selection" align="center" :selectable="setDefaultSelect" />
-          <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
+          <bk-table-column :label="$t(`m.userGroup['用户组名']`)" :width="300">
             <template slot-scope="{ row }">
-              <span
+              <div
                 :class="[
                   'single-hide',
                   'user-group-name-label'
@@ -45,7 +45,7 @@
                 @click="handleNavGroup(row)"
               >
                 {{ row.name }}
-              </span>
+              </div>
             </template>
           </bk-table-column>
           <bk-table-column :label="$t(`m.common['描述']`)">
@@ -521,8 +521,8 @@
       .group-table {
         border: none;
         .user-group-name {
-          display: flex;
-          align-items: center;
+          /* display: flex;
+          align-items: center; */
           &-label {
             color: #3a84ff;
             /* max-width: calc(100% - 120px); */

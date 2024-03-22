@@ -89,6 +89,7 @@
                     ref="joinedUserGroupRef"
                     :mode="curSliderName"
                     :list="selectTableList"
+                    :no-show-list="noSelectTableList"
                     :expired-at-new="expiredAt"
                   />
                 </div>
@@ -175,6 +176,7 @@
         customButtonStyle: {
           width: '160px'
         },
+        groupListBack: [],
         selectTableList: [],
         noSelectTableList: [],
         submitFormData: {},
@@ -217,20 +219,20 @@
       formatSelectedGroup () {
         const modeMap = {
             remove: () => {
-              const list = cloneDeep(this.selectTableList);
+              const list = cloneDeep(this.groupListBack);
               this.noSelectTableList = list.filter((item) =>
                 item.role_members.length === 1
                 && item.attributes
                 && item.attributes.source_from_role
               );
-              this.selectTableList = list.filter(
+              this.selectTableList = this.selectTableList.filter(
                 (item) => !this.noSelectTableList.map((v) => v.id).includes(item.id));
               return this.selectTableList.length;
             },
             renewal: () => {
-              const list = cloneDeep(this.selectTableList);
+              const list = cloneDeep(this.groupListBack);
               this.noSelectTableList = list.filter((item) => item.expired_at === PERMANENT_TIMESTAMP);
-              this.selectTableList = list.filter(
+              this.selectTableList = this.selectTableList.filter(
                 (item) => !this.noSelectTableList.map((v) => v.id).includes(item.id));
                return this.selectTableList.length;
             }
@@ -256,7 +258,7 @@
       show: {
         handler (value) {
           if (value) {
-            this.selectTableList = [...this.groupList];
+            [this.groupListBack, this.selectTableList] = [this.groupList, this.groupList];
             this.submitFormData = Object.assign({}, {
               expiredAtUse: this.expiredAtUse,
               selectTableList: this.selectTableList

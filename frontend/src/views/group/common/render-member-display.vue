@@ -15,14 +15,30 @@
         :key="index"
         class="member-item"
         :title="nameType(item)">
-        <span class="member-name">
-          {{ isDepartment ? item.name : item.username || item.id }}
-        </span>
-        <template v-if="isDepartment && item.count">
-          <span class="count">({{ item.count }})</span>
-        </template>
-        <template v-if="!isDepartment && !isTemplate && item.name !== ''">
-          <span class="display_name">({{ item.name }})</span>
+        <!-- 单独处理没有username和count的页面业务 -->
+        <template>
+          <template v-if="isCustomRoute">
+            <span class="member-name">
+              {{ item.username || item.name }}
+            </span>
+            <template v-if="isHasDepartCount && item.count">
+              <span class="count">({{ item.id }})</span>
+            </template>
+            <template v-if="!isHasDepartCount && !isTemplate && item.name !== ''">
+              <span class="display_name">({{ item.name }})</span>
+            </template>
+          </template>
+          <template v-else>
+            <span class="member-name">
+              {{ isHasDepartCount ? item.name : item.username || item.id }}
+            </span>
+            <template v-if="isHasDepartCount && item.count">
+              <span class="count">({{ item.count }})</span>
+            </template>
+            <template v-if="!isHasDepartCount && !isTemplate && item.name !== ''">
+              <span class="display_name">({{ item.name }})</span>
+            </template>
+          </template>
         </template>
         <template v-if="isTemplate">
           <span class="display_name">{{ item.name }}</span>
@@ -51,6 +67,9 @@
       }
     },
     computed: {
+      isCustomRoute () {
+        return ['userOrgPerm'].includes(this.$route.name);
+      },
       icon () {
         if (this.type === 'user') {
           return 'personal-user';
@@ -70,10 +89,13 @@
         return this.$t(`m.common['组织']`);
       },
       isDepartment () {
-        return this.type === 'department' && window.ENABLE_ORGANIZATION_COUNT.toLowerCase() === 'true';
+        return this.type === 'department';
       },
       isTemplate () {
         return this.type === 'template';
+      },
+      isHasDepartCount () {
+        return this.isDepartment && window.ENABLE_ORGANIZATION_COUNT.toLowerCase() === 'true';
       },
       isEdit () {
         return this.mode === 'edit';
