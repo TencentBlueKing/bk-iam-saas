@@ -107,7 +107,7 @@ class RoleGroupMemberViewSet(RoleSubjectGroupSearchMixin):
             RoleGroupMember.objects.filter(role_id=self.request.role.id, group_id__in=group_ids)
             .values("subject_type", "subject_id")
             .distinct()
-            .order_by("subject_type", "subject_id")
+            .order_by("-subject_type", "subject_id")
         )
 
         slz = RoleGroupMemberSearchSLZ(data=self.request.data)
