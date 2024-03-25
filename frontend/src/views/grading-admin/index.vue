@@ -10,18 +10,10 @@
       <bk-button theme="primary" @click="handleCreate" data-test-id="grading_btn_create">
         {{ isStaff ? $t(`m.common['申请新建']`) : $t(`m.common['新建']`) }}
       </bk-button>
-      <bk-link class="AdminLink" theme="primary" @click="handleOpenDocu">
+      <bk-link class="admin-link" theme="primary" @click="handleOpenDocu">
         <span class="linkText">{{ $t('m.common["什么是管理空间"]') }}</span>
       </bk-link>
       <div slot="right">
-        <!-- <bk-input
-                    :placeholder="$t(`m.levelSpace['请输入名称']`)"
-                    clearable
-                    style="width: 420px;"
-                    right-icon="bk-icon icon-search"
-                    v-model="searchValue"
-                    @enter="handleSearch">
-                </bk-input> -->
         <iam-search-select
           @on-change="handleSelectSearch"
           :data="searchData"
@@ -45,7 +37,7 @@
       @expand-change="handleExpandChange"
       v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
     >
-      <bk-table-column type="expand" width="30">
+      <bk-table-column type="expand" width="30" fixed="left">
         <template slot-scope="{ row }">
           <bk-table
             size="small"
@@ -58,8 +50,8 @@
             :max-height="500"
             v-bkloading="{ isLoading: subLoading, opacity: 1 }"
           >
-            <bk-table-column width="45" />
-            <bk-table-column prop="name" width="225">
+            <bk-table-column width="45" fixed="left" />
+            <bk-table-column prop="name" :min-width="190" fixed="left">
               <template slot-scope="child">
                 <div class="flex_space_name">
                   <Icon type="level-two-manage-space" :style="{ color: iconColor[1] }" />
@@ -84,7 +76,7 @@
                   @on-change="handleUpdateSubMembers" />
               </template>
             </bk-table-column>
-            <bk-table-column prop="description" width="300">
+            <bk-table-column prop="description" :min-width="200">
               <template slot-scope="child">
                 <iam-edit-textarea
                   field="description"
@@ -96,31 +88,21 @@
               </template>
             </bk-table-column>
             <bk-table-column :label="$t(`m.levelSpace['更新人']`)" prop="updater" />
-            <bk-table-column :label="$t(`m.levelSpace['更新时间']`)" prop="updated_time" width="240">
+            <bk-table-column :label="$t(`m.levelSpace['更新时间']`)" prop="updated_time" width="160">
               <template slot-scope="child">
                 <span :title="child.row.updated_time">{{ child.row.updated_time }}</span>
               </template>
             </bk-table-column>
-            <bk-table-column :width="curLanguageIsCn ? 200 : 320">
+            <bk-table-column :width="curLanguageIsCn ? 180 : 210" prop="child-operate">
               <template slot-scope="child">
                 <div class="operate_btn">
-                  <span>
-                    <!-- <bk-button
-                      theme="primary"
-                      text
-                      @click.stop="handleSubView(child.row, 'role')"
-                      :title="disabledPerm(child.row) ? $t(`m.verify['需添加当前用户为管理员']`) : ''"
-                      :disabled="disabledPerm(child.row)">
-                      {{ $t(`m.levelSpace['进入空间']`) }}
-                    </bk-button> -->
-                    <bk-button
-                      theme="primary"
-                      text
-                      @click.stop="handleSubView(child.row, 'role')"
-                    >
-                      {{ $t(`m.levelSpace['进入空间']`) }}
-                    </bk-button>
-                  </span>
+                  <bk-button
+                    theme="primary"
+                    text
+                    @click.stop="handleSubView(child.row, 'role')"
+                  >
+                    {{ $t(`m.levelSpace['进入空间']`) }}
+                  </bk-button>
                   <bk-button
                     theme="primary"
                     text
@@ -128,9 +110,6 @@
                   >
                     {{ $t(`m.nav['授权边界']`) }}
                   </bk-button>
-                  <!--<bk-button theme="primary" text @click.stop="handleSubView(child.row, 'clone')">
-                                        {{ $t(`m.levelSpace['克隆']`) }}
-                                    </bk-button> -->
                 </div>
               </template>
             </bk-table-column>
@@ -158,7 +137,7 @@
           </div>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.levelSpace['名称']`)" width="240">
+      <bk-table-column :label="$t(`m.levelSpace['名称']`)" prop="name" :min-width="200" fixed="left">
         <template slot-scope="{ row, $index }">
           <div class="flex_space_name">
             <template v-if="isFilter && ['subset_manager'].includes(row.type)">
@@ -187,12 +166,6 @@
       </bk-table-column>
       <bk-table-column :label="$t(`m.levelSpace['管理员']`)" prop="members" width="300">
         <template slot-scope="{ row , $index }">
-          <!-- <span
-                        :title="row.members && row.members.length ? row.members.map(tag => tag.username) : ''">
-                        <bk-tag v-for="(tag, index) of row.members" :key="index">
-                            {{tag.username}}
-                        </bk-tag>
-                    </span> -->
           <iam-edit-member-selector
             field="members"
             width="200"
@@ -202,7 +175,7 @@
             @on-change="handleUpdateMembers" />
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.common['描述']`)" width="300">
+      <bk-table-column :label="$t(`m.common['描述']`)" :min-width="200">
         <template slot-scope="{ row, $index }">
           <iam-edit-textarea
             field="description"
@@ -213,22 +186,18 @@
             :remote-hander="handleUpdateManageSpace" />
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.grading['更新人']`)" prop="updater"></bk-table-column>
-      <bk-table-column :label="$t(`m.grading['更新时间']`)" prop="updated_time" width="240">
+      <bk-table-column :label="$t(`m.grading['更新人']`)" prop="updater" />
+      <bk-table-column :label="$t(`m.grading['更新时间']`)" prop="updated_time" width="160">
         <template slot-scope="{ row }">
           <span :title="row.updated_time">{{ row.updated_time }}</span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.common['操作']`)" :width="curLanguageIsCn ? 200 : 320">
+      <bk-table-column
+        :label="$t(`m.common['操作-table']`)"
+        :width="curLanguageIsCn ? 180 : 210"
+        :fixed="tableList.length > 0 ? 'right' : false"
+      >
         <template slot-scope="{ row }">
-          <!-- <section>
-                        <bk-button theme="primary" text @click="handleDropOut(row)">
-                            {{ $t(`m.common['退出']`) }}
-                        </bk-button>
-                        <bk-button theme="primary" style="margin-left: 10px;" text @click="handleDelete(row)">
-                            {{ $t(`m.common['删除']`) }}
-                        </bk-button>
-                    </section> -->
           <div class="operate_btn">
             <bk-button
               theme="primary"
@@ -244,13 +213,30 @@
             >
               {{ $t(`m.nav['授权边界']`) }}
             </bk-button>
-            <bk-button
-              v-if="!['subset_manager'].includes(row.type)"
-              theme="primary"
-              text
-              @click="handleCopy(row)">
-              {{ $t(`m.grading['克隆']`) }}
-            </bk-button>
+            <bk-popover
+              class="custom-table-dot-menu"
+              ext-cls="custom-table-dot-menu-tipper"
+              placement="bottom-start"
+              theme="dot-menu light"
+              trigger="click"
+              :arrow="false"
+              :offset="15"
+              :distance="0"
+            >
+              <span class="custom-table-dot-menu-trigger" />
+              <ul class="custom-table-dot-menu-list" slot="content">
+                <li class="custom-table-dot-menu-item">
+                  <bk-button
+                    v-if="!['subset_manager'].includes(row.type)"
+                    theme="primary"
+                    text
+                    @click.stop="handleCopy(row)"
+                  >
+                    {{ $t(`m.levelSpace['克隆']`) }}
+                  </bk-button>
+                </li>
+              </ul>
+            </bk-popover>
           </div>
         </template>
       </bk-table-column>
@@ -422,10 +408,10 @@
         // if (!row.is_member) {
         //     return 'iam-tag-table-cell-cls iam-tag-table-cell-opacity-cls';
         // }
-        if (!row.has_subset_manager) {
+        if (!row.has_subset_manager && !['right'].includes(column.fixed)) {
           return 'iam-tag-table-cell-cls iam-tag-table-cell-subset-cls';
         }
-        if (columnIndex === 1 || column.type === 'default') {
+        if ((columnIndex === 1 || column.type === 'default') && !['right'].includes(column.fixed)) {
           return 'iam-table-cell-1-cls';
         }
         if (columnIndex === 2) {
@@ -435,7 +421,7 @@
       },
 
       getSubCellClass ({ row, column, rowIndex, columnIndex }) {
-        return 'iam-table-cell-1-cls';
+        return !['child-operate'].includes(column.property) ? 'iam-table-cell-1-cls' : '';
       },
 
       handleExpandChange (row, expandedRows) {
@@ -900,134 +886,150 @@
     }
   };
 </script>
+
 <style lang="postcss">
-    .iam-grading-admin-wrapper {
-        .detail-link {
-            color: #3a84ff;
-            cursor: pointer;
-            &:hover {
-                color: #699df4;
-            }
-        }
-        .grading-admin-table {
-            margin-top: 16px;
-            border-right: none;
-            border-bottom: none;
-            &.set-border {
-                border-right: 1px solid #dfe0e5;
-                border-bottom: 1px solid #dfe0e5;
-            }
-            .grading-admin-name {
-                color: #3a84ff;
-                margin-left: 5px;
-                cursor: pointer;
-                &:hover {
-                    color: #699df4;
-                }
-            }
-            .bk-table-pagination-wrapper {
-                background: #fff;
-            }
-        }
-    }
-    .AdminLink {
-        margin-left: 10px;
-        .linkText {
-            font-size: 12px
-        }
-    }
-
-    .iam-tag-table-cell-cls {
-        .cell {
-            .bk-tag {
-                &:first-of-type {
-                    margin-left: 0;
-                }
-
-                &:hover {
-                    cursor: pointer;
-                }
-            }
-        }
-    }
+@import '@/css/mixins/custom-table-dot.css';
 </style>
 
 <style lang="postcss" scoped>
-
-.operate_btn {
-    .bk-button-text {
-        &:nth-child(n + 2) {
-            margin-left: 10px;
+.iam-grading-admin-wrapper {
+  .detail-link {
+    color: #3a84ff;
+    cursor: pointer;
+    &:hover {
+      color: #699df4;
+    }
+  }
+  .grading-admin-table {
+    margin-top: 16px;
+    border-right: none;
+    border-bottom: none;
+    &.set-border {
+        border-right: 1px solid #dfe0e5;
+        border-bottom: 1px solid #dfe0e5;
+    }
+    .grading-admin-name {
+        color: #3a84ff;
+        margin-left: 5px;
+        cursor: pointer;
+        &:hover {
+            color: #699df4;
         }
     }
-}
+    .bk-table-pagination-wrapper {
+        background: #fff;
+    }
+  }
+  .admin-link {
+    margin-left: 10px;
+    .linkText {
+      font-size: 12px
+    }
+  }
+  .iam-tag-table-cell-cls {
+    .cell {
+      .bk-tag {
+        &:first-of-type {
+          margin-left: 0;
+        }
+        &:hover {
+          cursor: pointer;
+        }
+      }
+    }
+  }
+  .operate_btn {
+    .bk-button-text {
+      &:nth-child(n + 2) {
+          margin-left: 10px;
+      }
+    }
+  }
 
-.flex_space_name {
+  .flex_space_name {
     display: flex;
     align-items: center;
+  }
 }
 
 /deep/ .bk-table-expanded-cell {
-        padding: 0 !important;
+  padding: 0 !important;
+  &:hover {
+      cursor: pointer;
+  }
+  .bk-table {
+      border: 0;
+  }
+}
 
-        &:hover {
-            cursor: pointer;
-        }
+/deep/ .iam-tag-table-cell-cls {
+  .cell {
+    .bk-tag {
+      &:first-of-type {
+          margin-left: 0;
+      }
 
-        .bk-table {
-            border: 0;
-        }
+      &:hover {
+          cursor: pointer;
+      }
     }
+  }
+}
 
-    /deep/ .iam-tag-table-cell-cls {
-        .cell {
-            .bk-tag {
-                &:first-of-type {
-                    margin-left: 0;
-                }
+  /* /deep/ .iam-tag-table-cell-opacity-cls {
+      opacity: 0.4;
+      .cell {
+          padding-left: 0;
+          color:#575961;
+      }
+  } */
 
-                &:hover {
-                    cursor: pointer;
-                }
-            }
-        }
+/deep/ .iam-table-cell-1-cls,
+.iam-tag-table-cell-subset-cls  {
+  .cell {
+    padding-left: 2px;
+  }
+}
+
+/deep/ .iam-tag-table-cell-subset-cls {
+  .cell {
+    padding-left: 2px;
+    .bk-table-expand-icon  {
+        display: none;
     }
-
-    /* /deep/ .iam-tag-table-cell-opacity-cls {
-        opacity: 0.4;
-        .cell {
-            padding-left: 0;
-            color:#575961;
-        }
-    } */
-
-     /deep/ .iam-table-cell-1-cls, .iam-tag-table-cell-subset-cls  {
-        .cell {
-            padding-left: 2px;
-        }
+  }
+}
+/deep/ .bk-table-header-wrapper {
+    .cell {
+      padding-left: 2px;
     }
+}
 
-    /deep/ .iam-tag-table-cell-subset-cls {
-        .cell {
-            padding-left: 2px;
-            .bk-table-expand-icon  {
-                display: none;
-            }
-        }
+/deep/ .search-manage-table {
+    .bk-table-expand-icon  {
+      display: none;
     }
-
-    /deep/ .bk-table-header-wrapper {
-        .cell {
-            padding-left: 2px;
-        }
+    .bk-table .cell {
+      padding-left: 2px;
     }
-
-    /deep/ .search-manage-table {
-        .bk-table-expand-icon  {
-            display: none;
-        }
-        .bk-table .cell {
-            padding-left: 2px;
-        }
+}
+/deep/ .bk-table-fixed,
+/deep/ .bk-table-fixed-right {
+  border-bottom: 0;
+}
+/deep/ .children-expand-cls {
+  .bk-table-fixed {
+    .bk-table-fixed-body-wrapper {
+      z-index: 900;
     }
-</style>>
+  }
+  .bk-table-fixed-right {
+    .bk-table__fixed-body-wrapper{
+      z-index: 900;
+    }
+  }
+  .bk-table-body-wrapper {
+    z-index: 800;
+  }
+}
+</style>
