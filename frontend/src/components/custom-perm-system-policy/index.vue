@@ -1,5 +1,5 @@
 <template>
-  <div v-if="permLength > 0" :class="['iam-perm-item', extCls, `${$route.name}-perm-item`]">
+  <div v-if="permLength > 0" :class="['iam-perm-item', extCls, `${$route.name}-perm-item`]" :ref="customPermRef">
     <div class="header" @click.stop="handleExpanded(isExpanded)" v-if="!isOnlyPerm">
       <Icon bk class="expanded-icon" :type="isExpanded ? 'down-shape' : 'right-shape'" />
       <span class="title">{{ title }}</span>
@@ -56,6 +56,10 @@
         default: 0
       },
       extCls: {
+        type: String,
+        default: ''
+      },
+      customPermRef: {
         type: String,
         default: ''
       },
