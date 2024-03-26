@@ -3,8 +3,9 @@
     <template v-if="permData.hasPerm">
       <MemberTempPermPolicy
         :ref="`memberTempPermPolicyRef_${item.id}`"
+        :custom-perm-ref="`memberTempPermPolicy_${item.id}`"
         v-for="(item, index) in memberTempPermData"
-        :key="index"
+        :key="item.id"
         :title="item.name"
         :type-title="$t(`m.userGroup['用户组']`)"
         :expanded.sync="item.expanded"
@@ -542,13 +543,24 @@
       formatExpandedData (payload) {
         setTimeout(() => {
           this.memberTempPermData.forEach((item) => {
-            if (item.expanded && payload && payload.id === item.id) {
-              this.$refs[`memberTempPermPolicyRef_${item.id}`][0].handleExpanded(false);
+            if (item.expanded) {
+              const hasRef = this.$refs[`memberTempPermPolicyRef_${item.id}`];
+              if (hasRef && hasRef.length > 0) {
+                hasRef[0].handleExpanded(false);
+                // if (payload.id === item.id) {
+                //   const top = hasRef[0].$el.getBoundingClientRect().top;
+                //   console.log(hasRef[0].$refs[`memberTempPermPolicy_${payload.id}`]);
+                //   hasRef[0].$refs[`memberTempPermPolicy_${payload.id}`].scrollIntoView({
+                //     top: -top,
+                //     block: 'start'
+                //   });
+                // }
+              }
             } else {
               item.expanded = false;
             }
-          });
-        }, 0);
+          }, 0);
+        });
       },
 
       formatRoleMembers (payload) {
@@ -566,7 +578,7 @@
         return payload || [];
       },
 
-      async formatPaginationData (payload, current, limit) {
+      formatPaginationData (payload, current, limit) {
         const curData = this.memberTempPermData.find((item) => item.id === payload.id);
         if (curData) {
           const typeMap = {
@@ -599,7 +611,7 @@
               }
             }
           };
-          typeMap[payload.id]();
+          typeMap[curData.id]();
         }
       },
 

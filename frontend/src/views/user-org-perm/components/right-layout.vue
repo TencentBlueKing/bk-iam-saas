@@ -305,6 +305,20 @@
 
 <style lang="postcss" scoped>
 .user-org-right-wrapper {
+  height: 100%;
+  overflow-y: scroll;
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: #dcdee5;
+    border-radius: 3px;
+  }
+  &::-webkit-scrollbar-track {
+    background-color: transparent;
+    border-radius: 3px;
+  }
   .user-name {
     width: 100%;
     font-size: 14px;
