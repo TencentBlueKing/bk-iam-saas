@@ -173,6 +173,10 @@
               }
             };
             bus.$emit('on-related-change', params);
+            // 用户/组织模块在模板详情里解除关联用户组需要同步更新各种方式加入的用户组权限
+            if (['userOrgPerm'].includes(this.$route.name)) {
+              bus.$emit('on-refresh-template-table', params);
+            }
           }
         } catch (e) {
           this.messageAdvancedError(e);

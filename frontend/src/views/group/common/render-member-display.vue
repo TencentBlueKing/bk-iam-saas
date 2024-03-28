@@ -19,14 +19,8 @@
         <template>
           <template v-if="isCustomRoute">
             <span class="member-name">
-              {{ item.username || item.name }}
+              {{ formatCustomTypeName(item) }}
             </span>
-            <template v-if="isHasDepartCount && item.count">
-              <span class="count">({{ item.id }})</span>
-            </template>
-            <template v-if="!isHasDepartCount && !isTemplate && item.name !== ''">
-              <span class="display_name">({{ item.name }})</span>
-            </template>
           </template>
           <template v-else>
             <span class="member-name">
@@ -120,6 +114,20 @@
             },
             template: () => {
               return name;
+            }
+          };
+          return typeMap[type] ? typeMap[type]() : typeMap['user']();
+        };
+      },
+      formatCustomTypeName () {
+        return (payload) => {
+          const { name, type, id } = payload;
+          const typeMap = {
+            user: () => {
+              return `${id} (${name})`;
+            },
+            department: () => {
+              return `${name} (${id})`;
             }
           };
           return typeMap[type] ? typeMap[type]() : typeMap['user']();

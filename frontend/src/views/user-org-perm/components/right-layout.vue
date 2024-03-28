@@ -176,7 +176,7 @@
               && item.attributes.source_from_role
             );
             const result = this.selectedGroups.length === list.length;
-            this.removeGroupTitle = result ? this.$t(`m.userOrOrg['当前勾选项都为不可移出的管理员组']`) : '';
+            this.removeGroupTitle = result ? this.$t(`m.userOrOrg['已选择的用户组权限为不可移出的管理员组']`) : '';
             return result;
           }
           return !hasData;
@@ -188,7 +188,7 @@
           if (hasData) {
             const list = this.selectedGroups.filter((item) => item.expired_at === PERMANENT_TIMESTAMP);
             const result = this.selectedGroups.length === list.length;
-            this.renewalGroupTitle = result ? this.$t(`m.userOrOrg['当前勾选项都为不可移出的管理员组']`) : '';
+            this.renewalGroupTitle = result ? this.$t(`m.userOrOrg['已选择的用户组权限不需要续期']`) : '';
             return result;
           }
           return !hasData;

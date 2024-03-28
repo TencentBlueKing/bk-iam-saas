@@ -270,9 +270,10 @@
           modeMap[mode]();
         }
       });
-      bus.$on('on-refresh-template-table', () => {
+      bus.$on('on-refresh-template-table', async (payload) => {
         this.resetPagination();
-        this.fetchInitData();
+        await this.fetchInitData();
+        this.formatExpandedData(payload);
       });
     },
     methods: {
@@ -543,17 +544,17 @@
       formatExpandedData (payload) {
         setTimeout(() => {
           this.memberTempPermData.forEach((item) => {
-            if (item.expanded) {
+            if (item.expanded || item.id === payload.mode) {
               const hasRef = this.$refs[`memberTempPermPolicyRef_${item.id}`];
               if (hasRef && hasRef.length > 0) {
                 hasRef[0].handleExpanded(false);
                 // if (payload.id === item.id) {
                 //   const top = hasRef[0].$el.getBoundingClientRect().top;
                 //   console.log(hasRef[0].$refs[`memberTempPermPolicy_${payload.id}`]);
-                //   hasRef[0].$refs[`memberTempPermPolicy_${payload.id}`].scrollIntoView({
-                //     top: -top,
-                //     block: 'start'
-                //   });
+                // hasRef[0].$refs[`memberTempPermPolicy_${payload.id}`].$el.scrollIntoView({
+                //   top: -top,
+                //   block: 'start'
+                // });
                 // }
               }
             } else {

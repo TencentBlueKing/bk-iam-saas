@@ -217,9 +217,10 @@
         if (!this.tableList.length) {
           this.tableEmptyData = formatCodeData(0, this.tableEmptyData, true);
         }
-        this.$emit('on-remove-group', this.tableList);
         // 需要处理不需要续期和不能移除的用户组权限
-        const list = [...this.tableList, ...this.noShowList];
+        const noSelectTableList = [...this.noShowList];
+        const list = [...this.tableList, ...noSelectTableList];
+        this.$emit('on-remove-group', list);
         // 同步更新checkbox状态
         bus.$emit('on-remove-toggle-checkbox', list);
       },

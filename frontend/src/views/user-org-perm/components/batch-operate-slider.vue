@@ -91,6 +91,7 @@
                     :list="selectTableList"
                     :no-show-list="noSelectTableList"
                     :expired-at-new="expiredAt"
+                    @on-remove-group="handleRemoveGroup"
                   />
                 </div>
               </RenderPermBoundary>
@@ -180,7 +181,8 @@
         selectTableList: [],
         noSelectTableList: [],
         submitFormData: {},
-        submitFormDataBack: {}
+        submitFormDataBack: {},
+        curSliderNameBack: ''
       };
     },
     computed: {
@@ -218,26 +220,26 @@
       },
       formatSelectedGroup () {
         const modeMap = {
-            remove: () => {
-              const list = cloneDeep(this.groupListBack);
-              this.noSelectTableList = list.filter((item) =>
-                item.role_members.length === 1
-                && item.attributes
-                && item.attributes.source_from_role
-              );
-              this.selectTableList = this.selectTableList.filter(
-                (item) => !this.noSelectTableList.map((v) => v.id).includes(item.id));
-              return this.selectTableList.length;
-            },
-            renewal: () => {
-              const list = cloneDeep(this.groupListBack);
-              this.noSelectTableList = list.filter((item) => item.expired_at === PERMANENT_TIMESTAMP);
-              this.selectTableList = this.selectTableList.filter(
-                (item) => !this.noSelectTableList.map((v) => v.id).includes(item.id));
-               return this.selectTableList.length;
-            }
-          };
-         return modeMap[this.curSliderName] ? modeMap[this.curSliderName]() : '';
+          remove: () => {
+            const list = cloneDeep(this.groupListBack);
+            this.noSelectTableList = list.filter((item) =>
+              item.role_members.length === 1
+              && item.attributes
+              && item.attributes.source_from_role
+            );
+            this.selectTableList = this.selectTableList.filter(
+              (item) => !this.noSelectTableList.map((v) => v.id).includes(item.id));
+            return this.selectTableList.length;
+          },
+          renewal: () => {
+            const list = cloneDeep(this.groupListBack);
+            this.noSelectTableList = list.filter((item) => item.expired_at === PERMANENT_TIMESTAMP);
+            this.selectTableList = this.selectTableList.filter(
+              (item) => !this.noSelectTableList.map((v) => v.id).includes(item.id));
+            return this.selectTableList.length;
+          }
+        };
+        return modeMap[this.curSliderName] ? modeMap[this.curSliderName]() : '';
       },
       formatTypeTip () {
         return () => {
@@ -266,7 +268,7 @@
             this.submitFormDataBack = cloneDeep(this.submitFormData);
           }
         },
-        deep: true
+        immediate: true
       }
     },
     mounted () {
@@ -280,6 +282,9 @@
       });
     },
     methods: {
+      handleRemoveGroup (payload) {
+        this.selectTableList = payload;
+      },
       async handleExpiredAt () {
         const nowTimestamp = await getNowTimeExpired();
         const expiredAt = this.expiredAtUse + nowTimestamp;
