@@ -776,7 +776,7 @@
           this.tableLoading = false;
           const emptyField = this.groupTabList.find(item => item.name === this.tabActive);
           if (emptyField) {
-            this.emptyData = _.cloneDeep(Object.assign(this[emptyField.empty], { tipType: this.keyword ? 'search' : '' }));
+            this.emptyData = formatCodeData(0, _.cloneDeep(Object.assign(this[emptyField.empty], { tipType: this.keyword ? 'search' : '' })));
           }
         }
       },
