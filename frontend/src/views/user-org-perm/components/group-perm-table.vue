@@ -363,6 +363,49 @@
       });
     },
     methods: {
+      async fetchDetailInfo (id, name) {
+        try {
+          const { data } = await this.$store.dispatch('memberTemplate/subjectTemplateDetail', { id });
+          const { readonly, group_count } = data;
+          this.tempDetailData = {
+            tabActive: 'template_member',
+            mode: this.mode,
+            id,
+            name,
+            readonly,
+            group_count
+          };
+          this.isShowTempSlider = true;
+        } catch (e) {
+          this.messageAdvancedError(e);
+        }
+      },
+
+      async handleRemove (payload) {
+        const { type, id } = this.groupData;
+        try {
+          const params = {
+            members: [{
+              type,
+              id
+            }],
+            group_ids: [payload.id]
+          };
+          const emitParams = {
+            ...payload,
+            ...{
+              mode: this.mode
+            }
+          };
+          await this.$store.dispatch('userOrOrg/deleteGroupMembers', params);
+          this.messageSuccess(this.$t(`m.info['移出成功']`), 3000);
+          this.$emit('on-remove-group', emitParams);
+        } catch (e) {
+          console.error(e);
+          this.messageAdvancedError(e);
+        }
+      },
+
       getTableProps (payload) {
         const tabMap = {
           personalOrDepartPerm: () => {
@@ -432,14 +475,8 @@
             });
             window.open(routeData.href, '_blank');
           },
-          memberTemplate: () => {
-            this.tempDetailData = {
-              tabActive: 'template_member',
-              mode: this.mode,
-              id: template_id,
-              name: template_name
-            };
-            this.isShowTempSlider = true;
+          memberTemplate: async () => {
+            await this.fetchDetailInfo(template_id, template_name);
           },
           userOrgPerm: () => {
             const routeData = this.$router.resolve({
@@ -452,31 +489,6 @@
           }
         };
         return routeMap[type]();
-      },
-
-      async handleRemove (payload) {
-        const { type, id } = this.groupData;
-        try {
-          const params = {
-            members: [{
-              type,
-              id
-            }],
-            group_ids: [payload.id]
-          };
-          const emitParams = {
-            ...payload,
-            ...{
-              mode: this.mode
-            }
-          };
-          await this.$store.dispatch('userOrOrg/deleteGroupMembers', params);
-          this.messageSuccess(this.$t(`m.info['移出成功']`), 3000);
-          this.$emit('on-remove-group', emitParams);
-        } catch (e) {
-          console.error(e);
-          this.messageAdvancedError(e);
-        }
       },
 
       handleShowRenewal (payload) {
