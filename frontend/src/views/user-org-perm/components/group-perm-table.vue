@@ -116,18 +116,19 @@
                       </div>
                     </div>
                   </div>
-                  <bk-button
-                    theme="primary"
-                    text
-                    v-bk-tooltips="{
-                      content: $t(`m.perm['唯一管理员不可退出']`),
-                      disabled: !formatAdminGroup(row),
-                      placements: ['right']
-                    }"
-                    :disabled="formatAdminGroup(row)"
+                  <bk-popover
+                    placement="right"
+                    :disabled="!formatAdminGroup(row)"
+                    :content="$t(`m.perm['唯一管理员不可退出']`)"
                   >
-                    {{ $t(`m.userOrOrg['移出']`) }}
-                  </bk-button>
+                    <bk-button
+                      theme="primary"
+                      text
+                      :disabled="formatAdminGroup(row)"
+                    >
+                      {{ $t(`m.userOrOrg['移出']`) }}
+                    </bk-button>
+                  </bk-popover>
                 </bk-popconfirm>
                 <bk-button
                   v-if="row.expired_at !== PERMANENT_TIMESTAMP"
@@ -352,8 +353,8 @@
       });
       // 同步更新checkbox状态
       bus.$on('on-remove-toggle-checkbox', (payload) => {
+        this.$emit('on-selected-group', payload);
         this.$nextTick(() => {
-          this.$emit('on-selected-group', payload);
           this.list.forEach((item) => {
             if (this.$refs.groupPermRef && !payload.map((v) => v.id).includes(item.id)) {
               this.$refs.groupPermRef.toggleRowSelection(item, false);
