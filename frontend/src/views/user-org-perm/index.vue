@@ -905,7 +905,6 @@
               name,
               value: this.formData.username
             };
-            console.log(this.isHasDataNoExpand);
             if (!this.isHasDataNoExpand) {
               this.handleSearch();
             }
