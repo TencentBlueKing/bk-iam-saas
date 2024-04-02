@@ -33,7 +33,7 @@
           <bk-table-column type="selection" align="center" :selectable="setDefaultSelect" />
           <bk-table-column :label="$t(`m.userGroup['用户组名']`)" :width="300">
             <template slot-scope="{ row }">
-              <div
+              <span
                 :class="[
                   'single-hide',
                   'user-group-name-label'
@@ -45,12 +45,18 @@
                 @click="handleNavGroup(row)"
               >
                 {{ row.name }}
-              </div>
+              </span>
             </template>
           </bk-table-column>
           <bk-table-column :label="$t(`m.common['描述']`)">
             <template slot-scope="{ row }">
-              <span>
+              <span
+                v-bk-tooltips="{
+                  content: row.description,
+                  placements: ['right'],
+                  disabled: !row.description
+                }"
+              >
                 {{ row.description || '--' }}
               </span>
             </template>

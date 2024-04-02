@@ -303,6 +303,7 @@
           const { code } = await this.$store.dispatch(url, params);
           if (code === 0) {
             this.messageSuccess(msg, 3000);
+            this.resetData();
             this.$emit('on-submit', params);
             this.$emit('update:show', false);
           }

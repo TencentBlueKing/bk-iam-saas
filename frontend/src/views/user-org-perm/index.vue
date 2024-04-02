@@ -36,6 +36,7 @@
                 :placeholder="$t(`m.verify['请输入']`)"
                 :right-icon="'bk-icon icon-search'"
                 @right-icon-click="handleSearch"
+                @enter="handleSearch"
                 @clear="handleClearSearch"
               />
             </iam-form-item>
@@ -49,6 +50,7 @@
                 v-model="formData.id"
                 :placeholder="$t(`m.verify['请输入']`)"
                 :show-controls="false"
+                @enter="handleSearch"
               />
             </iam-form-item>
             <iam-form-item
@@ -56,14 +58,25 @@
               :style="{ width: formItemWidth }"
               class="custom-form-item"
             >
-              <bk-input
+              <!-- <bk-input
                 v-model="formData.username"
                 :clearable="true"
                 :show-clear-only-hover="true"
                 :placeholder="$t(`m.verify['请输入']`)"
                 :right-icon="'bk-icon icon-search'"
                 @right-icon-click="handleSearch"
+                @enter="handleSearch"
                 @clear="handleClearSearch"
+              /> -->
+              <bk-user-selector
+                ref="userSelectorRef"
+                :value="permMembers"
+                :api="userApi"
+                :multiple="false"
+                style="width: 100%"
+                :placeholder="$t(`m.verify['请输入']`)"
+                :empty-text="$t(`m.common['无匹配人员']`)"
+                @change="handleMemberChange(...arguments, 'username')"
               />
             </iam-form-item>
             <iam-form-item
@@ -77,6 +90,7 @@
                 :placeholder="$t(`m.verify['请输入']`)"
                 :right-icon="'bk-icon icon-search'"
                 @right-icon-click="handleSearch"
+                @enter="handleSearch"
                 @clear="handleClearSearch"
               />
             </iam-form-item>
@@ -123,13 +137,46 @@
               <div slot="content">
                 <div class="popover-title">{{ tag.label }}</div>
                 <div class="popover-tag-input">
-                  <bk-tag-input
+                  <!-- <bk-tag-input
                     :value="[tag.value]"
                     :placeholder="$t(`m.verify['请输入']`)"
                     :max-data="1"
                     :has-delete-icon="true"
                     :allow-create="true"
                     @change="handleInputChange(...arguments, tag.name)"
+                  /> -->
+                  <bk-input
+                    v-if="['name', 'department_name'].includes(tag.name)"
+                    ref="inputRef"
+                    :value="tag.value"
+                    :clearable="true"
+                    :placeholder="$t(`m.verify['请输入']`)"
+                    :right-icon="'bk-icon icon-search'"
+                    @right-icon-click="handlePopoverChange"
+                    @enter="handlePopoverChange"
+                    @clear="handleClearSearch"
+                    @input="handleInputChange(tag.name, ...arguments)"
+                  />
+                  <bk-input
+                    v-if="['id'].includes(tag.name)"
+                    ref="inputRef"
+                    type="number"
+                    :value="tag.value"
+                    :placeholder="$t(`m.verify['请输入']`)"
+                    :show-controls="false"
+                    @enter="handlePopoverChange"
+                    @input="handleInputChange(tag.name, ...arguments)"
+                  />
+                  <bk-user-selector
+                    v-if="['username'].includes(tag.name)"
+                    ref="userSelectorRef"
+                    style="width: 100%"
+                    :value="permMembers"
+                    :api="userApi"
+                    :multiple="false"
+                    :placeholder="$t(`m.verify['请输入']`)"
+                    :empty-text="$t(`m.common['无匹配人员']`)"
+                    @change="handleMemberChange(...arguments, tag.name)"
                   />
                 </div>
               </div>
@@ -248,6 +295,7 @@
   import Layout from './components/page-layout';
   import LeftLayout from './components/left-layout.vue';
   import RightLayout from './components/right-layout.vue';
+  import BkUserSelector from '@blueking/user-selector';
 
   const COM_MAP = new Map([
     [['user', 'department'], 'RightLayout']
@@ -259,11 +307,13 @@
       IamResourceCascadeSearch,
       Layout,
       LeftLayout,
-      RightLayout
+      RightLayout,
+      BkUserSelector
     },
 
     data () {
       return {
+        userApi: window.BK_USER_API,
         enableGroupInstanceSearch: window.ENABLE_GROUP_INSTANCE_SEARCH.toLowerCase() === 'true',
         listLoading: false,
         isSearchPerm: false,
@@ -382,6 +432,7 @@
         ],
         resourceInstances: [],
         noPopoverList: ['system_id', 'action_id', 'resource_type', 'resource_instance'],
+        permMembers: [],
         tagInputValue: {}
       };
     },
@@ -513,7 +564,7 @@
         await this.fetchDefaultSelectData();
       },
 
-      async fetchGroupMemberList (isLoading = false, isScrollLoad = false) {
+      async fetchGroupMemberList (isLoading = true, isScrollLoad = false) {
         this.listLoading = isLoading;
         try {
           const { current, limit } = this.pageConf;
@@ -684,15 +735,37 @@
         this.$nextTick(() => {
           if (this.$refs[`popoverConfirm_${payload.name}`] && this.$refs[`popoverConfirm_${payload.name}`].length) {
             this.$refs[`popoverConfirm_${payload.name}`][0].$refs.popover.showHandler();
+            if (['name', 'depart_name'].includes(payload.name)) {
+              if (['name', 'depart_name'].includes(payload.name)
+                && this.$refs.inputRef
+                && this.$refs.inputRef.length
+                && this.$refs.inputRef[0].$refs) {
+                this.$refs.inputRef[0].$refs.input.focus();
+              }
+            }
+            if (['username'].includes(payload.name)
+              && this.$refs.userSelectorRef
+              && this.$refs.userSelectorRef.length) {
+              this.$refs.userSelectorRef[0].focus();
+            }
           }
         });
       },
 
+      handleHidePopover (payload) {
+        this.$nextTick(() => {
+          if (this.$refs[`popoverConfirm_${payload.name}`] && this.$refs[`popoverConfirm_${payload.name}`].length) {
+            this.$refs[`popoverConfirm_${payload.name}`][0].$refs.popover.hideHandler();
+          }
+          this.tagInputValue = {};
+        });
+      },
+
       async handlePopoverChange () {
-        const { id, value } = this.tagInputValue;
-        if (id) {
-          this.formData[id] = value;
-          const curData = this.searchTagList.find((item) => item.name === id);
+        const { name, value } = this.tagInputValue;
+        if (name) {
+          this.formData[name] = value;
+          const curData = this.searchTagList.find((item) => item.name === name);
           if (curData) {
             curData.value = value;
           }
@@ -707,6 +780,7 @@
           curSearchParams: params,
           curSearchPagination: this.curSearchPagination
         });
+        this.handleHidePopover(this.tagInputValue);
       },
 
       // 获取跳转数据
@@ -719,11 +793,10 @@
         });
       },
 
-      handleInputChange (payload, type) {
-        const text = payload.length ? payload[0] : '';
+      handleInputChange (type, payload) {
         this.tagInputValue = {
-          id: type,
-          value: text
+          name: type,
+          value: payload
         };
       },
       
@@ -822,6 +895,22 @@
           });
         }
       },
+      
+      handleMemberChange (payload, name) {
+        this.permMembers = [...payload];
+        this.$nextTick(() => {
+          if (this.$refs.userSelectorRef) {
+            this.formData.username = payload.length > 0 ? payload.join() : '';
+            this.tagInputValue = {
+              name,
+              value: this.formData.username
+            };
+            if (!this.isHasDataNoExpand) {
+              this.handleSearch();
+            }
+          }
+        });
+      },
 
       handleSearch () {
         this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleSearchUserGroup(true, true);
@@ -861,6 +950,9 @@
         }
         if (this.formData[payload.name]) {
           this.formData[payload.name] = '';
+          if (['username'].includes(payload.name)) {
+            this.permMembers = [];
+          }
         }
         if (this.curResourceData[payload.name]) {
           this.curResourceData[payload.name] = '';
@@ -909,13 +1001,6 @@
         await this.handleEmptyUserClear();
       },
 
-      // handleGroupIdInput (payload) {
-      //   if (!/^[0-9]*$/.test(payload)) {
-      //     payload = payload.replace(/[^0-9]/g, '');
-      //     this.formData.id = payload.replace(/[^0-9]/g, '');
-      //   }
-      // },
-
       handleRefreshTipType (payload) {
         let tipType = '';
         if (this.isSearchPerm) {
@@ -956,6 +1041,7 @@
           username: '',
           department_name: ''
         };
+        this.permMembers = [];
         this.fetchFirstData();
         this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleEmptyClear();
       },

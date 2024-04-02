@@ -369,9 +369,10 @@
               };
               const { code } = await this.$store.dispatch('userOrOrg/batchJoinOrRenewal', params);
               if (code === 0) {
-                this.messageSuccess(this.$t(`m.renewal['续期成功']`), 3000);
+                bus.$emit('on-remove-toggle-checkbox', []);
                 this.$emit('on-submit', params);
                 this.$emit('update:show', false);
+                this.messageSuccess(this.$t(`m.renewal['续期成功']`), 3000);
               }
             } catch (e) {
               console.error(e);
