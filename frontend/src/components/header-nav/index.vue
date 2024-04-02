@@ -122,7 +122,7 @@
   import { il8n, language } from '@/language';
   import { bus } from '@/common/bus';
   import { buildURLParams } from '@/common/url';
-  import { formatI18nKey, jsonpRequest } from '@/common/util';
+  import { formatI18nKey, jsonpRequest, getManagerMenuPerm } from '@/common/util';
   import { NEED_CONFIRM_DIALOG_ROUTER } from '@/common/constants';
   import SystemLog from '../system-log';
   import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
@@ -484,15 +484,15 @@
 
       async updateRouter (navIndex = 0) {
         let difference = [];
-        const isSystemNoSuper = this.roleList.filter((item) => ['system_manager'].includes(item.type) && !['super_manager'].includes(item.type)).length > 0;
-        const list = isSystemNoSuper ? this.systemNoSuperList : this.defaultRouteList;
+        const permResult = getManagerMenuPerm(this.roleList);
+        const list = permResult.includes('hasSystemNoSuperManager') ? this.systemNoSuperList : this.defaultRouteList;
         if (navIndex === 1) {
           await this.$store.dispatch('userInfo');
           const type = this.curRole;
           difference = getRouterDiff(type);
           this.$store.commit('updataRouterDiff', type);
         } else {
-          difference = getNavRouterDiff(navIndex, isSystemNoSuper ? 'hasSystemNoSuperManager' : '');
+          difference = getNavRouterDiff(navIndex, permResult);
           this.$store.commit('updataNavRouterDiff', navIndex);
         }
         const curRouterName = this.$route.name;

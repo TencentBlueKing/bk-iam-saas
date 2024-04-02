@@ -718,3 +718,14 @@ export function getNowTimeExpired () {
   const timestamp = parseInt(timeList.splice(0, timeIndex).join(''), 10);
   return timestamp;
 }
+
+// 查找当前管理员最大身份划分导航栏下菜单
+export function getManagerMenuPerm (payload) {
+  const isSystemManager = payload.find((item) => ['system_manager'].includes(item.type));
+  const isSuperManager = payload.find((item) => ['super_manager'].includes(item.type));
+  // 最大为系统管理员
+  if (isSystemManager && !isSuperManager) {
+    return 'hasSystemNoSuperManager';
+  }
+  return '';
+}

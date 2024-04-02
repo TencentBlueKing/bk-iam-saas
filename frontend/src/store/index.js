@@ -27,7 +27,7 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 import http from '@/api';
-import { unifyObjectStyle, json2Query } from '@/common/util';
+import { unifyObjectStyle, json2Query, getManagerMenuPerm } from '@/common/util';
 import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
 import il8n from '@/language';
 
@@ -651,7 +651,8 @@ const store = new Vuex.Store({
     },
 
     updataNavRouterDiff (state, index) {
-      state.routerDiff = [...getNavRouterDiff(index)];
+      const result = getManagerMenuPerm(state.roleList);
+      state.routerDiff = [...getNavRouterDiff(index, result)];
     },
 
     updateRoleList (state, payload) {
@@ -796,12 +797,6 @@ const store = new Vuex.Store({
       };
       return http.get(`${AJAX_URL_PREFIX}/roles/grade_managers/?${json2Query(queryParams)}`).then(({ data }) => {
         const results = data.results || [];
-        // results.forEach((item) => {
-        //   if (item.type === 'system_manager') {
-        //     const langManager = ['zh-cn'].includes(window.CUR_LANGUAGE) ? '系统管理员' : ' system administrator';
-        //     item.name = `${item.name}${langManager}`;
-        //   }
-        // });
         commit('updateRoleListTotal', data.count || 0);
         commit('updateRoleList', results);
         return results;

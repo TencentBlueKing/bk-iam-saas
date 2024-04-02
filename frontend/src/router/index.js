@@ -33,7 +33,7 @@ import http from '@/api';
 import preload from '@/common/preload';
 import { bus } from '@/common/bus';
 // import { existValue, getParamsValue, getTreeNode } from '@/common/util';
-import { existValue, getParamsValue } from '@/common/util';
+import { existValue, getParamsValue, getManagerMenuPerm } from '@/common/util';
 import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
 import { messageError } from '@/common/bkmagic';
 
@@ -127,13 +127,19 @@ export const beforeEach = async (to, from, next) => {
   // 处理平台管理超管和系管都可以进入，但访问菜单权限不一致
   async function getPlatManageMenu () {
     hasManagerPerm = '';
-    const roleList = await store.dispatch('roleList', {
-      cancelWhenRouteChange: false,
-      cancelPrevious: false
-    });
+    let roleList = store.state.roleList;
+    if (roleList.length > 0) {
+      // 有系统管理员身份没超管身份
+      hasManagerPerm = getManagerMenuPerm(roleList);
+    } else {
+      roleList = await store.dispatch('roleList', {
+        cancelWhenRouteChange: false,
+        cancelPrevious: false
+      });
+    }
     // 有系统管理员身份没超管身份
-    const result = roleList.filter((item) => !['super_manager'].includes(item.type) && ['system_manager'].includes(item.type)).length > 0;
-    if (result) {
+    hasManagerPerm = getManagerMenuPerm(roleList);
+    if (['hasSystemNoSuperManager'].includes(hasManagerPerm)) {
       hasManagerPerm = 'hasSystemNoSuperManager';
       defaultRoute = ['my-perm', 'user-group', 'audit', 'resourcePermiss'];
     }
@@ -244,10 +250,10 @@ export const beforeEach = async (to, from, next) => {
     if (navIndex === 1) {
       difference = getRouterDiff(curRole);
     } else {
-      if (navIndex === 3) {
+      // 目前只有平台管理需要根据管理员最大身份处理路由权限
+      if ([3, '3'].includes(navIndex)) {
         await getPlatManageMenu();
       }
-      console.log(hasManagerPerm, 111);
       difference = getNavRouterDiff(navIndex, hasManagerPerm);
     }
     if (difference.length) {

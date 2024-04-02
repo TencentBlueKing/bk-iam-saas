@@ -370,19 +370,19 @@ export const getNavRouterDiff = (navIndex, managerPerm = '') => {
       'resourcePermManage',
       'userOrgPerm'
     ];
-    const systemManagerMenu = [
-      ...menuList.filter((item) => !['approvalProcess'].includes(item)),
-      ...[
-        'user',
-        'ratingManager',
-        'gradingAdminCreate',
-        'gradingAdminDetail',
-        'gradingAdminEdit',
-        'gradingAdminUpdateTemplate'
-      ]
-    ];
-    console.log(managerPerm, 5555);
     if (['hasSystemNoSuperManager'].includes(managerPerm)) {
+      const list = menuList.filter((item) => !['approvalProcess'].includes(item));
+      const systemManagerMenu = [
+        ...list,
+        ...[
+          'user',
+          'ratingManager',
+          'gradingAdminCreate',
+          'gradingAdminDetail',
+          'gradingAdminEdit',
+          'gradingAdminUpdateTemplate'
+        ]
+      ];
       return systemManagerMenu;
     }
     return menuList;
