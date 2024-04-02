@@ -86,15 +86,9 @@ export const beforeEach = async (to, from, next) => {
   let navIndex = store.state.index || Number(window.localStorage.getItem('index') || 0);
   let currentRoleId = String(to.query.current_role_id || '').trim();
   let curRoleId = store.state.curRoleId;
-  const defaultRoute = ['my-perm', 'user-group', 'audit', 'user'];
-  // if (curRole === 'staff') {
-  //     await store.dispatch('role/updateCurrentRole', { id: 0 });
-  // }
-  // 递归改成分级展开
-  // const roleList = await store.dispatch('roleList', {
-  //   cancelWhenRouteChange: false,
-  //   cancelPrevious: false
-  // });
+  // 检验有系管没超管身份
+  let hasManagerPerm = '';
+  let defaultRoute = ['my-perm', 'user-group', 'audit', 'user'];
 
   async function getExternalRole () {
     const { role_id: externalRoleId } = to.query;
@@ -127,6 +121,21 @@ export const beforeEach = async (to, from, next) => {
       curRole = role.type;
     } else {
       next({ path: `${SITE_URL}${defaultRoute[navIndex]}` });
+    }
+  }
+
+  // 处理平台管理超管和系管都可以进入，但访问菜单权限不一致
+  async function getPlatManageMenu () {
+    hasManagerPerm = '';
+    const roleList = await store.dispatch('roleList', {
+      cancelWhenRouteChange: false,
+      cancelPrevious: false
+    });
+    // 有系统管理员身份没超管身份
+    const result = roleList.filter((item) => !['super_manager'].includes(item.type) && ['system_manager'].includes(item.type)).length > 0;
+    if (result) {
+      hasManagerPerm = 'hasSystemNoSuperManager';
+      defaultRoute = ['my-perm', 'user-group', 'audit', 'resourcePermiss'];
     }
   }
 
@@ -165,6 +174,7 @@ export const beforeEach = async (to, from, next) => {
     await store.dispatch('role/updateCurrentRole', { id: curRoleId });
     navDiffMenuIndex(1);
   }
+
   if (to.name === 'userGroupDetail') {
     navDiffMenuIndex(1);
     store.dispatch('versionLogInfo');
@@ -194,13 +204,6 @@ export const beforeEach = async (to, from, next) => {
   } else if (to.name === 'userGroup') {
     store.dispatch('versionLogInfo');
     if (currentRoleId) {
-      // const roleList = await store.dispatch('roleList', {
-      //     cancelWhenRouteChange: false,
-      //     cancelPrevious: false
-      // });
-      // const currentRole = roleList.find((item) => String(item.id) === currentRoleId);
-      // const currentRole = getTreeNode(currentRoleId, roleList);
-      // await getExternalRole();
       await getManagerInfo();
     } else {
       if (existValue('externalApp')) { // 外部嵌入页面
@@ -237,22 +240,15 @@ export const beforeEach = async (to, from, next) => {
       getExternalRole();
     }
 
-    // if (to.name === 'gradingAdminEdit') {
-    //     await store.dispatch('role/updateCurrentRole', { id: 0 });
-    //     await store.dispatch('userInfo');
-    //     if (to.params.id) {
-    //         store.commit('updateNavId', to.params.id);
-    //     }
-    //     store.commit('updateIndex', 0);
-    //     window.localStorage.setItem('index', 0);
-    //     curRole = 'staff';
-    // }
-
     let difference = [];
     if (navIndex === 1) {
       difference = getRouterDiff(curRole);
     } else {
-      difference = getNavRouterDiff(navIndex);
+      if (navIndex === 3) {
+        await getPlatManageMenu();
+      }
+      console.log(hasManagerPerm, 111);
+      difference = getNavRouterDiff(navIndex, hasManagerPerm);
     }
     if (difference.length) {
       store.dispatch('versionLogInfo');

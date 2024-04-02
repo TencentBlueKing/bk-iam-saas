@@ -10,7 +10,7 @@
         <span v-for="(item, i) in navData" :key="i">
           <h2
             v-if="item.show"
-            class="heaer-nav-title"
+            class="header-nav-title"
             @click="handleSelect(item, i)"
             :class="index === i ? 'active' : ''"
           >
@@ -255,12 +255,13 @@
         placeholderValue: '',
         userGroupName: '',
         navData: [
-          { text: this.$t(`m.nav['个人工作台']`), id: 0, show: true, type: 'staff' },
-          { text: this.$t(`m.nav['管理空间']`), id: 1, show: true, type: 'all_manager' },
-          { text: this.$t(`m.nav['统计分析']`), id: 2, show: false, type: 'super_manager' },
-          { text: this.$t(`m.nav['平台管理']`), id: 3, show: false, type: 'super_manager' }
+          { text: this.$t(`m.nav['个人工作台']`), id: 0, show: true, type: ['staff'] },
+          { text: this.$t(`m.nav['管理空间']`), id: 1, show: true, type: ['all_manager'] },
+          { text: this.$t(`m.nav['统计分析']`), id: 2, show: false, type: ['super_manager'] },
+          { text: this.$t(`m.nav['平台管理']`), id: 3, show: false, type: ['super_manager', 'system_manager'] }
         ],
         defaultRouteList: ['myPerm', 'userGroup', 'audit', 'user', 'addGroupPerm'],
+        systemNoSuperList: ['myPerm', 'userGroup', 'audit', 'resourcePermiss', 'addGroupPerm'],
         isRatingChange: false,
         haveManager: false,
         showNavDataLength: 0,
@@ -278,32 +279,32 @@
       };
     },
     computed: {
-            ...mapGetters([
-            'navStick',
-            'headerTitle',
-            'backRouter',
-            'user',
-            'mainContentLoading',
-            'roleList',
-            'index',
-            'navCurRoleId',
-            'externalSystemId'
-            ]),
-            style () {
-                return {
-                    // height: `${this.roleList.length ? this.curHeight : 46}px`
-                    height: `46px`
-                };
-            },
-            curAccountLogo () {
-                return [].slice.call(this.user.username)[0].toUpperCase() || '-';
-            },
-            isHide () {
-                return this.$route.query.system_id && this.$route.query.tid;
-            },
-            isShowSearch () {
-                return this.searchValue === '';
-            }
+      ...mapGetters([
+      'navStick',
+      'headerTitle',
+      'backRouter',
+      'user',
+      'mainContentLoading',
+      'roleList',
+      'index',
+      'navCurRoleId',
+      'externalSystemId'
+      ]),
+      style () {
+          return {
+              // height: `${this.roleList.length ? this.curHeight : 46}px`
+              height: `46px`
+          };
+      },
+      curAccountLogo () {
+          return [].slice.call(this.user.username)[0].toUpperCase() || '-';
+      },
+      isHide () {
+          return this.$route.query.system_id && this.$route.query.tid;
+      },
+      isShowSearch () {
+          return this.searchValue === '';
+      }
     },
     watch: {
       $route: function (to, from) {
@@ -348,7 +349,9 @@
       },
       routeName: {
         handler (value) {
-          const index = this.defaultRouteList.findIndex((item) => item === value);
+          const isSystemNoSuper = this.roleList.find((item) => ['system_manager'].includes(item.type) && !['super_manager'].includes(item.type));
+          const list = isSystemNoSuper ? this.systemNoSuperList : this.defaultRouteList;
+          const index = list.findIndex((item) => item === value);
           if (index > -1) {
             ['addGroupPerm'].includes(value)
               ? this.fetchUserGroup()
@@ -366,7 +369,7 @@
           this.haveManager
             = this.showNavDataLength
               && this.showGuide
-              && newValue.find((item) => ['all_manager'].includes(item.type) && item.show);
+              && newValue.find((item) => item.type.includes('all_manager') && item.show);
         },
         immediate: true,
         deep: true
@@ -391,7 +394,7 @@
       });
 
       bus.$on('rating-admin-change', () => {
-        const data = this.navData.find((e) => e.type === 'staff');
+        const data = this.navData.find((e) => e.type.includes('staff'));
         this.isRatingChange = true;
         this.handleSelect(data, 0);
       });
@@ -481,13 +484,15 @@
 
       async updateRouter (navIndex = 0) {
         let difference = [];
+        const isSystemNoSuper = this.roleList.filter((item) => ['system_manager'].includes(item.type) && !['super_manager'].includes(item.type)).length > 0;
+        const list = isSystemNoSuper ? this.systemNoSuperList : this.defaultRouteList;
         if (navIndex === 1) {
           await this.$store.dispatch('userInfo');
           const type = this.curRole;
           difference = getRouterDiff(type);
           this.$store.commit('updataRouterDiff', type);
         } else {
-          difference = getNavRouterDiff(navIndex);
+          difference = getNavRouterDiff(navIndex, isSystemNoSuper ? 'hasSystemNoSuperManager' : '');
           this.$store.commit('updataNavRouterDiff', navIndex);
         }
         const curRouterName = this.$route.name;
@@ -497,19 +502,10 @@
             window.localStorage.removeItem('iam-header-title-cache');
             window.localStorage.removeItem('iam-header-name-cache');
             this.$router.push({
-              name: this.isRatingChange ? 'myManageSpace' : this.defaultRouteList[navIndex],
+              name: this.isRatingChange ? 'myManageSpace' : list[navIndex],
               params: navIndex === 1 ? { id: this.user.role.id, entry: 'updateRole' } : {}
             });
           } else {
-            // if (navIndex === 0 && ['gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'].includes(curRouterName)) {
-            //     this.$router.push({
-            //         name: 'myPerm'
-            //     });
-            // } else if (navIndex === 3 && ['gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit', 'myManageSpaceCreate', 'myManageSpaceSubDetail'].includes(curRouterName)) {
-            //     this.$router.push({
-            //         name: 'user'
-            //     });
-            // }
             // 修复当前是添加组权限页面点击其他角色菜单会再次跳到权限管理
             // 处理二级管理空间点击staff菜单不刷新路由问题
             // 处理超级管理员账号下头部导航没选择默认路由问题
@@ -525,7 +521,7 @@
             ];
             if (OtherRoute.includes(curRouterName)) {
               this.$router.push({
-                name: this.defaultRouteList[navIndex]
+                name: list[navIndex]
               });
             }
           }
@@ -635,7 +631,7 @@
       },
 
       handleManager () {
-        const data = this.navData.find((e) => e.type !== 'staff');
+        const data = this.navData.find((e) => !e.type.includes('staff'));
         this.handleSelect(data, 1);
         this.$store.commit('updateSelectManager', true);
       },
@@ -678,13 +674,15 @@
       // 根据角色设置
       setTabRoleData () {
         const superManager = this.curRoleList.find((e) => e.type === 'super_manager');
+        const systemManager = this.curRoleList.find((e) => e.type === 'system_manager');
         const allManager = this.curRoleList.find((e) => e.type !== 'staff');
         this.navData.forEach((element, i) => {
           element.active = i === this.index;
-          if (element.type === 'super_manager' && superManager) {
-            element.id = superManager.id;
-            element.show = true;
-          } else if (element.type === 'all_manager' && allManager) {
+          if (element.type.includes('super_manager') && superManager) {
+            element = Object.assign(element, { id: superManager.id, show: true });
+          } else if (element.type.includes('system_manager') && systemManager) {
+            element = Object.assign(element, { id: systemManager.id, show: true });
+          } else if (element.type.includes('all_manager') && allManager) {
             element.id = this.navCurRoleId || allManager.id;
             // element.id = allManager.id;
           }
@@ -695,7 +693,7 @@
       setNavData () {
         this.$nextTick(() => {
           for (let i = 0; i < this.navData.length; i++) {
-            if (this.navData[i].type === 'all_manager') {
+            if (this.navData[i].type.includes('all_manager')) {
               this.navData[i].show = !!this.roleList.length;
               break;
             }

@@ -23,7 +23,7 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-
+  
 /**
  * 获取不同身份的router差异
  *
@@ -251,7 +251,7 @@ export const getRouterDiff = (payload) => {
 };
 
 // 导航路由
-export const getNavRouterDiff = (navIndex) => {
+export const getNavRouterDiff = (navIndex, managerPerm = '') => {
   if (navIndex === 0 || navIndex === '') {
     return [
       'userGroup',
@@ -334,7 +334,7 @@ export const getNavRouterDiff = (navIndex) => {
   }
 
   if (navIndex === 3) {
-    return [
+    const menuList = [
       'applyCustomPerm',
       'applyProvisionPerm',
       'applyJoinUserGroup',
@@ -370,5 +370,21 @@ export const getNavRouterDiff = (navIndex) => {
       'resourcePermManage',
       'userOrgPerm'
     ];
+    const systemManagerMenu = [
+      ...menuList.filter((item) => !['approvalProcess'].includes(item)),
+      ...[
+        'user',
+        'ratingManager',
+        'gradingAdminCreate',
+        'gradingAdminDetail',
+        'gradingAdminEdit',
+        'gradingAdminUpdateTemplate'
+      ]
+    ];
+    console.log(managerPerm, 5555);
+    if (['hasSystemNoSuperManager'].includes(managerPerm)) {
+      return systemManagerMenu;
+    }
+    return menuList;
   }
 };
