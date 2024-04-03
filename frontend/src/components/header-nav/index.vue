@@ -559,6 +559,7 @@
         this.isShowGradingWrapper = false;
         this.isShowUserDropdown = false;
         try {
+          console.log(currentData, 5555);
           await this.$store.dispatch('role/updateCurrentRole', { id: currentData.id });
           bus.$emit('nav-change', { id: currentData.id }, index);
           this.updateRouter(index);
@@ -678,13 +679,23 @@
         const allManager = this.curRoleList.find((e) => e.type !== 'staff');
         this.navData.forEach((element, i) => {
           element.active = i === this.index;
-          if (element.type.includes('super_manager') && superManager) {
-            element = Object.assign(element, { id: superManager.id, show: true });
-          } else if (element.type.includes('system_manager') && systemManager) {
-            element = Object.assign(element, { id: systemManager.id, show: true });
-          } else if (element.type.includes('all_manager') && allManager) {
-            element.id = this.navCurRoleId || allManager.id;
-            // element.id = allManager.id;
+          // 代表当前导航栏菜单有多种角色可以访问
+          if (element.type.length > 1 && element.type.includes(this.curRole)) {
+            // 如果登录用户最大权限是超管，则无论他有多少种角色，直接更新到超管
+            if (element.type.includes('super_manager') && superManager) {
+              element = Object.assign(element, { id: superManager.id, show: true });
+            } else {
+              element = Object.assign(element, { id: this.curRoleId, show: true });
+            }
+          } else {
+            if (element.type.includes('super_manager') && superManager) {
+              element = Object.assign(element, { id: superManager.id, show: true });
+            } else if (element.type.includes('system_manager') && systemManager) {
+              element = Object.assign(element, { id: systemManager.id, show: true });
+            } else if (element.type.includes('all_manager') && allManager) {
+              element.id = this.navCurRoleId || allManager.id;
+              // element.id = allManager.id;
+            }
           }
         });
         this.$store.commit('updateNavData', this.navData);

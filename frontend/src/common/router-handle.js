@@ -245,8 +245,10 @@ export const getRouterDiff = (payload) => {
     'authorBoundaryEditSecondLevel',
     'secondaryManageSpace',
     'myManageSpace',
-    'MyManageSpaceCreate',
-    'ResourcePermManage'
+    'myManageSpaceCreate',
+    'resourcePermManage',
+    'resourcePermiss',
+    'sensitivityLevel'
   ];
 };
 
@@ -359,29 +361,37 @@ export const getNavRouterDiff = (navIndex, managerPerm = '') => {
       'permTemplate',
       'permTemplateDetail',
       'permTemplateCreate',
-      'approvalProcess',
       'authorBoundary',
       'secondaryManageSpace',
       'myManageSpace',
+      'myManageSpaceCreate',
       'secondaryManageSpaceCreate',
       'secondaryManageSpaceDetail',
+      'authorBoundaryEditFirstLevel',
+      'authorBoundaryEditSecondLevel',
+      'permTemplateEdit',
+      'permTemplateDiff',
+      'addGroupPerm',
+      'groupPermRenewal',
       'userGroupSetting',
       'memberTemplate',
       'resourcePermManage',
       'userOrgPerm'
     ];
     if (['hasSystemNoSuperManager'].includes(managerPerm)) {
-      const list = menuList.filter((item) => !['approvalProcess'].includes(item));
+      // 非超管用户隐藏的路由
+      const hideMenuList = [
+        'user',
+        'approvalProcess',
+        'ratingManager',
+        'gradingAdminCreate',
+        'gradingAdminDetail',
+        'gradingAdminEdit',
+        'gradingAdminUpdateTemplate'
+      ];
       const systemManagerMenu = [
-        ...list,
-        ...[
-          'user',
-          'ratingManager',
-          'gradingAdminCreate',
-          'gradingAdminDetail',
-          'gradingAdminEdit',
-          'gradingAdminUpdateTemplate'
-        ]
+        ...menuList,
+        ...hideMenuList
       ];
       return systemManagerMenu;
     }

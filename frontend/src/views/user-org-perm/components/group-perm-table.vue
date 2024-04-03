@@ -26,7 +26,8 @@
             :key="item.prop"
             :label="item.label"
             :prop="item.prop"
-            :min-width="200">
+            :min-width="200"
+            :fixed="'left'">
             <template slot-scope="{ row }">
               <span
                 :ref="`name_${row.id}`"
@@ -166,6 +167,7 @@
             :key="item.prop"
             :label="item.label"
             :prop="item.prop"
+            :min-width="['description'].includes(item.prop) ? 200 : 120"
           >
             <template slot-scope="{ row }">
               <span

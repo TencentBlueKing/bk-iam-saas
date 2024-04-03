@@ -176,7 +176,7 @@ export const beforeEach = async (to, from, next) => {
     navDiffMenuIndex(0);
   }
  
-  if (['userGroup', 'permTemplate', 'approvalProcess'].includes(to.name)) {
+  if (['userGroup', 'permTemplate'].includes(to.name)) {
     await store.dispatch('role/updateCurrentRole', { id: curRoleId });
     navDiffMenuIndex(1);
   }
@@ -232,9 +232,6 @@ export const beforeEach = async (to, from, next) => {
   } else {
     // 邮件点击续期跳转过来的链接需要做身份的前置判断
     if (to.name === 'groupPermRenewal' && to.query.source === 'email' && currentRoleId) {
-      // await store.dispatch('role/updateCurrentRole', { id: +currentRoleId });
-      // const { role } = await store.dispatch('userInfo');
-      // curRole = role.type;
       await getManagerInfo();
       navDiffMenuIndex(1);
     }
@@ -251,7 +248,7 @@ export const beforeEach = async (to, from, next) => {
       difference = getRouterDiff(curRole);
     } else {
       // 目前只有平台管理需要根据管理员最大身份处理路由权限
-      if ([3, '3'].includes(navIndex)) {
+      if ([3].includes(Number(navIndex))) {
         await getPlatManageMenu();
       }
       difference = getNavRouterDiff(navIndex, hasManagerPerm);
