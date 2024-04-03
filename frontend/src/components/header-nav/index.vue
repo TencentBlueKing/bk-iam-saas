@@ -559,7 +559,6 @@
         this.isShowGradingWrapper = false;
         this.isShowUserDropdown = false;
         try {
-          console.log(currentData, 5555);
           await this.$store.dispatch('role/updateCurrentRole', { id: currentData.id });
           bus.$emit('nav-change', { id: currentData.id }, index);
           this.updateRouter(index);
