@@ -177,6 +177,10 @@
         color: #699df4;
       }
     }
+    /deep/ .bk-table-fixed, 
+    .bk-table-fixed-right {
+      border-bottom: 0;
+    }
   }
 }
 .user-org-remove-confirm {

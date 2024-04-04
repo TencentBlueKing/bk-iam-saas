@@ -331,11 +331,11 @@
           return this.navStick || !this.navFold;
       },
       isShowRouterGroup () {
-          return (payload) => {
-              const allRouter = getRouterDiff('all');
-              const curRouter = allRouter.filter((item) => !this.routerDiff.includes(item));
-              return curRouter.filter((item) => payload.children.map((_) => _.rkey).includes(item)).length > 0;
-          };
+        return (payload) => {
+          const allRouter = getRouterDiff('all');
+          const curRouter = allRouter.filter((item) => !this.routerDiff.includes(item));
+          return curRouter.filter((item) => payload.children.map((_) => _.rkey).includes(item)).length > 0;
+        };
       },
       formatRoleIcon () {
           const { role } = this.user;
