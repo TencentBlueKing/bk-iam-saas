@@ -291,6 +291,14 @@ const currentNav = [
         disabled: false
       },
       {
+        icon: 'notification',
+        name: il8n('nav', '续期通知'),
+        id: 'renewalNoticeNav',
+        rkey: 'renewalNotice',
+        path: `${SITE_URL}renewal-notice`,
+        disabled: false
+      },
+      {
         icon: 'operate-audit',
         name: il8n('nav', '审计'),
         id: 'auditNav',
