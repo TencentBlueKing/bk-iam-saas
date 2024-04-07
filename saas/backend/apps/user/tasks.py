@@ -128,7 +128,7 @@ def user_group_policy_expire_remind():
     if "mail" not in notification_config["notification_types"]:
         return
 
-    expired_at_before = get_expired_at(notification_config["expire_days_before"])
+    expired_at_before = get_expired_at(notification_config["expire_days_before"] * -1)
     expired_at_after = get_expired_at(notification_config["expire_days_after"])
 
     username_set = set()  # 用于去重
