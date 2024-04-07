@@ -33,6 +33,16 @@ DEFAULT_EXPIRED_DURATION = 365 * DAY_SECONDS  # 1年
 EXPIRED = _("已过期")
 PERMANENT = _("永久")
 
+WEEKDAYS = {
+    0: "monday",
+    1: "tuesday",
+    2: "wednesday",
+    3: "thursday",
+    4: "friday",
+    5: "saturday",
+    6: "sunday",
+}
+
 
 def expired_at_display(expired_at: int, since_time: int = 0):
     """
@@ -116,3 +126,11 @@ def db_time():
 
 def get_soon_expire_ts() -> int:
     return int(time.time()) + EXPIRE_SOON_SECONDS
+
+
+def get_expired_at(days: int) -> int:
+    return int(time.time()) + days * DAY_SECONDS
+
+
+def get_today_weekday():
+    return WEEKDAYS[timezone.now().weekday()]

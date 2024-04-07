@@ -45,7 +45,7 @@ from backend.common.error_codes import error_codes
 from backend.common.filters import NoCheckModelFilterBackend
 from backend.common.lock import gen_group_upsert_lock
 from backend.common.serializers import HiddenSLZ, SystemQuerySLZ
-from backend.common.time import PERMANENT_SECONDS
+from backend.common.time import PERMANENT_SECONDS, get_soon_expire_ts
 from backend.service.constants import GroupMemberType, PermissionCodeEnum, RoleRelatedObjectType, RoleType
 from backend.service.models import Subject
 from backend.service.models.subject import SubjectType
@@ -1196,9 +1196,14 @@ class GroupSubjectTemplateViewSet(GroupPermissionMixin, GenericViewSet):
         group = get_object_or_404(self.queryset, pk=kwargs["id"])
 
         # 查询用户组拥有的权限模板
-        subject_template_ids = list(
-            SubjectTemplateGroup.objects.filter(group_id=group.id).values("template_id", "expired_at", "created_time")
+        subject_template_qs = SubjectTemplateGroup.objects.filter(group_id=group.id).values(
+            "template_id", "expired_at", "created_time"
         )
+        if request.query_params.get("expire_soon"):
+            expired_at = get_soon_expire_ts()
+            subject_template_qs = subject_template_qs.filter(expired_at__lt=expired_at)
+
+        subject_template_ids = list(subject_template_qs)
         queryset = SubjectTemplate.objects.filter(id__in=[one["template_id"] for one in subject_template_ids])
         queryset = self.filter_queryset(queryset)
 

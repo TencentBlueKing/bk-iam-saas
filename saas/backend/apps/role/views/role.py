@@ -42,7 +42,15 @@ from backend.apps.role.audit import (
     RoleUpdateAuditProvider,
 )
 from backend.apps.role.filters import GradeMangerFilter, RoleCommonActionFilter, RoleSearchFilter
-from backend.apps.role.models import Role, RoleCommonAction, RoleConfig, RoleRelatedObject, RoleRelation, RoleUser
+from backend.apps.role.models import (
+    Role,
+    RoleCommonAction,
+    RoleConfig,
+    RolePolicyExpiredNotificationConfig,
+    RoleRelatedObject,
+    RoleRelation,
+    RoleUser,
+)
 from backend.apps.role.serializers import (
     BaseGradeMangerSchemaSLZ,
     BaseGradeMangerSLZ,
@@ -54,6 +62,7 @@ from backend.apps.role.serializers import (
     GradeMangerDetailSLZ,
     GradeMangerListSchemaSLZ,
     MemberSystemPermissionUpdateSLZ,
+    NotificationConfigSerializer,
     RoleCommonActionSLZ,
     RoleCommonCreateSLZ,
     RoleGroupConfigSLZ,
@@ -70,6 +79,7 @@ from backend.apps.role.serializers import (
     SystemManagerSLZ,
 )
 from backend.apps.role.tasks import sync_subset_manager_subject_scope
+from backend.apps.subject_template.models import SubjectTemplateGroup
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.biz.group import GroupBiz, GroupMemberExpiredAtBean
 from backend.biz.helper import RoleWithPermGroupBiz
@@ -82,6 +92,7 @@ from backend.biz.role import (
     RoleObjectRelationChecker,
     RoleSubjectScopeChecker,
     can_user_manage_role,
+    update_periodic_permission_expire_remind_schedule,
 )
 from backend.biz.subject import SubjectInfoList
 from backend.common.error_codes import error_codes
@@ -89,6 +100,7 @@ from backend.common.lock import gen_role_upsert_lock
 from backend.common.serializers import SystemQuerySLZ
 from backend.common.time import get_soon_expire_ts
 from backend.service.constants import (
+    GroupMemberType,
     GroupSaaSAttributeEnum,
     PermissionCodeEnum,
     RoleConfigType,
@@ -639,6 +651,14 @@ class RoleGroupRenewViewSet(mixins.ListModelMixin, GenericViewSet):
 
         expired_at = get_soon_expire_ts()
         exist_group_ids = self.group_biz.list_exist_groups_before_expired_at(group_ids, expired_at)
+        # 查询有人员模版过期的用户组
+        subject_template_group_ids = list(
+            SubjectTemplateGroup.objects.filter(expired_at__lt=expired_at, group_id__in=group_ids).values_list(
+                "group_id", flat=True
+            )
+        )
+
+        exist_group_ids = list(set(exist_group_ids).union(set(subject_template_group_ids)))
         if not exist_group_ids:
             return Group.objects.none()
 
@@ -674,13 +694,20 @@ class RoleGroupRenewViewSet(mixins.ListModelMixin, GenericViewSet):
 
         sorted_members = sorted(members, key=lambda m: m["parent_id"])
         for group_id, per_members in groupby(sorted_members, key=lambda m: m["parent_id"]):
-            self.group_biz.update_members_expired_at(
-                int(group_id),
-                [
-                    GroupMemberExpiredAtBean(type=m["type"], id=m["id"], expired_at=m["expired_at"])
-                    for m in per_members
-                ],
-            )
+            part_members = [
+                GroupMemberExpiredAtBean(type=one["type"], id=one["id"], expired_at=one["expired_at"])
+                for one in per_members
+                if one["type"] != GroupMemberType.TEMPLATE.value
+            ]
+            if part_members:
+                self.group_biz.update_members_expired_at(
+                    int(group_id),
+                    part_members,
+                )
+
+            for m in per_members:
+                if m["type"] == GroupMemberType.TEMPLATE.value:
+                    self.group_biz.update_subject_template_expired_at(int(group_id), int(m["id"]), m["expired_at"])
 
         audit_context_setter(role=request.role, members=members)
 
@@ -1088,5 +1115,46 @@ class RoleGroupConfigView(views.APIView):
 
         # 更新同步权限用户组信息
         RoleListQuery(request.role, request.user).query_group().update(apply_disable=data["apply_disable"])
+
+        return Response({})
+
+
+class RoleNotificationConfigView(views.APIView):
+    """超级管理员的通知配置"""
+
+    @swagger_auto_schema(
+        operation_description="超级管理员的通知配置",
+        responses={status.HTTP_200_OK: NotificationConfigSerializer(label="通知配置")},
+        tags=["role"],
+    )
+    def get(self, request, *args, **kwargs):
+        if request.role.type == RoleType.SUBSET_MANAGER.value:
+            raise error_codes.FORBIDDEN
+
+        notification_config = RolePolicyExpiredNotificationConfig.objects.filter(role_id=request.role.id).get()
+        return Response(notification_config.config)
+
+    @swagger_auto_schema(
+        operation_description="超级管理员的通知配置",
+        request_body=NotificationConfigSerializer(label="通知配置"),
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["role"],
+    )
+    def post(self, request, *args, **kwargs):
+        if request.role.type == RoleType.SUBSET_MANAGER.value:
+            raise error_codes.FORBIDDEN
+
+        serializer = NotificationConfigSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        data = serializer.validated_data
+
+        notification_config = RolePolicyExpiredNotificationConfig.objects.filter(role_id=request.role.id).get()
+        notification_config.config = data
+        notification_config.save()
+
+        # 更新定时任务配置
+        hour, minute = [int(i) for i in data["send_time"].split(":")]
+        update_periodic_permission_expire_remind_schedule(hour, minute)
 
         return Response({})
