@@ -551,11 +551,6 @@
         this.$set(currentData, 'active', true);
         this.$store.commit('updateIndex', index);
         window.localStorage.setItem('index', index);
-        // if (this.routeName === 'addGroupPerm') {
-        //     this.$router.push({
-        //         name: 'userGroup'
-        //     });
-        // }
         this.isShowGradingWrapper = false;
         this.isShowUserDropdown = false;
         try {
@@ -678,23 +673,29 @@
         const allManager = this.curRoleList.find((e) => e.type !== 'staff');
         this.navData.forEach((element, i) => {
           element.active = i === this.index;
-          // 代表当前导航栏菜单有多种角色可以访问
-          if (element.type.length > 1 && element.type.includes(this.curRole)) {
-            // 如果登录用户最大权限是超管，则无论他有多少种角色，直接更新到超管
-            if (element.type.includes('super_manager') && superManager) {
-              element = Object.assign(element, { id: superManager.id, show: true });
-            } else {
-              element = Object.assign(element, { id: this.curRoleId, show: true });
-            }
-          } else {
-            if (element.type.includes('super_manager') && superManager) {
-              element = Object.assign(element, { id: superManager.id, show: true });
-            } else if (element.type.includes('system_manager') && systemManager) {
-              element = Object.assign(element, { id: systemManager.id, show: true });
-            } else if (element.type.includes('all_manager') && allManager) {
-              element.id = this.navCurRoleId || allManager.id;
-              // element.id = allManager.id;
-            }
+          const rolesMap = [
+            [
+              () => element.type.includes('super_manager') && superManager,
+              () => {
+                element = Object.assign(element, { id: superManager.id, show: true });
+              }
+            ],
+            [
+              () => element.type.includes('system_manager') && systemManager && !superManager,
+              () => {
+                element = Object.assign(element, { id: systemManager.id, show: true });
+              }
+            ],
+            [
+              () => element.type.includes('all_manager') && allManager,
+              () => {
+                element = Object.assign(element, { id: this.navCurRoleId || allManager.id });
+              }
+            ]
+          ];
+          const getRole = rolesMap.find((item) => item[0]());
+          if (getRole) {
+            getRole[1]();
           }
         });
         this.$store.commit('updateNavData', this.navData);
