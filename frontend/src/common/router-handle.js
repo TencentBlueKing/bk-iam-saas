@@ -58,7 +58,8 @@ export const getRouterDiff = (payload) => {
       'sensitivityLevel',
       'memberTemplate',
       'resourcePermManage',
-      'userOrgPerm'
+      'userOrgPerm',
+      'renewalNotice'
     ];
   }
   if (payload === 'super_manager') {
@@ -199,7 +200,8 @@ export const getRouterDiff = (payload) => {
       'sensitivityLevel',
       'memberTemplate',
       'resourcePermManage',
-      'userOrgPerm'
+      'userOrgPerm',
+      'renewalNotice'
     ];
   }
   // payload其它取值默认返回全部菜单
@@ -248,7 +250,9 @@ export const getRouterDiff = (payload) => {
     'myManageSpaceCreate',
     'resourcePermManage',
     'resourcePermiss',
-    'sensitivityLevel'
+    'sensitivityLevel',
+    'userOrgPerm',
+    'renewalNotice'
   ];
 };
 
@@ -279,7 +283,8 @@ export const getNavRouterDiff = (navIndex, managerPerm = '') => {
       'sensitivityLevel',
       'memberTemplate',
       'resourcePermManage',
-      'userOrgPerm'
+      'userOrgPerm',
+      'renewalNotice'
     ];
   }
 
@@ -331,7 +336,8 @@ export const getNavRouterDiff = (navIndex, managerPerm = '') => {
       'sensitivityLevel',
       'memberTemplate',
       'resourcePermManage',
-      'userOrgPerm'
+      'userOrgPerm',
+      'renewalNotice'
     ];
   }
 
@@ -376,7 +382,8 @@ export const getNavRouterDiff = (navIndex, managerPerm = '') => {
       'userGroupSetting',
       'memberTemplate',
       'resourcePermManage',
-      'userOrgPerm'
+      'userOrgPerm',
+      'renewalNotice'
     ];
     if (['hasSystemNoSuperManager'].includes(managerPerm)) {
       // 非超管用户隐藏的路由

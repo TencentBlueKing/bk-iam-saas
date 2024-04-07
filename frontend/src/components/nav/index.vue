@@ -276,7 +276,9 @@
     // 管理空间下资源权限管理
     [['resourcePermManage'], 'resourcePermManageNav'],
     // 用户/组织
-    [['userOrgPerm'], 'userOrgPermNav']
+    [['userOrgPerm'], 'userOrgPermNav'],
+    // 续期通知
+    [['renewalNotice'], 'renewalNoticeNav']
   ]);
 
   export default {
