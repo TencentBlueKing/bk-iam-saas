@@ -27,7 +27,7 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 import http from '@/api';
-import { unifyObjectStyle, json2Query } from '@/common/util';
+import { unifyObjectStyle, json2Query, getManagerMenuPerm } from '@/common/util';
 import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
 import il8n from '@/language';
 
@@ -189,6 +189,14 @@ const currentNav = [
         disabled: false
       },
       {
+        icon: 'renyuanmuban',
+        id: 'memberTemplateNav',
+        rkey: 'memberTemplate',
+        name: il8n('nav', '人员模板'),
+        path: `${SITE_URL}member-template`,
+        disabled: false
+      },
+      {
         icon: 'personal-user',
         id: 'userNav',
         rkey: 'user',
@@ -197,11 +205,19 @@ const currentNav = [
         disabled: false
       },
       {
-        icon: 'renyuanmuban',
-        id: 'memberTemplateNav',
-        rkey: 'memberTemplate',
-        name: il8n('nav', '人员模板'),
-        path: `${SITE_URL}member-template`,
+        icon: 'resource-perm-manage',
+        id: 'resourcePermissNav',
+        rkey: 'resourcePermiss',
+        name: il8n('nav', '资源权限管理'),
+        path: `${SITE_URL}resource-permiss`,
+        disabled: false
+      },
+      {
+        icon: 'mingandengji',
+        id: 'sensitivityLevelNav',
+        rkey: 'sensitivityLevel',
+        name: il8n('nav', '敏感等级'),
+        path: `${SITE_URL}sensitivity-level`,
         disabled: false
       }
       // {
@@ -253,22 +269,6 @@ const currentNav = [
   //     path: `${SITE_URL}first-manage-space`,
   //     disabled: false
   // },
-  {
-    icon: 'resource-perm-manage',
-    id: 'resourcePermissNav',
-    rkey: 'resourcePermiss',
-    name: il8n('nav', '资源权限管理'),
-    path: `${SITE_URL}resource-permiss`,
-    disabled: false
-  },
-  {
-    icon: 'mingandengji',
-    id: 'sensitivityLevelNav',
-    rkey: 'sensitivityLevel',
-    name: il8n('nav', '敏感等级'),
-    path: `${SITE_URL}sensitivity-level`,
-    disabled: false
-  },
   {
     icon: 'perm-manage',
     name: il8n('common', '设置'),
@@ -651,7 +651,8 @@ const store = new Vuex.Store({
     },
 
     updataNavRouterDiff (state, index) {
-      state.routerDiff = [...getNavRouterDiff(index)];
+      const result = getManagerMenuPerm(state.roleList);
+      state.routerDiff = [...getNavRouterDiff(index, result)];
     },
 
     updateRoleList (state, payload) {
@@ -750,13 +751,7 @@ const store = new Vuex.Store({
       const AJAX_URL_PREFIX = window.AJAX_URL_PREFIX;
       return http.get(`${AJAX_URL_PREFIX}/accounts/user/`, config).then((response) => {
         const data = response ? response.data : {};
-        // 由于现有搜索改成后端接口搜索，去掉之前前端自定义的内容
-        // if (data.role.type === 'system_manager') {
-        //   const langManager = ['zh-cn'].includes(window.CUR_LANGUAGE) ? '系统管理员' : ' system administrator';
-        //   data.role.name = `${data.role.name}${langManager}`;
-        // }
         commit('updateUser', data);
-
         if (Object.keys(data).length > 0) {
           const role = data.role.type;
           if (role === 'staff') {
@@ -796,12 +791,6 @@ const store = new Vuex.Store({
       };
       return http.get(`${AJAX_URL_PREFIX}/roles/grade_managers/?${json2Query(queryParams)}`).then(({ data }) => {
         const results = data.results || [];
-        // results.forEach((item) => {
-        //   if (item.type === 'system_manager') {
-        //     const langManager = ['zh-cn'].includes(window.CUR_LANGUAGE) ? '系统管理员' : ' system administrator';
-        //     item.name = `${item.name}${langManager}`;
-        //   }
-        // });
         commit('updateRoleListTotal', data.count || 0);
         commit('updateRoleList', results);
         return results;

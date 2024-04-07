@@ -322,7 +322,7 @@
         }
         return {
           // height: 'calc(100vh - 400px)'
-          height: 'calc(100vh - 435px)'
+          height: 'calc(100vh - 440px)'
         };
       },
       formatDropDownClass () {

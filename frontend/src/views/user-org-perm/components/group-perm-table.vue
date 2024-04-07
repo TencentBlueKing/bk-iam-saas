@@ -26,7 +26,8 @@
             :key="item.prop"
             :label="item.label"
             :prop="item.prop"
-            :min-width="200">
+            :min-width="200"
+            :fixed="'left'">
             <template slot-scope="{ row }">
               <span
                 :ref="`name_${row.id}`"
@@ -58,9 +59,18 @@
           <bk-table-column
             :key="item.prop"
             :label="item.label"
-            :prop="item.prop">
+            :prop="item.prop"
+            :min-width="300">
             <template slot-scope="{ row }">
-              <span>{{ formatJoinType(row) }}</span>
+              <span
+                v-bk-tooltips="{
+                  content:
+                    `${formatJoinType(row)}( ${row.template_name || row.department_name }
+                  ${row.template_name && row.department_name ? ' - ' + row.department_name + ' )' : ' )'}`
+                }"
+              >
+                {{ formatJoinType(row) }}
+              </span>
               (<span
                 v-if="row.template_id > 0 || row.department_id > 0"
                 v-bk-tooltips="{ content: formatJoinTypeTip(row), disabled: !formatJoinTypeTip(row) }"
@@ -69,7 +79,16 @@
               >
                 {{ row.template_name || row.department_name }}
               </span>
-              <span v-if="row.template_name && row.department_name">{{ ` - ${row.department_name}` }}</span>
+              <span
+                v-if="row.template_name && row.department_name"
+                v-bk-tooltips="{
+                  content:
+                    `${formatJoinType(row)}( ${row.template_name || row.department_name }
+                  ${' - ' + row.department_name + ' )'}`
+                }"
+              >
+                {{ ` - ${row.department_name}` }}
+              </span>
               )
             </template>
           </bk-table-column>
@@ -148,6 +167,7 @@
             :key="item.prop"
             :label="item.label"
             :prop="item.prop"
+            :min-width="['description'].includes(item.prop) ? 200 : 120"
           >
             <template slot-scope="{ row }">
               <span
