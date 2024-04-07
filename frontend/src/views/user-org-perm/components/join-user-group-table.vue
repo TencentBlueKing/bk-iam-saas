@@ -33,24 +33,29 @@
           <bk-table-column type="selection" align="center" :selectable="setDefaultSelect" />
           <bk-table-column :label="$t(`m.userGroup['用户组名']`)" :width="300">
             <template slot-scope="{ row }">
-              <div
+              <span
                 :class="[
-                  'single-hide',
                   'user-group-name-label'
                 ]"
                 v-bk-tooltips="{
                   content: row.name,
-                  placements: ['right']
+                  placements: ['right-start']
                 }"
                 @click="handleNavGroup(row)"
               >
                 {{ row.name }}
-              </div>
+              </span>
             </template>
           </bk-table-column>
           <bk-table-column :label="$t(`m.common['描述']`)">
             <template slot-scope="{ row }">
-              <span>
+              <span
+                v-bk-tooltips="{
+                  content: row.description,
+                  placements: ['right'],
+                  disabled: !row.description
+                }"
+              >
                 {{ row.description || '--' }}
               </span>
             </template>
@@ -525,18 +530,17 @@
           align-items: center; */
           &-label {
             color: #3a84ff;
-            /* max-width: calc(100% - 120px); */
             word-break: break-all;
             cursor: pointer;
             &:hover {
               color: #699df4;
             }
-            &-expired {
+            /* &-expired {
               max-width: calc(100% - 150px);
-            }
+            } */
           }
           &-expired {
-            line-height: 1;
+            /* line-height: 1; */
             margin-left: 5px;
           }
         }

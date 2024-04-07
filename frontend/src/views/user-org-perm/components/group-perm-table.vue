@@ -26,7 +26,8 @@
             :key="item.prop"
             :label="item.label"
             :prop="item.prop"
-            :min-width="200">
+            :min-width="200"
+            :fixed="'left'">
             <template slot-scope="{ row }">
               <span
                 :ref="`name_${row.id}`"
@@ -58,9 +59,18 @@
           <bk-table-column
             :key="item.prop"
             :label="item.label"
-            :prop="item.prop">
+            :prop="item.prop"
+            :min-width="300">
             <template slot-scope="{ row }">
-              <span>{{ formatJoinType(row) }}</span>
+              <span
+                v-bk-tooltips="{
+                  content:
+                    `${formatJoinType(row)}( ${row.template_name || row.department_name }
+                  ${row.template_name && row.department_name ? ' - ' + row.department_name + ' )' : ' )'}`
+                }"
+              >
+                {{ formatJoinType(row) }}
+              </span>
               (<span
                 v-if="row.template_id > 0 || row.department_id > 0"
                 v-bk-tooltips="{ content: formatJoinTypeTip(row), disabled: !formatJoinTypeTip(row) }"
@@ -69,7 +79,16 @@
               >
                 {{ row.template_name || row.department_name }}
               </span>
-              <span v-if="row.template_name && row.department_name">{{ ` - ${row.department_name}` }}</span>
+              <span
+                v-if="row.template_name && row.department_name"
+                v-bk-tooltips="{
+                  content:
+                    `${formatJoinType(row)}( ${row.template_name || row.department_name }
+                  ${' - ' + row.department_name + ' )'}`
+                }"
+              >
+                {{ ` - ${row.department_name}` }}
+              </span>
               )
             </template>
           </bk-table-column>
@@ -116,18 +135,19 @@
                       </div>
                     </div>
                   </div>
-                  <bk-button
-                    theme="primary"
-                    text
-                    v-bk-tooltips="{
-                      content: $t(`m.perm['唯一管理员不可退出']`),
-                      disabled: !formatAdminGroup(row),
-                      placements: ['right']
-                    }"
-                    :disabled="formatAdminGroup(row)"
+                  <bk-popover
+                    placement="right"
+                    :disabled="!formatAdminGroup(row)"
+                    :content="$t(`m.perm['唯一管理员不可退出']`)"
                   >
-                    {{ $t(`m.userOrOrg['移出']`) }}
-                  </bk-button>
+                    <bk-button
+                      theme="primary"
+                      text
+                      :disabled="formatAdminGroup(row)"
+                    >
+                      {{ $t(`m.userOrOrg['移出']`) }}
+                    </bk-button>
+                  </bk-popover>
                 </bk-popconfirm>
                 <bk-button
                   v-if="row.expired_at !== PERMANENT_TIMESTAMP"
@@ -147,6 +167,7 @@
             :key="item.prop"
             :label="item.label"
             :prop="item.prop"
+            :min-width="['description'].includes(item.prop) ? 200 : 120"
           >
             <template slot-scope="{ row }">
               <span
@@ -352,8 +373,8 @@
       });
       // 同步更新checkbox状态
       bus.$on('on-remove-toggle-checkbox', (payload) => {
+        this.$emit('on-selected-group', payload);
         this.$nextTick(() => {
-          this.$emit('on-selected-group', payload);
           this.list.forEach((item) => {
             if (this.$refs.groupPermRef && !payload.map((v) => v.id).includes(item.id)) {
               this.$refs.groupPermRef.toggleRowSelection(item, false);
@@ -363,6 +384,49 @@
       });
     },
     methods: {
+      async fetchDetailInfo (id, name) {
+        try {
+          const { data } = await this.$store.dispatch('memberTemplate/subjectTemplateDetail', { id });
+          const { readonly, group_count } = data;
+          this.tempDetailData = {
+            tabActive: 'template_member',
+            mode: this.mode,
+            id,
+            name,
+            readonly,
+            group_count
+          };
+          this.isShowTempSlider = true;
+        } catch (e) {
+          this.messageAdvancedError(e);
+        }
+      },
+
+      async handleRemove (payload) {
+        const { type, id } = this.groupData;
+        try {
+          const params = {
+            members: [{
+              type,
+              id
+            }],
+            group_ids: [payload.id]
+          };
+          const emitParams = {
+            ...payload,
+            ...{
+              mode: this.mode
+            }
+          };
+          await this.$store.dispatch('userOrOrg/deleteGroupMembers', params);
+          this.messageSuccess(this.$t(`m.info['移出成功']`), 3000);
+          this.$emit('on-remove-group', emitParams);
+        } catch (e) {
+          console.error(e);
+          this.messageAdvancedError(e);
+        }
+      },
+
       getTableProps (payload) {
         const tabMap = {
           personalOrDepartPerm: () => {
@@ -432,14 +496,8 @@
             });
             window.open(routeData.href, '_blank');
           },
-          memberTemplate: () => {
-            this.tempDetailData = {
-              tabActive: 'template_member',
-              mode: this.mode,
-              id: template_id,
-              name: template_name
-            };
-            this.isShowTempSlider = true;
+          memberTemplate: async () => {
+            await this.fetchDetailInfo(template_id, template_name);
           },
           userOrgPerm: () => {
             const routeData = this.$router.resolve({
@@ -452,31 +510,6 @@
           }
         };
         return routeMap[type]();
-      },
-
-      async handleRemove (payload) {
-        const { type, id } = this.groupData;
-        try {
-          const params = {
-            members: [{
-              type,
-              id
-            }],
-            group_ids: [payload.id]
-          };
-          const emitParams = {
-            ...payload,
-            ...{
-              mode: this.mode
-            }
-          };
-          await this.$store.dispatch('userOrOrg/deleteGroupMembers', params);
-          this.messageSuccess(this.$t(`m.info['移出成功']`), 3000);
-          this.$emit('on-remove-group', emitParams);
-        } catch (e) {
-          console.error(e);
-          this.messageAdvancedError(e);
-        }
       },
 
       handleShowRenewal (payload) {

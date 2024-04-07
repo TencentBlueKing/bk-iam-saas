@@ -932,7 +932,7 @@
         for (let i = 0; i < manualInputValue.length; i++) {
           const params = {
             keyword: manualInputValue[i],
-            is_exact: false
+            is_exact: true
           };
           try {
             if (manualInputValue.length < 10) {

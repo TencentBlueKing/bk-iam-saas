@@ -233,7 +233,7 @@
                     text
                     theme="primary"
                     :disabled="disabledTempGroup()"
-                    :title="disabledTempGroup() ? $t(`m.memberTemplate['只读人员模板不能移除]`) : ''"
+                    :title="disabledTempGroup() ? $t(`m.memberTemplate['只读人员模板不能移除']`) : ''"
                     @click="handleDelete(row)"
                   >
                     {{ $t(`m.common['移除']`) }}
@@ -373,6 +373,9 @@
       displaySet: {
         type: Object
       },
+      curDetailData: {
+        type: Object
+      },
       showExpiredAt: {
         type: Boolean,
         default: false
@@ -453,7 +456,7 @@
         ],
         groupTabList: [
           {
-            name: 'userOrOrg',
+            name: 'userOrgPerm',
             label: this.$t(`m.userGroup['用户/组织']`),
             count: 0,
             empty: 'emptyOrgData',
@@ -467,7 +470,7 @@
             tableList: []
           }
         ],
-        tabActive: 'userOrOrg',
+        tabActive: 'userOrgPerm',
         copyUrl: 'userGroup/getUserGroupMemberList',
         curRouteMode: '',
         curTempData: {},
@@ -506,7 +509,7 @@
         const hasData = this.currentSelectList.length > 0;
         if (
           hasData
-          && ['userOrOrg'].includes(this.tabActive)
+          && ['userOrgPerm'].includes(this.tabActive)
           && this.getGroupAttributes
           && this.getGroupAttributes().source_from_role
         ) {
@@ -551,7 +554,7 @@
           this.getGroupAttributes
           && this.getGroupAttributes().source_from_role
           && (this.userOrOrgCount === 1 || (this.userOrOrgCount === this.userOrOrgPagination.count === 1))
-          && (['userOrOrg'].includes(this.tabActive) && !this.routeMode)
+          && (['userOrgPerm'].includes(this.tabActive) && !this.routeMode)
         );
       };
     },
@@ -569,7 +572,7 @@
     formatPagination () {
       return () => {
         const typeMap = {
-          userOrOrg: () => {
+          userOrgPerm: () => {
             return this.userOrOrgPagination;
           },
           memberTemplate: () => {
@@ -582,7 +585,7 @@
     getTableList () {
       return () => {
         const typeMap = {
-          userOrOrg: () => {
+          userOrgPerm: () => {
             return this.groupTabList[0].tableList;
           },
           memberTemplate: () => {
@@ -631,7 +634,7 @@
       },
       tabActive: {
         handler (newValue, oldValue) {
-          this.curRouteMode = ['userOrOrg'].includes(newValue) ? 'userGroupDetail' : newValue;
+          this.curRouteMode = ['userOrgPerm'].includes(newValue) ? 'userGroupDetail' : newValue;
           if (this.routeMode) {
             this.curRouteMode = _.cloneDeep(this.routeMode);
           }
@@ -670,7 +673,7 @@
 
       getTableProps (payload) {
         const tabMap = {
-          userOrOrg: () => {
+          userOrgPerm: () => {
             return [
               { label: this.$t(`m.userGroup['用户/组织']`), prop: 'name' },
               { label: this.$t(`m.userGroupDetail['所属组织架构']`), prop: 'user_departments' },
@@ -693,7 +696,7 @@
 
       getDefaultSelect () {
         const typeMap = {
-          userOrOrg: () => {
+          userOrgPerm: () => {
             return this.groupTabList[0].tableList.length > 0;
           },
           memberTemplate: () => {
@@ -773,7 +776,7 @@
           this.tableLoading = false;
           const emptyField = this.groupTabList.find(item => item.name === this.tabActive);
           if (emptyField) {
-            this.emptyData = _.cloneDeep(Object.assign(this[emptyField.empty], { tipType: this.keyword ? 'search' : '' }));
+            this.emptyData = formatCodeData(0, _.cloneDeep(Object.assign(this[emptyField.empty], { tipType: this.keyword ? 'search' : '' })));
           }
         }
       },
@@ -840,7 +843,7 @@
         this.$set(this.groupTabList[0], 'tableList', []);
         this.resetPagination();
         const tabMap = {
-          userOrOrg: async () => {
+          userOrgPerm: async () => {
             await this.fetchUserOrOrgList();
           },
           memberTemplate: async () => {
@@ -1340,7 +1343,7 @@
 
       handlePageChange (current) {
         const tabMap = {
-          userOrOrg: () => {
+          userOrgPerm: () => {
             this.userOrOrgPagination = Object.assign(this.userOrOrgPagination, { current });
             this.fetchUserOrOrgList();
           },
@@ -1354,7 +1357,7 @@
 
       handleLimitChange (limit) {
         const tabMap = {
-          userOrOrg: () => {
+          userOrgPerm: () => {
             this.userOrOrgPagination = Object.assign(this.userOrOrgPagination, { current: 1, limit });
             this.fetchUserOrOrgList();
           },
@@ -1415,8 +1418,8 @@
             this.handleRefreshTab();
             this.fetchMemberListCount();
             // 用户/组织模块在模板详情里移除成员需要同步更新加入人员模板的用户组列表数据
-            if (['userOrOrg'].includes(this.$route.name)) {
-              bus.$emit('on-refresh-template-table');
+            if (['userOrgPerm'].includes(this.$route.name)) {
+              bus.$emit('on-refresh-template-table', this.curDetailData);
             }
           }
         } catch (e) {
@@ -1456,7 +1459,7 @@
       async fetchMemberListCount () {
         // 搜索移除成员后，再去查询当前搜索的数据是不是最后一条
         if (
-          (['userOrOrg'].includes(this.tabActive) && !this.routeMode)
+          (['userOrgPerm'].includes(this.tabActive) && !this.routeMode)
           && this.getGroupAttributes
           && this.getGroupAttributes().source_from_role
           && this.keyword) {

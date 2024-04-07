@@ -11,21 +11,31 @@ specific language governing permissions and limitations under the License.
 import logging
 from collections import defaultdict
 from textwrap import dedent
-from typing import Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set
 
 from blue_krill.web.std_error import APIError
 from django.conf import settings
 from django.db import connection
 from django.db.models import Case, Q, Value, When
+from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
+from django_celery_beat.models import CrontabSchedule, PeriodicTask
 from pydantic import BaseModel, parse_obj_as
 from rest_framework import serializers
 
 from backend.apps.application.models import Application
 from backend.apps.group.models import Group
 from backend.apps.organization.models import Department, DepartmentMember, User
-from backend.apps.role.models import Role, RoleRelatedObject, RoleRelation, RoleResourceRelation, RoleSource, RoleUser
+from backend.apps.role.models import (
+    Role,
+    RolePolicyExpiredNotificationConfig,
+    RoleRelatedObject,
+    RoleRelation,
+    RoleResourceRelation,
+    RoleSource,
+    RoleUser,
+)
 from backend.apps.subject_template.models import SubjectTemplate
 from backend.apps.template.models import PermTemplate
 from backend.common.cache import cached
@@ -645,17 +655,21 @@ class RoleListQuery:
 
         return template_ids
 
-    def query_group(self, inherit: bool = True):
+    def query_group(self, inherit: bool = True, only_inherit: bool = False):
         """
         查询用户组列表
         """
         if self.role.type == RoleType.STAFF.value:
             return Group.objects.filter(hidden=False)
 
-        group_ids = self._get_role_related_object_ids(RoleRelatedObjectType.GROUP.value, inherit=inherit)
+        group_ids = self._get_role_related_object_ids(
+            RoleRelatedObjectType.GROUP.value, inherit=inherit, only_inherit=only_inherit
+        )
         return Group.objects.filter(id__in=group_ids)
 
-    def _get_role_related_object_ids(self, object_type: str, inherit: bool = True) -> List[int]:
+    def _get_role_related_object_ids(
+        self, object_type: str, inherit: bool = True, only_inherit: bool = False
+    ) -> List[int]:
         # 分级管理员可以管理子集管理员的所有用户组
         if (
             self.role.type == RoleType.GRADE_MANAGER.value
@@ -663,7 +677,8 @@ class RoleListQuery:
             and inherit
         ):
             role_ids = RoleRelation.objects.list_sub_id(self.role.id)
-            role_ids.append(self.role.id)
+            if not only_inherit:
+                role_ids.append(self.role.id)
             return list(
                 RoleRelatedObject.objects.filter(role_id__in=role_ids, object_type=object_type).values_list(
                     "object_id", flat=True
@@ -1328,3 +1343,57 @@ class RoleResourceRelationHelper:
             for node in resource_nodes
         ]
         RoleResourceRelation.objects.bulk_create(labels, ignore_conflicts=True)
+
+
+@cached(timeout=600)
+def get_global_notification_config() -> Dict[str, Any]:
+    """获取全局通知配置"""
+    role = get_super_manager()
+    notification_config = RolePolicyExpiredNotificationConfig.objects.filter(role_id=role.id).get()
+    return notification_config.config
+
+
+def update_periodic_permission_expire_remind_schedule(hour: int, minute: int) -> None:
+    """更新周期性权限到期提醒调度"""
+    name = "periodic_permission_expire_remind"
+
+    task = PeriodicTask.objects.filter(name=name).prefetch_related("crontab").first()
+    if not task:
+        # 如果不存在, 则创建
+        schedule, _ = CrontabSchedule.objects.get_or_create(
+            minute=minute,
+            hour=hour,
+            day_of_week="*",
+            day_of_month="*",
+            month_of_year="*",
+            timezone=timezone.get_current_timezone(),
+        )
+        PeriodicTask.objects.create(
+            crontab=schedule,
+            name=name,
+            task="config.celery_app.permission_expire_remind",
+        )
+        return
+
+    schedule = task.crontab
+    if schedule.minute == minute and schedule.hour == hour:
+        # 如果没有变更, 则无需更新
+        return
+
+    if not PeriodicTask.objects.filter(crontab_id=task.crontab_id).exclude(name=name).exists():
+        # 如果只有这一个任务, 则更新
+        schedule.minute = minute
+        schedule.hour = hour
+        schedule.save()
+        return
+
+    schedule, _ = CrontabSchedule.objects.get_or_create(
+        minute=minute,
+        hour=hour,
+        day_of_week="*",
+        day_of_month="*",
+        month_of_year="*",
+        timezone=timezone.get_current_timezone(),
+    )
+    task = schedule
+    task.save()

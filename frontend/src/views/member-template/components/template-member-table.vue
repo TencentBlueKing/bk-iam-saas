@@ -13,6 +13,7 @@
       :name="curDetailData.name"
       :search-placeholder="placeholder"
       :read-only="curDetailData.readonly"
+      :cur-detail-data="curDetailData"
       :is-show-tab="false"
       :show-expired-at="false"
       :display-set="displaySet"

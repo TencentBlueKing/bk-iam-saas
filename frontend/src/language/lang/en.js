@@ -1513,7 +1513,10 @@ export const m = {
         '通过人员模板': 'Through member template',
         '查看人员模板详情': 'View member template details',
         '查看该组织的用户组详情页': 'View the user group details page of the organization',
-        '当前勾选项都为不可移出的管理员组': 'The current check boxes are all administrator groups that cannot be removed'
+        '当前勾选项都为不可移出的管理员组': 'The current check boxes are all administrator groups that cannot be removed',
+        '已选择的用户组权限为不可移出的管理员组': 'The selected user group permission is an administrator group that cannot be removed',
+        '已选择的用户组权限不需要续期': 'The selected user group permissions do not need to be renewed',
+        '组织用户组权限': 'Organizational user group permissions'
     }
 }
 export default {

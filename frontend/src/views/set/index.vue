@@ -37,7 +37,7 @@
       };
     },
     computed: {
-            ...mapGetters(['user'])
+      ...mapGetters(['user'])
     },
     watch: {
       user: {
