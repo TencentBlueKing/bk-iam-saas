@@ -39,7 +39,7 @@ app.conf.task_queues = [
 def setup_periodic_tasks(sender, **kwargs):
     from backend.biz.role import get_global_notification_config
 
-    config = get_global_notification_config().config
+    config = get_global_notification_config()
     hour, minute = [int(i) for i in config["send_time"].split(":")]
 
     sender.add_periodic_task(
