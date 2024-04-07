@@ -104,7 +104,11 @@ class GroupTemplateSystemFilter(filters.FilterSet):
 
 class GroupSubjectTemplateFilter(filters.FilterSet):
     name = filters.CharFilter(label="名字", lookup_expr="icontains")
+    expire_soon = filters.BooleanFilter(method="expire_soon_filter", label="即将过期")
 
     class Meta:
         model = SubjectTemplate
-        fields = ["name"]
+        fields = ["name", "expire_soon"]
+
+    def expire_soon_filter(self, queryset, name, value):
+        return queryset

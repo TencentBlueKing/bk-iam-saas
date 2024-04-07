@@ -20,6 +20,7 @@ from django.db.models import F, Q
 from django.template.loader import render_to_string
 from django.utils import timezone
 
+from backend.apps.application.models import Application
 from backend.apps.organization.models import User
 from backend.apps.policy.models import Policy
 from backend.apps.subject.audit import log_user_cleanup_policy_audit_event
@@ -29,12 +30,12 @@ from backend.biz.constants import StaffStatus
 from backend.biz.group import GroupBiz
 from backend.biz.helper import RoleWithPermGroupBiz
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
-from backend.biz.role import RoleBiz
+from backend.biz.role import RoleBiz, get_global_notification_config
 from backend.biz.subject_template import SubjectTemplateBiz
 from backend.biz.system import SystemBiz
-from backend.common.time import db_time, get_soon_expire_ts
+from backend.common.time import db_time, get_expired_at, get_today_weekday
 from backend.component import esb
-from backend.service.constants import RoleType, SubjectType
+from backend.service.constants import ApplicationStatus, ApplicationType, RoleType, SubjectType
 from backend.service.models import Subject
 from backend.util.url import url_join
 
@@ -54,9 +55,7 @@ class SendUserExpireRemindMailTask(Task):
 
     base_url = url_join(settings.APP_URL, "/perm-renewal")
 
-    def run(self, username: str, expired_at: int):
-        now = int(db_time())
-
+    def run(self, username: str, expired_at_before: int, expired_at_after: int):
         user = User.objects.filter(username=username).first()
         if not user:
             return
@@ -66,13 +65,32 @@ class SendUserExpireRemindMailTask(Task):
         # 注意: rbac用户所属组很大, 这里会变成多次查询, 也变成多次db io (单次 1000 个)
         groups = [
             group
-            for group in self.group_biz.list_all_subject_group_before_expired_at(subject, expired_at)
-            if group.expired_at > now
+            for group in self.group_biz.list_all_subject_group_before_expired_at(subject, expired_at_after)
+            if group.expired_at > expired_at_before
         ]
 
-        policies = self.policy_biz.list_expired(subject, expired_at)
-        # NOTE 针对蓝盾权限的特殊处理, 等蓝盾迁移半年后删除数据
-        policies = [p for p in policies if p.system.id != "bk_ci" and p.expired_at > now]
+        policies = self.policy_biz.list_expired(subject, expired_at_after)
+        policies = [p for p in policies if p.expired_at > expired_at_before]
+
+        if not groups and not policies:
+            return
+
+        # 查询当前用户未处理的续期单, 如果已经有相关数据, 过滤掉
+        for application in Application.objects.filter(
+            applicant=username,
+            type=[ApplicationType.RENEW_ACTION.value, ApplicationType.RENEW_GROUP.value],
+            status=ApplicationStatus.PENDING.value,
+        ):
+            data = application.data
+            if application.type == ApplicationType.RENEW_ACTION.value:
+                action_set = {
+                    (data["system"]["id"], action.get("id", action.get["action_id"])) for action in data["actions"]
+                }
+                policies = [p for p in policies if (p.system.id, p.action.id) not in action_set]
+
+            elif application.type == ApplicationType.RENEW_GROUP.value:
+                group_id_set = {group["id"] for group in data["groups"]}
+                groups = [g for g in groups if g.id not in group_id_set]
 
         if not groups and not policies:
             return
@@ -100,8 +118,20 @@ def user_group_policy_expire_remind():
     """
     用户的用户组, 自定义权限过期检查
     """
+    # 获取配置
+    notification_config = get_global_notification_config()
+    # 判断当前是星期几, 如果不在发送周期内, 直接返回
+    if get_today_weekday() not in notification_config["send_days"]:
+        return
+
+    # 如果通知配置中没有mail, 则不发送, 当前只支持邮件通知
+    if "mail" not in notification_config["notification_types"]:
+        return
+
+    expired_at_before = get_expired_at(notification_config["expire_days_before"])
+    expired_at_after = get_expired_at(notification_config["expire_days_after"])
+
     username_set = set()  # 用于去重
-    expired_at = get_soon_expire_ts()
 
     # 1. 查询有自定义授权的用户
     qs = Policy.objects.filter(subject_type=SubjectType.USER.value).only("subject_id")
@@ -115,13 +145,17 @@ def user_group_policy_expire_remind():
                 continue
 
             username_set.add(username)
-            SendUserExpireRemindMailTask().delay(username, expired_at)
+            SendUserExpireRemindMailTask().delay(username, expired_at_before, expired_at_after)
 
     # 2. 查询用户组成员过期
     group_biz = GroupBiz()
-    group_subjects = group_biz.list_group_subject_before_expired_at(expired_at)
+    group_subjects = group_biz.list_group_subject_before_expired_at(expired_at_after)
     for gs in group_subjects:
         if gs.subject.type != SubjectType.USER.value:
+            continue
+
+        # 判断过期时间是否在区间内
+        if gs.expired_at < expired_at_before:
             continue
 
         username = gs.subject.id
@@ -129,7 +163,7 @@ def user_group_policy_expire_remind():
             continue
 
         username_set.add(username)
-        SendUserExpireRemindMailTask().delay(username, expired_at)
+        SendUserExpireRemindMailTask().delay(username, expired_at_before, expired_at_after)
 
 
 @shared_task(ignore_result=True)

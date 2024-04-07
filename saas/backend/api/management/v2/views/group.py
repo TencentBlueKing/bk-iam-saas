@@ -153,10 +153,11 @@ class ManagementGradeManagerGroupViewSet(GenericViewSet):
         slz = ManagementQueryGroupSLZ(data=request.query_params)
         slz.is_valid(raise_exception=True)
         inherit = slz.validated_data["inherit"]
+        only_inherit = slz.validated_data["only_inherit"]
 
         role = get_object_or_404(self.queryset, id=kwargs["id"])
 
-        queryset = RoleListQuery(role).query_group(inherit=inherit)
+        queryset = RoleListQuery(role).query_group(inherit=inherit, only_inherit=only_inherit)
         queryset = self.filter_queryset(queryset)
         queryset = self._filter(request, queryset)
 
