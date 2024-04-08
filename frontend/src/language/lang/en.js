@@ -1518,6 +1518,36 @@ export const m = {
         '已选择的用户组权限为不可移出的管理员组': 'The selected user group permission is an administrator group that cannot be removed',
         '已选择的用户组权限不需要续期': 'The selected user group permissions do not need to be renewed',
         '组织用户组权限': 'Organizational user group permissions'
+    },
+    renewalNotice: {
+        '邮件': 'Mail',
+        '短信': 'SMS',
+        '微信': 'WeChat',
+        '企业微信': 'WeCom',
+        '通知方式': 'Notice method',
+        '通知时间': 'Notice time',
+        '通知范围': 'Notice scope',
+        '通知日': 'Notice day',
+        '发送时间': 'Send time',
+        '整个通知范围，需要 >= 7 天': 'The entire Notice scope requires>=7 days',
+        '通知方式为必填项': 'Notice method required',
+        '通知范围为必填项': 'Notice area required',
+        '通知日不为必填项': 'Notice date required',
+        '发送时间为必填项': 'Send time required',
+        '过期前': 'Before expiration',
+        '过期后': 'After expiration',
+        '天内': 'within the day',
+        '逢': 'Encounter',
+        '的': '',
+        '发送通知': 'send notice',
+        '恢复默认': 'Default',
+        '周一': 'Monday',
+        '周二': 'Tuesday',
+        '周三': 'Wednesday',
+        '周四': 'Thursday',
+        '周五': 'Friday',
+        '周六': 'Saturday',
+        '周日': 'Sunday'
     }
 }
 export default {

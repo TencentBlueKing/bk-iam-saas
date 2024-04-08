@@ -94,6 +94,9 @@ import memberTemplate from './modules/member-template';
 // 用户/组织模块
 import userOrOrg from './modules/user-org';
 
+// 续期通知
+import renewalNotice from './modules/renewal-notice';
+
 Vue.use(Vuex);
 
 const SITE_URL = window.SITE_URL;
@@ -368,7 +371,8 @@ const store = new Vuex.Store({
     userGroupSetting,
     sensitivityLevel,
     memberTemplate,
-    userOrOrg
+    userOrOrg,
+    renewalNotice
   },
   state: {
     mainContentLoading: false,
