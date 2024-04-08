@@ -30,16 +30,16 @@ vine = ">=5.0.0"
 
 [[package]]
 name = "apigw-manager"
-version = "3.0.1"
+version = "3.0.2"
 description = "The SDK for managing blueking gateway resource."
 category = "main"
 optional = false
-python-versions = ">=3.6.1,<4.0.0"
+python-versions = "<4.0.0,>=3.6.1"
 
 [package.dependencies]
 bkapi-bk-apigateway = ">=1.0.11,<2.0.0"
 bkapi-client-core = ">=1.2.0"
-future = "0.18.2"
+future = ">=0.18.2"
 packaging = ">=21.0"
 pyyaml = ">=5.4.1"
 urllib3 = ">=1.25.3"
@@ -784,7 +784,7 @@ importlib-metadata = {version = "*", markers = "python_version < \"3.8\""}
 
 [[package]]
 name = "future"
-version = "0.18.2"
+version = "0.18.3"
 description = "Clean single-source support for Python 3 and 2"
 category = "main"
 optional = false
@@ -2073,7 +2073,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = "3.6.6"
-content-hash = "7bf89e92f2209429554f56dbfbd12060f68f47deab98a58d66e4e4d751797a44"
+content-hash = "89a4481394a7eaac5f6aaa1890d4305d9fd8af594332a68cb7ed53076c0d7481"
 
 [metadata.files]
 aenum = [
@@ -2090,7 +2090,7 @@ amqp = [
     {file = "amqp-5.1.1.tar.gz", hash = "sha256:2c1b13fecc0893e946c65cbd5f36427861cffa4ea2201d8f6fca22e2a373b5e2"},
 ]
 apigw-manager = [
-    {file = "apigw_manager-3.0.1-py3-none-any.whl", hash = "sha256:5c1eafd7031dca609ddf8aebb26f716244d598801407bdc1fc3fbc44d5718ff0"},
+    {file = "apigw_manager-3.0.2-py3-none-any.whl", hash = "sha256:c495d8da42362c30e262bc524923807659b045654c82686c3f377afdd282b4d9"},
 ]
 appdirs = [
     {file = "appdirs-1.4.4-py2.py3-none-any.whl", hash = "sha256:a841dacd6b99318a741b166adb07e19ee71a274450e68237b4650ca1055ab128"},
@@ -2412,7 +2412,7 @@ flake8-comprehensions = [
     {file = "flake8_comprehensions-3.5.0-py3-none-any.whl", hash = "sha256:b07aef3277623db32310aa241a1cec67212b53c1d18e767d7e26d4d83aa05bf7"},
 ]
 future = [
-    {file = "future-0.18.2.tar.gz", hash = "sha256:b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d"},
+    {file = "future-0.18.3.tar.gz", hash = "sha256:34a17436ed1e96697a86f9de3d15a3b0be01d8bc8de9c1dffd59fb8234ed5307"},
 ]
 gevent = [
     {file = "gevent-22.10.2-cp27-cp27m-macosx_10_14_x86_64.whl", hash = "sha256:97cd42382421779f5d82ec5007199e8a84aa288114975429e4fd0a98f2290f10"},
