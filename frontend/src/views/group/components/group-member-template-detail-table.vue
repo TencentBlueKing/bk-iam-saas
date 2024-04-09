@@ -92,6 +92,7 @@
         tableLoading: false,
         tableKeyWord: '',
         groupTableList: [],
+        searchTableData: [],
         pagination: {
           current: 1,
           limit: 10,
@@ -110,6 +111,21 @@
       this.fetchTemplateGroupList();
     },
     methods: {
+      getDataByPage (page) {
+        if (!page) {
+          this.pagination.current = page = 1;
+        }
+        let startIndex = (page - 1) * this.pagination.limit;
+        let endIndex = page * this.pagination.limit;
+        if (startIndex < 0) {
+          startIndex = 0;
+        }
+        if (endIndex > this.searchTableData.length) {
+          endIndex = this.searchTableData.length;
+        }
+        return this.searchTableData.slice(startIndex, endIndex);
+      },
+
       async fetchTemplateGroupList () {
         this.tableLoading = true;
         try {
@@ -118,15 +134,27 @@
           const params = {
             id,
             template_id,
-            page: current,
-            page_size: limit,
+            limit,
+            offset: limit * (current - 1),
             keyword: this.tableKeyWord
           };
           const { code, data } = await this.$store.dispatch('memberTemplate/getGroupSubjectTemplateMembers', params);
           const { count, results } = data;
           this.pagination.count = count || 0;
           this.groupTableList = results || [];
-          this.emptyTableData = formatCodeData(code, this.emptyTableData, this.groupTableList.length === 0);
+          if (!data.hasOwnProperty('count')) {
+            this.pagination.count = results.length || 0;
+            this.searchTableData = [...results || []];
+            this.groupTableList = this.getDataByPage(this.pagination.current);
+          } else {
+            this.pagination.count = count || 0;
+            this.groupTableList = results || [];
+          }
+          this.emptyTableData = formatCodeData(
+            code,
+            Object.assign(this.emptyTableData, { tipType: this.tableKeyWord.length > 0 ? 'search' : '' }),
+            this.groupTableList.length === 0
+          );
         } catch (e) {
           this.groupTableList = [];
           this.emptyTableData = formatCodeData(e.code, this.emptyTableData);
@@ -139,6 +167,7 @@
       handleSearchGroup (payload) {
         this.tableKeyWord = payload;
         this.emptyTableData.tipType = 'search';
+        this.resetPagination();
         this.fetchTemplateGroupList();
       },
 
@@ -151,12 +180,17 @@
 
       async handlePageChange (current) {
         this.pagination = Object.assign(this.pagination, { current });
-        await this.fetchTemplateGroupList();
+        if (this.emptyTableData.tipType === 'search') {
+          const list = this.getDataByPage(current);
+          this.groupTableList.splice(0, this.groupTableList.length, ...list);
+        } else {
+          await this.fetchTemplateGroupList();
+        }
       },
 
-      async handleLimitChange (limit) {
+      handleLimitChange (limit) {
         this.pagination = Object.assign(this.pagination, { current: 1, limit });
-        await this.fetchTemplateGroupList();
+        this.handlePageChange(this.pagination.current);
       },
 
       handleEmptyClear () {
