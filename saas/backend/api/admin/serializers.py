@@ -10,6 +10,7 @@ specific language governing permissions and limitations under the License.
 """
 from rest_framework import serializers
 
+from backend.api.management.v2.serializers import ManagementGradeManagerGroupCreateSLZ
 from backend.apps.group.models import Group
 from backend.apps.role.models import Role
 from backend.apps.role.serializers import BaseGradeMangerSLZ
@@ -20,6 +21,10 @@ class AdminGroupBasicSLZ(serializers.ModelSerializer):
     class Meta:
         model = Group
         fields = ("id", "name", "description")
+
+
+class AdminGroupCreateSLZ(ManagementGradeManagerGroupCreateSLZ):
+    pass
 
 
 class AdminGroupMemberSLZ(serializers.Serializer):

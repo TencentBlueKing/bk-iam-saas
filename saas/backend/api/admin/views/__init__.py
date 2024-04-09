@@ -9,7 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 from .audit import AdminAuditEventViewSet
-from .group import AdminGroupMemberViewSet, AdminGroupViewSet
+from .group import AdminGroupInfoViewSet, AdminGroupMemberViewSet, AdminGroupViewSet
 from .role import AdminSuperManagerMemberViewSet, AdminSystemManagerMemberViewSet
 from .subject import (
     AdminSubjectFreezeViewSet,
@@ -22,6 +22,7 @@ from .system import AdminSystemViewSet
 
 __all__ = [
     "AdminGroupViewSet",
+    "AdminGroupInfoViewSet",
     "AdminGroupMemberViewSet",
     "AdminSubjectGroupViewSet",
     "AdminSuperManagerMemberViewSet",

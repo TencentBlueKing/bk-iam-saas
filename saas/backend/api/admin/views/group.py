@@ -8,19 +8,30 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from typing import List
+
+from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import status
+from pydantic.tools import parse_obj_as
+from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, mixins
 
-from backend.api.admin.constants import AdminAPIEnum
+from backend.api.admin.constants import AdminAPIEnum, VerifyApiParamLocationEnum
 from backend.api.admin.filters import GroupFilter
 from backend.api.admin.permissions import AdminAPIPermission
-from backend.api.admin.serializers import AdminGroupBasicSLZ, AdminGroupMemberSLZ
+from backend.api.admin.serializers import AdminGroupBasicSLZ, AdminGroupCreateSLZ, AdminGroupMemberSLZ
 from backend.api.authentication import ESBAuthentication
+from backend.api.management.v2.views import ManagementGroupViewSet
+from backend.apps.group.audit import GroupCreateAuditProvider
 from backend.apps.group.models import Group
-from backend.biz.group import GroupBiz
+from backend.apps.role.models import Role
+from backend.audit.audit import add_audit
+from backend.audit.constants import AuditSourceType
+from backend.biz.group import GroupBiz, GroupCheckBiz, GroupCreationBean
+from backend.common.lock import gen_group_upsert_lock
 from backend.common.pagination import CompatiblePagination
+from backend.service.constants import GroupSaaSAttributeEnum, RoleType
 
 
 class AdminGroupViewSet(mixins.ListModelMixin, GenericViewSet):
@@ -29,12 +40,15 @@ class AdminGroupViewSet(mixins.ListModelMixin, GenericViewSet):
     authentication_classes = [ESBAuthentication]
     permission_classes = [AdminAPIPermission]
 
-    admin_api_permission = {"list": AdminAPIEnum.GROUP_LIST.value}
+    admin_api_permission = {"list": AdminAPIEnum.GROUP_LIST.value, "create": AdminAPIEnum.GROUP_BATCH_CREATE.value}
 
     queryset = Group.objects.all()
     serializer_class = AdminGroupBasicSLZ
     filterset_class = GroupFilter
     pagination_class = CompatiblePagination
+
+    group_biz = GroupBiz()
+    group_check_biz = GroupCheckBiz()
 
     @swagger_auto_schema(
         operation_description="用户组列表",
@@ -43,6 +57,63 @@ class AdminGroupViewSet(mixins.ListModelMixin, GenericViewSet):
     )
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        operation_description="批量创建用户组",
+        request_body=AdminGroupCreateSLZ(label="用户组"),
+        responses={status.HTTP_200_OK: serializers.ListSerializer(child=serializers.IntegerField(label="用户组ID"))},
+        tags=["admin.group"],
+    )
+    def create(self, request, *args, **kwargs):
+        role = get_object_or_404(Role, type=RoleType.SUPER_MANAGER.value)
+
+        serializer = AdminGroupCreateSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        groups_data = serializer.validated_data["groups"]
+        sync_subject_template = serializer.validated_data["sync_subject_template"]
+
+        # 用户组数量在角色内是否超限
+        self.group_check_biz.check_role_group_limit(role, len(groups_data))
+
+        infos = parse_obj_as(List[GroupCreationBean], groups_data)
+
+        attrs = None
+        if serializer.validated_data["create_attributes"]:
+            attrs = {
+                GroupSaaSAttributeEnum.SOURCE_TYPE.value: AuditSourceType.OPENAPI.value,
+            }
+
+        with gen_group_upsert_lock(role.id):
+            # 用户组名称在角色内唯一
+            group_names = [g["name"] for g in groups_data]
+            self.group_check_biz.batch_check_role_group_names_unique(role.id, group_names)
+
+            groups = self.group_biz.batch_create(
+                role,
+                infos,
+                request.user.username,
+                attrs=attrs,
+                sync_subject_template=sync_subject_template,
+            )
+
+        # 添加审计信息
+        # TODO: 后续其他地方也需要批量添加审计时再抽象出一个batch_add_audit方法，将for循环逻辑放到方法里
+        for g in groups:
+            add_audit(GroupCreateAuditProvider, request, group=g)
+
+        return Response([group.id for group in groups])
+
+
+class AdminGroupInfoViewSet(ManagementGroupViewSet):
+    """用户组"""
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [AdminAPIPermission]
+
+    admin_api_permission = {
+        "update": (VerifyApiParamLocationEnum.GROUP_IN_PATH.value, AdminAPIEnum.GROUP_UPDATE.value),
+        "destroy": (VerifyApiParamLocationEnum.GROUP_IN_PATH.value, AdminAPIEnum.GROUP_DELETE.value),
+    }
 
 
 class AdminGroupMemberViewSet(GenericViewSet):
