@@ -264,6 +264,7 @@
         systemNoSuperList: ['myPerm', 'userGroup', 'audit', 'resourcePermiss', 'addGroupPerm'],
         isRatingChange: false,
         haveManager: false,
+        isSameRoute: false,
         showNavDataLength: 0,
         curHeight: 78,
         languageList: [
@@ -275,7 +276,8 @@
             label: 'English',
             value: 'en'
           }
-        ]
+        ],
+        curFromName: ''
       };
     },
     computed: {
@@ -308,6 +310,7 @@
     },
     watch: {
       $route: function (to, from) {
+        this.curFromName = from.name || '';
         this.hasPageTab = !!to.meta.hasPageTab;
         if (['permTemplateDetail', 'userGroupDetail'].includes(to.name)) {
           this.panels = this.getTabData(to.name);
@@ -377,15 +380,11 @@
       },
       index: {
         handler (newValue, oldValue) {
-          if (newValue !== oldValue && oldValue && this.$route.name === this.routeName) {
-            // 不同导航栏下相同的权限路由名称跳转增加延时时间，防止相同接口调用多次被节流
-            setTimeout(async () => {
-              await this.$store.dispatch('userInfo');
-              this.reloadCurPage(this.$route);
-            }, 200);
+          if (oldValue && newValue !== oldValue && !this.curFromName) {
+            this.isSameRoute = true;
           }
         },
-        immediate: true
+        deep: true
       }
     },
     created () {
@@ -501,14 +500,22 @@
         // const list = permResult.includes('hasSystemNoSuperManager') ? this.systemNoSuperList : this.defaultRouteList;
         const list = this.defaultRouteList;
         if (navIndex === 1) {
-          // await this.$store.dispatch('userInfo');
-          console.log(555, difference);
+          // 不同导航栏下相同的权限路由名称跳转增加延时时间，防止相同接口调用多次被节流
+          await this.$store.dispatch('userInfo');
+          if (this.isSameRoute) {
+            this.reloadCurPage(this.$route);
+          }
           const type = this.curRole;
           difference = getRouterDiff(type);
           this.$store.commit('updataRouterDiff', type);
         } else {
           difference = getNavRouterDiff(navIndex, permResult);
           this.$store.commit('updataNavRouterDiff', navIndex);
+          // 不同导航栏下相同的权限路由名称跳转增加延时时间，防止相同接口调用多次被节流
+          if (this.isSameRoute) {
+            await this.$store.dispatch('userInfo');
+            this.reloadCurPage(this.$route);
+          }
         }
         const curRouterName = this.$route.name;
         if (difference.length) {
