@@ -16,7 +16,8 @@ from rest_framework.viewsets import GenericViewSet
 from backend.account.permissions import RolePermission
 from backend.apps.role.serializers import AuthorizedSubjectsSLZ, QueryAuthorizedSubjectsSLZ
 from backend.biz.permission_audit import QueryAuthorizedSubjects
-from backend.service.constants import PermissionCodeEnum
+from backend.common import error_codes
+from backend.service.constants import PermissionCodeEnum, RoleType
 from backend.util.time import format_localtime
 
 
@@ -38,6 +39,11 @@ class QueryAuthorizedSubjectsViewSet(GenericViewSet):
         serializer = QueryAuthorizedSubjectsSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
+
+        # 校验系统管理员权限
+        if request.role.type == RoleType.SYSTEM_MANAGER.value and request.role.code != data["system_id"]:
+            raise error_codes.FORBIDDEN
+
         subjects = QueryAuthorizedSubjects(data).query_by_permission_type()
         return Response(subjects)
 
@@ -51,6 +57,10 @@ class QueryAuthorizedSubjectsViewSet(GenericViewSet):
         serializer = QueryAuthorizedSubjectsSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
+
+        # 校验系统管理员权限
+        if request.role.type == RoleType.SYSTEM_MANAGER.value and request.role.code != data["system_id"]:
+            raise error_codes.FORBIDDEN
 
         exported_file_name = f'{data["system_id"]}_{format_localtime()}'
         response = QueryAuthorizedSubjects(data).export(exported_file_name)
