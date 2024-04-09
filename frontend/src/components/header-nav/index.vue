@@ -203,7 +203,7 @@
   ]);
 
   export default {
-    name: '',
+    inject: ['reloadCurPage'],
     components: {
       SystemLog
       // IamGuide
@@ -258,7 +258,7 @@
           { text: this.$t(`m.nav['个人工作台']`), id: 0, show: true, type: ['staff'] },
           { text: this.$t(`m.nav['管理空间']`), id: 1, show: true, type: ['all_manager'] },
           { text: this.$t(`m.nav['统计分析']`), id: 2, show: false, type: ['super_manager'] },
-          { text: this.$t(`m.nav['平台管理']`), id: 3, show: false, type: ['super_manager', 'system_manager'] }
+          { text: this.$t(`m.nav['平台管理']`), id: 3, show: false, type: ['super_manager'] }
         ],
         defaultRouteList: ['myPerm', 'userGroup', 'audit', 'user', 'addGroupPerm'],
         systemNoSuperList: ['myPerm', 'userGroup', 'audit', 'resourcePermiss', 'addGroupPerm'],
@@ -349,8 +349,9 @@
       },
       routeName: {
         handler (value) {
-          const isSystemNoSuper = this.roleList.find((item) => ['system_manager'].includes(item.type) && !['super_manager'].includes(item.type));
-          const list = isSystemNoSuper ? this.systemNoSuperList : this.defaultRouteList;
+          // const isSystemNoSuper = this.roleList.find((item) => ['system_manager'].includes(item.type) && !['super_manager'].includes(item.type));
+          // const list = isSystemNoSuper ? this.systemNoSuperList : this.defaultRouteList;
+          const list = this.defaultRouteList;
           const index = list.findIndex((item) => item === value);
           if (index > -1) {
             ['addGroupPerm'].includes(value)
@@ -373,6 +374,18 @@
         },
         immediate: true,
         deep: true
+      },
+      index: {
+        handler (newValue, oldValue) {
+          if (newValue !== oldValue && oldValue && this.$route.name === this.routeName) {
+            // 不同导航栏下相同的权限路由名称跳转增加延时时间，防止相同接口调用多次被节流
+            setTimeout(async () => {
+              await this.$store.dispatch('userInfo');
+              this.reloadCurPage(this.$route);
+            }, 200);
+          }
+        },
+        immediate: true
       }
     },
     created () {
@@ -485,9 +498,11 @@
       async updateRouter (navIndex = 0) {
         let difference = [];
         const permResult = getManagerMenuPerm(this.roleList);
-        const list = permResult.includes('hasSystemNoSuperManager') ? this.systemNoSuperList : this.defaultRouteList;
+        // const list = permResult.includes('hasSystemNoSuperManager') ? this.systemNoSuperList : this.defaultRouteList;
+        const list = this.defaultRouteList;
         if (navIndex === 1) {
-          await this.$store.dispatch('userInfo');
+          // await this.$store.dispatch('userInfo');
+          console.log(555, difference);
           const type = this.curRole;
           difference = getRouterDiff(type);
           this.$store.commit('updataRouterDiff', type);

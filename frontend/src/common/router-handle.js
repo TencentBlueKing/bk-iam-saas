@@ -123,12 +123,10 @@ export const getRouterDiff = (payload) => {
       'systemAccessRegistry',
       'systemAccessOptimize',
       'systemAccessComplete',
-      'resourcePermiss',
       'firstManageSpace',
       'secondaryManageSpace',
       'authorBoundary',
-      'myManageSpace',
-      'sensitivityLevel'
+      'myManageSpace'
     ];
   }
   if (payload === 'rating_manager') {
