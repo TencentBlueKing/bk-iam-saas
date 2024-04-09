@@ -78,6 +78,9 @@ class SubjectGroupBean(BaseModel):
     user_count: int = 0
     department_count: int = 0
 
+    def get_role_name(self) -> str:
+        return RoleService().get_role_by_group_id(self.id).name
+
 
 class GroupMemberBean(BaseModel):
     type: str
@@ -148,7 +151,7 @@ class GroupBiz:
     check_subject_groups_quota = GroupService.__dict__["check_subject_groups_quota"]
     update = GroupService.__dict__["update"]
     get_member_count_before_expired_at = GroupService.__dict__["get_member_count_before_expired_at"]
-    list_exist_groups_before_expired_at = GroupService.__dict__["list_exist_groups_before_expired_at"]
+    list_group_subject_before_expired_at_by_ids = GroupService.__dict__["list_group_subject_before_expired_at_by_ids"]
     list_group_subject_before_expired_at = GroupService.__dict__["list_group_subject_before_expired_at"]
     batch_get_attributes = GroupAttributeService.__dict__["batch_get_attributes"]
     convert_attr_value = GroupAttributeService.__dict__["convert_attr_value"]
