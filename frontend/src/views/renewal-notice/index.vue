@@ -259,7 +259,9 @@
 
       handleSubmit () {},
 
-      handleReset () {},
+      handleReset () {
+        this.fetchSuperNoticeConfig();
+      },
 
       handleDefault () {}
     }
