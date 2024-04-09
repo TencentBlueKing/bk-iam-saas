@@ -500,6 +500,7 @@
         this.selectCls = 'hide-iam-nav-select-cls';
         if (value) {
           this.selectCls = 'iam-nav-select-dropdown-content';
+          this.handleClearSearch();
           this.resetPagination();
           this.resetSubPagination();
           await this.resetRoleList('handleClearSearch');

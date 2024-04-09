@@ -33,11 +33,14 @@
         :route-name="routeName"
         :user-group-id="userGroupId">
       </header-nav>
-      <the-header @reload-page="handleRefreshPage"
+      <the-header
+        @reload-page="handleRefreshPage"
         :route-name="routeName"
         :user-group-id="userGroupId"
       />
-      <the-nav class="nav-layout"
+      <the-nav
+        class="nav-layout"
+        :route-name="routeName"
         @reload-page="reloadCurPage"
         v-if="!externalSystemsLayout.hideIamSlider" />
     </template>
@@ -80,6 +83,7 @@
     provide () {
       return {
         reload: this.reload,
+        reloadCurPage: this.reloadCurPage,
         showNoticeAlert: this.isShowNoticeAlert
       };
     },
