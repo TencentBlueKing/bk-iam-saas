@@ -793,6 +793,7 @@ const store = new Vuex.Store({
         const results = data.results || [];
         commit('updateRoleListTotal', data.count || 0);
         commit('updateRoleList', results);
+        // commit('updateRoleList', results.filter((item) => item.type !== 'super_manager'));
         return results;
       });
     },
