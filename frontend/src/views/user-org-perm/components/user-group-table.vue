@@ -18,7 +18,7 @@
               <span
                 v-bk-tooltips="{
                   content: row.name,
-                  placements: ['right']
+                  placements: ['right-start']
                 }"
                 class="can-view-name"
                 @click.stop="handleOpenTag(row, 'userGroupDetail')"
@@ -57,7 +57,7 @@
         <template v-else>
           <bk-table-column :key="item.prop" :label="item.label" :prop="item.prop">
             <template slot-scope="{ row }">
-              <span v-bk-tooltips="{ content: row[item.prop], disabled: !row[item.prop], placements: ['right'] }">
+              <span v-bk-tooltips="{ content: row[item.prop], disabled: !row[item.prop], placements: ['right-start'] }">
                 {{ row[item.prop] || '--' }}
               </span>
             </template>
