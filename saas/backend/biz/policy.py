@@ -1326,6 +1326,50 @@ class ExpiredPolicy(BackendThinPolicy, ExcludeModel):
             data["expired_display"] = expired_at_display(data["expired_at"])
         super().__init__(**data)
 
+    def gen_resource_summary(self) -> str:
+        """
+        生成资源组合概要信息
+        """
+        if not self.policy:
+            return ""
+
+        if len(self.policy.resource_groups) != 1:
+            return f"已设置 {len(self.policy.resource_groups)} 个资源组"
+
+        summary = []
+        for rg in self.policy.resource_groups:
+            for rt in rg.related_resource_types:
+                resource_type_name = rt.name
+                if len(rt.condition) == 0:
+                    value = f"{resource_type_name}: 无限制"
+                else:
+                    # 解析资源条件
+                    resource_name = ""
+                    resource_count = 0
+                    attribute_count = 0
+                    for c in rt.condition:
+                        for instance in c.instances:
+                            resource_count += len(instance.path)
+                            if resource_name == "":
+                                if instance.path[0][-1].id == ANY_ID and len(instance.path[0]) > 1:
+                                    resource_name = instance.path[0][-2].name
+                                else:
+                                    resource_name = instance.path[0][-1].name
+                        attribute_count += len(c.attributes)
+
+                    if attribute_count == 0 and resource_count == 1:
+                        value = f"{resource_type_name}: {resource_name}"
+                    elif attribute_count == 0 and resource_count > 1:
+                        value = f"{resource_type_name}: {resource_name}等{resource_count}个实例"
+                    elif attribute_count > 0 and resource_count == 0:
+                        value = f"{resource_type_name}: {attribute_count}个属性"
+                    else:
+                        value = f"{resource_type_name}: {resource_count}个实例({attribute_count}个属性)"
+
+                summary.append(value)
+
+        return ", ".join(summary)
+
 
 class PolicyQueryBiz:
     system_svc = SystemService()
