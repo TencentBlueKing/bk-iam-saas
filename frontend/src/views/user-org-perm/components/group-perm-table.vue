@@ -34,7 +34,7 @@
                 class="can-view-name"
                 v-bk-tooltips="{
                   content: row.name,
-                  placements: ['right']
+                  placements: ['right-start']
                 }"
                 @click.stop="handleOpenTag(row, 'userGroupDetail')">
                 {{ row.name || "--" }}
@@ -174,7 +174,7 @@
                 v-bk-tooltips="{
                   content: row[item.prop],
                   disabled: !row[item.prop] || ['created_time', 'expired_at_display'].includes(item.prop),
-                  placements: ['right']
+                  placements: ['right-start']
                 }"
               >
                 {{ row[item.prop] || '--'}}
