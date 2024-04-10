@@ -10,7 +10,6 @@ specific language governing permissions and limitations under the License.
 """
 from typing import List
 
-from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 from pydantic.tools import parse_obj_as
 from rest_framework import serializers, status
@@ -65,7 +64,7 @@ class AdminGroupViewSet(mixins.ListModelMixin, GenericViewSet):
         tags=["admin.group"],
     )
     def create(self, request, *args, **kwargs):
-        role = get_object_or_404(Role, type=RoleType.SUPER_MANAGER.value)
+        role = Role.objects.get(type=RoleType.SUPER_MANAGER.value)
 
         serializer = AdminGroupCreateSLZ(data=request.data)
         serializer.is_valid(raise_exception=True)
