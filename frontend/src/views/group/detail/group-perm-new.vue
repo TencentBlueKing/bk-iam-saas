@@ -160,7 +160,7 @@
                 return this.mode === 'edit';
             },
             expandedText () {
-                return this.isAllExpanded ? this.$t(`m.grading['逐项编辑']`) : this.$t(`m.grading['批量编辑']`);
+                return this.isAllExpanded ? this.$t(`m.grading['批量编辑']`) : this.$t(`m.grading['逐项编辑']`);
             },
             canEditGroup () {
                 return this.$route.query.edit === 'GroupEdit';

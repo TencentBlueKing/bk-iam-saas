@@ -341,7 +341,7 @@
                 return tempList;
             },
             expandedText () {
-                return this.isAllExpanded ? this.$t(`m.grading['逐项编辑']`) : this.$t(`m.grading['批量编辑']`);
+                return this.isAllExpanded ? this.$t(`m.grading['批量编辑']`) : this.$t(`m.grading['逐项编辑']`);
             },
             isAggregateDisabled () {
                 return this.policyList.length < 1

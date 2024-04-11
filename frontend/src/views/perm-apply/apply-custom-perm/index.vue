@@ -243,7 +243,7 @@
                   :disabled="isAggregateDisabled"
                   @change="handleAggregateActionChange">
                 </bk-switcher>
-                <span class="expanded-text">{{ isAllExpanded ? $t(`m.grading['逐项编辑']`) : $t(`m.grading['批量编辑']`) }}</span>
+                <span class="expanded-text">{{ isAllExpanded ? $t(`m.grading['批量编辑']`) : $t(`m.grading['逐项编辑']`) }}</span>
               </div>
             </div>
           </div>
