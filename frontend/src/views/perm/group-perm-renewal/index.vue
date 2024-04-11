@@ -387,8 +387,8 @@
           const params = {
             limit: tabData.pagination.limit,
             offset: tabData.pagination.limit * (item.groupTabList[1].pagination.current - 1),
-            id: item.id
-            // expire_soon: true
+            id: item.id,
+            expire_soon: true
           };
           const { current_role_id: currentRoleId, source } = this.$route.query;
           if (currentRoleId && source === 'email') {
