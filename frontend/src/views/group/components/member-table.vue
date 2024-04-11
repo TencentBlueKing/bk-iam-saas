@@ -854,7 +854,7 @@
         this.curMember = {};
         this.currentSelectList = [];
         this.$set(this.groupTabList[0], 'tableList', []);
-        this.$set(this.groupTabList[0], 'tableList', []);
+        this.$set(this.groupTabList[1], 'tableList', []);
         this.resetPagination();
         const tabMap = {
           userOrgPerm: async () => {
