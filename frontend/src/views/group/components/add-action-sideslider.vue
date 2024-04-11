@@ -515,6 +515,9 @@
        * @param {String} systemId 系统id
        */
       async fetchCommonActions (systemId) {
+        if (!systemId) {
+          return;
+        }
         try {
           const { code, data } = await this.$store.dispatch('permApply/getUserCommonAction', { systemId });
           this.commonActions.splice(0, this.commonActions.length, ...(data || []));
@@ -599,12 +602,15 @@
           this.fetchErrorMsg(e);
         } finally {
           this.initRequestQueue.shift();
+          if (!this.systemList.length) {
+            this.initRequestQueue = [];
+          }
           this.systemListIsLoading = false;
         }
       },
 
       async fetchAggregationAction () {
-        if (this.aggregationData[this.curSystem]) {
+        if (!this.curSystem || this.aggregationData[this.curSystem]) {
           return;
         }
         try {
@@ -618,7 +624,7 @@
       },
 
       async fetchAuthorizationScopeActions () {
-        if (this.authorizationData[this.curSystem]) {
+        if (!this.curSystem || this.authorizationData[this.curSystem]) {
           return;
         }
         try {
@@ -640,6 +646,9 @@
        * @param {String} systemId 系统id
        */
       async fetchActions (systemId) {
+        if (!systemId) {
+          return;
+        }
         const params = {
           system_id: systemId
         };

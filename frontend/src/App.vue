@@ -8,7 +8,7 @@
       { 'no-perm-app-layout': ['403'].includes(routeName) }
     ]">
     <NoticeComponent
-      v-if="isShowNoticeAlert"
+      v-if="isEnableNoticeAlert"
       :api-url="noticeApi"
       @show-alert-change="handleShowAlertChange"
     />
@@ -33,11 +33,14 @@
         :route-name="routeName"
         :user-group-id="userGroupId">
       </header-nav>
-      <the-header @reload-page="handleRefreshPage"
+      <the-header
+        @reload-page="handleRefreshPage"
         :route-name="routeName"
         :user-group-id="userGroupId"
       />
-      <the-nav class="nav-layout"
+      <the-nav
+        class="nav-layout"
+        :route-name="routeName"
         @reload-page="reloadCurPage"
         v-if="!externalSystemsLayout.hideIamSlider" />
     </template>
@@ -80,6 +83,7 @@
     provide () {
       return {
         reload: this.reload,
+        reloadCurPage: this.reloadCurPage,
         showNoticeAlert: this.isShowNoticeAlert
       };
     },
@@ -111,7 +115,7 @@
         routeName: '',
         userGroupId: '',
         isRouterAlive: true,
-        showNoticeAlert: true,
+        showNoticeAlert: false,
         noticeApi: `${window.AJAX_URL_PREFIX}/notice/announcements/`,
         enableNotice: window.ENABLE_BK_NOTICE.toLowerCase() === 'true'
       };
@@ -119,7 +123,10 @@
     computed: {
       ...mapGetters(['mainContentLoading', 'user', 'externalSystemsLayout']),
       isShowNoticeAlert () {
-        return this.enableNotice && this.showNoticeAlert && !this.externalSystemsLayout.hideNoticeAlert;
+        return this.showNoticeAlert && this.isEnableNoticeAlert;
+      },
+      isEnableNoticeAlert () {
+        return this.enableNotice && !this.externalSystemsLayout.hideNoticeAlert;
       }
     },
     watch: {
@@ -329,7 +336,7 @@
       },
 
       handleShowAlertChange (isShow) {
-        console.log(444, isShow);
+        console.log(isShow, '跑马灯回调');
         this.showNoticeAlert = isShow;
       }
     }
@@ -400,10 +407,25 @@
 
     }
 
+    .user-org-perm-container {
+      .main-scroller {
+        height: calc(100% + 278px);
+      }
+      .views-layout {
+        min-width: 100%;
+        overflow: hidden;
+      }
+    }
+
     .notice-app-layout {
       height: calc(100% - 101px) !important;
       .main-scroller {
         height: calc(100% + 91px);
+      }
+      .user-org-perm-container {
+        .main-scroller {
+          height: calc(100% + 312px);
+        }
       }
     }
 
@@ -414,5 +436,4 @@
         background-color: #ffffff;
       }
     }
-
 </style>

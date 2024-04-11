@@ -26,7 +26,7 @@ from backend.biz.role import RoleAuthorizationScopeChecker, RoleListQuery, RoleO
 from backend.common.error_codes import error_codes
 from backend.common.serializers import SystemQuerySLZ
 from backend.service.action import ActionService
-from backend.service.constants import PermissionCodeEnum
+from backend.service.constants import PermissionCodeEnum, RoleType
 
 from .audit import (
     ActionSensitivityLevelAuditProvider,
@@ -252,6 +252,10 @@ class ActionSensitivityLevelViewSet(GenericViewSet):
         # 目前只支持同一系统的批量Action设置审批流程
         system_id = actions[0]["system_id"]
         action_ids = [a["id"] for a in actions]
+
+        # 校验系统管理员权限
+        if request.role.type == RoleType.SYSTEM_MANAGER.value and request.role.code != system_id:
+            raise error_codes.FORBIDDEN
 
         self.biz.batch_create_or_update_action_sensitivity_level(
             system_id, action_ids, sensitivity_level, request.user.username

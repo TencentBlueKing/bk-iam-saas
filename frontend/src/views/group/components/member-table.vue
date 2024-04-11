@@ -209,6 +209,18 @@
               :render-header="renderHeader"
             />
           </template>
+          <template v-else-if="item.prop === 'description'">
+            <bk-table-column
+              :key="item.prop"
+              :label="item.label"
+              :prop="item.prop">
+              <template slot-scope="{ row }">
+                <span :title="row.description">
+                  {{ row.description || '--' }}
+                </span>
+              </template>
+            </bk-table-column>
+          </template>
           <template v-else-if="item.prop === 'created_time'">
             <bk-table-column
               :key="item.prop"
@@ -233,7 +245,7 @@
                     text
                     theme="primary"
                     :disabled="disabledTempGroup()"
-                    :title="disabledTempGroup() ? $t(`m.memberTemplate['只读人员模板不能移除]`) : ''"
+                    :title="disabledTempGroup() ? $t(`m.memberTemplate['只读人员模板不能移除']`) : ''"
                     @click="handleDelete(row)"
                   >
                     {{ $t(`m.common['移除']`) }}
@@ -321,6 +333,7 @@
   import { mapGetters } from 'vuex';
   import { PERMANENT_TIMESTAMP, COPY_KEYS_ENUM } from '@/common/constants';
   import { formatCodeData } from '@/common/util';
+  import { bus } from '@/common/bus';
   import renderRenewalDialog from '@/components/render-renewal-dialog';
   import DeleteDialog from '../common/iam-confirm-dialog';
   import AddMemberDialog from './iam-add-member';
@@ -370,6 +383,9 @@
         default: ''
       },
       displaySet: {
+        type: Object
+      },
+      curDetailData: {
         type: Object
       },
       showExpiredAt: {
@@ -452,7 +468,7 @@
         ],
         groupTabList: [
           {
-            name: 'userOrOrg',
+            name: 'userOrgPerm',
             label: this.$t(`m.userGroup['用户/组织']`),
             count: 0,
             empty: 'emptyOrgData',
@@ -466,7 +482,7 @@
             tableList: []
           }
         ],
-        tabActive: 'userOrOrg',
+        tabActive: 'userOrgPerm',
         copyUrl: 'userGroup/getUserGroupMemberList',
         curRouteMode: '',
         curTempData: {},
@@ -505,7 +521,7 @@
         const hasData = this.currentSelectList.length > 0;
         if (
           hasData
-          && ['userOrOrg'].includes(this.tabActive)
+          && ['userOrgPerm'].includes(this.tabActive)
           && this.getGroupAttributes
           && this.getGroupAttributes().source_from_role
         ) {
@@ -550,7 +566,7 @@
           this.getGroupAttributes
           && this.getGroupAttributes().source_from_role
           && (this.userOrOrgCount === 1 || (this.userOrOrgCount === this.userOrOrgPagination.count === 1))
-          && (['userOrOrg'].includes(this.tabActive) && !this.routeMode)
+          && (['userOrgPerm'].includes(this.tabActive) && !this.routeMode)
         );
       };
     },
@@ -568,7 +584,7 @@
     formatPagination () {
       return () => {
         const typeMap = {
-          userOrOrg: () => {
+          userOrgPerm: () => {
             return this.userOrOrgPagination;
           },
           memberTemplate: () => {
@@ -581,7 +597,7 @@
     getTableList () {
       return () => {
         const typeMap = {
-          userOrOrg: () => {
+          userOrgPerm: () => {
             return this.groupTabList[0].tableList;
           },
           memberTemplate: () => {
@@ -630,7 +646,7 @@
       },
       tabActive: {
         handler (newValue, oldValue) {
-          this.curRouteMode = ['userOrOrg'].includes(newValue) ? 'userGroupDetail' : newValue;
+          this.curRouteMode = ['userOrgPerm'].includes(newValue) ? 'userGroupDetail' : newValue;
           if (this.routeMode) {
             this.curRouteMode = _.cloneDeep(this.routeMode);
           }
@@ -669,11 +685,12 @@
 
       getTableProps (payload) {
         const tabMap = {
-          userOrOrg: () => {
+          userOrgPerm: () => {
             return [
               { label: this.$t(`m.userGroup['用户/组织']`), prop: 'name' },
               { label: this.$t(`m.userGroupDetail['所属组织架构']`), prop: 'user_departments' },
               { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' },
+              { label: this.$t(`m.common['备注']`), prop: 'description' },
               { label: this.$t(`m.common['加入时间']`), prop: 'created_time' },
               { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
             ];
@@ -682,6 +699,7 @@
             return [
               { label: this.$t(`m.memberTemplate['人员模板']`), prop: 'template_name' },
               { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' },
+              { label: this.$t(`m.common['备注']`), prop: 'description' },
               { label: this.$t(`m.common['加入时间']`), prop: 'created_time' },
               { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
             ];
@@ -692,7 +710,7 @@
 
       getDefaultSelect () {
         const typeMap = {
-          userOrOrg: () => {
+          userOrgPerm: () => {
             return this.groupTabList[0].tableList.length > 0;
           },
           memberTemplate: () => {
@@ -772,7 +790,7 @@
           this.tableLoading = false;
           const emptyField = this.groupTabList.find(item => item.name === this.tabActive);
           if (emptyField) {
-            this.emptyData = _.cloneDeep(Object.assign(this[emptyField.empty], { tipType: this.keyword ? 'search' : '' }));
+            this.emptyData = formatCodeData(0, _.cloneDeep(Object.assign(this[emptyField.empty], { tipType: this.keyword ? 'search' : '' })));
           }
         }
       },
@@ -836,10 +854,10 @@
         this.curMember = {};
         this.currentSelectList = [];
         this.$set(this.groupTabList[0], 'tableList', []);
-        this.$set(this.groupTabList[0], 'tableList', []);
+        this.$set(this.groupTabList[1], 'tableList', []);
         this.resetPagination();
         const tabMap = {
-          userOrOrg: async () => {
+          userOrgPerm: async () => {
             await this.fetchUserOrOrgList();
           },
           memberTemplate: async () => {
@@ -894,7 +912,7 @@
       fetchCustomTotal () {
         this.$nextTick(() => {
           const selectionCount = document.getElementsByClassName('bk-page-selection-count');
-          if (this.$refs.groupMemberRef && selectionCount && selectionCount.length) {
+          if (this.$refs.groupMemberRef && selectionCount && selectionCount.length && selectionCount[0].children) {
             selectionCount[0].children[0].innerHTML = this.currentSelectList.length;
           }
         });
@@ -1339,7 +1357,7 @@
 
       handlePageChange (current) {
         const tabMap = {
-          userOrOrg: () => {
+          userOrgPerm: () => {
             this.userOrOrgPagination = Object.assign(this.userOrOrgPagination, { current });
             this.fetchUserOrOrgList();
           },
@@ -1353,7 +1371,7 @@
 
       handleLimitChange (limit) {
         const tabMap = {
-          userOrOrg: () => {
+          userOrgPerm: () => {
             this.userOrOrgPagination = Object.assign(this.userOrOrgPagination, { current: 1, limit });
             this.fetchUserOrOrgList();
           },
@@ -1413,6 +1431,10 @@
             this.messageSuccess(this.$t(`m.info['移除成功']`), 3000);
             this.handleRefreshTab();
             this.fetchMemberListCount();
+            // 用户/组织模块在模板详情里移除成员需要同步更新加入人员模板的用户组列表数据
+            if (['userOrgPerm'].includes(this.$route.name)) {
+              bus.$emit('on-refresh-template-table', this.curDetailData);
+            }
           }
         } catch (e) {
           console.error(e);
@@ -1451,7 +1473,7 @@
       async fetchMemberListCount () {
         // 搜索移除成员后，再去查询当前搜索的数据是不是最后一条
         if (
-          (['userOrOrg'].includes(this.tabActive) && !this.routeMode)
+          (['userOrgPerm'].includes(this.tabActive) && !this.routeMode)
           && this.getGroupAttributes
           && this.getGroupAttributes().source_from_role
           && this.keyword) {

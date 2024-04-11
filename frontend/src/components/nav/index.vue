@@ -274,7 +274,9 @@
     // 人员模板
     [['memberTemplate'], 'memberTemplateNav'],
     // 管理空间下资源权限管理
-    [['resourcePermManage'], 'resourcePermManageNav']
+    [['resourcePermManage'], 'resourcePermManageNav'],
+    // 用户/组织
+    [['userOrgPerm'], 'userOrgPermNav']
   ]);
 
   export default {
@@ -329,11 +331,11 @@
           return this.navStick || !this.navFold;
       },
       isShowRouterGroup () {
-          return (payload) => {
-              const allRouter = getRouterDiff('all');
-              const curRouter = allRouter.filter((item) => !this.routerDiff.includes(item));
-              return curRouter.filter((item) => payload.children.map((_) => _.rkey).includes(item)).length > 0;
-          };
+        return (payload) => {
+          const allRouter = getRouterDiff('all');
+          const curRouter = allRouter.filter((item) => !this.routerDiff.includes(item));
+          return curRouter.filter((item) => payload.children.map((_) => _.rkey).includes(item)).length > 0;
+        };
       },
       formatRoleIcon () {
           const { role } = this.user;
@@ -498,6 +500,7 @@
         this.selectCls = 'hide-iam-nav-select-cls';
         if (value) {
           this.selectCls = 'iam-nav-select-dropdown-content';
+          this.handleClearSearch();
           this.resetPagination();
           this.resetSubPagination();
           await this.resetRoleList('handleClearSearch');

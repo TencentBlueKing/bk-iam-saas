@@ -111,6 +111,7 @@ export const m = {
         '的关联': 'association',
         '添加成员': 'Add members',
         '添加成员至': 'Add members to',
+        '已选': 'Selected',
         '已选择': 'Selected',
         '清空': 'Clear',
         '保存': 'Save',
@@ -153,7 +154,7 @@ export const m = {
         '已获得': 'Acquired',
         '未选择': 'Not Selected',
         '选择全部': 'All',
-        '加载中': 'Loading...',
+        '加载中': 'Loading',
         '返回': 'Back',
         '期限选择提示': '1-365',
         '临时期限选择提示': '1-24',
@@ -287,6 +288,8 @@ export const m = {
         '解析并添加': 'Parse and add',
         '搜索解析结果': 'Search parsing results',
         '请先从左侧输入并解析': 'Please input and parse from the left first',
+        '剩余加载数据': 'Remaining {value} pieces of data',
+        '已加载全部数据': 'All data loaded',
         '实例名称输入错误或不存在于授权资源实例范围内': 'Instance name input error or does not exist within the authorized resource instance scope',
         '实例名称': 'Instance name',
         '请输入实例名称，以回车/逗号/分号分割': 'Please enter the instance name, separated by carriage return, comma, or semicolon',
@@ -398,7 +401,9 @@ export const m = {
         '关联成员将不再继承该模板的权限': 'Associated members will no longer inherit the permissions of the template',
         '该用户组已关联': 'The group has been associated',
         '添加用户组成功': 'Group Added',
+        '重置用户组成功': 'Group reset',
         '添加成员成功': 'Members Added',
+        '移出成功': 'Removed',
         '移除成功': 'Removed',
         '该用户组将不再继承对应模板的权限': 'The group will no longer inherit the permissions of the template',
         '该成员将不再继承对应模板的权限': 'The member will no longer inherit the permissions of the template',
@@ -554,7 +559,8 @@ export const m = {
          '最多添加一个管理员': 'Add at most one administrator',
          '管理员不可重复添加': 'Administrators cannot be added repeatedly',
          '有关联的用户组, 无法删除': 'Associated user groups cannot be deleted',
-         'ip选择器每页最大条数': 'items {value}/page'
+         '不可续期的用户组如下': 'The non renewable user groups are as follows: {value}',
+         '不可移出的用户组如下': 'The user groups that cannot be removed are as follows'
     },
     // 二次确认弹窗相关
     dialog: {
@@ -577,7 +583,8 @@ export const m = {
         '确认批量退出所选的用户组吗？': 'Are you sure to batch quit the selected user groups?',
         '确认删除该人员模板？': 'Are you sure to delete the member template?',
         '确认解除与该用户组的关联？': 'Are you sure to dissociate from this user group?',
-        '确认批量删除所选的人员模板吗？': 'Are you sure to batch delete the selected member templates?'
+        '确认批量删除所选的人员模板吗？': 'Are you sure to batch delete the selected member templates?',
+        '确认把用户/组织移出该用户组？': 'Are you sure to move the user/organization out of this user group?'
     },
     nav: {
         '蓝鲸权限中心': 'BlueKing-IAM',
@@ -635,7 +642,8 @@ export const m = {
         '克隆二级管理空间': 'Clone Secondary management space',
         '用户组设置': 'User Group Setting',
         '敏感等级': 'Sensitivity Level',
-        '人员模板': 'Members Template'
+        '人员模板': 'Members Template',
+        '用户/组织': 'User/Organization'
     },
     applyEntrance: {
         '立刻申请': 'Apply now',
@@ -762,7 +770,7 @@ export const m = {
         '加入用户组的时间': 'Joined at',
         '加入方式': 'Joined type',
         '退出该组': 'Quit Group',
-        '组织名': 'Organization Name',
+        '组织名': 'Organization name',
         '加入的用户组': 'Joined Groups',
         '加入的组织': 'Joined Organizations',
         '通过组织加入的组无法退出': 'Joined through organization cannot be quit',
@@ -1463,6 +1471,52 @@ export const m = {
         '只读人员模板不能移除': 'The read-only member template cannot be removed',
         '只读人员模板不能添加、删除、复制成员': 'Read-only member template cannot add, delete, or copy members',
         '最多只能选择10个人员模板' : 'You can only select up to 10 member templates'
+    },
+    userOrOrg: {
+        '用户组名': 'User group name',
+        '批量操作': 'Multi-operate',
+        '重置用户组': 'Reset user group',
+        '追加用户组': 'Append user group',
+        '加入用户组': 'Join user group',
+        '追加的用户组': 'Append user group',
+        '批量追加用户组': 'Batch add user groups',
+        '批量重置用户组': 'Batch reset user groups',
+        '操作对象': 'Operating object',
+        '加入的用户组': 'Joined user group',
+        '重置的用户组': 'Reset user group',
+        '申请时长': 'Application duration',
+        '移出': 'Remove',
+        '续期时长': 'Renewal duration',
+        '续期预览': 'Renewal preview',
+        '用户组 ID': 'User group ID',
+        '用户 / 组织列表': 'User/Organization list',
+        '移出用户组名': 'Remove user group name',
+        '批量移出用户组': 'Multi-remove user group',
+        '清空用户组': 'Empty user groups',
+        '请先勾选用户': 'Please check the user first',
+        '请先勾选用户组权限': 'Please check user group permissions first',
+        '请先勾选用户/组织': 'Please check the user/organization first',
+        '搜索用户组名、描述': 'Search for user group name and description',
+        '输入ID、用户组名、用户名、组织名、描述等按回车进行搜索': 'Enter ID, user group name, username, organization name, description, etc. and press enter to search',
+        '在已有用户组的基础上，追加以下所选的用户组': 'On the basis of existing user groups, add the following selected user groups',
+        '已选对象的权限将被清空，替换为以下所选的用户组': 'The permissions of the selected objects will be cleared and replaced with the following selected user groups',
+        '移出后，该用户/组织将不再继承该组的权限。': 'After removal, the user/organization will no longer inherit the permissions of the group.',
+        '用户组不能为空': 'User group cannot be empty',
+        '的用户组': " 's Groups",
+        '清空对象': 'Clear object',
+        '个人': 'Personal',
+        '个人用户组权限': 'Personal user group perm',
+        '用户组权限（不影响因所属组织而拥有的用户组权限）': 'User group permissions (do not affect user group permissions owned by the organization)',
+        '请选择申请时长': 'Please select the application duration',
+        '请选择续期时长': 'Please select the renewal duration',
+        '通过组织': 'Through organization',
+        '通过人员模板': 'Through member template',
+        '查看人员模板详情': 'View member template details',
+        '查看该组织的用户组详情页': 'View the user group details page of the organization',
+        '当前勾选项都为不可移出的管理员组': 'The current check boxes are all administrator groups that cannot be removed',
+        '已选择的用户组权限为不可移出的管理员组': 'The selected user group permission is an administrator group that cannot be removed',
+        '已选择的用户组权限不需要续期': 'The selected user group permissions do not need to be renewed',
+        '组织用户组权限': 'Organizational user group permissions'
     }
 }
 export default {

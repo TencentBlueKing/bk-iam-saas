@@ -35,6 +35,8 @@ DEFAULT_ROLE_PERMISSIONS = {  # 超级管理员不能操作子集管理员
         PermissionCodeEnum.MANAGE_COMMON_ACTION.value,
         PermissionCodeEnum.MANAGE_SYSTEM_MANAGER_MEMBER.value,
         PermissionCodeEnum.MANAGE_ROLE_GROUP_MEMBER.value,
+        PermissionCodeEnum.VIEW_AUTHORIZED_SUBJECTS.value,
+        PermissionCodeEnum.MANAGE_SENSITIVITY_LEVEL.value,
     ],
     RoleType.GRADE_MANAGER.value: [
         PermissionCodeEnum.MANAGE_GROUP.value,

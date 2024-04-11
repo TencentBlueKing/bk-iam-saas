@@ -645,17 +645,21 @@ class RoleListQuery:
 
         return template_ids
 
-    def query_group(self, inherit: bool = True):
+    def query_group(self, inherit: bool = True, only_inherit: bool = False):
         """
         查询用户组列表
         """
         if self.role.type == RoleType.STAFF.value:
             return Group.objects.filter(hidden=False)
 
-        group_ids = self._get_role_related_object_ids(RoleRelatedObjectType.GROUP.value, inherit=inherit)
+        group_ids = self._get_role_related_object_ids(
+            RoleRelatedObjectType.GROUP.value, inherit=inherit, only_inherit=only_inherit
+        )
         return Group.objects.filter(id__in=group_ids)
 
-    def _get_role_related_object_ids(self, object_type: str, inherit: bool = True) -> List[int]:
+    def _get_role_related_object_ids(
+        self, object_type: str, inherit: bool = True, only_inherit: bool = False
+    ) -> List[int]:
         # 分级管理员可以管理子集管理员的所有用户组
         if (
             self.role.type == RoleType.GRADE_MANAGER.value
@@ -663,7 +667,8 @@ class RoleListQuery:
             and inherit
         ):
             role_ids = RoleRelation.objects.list_sub_id(self.role.id)
-            role_ids.append(self.role.id)
+            if not only_inherit:
+                role_ids.append(self.role.id)
             return list(
                 RoleRelatedObject.objects.filter(role_id__in=role_ids, object_type=object_type).values_list(
                     "object_id", flat=True

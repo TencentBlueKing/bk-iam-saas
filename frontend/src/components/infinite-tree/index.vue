@@ -513,6 +513,7 @@
 
         .arrow-icon {
             color: #c0c4cc;
+            margin-right: 4px;
         }
 
         .node-title {
@@ -543,8 +544,8 @@
 
         .node-radio {
             /* margin-right: 5px;
-            float: left; */
-            margin-left: 5px;
+            float: left;
+            margin-left: 5px; */
             .node-checkbox {
                 display: inline-block;
                 position: relative;

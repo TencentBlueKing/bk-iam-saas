@@ -23,7 +23,7 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-
+  
 /**
  * 获取不同身份的router差异
  *
@@ -57,7 +57,8 @@ export const getRouterDiff = (payload) => {
       'userGroupSetting',
       'sensitivityLevel',
       'memberTemplate',
-      'resourcePermManage'
+      'resourcePermManage',
+      'userOrgPerm'
     ];
   }
   if (payload === 'super_manager') {
@@ -95,7 +96,8 @@ export const getRouterDiff = (payload) => {
       'permTransfer',
       'myManageSpaceSubDetail',
       'sensitivityLevel',
-      'resourcePermManage'
+      'resourcePermManage',
+      'userOrgPerm'
     ];
   }
   if (payload === 'system_manager') {
@@ -122,12 +124,11 @@ export const getRouterDiff = (payload) => {
       'systemAccessRegistry',
       'systemAccessOptimize',
       'systemAccessComplete',
-      'resourcePermiss',
       'firstManageSpace',
       'secondaryManageSpace',
       'authorBoundary',
       'myManageSpace',
-      'sensitivityLevel'
+      'userOrgPerm'
     ];
   }
   if (payload === 'rating_manager') {
@@ -197,7 +198,8 @@ export const getRouterDiff = (payload) => {
       'userGroupSetting',
       'sensitivityLevel',
       'memberTemplate',
-      'resourcePermManage'
+      'resourcePermManage',
+      'userOrgPerm'
     ];
   }
   // payload其它取值默认返回全部菜单
@@ -243,13 +245,15 @@ export const getRouterDiff = (payload) => {
     'authorBoundaryEditSecondLevel',
     'secondaryManageSpace',
     'myManageSpace',
-    'MyManageSpaceCreate',
-    'ResourcePermManage'
+    'myManageSpaceCreate',
+    'resourcePermManage',
+    'resourcePermiss',
+    'sensitivityLevel'
   ];
 };
 
 // 导航路由
-export const getNavRouterDiff = (navIndex) => {
+export const getNavRouterDiff = (navIndex, managerPerm = '') => {
   if (navIndex === 0 || navIndex === '') {
     return [
       'userGroup',
@@ -274,7 +278,8 @@ export const getNavRouterDiff = (navIndex) => {
       'userGroupSetting',
       'sensitivityLevel',
       'memberTemplate',
-      'resourcePermManage'
+      'resourcePermManage',
+      'userOrgPerm'
     ];
   }
 
@@ -325,12 +330,13 @@ export const getNavRouterDiff = (navIndex) => {
       'userGroupSetting',
       'sensitivityLevel',
       'memberTemplate',
-      'resourcePermManage'
+      'resourcePermManage',
+      'userOrgPerm'
     ];
   }
 
   if (navIndex === 3) {
-    return [
+    const menuList = [
       'applyCustomPerm',
       'applyProvisionPerm',
       'applyJoinUserGroup',
@@ -355,15 +361,40 @@ export const getNavRouterDiff = (navIndex) => {
       'permTemplate',
       'permTemplateDetail',
       'permTemplateCreate',
-      'approvalProcess',
       'authorBoundary',
       'secondaryManageSpace',
       'myManageSpace',
+      'myManageSpaceCreate',
       'secondaryManageSpaceCreate',
       'secondaryManageSpaceDetail',
+      'authorBoundaryEditFirstLevel',
+      'authorBoundaryEditSecondLevel',
+      'permTemplateEdit',
+      'permTemplateDiff',
+      'addGroupPerm',
+      'groupPermRenewal',
       'userGroupSetting',
       'memberTemplate',
-      'resourcePermManage'
+      'resourcePermManage',
+      'userOrgPerm'
     ];
+    if (['hasSystemNoSuperManager'].includes(managerPerm)) {
+      // 非超管用户隐藏的路由
+      const hideMenuList = [
+        'user',
+        'approvalProcess',
+        'ratingManager',
+        'gradingAdminCreate',
+        'gradingAdminDetail',
+        'gradingAdminEdit',
+        'gradingAdminUpdateTemplate'
+      ];
+      const systemManagerMenu = [
+        ...menuList,
+        ...hideMenuList
+      ];
+      return systemManagerMenu;
+    }
+    return menuList;
   }
 };

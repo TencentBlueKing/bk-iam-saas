@@ -71,7 +71,7 @@
     },
     computed: {
       expandedText () {
-        return this.isAllExpanded ? this.$t(`m.grading['逐项编辑']`) : this.$t(`m.grading['展开选择']`);
+        return this.isAllExpanded ? this.$t(`m.grading['展开选择']`) : this.$t(`m.grading['逐项编辑']`);
       },
       isAggregateDisabled () {
         return this.policyList.length < 1

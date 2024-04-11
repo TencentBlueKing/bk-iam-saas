@@ -1033,7 +1033,7 @@
           const keyword = getUsername(manualInputValue[i]);
           const params = {
             keyword,
-            is_exact: false
+            is_exact: true
           };
           try {
             if (manualInputValue.length < 10) {
@@ -1070,7 +1070,7 @@
           this.hasSelectedUsers.push(...temps);
           this.hasSelectedManualUsers.push(...temps);
           if (res.data.length) {
-            this.usernameList = res.data.map((item) => `${item.username}(${item.name})`);
+            this.usernameList = res.data.map((item) => item.username);
             // 分号拼接
             // const templateArr = [];
             // this.manualValueBackup = this.manualValueActual.split(';').filter(item => item !== '');
@@ -1108,13 +1108,19 @@
             console.log(formatStr);
             this.manualValue = _.cloneDeep(formatStr);
             if (this.isStaff) {
+              // 兼容staff角色不处理部门类的数据
               this.manualInputError = !!this.manualValue;
+              this.manualTableListStorage = [...this.hasSelectedManualDepartments, ...this.hasSelectedManualUsers];
+              this.manualTableList = _.cloneDeep(this.manualTableListStorage);
+              this.fetchManualTableData();
               return;
             }
             this.formatOrgAndUser();
           } else {
             if (this.isStaff) {
               this.manualInputError = !!this.manualValue;
+              this.manualTableListStorage = [...this.hasSelectedManualDepartments, ...this.hasSelectedManualUsers];
+              this.manualTableList = _.cloneDeep(this.manualTableListStorage);
               return;
             }
             this.formatOrgAndUser();

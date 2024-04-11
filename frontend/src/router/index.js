@@ -32,8 +32,8 @@ import http from '@/api';
 // import il8n from '@/language';
 import preload from '@/common/preload';
 import { bus } from '@/common/bus';
-// import { existValue, getParamsValue, getTreeNode } from '@/common/util';
 import { existValue, getParamsValue } from '@/common/util';
+// import { existValue, getParamsValue, getManagerMenuPerm } from '@/common/util';
 import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
 import { messageError } from '@/common/bkmagic';
 
@@ -86,15 +86,9 @@ export const beforeEach = async (to, from, next) => {
   let navIndex = store.state.index || Number(window.localStorage.getItem('index') || 0);
   let currentRoleId = String(to.query.current_role_id || '').trim();
   let curRoleId = store.state.curRoleId;
+  // 检验有系管没超管身份
+  const hasManagerPerm = '';
   const defaultRoute = ['my-perm', 'user-group', 'audit', 'user'];
-  // if (curRole === 'staff') {
-  //     await store.dispatch('role/updateCurrentRole', { id: 0 });
-  // }
-  // 递归改成分级展开
-  // const roleList = await store.dispatch('roleList', {
-  //   cancelWhenRouteChange: false,
-  //   cancelPrevious: false
-  // });
 
   async function getExternalRole () {
     const { role_id: externalRoleId } = to.query;
@@ -130,6 +124,28 @@ export const beforeEach = async (to, from, next) => {
     }
   }
 
+  // 处理平台管理超管和系管都可以进入，但访问菜单权限不一致
+  // 暂时注释掉后期开放
+  // async function getPlatManageMenu () {
+  //   hasManagerPerm = '';
+  //   let roleList = store.state.roleList;
+  //   if (roleList.length > 0) {
+  // 有系统管理员身份没超管身份
+  //     hasManagerPerm = getManagerMenuPerm(roleList);
+  //   } else {
+  //     roleList = await store.dispatch('roleList', {
+  //       cancelWhenRouteChange: false,
+  //       cancelPrevious: false
+  //     });
+  //   }
+  // 有系统管理员身份没超管身份
+  //   hasManagerPerm = getManagerMenuPerm(roleList);
+  //   if (['hasSystemNoSuperManager'].includes(hasManagerPerm)) {
+  //     hasManagerPerm = 'hasSystemNoSuperManager';
+  //     defaultRoute = ['my-perm', 'user-group', 'audit', 'resourcePermiss'];
+  //   }
+  // }
+
   // 根据不同权限处理不同的导航栏索引
   function navDiffMenuIndex (index) {
     navIndex = index;
@@ -161,10 +177,11 @@ export const beforeEach = async (to, from, next) => {
     navDiffMenuIndex(0);
   }
  
-  if (['userGroup', 'permTemplate', 'approvalProcess'].includes(to.name)) {
+  if (['userGroup', 'permTemplate'].includes(to.name)) {
     await store.dispatch('role/updateCurrentRole', { id: curRoleId });
     navDiffMenuIndex(1);
   }
+
   if (to.name === 'userGroupDetail') {
     navDiffMenuIndex(1);
     store.dispatch('versionLogInfo');
@@ -194,13 +211,6 @@ export const beforeEach = async (to, from, next) => {
   } else if (to.name === 'userGroup') {
     store.dispatch('versionLogInfo');
     if (currentRoleId) {
-      // const roleList = await store.dispatch('roleList', {
-      //     cancelWhenRouteChange: false,
-      //     cancelPrevious: false
-      // });
-      // const currentRole = roleList.find((item) => String(item.id) === currentRoleId);
-      // const currentRole = getTreeNode(currentRoleId, roleList);
-      // await getExternalRole();
       await getManagerInfo();
     } else {
       if (existValue('externalApp')) { // 外部嵌入页面
@@ -223,9 +233,6 @@ export const beforeEach = async (to, from, next) => {
   } else {
     // 邮件点击续期跳转过来的链接需要做身份的前置判断
     if (to.name === 'groupPermRenewal' && to.query.source === 'email' && currentRoleId) {
-      // await store.dispatch('role/updateCurrentRole', { id: +currentRoleId });
-      // const { role } = await store.dispatch('userInfo');
-      // curRole = role.type;
       await getManagerInfo();
       navDiffMenuIndex(1);
     }
@@ -237,22 +244,15 @@ export const beforeEach = async (to, from, next) => {
       getExternalRole();
     }
 
-    // if (to.name === 'gradingAdminEdit') {
-    //     await store.dispatch('role/updateCurrentRole', { id: 0 });
-    //     await store.dispatch('userInfo');
-    //     if (to.params.id) {
-    //         store.commit('updateNavId', to.params.id);
-    //     }
-    //     store.commit('updateIndex', 0);
-    //     window.localStorage.setItem('index', 0);
-    //     curRole = 'staff';
-    // }
-
     let difference = [];
     if (navIndex === 1) {
       difference = getRouterDiff(curRole);
     } else {
-      difference = getNavRouterDiff(navIndex);
+      // 目前只有平台管理需要根据管理员最大身份处理路由权限
+      // if ([3].includes(Number(navIndex))) {
+      //   await getPlatManageMenu();
+      // }
+      difference = getNavRouterDiff(navIndex, hasManagerPerm);
     }
     if (difference.length) {
       store.dispatch('versionLogInfo');

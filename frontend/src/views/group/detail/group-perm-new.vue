@@ -160,7 +160,7 @@
                 return this.mode === 'edit';
             },
             expandedText () {
-                return this.isAllExpanded ? this.$t(`m.grading['逐项编辑']`) : this.$t(`m.grading['批量编辑']`);
+                return this.isAllExpanded ? this.$t(`m.grading['批量编辑']`) : this.$t(`m.grading['逐项编辑']`);
             },
             canEditGroup () {
                 return this.$route.query.edit === 'GroupEdit';
@@ -235,8 +235,9 @@
       async fetchDetail (payload) {
         if (this.$parent.fetchDetail) {
           const { data } = await this.$parent.fetchDetail(payload);
-          const { attributes, readonly } = data;
+          const { attributes, name, readonly } = data;
           this.readonly = readonly;
+          this.$store.commit('setHeaderTitle', name);
           if (Object.keys(attributes).length) {
             this.groupAttributes = Object.assign(this.groupAttributes, attributes);
           }
