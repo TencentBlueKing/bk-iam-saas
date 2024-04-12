@@ -1,3 +1,16 @@
+<!-- 2024-04-12 -->
+# V1.10.26 Version Update Log
+
+### Feature Enhancements
+
+* Dependency version upgrades
+
+### Bug Fixes
+
+* Fixed issue with scheduled organization synchronization task becoming ineffective
+
+---
+
 <!-- 2024-04-11 -->
 # V1.10.25 Version Update Log
 
