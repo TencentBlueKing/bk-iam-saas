@@ -103,7 +103,7 @@
       handleExpanded () {
         this.isExpanded = !this.isExpanded;
         this.$emit('update:expanded', true);
-        this.$emit('on-expanded', true);
+        this.$emit('on-expanded', this.isExpanded);
       }
     }
   };
