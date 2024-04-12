@@ -33,23 +33,24 @@
             <span class="gou" />
           </div>
         </div>
-        <div v-if="isMethodsEmpty" class="notice-empty-error">{{ $t(`m.renewalNotice['通知方式不能为空']`) }}</div>
+        <div v-if="isMethodsEmpty" class="notice-empty-error">{{ $t(`m.renewalNotice['通知方式为必填项']`) }}</div>
       </div>
       <div class="notice-time">
         <div class="notice-item-label mb8">
           {{ $t(`m.renewalNotice['通知时间']`) }}
         </div>
         <div class="notice-time-content">
-          <div class="notice-time-item notice-area">
-            <div class="notice-item-label notice-time-title notice-area-title">
+          <div class="notice-time-item notice-scope">
+            <div class="notice-item-label notice-time-title notice-scope-title">
               {{ $t(`m.renewalNotice['通知范围']`) }}
             </div>
-            <div class="notice-item-value notice-item-area">
-              <div class="notice-item-area-input">
+            <div class="notice-item-value notice-item-scope">
+              <div class="notice-item-scope-input">
                 <bk-input
                   type="number"
                   v-model="noticeForm.expire_days_before"
-                >
+                  :precision="0"
+                  @input="handleDayBeforeInput">
                   <template slot="prepend">
                     <div class="group-text"> {{ $t(`m.renewalNotice['过期前']`) }}</div>
                   </template>
@@ -57,10 +58,12 @@
                     <div class="group-text"> {{ $t(`m.common['天']`) }}</div>
                   </template>
                 </bk-input>
-                <div class="and-icon">~</div>
+                <span class="and-icon">~</span>
                 <bk-input
                   type="number"
+                  :precision="0"
                   v-model="noticeForm.expire_days_after"
+                  @input="handleDayAfterInput"
                 >
                   <template slot="prepend">
                     <div class="group-text"> {{ $t(`m.renewalNotice['过期后']`) }}</div>
@@ -70,11 +73,11 @@
                   </template>
                 </bk-input>
               </div>
-              <div class="notice-item-area-tip">
+              <div class="notice-item-scope-tip">
                 <bk-icon type="info-circle" class="icon" />
                 <span>{{ $t(`m.renewalNotice['整个通知范围，需要 >= 7 天']`) }}</span>
               </div>
-              <div v-if="isAreaEmpty" class="notice-empty-error">{{ $t(`m.renewalNotice['通知范围不能为空']`) }}</div>
+              <div v-if="isScopeEmpty" class="notice-empty-error">{{ $t(`m.renewalNotice['通知范围为必填项']`) }}</div>
             </div>
           </div>
           <div class="notice-time-item notice-day">
@@ -82,17 +85,17 @@
               {{ $t(`m.renewalNotice['通知日']`) }}
             </div>
             <div class="notice-item-value">
-              <bk-checkbox-group v-model="noticeForm.send_days">
+              <bk-checkbox-group v-model="noticeForm.send_days" @change="handleDayChange">
                 <bk-checkbox
                   v-for="item in sendDaysList"
                   :key="item.value"
                   :value="item.value"
-                  class="notice-day-checkbox mb8"
+                  class="notice-day-checkbox"
                 >
                   {{ $t(`m.renewalNotice['${item.label}']`) }}
                 </bk-checkbox>
               </bk-checkbox-group>
-              <div v-if="isDayEmpty" class="notice-empty-error">{{ $t(`m.renewalNotice['通知日不能为空']`) }}</div>
+              <div v-if="isDayEmpty" class="notice-empty-error">{{ $t(`m.renewalNotice['通知日为必填项']`) }}</div>
             </div>
           </div>
           <div class="notice-time-item notice-send-time">
@@ -100,7 +103,7 @@
               {{ $t(`m.renewalNotice['发送时间']`) }}
             </div>
             <div class="notice-item-value">
-              <bk-time-picker v-model="noticeForm.send_time" :format="'HH:mm'" />
+              <bk-time-picker v-model="noticeForm.send_time" :format="'HH:mm'" @change="handleSendTimeChange" />
               <div class="notice-item-time-tip">
                 <span>{{ $t(`m.renewalNotice['过期前']`) }}</span>
                 <span class="bold-text">{{ noticeForm.expire_days_before }}</span>
@@ -116,7 +119,7 @@
                 <span class="bold-text">{{ noticeForm.send_time }}</span>
                 <span>{{ $t(`m.renewalNotice['发送通知']`) }}</span>
               </div>
-              <div v-if="isSendTimeEmpty" class="notice-empty-error">{{ $t(`m.renewalNotice['发送时间不能为空']`) }}</div>
+              <div v-if="isSendTimeEmpty" class="notice-empty-error">{{ $t(`m.renewalNotice['发送时间为必填项']`) }}</div>
             </div>
           </div>
         </div>
@@ -147,6 +150,7 @@
 </template>
 
 <script>
+  import { cloneDeep } from 'lodash';
   export default {
     inject: ['showNoticeAlert'],
     data () {
@@ -163,19 +167,19 @@
             value: 'mail',
             icon: 'iamcenter-youjian',
             selected_icon: require('@/images/mail.svg')
-          },
-          {
-            label: this.$t(`m.renewalNotice['微信']`),
-            value: 'WeChat',
-            icon: 'iamcenter-wechat',
-            selected_icon: require('@/images/weChat.svg')
-          },
-          {
-            label: this.$t(`m.renewalNotice['短信']`),
-            value: 'rtx',
-            icon: 'iamcenter-duanxin',
-            selected_icon: require('@/images/sms.svg')
           }
+          // {
+          //   label: this.$t(`m.renewalNotice['微信']`),
+          //   value: 'WeChat',
+          //   icon: 'iamcenter-wechat',
+          //   selected_icon: require('@/images/weChat.svg')
+          // },
+          // {
+          //   label: this.$t(`m.renewalNotice['短信']`),
+          //   value: 'rtx',
+          //   icon: 'iamcenter-duanxin',
+          //   selected_icon: require('@/images/sms.svg')
+          // }
         ],
         sendDaysList: [
           {
@@ -208,16 +212,18 @@
           }
         ],
         noticeForm: {
-          notification_types: ['WeCom', 'mail'],
-          send_days: ['monday'],
-          send_time: '10:00',
-          expire_days_before: 15,
-          expire_days_after: 1
+          notification_types: [],
+          send_days: [],
+          send_time: '',
+          expire_days_before: 0,
+          expire_days_after: 0
         },
+        noticeFormBack: {},
         isMethodsEmpty: false,
-        isAreaEmpty: false,
+        isScopeEmpty: false,
         isDayEmpty: false,
-        isSendTimeEmpty: false
+        isSendTimeEmpty: false,
+        submitLoading: false
       };
     },
     computed: {
@@ -239,9 +245,44 @@
           const { data } = await this.$store.dispatch('renewalNotice/getSuperNoticeConfig');
           if (data) {
             this.noticeForm = Object.assign(this.noticeForm, data);
+            this.noticeFormBack = cloneDeep(this.noticeForm);
           }
         } catch (e) {
           this.messageAdvancedError(e);
+        }
+      },
+
+      async handleSubmit () {
+        const {
+          notification_types,
+          send_days, send_time: sendTime,
+          expire_days_before: expireDaysBefore,
+          expire_days_after: expireDaysAfter
+        } = this.noticeForm;
+        if (!notification_types.length) {
+          this.isMethodsEmpty = true;
+          return;
+        }
+        if (!expireDaysBefore || !expireDaysAfter) {
+          this.isScopeEmpty = true;
+          return;
+        }
+        if (!send_days.length) {
+          this.isDayEmpty = true;
+          return;
+        }
+        if (!sendTime) {
+          this.isSendTimeEmpty = true;
+          return;
+        }
+        this.submitLoading = true;
+        try {
+          await this.$store.dispatch('renewalNotice/updateSuperNoticeConfig', this.noticeForm);
+          this.messageSuccess(this.$t(`m.info['保存成功']`), 3000);
+        } catch (e) {
+          this.messageAdvancedError(e);
+        } finally {
+          this.submitLoading = false;
         }
       },
 
@@ -257,13 +298,29 @@
         this.isMethodsEmpty = this.noticeForm.notification_types.length < 1;
       },
 
-      handleSubmit () {},
-
-      handleReset () {
-        this.fetchSuperNoticeConfig();
+      handleDayBeforeInput (payload) {
+        this.isScopeEmpty = !(payload.length > 0 && String(this.noticeForm.expire_days_after).length > 0);
       },
 
-      handleDefault () {}
+      handleDayAfterInput (payload) {
+        this.isScopeEmpty = !(payload.length > 0 && String(this.noticeForm.expire_days_before).length > 0);
+      },
+
+      handleDayChange (payload) {
+        this.isDayEmpty = !(payload.length > 0);
+      },
+
+      handleSendTimeChange (payload) {
+        this.isSendTimeEmpty = !(payload.length > 0);
+      },
+
+      handleReset () {
+        this.noticeForm = cloneDeep(this.noticeFormBack);
+      },
+
+      handleDefault () {
+        this.fetchSuperNoticeConfig();
+      }
     }
   };
 </script>
@@ -318,7 +375,7 @@
           .iam-icon {
             color: #979ba5;
             margin-left: 13px;
-            margin-right: 4px;
+            margin-right: 6px;
             font-size: 16px;
             line-height: 0;
           }
@@ -362,8 +419,8 @@
                 background: transparent;
                 top: 2px;
                 right: 3px;
-                border-left: 1px solid #ffffff;
-                border-bottom: 1px solid #ffffff;
+                border-left: 2px solid #ffffff;
+                border-bottom: 2px solid #ffffff;
                 transform: rotate(-50deg);
                 z-index: 9;
               }
@@ -391,54 +448,53 @@
           &:not(&:last-child) {
             margin-bottom: 24px;
           }
-          &.notice-area {
+          &.notice-scope {
             align-items: center;
-            .notice-area-title {
+            .notice-scope-title {
               margin-top: -22px;
               margin-bottom: 0;
             }
-            /deep/ .notice-item-area {
+            /deep/ .notice-item-scope {
+              margin-left: 0;
               &-input {
                 display: flex;
                 align-items: center;
                 .group-box {
                   background-color: #FAFBFD;
                   .group-text {
-                    padding: 0 7.5px;
-                    font-size: 12px;
+                    padding: 0 8px;
                   }
                   &.group-append {
                     min-width: 40px;
-                    .group-text {
-                      padding-left: 8px;
-                    }
                   }
                 }
                 .bk-input-number {
-                  width: 93px;
+                  width: 88px;
                 }
               }
               &-tip {
                 color: #979BA5;
                 font-size: 12px;
-                margin-top: 6px;
+                margin-top: 4px;
+                word-break: break-all;
                 .icon {
                   color: #C4C6CC;
                   margin-right: 6px;
-                  font-size: 16px !important;
+                  font-size: 14px !important;
                 }
               }
               .and-icon {
-                padding: 0 8px;
+                margin: 0 8px;
                 color: #63656E;
               }
             }
           }
           &.notice-day {
             align-items: self-start;
+            margin-bottom: 20px !important;
            /deep/ .notice-day-checkbox {
               margin-right: 40px;
-              font-size: 12px;
+              margin-bottom: 4px;
               line-height: 20px;
               &:nth-child(5) {
                 margin-right: 0;
@@ -451,7 +507,6 @@
           &.notice-send-time {
             align-items: baseline;
             .notice-item-value {
-              width: calc(100% - 94px);
               .bk-date-picker {
                 width: 100%;
               }
@@ -470,11 +525,12 @@
           }
         }
         .notice-time-title {
-          min-width: 62px;
+          min-width: 70px;
+          margin-right: 20px;
           text-align: right;
         }
         .notice-item-value {
-          padding-left: 20px;
+          min-width: 390px;
         }
       }
     }
@@ -504,6 +560,18 @@
           width: 666px;
           .notice-time-title {
             min-width: 96px;
+          }
+          /deep/ .notice-item-scope {
+            .bk-input-number {
+              min-width: 93px;
+            }
+          }
+          .notice-day {
+           /deep/ .notice-day-checkbox {
+              .bk-checkbox-text {
+                min-width: 51px;
+              }
+            }
           }
           .notice-send-time {
             width: calc(100% - 28px);
