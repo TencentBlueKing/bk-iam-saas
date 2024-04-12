@@ -279,7 +279,7 @@
        * expandedText
        */
       expandedText () {
-          return this.isAllExpanded ? this.$t(`m.grading['逐项编辑']`) : this.$t(`m.grading['批量编辑']`);
+          return this.isAllExpanded ? this.$t(`m.grading['批量编辑']`) : this.$t(`m.grading['逐项编辑']`);
       },
       members () {
           const arr = [];
@@ -361,7 +361,7 @@
     methods: {
       // 获取分级管理员用户组配置
       async fetchUserGroupSet () {
-        if (!['subset_manager'].includes(this.curRole)) {
+        if (!['subset_manager', 'staff', ''].includes(this.user.role.type)) {
           try {
             const { data } = await this.$store.dispatch('userGroupSetting/getUserGroupSetConfig');
             if (data) {

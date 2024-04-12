@@ -98,7 +98,8 @@ export const getRouterDiff = (payload) => {
       'myManageSpaceSubDetail',
       'sensitivityLevel',
       'resourcePermManage',
-      'renewalNotice'
+      'renewalNotice',
+      'userOrgPerm'
     ];
   }
   if (payload === 'system_manager') {
@@ -125,13 +126,13 @@ export const getRouterDiff = (payload) => {
       'systemAccessRegistry',
       'systemAccessOptimize',
       'systemAccessComplete',
-      'resourcePermiss',
       'firstManageSpace',
       'secondaryManageSpace',
       'authorBoundary',
       'myManageSpace',
       'sensitivityLevel',
-      'renewalNotice'
+      'renewalNotice',
+      'userOrgPerm'
     ];
   }
   if (payload === 'rating_manager') {

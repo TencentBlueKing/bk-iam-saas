@@ -30,6 +30,7 @@
               v-model="systemId"
               :clearable="true"
               :placeholder="$t(`m.verify['请选择']`)"
+              :disabled="isSystemDisabled"
               @change="handleCascadeChange"
               @clear="handleSystemClear">
               <bk-option v-for="option in systemList"
@@ -282,7 +283,7 @@
       };
     },
     computed: {
-      ...mapGetters(['externalSystemId']),
+      ...mapGetters(['externalSystemId', 'user', 'index']),
       condition () {
           if (this.curResIndex === -1 || this.groupIndex === -1) {
               return [];
@@ -307,7 +308,10 @@
           return _.cloneDeep(this.condition);
       },
       isShowExport () {
-        return ['resource-permiss'].includes(this.$route.name);
+        return ['resourcePermiss'].includes(this.$route.name);
+      },
+      isSystemDisabled () {
+        return this.index === 1 && ['system_manager'].includes(this.user.role.type);
       }
     },
     watch: {
@@ -347,6 +351,10 @@
           ? 960 : Math.ceil(window.innerWidth * 0.67 - 7);
       },
 
+      async fetchPageData () {
+        await this.fetchSystemList();
+      },
+
       async fetchSystemList () {
         try {
           const params = {};
@@ -355,7 +363,7 @@
           }
           const res = await this.$store.dispatch('system/getSystems', params);
           this.systemList = res.data;
-          if (this.systemList.length && ['resourcePermManage'].includes(this.$route.name)) {
+          if (this.systemList.length && ['system_manager'].includes(this.user.role.type)) {
             this.systemId = this.systemList[0].id;
           }
         } catch (e) {
@@ -549,7 +557,9 @@
       // 重置
       handleReset () {
         this.searchType = 'resource_instance';
-        this.systemId = '';
+        if (!this.isSystemDisabled) {
+          this.systemId = '';
+        }
         this.actionId = '';
         this.permissionType = '';
         this.tableList = [];

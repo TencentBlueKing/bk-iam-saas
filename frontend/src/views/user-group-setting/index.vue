@@ -26,6 +26,7 @@
 </template>
 
 <script>
+  import { mapGetters } from 'vuex';
   export default {
     name: 'IamUserGroupSetting',
     data () {
@@ -36,19 +37,24 @@
         submitLoading: false
       };
     },
+    computed: {
+      ...mapGetters(['user'])
+    },
     async created () {
       await this.getGroupConfig();
     },
     methods: {
       async getGroupConfig () {
-        try {
-          const { data } = await this.$store.dispatch('userGroupSetting/getUserGroupSetConfig');
-          if (data) {
-            this.formData = Object.assign({}, { apply_disable: data.apply_disable });
+        if (!['subset_manager', 'staff', ''].includes(this.user.role.type)) {
+          try {
+            const { data } = await this.$store.dispatch('userGroupSetting/getUserGroupSetConfig');
+            if (data) {
+              this.formData = Object.assign({}, { apply_disable: data.apply_disable });
+            }
+          } catch (e) {
+            console.error(e);
+            this.messageAdvancedError(e);
           }
-        } catch (e) {
-          console.error(e);
-          this.messageAdvancedError(e);
         }
       },
       
