@@ -22,22 +22,22 @@ from django.template.loader import render_to_string
 from pydantic.main import BaseModel
 
 from backend.apps.group.models import Group
-from backend.apps.organization.models import User
+from backend.apps.organization.models import Department, User
 from backend.apps.role.models import Role, RoleRelatedObject, RoleUser
-from backend.apps.subject_template.models import SubjectTemplateGroup
+from backend.apps.subject_template.models import SubjectTemplate, SubjectTemplateGroup
 from backend.biz.group import GroupBiz, GroupTemplateGrantBean
 from backend.biz.policy import PolicyBean, PolicyBeanList, ResourceGroupBeanList
 from backend.biz.resource import ResourceBiz
 from backend.biz.role import RoleBiz, RoleCheckBiz, RoleInfoBean, get_global_notification_config
 from backend.biz.system import SystemBiz
 from backend.common.lock import gen_bcs_manager_lock, gen_init_grade_manager_lock
-from backend.common.time import DAY_SECONDS, get_expired_at, get_today_weekday
+from backend.common.time import DAY_SECONDS, expired_at_display, get_expired_at, get_today_weekday
 from backend.component import esb
 from backend.component.bcs import list_project_for_iam
 from backend.component.cmdb import list_biz
 from backend.component.sops import list_project
 from backend.service.action import ActionService
-from backend.service.constants import ADMIN_USER, RoleRelatedObjectType, RoleType, SubjectType
+from backend.service.constants import ADMIN_USER, GroupMemberType, RoleRelatedObjectType, RoleType, SubjectType
 from backend.service.models import Action, PathResourceType
 from backend.service.models.policy import ResourceGroupList
 from backend.service.models.subject import Subject
@@ -90,7 +90,7 @@ class SendRoleGroupExpireRemindMailTask(Task):
 
     base_url = url_join(settings.APP_URL, "/group-perm-renewal")
 
-    def run(self, role_id: int, expired_at: int):
+    def run(self, role_id: int, expired_at_before: int, expired_at_after: int):
         role = Role.objects.get(id=role_id)
         group_ids = list(
             RoleRelatedObject.objects.filter(
@@ -100,26 +100,91 @@ class SendRoleGroupExpireRemindMailTask(Task):
         if not group_ids:
             return
 
-        exist_group_ids = self.group_biz.list_exist_groups_before_expired_at(group_ids, expired_at)
+        group_members = []
+
+        # 需要查询用户组已过期的成员
+        group_subjects = self.group_biz.list_group_subject_before_expired_at_by_ids(group_ids, expired_at_after)
+        for gs in group_subjects:
+            # role 只通知部门相关的权限续期
+            if gs.subject.type == SubjectType.USER.value:
+                continue
+
+            # 判断过期时间是否在区间内
+            if gs.expired_at < expired_at_before:
+                continue
+
+            group_members.append(
+                {
+                    "id": int(gs.group.id),
+                    "name": "",
+                    "subject_type": gs.subject.type,
+                    "subject_id": gs.subject.id,
+                    "subject_name": "",
+                    "expired_at": gs.expired_at,
+                    "expired_at_display": expired_at_display(gs.expired_at),
+                }
+            )
+
+        # 填充部门名称
+        department_ids = [
+            int(m["subject_id"]) for m in group_members if m["subject_type"] == SubjectType.DEPARTMENT.value
+        ]
+        if department_ids:
+            qs = Department.objects.filter(id__in=department_ids).only("id", "name")
+            department_name_map = {d.id: d.name for d in qs}
+
+            for m in group_members:
+                if m["subject_type"] == SubjectType.DEPARTMENT.value:
+                    m["subject_name"] = department_name_map.get(int(m["subject_id"]), "")
 
         # 查询有人员模版过期的用户组
-        subject_template_group_ids = list(
-            SubjectTemplateGroup.objects.filter(expired_at__lt=expired_at, group_id__in=group_ids).values_list(
-                "group_id", flat=True
-            )
+        qs = SubjectTemplateGroup.objects.filter(
+            expired_at__range=(expired_at_before, expired_at_after), group_id__in=group_ids
         )
+        for s in qs:
+            group_members.append(
+                {
+                    "id": s.group_id,
+                    "name": "",
+                    "subject_type": GroupMemberType.TEMPLATE.value,
+                    "subject_id": str(s.template_id),
+                    "subject_name": "",
+                    "expired_at": s.expired_at,
+                    "expired_at_display": expired_at_display(s.expired_at),
+                }
+            )
 
-        exist_group_ids = list(set(exist_group_ids).union(set(subject_template_group_ids)))
-        if not exist_group_ids:
+        # 填充人员模版名称
+        template_ids = [
+            int(m["subject_id"]) for m in group_members if m["subject_type"] == GroupMemberType.TEMPLATE.value
+        ]
+        if template_ids:
+            qs = SubjectTemplate.objects.filter(id__in=template_ids).only("id", "name")
+            template_name_map = {d.id: d.name for d in qs}
+
+            for m in group_members:
+                if m["subject_type"] == GroupMemberType.TEMPLATE.value:
+                    m["subject_name"] = template_name_map.get(int(m["subject_id"]), "")
+
+        if not group_members:
             return
 
-        groups = Group.objects.filter(id__in=exist_group_ids)
+        # 填充用户组名称
+        groups = Group.objects.filter(id__in=[gm["id"] for gm in group_members]).only("id", "name")
+        group_name_map = {g.id: g.name for g in groups}
 
+        for m in group_members:
+            m["name"] = group_name_map.get(int(m["id"]), "")
+
+        group_members.sort(key=lambda x: (x["id"], x["subject_type"], x["subject_id"]))
+
+        # 发送邮件
         params = {"source": "email", "current_role_id": role.id, "role_type": role.type}
         url = self.base_url + "?" + urlencode(params)
 
         mail_content = render_to_string(
-            "group_expired_mail.html", {"groups": groups, "role": role, "url": url, "index_url": settings.APP_URL}
+            "group_expired_mail.html",
+            {"groups": group_members, "role": role, "url": url, "index_url": settings.APP_URL},
         )
 
         usernames = RoleUser.objects.filter(role_id=role.id).values_list("username", flat=True)
@@ -176,7 +241,7 @@ def role_group_expire_remind():
 
     # 生成子任务
     for role_id in role_id_set:
-        SendRoleGroupExpireRemindMailTask().delay(role_id, expired_at_after)
+        SendRoleGroupExpireRemindMailTask().delay(role_id, expired_at_before, expired_at_after)
 
 
 def _add_group_role_set(group_id_set: Set[int], role_id_set: Set[int], group_id: int):

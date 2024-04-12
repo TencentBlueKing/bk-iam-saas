@@ -84,7 +84,7 @@ class SendUserExpireRemindMailTask(Task):
             data = application.data
             if application.type == ApplicationType.RENEW_ACTION.value:
                 action_set = {
-                    (data["system"]["id"], action.get("id", action.get["action_id"])) for action in data["actions"]
+                    (data["system"]["id"], action.get("id", action.get("action_id"))) for action in data["actions"]
                 }
                 policies = [p for p in policies if (p.system.id, p.action.id) not in action_set]
 
