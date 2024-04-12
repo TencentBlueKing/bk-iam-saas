@@ -30,7 +30,7 @@
               v-model="systemId"
               :clearable="true"
               :placeholder="$t(`m.verify['请选择']`)"
-              :disabled="['system_manager'].includes(user.role.type)"
+              :disabled="isSystemDisabled"
               @change="handleCascadeChange"
               @clear="handleSystemClear">
               <bk-option v-for="option in systemList"
@@ -283,7 +283,7 @@
       };
     },
     computed: {
-      ...mapGetters(['externalSystemId', 'user']),
+      ...mapGetters(['externalSystemId', 'user', 'index']),
       condition () {
           if (this.curResIndex === -1 || this.groupIndex === -1) {
               return [];
@@ -309,6 +309,9 @@
       },
       isShowExport () {
         return ['resourcePermiss'].includes(this.$route.name);
+      },
+      isSystemDisabled () {
+        return this.index === 1 && ['system_manager'].includes(this.user.role.type);
       }
     },
     watch: {
@@ -554,7 +557,9 @@
       // 重置
       handleReset () {
         this.searchType = 'resource_instance';
-        this.systemId = '';
+        if (!this.isSystemDisabled) {
+          this.systemId = '';
+        }
         this.actionId = '';
         this.permissionType = '';
         this.tableList = [];
