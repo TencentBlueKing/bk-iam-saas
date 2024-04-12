@@ -1309,8 +1309,8 @@
           if (this.curModeMap[this.curRouteMode]) {
             this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)} ${
               this.currentSelectList.length
-            } ${this.$t(`m.common['位成员']`)}${this.$t(`m.common['，']`)}${this.$t(
-              `m.info['这些成员将不再关联该用户组的权限']`
+            } ${this.$t(`m.common['个人员模板']`)}${this.$t(`m.common['，']`)}${this.$t(
+              `m.info['相关人员将不再关联该用户组的权限']`
             )}${this.$t(`m.common['。']`)}`;
           } else {
             this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)} ${
