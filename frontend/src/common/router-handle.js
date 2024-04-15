@@ -97,7 +97,9 @@ export const getRouterDiff = (payload) => {
       'permTransfer',
       'myManageSpaceSubDetail',
       'sensitivityLevel',
-      'resourcePermManage'
+      'resourcePermManage',
+      'renewalNotice',
+      'userOrgPerm'
     ];
   }
   if (payload === 'system_manager') {
@@ -124,12 +126,12 @@ export const getRouterDiff = (payload) => {
       'systemAccessRegistry',
       'systemAccessOptimize',
       'systemAccessComplete',
-      'resourcePermiss',
       'firstManageSpace',
       'secondaryManageSpace',
       'authorBoundary',
       'myManageSpace',
-      'sensitivityLevel'
+      'renewalNotice',
+      'userOrgPerm'
     ];
   }
   if (payload === 'rating_manager') {
@@ -161,7 +163,8 @@ export const getRouterDiff = (payload) => {
       'resourcePermiss',
       'firstManageSpace',
       'sensitivityLevel',
-      'resourcePermManage'
+      'resourcePermManage',
+      'renewalNotice'
     ];
   }
   if (payload === 'subset_manager') {
@@ -382,8 +385,7 @@ export const getNavRouterDiff = (navIndex, managerPerm = '') => {
       'userGroupSetting',
       'memberTemplate',
       'resourcePermManage',
-      'userOrgPerm',
-      'renewalNotice'
+      'userOrgPerm'
     ];
     if (['hasSystemNoSuperManager'].includes(managerPerm)) {
       // 非超管用户隐藏的路由
@@ -394,7 +396,8 @@ export const getNavRouterDiff = (navIndex, managerPerm = '') => {
         'gradingAdminCreate',
         'gradingAdminDetail',
         'gradingAdminEdit',
-        'gradingAdminUpdateTemplate'
+        'gradingAdminUpdateTemplate',
+        'renewalNotice'
       ];
       const systemManagerMenu = [
         ...menuList,

@@ -23,7 +23,7 @@
             <li>
               <a
                 :class="[{ 'remove-disabled': isNoBatchRemove() }]"
-                v-bk-tooltips="{ content: removeGroupTitle, disabled: !removeGroupTitle, placements: ['right'] }"
+                v-bk-tooltips="{ content: removeGroupTitle, disabled: !removeGroupTitle,placements: ['right-start'] }"
                 @click.stop="handleBatch('remove')"
               >
                 {{ $t(`m.userOrOrg['移出']`) }}
@@ -32,7 +32,10 @@
             <li>
               <a
                 :class="[{ 'renewal-disabled': isNoBatchRenewal() }]"
-                v-bk-tooltips="{ content: renewalGroupTitle, disabled: !renewalGroupTitle, placements: ['right'] }"
+                v-bk-tooltips="{
+                  content: renewalGroupTitle,
+                  disabled: !renewalGroupTitle, placements: ['right-start']
+                }"
                 @click.stop="handleBatch('renewal')">
                 {{ $t(`m.renewal['续期']`) }}
               </a>

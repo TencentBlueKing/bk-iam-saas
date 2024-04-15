@@ -329,7 +329,11 @@
               const selectionCount = document.getElementsByClassName(
                 'bk-page-selection-count'
               );
-              if (this.$refs.sensitivityTableRef && selectionCount) {
+              if (this.$refs.sensitivityTableRef
+                && selectionCount
+                && selectionCount.length
+                && selectionCount[0].children
+              ) {
                 selectionCount[0].children[0].innerHTML = this.currentSelectList.length;
               }
             });

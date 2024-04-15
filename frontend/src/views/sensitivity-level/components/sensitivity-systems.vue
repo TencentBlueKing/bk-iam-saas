@@ -110,23 +110,27 @@
       };
     },
     computed: {
-    ...mapGetters(['externalSystemId']),
-    formatDragWidth () {
-      return {
-        minWidth: '280px'
-      };
-    },
-    formatSystemsHeight () {
-      return {
-        maxHeight: `${getWindowHeight() - 185}px`
-      };
-    }
+      ...mapGetters(['externalSystemId', 'user']),
+      formatDragWidth () {
+        return {
+          minWidth: '280px'
+        };
+      },
+      formatSystemsHeight () {
+        return {
+          maxHeight: `${getWindowHeight() - 185}px`
+        };
+      }
     },
     async created () {
       // this.handleSelectSystem({ id: 'all', isFirst: true });
       await this.fetchSystems();
     },
     methods: {
+      async fetchPageData () {
+        await this.fetchSystems();
+      },
+
       async fetchSystems () {
         this.systemLoading = true;
         try {
@@ -135,15 +139,19 @@
             params.hidden = false;
           }
           const { code, data } = await this.$store.dispatch('system/getSystems', params);
+          let list = [...data];
           if (data && data.length) {
-            // this.systemList = _.cloneDeep([...data]);
-            this.systemList = await this.getSystemCount(data);
+            const { role } = this.user;
+            if (['system_manager'].includes(role.type) && role.code) {
+              list = data.filter((item) => item.id === role.code);
+            }
+            this.systemList = await this.getSystemCount(list);
             this.systemListStorage = [...this.systemList];
           }
           this.emptySystemData = formatCodeData(
             code,
             this.emptySystemData,
-            data.length === 0
+            list.length === 0
           );
         } catch (e) {
           this.emptySystemData = formatCodeData(e.code, this.emptySystemData);

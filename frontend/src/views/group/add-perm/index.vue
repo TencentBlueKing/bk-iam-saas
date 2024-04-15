@@ -167,7 +167,7 @@
         return isDisabled;
       },
       expandedText () {
-          return this.isAllExpanded ? this.$t(`m.grading['逐项编辑']`) : this.$t(`m.grading['批量编辑']`);
+          return this.isAllExpanded ? this.$t(`m.grading['批量编辑']`) : this.$t(`m.grading['逐项编辑']`);
       },
       defaultValue () {
           if (this.originalList.length < 1) {

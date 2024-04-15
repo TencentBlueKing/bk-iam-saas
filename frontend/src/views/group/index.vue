@@ -535,7 +535,7 @@
 
       // 获取分级管理员用户组配置
       async fetchUserGroupSet () {
-        if (!['subset_manager'].includes(this.curRole)) {
+        if (!['subset_manager', 'staff', ''].includes(this.curRole)) {
           try {
             const { data } = await this.$store.dispatch('userGroupSetting/getUserGroupSetConfig');
             if (data) {

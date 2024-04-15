@@ -94,6 +94,9 @@ import memberTemplate from './modules/member-template';
 // 用户/组织模块
 import userOrOrg from './modules/user-org';
 
+// 续期通知
+import renewalNotice from './modules/renewal-notice';
+
 Vue.use(Vuex);
 
 const SITE_URL = window.SITE_URL;
@@ -211,14 +214,6 @@ const currentNav = [
         name: il8n('nav', '资源权限管理'),
         path: `${SITE_URL}resource-permiss`,
         disabled: false
-      },
-      {
-        icon: 'mingandengji',
-        id: 'sensitivityLevelNav',
-        rkey: 'sensitivityLevel',
-        name: il8n('nav', '敏感等级'),
-        path: `${SITE_URL}sensitivity-level`,
-        disabled: false
       }
       // {
       //   icon: 'resource-perm-manage',
@@ -274,6 +269,14 @@ const currentNav = [
     name: il8n('common', '设置'),
     rkey: 'set',
     children: [
+      {
+        icon: 'mingandengji',
+        id: 'sensitivityLevelNav',
+        rkey: 'sensitivityLevel',
+        name: il8n('nav', '敏感等级'),
+        path: `${SITE_URL}sensitivity-level`,
+        disabled: false
+      },
       {
         icon: 'super-admin',
         name: il8n('common', '管理员'),
@@ -368,7 +371,8 @@ const store = new Vuex.Store({
     userGroupSetting,
     sensitivityLevel,
     memberTemplate,
-    userOrOrg
+    userOrOrg,
+    renewalNotice
   },
   state: {
     mainContentLoading: false,
@@ -801,6 +805,7 @@ const store = new Vuex.Store({
         const results = data.results || [];
         commit('updateRoleListTotal', data.count || 0);
         commit('updateRoleList', results);
+        // commit('updateRoleList', results.filter((item) => item.type !== 'super_manager'));
         return results;
       });
     },
