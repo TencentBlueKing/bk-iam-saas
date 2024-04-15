@@ -261,26 +261,8 @@
       },
 
       async handleSubmit () {
-        const {
-          notification_types,
-          send_days, send_time: sendTime,
-          expire_days_before: expireDaysBefore,
-          expire_days_after: expireDaysAfter
-        } = this.noticeForm;
-        if (!notification_types.length) {
-          this.isMethodsEmpty = true;
-          return;
-        }
-        if (!String(expireDaysBefore) || !String(expireDaysAfter)) {
-          this.isScopeEmpty = true;
-          return;
-        }
-        if (!send_days.length) {
-          this.isDayEmpty = true;
-          return;
-        }
-        if (!sendTime) {
-          this.isSendTimeEmpty = true;
+        const isEmpty = this.handleGetValidate();
+        if (isEmpty) {
           return;
         }
         this.submitLoading = true;
@@ -335,10 +317,27 @@
 
       handleReset () {
         this.noticeForm = cloneDeep(this.noticeFormReset);
+        this.handleGetValidate();
       },
 
       handleDefault () {
         this.noticeForm = cloneDeep(this.noticeDetail);
+        this.handleGetValidate();
+      },
+
+      handleGetValidate () {
+        const {
+          notification_types,
+          send_days, send_time: sendTime,
+          expire_days_before: expireDaysBefore,
+          expire_days_after: expireDaysAfter
+        } = this.noticeForm;
+        this.isMethodsEmpty = !(notification_types.length > 0);
+        this.isDayEmpty = !(send_days.length > 0);
+        this.isScopeEmpty = !(String(expireDaysBefore).length > 0 || String(expireDaysAfter).length > 0);
+        this.isSendTimeEmpty = !(sendTime.length > 0);
+        const result = this.isMethodsEmpty || this.isScopeEmpty || this.isDayEmpty || this.isSendTimeEmpty;
+        return result;
       }
     }
   };
