@@ -1532,7 +1532,7 @@ export const m = {
         '通知范围': 'Notice scope',
         '通知日': 'Notice day',
         '发送时间': 'Send time',
-        '整个通知范围，需要 >= 7 天': 'The entire notice scope requires>=7 days',
+        '整个通知范围，需要 >= 7 天且过期前后的日期范围最大为15天': 'The entire notification scope needs to be>=7 days, and the maximum date range before and after expiration is 15 days',
         '通知方式为必填项': 'Notice method required',
         '通知范围为必填项': 'Notice scope required',
         '通知日为必填项': 'Notice date required',
