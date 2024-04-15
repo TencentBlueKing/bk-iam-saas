@@ -241,7 +241,7 @@
         typeList: [{ name: this.$t(`m.resourcePermiss['自定义权限']`), value: 'custom' }, { name: this.$t(`m.resourcePermiss['模板权限']`), value: 'template' }],
         permissionType: '',
         groupValue: '1-1',
-        limit: 100,
+        limit: 1000,
         limitList: [10, 50, 100, 500, 1000],
         resourceActionId: 0,
         resourceActionSystemId: '',
@@ -269,7 +269,7 @@
         pagination: {
           current: 1,
           count: 0,
-          limit: 100
+          limit: 10
         },
         currentBackup: 1,
         emptyData: {
@@ -562,7 +562,7 @@
         }
         this.actionId = '';
         this.permissionType = '';
-        this.limit = 100;
+        this.limit = 1000;
         this.tableList = [];
         this.resourceInstances = [];
         this.resourceTypeData = { isEmpty: true };
@@ -685,7 +685,7 @@
       handleSearch () {
         const routeMap = {
           resourcePermManage: async () => {
-            this.pagination = Object.assign(this.pagination, { current: 1, limit: 100 });
+            this.pagination = Object.assign(this.pagination, { current: 1, limit: 10 });
             await this.handleSearchAndExport();
           },
           resourcePermiss: () => {
