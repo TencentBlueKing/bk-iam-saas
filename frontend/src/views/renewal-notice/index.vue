@@ -77,7 +77,7 @@
               </div>
               <div class="notice-item-scope-tip">
                 <bk-icon type="info-circle" class="icon" />
-                <span>{{ $t(`m.renewalNotice['整个通知范围，需要 >= 7 天']`) }}</span>
+                <span>{{ $t(`m.renewalNotice['整个通知范围，需要 >= 7 天且过期前后的日期范围最大为15天']`) }}</span>
               </div>
               <div v-if="isScopeEmpty" class="notice-empty-error">{{ $t(`m.renewalNotice['通知范围为必填项']`) }}</div>
             </div>
