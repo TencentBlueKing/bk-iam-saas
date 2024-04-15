@@ -319,7 +319,7 @@
           this.$set(item, 'groupTabList', cloneDeep(this.groupTabList));
           await Promise.all([this.fetchMembers(item), this.fetchGroupSubjectTemplate(item)]).then(() => {
             if (item.groupTabList && item.groupTabList.length) {
-              const childList = item.groupTabList.map((item) => item.children || []).flat(Infinity);
+              const childList = item.groupTabList.map((v) => v.children || []).flat(Infinity);
               childList && childList.forEach(subItem => {
                 item.checkList.push(subItem);
                 if (this.$refs.permTableRef && this.$refs.permTableRef.length) {
