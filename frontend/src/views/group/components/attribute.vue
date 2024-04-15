@@ -302,7 +302,7 @@
           // this.attrValueListMap[this.curOperateData.id].shift();
           return;
         }
-        if (event.target.scrollTop + event.target.offsetHeight >= event.target.scrollHeight) {
+        if (event.target.scrollTop + event.target.offsetHeight >= event.target.scrollHeight - 1) {
           ++this.pagination.current;
           if (this.pagination.current <= this.pagination.totalPage) {
             await this.fetchResourceAttrValues(this.curOperateData, this.curKeyWord, false, true);
