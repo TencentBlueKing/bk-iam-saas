@@ -50,6 +50,7 @@
                   type="number"
                   v-model="noticeForm.expire_days_before"
                   :precision="0"
+                  :maxlength="2"
                   @input="handleDayBeforeInput">
                   <template slot="prepend">
                     <div class="group-text"> {{ $t(`m.renewalNotice['过期前']`) }}</div>
@@ -61,8 +62,9 @@
                 <span class="and-icon">~</span>
                 <bk-input
                   type="number"
-                  :precision="0"
                   v-model="noticeForm.expire_days_after"
+                  :precision="0"
+                  :maxlength="2"
                   @input="handleDayAfterInput"
                 >
                   <template slot="prepend">
@@ -158,7 +160,7 @@
         noticeList: [
           {
             label: this.$t(`m.renewalNotice['企业微信']`),
-            value: 'WeCom',
+            value: 'rtx',
             icon: 'iamcenter-qw',
             selected_icon: require('@/images/qw.svg')
           },
@@ -170,13 +172,13 @@
           }
           // {
           //   label: this.$t(`m.renewalNotice['微信']`),
-          //   value: 'WeChat',
+          //   value: 'weixin',
           //   icon: 'iamcenter-wechat',
           //   selected_icon: require('@/images/weChat.svg')
           // },
           // {
           //   label: this.$t(`m.renewalNotice['短信']`),
-          //   value: 'rtx',
+          //   value: 'sms',
           //   icon: 'iamcenter-duanxin',
           //   selected_icon: require('@/images/sms.svg')
           // }
@@ -218,7 +220,8 @@
           expire_days_before: 0,
           expire_days_after: 0
         },
-        noticeFormBack: {},
+        noticeFormReset: {},
+        noticeDetail: {},
         isMethodsEmpty: false,
         isScopeEmpty: false,
         isDayEmpty: false,
@@ -237,15 +240,20 @@
       }
     },
     created () {
-      this.fetchSuperNoticeConfig();
+      this.fetchSuperNoticeConfig(false);
     },
     methods: {
-      async fetchSuperNoticeConfig () {
+      async fetchSuperNoticeConfig (isReset = false) {
         try {
           const { data } = await this.$store.dispatch('renewalNotice/getSuperNoticeConfig');
           if (data) {
+            // 如果是重置操作，只需赋值给重置变量
+            if (isReset) {
+              this.noticeFormReset = Object.assign(this.noticeFormReset, data);
+              return;
+            }
             this.noticeForm = Object.assign(this.noticeForm, data);
-            this.noticeFormBack = cloneDeep(this.noticeForm);
+            [this.noticeFormReset, this.noticeDetail] = [cloneDeep(this.noticeForm), cloneDeep(this.noticeForm)];
           }
         } catch (e) {
           this.messageAdvancedError(e);
@@ -263,7 +271,7 @@
           this.isMethodsEmpty = true;
           return;
         }
-        if (!expireDaysBefore || !expireDaysAfter) {
+        if (!String(expireDaysBefore) || !String(expireDaysAfter)) {
           this.isScopeEmpty = true;
           return;
         }
@@ -277,6 +285,9 @@
         }
         this.submitLoading = true;
         try {
+          if (JSON.stringify(this.noticeForm) !== JSON.stringify(this.noticeFormReset)) {
+            await this.fetchSuperNoticeConfig(true);
+          }
           await this.$store.dispatch('renewalNotice/updateSuperNoticeConfig', this.noticeForm);
           this.messageSuccess(this.$t(`m.info['保存成功']`), 3000);
         } catch (e) {
@@ -299,11 +310,19 @@
       },
 
       handleDayBeforeInput (payload) {
-        this.isScopeEmpty = !(payload.length > 0 && String(this.noticeForm.expire_days_after).length > 0);
+        if (Number(payload) > 15) {
+          payload = 15;
+          this.noticeForm.expire_days_before = 15;
+        }
+        this.isScopeEmpty = !(String(payload).length > 0 && String(this.noticeForm.expire_days_before).length > 0);
       },
 
       handleDayAfterInput (payload) {
-        this.isScopeEmpty = !(payload.length > 0 && String(this.noticeForm.expire_days_before).length > 0);
+        if (Number(payload) > 15) {
+          payload = 15;
+          this.noticeForm.expire_days_after = 15;
+        }
+        this.isScopeEmpty = !(String(payload).length > 0 && String(this.noticeForm.expire_days_after).length > 0);
       },
 
       handleDayChange (payload) {
@@ -315,11 +334,11 @@
       },
 
       handleReset () {
-        this.noticeForm = cloneDeep(this.noticeFormBack);
+        this.noticeForm = cloneDeep(this.noticeFormReset);
       },
 
       handleDefault () {
-        this.fetchSuperNoticeConfig();
+        this.noticeForm = cloneDeep(this.noticeDetail);
       }
     }
   };
@@ -450,6 +469,7 @@
           }
           &.notice-scope {
             align-items: center;
+            width: calc(100% - 28px);
             .notice-scope-title {
               margin-top: -22px;
               margin-bottom: 0;
@@ -491,10 +511,10 @@
           }
           &.notice-day {
             align-items: self-start;
-            margin-bottom: 20px !important;
+            margin-bottom: 16px !important;
            /deep/ .notice-day-checkbox {
               margin-right: 40px;
-              margin-bottom: 4px;
+              margin-bottom: 8px;
               line-height: 20px;
               &:nth-child(5) {
                 margin-right: 0;
@@ -506,6 +526,7 @@
           }
           &.notice-send-time {
             align-items: baseline;
+            width: calc(100% - 28px);
             .notice-item-value {
               .bk-date-picker {
                 width: 100%;
@@ -572,9 +593,6 @@
                 min-width: 51px;
               }
             }
-          }
-          .notice-send-time {
-            width: calc(100% - 28px);
           }
         }
       }
