@@ -29,6 +29,7 @@
               style="width: 200px; background: #fff"
               v-model="systemId"
               :clearable="true"
+              :searchable="true"
               :placeholder="$t(`m.verify['请选择']`)"
               :disabled="isSystemDisabled"
               @change="handleCascadeChange"

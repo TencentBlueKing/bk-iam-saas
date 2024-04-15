@@ -1033,7 +1033,7 @@
           const keyword = getUsername(manualInputValue[i]);
           const params = {
             keyword,
-            is_exact: true
+            is_exact: false
           };
           try {
             if (manualInputValue.length < 10) {
