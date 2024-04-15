@@ -634,9 +634,7 @@
             item.sub_groups = [];
           }
           let allChecked = true;
-          if (['myManageSpaceCreate'].includes(this.$route.name)
-            && (['gradingAdminCreate'].includes(this.$route.name) && ['staff'].includes(this.user.role.type))
-          ) {
+          if (['myManageSpaceCreate', 'authorBoundaryEditFirstLevel'].includes(this.$route.name)) {
             item.actions = item.actions.filter(v => !v.hidden);
           }
           item.actions.forEach(act => {
@@ -654,9 +652,7 @@
             this.linearAction.push(act);
           });
           item.sub_groups.forEach(act => {
-            if (['myManageSpaceCreate'].includes(this.$route.name)
-              && (['gradingAdminCreate'].includes(this.$route.name) && ['staff'].includes(this.user.role.type))
-            ) {
+            if (['myManageSpaceCreate', 'authorBoundaryEditFirstLevel'].includes(this.$route.name)) {
               act.actions = act.actions.filter(v => !v.hidden);
             }
             (act.actions || []).forEach(v => {
