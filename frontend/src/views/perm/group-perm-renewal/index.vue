@@ -319,7 +319,8 @@
           this.$set(item, 'groupTabList', cloneDeep(this.groupTabList));
           await Promise.all([this.fetchMembers(item), this.fetchGroupSubjectTemplate(item)]).then(() => {
             if (item.groupTabList && item.groupTabList.length) {
-              item.groupTabList[0].children && item.groupTabList[0].children.forEach(subItem => {
+              const childList = item.groupTabList.map((item) => item.children || []).flat(Infinity);
+              childList && childList.forEach(subItem => {
                 item.checkList.push(subItem);
                 if (this.$refs.permTableRef && this.$refs.permTableRef.length) {
                   this.$refs.permTableRef[i].toggleRowSelection(subItem, true);
@@ -912,17 +913,11 @@
     }
   }
   .member-template {
-    background-color: #f0f5ff;
-    color: #3a84ff;
     padding: 4px 6px;
     width: max-content;
-    border-radius: 2px;
+    color: #313238;
     i {
-      color: #699df4;
-    }
-    &:hover {
-      color: #699df4;
-      cursor: pointer;
+      color: #979ba5;
     }
   }
   /deep/ .group-renewal-member-wrapper {
