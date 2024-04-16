@@ -367,7 +367,7 @@
 
     .views-layout {
         min-height: 100%;
-        min-width: 1120px;
+        /* min-width: 1120px; */
         padding: 24px;
     }
 

@@ -94,6 +94,9 @@ import memberTemplate from './modules/member-template';
 // 用户/组织模块
 import userOrOrg from './modules/user-org';
 
+// 续期通知
+import renewalNotice from './modules/renewal-notice';
+
 Vue.use(Vuex);
 
 const SITE_URL = window.SITE_URL;
@@ -299,6 +302,14 @@ const currentNav = [
         disabled: false
       },
       {
+        icon: 'notification',
+        name: il8n('nav', '续期通知'),
+        id: 'renewalNoticeNav',
+        rkey: 'renewalNotice',
+        path: `${SITE_URL}renewal-notice`,
+        disabled: false
+      },
+      {
         icon: 'operate-audit',
         name: il8n('nav', '审计'),
         id: 'auditNav',
@@ -368,7 +379,8 @@ const store = new Vuex.Store({
     userGroupSetting,
     sensitivityLevel,
     memberTemplate,
-    userOrOrg
+    userOrOrg,
+    renewalNotice
   },
   state: {
     mainContentLoading: false,

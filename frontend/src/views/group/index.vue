@@ -1057,14 +1057,6 @@
             text-overflow: ellipsis;
             white-space: nowrap;
         }
-
-        .bk-table-pagination-wrapper {
-            background-color: #ffffff;
-        }
-
-        .bk-table-fixed, .bk-table-fixed-right {
-            border-bottom: 0;
-        }
     }
 }
 </style>

@@ -588,7 +588,8 @@ export const m = {
         '确认删除该人员模板？': 'Are you sure to delete the member template?',
         '确认解除与该用户组的关联？': 'Are you sure to dissociate from this user group?',
         '确认批量删除所选的人员模板吗？': 'Are you sure to batch delete the selected member templates?',
-        '确认把用户/组织移出该用户组？': 'Are you sure to move the user/organization out of this user group?'
+        '确认把用户/组织移出该用户组？': 'Are you sure to move the user/organization out of this user group?',
+        '确认删除该操作模板？': 'Are you sure to delete the operation template?'
     },
     nav: {
         '蓝鲸权限中心': 'BlueKing-IAM',
@@ -646,8 +647,9 @@ export const m = {
         '克隆二级管理空间': 'Clone Secondary management space',
         '用户组设置': 'User Group Setting',
         '敏感等级': 'Sensitivity Level',
-        '人员模板': 'Members Template',
+        '人员模板': 'Member Templates',
         '用户/组织': 'User/Organization',
+        '续期通知': 'Renewal notice',
         '操作模板': 'Action Templates'
     },
     applyEntrance: {
@@ -1521,6 +1523,41 @@ export const m = {
         '已选择的用户组权限为不可移出的管理员组': 'The selected user group permission is an administrator group that cannot be removed',
         '已选择的用户组权限不需要续期': 'The selected user group permissions do not need to be renewed',
         '组织用户组权限': 'Organizational user group permissions'
+    },
+    renewalNotice: {
+        '邮件': 'Mail',
+        '短信': 'SMS',
+        '微信': 'WeChat',
+        '企业微信': 'WeCom',
+        '通知方式': 'Notice method',
+        '通知时间': 'Notice time',
+        '通知范围': 'Notice scope',
+        '通知日': 'Notice day',
+        '发送时间': 'Send time',
+        '整个通知范围，需要 >= 7 天且过期前后的日期范围最大为15天': 'The entire notification scope needs to be>=7 days, and the maximum date range before and after expiration is 15 days',
+        '通知方式为必填项': 'Notice method required',
+        '通知范围为必填项': 'Notice scope required',
+        '通知日为必填项': 'Notice date required',
+        '发送时间为必填项': 'Send time required',
+        '过期前': 'Before expiration',
+        '过期后': 'After expiration',
+        '天内': 'within the day',
+        '逢': 'Encounter',
+        '的': '',
+        '发送通知': 'send notice',
+        '恢复默认': 'Default',
+        '周一': 'Monday',
+        '周二': 'Tuesday',
+        '周三': 'Wednesday',
+        '周四': 'Thursday',
+        '周五': 'Friday',
+        '周六': 'Saturday',
+        '周日': 'Sunday'
+    },
+    actionsTemplate: {
+        '模板名称': 'Template name',
+        '搜索 模板名称、所属系统、创建人、描述': 'Search template name, system, creator, description',
+        '删除后，无法恢复，请谨慎操作！': 'After deletion, it cannot be restored. Please operate with caution!'
     }
 }
 export default {

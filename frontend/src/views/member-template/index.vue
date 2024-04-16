@@ -151,10 +151,18 @@
       @on-cancel="handleCancelAdd"
       @on-sumbit="handleSubmitAdd" @on-after-leave="handleAddAfterClose" />
 
-    <DeleteActionDialog :show.sync="isShowDeleteDialog" :loading="batchQuitLoading" :width="formatDeleteWidth"
-      :title="delActionDialogTitle" :tip="delActionDialogTip" :name="currentActionName"
-      :related-action-list="readOnlyGroups" @on-after-leave="handleAfterDeleteLeave" @on-cancel="handleCancelDelete"
-      @on-submit="handleSubmitDelete" />
+    <DeleteActionDialog
+      :show.sync="isShowDeleteDialog"
+      :loading="batchQuitLoading"
+      :title="delActionDialogTitle"
+      :tip="delActionDialogTip"
+      :name="currentActionName"
+      :width="formatDeleteWidth"
+      :related-action-list="readOnlyGroups"
+      @on-after-leave="handleAfterDeleteLeave"
+      @on-cancel="handleCancelDelete"
+      @on-submit="handleSubmitDelete"
+    />
   </div>
 </template>
 

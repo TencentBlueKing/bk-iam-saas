@@ -313,19 +313,20 @@ class GroupService:
         )
         return data["count"], parse_obj_as(List[SubjectGroup], data["results"])
 
-    def list_exist_groups_before_expired_at(self, group_ids: List[int], expired_at: int) -> List[int]:
+    def list_group_subject_before_expired_at_by_ids(self, group_ids: List[int], expired_at: int) -> List[GroupSubject]:
         """
         筛选出存在的即将过期的用户组id
         """
         subjects = [{"type": SubjectType.GROUP.value, "id": str(_id)} for _id in group_ids]
 
-        exist_group_ids = []
-        for i in range(0, len(subjects), 500):
-            part_subjects = subjects[i : i + 500]
+        group_subjects = []
+        for i in range(0, len(subjects), 100):
+            part_subjects = subjects[i : i + 100]
             data = iam.list_exist_subjects_before_expired_at(part_subjects, expired_at)
-            exist_group_ids.extend([int(m["id"]) for m in data])
+            relations = parse_obj_as(List[GroupSubject], data)
+            group_subjects.extend(relations)
 
-        return exist_group_ids
+        return group_subjects
 
     def update_subject_groups_expired_at(self, subject_expired_at: GroupMemberExpiredAt, group_ids: List[int]):
         """

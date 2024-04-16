@@ -893,10 +893,6 @@
     margin-top: 16px;
     .perm-renewal-table {
       border: none;
-      .bk-table-fixed,
-      .bk-table-fixed-right {
-        border-bottom: 0;
-      }
     }
   }
   .error-tips {

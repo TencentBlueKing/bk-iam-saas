@@ -277,6 +277,8 @@
     [['resourcePermManage'], 'resourcePermManageNav'],
     // 用户/组织
     [['userOrgPerm'], 'userOrgPermNav'],
+    // 续期通知
+    [['renewalNotice'], 'renewalNoticeNav'],
     // 操作模板
     [['actionsTemplate'], 'actionsTemplateNav']
   ]);

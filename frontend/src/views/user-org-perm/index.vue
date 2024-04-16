@@ -49,6 +49,7 @@
                 type="number"
                 v-model="formData.id"
                 :placeholder="$t(`m.verify['请输入']`)"
+                :precision="0"
                 :show-controls="false"
                 @enter="handleSearch"
               />
@@ -161,6 +162,7 @@
                     v-if="['id'].includes(tag.name)"
                     ref="inputRef"
                     type="number"
+                    :precision="0"
                     :value="tag.value"
                     :placeholder="$t(`m.verify['请输入']`)"
                     :show-controls="false"

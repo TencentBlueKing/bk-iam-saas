@@ -423,3 +423,24 @@ class RoleGroupMember(models.Model):
         unique_together = [
             ["role_id", "subject_type", "subject_id", "group_id", "subject_template_id"],
         ]
+
+
+class RolePolicyExpiredNotificationConfig(BaseModel):
+    """
+    角色策略过期通知配置
+    """
+
+    role_id = models.IntegerField("角色ID", unique=True)
+    _config = models.TextField("配置", db_column="config", default="{}")
+
+    class Meta:
+        verbose_name = "角色策略过期通知配置"
+        verbose_name_plural = "角色策略过期通知配置"
+
+    @property
+    def config(self):
+        return json.loads(self._config)
+
+    @config.setter
+    def config(self, config):
+        self._config = json_dumps(config)

@@ -163,6 +163,9 @@ const Setting = () => import(/* webpackChunkName: 'set' */ '../views/set');
 // 审批流程设置
 const ApprovalProcess = () => import(/* webpackChunkName: 'approvalProcess' */ '../views/approval-process');
 
+// 续期通知
+const RenewalNotice = () => import(/* webpackChunkName: 'approvalProcess' */ '../views/renewal-notice');
+
 // 用户组设置
 const UserGroupSetting = () => import(/* webpackChunkName: 'userGroupSetting' */ '../views/user-group-setting');
 
@@ -677,6 +680,14 @@ export const routes = [
           headerTitle: il8n('myApply', '审批流程')
         },
         component: ApprovalProcess
+      },
+      {
+        path: 'renewal-notice',
+        name: 'renewalNotice',
+        meta: {
+          headerTitle: il8n('nav', '续期通知')
+        },
+        component: RenewalNotice
       },
       {
         path: 'user-group-setting',

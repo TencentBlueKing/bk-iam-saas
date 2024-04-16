@@ -239,6 +239,15 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .iamcenter-revoke:before {
 	content: "\e1d2";
 }
+.iamcenter-qq:before {
+	content: "\e22b";
+}
+.iamcenter-qw:before {
+	content: "\e229";
+}
+.iamcenter-wechat:before {
+	content: "\e22a";
+}
 .iamcenter-user-directory:before {
 	content: "\e1d3";
 }
@@ -436,4 +445,16 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 }
 .iamcenter-renyuanmuban:before {
 	content: "\e225";
+}
+.iamcenter-setting:before {
+	content: "\e227";
+}
+.iamcenter-notification:before {
+	content: "\e228";
+}
+.iamcenter-duanxin:before {
+	content: "\e22d";
+}
+.iamcenter-youjian:before {
+	content: "\e22c";
 }
