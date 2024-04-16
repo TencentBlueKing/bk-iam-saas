@@ -189,6 +189,14 @@ const currentNav = [
         disabled: false
       },
       {
+        icon: 'perm-template',
+        id: 'actionsTemplateNav',
+        rkey: 'memberTemplate',
+        name: il8n('nav', '操作模板'),
+        path: `${SITE_URL}actions-template`,
+        disabled: false
+      },
+      {
         icon: 'renyuanmuban',
         id: 'memberTemplateNav',
         rkey: 'memberTemplate',

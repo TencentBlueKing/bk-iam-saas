@@ -104,6 +104,9 @@ const PermTemplateEdit = () => import(/* webpackChunkName: 'perm-template' */ '.
 const PermTemplateDifference = () =>
   import(/* webpackChunkName: 'perm-template' */ '../views/perm-template/edit/difference');
 
+// 操作模板
+const ActionsTemplate = () => import(/* webpackChunkName: 'actions-template' */ '../views/actions-template/index');
+
 // 用户
 const User = () => import(/* webpackChunkName: 'user' */ '../views/user');
 
@@ -122,14 +125,6 @@ const GradingAdminEdit = () => import(/* webpackChunkName: 'grading-admin' */ '.
 // 管理空间更新权限模板
 const GradingAdminUpdateTemplate = () =>
   import(/* webpackChunkName: 'grading-admin' */ '../views/grading-admin/update-template');
-
-// 管理空间
-// const FirstManageSpace = () =>
-//     import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/first-manage-space');
-
-// // 管理空间新建
-// const FirstManageSpaceCreate = () =>
-//     import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/first-manage-space/create');
 
 // 授权边界
 const AuthorizationBoundary = () =>
@@ -543,6 +538,14 @@ export const routes = [
         component: PermTemplateDifference
       },
       {
+        path: 'actions-template',
+        name: 'actionsTemplate',
+        meta: {
+          headerTitle: il8n('nav', '操作模板')
+        },
+        component: ActionsTemplate
+      },
+      {
         path: 'member-template',
         name: 'memberTemplate',
         meta: {
@@ -643,24 +646,6 @@ export const routes = [
         },
         component: GradingAdminUpdateTemplate
       },
-      // {
-      //     path: 'first-manage-space',
-      //     name: 'firstManageSpace',
-      //     meta: {
-      //         headerTitle: il8n('nav', '管理空间')
-      //     },
-      //     component: FirstManageSpace
-      // },
-      // {
-      //     path: ':id/first-manage-space-create',
-      //     name: 'firstManageSpaceCreate',
-      //     meta: {
-      //         headerTitle: il8n('levelSpace', '新建管理空间'),
-      //         backRouter: 'firstManageSpace'
-      //     },
-      //     props: true,
-      //     component: FirstManageSpaceCreate
-      // },
       {
         path: 'resource-permiss',
         name: 'resourcePermiss',

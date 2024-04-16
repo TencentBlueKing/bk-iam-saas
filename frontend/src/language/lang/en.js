@@ -647,7 +647,8 @@ export const m = {
         '用户组设置': 'User Group Setting',
         '敏感等级': 'Sensitivity Level',
         '人员模板': 'Members Template',
-        '用户/组织': 'User/Organization'
+        '用户/组织': 'User/Organization',
+        '操作模板': 'Action Templates'
     },
     applyEntrance: {
         '立刻申请': 'Apply now',
