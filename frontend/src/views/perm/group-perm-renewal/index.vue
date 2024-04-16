@@ -319,7 +319,8 @@
           this.$set(item, 'groupTabList', cloneDeep(this.groupTabList));
           await Promise.all([this.fetchMembers(item), this.fetchGroupSubjectTemplate(item)]).then(() => {
             if (item.groupTabList && item.groupTabList.length) {
-              item.groupTabList[0].children && item.groupTabList[0].children.forEach(subItem => {
+              const childList = item.groupTabList.map((v) => v.children || []).flat(Infinity);
+              childList && childList.forEach(subItem => {
                 item.checkList.push(subItem);
                 if (this.$refs.permTableRef && this.$refs.permTableRef.length) {
                   this.$refs.permTableRef[i].toggleRowSelection(subItem, true);
@@ -374,7 +375,7 @@
         try {
           const params = {
             limit: tabData.pagination.limit,
-            offset: tabData.pagination.limit * (item.groupTabList[1].pagination.current - 1),
+            offset: tabData.pagination.limit * (tabData.pagination.current - 1),
             id: item.id,
             expire_soon: true
           };
@@ -427,7 +428,6 @@
             item.currentBackup = 1;
             if (index === 0) {
               this.$set(item, 'expanded', true);
-              await Promise.all([this.fetchMembers(item), this.fetchGroupSubjectTemplate(item)]);
             }
           });
           this.handleRefreshTabCount();
@@ -554,7 +554,6 @@
         const { checkList, tabActive, name, id } = this.tableList[index];
         this.$nextTick(() => {
           const selectionCount = document.getElementsByClassName('bk-page-selection-count');
-          console.log(index, selectionCount, selectionCount[index]);
           let tableIndex = -1;
           if (this.$refs.permTableRef && this.$refs.permTableRef.length) {
             tableIndex = this.$refs.permTableRef.findIndex((v) => v.$el.dataset.customKey === `${name}&${id}-${index}`);
@@ -836,7 +835,6 @@
             name: 'userGroup'
           });
         } catch (e) {
-          console.error(e);
           this.fetchErrorMsg(e);
         } finally {
           this.submitLoading = false;
@@ -866,8 +864,7 @@
       },
 
       handleEmptyRefresh () {
-        this.pagination = Object.assign(this.pagination, { current: 1, limit: 10 });
-        this.fetchData(true);
+        this.fetchPageData();
       }
     }
   };
@@ -912,17 +909,11 @@
     }
   }
   .member-template {
-    background-color: #f0f5ff;
-    color: #3a84ff;
     padding: 4px 6px;
     width: max-content;
-    border-radius: 2px;
+    color: #313238;
     i {
-      color: #699df4;
-    }
-    &:hover {
-      color: #699df4;
-      cursor: pointer;
+      color: #979ba5;
     }
   }
   /deep/ .group-renewal-member-wrapper {
