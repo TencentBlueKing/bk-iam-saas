@@ -375,7 +375,7 @@
         try {
           const params = {
             limit: tabData.pagination.limit,
-            offset: tabData.pagination.limit * (item.groupTabList[1].pagination.current - 1),
+            offset: tabData.pagination.limit * (tabData.pagination.current - 1),
             id: item.id,
             expire_soon: true
           };
@@ -428,7 +428,6 @@
             item.currentBackup = 1;
             if (index === 0) {
               this.$set(item, 'expanded', true);
-              await Promise.all([this.fetchMembers(item), this.fetchGroupSubjectTemplate(item)]);
             }
           });
           this.handleRefreshTabCount();
@@ -555,7 +554,6 @@
         const { checkList, tabActive, name, id } = this.tableList[index];
         this.$nextTick(() => {
           const selectionCount = document.getElementsByClassName('bk-page-selection-count');
-          console.log(index, selectionCount, selectionCount[index]);
           let tableIndex = -1;
           if (this.$refs.permTableRef && this.$refs.permTableRef.length) {
             tableIndex = this.$refs.permTableRef.findIndex((v) => v.$el.dataset.customKey === `${name}&${id}-${index}`);
@@ -837,7 +835,6 @@
             name: 'userGroup'
           });
         } catch (e) {
-          console.error(e);
           this.fetchErrorMsg(e);
         } finally {
           this.submitLoading = false;
@@ -867,8 +864,7 @@
       },
 
       handleEmptyRefresh () {
-        this.pagination = Object.assign(this.pagination, { current: 1, limit: 10 });
-        this.fetchData(true);
+        this.fetchPageData();
       }
     }
   };
