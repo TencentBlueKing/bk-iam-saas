@@ -45,12 +45,12 @@
       <bk-table-column :label="$t(`m.common['所属系统']`)" prop="system.name" :min-width="100" />
       <bk-table-column :label="$t(`m.permTemplate['关联的组']`)">
         <template slot-scope="{ row }">
-          <template v-if="!!row.subject_count">
-            <bk-button text theme="primary" @click="handleView(row, 'associate_groups')">
+          <div class="associate-groups">
+            <bk-button v-if="!!row.subject_count" text theme="primary" @click="handleView(row, 'associate_groups')">
               {{ row.subject_count }}
             </bk-button>
-          </template>
-          <template v-else>0</template>
+            <span v-else>0</span>
+          </div>
         </template>
       </bk-table-column>
       <bk-table-column :label="$t(`m.permTemplate['创建人']`)" prop="creator" />
