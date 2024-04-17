@@ -197,7 +197,7 @@
             border="0"
             cellpadding="0"
             cellspacing="0"
-            width="928"
+            width="968"
             style="background:#fff;
                 border-collapse: collapse;
                 border-spacing: 0px;
@@ -227,20 +227,32 @@
                                             <th style="padding:15px 15px 15px 30px; color: #000; font-weight: normal; background: #f5f6fa; text-align: left; width: 250px;">
                                                 用户组
                                             </th>
-                                            <th style="padding:13px; color: #000; font-weight: normal; background: #f5f6fa; text-align: left; width: 360px;">
-                                                描述
+                                            <th style="padding:13px; color: #000; font-weight: normal; background: #f5f6fa; text-align: left; ">
+                                                过期成员
+                                            </th>
+                                            <th style="padding:13px; color: #000; font-weight: normal; background: #f5f6fa; text-align: left; ">
+                                                到期时间
                                             </th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for group in groups %}
                                         <tr>
-                                            <td style="padding:15px 15px 15px 30px;color: #555; max-width: 180px; word-wrap:break-word; word-break:break-all;">
+                                            <td style="padding: 15px 15px 15px 30px; color: #555; max-width: 180px; word-wrap:break-word; word-break:break-all;">
                                                 {{ group.name }}
                                             </td>
-                                            <td style="padding:13px;color: #555; max-width: 180px; word-wrap:break-word; word-break:break-all;">
-                                                {{ group.description }}
+                                            <td style="padding: 13px; color: #555; max-width: 180px; word-wrap:break-word; word-break:break-all;">
+                                                {{ group.subject_name }}({{group.subject_id}})
                                             </td>
+                                            {% if group.expired_at_display == "已过期" %}
+                                            <td style="padding:13px;color: #c4c6cc; max-width: 180px; word-wrap:break-word; word-break:break-all;">
+                                                {{ group.expired_at_display }}
+                                            </td>
+                                            {% else %}
+                                            <td style="padding:13px;color: #ff9c01; max-width: 180px; word-wrap:break-word; word-break:break-all;">
+                                                {{ group.expired_at_display }}
+                                            </td>
+                                            {% endif %}
                                         </tr>
                                         {% endfor %}
                                     </tbody>
