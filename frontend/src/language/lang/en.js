@@ -1463,7 +1463,7 @@ export const m = {
         '模板成员': 'Template members',
         '模板详情': 'Template detail',
         '模板描述': 'Template description',
-        '模板ID': 'Template ID',
+        '模板 ID': 'Template ID',
         '解除': 'Remove',
         '解除关联': 'Disassociate',
         '人员模板创建成功': 'Successfully created members template',

@@ -18,7 +18,7 @@
       size="small"
       ext-cls="actions-template-table"
       :class="{ 'set-border': tableLoading }"
-      :data="tableList"
+      :data="actionsTempList"
       :max-height="tableHeight"
       :pagination="pagination"
       @page-change="handlePageChange"
@@ -33,7 +33,7 @@
                 'name',
                 { 'single-hide is-lock': row.is_lock }
               ]"
-              v-bk-tooltips="{ content: row.name }"
+              v-bk-tooltips="{ content: row.name, placement: 'right-start' }"
               @click="handleView(row, 'basic_info')"
             >
               {{ row.name }}
@@ -131,8 +131,9 @@
 </template>
 
 <script>
-  import { cloneDeep } from 'lodash';
   import { mapGetters } from 'vuex';
+  import { cloneDeep } from 'lodash';
+  import { bus } from '@/common/bus';
   import { fuzzyRtxSearch } from '@/common/rtx';
   import { buildURLParams } from '@/common/url';
   import { formatCodeData, getWindowHeight, delLocationHref } from '@/common/util';
@@ -148,7 +149,7 @@
     },
     data () {
       return {
-        tableList: [],
+        actionsTempList: [],
         tableLoading: false,
         pagination: {
           current: 1,
@@ -159,7 +160,7 @@
         searchData: [
           {
             id: 'name',
-            name: this.$t(`m.permTemplate['模板名']`),
+            name: this.$t(`m.actionsTemplate['模板名称']`),
             default: true
           },
           {
@@ -243,6 +244,9 @@
       });
       this.getQueryParamsData();
     },
+    mounted () {
+      this.updateSliderOperateData();
+    },
     methods: {
       async fetchPageData () {
         await this.fetchTemplateList();
@@ -296,6 +300,23 @@
             }
           }
         }
+      },
+
+      updateSliderOperateData () {
+        this.$once('hook:beforeDestroy', () => {
+          bus.$off('on-info-change');
+          bus.$off('on-related-change');
+        });
+        bus.$on('on-info-change', (payload) => {
+          const { id, name, description } = payload;
+          const index = this.actionsTempList.findIndex((item) => item.id === id);
+          if (index > -1) {
+            this.actionsTempList[index] = Object.assign(this.actionsTempList[index], {
+              name,
+              description
+            });
+          }
+        });
       },
   
       refreshCurrentQuery () {
@@ -379,19 +400,20 @@
       async fetchTemplateList (isLoading = false) {
         this.tableLoading = isLoading;
         this.setCurrentQueryCache(this.refreshCurrentQuery());
+        const { current, limit } = this.pagination;
         const params = {
           ...this.searchParams,
-          limit: this.pagination.limit,
-          offset: this.pagination.limit * (this.pagination.current - 1)
+          limit,
+          offset: limit * (current - 1)
         };
         delete params.current;
         try {
           const { code, data } = await this.$store.dispatch('permTemplate/getTemplateList', params);
-          this.tableList = [...data.results || []];
+          this.actionsTempList = [...data.results || []];
           this.pagination = Object.assign(this.pagination, { count: data.count || 0 });
-          this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
+          this.emptyData = formatCodeData(code, this.emptyData, this.actionsTempList.length === 0);
         } catch (e) {
-          this.tableList = [];
+          this.actionsTempList = [];
           this.emptyData = formatCodeData(e.code, this.emptyData);
           this.messageAdvancedError(e);
         } finally {
