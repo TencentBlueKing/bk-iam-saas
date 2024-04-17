@@ -380,7 +380,9 @@
       },
       index: {
         handler (newValue, oldValue) {
-          if (oldValue && newValue !== oldValue && !this.curFromName) {
+          if (oldValue && newValue !== oldValue
+            && ([this.defaultRouteList[oldValue], this.defaultRouteList[newValue]].includes(this.curFromName))
+          ) {
             this.isSameRoute = true;
           }
         },
