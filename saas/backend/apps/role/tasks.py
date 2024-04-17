@@ -103,14 +103,14 @@ class SendRoleGroupExpireRemindMailTask(Task):
         group_members = []
 
         # 需要查询用户组已过期的成员
-        group_subjects = self.group_biz.list_group_subject_before_expired_at_by_ids(group_ids, expired_at_after)
+        group_subjects = self.group_biz.list_group_subject_before_expired_at_by_ids(group_ids, expired_at_before)
         for gs in group_subjects:
             # role 只通知部门相关的权限续期
             if gs.subject.type == SubjectType.USER.value:
                 continue
 
             # 判断过期时间是否在区间内
-            if gs.expired_at < expired_at_before:
+            if gs.expired_at < expired_at_after:
                 continue
 
             group_members.append(
@@ -139,7 +139,7 @@ class SendRoleGroupExpireRemindMailTask(Task):
 
         # 查询有人员模版过期的用户组
         qs = SubjectTemplateGroup.objects.filter(
-            expired_at__range=(expired_at_before, expired_at_after), group_id__in=group_ids
+            expired_at__range=(expired_at_after, expired_at_before), group_id__in=group_ids
         )
         for s in qs:
             group_members.append(
@@ -212,28 +212,28 @@ def role_group_expire_remind():
     if "mail" not in notification_config["notification_types"]:
         return
 
-    expired_at_before = get_expired_at(notification_config["expire_days_before"] * -1)
-    expired_at_after = get_expired_at(notification_config["expire_days_after"])
+    expired_at_before = get_expired_at(notification_config["expire_days_before"])
+    expired_at_after = get_expired_at(notification_config["expire_days_after"] * -1)
 
     group_biz = GroupBiz()
 
     group_id_set, role_id_set = set(), set()  # 去重用
 
     # 查询有过期成员的用户组关系
-    group_subjects = group_biz.list_group_subject_before_expired_at(expired_at_after)
+    group_subjects = group_biz.list_group_subject_before_expired_at(expired_at_before)
     for gs in group_subjects:
         # role 只通知部门相关的权限续期
         if gs.subject.type == SubjectType.USER.value:
             continue
 
         # 判断过期时间是否在区间内
-        if gs.expired_at < expired_at_before:
+        if gs.expired_at < expired_at_after:
             continue
 
         _add_group_role_set(group_id_set, role_id_set, int(gs.group.id))
 
     # 查询人员模版过期的相关用户组
-    qs = SubjectTemplateGroup.objects.filter(expired_at__range=(expired_at_before, expired_at_after))
+    qs = SubjectTemplateGroup.objects.filter(expired_at__range=(expired_at_after, expired_at_before))
     paginator = Paginator(qs, 100)
     for i in paginator.page_range:
         for stg in paginator.page(i):

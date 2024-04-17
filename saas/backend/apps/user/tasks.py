@@ -65,12 +65,12 @@ class SendUserExpireRemindMailTask(Task):
         # 注意: rbac用户所属组很大, 这里会变成多次查询, 也变成多次db io (单次 1000 个)
         groups = [
             group
-            for group in self.group_biz.list_all_subject_group_before_expired_at(subject, expired_at_after)
-            if group.expired_at > expired_at_before
+            for group in self.group_biz.list_all_subject_group_before_expired_at(subject, expired_at_before)
+            if group.expired_at > expired_at_after
         ]
 
-        policies = self.policy_biz.list_expired(subject, expired_at_after)
-        policies = [p for p in policies if p.expired_at > expired_at_before]
+        policies = self.policy_biz.list_expired(subject, expired_at_before)
+        policies = [p for p in policies if p.expired_at > expired_at_after]
 
         if not groups and not policies:
             return
@@ -128,8 +128,8 @@ def user_group_policy_expire_remind():
     if "mail" not in notification_config["notification_types"]:
         return
 
-    expired_at_before = get_expired_at(notification_config["expire_days_before"] * -1)
-    expired_at_after = get_expired_at(notification_config["expire_days_after"])
+    expired_at_before = get_expired_at(notification_config["expire_days_before"])
+    expired_at_after = get_expired_at(notification_config["expire_days_after"] * -1)
 
     username_set = set()  # 用于去重
 
@@ -149,13 +149,13 @@ def user_group_policy_expire_remind():
 
     # 2. 查询用户组成员过期
     group_biz = GroupBiz()
-    group_subjects = group_biz.list_group_subject_before_expired_at(expired_at_after)
+    group_subjects = group_biz.list_group_subject_before_expired_at(expired_at_before)
     for gs in group_subjects:
         if gs.subject.type != SubjectType.USER.value:
             continue
 
         # 判断过期时间是否在区间内
-        if gs.expired_at < expired_at_before:
+        if gs.expired_at < expired_at_after:
             continue
 
         username = gs.subject.id
