@@ -50,6 +50,7 @@
                   type="number"
                   v-model="noticeForm.expire_days_before"
                   :precision="0"
+                  :max="15"
                   :maxlength="2"
                   @input="handleDayBeforeInput">
                   <template slot="prepend">
@@ -64,6 +65,7 @@
                   type="number"
                   v-model="noticeForm.expire_days_after"
                   :precision="0"
+                  :max="15"
                   :maxlength="2"
                   @input="handleDayAfterInput"
                 >
@@ -77,9 +79,9 @@
               </div>
               <div class="notice-item-scope-tip">
                 <bk-icon type="info-circle" class="icon" />
-                <span>{{ $t(`m.renewalNotice['整个通知范围，需要 >= 7 天且过期前后的日期范围最大为15天']`) }}</span>
+                <span>{{ $t(`m.renewalNotice['整个通知范围，需要 >= 7 天']`) }}</span>
               </div>
-              <div v-if="isScopeEmpty" class="notice-empty-error">{{ $t(`m.renewalNotice['通知范围为必填项']`) }}</div>
+              <div v-if="isScopeEmpty" class="notice-empty-error">{{ scopeEmptyError }}</div>
             </div>
           </div>
           <div class="notice-time-item notice-day">
@@ -219,7 +221,8 @@
         isScopeEmpty: false,
         isDayEmpty: false,
         isSendTimeEmpty: false,
-        submitLoading: false
+        submitLoading: false,
+        scopeEmptyError: ''
       };
     },
     computed: {
@@ -289,7 +292,15 @@
           payload = 15;
           this.noticeForm.expire_days_before = 15;
         }
-        this.isScopeEmpty = !(String(payload).length > 0 && String(this.noticeForm.expire_days_before).length > 0);
+        this.isScopeEmpty = !(String(payload).length > 0 && String(this.noticeForm.expire_days_after).length > 0);
+        const isLessSevenDay = Number(payload) + Number(this.noticeForm.expire_days_before) < 7;
+        if (this.isScopeEmpty) {
+          this.scopeEmptyError = this.$t(`m.renewalNotice['通知范围为必填项']`);
+        }
+        if (isLessSevenDay && !this.isScopeEmpty) {
+          this.scopeEmptyError = this.$t(`m.renewalNotice['通知范围至少7天']`);
+          this.isScopeEmpty = true;
+        }
       },
 
       handleDayAfterInput (payload) {
@@ -297,7 +308,16 @@
           payload = 15;
           this.noticeForm.expire_days_after = 15;
         }
-        this.isScopeEmpty = !(String(payload).length > 0 && String(this.noticeForm.expire_days_after).length > 0);
+        this.isScopeEmpty = !(String(payload).length > 0 && String(this.noticeForm.expire_days_before).length > 0);
+        const isLessSevenDay = Number(payload) + Number(this.noticeForm.expire_days_before) < 7;
+        if (this.isScopeEmpty) {
+          this.scopeEmptyError = this.$t(`m.renewalNotice['通知范围为必填项']`);
+        }
+        if (isLessSevenDay && !this.isScopeEmpty) {
+          this.scopeEmptyError = this.$t(`m.renewalNotice['通知范围至少7天']`);
+          this.isScopeEmpty = true;
+        }
+        console.log(this.isScopeEmpty);
       },
 
       handleDayChange (payload) {
@@ -320,10 +340,20 @@
           expire_days_before: expireDaysBefore,
           expire_days_after: expireDaysAfter
         } = this.noticeForm;
+        this.isScopeEmpty = false;
         this.isMethodsEmpty = !(notification_types.length > 0);
         this.isDayEmpty = !(send_days.length > 0);
-        this.isScopeEmpty = !(String(expireDaysBefore).length > 0 || String(expireDaysAfter).length > 0);
         this.isSendTimeEmpty = !(sendTime.length > 0);
+        const isScopeEmpty = !(String(expireDaysBefore).length > 0 || String(expireDaysAfter).length > 0);
+        const isLessSevenDay = Number(expireDaysBefore) + Number(expireDaysAfter) < 7;
+        if (isScopeEmpty) {
+          this.scopeEmptyError = this.$t(`m.renewalNotice['通知范围为必填项']`);
+          this.isScopeEmpty = true;
+        }
+        if (isLessSevenDay && !isScopeEmpty) {
+          this.scopeEmptyError = this.$t(`m.renewalNotice['通知范围至少7天']`);
+          this.isScopeEmpty = true;
+        }
         const result = this.isMethodsEmpty || this.isScopeEmpty || this.isDayEmpty || this.isSendTimeEmpty;
         return result;
       }
