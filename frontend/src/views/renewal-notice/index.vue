@@ -140,12 +140,6 @@
         >
           {{ $t(`m.common['重置']`)}}
         </bk-button>
-        <bk-button
-          class="renewal-notice-footer-btn"
-          @click.stop="handleDefault"
-        >
-          {{ $t(`m.renewalNotice['恢复默认']`)}}
-        </bk-button>
       </div>
     </div>
   </div>
@@ -221,7 +215,6 @@
           expire_days_after: 0
         },
         noticeFormReset: {},
-        noticeDetail: {},
         isMethodsEmpty: false,
         isScopeEmpty: false,
         isDayEmpty: false,
@@ -253,7 +246,7 @@
               return;
             }
             this.noticeForm = Object.assign(this.noticeForm, data);
-            [this.noticeFormReset, this.noticeDetail] = [cloneDeep(this.noticeForm), cloneDeep(this.noticeForm)];
+            this.noticeFormReset = cloneDeep(this.noticeForm);
           }
         } catch (e) {
           this.messageAdvancedError(e);
@@ -317,11 +310,6 @@
 
       handleReset () {
         this.noticeForm = cloneDeep(this.noticeFormReset);
-        this.handleGetValidate();
-      },
-
-      handleDefault () {
-        this.noticeForm = cloneDeep(this.noticeDetail);
         this.handleGetValidate();
       },
 

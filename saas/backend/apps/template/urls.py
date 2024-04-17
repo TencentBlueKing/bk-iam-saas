@@ -59,6 +59,12 @@ urlpatterns = [
                     views.TemplateUpdateCommitViewSet.as_view({"post": "create"}),
                     name="template.update_commit",
                 ),
+                # 转换成自定义权限
+                path(
+                    "convert_to_custom_policy/",
+                    views.TemplateConvertToCustomPolicyViewSet.as_view({"post": "create"}),
+                    name="template.convert_to_custom_policy",
+                ),
             ]
         ),
     ),

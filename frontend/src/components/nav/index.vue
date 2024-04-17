@@ -502,7 +502,6 @@
         this.selectCls = 'hide-iam-nav-select-cls';
         if (value) {
           this.selectCls = 'iam-nav-select-dropdown-content';
-          this.handleClearSearch();
           this.resetPagination();
           this.resetSubPagination();
           await this.resetRoleList('handleClearSearch');
@@ -575,6 +574,9 @@
       // 刷新一、二级管理员列表和设置当前页捕获不到的数据
       async resetRoleList (payload) {
         const { role } = this.user;
+        if (payload === 'handleClearSearch') {
+          this[payload]();
+        }
         if (this.$refs.selectTree) {
           const curNode = this.$refs.selectTree.getNodeById(role.id);
           if (!curNode && this.$refs.select && this.isSearch) {
@@ -587,9 +589,6 @@
           }
           if (curNode && curNode.data && curNode.data.has_subset_manager) {
             await this.handleExpandNode(curNode || this.curRoleData);
-          }
-          if (payload === 'handleClearSearch') {
-            this[payload]();
           }
         }
       },
