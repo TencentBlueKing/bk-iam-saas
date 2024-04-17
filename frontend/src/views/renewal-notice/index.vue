@@ -50,6 +50,7 @@
                   type="number"
                   v-model="noticeForm.expire_days_before"
                   :precision="0"
+                  :min="0"
                   :max="15"
                   :maxlength="2"
                   @input="handleDayBeforeInput">
@@ -65,6 +66,7 @@
                   type="number"
                   v-model="noticeForm.expire_days_after"
                   :precision="0"
+                  :min="0"
                   :max="15"
                   :maxlength="2"
                   @input="handleDayAfterInput"
@@ -293,7 +295,7 @@
           this.noticeForm.expire_days_before = 15;
         }
         this.isScopeEmpty = !(String(payload).length > 0 && String(this.noticeForm.expire_days_after).length > 0);
-        const isLessSevenDay = Number(payload) + Number(this.noticeForm.expire_days_before) < 7;
+        const isLessSevenDay = Number(payload) + Number(this.noticeForm.expire_days_after) < 7;
         if (this.isScopeEmpty) {
           this.scopeEmptyError = this.$t(`m.renewalNotice['通知范围为必填项']`);
         }
