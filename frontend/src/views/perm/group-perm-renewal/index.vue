@@ -63,7 +63,8 @@
                       :label="tableItem.label"
                       :prop="tableItem.prop">
                       <template slot-scope="{ row }">
-                        <span>{{ row.id }}({{ row.name }})</span>
+                        <span v-if="['user'].includes(row.type)">{{ row.id }}({{ row.name }})</span>
+                        <span v-if="['depart', 'department'].includes(row.type)">{{ row.name }}({{ row.id }})</span>
                       </template>
                     </bk-table-column>
                   </template>
@@ -324,6 +325,7 @@
                 item.checkList.push(subItem);
                 if (this.$refs.permTableRef && this.$refs.permTableRef.length) {
                   this.$refs.permTableRef[i].toggleRowSelection(subItem, true);
+                  this.fetchCustomTotal(i);
                 }
               });
             }
