@@ -51,13 +51,13 @@
 <script>
   import AssociateUserGroup from './associate-user-group.vue';
   import BasicInfoDetail from './basic-info-detail.vue';
-  import TemplateMemberTable from './template-member-table.vue';
+  import TemplateActionsTable from './template-actions-table.vue';
 
   export default {
     components: {
       AssociateUserGroup,
       BasicInfoDetail,
-      TemplateMemberTable
+      TemplateActionsTable
     },
     props: {
       show: {
@@ -84,7 +84,7 @@
         COM_MAP: Object.freeze(
           new Map([
             [['basic_info'], 'BasicInfoDetail'],
-            [['template_action'], 'TemplateMemberTable'],
+            [['template_action'], 'TemplateActionsTable'],
             [['associate_groups'], 'AssociateUserGroup']
           ])
         ),
