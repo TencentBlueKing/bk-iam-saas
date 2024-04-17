@@ -65,10 +65,7 @@
         default: false
       },
       curDetailData: {
-        type: Object,
-        default: () => {
-          return {};
-        }
+        type: Object
       }
     },
     data () {
@@ -112,10 +109,13 @@
         handler (value) {
           this.isShowSideSlider = !!value;
           if (this.curDetailData.tabActive && value) {
-            const { tabActive, group_count: groupCount } = this.curDetailData;
+            const { tabActive, subject_count: subjectCount } = this.curDetailData;
+            const tabIndex = this.tabList.findIndex((item) => item.id === 'associate_groups');
+            if (tabIndex > -1) {
+              this.$set(this.tabList[tabIndex], 'count', subjectCount || 0);
+            }
             this.tabActive = tabActive;
-            this.$set(this.tabList[2], 'count', groupCount || 0);
-            this.handleTabChange(this.tabActive, false);
+            this.handleTabChange(tabActive, false);
           }
         },
         immediate: true

@@ -1556,6 +1556,7 @@ export const m = {
     },
     actionsTemplate: {
         '模板名称': 'Template name',
+        '模板操作': 'Template action',
         '搜索 模板名称、所属系统、创建人、描述': 'Search template name, system, creator, description',
         '删除后，无法恢复，请谨慎操作！': 'After deletion, it cannot be restored. Please operate with caution!'
     }

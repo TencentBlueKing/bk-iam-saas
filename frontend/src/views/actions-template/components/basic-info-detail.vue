@@ -1,10 +1,13 @@
 <template>
   <div
-    class="action-template-basic-info"
+    :class="[
+      'action-template-basic-info',
+      { 'action-template-basic-info-lang': !curLanguageIsCn }
+    ]"
     v-bkloading="{ isLoading: detailLoading, opacity: 1 }"
   >
     <detail-layout mode="action-template-detail">
-      <render-layout class="sads">
+      <render-layout>
         <detail-item :label="`${$t(`m.memberTemplate['模板名称']`)}${$t(`m.common['：']`)}`">
           <div class="basic-info-value">
             <iam-edit-input
@@ -20,8 +23,8 @@
         <detail-item :label="`${$t(`m.memberTemplate['模板 ID']`)}${$t(`m.common['：']`)}`">
           <span class="basic-info-value">{{ basicInfo.id }}</span>
         </detail-item>
-        <detail-item :label="`${$t(`m.common['创建时间']`)}${$t(`m.common['：']`)}`">
-          <span class="basic-info-value">{{ basicInfo.created_time }}</span>
+        <detail-item :label="`${$t(`m.common['所属系统']`)}${$t(`m.common['：']`)}`">
+          <span class="basic-info-value">{{ basicInfo.system_name }}</span>
         </detail-item>
         <detail-item :label="`${$t(`m.memberTemplate['模板描述']`)}${$t(`m.common['：']`)}`">
           <div class="basic-info-value">
@@ -35,6 +38,19 @@
               :remote-hander="handleChangeInfo"
             />
           </div>
+        </detail-item>
+        <div class="detail-item-border" />
+        <detail-item :label="`${$t(`m.common['创建人']`)}${$t(`m.common['：']`)}`">
+          <span class="basic-info-value">{{ basicInfo.creator }}</span>
+        </detail-item>
+        <detail-item :label="`${$t(`m.common['创建时间']`)}${$t(`m.common['：']`)}`">
+          <span class="basic-info-value">{{ basicInfo.created_time }}</span>
+        </detail-item>
+        <detail-item :label="`${$t(`m.common['更新人']`)}${$t(`m.common['：']`)}`">
+          <span class="basic-info-value">{{ basicInfo.updater }}</span>
+        </detail-item>
+        <detail-item :label="`${$t(`m.common['更新时间']`)}${$t(`m.common['：']`)}`">
+          <span class="basic-info-value">{{ basicInfo.updated_time }}</span>
         </detail-item>
       </render-layout>
     </detail-layout>
@@ -66,13 +82,18 @@
       return {
         detailLoading: false,
         basicInfo: {
+          id: 0,
           name: '',
           description: '',
           systemName: '',
           systemId: '',
-          actions: [],
-          updatedTime: '',
-          id: 0
+          creator: '',
+          updater: '',
+          created_time: '',
+          updated_time: '',
+          system_name: '',
+          system_id: '',
+          actions: []
         },
         rules: [
           {
@@ -98,15 +119,14 @@
         try {
           const { id } = this.curDetailData;
           const { data } = await this.$store.dispatch('permTemplate/getTemplateDetail', { id, grouping: true });
-          this.basicInfo = Object.assign({}, {
-            name: data.name,
-            description: data.description,
-            systemName: data.system.name,
-            systemId: data.system.id,
-            actions: data.actions,
-            updatedTime: data.updated_time,
-            id
-          });
+          const result = {
+            ...data,
+            ...{
+              system_name: data.system.name,
+              system_id: data.system.id
+            }
+          };
+          this.basicInfo = Object.assign({}, result);
           this.handleActionData();
         } catch (e) {
           this.messageAdvancedError(e);
@@ -284,15 +304,46 @@
 
 <style lang="postcss" scoped>
 .action-template-basic-info {
-  padding-left: 40px;
+  padding: 0 48px;
   .basic-info-value {
     margin-left: 8px;
   }
+  .detail-item-border {
+    width: 100%;
+    height: 1px;
+    background-color: #DCDEE5;
+    margin-top: 16px;
+    margin-bottom: 24px;
+  }
   /deep/.action-template-detail {
     .iam-render-common-layout {
-      .detail-label {
-        min-width: 80px;
-        /* text-align: right; */
+      .detail-item {
+        font-size: 12px;
+        line-height: 32px;
+        .detail-label {
+          min-width: 60px;
+          text-align: right;
+        }
+        .detail-content {
+          width: calc(100vh - 104px);
+          .iam-edit-textarea {
+            width: 100% !important;
+          }
+        }
+      }
+    }
+  }
+  &-lang {
+    /deep/.action-template-detail {
+      .iam-render-common-layout {
+        .detail-item {
+          .detail-label {
+            min-width: 120px;
+          }
+          .detail-content {
+            width: calc(100vh - 160px);
+          }
+        }
       }
     }
   }

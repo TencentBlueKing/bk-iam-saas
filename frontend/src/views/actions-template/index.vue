@@ -305,7 +305,6 @@
       updateSliderOperateData () {
         this.$once('hook:beforeDestroy', () => {
           bus.$off('on-info-change');
-          bus.$off('on-related-change');
         });
         bus.$on('on-info-change', (payload) => {
           const { id, name, description } = payload;
