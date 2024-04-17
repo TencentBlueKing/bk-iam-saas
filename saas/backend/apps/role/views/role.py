@@ -649,8 +649,11 @@ class RoleGroupRenewViewSet(mixins.ListModelMixin, GenericViewSet):
         if not group_ids:
             return Group.objects.none()
 
+        # 查询有成员过期的用户组
         expired_at = get_soon_expire_ts()
-        exist_group_ids = self.group_biz.list_exist_groups_before_expired_at(group_ids, expired_at)
+        group_subjects = self.group_biz.list_group_subject_before_expired_at_by_ids(group_ids, expired_at)
+        exist_group_ids = set(map(int, [i.group.id for i in group_subjects]))
+
         # 查询有人员模版过期的用户组
         subject_template_group_ids = list(
             SubjectTemplateGroup.objects.filter(expired_at__lt=expired_at, group_id__in=group_ids).values_list(
