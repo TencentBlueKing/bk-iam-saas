@@ -1128,7 +1128,7 @@ class RoleNotificationConfigView(views.APIView):
         tags=["role"],
     )
     def get(self, request, *args, **kwargs):
-        if request.role.type != RoleType.SUBSET_MANAGER.value:
+        if request.role.type != RoleType.SUPER_MANAGER.value:
             raise error_codes.FORBIDDEN
 
         notification_config = RolePolicyExpiredNotificationConfig.objects.filter(role_id=request.role.id).get()
@@ -1141,7 +1141,7 @@ class RoleNotificationConfigView(views.APIView):
         tags=["role"],
     )
     def post(self, request, *args, **kwargs):
-        if request.role.type != RoleType.SUBSET_MANAGER.value:
+        if request.role.type != RoleType.SUPER_MANAGER.value:
             raise error_codes.FORBIDDEN
 
         serializer = NotificationConfigSerializer(data=request.data)
