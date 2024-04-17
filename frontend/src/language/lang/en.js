@@ -648,7 +648,7 @@ export const m = {
         '敏感等级': 'Sensitivity Level',
         '人员模板': 'Members Template',
         '用户/组织': 'User/Organization',
-        '续期通知': 'Renewal notice'
+        '续期通知': 'Renewal Notice'
     },
     applyEntrance: {
         '立刻申请': 'Apply now',
