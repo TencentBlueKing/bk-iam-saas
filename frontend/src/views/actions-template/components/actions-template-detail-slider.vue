@@ -3,19 +3,19 @@
     <bk-sideslider
       :is-show="isShowSideSlider"
       :width="width"
-      ext-cls="iam-member-template-detail-side"
+      ext-cls="iam-action-template-detail-side"
       :quick-close="true"
       @update:isShow="handleCancel"
     >
-      <div slot="header" class="iam-member-template-detail-side-header">
+      <div slot="header" class="iam-action-template-detail-side-header">
         <span>{{ $t(`m.memberTemplate['模板详情']`) }}</span>
         <span class="custom-header-divider">|</span>
         <span class="single-hide custom-header-name" :title="curDetailData.name">
           {{ curDetailData.name }}
         </span>
       </div>
-      <div slot="content" class="iam-member-template-detail-side-content">
-        <div class="member-template-tab">
+      <div slot="content" class="iam-action-template-detail-side-content">
+        <div class="action-template-tab">
           <div class="member-tab-groups">
             <div
               v-for="item in tabList"
@@ -33,7 +33,7 @@
             </div>
           </div>
         </div>
-        <div class="member-template-content">
+        <div class="action-template-content">
           <component
             ref="tempDetailComRef"
             :is="curCom"
@@ -170,7 +170,7 @@
 </script>
 
 <style lang="postcss" scoped>
-.iam-member-template-detail-side {
+.iam-action-template-detail-side {
   &-header {
     display: flex;
     .custom-header-divider {
@@ -185,7 +185,7 @@
   }
   &-content {
     /* height: calc(100vh - 114px); */
-    .member-template-tab {
+    .action-template-tab {
       padding: 24px 24px 0;
       background-color: #f5f7fa;
       position: sticky;
@@ -221,7 +221,7 @@
         }
       }
     }
-    .member-template-content {
+    .action-template-content {
       padding: 24px 0;
     }
   }
