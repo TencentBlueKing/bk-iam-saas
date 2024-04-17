@@ -135,7 +135,7 @@ def user_group_policy_expire_remind():
 
     # 1. 查询有自定义授权的用户
     qs = Policy.objects.filter(subject_type=SubjectType.USER.value).only("subject_id")
-    paginator = Paginator(qs, 100)
+    paginator = Paginator(qs, 1000)
 
     for i in paginator.page_range:
         for p in paginator.page(i):
