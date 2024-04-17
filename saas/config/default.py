@@ -287,7 +287,7 @@ CELERYBEAT_SCHEDULE = {
 # 是否开启初始化分级管理员
 ENABLE_INIT_GRADE_MANAGER = env.bool("BKAPP_ENABLE_INIT_GRADE_MANAGER", default=False)
 if ENABLE_INIT_GRADE_MANAGER:
-    CELERYBEAT_SCHEDULE["init_biz_grade_manager"] = {
+    CELERYBEAT_SCHEDULE["periodic_init_biz_grade_manager"] = {
         "task": "backend.apps.role.tasks.InitBizGradeManagerTask",
         "schedule": crontab(minute="*/2"),  # 每2分钟执行一次
     }
@@ -295,7 +295,7 @@ if ENABLE_INIT_GRADE_MANAGER:
 # 是否开启初始化BCS一级/二级管理员
 ENABLE_INIT_BCS_PROJECT_MANAGER = env.bool("BKAPP_ENABLE_INIT_BCS_PROJECT_MANAGER", default=False)
 if ENABLE_INIT_BCS_PROJECT_MANAGER:
-    CELERYBEAT_SCHEDULE["init_bcs_manager"] = {
+    CELERYBEAT_SCHEDULE["periodic_init_bcs_manager"] = {
         "task": "backend.apps.role.tasks.InitBcsProjectManagerTask",
         "schedule": crontab(minute="*/2"),  # 每2分钟执行一次
     }
