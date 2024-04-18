@@ -135,7 +135,7 @@
           },
           template_action: () => {
             this.$nextTick(() => {
-              this.$refs.tempDetailComRef && this.$refs.tempDetailComRef.fetchTempMemberList();
+              this.$refs.tempDetailComRef && this.$refs.tempDetailComRef.fetchDetailInfo();
             });
           },
           associate_groups: () => {
@@ -173,11 +173,14 @@
 .iam-action-template-detail-side {
   &-header {
     display: flex;
+    font-size: 16px;
+    color: #313238;
     .custom-header-divider {
       margin: 0 8px;
       color: #dcdee5;
     }
     .custom-header-name {
+      font-size: 12px;
       max-width: 800px;
       color: #979ba5;
       word-break: break-all;

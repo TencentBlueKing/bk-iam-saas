@@ -30,7 +30,6 @@
           <div class="basic-info-value">
             <iam-edit-textarea
               field="description"
-              width="600px"
               :mode="formatEdit"
               :placeholder="$t(`m.memberTemplate['请输入模板描述']`)"
               :max-length="255"
