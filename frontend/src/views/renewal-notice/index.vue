@@ -228,7 +228,7 @@
           send_time: '',
           expire_days_before: 0,
           expire_days_after: 0,
-          enable: true
+          enable: false
         },
         noticeFormReset: {},
         emptyData: {
