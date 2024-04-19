@@ -264,6 +264,9 @@
         try {
           const { data } = await this.$store.dispatch('renewalNotice/getSuperNoticeConfig');
           if (data) {
+            if (!data.hasOwnProperty('enable')) {
+              data.enable = false;
+            }
             // 如果是重置操作，只需赋值给重置变量
             if (isReset) {
               this.noticeFormReset = Object.assign(this.noticeFormReset, data);
@@ -271,6 +274,7 @@
             }
             this.noticeForm = Object.assign(this.noticeForm, data);
             this.noticeFormReset = cloneDeep(this.noticeForm);
+            bus.$emit('on-refresh-renewal-status', { isShowRenewalNotice: data.enable });
           }
         } catch (e) {
           this.messageAdvancedError(e);

@@ -291,6 +291,7 @@
         bus.$off('reload-page');
         bus.$off('refresh-role');
         bus.$off('on-set-tab');
+        bus.$off('on-refresh-renewal-status');
       });
     },
     mounted () {
@@ -299,6 +300,10 @@
       });
       bus.$on('on-set-tab', data => {
         this.active = data;
+      });
+      bus.$on('on-refresh-renewal-status', (payload) => {
+        const isShowRenewalNotice = payload.isShowRenewalNotice || false;
+        this.needProvideValue = Object.assign(this.needProvideValue, { isShowRenewalNotice });
       });
     },
     methods: {
