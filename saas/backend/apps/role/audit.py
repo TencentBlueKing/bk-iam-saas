@@ -115,3 +115,19 @@ class RoleGroupRenewAuditProvider(BaseRoleDataProvider):
     def extra(self):
         members = audit_context_getter(self.request, "members")
         return {"members": members}
+
+
+class RoleUpdateGroupConfigProvider(BaseRoleDataProvider):
+    type = AuditType.ROLE_UPDATE_GROUP_CONFIG.value
+
+    @property
+    def extra(self):
+        return {"data": audit_context_getter(self.request, "data")}
+
+
+class RoleUpdateNotificationConfigProvider(BaseRoleDataProvider):
+    type = AuditType.ROLE_UPDATE_NOTIFICATION_CONFIG.value
+
+    @property
+    def extra(self):
+        return {"data": audit_context_getter(self.request, "data")}

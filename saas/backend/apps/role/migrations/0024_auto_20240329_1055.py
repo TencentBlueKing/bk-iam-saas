@@ -11,6 +11,8 @@ def delete_periodic_tasks(apps, schema_editor):
     PeriodicTask.objects.filter(name="periodic_role_group_expire_remind").delete()
     PeriodicTask.objects.filter(name="check_user_permission_clean_task").delete()
     PeriodicTask.objects.filter(name="clean_user_permission_clean_record").delete()
+    PeriodicTask.objects.filter(name="init_bcs_manager").delete()
+    PeriodicTask.objects.filter(name="init_biz_grade_manager").delete()
 
 
 class Migration(migrations.Migration):

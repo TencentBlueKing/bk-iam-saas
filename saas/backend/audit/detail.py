@@ -254,6 +254,12 @@ class RoleGroupRenewProvider(BaseProvider):
         return {"members": data}
 
 
+class RoleConfigProvider(BaseProvider):
+    @property
+    def extra_info(self) -> Dict:
+        return {"data": self.event.extra["data"]}
+
+
 class ApprovalNameMixin:
     approval_svc = ApprovalProcessService()
 
@@ -393,6 +399,8 @@ class EventDetailExtra:
         AuditType.ROLE_COMMONACTION_CREATE.value: RoleCommonActionProvider,
         AuditType.ROLE_COMMONACTION_DELETE.value: RoleCommonActionProvider,
         AuditType.ROLE_GROUP_RENEW.value: RoleGroupRenewProvider,
+        AuditType.ROLE_UPDATE_GROUP_CONFIG.value: RoleConfigProvider,
+        AuditType.ROLE_UPDATE_NOTIFICATION_CONFIG.value: RoleConfigProvider,
         # approval
         AuditType.APPROVAL_GLOBAL_UPDATE.value: ApprovalGlobalProvider,
         AuditType.APPROVAL_ACTION_UPDATE.value: ApprovalActionProvider,

@@ -63,7 +63,9 @@
       <bk-table-column :label="$t(`m.common['操作-table']`)" :min-width="100" fixed="right">
         <template slot-scope="{ row }">
           <span>
-            <bk-button theme="primary" text class="table-operate-btn"> {{ $t(`m.common['编辑']`) }}</bk-button>
+            <bk-button theme="primary" text class="table-operate-btn" @click.stop="handleEdit(row)">
+              {{ $t(`m.common['编辑']`) }}
+            </bk-button>
             <bk-popconfirm
               trigger="click"
               placement="bottom-end"
@@ -190,6 +192,7 @@
         curTemplateId: '',
         addGroupLoading: false,
         spaceFiltersList: [],
+        editRequestQueue: [],
         curRole: 'staff',
         queryParams: {},
         emptyData: {
@@ -299,6 +302,34 @@
               }
             }
           }
+        }
+      },
+      
+      async getPreUpdateInfo () {
+        try {
+          const { data } = await this.$store.dispatch('permTemplate/getPreUpdateInfo', { id: this.curDetailData.id });
+          const flag = Object.keys(data).length > 0;
+          // const nameCache = window.localStorage.getItem('iam-header-name-cache');
+          // window.localStorage.setItem('iam-header-title-cache', `${this.$t(`m.nav['编辑权限模板']`)}(${nameCache})`);
+          if (flag) {
+            this.$store.commit('permTemplate/updatePreActionIds', data.action_ids || []);
+            this.$store.commit('permTemplate/updateAction', this.getActionsData(data.action_ids || []));
+            await this.addPreUpdateInfo(data.action_ids);
+            this.$router.push({
+              name: 'permTemplateDiff',
+              params: this.$route.params
+            });
+          } else {
+            this.editRequestQueue = ['getPre'];
+            this.$router.push({
+              name: 'actionsTemplateEdit',
+              params: this.$route.params
+            });
+          }
+        } catch (e) {
+          this.messageAdvancedError(e);
+        } finally {
+          this.editRequestQueue.shift();
         }
       },
 
@@ -422,7 +453,7 @@
   
       handleCreate () {
         this.$router.push({
-          name: 'permTemplateCreate'
+          name: 'actionsTemplateCreate'
         });
       },
   
@@ -533,6 +564,12 @@
         //     tab
         //   }
         // });
+      },
+
+      async handleEdit (payload) {
+        this.editRequestQueue = ['getPre', 'addPre'];
+        this.curDetailData = Object.assign(this.curDetailData, payload);
+        await this.getPreUpdateInfo();
       }
     }
   };

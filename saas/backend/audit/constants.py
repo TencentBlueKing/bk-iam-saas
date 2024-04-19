@@ -109,6 +109,8 @@ class AuditType(ChoicesEnum, StrEnum):
     ROLE_COMMONACTION_CREATE = auto()
     ROLE_COMMONACTION_DELETE = auto()
     ROLE_GROUP_RENEW = auto()
+    ROLE_UPDATE_GROUP_CONFIG = auto()
+    ROLE_UPDATE_NOTIFICATION_CONFIG = auto()
 
     APPROVAL_GLOBAL_UPDATE = auto()
     APPROVAL_ACTION_UPDATE = auto()

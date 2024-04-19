@@ -107,6 +107,12 @@ const PermTemplateDifference = () =>
 // 操作模板
 const ActionsTemplate = () => import(/* webpackChunkName: 'actions-template' */ '../views/actions-template/index');
 
+// 操作模板新建
+const ActionsTemplateCreate = () => import(/* webpackChunkName: 'actions-template' */ '../views/actions-template/create/index');
+
+// 操作模板编辑
+const ActionsTemplateEdit = () => import(/* webpackChunkName: 'actions-template' */ '../views/actions-template/edit/index');
+
 // 用户
 const User = () => import(/* webpackChunkName: 'user' */ '../views/user');
 
@@ -547,6 +553,24 @@ export const routes = [
           headerTitle: il8n('nav', '操作模板')
         },
         component: ActionsTemplate
+      },
+      {
+        path: 'actions-template-create',
+        name: 'actionsTemplateCreate',
+        meta: {
+          headerTitle: il8n('nav', '新建操作模板'),
+          backRouter: 'actionsTemplate'
+        },
+        component: ActionsTemplateCreate
+      },
+      {
+        path: 'actions-template-edit/:id/:systemId',
+        name: 'actionsTemplateEdit',
+        meta: {
+          headerTitle: '',
+          backRouter: 'actionsTemplate'
+        },
+        component: ActionsTemplateEdit
       },
       {
         path: 'member-template',
