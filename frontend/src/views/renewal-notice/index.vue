@@ -6,144 +6,154 @@
         { 'renewal-notice-content-lang': !curLanguageIsCn },
         { 'show-notice-alert': showNoticeAlert }
       ]">
-      <div class="notice-methods">
-        <div class="notice-item-label mb8">
-          {{ $t(`m.renewalNotice['通知方式']`) }}
+      <template v-if="noticeForm.enable">
+        <div class="notice-methods">
+          <div class="notice-item-label mb8">
+            {{ $t(`m.renewalNotice['通知方式']`) }}
+          </div>
+          <div class="notice-methods-list">
+            <div
+              v-for="item in noticeList"
+              :key="item.value"
+              :class="[
+                'notice-methods-item',
+                {
+                  'is-active': noticeForm.notification_types.includes(item.value)
+                }
+              ]"
+              @click.stop="handleSelectNoticeType(item)"
+            >
+              <div class="notice-type-content">
+                <i :class="['iam-icon', item.icon]" />
+                <img
+                  class="notice-type-img"
+                  :src="item.selected_icon"
+                />
+                <span class="notice-type-label">{{ item.label }}</span>
+              </div>
+              <span class="gou" />
+            </div>
+          </div>
+          <div v-if="isMethodsEmpty" class="notice-empty-error">{{ $t(`m.renewalNotice['通知方式为必填项']`) }}</div>
         </div>
-        <div class="notice-methods-list">
-          <div
-            v-for="item in noticeList"
-            :key="item.value"
-            :class="[
-              'notice-methods-item',
-              {
-                'is-active': noticeForm.notification_types.includes(item.value)
-              }
-            ]"
-            @click.stop="handleSelectNoticeType(item)"
+        <div class="notice-time">
+          <div class="notice-item-label mb8">
+            {{ $t(`m.renewalNotice['通知时间']`) }}
+          </div>
+          <div class="notice-time-content">
+            <div class="notice-time-item notice-scope">
+              <div class="notice-item-label notice-time-title notice-scope-title">
+                {{ $t(`m.renewalNotice['通知范围']`) }}
+              </div>
+              <div class="notice-item-value notice-item-scope">
+                <div class="notice-item-scope-input">
+                  <bk-input
+                    type="number"
+                    v-model="noticeForm.expire_days_before"
+                    :precision="0"
+                    :min="0"
+                    :max="15"
+                    :maxlength="2"
+                    @input="handleDayBeforeInput">
+                    <template slot="prepend">
+                      <div class="group-text"> {{ $t(`m.renewalNotice['过期前']`) }}</div>
+                    </template>
+                    <template slot="append">
+                      <div class="group-text"> {{ $t(`m.common['天']`) }}</div>
+                    </template>
+                  </bk-input>
+                  <span class="and-icon">~</span>
+                  <bk-input
+                    type="number"
+                    v-model="noticeForm.expire_days_after"
+                    :precision="0"
+                    :min="0"
+                    :max="15"
+                    :maxlength="2"
+                    @input="handleDayAfterInput"
+                  >
+                    <template slot="prepend">
+                      <div class="group-text"> {{ $t(`m.renewalNotice['过期后']`) }}</div>
+                    </template>
+                    <template slot="append">
+                      <div class="group-text"> {{ $t(`m.common['天']`) }}</div>
+                    </template>
+                  </bk-input>
+                </div>
+                <div class="notice-item-scope-tip">
+                  <bk-icon type="info-circle" class="icon" />
+                  <span>{{ $t(`m.renewalNotice['整个通知范围，需要 >= 7 天']`) }}</span>
+                </div>
+                <div v-if="isScopeEmpty" class="notice-empty-error">{{ scopeEmptyError }}</div>
+              </div>
+            </div>
+            <div class="notice-time-item notice-day">
+              <div class="notice-item-label notice-time-title">
+                {{ $t(`m.renewalNotice['通知日']`) }}
+              </div>
+              <div class="notice-item-value">
+                <bk-checkbox-group v-model="noticeForm.send_days" @change="handleDayChange">
+                  <bk-checkbox
+                    v-for="item in sendDaysList"
+                    :key="item.value"
+                    :value="item.value"
+                    class="notice-day-checkbox"
+                  >
+                    {{ $t(`m.renewalNotice['${item.label}']`) }}
+                  </bk-checkbox>
+                </bk-checkbox-group>
+                <div v-if="isDayEmpty" class="notice-empty-error">{{ $t(`m.renewalNotice['通知日为必填项']`) }}</div>
+              </div>
+            </div>
+            <div class="notice-time-item notice-send-time">
+              <div class="notice-item-label notice-time-title">
+                {{ $t(`m.renewalNotice['发送时间']`) }}
+              </div>
+              <div class="notice-item-value">
+                <bk-time-picker v-model="noticeForm.send_time" :format="'HH:mm'" @change="handleSendTimeChange" />
+                <div class="notice-item-time-tip">
+                  <span>{{ $t(`m.renewalNotice['过期前']`) }}</span>
+                  <span class="bold-text">{{ noticeForm.expire_days_before }}</span>
+                  <span>{{ $t(`m.common['天']`) }}</span>
+                  <span>~</span>
+                  <span>{{ $t(`m.renewalNotice['过期后']`) }}</span>
+                  <span class="bold-text">{{ noticeForm.expire_days_after }}</span>
+                  <span>{{ $t(`m.renewalNotice['天内']`) }}</span>
+                  <span>{{ $t(`m.common['，']`) }}</span>
+                  <span>{{ $t(`m.renewalNotice['逢']`) }}</span>
+                  <span class="bold-text">{{ formatDayLabel }}</span>
+                  <span>{{ $t(`m.renewalNotice['的']`) }}</span>
+                  <span class="bold-text">{{ noticeForm.send_time }}</span>
+                  <span>{{ $t(`m.renewalNotice['发送通知']`) }}</span>
+                </div>
+                <div v-if="isSendTimeEmpty" class="notice-empty-error">{{ $t(`m.renewalNotice['发送时间为必填项']`) }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="renewal-notice-footer">
+          <bk-button
+            theme="primary"
+            class="renewal-notice-footer-btn"
+            @click.stop="handleSubmit('submit')"
           >
-            <div class="notice-type-content">
-              <i :class="['iam-icon', item.icon]" />
-              <img
-                class="notice-type-img"
-                :src="item.selected_icon"
-              />
-              <span class="notice-type-label">{{ item.label }}</span>
-            </div>
-            <span class="gou" />
-          </div>
+            {{ $t(`m.common['保存']`)}}
+          </bk-button>
+          <bk-button
+            class="renewal-notice-footer-btn"
+            @click.stop="handleReset"
+          >
+            {{ $t(`m.common['重置']`)}}
+          </bk-button>
         </div>
-        <div v-if="isMethodsEmpty" class="notice-empty-error">{{ $t(`m.renewalNotice['通知方式为必填项']`) }}</div>
-      </div>
-      <div class="notice-time">
-        <div class="notice-item-label mb8">
-          {{ $t(`m.renewalNotice['通知时间']`) }}
-        </div>
-        <div class="notice-time-content">
-          <div class="notice-time-item notice-scope">
-            <div class="notice-item-label notice-time-title notice-scope-title">
-              {{ $t(`m.renewalNotice['通知范围']`) }}
-            </div>
-            <div class="notice-item-value notice-item-scope">
-              <div class="notice-item-scope-input">
-                <bk-input
-                  type="number"
-                  v-model="noticeForm.expire_days_before"
-                  :precision="0"
-                  :min="0"
-                  :max="15"
-                  :maxlength="2"
-                  @input="handleDayBeforeInput">
-                  <template slot="prepend">
-                    <div class="group-text"> {{ $t(`m.renewalNotice['过期前']`) }}</div>
-                  </template>
-                  <template slot="append">
-                    <div class="group-text"> {{ $t(`m.common['天']`) }}</div>
-                  </template>
-                </bk-input>
-                <span class="and-icon">~</span>
-                <bk-input
-                  type="number"
-                  v-model="noticeForm.expire_days_after"
-                  :precision="0"
-                  :min="0"
-                  :max="15"
-                  :maxlength="2"
-                  @input="handleDayAfterInput"
-                >
-                  <template slot="prepend">
-                    <div class="group-text"> {{ $t(`m.renewalNotice['过期后']`) }}</div>
-                  </template>
-                  <template slot="append">
-                    <div class="group-text"> {{ $t(`m.common['天']`) }}</div>
-                  </template>
-                </bk-input>
-              </div>
-              <div class="notice-item-scope-tip">
-                <bk-icon type="info-circle" class="icon" />
-                <span>{{ $t(`m.renewalNotice['整个通知范围，需要 >= 7 天']`) }}</span>
-              </div>
-              <div v-if="isScopeEmpty" class="notice-empty-error">{{ scopeEmptyError }}</div>
-            </div>
-          </div>
-          <div class="notice-time-item notice-day">
-            <div class="notice-item-label notice-time-title">
-              {{ $t(`m.renewalNotice['通知日']`) }}
-            </div>
-            <div class="notice-item-value">
-              <bk-checkbox-group v-model="noticeForm.send_days" @change="handleDayChange">
-                <bk-checkbox
-                  v-for="item in sendDaysList"
-                  :key="item.value"
-                  :value="item.value"
-                  class="notice-day-checkbox"
-                >
-                  {{ $t(`m.renewalNotice['${item.label}']`) }}
-                </bk-checkbox>
-              </bk-checkbox-group>
-              <div v-if="isDayEmpty" class="notice-empty-error">{{ $t(`m.renewalNotice['通知日为必填项']`) }}</div>
-            </div>
-          </div>
-          <div class="notice-time-item notice-send-time">
-            <div class="notice-item-label notice-time-title">
-              {{ $t(`m.renewalNotice['发送时间']`) }}
-            </div>
-            <div class="notice-item-value">
-              <bk-time-picker v-model="noticeForm.send_time" :format="'HH:mm'" @change="handleSendTimeChange" />
-              <div class="notice-item-time-tip">
-                <span>{{ $t(`m.renewalNotice['过期前']`) }}</span>
-                <span class="bold-text">{{ noticeForm.expire_days_before }}</span>
-                <span>{{ $t(`m.common['天']`) }}</span>
-                <span>~</span>
-                <span>{{ $t(`m.renewalNotice['过期后']`) }}</span>
-                <span class="bold-text">{{ noticeForm.expire_days_after }}</span>
-                <span>{{ $t(`m.renewalNotice['天内']`) }}</span>
-                <span>{{ $t(`m.common['，']`) }}</span>
-                <span>{{ $t(`m.renewalNotice['逢']`) }}</span>
-                <span class="bold-text">{{ formatDayLabel }}</span>
-                <span>{{ $t(`m.renewalNotice['的']`) }}</span>
-                <span class="bold-text">{{ noticeForm.send_time }}</span>
-                <span>{{ $t(`m.renewalNotice['发送通知']`) }}</span>
-              </div>
-              <div v-if="isSendTimeEmpty" class="notice-empty-error">{{ $t(`m.renewalNotice['发送时间为必填项']`) }}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="renewal-notice-footer">
-        <bk-button
-          theme="primary"
-          class="renewal-notice-footer-btn"
-          @click.stop="handleSubmit"
-        >
-          {{ $t(`m.common['保存']`)}}
-        </bk-button>
-        <bk-button
-          class="renewal-notice-footer-btn"
-          @click.stop="handleReset"
-        >
-          {{ $t(`m.common['重置']`)}}
-        </bk-button>
+      </template>
+      <div v-else class="close-renewal-notice">
+        <ExceptionEmpty
+          :type="emptyData.type"
+          :empty-text="emptyData.text"
+          :error-message="emptyData.tip"
+          :tip-type="emptyData.tipType"
+        />
       </div>
     </div>
   </div>
@@ -151,6 +161,7 @@
 
 <script>
   import { cloneDeep } from 'lodash';
+  import { bus } from '@/common/bus';
   export default {
     inject: ['showNoticeAlert'],
     data () {
@@ -216,9 +227,16 @@
           send_days: [],
           send_time: '',
           expire_days_before: 0,
-          expire_days_after: 0
+          expire_days_after: 0,
+          enable: false
         },
         noticeFormReset: {},
+        emptyData: {
+          type: 'empty',
+          text: this.$t(`m.renewalNotice['续期通知暂未开启']`),
+          tip: this.$t(`m.renewalNotice['请在顶部开启相关功能']`),
+          tipType: 'noPerm'
+        },
         isMethodsEmpty: false,
         isScopeEmpty: false,
         isDayEmpty: false,
@@ -238,6 +256,7 @@
       }
     },
     created () {
+      this.handleGetBusQueryData();
       this.fetchSuperNoticeConfig(false);
     },
     methods: {
@@ -245,6 +264,9 @@
         try {
           const { data } = await this.$store.dispatch('renewalNotice/getSuperNoticeConfig');
           if (data) {
+            if (!data.hasOwnProperty('enable')) {
+              data.enable = false;
+            }
             // 如果是重置操作，只需赋值给重置变量
             if (isReset) {
               this.noticeFormReset = Object.assign(this.noticeFormReset, data);
@@ -252,13 +274,14 @@
             }
             this.noticeForm = Object.assign(this.noticeForm, data);
             this.noticeFormReset = cloneDeep(this.noticeForm);
+            bus.$emit('on-refresh-renewal-status', { isShowRenewalNotice: data.enable });
           }
         } catch (e) {
           this.messageAdvancedError(e);
         }
       },
 
-      async handleSubmit () {
+      async handleSubmit (payload) {
         const isEmpty = this.handleGetValidate();
         if (isEmpty) {
           return;
@@ -269,7 +292,16 @@
             await this.fetchSuperNoticeConfig(true);
           }
           await this.$store.dispatch('renewalNotice/updateSuperNoticeConfig', this.noticeForm);
-          this.messageSuccess(this.$t(`m.info['保存成功']`), 3000);
+          const typeMap = {
+            submit: () => {
+              this.messageSuccess(this.$t(`m.info['保存成功']`), 3000);
+            },
+            status: () => {
+              const msg = this.noticeForm.enable ? this.$t(`m.renewalNotice['开启成功']`) : this.$t(`m.renewalNotice['关闭成功']`);
+              this.messageSuccess(msg, 3000);
+            }
+          };
+          typeMap[payload]();
         } catch (e) {
           this.messageAdvancedError(e);
         } finally {
@@ -319,7 +351,6 @@
           this.scopeEmptyError = this.$t(`m.renewalNotice['通知范围至少7天']`);
           this.isScopeEmpty = true;
         }
-        console.log(this.isScopeEmpty);
       },
 
       handleDayChange (payload) {
@@ -358,6 +389,17 @@
         }
         const result = this.isMethodsEmpty || this.isScopeEmpty || this.isDayEmpty || this.isSendTimeEmpty;
         return result;
+      },
+
+      handleGetBusQueryData () {
+        this.$once('hook:beforeDestroy', () => {
+          bus.$off('on-update-renewal-notice');
+        });
+        bus.$on('on-update-renewal-notice', async ({ isShowRenewalNotice }) => {
+          await this.fetchSuperNoticeConfig(false);
+          this.noticeForm.enable = isShowRenewalNotice || false;
+          await this.handleSubmit('status');
+        });
       }
     }
   };
@@ -367,6 +409,7 @@
 .renewal-notice-wrapper {
   padding: 24px;
   .renewal-notice-content {
+    position: relative;
     padding: 16px 24px;
     min-height: calc(100vh - 150px);
     background-color: #ffffff;
@@ -533,8 +576,11 @@
             margin-bottom: 16px !important;
            /deep/ .notice-day-checkbox {
               margin-right: 40px;
-              margin-bottom: 8px;
+              margin-top: 8px;
               line-height: 20px;
+              &:nth-child(-n+5) {
+                margin-top: 0;
+              }
               &:nth-child(5) {
                 margin-right: 0;
               }
@@ -593,6 +639,24 @@
     }
     .mb8 {
       margin-bottom: 8px;
+    }
+    /deep/.close-renewal-notice {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      .part-img {
+        width: 440px !important;
+      }
+      .part-text {
+        .empty-text {
+          font-size: 24px;
+          color: #63656E;
+        }
+        .tip-wrap {
+          margin-top: 16px;
+        }
+      }
     }
     &-lang {
       .notice-time {
