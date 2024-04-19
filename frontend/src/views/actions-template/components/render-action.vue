@@ -27,7 +27,13 @@
         </span>
       </p> -->
       <div class="action-content">
-        <div class="action-content-title" v-if="isShowGroupTitle(item)">{{ item.name }}</div>
+        <div
+          v-if="isShowGroupTitle(item)"
+          v-bk-tooltips="{ content: item.name, disabled: !isShowGroupTitle(item) }"
+          class="action-content-title single-hide"
+        >
+          {{ item.name }}
+        </div>
         <div class="action-content-wrapper">
           <div
             v-if="item.actions && item.actions.length > 0"
@@ -37,92 +43,92 @@
             ]"
             :style="formatActionStyle(index)"
           >
-            <bk-checkbox
-              v-for="(act, actIndex) in item.actions"
-              :key="actIndex"
-              :true-value="true"
-              :false-value="false"
-              v-model="act.checked"
-              :disabled="act.disabled || isDisabled"
-              ext-cls="iam-action-cls"
-              @change="handleActionChecked(...arguments, act, item)">
-              <bk-popover placement="top" :delay="300" ext-cls="iam-tooltips-cls">
-                <!-- <template v-if="act.disabled">
+            <div class="set-margin" :style="formatActionStyle(index)" />
+            <div class="action-content-wrapper-checkbox">
+              <bk-checkbox
+                v-for="(act, actIndex) in item.actions"
+                :key="actIndex"
+                :true-value="true"
+                :false-value="false"
+                v-model="act.checked"
+                :disabled="act.disabled || isDisabled"
+                ext-cls="iam-action-cls"
+                @change="handleActionChecked(...arguments, act, item)">
+                <bk-popover placement="top" :delay="300" ext-cls="iam-tooltips-cls">
                   <span :class="['single-hide text', { 'text-through': act.tag === 'delete' && mode === 'detail' }]">
                     {{ act.name }}
                   </span>
+                  <div slot="content" class="iam-perm-apply-action-popover-content">
+                    <div>
+                      <span class="name">{{ act.name }}</span>
+                      <span :class="getComputedClass(act)">
+                        ({{ act.checked ? act.disabled
+                          ? $t(`m.common['已获得']`) : $t(`m.common['已选择']`)
+                          : $t(`m.common['未选择']`) }})
+                      </span>
+                    </div>
+                    <div class="description">{{ $t(`m.common['描述']`) + '：' + (act.description || '--') }}</div>
+                    <div class="relate-action" v-if="act.related_actions.length > 0">
+                      {{ getRelatedActionTips(act.related_actions) }}
+                    </div>
+                  </div>
+                </bk-popover>
+                <bk-popover placement="top" :delay="300" ext-cls="iam-tooltips-cls">
+                  <template v-if="act.tag === 'delete'">
+                    <Icon type="error-fill" class="error-icon" />
+                  </template>
+                  <div slot="content" class="iam-perm-apply-action-popover-content">
+                    <div>
+                      {{$t(`m.common['由于管理空间的授权范围没有包含此操作，']`)}}<br>
+                      {{$t(`m.common[' 如需使用该模板进行新的授权必须先删除该操作。']`)}}
+                    </div>
+                  </div>
+                </bk-popover>
+                <template v-if="isCompare && act.hasOwnProperty('flag') && ['added', 'cancel'].includes(act.flag)">
+                  <bk-tag :theme="act.flag === 'added' ? 'success' : 'danger'">
+                    {{ act.flag === 'added' ? $t(`m.common['新增']`) : $t(`m.common['移除']`) }}
+                  </bk-tag>
                 </template>
-                <template v-else>
-                  <span :class="['single-hide text', { 'text-through': act.tag === 'delete' && mode === 'detail' }]">
-                    {{ act.name }}
-                  </span>
-                </template> -->
-                <span :class="['single-hide text', { 'text-through': act.tag === 'delete' && mode === 'detail' }]">
-                  {{ act.name }}555
-                </span>
-                <div slot="content" class="iam-perm-apply-action-popover-content">
-                  <div>
-                    <span class="name">{{ act.name }}</span>
-                    <span :class="getComputedClass(act)">
-                      ({{ act.checked ? act.disabled
-                        ? $t(`m.common['已获得']`) : $t(`m.common['已选择']`)
-                        : $t(`m.common['未选择']`) }})
-                    </span>
-                  </div>
-                  <div class="description">{{ $t(`m.common['描述']`) + '：' + (act.description || '--') }}</div>
-                  <div class="relate-action" v-if="act.related_actions.length > 0">
-                    {{ getRelatedActionTips(act.related_actions) }}
-                  </div>
-                </div>
-              </bk-popover>
-              <bk-popover placement="top" :delay="300" ext-cls="iam-tooltips-cls">
-                <template v-if="act.tag === 'delete'">
-                  <Icon type="error-fill" class="error-icon" />
-                </template>
-                <div slot="content" class="iam-perm-apply-action-popover-content">
-                  <div>
-                    {{$t(`m.common['由于管理空间的授权范围没有包含此操作，']`)}}<br>
-                    {{$t(`m.common[' 如需使用该模板进行新的授权必须先删除该操作。']`)}}
-                  </div>
-                </div>
-              </bk-popover>
-              <template v-if="isCompare && act.hasOwnProperty('flag') && ['added', 'cancel'].includes(act.flag)">
-                <bk-tag :theme="act.flag === 'added' ? 'success' : 'danger'">
-                  {{ act.flag === 'added' ? $t(`m.common['新增']`) : $t(`m.common['移除']`) }}
-                </bk-tag>
-              </template>
-            </bk-checkbox>
-            <bk-checkbox
-              v-if="!isDisabled"
-              :true-value="true"
-              :false-value="false"
-              v-model="item.allChecked"
-              :disabled="item.actions.every(v => v.disabled) || isDisabled"
-              ext-cls="iam-action-all-cls"
-              @change="handleAllChange(...arguments, item)">
-              {{ $t(`m.common['全选']`) }}
-            </bk-checkbox>
+              </bk-checkbox>
+              <bk-checkbox
+                v-if="!isDisabled"
+                :true-value="true"
+                :false-value="false"
+                v-model="item.allChecked"
+                :disabled="item.actions.every(v => v.disabled) || isDisabled"
+                ext-cls="iam-action-all-cls"
+                @change="handleAllChange(...arguments, item)">
+                {{ $t(`m.common['全选']`) }}
+              </bk-checkbox>
+            </div>
           </div>
           <div class="sub-group-action-content" v-if="isShowGroupSubAction(item)">
+            {{ item.s }}
             <section
               v-for="(subAct, subIndex) in item.sub_groups"
               :key="subIndex"
               :class="[
                 'sub-action-item',
-                { 'set-margin': subIndex !== 0 },
                 { 'sub-action-item-none': !subAct.actions.length }
               ]"
-              :style="formatActionStyle(index)"
+              :style="formatActionStyle(subIndex)"
             >
-              <div class="sub-action-wrapper">
-                <span
+              <div
+                :class="[
+                  'sub-action-wrapper',
+                  { 'set-border-top': item.sub_groups.length > 0 }
+                ]"
+              >
+                <div
                   v-if="subAct.actions.length > 0"
-                  :class="['single-hide name', { 'set-border': item.sub_groups.length > 1 }]"
-                  :title="subAct.name"
+                  v-bk-tooltips="{ content: subAct.name }"
+                  class="single-hide name"
                 >
                   {{ subAct.name }}
-                </span>
-                <div>
+                </div>
+                <!-- 占位12像素 -->
+                <div class="set-margin" :style="formatActionStyle(subIndex)"></div>
+                <div class="sub-action-wrapper-checkbox" :style="formatActionStyle(subIndex)">
                   <bk-checkbox
                     v-for="(act, actIndex) in subAct.actions"
                     :key="actIndex"
@@ -626,7 +632,6 @@
     }
   }
   .action-item {
-    min-height: 36px;
     background-color: #EAEBF0;
     &.set-border {
       border-bottom: 1px solid #dcdee5;
@@ -634,10 +639,9 @@
     &.action-item-none {
       display: none;
     }
-    p {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
+    .set-margin {
+      min-width: 12px;
+      height: 100%;
     }
     .action-group-name {
       color: #313238;
@@ -675,18 +679,19 @@
       align-items: center;
       border-bottom: 1px solid #ffffff;
       &-title {
-        min-width: 80px;
+        width: 80px;
         font-weight: 700;
         font-size: 12px;
         background-color: #EAEBF0;
         color: #313238;
-        padding: 0 8px;
+        padding-left: 8px;
       }
       &-wrapper {
         width: 100%;
         .self-action-content {
-          position: relative;
-          padding-left: 12px;
+          display: flex;
+          align-items: center;
+          margin-left: 80px;
         }
         .sub-group-action-content {
           .sub-action-item {
@@ -696,26 +701,25 @@
             .sub-action-wrapper {
               width: 100%;
               display: flex;
-              /* align-items: center; */
-              justify-content: flex-start;
+              align-items: center;
+              background-color: #EAEBF0;
+              border-left: 1px solid #ffffff;
               .name {
                 display: inline-block;
                 flex: 0 0 80px;
-                background-color: #EAEBF0;
                 color: #313238;
                 font-size: 12px;
                 font-weight: 700;
                 line-height: 36px;
                 padding: 0 8px;
-                margin-right: 12px;
-                &.set-border {
-                  border-top: 1px solid #ffffff;
-                  border-left: 1px solid #ffffff;
-                }
+    
               }
-            }
-            &.set-margin {
-              /* margin-top: 10px; */
+              &-checkbox {
+                flex-grow: 1;
+              }
+              &.set-border-top {
+                border-top: 1px solid #ffffff;
+              }
             }
             &.sub-action-item-none {
               display: none;

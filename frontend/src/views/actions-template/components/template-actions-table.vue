@@ -81,7 +81,6 @@
     },
     computed: {
       isShowAction () {
-        console.log(this.basicInfo.actions);
         if (this.basicInfoBack.actions.length) {
           return this.basicInfoBack.actions.some((item) => item.actions.length > 0);
         }
@@ -190,9 +189,9 @@
         });
       },
 
-      handleShowAllAction (payload) {
+      handleShowAllAction () {
         this.handleRefreshAction();
-        console.log(this.basicInfo, this.isShowAction);
+        console.log(this.basicInfo);
       },
 
       handleTableSearch () {
