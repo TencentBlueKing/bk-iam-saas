@@ -18,89 +18,25 @@
       @click="back">
       <div v-if="!isHide" class="breadcrumbs-content">
         <Icon type="arrows-left" class="breadcrumbs-back" v-if="backRouter" />
-        <h2 v-if="customBreadCrumbTitles.includes(routeName)" class="breadcrumbs-current single-hide">
-          {{ $t(`m.info['用户组成员添加权限']`, { value: `${$t(`m.common['【']`)}${userGroupName}${$t(`m.common['】']`)}` }) }}
+        <template v-if="customBreadCrumbTitles.includes(routeName)">
+          <h2 v-if="['addGroupPerm'].includes(routeName)">
+            {{ $t(`m.info['用户组成员添加权限']`, { value: `${$t(`m.common['【']`)}${userGroupName}${$t(`m.common['】']`)}` }) }}
+          </h2>
+          <div v-else-if="['renewalNotice'].includes(routeName)">
+            <h2 class="breadcrumbs-current single-hide" :style="formatBreadCrumbWidth('switch')">
+              {{ headerTitle }}
+            </h2>
+            <bk-switcher size="large" theme="primary" v-model="needProvideValue.isShowRenewalNotice" @change="handleChangeRenewalNotice" />
+          </div>
+          <h2 v-else class="breadcrumbs-current single-hide" :style="formatBreadCrumbWidth()">
+            {{ headerTitle }}
+          </h2>
+        </template>
+        <h2 v-else class="breadcrumbs-current single-hide" :style="formatBreadCrumbWidth()">
+          {{ headerTitle }}
         </h2>
-        <h2 v-else class="breadcrumbs-current single-hide">{{ headerTitle }}</h2>
       </div>
     </div>
-    <!-- <div class="user fr">
-            <div class="help-flag">
-                <Icon type="help-fill-2" />
-                <div class="dropdown-panel">
-                    <div class="item" @click="handleOpenDocu">{{ $t(`m.common['产品文档']`) }}</div>
-                    <div class="item" @click="handleOpenVersion">{{ $t(`m.common['版本日志']`) }}</div>
-                    <div class="item" @click="handleOpenQuestion">{{ $t(`m.common['问题反馈']`) }}</div>
-                </div>
-            </div>
-            <p class="user-name" @click.stop="handleSwitchIdentity" data-test-id="header_btn_triggerSwitchRole">
-                {{ curIdentity !== 'STAFF' ? curIdentity : user.username }}
-                <Icon type="down-angle" :class="['user-name-angle', { dropped: isShowUserDropdown }]" />
-            </p>
-            <transition name="toggle-slide">
-                <section
-                    class="iam-grading-admin-list-wrapper"
-                    :style="style"
-                    v-show="isShowGradingWrapper"
-                    v-bk-clickoutside="handleClickOutSide">
-                    <div :class="['userInfo',{ 'lineHeight': curRole === 'staff' }]">
-                        <p :class="userName">{{ user.username }}</p>
-                        <Icon :type="identityIconMap[curRole] || ''" />
-                    </div>
-                    <div class="search-input">
-                        <bk-input
-                            :clearable="true"
-                            size="small"
-                            v-model="searchValue"
-                            ext-cls="iam-role-list-seatch-input-cls"
-                            :placeholder="placeholderValue"
-                            @input="handleInput">
-                        </bk-input>
-                        <div v-if="isShowSearch" class="search-nextfix">
-                            <slot name="nextfix">
-                                <i class="bk-icon icon-search search-nextfix-icon" />
-                            </slot>
-                        </div>
-                    </div>
-                    <ul>
-                        <template v-if="curRoleList.length < 1">
-                            <iam-svg ext-cls="rating-empty" />
-                        </template>
-                        <template v-else>
-                            <li class="grading-item"
-                                data-test-id="header_btn_switchRole"
-                                v-for="item in curRoleList"
-                                :key="item.id"
-                                :title="item.name"
-                                :class="item.id === curRoleId ? 'active' : ''"
-                                @click="handleSelect(item)">
-                                <i v-if="isShowSuperManager(item)" class="superManagerIcon"></i>
-                                <i v-if="isShowSystemManager(item)" class="systemManagerIcon"></i>
-                                <i v-if="isShowRatingManager(item)" class="ratingManagerIcon"></i>
-                                <span class="name">{{ item.name }}</span>
-                                <Icon v-if="item.id === curRoleId" type="check-small" class="checked" />
-                            </li>
-                            <div :class="['operation', { 'right': curRole === 'staff' }]">
-                                <div :class="['user-dropdown-item', { 'marginleft': curRole !== 'staff' }]"
-                                    v-if="curIdentity !== '' && curRole !== 'staff'"
-                                    @click="handleBack">
-                                    <img src="@/images/back.svg" alt="" class="back-staff">
-                                    <span>{{ $t(`m.nav['普通成员']`) }}</span>
-                                </div>
-                            </div>
-                        </template>
-                        <template>
-                            <div class="operation right">
-                                <div class="user-dropdown-item " @click="handleLogout">
-                                    <Icon type="logout" />
-                                    {{ $t(`m.nav['注销']`) }}
-                                </div>
-                            </div>
-                        </template>
-                    </ul>
-                </section>
-            </transition>
-        </div> -->
     <div class="page-tab-wrapper" :style="{ top: externalSystemsLayout.hideIamBreadCrumbs ? '0' : '51px' }" v-if="hasPageTab">
       <bk-tab
         :active.sync="active"
@@ -193,7 +129,11 @@
   ]);
 
   export default {
-    name: '',
+    provide () {
+      return {
+        needProvideValue: this.needProvideValue
+      };
+    },
     components: {
       SystemLog
       // IamGuide
@@ -247,37 +187,55 @@
         placeholderValue: '',
         userGroupName: '',
         externalRouter: ['permTransfer', 'permRenewal', 'addGroupPerm'], // 开放内嵌页面需要面包屑的页面
-        customBreadCrumbTitles: ['addGroupPerm']
+        customBreadCrumbTitles: ['addGroupPerm', 'renewalNotice'],
+        // 需要provide的变量
+        needProvideValue: {
+          isShowRenewalNotice: true
+        }
       };
     },
     computed: {
-            ...mapGetters([
-                'navStick',
-                'headerTitle',
-                'backRouter',
-                'user',
-                'mainContentLoading',
-                'roleList',
-                'externalSystemsLayout',
-                'externalSystemId'
-            ]),
-            style () {
-                return {
-                    height: `${this.curHeight}px`
-                };
-            },
-            curAccountLogo () {
-                return [].slice.call(this.user.username)[0].toUpperCase() || '-';
-            },
-            isHide () {
-                return this.$route.query.system_id && this.$route.query.tid;
-            },
-            isShowSearch () {
-                return this.searchValue === '';
-            },
-            isShowExternal () {
-               return this.externalRouter.includes(this.$route.name) && this.externalSystemsLayout.hideIamBreadCrumbs;
-            }
+      ...mapGetters([
+        'navStick',
+        'headerTitle',
+        'backRouter',
+        'user',
+        'mainContentLoading',
+        'roleList',
+        'externalSystemsLayout',
+        'externalSystemId'
+      ]),
+      style () {
+        return {
+          height: `${this.curHeight}px`
+        };
+      },
+      curAccountLogo () {
+        return [].slice.call(this.user.username)[0].toUpperCase() || '-';
+      },
+      isHide () {
+        return this.$route.query.system_id && this.$route.query.tid;
+      },
+      isShowSearch () {
+        return this.searchValue === '';
+      },
+      isShowExternal () {
+        return this.externalRouter.includes(this.$route.name) && this.externalSystemsLayout.hideIamBreadCrumbs;
+      },
+      formatBreadCrumbWidth () {
+        return (payload) => {
+          if (payload === 'switch') {
+            const switchWidth = 52;
+            return {
+              'max-width': `calc(100vw - ${this.navStick ? 280 - switchWidth : 80 - switchWidth}px)`,
+              'margin-right': '10px'
+            };
+          }
+          return {
+            'max-width': `calc(100vw - ${this.navStick ? 280 : 80}px)`
+          };
+        };
+      }
     },
     watch: {
       '$route': function (to, from) {
@@ -381,6 +339,11 @@
         if (value.type === 'rating_manager') {
           return true;
         }
+      },
+
+      handleChangeRenewalNotice (payload) {
+        this.needProvideValue = Object.assign(this.needProvideValue, { isShowRenewalNotice: payload });
+        bus.$emit('on-update-renewal-notice', { isShowRenewalNotice: payload });
       },
 
       handleInput (value) {
