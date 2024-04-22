@@ -115,7 +115,7 @@ class SendRoleGroupExpireRemindMailTask(Task):
             except Exception:  # pylint: disable=broad-except
                 logger.exception("send role_group_expire_remind email fail, usernames=%s", usernames)
 
-        if NotificationTypeEnum.RTX.value in notification_types:
+        if NotificationTypeEnum.RTX.value in notification_types and settings.BK_BOT_APPROVAL_APIGW_URL:
             content = render_to_string(
                 "group_expired_rtx.tpl",
                 {"groups": group_members, "role": role},
