@@ -29,7 +29,7 @@
       <div class="action-content">
         <div
           v-if="isShowGroupTitle(item)"
-          v-bk-tooltips="{ content: item.name, disabled: !isShowGroupTitle(item) }"
+          v-bk-tooltips="{ content: item.name, placement: 'top-start', disabled: !isShowGroupTitle(item) }"
           class="action-content-title single-hide"
         >
           {{ item.name }}
@@ -41,10 +41,10 @@
               'self-action-content',
               { 'set-border-bottom': isShowGroupAction(item) }
             ]"
-            :style="formatActionStyle(index)"
+            :style="{ 'background-color': item.bgColor }"
           >
-            <div class="set-margin" :style="formatActionStyle(index)" />
-            <div class="action-content-wrapper-checkbox">
+            <div class="set-margin" :style="{ 'background-color': item.bgColor }" />
+            <div class="action-content-wrapper-checkbox" :style="{ 'background-color': item.bgColor }">
               <bk-checkbox
                 v-for="(act, actIndex) in item.actions"
                 :key="actIndex"
@@ -103,7 +103,6 @@
             </div>
           </div>
           <div class="sub-group-action-content" v-if="isShowGroupSubAction(item)">
-            {{ item.s }}
             <section
               v-for="(subAct, subIndex) in item.sub_groups"
               :key="subIndex"
@@ -111,24 +110,24 @@
                 'sub-action-item',
                 { 'sub-action-item-none': !subAct.actions.length }
               ]"
-              :style="formatActionStyle(subIndex)"
+              :style="{ 'background-color': subAct.bgColor }"
             >
               <div
                 :class="[
                   'sub-action-wrapper',
-                  { 'set-border-top': item.sub_groups.length > 0 }
+                  { 'set-border-top': isOnlyActions(item) }
                 ]"
               >
                 <div
                   v-if="subAct.actions.length > 0"
-                  v-bk-tooltips="{ content: subAct.name }"
+                  v-bk-tooltips="{ content: subAct.name, placement: 'top-start' }"
                   class="single-hide name"
                 >
                   {{ subAct.name }}
                 </div>
                 <!-- 占位12像素 -->
-                <div class="set-margin" :style="formatActionStyle(subIndex)"></div>
-                <div class="sub-action-wrapper-checkbox" :style="formatActionStyle(subIndex)">
+                <div class="set-margin" :style="{ 'background-color': subAct.bgColor }"></div>
+                <div class="sub-action-wrapper-checkbox" :style="{ 'background-color': subAct.bgColor }">
                   <bk-checkbox
                     v-for="(act, actIndex) in subAct.actions"
                     :key="actIndex"
@@ -259,6 +258,15 @@
           return item.sub_groups && item.sub_groups.length > 0 && isExistSubGroup;
         };
       },
+      isOnlyActions () {
+        return (payload) => {
+          const isExistSubGroup = (payload.sub_groups || []).some(v =>
+            (v.sub_groups && v.sub_groups.length > 0)
+            || (v.actions && v.actions.length > 0)
+          );
+          return payload.actions && payload.actions.length > 0 && isExistSubGroup;
+        };
+      },
       curSelectActions () {
         const allActionIds = [];
         this.originalCustomTmplList.forEach(payload => {
@@ -285,17 +293,6 @@
           }
         });
         return allActionIds;
-      },
-      formatActionStyle () {
-        return (payload) => {
-          let bgColor = '#ffffff';
-          if (payload % 2 === 0) {
-            bgColor = '#F7F9FC';
-          }
-          return {
-            backgroundColor: bgColor
-          };
-        };
       }
     },
     watch: {
@@ -318,7 +315,8 @@
       },
       handleRelatedActions (payload, flag) {
         this.originalCustomTmplList.forEach((item, index) => {
-          item.actions.forEach(act => {
+          (item.actions || []).forEach((act, actIndex) => {
+            act.bgColor = actIndex % 2 === 0 ? '#F7F9FC' : '#ffffff';
             if (payload.related_actions.includes(act.id) && flag && !act.checked) {
               act.checked = true;
               act.flag = payload.flag;
@@ -331,7 +329,8 @@
             }
           });
           (item.sub_groups || []).forEach(sub => {
-            sub.actions.forEach(act => {
+            sub.actions.forEach((act, actIndex) => {
+              act.bgColor = actIndex % 2 === 0 ? '#F7F9FC' : '#ffffff';
               if (payload.related_actions.includes(act.id) && flag && !act.checked) {
                 act.checked = true;
                 act.flag = payload.flag;
@@ -679,7 +678,7 @@
       align-items: center;
       border-bottom: 1px solid #ffffff;
       &-title {
-        width: 80px;
+        min-width: 80px;
         font-weight: 700;
         font-size: 12px;
         background-color: #EAEBF0;

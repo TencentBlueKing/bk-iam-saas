@@ -2,7 +2,7 @@
   <div class="template-actions-table" v-bkloading="{ isLoading: detailLoading, opacity: 1 }">
     <div class="template-actions-table-header">
       <render-search>
-        <bk-button theme="primary" @click="handleEdit">
+        <bk-button theme="primary" @click="handleEdit(curDetailData)">
           {{ $t(`m.common['编辑']`) }}
         </bk-button>
         <bk-checkbox
@@ -29,7 +29,7 @@
       </render-search>
     </div>
     <div class="template-actions-table-content">
-      <render-action v-if="isShowAction" mode="detail" :actions="basicInfo.actions" />
+      <RenderAction v-if="isShowAction" mode="detail" :actions="basicInfo.actions" />
       <ExceptionEmpty
         v-else
         :type="emptyData.type"
@@ -75,14 +75,16 @@
           tip: '',
           tipType: ''
         },
-        defaultCheckedActions: [],
-        editRequestQueue: []
+        defaultCheckedActions: []
       };
     },
     computed: {
       isShowAction () {
-        if (this.basicInfoBack.actions.length) {
-          return this.basicInfoBack.actions.some((item) => item.actions.length > 0);
+        if (this.basicInfo.actions.length) {
+          return this.basicInfo.actions.some((item) =>
+            item.actions.length > 0
+            || item.sub_groups.some((v) => v.actions.length > 0 || v.sub_groups.length > 0)
+          );
         }
         return false;
       }
@@ -102,7 +104,7 @@
             }
           };
           this.basicInfo = Object.assign({}, result);
-          this.basicInfoBack = { ...this.basicInfo };
+          this.basicInfoBack = cloneDeep(this.basicInfo);
           this.emptyData = formatCodeData(code, this.emptyData, result.actions.length === 0);
           if (this.basicInfo.actions.length) {
             this.handleActionData();
@@ -115,6 +117,8 @@
       },
 
       handleActionData (keyword = '') {
+        // 获取actions和sub_groups所有数据，并根据单双行渲染不同背景颜色
+        let colorIndex = 0;
         this.basicInfo.actions.forEach((item) => {
           this.$set(item, 'expanded', true);
           let count = 0;
@@ -132,9 +136,17 @@
           if (keyword) {
             item.actions = item.actions.filter((v) => v.name.indexOf(keyword) > -1);
           }
-          item.actions.forEach(act => {
+          if (item.actions.length === 1 || !item.sub_groups.length) {
+            this.$set(item, 'bgColor', colorIndex % 2 === 0 ? '#f7f9fc' : '#ffffff');
+            colorIndex++;
+          }
+          item.actions.forEach((act) => {
             this.$set(act, 'checked', ['checked', 'readonly', 'delete'].includes(act.tag));
             this.$set(act, 'disabled', act.tag === 'readonly');
+            if (item.actions.length > 1 && item.sub_groups.length > 0) {
+              this.$set(act, 'bgColor', colorIndex % 2 === 0 ? '#ffffff' : '#f7f9fc');
+              colorIndex++;
+            }
             if (act.checked) {
               ++count;
               this.defaultCheckedActions.push(act.id);
@@ -144,9 +156,11 @@
             }
             ++allCount;
           });
-          item.sub_groups.forEach(sub => {
+          item.sub_groups.forEach((sub) => {
             this.$set(sub, 'expanded', false);
             this.$set(sub, 'actionsAllChecked', false);
+            this.$set(sub, 'bgColor', colorIndex % 2 === 0 ? '#f7f9fc' : '#ffffff');
+            colorIndex++;
             if (!sub.actions) {
               this.$set(sub, 'actions', []);
             }
@@ -156,7 +170,7 @@
             if (keyword) {
               sub.actions = sub.actions.filter((v) => v.name.indexOf(keyword) > -1);
             }
-            sub.actions.forEach(act => {
+            sub.actions.forEach((act) => {
               this.$set(act, 'checked', ['checked', 'readonly', 'delete'].includes(act.tag));
               this.$set(act, 'disabled', act.tag === 'readonly');
               if (act.checked) {
@@ -191,13 +205,12 @@
 
       handleShowAllAction () {
         this.handleRefreshAction();
-        console.log(this.basicInfo);
       },
 
       handleTableSearch () {
         this.emptyData.tipType = 'search';
-        this.basicInfo = cloneDeep(this.basicInfoBack);
-        this.handleActionData(this.actionValue);
+        this.handleRefreshAction(this.actionValue);
+        console.log(this.basicInfo.actions, this.isShowAction);
         if (!this.isShowAction) {
           this.emptyData = formatCodeData(0, this.emptyData, true);
         }
@@ -206,19 +219,22 @@
       handleClear () {
         this.emptyData.tipType = '';
         this.actionValue = '';
-        this.handleRefreshAction();
-        if (!this.isShowAction) {
-          this.emptyData = formatCodeData(0, this.emptyData, true);
-        }
+        this.handleRefreshAction('');
       },
 
-      handleRefreshAction () {
+      handleRefreshAction (keyword = '') {
         this.basicInfo = cloneDeep(this.basicInfoBack);
-        this.handleActionData();
+        this.handleActionData(keyword);
       },
 
-      handleEdit () {
-        
+      handleEdit ({ id, system }) {
+        this.$router.push({
+          name: 'actionsTemplateEdit',
+          params: {
+            id,
+            systemId: system.id
+          }
+        });
       }
     }
   };
