@@ -11,6 +11,7 @@ specific language governing permissions and limitations under the License.
 import logging
 from datetime import timedelta
 from itertools import groupby
+from typing import List
 from urllib.parse import urlencode
 
 from celery import Task, current_app, shared_task
@@ -20,22 +21,23 @@ from django.db.models import F, Q
 from django.template.loader import render_to_string
 from django.utils import timezone
 
-from backend.apps.application.models import Application
 from backend.apps.organization.models import User
 from backend.apps.policy.models import Policy
+from backend.apps.role.constants import NotificationTypeEnum
 from backend.apps.subject.audit import log_user_cleanup_policy_audit_event
 from backend.apps.subject_template.models import SubjectTemplateRelation
 from backend.apps.user.models import UserPermissionCleanupRecord
 from backend.biz.constants import StaffStatus
 from backend.biz.group import GroupBiz
-from backend.biz.helper import RoleWithPermGroupBiz
+from backend.biz.helper import RoleWithPermGroupBiz, get_user_expired_groups_policies
 from backend.biz.policy import PolicyOperationBiz, PolicyQueryBiz
 from backend.biz.role import RoleBiz, get_global_notification_config
 from backend.biz.subject_template import SubjectTemplateBiz
 from backend.biz.system import SystemBiz
 from backend.common.time import db_time, get_expired_at, get_today_weekday
 from backend.component import esb
-from backend.service.constants import ApplicationStatus, ApplicationType, RoleType, SubjectType
+from backend.component.bkbot import send_iam_ticket
+from backend.service.constants import RoleType, SubjectType
 from backend.service.models import Subject
 from backend.util.url import url_join
 
@@ -55,43 +57,13 @@ class SendUserExpireRemindMailTask(Task):
 
     base_url = url_join(settings.APP_URL, "/perm-renewal")
 
-    def run(self, username: str, expired_at_before: int, expired_at_after: int):
+    def run(self, username: str, expired_at_before: int, expired_at_after: int, notification_types: List[str]):
         user = User.objects.filter(username=username).first()
         if not user:
             return
 
-        subject = Subject.from_username(username)
-
-        # 注意: rbac用户所属组很大, 这里会变成多次查询, 也变成多次db io (单次 1000 个)
-        groups = [
-            group
-            for group in self.group_biz.list_all_subject_group_before_expired_at(subject, expired_at_before)
-            if group.expired_at > expired_at_after
-        ]
-
-        policies = self.policy_biz.list_expired(subject, expired_at_before)
-        policies = [p for p in policies if p.expired_at > expired_at_after]
-
-        if not groups and not policies:
-            return
-
-        # 查询当前用户未处理的续期单, 如果已经有相关数据, 过滤掉
-        for application in Application.objects.filter(
-            applicant=username,
-            type=[ApplicationType.RENEW_ACTION.value, ApplicationType.RENEW_GROUP.value],
-            status=ApplicationStatus.PENDING.value,
-        ):
-            data = application.data
-            if application.type == ApplicationType.RENEW_ACTION.value:
-                action_set = {
-                    (data["system"]["id"], action.get("id", action.get("action_id"))) for action in data["actions"]
-                }
-                policies = [p for p in policies if (p.system.id, p.action.id) not in action_set]
-
-            elif application.type == ApplicationType.RENEW_GROUP.value:
-                group_id_set = {group["id"] for group in data["groups"]}
-                groups = [g for g in groups if g.id not in group_id_set]
-
+        # 查询用户过期的用户组与权限
+        groups, policies = get_user_expired_groups_policies(user, expired_at_before, expired_at_after)
         if not groups and not policies:
             return
 
@@ -100,14 +72,76 @@ class SendUserExpireRemindMailTask(Task):
             params["tab"] = "custom"
         url = self.base_url + "?" + urlencode(params)
 
-        mail_content = render_to_string(
-            "user_expired_mail.html",
-            {"groups": groups, "policies": policies, "url": url, "user": user, "index_url": settings.APP_URL},
-        )
-        try:
-            esb.send_mail(user.username, "蓝鲸权限中心续期提醒", mail_content)
-        except Exception:  # pylint: disable=broad-except
-            logger.exception("send user_group_policy_expire_remind email fail, username=%s", user.username)
+        if NotificationTypeEnum.MAIL.value in notification_types:
+            mail_content = render_to_string(
+                "user_expired_mail.html",
+                {"groups": groups, "policies": policies, "url": url, "user": user, "index_url": settings.APP_URL},
+            )
+            try:
+                esb.send_mail(user.username, "蓝鲸权限中心续期提醒", mail_content)
+            except Exception:  # pylint: disable=broad-except
+                logger.exception("send user_group_policy_expire_remind email fail, username=%s", user.username)
+
+        if NotificationTypeEnum.RTX.value in notification_types:
+            content = render_to_string(
+                "user_expired_rtx.tpl",
+                {"groups": groups, "policies": policies},
+            )
+
+            data = {
+                "title": "**【蓝鲸权限中心】权限续期提醒**",
+                "summary": content,
+                "approvers": username,
+                "detail_url": url,
+                "refuse_url": "",
+                "refuse_data": {"action": "refse"},
+                "actions": [
+                    {
+                        "name": "3个月",
+                        "callback_url": url_join(
+                            settings.BK_IAM_BOT_APPROVAL_CALLBACK_APIGW_URL,
+                            "/api/v1/open/application/approval_bot/user/",
+                        ),
+                        "callback_data": {
+                            "username": username,
+                            "expired_at_before": expired_at_before,
+                            "expired_at_after": expired_at_after,
+                            "month": 3,
+                        },
+                    },
+                    {
+                        "name": "6个月",
+                        "callback_url": url_join(
+                            settings.BK_IAM_BOT_APPROVAL_CALLBACK_APIGW_URL,
+                            "/api/v1/open/application/approval_bot/user/",
+                        ),
+                        "callback_data": {
+                            "username": username,
+                            "expired_at_before": expired_at_before,
+                            "expired_at_after": expired_at_after,
+                            "month": 6,
+                        },
+                    },
+                    {
+                        "name": "1年",
+                        "callback_url": url_join(
+                            settings.BK_IAM_BOT_APPROVAL_CALLBACK_APIGW_URL,
+                            "/api/v1/open/application/approval_bot/user/",
+                        ),
+                        "callback_data": {
+                            "username": username,
+                            "expired_at_before": expired_at_before,
+                            "expired_at_after": expired_at_after,
+                            "month": 12,
+                        },
+                    },
+                ],
+            }
+
+            try:
+                send_iam_ticket(data)
+            except Exception:  # pylint: disable=broad-except
+                logger.exception("send user_group_policy_expire_remind rtx fail, username=%s", user.username)
 
 
 current_app.tasks.register(SendUserExpireRemindMailTask())
@@ -120,12 +154,13 @@ def user_group_policy_expire_remind():
     """
     # 获取配置
     notification_config = get_global_notification_config()
-    # 判断当前是星期几, 如果不在发送周期内, 直接返回
-    if get_today_weekday() not in notification_config["send_days"]:
+
+    # 如果没有开启用户组过期提醒, 直接返回
+    if not notification_config["enable"]:
         return
 
-    # 如果通知配置中没有mail, 则不发送, 当前只支持邮件通知
-    if "mail" not in notification_config["notification_types"]:
+    # 判断当前是星期几, 如果不在发送周期内, 直接返回
+    if get_today_weekday() not in notification_config["send_days"]:
         return
 
     expired_at_before = get_expired_at(notification_config["expire_days_before"])
@@ -145,7 +180,9 @@ def user_group_policy_expire_remind():
                 continue
 
             username_set.add(username)
-            SendUserExpireRemindMailTask().delay(username, expired_at_before, expired_at_after)
+            SendUserExpireRemindMailTask().delay(
+                username, expired_at_before, expired_at_after, notification_config["notification_types"]
+            )
 
     # 2. 查询用户组成员过期
     group_biz = GroupBiz()
@@ -163,7 +200,9 @@ def user_group_policy_expire_remind():
             continue
 
         username_set.add(username)
-        SendUserExpireRemindMailTask().delay(username, expired_at_before, expired_at_after)
+        SendUserExpireRemindMailTask().delay(
+            username, expired_at_before, expired_at_after, notification_config["notification_types"]
+        )
 
 
 @shared_task(ignore_result=True)

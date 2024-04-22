@@ -476,5 +476,13 @@ BK_IAM_METRIC_TOKEN = env.str("BK_IAM_METRIC_TOKEN", default="")
 BK_BCS_APIGW_URL = env.str("BK_BCS_APIGW_URL", default="")
 
 
+# BK BOT approval审批机器人通知
+BK_BOT_APPROVAL_APIGW_URL = env.str("BK_BOT_APPROVAL_APIGW_URL", default="")
+
+
+# BK BOT approval审批机器人通知
+BK_IAM_BOT_APPROVAL_CALLBACK_APIGW_URL = env.str("BK_IAM_BOT_APPROVAL_CALLBACK_APIGW_URL", default="")
+
+
 # 文档地址
 BK_DOCS_URL_PREFIX = env.str("BK_DOCS_URL_PREFIX", default="https://bk.tencent.com/docs/")

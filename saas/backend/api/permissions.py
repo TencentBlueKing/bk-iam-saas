@@ -8,14 +8,19 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from django.urls import path
+from rest_framework import permissions
 
-from . import views
 
-urlpatterns = [
-    path("", views.ApplicationView.as_view(), name="open.application"),
-    path("policies/", views.ApplicationCustomPolicyView.as_view(), name="open.application_policy"),
-    path("approval_bot/user/", views.ApprovalBotUserCallbackView.as_view(), name="open.approval_bot_user"),
-    path("approval_bot/role/", views.ApprovalBotRoleCallbackView.as_view(), name="open.approval_bot_role"),
-    path("<str:sn>/", views.ApplicationDetailView.as_view({"get": "retrieve"}), name="open.application_detail"),
-]
+class ApprovalBotPermission(permissions.BasePermission):
+    """
+    审批机器人回调鉴权
+    """
+
+    APP_CODE = "approvalbot"
+
+    def has_permission(self, request, view):
+        if not bool(request.user and request.user.is_authenticated):
+            return False
+
+        # 只有app_code为审批助手才能访问
+        return request.bk_app_code == self.APP_CODE

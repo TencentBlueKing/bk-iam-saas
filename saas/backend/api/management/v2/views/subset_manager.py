@@ -27,10 +27,10 @@ from backend.api.management.v2.serializers import (
 )
 from backend.apps.role.audit import RoleCreateAuditProvider, RoleDeleteAuditProvider, RoleUpdateAuditProvider
 from backend.apps.role.models import Role, RoleRelation, RoleSource
+from backend.apps.role.tasks import delete_role
 from backend.audit.audit import audit_context_setter, view_audit_decorator
 from backend.audit.constants import AuditSourceType
 from backend.biz.group import GroupBiz
-from backend.biz.helper import RoleDeleteHelper
 from backend.biz.role import RoleBiz, RoleCheckBiz
 from backend.service.constants import GroupSaaSAttributeEnum, RoleSourceType, RoleType
 from backend.trans.open_management import GradeManagerTrans
@@ -241,7 +241,7 @@ class ManagementSubsetManagerViewSet(GenericViewSet):
     @view_audit_decorator(RoleDeleteAuditProvider)
     def destroy(self, request, *args, **kwargs):
         role = self.get_object()
-        RoleDeleteHelper(role.id).delete()
+        delete_role.delay(role.id)
 
         # 审计
         audit_context_setter(role=role)

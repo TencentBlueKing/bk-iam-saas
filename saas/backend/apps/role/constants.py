@@ -10,7 +10,10 @@ specific language governing permissions and limitations under the License.
 """
 from enum import Enum
 
+from aenum import LowerStrEnum, auto, skip
+
 from backend.service.constants import PermissionCodeEnum, RoleType
+from backend.util.enum import ChoicesEnum
 
 # 角色默认权限
 DEFAULT_ROLE_PERMISSIONS = {  # 超级管理员不能操作子集管理员
@@ -68,3 +71,12 @@ class ManagementCommonActionNameEnum(Enum):
 class ManagementGroupNameSuffixEnum(Enum):
     OPS = "运维组"
     READ = "查看组"
+
+
+class NotificationTypeEnum(ChoicesEnum, LowerStrEnum):
+    """通知类型"""
+
+    MAIL = auto()
+    RTX = auto()
+
+    _choices_labels = skip(((MAIL, "邮件"), (RTX, "企业微信")))
