@@ -321,6 +321,11 @@
           await Promise.all([this.fetchMembers(item), this.fetchGroupSubjectTemplate(item)]).then(() => {
             if (item.groupTabList && item.groupTabList.length) {
               const childList = item.groupTabList.map((v) => v.children || []).flat(Infinity);
+              const isExistUserOrg = childList.filter((v) => ['user', 'department'].includes(v.type));
+              const isExistTemp = childList.filter((v) => ['template'].includes(v.type));
+              if (!isExistUserOrg && isExistTemp) {
+                item.tabActive = 'memberTemplate';
+              }
               childList && childList.forEach(subItem => {
                 item.checkList.push(subItem);
                 if (this.$refs.permTableRef && this.$refs.permTableRef.length) {

@@ -17,6 +17,7 @@ def init_super_manager_notification_config(apps, schema_editor):
 
     config = RolePolicyExpiredNotificationConfig(role_id=role.id)
     config._config = json_dumps({
+        "enable": True,
         "notification_types": ["mail", "rtx"],
         "send_time": "10:00",
         "expire_days_before": 15,

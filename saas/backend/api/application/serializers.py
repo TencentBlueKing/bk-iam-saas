@@ -123,3 +123,17 @@ class AccessSystemApplicationCustomPolicySLZ(AccessSystemApplicationSLZ):
 class AccessSystemApplicationCustomPolicyResultSLZ(serializers.Serializer):
     id = serializers.CharField(label="申请单据ID")
     sn = serializers.CharField(label="ITSM审批单SN")
+
+
+class ApprovalBotUserCallbackSLZ(serializers.Serializer):
+    username = serializers.CharField(label="用户名")
+    expired_at_before = serializers.IntegerField(label="过期时间")
+    expired_at_after = serializers.IntegerField(label="过期时间")
+    month = serializers.IntegerField(label="续期月数")
+
+
+class ApprovalBotRoleCallbackSLZ(serializers.Serializer):
+    role_id = serializers.IntegerField(label="角色ID")
+    expired_at_before = serializers.IntegerField(label="过期时间")
+    expired_at_after = serializers.IntegerField(label="过期时间")
+    month = serializers.IntegerField(label="续期月数")

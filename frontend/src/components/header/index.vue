@@ -190,7 +190,7 @@
         customBreadCrumbTitles: ['addGroupPerm', 'renewalNotice'],
         // 需要provide的变量
         needProvideValue: {
-          isShowRenewalNotice: true
+          isShowRenewalNotice: false
         }
       };
     },
