@@ -642,9 +642,9 @@
     }
     /deep/.close-renewal-notice {
       position: absolute;
-      top: 50%;
+      top: 45%;
       left: 50%;
-      transform: translate(-50%, -50%);
+      transform: translate(-50%, -45%);
       .part-img {
         width: 440px !important;
       }
