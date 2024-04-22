@@ -18,6 +18,7 @@ from rest_framework import serializers
 from backend.apps.application.base_serializers import BaseAggActionListSLZ, SystemInfoSLZ, validate_action_repeat
 from backend.apps.organization.models import Department, User
 from backend.apps.policy.serializers import ConditionSLZ, InstanceSLZ, ResourceGroupSLZ, ResourceSLZ, ResourceTypeSLZ
+from backend.apps.role.constants import NotificationTypeEnum
 from backend.apps.role.models import Role, RoleCommonAction, RoleRelation, RoleUser
 from backend.biz.constants import PermissionTypeEnum
 from backend.biz.role import RoleBiz
@@ -494,16 +495,10 @@ class RoleGroupMemberCleanSLZ(serializers.Serializer):
 
 
 class NotificationConfigSerializer(serializers.Serializer):
+    enable = serializers.BooleanField(default=True)
     notification_types = serializers.ListField(
         label="通知类型",
-        child=serializers.ChoiceField(
-            choices=[
-                ("mail", "Email"),
-                ("rtx", "Rtx"),
-                ("weixin", "Weixin"),
-                ("sms", "sms"),
-            ]
-        ),
+        child=serializers.ChoiceField(choices=NotificationTypeEnum.get_choices()),
         allow_empty=False,
     )
     send_time = serializers.RegexField(r"^\d{2}:\d{2}$")
