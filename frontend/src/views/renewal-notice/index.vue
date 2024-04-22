@@ -256,8 +256,10 @@
       }
     },
     created () {
-      this.handleGetBusQueryData();
       this.fetchSuperNoticeConfig(false, false);
+    },
+    mounted () {
+      this.handleGetBusQueryData();
     },
     methods: {
       async fetchSuperNoticeConfig (isReset = false, isStatus = false) {
@@ -395,13 +397,13 @@
       },
 
       handleGetBusQueryData () {
-        this.$once('hook:beforeDestroy', () => {
-          bus.$off('on-update-renewal-notice');
-        });
         bus.$on('on-update-renewal-notice', async ({ isShowRenewalNotice }) => {
           await this.fetchSuperNoticeConfig(false, true);
           this.noticeForm.enable = isShowRenewalNotice || false;
           await this.handleSubmit('status');
+        });
+        this.$once('hook:beforeDestroy', () => {
+          bus.$off('on-update-renewal-notice');
         });
       }
     }
