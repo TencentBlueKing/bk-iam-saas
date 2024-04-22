@@ -39,16 +39,16 @@
           </div>
         </detail-item>
         <div class="detail-item-border" />
-        <detail-item :label="`${$t(`m.common['创建人']`)}${$t(`m.common['：']`)}`">
+        <detail-item :label="`${$t(`m.grading['创建人']`)}${$t(`m.common['：']`)}`">
           <span class="basic-info-value">{{ basicInfo.creator }}</span>
         </detail-item>
         <detail-item :label="`${$t(`m.common['创建时间']`)}${$t(`m.common['：']`)}`">
           <span class="basic-info-value">{{ basicInfo.created_time }}</span>
         </detail-item>
-        <detail-item :label="`${$t(`m.common['更新人']`)}${$t(`m.common['：']`)}`">
+        <detail-item :label="`${$t(`m.grading['更新人']`)}${$t(`m.common['：']`)}`">
           <span class="basic-info-value">{{ basicInfo.updater }}</span>
         </detail-item>
-        <detail-item :label="`${$t(`m.common['更新时间']`)}${$t(`m.common['：']`)}`">
+        <detail-item :label="`${$t(`m.grading['更新时间']`)}${$t(`m.common['：']`)}`">
           <span class="basic-info-value">{{ basicInfo.updated_time }}</span>
         </detail-item>
       </render-layout>

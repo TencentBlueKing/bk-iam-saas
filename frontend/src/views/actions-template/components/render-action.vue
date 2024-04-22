@@ -678,6 +678,7 @@
       align-items: center;
       border-bottom: 1px solid #ffffff;
       &-title {
+        width: 20%;
         min-width: 80px;
         font-weight: 700;
         font-size: 12px;

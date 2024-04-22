@@ -650,7 +650,8 @@ export const m = {
         '人员模板': 'Member Templates',
         '用户/组织': 'User/Organization',
         '续期通知': 'Renewal notice',
-        '操作模板': 'Action Templates'
+        '操作模板': 'Action Templates',
+        '新建操作模板': 'New Action Templates'
     },
     applyEntrance: {
         '立刻申请': 'Apply now',

@@ -307,23 +307,28 @@
       
       async getPreUpdateInfo () {
         try {
-          const { data } = await this.$store.dispatch('permTemplate/getPreUpdateInfo', { id: this.curDetailData.id });
+          const { id, system } = this.curDetailData;
+          const { data } = await this.$store.dispatch('permTemplate/getPreUpdateInfo', { id });
           const flag = Object.keys(data).length > 0;
-          // const nameCache = window.localStorage.getItem('iam-header-name-cache');
-          // window.localStorage.setItem('iam-header-title-cache', `${this.$t(`m.nav['编辑权限模板']`)}(${nameCache})`);
           if (flag) {
             this.$store.commit('permTemplate/updatePreActionIds', data.action_ids || []);
             this.$store.commit('permTemplate/updateAction', this.getActionsData(data.action_ids || []));
             await this.addPreUpdateInfo(data.action_ids);
             this.$router.push({
               name: 'permTemplateDiff',
-              params: this.$route.params
+              params: {
+                id,
+                systemId: system.id
+              }
             });
           } else {
             this.editRequestQueue = ['getPre'];
             this.$router.push({
               name: 'actionsTemplateEdit',
-              params: this.$route.params
+              params: {
+                id,
+                systemId: system.id
+              }
             });
           }
         } catch (e) {
@@ -331,6 +336,96 @@
         } finally {
           this.editRequestQueue.shift();
         }
+      },
+
+      getActionsData (payload) {
+        // 获取actions和sub_groups所有数据，并根据单双行渲染不同背景颜色
+        let colorIndex = 0;
+        const temps = cloneDeep(this.curDetailData.actions);
+        // 交集
+        const intersections = this.defaultCheckedActions.filter(item => payload.includes(item));
+        // 已删除的
+        const hasDeleteActions = this.defaultCheckedActions.filter(item => !intersections.includes(item));
+        // 新增的
+        const hasAddActions = payload.filter(item => !intersections.includes(item));
+        temps.forEach((item, index) => {
+          this.$set(item, 'expanded', index === 0);
+          let count = 0;
+          let deleteCount = 0;
+          if (!item.actions) {
+            this.$set(item, 'actions', []);
+          }
+          if (!item.sub_groups) {
+            this.$set(item, 'sub_groups', []);
+          }
+          if (item.actions.length === 1 || !item.sub_groups.length) {
+            this.$set(item, 'bgColor', colorIndex % 2 === 0 ? '#f7f9fc' : '#ffffff');
+            colorIndex++;
+          }
+          item.actions.forEach(act => {
+            this.$set(act, 'checked', ['checked', 'readonly', 'delete'].includes(act.tag));
+            this.$set(act, 'disabled', act.tag === 'readonly');
+            if (hasAddActions.includes(act.id)) {
+              this.$set(act, 'checked', true);
+              this.$set(act, 'flag', 'added');
+            }
+            if (act.checked && hasDeleteActions.includes(act.id)) {
+              act.checked = false;
+              this.$set(act, 'flag', 'cancel');
+            }
+            if (act.checked) {
+              ++count;
+            }
+            if (act.tag === 'delete') {
+              ++deleteCount;
+            }
+          });
+          item.sub_groups.forEach(sub => {
+            this.$set(sub, 'expanded', false);
+            this.$set(sub, 'actionsAllChecked', false);
+            this.$set(sub, 'bgColor', colorIndex % 2 === 0 ? '#f7f9fc' : '#ffffff');
+            colorIndex++;
+            if (!sub.actions) {
+              this.$set(sub, 'actions', []);
+            }
+            sub.actions.forEach(act => {
+              this.$set(act, 'checked', ['checked', 'readonly', 'delete'].includes(act.tag));
+              this.$set(act, 'disabled', act.tag === 'readonly');
+              if (hasAddActions.includes(act.id)) {
+                this.$set(act, 'checked', true);
+                this.$set(act, 'flag', 'added');
+              }
+              if (act.checked && hasDeleteActions.includes(act.id)) {
+                act.checked = false;
+                this.$set(act, 'flag', 'cancel');
+              }
+              if (act.checked) {
+                ++count;
+              }
+              if (act.tag === 'delete') {
+                ++deleteCount;
+              }
+            });
+
+            const isSubAllChecked = sub.actions.every(v => v.checked);
+            this.$set(sub, 'allChecked', isSubAllChecked);
+          });
+          this.$set(item, 'deleteCount', deleteCount);
+          this.$set(item, 'count', count);
+          const isAllChecked = item.actions.every(v => v.checked);
+          const isAllDisabled = item.actions.every(v => v.disabled);
+          this.$set(item, 'allChecked', isAllChecked);
+          if (item.sub_groups && item.sub_groups.length > 0) {
+            this.$set(item, 'actionsAllChecked', isAllChecked && item.sub_groups.every(v => v.allChecked));
+            this.$set(item, 'actionsAllDisabled', isAllDisabled && item.sub_groups.every(v => {
+              return v.actions.every(sub => sub.disabled);
+            }));
+          } else {
+            this.$set(item, 'actionsAllChecked', isAllChecked);
+            this.$set(item, 'actionsAllDisabled', isAllDisabled);
+          }
+        });
+        return temps;
       },
 
       updateSliderOperateData () {
@@ -554,16 +649,6 @@
           tabActive
         });
         this.isShowDetailSlider = true;
-        // this.$router.push({
-        //   name: 'permTemplateDetail',
-        //   params: {
-        //     id: payload.id,
-        //     systemId: payload.system.id
-        //   },
-        //   query: {
-        //     tab
-        //   }
-        // });
       },
 
       async handleEdit (payload) {

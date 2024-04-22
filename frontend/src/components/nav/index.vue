@@ -280,7 +280,10 @@
     // 续期通知
     [['renewalNotice'], 'renewalNoticeNav'],
     // 操作模板
-    [['actionsTemplate'], 'actionsTemplateNav']
+    [
+      ['actionsTemplate', 'actionsTemplateCreate', 'actionsTemplateEdit', 'actionsTemplateDiff'],
+      'actionsTemplateNav'
+    ]
   ]);
 
   export default {
