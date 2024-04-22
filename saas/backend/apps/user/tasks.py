@@ -89,7 +89,7 @@ class SendUserExpireRemindMailTask(Task):
             )
 
             data = {
-                "title": "*【蓝鲸权限中心】权限续期提醒*",
+                "title": "**【蓝鲸权限中心】权限续期提醒**",
                 "summary": content,
                 "approvers": username,
                 "detail_url": url,

@@ -122,7 +122,7 @@ class SendRoleGroupExpireRemindMailTask(Task):
             )
 
             data = {
-                "title": "*【蓝鲸权限中心】用户组续期提醒*",
+                "title": "**【蓝鲸权限中心】用户组续期提醒**",
                 "summary": content,
                 "approvers": ",".join(usernames),
                 "detail_url": url,
