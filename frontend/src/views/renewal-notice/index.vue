@@ -257,10 +257,10 @@
     },
     created () {
       this.handleGetBusQueryData();
-      this.fetchSuperNoticeConfig(false);
+      this.fetchSuperNoticeConfig(false, false);
     },
     methods: {
-      async fetchSuperNoticeConfig (isReset = false) {
+      async fetchSuperNoticeConfig (isReset = false, isStatus = false) {
         try {
           const { data } = await this.$store.dispatch('renewalNotice/getSuperNoticeConfig');
           if (data) {
@@ -274,7 +274,9 @@
             }
             this.noticeForm = Object.assign(this.noticeForm, data);
             this.noticeFormReset = cloneDeep(this.noticeForm);
-            bus.$emit('on-refresh-renewal-status', { isShowRenewalNotice: data.enable });
+            if (!isStatus) {
+              bus.$emit('on-refresh-renewal-status', { isShowRenewalNotice: data.enable });
+            }
           }
         } catch (e) {
           this.messageAdvancedError(e);
@@ -288,15 +290,16 @@
         }
         this.submitLoading = true;
         try {
-          if (JSON.stringify(this.noticeForm) !== JSON.stringify(this.noticeFormReset)) {
-            await this.fetchSuperNoticeConfig(true);
-          }
-          await this.$store.dispatch('renewalNotice/updateSuperNoticeConfig', this.noticeForm);
           const typeMap = {
-            submit: () => {
+            submit: async () => {
+              if (JSON.stringify(this.noticeForm) !== JSON.stringify(this.noticeFormReset)) {
+                await this.fetchSuperNoticeConfig(true, false);
+              }
+              await this.$store.dispatch('renewalNotice/updateSuperNoticeConfig', this.noticeForm);
               this.messageSuccess(this.$t(`m.info['保存成功']`), 3000);
             },
-            status: () => {
+            status: async () => {
+              await this.$store.dispatch('renewalNotice/updateSuperNoticeConfig', this.noticeForm);
               const msg = this.noticeForm.enable ? this.$t(`m.renewalNotice['开启成功']`) : this.$t(`m.renewalNotice['关闭成功']`);
               this.messageSuccess(msg, 3000);
             }
@@ -396,7 +399,7 @@
           bus.$off('on-update-renewal-notice');
         });
         bus.$on('on-update-renewal-notice', async ({ isShowRenewalNotice }) => {
-          await this.fetchSuperNoticeConfig(false);
+          await this.fetchSuperNoticeConfig(false, true);
           this.noticeForm.enable = isShowRenewalNotice || false;
           await this.handleSubmit('status');
         });
