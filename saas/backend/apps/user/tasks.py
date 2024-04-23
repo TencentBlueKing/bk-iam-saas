@@ -82,7 +82,7 @@ class SendUserExpireRemindMailTask(Task):
             except Exception:  # pylint: disable=broad-except
                 logger.exception("send user_group_policy_expire_remind email fail, username=%s", user.username)
 
-        if NotificationTypeEnum.RTX.value in notification_types:
+        if NotificationTypeEnum.RTX.value in notification_types and settings.BK_BOT_APPROVAL_APIGW_URL:
             content = render_to_string(
                 "user_expired_rtx.tpl",
                 {"groups": groups, "policies": policies},
