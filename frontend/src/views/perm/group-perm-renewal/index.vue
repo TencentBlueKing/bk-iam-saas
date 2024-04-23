@@ -321,8 +321,8 @@
           await Promise.all([this.fetchMembers(item), this.fetchGroupSubjectTemplate(item)]).then(() => {
             if (item.groupTabList && item.groupTabList.length) {
               const childList = item.groupTabList.map((v) => v.children || []).flat(Infinity);
-              const isExistUserOrg = childList.filter((v) => ['user', 'department'].includes(v.type));
-              const isExistTemp = childList.filter((v) => ['template'].includes(v.type));
+              const isExistUserOrg = childList.find((v) => ['user', 'department'].includes(v.type));
+              const isExistTemp = childList.find((v) => ['template'].includes(v.type));
               if (!isExistUserOrg && isExistTemp) {
                 item.tabActive = 'memberTemplate';
               }
