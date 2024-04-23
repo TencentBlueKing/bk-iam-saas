@@ -154,9 +154,8 @@
     <!-- <p class="resource-error-tips" v-if="isEmptyResource">{{ $t(`m.resource['请至少选择一组实例']`) }}</p> -->
   </div>
 </template>
-<script>
-    /* eslint-disable max-len */
 
+<script>
   import _ from 'lodash';
   import renderResourceInstance from '@/components/render-resource';
   import renderOrderNumber from '@/components/render-resource/order-number';
@@ -763,7 +762,9 @@
         }
         const tempConditionData = _.cloneDeep(this.conditionData);
         if (!tempConditionData.some(item => {
-          return (item.instance && (item.instance.length > 0 && item.instance.some(instanceItem => instanceItem.path.length > 0)))
+          return (item.instance
+            && (item.instance.length > 0
+              && item.instance.some(instanceItem => instanceItem.path.length > 0)))
             || (item.attribute && (item.attribute.length > 0 && item.attribute.some(attr => attr.values.some(val => val.id !== ''))));
         })) {
           return {
@@ -1043,7 +1044,8 @@
             this.hasSelectData = _.cloneDeep(hasSelectData);
             const hasData = this.hasSelectData.find((item) => item.childTypes.includes(type));
             if (hasData) {
-              deleteInstanceItem = curInstance.find(item => hasData.childTypes.includes(item.type) && hasData.childTypes.includes(type));
+              deleteInstanceItem = curInstance.find(item =>
+                hasData.childTypes.includes(item.type) && hasData.childTypes.includes(type));
             }
           }
           if (resourceLen) {

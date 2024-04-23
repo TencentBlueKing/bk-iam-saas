@@ -90,7 +90,7 @@
                   </bk-tag>
                 </template>
               </bk-checkbox>
-              <bk-checkbox
+              <!-- <bk-checkbox
                 v-if="!isDisabled"
                 :true-value="true"
                 :false-value="false"
@@ -99,7 +99,16 @@
                 ext-cls="iam-action-all-cls"
                 @change="handleAllChange(...arguments, item)">
                 {{ $t(`m.common['全选']`) }}
-              </bk-checkbox>
+              </bk-checkbox> -->
+              <span
+                v-if="!isDisabled"
+                :class="[
+                  'iam-action-all-cls',
+                  { 'is-disabled': formatActionDisabled(item) }
+                ]"
+                @click.stop="handleAllChange(...arguments, item)">
+                {{ item.allChecked ? $t(`m.common['取消全选']`) : $t(`m.common['全选']`) }}
+              </span>
             </div>
           </div>
           <div class="sub-group-action-content" v-if="isShowGroupSubAction(item)">
@@ -115,7 +124,7 @@
               <div
                 :class="[
                   'sub-action-wrapper',
-                  { 'set-border-top': isOnlyActions(item) }
+                  { 'set-border-top': isOnlyActions(subAct) }
                 ]"
               >
                 <div
@@ -126,7 +135,7 @@
                   {{ subAct.name }}
                 </div>
                 <!-- 占位12像素 -->
-                <div class="set-margin" :style="{ 'background-color': subAct.bgColor }"></div>
+                <div class="set-margin" :style="{ 'background-color': subAct.bgColor }" />
                 <div class="sub-action-wrapper-checkbox" :style="{ 'background-color': subAct.bgColor }">
                   <bk-checkbox
                     v-for="(act, actIndex) in subAct.actions"
@@ -186,7 +195,7 @@
                   </bk-checkbox>
                 </div>
               </div>
-              <bk-checkbox
+              <!-- <bk-checkbox
                 v-if="subAct.actions.length > 0 && !isDisabled"
                 :true-value="true"
                 :false-value="false"
@@ -195,7 +204,16 @@
                 ext-cls="iam-sub-action-all-cls"
                 @change="handleSubAllChange(...arguments, subAct, item)">
                 {{ $t(`m.common['全选']`) }}
-              </bk-checkbox>
+              </bk-checkbox> -->
+              <span
+                v-if="subAct.actions.length > 0 && !isDisabled"
+                :class="[
+                  'iam-sub-action-all-cls',
+                  { 'is-disabled': formatActionDisabled(subAct) }
+                ]"
+                @click.stop="handleSubAllChange(...arguments, subAct, item)">
+                {{ subAct.allChecked ? $t(`m.common['取消全选']`) : $t(`m.common['全选']`) }}
+              </span>
             </section>
           </div>
         </div>
@@ -205,6 +223,7 @@
 </template>
 
 <script>
+  import { cloneDeep } from 'lodash';
   export default {
     props: {
       actions: {
@@ -264,7 +283,7 @@
             (v.sub_groups && v.sub_groups.length > 0)
             || (v.actions && v.actions.length > 0)
           );
-          return payload.actions && payload.actions.length > 0 && isExistSubGroup;
+          return !(payload.actions && payload.actions.length > 0 && isExistSubGroup);
         };
       },
       curSelectActions () {
@@ -274,7 +293,7 @@
           if (!payload.actionsAllDisabled) {
             payload.actions.forEach(item => {
               if (!item.disabled && item.checked) {
-                allActionIds.push(item.id);
+                allActionIds.push(item);
               }
               if (!item.disabled && item.checked && item.tag === 'delete') {
                 payload.deleteCount++;
@@ -283,7 +302,7 @@
             (payload.sub_groups || []).forEach(subItem => {
               (subItem.actions || []).forEach(act => {
                 if (!act.disabled && act.checked) {
-                  allActionIds.push(act.id);
+                  allActionIds.push(act);
                 }
                 if (!act.disabled && act.checked && act.tag === 'delete') {
                   payload.deleteCount++;
@@ -293,12 +312,18 @@
           }
         });
         return allActionIds;
+      },
+      formatActionDisabled () {
+        return (payload) => {
+          return payload.actions.every(v => v.disabled) || this.isDisabled;
+        };
       }
     },
     watch: {
       actions: {
         handler (value) {
           this.originalCustomTmplList = value;
+          this.originalCustomTmplListBack = cloneDeep(value);
         },
         deep: true,
         immediate: true
@@ -566,7 +591,6 @@
         item.count = item.count + count;
       },
       handleAllChange (newVal, oldVal, val, payload) {
-        this.setWindowChangeDialog();
         const tempActionIds = [];
         let count = 0;
         payload.actions.forEach(item => {
@@ -622,10 +646,11 @@
     background-color: #A3C5FD;
   }
   .bk-checkbox-text {
-    font-size: 12px;
     .text {
+      font-size: 12px;
       display: inline-block;
       max-width: 99px;
+      color: #63656E;
       vertical-align: middle;
       outline: none;
     }
@@ -660,16 +685,6 @@
       }
       .delete-count{
         color: #ec4545;
-      }
-    }
-    .check-all {
-      position: relative;
-      top: 4px;
-      color: #3a84ff;
-      cursor: pointer;
-      &.is-disabled {
-        color: #dcdee5;
-        cursor: not-allowed;
       }
     }
     .action-content {
@@ -739,17 +754,19 @@
           text-decoration-color: #ffb400;
         }
       }
-      .iam-action-all-cls {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        line-height: 36px;
-      }
+      .iam-action-all-cls,
       .iam-sub-action-all-cls {
-        display: inline-block;
         position: absolute;
-        right: 0;
+        top: 0;
+        right: 12px;
+        font-size: 12px;
         line-height: 36px;
+        color: #3a84ff;
+        cursor: pointer;
+        &.is-disabled {
+          color: #dcdee5;
+          cursor: not-allowed;
+        }
       }
     }
   }

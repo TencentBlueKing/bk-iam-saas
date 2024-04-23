@@ -133,7 +133,9 @@ export const NEED_CONFIRM_DIALOG_ROUTER = [
   'gradingAdminEdit',
   'myManageSpaceCreate',
   'authorBoundaryEditFirstLevel',
-  'secondaryManageSpaceCreate'
+  'secondaryManageSpaceCreate',
+  'actionsTemplateCreate',
+  'actionsTemplateEdit'
 ];
 
 // 用户组属性枚举

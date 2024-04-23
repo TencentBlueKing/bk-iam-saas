@@ -407,7 +407,8 @@
 
     }
 
-    .user-org-perm-container {
+    .user-org-perm-container,
+    .actions-template-create-container {
       .main-scroller {
         height: calc(100% + 278px);
       }
@@ -422,7 +423,8 @@
       .main-scroller {
         height: calc(100% + 91px);
       }
-      .user-org-perm-container {
+      .user-org-perm-container,
+      .actions-template-create-container {
         .main-scroller {
           height: calc(100% + 312px);
         }

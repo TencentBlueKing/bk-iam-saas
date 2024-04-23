@@ -210,7 +210,6 @@
       handleTableSearch () {
         this.emptyData.tipType = 'search';
         this.handleRefreshAction(this.actionValue);
-        console.log(this.basicInfo.actions, this.isShowAction);
         if (!this.isShowAction) {
           this.emptyData = formatCodeData(0, this.emptyData, true);
         }
