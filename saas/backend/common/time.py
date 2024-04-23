@@ -17,7 +17,6 @@ from django.db import connection
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import ngettext
-from django_celery_beat.models import PeriodicTask
 
 # 分钟、小时、天的秒数
 MINUTE_SECONDS = 60
@@ -145,14 +144,11 @@ def need_run_expired_remind(config: Dict[str, Any]) -> bool:
         return False
 
     # 如果不在调度时间内, 不发送提醒
-    periodic_task = PeriodicTask.objects.filter(name="periodic_permission_expire_remind").get()
-    last_run_at = timezone.localtime(periodic_task.last_run_at)
-
     hour, minute = [int(i) for i in config["send_time"].split(":")]
     schedule_time = timezone.localtime(timezone.now()).replace(hour=hour, minute=minute, second=0, microsecond=0)
 
-    # 执行时间小于调度时间不执行, 最后执行时间已经大于调度时间不执行
-    if current_time < schedule_time or last_run_at >= schedule_time:
+    # 执行时间小于调度时间不执行, 当前时间超过调度时间10分钟不执行
+    if current_time < schedule_time or current_time - schedule_time > datetime.timedelta(minutes=10):
         return False
 
     return True
