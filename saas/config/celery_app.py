@@ -9,6 +9,7 @@ specific language governing permissions and limitations under the License.
 """
 
 import os
+import sys
 
 from celery import Celery
 from celery.schedules import crontab
@@ -37,6 +38,9 @@ app.conf.task_queues = [
 # set periodic tasks
 @app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):
+    if "beat" not in sys.argv:
+        return
+
     from backend.biz.role import get_global_notification_config
 
     config = get_global_notification_config()
