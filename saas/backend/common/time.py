@@ -11,11 +11,13 @@ specific language governing permissions and limitations under the License.
 import datetime
 import math
 import time
+from typing import Any, Dict
 
 from django.db import connection
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import ngettext
+from django_celery_beat.models import PeriodicTask
 
 # 分钟、小时、天的秒数
 MINUTE_SECONDS = 60
@@ -132,5 +134,25 @@ def get_expired_at(days: int) -> int:
     return int(time.time()) + days * DAY_SECONDS
 
 
-def get_today_weekday():
-    return WEEKDAYS[timezone.now().weekday()]
+def need_run_expired_remind(config: Dict[str, Any]) -> bool:
+    # 如果没有开启用户组过期提醒, 直接返回
+    if not config["enable"]:
+        return False
+
+    # 判断当前是星期几, 如果不在发送周期内, 直接返回
+    current_time = timezone.localtime(timezone.now())
+    if WEEKDAYS[current_time.weekday()] not in config["send_days"]:
+        return False
+
+    # 如果不在调度时间内, 不发送提醒
+    periodic_task = PeriodicTask.objects.filter(name="periodic_permission_expire_remind").get()
+    last_run_at = timezone.localtime(periodic_task.last_run_at)
+
+    hour, minute = [int(i) for i in config["send_time"].split(":")]
+    schedule_time = timezone.localtime(timezone.now()).replace(hour=hour, minute=minute, second=0, microsecond=0)
+
+    # 执行时间小于调度时间不执行, 最后执行时间已经大于调度时间不执行
+    if current_time < schedule_time or last_run_at >= schedule_time:
+        return False
+
+    return True
