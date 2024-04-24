@@ -80,18 +80,18 @@
                 {{ $t(`m.common['全选']`) }}
               </bk-checkbox>
             </div>
-            <render-action-tag
-              v-if="commonActions.length > 0 && !customLoading"
-              ref="commonActionRef"
-              style="margin-top: 12px;"
-              :system-id="basicInfo.system_id"
-              :tag-action-list="tagActionList"
-              :data="commonActions"
-              :cur-select-actions="curSelectActions"
-              @on-delete="handleCommonActionDelete"
-              @on-add="handleCommonActionAdd"
-              @on-change="handleActionTagChange"
-            />
+            <div v-if="commonActions.length > 0 && !customLoading" class="common-actions-list">
+              <render-action-tag
+                ref="commonActionRef"
+                :system-id="basicInfo.system_id"
+                :tag-action-list="tagActionList"
+                :data="commonActions"
+                :cur-select-actions="curSelectActions"
+                @on-delete="handleCommonActionDelete"
+                @on-add="handleCommonActionAdd"
+                @on-change="handleActionTagChange"
+              />
+            </div>
           </div>
           <div
             ref="actionRef"
@@ -99,16 +99,17 @@
               'iam-action-content-wrapper',
               { 'set-margin': commonActions.length > 0 }
             ]"
-            :style="{ 'height': `${actionContentHeight}px` }"
+            :style="{ 'max-height': `${actionContentHeight}px` }"
           >
-            <render-action
-              v-if="isShowAction && !customLoading"
-              ref="actionsRef"
-              mode="edit"
-              :actions="originalCustomTmplList"
-              :linear-action="linearAction"
-              @on-select="handleSelect"
-            />
+            <template v-if="isShowAction && !customLoading">
+              <render-action
+                ref="actionsRef"
+                mode="edit"
+                :actions="originalCustomTmplList"
+                :linear-action="linearAction"
+                @on-select="handleSelectAction"
+              />
+            </template>
             <div
               v-if="!isShowAction && !customLoading"
               class="empty-wrapper"
@@ -118,7 +119,7 @@
                 :empty-text="emptyActionData.text"
                 :tip-text="emptyActionData.tip"
                 :tip-type="emptyActionData.tipType"
-                @on-clear="handleClear"
+                @on-clear="handleClearSearch"
               />
             </div>
           </div>
@@ -149,7 +150,7 @@
             <div
               v-if="isExpandAction"
               class="right-layout-content"
-              :style="{ 'height': `${actionContentHeight - 43}px` }"
+              :style="{ 'height': `${ isEdit ? actionContentHeight : actionContentHeight + commonActionsHeight }px` }"
             >
               <div
                 class="flex-between right-layout-content-item"
@@ -157,13 +158,14 @@
                 :key="item.id"
               >
                 <div class="action-text">
-                  <bk-tag class="action-text-tag" :theme="item.flag === 'added' ? 'success' : 'danger'">
-                    {{ item.flag === 'added' ? $t(`m.common['新增']`) : $t(`m.common['移除']`) }}
+                  <bk-tag class="action-text-tag" :theme="formatTagContent(item, 'theme')">
+                    {{ formatTagContent(item, 'text') }}
                   </bk-tag>
-                  <div :class="[
-                    'single-hide action-text-name',
-                    { 'lang-name': !curLanguageIsCn }
-                  ]">
+                  <div
+                    v-bk-tooltips="{ content: item.name, disabled: checkActionWidth(item) }"
+                    :ref="`select_actions_${item.id}`"
+                    class="single-hide action-text-name"
+                  >
                     {{ item.name }}
                   </div>
                 </div>
@@ -279,8 +281,8 @@
         noticeBarHeight: 40,
         // 基本信息表单高度
         basicInfoHeight: 186,
-        // 两个51代表面包屑和导航栏的高度， 186代表基本信息的高度， 30代表内边距
-        actionContentHeight: 0
+        actionContentHeight: 0,
+        commonActionsHeight: 0
       };
     },
     computed: {
@@ -313,6 +315,21 @@
         return {
           width: '480px'
         };
+      },
+      formatTagContent () {
+        return (payload, tagType) => {
+          const { flag, tag } = payload;
+          const isAdd = ['added'].includes(flag) || ['unchecked'].includes(tag);
+          const typeMap = {
+            theme: () => {
+              return isAdd ? 'success' : 'false';
+            },
+            text: () => {
+              return isAdd ? this.$t(`m.common['新增']`) : this.$t(`m.common['已有']`);
+            }
+          };
+         return typeMap[tagType] ? typeMap[tagType]() : '';
+        };
       }
     },
     watch: {
@@ -326,7 +343,11 @@
         this.isEditTemplate = oldValue.length !== newValue.length;
         this.isCurSelectActions = JSON.stringify(newValue) === JSON.stringify(this.initialValue);
         this.leavePageForm = Object.assign(this.leavePageForm, { selected_actions: newValue });
+        if (newValue.length) {
+          this.isSelectAllActions = newValue.length === this.linearAction.length;
+        }
         this.handleGetLeaveData();
+        this.handleGetResizeHeight();
       },
       'basicInfo': {
         handler (payload) {
@@ -361,10 +382,15 @@
         } else {
           await this.fetchSystems();
         }
-        this.leavePageForm = cloneDeep(this.basicInfo, {
-          selected_actions: this.curSelectActions
-        });
+        this.leavePageForm = cloneDeep(Object.assign(
+          this.basicInfo,
+          {
+            selected_actions: this.curSelectActions
+          }
+        ));
         this.leavePageFormBack = cloneDeep(this.leavePageForm);
+        this.handleGetLeaveData();
+        this.handleGetResizeHeight();
       },
 
       async fetchGroupPreview () {
@@ -411,6 +437,7 @@
           await this.$store.dispatch('permTemplate/deleteCommonAction', { id });
           this.commonActions.splice(index, 1);
           this.$refs.commonActionRef && this.$refs.commonActionRef.handleSetSelectData($id);
+          this.handleGetResizeHeight();
         } catch (e) {
           this.messageAdvancedError(e);
         }
@@ -432,6 +459,7 @@
           };
           this.commonActions.push(addData);
           this.$refs.commonActionRef && this.$refs.commonActionRef.handleSetActive(addData.$id);
+          this.handleGetResizeHeight();
         } catch (e) {
           this.messageAdvancedError(e);
         }
@@ -443,6 +471,7 @@
         }
         this.tagActionList = payload;
         this.handleActionMatchChecked(flag, payload);
+        this.handleGetResizeHeight();
       },
 
       handleActionMatchChecked (flag, payload) {
@@ -520,12 +549,11 @@
             item.displayName = `${item.name}(${item.id})`;
           });
           this.systemList = data || [];
-          this.basicInfo.system_id = 'bk_cmdb' || (data && data.length ? data[0].id : '');
-          if (this.basicInfo.system_id) {
-            Promise.all([
-              this.fetchActions(this.basicInfo.system_id),
-              this.fetchCommonActions(this.basicInfo.system_id)
-            ]);
+          if (this.systemList.length) {
+            this.basicInfo.system_id = 'bk_job' || data[0].id;
+            // 这里必须先调用action获取到所有操作，在判断常用操作里包含了哪些操作
+            await this.fetchActions(this.basicInfo.system_id);
+            await this.fetchCommonActions(this.basicInfo.system_id);
           }
         } catch (e) {
           this.messageAdvancedError(e);
@@ -538,11 +566,11 @@
         try {
           const { data } = await this.$store.dispatch('permTemplate/getCommonAction', { systemId });
           const list = data || [];
-          const linearActionIdList = this.linearAction.map(la => la.id);
+          const linearActionIdList = this.linearAction.map((item) => item.id);
           const commonActions = [];
           list.forEach((item) => {
             item.$id = guid();
-            if (item.action_ids.every(aId => linearActionIdList.indexOf(aId) > -1)) {
+            if (item.action_ids.every((item) => linearActionIdList.indexOf((item)) > -1)) {
               commonActions.push(item);
             }
           });
@@ -676,8 +704,8 @@
       },
 
       handleRefreshAction (payload) {
-        this.originalCustomTmplList = cloneDeep(this.originalCustomTmplListBack);
-        this.handleActionLinearData(payload);
+        const list = cloneDeep(this.originalCustomTmplListBack);
+        this.originalCustomTmplList = this.getActionsData(list, payload);
       },
 
       handleExpandAction () {
@@ -720,12 +748,15 @@
         this.tagActionList = [];
         this.requestQueue = ['actions', 'commonActions'];
         Promise.all([this.fetchActions(value), this.fetchCommonActions(value)]);
+        this.handleClearAllAction();
       },
 
-      handleSelect (payload) {
+      handleSelectAction (payload) {
         this.curSelectActions = [...payload];
         this.tagActionList = [...payload].map((item) => item.id);
-        this.isShowActionError = !(payload.length > 0);
+        if (payload.length) {
+          this.isShowActionError = false;
+        }
       },
 
       getActionsData (payload, isSearch = false) {
@@ -967,16 +998,34 @@
       },
 
       handleGetResizeHeight () {
-        const distance = window.innerHeight - 51 - 51 - 52 - 30 - 120;
+        // 两个51代表面包屑和导航栏的高度， 186代表基本信息的高度， 30代表内边距
+        const distance = window.innerHeight - 51 - 51 - 52 - 30 - 126;
         let listHeight = this.isEdit ? distance - 30 : distance - this.basicInfoHeight;
+        this.commonActionsHeight = 0;
         if (this.isShowActionError) {
-          listHeight = listHeight - 18;
+          listHeight -= 32;
         }
         if (this.isShowNoticeAlert) {
-          this.actionContentHeight = listHeight - this.noticeBarHeight;
-          return;
+          listHeight = listHeight - this.noticeBarHeight;
         }
-        this.actionContentHeight = listHeight;
+        if (this.commonActions.length && this.$refs.commonActionRef) {
+          setTimeout(() => {
+            // 12的向上外边距和8像素的向下外边距
+            this.commonActionsHeight = this.$refs.commonActionRef.$el.offsetHeight;
+            listHeight = listHeight - this.commonActionsHeight - 12 - 8;
+            this.actionContentHeight = listHeight;
+          }, 0);
+        } else {
+          this.actionContentHeight = listHeight;
+        }
+      },
+
+      checkActionWidth (payload) {
+        const selectActions = this.$refs[`select_actions_${payload.id}`];
+        if (selectActions && selectActions.length) {
+          const offsetWidth = selectActions[0].offsetWidth;
+          return !(offsetWidth > 134);
+        }
       }
     }
   };

@@ -14,9 +14,9 @@
       border-radius: 2px;
       background-color: #e6e9ea;
     }
-    &.set-margin {
+    /* &.set-margin {
       margin-top: 4px;
-    }
+    } */
     .empty-wrapper {
       margin-top: 14px;
       font-size: 12px;
@@ -131,6 +131,14 @@
               }
             }
           }
+          .common-actions-list {
+            .iam-common-used-action-wrapper {
+              margin-top: 12px;
+              .icon-plus {
+                font-size: 16px !important;
+              }
+            }
+          }
         }
         .right-layout {
           width: 244px;
@@ -179,7 +187,7 @@
               background-color: #ffffff;
               box-shadow: 0 1px 2px 0 #0000001f;
               border-radius: 2px;
-              padding: 0 5px;
+              padding-right: 6px;
               line-height: 32px;
               margin-bottom: 2px;
               .action-text {
@@ -187,14 +195,14 @@
                 align-items: center;
                 &-tag {
                   margin-right: 4px;
+                  padding: 0 4px;
+                  font-size: 10px;
                 }
                 &-name {
-                  max-width: 120px;
+                  max-width: 135px;
                   font-size: 12px;
-                  color: #63656E;
-                  &.lang-name {
-                    max-width: 110px;
-                  }
+                  color: #63656e;
+                  word-break: break-all;
                 }
               }
               .close-icon {

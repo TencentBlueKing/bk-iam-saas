@@ -292,6 +292,7 @@
   import { mapGetters } from 'vuex';
   import { cloneDeep } from 'lodash';
   import { bus } from '@/common/bus';
+  import { USER_ORG_SEARCH_TAG_LIST } from '@/common/constants';
   import { delLocationHref, formatCodeData } from '@/common/util';
   import IamResourceCascadeSearch from '@/components/iam-resource-cascade-search';
   import Layout from './components/page-layout';
@@ -390,48 +391,7 @@
         dragWidth: 224,
         formItemWidth: '',
         listHeight: window.innerHeight - 51 - 51 - 157 - 42 - 8,
-        searchTagList: [
-          {
-            name: 'system_id',
-            label: this.$t(`m.common['系统']`),
-            value: ''
-          },
-          {
-            name: 'action_id',
-            label: this.$t(`m.common['操作']`),
-            value: ''
-          },
-          {
-            name: 'resource_type',
-            label: this.$t(`m.permApply['资源类型']`),
-            value: ''
-          },
-          {
-            name: 'resource_instance',
-            label: this.$t(`m.common['资源实例']`),
-            value: ''
-          },
-          {
-            name: 'name',
-            label: this.$t(`m.userGroup['用户组名']`),
-            value: ''
-          },
-          {
-            name: 'id',
-            label: this.$t(`m.userOrOrg['用户组 ID']`),
-            value: ''
-          },
-          {
-            name: 'username',
-            label: this.$t(`m.common['用户名']`),
-            value: ''
-          },
-          {
-            name: 'department_name',
-            label: this.$t(`m.perm['组织名']`),
-            value: ''
-          }
-        ],
+        searchTagList: cloneDeep(USER_ORG_SEARCH_TAG_LIST),
         resourceInstances: [],
         noPopoverList: ['system_id', 'action_id', 'resource_type', 'resource_instance'],
         permMembers: [],
@@ -572,7 +532,7 @@
           const { current, limit } = this.pageConf;
           const params = {
             ...this.curSearchParams,
-              ...this.formData,
+            ...this.formData,
             page: current,
             page_size: limit,
             apply_disable: false
@@ -945,23 +905,8 @@
       },
 
       async handleCloseTag (payload) {
-        payload.value = '';
         this.pageConf.current = 1;
-        if (this.curSystemAction[payload.name]) {
-          this.curSystemAction[payload.name] = '';
-        }
-        if (this.formData[payload.name]) {
-          this.formData[payload.name] = '';
-          if (['username'].includes(payload.name)) {
-            this.permMembers = [];
-          }
-        }
-        if (this.curResourceData[payload.name]) {
-          this.curResourceData[payload.name] = '';
-        }
-        if (this.curSearchParams[payload.name]) {
-          this.curSearchParams[payload.name] = '';
-        }
+        this.handleClearSearchData(payload);
         // 删除有关联数据的tag
         if (['system_id', 'action_id'].includes(payload.name)) {
           this.searchTagList.forEach((item) => {
@@ -988,19 +933,29 @@
       async handleClearAll () {
         this.searchTagList.forEach((item) => {
           if (item.value) {
-            item.value = '';
-            if (this.curSystemAction[item.name]) {
-              this.curSystemAction[item.name] = '';
-            }
-            if (this.formData[item.name]) {
-              this.formData[item.name] = '';
-            }
-            if (this.curResourceData[item.name]) {
-              this.curResourceData[item.name] = '';
-            }
+            this.handleClearSearchData(item);
           }
         });
         await this.handleEmptyUserClear();
+      },
+
+      handleClearSearchData (payload) {
+        payload.value = '';
+        if (this.curSystemAction[payload.name]) {
+          this.curSystemAction[payload.name] = '';
+        }
+        if (this.formData[payload.name]) {
+          this.formData[payload.name] = '';
+          if (['username'].includes(payload.name)) {
+            this.permMembers = [];
+          }
+        }
+        if (this.curResourceData[payload.name]) {
+          this.curResourceData[payload.name] = '';
+        }
+        if (this.curSearchParams[payload.name]) {
+          this.curSearchParams[payload.name] = '';
+        }
       },
 
       handleRefreshTipType (payload) {
@@ -1058,6 +1013,7 @@
     }
   };
 </script>
+
 <style lang="postcss">
 .user-org-popover-tag-edit {
   color: #63656E;

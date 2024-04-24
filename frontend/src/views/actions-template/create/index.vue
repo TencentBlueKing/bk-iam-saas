@@ -1,6 +1,7 @@
 <template>
   <component
     ref="actionChild"
+    :mode="'create'"
     :is="'CreateTemplate'"
   />
 </template>

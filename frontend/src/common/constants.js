@@ -243,3 +243,47 @@ export const MEMBERS_TEMPLATE_FIELDS = [
     disabled: false
   }
 ];
+
+// 用户/组织搜索字段列表
+export const USER_ORG_SEARCH_TAG_LIST = [
+  {
+    name: 'system_id',
+    label: il8n('common', '系统'),
+    value: ''
+  },
+  {
+    name: 'action_id',
+    label: il8n('common', '操作'),
+    value: ''
+  },
+  {
+    name: 'resource_type',
+    label: il8n('permApply', '资源类型'),
+    value: ''
+  },
+  {
+    name: 'resource_instance',
+    label: il8n('common', '资源实例'),
+    value: ''
+  },
+  {
+    name: 'name',
+    label: il8n('userGroup', '用户组名'),
+    value: ''
+  },
+  {
+    name: 'id',
+    label: il8n('userOrOrg', '用户组 ID'),
+    value: ''
+  },
+  {
+    name: 'username',
+    label: il8n('common', '用户名'),
+    value: ''
+  },
+  {
+    name: 'department_name',
+    label: il8n('perm', '组织名'),
+    value: ''
+  }
+];
