@@ -1,3 +1,14 @@
+<!-- 2024-04-11 -->
+# V1.10.25 Version Update Log
+
+### New Features
+
+* Added the ability to manage permissions for desired users/departments within the management space.
+* System administrators can now query personnel with permissions.
+* System administrators can now edit sensitivity levels.
+
+---
+
 <!-- 2024-03-01 -->
 # V1.10.24 Version Update Log
 

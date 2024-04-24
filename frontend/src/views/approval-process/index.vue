@@ -231,8 +231,8 @@
             this.active = 'CustomPermProcess';
           },
           system_manager: () => {
-            this.panels = this.panels.filter(item => ['JoinGroupProcess'].includes(item.name));
-            this.active = 'JoinGroupProcess';
+            this.panels = this.panels.filter(item => ['CustomPermProcess', 'JoinGroupProcess'].includes(item.name));
+            this.active = 'CustomPermProcess';
           },
           rating_manager: () => {
             this.panels = this.panels.filter(item => ['JoinRateManagerProcess', 'JoinGroupProcess'].includes(item.name));
