@@ -27,6 +27,14 @@ urlpatterns = [
         views.AdminGroupMemberViewSet.as_view({"get": "list"}),
         name="open.admin.group_member",
     ),
+    # 用户组授权
+    path(
+        "groups/<str:id>/policies/",
+        views.AdminGroupPolicyViewSet.as_view({"post": "create"}),
+        name="open.admin.group_policy",
+    ),
+    # 模板
+    path("templates/", views.AdminTemplateViewSet.as_view({"post": "create"}), name="open.admin.template"),
     # Subject
     path(
         "subjects/<str:subject_type>/<str:subject_id>/groups/",
@@ -38,6 +46,12 @@ urlpatterns = [
         "systems/",
         views.AdminSystemViewSet.as_view({"get": "list"}),
         name="open.admin.system",
+    ),
+    # 系统回调信息
+    path(
+        "systems/<str:system_id>/provider_config/",
+        views.AdminSystemProviderConfigViewSet.as_view({"get": "list"}),
+        name="open.admin.system_provider_config",
     ),
     # 超级管理员成员列表  get
     path(

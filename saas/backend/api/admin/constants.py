@@ -26,12 +26,19 @@ class AdminAPIEnum(BaseAPIEnum):
     # 用户组成员
     GROUP_MEMBER_LIST = auto()
 
+    # 用户组权限
+    GROUP_POLICY_GRANT = auto()
+
+    # 模板
+    TEMPLATE_CREATE = auto()
+
     # Subject
     SUBJECT_JOINED_GROUP_LIST = auto()
     SUBJECT_ROLE_LIST = auto()
 
     # System
     SYSTEM_LIST = auto()
+    SYSTEM_PROVIDER_CONFIG_LIST = auto()
 
     # 角色
     ROLE_SUPER_MANAGER_MEMBER_LIST = auto()
@@ -52,11 +59,14 @@ class AdminAPIEnum(BaseAPIEnum):
     _choices_labels = skip(
         (
             (SYSTEM_LIST, "获取系统列表"),
+            (SYSTEM_PROVIDER_CONFIG_LIST, "获取系统回调信息"),
             (GROUP_LIST, "获取用户组列表"),
             (GROUP_BATCH_CREATE, "批量创建用户组"),
             (GROUP_UPDATE, "更新用户组"),
             (GROUP_DELETE, "删除用户组"),
             (GROUP_MEMBER_LIST, "获取用户组成员列表"),
+            (GROUP_POLICY_GRANT, "授权用户组"),
+            (TEMPLATE_CREATE, "新建模板"),
             (SUBJECT_JOINED_GROUP_LIST, "获取Subject加入的用户组列表"),
             (SUBJECT_ROLE_LIST, "获取Subject角色列表"),
             (ROLE_SUPER_MANAGER_MEMBER_LIST, "获取超级管理员成员列表"),

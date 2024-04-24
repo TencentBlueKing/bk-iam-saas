@@ -19,18 +19,27 @@ from rest_framework.viewsets import GenericViewSet, mixins
 from backend.api.admin.constants import AdminAPIEnum, VerifyApiParamLocationEnum
 from backend.api.admin.filters import GroupFilter
 from backend.api.admin.permissions import AdminAPIPermission
-from backend.api.admin.serializers import AdminGroupBasicSLZ, AdminGroupCreateSLZ, AdminGroupMemberSLZ
+from backend.api.admin.serializers import (
+    AdminGroupAuthorizationSLZ,
+    AdminGroupBasicSLZ,
+    AdminGroupCreateSLZ,
+    AdminGroupMemberSLZ,
+)
 from backend.api.authentication import ESBAuthentication
 from backend.api.management.v2.views import ManagementGroupViewSet
-from backend.apps.group.audit import GroupCreateAuditProvider
+from backend.apps.group.audit import GroupCreateAuditProvider, GroupTemplateCreateAuditProvider
+from backend.apps.group.constants import OperateEnum
 from backend.apps.group.models import Group
+from backend.apps.group.views import check_readonly_group
 from backend.apps.role.models import Role
-from backend.audit.audit import add_audit
+from backend.audit.audit import add_audit, audit_context_setter, view_audit_decorator
 from backend.audit.constants import AuditSourceType
 from backend.biz.group import GroupBiz, GroupCheckBiz, GroupCreationBean
+from backend.biz.role import RoleBiz
 from backend.common.lock import gen_group_upsert_lock
 from backend.common.pagination import CompatiblePagination
 from backend.service.constants import GroupSaaSAttributeEnum, RoleType
+from backend.trans.group import GroupTrans
 
 
 class AdminGroupViewSet(mixins.ListModelMixin, GenericViewSet):
@@ -143,3 +152,48 @@ class AdminGroupMemberViewSet(GenericViewSet):
         count, group_members = self.biz.list_paging_thin_group_member(group.id, limit, offset)
         results = [one.dict(include={"type", "id", "name", "expired_at"}) for one in group_members]
         return Response({"count": count, "results": results})
+
+
+class AdminGroupPolicyViewSet(GenericViewSet):
+    """用户组授权"""
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [AdminAPIPermission]
+
+    admin_api_permission = {"create": AdminAPIEnum.GROUP_POLICY_GRANT.value}
+
+    pagination_class = None  # 去掉swagger中的limit offset参数
+    queryset = Group.objects.all()
+    lookup_field = "id"
+
+    group_biz = GroupBiz()
+    role_biz = RoleBiz()
+
+    group_trans = GroupTrans()
+
+    @swagger_auto_schema(
+        operation_description="用户组添加权限",
+        request_body=AdminGroupAuthorizationSLZ(label="授权信息"),
+        responses={status.HTTP_201_CREATED: serializers.Serializer()},
+        tags=["admin.group.policy"],
+    )
+    @view_audit_decorator(GroupTemplateCreateAuditProvider)
+    @check_readonly_group(operation=OperateEnum.GROUP_POLICY_CREATE.label)
+    def create(self, request, *args, **kwargs):
+        serializer = AdminGroupAuthorizationSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        group = self.get_object()
+        data = serializer.validated_data
+
+        role = self.role_biz.get_role_by_group_id(group.id)
+        templates = self.group_trans.from_group_grant_data(data["templates"])
+        self.group_biz.grant(role, group, templates)
+
+        # 写入审计上下文
+        audit_context_setter(
+            group=group,
+            templates=[{"system_id": t["system_id"], "template_id": t["template_id"]} for t in data["templates"]],
+        )
+
+        return Response({}, status=status.HTTP_201_CREATED)
