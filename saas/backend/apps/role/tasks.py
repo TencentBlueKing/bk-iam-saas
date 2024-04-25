@@ -31,7 +31,7 @@ from backend.biz.resource import ResourceBiz
 from backend.biz.role import RoleBiz, RoleCheckBiz, RoleInfoBean, get_global_notification_config
 from backend.biz.system import SystemBiz
 from backend.common.lock import gen_bcs_manager_lock, gen_init_grade_manager_lock
-from backend.common.time import DAY_SECONDS, get_expired_at, get_today_weekday
+from backend.common.time import DAY_SECONDS, get_expired_at, need_run_expired_remind
 from backend.component import esb
 from backend.component.bcs import list_project_for_iam
 from backend.component.bkbot import send_iam_ticket
@@ -188,12 +188,7 @@ def role_group_expire_remind():
     # 获取配置
     notification_config = get_global_notification_config()
 
-    # 如果没有开启用户组过期提醒, 直接返回
-    if not notification_config["enable"]:
-        return
-
-    # 判断当前是星期几, 如果不在发送周期内, 直接返回
-    if get_today_weekday() not in notification_config["send_days"]:
+    if not need_run_expired_remind(notification_config):
         return
 
     expired_at_before = get_expired_at(notification_config["expire_days_before"])
