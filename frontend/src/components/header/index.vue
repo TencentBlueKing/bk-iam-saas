@@ -19,7 +19,7 @@
       <div v-if="!isHide" class="breadcrumbs-content">
         <Icon type="arrows-left" class="breadcrumbs-back" v-if="backRouter" />
         <template v-if="customBreadCrumbTitles.includes(routeName)">
-          <h2 v-if="['addGroupPerm'].includes(routeName)">
+          <h2 v-if="['addGroupPerm'].includes(routeName)" class="breadcrumbs-current single-hide" :style="formatBreadCrumbWidth()">
             {{ $t(`m.info['用户组成员添加权限']`, { value: `${$t(`m.common['【']`)}${userGroupName}${$t(`m.common['】']`)}` }) }}
           </h2>
           <div v-else-if="['renewalNotice'].includes(routeName)">
