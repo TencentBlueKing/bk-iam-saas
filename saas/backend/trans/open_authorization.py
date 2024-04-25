@@ -15,6 +15,7 @@ from pydantic.tools import parse_obj_as
 from backend.biz.action import ActionBiz
 from backend.biz.policy import PolicyBeanList
 from backend.common.error_codes import error_codes
+from backend.common.time import PERMANENT_SECONDS
 
 from .open import OpenCommonTrans, OpenPolicy
 
@@ -211,7 +212,7 @@ class AuthorizationTrans(OpenCommonTrans):
         for open_policy in open_policies:
             open_policy.fill_instance_name()
 
-        return self._to_policy_list(system_id, open_policies)
+        return self._to_policy_list(system_id, open_policies, expired_at=PERMANENT_SECONDS)
 
     def to_policy_list_for_attributes_of_creator(
         self, system_id: str, action_ids: List[str], resource_type_id: str, attributes: List[Dict]
@@ -240,4 +241,4 @@ class AuthorizationTrans(OpenCommonTrans):
         # 将数据转换为OpenPolicy用于后续处理
         open_policies = parse_obj_as(List[OpenPolicy], actions)
 
-        return self._to_policy_list(system_id, open_policies)
+        return self._to_policy_list(system_id, open_policies, expired_at=PERMANENT_SECONDS)
