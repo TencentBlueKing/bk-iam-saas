@@ -182,15 +182,20 @@
     <div slot="action" class="action-footer-btn">
       <template v-if="isEdit">
         <bk-button
+          v-if="!hasGroupPreview"
+          :loading="prevLoading"
+          :disabled="isCurSelectActions"
+          @click="handlePrevStep">
+          {{ $t(`m.common['上一步']`) }}
+        </bk-button>
+        <bk-button
           theme="primary"
-          :disabled="isCurSelectActions && isTempName && isDescription"
+          :disabled="isCurSelectActions"
           :loading="nextLoading"
           @click="handleNextStep">
           {{ hasGroupPreview ? $t(`m.common['下一步']`) : $t(`m.common['提交']`) }}
         </bk-button>
-        <bk-button
-          :loading="prevLoading"
-          @click="handlePrevStep">
+        <bk-button @click.stop="handleCancel">
           {{ $t(`m.common['取消']`) }}
         </bk-button>
       </template>
@@ -243,8 +248,6 @@
         isEditTemplate: false,
         isSystemListLoading: false,
         isSelectAllActions: false,
-        isTempName: true,
-        isDescription: true,
         isCurSelectActions: true,
         isExpandAction: true,
         hasGroupPreview: true,
@@ -289,8 +292,8 @@
       ...mapGetters(['user', 'externalSystemId']),
       isShowGroupAction () {
         return (item) => {
-            const isExistSubGroup = (item.sub_groups || []).some(v => v.sub_groups && v.sub_groups.length > 0);
-            return item.sub_groups && item.sub_groups.length > 0 && !isExistSubGroup;
+          const isExistSubGroup = (item.sub_groups || []).some(v => v.sub_groups && v.sub_groups.length > 0);
+          return item.sub_groups && item.sub_groups.length > 0 && !isExistSubGroup;
         };
       },
       isEdit () {
@@ -351,9 +354,6 @@
       },
       'basicInfo': {
         handler (payload) {
-          const { name, description } = payload;
-          this.isTempName = name === this.initialTempName;
-          this.isDescription = description === this.initialDescription;
           this.leavePageForm = Object.assign(this.leavePageForm, payload);
           this.handleGetLeaveData();
         },
@@ -423,6 +423,7 @@
           this.initialDescription = cloneDeep(description || '');
           this.originalCustomTmplList = cloneDeep(actions || []);
           this.originalCustomTmplListBack = cloneDeep(actions || []);
+          this.$store.commit('setHeaderTitle', name);
           await this.handleActionLinearData(false);
           await this.fetchCommonActions(system.id || '');
         } catch (e) {
@@ -932,20 +933,6 @@
         }
       },
 
-      async handlePrevStep () {
-        // let cancelHandler = Promise.resolve();
-        // window.changeDialog = JSON.stringify(this.leavePageForm) !== JSON.stringify(this.leavePageFormBack);
-        // if (window.changeDialog) {
-        //   cancelHandler = leavePageConfirm();
-        // }
-        // cancelHandler.then(async () => {
-        //   this.$router.push({
-        //     name: 'permTemplateDetail',
-        //     params: this.$route.params
-        //   });
-        // }, _ => _);
-      },
-
       async handleCreateSubmit () {
         const { name, description, system_id } = this.basicInfo;
         this.handleNameBlur(name);
@@ -980,9 +967,21 @@
         }
       },
 
-      handleCancel () {
+      handlePrevStep () {
         let cancelHandler = Promise.resolve();
+        if (window.changeDialog) {
+          cancelHandler = leavePageConfirm();
+        }
+        cancelHandler.then(() => {
+          this.$router.push({
+            name: 'actionsTemplate'
+          });
+        }, _ => _);
+      },
+
+      handleCancel () {
         this.handleGetLeaveData();
+        let cancelHandler = Promise.resolve();
         if (window.changeDialog) {
           cancelHandler = leavePageConfirm();
         }
@@ -999,8 +998,8 @@
 
       handleGetResizeHeight () {
         // 两个51代表面包屑和导航栏的高度， 186代表基本信息的高度， 30代表内边距
-        const distance = window.innerHeight - 51 - 51 - 52 - 30 - 126;
-        let listHeight = this.isEdit ? distance - 30 : distance - this.basicInfoHeight;
+        const distance = window.innerHeight - 51 - 51 - 52 - 126;
+        let listHeight = this.isEdit ? distance - 8 : distance - this.basicInfoHeight - 30;
         this.commonActionsHeight = 0;
         if (this.isShowActionError) {
           listHeight -= 32;

@@ -5,32 +5,31 @@
     { 'nav-sticked': navStick, 'hide-bread': externalSystemsLayout.hideIamBreadCrumbs && !externalRouter.includes($route.name) },
     { 'external-nav-sticked': isShowExternal }
   ]">
-    <!-- <iam-guide
-            v-if="showGuide"
-            type="switch_role"
-            direction="right"
-            :flag="showGuide"
-            :style="{ top: '5px', right: '125px' }"
-            :content="$t(`m.guide['切换管理空间']`)" /> -->
-    <div class="breadcrumbs fl"
+    <div
+      class="breadcrumbs fl"
       :class="backRouter ? 'has-cursor' : ''"
       v-show="isShowExternal || (!mainContentLoading && !externalSystemsLayout.hideIamBreadCrumbs)"
-      @click="back">
+      @click="back"
+    >
       <div v-if="!isHide" class="breadcrumbs-content">
         <Icon type="arrows-left" class="breadcrumbs-back" v-if="backRouter" />
         <template v-if="customBreadCrumbTitles.includes(routeName)">
-          <h2 v-if="['addGroupPerm'].includes(routeName)">
+          <h2 v-if="['addGroupPerm'].includes(routeName)" class="breadcrumbs-current single-hide">
             {{ $t(`m.info['用户组成员添加权限']`, { value: `${$t(`m.common['【']`)}${userGroupName}${$t(`m.common['】']`)}` }) }}
           </h2>
-          <div v-else-if="['renewalNotice'].includes(routeName)">
-            <h2 class="breadcrumbs-current single-hide" :style="formatBreadCrumbWidth('switch')">
+          <template v-if="['renewalNotice'].includes(routeName)">
+            <h2 class="breadcrumbs-current single-hide" :style="formatBreadCrumbWidth()">
               {{ headerTitle }}
             </h2>
             <bk-switcher size="large" theme="primary" v-model="needProvideValue.isShowRenewalNotice" @change="handleChangeRenewalNotice" />
+          </template>
+          <div v-if="['actionsTemplateEdit'].includes(routeName)" class="breadcrumbs-content-actions-template-edit">
+            <div class="breadcrumbs-text">
+              <div>{{ $t(`m.actionTemplate['编辑模板操作']`) }}</div>
+              <div class="single-hide" :style="formatBreadCrumbWidth()">{{ headerTitle }}</div>
+            </div>
+            <bk-steps :steps="actionSteps" ext-cls="actions-template-edit-step" />
           </div>
-          <h2 v-else class="breadcrumbs-current single-hide" :style="formatBreadCrumbWidth()">
-            {{ headerTitle }}
-          </h2>
         </template>
         <h2 v-else class="breadcrumbs-current single-hide" :style="formatBreadCrumbWidth()">
           {{ headerTitle }}
@@ -187,11 +186,15 @@
         placeholderValue: '',
         userGroupName: '',
         externalRouter: ['permTransfer', 'permRenewal', 'addGroupPerm'], // 开放内嵌页面需要面包屑的页面
-        customBreadCrumbTitles: ['addGroupPerm', 'renewalNotice'],
+        customBreadCrumbTitles: ['addGroupPerm', 'renewalNotice', 'actionsTemplateEdit'],
         // 需要provide的变量
         needProvideValue: {
           isShowRenewalNotice: false
-        }
+        },
+        actionSteps: [
+          { title: '选择操作', icon: 1 },
+          { title: '同步用户组', icon: 2 }
+        ]
       };
     },
     computed: {
@@ -223,13 +226,24 @@
         return this.externalRouter.includes(this.$route.name) && this.externalSystemsLayout.hideIamBreadCrumbs;
       },
       formatBreadCrumbWidth () {
-        return (payload) => {
-          if (payload === 'switch') {
-            const switchWidth = 52;
-            return {
-              'max-width': `calc(100vw - ${this.navStick ? 280 - switchWidth : 80 - switchWidth}px)`,
-              'margin-right': '10px'
-            };
+        return () => {
+          const routeMap = {
+            renewalNotice: () => {
+              const switchWidth = 52;
+              return {
+                'max-width': `calc(100vw - ${this.navStick ? 280 - switchWidth : 80 - switchWidth}px)`,
+                'margin-right': '10px'
+              };
+            },
+            actionsTemplateEdit: () => {
+              const stepWidth = 252;
+              return {
+                'max-width': `calc(100vw - ${this.navStick ? 280 - stepWidth : 80 - stepWidth}px)`
+              };
+            }
+          };
+          if (routeMap[this.$route.name]) {
+            return routeMap[this.$route.name]();
           }
           return {
             'max-width': `calc(100vw - ${this.navStick ? 280 : 80}px)`
@@ -517,5 +531,5 @@
 </script>
 
 <style>
-    @import './index';
+  @import './index';
 </style>
