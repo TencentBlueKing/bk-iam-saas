@@ -414,6 +414,7 @@
       },
       handleActionChecked (newVal, oldVal, val, actData, payload) {
         this.setWindowChangeDialog();
+        console.log(actData, 5555);
         const hasFlag = actData.hasOwnProperty('flag');
         if (!newVal) {
           payload.allChecked = false;

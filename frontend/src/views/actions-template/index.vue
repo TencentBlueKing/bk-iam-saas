@@ -30,8 +30,8 @@
           <div class="actions-template-name">
             <div
               :class="[
-                'name',
-                { 'single-hide is-lock': row.is_lock }
+                'single-hide name',
+                { 'is-lock': row.is_lock }
               ]"
               v-bk-tooltips="{ content: row.name, placement: 'right-start' }"
               @click="handleView(row, 'basic_info')"
@@ -57,7 +57,9 @@
       <bk-table-column :label="$t(`m.common['创建时间']`)" prop="created_time" :min-width="160" />
       <bk-table-column :label="$t(`m.common['描述']`)" width="300">
         <template slot-scope="{ row }">
-          <span :title="row.description">{{ row.description || '--' }}</span>
+          <span v-bk-tooltips="{ content: row.description, placement: 'left-start', disabled: !row.description }">
+            {{ row.description || '--' }}
+          </span>
         </template>
       </bk-table-column>
       <bk-table-column :label="$t(`m.common['操作-table']`)" :min-width="100" fixed="right">
@@ -193,6 +195,7 @@
         addGroupLoading: false,
         spaceFiltersList: [],
         editRequestQueue: [],
+        defaultCheckedActions: [],
         curRole: 'staff',
         queryParams: {},
         emptyData: {
@@ -304,6 +307,22 @@
           }
         }
       },
+
+      async addPreUpdateInfo (payload) {
+        try {
+          const { data } = await this.$store.dispatch('permTemplate/addPreUpdateInfo', {
+            id: this.curDetailData.id,
+            data: {
+              action_ids: payload
+            }
+          });
+          this.$store.commit('permTemplate/updateCloneActions', data || []);
+        } catch (e) {
+          this.messageAdvancedError(e);
+        } finally {
+          this.editRequestQueue.shift();
+        }
+      },
       
       async getPreUpdateInfo () {
         try {
@@ -315,7 +334,7 @@
             this.$store.commit('permTemplate/updateAction', this.getActionsData(data.action_ids || []));
             await this.addPreUpdateInfo(data.action_ids);
             this.$router.push({
-              name: 'permTemplateDiff',
+              name: 'actionsTemplateEdit',
               params: {
                 id,
                 systemId: system.id
@@ -426,6 +445,81 @@
           }
         });
         return temps;
+      },
+
+      handleActionData () {
+        // 获取actions和sub_groups所有数据，并根据单双行渲染不同背景颜色
+        let colorIndex = 0;
+        this.curDetailData.actions.forEach((item) => {
+          this.$set(item, 'expanded', true);
+          let count = 0;
+          let allCount = 0;
+          let deleteCount = 0;
+          if (!item.actions) {
+            this.$set(item, 'actions', []);
+          }
+          if (!item.sub_groups) {
+            this.$set(item, 'sub_groups', []);
+          }
+          if (item.actions.length === 1 || !item.sub_groups.length) {
+            this.$set(item, 'bgColor', colorIndex % 2 === 0 ? '#f7f9fc' : '#ffffff');
+            colorIndex++;
+          }
+          item.actions.forEach((act) => {
+            this.$set(act, 'checked', ['checked', 'readonly', 'delete'].includes(act.tag));
+            this.$set(act, 'disabled', act.tag === 'readonly');
+            if (item.actions.length > 1 && item.sub_groups.length > 0) {
+              this.$set(act, 'bgColor', colorIndex % 2 === 0 ? '#ffffff' : '#f7f9fc');
+              colorIndex++;
+            }
+            if (act.checked) {
+              ++count;
+              this.defaultCheckedActions.push(act.id);
+            }
+            if (act.tag === 'delete') {
+              ++deleteCount;
+            }
+            ++allCount;
+          });
+          item.sub_groups.forEach((sub) => {
+            this.$set(sub, 'expanded', false);
+            this.$set(sub, 'actionsAllChecked', false);
+            this.$set(sub, 'bgColor', colorIndex % 2 === 0 ? '#f7f9fc' : '#ffffff');
+            colorIndex++;
+            if (!sub.actions) {
+              this.$set(sub, 'actions', []);
+            }
+            sub.actions.forEach((act) => {
+              this.$set(act, 'checked', ['checked', 'readonly', 'delete'].includes(act.tag));
+              this.$set(act, 'disabled', act.tag === 'readonly');
+              if (act.checked) {
+                ++count;
+                this.defaultCheckedActions.push(act.id);
+              }
+              if (act.tag === 'delete') {
+                ++deleteCount;
+              }
+              ++allCount;
+            });
+            const isSubAllChecked = sub.actions.every(v => v.checked);
+            this.$set(sub, 'allChecked', isSubAllChecked);
+          });
+          this.$set(item, 'deleteCount', deleteCount);
+          this.$set(item, 'count', count);
+          this.$set(item, 'allCount', allCount);
+          const isAllChecked = item.actions.every(v => v.checked);
+          const isAllDisabled = item.actions.every(v => v.disabled);
+          this.$set(item, 'allChecked', isAllChecked);
+          if (item.sub_groups && item.sub_groups.length > 0) {
+            this.$set(item, 'actionsAllChecked', isAllChecked && item.sub_groups.every(v => v.allChecked));
+            this.$set(item, 'actionsAllDisabled', isAllDisabled && item.sub_groups.every(v => {
+              return v.actions.every(sub => sub.disabled);
+            }));
+          } else {
+            this.$set(item, 'actionsAllChecked', isAllChecked);
+            this.$set(item, 'actionsAllDisabled', isAllDisabled);
+          }
+        });
       },
 
       updateSliderOperateData () {
@@ -545,11 +639,15 @@
           this.tableLoading = false;
         }
       },
-  
-      handleCreate () {
-        this.$router.push({
-          name: 'actionsTemplateCreate'
-        });
+
+      async fetchTemplateDetail (id) {
+        try {
+          const { data } = await this.$store.dispatch('permTemplate/getTemplateDetail', { id, grouping: true });
+          this.curDetailData = Object.assign(this.curDetailData, data);
+          this.handleActionData();
+        } catch (e) {
+          this.messageAdvancedError(e);
+        }
       },
   
       async handleSubmitSelectUserGroup (payload) {
@@ -565,11 +663,25 @@
           this.handleCancelSelect();
           this.fetchTemplateList(true);
         } catch (e) {
-          console.error(e);
           this.messageAdvancedError(e);
         } finally {
           this.addGroupLoading = false;
         }
+      },
+
+      async handleRemoteSystem (value) {
+        const params = {};
+        if (this.externalSystemId) {
+          params.hidden = false;
+        }
+        const { data } = await this.$store.dispatch('system/getSystems', params);
+        return data.map(({ id, name }) => ({ id, name })).filter(item => item.name.indexOf(value) > -1);
+      },
+
+      handleCreate () {
+        this.$router.push({
+          name: 'actionsTemplateCreate'
+        });
       },
   
       handleCancelSelect () {
@@ -578,39 +690,10 @@
         this.isShowUserGroupDialog = false;
       },
   
-      handleBatchDelete () {
-        const hasSelectedLen = this.currentSelectList.length;
-        let deleteTitle = '';
-        if (hasSelectedLen === 1) {
-          deleteTitle = `${this.$t(`m.dialog['确认删除']`)}`;
-        } else {
-          deleteTitle = `${this.$t(`m.common['确认删除']`)}${hasSelectedLen}${this.$t(`m.permTemplate['个模板']`)}？`;
-        }
-        this.$bkInfo({
-          title: deleteTitle,
-          subTitle: this.$t(`m.permTemplate['删除权限模版不会影响已授权用户，可以放心删除。']`),
-          maskClose: true,
-          confirmFn: async () => {
-            console.warn('');
-          }
-        });
-      },
-  
       handleRemoteRtx (value) {
         return fuzzyRtxSearch(value)
           .then(data => {
             return data.results;
-          });
-      },
-  
-      handleRemoteSystem (value) {
-        const params = {};
-        if (this.externalSystemId) {
-          params.hidden = false;
-        }
-        return this.$store.dispatch('system/getSystems', params)
-          .then(({ data }) => {
-            return data.map(({ id, name }) => ({ id, name })).filter(item => item.name.indexOf(value) > -1);
           });
       },
   
@@ -654,6 +737,7 @@
       async handleEdit (payload) {
         this.editRequestQueue = ['getPre', 'addPre'];
         this.curDetailData = Object.assign(this.curDetailData, payload);
+        await this.fetchTemplateDetail(payload.id);
         await this.getPreUpdateInfo();
       }
     }

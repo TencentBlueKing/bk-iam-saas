@@ -417,74 +417,6 @@
         this.handleRelatedActions(actData, true);
       },
 
-      handleCheckAll (payload) {
-        if (payload.actionsAllDisabled) {
-          return;
-        }
-        this.setWindowChangeDialog();
-        const tempActions = [];
-        payload.actionsAllChecked = !payload.actionsAllChecked;
-        if (!payload.actions.every(v => v.disabled)) {
-          payload.allChecked = payload.actionsAllChecked;
-        }
-        payload.actions.forEach(item => {
-          if (!item.disabled) {
-            item.checked = payload.actionsAllChecked;
-            tempActions.push(item);
-            const hasFlag = item.hasOwnProperty('flag');
-            if (!item.checked) {
-              if (hasFlag) {
-                if (item.flag === 'selected') {
-                  item.flag = 'cancel';
-                }
-                if (item.flag === 'added') {
-                  this.$delete(item, 'flag');
-                }
-              }
-            } else {
-              if (hasFlag && item.flag === 'cancel') {
-                item.flag = 'selected';
-              }
-              if (!hasFlag) {
-                this.$set(item, 'flag', 'added');
-              }
-            }
-          }
-        });
-        (payload.sub_groups || []).forEach(subItem => {
-          subItem.actionsAllChecked = payload.actionsAllChecked;
-          subItem.allChecked = payload.actionsAllChecked;
-          (subItem.actions || []).forEach(act => {
-            if (!act.disabled) {
-              act.checked = payload.actionsAllChecked;
-              tempActions.push(act);
-              const hasFlag = act.hasOwnProperty('flag');
-              if (!act.checked) {
-                if (hasFlag) {
-                  if (act.flag === 'selected') {
-                    act.flag = 'cancel';
-                  }
-                  if (act.flag === 'added') {
-                    this.$delete(act, 'flag');
-                  }
-                }
-              } else {
-                if (hasFlag && act.flag === 'cancel') {
-                  act.flag = 'selected';
-                }
-                if (!hasFlag) {
-                  this.$set(act, 'flag', 'added');
-                }
-              }
-            }
-          });
-        });
-        tempActions.forEach(item => {
-          this.handleRelatedActions(item, payload.actionsAllChecked);
-        });
-        payload.count = payload.actionsAllChecked ? payload.allCount : 0;
-      },
-
       handleActionChecked (actData, payload, newVal) {
         this.setWindowChangeDialog();
         const hasFlag = actData.hasOwnProperty('flag');
@@ -604,6 +536,74 @@
           payload.actionsAllChecked = true;
         }
         payload.count = payload.count + count;
+      },
+
+      handleCheckAll (payload) {
+        if (payload.actionsAllDisabled) {
+          return;
+        }
+        this.setWindowChangeDialog();
+        const tempActions = [];
+        payload.actionsAllChecked = !payload.actionsAllChecked;
+        if (!payload.actions.every(v => v.disabled)) {
+          payload.allChecked = payload.actionsAllChecked;
+        }
+        payload.actions.forEach(item => {
+          if (!item.disabled) {
+            item.checked = payload.actionsAllChecked;
+            tempActions.push(item);
+            const hasFlag = item.hasOwnProperty('flag');
+            if (!item.checked) {
+              if (hasFlag) {
+                if (item.flag === 'selected') {
+                  item.flag = 'cancel';
+                }
+                if (item.flag === 'added') {
+                  this.$delete(item, 'flag');
+                }
+              }
+            } else {
+              if (hasFlag && item.flag === 'cancel') {
+                item.flag = 'selected';
+              }
+              if (!hasFlag) {
+                this.$set(item, 'flag', 'added');
+              }
+            }
+          }
+        });
+        (payload.sub_groups || []).forEach(subItem => {
+          subItem.actionsAllChecked = payload.actionsAllChecked;
+          subItem.allChecked = payload.actionsAllChecked;
+          (subItem.actions || []).forEach(act => {
+            if (!act.disabled) {
+              act.checked = payload.actionsAllChecked;
+              tempActions.push(act);
+              const hasFlag = act.hasOwnProperty('flag');
+              if (!act.checked) {
+                if (hasFlag) {
+                  if (act.flag === 'selected') {
+                    act.flag = 'cancel';
+                  }
+                  if (act.flag === 'added') {
+                    this.$delete(act, 'flag');
+                  }
+                }
+              } else {
+                if (hasFlag && act.flag === 'cancel') {
+                  act.flag = 'selected';
+                }
+                if (!hasFlag) {
+                  this.$set(act, 'flag', 'added');
+                }
+              }
+            }
+          });
+        });
+        tempActions.forEach(item => {
+          this.handleRelatedActions(item, payload.actionsAllChecked);
+        });
+        payload.count = payload.actionsAllChecked ? payload.allCount : 0;
       },
 
       getRelatedActionTips (payload) {

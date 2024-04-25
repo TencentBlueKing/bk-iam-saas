@@ -44,7 +44,8 @@
   }
   /deep/ .actions-form {
     position: relative;
-    padding: 16px 24px 30px 24px !important;
+    padding: 16px 24px 30x 24px !important;
+    margin-bottom: 0;
     box-shadow: 0 2px 4px 0 #1919290d;
     .label {
       font-weight: 700;
@@ -77,6 +78,7 @@
       }
     }
     &.basic-info-wrapper {
+      margin-bottom: 12px;
       .content {
         display: flex;
         align-items: flex-start;
@@ -102,8 +104,10 @@
     }
     &.apply-way-wrapper {
       position: relative;
+      padding: 16px 24px 24px 24px !important;
       .actions-form-item {
         display: flex;
+        line-height: 1;
         .actions-perm-table {
           width: calc(100% - 244px);
           &-header {
@@ -143,6 +147,7 @@
         .right-layout {
           width: 244px;
           margin-left: 16px;
+          margin-bottom: 16px;
           background-color: #f5f7fa;
           border-radius: 2px 0 0 0;
           position: relative;
@@ -172,7 +177,7 @@
             }
           }
           &-content {
-            padding: 0 16px;
+            padding: 0 16px 16px 16px;
             overflow-y: auto;
             &::-webkit-scrollbar {
               width: 4px;

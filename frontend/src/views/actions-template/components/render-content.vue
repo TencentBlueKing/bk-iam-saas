@@ -56,7 +56,6 @@
     <render-horizontal-block
       ext-cls="actions-form apply-way-wrapper"
       :label="$t(`m.permApply['选择操作']`)"
-      :style="{ 'max-height': `${actionContentHeight}px` }"
     >
       <div class="actions-form-item">
         <div class="actions-perm-table" v-bkloading="{ isLoading: customLoading, opacity: 1, zIndex: 1000 }">
@@ -99,7 +98,7 @@
               'iam-action-content-wrapper',
               { 'set-margin': commonActions.length > 0 }
             ]"
-            :style="{ 'max-height': `${actionContentHeight}px` }"
+            :style="{ 'height': `${actionContentHeight}px` }"
           >
             <template v-if="isShowAction && !customLoading">
               <render-action
@@ -150,7 +149,7 @@
             <div
               v-if="isExpandAction"
               class="right-layout-content"
-              :style="{ 'height': `${ isEdit ? actionContentHeight : actionContentHeight + commonActionsHeight }px` }"
+              :style="{ 'height': `${ actionContentHeight + commonActionsHeight }px` }"
             >
               <div
                 class="flex-between right-layout-content-item"
@@ -169,7 +168,7 @@
                     {{ item.name }}
                   </div>
                 </div>
-                <Icon bk type="close" class="close-icon" />
+                <Icon bk type="close" class="close-icon" @click.stop="handleDelAction(item)" />
               </div>
             </div>
           </template>
@@ -185,14 +184,14 @@
           v-if="!hasGroupPreview"
           :loading="prevLoading"
           :disabled="isCurSelectActions"
-          @click="handlePrevStep">
+          @click.stop="handlePrevStep">
           {{ $t(`m.common['上一步']`) }}
         </bk-button>
         <bk-button
           theme="primary"
           :disabled="isCurSelectActions"
           :loading="nextLoading"
-          @click="handleNextStep">
+          @click.stop="handleNextStep">
           {{ hasGroupPreview ? $t(`m.common['下一步']`) : $t(`m.common['提交']`) }}
         </bk-button>
         <bk-button @click.stop="handleCancel">
@@ -245,7 +244,6 @@
         prevLoading: false,
         isShowNameError: false,
         isShowActionError: false,
-        isEditTemplate: false,
         isSystemListLoading: false,
         isSelectAllActions: false,
         isCurSelectActions: true,
@@ -342,10 +340,12 @@
         },
         immediate: true
       },
-      curSelectActions (newValue, oldValue) {
-        this.isEditTemplate = oldValue.length !== newValue.length;
+      curSelectActions (newValue) {
         this.isCurSelectActions = JSON.stringify(newValue) === JSON.stringify(this.initialValue);
         this.leavePageForm = Object.assign(this.leavePageForm, { selected_actions: newValue });
+        if (!newValue.length) {
+          this.isSelectAllActions = false;
+        }
         if (newValue.length) {
           this.isSelectAllActions = newValue.length === this.linearAction.length;
         }
@@ -422,9 +422,9 @@
           this.initialTempName = cloneDeep(name || '');
           this.initialDescription = cloneDeep(description || '');
           this.originalCustomTmplList = cloneDeep(actions || []);
-          this.originalCustomTmplListBack = cloneDeep(actions || []);
           this.$store.commit('setHeaderTitle', name);
           await this.handleActionLinearData(false);
+          this.originalCustomTmplListBack = cloneDeep(this.originalCustomTmplList);
           await this.fetchCommonActions(system.id || '');
         } catch (e) {
           this.messageAdvancedError(e);
@@ -594,8 +594,8 @@
         try {
           const { data } = await this.$store.dispatch('permApply/getActions', params);
           this.originalCustomTmplList = cloneDeep(data);
-          this.originalCustomTmplListBack = cloneDeep(data);
           this.handleActionLinearData();
+          this.originalCustomTmplListBack = cloneDeep(this.originalCustomTmplList);
         } catch (e) {
           this.messageAdvancedError(e);
         } finally {
@@ -632,7 +632,7 @@
             this.$set(act, 'disabled', act.tag === 'readonly');
             linearActions.push(act);
             if (act.checked) {
-              this.curSelectActions.push(act.id);
+              this.curSelectActions.push(act);
               this.$set(act, 'flag', 'selected');
               ++count;
               if (act.tag === 'delete') {
@@ -658,7 +658,7 @@
               this.$set(act, 'disabled', act.tag === 'readonly');
               linearActions.push(act);
               if (act.checked) {
-                this.curSelectActions.push(act.id);
+                this.curSelectActions.push(act);
                 this.$set(act, 'flag', 'selected');
                 ++count;
                 if (act.tag === 'delete') {
@@ -690,6 +690,7 @@
       },
 
       handleSearchAction () {
+        this.searchTableData = cloneDeep(this.originalCustomTmplList);
         this.isShowActionError = false;
         this.emptyActionData.tipType = 'search';
         this.handleRefreshAction(true);
@@ -713,13 +714,27 @@
         this.isExpandAction = !this.isExpandAction;
       },
 
-      async handleSelectAllActions () {
-        this.originalCustomTmplList = this.getActionsData(this.originalCustomTmplList, false);
+      async handleSelectAllActions (payload) {
+        const modeMap = {
+          true: () => {
+            if (payload) {
+              this.originalCustomTmplList = this.getActionsData(this.originalCustomTmplList, false);
+            } else {
+              this.handleClearAllAction();
+            }
+          },
+          false: () => {
+            this.originalCustomTmplList = this.getActionsData(this.originalCustomTmplList, false);
+          }
+        };
+        modeMap[this.isEdit]();
       },
 
       handleClearAllAction () {
         this.isSelectAllActions = false;
-        this.originalCustomTmplList = this.getActionsData(this.originalCustomTmplList, false);
+        this.curSelectActions.forEach((item) => {
+          this.handleDelAction(item);
+        });
       },
 
       handleNameInput () {
@@ -758,6 +773,26 @@
         if (payload.length) {
           this.isShowActionError = false;
         }
+      },
+
+      handleDelAction (payload) {
+        const list = cloneDeep(this.originalCustomTmplListBack);
+        list.forEach((item) => {
+          (item.actions || []).forEach((act) => {
+            if (`${act.id}&${act.name}` === `${payload.id}&${payload.name}`) {
+              payload.checked = false;
+              this.$refs.actionsRef && this.$refs.actionsRef.handleActionChecked(payload, item, false);
+            }
+          });
+          (item.sub_groups || []).forEach((sub) => {
+            sub.actions.forEach((act) => {
+              if (`${act.id}&${act.name}` === `${payload.id}&${payload.name}`) {
+                payload.checked = false;
+                this.$refs.actionsRef && this.$refs.actionsRef.handleSubActionChecked(payload, sub, item, false);
+              }
+            });
+          });
+        });
       },
 
       getActionsData (payload, isSearch = false) {
@@ -848,11 +883,7 @@
           await this.$store.dispatch('permTemplate/updateCommit', {
             id: this.id
           });
-          this.bkMessageInstance = this.$bkMessage({
-            limit: 1,
-            theme: 'success',
-            message: this.$t(`m.info['提交成功']`)
-          });
+          this.messageSuccess(this.$t(`m.info['提交成功']`), 3000);
           this.$router.push({
             name: 'actionsTemplate'
           });
@@ -881,55 +912,6 @@
       async handleNextStep () {
         if (!this.hasGroupPreview && this.originalCustomTmplList.some(e => e.deleteCount)) {
           this.messageWarn(this.$t(`m.permTemplate['由于分级管理员的授权范围没有包含此操作，如需使用该模板进行新的授权必须先删除该操作。']`), 3000);
-          return;
-        }
-        this.handleNameBlur(this.basicInfo.name);
-        this.isShowActionError = this.curSelectActions.length < 1;
-        const nameRef = this.$refs.templateNameRef;
-        const actionRef = this.$refs.actionRef;
-        if (this.isShowNameError) {
-          this.scrollToLocation(nameRef);
-          return;
-        }
-        if (this.isShowActionError) {
-          this.scrollToLocation(actionRef);
-          return;
-        }
-        this.nextRequestQueue = ['edit', 'addPre'];
-        // 如果编辑中修改的是模板名称和描述
-        if (!this.isEditTemplate) {
-          await this.editTemplate();
-          this.$router.push({
-            name: 'permTemplateDetail',
-            params: this.$route.params
-          });
-        } else {
-          try {
-            await this.editTemplate();
-            const { data } = await this.$store.dispatch('permTemplate/addPreUpdateInfo', {
-              id: this.id,
-              data: {
-                action_ids: this.curSelectActions
-              }
-            });
-            if (!this.hasGroupPreview) {
-              this.nextRequestQueue = ['addPre', 'updateCommit'];
-              this.handleUpdateCommit();
-              return;
-            }
-            this.$store.commit('permTemplate/updateCloneActions', data);
-            this.$store.commit('permTemplate/updatePreActionIds', this.curSelectActions);
-            this.$store.commit('permTemplate/updateAction', this.getActionsData(this.originalCustomTmplList, false));
-            this.$router.push({
-              name: 'actionsTemplateDiff',
-              params: this.$route.params
-            });
-          } catch (e) {
-            console.error(e);
-            this.messageAdvancedError(e);
-          } finally {
-            this.nextRequestQueue.shift();
-          }
         }
       },
 
@@ -997,22 +979,19 @@
       },
 
       handleGetResizeHeight () {
-        // 两个51代表面包屑和导航栏的高度， 186代表基本信息的高度， 30代表内边距
-        const distance = window.innerHeight - 51 - 51 - 52 - 126;
-        let listHeight = this.isEdit ? distance - 8 : distance - this.basicInfoHeight - 30;
-        this.commonActionsHeight = 0;
+        // 两个51代表面包屑和导航栏的高度， 186代表基本信息的高度， 52代表底footer高度
+        const distance = window.innerHeight - 51 - 51 - 52;
+        let listHeight = this.isEdit ? distance - 100 : distance - this.basicInfoHeight - 126;
         if (this.isShowActionError) {
           listHeight -= 32;
         }
         if (this.isShowNoticeAlert) {
           listHeight = listHeight - this.noticeBarHeight;
         }
-        if (this.commonActions.length && this.$refs.commonActionRef) {
+        if (this.commonActions.length > 0 && this.$refs.commonActionRef) {
           setTimeout(() => {
-            // 12的向上外边距和8像素的向下外边距
             this.commonActionsHeight = this.$refs.commonActionRef.$el.offsetHeight;
-            listHeight = listHeight - this.commonActionsHeight - 12 - 8;
-            this.actionContentHeight = listHeight;
+            this.actionContentHeight = listHeight - this.commonActionsHeight;
           }, 0);
         } else {
           this.actionContentHeight = listHeight;
@@ -1020,11 +999,13 @@
       },
 
       checkActionWidth (payload) {
-        const selectActions = this.$refs[`select_actions_${payload.id}`];
-        if (selectActions && selectActions.length) {
-          const offsetWidth = selectActions[0].offsetWidth;
-          return !(offsetWidth > 134);
-        }
+        this.$nextTick(() => {
+          const selectActions = this.$refs[`select_actions_${payload.id}`];
+          if (selectActions && selectActions.length) {
+            const offsetWidth = selectActions[0].offsetWidth;
+            return !(offsetWidth > 134);
+          }
+        });
       }
     }
   };

@@ -9,12 +9,11 @@
       class="breadcrumbs fl"
       :class="backRouter ? 'has-cursor' : ''"
       v-show="isShowExternal || (!mainContentLoading && !externalSystemsLayout.hideIamBreadCrumbs)"
-      @click="back"
     >
       <div v-if="!isHide" class="breadcrumbs-content">
-        <Icon type="arrows-left" class="breadcrumbs-back" v-if="backRouter" />
+        <Icon type="arrows-left" class="breadcrumbs-back" v-if="backRouter" @click.stop="back" />
         <template v-if="customBreadCrumbTitles.includes(routeName)">
-          <h2 v-if="['addGroupPerm'].includes(routeName)" class="breadcrumbs-current single-hide">
+          <h2 v-if="['addGroupPerm'].includes(routeName)" class="breadcrumbs-current single-hide" :style="formatBreadCrumbWidth()">
             {{ $t(`m.info['用户组成员添加权限']`, { value: `${$t(`m.common['【']`)}${userGroupName}${$t(`m.common['】']`)}` }) }}
           </h2>
           <template v-if="['renewalNotice'].includes(routeName)">
@@ -25,10 +24,14 @@
           </template>
           <div v-if="['actionsTemplateEdit'].includes(routeName)" class="breadcrumbs-content-actions-template-edit">
             <div class="breadcrumbs-text">
-              <div>{{ $t(`m.actionTemplate['编辑模板操作']`) }}</div>
-              <div class="single-hide" :style="formatBreadCrumbWidth()">{{ headerTitle }}</div>
+              <span class="breadcrumbs-text-title">{{ $t(`m.actionsTemplate['编辑模板操作']`) }}</span>
+              <span class="vertical-line">|</span>
+              <div class="breadcrumbs-text-name">
+                <div class="title">{{ $t(`m.common['模板名称']`) }}{{ $t(`m.common['：']`) }}</div>
+                <div class="single-hide name" :style="formatBreadCrumbWidth()">{{ headerTitle }}</div>
+              </div>
             </div>
-            <bk-steps :steps="actionSteps" ext-cls="actions-template-edit-step" />
+            <bk-steps :steps="actionSteps" :cur-step="needProvideValue.curACtionStep" ext-cls="actions-template-edit-step" @step-changed="handleStepChange" />
           </div>
         </template>
         <h2 v-else class="breadcrumbs-current single-hide" :style="formatBreadCrumbWidth()">
@@ -189,11 +192,12 @@
         customBreadCrumbTitles: ['addGroupPerm', 'renewalNotice', 'actionsTemplateEdit'],
         // 需要provide的变量
         needProvideValue: {
-          isShowRenewalNotice: false
+          isShowRenewalNotice: false,
+          curACtionStep: 1
         },
         actionSteps: [
-          { title: '选择操作', icon: 1 },
-          { title: '同步用户组', icon: 2 }
+          { title: this.$t(`m.permApply['选择操作']`), icon: 1 },
+          { title: this.$t(`m.actionsTemplate['同步用户组']`), icon: 2 }
         ]
       };
     },
@@ -236,9 +240,8 @@
               };
             },
             actionsTemplateEdit: () => {
-              const stepWidth = 252;
               return {
-                'max-width': `calc(100vw - ${this.navStick ? 280 - stepWidth : 80 - stepWidth}px)`
+                'max-width': `150px`
               };
             }
           };
@@ -294,6 +297,12 @@
           }
         },
         immediate: true
+      },
+      'needProvideValue.curStep': {
+        handler (value) {
+          bus.$emit('on-change-temp-action-step', { step: value });
+        },
+        deep: true
       }
     },
     created () {
@@ -525,6 +534,10 @@
             tab: tab
           }))}`);
         }
+      },
+
+      handleStepChange (payload) {
+        console.log(payload);
       }
     }
   };

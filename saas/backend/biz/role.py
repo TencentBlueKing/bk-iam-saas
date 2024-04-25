@@ -1376,7 +1376,7 @@ def update_periodic_permission_expire_remind_schedule(hour: int, minute: int) ->
         return
 
     schedule = task.crontab
-    if schedule.minute == minute and schedule.hour == hour:
+    if int(schedule.minute) == minute and int(schedule.hour) == hour:
         # 如果没有变更, 则无需更新
         return
 

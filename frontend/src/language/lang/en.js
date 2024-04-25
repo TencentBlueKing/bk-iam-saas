@@ -180,6 +180,7 @@ export const m = {
         '问题反馈': 'Feedback',
         '正在同步中': 'Syncing',
         '新增': 'Add',
+        '已有': 'Selected',
         '申请新建': 'Apply for new',
         '批量粘贴': 'Multi-paste',
         '查看更多': 'More',
@@ -1568,7 +1569,10 @@ export const m = {
         '搜索 模板名称、所属系统、创建人、描述': 'Search template name, system, creator, description',
         '删除后，无法恢复，请谨慎操作！': 'After deletion, it cannot be restored. Please operate with caution!',
         '仅展示已勾选的操作': 'Show only selected actions',
-        '搜索 操作名称': 'Search action name'
+        '搜索 操作名称': 'Search action name',
+        '编辑模板操作': 'Edit Template Action',
+        '同步用户组': 'Synchronize user groups',
+        '新建操作模板成功': 'Actions template created'
     }
 }
 export default {
