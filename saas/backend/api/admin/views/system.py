@@ -8,11 +8,17 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.viewsets import GenericViewSet
 
 from backend.api.admin.constants import AdminAPIEnum
 from backend.api.admin.permissions import AdminAPIPermission
+from backend.api.admin.serializers import AdminSystemProviderConfigSLZ
 from backend.api.authentication import ESBAuthentication
 from backend.apps.system.views import SystemViewSet
+from backend.service.resource import SystemProviderConfigService
 
 
 class AdminSystemViewSet(SystemViewSet):
@@ -30,3 +36,20 @@ class AdminSystemViewSet(SystemViewSet):
         request.query_params["hidden"] = False
 
         return super().list(request, *args, **kwargs)
+
+
+class AdminSystemProviderConfigViewSet(GenericViewSet):
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [AdminAPIPermission]
+    admin_api_permission = {"list": AdminAPIEnum.SYSTEM_PROVIDER_CONFIG_LIST.value}
+
+    @swagger_auto_schema(
+        operation_description="系统回调信息",
+        responses={status.HTTP_200_OK: AdminSystemProviderConfigSLZ(label="系统回调信息")},
+        tags=["admin.system.provider_config"],
+    )
+    def list(self, request, *args, **kwargs):
+        system_id = kwargs["system_id"]
+        system_provider_config = SystemProviderConfigService().get_provider_config(system_id=system_id)
+
+        return Response(AdminSystemProviderConfigSLZ(system_provider_config).data)
