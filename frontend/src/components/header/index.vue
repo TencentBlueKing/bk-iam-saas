@@ -9,9 +9,10 @@
       class="breadcrumbs fl"
       :class="backRouter ? 'has-cursor' : ''"
       v-show="isShowExternal || (!mainContentLoading && !externalSystemsLayout.hideIamBreadCrumbs)"
+      @click.stop="back"
     >
       <div v-if="!isHide" class="breadcrumbs-content">
-        <Icon type="arrows-left" class="breadcrumbs-back" v-if="backRouter" @click.stop="back" />
+        <Icon type="arrows-left" class="breadcrumbs-back" v-if="backRouter" />
         <template v-if="customBreadCrumbTitles.includes(routeName)">
           <h2 v-if="['addGroupPerm'].includes(routeName)" class="breadcrumbs-current single-hide" :style="formatBreadCrumbWidth()">
             {{ $t(`m.info['用户组成员添加权限']`, { value: `${$t(`m.common['【']`)}${userGroupName}${$t(`m.common['】']`)}` }) }}
@@ -23,15 +24,17 @@
             <bk-switcher size="large" theme="primary" v-model="needProvideValue.isShowRenewalNotice" @change="handleChangeRenewalNotice" />
           </template>
           <div v-if="['actionsTemplateEdit'].includes(routeName)" class="breadcrumbs-content-actions-template-edit">
-            <div class="breadcrumbs-text">
-              <span class="breadcrumbs-text-title">{{ $t(`m.actionsTemplate['编辑模板操作']`) }}</span>
+            <div class="breadcrumbs-label">
+              <span class="breadcrumbs-label-title">{{ $t(`m.actionsTemplate['编辑模板操作']`) }}</span>
               <span class="vertical-line">|</span>
-              <div class="breadcrumbs-text-name">
+              <div class="breadcrumbs-label-name">
                 <div class="title">{{ $t(`m.common['模板名称']`) }}{{ $t(`m.common['：']`) }}</div>
                 <div class="single-hide name" :style="formatBreadCrumbWidth()">{{ headerTitle }}</div>
               </div>
             </div>
-            <bk-steps :steps="actionSteps" :cur-step="needProvideValue.curACtionStep" ext-cls="actions-template-edit-step" @step-changed="handleStepChange" />
+            <div @click.stop="" class="breadcrumbs-value">
+              <bk-steps :steps="actionSteps" :cur-step.sync="needProvideValue.curActionStep" ext-cls="actions-template-edit-step" @step-changed="handleStepChange" />
+            </div>
           </div>
         </template>
         <h2 v-else class="breadcrumbs-current single-hide" :style="formatBreadCrumbWidth()">
@@ -131,14 +134,8 @@
   ]);
 
   export default {
-    provide () {
-      return {
-        needProvideValue: this.needProvideValue
-      };
-    },
     components: {
       SystemLog
-      // IamGuide
     },
     props: {
       routeName: {
@@ -193,7 +190,7 @@
         // 需要provide的变量
         needProvideValue: {
           isShowRenewalNotice: false,
-          curACtionStep: 1
+          curActionStep: 1
         },
         actionSteps: [
           { title: this.$t(`m.permApply['选择操作']`), icon: 1 },
@@ -297,12 +294,6 @@
           }
         },
         immediate: true
-      },
-      'needProvideValue.curStep': {
-        handler (value) {
-          bus.$emit('on-change-temp-action-step', { step: value });
-        },
-        deep: true
       }
     },
     created () {
@@ -310,24 +301,9 @@
       this.curIdentity = this.user.role.name;
       bus.$emit('theme-change', this.curRole);
       this.curRoleId = this.user.role.id;
-      this.$once('hook:beforeDestroy', () => {
-        bus.$off('reload-page');
-        bus.$off('refresh-role');
-        bus.$off('on-set-tab');
-        bus.$off('on-refresh-renewal-status');
-      });
     },
     mounted () {
-      bus.$on('refresh-role', data => {
-        this.handleSwitchRole(data);
-      });
-      bus.$on('on-set-tab', data => {
-        this.active = data;
-      });
-      bus.$on('on-refresh-renewal-status', (payload) => {
-        const isShowRenewalNotice = payload.isShowRenewalNotice || false;
-        this.needProvideValue = Object.assign(this.needProvideValue, { isShowRenewalNotice });
-      });
+      this.handleGetBusQueryData();
     },
     methods: {
       // 获取用户组详情
@@ -538,6 +514,22 @@
 
       handleStepChange (payload) {
         console.log(payload);
+      },
+
+      handleGetBusQueryData () {
+        bus.$on('refresh-role', data => {
+          this.handleSwitchRole(data);
+        });
+        bus.$on('on-set-tab', data => {
+          this.active = data;
+        });
+        bus.$on('on-refresh-renewal-status', (payload) => {
+          const isShowRenewalNotice = payload.isShowRenewalNotice || false;
+          this.needProvideValue = Object.assign(this.needProvideValue, { isShowRenewalNotice });
+        });
+        bus.$on('on-action-temp-step-change', ({ step }) => {
+          this.needProvideValue = Object.assign(this.needProvideValue, { curActionStep: step || 1 });
+        });
       }
     }
   };

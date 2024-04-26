@@ -61,7 +61,7 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
                 width: 100vh;
                 display: flex;
                 align-items: center;
-                .breadcrumbs-text {
+                .breadcrumbs-label {
                     width: 100%;
                     font-size: 16px;
                     display: flex;
@@ -83,8 +83,11 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
                         color: #dcdee5;
                     }
                 }
-                .actions-template-edit-step {
-                    line-height: 1;
+                .breadcrumbs-value {
+                    width: 100%;
+                    .actions-template-edit-step {
+                        line-height: 1;
+                    }
                 }
             }
         }

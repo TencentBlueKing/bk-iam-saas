@@ -117,6 +117,7 @@ export const m = {
         '清空': 'Clear',
         '保存': 'Save',
         '提交': 'Submit',
+        '直接提交': 'Direct submit',
         '取消': 'Cancel',
         '取消-dialog': 'CANCEL',
         '组织': 'Organization',
@@ -1572,7 +1573,10 @@ export const m = {
         '搜索 操作名称': 'Search action name',
         '编辑模板操作': 'Edit Template Action',
         '同步用户组': 'Synchronize user groups',
-        '新建操作模板成功': 'Actions template created'
+        '新建操作模板成功': 'Actions template created',
+        '操作模板未变更, 无需更新!': 'The actions template has not been changed, no need to update!',
+        '暂无关联的用户组': 'Temporarily Unassociated User Groups',
+        '无须进行操作实例的确认': 'No need to confirm the operation instance'
     }
 }
 export default {

@@ -113,9 +113,6 @@ const ActionsTemplateCreate = () => import(/* webpackChunkName: 'actions-templat
 // 操作模板编辑
 const ActionsTemplateEdit = () => import(/* webpackChunkName: 'actions-template' */ '../views/actions-template/edit/index');
 
-// 操作模板编辑差异
-const ActionsTemplateDifference = () => import(/* webpackChunkName: 'actions-template' */ '../views/actions-template/edit/difference');
-
 // 用户
 const User = () => import(/* webpackChunkName: 'user' */ '../views/user');
 
@@ -574,15 +571,6 @@ export const routes = [
           backRouter: 'actionsTemplate'
         },
         component: ActionsTemplateEdit
-      },
-      {
-        path: 'actions-template-diff/:id/:systemId',
-        name: 'actionsTemplateDiff',
-        meta: {
-          headerTitle: '',
-          backRouter: -1
-        },
-        component: ActionsTemplateDifference
       },
       {
         path: 'member-template',

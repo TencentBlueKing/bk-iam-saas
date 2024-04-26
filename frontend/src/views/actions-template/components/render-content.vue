@@ -1,232 +1,244 @@
 <template>
-  <smart-action class="iam-action-temp-content-wrapper">
-    <render-horizontal-block v-if="!isEdit" ext-cls="actions-form basic-info-wrapper" :label="$t(`m.common['基本信息']`)">
-      <div>
-        <div class="actions-form-item mb24">
-          <div class="actions-form-item-label is-required">{{ $t(`m.common['模板名称']`) }}</div>
-          <div class="actions-form-item-content" ref="templateNameRef">
-            <bk-input
-              v-model="basicInfo.name"
-              :clearable="true"
-              :style="formatFormItemStyle"
-              :ext-cls="isShowNameError ? 'template-name-error' : ''"
-              @input="handleNameInput"
-              @blur="handleNameBlur"
-            />
-            <div class="error-tips" v-if="isShowNameError">{{ nameValidateText }}</div>
-          </div>
-        </div>
-        <div class="actions-form-item">
-          <div class="actions-form-item-label is-required">{{ $t(`m.common['所属系统']`) }}</div>
-          <div class="actions-form-item-content">
-            <bk-select
-              v-model="basicInfo.system_id"
-              :style="formatFormItemStyle"
-              :popover-min-width="480"
-              :placeholder="$t(`m.verify['请选择']`)"
-              searchable
-              :clearable="false"
-              @selected="handleSysSelected">
-              <bk-option
-                v-show="!isSystemListLoading"
-                v-for="option in systemList"
-                :key="option.id"
-                :id="option.id"
-                :name="option.displayName"
-              >
-                <span>{{ option.name }}</span>
-                <span style="color: #c4c6cc;">({{ option.id }})</span>
-              </bk-option>
-            </bk-select>
-          </div>
-        </div>
-      </div>
-      <div class="actions-form-item description-item">
-        <div class="actions-form-item-label">{{ $t(`m.memberTemplate['模板描述']`) }}</div>
-        <div class="actions-form-item-content">
-          <bk-input
-            type="textarea"
-            v-model="basicInfo.description"
-            :maxlength="255"
-            ext-cls="iam-create-template-desc-cls"
-          />
-        </div>
-      </div>
-    </render-horizontal-block>
-    <render-horizontal-block
-      ext-cls="actions-form apply-way-wrapper"
-      :label="$t(`m.permApply['选择操作']`)"
-    >
-      <div class="actions-form-item">
-        <div class="actions-perm-table" v-bkloading="{ isLoading: customLoading, opacity: 1, zIndex: 1000 }">
-          <div class="actions-perm-table-header">
-            <div class="action-temp-search">
-              <bk-input
-                v-model="actionsValue"
-                ext-cls="action-temp-search-input"
-                :clearable="true"
-                :placeholder="$t(`m.actionsTemplate['搜索 操作名称']`)"
-                :right-icon="'bk-icon icon-search'"
-                @enter="handleSearchAction"
-                @clear="handleClearSearch"
-                @right-icon-click="handleSearchAction"
-              />
-              <bk-checkbox
-                class="action-temp-search-checkbox"
-                v-model="isSelectAllActions"
-                @change="handleSelectAllActions"
-              >
-                {{ $t(`m.common['全选']`) }}
-              </bk-checkbox>
-            </div>
-            <div v-if="commonActions.length > 0 && !customLoading" class="common-actions-list">
-              <render-action-tag
-                ref="commonActionRef"
-                :system-id="basicInfo.system_id"
-                :tag-action-list="tagActionList"
-                :data="commonActions"
-                :cur-select-actions="curSelectActions"
-                @on-delete="handleCommonActionDelete"
-                @on-add="handleCommonActionAdd"
-                @on-change="handleActionTagChange"
-              />
-            </div>
-          </div>
-          <div
-            ref="actionRef"
-            :class="[
-              'iam-action-content-wrapper',
-              { 'set-margin': commonActions.length > 0 }
-            ]"
-            :style="{ 'height': `${actionContentHeight}px` }"
-          >
-            <template v-if="isShowAction && !customLoading">
-              <render-action
-                ref="actionsRef"
-                mode="edit"
-                :actions="originalCustomTmplList"
-                :linear-action="linearAction"
-                @on-select="handleSelectAction"
-              />
-            </template>
-            <div
-              v-if="!isShowAction && !customLoading"
-              class="empty-wrapper"
-            >
-              <ExceptionEmpty
-                :type="emptyActionData.type"
-                :empty-text="emptyActionData.text"
-                :tip-text="emptyActionData.tip"
-                :tip-type="emptyActionData.tipType"
-                @on-clear="handleClearSearch"
-              />
-            </div>
-          </div>
-          <div v-if="isShowActionError" class="error-tips">{{ $t(`m.verify['请选择操作']`) }}</div>
-        </div>
-        <div class="right-layout">
-          <div class="flex-between right-layout-header">
-            <div class="right-layout--header-title">{{ $t(`m.common['结果预览']`) }}</div>
-          </div>
-          <template v-if="curSelectActions.length > 0">
-            <div class="flex-between right-layout-item">
-              <div class="right-layout-item-title" @click.stop="handleExpandAction">
-                <Icon bk class="expanded-icon" :type="isExpandAction ? 'down-shape' : 'right-shape'" />
-                <span>{{ $t(`m.common['已选择']`) }}</span>
-                <span class="count">{{ curSelectActions.length }}</span>
-                <span>{{ $t(`m.common['个操作']`) }}</span>
+  <div>
+    <template v-if="curActionStep === 1">
+      <smart-action class="iam-action-temp-content-wrapper">
+        <render-horizontal-block
+          v-if="!isEdit"
+          ext-cls="actions-form basic-info-wrapper"
+          :label="$t(`m.common['基本信息']`)"
+        >
+          <div>
+            <div class="actions-form-item mb24">
+              <div class="actions-form-item-label is-required">{{ $t(`m.common['模板名称']`) }}</div>
+              <div class="actions-form-item-content" ref="templateNameRef">
+                <bk-input
+                  v-model="basicInfo.name"
+                  :clearable="true"
+                  :style="formatFormItemStyle"
+                  :ext-cls="isShowNameError ? 'template-name-error' : ''"
+                  @input="handleNameInput"
+                  @blur="handleNameBlur"
+                />
+                <div class="error-tips" v-if="isShowNameError">{{ nameValidateText }}</div>
               </div>
-              <bk-button
-                size="small"
-                theme="primary"
-                :text="true"
-                class="right-layout-item-clear"
-                @click.stop="handleClearAllAction"
-              >
-                {{ $t(`m.common['清空']`) }}
-              </bk-button>
             </div>
-            <div
-              v-if="isExpandAction"
-              class="right-layout-content"
-              :style="{ 'height': `${ actionContentHeight + commonActionsHeight }px` }"
-            >
-              <div
-                class="flex-between right-layout-content-item"
-                v-for="item in curSelectActions"
-                :key="item.id"
-              >
-                <div class="action-text">
-                  <bk-tag class="action-text-tag" :theme="formatTagContent(item, 'theme')">
-                    {{ formatTagContent(item, 'text') }}
-                  </bk-tag>
-                  <div
-                    v-bk-tooltips="{ content: item.name, disabled: checkActionWidth(item) }"
-                    :ref="`select_actions_${item.id}`"
-                    class="single-hide action-text-name"
+            <div class="actions-form-item">
+              <div class="actions-form-item-label is-required">{{ $t(`m.common['所属系统']`) }}</div>
+              <div class="actions-form-item-content">
+                <bk-select
+                  v-model="basicInfo.system_id"
+                  :style="formatFormItemStyle"
+                  :popover-min-width="480"
+                  :placeholder="$t(`m.verify['请选择']`)"
+                  searchable
+                  :clearable="false"
+                  @selected="handleSysSelected">
+                  <bk-option
+                    v-show="!isSystemListLoading"
+                    v-for="option in systemList"
+                    :key="option.id"
+                    :id="option.id"
+                    :name="option.displayName"
                   >
-                    {{ item.name }}
+                    <span>{{ option.name }}</span>
+                    <span style="color: #c4c6cc;">({{ option.id }})</span>
+                  </bk-option>
+                </bk-select>
+              </div>
+            </div>
+          </div>
+          <div class="actions-form-item description-item">
+            <div class="actions-form-item-label">{{ $t(`m.memberTemplate['模板描述']`) }}</div>
+            <div class="actions-form-item-content">
+              <bk-input
+                type="textarea"
+                v-model="basicInfo.description"
+                :maxlength="255"
+                ext-cls="iam-create-template-desc-cls"
+              />
+            </div>
+          </div>
+        </render-horizontal-block>
+        <render-horizontal-block
+          ext-cls="actions-form apply-way-wrapper"
+          :label="$t(`m.permApply['选择操作']`)"
+        >
+          <div class="actions-form-item">
+            <div class="actions-perm-table" v-bkloading="{ isLoading: customLoading, opacity: 1, zIndex: 1000 }">
+              <div class="actions-perm-table-header">
+                <div class="action-temp-search">
+                  <bk-input
+                    v-model="actionsValue"
+                    ext-cls="action-temp-search-input"
+                    :clearable="true"
+                    :placeholder="$t(`m.actionsTemplate['搜索 操作名称']`)"
+                    :right-icon="'bk-icon icon-search'"
+                    @enter="handleSearchAction"
+                    @clear="handleClearSearch"
+                    @right-icon-click="handleSearchAction"
+                  />
+                  <bk-checkbox
+                    class="action-temp-search-checkbox"
+                    v-model="isSelectAllActions"
+                    @change="handleSelectAllActions"
+                  >
+                    {{ $t(`m.common['全选']`) }}
+                  </bk-checkbox>
+                </div>
+                <div v-if="commonActions.length > 0 && !customLoading" class="common-actions-list">
+                  <render-action-tag
+                    ref="commonActionRef"
+                    :system-id="basicInfo.system_id"
+                    :tag-action-list="tagActionList"
+                    :data="commonActions"
+                    :cur-select-actions="curSelectActions"
+                    @on-delete="handleCommonActionDelete"
+                    @on-add="handleCommonActionAdd"
+                    @on-change="handleActionTagChange"
+                  />
+                </div>
+              </div>
+              <div
+                ref="actionRef"
+                :class="[
+                  'iam-action-content-wrapper',
+                  { 'set-margin': commonActions.length > 0 }
+                ]"
+                :style="{ 'height': `${actionContentHeight}px` }"
+              >
+                <template v-if="isShowAction && !customLoading">
+                  <render-action
+                    ref="actionsRef"
+                    mode="edit"
+                    :actions="originalCustomTmplList"
+                    :linear-action="linearAction"
+                    @on-select="handleSelectAction"
+                  />
+                </template>
+                <div
+                  v-if="!isShowAction && !customLoading"
+                  class="empty-wrapper"
+                >
+                  <ExceptionEmpty
+                    :type="emptyActionData.type"
+                    :empty-text="emptyActionData.text"
+                    :tip-text="emptyActionData.tip"
+                    :tip-type="emptyActionData.tipType"
+                    @on-clear="handleClearSearch"
+                  />
+                </div>
+              </div>
+              <div v-if="isShowActionError" class="error-tips">{{ $t(`m.verify['请选择操作']`) }}</div>
+            </div>
+            <div class="right-layout">
+              <div class="flex-between right-layout-header">
+                <div class="right-layout--header-title">{{ $t(`m.common['结果预览']`) }}</div>
+              </div>
+              <template v-if="curSelectActions.length > 0">
+                <div class="flex-between right-layout-item">
+                  <div class="right-layout-item-title" @click.stop="handleExpandAction">
+                    <Icon bk class="expanded-icon" :type="isExpandAction ? 'down-shape' : 'right-shape'" />
+                    <span>{{ $t(`m.common['已选择']`) }}</span>
+                    <span class="count">{{ curSelectActions.length }}</span>
+                    <span>{{ $t(`m.common['个操作']`) }}</span>
+                  </div>
+                  <bk-button
+                    size="small"
+                    theme="primary"
+                    :text="true"
+                    class="right-layout-item-clear"
+                    @click.stop="handleClearAllAction"
+                  >
+                    {{ $t(`m.common['清空']`) }}
+                  </bk-button>
+                </div>
+                <div
+                  v-if="isExpandAction"
+                  class="right-layout-content"
+                  :style="{ 'height': `${ actionContentHeight + commonActionsHeight }px` }"
+                >
+                  <div
+                    class="flex-between right-layout-content-item"
+                    v-for="item in curSelectActions"
+                    :key="item.id"
+                  >
+                    <div class="action-text">
+                      <bk-tag class="action-text-tag" :theme="formatTagContent(item, 'theme')">
+                        {{ formatTagContent(item, 'text') }}
+                      </bk-tag>
+                      <div
+                        v-bk-tooltips="{ content: item.name, disabled: checkActionWidth(item) }"
+                        :ref="`select_actions_${item.id}`"
+                        class="single-hide action-text-name"
+                      >
+                        {{ item.name }}
+                      </div>
+                    </div>
+                    <Icon bk type="close" class="close-icon" @click.stop="handleDelAction(item, [])" />
                   </div>
                 </div>
-                <Icon bk type="close" class="close-icon" @click.stop="handleDelAction(item)" />
+              </template>
+              <div v-else class="empty-wrapper">
+                <ExceptionEmpty />
               </div>
             </div>
-          </template>
-          <div v-else class="empty-wrapper">
-            <ExceptionEmpty />
           </div>
+        </render-horizontal-block>
+        <div slot="action" class="action-footer-btn">
+          <template v-if="isEdit">
+            <bk-button
+              theme="primary"
+              :disabled="isCurSelectActions"
+              :loading="nextLoading"
+              @click.stop="handleNextStep">
+              {{ curActionStep > 1 ? $t(`m.common['提交']`) : $t(`m.common['下一步']`) }}
+            </bk-button>
+            <bk-button @click.stop="handleCancel">
+              {{ $t(`m.common['取消']`) }}
+            </bk-button>
+          </template>
+          <template v-else>
+            <bk-button
+              theme="primary"
+              :loading="saveLoading"
+              @click="handleCreateSubmit">
+              {{ $t(`m.common['提交']`) }}
+            </bk-button>
+            <bk-button
+              @click="handleCancel">
+              {{ $t(`m.common['取消']`) }}
+            </bk-button>
+          </template>
         </div>
-      </div>
-    </render-horizontal-block>
-    <div slot="action" class="action-footer-btn">
-      <template v-if="isEdit">
-        <bk-button
-          v-if="!hasGroupPreview"
-          :loading="prevLoading"
-          :disabled="isCurSelectActions"
-          @click.stop="handlePrevStep">
-          {{ $t(`m.common['上一步']`) }}
-        </bk-button>
-        <bk-button
-          theme="primary"
-          :disabled="isCurSelectActions"
-          :loading="nextLoading"
-          @click.stop="handleNextStep">
-          {{ hasGroupPreview ? $t(`m.common['下一步']`) : $t(`m.common['提交']`) }}
-        </bk-button>
-        <bk-button @click.stop="handleCancel">
-          {{ $t(`m.common['取消']`) }}
-        </bk-button>
-      </template>
-      <template v-else>
-        <bk-button
-          theme="primary"
-          :loading="saveLoading"
-          @click="handleCreateSubmit">
-          {{ $t(`m.common['提交']`) }}
-        </bk-button>
-        <bk-button
-          @click="handleCancel">
-          {{ $t(`m.common['取消']`) }}
-        </bk-button>
-      </template>
+      </smart-action>
+    </template>
+    <div v-if="curActionStep === 2">
+      <RenderSyncGroup
+        :id="id"
+        :has-group="hasGroupPreview"
+        :select-actions="curSelectActions"
+        :select-actions-back="curSelectActionsBack"
+      />
     </div>
-  </smart-action>
+  </div>
 </template>
 
 <script>
   import { cloneDeep } from 'lodash';
   import { mapGetters } from 'vuex';
+  import { bus } from '@/common/bus';
+  import { buildURLParams } from '@/common/url';
   import { formatCodeData, guid } from '@/common/util';
   import { leavePageConfirm } from '@/common/leave-page-confirm';
   import RenderActionTag from '@/components/common-action';
   import RenderAction from './render-action';
+  import RenderSyncGroup from './difference';
 
   export default {
-    inject: ['showNoticeAlert'],
     components: {
       RenderActionTag,
-      RenderAction
+      RenderAction,
+      RenderSyncGroup
     },
     props: {
       id: {
@@ -241,14 +253,14 @@
     data () {
       return {
         saveLoading: false,
-        prevLoading: false,
+        nextLoading: false,
         isShowNameError: false,
         isShowActionError: false,
         isSystemListLoading: false,
         isSelectAllActions: false,
         isCurSelectActions: true,
         isExpandAction: true,
-        hasGroupPreview: true,
+        hasGroupPreview: false,
         nameValidateText: '',
         initialTempName: '',
         initialDescription: '',
@@ -259,19 +271,19 @@
         commonActions: [],
         linearAction: [],
         curSelectActions: [],
-        nextRequestQueue: [],
+        curSelectActionsBack: [],
         initialValue: [],
         tagActionList: [],
         defaultCheckedActions: [],
         requestQueue: ['actions', 'commonActions'],
+        leavePageForm: {},
+        leavePageFormBack: {},
         basicInfo: {
           name: '',
           description: '',
           system_id: '',
           system_name: ''
         },
-        leavePageForm: {},
-        leavePageFormBack: {},
         emptyActionData: {
           type: '',
           text: '',
@@ -283,7 +295,8 @@
         // 基本信息表单高度
         basicInfoHeight: 186,
         actionContentHeight: 0,
-        commonActionsHeight: 0
+        commonActionsHeight: 0,
+        curActionStep: 1
       };
     },
     computed: {
@@ -308,9 +321,6 @@
       },
       customLoading () {
         return this.requestQueue.length > 0;
-      },
-      nextLoading () {
-        return this.nextRequestQueue.length > 0;
       },
       formatFormItemStyle () {
         return {
@@ -367,6 +377,10 @@
       }
     },
     mounted () {
+      const { step } = this.$route.query;
+      if (this.$route.query.step) {
+        this.handleSetCurActionStep(step);
+      }
       this.handleGetResizeHeight();
       window.addEventListener('resize', this.handleGetResizeHeight);
     },
@@ -382,6 +396,8 @@
         } else {
           await this.fetchSystems();
         }
+        // 备份一份数据判断是否有操作变更
+        this.curSelectActionsBack = cloneDeep(this.curSelectActions);
         this.leavePageForm = cloneDeep(Object.assign(
           this.basicInfo,
           {
@@ -732,8 +748,9 @@
 
       handleClearAllAction () {
         this.isSelectAllActions = false;
+        const list = Object.freeze(cloneDeep(this.originalCustomTmplList));
         this.curSelectActions.forEach((item) => {
-          this.handleDelAction(item);
+          this.handleDelAction(item, list);
         });
       },
 
@@ -758,13 +775,14 @@
       },
 
       handleSysSelected (value) {
+        this.isSelectAllActions = false;
         this.commonActions = [];
         this.linearAction = [];
         this.curSelectActions = [];
+        this.curSelectActionsBack = [];
         this.tagActionList = [];
         this.requestQueue = ['actions', 'commonActions'];
         Promise.all([this.fetchActions(value), this.fetchCommonActions(value)]);
-        this.handleClearAllAction();
       },
 
       handleSelectAction (payload) {
@@ -775,8 +793,8 @@
         }
       },
 
-      handleDelAction (payload) {
-        const list = cloneDeep(this.originalCustomTmplListBack);
+      handleDelAction (payload, arr) {
+        const list = arr.length > 0 ? arr : Object.freeze(cloneDeep(this.originalCustomTmplListBack));
         list.forEach((item) => {
           (item.actions || []).forEach((act) => {
             if (`${act.id}&${act.name}` === `${payload.id}&${payload.name}`) {
@@ -878,40 +896,52 @@
         return temps;
       },
 
-      async handleUpdateCommit () {
-        try {
-          await this.$store.dispatch('permTemplate/updateCommit', {
-            id: this.id
-          });
-          this.messageSuccess(this.$t(`m.info['提交成功']`), 3000);
-          this.$router.push({
-            name: 'actionsTemplate'
-          });
-        } catch (e) {
-          this.messageAdvancedError(e);
-        } finally {
-          this.nextRequestQueue.shift();
-        }
-      },
-
-      async editTemplate () {
-        try {
-          const { name, description } = this.basicInfo;
-          await this.$store.dispatch('permTemplate/updateTemplate', {
-            name: name.trim(),
-            description,
-            id: this.id
-          });
-        } catch (e) {
-          this.messageAdvancedError(e);
-        } finally {
-          this.nextRequestQueue.shift();
-        }
-      },
-
       async handleNextStep () {
-        if (!this.hasGroupPreview && this.originalCustomTmplList.some(e => e.deleteCount)) {
-          this.messageWarn(this.$t(`m.permTemplate['由于分级管理员的授权范围没有包含此操作，如需使用该模板进行新的授权必须先删除该操作。']`), 3000);
+        const nameRef = this.$refs.templateNameRef;
+        const actionRef = this.$refs.actionRef;
+        const hasDelCount = this.originalCustomTmplList.some(e => e.deleteCount);
+        this.handleNameBlur(this.basicInfo.name);
+        this.isShowActionError = this.curSelectActions.length < 1;
+        if (this.isShowNameError) {
+          this.scrollToLocation(nameRef);
+          return;
+        }
+        if (this.isShowActionError) {
+          this.scrollToLocation(actionRef);
+          return;
+        }
+        if (!this.hasGroupPreview) {
+          if (hasDelCount) {
+            this.messageWarn(this.$t(`m.permTemplate['由于分级管理员的授权范围没有包含此操作，如需使用该模板进行新的授权必须先删除该操作。']`), 3000);
+            return;
+          }
+          window.changeDialog = false;
+          this.handleSetCurActionStep(2);
+          return;
+        }
+        // 如果没有操作变更不需要调用接口
+        if (JSON.stringify(this.curSelectActionsBack) === JSON.stringify(this.curSelectActions)) {
+          return this.messageWarn(this.$t(`m.actionsTemplate['操作模板未变更, 无需更新!']`), 3000);
+        }
+        this.nextLoading = true;
+        try {
+          const actionIdList = this.curSelectActions.map((item) => item.id);
+          const params = {
+            id: this.id,
+            data: {
+              action_ids: actionIdList
+            }
+          };
+          const { data } = await this.$store.dispatch('permTemplate/addPreUpdateInfo', params);
+          window.changeDialog = false;
+          this.$store.commit('permTemplate/updateCloneActions', data || []);
+          this.$store.commit('permTemplate/updatePreActionIds', actionIdList);
+          this.$store.commit('permTemplate/updateAction', this.getActionsData(this.originalCustomTmplList));
+          this.handleSetCurActionStep(2);
+        } catch (e) {
+          this.messageAdvancedError(e);
+        } finally {
+          this.nextLoading = false;
         }
       },
 
@@ -968,6 +998,7 @@
           cancelHandler = leavePageConfirm();
         }
         cancelHandler.then(() => {
+          window.changeDialog = false;
           this.$router.push({
             name: 'actionsTemplate'
           });
@@ -979,8 +1010,8 @@
       },
 
       handleGetResizeHeight () {
-        // 两个51代表面包屑和导航栏的高度， 186代表基本信息的高度， 52代表底footer高度
-        const distance = window.innerHeight - 51 - 51 - 52;
+        // 两个51代表面包屑和导航栏的高度， 186代表基本信息的高度， 48代表底footer高度
+        const distance = window.innerHeight - 51 - 51 - 48;
         let listHeight = this.isEdit ? distance - 100 : distance - this.basicInfoHeight - 126;
         if (this.isShowActionError) {
           listHeight -= 32;
@@ -998,6 +1029,24 @@
         }
       },
 
+      handleGetBusQueryData () {
+        bus.$on('on-update-renewal-notice', async ({ isShowRenewalNotice }) => {
+          await this.fetchSuperNoticeConfig(false, true);
+          this.noticeForm.enable = isShowRenewalNotice || false;
+          await this.handleSubmit('status');
+        });
+        this.$once('hook:beforeDestroy', () => {
+          bus.$off('on-update-renewal-notice');
+        });
+      },
+
+      handleSetCurActionStep (payload) {
+        payload = Number(payload);
+        this.curActionStep = payload;
+        window.history.replaceState({}, '', `?${buildURLParams({ step: payload })}`);
+        bus.$emit('on-action-temp-step-change', { step: payload });
+      },
+
       checkActionWidth (payload) {
         this.$nextTick(() => {
           const selectActions = this.$refs[`select_actions_${payload.id}`];
@@ -1012,5 +1061,5 @@
 </script>
 
 <style lang="postcss" scoped>
-@import '../css/render.content.css';
+@import '../css/render-content.css';
 </style>

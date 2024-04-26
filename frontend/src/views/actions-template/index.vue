@@ -141,6 +141,7 @@
   import { fuzzyRtxSearch } from '@/common/rtx';
   import { buildURLParams } from '@/common/url';
   import { formatCodeData, getWindowHeight, delLocationHref } from '@/common/util';
+  import { addPreUpdateInfo, getActionsData } from '@/views/actions-template/js/actions';
   import UserGroupDialog from '@/components/render-user-group-dialog';
   import IamSearchSelect from '@/components/iam-search-select';
   import ActionsTemplateDetailSlider from './components/actions-template-detail-slider.vue';
@@ -307,49 +308,32 @@
           }
         }
       },
-
-      async addPreUpdateInfo (payload) {
-        try {
-          const { data } = await this.$store.dispatch('permTemplate/addPreUpdateInfo', {
-            id: this.curDetailData.id,
-            data: {
-              action_ids: payload
-            }
-          });
-          this.$store.commit('permTemplate/updateCloneActions', data || []);
-        } catch (e) {
-          this.messageAdvancedError(e);
-        } finally {
-          this.editRequestQueue.shift();
-        }
-      },
       
       async getPreUpdateInfo () {
         try {
           const { id, system } = this.curDetailData;
           const { data } = await this.$store.dispatch('permTemplate/getPreUpdateInfo', { id });
+          // 是否有编辑中的数据
           const flag = Object.keys(data).length > 0;
           if (flag) {
-            this.$store.commit('permTemplate/updatePreActionIds', data.action_ids || []);
-            this.$store.commit('permTemplate/updateAction', this.getActionsData(data.action_ids || []));
-            await this.addPreUpdateInfo(data.action_ids);
-            this.$router.push({
-              name: 'actionsTemplateEdit',
-              params: {
-                id,
-                systemId: system.id
-              }
-            });
+            const list = cloneDeep(this.curDetailData.actions);
+            const actionIdList = data.action_ids || [];
+            this.$store.commit('permTemplate/updatePreActionIds', actionIdList);
+            this.$store.commit('permTemplate/updateAction', getActionsData(actionIdList, list, this.defaultCheckedActions));
+            await addPreUpdateInfo(id, data.action_ids);
           } else {
             this.editRequestQueue = ['getPre'];
-            this.$router.push({
-              name: 'actionsTemplateEdit',
-              params: {
-                id,
-                systemId: system.id
-              }
-            });
           }
+          this.$router.push({
+            name: 'actionsTemplateEdit',
+            params: {
+              id,
+              systemId: system.id
+            },
+            query: {
+              step: flag ? 2 : 1
+            }
+          });
         } catch (e) {
           this.messageAdvancedError(e);
         } finally {
@@ -357,96 +341,141 @@
         }
       },
 
-      getActionsData (payload) {
-        // 获取actions和sub_groups所有数据，并根据单双行渲染不同背景颜色
-        let colorIndex = 0;
-        const temps = cloneDeep(this.curDetailData.actions);
-        // 交集
-        const intersections = this.defaultCheckedActions.filter(item => payload.includes(item));
-        // 已删除的
-        const hasDeleteActions = this.defaultCheckedActions.filter(item => !intersections.includes(item));
-        // 新增的
-        const hasAddActions = payload.filter(item => !intersections.includes(item));
-        temps.forEach((item, index) => {
-          this.$set(item, 'expanded', index === 0);
-          let count = 0;
-          let deleteCount = 0;
-          if (!item.actions) {
-            this.$set(item, 'actions', []);
-          }
-          if (!item.sub_groups) {
-            this.$set(item, 'sub_groups', []);
-          }
-          if (item.actions.length === 1 || !item.sub_groups.length) {
-            this.$set(item, 'bgColor', colorIndex % 2 === 0 ? '#f7f9fc' : '#ffffff');
-            colorIndex++;
-          }
-          item.actions.forEach(act => {
-            this.$set(act, 'checked', ['checked', 'readonly', 'delete'].includes(act.tag));
-            this.$set(act, 'disabled', act.tag === 'readonly');
-            if (hasAddActions.includes(act.id)) {
-              this.$set(act, 'checked', true);
-              this.$set(act, 'flag', 'added');
-            }
-            if (act.checked && hasDeleteActions.includes(act.id)) {
-              act.checked = false;
-              this.$set(act, 'flag', 'cancel');
-            }
-            if (act.checked) {
-              ++count;
-            }
-            if (act.tag === 'delete') {
-              ++deleteCount;
-            }
-          });
-          item.sub_groups.forEach(sub => {
-            this.$set(sub, 'expanded', false);
-            this.$set(sub, 'actionsAllChecked', false);
-            this.$set(sub, 'bgColor', colorIndex % 2 === 0 ? '#f7f9fc' : '#ffffff');
-            colorIndex++;
-            if (!sub.actions) {
-              this.$set(sub, 'actions', []);
-            }
-            sub.actions.forEach(act => {
-              this.$set(act, 'checked', ['checked', 'readonly', 'delete'].includes(act.tag));
-              this.$set(act, 'disabled', act.tag === 'readonly');
-              if (hasAddActions.includes(act.id)) {
-                this.$set(act, 'checked', true);
-                this.$set(act, 'flag', 'added');
-              }
-              if (act.checked && hasDeleteActions.includes(act.id)) {
-                act.checked = false;
-                this.$set(act, 'flag', 'cancel');
-              }
-              if (act.checked) {
-                ++count;
-              }
-              if (act.tag === 'delete') {
-                ++deleteCount;
-              }
-            });
-
-            const isSubAllChecked = sub.actions.every(v => v.checked);
-            this.$set(sub, 'allChecked', isSubAllChecked);
-          });
-          this.$set(item, 'deleteCount', deleteCount);
-          this.$set(item, 'count', count);
-          const isAllChecked = item.actions.every(v => v.checked);
-          const isAllDisabled = item.actions.every(v => v.disabled);
-          this.$set(item, 'allChecked', isAllChecked);
-          if (item.sub_groups && item.sub_groups.length > 0) {
-            this.$set(item, 'actionsAllChecked', isAllChecked && item.sub_groups.every(v => v.allChecked));
-            this.$set(item, 'actionsAllDisabled', isAllDisabled && item.sub_groups.every(v => {
-              return v.actions.every(sub => sub.disabled);
-            }));
-          } else {
-            this.$set(item, 'actionsAllChecked', isAllChecked);
-            this.$set(item, 'actionsAllDisabled', isAllDisabled);
-          }
-        });
-        return temps;
+      async handleTemplateDelete ({ id }) {
+        try {
+          await this.$store.dispatch('permTemplate/deleteTemplate', { id });
+          this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
+          this.resetPagination();
+        } catch (e) {
+          this.messageAdvancedError(e);
+        }
+      },
+  
+      async fetchTemplateList (isLoading = false) {
+        this.tableLoading = isLoading;
+        this.setCurrentQueryCache(this.refreshCurrentQuery());
+        const { current, limit } = this.pagination;
+        const params = {
+          ...this.searchParams,
+          limit,
+          offset: limit * (current - 1)
+        };
+        delete params.current;
+        try {
+          const { code, data } = await this.$store.dispatch('permTemplate/getTemplateList', params);
+          this.actionsTempList = [...data.results || []];
+          this.pagination = Object.assign(this.pagination, { count: data.count || 0 });
+          this.emptyData = formatCodeData(code, this.emptyData, this.actionsTempList.length === 0);
+        } catch (e) {
+          this.actionsTempList = [];
+          this.emptyData = formatCodeData(e.code, this.emptyData);
+          this.messageAdvancedError(e);
+        } finally {
+          this.tableLoading = false;
+        }
       },
 
+      async fetchTemplateDetail (id) {
+        try {
+          const { data } = await this.$store.dispatch('permTemplate/getTemplateDetail', { id, grouping: true });
+          this.curDetailData = Object.assign(this.curDetailData, data);
+          this.handleActionData();
+        } catch (e) {
+          this.messageAdvancedError(e);
+        }
+      },
+  
+      async handleSubmitSelectUserGroup (payload) {
+        const params = {
+          expired_at: 0,
+          members: payload,
+          id: this.curTemplateId
+        };
+        this.addGroupLoading = true;
+        try {
+          await this.$store.dispatch('permTemplate/addTemplateMember', params);
+          this.messageSuccess(this.$t(`m.info['关联用户组成功']`), 3000);
+          this.handleCancelSelect();
+          this.fetchTemplateList(true);
+        } catch (e) {
+          this.messageAdvancedError(e);
+        } finally {
+          this.addGroupLoading = false;
+        }
+      },
+
+      async handleRemoteSystem (value) {
+        const params = {};
+        if (this.externalSystemId) {
+          params.hidden = false;
+        }
+        const { data } = await this.$store.dispatch('system/getSystems', params);
+        return data.map(({ id, name }) => ({ id, name })).filter(item => item.name.indexOf(value) > -1);
+      },
+
+      async handleEdit (payload) {
+        this.editRequestQueue = ['getPre', 'addPre'];
+        this.curDetailData = Object.assign(this.curDetailData, payload);
+        await this.fetchTemplateDetail(payload.id);
+        await this.getPreUpdateInfo();
+      },
+
+      handleCreate () {
+        this.$router.push({
+          name: 'actionsTemplateCreate'
+        });
+      },
+  
+      handleCancelSelect () {
+        this.curTemplateId = '';
+        this.curTemplateName = '';
+        this.isShowUserGroupDialog = false;
+      },
+  
+      handleRemoteRtx (value) {
+        return fuzzyRtxSearch(value)
+          .then(data => {
+            return data.results;
+          });
+      },
+  
+      handleSearch (payload, result) {
+        this.searchParams = payload;
+        this.searchList = result;
+        this.emptyData.tipType = 'search';
+        this.queryParams = Object.assign(this.queryParams, { current: 1, limit: 10 });
+        if (!result.length) {
+          this.resetLocationHref();
+          window.localStorage.removeItem('templateList');
+        }
+        this.resetPagination();
+      },
+  
+      handlePageChange (page) {
+        if (this.currentBackup === page) {
+          return;
+        }
+        this.pagination.current = page;
+        this.queryParams = Object.assign(this.queryParams, { current: page });
+        this.fetchTemplateList(true);
+      },
+  
+      handleLimitChange (limit) {
+        this.pagination = Object.assign(this.pagination, { current: 1, limit });
+        this.queryParams = Object.assign(this.queryParams, { current: 1, limit });
+        this.fetchTemplateList(true);
+      },
+  
+      handleView (payload, tabActive) {
+        this.$store.commit('permTemplate/updateCloneActions', []);
+        this.$store.commit('permTemplate/updateAction', []);
+        this.$store.commit('permTemplate/updatePreActionIds', []);
+        this.curDetailData = Object.assign(payload, {
+          tabActive
+        });
+        this.isShowDetailSlider = true;
+      },
+      
       handleActionData () {
         // 获取actions和sub_groups所有数据，并根据单双行渲染不同背景颜色
         let colorIndex = 0;
@@ -537,7 +566,7 @@
           }
         });
       },
-  
+       
       refreshCurrentQuery () {
         const params = {};
         const queryParams = {
@@ -604,141 +633,6 @@
       handleEmptyRefresh () {
         this.queryParams = Object.assign({}, { current: 1, limit: 10 });
         this.resetPagination();
-      },
-  
-      async handleTemplateDelete ({ id }) {
-        try {
-          await this.$store.dispatch('permTemplate/deleteTemplate', { id });
-          this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
-          this.resetPagination();
-        } catch (e) {
-          this.messageAdvancedError(e);
-        }
-      },
-  
-      async fetchTemplateList (isLoading = false) {
-        this.tableLoading = isLoading;
-        this.setCurrentQueryCache(this.refreshCurrentQuery());
-        const { current, limit } = this.pagination;
-        const params = {
-          ...this.searchParams,
-          limit,
-          offset: limit * (current - 1)
-        };
-        delete params.current;
-        try {
-          const { code, data } = await this.$store.dispatch('permTemplate/getTemplateList', params);
-          this.actionsTempList = [...data.results || []];
-          this.pagination = Object.assign(this.pagination, { count: data.count || 0 });
-          this.emptyData = formatCodeData(code, this.emptyData, this.actionsTempList.length === 0);
-        } catch (e) {
-          this.actionsTempList = [];
-          this.emptyData = formatCodeData(e.code, this.emptyData);
-          this.messageAdvancedError(e);
-        } finally {
-          this.tableLoading = false;
-        }
-      },
-
-      async fetchTemplateDetail (id) {
-        try {
-          const { data } = await this.$store.dispatch('permTemplate/getTemplateDetail', { id, grouping: true });
-          this.curDetailData = Object.assign(this.curDetailData, data);
-          this.handleActionData();
-        } catch (e) {
-          this.messageAdvancedError(e);
-        }
-      },
-  
-      async handleSubmitSelectUserGroup (payload) {
-        const params = {
-          expired_at: 0,
-          members: payload,
-          id: this.curTemplateId
-        };
-        this.addGroupLoading = true;
-        try {
-          await this.$store.dispatch('permTemplate/addTemplateMember', params);
-          this.messageSuccess(this.$t(`m.info['关联用户组成功']`), 3000);
-          this.handleCancelSelect();
-          this.fetchTemplateList(true);
-        } catch (e) {
-          this.messageAdvancedError(e);
-        } finally {
-          this.addGroupLoading = false;
-        }
-      },
-
-      async handleRemoteSystem (value) {
-        const params = {};
-        if (this.externalSystemId) {
-          params.hidden = false;
-        }
-        const { data } = await this.$store.dispatch('system/getSystems', params);
-        return data.map(({ id, name }) => ({ id, name })).filter(item => item.name.indexOf(value) > -1);
-      },
-
-      handleCreate () {
-        this.$router.push({
-          name: 'actionsTemplateCreate'
-        });
-      },
-  
-      handleCancelSelect () {
-        this.curTemplateId = '';
-        this.curTemplateName = '';
-        this.isShowUserGroupDialog = false;
-      },
-  
-      handleRemoteRtx (value) {
-        return fuzzyRtxSearch(value)
-          .then(data => {
-            return data.results;
-          });
-      },
-  
-      handleSearch (payload, result) {
-        this.searchParams = payload;
-        this.searchList = result;
-        this.emptyData.tipType = 'search';
-        this.queryParams = Object.assign(this.queryParams, { current: 1, limit: 10 });
-        if (!result.length) {
-          this.resetLocationHref();
-          window.localStorage.removeItem('templateList');
-        }
-        this.resetPagination();
-      },
-  
-      handlePageChange (page) {
-        if (this.currentBackup === page) {
-          return;
-        }
-        this.pagination.current = page;
-        this.queryParams = Object.assign(this.queryParams, { current: page });
-        this.fetchTemplateList(true);
-      },
-  
-      handleLimitChange (limit) {
-        this.pagination = Object.assign(this.pagination, { current: 1, limit });
-        this.queryParams = Object.assign(this.queryParams, { current: 1, limit });
-        this.fetchTemplateList(true);
-      },
-  
-      handleView (payload, tabActive) {
-        this.$store.commit('permTemplate/updateCloneActions', []);
-        this.$store.commit('permTemplate/updateAction', []);
-        this.$store.commit('permTemplate/updatePreActionIds', []);
-        this.curDetailData = Object.assign(payload, {
-          tabActive
-        });
-        this.isShowDetailSlider = true;
-      },
-
-      async handleEdit (payload) {
-        this.editRequestQueue = ['getPre', 'addPre'];
-        this.curDetailData = Object.assign(this.curDetailData, payload);
-        await this.fetchTemplateDetail(payload.id);
-        await this.getPreUpdateInfo();
       }
     }
   };

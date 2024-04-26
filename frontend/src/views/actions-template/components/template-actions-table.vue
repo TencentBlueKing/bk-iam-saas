@@ -45,6 +45,7 @@
 <script>
   import { cloneDeep } from 'lodash';
   import { formatCodeData } from '@/common/util';
+  import { addPreUpdateInfo, getActionsData } from '../js/actions';
   import RenderAction from '@/views/actions-template/components/render-action';
   export default {
     components: {
@@ -113,6 +114,33 @@
           this.messageAdvancedError(e);
         } finally {
           this.detailLoading = false;
+        }
+      },
+
+      async getPreUpdateInfo () {
+        try {
+          const { id, system } = this.curDetailData;
+          const { data } = await this.$store.dispatch('permTemplate/getPreUpdateInfo', { id });
+          // 是否有编辑中的数据
+          const flag = Object.keys(data).length > 0;
+          if (flag) {
+            const list = cloneDeep(this.basicInfo.actions);
+            this.$store.commit('permTemplate/updatePreActionIds', data.action_ids || []);
+            this.$store.commit('permTemplate/updateAction', getActionsData(data.action_ids || [], list, this.defaultCheckedActions));
+            await addPreUpdateInfo(id, data.action_ids);
+          }
+          this.$router.push({
+            name: 'actionsTemplateEdit',
+            params: {
+              id,
+              systemId: system.id
+            },
+            query: {
+              step: flag ? 2 : 1
+            }
+          });
+        } catch (e) {
+          this.messageAdvancedError(e);
         }
       },
 
@@ -226,14 +254,8 @@
         this.handleActionData(keyword);
       },
 
-      handleEdit ({ id, system }) {
-        this.$router.push({
-          name: 'actionsTemplateEdit',
-          params: {
-            id,
-            systemId: system.id
-          }
-        });
+      handleEdit () {
+        this.getPreUpdateInfo();
       }
     }
   };
