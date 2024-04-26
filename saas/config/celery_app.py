@@ -9,7 +9,6 @@ specific language governing permissions and limitations under the License.
 """
 
 import os
-import sys
 
 from celery import Celery
 from celery.schedules import crontab
