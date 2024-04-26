@@ -1576,7 +1576,8 @@ export const m = {
         '新建操作模板成功': 'Actions template created',
         '操作模板未变更, 无需更新!': 'The actions template has not been changed, no need to update!',
         '暂无关联的用户组': 'Temporarily Unassociated User Groups',
-        '无须进行操作实例的确认': 'No need to confirm the operation instance'
+        '无须进行操作实例的确认': 'No need to confirm the operation instance',
+        '还有用户组未完成实例关联': 'There are still user groups that have not completed instance association'
     }
 }
 export default {

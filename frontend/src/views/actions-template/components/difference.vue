@@ -1,8 +1,15 @@
 <template>
   <div class="related-group-content">
-    <template v-if="hasGroup">
-      <smart-action class="iam-template-diff-wrapper">
-        <render-horizontal-block :label="$t(`m.common['选择实例']`)">
+    <template v-if="hasRelatedGroup">
+      <smart-action>
+        <div class="related-instance-header">
+          <div class="header-title">{{ $t(`m.actionsTemplate['关联用户组的实例']`)}}</div>
+          <div class="header-content">
+            <div class="header-content-btn">
+              <bk-button theme="primary" class="fill">{{ $t(`m.actionsTemplate['一键填充']`) }}</bk-button>
+              <bk-button class="no-limited">{{ $t(`m.actionsTemplate['全部无限制']`) }}</bk-button>
+            </div>
+          </div>
           <render-sync
             ref="syncRef"
             :id="$route.params.id"
@@ -11,7 +18,7 @@
             @on-ready="handleSyncReady"
             @on-all-submit="handleAllSubmit"
           />
-        </render-horizontal-block>
+        </div>
         <div slot="action">
           <bk-button
             :loading="prevLoading"
@@ -25,7 +32,7 @@
             :loading="isLoading"
             :disabled="(disabled || !isLastPage) && !isNoAddActions"
             @click.stop="handleNextStep">
-            <span v-if="!isLastPage && !isNoAddActions" v-bk-tooltips="$t(`m.info['请先确认完所有实例']`)">
+            <span v-if="!isLastPage && !isNoAddActions" v-bk-tooltips="$t(`m.actionsTemplate['还有用户组未完成实例关联']`)">
               {{ $t(`m.common['提交']`) }}
             </span>
             <span v-else>{{ $t(`m.common['提交']`) }}</span>
@@ -69,7 +76,7 @@
       RenderSync
     },
     props: {
-      hasGroup: {
+      hasRelatedGroup: {
         type: Boolean
       },
       id: {
@@ -281,6 +288,44 @@
 
 <style lang="postcss" scoped>
 .related-group-content {
+  .related-instance-header {
+    .header-title {
+      position: relative;
+      font-weight: 700;
+      font-size: 14px;
+      color: #313238;
+      &::after {
+        height: 8px;
+        line-height: 1;
+        content: "*";
+        color: #ea3636;
+        font-size: 12px;
+        position: absolute;
+        top: 50%;
+        display: inline-block;
+        vertical-align: middle;
+        -webkit-transform: translate(3px, -50%);
+        transform: translate(3px, -50%);
+      }
+    }
+    .header-content {
+      margin-top: 12px;
+      &-btn {
+        font-size: 0;
+        .bk-button {
+          &.fill {
+            min-width: 72px;
+          }
+          &.no-limited {
+            min-width: 84px;
+          }
+          &:not(&:first-child) {
+            margin-left: 8px;
+          }
+        }
+      }
+    }
+  }
   /deep/.no-related-group {
     position: absolute;
     top: 45%;

@@ -215,7 +215,7 @@
     <div v-if="curActionStep === 2">
       <RenderSyncGroup
         :id="id"
-        :has-group="hasGroupPreview"
+        :has-related-group="hasGroupPreview"
         :select-actions="curSelectActions"
         :select-actions-back="curSelectActionsBack"
       />

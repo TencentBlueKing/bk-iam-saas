@@ -1,6 +1,5 @@
 <template>
   <div class="iam-template-sync-wrapper" v-bkloading="{ isLoading: syncLoading, opacity: 1 }">
-    <!-- eslint-disable max-len -->
     <bk-table
       v-if="!syncLoading"
       :data="tableList"
@@ -76,7 +75,10 @@
                         {{ resItem.name }}
                       </p>
                     </template>
-                    <template v-if="!isShowBatchRefer(row.add_actions[index]) && batchReferAction(row.add_actions[index]).length === 0">
+                    <template
+                      v-if="!isShowBatchRefer(row.add_actions[index])
+                        && batchReferAction(row.add_actions[index]).length === 0"
+                    >
                       {{ $t(`m.common['暂无数据']`) }}
                     </template>
                   </div>
@@ -177,8 +179,12 @@
           @on-init="handleOnInit" />
       </div>
       <div slot="footer" style="margin-left: 25px;">
-        <bk-button theme="primary" :disabled="disabled" @click="handleResourceSubmit">{{ $t(`m.common['保存']`) }}</bk-button>
-        <bk-button style="margin-left: 10px;" :disabled="disabled" @click="handleResourceCancel('cancel')">{{ $t(`m.common['取消']`) }}</bk-button>
+        <bk-button theme="primary" :disabled="disabled" @click="handleResourceSubmit">
+          {{ $t(`m.common['保存']`) }}
+        </bk-button>
+        <bk-button style="margin-left: 10px;" :disabled="disabled" @click="handleResourceCancel('cancel')">
+          {{ $t(`m.common['取消']`) }}
+        </bk-button>
       </div>
     </bk-sideslider>
   </div>
