@@ -120,8 +120,8 @@ class RoleType(ChoicesEnum, LowerStrEnum):
             (STAFF, "个人用户"),
             (SUPER_MANAGER, "超级管理员"),
             (SYSTEM_MANAGER, "系统管理员"),
-            (GRADE_MANAGER, "分级管理员"),
-            (SUBSET_MANAGER, "子集管理员"),
+            (GRADE_MANAGER, "管理空间管理员"),
+            (SUBSET_MANAGER, "二级管理空间管理员"),
         )
     )
 
