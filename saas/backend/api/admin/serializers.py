@@ -10,9 +10,12 @@ specific language governing permissions and limitations under the License.
 """
 from rest_framework import serializers
 
+from backend.api.management.v2.serializers import ManagementGradeManagerGroupCreateSLZ
 from backend.apps.group.models import Group
+from backend.apps.group.serializers import GroupAuthorizationSLZ
 from backend.apps.role.models import Role
 from backend.apps.role.serializers import BaseGradeMangerSLZ
+from backend.apps.template.serializers import TemplateCreateSLZ, TemplateIdSLZ
 from backend.service.constants import GroupMemberType, RoleType
 
 
@@ -20,6 +23,10 @@ class AdminGroupBasicSLZ(serializers.ModelSerializer):
     class Meta:
         model = Group
         fields = ("id", "name", "description")
+
+
+class AdminGroupCreateSLZ(ManagementGradeManagerGroupCreateSLZ):
+    pass
 
 
 class AdminGroupMemberSLZ(serializers.Serializer):
@@ -33,6 +40,15 @@ class AdminSubjectGroupSLZ(serializers.Serializer):
     id = serializers.CharField(label="用户组id")
     name = serializers.CharField(label="用户组名称")
     expired_at = serializers.IntegerField(label="过期时间戳(单位秒)")
+
+
+class AdminGroupAuthorizationSLZ(GroupAuthorizationSLZ):
+    pass
+
+
+class AdminSystemProviderConfigSLZ(serializers.Serializer):
+    token = serializers.CharField(label="回调token")
+    host = serializers.CharField(label="回调地址")
 
 
 class SystemManageSLZ(serializers.Serializer):
@@ -73,3 +89,11 @@ class SubjectSLZ(serializers.Serializer):
 class FreezeSubjectResponseSLZ(serializers.Serializer):
     type = serializers.CharField(label="SubjectType")
     id = serializers.CharField(label="SubjectID")
+
+
+class AdminTemplateCreateSLZ(TemplateCreateSLZ):
+    pass
+
+
+class AdminTemplateIdSLZ(TemplateIdSLZ):
+    pass
