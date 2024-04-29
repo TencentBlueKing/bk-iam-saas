@@ -141,7 +141,7 @@
   import { fuzzyRtxSearch } from '@/common/rtx';
   import { buildURLParams } from '@/common/url';
   import { formatCodeData, getWindowHeight, delLocationHref } from '@/common/util';
-  import { addPreUpdateInfo, getActionsData } from '@/views/actions-template/js/actions';
+  import { addPreUpdateInfo, getActionsData } from '@/views/actions-template/common/actions';
   import UserGroupDialog from '@/components/render-user-group-dialog';
   import IamSearchSelect from '@/components/iam-search-select';
   import ActionsTemplateDetailSlider from './components/actions-template-detail-slider.vue';
@@ -316,11 +316,17 @@
           // 是否有编辑中的数据
           const flag = Object.keys(data).length > 0;
           if (flag) {
+            const params = {
+              id,
+              data: {
+                action_ids: data.action_ids
+              }
+            };
             const list = cloneDeep(this.curDetailData.actions);
             const actionIdList = data.action_ids || [];
             this.$store.commit('permTemplate/updatePreActionIds', actionIdList);
             this.$store.commit('permTemplate/updateAction', getActionsData(actionIdList, list, this.defaultCheckedActions));
-            await addPreUpdateInfo(id, data.action_ids);
+            await addPreUpdateInfo(params);
           } else {
             this.editRequestQueue = ['getPre'];
           }

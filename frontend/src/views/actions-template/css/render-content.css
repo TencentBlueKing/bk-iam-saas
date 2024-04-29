@@ -1,6 +1,9 @@
 .iam-action-temp-content-wrapper {
   position: relative;
   font-size: 14px;
+  &.is-padding {
+    padding-top: 24px;
+  }
   .iam-action-content-wrapper {
     position: relative;
     margin-top: 12px;

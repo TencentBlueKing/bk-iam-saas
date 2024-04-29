@@ -90,12 +90,7 @@ export function getActionsData (payload, temps, defaultCheckedActions) {
   return temps;
 }
 
-export async function addPreUpdateInfo (id, payload) {
-  const { data } = await store.dispatch('permTemplate/addPreUpdateInfo', {
-    id,
-    data: {
-      action_ids: payload
-    }
-  });
+export async function addPreUpdateInfo (payload) {
+  const { data } = await store.dispatch('permTemplate/addPreUpdateInfo', payload);
   store.commit('permTemplate/updateCloneActions', data || []);
 }

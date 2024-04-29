@@ -1,23 +1,82 @@
 <template>
-  <div class="related-group-content">
+  <div class="sync-group-wrapper">
     <template v-if="hasRelatedGroup">
       <smart-action>
-        <div class="related-instance-header">
-          <div class="header-title">{{ $t(`m.actionsTemplate['关联用户组的实例']`)}}</div>
-          <div class="header-content">
-            <div class="header-content-btn">
-              <bk-button theme="primary" class="fill">{{ $t(`m.actionsTemplate['一键填充']`) }}</bk-button>
-              <bk-button class="no-limited">{{ $t(`m.actionsTemplate['全部无限制']`) }}</bk-button>
+        <div :class="['sync-group-content', { 'is-full': isFullScreen }]">
+          <div :class="['sync-group-content-left']" :style="leftStyle">
+            <div class="related-instance-header">
+              <div class="header-title">{{ $t(`m.actionsTemplate['关联用户组的实例']`)}}</div>
+              <div class="flex-between header-content">
+                <div class="header-content-btn">
+                  <div class="operate-btn">
+                    <bk-button theme="primary" class="fill" v-bk-tooltips="{ content: fillTip }">
+                      {{ $t(`m.common['一键填充']`) }}
+                    </bk-button>
+                    <bk-button class="no-limited">{{ $t(`m.common['全部无限制']`) }}</bk-button>
+                  </div>
+                  <div class="aggregate-type-list">
+                    <div
+                      v-for="item in AGGREGATE_METHODS_LIST"
+                      :key="item.value"
+                      :class="[
+                        'aggregate-action-btn',
+                        { 'is-active': aggregateType === item.value },
+                        { 'is-disabled': isAggregateDisabled }
+                      ]"
+                      @click.stop="handleAggregateAction(item.value)"
+                    >
+                      <span>{{ $t(`m.common['${item.name}']`)}}</span>
+                    </div>
+                  </div>
+                </div>
+                <div :class="['location-fill-btn', { 'is-disabled': totalLocationCount === 0 }]">
+                  <Icon bk type="plus-circle-shape" class="location-icon" />
+                  <div class="location-content">
+                    <span class="location-tip">{{ $t(`m.common['定位未填写']`)}}</span>
+                    <span v-if="isLocation && curLocationIndex > -1" class="location-count">
+                      {{ `(${curLocationIndex}/${totalLocationCount})` }}
+                    </span>
+                    <span v-else :class="['location-count']">
+                      {{ `(${totalLocationCount})` }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="related-instance-content-table">
+              <RenderSync
+                ref="syncRef"
+                :id="$route.params.id"
+                :all-actions="policyList"
+                :add-action="addActions"
+                :clone-action="cloneActions"
+                @on-ready="handleSyncReady"
+                @on-all-submit="handleAllSubmit"
+              />
             </div>
           </div>
-          <render-sync
-            ref="syncRef"
-            :id="$route.params.id"
-            :add-action="addActions"
-            :clone-action="cloneActions"
-            @on-ready="handleSyncReady"
-            @on-all-submit="handleAllSubmit"
-          />
+          <div class="sync-group-content-center">
+            <div class="expand-icon" @click.stop="handleToggleExpand">
+              <bk-icon :type="isFullScreen ? 'angle-left' : 'angle-right'" class="icon" />
+            </div>
+          </div>
+          <div :class="['sync-group-content-right']" :style="rightStyle">
+            <div class="drag-dotted-line" v-if="isDrag" :style="dottedLineStyle" />
+            <div class="drag-line" :style="dragStyle">
+              <img
+                class="drag-bar"
+                src="@/images/drag-icon.svg"
+                alt=""
+                :draggable="false"
+                @mousedown="handleDragMouseenter($event)"
+              />
+            </div>
+            <div class="group-detail-header">
+              <span class="group-title">{{ $t(`m.actionsTemplate['用户组详情']`) }}</span>
+              <span class="group-divider">|</span>
+              <span class="group-name">{{ curExpandData.name }}</span>
+            </div>
+          </div>
         </div>
         <div slot="action">
           <bk-button
@@ -43,14 +102,14 @@
         </div>
       </smart-action>
     </template>
-    <div v-else class="no-related-group">
+    <div v-else class="no-sync-group">
       <ExceptionEmpty
         :type="emptyGroupData.type"
         :empty-text="emptyGroupData.text"
         :error-message="emptyGroupData.tip"
         :tip-type="emptyGroupData.tipType"
       />
-      <div class="no-related-group-btn">
+      <div class="no-sync-group-btn">
         <bk-button @click.stop="handleNoGroupOperate('prev')">
           {{ $t(`m.common['上一步']`) }}
         </bk-button>
@@ -69,6 +128,7 @@
 <script>
   import { mapGetters } from 'vuex';
   import { leavePageConfirm } from '@/common/leave-page-confirm';
+  import { AGGREGATE_METHODS_LIST } from '@/common/constants';
   import RenderSync from './sync.vue';
 
   export default {
@@ -90,43 +150,112 @@
       selectActionsBack: {
         type: Array,
         default: () => []
+      },
+      allActions: {
+        type: Array,
+        default: () => []
       }
     },
     data () {
       return {
+        AGGREGATE_METHODS_LIST,
         isLoading: false,
         isOnePage: false,
         isLastPage: false,
         isNoAddActions: false,
+        isLocation: false,
+        isFullScreen: false,
+        isDrag: false,
         prevLoading: false,
         disabled: true,
-        curCom: 'diff',
+        aggregateType: 'no-aggregate',
+        fillTip: this.$t(`m.actionsTemplate['引用已有的操作实例一键填充']`),
+        curLocationIndex: -1,
+        totalLocationCount: 0,
+        navWidth: 240,
+        dragWidth: 680,
+        dragRealityWidth: 680,
+        curExpandData: {
+          name: 'ssssssssssss'
+        },
+        pagination: {
+          current: 1,
+          limit: 20
+        },
         emptyGroupData: {
           type: 'empty',
           text: this.$t(`m.actionsTemplate['暂无关联的用户组']`),
           tip: this.$t(`m.actionsTemplate['无须进行操作实例的确认']`),
           tipType: 'noPerm'
         },
-        addActions: []
+        addActions: [],
+        policyList: [],
+        aggregations: []
       };
     },
     computed: {
-      ...mapGetters('permTemplate', ['preActionIds', 'cloneActions', 'preGroupOnePage'])
+      ...mapGetters('permTemplate', ['cloneActions', 'preGroupOnePage']),
+      ...mapGetters(['navStick']),
+      isAggregateDisabled () {
+        return this.policyList.length < 1 || this.aggregations.length < 1
+          || (this.policyList.length === 1 && !this.policyList[0].isAggregate);
+      },
+      leftStyle () {
+        if (this.dragWidth > 0) {
+          return {
+            'width': `calc(100% - ${this.dragWidth}px)`
+          };
+        }
+        return {
+          'width': `calc(100% - 680px)`
+        };
+      },
+      rightStyle () {
+        if (this.dragWidth > 0) {
+          return {
+            'flexBasis': `${this.dragWidth}px`
+          };
+        }
+        return {
+          'flexBasis': '680px'
+        };
+      },
+      dragStyle () {
+        return {
+          'right': `${this.dragWidth}px`
+        };
+      },
+      dottedLineStyle () {
+        return {
+          'right': `${this.dragRealityWidth}px`
+        };
+      }
     },
     watch: {
-      selectActions: {
+      navStick (value) {
+        this.navWidth = value ? 240 : 60;
+      },
+      allActions: {
         handler (value) {
-          console.log(value, 5555);
+          console.log(value);
           const tempActions = [];
           value.forEach((item) => {
-            if (['added'].includes(item.flag) || (['unchecked'].includes(item.tag) && item.checked)) {
-              tempActions.push(item);
-            }
+            item.actions.forEach(act => {
+              if (['added'].includes(act.flag) || (['unchecked'].includes(act.tag) && act.checked)) {
+                tempActions.push(act);
+              }
+            });
+            (item.sub_groups || []).forEach(sub => {
+              sub.actions.forEach(act => {
+                if (['added'].includes(act.flag) || (['unchecked'].includes(act.tag) && act.checked)) {
+                  tempActions.push(act);
+                }
+              });
+            });
           });
           this.addActions = tempActions;
-          this.isNoAddActions = this.addActions.length < 1;
         },
-        immediate: true
+        deep: true
       }
     },
     methods: {
@@ -281,52 +410,236 @@
           };
           typeMap[payload]();
         }, _ => _);
+      },
+
+      handleToggleExpand () {
+        this.isFullScreen = !this.isFullScreen;
+      },
+
+      handleDragMouseenter () {
+        if (this.isDrag) {
+          return;
+        }
+        this.isDrag = true;
+        document.addEventListener('mousemove', this.handleDragMousemove);
+        document.addEventListener('mouseup', this.handleDragMouseup);
+      },
+
+      handleDragMouseup (e) {
+        this.dragWidth = this.dragRealityWidth;
+        this.isDrag = false;
+        document.removeEventListener('mousemove', this.handleDragMousemove);
+        document.removeEventListener('mouseup', this.handleDragMouseup);
+      },
+
+      handleDragMousemove (e) {
+        if (!this.isDrag) {
+          return;
+        }
+        const minWidth = this.navWidth + 680;
+        const maxWidth = this.navWidth + 1260;
+        if (e.clientX < minWidth || e.clientX >= maxWidth) {
+          return;
+        }
+        this.dragRealityWidth = e.clientX - this.navWidth;
       }
     }
   };
 </script>
 
 <style lang="postcss" scoped>
-.related-group-content {
-  .related-instance-header {
-    .header-title {
-      position: relative;
-      font-weight: 700;
-      font-size: 14px;
-      color: #313238;
-      &::after {
-        height: 8px;
-        line-height: 1;
-        content: "*";
-        color: #ea3636;
-        font-size: 12px;
-        position: absolute;
-        top: 50%;
-        display: inline-block;
-        vertical-align: middle;
-        -webkit-transform: translate(3px, -50%);
-        transform: translate(3px, -50%);
-      }
-    }
-    .header-content {
-      margin-top: 12px;
-      &-btn {
-        font-size: 0;
-        .bk-button {
-          &.fill {
-            min-width: 72px;
+.sync-group-wrapper {
+  .sync-group-content {
+    position: relative;
+    display: flex;
+    &-left {
+      width: calc(100% - 680px);
+      .related-instance-header {
+        padding-top: 16px;
+        .header-title {
+          position: relative;
+          font-weight: 700;
+          font-size: 14px;
+          color: #313238;
+          &::after {
+            height: 8px;
+            line-height: 1;
+            content: "*";
+            color: #ea3636;
+            font-size: 12px;
+            position: absolute;
+            top: 50%;
+            display: inline-block;
+            vertical-align: middle;
+            -webkit-transform: translate(3px, -50%);
+            transform: translate(3px, -50%);
           }
-          &.no-limited {
-            min-width: 84px;
+        }
+        .header-content {
+          margin: 12px 0;
+          flex-wrap: wrap;
+          &-btn {
+            display: flex;
+            align-items: center;
+            .operate-btn {
+              font-size: 0;
+              .bk-button {
+                font-size: 12px;
+                margin-right: 8px;
+                &.fill {
+                  min-width: 72px;
+                }
+                &.no-limited {
+                  min-width: 84px;
+                }
+              }
+            }
+            .aggregate-type-list {
+              min-width: 108px;
+              position: relative;
+              display: flex;
+              justify-content: space-between;
+              background-color: #EAEBF0;
+              border-radius: 2px;
+              cursor: pointer;
+              .aggregate-action-btn {
+                background-color: #EAEBF0;
+                border: 4px solid #EAEBF0;
+                padding: 4px 12px;
+                font-size: 12px;
+                &.is-active {
+                  color: #3A84FF;
+                  background-color: #ffffff;
+                }
+                &.is-disabled {
+                  cursor: not-allowed;
+                }
+              }
+            }
           }
-          &:not(&:first-child) {
-            margin-left: 8px;
+          .location-fill-btn {
+            display: flex;
+            align-items: center;
+            min-width: 123px;
+            height: 32px;
+            line-height: 32px;
+            padding: 0 12px;
+            background-color: #ffffff;
+            border: 1px solid #c4c6cc;
+            border-radius: 2px;
+            box-sizing: border-box;
+            vertical-align: middle;
+            cursor: pointer;
+            .location-icon {
+              margin-right: 4px;
+            }
+            .location-content {
+              font-size: 12px;
+              color: #63656E;
+            }
+            &.is-disabled {
+              cursor: inherit;
+              .location-icon {
+                color: #dcdee5;
+              }
+              .location-content {
+                color: #c4c6cc;
+              }
+            }
           }
         }
       }
+      &.is-full {
+        width: 100%;
+      }
+    }
+    &-center {
+      width: 16px;
+      margin-left: 10px;
+      height: calc(100vh - 61px);
+      .expand-icon {
+        width: 16px;
+        height: 64px;
+        background-color: #dcdee5;
+        border-radius: 4px 0 0 4px;
+        position: relative;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        .icon {
+          color: #ffffff;
+          font-size: 22px !important;
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+        }
+        &:hover {
+          background-color: #3a84ff;
+        }
+      }
+    }
+    &-right {
+      position: relative;
+      padding: 16px;
+      height: calc(100vh - 61px);
+      overflow: hidden;
+      .drag-dotted-line {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 680px;
+        height: 100%;
+        border-left: 1px solid #dcdee5;
+        z-index: 1500;
+      }
+      .drag-line {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 680px;
+        height: 100%;
+        width: 1px;
+        background-color: #dcdee5;
+        z-index: 1500;
+        .drag-bar {
+          position: relative;
+          top: calc(50% - 17px);
+          left: 2px;
+          width: 9px;
+          background: transparent;
+          cursor: col-resize;
+        }
+      }
+      .group-detail-header {
+        font-size: 14px;
+        .group-title {
+          color: #313238;
+        }
+        .group-divider {
+          color: #DCDEE5;
+          margin: 0 8px;
+        }
+        .group-name {
+          color: #63656E;
+        }
+      }
+    }
+    &.is-full {
+      .sync-group-content-left {
+        flex: 0 0 100%;
+      }
+      .sync-group-content-center {
+        .expand-icon {
+          border-radius: 0 4px 4px 0;
+        }
+      }
+      .sync-group-content-right {
+        display: none;
+      }
     }
   }
-  /deep/.no-related-group {
+  /deep/.no-sync-group {
     position: absolute;
     top: 45%;
     left: 50%;

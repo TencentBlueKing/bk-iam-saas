@@ -287,3 +287,10 @@ export const USER_ORG_SEARCH_TAG_LIST = [
     value: ''
   }
 ];
+
+// 资源实例表格聚合方式
+export const AGGREGATE_METHODS_LIST = [
+  { name: '按顶层聚合', value: 'action-instance' },
+  { name: '按资源类型聚合', value: 'resource-type' },
+  { name: '不聚合', value: 'no-aggregate' }
+];

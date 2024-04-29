@@ -1,7 +1,7 @@
 <template>
   <div>
     <template v-if="curActionStep === 1">
-      <smart-action class="iam-action-temp-content-wrapper">
+      <smart-action :class="['iam-action-temp-content-wrapper', { 'is-padding': isEdit }]">
         <render-horizontal-block
           v-if="!isEdit"
           ext-cls="actions-form basic-info-wrapper"
@@ -218,6 +218,8 @@
         :has-related-group="hasGroupPreview"
         :select-actions="curSelectActions"
         :select-actions-back="curSelectActionsBack"
+        :all-actions="originalCustomTmplList"
+        :default-checked-actions="defaultCheckedActions"
       />
     </div>
   </div>
@@ -230,6 +232,7 @@
   import { buildURLParams } from '@/common/url';
   import { formatCodeData, guid } from '@/common/util';
   import { leavePageConfirm } from '@/common/leave-page-confirm';
+  import { addPreUpdateInfo } from '../common/actions';
   import RenderActionTag from '@/components/common-action';
   import RenderAction from './render-action';
   import RenderSyncGroup from './difference';
@@ -932,9 +935,8 @@
               action_ids: actionIdList
             }
           };
-          const { data } = await this.$store.dispatch('permTemplate/addPreUpdateInfo', params);
           window.changeDialog = false;
-          this.$store.commit('permTemplate/updateCloneActions', data || []);
+          await addPreUpdateInfo(params);
           this.$store.commit('permTemplate/updatePreActionIds', actionIdList);
           this.$store.commit('permTemplate/updateAction', this.getActionsData(this.originalCustomTmplList));
           this.handleSetCurActionStep(2);

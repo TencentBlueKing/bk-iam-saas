@@ -418,6 +418,12 @@
         overflow: hidden;
       }
     }
+        
+    .actions-template-edit-container {
+      .views-layout {
+        padding-top: 0;
+      }
+    }
 
     .notice-app-layout {
       height: calc(100% - 101px) !important;

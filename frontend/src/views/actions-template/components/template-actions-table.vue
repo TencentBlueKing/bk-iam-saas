@@ -45,7 +45,7 @@
 <script>
   import { cloneDeep } from 'lodash';
   import { formatCodeData } from '@/common/util';
-  import { addPreUpdateInfo, getActionsData } from '../js/actions';
+  import { addPreUpdateInfo, getActionsData } from '../common/actions';
   import RenderAction from '@/views/actions-template/components/render-action';
   export default {
     components: {
@@ -124,10 +124,16 @@
           // 是否有编辑中的数据
           const flag = Object.keys(data).length > 0;
           if (flag) {
+            const params = {
+              id,
+              data: {
+                action_ids: data.action_ids
+              }
+            };
             const list = cloneDeep(this.basicInfo.actions);
             this.$store.commit('permTemplate/updatePreActionIds', data.action_ids || []);
             this.$store.commit('permTemplate/updateAction', getActionsData(data.action_ids || [], list, this.defaultCheckedActions));
-            await addPreUpdateInfo(id, data.action_ids);
+            await addPreUpdateInfo(params);
           }
           this.$router.push({
             name: 'actionsTemplateEdit',
