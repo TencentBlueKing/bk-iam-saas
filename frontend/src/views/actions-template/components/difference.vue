@@ -25,12 +25,12 @@
                       ]"
                       @click.stop="handleAggregateAction(item.value)"
                     >
-                      <span>{{ $t(`m.common['${item.name}']`)}}</span>
+                      <span>{{ $t(`m.common['${item.name}']`) }}</span>
                     </div>
                   </div>
                 </div>
                 <div :class="['location-fill-btn', { 'is-disabled': totalLocationCount === 0 }]">
-                  <Icon bk type="plus-circle-shape" class="location-icon" />
+                  <Icon type="locate" class="location-icon" />
                   <div class="location-content">
                     <span class="location-tip">{{ $t(`m.common['定位未填写']`)}}</span>
                     <span v-if="isLocation && curLocationIndex > -1" class="location-count">
@@ -43,7 +43,7 @@
                 </div>
               </div>
             </div>
-            <div class="related-instance-content-table">
+            <div class="related-instance-table">
               <RenderSync
                 ref="syncRef"
                 :id="$route.params.id"
@@ -51,6 +51,7 @@
                 :add-action="addActions"
                 :clone-action="cloneActions"
                 @on-ready="handleSyncReady"
+                @on-expand="handleExpand"
                 @on-all-submit="handleAllSubmit"
               />
             </div>
@@ -63,42 +64,39 @@
           <div :class="['sync-group-content-right']" :style="rightStyle">
             <div class="drag-dotted-line" v-if="isDrag" :style="dottedLineStyle" />
             <div class="drag-line" :style="dragStyle">
-              <img
+              <Icon
+                type="drag-fill"
                 class="drag-bar"
-                src="@/images/drag-icon.svg"
-                alt=""
                 :draggable="false"
                 @mousedown="handleDragMouseenter($event)"
               />
             </div>
-            <div class="group-detail-header">
-              <span class="group-title">{{ $t(`m.actionsTemplate['用户组详情']`) }}</span>
-              <span class="group-divider">|</span>
-              <span class="group-name">{{ curExpandData.name }}</span>
-            </div>
+            <GroupDetail :expand-data="curExpandData" />
           </div>
         </div>
         <div slot="action">
-          <bk-button
-            :loading="prevLoading"
-            :disabled="disabled"
-            @click.stop="handlePrevStep('prev')"
-          >
-            {{ $t(`m.common['上一步']`) }}
-          </bk-button>
-          <bk-button
-            theme="primary"
-            :loading="isLoading"
-            :disabled="(disabled || !isLastPage) && !isNoAddActions"
-            @click.stop="handleNextStep">
-            <span v-if="!isLastPage && !isNoAddActions" v-bk-tooltips="$t(`m.actionsTemplate['还有用户组未完成实例关联']`)">
-              {{ $t(`m.common['提交']`) }}
-            </span>
-            <span v-else>{{ $t(`m.common['提交']`) }}</span>
-          </bk-button>
-          <bk-button @click.stop="handlePrevStep('cancel')">
-            {{ $t(`m.common['取消']`) }}
-          </bk-button>
+          <div class="sync-group-btn">
+            <bk-button
+              :loading="prevLoading"
+              :disabled="disabled"
+              @click.stop="handlePrevStep('prev')"
+            >
+              {{ $t(`m.common['上一步']`) }}
+            </bk-button>
+            <bk-button
+              theme="primary"
+              :loading="isLoading"
+              :disabled="(disabled || !isLastPage) && !isNoAddActions"
+              @click.stop="handleNextStep">
+              <span v-if="!isLastPage && !isNoAddActions" v-bk-tooltips="$t(`m.actionsTemplate['还有用户组未完成实例关联']`)">
+                {{ $t(`m.common['提交']`) }}
+              </span>
+              <span v-else>{{ $t(`m.common['提交']`) }}</span>
+            </bk-button>
+            <bk-button @click.stop="handlePrevStep('cancel')">
+              {{ $t(`m.common['取消']`) }}
+            </bk-button>
+          </div>
         </div>
       </smart-action>
     </template>
@@ -130,10 +128,12 @@
   import { leavePageConfirm } from '@/common/leave-page-confirm';
   import { AGGREGATE_METHODS_LIST } from '@/common/constants';
   import RenderSync from './sync.vue';
+  import GroupDetail from './group-detail';
 
   export default {
     components: {
-      RenderSync
+      RenderSync,
+      GroupDetail
     },
     props: {
       hasRelatedGroup: {
@@ -173,11 +173,9 @@
         curLocationIndex: -1,
         totalLocationCount: 0,
         navWidth: 240,
-        dragWidth: 680,
-        dragRealityWidth: 680,
-        curExpandData: {
-          name: 'ssssssssssss'
-        },
+        dragWidth: 692,
+        dragRealityWidth: 692,
+        curExpandData: {},
         pagination: {
           current: 1,
           limit: 20
@@ -207,7 +205,7 @@
           };
         }
         return {
-          'width': `calc(100% - 680px)`
+          'width': `calc(100% - 704px)`
         };
       },
       rightStyle () {
@@ -217,7 +215,7 @@
           };
         }
         return {
-          'flexBasis': '680px'
+          'flexBasis': '692px'
         };
       },
       dragStyle () {
@@ -374,6 +372,14 @@
         return typeMap[payload]();
       },
 
+      handleAggregateAction (payload) {
+
+      },
+
+      handleExpand (payload) {
+        this.curExpandData = payload.expand ? payload : {};
+      },
+ 
       handleAllSubmit (payload) {
         this.isLastPage = payload;
       },
@@ -436,8 +442,8 @@
         if (!this.isDrag) {
           return;
         }
-        const minWidth = this.navWidth + 680;
-        const maxWidth = this.navWidth + 1260;
+        const minWidth = this.navWidth + 692;
+        const maxWidth = this.navWidth + 900;
         if (e.clientX < minWidth || e.clientX >= maxWidth) {
           return;
         }
@@ -453,9 +459,13 @@
     position: relative;
     display: flex;
     &-left {
-      width: calc(100% - 680px);
+      width: calc(100% - 692px);
       .related-instance-header {
         padding-top: 16px;
+        position: sticky;
+        top: 0;
+        left: 0;
+        z-index: 2;
         .header-title {
           position: relative;
           font-weight: 700;
@@ -549,6 +559,23 @@
           }
         }
       }
+      .related-instance-table {
+        overflow-y: auto;
+        max-height: calc(100vh - 246px);
+        &::-webkit-scrollbar {
+          width: 6px;
+          height: 6px;
+          margin-left: 5px;
+        }
+        &::-webkit-scrollbar-thumb {
+          background: #dcdee5;
+          border-radius: 3px;
+        }
+        &::-webkit-scrollbar-track {
+          background: transparent;
+          border-radius: 3px;
+        }
+      }
       &.is-full {
         width: 100%;
       }
@@ -581,7 +608,7 @@
     }
     &-right {
       position: relative;
-      padding: 16px;
+      padding: 16px 0;
       height: calc(100vh - 61px);
       overflow: hidden;
       .drag-dotted-line {
@@ -591,7 +618,8 @@
         right: 680px;
         height: 100%;
         border-left: 1px solid #dcdee5;
-        z-index: 1500;
+        background-color: #ffffff;
+        z-index: 98;
       }
       .drag-line {
         position: absolute;
@@ -601,27 +629,14 @@
         height: 100%;
         width: 1px;
         background-color: #dcdee5;
-        z-index: 1500;
+        z-index: 98;
         .drag-bar {
           position: relative;
-          top: calc(50% - 17px);
+          top: calc(50% - 10px);
           left: 2px;
-          width: 9px;
-          background: transparent;
+          font-size: 24px;
+          color: #979BA5;
           cursor: col-resize;
-        }
-      }
-      .group-detail-header {
-        font-size: 14px;
-        .group-title {
-          color: #313238;
-        }
-        .group-divider {
-          color: #DCDEE5;
-          margin: 0 8px;
-        }
-        .group-name {
-          color: #63656E;
         }
       }
     }
@@ -639,7 +654,14 @@
       }
     }
   }
-  /deep/.no-sync-group {
+  .sync-group-btn {
+    font-size: 0;
+    .bk-button {
+      min-width: 88px;
+      margin-right: 8px;
+    }
+  }
+  /deep/ .no-sync-group {
     position: absolute;
     top: 45%;
     left: 50%;

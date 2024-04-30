@@ -130,6 +130,7 @@
         isLoading: false,
         linearActionList: [],
         groupSystemList: [],
+        originalCustomTmplList: [],
         authorizationData: {},
         groupSystemListLength: '',
         removingSingle: false,

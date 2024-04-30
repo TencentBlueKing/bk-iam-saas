@@ -288,8 +288,8 @@
           system_name: ''
         },
         emptyActionData: {
-          type: '',
-          text: '',
+          type: 'empty',
+          text: '暂无数据',
           tip: '',
           tipType: ''
         },

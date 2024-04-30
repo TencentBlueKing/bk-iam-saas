@@ -4,7 +4,7 @@
       <div class="temp-group-sync-table-header" @click.stop="handleExpand(group)">
         <Icon bk :type="group.expand ? 'down-shape' : 'right-shape'" class="expand-icon" />
         <div class="group-status-btn">
-          <Icon bk type="plus-circle-shape" class="fill-status" />
+          <Icon type="check-fill" class="fill-status" />
           <span class="fill-text">{{ $t(`m.actionsTemplate['已填写']`)}}</span>
         </div>
         <div class="single-hide group-name">{{ group.name }}</div>
@@ -133,7 +133,7 @@
         </bk-table-column>
       </div> -->
       </bk-table>
-      <div class="pagination-wrapper" v-if="pagination.totalPage > 1 && !syncLoading">
+      <div class="pagination-wrapper" v-if="pagination.totalPage > 1">
         <div class="page-display">
           {{ pagination.current }} / {{ pagination.totalPage }}
         </div>
@@ -157,8 +157,8 @@
     </div>
 
     <bk-sideslider
-      :is-show.sync="isShowSideslider"
-      :title="sidesliderTitle"
+      :is-show.sync="isShowSideSlider"
+      :title="sideSliderTitle"
       :width="640"
       :quick-close="true"
       @animation-end="handleAnimationEnd">
@@ -169,7 +169,7 @@
 
     <bk-sideslider
       :is-show="isShowInstanceSideslider"
-      :title="instanceSidesliderTitle"
+      :title="instanceSideSliderTitle"
       :width="resourceSliderWidth"
       quick-close
       transfer
@@ -247,6 +247,7 @@
     },
     data () {
       return {
+        syncLoading: false,
         pagination: {
           current: 1,
           limit: 20,
@@ -255,11 +256,11 @@
         tableList: [],
         deleteProps: [],
         addProps: [],
-        isShowSideslider: false,
-        sidesliderTitle: '',
+        isShowSideSlider: false,
+        sideSliderTitle: '',
         previewData: [],
         isShowInstanceSideslider: false,
-        instanceSidesliderTitle: '',
+        instanceSideSliderTitle: '',
         curIndex: -1,
         curActionIndex: -1,
         curResIndex: -1,
@@ -383,9 +384,6 @@
           return [];
         };
       },
-      syncLoading () {
-        return this.requestQueue.length > 0;
-      },
       isAddActionEmpty () {
         return this.addAction.length < 1;
       }
@@ -435,6 +433,9 @@
           this.tableList = cloneDeep(data.results || []);
           this.tableList.forEach((item, index) => {
             this.$set(item, 'expand', !(index > 0));
+            if (index === 0) {
+              this.$emit('on-expand', item);
+            }
             if (this.addAction.length > 0) {
               this.$set(item, 'add_actions', cloneDeep(this.addAction));
               item.add_actions = item.add_actions.map(act => {
@@ -614,13 +615,13 @@
       },
 
       handleExpand (payload) {
-        console.log(payload);
         payload.expand = !payload.expand;
         this.tableList.forEach((item) => {
           if (item.expand && payload.id !== item.id) {
             item.expand = false;
           }
         });
+        this.$emit('on-expand', payload);
       },
 
       handlePrevPage () {
@@ -699,7 +700,7 @@
       },
 
       handleAnimationEnd () {
-        this.sidesliderTitle = '';
+        this.sideSliderTitle = '';
         this.previewData = [];
       },
 
@@ -754,7 +755,7 @@
         this.curActionIndex = -1;
         this.curGroupIndex = -1;
         this.params = {};
-        this.instanceSidesliderTitle = '';
+        this.instanceSideSliderTitle = '';
       },
 
       handleResourceCancel (payload) {
@@ -786,7 +787,7 @@
           return;
         }
         window.changeAlert = false;
-        this.instanceSidesliderTitle = '';
+        this.instanceSideSliderTitle = '';
         this.isShowInstanceSideslider = false;
         const resItem = this.tableList[this.curIndex]
           .add_actions[this.curActionIndex]
@@ -899,7 +900,7 @@
         this.curActionIndex = index;
         this.curResIndex = resIndex;
         this.curGroupIndex = groupIndex;
-        this.instanceSidesliderTitle = this.$t(`m.info['关联侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${data.add_actions[index].name}${this.$t(`m.common['】']`)}` });
+        this.instanceSideSliderTitle = this.$t(`m.info['关联侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${data.add_actions[index].name}${this.$t(`m.common['】']`)}` });
         window.changeAlert = 'iamSidesider';
         this.isShowInstanceSideslider = true;
       },
@@ -919,8 +920,8 @@
           });
         }
         this.previewData = params;
-        this.sidesliderTitle = this.$t(`m.info['操作侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}` });
-        this.isShowSideslider = true;
+        this.sideSliderTitle = this.$t(`m.info['操作侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}` });
+        this.isShowSideSlider = true;
       },
 
       renderDeleteActionHeader (h, { column }) {

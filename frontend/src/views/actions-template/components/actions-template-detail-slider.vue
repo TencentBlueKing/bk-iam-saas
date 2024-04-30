@@ -16,17 +16,17 @@
       </div>
       <div slot="content" class="iam-action-template-detail-side-content">
         <div class="action-template-tab">
-          <div class="member-tab-groups">
+          <div class="action-tab-groups">
             <div
               v-for="item in tabList"
               :key="item.id"
-              :class="['member-tab-groups-item', { 'is-active': tabActive === item.id }]"
+              :class="['action-tab-groups-item', { 'is-active': tabActive === item.id }]"
               @click.stop="handleTabChange(item.id, true)"
             >
-              <span class="member-tab-groups-item-name">{{ item.name }}</span>
+              <span class="action-tab-groups-item-name">{{ item.name }}</span>
               <span
                 v-if="['associate_groups'].includes(item.id)"
-                class="member-tab-groups-item-count"
+                class="action-tab-groups-item-count"
               >
                 ({{ item.count }})
               </span>
@@ -187,7 +187,6 @@
     }
   }
   &-content {
-    /* height: calc(100vh - 114px); */
     .action-template-tab {
       padding: 24px 24px 0;
       background-color: #f5f7fa;
@@ -195,7 +194,7 @@
       top: 0;
       left: 0;
       z-index: 9999;
-      .member-tab-groups {
+      .action-tab-groups {
         position: relative;
         display: flex;
         &-item {
@@ -212,7 +211,7 @@
           cursor: pointer;
           &:last-child {
             margin-right: 0px;
-            .member-tab-groups-item-count {
+            .action-tab-groups-item-count {
               padding-left: 5px;
             }
           }

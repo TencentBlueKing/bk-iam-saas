@@ -192,7 +192,7 @@ const currentNav = [
         disabled: false
       },
       {
-        icon: 'perm-template',
+        icon: 'action-temp',
         id: 'actionsTemplateNav',
         rkey: 'memberTemplate',
         name: il8n('nav', '操作模板'),
