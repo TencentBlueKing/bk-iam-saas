@@ -21,17 +21,24 @@
                   'is-active': noticeForm.notification_types.includes(item.value)
                 }
               ]"
-              @click.stop="handleSelectNoticeType(item)"
             >
-              <div class="notice-type-content">
-                <i :class="['iam-icon', item.icon]" />
-                <img
-                  class="notice-type-img"
-                  :src="item.selected_icon"
-                />
-                <span class="notice-type-label">{{ item.label }}</span>
+              <div class="notice-type-item" @click.stop="handleSelectNoticeType(item)">
+                <div class="notice-type-content">
+                  <i :class="['iam-icon active-icon', item.icon]" />
+                  <img
+                    class="notice-type-img"
+                    :src="item.selected_icon"
+                  />
+                  <span class="notice-type-label">{{ item.label }}</span>
+                </div>
+                <div class="gou" />
               </div>
-              <span class="gou" />
+              <div class="notice-temp">
+                <Icon type="setting" class="notice-temp-icon" />
+                <div class="notice-temp-label" @click.stop="handleShowNoticeTemp(item)">
+                  {{ $t(`m.renewalNotice['模板']`) }}
+                </div>
+              </div>
             </div>
           </div>
           <div v-if="isMethodsEmpty" class="notice-empty-error">{{ $t(`m.renewalNotice['通知方式为必填项']`) }}</div>
@@ -156,14 +163,40 @@
         />
       </div>
     </div>
+
+    <bk-sideslider
+      :is-show.sync="noticeTempSlider.isShow"
+      :title="noticeTempSlider.title"
+      :width="noticeTempSlider.width"
+      :quick-close="true"
+      @animation-end="handleAnimationEnd"
+    >
+      <div slot="header" class="notice-temp-header">
+        <div class="notice-temp-header-title">{{ $t(`m.renewalNotice['通知模板']`) }}</div>
+        <div class="notice-temp-header-divider">|</div>
+        <div class="notice-temp-header-content">
+          <img class="selected-img" :src="noticeTempSlider.detailData.selected_icon" alt="" />
+          <div class="selected-label">{{ noticeTempSlider.detailData.label }}</div>
+        </div>
+      </div>
+      <div slot="content" class="notice-temp-content">
+        <component :is="noticeTempSlider.slideName" :detail-data="noticeTempSlider.detailData" />
+      </div>
+    </bk-sideslider>
   </div>
 </template>
 
 <script>
   import { cloneDeep } from 'lodash';
   import { bus } from '@/common/bus';
+  import MailNoticeSlider from '@/views/renewal-notice/components/mail-notice-slider.vue';
+  import RtxNoticeSlider from '@/views/renewal-notice/components/rtx-notice-slider.vue';
   export default {
     inject: ['showNoticeAlert'],
+    components: {
+      MailNoticeSlider,
+      RtxNoticeSlider
+    },
     data () {
       return {
         noticeList: [
@@ -231,6 +264,13 @@
           enable: false
         },
         noticeFormReset: {},
+        noticeTempSlider: {
+          title: '',
+          slideName: '',
+          isShow: false,
+          width: 960,
+          detailData: {}
+        },
         emptyData: {
           type: 'empty',
           text: this.$t(`m.renewalNotice['续期通知暂未开启']`),
@@ -366,6 +406,29 @@
         this.isSendTimeEmpty = !(payload.length > 0);
       },
 
+      handleShowNoticeTemp (payload) {
+        console.log(payload.value);
+        const typeMap = {
+          rtx: () => {
+            this.noticeTempSlider = Object.assign(this.noticeTempSlider, { slideName: 'RtxNoticeSlider', isShow: true, detailData: payload });
+          },
+          mail: () => {
+            this.noticeTempSlider = Object.assign(this.noticeTempSlider, { slideName: 'MailNoticeSlider', isShow: true, detailData: payload });
+          }
+        };
+        return typeMap[payload.value]();
+      },
+
+      handleAnimationEnd () {
+        this.noticeTempSlider = {
+          title: '',
+          slideName: '',
+          isShow: false,
+          width: 960,
+          detailData: {}
+        };
+      },
+
       handleReset () {
         this.noticeForm = cloneDeep(this.noticeFormReset);
         this.handleGetValidate();
@@ -442,7 +505,7 @@
       }
     }
     .notice-methods {
-      margin-bottom: 24px;
+      margin-bottom: 44px;
       &-list {
         display: flex;
         align-items: center;
@@ -458,7 +521,7 @@
           &:not(&:last-child) {
             margin-right: 8px;
           }
-          .iam-icon {
+          .active-icon {
             color: #979ba5;
             margin-left: 13px;
             margin-right: 6px;
@@ -475,12 +538,21 @@
               padding-right: 10px;
             }
           }
+          .notice-temp {
+            display: flex;
+            align-items: center;
+            line-height: 20px;
+            color: #3a84ff;
+            &-icon {
+              margin-right: 4px;
+            }
+          }
           &.is-active {
             position: relative;
             color: #313238;
             background-color: #f0f5ff;
             border: 1px solid #3a84ff;
-            .iam-icon {
+            .active-icon {
               display: none;
             }
             .notice-type-img {
@@ -683,6 +755,28 @@
             }
           }
         }
+      }
+    }
+  }
+  .notice-temp-header {
+    width: 100%;
+    display: flex;
+    &-title {
+      font-size: 16px;
+      color: #313238;
+    }
+    &-divider {
+      margin: 0 8px;
+      color: #C4C6CC;
+    }
+    &-content {
+      display: flex;
+      align-items: center;
+      font-size: 12px;
+      color: #63656E;
+      .selected-img {
+        width: 16px;
+        margin-right: 4px;
       }
     }
   }
