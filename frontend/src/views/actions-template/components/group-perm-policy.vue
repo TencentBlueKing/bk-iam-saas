@@ -1,108 +1,45 @@
 <template>
   <div class="group-perm-policy-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
     <div class="group-perm-policy-wrapper-input">
-      <bk-input
-        v-model="keyword"
+      <iam-search-select
         :placeholder="$t(`m.actionsTemplate['搜索 系统名、操作名']`)"
-        :clearable="true"
-        :right-icon="'bk-icon icon-search'"
-        @right-icon-click="handleTableSearch"
-        @enter="handleTableSearch"
-        @clear="handleClear"
+        :data="searchData"
+        :value="searchValue"
+        @on-change="handleTableSearch"
       />
     </div>
     <div v-if="!isLoading && !isEmpty" class="group-perm-policy-wrapper-content">
-      <!-- <render-perm-item
-        data-test-id="myPerm_list_permItem"
-        v-for="(item, index) in groupSystemList"
-        :key="item.id"
-        :expanded.sync="item.expanded"
-        :ext-cls="index > 0 ? 'iam-perm-ext-cls' : ''"
-        :class="index === groupSystemList.length - 1 ? 'iam-perm-ext-reset-cls' : ''"
-        :title="item.name"
-        :policy-count="item.custom_policy_count"
-        :template-count="item.template_count"
-        :group-system-list-length="groupSystemListLength"
-        @on-expanded="handleExpanded(...arguments, item)"
-        @on-set-external="handleSetExternal">
-        <div style="min-height: 60px;" v-bkloading="{ isLoading: item.loading, opacity: 1 }">
-          <div v-if="!item.loading">
-            <render-template-item
-              data-test-id="myPerm_list_templateItem"
-              :ref="`rTemplateItem${item.id}`"
-              v-for="(subItem, subIndex) in item.templates"
-              :key="subIndex"
-              :title="subItem.name"
-              :count="subItem.count"
-              :external-edit="formatOperate"
-              :external-delete="formatOperate"
-              :is-edit="subItem.isEdit"
-              :loading="subItem.editLoading"
-              :expanded.sync="subItem.expanded"
-              :mode="isEditMode ? 'edit' : 'detail'"
-              :external-header-width="externalHeaderWidth"
-              @on-delete="handleDelete(item, subItem)"
-              @on-save="handleSave(item, index, subItem, subIndex)"
-              @on-edit="handleEdit(subItem)"
-              @on-cancel="handleCancel(subItem)"
-              @on-expanded="handleTemplateExpanded(...arguments, subItem)">
-              <div style="min-height: 136px;"
-                v-bkloading="{ isLoading: subItem.loading, opacity: 1 }">
-                <render-instance-table
-                  data-test-id="myPerm_list_instanceTable"
-                  v-if="!subItem.loading"
-                  mode="detail"
-                  :is-custom="subItem.count > 0"
-                  :ref="`${index}_${subIndex}_resourceTableRef`"
-                  :list="subItem.tableData"
-                  :original-list="subItem.tableDataBackup"
-                  :authorization="authorizationData"
-                  :system-id="item.id"
-                  :group-id="groupId"
-                  :template-id="subItem.id"
-                  :is-edit="subItem.isEdit"
-                  :external-delete="formatOperate"
-                  :linear-action-list="linearActionList"
-                  :is-custom-action-button="true"
-                  @on-delete="handleSingleDelete(...arguments, item)"
-                />
-              </div>
-            </render-template-item>
-          </div>
-        </div>
-      </render-perm-item> -->
       <GroupPermTable
         mode="detail"
+        :group-id="groupId"
         :list="groupSystemList"
       />
     </div>
-    <template v-if="isEmpty">
-      <div class="empty-wrapper">
-        <ExceptionEmpty
-          :type="emptyData.type"
-          :empty-text="emptyData.text"
-          :tip-text="emptyData.tip"
-          :tip-type="emptyData.tipType"
-        />
-      </div>
-    </template>
+    <div v-if="isEmpty" class="empty-wrapper">
+      <ExceptionEmpty
+        :type="emptyData.type"
+        :empty-text="emptyData.text"
+        :tip-text="emptyData.tip"
+        :tip-type="emptyData.tipType"
+        @on-clear="handleTableClear"
+      />
+    </div>
   </div>
 </template>
+
 <script>
   import { cloneDeep } from 'lodash';
   import { mapGetters } from 'vuex';
   import { formatCodeData } from '@/common/util';
   import GroupPolicy from '@/model/group-policy';
-  // import RenderPermItem from '@/views/group/common/render-perm-item-new.vue';
-  // import RenderTemplateItem from '@/views/group/common/render-template-item.vue';
   import GroupPermTable from '@/views/actions-template/components/group-perm-table.vue';
+  import IamSearchSelect from '@/components/iam-search-select';
 
   const CUSTOM_CUSTOM_TEMPLATE_ID = 0;
 
   export default {
     components: {
-      // RenderPermItem,
-      // RenderTemplateItem,
+      IamSearchSelect,
       GroupPermTable
     },
     props: {
@@ -119,14 +56,26 @@
         keyword: '',
         groupId: '',
         isLoading: false,
+        searchValue: [],
+        searchData: [
+          {
+            id: 'system_id',
+            name: this.$t(`m.userGroup['系统名']`),
+            remoteMethod: this.handleRemoteSystem
+          },
+
+          {
+            id: 'action_id',
+            name: this.$t(`m.common['操作名']`)
+          }
+        ],
         linearActionList: [],
         groupSystemList: [],
+        groupSystemListBack: [],
         actionPermList: [],
         policyList: [],
+        searchParams: {},
         authorizationData: {},
-        removingSingle: false,
-        isPermTemplateDetail: false,
-        role: '',
         groupAttributes: {
           source_type: '',
           source_from_role: false
@@ -137,7 +86,6 @@
           tip: '',
           tipType: ''
         },
-        groupSystemListLength: 0,
         externalHeaderWidth: 0,
         readonly: false
       };
@@ -145,7 +93,15 @@
     computed: {
       ...mapGetters(['user', 'externalSystemsLayout', 'externalSystemId']),
       isEmpty () {
-        return this.groupSystemList.length < 1;
+        if (this.groupSystemList.length < 1) {
+          return true;
+        }
+        const noData = this.groupSystemList.every((item) => {
+          if (item.templates && item.templates.length > 0) {
+            item.templates.every((v) => v.tableData.length === 0);
+          }
+        });
+        return noData;
       },
       isEditMode () {
         return this.mode === 'edit';
@@ -204,8 +160,7 @@
               });
             }
           }
-          this.groupSystemList = list;
-          this.groupSystemListLength = list.length;
+          [this.groupSystemList, this.groupSystemListBack] = [list, list];
           this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
         } catch (e) {
           this.emptyData = formatCodeData(e.code, this.emptyData);
@@ -362,82 +317,13 @@
         item.count > 0 ? await this.getGroupCustomPolicy(item) : this.getGroupTemplateDetail(item);
       },
 
-      async handleSave (item, index, subItem, subIndex) {
-        const $ref = this.$refs[`${index}_${subIndex}_resourceTableRef`][0];
-        const { flag, actions } = $ref.getDataByNormal();
-        if (flag) {
-          return;
+      async handleRemoteSystem (value) {
+        const params = {};
+        if (this.externalSystemId) {
+          params.hidden = false;
         }
-        subItem.editLoading = true;
-        try {
-          await this.$store.dispatch('userGroup/updateGroupPolicy', {
-            id: this.groupId,
-            data: {
-              system_id: item.id,
-              template_id: subItem.id,
-              actions
-            }
-          });
-          if (subItem.count > 0) {
-            this.getGroupCustomPolicy(subItem);
-          } else {
-            this.getGroupTemplateDetail(subItem);
-          }
-          subItem.isEdit = false;
-        } catch (e) {
-          this.messageAdvancedError(e);
-        } finally {
-          subItem.editLoading = false;
-        }
-      },
-
-      async deleteTemplate (params = {}, item, subItem) {
-        subItem.deleteLoading = true;
-        try {
-          await this.$store.dispatch('permTemplate/deleteTemplateMember', params);
-          let filterLen = item.templates.filter(item => item.id !== CUSTOM_CUSTOM_TEMPLATE_ID).length;
-          const isExistCustom = item.templates.some(item => item.id === CUSTOM_CUSTOM_TEMPLATE_ID);
-          if (filterLen > 0) {
-            --filterLen;
-            --item.template_count;
-          }
-          if (filterLen > 0 || isExistCustom) {
-            this.getGroupTemplateList(item);
-          }
-          if (!filterLen && !isExistCustom) {
-            this.handleInit();
-          }
-        } catch (e) {
-          this.messageAdvancedError(e);
-        } finally {
-          subItem.deleteLoading = false;
-        }
-      },
-
-      async deleteGroupPolicy (params = {}, item, subItem, flag) {
-        if (flag) {
-          subItem.deleteLoading = true;
-        }
-        try {
-          await this.$store.dispatch('userGroup/deleteGroupPolicy', params);
-          const isExistTemplate = item.templates.some(item => item.id !== CUSTOM_CUSTOM_TEMPLATE_ID);
-          if (item.custom_policy_count > 0 && this.removingSingle) {
-            --item.custom_policy_count;
-          } else {
-            item.custom_policy_count = 0;
-          }
-          this.policyList = subItem;
-          if (isExistTemplate) {
-            this.getGroupTemplateList(item);
-          }
-          this.handleInit();
-        } catch (e) {
-          this.messageAdvancedError(e);
-        } finally {
-          if (flag) {
-            subItem.deleteLoading = false;
-          }
-        }
+        const { data } = await this.$store.dispatch('system/getSystems', params);
+        return data.map(({ id, name }) => ({ id, name })).filter(item => item.name.indexOf(value) > -1);
       },
       
       handleActionLinearData () {
@@ -454,50 +340,38 @@
             });
           });
         });
-
         this.linearActionList = cloneDeep(linearActions);
       },
 
-      handleDelete (item, subItem) {
-        this.removingSingle = false;
-        if (subItem.id > 0) {
-          this.deleteTemplate({
-            id: subItem.id,
-            data: {
-              members: [{
-                type: 'group',
-                id: this.groupId
-              }]
+      handleTableSearch (payload, result) {
+        this.searchParams = payload;
+        this.searchValue = result;
+        let list = cloneDeep(this.groupSystemListBack);
+        if (payload.hasOwnProperty('system_id')) {
+          list = list.filter((item) => item.id.indexOf(payload.system_id) > -1);
+        }
+        if (payload.hasOwnProperty('action_id')) {
+          list.forEach((item) => {
+            if (item.templates && item.templates.length > 0) {
+              item.templates.forEach((v) => {
+                v.tableData = v.tableData.filter((sub) => sub.name.indexOf(payload.action_id) > -1);
+              });
             }
-          }, item, subItem);
+          });
+        }
+        console.log(list);
+        if (!result.length) {
+          this.handleTableClear();
         } else {
-          this.deleteGroupPolicy({
-            id: this.groupId,
-            data: {
-              system_id: item.id,
-              ids: subItem.tableData.map(item => item.policy_id).join(',')
-            }
-          }, item, subItem, true);
+          this.groupSystemList = cloneDeep(list);
+          this.emptyData = formatCodeData(0, { ...this.emptyData, ...{ tipType: 'search' } }, list.length === 0);
         }
       },
 
-      handleSingleDelete (data, item) {
-        this.removingSingle = true;
-        this.deleteGroupPolicy({
-          id: this.groupId,
-          data: {
-            system_id: item.id,
-            ids: data.ids ? data.ids.join(',') : data.policy_id
-          }
-        }, item, {}, false);
-      },
-
-      handleTableSearch () {},
-
-      handleClear () {},
-      
-      handleEmptyRefresh () {
-        this.handleInit();
+      handleTableClear () {
+        this.emptyData.tipType = '';
+        this.searchValue = [];
+        this.groupSystemList = cloneDeep(this.groupSystemListBack);
       }
     }
   };
@@ -505,9 +379,6 @@
 
 <style lang="postcss" scoped>
 .group-perm-policy-wrapper {
-  &-input {
-
-  }
   &-content {
     margin-top: 18px;
     max-height: calc(100vh - 323px);

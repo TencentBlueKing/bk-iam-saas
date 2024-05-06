@@ -222,6 +222,17 @@
         :default-checked-actions="defaultCheckedActions"
       />
     </div>
+    <!-- 查看组权限实例详情 -->
+    <bk-sideslider
+      :is-show.sync="instanceDetailSlider.isShow"
+      :title="instanceDetailSlider.title"
+      :width="instanceDetailSlider.width"
+      :quick-close="true"
+      @animation-end="handleAnimationEnd">
+      <div slot="content">
+        <component :is="'RenderDetail'" :data="instanceDetailSlider.previewData" />
+      </div>
+    </bk-sideslider>
   </div>
 </template>
 
@@ -233,14 +244,16 @@
   import { formatCodeData, guid } from '@/common/util';
   import { leavePageConfirm } from '@/common/leave-page-confirm';
   import { addPreUpdateInfo } from '../common/actions';
+  import RenderDetail from '@/views/group/common/render-detail';
   import RenderActionTag from '@/components/common-action';
   import RenderAction from './render-action';
   import RenderSyncGroup from './difference';
 
   export default {
     components: {
-      RenderActionTag,
+      RenderDetail,
       RenderAction,
+      RenderActionTag,
       RenderSyncGroup
     },
     props: {
@@ -257,6 +270,7 @@
       return {
         saveLoading: false,
         nextLoading: false,
+        isShowDetailSlider: false,
         isShowNameError: false,
         isShowActionError: false,
         isSystemListLoading: false,
@@ -286,6 +300,12 @@
           description: '',
           system_id: '',
           system_name: ''
+        },
+        instanceDetailSlider: {
+          title: '',
+          isShow: false,
+          width: 960,
+          previewData: []
         },
         emptyActionData: {
           type: 'empty',
@@ -384,6 +404,7 @@
       if (this.$route.query.step) {
         this.handleSetCurActionStep(step);
       }
+      this.handleGetBusQueryData();
       this.handleGetResizeHeight();
       window.addEventListener('resize', this.handleGetResizeHeight);
     },
@@ -1032,13 +1053,11 @@
       },
 
       handleGetBusQueryData () {
-        bus.$on('on-update-renewal-notice', async ({ isShowRenewalNotice }) => {
-          await this.fetchSuperNoticeConfig(false, true);
-          this.noticeForm.enable = isShowRenewalNotice || false;
-          await this.handleSubmit('status');
+        bus.$on('on-drawer-side', (payload) => {
+          this.instanceDetailSlider = Object.assign(this.instanceDetailSlider, payload);
         });
         this.$once('hook:beforeDestroy', () => {
-          bus.$off('on-update-renewal-notice');
+          bus.$off('on-drawer-side');
         });
       },
 
@@ -1057,6 +1076,10 @@
             return !(offsetWidth > 134);
           }
         });
+      },
+
+      handleAnimationEnd () {
+        this.instanceDetailSlider = Object.assign(this.instanceDetailSlider, { isShow: false, sideSliderDetailTitle: '', previewData: [] });
       }
     }
   };
