@@ -8,9 +8,10 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from aenum import auto, skip
+from aenum import LowerStrEnum, auto, skip
 
 from backend.api.constants import BaseAPIEnum
+from backend.util.enum import ChoicesEnum
 
 
 class AdminAPIEnum(BaseAPIEnum):
@@ -18,8 +19,18 @@ class AdminAPIEnum(BaseAPIEnum):
 
     # 用户组
     GROUP_LIST = auto()
+    GROUP_BATCH_CREATE = auto()
+    GROUP_UPDATE = auto()
+    GROUP_DELETE = auto()
+
     # 用户组成员
     GROUP_MEMBER_LIST = auto()
+
+    # 用户组权限
+    GROUP_POLICY_GRANT = auto()
+
+    # 模板
+    TEMPLATE_CREATE = auto()
 
     # Subject
     SUBJECT_JOINED_GROUP_LIST = auto()
@@ -27,6 +38,7 @@ class AdminAPIEnum(BaseAPIEnum):
 
     # System
     SYSTEM_LIST = auto()
+    SYSTEM_PROVIDER_CONFIG_LIST = auto()
 
     # 角色
     ROLE_SUPER_MANAGER_MEMBER_LIST = auto()
@@ -47,8 +59,14 @@ class AdminAPIEnum(BaseAPIEnum):
     _choices_labels = skip(
         (
             (SYSTEM_LIST, "获取系统列表"),
+            (SYSTEM_PROVIDER_CONFIG_LIST, "获取系统回调信息"),
             (GROUP_LIST, "获取用户组列表"),
+            (GROUP_BATCH_CREATE, "批量创建用户组"),
+            (GROUP_UPDATE, "更新用户组"),
+            (GROUP_DELETE, "删除用户组"),
             (GROUP_MEMBER_LIST, "获取用户组成员列表"),
+            (GROUP_POLICY_GRANT, "授权用户组"),
+            (TEMPLATE_CREATE, "新建模板"),
             (SUBJECT_JOINED_GROUP_LIST, "获取Subject加入的用户组列表"),
             (SUBJECT_ROLE_LIST, "获取Subject角色列表"),
             (ROLE_SUPER_MANAGER_MEMBER_LIST, "获取超级管理员成员列表"),
@@ -59,3 +77,9 @@ class AdminAPIEnum(BaseAPIEnum):
             (SUBJECT_PERMISSION_EXISTS, "权限是否存在"),
         )
     )
+
+
+class VerifyApiParamLocationEnum(ChoicesEnum, LowerStrEnum):
+    GROUP_IN_PATH = auto()
+
+    _choices_labels = skip(((GROUP_IN_PATH, "在URL里的group id参数"),))

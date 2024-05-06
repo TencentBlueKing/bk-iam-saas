@@ -209,6 +209,18 @@ export default {
          */
     getSubjectScopeCheck ({ commit, state, dispatch }, config) {
       return http.post(`${AJAX_URL_PREFIX}/roles/subject_scope_check/?${+new Date()}`, config);
+    },
+    /**
+     * 删除同步记录
+     *
+     * @param {Function} commit store commit mutation handler
+     * @param {Object} state store state
+     * @param {Function} dispatch store dispatch action handler
+     * @param {Object} params 请求参数
+     * @return {Promise} promise 对象
+     */
+    delRecordsLog ({ commit, state, dispatch }, id, config) {
+      return http.delete(`${AJAX_URL_PREFIX}/organizations/sync_records/${id}/`, config);
     }
   }
 };

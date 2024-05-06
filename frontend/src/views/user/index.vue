@@ -608,7 +608,7 @@
           const res = await this.$store.dispatch('organization/organizationsSyncTask');
           if (res.result) {
             bus.$emit('updatePoll');
-            window.localStorage.setItem('isPoll', true);
+            window.localStorage.setItem('isPoll', false);
           }
         } catch (e) {
           this.$store.commit('updateSync', false);
