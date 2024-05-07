@@ -729,3 +729,14 @@ export function getManagerMenuPerm (payload) {
   }
   return '';
 }
+
+// 获取特定字符之间的数据
+export function getDataBetweenBraces (str, reg) {
+  const regex = reg;
+  let match;
+  const values = [];
+  while ((match = regex.exec(str))) {
+    values.push(match[1]);
+  }
+  return values;
+}

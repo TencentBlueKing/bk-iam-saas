@@ -5,8 +5,9 @@
         'renewal-notice-content',
         { 'renewal-notice-content-lang': !curLanguageIsCn },
         { 'show-notice-alert': showNoticeAlert }
-      ]">
-      <template v-if="noticeForm.enable">
+      ]"
+    >
+      <template v-if="!isLoading && noticeForm.enable">
         <div class="notice-methods">
           <div class="notice-item-label mb8">
             {{ $t(`m.renewalNotice['通知方式']`) }}
@@ -35,7 +36,7 @@
               </div>
               <div class="notice-temp">
                 <Icon type="setting" class="notice-temp-icon" />
-                <div class="notice-temp-label" @click.stop="handleShowNoticeTemp(item)">
+                <div class="notice-temp-label" @click.stop="handleShowNoticeTemp(item)" style="z-index: 9999">
                   {{ $t(`m.renewalNotice['模板']`) }}
                 </div>
               </div>
@@ -154,7 +155,7 @@
           </bk-button>
         </div>
       </template>
-      <div v-else class="close-renewal-notice">
+      <div v-if="!isLoading && !noticeForm.enable" class="close-renewal-notice">
         <ExceptionEmpty
           :type="emptyData.type"
           :empty-text="emptyData.text"
@@ -169,6 +170,7 @@
       :title="noticeTempSlider.title"
       :width="noticeTempSlider.width"
       :quick-close="true"
+      :show-mask="false"
       @animation-end="handleAnimationEnd"
     >
       <div slot="header" class="notice-temp-header">
@@ -189,6 +191,7 @@
 <script>
   import { cloneDeep } from 'lodash';
   import { bus } from '@/common/bus';
+  import { SEND_DAYS_LIST } from '@/common/constants';
   import MailNoticeSlider from '@/views/renewal-notice/components/mail-notice-slider.vue';
   import RtxNoticeSlider from '@/views/renewal-notice/components/rtx-notice-slider.vue';
   export default {
@@ -225,36 +228,7 @@
           //   selected_icon: require('@/images/sms.svg')
           // }
         ],
-        sendDaysList: [
-          {
-            label: '周一',
-            value: 'monday'
-          },
-          {
-            label: '周二',
-            value: 'tuesday'
-          },
-          {
-            label: '周三',
-            value: 'wednesday'
-          },
-          {
-            label: '周四',
-            value: 'thursday'
-          },
-          {
-            label: '周五',
-            value: 'friday'
-          },
-          {
-            label: '周六',
-            value: 'saturday'
-          },
-          {
-            label: '周日',
-            value: 'sunday'
-          }
-        ],
+        sendDaysList: SEND_DAYS_LIST,
         noticeForm: {
           notification_types: [],
           send_days: [],
@@ -277,6 +251,7 @@
           tip: this.$t(`m.renewalNotice['请在顶部开启相关功能']`),
           tipType: 'noPerm'
         },
+        isLoading: true,
         isMethodsEmpty: false,
         isScopeEmpty: false,
         isDayEmpty: false,
@@ -303,11 +278,12 @@
     },
     methods: {
       async fetchSuperNoticeConfig (isReset = false, isStatus = false) {
+        this.isLoading = true;
         try {
           const { data } = await this.$store.dispatch('renewalNotice/getSuperNoticeConfig');
           if (data) {
             if (!data.hasOwnProperty('enable')) {
-              data.enable = false;
+              data.enable = true;
             }
             // 如果是重置操作，只需赋值给重置变量
             if (isReset) {
@@ -322,6 +298,8 @@
           }
         } catch (e) {
           this.messageAdvancedError(e);
+        } finally {
+          this.isLoading = false;
         }
       },
 
