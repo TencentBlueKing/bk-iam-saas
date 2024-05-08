@@ -391,14 +391,18 @@
               const userTempRef = this.$refs.userTextareaConfirm;
               if (userTempRef && userTempRef.$refs) {
                 userTempRef.$refs.popover.showHandler();
-                bus.$emit('on-change-temp-zIndex', { zIndex: 99 });
+                if (window.innerWidth < 1600) {
+                  bus.$emit('on-change-temp-zIndex', { zIndex: 99 });
+                }
               }
             },
             manager: () => {
               const managerTempRef = this.$refs.managerTextareaConfirm;
               if (managerTempRef && managerTempRef.$refs) {
                 managerTempRef.$refs.popover.showHandler();
-                bus.$emit('on-change-temp-zIndex', { zIndex: 99 });
+                if (window.innerWidth < 1600) {
+                  bus.$emit('on-change-temp-zIndex', { zIndex: 99 });
+                }
               }
             }
           };
