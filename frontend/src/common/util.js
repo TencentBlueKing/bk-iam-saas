@@ -24,6 +24,9 @@
  * IN THE SOFTWARE.
 */
 
+import il8n from '@/language';
+import { messageWarn, messageSuccess } from '@/common/bkmagic';
+
 /**
  * 函数柯里化
  *
@@ -732,11 +735,33 @@ export function getManagerMenuPerm (payload) {
 
 // 获取特定字符之间的数据
 export function getDataBetweenBraces (str, reg) {
-  const regex = reg;
-  let match;
+  let match = [];
   const values = [];
-  while ((match = regex.exec(str))) {
+  while ((match = reg.exec(str))) {
     values.push(match[1]);
   }
   return values;
+}
+
+// 复制传入的字符集
+export function getCopyValue (value) {
+  if (!value) {
+    messageWarn(il8n('common', '暂无可复制数据'));
+    return;
+  }
+  const el = document.createElement('textarea');
+  el.value = value;
+  el.setAttribute('readonly', '');
+  el.style.position = 'absolute';
+  el.style.left = '-9999px';
+  document.body.appendChild(el);
+  const selected = document.getSelection().rangeCount > 0 ? document.getSelection().getRangeAt(0) : false;
+  el.select();
+  document.execCommand('copy');
+  document.body.removeChild(el);
+  if (selected) {
+    document.getSelection().removeAllRanges();
+    document.getSelection().addRange(selected);
+  }
+  messageSuccess(il8n('common', '复制成功'));
 }

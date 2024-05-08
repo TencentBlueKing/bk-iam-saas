@@ -36,13 +36,15 @@
               </div>
               <div class="notice-temp">
                 <Icon type="setting" class="notice-temp-icon" />
-                <div class="notice-temp-label" @click.stop="handleShowNoticeTemp(item)" style="z-index: 9999">
+                <div class="notice-temp-label" @click.stop="handleShowNoticeTemp(item)" :style="tempSetStyle">
                   {{ $t(`m.renewalNotice['模板']`) }}
                 </div>
               </div>
             </div>
           </div>
-          <div v-if="isMethodsEmpty" class="notice-empty-error">{{ $t(`m.renewalNotice['通知方式为必填项']`) }}</div>
+          <div v-if="isMethodsEmpty" class="notice-empty-error methods-empty-error">
+            {{ $t(`m.renewalNotice['通知方式为必填项']`) }}
+          </div>
         </div>
         <div class="notice-time">
           <div class="notice-item-label mb8">
@@ -171,6 +173,7 @@
       :width="noticeTempSlider.width"
       :quick-close="true"
       :show-mask="false"
+      elx-cls="notice-temp-slider"
       @animation-end="handleAnimationEnd"
     >
       <div slot="header" class="notice-temp-header">
@@ -242,7 +245,7 @@
           title: '',
           slideName: '',
           isShow: false,
-          width: 960,
+          width: 640,
           detailData: {}
         },
         emptyData: {
@@ -257,7 +260,10 @@
         isDayEmpty: false,
         isSendTimeEmpty: false,
         submitLoading: false,
-        scopeEmptyError: ''
+        scopeEmptyError: '',
+        tempSetStyle: {
+          zIndex: 99999
+        }
       };
     },
     computed: {
@@ -385,7 +391,6 @@
       },
 
       handleShowNoticeTemp (payload) {
-        console.log(payload.value);
         const typeMap = {
           rtx: () => {
             this.noticeTempSlider = Object.assign(this.noticeTempSlider, { slideName: 'RtxNoticeSlider', isShow: true, detailData: payload });
@@ -402,7 +407,7 @@
           title: '',
           slideName: '',
           isShow: false,
-          width: 960,
+          width: 640,
           detailData: {}
         };
       },
@@ -443,8 +448,12 @@
           this.noticeForm.enable = isShowRenewalNotice || false;
           await this.handleSubmit('status');
         });
+        bus.$on('on-change-temp-zIndex', (payload) => {
+          this.tempSetStyle = payload;
+        });
         this.$once('hook:beforeDestroy', () => {
           bus.$off('on-update-renewal-notice');
+          bus.$off('on-change-temp-zIndex');
         });
       }
     }
@@ -519,6 +528,7 @@
           .notice-temp {
             display: flex;
             align-items: center;
+            margin-top: 2px;
             line-height: 20px;
             color: #3a84ff;
             &-icon {
@@ -530,6 +540,12 @@
             color: #313238;
             background-color: #f0f5ff;
             border: 1px solid #3a84ff;
+            .notice-type-item {
+              line-height: 38px;
+              &:hover {
+                background-color: #E1ECFF;
+              }
+            }
             .active-icon {
               display: none;
             }
@@ -679,6 +695,9 @@
       color: #ff5656;
       font-size: 12px;
       margin-top: 4px;
+      &.methods-empty-error {
+        margin-top: 24px;
+      }
     }
     .renewal-notice-footer {
       width: 100%;
@@ -756,6 +775,13 @@
         width: 16px;
         margin-right: 4px;
       }
+    }
+  }
+}
+/deep/ .notice-temp-slider {
+  .bk-sideslider-content {
+    .notice-temp-content {
+      max-height: calc(100vh - 550px);
     }
   }
 }

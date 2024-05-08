@@ -301,7 +301,10 @@ export const m = {
         '暂无可清空数据': 'No data clear',
         '已选父级': 'Selected parent level',
         '测试': 'Test',
-        '恢复默认': 'Default'
+        '恢复默认': 'Default',
+        '点击复制': 'Click to copy',
+        '复制成功': 'Copy successful',
+        '暂无可复制数据': 'There is currently no replicable data'
     },
     // 校验
     verify: {
@@ -1565,10 +1568,15 @@ export const m = {
         '模板': 'Template',
         '通知模板': 'Notice template',
         '模板内容': 'Template content',
+        '邮件主题': 'Email subject',
         '发送对象': 'Sending object',
         '续期用户': 'Renewal user',
         '空间管理员': 'Space manager',
+        '内置变量': 'Built in variables',
+        '变量名': 'Variable name',
+        '变量描述': 'Variable description',
         '恢复后，模板将会回到系统默认设定': 'After restoration, the template will return to the system default settings',
+        '请输入邮件主题': 'Please enter email subject',
         '请输入接收测试通知的用户（请确保账号正确）': 'Please enter the user who will receive the test notification (please ensure that the account is correct)',
         '测试通知已发送成功，请查收。': 'The test notification has been successfully sent, please check it.'
     }
