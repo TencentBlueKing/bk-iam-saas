@@ -168,13 +168,13 @@
     </div>
 
     <bk-sideslider
-      :is-show.sync="noticeTempSlider.isShow"
+      :is-show="noticeTempSlider.isShow"
       :title="noticeTempSlider.title"
       :width="noticeTempSlider.width"
       :quick-close="true"
       :show-mask="false"
-      elx-cls="notice-temp-slider"
-      @animation-end="handleAnimationEnd"
+      class="notice-temp-slider"
+      @update:isShow="handleCancel('leave')"
     >
       <div slot="header" class="notice-temp-header">
         <div class="notice-temp-header-title">{{ $t(`m.renewalNotice['通知模板']`) }}</div>
@@ -186,10 +186,15 @@
       </div>
       <div slot="content" class="notice-temp-content">
         <component
+          ref="noticeTempRef"
           :is="noticeTempSlider.slideName"
           :active="noticeTempSlider.active"
           :detail-data="noticeTempSlider.detailData"
         />
+      </div>
+      <div slot="footer" class="notice-temp-footer">
+        <bk-button theme="primary" :loading="saveLoading" @click="handleSave">{{ $t(`m.common['保存']`) }}</bk-button>
+        <bk-button theme="default" @click="handleCancel('cancel')">{{ $t(`m.common['取消']`) }}</bk-button>
       </div>
     </bk-sideslider>
   </div>
@@ -199,6 +204,7 @@
   import { cloneDeep } from 'lodash';
   import { bus } from '@/common/bus';
   import { SEND_DAYS_LIST } from '@/common/constants';
+  import { leaveConfirm } from '@/common/leave-confirm';
   import NoticeTempSlider from '@/views/renewal-notice/components/notice-temp-slider.vue';
   export default {
     inject: ['showNoticeAlert'],
@@ -263,6 +269,7 @@
         isDayEmpty: false,
         isSendTimeEmpty: false,
         submitLoading: false,
+        saveLoading: false,
         scopeEmptyError: '',
         tempSetStyle: {
           zIndex: 99999
@@ -406,15 +413,56 @@
         return typeMap[value]();
       },
 
-      handleAnimationEnd () {
-        this.noticeTempSlider = {
-          title: '',
-          slideName: '',
-          active: '',
-          isShow: false,
-          width: 640,
-          detailData: {}
+      handleSave () {
+        const { noticeTempData } = this.$refs.noticeTempRef;
+        const { active } = this.noticeTempSlider;
+        const isPublicError = !noticeTempData.user_temp_html || !noticeTempData.manager_temp_html;
+        const isMailError = !noticeTempData.user_title || !noticeTempData.manager_title;
+        let isEmpty = isPublicError;
+        if (!noticeTempData.user_temp_html) {
+          this.$refs.noticeTempRef.isShowUserTempError = true;
+        }
+        if (!noticeTempData.manager_temp_html) {
+          this.$refs.noticeTempRef.isShowManagerTempError = true;
+        }
+        if (['mail'].includes(active)) {
+          if (!noticeTempData.user_title) {
+            this.$refs.noticeTempRef.isShowUserTitleError = true;
+          }
+          if (!noticeTempData.manager_title) {
+            this.$refs.noticeTempRef.isShowManagerTitleError = true;
+          }
+          isEmpty = isPublicError || isMailError;
+        }
+        console.log(isEmpty);
+        if (isEmpty) {
+          return;
+        }
+        this.saveLoading = true;
+      },
+
+      handleCancel (payload) {
+        const operateMap = {
+          leave: () => {
+            const { noticeTempData, noticeTempDataBack } = this.$refs.noticeTempRef;
+            window.changeAlert = JSON.stringify(noticeTempData) !== JSON.stringify(noticeTempDataBack);
+            let cancelHandler = Promise.resolve();
+            if (window.changeAlert) {
+              this.tempSetStyle = Object.assign(this.tempSetStyle, { zIndex: 1 });
+              cancelHandler = leaveConfirm();
+            }
+            cancelHandler.then(() => {
+              this.tempSetStyle = Object.assign(this.tempSetStyle, { zIndex: 9999 });
+              this.resetData();
+              this.$emit('update:isShow', false);
+            }, _ => _);
+          },
+          cancel: () => {
+            this.resetData();
+            this.$emit('update:isShow', false);
+          }
         };
+        return operateMap[payload]();
       },
 
       handleReset () {
@@ -460,6 +508,17 @@
           bus.$off('on-update-renewal-notice');
           bus.$off('on-change-temp-zIndex');
         });
+      },
+
+      resetData () {
+        this.noticeTempSlider = {
+          title: '',
+          slideName: '',
+          active: '',
+          isShow: false,
+          width: 640,
+          detailData: {}
+        };
       }
     }
   };
@@ -784,9 +843,17 @@
   }
 }
 /deep/ .notice-temp-slider {
-  .bk-sideslider-content {
-    .notice-temp-content {
-      max-height: calc(100vh - 550px);
+  .bk-sideslider-footer {
+    background-color: #ffffff !important;
+    font-size: 0;
+    .notice-temp-footer {
+      padding: 0 24px;
+      .bk-button {
+        margin-right: 8px;
+        &:nth-child(1) {
+          min-width: 88px;
+        }
+      }
     }
   }
 }

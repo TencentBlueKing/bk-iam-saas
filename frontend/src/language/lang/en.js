@@ -1577,8 +1577,11 @@ export const m = {
         '变量描述': 'Variable description',
         '恢复后，模板将会回到系统默认设定': 'After restoration, the template will return to the system default settings',
         '请输入邮件主题': 'Please enter email subject',
+        '请输入模板内容': 'Please enter template content',
         '请输入接收测试通知的用户（请确保账号正确）': 'Please enter the user who will receive the test notification (please ensure that the account is correct)',
-        '测试通知已发送成功，请查收。': 'The test notification has been successfully sent, please check it.'
+        '测试通知已发送成功，请查收。': 'The test notification has been successfully sent, please check it.',
+        '邮件主题为必填项': 'Email subject is required',
+        '模板内容为必填项': 'Template content is required'
     }
 }
 export default {
