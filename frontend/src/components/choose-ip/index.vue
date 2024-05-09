@@ -369,12 +369,20 @@
       renderTopologyData () {
         const hasNode = {};
         const treeData = [...this.treeData];
+        console.log(treeData, '去重前的数据');
         const list = treeData.reduce((curr, next) => {
-          // eslint-disable-next-line no-unused-expressions
-          hasNode[`${next.name}&${next.id}`] ? '' : hasNode[`${next.name}&${next.id}`] = true && curr.push(next);
-          // hasNode[next.name] ? '' : hasNode[next.name] = true && curr.push(next);
+          if (next.level > 0 && next.parentChain && next.parentChain.length > 0) {
+            const chainContent = next.parentChain.map((v) => `${v.id}&${v.name}&${v.type}`).join();
+            // eslint-disable-next-line no-unused-expressions
+            hasNode[`${next.id}&${next.name}&${chainContent}`] ? ''
+            : hasNode[`${next.id}&${next.name}&${chainContent}`] = true && curr.push(next);
+          } else {
+            // eslint-disable-next-line no-unused-expressions
+            hasNode[`${next.name}&${next.id}`] ? '' : hasNode[`${next.name}&${next.id}`] = true && curr.push(next);
+          }
           return curr;
         }, []);
+        console.log(list, '去重后的数据');
         return list;
       },
       getSystemParams () {
@@ -1141,7 +1149,6 @@
           }, []);
         }
         params.ancestors.push(...parentData, ancestorItem);
-
         try {
           const { code, data } = await this.$store.dispatch('permApply/getResources', params);
           this.emptyTreeData = formatCodeData(code, this.emptyData, data.results.length === 0);
@@ -1262,7 +1269,6 @@
             this.treeData.splice((index + childNodes.length + 1), 0, loadData);
             node.children.push(new Node(loadItem, curLevel, false, 'load'));
           }
-
           const searchItem = {
             ...SEARCH_ITEM,
             totalPage: totalPage,
@@ -1272,7 +1278,6 @@
             visiable: flag,
             placeholder: `${this.$t(`m.common['搜索']`)} ${placeholder}`
           };
-
           const searchData = new Node(searchItem, curLevel, false, 'search');
           // 保存当前页条数用于自定义分页
           this.curTableData = [...childNodes];
@@ -1284,23 +1289,31 @@
           }
           this.removeAsyncNode();
         } catch (e) {
-          console.error(e);
-          const { code } = e;
           this.removeAsyncNode();
-          this.emptyTreeData = formatCodeData(code, this.emptyData);
+          this.emptyTreeData = formatCodeData(e.code, this.emptyData);
           this.messageAdvancedError(e);
         }
       },
 
       removeAsyncNode () {
         // 需要过滤掉name为空以及反复切换选中造成的重复数据的节点
-        const obj = {};
-        const treeList = _.cloneDeep(this.treeData.filter(item => item.name));
-        this.treeData = treeList.reduce((pre, item) => {
-          // eslint-disable-next-line no-unused-expressions
-          obj[`${item.id}${item.name}`] ? '' : obj[`${item.id}${item.name}`] = true && pre.push(item);
-          return pre;
+        const hasNode = {};
+        const treeList = _.cloneDeep(this.treeData.filter(item => item.name !== ''));
+        console.log(treeList, 'remove前');
+        this.treeData = treeList.reduce((curr, next) => {
+          if (next.level > 0 && next.parentChain && next.parentChain.length > 0) {
+            const chainContent = next.parentChain.map((v) => `${v.id}&${v.name}&${v.type}`).join();
+            console.log(chainContent, '父级数据');
+            // eslint-disable-next-line no-unused-expressions
+            hasNode[`${next.id}&${next.name}&${chainContent}`] ? ''
+            : hasNode[`${next.id}&${next.name}&${chainContent}`] = true && curr.push(next);
+          } else {
+            // eslint-disable-next-line no-unused-expressions
+            hasNode[`${next.name}&${next.id}`] ? '' : hasNode[`${next.name}&${next.id}`] = true && curr.push(next);
+          }
+          return curr;
         }, []);
+        console.log(this.treeData, 'remove前后');
         const index = this.treeData.findIndex(item => item.type === 'async');
         if (index > -1) this.treeData.splice(index, 1);
       },
