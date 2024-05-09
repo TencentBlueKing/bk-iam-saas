@@ -462,7 +462,7 @@
 
       handleOnExpanded (index, expanded) {
         window.changeAlert = true;
-        if (!expanded && this.treeData[index + 2].type === 'search-empty') {
+        if (!expanded && this.treeData[index + 2] && this.treeData[index + 2].type === 'search-empty') {
           this.treeData.splice(index + 2, 1);
         }
       },
