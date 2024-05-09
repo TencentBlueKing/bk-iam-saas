@@ -374,7 +374,8 @@
           if (next.level > 0 && next.parentChain && next.parentChain.length > 0) {
             const chainContent = next.parentChain.map((v) => `${v.id}&${v.name}&${v.type}`).join();
             // eslint-disable-next-line no-unused-expressions
-            hasNode[`${next.id}${next.name}${chainContent}`] ? '' : hasNode[`${next.id}${next.name}${chainContent}`] = true && curr.push(next);
+            hasNode[`${next.id}&${next.name}&${chainContent}`] ? ''
+            : hasNode[`${next.id}&${next.name}&${chainContent}`] = true && curr.push(next);
           } else {
             // eslint-disable-next-line no-unused-expressions
             hasNode[`${next.name}&${next.id}`] ? '' : hasNode[`${next.name}&${next.id}`] = true && curr.push(next);
@@ -1302,8 +1303,10 @@
         this.treeData = treeList.reduce((curr, next) => {
           if (next.level > 0 && next.parentChain && next.parentChain.length > 0) {
             const chainContent = next.parentChain.map((v) => `${v.id}&${v.name}&${v.type}`).join();
+            console.log(chainContent, '父级数据');
             // eslint-disable-next-line no-unused-expressions
-            hasNode[`${next.id}${next.name}${chainContent}`] ? '' : hasNode[`${next.id}${next.name}${chainContent}`] = true && curr.push(next);
+            hasNode[`${next.id}&${next.name}&${chainContent}`] ? ''
+            : hasNode[`${next.id}&${next.name}&${chainContent}`] = true && curr.push(next);
           } else {
             // eslint-disable-next-line no-unused-expressions
             hasNode[`${next.name}&${next.id}`] ? '' : hasNode[`${next.name}&${next.id}`] = true && curr.push(next);
