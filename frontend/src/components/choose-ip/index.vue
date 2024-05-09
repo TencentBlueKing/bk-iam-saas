@@ -369,7 +369,6 @@
       renderTopologyData () {
         const hasNode = {};
         const treeData = [...this.treeData];
-        console.log(treeData, '去重前的数据');
         const list = treeData.reduce((curr, next) => {
           if (next.level > 0 && next.parentChain && next.parentChain.length > 0) {
             const chainContent = next.parentChain.map((v) => `${v.id}&${v.name}&${v.type}`).join();
@@ -382,7 +381,6 @@
           }
           return curr;
         }, []);
-        console.log(list, '去重后的数据');
         return list;
       },
       getSystemParams () {
@@ -462,7 +460,8 @@
 
       handleOnExpanded (index, expanded) {
         window.changeAlert = true;
-        if (!expanded && this.treeData[index + 2] && this.treeData[index + 2].type === 'search-empty') {
+        const searchEmptyData = this.treeData[index + 2];
+        if (!expanded && searchEmptyData && searchEmptyData.type === 'search-empty') {
           this.treeData.splice(index + 2, 1);
         }
       },
@@ -1299,11 +1298,9 @@
         // 需要过滤掉name为空以及反复切换选中造成的重复数据的节点
         const hasNode = {};
         const treeList = _.cloneDeep(this.treeData.filter(item => item.name !== ''));
-        console.log(treeList, 'remove前');
         this.treeData = treeList.reduce((curr, next) => {
           if (next.level > 0 && next.parentChain && next.parentChain.length > 0) {
             const chainContent = next.parentChain.map((v) => `${v.id}&${v.name}&${v.type}`).join();
-            console.log(chainContent, '父级数据');
             // eslint-disable-next-line no-unused-expressions
             hasNode[`${next.id}&${next.name}&${chainContent}`] ? ''
             : hasNode[`${next.id}&${next.name}&${chainContent}`] = true && curr.push(next);
@@ -1313,7 +1310,6 @@
           }
           return curr;
         }, []);
-        console.log(this.treeData, 'remove前后');
         const index = this.treeData.findIndex(item => item.type === 'async');
         if (index > -1) this.treeData.splice(index, 1);
       },
