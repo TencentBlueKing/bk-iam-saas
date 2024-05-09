@@ -185,7 +185,11 @@
         </div>
       </div>
       <div slot="content" class="notice-temp-content">
-        <component :is="noticeTempSlider.slideName" :detail-data="noticeTempSlider.detailData" />
+        <component
+          :is="noticeTempSlider.slideName"
+          :active="noticeTempSlider.active"
+          :detail-data="noticeTempSlider.detailData"
+        />
       </div>
     </bk-sideslider>
   </div>
@@ -195,13 +199,11 @@
   import { cloneDeep } from 'lodash';
   import { bus } from '@/common/bus';
   import { SEND_DAYS_LIST } from '@/common/constants';
-  import MailNoticeSlider from '@/views/renewal-notice/components/mail-notice-slider.vue';
-  import RtxNoticeSlider from '@/views/renewal-notice/components/rtx-notice-slider.vue';
+  import NoticeTempSlider from '@/views/renewal-notice/components/notice-temp-slider.vue';
   export default {
     inject: ['showNoticeAlert'],
     components: {
-      MailNoticeSlider,
-      RtxNoticeSlider
+      NoticeTempSlider
     },
     data () {
       return {
@@ -244,6 +246,7 @@
         noticeTempSlider: {
           title: '',
           slideName: '',
+          active: '',
           isShow: false,
           width: 640,
           detailData: {}
@@ -391,21 +394,23 @@
       },
 
       handleShowNoticeTemp (payload) {
+        const { value } = payload;
         const typeMap = {
           rtx: () => {
-            this.noticeTempSlider = Object.assign(this.noticeTempSlider, { slideName: 'RtxNoticeSlider', isShow: true, detailData: payload });
+            this.noticeTempSlider = Object.assign(this.noticeTempSlider, { slideName: 'NoticeTempSlider', active: value, isShow: true, detailData: payload });
           },
           mail: () => {
-            this.noticeTempSlider = Object.assign(this.noticeTempSlider, { slideName: 'MailNoticeSlider', isShow: true, detailData: payload });
+            this.noticeTempSlider = Object.assign(this.noticeTempSlider, { slideName: 'NoticeTempSlider', active: value, isShow: true, detailData: payload });
           }
         };
-        return typeMap[payload.value]();
+        return typeMap[value]();
       },
 
       handleAnimationEnd () {
         this.noticeTempSlider = {
           title: '',
           slideName: '',
+          active: '',
           isShow: false,
           width: 640,
           detailData: {}
