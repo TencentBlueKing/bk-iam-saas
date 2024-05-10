@@ -5,8 +5,9 @@
         'renewal-notice-content',
         { 'renewal-notice-content-lang': !curLanguageIsCn },
         { 'show-notice-alert': showNoticeAlert }
-      ]">
-      <template v-if="noticeForm.enable">
+      ]"
+    >
+      <template v-if="!isLoading && noticeForm.enable">
         <div class="notice-methods">
           <div class="notice-item-label mb8">
             {{ $t(`m.renewalNotice['通知方式']`) }}
@@ -21,20 +22,29 @@
                   'is-active': noticeForm.notification_types.includes(item.value)
                 }
               ]"
-              @click.stop="handleSelectNoticeType(item)"
             >
-              <div class="notice-type-content">
-                <i :class="['iam-icon', item.icon]" />
-                <img
-                  class="notice-type-img"
-                  :src="item.selected_icon"
-                />
-                <span class="notice-type-label">{{ item.label }}</span>
+              <div class="notice-type-item" @click.stop="handleSelectNoticeType(item)">
+                <div class="notice-type-content">
+                  <i :class="['iam-icon active-icon', item.icon]" />
+                  <img
+                    class="notice-type-img"
+                    :src="item.selected_icon"
+                  />
+                  <span class="notice-type-label">{{ item.label }}</span>
+                </div>
+                <div class="gou" />
               </div>
-              <span class="gou" />
+              <div class="notice-temp">
+                <Icon type="setting" class="notice-temp-icon" />
+                <div class="notice-temp-label" @click.stop="handleShowNoticeTemp(item)" :style="tempSetStyle">
+                  {{ $t(`m.renewalNotice['模板']`) }}
+                </div>
+              </div>
             </div>
           </div>
-          <div v-if="isMethodsEmpty" class="notice-empty-error">{{ $t(`m.renewalNotice['通知方式为必填项']`) }}</div>
+          <div v-if="isMethodsEmpty" class="notice-empty-error methods-empty-error">
+            {{ $t(`m.renewalNotice['通知方式为必填项']`) }}
+          </div>
         </div>
         <div class="notice-time">
           <div class="notice-item-label mb8">
@@ -147,7 +157,7 @@
           </bk-button>
         </div>
       </template>
-      <div v-else class="close-renewal-notice">
+      <div v-if="!isLoading && !noticeForm.enable" class="close-renewal-notice">
         <ExceptionEmpty
           :type="emptyData.type"
           :empty-text="emptyData.text"
@@ -156,14 +166,51 @@
         />
       </div>
     </div>
+
+    <bk-sideslider
+      :is-show="noticeTempSlider.isShow"
+      :title="noticeTempSlider.title"
+      :width="noticeTempSlider.width"
+      :quick-close="true"
+      :show-mask="false"
+      class="notice-temp-slider"
+      @update:isShow="handleCancel('leave')"
+    >
+      <div slot="header" class="notice-temp-header">
+        <div class="notice-temp-header-title">{{ $t(`m.renewalNotice['通知模板']`) }}</div>
+        <div class="notice-temp-header-divider">|</div>
+        <div class="notice-temp-header-content">
+          <img class="selected-img" :src="noticeTempSlider.detailData.selected_icon" alt="" />
+          <div class="selected-label">{{ noticeTempSlider.detailData.label }}</div>
+        </div>
+      </div>
+      <div slot="content" class="notice-temp-content">
+        <component
+          ref="noticeTempRef"
+          :is="noticeTempSlider.slideName"
+          :active="noticeTempSlider.active"
+          :detail-data="noticeTempSlider.detailData"
+        />
+      </div>
+      <div slot="footer" class="notice-temp-footer">
+        <bk-button theme="primary" :loading="saveLoading" @click="handleSave">{{ $t(`m.common['保存']`) }}</bk-button>
+        <bk-button theme="default" @click="handleCancel('cancel')">{{ $t(`m.common['取消']`) }}</bk-button>
+      </div>
+    </bk-sideslider>
   </div>
 </template>
 
 <script>
   import { cloneDeep } from 'lodash';
   import { bus } from '@/common/bus';
+  import { SEND_DAYS_LIST } from '@/common/constants';
+  import { leaveConfirm } from '@/common/leave-confirm';
+  import NoticeTempSlider from '@/views/renewal-notice/components/notice-temp-slider.vue';
   export default {
     inject: ['showNoticeAlert'],
+    components: {
+      NoticeTempSlider
+    },
     data () {
       return {
         noticeList: [
@@ -192,36 +239,7 @@
           //   selected_icon: require('@/images/sms.svg')
           // }
         ],
-        sendDaysList: [
-          {
-            label: '周一',
-            value: 'monday'
-          },
-          {
-            label: '周二',
-            value: 'tuesday'
-          },
-          {
-            label: '周三',
-            value: 'wednesday'
-          },
-          {
-            label: '周四',
-            value: 'thursday'
-          },
-          {
-            label: '周五',
-            value: 'friday'
-          },
-          {
-            label: '周六',
-            value: 'saturday'
-          },
-          {
-            label: '周日',
-            value: 'sunday'
-          }
-        ],
+        sendDaysList: SEND_DAYS_LIST,
         noticeForm: {
           notification_types: [],
           send_days: [],
@@ -231,18 +249,31 @@
           enable: false
         },
         noticeFormReset: {},
+        noticeTempSlider: {
+          title: '',
+          slideName: '',
+          active: '',
+          isShow: false,
+          width: 640,
+          detailData: {}
+        },
         emptyData: {
           type: 'empty',
           text: this.$t(`m.renewalNotice['续期通知暂未开启']`),
           tip: this.$t(`m.renewalNotice['请在顶部开启相关功能']`),
           tipType: 'noPerm'
         },
+        isLoading: true,
         isMethodsEmpty: false,
         isScopeEmpty: false,
         isDayEmpty: false,
         isSendTimeEmpty: false,
         submitLoading: false,
-        scopeEmptyError: ''
+        saveLoading: false,
+        scopeEmptyError: '',
+        tempSetStyle: {
+          zIndex: 99999
+        }
       };
     },
     computed: {
@@ -263,11 +294,12 @@
     },
     methods: {
       async fetchSuperNoticeConfig (isReset = false, isStatus = false) {
+        this.isLoading = true;
         try {
           const { data } = await this.$store.dispatch('renewalNotice/getSuperNoticeConfig');
           if (data) {
             if (!data.hasOwnProperty('enable')) {
-              data.enable = false;
+              data.enable = true;
             }
             // 如果是重置操作，只需赋值给重置变量
             if (isReset) {
@@ -282,6 +314,8 @@
           }
         } catch (e) {
           this.messageAdvancedError(e);
+        } finally {
+          this.isLoading = false;
         }
       },
 
@@ -366,6 +400,70 @@
         this.isSendTimeEmpty = !(payload.length > 0);
       },
 
+      handleShowNoticeTemp (payload) {
+        const { value } = payload;
+        const typeMap = {
+          rtx: () => {
+            this.noticeTempSlider = Object.assign(this.noticeTempSlider, { slideName: 'NoticeTempSlider', active: value, isShow: true, detailData: payload });
+          },
+          mail: () => {
+            this.noticeTempSlider = Object.assign(this.noticeTempSlider, { slideName: 'NoticeTempSlider', active: value, isShow: true, detailData: payload });
+          }
+        };
+        return typeMap[value]();
+      },
+
+      handleSave () {
+        const { noticeTempData } = this.$refs.noticeTempRef;
+        const { active } = this.noticeTempSlider;
+        const isPublicError = !noticeTempData.user_temp_html || !noticeTempData.manager_temp_html;
+        const isMailError = !noticeTempData.user_title || !noticeTempData.manager_title;
+        let isEmpty = isPublicError;
+        if (!noticeTempData.user_temp_html) {
+          this.$refs.noticeTempRef.isShowUserTempError = true;
+        }
+        if (!noticeTempData.manager_temp_html) {
+          this.$refs.noticeTempRef.isShowManagerTempError = true;
+        }
+        if (['mail'].includes(active)) {
+          if (!noticeTempData.user_title) {
+            this.$refs.noticeTempRef.isShowUserTitleError = true;
+          }
+          if (!noticeTempData.manager_title) {
+            this.$refs.noticeTempRef.isShowManagerTitleError = true;
+          }
+          isEmpty = isPublicError || isMailError;
+        }
+        if (isEmpty) {
+          return;
+        }
+        this.saveLoading = true;
+      },
+
+      handleCancel (payload) {
+        const operateMap = {
+          leave: () => {
+            const { noticeTempData, noticeTempDataBack } = this.$refs.noticeTempRef;
+            window.changeAlert = JSON.stringify(noticeTempData) !== JSON.stringify(noticeTempDataBack);
+            let cancelHandler = Promise.resolve();
+            if (window.changeAlert) {
+              this.tempSetStyle = Object.assign(this.tempSetStyle, { zIndex: 1 });
+              cancelHandler = leaveConfirm();
+            }
+            cancelHandler.then(() => {
+              this.tempSetStyle = Object.assign(this.tempSetStyle, { zIndex: 9999 });
+              this.resetData();
+              this.$emit('update:isShow', false);
+            }, _ => _);
+          },
+          cancel: () => {
+            this.resetData();
+            this.$emit('update:isShow', false);
+          }
+        };
+        return operateMap[payload]();
+      },
+
       handleReset () {
         this.noticeForm = cloneDeep(this.noticeFormReset);
         this.handleGetValidate();
@@ -402,9 +500,24 @@
           this.noticeForm.enable = isShowRenewalNotice || false;
           await this.handleSubmit('status');
         });
+        bus.$on('on-change-temp-zIndex', (payload) => {
+          this.tempSetStyle = payload;
+        });
         this.$once('hook:beforeDestroy', () => {
           bus.$off('on-update-renewal-notice');
+          bus.$off('on-change-temp-zIndex');
         });
+      },
+
+      resetData () {
+        this.noticeTempSlider = {
+          title: '',
+          slideName: '',
+          active: '',
+          isShow: false,
+          width: 640,
+          detailData: {}
+        };
       }
     }
   };
@@ -442,7 +555,7 @@
       }
     }
     .notice-methods {
-      margin-bottom: 24px;
+      margin-bottom: 44px;
       &-list {
         display: flex;
         align-items: center;
@@ -458,7 +571,7 @@
           &:not(&:last-child) {
             margin-right: 8px;
           }
-          .iam-icon {
+          .active-icon {
             color: #979ba5;
             margin-left: 13px;
             margin-right: 6px;
@@ -475,12 +588,28 @@
               padding-right: 10px;
             }
           }
+          .notice-temp {
+            display: flex;
+            align-items: center;
+            margin-top: 2px;
+            line-height: 20px;
+            color: #3a84ff;
+            &-icon {
+              margin-right: 4px;
+            }
+          }
           &.is-active {
             position: relative;
             color: #313238;
             background-color: #f0f5ff;
             border: 1px solid #3a84ff;
-            .iam-icon {
+            .notice-type-item {
+              line-height: 38px;
+              &:hover {
+                background-color: #E1ECFF;
+              }
+            }
+            .active-icon {
               display: none;
             }
             .notice-type-img {
@@ -629,6 +758,9 @@
       color: #ff5656;
       font-size: 12px;
       margin-top: 4px;
+      &.methods-empty-error {
+        margin-top: 24px;
+      }
     }
     .renewal-notice-footer {
       width: 100%;
@@ -682,6 +814,43 @@
               }
             }
           }
+        }
+      }
+    }
+  }
+  .notice-temp-header {
+    width: 100%;
+    display: flex;
+    &-title {
+      font-size: 16px;
+      color: #313238;
+    }
+    &-divider {
+      margin: 0 8px;
+      color: #C4C6CC;
+    }
+    &-content {
+      display: flex;
+      align-items: center;
+      font-size: 12px;
+      color: #63656E;
+      .selected-img {
+        width: 16px;
+        margin-right: 4px;
+      }
+    }
+  }
+}
+/deep/ .notice-temp-slider {
+  .bk-sideslider-footer {
+    background-color: #ffffff !important;
+    font-size: 0;
+    .notice-temp-footer {
+      padding: 0 24px;
+      .bk-button {
+        margin-right: 8px;
+        &:nth-child(1) {
+          min-width: 88px;
         }
       }
     }

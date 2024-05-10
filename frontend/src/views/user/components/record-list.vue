@@ -72,7 +72,7 @@
                 <div class="popover-content">
                   <div class="popover-content-tip">
                     {{
-                      $t(`m.user['删除后，可通过重新同步更新记录。']`)
+                      $t(`m.user['删除后，可通过重新同步更新记录']`)
                     }}
                   </div>
                 </div>
@@ -307,7 +307,7 @@
             this.$store.commit('updateSync', false);
             bus.$emit('updatePoll', { isStop: true });
             window.localStorage.removeItem('isPoll');
-            this.messageSuccess(this.$t(`m.common['删除成功']`), 3000);
+            this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
             this.resetPagination();
             this.fetchModelingList(true);
           }
