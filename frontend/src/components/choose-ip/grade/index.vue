@@ -386,8 +386,15 @@
         const hasNode = {};
         const treeData = [...this.treeData];
         const list = treeData.reduce((curr, next) => {
-          // eslint-disable-next-line no-unused-expressions
-          hasNode[`${next.name}&${next.id}`] ? '' : hasNode[`${next.name}&${next.id}`] = true && curr.push(next);
+          if (next.level > 0 && next.parentChain && next.parentChain.length > 0) {
+            const chainContent = next.parentChain.map((v) => `${v.id}&${v.name}&${v.type}`).join();
+            // eslint-disable-next-line no-unused-expressions
+            hasNode[`${next.id}&${next.name}&${chainContent}`] ? ''
+            : hasNode[`${next.id}&${next.name}&${chainContent}`] = true && curr.push(next);
+          } else {
+            // eslint-disable-next-line no-unused-expressions
+            hasNode[`${next.name}&${next.id}`] ? '' : hasNode[`${next.name}&${next.id}`] = true && curr.push(next);
+          }
           return curr;
         }, []);
         return list;
@@ -603,7 +610,8 @@
 
       handleOnExpanded (index, expanded) {
         window.changeAlert = true;
-        if (!expanded && this.treeData[index + 2].type === 'search-empty') {
+        const searchEmptyData = this.treeData[index + 2];
+        if (!expanded && searchEmptyData && searchEmptyData.type === 'search-empty') {
           this.treeData.splice(index + 2, 1);
         }
       },
@@ -1681,14 +1689,21 @@
 
       removeAsyncNode () {
         // 需要过滤掉name为空以及反复切换选中造成的重复数据的节点
-        const obj = {};
-        const treeList = _.cloneDeep(this.treeData.filter(item => item.name));
-        this.treeData = treeList.reduce((pre, item) => {
-          // eslint-disable-next-line no-unused-expressions
-          obj[`${item.id}${item.name}`] ? '' : obj[`${item.id}${item.name}`] = true && pre.push(item);
-          return pre;
+        const hasNode = {};
+        const treeList = _.cloneDeep(this.treeData.filter(item => item.name !== ''));
+        this.treeData = treeList.reduce((curr, next) => {
+          if (next.level > 0 && next.parentChain && next.parentChain.length > 0) {
+            const chainContent = next.parentChain.map((v) => `${v.id}&${v.name}&${v.type}`).join();
+            // eslint-disable-next-line no-unused-expressions
+            hasNode[`${next.id}&${next.name}&${chainContent}`] ? ''
+            : hasNode[`${next.id}&${next.name}&${chainContent}`] = true && curr.push(next);
+          } else {
+            // eslint-disable-next-line no-unused-expressions
+            hasNode[`${next.name}&${next.id}`] ? '' : hasNode[`${next.name}&${next.id}`] = true && curr.push(next);
+          }
+          return curr;
         }, []);
-        const index = this.treeData.findIndex((item) => item.type === 'async');
+        const index = this.treeData.findIndex(item => item.type === 'async');
         if (index > -1) this.treeData.splice(index, 1);
       },
 
