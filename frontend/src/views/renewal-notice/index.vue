@@ -34,12 +34,13 @@
                 </div>
                 <div class="gou" />
               </div>
-              <div class="notice-temp">
+              <!-- 暂时注释，待二期后台提供接口对接 -->
+              <!-- <div class="notice-temp">
                 <Icon type="setting" class="notice-temp-icon" />
                 <div class="notice-temp-label" @click.stop="handleShowNoticeTemp(item)" :style="tempSetStyle">
                   {{ $t(`m.renewalNotice['模板']`) }}
                 </div>
-              </div>
+              </div> -->
             </div>
           </div>
           <div v-if="isMethodsEmpty" class="notice-empty-error methods-empty-error">
@@ -758,9 +759,9 @@
       color: #ff5656;
       font-size: 12px;
       margin-top: 4px;
-      &.methods-empty-error {
+      /* &.methods-empty-error {
         margin-top: 24px;
-      }
+      } */
     }
     .renewal-notice-footer {
       width: 100%;
