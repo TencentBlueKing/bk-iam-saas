@@ -434,7 +434,6 @@
           }
           isEmpty = isPublicError || isMailError;
         }
-        console.log(isEmpty);
         if (isEmpty) {
           return;
         }

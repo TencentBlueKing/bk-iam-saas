@@ -713,7 +713,9 @@ export function isEmojiCharacter (str) {
   }
 }
 
-// 获取当前unix时间戳
+/**
+ *  获取当前unix时间戳
+ */
 export function getNowTimeExpired () {
   const nowTimestamp = +new Date() / 1000;
   const timeList = String(nowTimestamp).split('');
@@ -722,7 +724,12 @@ export function getNowTimeExpired () {
   return timestamp;
 }
 
-// 查找当前管理员最大身份划分导航栏下菜单
+/**
+ *  查找当前管理员最大身份划分导航栏下菜单
+ *
+ * @param {payload} payload 传入的数组数据
+ *
+ */
 export function getManagerMenuPerm (payload) {
   const isSystemManager = payload.find((item) => ['system_manager'].includes(item.type));
   const isSuperManager = payload.find((item) => ['super_manager'].includes(item.type));
@@ -733,7 +740,12 @@ export function getManagerMenuPerm (payload) {
   return '';
 }
 
-// 获取特定字符之间的数据
+/**
+ * 获取特定字符之间的数据
+ * @param {str} str 传入的源数据
+ * @param {reg} reg 传入的正则
+ * @return {values} 返回结果
+ */
 export function getDataBetweenBraces (str, reg) {
   let match = [];
   const values = [];
@@ -743,7 +755,10 @@ export function getDataBetweenBraces (str, reg) {
   return values;
 }
 
-// 复制传入的字符集
+/**
+ * 复制传入的字符集
+ * @param {value} value 传入的字符集
+ */
 export function getCopyValue (value) {
   if (!value) {
     messageWarn(il8n('common', '暂无可复制数据'));
