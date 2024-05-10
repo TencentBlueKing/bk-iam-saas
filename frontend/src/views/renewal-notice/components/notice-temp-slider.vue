@@ -22,7 +22,7 @@
       <div class="mail-notice-item-content">
         <div class="temp-title">{{ $t(`m.renewalNotice['模板内容']`) }}</div>
         <div class="temp-content">
-          <div>
+          <div class="temp-content-popover-confirm">
             <bk-popconfirm
               ref="userTextareaConfirm"
               trigger="click"
@@ -191,7 +191,7 @@
       <div class="mail-notice-item-content">
         <div class="temp-title">{{ $t(`m.renewalNotice['模板内容']`) }}</div>
         <div class="temp-content">
-          <div>
+          <div class="temp-content-popover-confirm">
             <bk-popconfirm
               ref="managerTextareaConfirm"
               trigger="click"
@@ -599,7 +599,9 @@
         }
       }
       .temp-content {
-        /* transform: translateY(-16px); */
+        &-popover-confirm {
+          height: 0;
+        }
         .temp-textarea-content {
           width: 100%;
           height: 122px;
