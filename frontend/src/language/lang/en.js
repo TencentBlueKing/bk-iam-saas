@@ -232,6 +232,7 @@ export const m = {
         '查询类型': 'Query type',
         '确定同步': 'Confirm sync',
         '新增模板': 'New template',
+        '发送': 'Send',
         '导出': 'Export',
         '查询': 'Search',
         '生效条件': 'Effective condition',
@@ -298,7 +299,12 @@ export const m = {
         '每页': 'Page',
         '清除选择': 'Clear',
         '暂无可清空数据': 'No data clear',
-        '已选父级': 'Selected parent level'
+        '已选父级': 'Selected parent level',
+        '测试': 'Test',
+        '恢复默认': 'Default',
+        '点击复制': 'Click to copy',
+        '复制成功': 'Copy successful',
+        '暂无可复制数据': 'There is currently no replicable data'
     },
     // 校验
     verify: {
@@ -589,7 +595,8 @@ export const m = {
         '确认解除与该用户组的关联？': 'Are you sure to dissociate from this user group?',
         '确认批量删除所选的人员模板吗？': 'Are you sure to batch delete the selected member templates?',
         '确认把用户/组织移出该用户组？': 'Are you sure to move the user/organization out of this user group?',
-        '确认删除同步记录？': 'Are you sure you want to delete the synchronization record?'
+        '确认删除同步记录？': 'Are you sure you want to delete the synchronization record?',
+        '确认恢复默认？': 'Are you sure to restore defaults?'
     },
     nav: {
         '蓝鲸权限中心': 'BlueKing-IAM',
@@ -1549,7 +1556,6 @@ export const m = {
         '逢': 'Encounter',
         '的': '',
         '发送通知': 'send notice',
-        '恢复默认': 'Default',
         '开启成功': 'Opened successfully',
         '关闭成功': 'Closed successfully',
         '周一': 'Monday',
@@ -1558,7 +1564,24 @@ export const m = {
         '周四': 'Thursday',
         '周五': 'Friday',
         '周六': 'Saturday',
-        '周日': 'Sunday'
+        '周日': 'Sunday',
+        '模板': 'Template',
+        '通知模板': 'Notice template',
+        '模板内容': 'Template content',
+        '邮件主题': 'Email subject',
+        '发送对象': 'Sending object',
+        '续期用户': 'Renewal user',
+        '空间管理员': 'Space manager',
+        '内置变量': 'Built in variables',
+        '变量名': 'Variable name',
+        '变量描述': 'Variable description',
+        '恢复后，模板将会回到系统默认设定': 'After restoration, the template will return to the system default settings',
+        '请输入邮件主题': 'Please enter email subject',
+        '请输入模板内容': 'Please enter template content',
+        '请输入接收测试通知的用户（请确保账号正确）': 'Please enter the user who will receive the test notification (please ensure that the account is correct)',
+        '测试通知已发送成功，请查收。': 'The test notification has been successfully sent, please check it.',
+        '邮件主题为必填项': 'Email subject is required',
+        '模板内容为必填项': 'Template content is required'
     }
 }
 export default {
