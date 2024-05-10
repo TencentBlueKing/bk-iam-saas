@@ -599,6 +599,7 @@ export const m = {
         '确认解除与该用户组的关联？': 'Are you sure to dissociate from this user group?',
         '确认批量删除所选的人员模板吗？': 'Are you sure to batch delete the selected member templates?',
         '确认把用户/组织移出该用户组？': 'Are you sure to move the user/organization out of this user group?',
+        '确认删除同步记录？': 'Are you sure you want to delete the synchronization record?',
         '确认删除该操作模板？': 'Are you sure to delete the operation template?'
     },
     nav: {
@@ -958,7 +959,9 @@ export const m = {
         '同步失败排查指引': 'Sync Failure Troubleshooting Guide',
         '今天': 'Today',
         '最近7天': 'Last 7 days',
-        '最近30天': 'Last 30 days'
+        '最近30天': 'Last 30 days',
+        '删除后，可通过重新同步更新记录': 'After deletion, records can be updated by resynchronizing',
+        '同步操作失败，请在用户管理后台API日志中查询详情': 'The synchronization operation failed. Please check the details in the API log of the user management backend'
     },
     grading: {
         '管理空间': 'Management space',
