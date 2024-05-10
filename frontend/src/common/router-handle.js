@@ -59,7 +59,10 @@ export const getRouterDiff = (payload) => {
       'memberTemplate',
       'resourcePermManage',
       'userOrgPerm',
-      'renewalNotice'
+      'renewalNotice',
+      'actionsTemplate',
+      'actionsTemplateCreate',
+      'actionsTemplateEdit'
     ];
   }
   if (payload === 'super_manager') {
@@ -205,7 +208,9 @@ export const getRouterDiff = (payload) => {
       'resourcePermManage',
       'userOrgPerm',
       'renewalNotice',
-      'actionsTemplate'
+      'actionsTemplate',
+      'actionsTemplateCreate',
+      'actionsTemplateEdit'
     ];
   }
   // payload其它取值默认返回全部菜单
@@ -257,7 +262,9 @@ export const getRouterDiff = (payload) => {
     'sensitivityLevel',
     'userOrgPerm',
     'renewalNotice',
-    'actionsTemplate'
+    'actionsTemplate',
+    'actionsTemplateCreate',
+    'actionsTemplateEdit'
   ];
 };
 
@@ -290,7 +297,9 @@ export const getNavRouterDiff = (navIndex, managerPerm = '') => {
       'resourcePermManage',
       'userOrgPerm',
       'renewalNotice',
-      'actionsTemplate'
+      'actionsTemplate',
+      'actionsTemplateCreate',
+      'actionsTemplateEdit'
     ];
   }
 
@@ -344,7 +353,9 @@ export const getNavRouterDiff = (navIndex, managerPerm = '') => {
       'resourcePermManage',
       'userOrgPerm',
       'renewalNotice',
-      'actionsTemplate'
+      'actionsTemplate',
+      'actionsTemplateCreate',
+      'actionsTemplateEdit'
     ];
   }
 
@@ -390,7 +401,9 @@ export const getNavRouterDiff = (navIndex, managerPerm = '') => {
       'memberTemplate',
       'resourcePermManage',
       'userOrgPerm',
-      'actionsTemplate'
+      'actionsTemplate',
+      'actionsTemplateCreate',
+      'actionsTemplateEdit'
     ];
     if (['hasSystemNoSuperManager'].includes(managerPerm)) {
       // 非超管用户隐藏的路由

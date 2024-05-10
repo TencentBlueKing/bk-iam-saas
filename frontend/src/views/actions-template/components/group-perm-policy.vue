@@ -152,7 +152,6 @@
               expand: false,
               templates: []
             });
-            this.fetchAuthorizationScopeActions(item.id);
             await this.getGroupTemplateList(item);
             if (item.templates.length) {
               item.templates.forEach((v) => {
@@ -204,18 +203,6 @@
               tableDataBackup: []
             });
           }
-        } catch (e) {
-          this.messageAdvancedError(e);
-        }
-      },
-
-      async fetchAuthorizationScopeActions (id) {
-        if (this.authorizationData[id]) {
-          return;
-        }
-        try {
-          const res = await this.$store.dispatch('permTemplate/getAuthorizationScopeActions', { systemId: id });
-          this.authorizationData[id] = res.data.filter(item => item.id !== '*');
         } catch (e) {
           this.messageAdvancedError(e);
         }

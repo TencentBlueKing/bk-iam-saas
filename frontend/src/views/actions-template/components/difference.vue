@@ -64,11 +64,12 @@
           <div :class="['sync-group-content-right']" :style="rightStyle">
             <div class="drag-dotted-line" v-if="isDrag" :style="dottedLineStyle" />
             <div class="drag-line" :style="dragStyle">
-              <Icon
-                type="drag-fill"
+              <img
                 class="drag-bar"
+                src="@/images/drag-icon.svg"
                 :draggable="false"
                 @mousedown="handleDragMouseenter($event)"
+                alt=""
               />
             </div>
             <GroupDetail :expand-data="curExpandData" />
@@ -172,9 +173,10 @@
         fillTip: this.$t(`m.actionsTemplate['引用已有的操作实例一键填充']`),
         curLocationIndex: -1,
         totalLocationCount: 0,
-        navWidth: 240,
-        dragWidth: 692,
-        dragRealityWidth: 692,
+        navWidth: 260,
+        dragWidth: window.innerWidth / 2 - 260 + 26,
+        dragRealityWidth: window.innerWidth / 2 - 260 + 26,
+        dottedLineWidth: 26,
         curExpandData: {},
         pagination: {
           current: 1,
@@ -188,11 +190,12 @@
         },
         addActions: [],
         policyList: [],
-        aggregations: []
+        aggregations: [],
+        startX: 0
       };
     },
     computed: {
-      ...mapGetters('permTemplate', ['cloneActions', 'preGroupOnePage']),
+      ...mapGetters('permTemplate', ['actions', 'cloneActions', 'preGroupOnePage']),
       ...mapGetters(['navStick']),
       isAggregateDisabled () {
         return this.policyList.length < 1 || this.aggregations.length < 1
@@ -205,7 +208,7 @@
           };
         }
         return {
-          'width': `calc(100% - 704px)`
+          'width': `calc(100% - ${window.innerWidth / 2 - this.navWidth}px)`
         };
       },
       rightStyle () {
@@ -215,7 +218,7 @@
           };
         }
         return {
-          'flexBasis': '692px'
+          'flexBasis': `${(window.innerWidth / 2) - this.navWidth}px`
         };
       },
       dragStyle () {
@@ -231,11 +234,11 @@
     },
     watch: {
       navStick (value) {
-        this.navWidth = value ? 240 : 60;
+        this.navWidth = value ? 260 : 60;
       },
-      allActions: {
+      actions: {
         handler (value) {
-          console.log(value);
+          console.log(value, 6666);
           const tempActions = [];
           value.forEach((item) => {
             item.actions.forEach(act => {
@@ -252,9 +255,16 @@
             });
           });
           this.addActions = tempActions;
+          this.isNoAddActions = this.addActions.length < 1;
         },
         deep: true
       }
+    },
+    mounted () {
+      window.addEventListener('resize', this.handleResizeView);
+      this.$once('hook:beforeDestroy', () => {
+        window.removeEventListener('resize', this.handleResizeView);
+      });
     },
     methods: {
       async handleNextStep () {
@@ -420,6 +430,7 @@
 
       handleToggleExpand () {
         this.isFullScreen = !this.isFullScreen;
+        this.handleResizeView();
       },
 
       handleDragMouseenter () {
@@ -439,15 +450,22 @@
       },
 
       handleDragMousemove (e) {
+        const { clientX } = e;
         if (!this.isDrag) {
           return;
         }
-        const minWidth = this.navWidth + 692;
-        const maxWidth = this.navWidth + 900;
-        if (e.clientX < minWidth || e.clientX >= maxWidth) {
+        const minWidth = window.innerWidth / 2;
+        const maxWidth = minWidth + 600;
+        // console.log(clientX, minWidth, maxWidth);
+        if (clientX < minWidth || clientX >= maxWidth) {
           return;
         }
-        this.dragRealityWidth = e.clientX - this.navWidth;
+        this.dragRealityWidth = window.innerWidth - clientX - this.navWidth;
+      },
+
+      handleResizeView () {
+        const resizeWidth = (window.innerWidth / 2) - this.navWidth;
+        [this.dragWidth, this.dragRealityWidth] = [resizeWidth, resizeWidth];
       }
     }
   };
@@ -459,7 +477,7 @@
     position: relative;
     display: flex;
     &-left {
-      width: calc(100% - 692px);
+      width: calc(100% - 680px);
       .related-instance-header {
         padding-top: 16px;
         position: sticky;
@@ -615,7 +633,6 @@
         position: absolute;
         top: 0;
         left: 0;
-        right: 680px;
         height: 100%;
         border-left: 1px solid #dcdee5;
         background-color: #ffffff;
@@ -625,16 +642,15 @@
         position: absolute;
         top: 0;
         left: 0;
-        right: 680px;
         height: 100%;
         width: 1px;
         background-color: #dcdee5;
         z-index: 98;
         .drag-bar {
           position: relative;
-          top: calc(50% - 10px);
+          top: calc(50% - 15px);
           left: 2px;
-          font-size: 24px;
+          width: 9px;
           color: #979BA5;
           cursor: col-resize;
         }

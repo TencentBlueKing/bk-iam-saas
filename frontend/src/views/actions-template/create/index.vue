@@ -14,7 +14,7 @@
     },
     methods: {
       async fetchPageData () {
-        await this.$refs.actionChild.fetchPageData();
+        await this.$refs.actionChild.fetchInitData();
       }
     }
   };

@@ -20,13 +20,6 @@
         :cell-class-name="getCellClass"
         @cell-mouse-enter="handleCellMouseEnter"
         @cell-mouse-leave="handleCellMouseLeave">
-        <bk-table-column
-          :label="$t(`m.permTemplateDetail['关联的用户组']`)"
-          :resizable="false"
-          :width="180"
-          fixed="left"
-          prop="name">
-        </bk-table-column>
         <div v-for="(item, index) in addProps" :key="index">
           <bk-table-column
             :min-width="200"
@@ -101,37 +94,37 @@
             </template>
           </bk-table-column>
         </div>
-      <!-- <div v-for="(item, index) in deleteProps" :key="item.id">
-        <bk-table-column
-          :key="item.id"
-          :min-width="200"
-          :resizable="false"
-          :render-header="renderDeleteActionHeader"
-          :label="item.label">
-          <template slot-scope="{ row }">
-            <div class="relation-content-wrapper">
-              <template v-if="!row.delete_actions[index].isEmpty">
-                <div v-for="(_, groIndex) in row.delete_actions[index].resource_groups" :key="_.id">
-                  <p class="related-resource-item"
-                    v-for="subItem in _.related_resource_types"
-                    :key="subItem.type"
-                    @click.stop="handleViewResource(row, index, groIndex)">
-                    <render-resource-popover
+        <div v-for="(item, index) in deleteProps" :key="item.id">
+          <bk-table-column
+            :key="item.id"
+            :min-width="200"
+            :resizable="false"
+            :render-header="renderDeleteActionHeader"
+            :label="item.label">
+            <template slot-scope="{ row }">
+              <div class="relation-content-wrapper">
+                <template v-if="!row.delete_actions[index].isEmpty">
+                  <div v-for="(_, groIndex) in row.delete_actions[index].resource_groups" :key="_.id">
+                    <p class="related-resource-item"
+                      v-for="subItem in _.related_resource_types"
                       :key="subItem.type"
-                      :data="subItem.condition"
-                      :value="`${subItem.name}：${subItem.value}`"
-                      :max-width="185"
-                      @on-view="handleViewResource(row, index, groIndex)" />
-                  </p>
-                </div>
-              </template>
-              <template v-else>
-                {{ $t(`m.common['无需关联实例']`) }}
-              </template>
-            </div>
-          </template>
-        </bk-table-column>
-      </div> -->
+                      @click.stop="handleViewResource(row, index, groIndex)">
+                      <render-resource-popover
+                        :key="subItem.type"
+                        :data="subItem.condition"
+                        :value="`${subItem.name}：${subItem.value}`"
+                        :max-width="185"
+                        @on-view="handleViewResource(row, index, groIndex)" />
+                    </p>
+                  </div>
+                </template>
+                <template v-else>
+                  {{ $t(`m.common['无需关联实例']`) }}
+                </template>
+              </div>
+            </template>
+          </bk-table-column>
+        </div>
       </bk-table>
       <div class="pagination-wrapper" v-if="pagination.totalPage > 1">
         <div class="page-display">
@@ -250,7 +243,7 @@
         syncLoading: false,
         pagination: {
           current: 1,
-          limit: 20,
+          limit: 5,
           totalPage: 0
         },
         tableList: [],
@@ -393,12 +386,6 @@
         if (value.length < 1) {
           this.$emit('on-ready');
         }
-      },
-      addAction: {
-        handler (value) {
-          console.log(value);
-        },
-        immediate: true
       }
     },
     async created () {

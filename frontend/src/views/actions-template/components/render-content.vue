@@ -110,7 +110,7 @@
                   <render-action
                     ref="actionsRef"
                     mode="edit"
-                    :actions="originalCustomTmplList"
+                    :actions="allCustomActionList"
                     :linear-action="linearAction"
                     @on-select="handleSelectAction"
                   />
@@ -218,7 +218,7 @@
         :has-related-group="hasGroupPreview"
         :select-actions="curSelectActions"
         :select-actions-back="curSelectActionsBack"
-        :all-actions="originalCustomTmplList"
+        :all-actions="allCustomActionList"
         :default-checked-actions="defaultCheckedActions"
       />
     </div>
@@ -243,7 +243,7 @@
   import { buildURLParams } from '@/common/url';
   import { formatCodeData, guid } from '@/common/util';
   import { leavePageConfirm } from '@/common/leave-page-confirm';
-  import { addPreUpdateInfo } from '../common/actions';
+  import { addPreUpdateInfo, getActionsData as getHasSelectedActions } from '../common/actions';
   import RenderDetail from '@/views/group/common/render-detail';
   import RenderActionTag from '@/components/common-action';
   import RenderAction from './render-action';
@@ -283,8 +283,8 @@
         initialDescription: '',
         actionsValue: '',
         systemList: [],
-        originalCustomTmplList: [],
-        originalCustomTmplListBack: [],
+        allCustomActionList: [],
+        allCustomActionListBack: [],
         commonActions: [],
         linearAction: [],
         curSelectActions: [],
@@ -334,8 +334,8 @@
         return this.mode === 'edit';
       },
       isShowAction () {
-        if (this.originalCustomTmplList.length) {
-          return this.originalCustomTmplList.some((item) =>
+        if (this.allCustomActionList.length) {
+          return this.allCustomActionList.some((item) =>
             item.actions.length > 0
             || item.sub_groups.some((v) => v.actions.length > 0 || v.sub_groups.length > 0)
           );
@@ -412,11 +412,12 @@
       window.removeEventListener('resize', this.handleGetResizeHeight);
     },
     methods: {
-      async fetchPageData () {
+      async fetchInitData () {
         this.initialValue = cloneDeep(this.curSelectActions);
         if (this.isEdit) {
           await this.fetchDetail();
           await this.fetchGroupPreview();
+          await this.fetchPreUpdateInfo();
         } else {
           await this.fetchSystems();
         }
@@ -461,10 +462,10 @@
           });
           this.initialTempName = cloneDeep(name || '');
           this.initialDescription = cloneDeep(description || '');
-          this.originalCustomTmplList = cloneDeep(actions || []);
+          this.allCustomActionList = cloneDeep(actions || []);
           this.$store.commit('setHeaderTitle', name);
           await this.handleActionLinearData(false);
-          this.originalCustomTmplListBack = cloneDeep(this.originalCustomTmplList);
+          this.allCustomActionListBack = cloneDeep(this.allCustomActionList);
           await this.fetchCommonActions(system.id || '');
         } catch (e) {
           this.messageAdvancedError(e);
@@ -516,7 +517,7 @@
       },
 
       handleActionMatchChecked (flag, payload) {
-        this.originalCustomTmplList.forEach(item => {
+        this.allCustomActionList.forEach(item => {
           let allCheckedLen = 0;
           let count = 0;
           let delCount = 0;
@@ -633,9 +634,9 @@
         }
         try {
           const { data } = await this.$store.dispatch('permApply/getActions', params);
-          this.originalCustomTmplList = cloneDeep(data);
+          this.allCustomActionList = cloneDeep(data);
           this.handleActionLinearData();
-          this.originalCustomTmplListBack = cloneDeep(this.originalCustomTmplList);
+          this.allCustomActionListBack = cloneDeep(this.allCustomActionList);
         } catch (e) {
           this.messageAdvancedError(e);
         } finally {
@@ -647,7 +648,7 @@
         const linearActions = [];
         // 获取actions和sub_groups所有数据，并根据单双行渲染不同背景颜色
         let colorIndex = 0;
-        this.originalCustomTmplList.forEach((item, index) => {
+        this.allCustomActionList.forEach((item, index) => {
           this.$set(item, 'expanded', index === 0);
           let allCount = 0;
           let count = 0;
@@ -659,7 +660,7 @@
           if (!item.sub_groups) {
             this.$set(item, 'sub_groups', []);
           }
-          // item.actions = item.actions.filter(v => !v.hidden);
+          item.actions = item.actions.filter(v => !v.hidden);
           if (item.actions.length === 1 || !item.sub_groups.length) {
             this.$set(item, 'bgColor', colorIndex % 2 === 0 ? '#f7f9fc' : '#ffffff');
             colorIndex++;
@@ -689,7 +690,7 @@
             if (!sub.actions) {
               this.$set(sub, 'actions', []);
             }
-            // sub.actions = sub.actions.filter(v => !v.hidden);
+            sub.actions = sub.actions.filter(v => !v.hidden);
             if (isSearch) {
               sub.actions = sub.actions.filter((v) => v.name.indexOf(this.actionsValue) > -1);
             }
@@ -730,7 +731,7 @@
       },
 
       handleSearchAction () {
-        this.searchTableData = cloneDeep(this.originalCustomTmplList);
+        this.searchTableData = cloneDeep(this.allCustomActionList);
         this.isShowActionError = false;
         this.emptyActionData.tipType = 'search';
         this.handleRefreshAction(true);
@@ -746,8 +747,8 @@
       },
 
       handleRefreshAction (payload) {
-        const list = cloneDeep(this.originalCustomTmplListBack);
-        this.originalCustomTmplList = this.getActionsData(list, payload);
+        const list = cloneDeep(this.allCustomActionListBack);
+        this.allCustomActionList = this.getActionsData(list, payload);
       },
 
       handleExpandAction () {
@@ -758,13 +759,13 @@
         const modeMap = {
           true: () => {
             if (payload) {
-              this.originalCustomTmplList = this.getActionsData(this.originalCustomTmplList, false);
+              this.allCustomActionList = this.getActionsData(this.allCustomActionList, false);
             } else {
               this.handleClearAllAction();
             }
           },
           false: () => {
-            this.originalCustomTmplList = this.getActionsData(this.originalCustomTmplList, false);
+            this.allCustomActionList = this.getActionsData(this.allCustomActionList, false);
           }
         };
         modeMap[this.isEdit]();
@@ -772,7 +773,7 @@
 
       handleClearAllAction () {
         this.isSelectAllActions = false;
-        const list = Object.freeze(cloneDeep(this.originalCustomTmplList));
+        const list = Object.freeze(cloneDeep(this.allCustomActionList));
         this.curSelectActions.forEach((item) => {
           this.handleDelAction(item, list);
         });
@@ -818,7 +819,7 @@
       },
 
       handleDelAction (payload, arr) {
-        const list = arr.length > 0 ? arr : Object.freeze(cloneDeep(this.originalCustomTmplListBack));
+        const list = arr.length > 0 ? arr : Object.freeze(cloneDeep(this.allCustomActionListBack));
         list.forEach((item) => {
           (item.actions || []).forEach((act) => {
             if (`${act.id}&${act.name}` === `${payload.id}&${payload.name}`) {
@@ -920,10 +921,33 @@
         return temps;
       },
 
+      async fetchPreUpdateInfo () {
+        try {
+          const { data } = await this.$store.dispatch('permTemplate/getPreUpdateInfo', { id: this.id });
+          const flag = Object.keys(data).length > 0;
+          if (flag) {
+            const actionIdList = data.action_ids || [];
+            const params = {
+              id: this.id,
+              data: {
+                action_ids: actionIdList
+              }
+            };
+            const list = cloneDeep(this.allCustomActionListBack);
+            this.$store.commit('permTemplate/updatePreActionIds', actionIdList);
+            console.log(getHasSelectedActions(actionIdList, list, this.defaultCheckedActions), 55);
+            this.$store.commit('permTemplate/updateAction', getHasSelectedActions(actionIdList, list, this.defaultCheckedActions));
+            await addPreUpdateInfo(params);
+          }
+        } catch (e) {
+          this.messageAdvancedError(e);
+        }
+      },
+
       async handleNextStep () {
         const nameRef = this.$refs.templateNameRef;
         const actionRef = this.$refs.actionRef;
-        const hasDelCount = this.originalCustomTmplList.some(e => e.deleteCount);
+        const hasDelCount = this.allCustomActionList.some(e => e.deleteCount);
         this.handleNameBlur(this.basicInfo.name);
         this.isShowActionError = this.curSelectActions.length < 1;
         if (this.isShowNameError) {
@@ -949,17 +973,7 @@
         }
         this.nextLoading = true;
         try {
-          const actionIdList = this.curSelectActions.map((item) => item.id);
-          const params = {
-            id: this.id,
-            data: {
-              action_ids: actionIdList
-            }
-          };
           window.changeDialog = false;
-          await addPreUpdateInfo(params);
-          this.$store.commit('permTemplate/updatePreActionIds', actionIdList);
-          this.$store.commit('permTemplate/updateAction', this.getActionsData(this.originalCustomTmplList));
           this.handleSetCurActionStep(2);
         } catch (e) {
           this.messageAdvancedError(e);

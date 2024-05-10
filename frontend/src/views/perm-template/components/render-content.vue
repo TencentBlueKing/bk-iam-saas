@@ -309,6 +309,7 @@
           this.originalCustomTmplList = _.cloneDeep(res.data.actions);
           await this.handleActionLinearData();
           await this.fetchCommonActions(this.systemValue);
+          console.log(this.originalCustomTmplList, 666);
           this.initialTempName = this.tempName;
           this.initialDescription = this.description;
         } catch (e) {

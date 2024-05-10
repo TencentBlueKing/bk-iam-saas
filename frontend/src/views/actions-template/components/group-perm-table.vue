@@ -475,7 +475,6 @@
       list: {
         handler (value) {
           this.tableList = uniqWith(value, isEqual);
-          console.log(value, this.tableList, 555);
         },
         immediate: true
       },
