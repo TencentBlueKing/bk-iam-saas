@@ -47,15 +47,15 @@
       showLoginModal (iframeSrc) {
         const ver = +new Date();
         this.iframeSrc = iframeSrc + '&ver=' + ver;
-        // setTimeout(() => {
-        //   this.isShow = true;
-        // }, 1000);
         if (this.isShow) {
           return;
         }
+        // setTimeout(() => {
+        //   this.isShow = true;
+        // }, 1000);
         this.isShow = true;
-        const width = 400;
-        const height = 380;
+        const width = 700;
+        const height = 510;
         const { availHeight, availWidth } = window.screen;
         this.loginWindow = window.open(
           this.iframeSrc,
