@@ -18,7 +18,7 @@ urlpatterns = [
     # 用户组基本信息更新 & 删除
     path(
         "groups/<int:id>/",
-        views.AdminGroupInfoViewSet.as_view({"get": "update", "delete": "destroy"}),
+        views.AdminGroupInfoViewSet.as_view({"put": "update", "delete": "destroy"}),
         name="open.admin.group",
     ),
     # 用户组成员
