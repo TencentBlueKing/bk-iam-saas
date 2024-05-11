@@ -21,9 +21,7 @@
       const iframeSrc = `${window.LOGIN_SERVICE_URL}/?app_code=1&c_url=${loginCallbackURL}`;
       return {
         iframeSrc: iframeSrc,
-        isShow: false,
-        checkWindowTimer: null,
-        loginWindow: null
+        isShow: false
       };
     },
     methods: {
