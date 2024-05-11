@@ -214,7 +214,7 @@ function handleReject (error, config) {
       // nextError.message = error.response.data.message;
       // bus.$emit('show-login-modal', loginPlainUrl);
       // window.location = LOGIN_SERVICE_URL + '/?c_url=' + window.location.href
-      const loginCallbackURL = `${window.site}login_success.html?is_ajax=1`;
+      const loginCallbackURL = `${window.SITE_URL}login_success.html?is_ajax=1`;
       const siteLoginUrl = window.LOGIN_SERVICE_URL || '';
       if (!siteLoginUrl) {
         console.error('Login URL not configured!');
