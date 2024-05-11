@@ -57,7 +57,7 @@
               v-if="['user'].includes(item.type)"
               v-bk-tooltips="{
                 content: `${item.id} (${item.name})`,
-                placements: ['right'],
+                placements: ['right-start'],
                 disabled: formatShowToolTip(item)
               }"
               :ref="`userOrg_${item.id}`"
@@ -69,7 +69,7 @@
             <div
               v-if="['department'].includes(item.type)"
               :ref="`userOrg_${item.id}`"
-              v-bk-tooltips="{ content: item.name, placements: ['right'], disabled: formatShowToolTip(item) }"
+              v-bk-tooltips="{ content: item.name, placements: ['right-start'], disabled: formatShowToolTip(item) }"
               class="single-hide group-name"
             >
               {{ item.name }}

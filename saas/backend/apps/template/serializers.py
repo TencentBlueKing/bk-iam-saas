@@ -275,3 +275,7 @@ class TemplateGroupPreViewSchemaSLZ(TemplateGroupPreViewSLZ):
 
 class TemplatePreUpdateSchemaSLZ(serializers.Serializer):
     action_ids = serializers.ListField(label="操作策略", child=serializers.CharField(), allow_empty=False)
+
+
+class TemplateGroupSLZ(serializers.Serializer):
+    group_id = serializers.IntegerField(label="用户组id")

@@ -1,3 +1,37 @@
+<!-- 2024-04-25 -->
+# V1.10.27 Version Update Log
+
+### Bug Fixes
+
+* System-registered non-apply operations take effect for "My Management Space"
+* Add support for fuzzy search of members (resolves the issue of not being able to search for users with login domains)
+
+---
+
+<!-- 2024-04-12 -->
+# V1.10.26 Version Update Log
+
+### Feature Enhancements
+
+* Dependency version upgrades
+
+### Bug Fixes
+
+* Fixed issue with scheduled organization synchronization task becoming ineffective
+
+---
+
+<!-- 2024-04-11 -->
+# V1.10.25 Version Update Log
+
+### New Features
+
+* Added the ability to manage permissions for desired users/departments within the management space.
+* System administrators can now query personnel with permissions.
+* System administrators can now edit sensitivity levels.
+
+---
+
 <!-- 2024-03-01 -->
 # V1.10.24 Version Update Log
 

@@ -32,8 +32,8 @@ import http from '@/api';
 // import il8n from '@/language';
 import preload from '@/common/preload';
 import { bus } from '@/common/bus';
-// import { existValue, getParamsValue, getTreeNode } from '@/common/util';
-import { existValue, getParamsValue, getManagerMenuPerm } from '@/common/util';
+import { existValue, getParamsValue } from '@/common/util';
+// import { existValue, getParamsValue, getManagerMenuPerm } from '@/common/util';
 import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
 import { messageError } from '@/common/bkmagic';
 
@@ -87,8 +87,8 @@ export const beforeEach = async (to, from, next) => {
   let currentRoleId = String(to.query.current_role_id || '').trim();
   let curRoleId = store.state.curRoleId;
   // 检验有系管没超管身份
-  let hasManagerPerm = '';
-  let defaultRoute = ['my-perm', 'user-group', 'audit', 'user'];
+  const hasManagerPerm = '';
+  const defaultRoute = ['my-perm', 'user-group', 'audit', 'user'];
 
   async function getExternalRole () {
     const { role_id: externalRoleId } = to.query;
@@ -125,25 +125,26 @@ export const beforeEach = async (to, from, next) => {
   }
 
   // 处理平台管理超管和系管都可以进入，但访问菜单权限不一致
-  async function getPlatManageMenu () {
-    hasManagerPerm = '';
-    let roleList = store.state.roleList;
-    if (roleList.length > 0) {
-      // 有系统管理员身份没超管身份
-      hasManagerPerm = getManagerMenuPerm(roleList);
-    } else {
-      roleList = await store.dispatch('roleList', {
-        cancelWhenRouteChange: false,
-        cancelPrevious: false
-      });
-    }
-    // 有系统管理员身份没超管身份
-    hasManagerPerm = getManagerMenuPerm(roleList);
-    if (['hasSystemNoSuperManager'].includes(hasManagerPerm)) {
-      hasManagerPerm = 'hasSystemNoSuperManager';
-      defaultRoute = ['my-perm', 'user-group', 'audit', 'resourcePermiss'];
-    }
-  }
+  // 暂时注释掉后期开放
+  // async function getPlatManageMenu () {
+  //   hasManagerPerm = '';
+  //   let roleList = store.state.roleList;
+  //   if (roleList.length > 0) {
+  // 有系统管理员身份没超管身份
+  //     hasManagerPerm = getManagerMenuPerm(roleList);
+  //   } else {
+  //     roleList = await store.dispatch('roleList', {
+  //       cancelWhenRouteChange: false,
+  //       cancelPrevious: false
+  //     });
+  //   }
+  // 有系统管理员身份没超管身份
+  //   hasManagerPerm = getManagerMenuPerm(roleList);
+  //   if (['hasSystemNoSuperManager'].includes(hasManagerPerm)) {
+  //     hasManagerPerm = 'hasSystemNoSuperManager';
+  //     defaultRoute = ['my-perm', 'user-group', 'audit', 'resourcePermiss'];
+  //   }
+  // }
 
   // 根据不同权限处理不同的导航栏索引
   function navDiffMenuIndex (index) {
@@ -248,9 +249,9 @@ export const beforeEach = async (to, from, next) => {
       difference = getRouterDiff(curRole);
     } else {
       // 目前只有平台管理需要根据管理员最大身份处理路由权限
-      if ([3].includes(Number(navIndex))) {
-        await getPlatManageMenu();
-      }
+      // if ([3].includes(Number(navIndex))) {
+      //   await getPlatManageMenu();
+      // }
       difference = getNavRouterDiff(navIndex, hasManagerPerm);
     }
     if (difference.length) {

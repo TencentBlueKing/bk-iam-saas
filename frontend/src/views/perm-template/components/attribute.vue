@@ -10,7 +10,7 @@
           :clearable="false"
           :disabled="item.disabled || isDisabledMode"
           searchable
-          style="width: 130px;"
+          style="width: 160px;"
           @selected="handleAttributeSelected(...arguments, item)">
           <bk-option v-for="option in list"
             :key="option.id"
@@ -38,7 +38,7 @@
               <span>{{ option.display_name }}</span>
             </template>
             <template v-else>
-              <div v-bkloading="{ isLoading: true, size: 'mini' }"></div>
+              <div v-bkloading="{ isLoading: item.isScrollRemote, size: 'mini' }"></div>
             </template>
           </bk-option>
         </bk-select>
@@ -55,6 +55,8 @@
   </div>
 </template>
 <script>
+  import _ from 'lodash';
+  import { sleep } from '@/common/util';
   import Attribute from '@/model/attribute';
 
   const ATTRIBUTE_ITEM = {
@@ -105,7 +107,9 @@
           totalPage: 0
         },
         attrValueListMap: {},
-        isDisabledMode: false
+        isDisabledMode: false,
+        curToggleItem: '',
+        curKeyWord: ''
       };
     },
     computed: {
@@ -220,11 +224,11 @@
         item.loading = true;
         try {
           const res = await this.$store.dispatch('permApply/getResourceAttrValues', {
-                        ...this.params,
-                        limit: this.pagination.limit,
-                        offset: this.pagination.limit * (this.pagination.current - 1),
-                        attribute: item.id,
-                        keyword: ''
+            ...this.params,
+            limit: this.pagination.limit,
+            offset: this.pagination.limit * (this.pagination.current - 1),
+            attribute: item.id,
+            keyword: ''
           });
           this.pagination.totalPage = Math.ceil(res.data.count / this.pagination.limit);
           if (this.pagination.totalPage > 1) {
@@ -267,7 +271,7 @@
           payload.name = curAttr.display_name || '';
         }
         if (this.attrValueListMap[payload.id] && this.attrValueListMap[payload.id].length < 1) {
-          this.fetchResourceAttrValues(payload, '', true);
+          this.resetPagination(payload, '', true, false);
         }
       },
 
@@ -280,6 +284,10 @@
         if (val) {
           // 记录当前操作的属性值数据
           this.curOperateData = payload;
+          if ((this.curToggleItem && `${payload.id}&${index}&valueRef` !== this.curToggleItem) || !this.curKeyWord) {
+            this.resetPagination(payload, '', false, false);
+          }
+          this.curToggleItem = `${payload.id}&${index}&valueRef`;
         } else {
           this.curOperateData = {};
           curOptionDom.removeEventListener('scroll', this.handleScroll);
@@ -292,52 +300,66 @@
           this.attrValueListMap[this.curOperateData.id].shift();
           return;
         }
-        if (event.target.scrollTop + event.target.offsetHeight >= event.target.scrollHeight) {
+        if (event.target.scrollTop + event.target.offsetHeight >= event.target.scrollHeight - 1) {
           ++this.pagination.current;
           if (this.pagination.current <= this.pagination.totalPage) {
-            await this.fetchResourceAttrValues(this.curOperateData, '', false, true);
+            await this.fetchResourceAttrValues(this.curOperateData, this.curKeyWord, false, true);
             event.target.scrollTo(0, event.target.scrollTop - 10);
           }
         }
       },
 
       async handleRemoteValue (val) {
+        this.curKeyWord = val;
         if (this.curOperateData.id) {
-          this.pagination.current = 1;
-          this.pagination.totalPage = 0;
           // 删除loading项
           this.attrValueListMap[this.curOperateData.id].shift();
-          await this.fetchResourceAttrValues(this.curOperateData, val, false);
+          await this.resetPagination(this.curOperateData, val, false, false);
         }
       },
 
       async fetchResourceAttrValues (payload, keyword = '', isLoading = true, isScrollRemote = false) {
         payload.loading = isLoading && !isScrollRemote;
+        payload.isScrollRemote = isScrollRemote;
         const { limit, current } = this.pagination;
         try {
           const res = await this.$store.dispatch('permApply/getResourceAttrValues', {
-                        ...this.params,
-                        limit: limit,
-                        offset: limit * (current - 1),
-                        attribute: payload.id,
-                        keyword
+            ...this.params,
+            limit: limit,
+            offset: limit * (current - 1),
+            attribute: payload.id,
+            keyword
           });
           if (isScrollRemote) {
             const len = this.attrValueListMap[payload.id].length;
-            this.attrValueListMap[payload.id].splice(len - 2, 0, ...res.data.results);
+            this.attrValueListMap[payload.id].splice(len - 1, 0, ...res.data.results);
           } else {
             this.pagination.totalPage = Math.ceil(res.data.count / this.pagination.limit);
             if (this.pagination.totalPage > 1) {
               res.data.results.push(LOADING_ITEM);
+            } else {
+              res.data.results = res.data.results.filter((item) => item.id !== '');
             }
-            this.attrValueListMap[payload.id] = [...res.data.results];
+            this.attrValueListMap[payload.id] = _.cloneDeep(res.data.results);
           }
         } catch (e) {
           console.error(e);
           this.messageAdvancedError(e);
         } finally {
           payload.loading = false;
+          sleep(300).then(() => {
+            payload.isScrollRemote = false;
+          });
         }
+      },
+
+      async resetPagination (payload, keyword = '', isLoading = true, isScrollRemote = false) {
+        this.pagination = Object.assign({
+          limit: 10,
+          current: 1,
+          totalPage: 0
+        });
+        await this.fetchResourceAttrValues(payload, keyword, isLoading, isScrollRemote);
       },
 
       trigger () {

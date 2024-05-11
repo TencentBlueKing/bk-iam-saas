@@ -96,7 +96,8 @@ export const getRouterDiff = (payload) => {
       'permTransfer',
       'myManageSpaceSubDetail',
       'sensitivityLevel',
-      'resourcePermManage'
+      'resourcePermManage',
+      'userOrgPerm'
     ];
   }
   if (payload === 'system_manager') {
@@ -123,12 +124,11 @@ export const getRouterDiff = (payload) => {
       'systemAccessRegistry',
       'systemAccessOptimize',
       'systemAccessComplete',
-      'resourcePermiss',
       'firstManageSpace',
       'secondaryManageSpace',
       'authorBoundary',
       'myManageSpace',
-      'sensitivityLevel'
+      'userOrgPerm'
     ];
   }
   if (payload === 'rating_manager') {

@@ -52,7 +52,7 @@
               <span
                 v-bk-tooltips="{
                   content: row.description,
-                  placements: ['right'],
+                  placements: ['right-start'],
                   disabled: !row.description
                 }"
               >

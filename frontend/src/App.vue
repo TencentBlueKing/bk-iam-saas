@@ -33,11 +33,14 @@
         :route-name="routeName"
         :user-group-id="userGroupId">
       </header-nav>
-      <the-header @reload-page="handleRefreshPage"
+      <the-header
+        @reload-page="handleRefreshPage"
         :route-name="routeName"
         :user-group-id="userGroupId"
       />
-      <the-nav class="nav-layout"
+      <the-nav
+        class="nav-layout"
+        :route-name="routeName"
         @reload-page="reloadCurPage"
         v-if="!externalSystemsLayout.hideIamSlider" />
     </template>
@@ -58,7 +61,7 @@
         <router-view class="views-layout" :key="routerKey" v-show="!mainContentLoading"></router-view>
       </div>
     </main>
-    <app-auth ref="bkAuth"></app-auth>
+    <!-- <app-auth ref="bkAuth"></app-auth> -->
   </div>
 </template>
 <script>
@@ -80,6 +83,7 @@
     provide () {
       return {
         reload: this.reload,
+        reloadCurPage: this.reloadCurPage,
         showNoticeAlert: this.isShowNoticeAlert
       };
     },
@@ -183,16 +187,16 @@
       });
     },
     mounted () {
-      const self = this;
-      bus.$on('show-login-modal', (payload) => {
-        self.$refs.bkAuth.showLoginModal(payload);
-      });
-      bus.$on('close-login-modal', () => {
-        self.$refs.bkAuth.hideLoginModal();
-        setTimeout(() => {
-          window.location.reload();
-        }, 0);
-      });
+      // const self = this;
+      // bus.$on('show-login-modal', (payload) => {
+      //   self.$refs.bkAuth.showLoginModal(payload);
+      // });
+      // bus.$on('close-login-modal', () => {
+      //   self.$refs.bkAuth.hideLoginModal();
+      //   setTimeout(() => {
+      //     window.location.reload();
+      //   }, 0);
+      // });
       bus.$on('updatePoll', () => {
         clearInterval(this.timer);
         this.timer = setInterval(() => {

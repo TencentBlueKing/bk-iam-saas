@@ -211,14 +211,6 @@ const currentNav = [
         name: il8n('nav', '资源权限管理'),
         path: `${SITE_URL}resource-permiss`,
         disabled: false
-      },
-      {
-        icon: 'mingandengji',
-        id: 'sensitivityLevelNav',
-        rkey: 'sensitivityLevel',
-        name: il8n('nav', '敏感等级'),
-        path: `${SITE_URL}sensitivity-level`,
-        disabled: false
       }
       // {
       //   icon: 'resource-perm-manage',
@@ -274,6 +266,14 @@ const currentNav = [
     name: il8n('common', '设置'),
     rkey: 'set',
     children: [
+      {
+        icon: 'mingandengji',
+        id: 'sensitivityLevelNav',
+        rkey: 'sensitivityLevel',
+        name: il8n('nav', '敏感等级'),
+        path: `${SITE_URL}sensitivity-level`,
+        disabled: false
+      },
       {
         icon: 'super-admin',
         name: il8n('common', '管理员'),
@@ -793,6 +793,7 @@ const store = new Vuex.Store({
         const results = data.results || [];
         commit('updateRoleListTotal', data.count || 0);
         commit('updateRoleList', results);
+        // commit('updateRoleList', results.filter((item) => item.type !== 'super_manager'));
         return results;
       });
     },

@@ -29,7 +29,9 @@
               style="width: 200px; background: #fff"
               v-model="systemId"
               :clearable="true"
+              :searchable="true"
               :placeholder="$t(`m.verify['请选择']`)"
+              :disabled="isSystemDisabled"
               @change="handleCascadeChange"
               @clear="handleSystemClear">
               <bk-option v-for="option in systemList"
@@ -106,7 +108,7 @@
           <iam-form-item :label="$t(`m.resourcePermiss['条数展示']`)" class="pb20 pr20">
             <bk-select
               style="width: 200px; background: #fff"
-              v-model="pagination.limit"
+              v-model="limit"
               :clearable="false"
               :placeholder="$t(`m.verify['请选择']`)"
               @change="limitChange">
@@ -240,8 +242,8 @@
         typeList: [{ name: this.$t(`m.resourcePermiss['自定义权限']`), value: 'custom' }, { name: this.$t(`m.resourcePermiss['模板权限']`), value: 'template' }],
         permissionType: '',
         groupValue: '1-1',
-        limit: 100,
-        limitList: [10, 20, 50, 100],
+        limit: 1000,
+        limitList: [10, 50, 100, 500, 1000],
         resourceActionId: 0,
         resourceActionSystemId: '',
         resourceSystemId: '',
@@ -268,7 +270,7 @@
         pagination: {
           current: 1,
           count: 0,
-          limit: 100
+          limit: 10
         },
         currentBackup: 1,
         emptyData: {
@@ -282,7 +284,7 @@
       };
     },
     computed: {
-      ...mapGetters(['externalSystemId']),
+      ...mapGetters(['externalSystemId', 'user', 'index']),
       condition () {
           if (this.curResIndex === -1 || this.groupIndex === -1) {
               return [];
@@ -307,7 +309,10 @@
           return _.cloneDeep(this.condition);
       },
       isShowExport () {
-        return ['resource-permiss'].includes(this.$route.name);
+        return ['resourcePermiss'].includes(this.$route.name);
+      },
+      isSystemDisabled () {
+        return this.index === 1 && ['system_manager'].includes(this.user.role.type);
       }
     },
     watch: {
@@ -347,6 +352,10 @@
           ? 960 : Math.ceil(window.innerWidth * 0.67 - 7);
       },
 
+      async fetchPageData () {
+        await this.fetchSystemList();
+      },
+
       async fetchSystemList () {
         try {
           const params = {};
@@ -355,7 +364,7 @@
           }
           const res = await this.$store.dispatch('system/getSystems', params);
           this.systemList = res.data;
-          if (this.systemList.length && ['resourcePermManage'].includes(this.$route.name)) {
+          if (this.systemList.length && ['system_manager'].includes(this.user.role.type)) {
             this.systemId = this.systemList[0].id;
           }
         } catch (e) {
@@ -454,7 +463,7 @@
         // 区分管理空间下和平台管理下的资源权限管理的业务
         const { current, limit } = this.pagination;
         const params = {
-          limit,
+          limit: this.limit,
           system_id: this.systemId || '',
           action_id: this.actionId,
           resource_instances: resourceInstances || []
@@ -549,13 +558,16 @@
       // 重置
       handleReset () {
         this.searchType = 'resource_instance';
-        this.systemId = '';
+        if (!this.isSystemDisabled) {
+          this.systemId = '';
+        }
         this.actionId = '';
         this.permissionType = '';
+        this.limit = 1000;
         this.tableList = [];
         this.resourceInstances = [];
         this.resourceTypeData = { isEmpty: true };
-        this.pagination = Object.assign(this.pagination, { current: 1, limit: 100, showTotalCount: true });
+        this.pagination = Object.assign(this.pagination, { current: 1, limit: 10, showTotalCount: true });
         this.emptyData = {
           type: 'empty',
           text: '暂无数据',
@@ -674,7 +686,7 @@
       handleSearch () {
         const routeMap = {
           resourcePermManage: async () => {
-            this.pagination = Object.assign(this.pagination, { current: 1, limit: 100 });
+            this.pagination = Object.assign(this.pagination, { current: 1, limit: 10 });
             await this.handleSearchAndExport();
           },
           resourcePermiss: () => {
@@ -745,7 +757,7 @@
       },
 
       limitChange (limit) {
-        this.pagination = Object.assign(this.pagination, { current: 1, limit });
+        this.limit = limit;
         const routeMap = {
           resourcePermManage: async () => {
             await this.handleSearchAndExport();

@@ -41,6 +41,16 @@ class ActionBean(Action):
     tag: str = ActionTag.UNCHECKED.value
     sensitivity_level: str = ""
 
+    def __init__(self, **data):
+        super().__init__(**data)
+        if (
+            "sensitivity" in data
+            and data["sensitivity"]
+            and isinstance(data["sensitivity"], int)
+            and 1 < data["sensitivity"] < 6
+        ):
+            self.sensitivity_level = SensitivityLevel.get_choices()[data["sensitivity"] - 1][0]
+
 
 class ActionSearchCondition(BaseModel):
     """操作的搜索条件"""
@@ -76,6 +86,10 @@ class ActionBeanList:
     def fill_sensitivity_level(self, action_sensitivity_level: Dict[str, str]):
         # 填充敏感度等级
         for action in self.actions:
+            # NOTE: 模型本身已经有默认值
+            if action.id not in action_sensitivity_level and action.sensitivity_level:
+                continue
+
             action.sensitivity_level = action_sensitivity_level.get(action.id, SensitivityLevel.L1.value)
 
     def filter_by_scope_action_ids(self, scope_action_ids: List[str]) -> List[ActionBean]:
