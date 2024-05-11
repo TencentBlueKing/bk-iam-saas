@@ -556,7 +556,8 @@
       }
     }
     .notice-methods {
-      margin-bottom: 44px;
+      /* margin-bottom: 44px; */
+      margin-bottom: 24px;
       &-list {
         display: flex;
         align-items: center;
