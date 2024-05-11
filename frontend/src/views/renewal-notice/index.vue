@@ -288,19 +288,19 @@
       }
     },
     created () {
-      this.fetchSuperNoticeConfig(false, false);
+      this.fetchSuperNoticeConfig(false, false, true);
     },
     mounted () {
       this.handleGetBusQueryData();
     },
     methods: {
-      async fetchSuperNoticeConfig (isReset = false, isStatus = false) {
-        this.isLoading = true;
+      async fetchSuperNoticeConfig (isReset = false, isStatus = false, isLoading = false) {
+        this.isLoading = isLoading;
         try {
           const { data } = await this.$store.dispatch('renewalNotice/getSuperNoticeConfig');
           if (data) {
             if (!data.hasOwnProperty('enable')) {
-              data.enable = true;
+              data.enable = false;
             }
             // 如果是重置操作，只需赋值给重置变量
             if (isReset) {
@@ -330,7 +330,7 @@
           const typeMap = {
             submit: async () => {
               if (JSON.stringify(this.noticeForm) !== JSON.stringify(this.noticeFormReset)) {
-                await this.fetchSuperNoticeConfig(true, false);
+                await this.fetchSuperNoticeConfig(true, false, false);
               }
               await this.$store.dispatch('renewalNotice/updateSuperNoticeConfig', this.noticeForm);
               this.messageSuccess(this.$t(`m.info['保存成功']`), 3000);
@@ -497,7 +497,7 @@
 
       handleGetBusQueryData () {
         bus.$on('on-update-renewal-notice', async ({ isShowRenewalNotice }) => {
-          await this.fetchSuperNoticeConfig(false, true);
+          await this.fetchSuperNoticeConfig(false, true, false);
           this.noticeForm.enable = isShowRenewalNotice || false;
           await this.handleSubmit('status');
         });
