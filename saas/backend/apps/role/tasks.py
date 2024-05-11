@@ -111,7 +111,7 @@ class SendRoleGroupExpireRemindMailTask(Task):
             )
 
             try:
-                esb.send_mail(",".join(usernames), "蓝鲸权限中心用户组续期提醒", mail_content)
+                esb.send_mail(",".join(usernames), "【蓝鲸权限中心】用户组成员续期提醒", mail_content)
             except Exception:  # pylint: disable=broad-except
                 logger.exception("send role_group_expire_remind email fail, usernames=%s", usernames)
 
@@ -122,7 +122,7 @@ class SendRoleGroupExpireRemindMailTask(Task):
             )
 
             data = {
-                "title": "**【蓝鲸权限中心】用户组续期提醒**",
+                "title": "**【蓝鲸权限中心】用户组成员续期提醒**",
                 "summary": content,
                 "approvers": ",".join(usernames),
                 "detail_url": url,
@@ -141,6 +141,7 @@ class SendRoleGroupExpireRemindMailTask(Task):
                             "expired_at_after": expired_at_after,
                             "month": 3,
                         },
+                        "confirm_button_info": "你已成功续期3个月",
                     },
                     {
                         "name": "6个月",
@@ -154,6 +155,7 @@ class SendRoleGroupExpireRemindMailTask(Task):
                             "expired_at_after": expired_at_after,
                             "month": 6,
                         },
+                        "confirm_button_info": "你已成功续期6个月",
                     },
                     {
                         "name": "1年",
@@ -167,6 +169,7 @@ class SendRoleGroupExpireRemindMailTask(Task):
                             "expired_at_after": expired_at_after,
                             "month": 12,
                         },
+                        "confirm_button_info": "你已成功续期1年",
                     },
                 ],
             }

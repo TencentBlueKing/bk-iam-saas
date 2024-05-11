@@ -78,7 +78,7 @@ class SendUserExpireRemindMailTask(Task):
                 {"groups": groups, "policies": policies, "url": url, "user": user, "index_url": settings.APP_URL},
             )
             try:
-                esb.send_mail(user.username, "蓝鲸权限中心续期提醒", mail_content)
+                esb.send_mail(user.username, "【蓝鲸权限中心】权限续期提醒", mail_content)
             except Exception:  # pylint: disable=broad-except
                 logger.exception("send user_group_policy_expire_remind email fail, username=%s", user.username)
 
@@ -108,6 +108,7 @@ class SendUserExpireRemindMailTask(Task):
                             "expired_at_after": expired_at_after,
                             "month": 3,
                         },
+                        "confirm_button_info": "你的续期申请已提交，审批中",
                     },
                     {
                         "name": "6个月",
@@ -121,6 +122,7 @@ class SendUserExpireRemindMailTask(Task):
                             "expired_at_after": expired_at_after,
                             "month": 6,
                         },
+                        "confirm_button_info": "你的续期申请已提交，审批中",
                     },
                     {
                         "name": "1年",
@@ -134,6 +136,7 @@ class SendUserExpireRemindMailTask(Task):
                             "expired_at_after": expired_at_after,
                             "month": 12,
                         },
+                        "confirm_button_info": "你的续期申请已提交，审批中",
                     },
                 ],
             }
