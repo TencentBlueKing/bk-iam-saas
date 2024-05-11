@@ -27,11 +27,11 @@
 import Vue from 'vue';
 import axios from 'axios';
 import cookie from 'cookie';
-import { bus } from '@/common/bus';
+// import { bus } from '@/common/bus';
 import il8n from '@/language';
-
 import CachedPromise from './cached-promise';
 import RequestQueue from './request-queue';
+import { showLoginModal } from '@blueking/login-modal';
 // import { messageError } from '@/common/bkmagic'
 
 const CSRF_COOKIE_NAME = window.CSRF_COOKIE_NAME;
@@ -210,10 +210,19 @@ function handleReject (error, config) {
     const { status, data } = error.response;
     const nextError = { message: error.message, response: error.response };
     if (status === 401) {
-      const loginPlainUrl = error.response.data.data.login_plain_url;
-      nextError.message = error.response.data.message;
-      bus.$emit('show-login-modal', loginPlainUrl);
+      // const loginPlainUrl = error.response.data.data.login_plain_url;
+      // nextError.message = error.response.data.message;
+      // bus.$emit('show-login-modal', loginPlainUrl);
       // window.location = LOGIN_SERVICE_URL + '/?c_url=' + window.location.href
+      const loginCallbackURL = `${window.location.origin}/static/login_success.html?is_ajax=1`;
+      const siteLoginUrl = window.LOGIN_SERVICE_URL || '';
+      if (!siteLoginUrl) {
+        console.error('Login URL not configured!');
+        return;
+      }
+      // 增加encodeURIComponent防止回调地址特殊字符被转义
+      const loginUrl = `${window.LOGIN_SERVICE_URL}/plain?size=big&app_code=1&c_url=${encodeURIComponent(loginCallbackURL)}`;
+      showLoginModal({ loginUrl });
     } else if (status === 500) {
       nextError.message = il8n('common', '系统出现异常');
     } else if (data && data.message) {

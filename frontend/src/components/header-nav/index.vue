@@ -644,7 +644,7 @@
         window.localStorage.removeItem('iam-header-name-cache');
         window.localStorage.removeItem('applyGroupList');
         window.localStorage.removeItem('index');
-        window.location = window.LOGIN_SERVICE_URL + '/?c_url=' + window.location.href;
+        window.location = `${window.LOGIN_SERVICE_URL}/?c_url=${encodeURIComponent(window.location.href)}`;
       },
 
       handleManager () {
