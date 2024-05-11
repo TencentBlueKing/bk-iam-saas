@@ -221,7 +221,7 @@ function handleReject (error, config) {
         return;
       }
       // 增加encodeURIComponent防止回调地址特殊字符被转义
-      const loginUrl = `${window.LOGIN_SERVICE_URL}/?size=big&app_code=1&c_url=${encodeURIComponent(loginCallbackURL)}`;
+      const loginUrl = `${window.LOGIN_SERVICE_URL}/plain?size=big&app_code=1&c_url=${encodeURIComponent(loginCallbackURL)}`;
       showLoginModal({ loginUrl });
     } else if (status === 500) {
       nextError.message = il8n('common', '系统出现异常');
