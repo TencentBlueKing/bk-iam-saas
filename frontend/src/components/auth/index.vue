@@ -1,9 +1,10 @@
 <template>
-  <div class="bk-login-dialog" v-if="isShow">
+  <!-- <div class="bk-login-dialog" v-if="isShow">
     <div class="bk-login-wrapper">
       <iframe :src="iframeSrc" scrolling="no" border="0" width="400" height="400"></iframe>
     </div>
-  </div>
+  </div> -->
+  <div></div>
 </template>
 
 <script>
