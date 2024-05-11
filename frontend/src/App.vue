@@ -61,7 +61,7 @@
         <router-view class="views-layout" :key="routerKey" v-show="!mainContentLoading"></router-view>
       </div>
     </main>
-    <app-auth ref="bkAuth"></app-auth>
+    <!-- <app-auth ref="bkAuth"></app-auth> -->
   </div>
 </template>
 <script>
@@ -187,16 +187,16 @@
       });
     },
     mounted () {
-      const self = this;
-      bus.$on('show-login-modal', (payload) => {
-        self.$refs.bkAuth.showLoginModal(payload);
-      });
-      bus.$on('close-login-modal', () => {
-        self.$refs.bkAuth.hideLoginModal();
-        setTimeout(() => {
-          window.location.reload();
-        }, 0);
-      });
+      // const self = this;
+      // bus.$on('show-login-modal', (payload) => {
+      //   self.$refs.bkAuth.showLoginModal(payload);
+      // });
+      // bus.$on('close-login-modal', () => {
+      //   self.$refs.bkAuth.hideLoginModal();
+      //   setTimeout(() => {
+      //     window.location.reload();
+      //   }, 0);
+      // });
       bus.$on('updatePoll', (payload) => {
         clearInterval(this.timer);
         if (payload && payload.isStop) {

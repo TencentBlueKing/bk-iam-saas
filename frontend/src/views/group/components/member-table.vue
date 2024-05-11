@@ -1509,7 +1509,7 @@
   width: auto !important;
   .bk-cascade-options {
     width: auto !important;
-    height: 70px !important;
+    height: 72px !important;
   }
   .bk-cascade-panel {
     .bk-cascade-panel-ul {
