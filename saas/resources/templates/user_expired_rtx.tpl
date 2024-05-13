@@ -9,5 +9,5 @@
 **用户组权限({{ groups|length }})**
 {% endif %}
 {% for group in groups %}
-用户组: **{{ group.name }}**, 管理空间: **{{ group.get_role_name }}**, 描述: **{{ group.description }}**, 过期时间: **{{ group.expired_at_display }}**
+用户组: **{{ group.name }}**, 管理空间: **{{ group.get_role_name }}**, 描述: {{ group.description }}, 过期时间: **{{ group.expired_at_display }}**
 {% endfor %}
