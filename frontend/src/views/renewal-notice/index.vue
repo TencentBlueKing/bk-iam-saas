@@ -34,12 +34,13 @@
                 </div>
                 <div class="gou" />
               </div>
-              <div class="notice-temp">
+              <!-- 暂时注释，待二期后台提供接口对接 -->
+              <!-- <div class="notice-temp">
                 <Icon type="setting" class="notice-temp-icon" />
                 <div class="notice-temp-label" @click.stop="handleShowNoticeTemp(item)" :style="tempSetStyle">
                   {{ $t(`m.renewalNotice['模板']`) }}
                 </div>
-              </div>
+              </div> -->
             </div>
           </div>
           <div v-if="isMethodsEmpty" class="notice-empty-error methods-empty-error">
@@ -287,19 +288,19 @@
       }
     },
     created () {
-      this.fetchSuperNoticeConfig(false, false);
+      this.fetchSuperNoticeConfig(false, false, true);
     },
     mounted () {
       this.handleGetBusQueryData();
     },
     methods: {
-      async fetchSuperNoticeConfig (isReset = false, isStatus = false) {
-        this.isLoading = true;
+      async fetchSuperNoticeConfig (isReset = false, isStatus = false, isLoading = false) {
+        this.isLoading = isLoading;
         try {
           const { data } = await this.$store.dispatch('renewalNotice/getSuperNoticeConfig');
           if (data) {
             if (!data.hasOwnProperty('enable')) {
-              data.enable = true;
+              data.enable = false;
             }
             // 如果是重置操作，只需赋值给重置变量
             if (isReset) {
@@ -329,7 +330,7 @@
           const typeMap = {
             submit: async () => {
               if (JSON.stringify(this.noticeForm) !== JSON.stringify(this.noticeFormReset)) {
-                await this.fetchSuperNoticeConfig(true, false);
+                await this.fetchSuperNoticeConfig(true, false, false);
               }
               await this.$store.dispatch('renewalNotice/updateSuperNoticeConfig', this.noticeForm);
               this.messageSuccess(this.$t(`m.info['保存成功']`), 3000);
@@ -496,7 +497,7 @@
 
       handleGetBusQueryData () {
         bus.$on('on-update-renewal-notice', async ({ isShowRenewalNotice }) => {
-          await this.fetchSuperNoticeConfig(false, true);
+          await this.fetchSuperNoticeConfig(false, true, false);
           this.noticeForm.enable = isShowRenewalNotice || false;
           await this.handleSubmit('status');
         });
@@ -555,7 +556,8 @@
       }
     }
     .notice-methods {
-      margin-bottom: 44px;
+      /* margin-bottom: 44px; */
+      margin-bottom: 24px;
       &-list {
         display: flex;
         align-items: center;
@@ -758,9 +760,9 @@
       color: #ff5656;
       font-size: 12px;
       margin-top: 4px;
-      &.methods-empty-error {
+      /* &.methods-empty-error {
         margin-top: 24px;
-      }
+      } */
     }
     .renewal-notice-footer {
       width: 100%;
