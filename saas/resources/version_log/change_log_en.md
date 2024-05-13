@@ -1,3 +1,12 @@
+## V1.10.28 Version Update Log
+
+### New Features
+
+* Added configuration permission expiration reminder notification policy function
+* Added enterprise WeChat to permission expiration reminder notification
+
+---
+
 <!-- 2024-04-25 -->
 # V1.10.27 Version Update Log
 
