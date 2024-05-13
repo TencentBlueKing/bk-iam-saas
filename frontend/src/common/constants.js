@@ -241,3 +241,35 @@ export const MEMBERS_TEMPLATE_FIELDS = [
     disabled: false
   }
 ];
+
+// 续期通知日期
+export const SEND_DAYS_LIST = [
+  {
+    label: '周一',
+    value: 'monday'
+  },
+  {
+    label: '周二',
+    value: 'tuesday'
+  },
+  {
+    label: '周三',
+    value: 'wednesday'
+  },
+  {
+    label: '周四',
+    value: 'thursday'
+  },
+  {
+    label: '周五',
+    value: 'friday'
+  },
+  {
+    label: '周六',
+    value: 'saturday'
+  },
+  {
+    label: '周日',
+    value: 'sunday'
+  }
+];

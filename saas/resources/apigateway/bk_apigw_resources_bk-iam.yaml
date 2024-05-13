@@ -806,6 +806,58 @@ paths:
           resourcePermissionRequired: false
         disabledStages: []
         descriptionEn:
+  /api/v1/open/application/approval_bot/role/:
+    post:
+      operationId: approval_bot_callback_role
+      description: 审批机器人角色回调
+      tags:
+      - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: false
+        allowApplyPermission: false
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/open/application/approval_bot/role/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
+  /api/v1/open/application/approval_bot/user/:
+    post:
+      operationId: approval_bot_callback_user
+      description: 审批机器人用户续期回调
+      tags:
+      - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: false
+        allowApplyPermission: false
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/open/application/approval_bot/user/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
   /api/v1/open/application/policies/:
     post:
       operationId: application_grant_policy

@@ -63,7 +63,8 @@
                       :label="tableItem.label"
                       :prop="tableItem.prop">
                       <template slot-scope="{ row }">
-                        <span>{{ row.id }}({{ row.name }})</span>
+                        <span v-if="['user'].includes(row.type)">{{ row.id }}({{ row.name }})</span>
+                        <span v-if="['depart', 'department'].includes(row.type)">{{ row.name }}({{ row.id }})</span>
                       </template>
                     </bk-table-column>
                   </template>
@@ -320,10 +321,16 @@
           await Promise.all([this.fetchMembers(item), this.fetchGroupSubjectTemplate(item)]).then(() => {
             if (item.groupTabList && item.groupTabList.length) {
               const childList = item.groupTabList.map((v) => v.children || []).flat(Infinity);
+              const isExistUserOrg = childList.find((v) => ['user', 'department'].includes(v.type));
+              const isExistTemp = childList.find((v) => ['template'].includes(v.type));
+              if (!isExistUserOrg && isExistTemp) {
+                item.tabActive = 'memberTemplate';
+              }
               childList && childList.forEach(subItem => {
                 item.checkList.push(subItem);
                 if (this.$refs.permTableRef && this.$refs.permTableRef.length) {
                   this.$refs.permTableRef[i].toggleRowSelection(subItem, true);
+                  this.fetchCustomTotal(i);
                 }
               });
             }

@@ -232,6 +232,7 @@ export const m = {
         '查询类型': 'Query type',
         '确定同步': 'Confirm sync',
         '新增模板': 'New template',
+        '发送': 'Send',
         '导出': 'Export',
         '查询': 'Search',
         '生效条件': 'Effective condition',
@@ -298,7 +299,12 @@ export const m = {
         '每页': 'Page',
         '清除选择': 'Clear',
         '暂无可清空数据': 'No data clear',
-        '已选父级': 'Selected parent level'
+        '已选父级': 'Selected parent level',
+        '测试': 'Test',
+        '恢复默认': 'Default',
+        '点击复制': 'Click to copy',
+        '复制成功': 'Copy successful',
+        '暂无可复制数据': 'There is currently no replicable data'
     },
     // 校验
     verify: {
@@ -588,7 +594,9 @@ export const m = {
         '确认删除该人员模板？': 'Are you sure to delete the member template?',
         '确认解除与该用户组的关联？': 'Are you sure to dissociate from this user group?',
         '确认批量删除所选的人员模板吗？': 'Are you sure to batch delete the selected member templates?',
-        '确认把用户/组织移出该用户组？': 'Are you sure to move the user/organization out of this user group?'
+        '确认把用户/组织移出该用户组？': 'Are you sure to move the user/organization out of this user group?',
+        '确认删除同步记录？': 'Are you sure you want to delete the synchronization record?',
+        '确认恢复默认？': 'Are you sure to restore defaults?'
     },
     nav: {
         '蓝鲸权限中心': 'BlueKing-IAM',
@@ -647,7 +655,8 @@ export const m = {
         '用户组设置': 'User Group Setting',
         '敏感等级': 'Sensitivity Level',
         '人员模板': 'Members Template',
-        '用户/组织': 'User/Organization'
+        '用户/组织': 'User/Organization',
+        '续期通知': 'Renewal Notice'
     },
     applyEntrance: {
         '立刻申请': 'Apply now',
@@ -944,7 +953,9 @@ export const m = {
         '同步失败排查指引': 'Sync Failure Troubleshooting Guide',
         '今天': 'Today',
         '最近7天': 'Last 7 days',
-        '最近30天': 'Last 30 days'
+        '最近30天': 'Last 30 days',
+        '删除后，可通过重新同步更新记录': 'After deletion, records can be updated by resynchronizing',
+        '同步操作失败，请在用户管理后台API日志中查询详情': 'The synchronization operation failed. Please check the details in the API log of the user management backend'
     },
     grading: {
         '管理空间': 'Management space',
@@ -1520,6 +1531,57 @@ export const m = {
         '已选择的用户组权限为不可移出的管理员组': 'The selected user group permission is an administrator group that cannot be removed',
         '已选择的用户组权限不需要续期': 'The selected user group permissions do not need to be renewed',
         '组织用户组权限': 'Organizational user group permissions'
+    },
+    renewalNotice: {
+        '邮件': 'Mail',
+        '短信': 'SMS',
+        '微信': 'WeChat',
+        '企业微信': 'WeCom',
+        '通知方式': 'Notice method',
+        '通知时间': 'Notice time',
+        '通知范围': 'Notice scope',
+        '通知日': 'Notice day',
+        '发送时间': 'Send time',
+        '通知范围至少7天': 'Notification scope for at least 7 days',
+        '整个通知范围，需要 >= 7 天': 'The entire notification scope needs to be>=7 days',
+        '续期通知暂未开启': 'Renewal notification not yet enabled',
+        '请在顶部开启相关功能': 'Please enable relevant functions at the top',
+        '通知方式为必填项': 'Notice method required',
+        '通知范围为必填项': 'Notice scope required',
+        '通知日为必填项': 'Notice date required',
+        '发送时间为必填项': 'Send time required',
+        '过期前': 'Before expiration',
+        '过期后': 'After expiration',
+        '天内': 'within the day',
+        '逢': 'Encounter',
+        '的': '',
+        '发送通知': 'send notice',
+        '开启成功': 'Opened successfully',
+        '关闭成功': 'Closed successfully',
+        '周一': 'Monday',
+        '周二': 'Tuesday',
+        '周三': 'Wednesday',
+        '周四': 'Thursday',
+        '周五': 'Friday',
+        '周六': 'Saturday',
+        '周日': 'Sunday',
+        '模板': 'Template',
+        '通知模板': 'Notice template',
+        '模板内容': 'Template content',
+        '邮件主题': 'Email subject',
+        '发送对象': 'Sending object',
+        '续期用户': 'Renewal user',
+        '空间管理员': 'Space manager',
+        '内置变量': 'Built in variables',
+        '变量名': 'Variable name',
+        '变量描述': 'Variable description',
+        '恢复后，模板将会回到系统默认设定': 'After restoration, the template will return to the system default settings',
+        '请输入邮件主题': 'Please enter email subject',
+        '请输入模板内容': 'Please enter template content',
+        '请输入接收测试通知的用户（请确保账号正确）': 'Please enter the user who will receive the test notification (please ensure that the account is correct)',
+        '测试通知已发送成功，请查收。': 'The test notification has been successfully sent, please check it.',
+        '邮件主题为必填项': 'Email subject is required',
+        '模板内容为必填项': 'Template content is required'
     }
 }
 export default {

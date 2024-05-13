@@ -143,4 +143,5 @@ urlpatterns = [
             ]
         ),
     ),
+    path("notification_config/", views.RoleNotificationConfigView.as_view(), name="role.notification_config"),
 ]

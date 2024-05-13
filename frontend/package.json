@@ -88,7 +88,7 @@
     "@babel/runtime": "~7.4.5",
     "@blueking/login-modal": "^1.0.0",
     "@blueking/notice-component-vue2": "^2.0.3",
-    "@blueking/user-selector": "^1.0.11",
+    "@blueking/user-selector": "^1.0.14",
     "@commitlint/cli": "~13.1.0",
     "@commitlint/config-conventional": "~13.1.0",
     "@icon-cool/bk-icon-bk-iam": "^0.0.3",

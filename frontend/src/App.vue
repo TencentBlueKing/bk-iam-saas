@@ -197,8 +197,11 @@
       //     window.location.reload();
       //   }, 0);
       // });
-      bus.$on('updatePoll', () => {
+      bus.$on('updatePoll', (payload) => {
         clearInterval(this.timer);
+        if (payload && payload.isStop) {
+          return;
+        }
         this.timer = setInterval(() => {
           this.fetchSyncStatus();
         }, 15000);
@@ -300,6 +303,7 @@
                 ? this.$t(`m.permTemplate['同步组织架构成功']`)
                 : this.$t(`m.permTemplate['同步组织架构失败']`)
             });
+            bus.$emit('on-sync-record-status');
           }
         } catch (e) {
           console.error(e);
@@ -367,7 +371,7 @@
 
     .views-layout {
         min-height: 100%;
-        min-width: 1120px;
+        /* min-width: 1120px; */
         padding: 24px;
     }
 
