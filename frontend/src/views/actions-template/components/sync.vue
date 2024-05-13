@@ -12,7 +12,7 @@
       <bk-table
         v-bkloading="{ isLoading: syncLoading, opacity: 1 }"
         v-if="group.expand"
-        :data="tableList"
+        :data="group.tableList"
         col-border
         border
         size="small"
@@ -20,81 +20,92 @@
         :cell-class-name="getCellClass"
         @cell-mouse-enter="handleCellMouseEnter"
         @cell-mouse-leave="handleCellMouseLeave">
-        <div v-for="(item, index) in addProps" :key="index">
-          <bk-table-column
-            :min-width="200"
-            :resizable="false"
-            :prop="item.id"
-            :render-header="renderAddActionHeader"
-            :label="item.label">
-            <template slot-scope="{ row, $index }">
-              <div class="relation-content-wrapper">
-                <template v-if="!row.add_actions[index].isEmpty">
-                  <div v-for="(_, groIndex) in row.add_actions[index].resource_groups" :key="_.id">
-                    <div class="relation-content-item"
-                      v-for="(content, contentIndex) in _.related_resource_types"
-                      :key="`${index}${contentIndex}`">
-                      <div class="content-name">{{ content.name }}</div>
-                      <div class="content">
-                        <render-condition
-                          :ref="`condition_${index}_${$index}_${contentIndex}_ref`"
-                          :value="content.value"
-                          :params="curCopyParams"
-                          :is-empty="content.empty"
-                          :can-view="row.canView"
-                          :can-paste="content.canPaste"
-                          :is-error="content.isError"
-                          @on-mouseover="handlerConditionMouseover(content, row)"
-                          @on-mouseleave="handlerConditionMouseleave(content)"
-                          @on-restore="handlerOnRestore(content)"
-                          @on-copy="handlerOnCopy(content, $index, contentIndex, index, row.add_actions[index])"
-                          @on-paste="handlerOnPaste(...arguments, content)"
-                          @on-batch-paste="handlerOnBatchPaste(...arguments, content, $index, contentIndex, index)"
-                          @on-click="showResourceInstance(row, content, contentIndex, $index, index, groIndex)" />
-                      </div>
+        <bk-table-column
+          :min-width="180"
+          :resizable="false"
+          :label="$t(`m.common['操作名']`)"
+        >
+          <template slot-scope="{ row, $index }">
+            <span>
+              <bk-tag :type="formatModeType(row.mode_type).tag" class="name-tag">
+                {{ formatModeType(row.mode_type).text }}
+              </bk-tag>
+              <span>{{ row.name }}</span>
+            </span>{{ $index }}
+          </template>
+        </bk-table-column>
+        <bk-table-column
+          :min-width="200"
+          :resizable="false"
+          :label="$t(`m.permApply['资源类型']`)"
+        >
+          <div v-for="(item, index) in addProps" :key="index">
+            <div class="relation-content-wrapper">
+              <template v-if="!row.add_actions[index].isEmpty">
+                <div v-for="(_, groIndex) in row.add_actions[index].resource_groups" :key="_.id">
+                  <div class="relation-content-item"
+                    v-for="(content, contentIndex) in _.related_resource_types"
+                    :key="`${index}${contentIndex}`">
+                    <div class="content-name">{{ content.name }}</div>
+                    <div class="content">
+                      <render-condition
+                        :ref="`condition_${index}_${$index}_${contentIndex}_ref`"
+                        :value="content.value"
+                        :params="curCopyParams"
+                        :is-empty="content.empty"
+                        :can-view="row.canView"
+                        :can-paste="content.canPaste"
+                        :is-error="content.isError"
+                        @on-mouseover="handlerConditionMouseover(content, row)"
+                        @on-mouseleave="handlerConditionMouseleave(content)"
+                        @on-restore="handlerOnRestore(content)"
+                        @on-copy="handlerOnCopy(content, $index, contentIndex, index, row.add_actions[index])"
+                        @on-paste="handlerOnPaste(...arguments, content)"
+                        @on-batch-paste="handlerOnBatchPaste(...arguments, content, $index, contentIndex, index)"
+                        @on-click="showResourceInstance(row, content, contentIndex, $index, index, groIndex)" />
                     </div>
                   </div>
-                  <bk-popover
-                    :ref="`popover_${index}_${$index}_ref`"
-                    trigger="click"
-                    class="iam-template-sync-popover-cls"
-                    theme="light"
-                    placement="right"
-                    :on-hide="() => handleHidePopover(row.add_actions[index])"
-                    :on-show="() => handleShowPopover(row.add_actions[index])">
-                    <div class="edit-wrapper" v-if="!!row.add_actions[index].showAction">
-                      <spin-loading v-if="row.add_actions[index].loading" />
-                      <Icon type="edit-fill" v-else />
-                    </div>
-                    <div slot="content" class="sync-popover-content">
-                      <p class="refer-title" v-if="isShowBatchRefer(row.add_actions[index])">
-                        <Icon type="down-angle" />{{ $t(`m.permTemplateDetail['批量引用已有的操作实例']`) }}
+                </div>
+                <bk-popover
+                  :ref="`popover_${index}_${$index}_ref`"
+                  trigger="click"
+                  class="iam-template-sync-popover-cls"
+                  theme="light"
+                  placement="right"
+                  :on-hide="() => handleHidePopover(row.add_actions[index])"
+                  :on-show="() => handleShowPopover(row.add_actions[index])">
+                  <div class="edit-wrapper" v-if="!!row.add_actions[index].showAction">
+                    <spin-loading v-if="row.add_actions[index].loading" />
+                    <Icon type="edit-fill" v-else />
+                  </div>
+                  <div slot="content" class="sync-popover-content">
+                    <p class="refer-title" v-if="isShowBatchRefer(row.add_actions[index])">
+                      <Icon type="down-angle" />{{ $t(`m.permTemplateDetail['批量引用已有的操作实例']`) }}
+                    </p>
+                    <template v-if="batchReferAction(row.add_actions[index]).length > 0">
+                      <p v-for="resItem in batchReferAction(row.add_actions[index])"
+                        :key="resItem.id"
+                        class="cursor"
+                        @click.stop="handleReferInstance(resItem, row.add_actions[index], row, index, $index)">
+                        {{ resItem.name }}
                       </p>
-                      <template v-if="batchReferAction(row.add_actions[index]).length > 0">
-                        <p v-for="resItem in batchReferAction(row.add_actions[index])"
-                          :key="resItem.id"
-                          class="cursor"
-                          @click.stop="handleReferInstance(resItem, row.add_actions[index], row, index, $index)">
-                          {{ resItem.name }}
-                        </p>
-                      </template>
-                      <template
-                        v-if="!isShowBatchRefer(row.add_actions[index])
-                          && batchReferAction(row.add_actions[index]).length === 0"
-                      >
-                        {{ $t(`m.common['暂无数据']`) }}
-                      </template>
-                    </div>
-                  </bk-popover>
-                </template>
-                <template v-else>
-                  {{ $t(`m.common['无需关联实例']`) }}
-                </template>
-              </div>
-            </template>
-          </bk-table-column>
-        </div>
-        <div v-for="(item, index) in deleteProps" :key="item.id">
+                    </template>
+                    <template
+                      v-if="!isShowBatchRefer(row.add_actions[index])
+                        && batchReferAction(row.add_actions[index]).length === 0"
+                    >
+                      {{ $t(`m.common['暂无数据']`) }}
+                    </template>
+                  </div>
+                </bk-popover>
+              </template>
+              <template v-else>
+                {{ $t(`m.common['无需关联实例']`) }}
+              </template>
+            </div>
+          </div>
+        </bk-table-column>
+        <!-- <div v-for="(item, index) in deleteProps" :key="item.id">
           <bk-table-column
             :key="item.id"
             :min-width="200"
@@ -124,7 +135,7 @@
               </div>
             </template>
           </bk-table-column>
-        </div>
+        </div> -->
       </bk-table>
       <div class="pagination-wrapper" v-if="pagination.totalPage > 1">
         <div class="page-display">
@@ -200,7 +211,7 @@
   import SyncPolicy from '@/model/template-sync-policy';
   import Condition from '@/model/condition';
   // import RenderResourcePopover from '@/components/iam-view-resource-popover';
-  import RenderCondition from '../components/render-condition';
+  // import RenderCondition from '../components/render-condition';
   import RenderDetail from '../components/render-detail';
   import RenderResource from '../components/render-resource';
   export default {
@@ -212,7 +223,7 @@
     },
     components: {
       // RenderResourcePopover,
-      RenderCondition,
+      // RenderCondition,
       RenderDetail,
       RenderResource
     },
@@ -225,7 +236,7 @@
         type: Array,
         default: () => []
       },
-      addAction: {
+      addActions: {
         type: Array,
         default: () => []
       },
@@ -378,14 +389,33 @@
         };
       },
       isAddActionEmpty () {
-        return this.addAction.length < 1;
-      }
-    },
-    watch: {
-      requestQueue (value) {
-        if (value.length < 1) {
-          this.$emit('on-ready');
-        }
+        return this.addActions.length < 1;
+      },
+      formatModeType () {
+        return (payload) => {
+          const result = {
+            tag: 'success',
+            text: this.$t(`m.common['新增']`)
+          };
+          const modeMap = {
+            add: () => {
+              return {
+                tag: 'success',
+                text: this.$t(`m.common['新增']`)
+              };
+            },
+            delete: () => {
+              return {
+                tag: 'danger',
+                text: this.$t(`m.common['移除']`)
+              };
+            }
+          };
+          if (modeMap[payload]) {
+            return modeMap[payload]();
+          }
+          return result;
+        };
       }
     },
     async created () {
@@ -420,11 +450,12 @@
           this.tableList = cloneDeep(data.results || []);
           this.tableList.forEach((item, index) => {
             this.$set(item, 'expand', !(index > 0));
+            this.$set(item, 'tableList', []);
             if (index === 0) {
               this.$emit('on-expand', item);
             }
-            if (this.addAction.length > 0) {
-              this.$set(item, 'add_actions', cloneDeep(this.addAction));
+            if (this.addActions.length > 0) {
+              this.$set(item, 'add_actions', cloneDeep(this.addActions));
               item.add_actions = item.add_actions.map(act => {
                 if (!act.resource_groups || !act.resource_groups.length) {
                   act.resource_groups = [];
@@ -432,7 +463,10 @@
                     act.resource_groups = [{ id: '', related_resource_types: act.related_resource_types }];
                   }
                 }
-                return new SyncPolicy({ ...act, tag: 'add' }, 'add');
+                const result = new SyncPolicy({ ...act, tag: 'add' }, 'add');
+                this.$set(result, 'mode_type', 'add');
+                item.tableList.push(result);
+                return result;
               });
             }
             item.delete_actions = item.delete_actions.map(act => {
@@ -442,9 +476,13 @@
                   act.resource_groups = [{ id: '', related_resource_types: act.related_resource_types }];
                 }
               }
-              return new SyncPolicy({ ...act, tag: 'add' }, 'add');
+              const result = new SyncPolicy({ ...act, tag: 'add' }, 'add');
+              this.$set(result, 'mode_type', 'delete');
+              item.tableList.push(result);
+              return result;
             });
           });
+          console.log(this.tableList, 555);
           this.setTableProps();
           this.originalList = cloneDeep(this.tableList);
           this.isLastPage = current === this.pagination.totalPage;
@@ -958,7 +996,7 @@
                 margin: '0 4px 0 0'
               },
               props: {
-                theme: 'info'
+                theme: 'success'
               },
               domProps: {
                 innerHTML: this.$t(`m.common['新增']`)
@@ -976,7 +1014,7 @@
       setTableProps () {
         this.addProps = [];
         this.deleteProps = [];
-        this.addAction.forEach(item => {
+        this.addActions.forEach(item => {
           this.addProps.push({
             label: item.name,
             id: item.id
@@ -1034,6 +1072,9 @@
     &-content {
       border-right: none;
       border-bottom: none;
+      .name-tag {
+        margin-left: 0
+      }
       .relation-content-wrapper {
         height: 100%;
         padding: 17px 0;

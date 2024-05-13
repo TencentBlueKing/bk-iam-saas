@@ -417,7 +417,9 @@
         if (this.isEdit) {
           await this.fetchDetail();
           await this.fetchGroupPreview();
-          await this.fetchPreUpdateInfo();
+          if (this.hasGroupPreview) {
+            await this.fetchPreUpdateInfo();
+          }
         } else {
           await this.fetchSystems();
         }
@@ -462,7 +464,7 @@
           });
           this.initialTempName = cloneDeep(name || '');
           this.initialDescription = cloneDeep(description || '');
-          this.allCustomActionList = cloneDeep(actions || []);
+          this.allCustomActionList = cloneDeep(this.getDetailActionData(actions || []));
           this.$store.commit('setHeaderTitle', name);
           await this.handleActionLinearData(false);
           this.allCustomActionListBack = cloneDeep(this.allCustomActionList);
@@ -838,6 +840,73 @@
         });
       },
 
+      getDetailActionData (payload) {
+        payload.forEach((item) => {
+          this.$set(item, 'expanded', false);
+          let count = 0;
+          let allCount = 0;
+          let deleteCount = 0;
+          if (!item.actions) {
+            this.$set(item, 'actions', []);
+          }
+          if (!item.sub_groups) {
+            this.$set(item, 'sub_groups', []);
+          }
+          item.actions.forEach(act => {
+            this.$set(act, 'checked', ['checked', 'readonly', 'delete'].includes(act.tag));
+            this.$set(act, 'disabled', act.tag === 'readonly');
+            if (act.checked) {
+              ++count;
+              this.defaultCheckedActions.push(act.id);
+            }
+            if (act.tag === 'delete') {
+              ++deleteCount;
+            }
+            ++allCount;
+          });
+          item.sub_groups.forEach(sub => {
+            this.$set(sub, 'expanded', false);
+            this.$set(sub, 'actionsAllChecked', false);
+            if (!sub.actions) {
+              this.$set(sub, 'actions', []);
+            }
+            sub.actions.forEach(act => {
+              this.$set(act, 'checked', ['checked', 'readonly', 'delete'].includes(act.tag));
+              this.$set(act, 'disabled', act.tag === 'readonly');
+              if (act.checked) {
+                ++count;
+                this.defaultCheckedActions.push(act.id);
+              }
+              if (act.tag === 'delete') {
+                ++deleteCount;
+              }
+              ++allCount;
+            });
+
+            const isSubAllChecked = sub.actions.every(v => v.checked);
+            this.$set(sub, 'allChecked', isSubAllChecked);
+          });
+
+          this.$set(item, 'deleteCount', deleteCount);
+          this.$set(item, 'count', count);
+          this.$set(item, 'allCount', allCount);
+
+          const isAllChecked = item.actions.every(v => v.checked);
+          const isAllDisabled = item.actions.every(v => v.disabled);
+          this.$set(item, 'allChecked', isAllChecked);
+          if (item.sub_groups && item.sub_groups.length > 0) {
+            this.$set(item, 'actionsAllChecked', isAllChecked && item.sub_groups.every(v => v.allChecked));
+            this.$set(item, 'actionsAllDisabled', isAllDisabled && item.sub_groups.every(v => {
+              return v.actions.every(sub => sub.disabled);
+            }));
+          } else {
+            this.$set(item, 'actionsAllChecked', isAllChecked);
+            this.$set(item, 'actionsAllDisabled', isAllDisabled);
+          }
+        });
+        return payload;
+      },
+
       getActionsData (payload, isSearch = false) {
         // 获取actions和sub_groups所有数据，并根据单双行渲染不同背景颜色
         let colorIndex = 0;
@@ -935,7 +1004,6 @@
             };
             const list = cloneDeep(this.allCustomActionListBack);
             this.$store.commit('permTemplate/updatePreActionIds', actionIdList);
-            console.log(getHasSelectedActions(actionIdList, list, this.defaultCheckedActions), 55);
             this.$store.commit('permTemplate/updateAction', getHasSelectedActions(actionIdList, list, this.defaultCheckedActions));
             await addPreUpdateInfo(params);
           }

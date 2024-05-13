@@ -48,7 +48,7 @@
                 ref="syncRef"
                 :id="$route.params.id"
                 :all-actions="policyList"
-                :add-action="addActions"
+                :add-actions="addActions"
                 :clone-action="cloneActions"
                 @on-ready="handleSyncReady"
                 @on-expand="handleExpand"
@@ -238,7 +238,6 @@
       },
       actions: {
         handler (value) {
-          console.log(value, 6666);
           const tempActions = [];
           value.forEach((item) => {
             item.actions.forEach(act => {
