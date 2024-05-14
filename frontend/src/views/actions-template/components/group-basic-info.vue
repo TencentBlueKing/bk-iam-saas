@@ -17,7 +17,7 @@
             />
           </div>
         </detail-item>
-        <detail-item :label="`${$t(`m.memberTemplate['用户组ID']`)}${$t(`m.common['：']`)}`">
+        <detail-item :label="`${$t(`m.actionsTemplate['用户组ID']`)}${$t(`m.common['：']`)}`">
           <span class="basic-info-value">{{ basicInfo.id || '--'}}</span>
         </detail-item>
         <detail-item :label="`${$t(`m.common['描述']`)}${$t(`m.common['：']`)}`">
@@ -42,7 +42,7 @@
         <detail-item :label="`${$t(`m.grading['更新时间']`)}${$t(`m.common['：']`)}`">
           <span class="basic-info-value">{{ basicInfo.updated_time || '--'}}</span>
         </detail-item>
-        <detail-item :label="`${$t(`m.common['成员']`)}${$t(`m.common['：']`)}`">
+        <detail-item :label="`${$t(`m.actionsTemplate['成员']`)}${$t(`m.common['：']`)}`">
           <div class="basic-info-value">
             <div class="member-type-tab">
               <div
@@ -67,20 +67,6 @@
                     {{ `(${getMemberTypeDetail(item).id})`}}
                   </span>
                 </div>
-                <!-- <div v-if="['depart', 'department'].includes(item.type)" class="type-name">
-                    <Icon type="organization-fill" class="icon" />
-                    <span class="name"> {{ item.name || "--" }} </span>
-                    <span class="count"> {{ `(${item.id})` }}</span>
-                  </div>
-                </template>
-                <template v-if="['memberTemplate'].includes(tabActive)">
-                  <div class="member-temp">
-                    <Icon type="renyuanmuban" class="icon" />
-                    <span class="name">
-                      {{ item.name || "--" }}
-                    </span>
-                  </div>
-                </template> -->
               </div>
             </div>
           </div>
@@ -128,7 +114,7 @@
         },
         memberTabList: [
           {
-            name: this.$t(`m.memberTemplate['用户/组织']`),
+            name: this.$t(`m.userGroup['用户/组织']`),
             id: 'userOrg',
             list: [],
             count: 0

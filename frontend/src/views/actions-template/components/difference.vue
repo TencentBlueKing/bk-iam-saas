@@ -52,6 +52,7 @@
                 :clone-action="cloneActions"
                 @on-ready="handleSyncReady"
                 @on-expand="handleExpand"
+                @on-change-location-group="handleLocationGroup"
                 @on-all-submit="handleAllSubmit"
               />
             </div>
@@ -79,7 +80,6 @@
           <div class="sync-group-btn">
             <bk-button
               :loading="prevLoading"
-              :disabled="disabled"
               @click.stop="handlePrevStep('prev')"
             >
               {{ $t(`m.common['上一步']`) }}
@@ -387,6 +387,12 @@
 
       handleExpand (payload) {
         this.curExpandData = payload.expand ? payload : {};
+      },
+
+      handleLocationGroup (payload) {
+        const { list } = payload;
+        console.log(list);
+        this.totalLocationCount = list.length || 0;
       },
  
       handleAllSubmit (payload) {

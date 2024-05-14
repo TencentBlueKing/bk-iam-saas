@@ -182,7 +182,7 @@
           }
           &-content {
             padding: 0 16px 16px 16px;
-            margin-bottom: 16px;
+            /* margin-bottom: 16px; */
             overflow-y: auto;
             &::-webkit-scrollbar {
               width: 4px;
@@ -212,6 +212,9 @@
                   font-size: 12px;
                   color: #63656e;
                   word-break: break-all;
+                  &.delete-name {
+                    text-decoration: line-through;
+                  }
                 }
               }
               .close-icon {
@@ -222,6 +225,18 @@
                   color: #3a84ff;
                 }
               }
+            }
+          }
+          .actions-result-list {
+            overflow-y: auto;
+            &::-webkit-scrollbar {
+              width: 4px;
+              background-color: lighten(transparent, 80%);
+            }
+            &::-webkit-scrollbar-thumb {
+              height: 50px;
+              border-radius: 2px;
+              background-color: #e6e9ea;
             }
           }
           .empty-wrapper {

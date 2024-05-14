@@ -12,7 +12,7 @@
           <span>{{ row.name }}</span>
         </template>
       </bk-table-column>
-      <bk-table-column :resizable="false" :label="$t(`m.common['添加来源']`)" :min-width="130" prop="source_type">
+      <bk-table-column :resizable="false" :label="$t(`m.actionsTemplate['添加来源']`)" :min-width="130" prop="source_type">
         <template slot-scope="{ row }">
           <!-- <div class="source-type" v-for="temp in row.templates" :key="temp.id">
             <Icon type="action-temp" class="action-icon" v-show="temp.count < 1" />
@@ -38,7 +38,7 @@
           </bk-table>
         </template>
       </bk-table-column>
-      <bk-table-column :resizable="false" :label="$t(`m.common['操作名']`)" :min-width="160" prop="action_name">
+      <bk-table-column :resizable="false" :label="$t(`m.common['操作']`)" :min-width="160" prop="action_name">
         <template slot-scope="{ row }">
           <bk-table
             :data="row.templates"
@@ -102,12 +102,6 @@
                             </div>
                           </template>
                         </div>
-                        <!-- <render-resource-popover
-                            :key="related.type"
-                            :data="related.condition"
-                            :value="`${related.name}: ${related.value}`"
-                            :max-width="380"
-                            @on-view="handleViewResource(group)" /> -->
                       </div>
                     </template>
                     <div v-else>{{ $t(`m.common['无需关联实例']`) }}</div>
@@ -563,7 +557,7 @@
           });
         }
         this.previewData = cloneDeep(params);
-        bus.$emit('on-drawer-side', { isShow: true, width: 960, sideSliderTitle, previewData: this.previewData });
+        bus.$emit('on-drawer-side', { isShow: true, width: 960, title: sideSliderTitle, previewData: this.previewData });
       },
 
       getCellClass ({ row, column, rowIndex, columnIndex }) {

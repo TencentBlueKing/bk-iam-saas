@@ -607,7 +607,8 @@ export const m = {
         '确认把用户/组织移出该用户组？': 'Are you sure to move the user/organization out of this user group?',
         '确认删除同步记录？': 'Are you sure you want to delete the synchronization record?',
         '确认恢复默认？': 'Are you sure to restore defaults?',
-        '确认删除该操作模板？': 'Are you sure to delete the operation template?'
+        '确认删除该操作模板？': 'Are you sure to delete the operation template?',
+        '确认解除与该操作模板的同步？': 'Confirm to unsynchronize with this action template?'
     },
     nav: {
         '蓝鲸权限中心': 'BlueKing-IAM',
@@ -1601,6 +1602,9 @@ export const m = {
         '模板操作': 'Template action',
         '系统名': 'System name',
         '操作名': 'Action name',
+        '成员': 'Member',
+        '用户组ID': 'User group ID',
+        '添加来源': 'Add resource',
         '搜索 模板名称、所属系统、创建人、描述': 'Search template name, system, creator, description',
         '删除后，无法恢复，请谨慎操作！': 'After deletion, it cannot be restored. Please operate with caution!',
         '仅展示已勾选的操作': 'Show only selected actions',
@@ -1618,7 +1622,10 @@ export const m = {
         '用户组ID': 'User group ID',
         '已填写': 'Completed',
         '未填写': 'Not filled in',
-        '搜索 系统名、操作名': 'Search system name and action name'
+        '解除同步': 'Resynchronize',
+        '批量复用': 'Multi-Reuse',
+        '搜索 系统名、操作名': 'Search system name and action name',
+        '解除同步后，模板权限将转为用户组自定义权限，不会再继续同步该模板的操作。': 'After unsynchronizing, template permissions will be converted to user group custom permissions, and the operation of synchronizing the template will no longer be continued.'
     }
 }
 export default {

@@ -1,13 +1,60 @@
 <template>
   <div class="temp-group-sync-wrapper">
-    <div class="temp-group-sync-table" v-for="group in tableList" :key="group.id">
-      <div class="temp-group-sync-table-header" @click.stop="handleExpand(group)">
-        <Icon bk :type="group.expand ? 'down-shape' : 'right-shape'" class="expand-icon" />
-        <div class="group-status-btn">
-          <Icon type="check-fill" class="fill-status" />
-          <span class="fill-text">{{ $t(`m.actionsTemplate['已填写']`)}}</span>
+    <div class="temp-group-sync-table" v-for="(group, groupIndex) in tableList" :key="group.id">
+      <div class="flex-between temp-group-sync-table-header" @click.stop="handleExpand(group)">
+        <div class="temp-group-sync-table-header-left">
+          <Icon bk :type="group.expand ? 'down-shape' : 'right-shape'" class="expand-icon" />
+          <div :class="['group-status-btn', { 'no-fill-btn': isHasGroupEmpty(group) }]">
+            <Icon :type="isHasGroupEmpty(group) ? 'unfinished' : 'check-fill'" class="fill-status" />
+            <span class="fill-text">
+              {{ isHasGroupEmpty(group) ? $t(`m.actionsTemplate['未填写']`) : $t(`m.actionsTemplate['已填写']`) }}
+            </span>
+          </div>
+          <div class="single-hide group-name">{{ group.name }}</div>
         </div>
-        <div class="single-hide group-name">{{ group.name }}</div>
+        <div class="temp-group-sync-table-header-right" v-show="group.expand" @click.stop="">
+          <bk-popconfirm
+            trigger="click"
+            placement="bottom-end"
+            ext-popover-cls="actions-temp-resynchronize-confirm"
+            :width="320"
+            @confirm="handleConfirmResynchronize(group)"
+          >
+            <div slot="content">
+              <div class="popover-title">
+                <div class="popover-title-text">
+                  {{ $t(`m.dialog['确认解除与该操作模板的同步？']`) }}
+                </div>
+              </div>
+              <div class="popover-content">
+                <div class="popover-content-item">
+                  <span class="popover-content-item-label"
+                  >{{ $t(`m.memberTemplate['用户组名称']`) }}:</span
+                  >
+                  <span class="popover-content-item-value"> {{ group.name }}</span>
+                </div>
+                <div class="popover-content-tip">
+                  {{ $t(`m.actionsTemplate['解除同步后，模板权限将转为用户组自定义权限，不会再继续同步该模板的操作。']`) }}
+                </div>
+              </div>
+            </div>
+            <bk-button
+              size="small"
+              theme="primary"
+              class="un-sync"
+              text
+              :loading="removeSyncLoading"
+              @click.stop="handleUnSynchronize(group)"
+            >
+              {{ $t(`m.actionsTemplate['解除同步']`) }}
+            </bk-button>
+          </bk-popconfirm>
+          <bk-popover :content="$t(`m.actionsTemplate['批量复用资源实例值（资源模板）到其他用户组']`)">
+            <bk-button size="small" text @click.stop="handleBatchRepeat">
+              {{ $t(`m.actionsTemplate['批量复用']`) }}
+            </bk-button>
+          </bk-popover>
+        </div>
       </div>
       <bk-table
         v-bkloading="{ isLoading: syncLoading, opacity: 1 }"
@@ -23,119 +70,126 @@
         <bk-table-column
           :min-width="180"
           :resizable="false"
-          :label="$t(`m.common['操作名']`)"
+          :label="$t(`m.common['操作']`)"
         >
-          <template slot-scope="{ row, $index }">
+          <template slot-scope="{ row }">
             <span>
               <bk-tag :type="formatModeType(row.mode_type).tag" class="name-tag">
                 {{ formatModeType(row.mode_type).text }}
               </bk-tag>
-              <span>{{ row.name }}</span>
-            </span>{{ $index }}
+              <span :class="[`${row.mode_type}-name`]">{{ row.name }}</span>
+            </span>
           </template>
         </bk-table-column>
         <bk-table-column
-          :min-width="200"
           :resizable="false"
           :label="$t(`m.permApply['资源类型']`)"
         >
-          <div v-for="(item, index) in addProps" :key="index">
+          <template slot-scope="{ row }">
+            <div v-for="resource in row.resource_groups" :key="resource.id">
+              <span
+                v-for="related in resource.related_resource_types"
+                :key="related.type"
+                :class="['resource-type-item', `resource-type-item-${row.mode_type}`]"
+              >
+                {{ related.name }}
+              </span>
+            </div>
+          </template>
+        </bk-table-column>
+        <bk-table-column
+          :min-width="310"
+          :resizable="false"
+          :render-header="(h, { column, $index }) =>
+            renderResourceHeader(h, { column, $index }, group, groupIndex)
+          "
+        >
+          <template slot-scope="{ row, $index }">
             <div class="relation-content-wrapper">
-              <template v-if="!row.add_actions[index].isEmpty">
-                <div v-for="(_, groIndex) in row.add_actions[index].resource_groups" :key="_.id">
-                  <div class="relation-content-item"
-                    v-for="(content, contentIndex) in _.related_resource_types"
-                    :key="`${index}${contentIndex}`">
-                    <div class="content-name">{{ content.name }}</div>
-                    <div class="content">
-                      <render-condition
-                        :ref="`condition_${index}_${$index}_${contentIndex}_ref`"
-                        :value="content.value"
-                        :params="curCopyParams"
-                        :is-empty="content.empty"
-                        :can-view="row.canView"
-                        :can-paste="content.canPaste"
-                        :is-error="content.isError"
-                        @on-mouseover="handlerConditionMouseover(content, row)"
-                        @on-mouseleave="handlerConditionMouseleave(content)"
-                        @on-restore="handlerOnRestore(content)"
-                        @on-copy="handlerOnCopy(content, $index, contentIndex, index, row.add_actions[index])"
-                        @on-paste="handlerOnPaste(...arguments, content)"
-                        @on-batch-paste="handlerOnBatchPaste(...arguments, content, $index, contentIndex, index)"
-                        @on-click="showResourceInstance(row, content, contentIndex, $index, index, groIndex)" />
+              <template v-if="!row.isEmpty">
+                <template v-if="['add'].includes(row.mode_type)">
+                  <div v-for="(related, relatedIndex) in row.resource_groups" :key="related.id">
+                    <div class="relation-content-item"
+                      v-for="(content, contentIndex) in related.related_resource_types"
+                      :key="`${groupIndex}${contentIndex}`">
+                      <div class="content">
+                        <render-condition
+                          :ref="`condition_${groupIndex}_${$index}_${contentIndex}_ref`"
+                          :value="content.value"
+                          :params="curCopyParams"
+                          :is-empty="content.empty"
+                          :can-view="row.canView"
+                          :can-paste="content.canPaste"
+                          :is-error="content.isError"
+                          @on-mouseover="handlerConditionMouseover(content, row)"
+                          @on-mouseleave="handlerConditionMouseleave(content)"
+                          @on-restore="handlerOnRestore(content)"
+                          @on-copy="handlerOnCopy(content, groupIndex, contentIndex, $index, row)"
+                          @on-paste="handlerOnPaste(...arguments, content)"
+                          @on-batch-paste="handlerOnBatchPaste(...arguments, content, groupIndex, contentIndex, $index)"
+                          @on-click="handleShowResourceSlider(
+                            row, content, contentIndex, $index, groupIndex, relatedIndex
+                          )"
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-                <bk-popover
-                  :ref="`popover_${index}_${$index}_ref`"
-                  trigger="click"
-                  class="iam-template-sync-popover-cls"
-                  theme="light"
-                  placement="right"
-                  :on-hide="() => handleHidePopover(row.add_actions[index])"
-                  :on-show="() => handleShowPopover(row.add_actions[index])">
-                  <div class="edit-wrapper" v-if="!!row.add_actions[index].showAction">
-                    <spin-loading v-if="row.add_actions[index].loading" />
-                    <Icon type="edit-fill" v-else />
-                  </div>
-                  <div slot="content" class="sync-popover-content">
-                    <p class="refer-title" v-if="isShowBatchRefer(row.add_actions[index])">
-                      <Icon type="down-angle" />{{ $t(`m.permTemplateDetail['批量引用已有的操作实例']`) }}
-                    </p>
-                    <template v-if="batchReferAction(row.add_actions[index]).length > 0">
-                      <p v-for="resItem in batchReferAction(row.add_actions[index])"
-                        :key="resItem.id"
-                        class="cursor"
-                        @click.stop="handleReferInstance(resItem, row.add_actions[index], row, index, $index)">
-                        {{ resItem.name }}
+                  <bk-popover
+                    :ref="`popover_${groupIndex}_${$index}_ref`"
+                    trigger="click"
+                    class="iam-template-sync-popover-cls"
+                    theme="light"
+                    placement="right"
+                    :on-hide="() => handleHidePopover(row)"
+                    :on-show="() => handleShowPopover(row)">
+                    <div class="edit-wrapper" v-if="!!row.showAction">
+                      <spin-loading v-if="row.loading" />
+                      <Icon type="edit-fill" v-else />
+                    </div>
+                    <div slot="content" class="sync-popover-content">
+                      <p class="refer-title" v-if="isShowBatchRefer(row)">
+                        <Icon type="down-angle" />{{ $t(`m.permTemplateDetail['批量引用已有的操作实例']`) }}
                       </p>
-                    </template>
-                    <template
-                      v-if="!isShowBatchRefer(row.add_actions[index])
-                        && batchReferAction(row.add_actions[index]).length === 0"
-                    >
-                      {{ $t(`m.common['暂无数据']`) }}
-                    </template>
-                  </div>
-                </bk-popover>
-              </template>
-              <template v-else>
-                {{ $t(`m.common['无需关联实例']`) }}
-              </template>
-            </div>
-          </div>
-        </bk-table-column>
-        <!-- <div v-for="(item, index) in deleteProps" :key="item.id">
-          <bk-table-column
-            :key="item.id"
-            :min-width="200"
-            :resizable="false"
-            :render-header="renderDeleteActionHeader"
-            :label="item.label">
-            <template slot-scope="{ row }">
-              <div class="relation-content-wrapper">
-                <template v-if="!row.delete_actions[index].isEmpty">
-                  <div v-for="(_, groIndex) in row.delete_actions[index].resource_groups" :key="_.id">
-                    <p class="related-resource-item"
-                      v-for="subItem in _.related_resource_types"
+                      <template v-if="batchReferAction(row).length > 0">
+                        <p v-for="resItem in batchReferAction(row)"
+                          :key="resItem.id"
+                          class="cursor"
+                          @click.stop="handleReferInstance(resItem, row, group, groupIndex, $index)">
+                          {{ resItem.name }}
+                        </p>
+                      </template>
+                      <template
+                        v-if="!isShowBatchRefer(row)
+                          && batchReferAction(row).length === 0"
+                      >
+                        {{ $t(`m.common['暂无数据']`) }}
+                      </template>
+                    </div>
+                  </bk-popover>
+                </template>
+                <template v-if="['delete'].includes(row.mode_type)">
+                  <div v-for="(related, relatedIndex) in row.resource_groups" :key="related.id">
+                    <div
+                      class="related-resource-item"
+                      v-for="subItem in related.related_resource_types"
                       :key="subItem.type"
-                      @click.stop="handleViewResource(row, index, groIndex)">
+                      @click.stop="handleViewResource(row, groupIndex, relatedIndex)"
+                    >
                       <render-resource-popover
                         :key="subItem.type"
                         :data="subItem.condition"
-                        :value="`${subItem.name}：${subItem.value}`"
+                        :value="`${subItem.name}: ${subItem.value}`"
                         :max-width="185"
-                        @on-view="handleViewResource(row, index, groIndex)" />
-                    </p>
+                        @on-view="handleViewResource(row, groupIndex, relatedIndex)"
+                      />
+                    </div>
                   </div>
                 </template>
-                <template v-else>
-                  {{ $t(`m.common['无需关联实例']`) }}
-                </template>
-              </div>
-            </template>
-          </bk-table-column>
-        </div> -->
+              </template>
+              <template v-else>{{ $t(`m.common['无需关联实例']`) }}</template>
+            </div>
+          </template>
+        </bk-table-column>
       </bk-table>
       <div class="pagination-wrapper" v-if="pagination.totalPage > 1">
         <div class="page-display">
@@ -160,6 +214,7 @@
       </div>
     </div>
 
+    <!-- 查看资源实例详情 -->
     <bk-sideslider
       :is-show.sync="isShowSideSlider"
       :title="sideSliderTitle"
@@ -171,29 +226,30 @@
       </div>
     </bk-sideslider>
 
+    <!-- 打开资源视图选择器 -->
     <bk-sideslider
-      :is-show="isShowInstanceSideslider"
+      :is-show="isShowInstanceSideSlider"
       :title="instanceSideSliderTitle"
       :width="resourceSliderWidth"
       quick-close
       transfer
-      ext-cls="relate-instance-sideslider"
+      ext-cls="related-instance-sideslider"
       @update:isShow="handleResourceCancel('mask')">
-      <div slot="content" class="sideslider-content">
+      <div slot="content">
         <render-resource
           ref="renderResourceRef"
-          :key="`${curIndex}${curResIndex}${curActionIndex}`"
+          :key="`${curIndex}${curResourceIndex}${curActionIndex}`"
           :data="condition"
           :original-data="originalCondition"
           :flag="curFlag"
           :selection-mode="curSelectionMode"
           :disabled="curDisabled"
           :params="params"
-          :res-index="curResIndex"
+          :res-index="curResourceIndex"
           :cur-scope-action="curScopeAction"
           @on-init="handleOnInit" />
       </div>
-      <div slot="footer" style="margin-left: 25px;">
+      <div slot="footer" class="sync-group-slider-footer">
         <bk-button theme="primary" :disabled="disabled" @click="handleResourceSubmit">
           {{ $t(`m.common['保存']`) }}
         </bk-button>
@@ -204,26 +260,27 @@
     </bk-sideslider>
   </div>
 </template>
+
 <script>
   import { cloneDeep } from 'lodash';
   import { mapGetters } from 'vuex';
   import { leaveConfirm } from '@/common/leave-confirm';
   import SyncPolicy from '@/model/template-sync-policy';
   import Condition from '@/model/condition';
-  // import RenderResourcePopover from '@/components/iam-view-resource-popover';
-  // import RenderCondition from '../components/render-condition';
+  import RenderResourcePopover from '@/components/iam-view-resource-popover';
+  import RenderCondition from '../components/render-condition';
   import RenderDetail from '../components/render-detail';
   import RenderResource from '../components/render-resource';
+  import AggregationPolicy from '@/model/actions-temp-aggregation-policy';
   export default {
-    name: '',
     provide: function () {
       return {
         getResourceSliderWidth: () => this.resourceSliderWidth
       };
     },
     components: {
-      // RenderResourcePopover,
-      // RenderCondition,
+      RenderResourcePopover,
+      RenderCondition,
       RenderDetail,
       RenderResource
     },
@@ -243,42 +300,39 @@
       allActions: {
         type: Array,
         default: () => []
-      },
-      defaultCheckedActions: {
-        type: Array,
-        default: () => []
       }
     },
     data () {
       return {
         syncLoading: false,
+        removeSyncLoading: false,
+        nextLoading: false,
+        isLastPage: false,
+        prevLoading: false,
+        disabled: false,
+        isShowSideSlider: false,
+        isShowInstanceSideSlider: false,
+        sideSliderTitle: '',
+        instanceSideSliderTitle: '',
+        curIndex: -1,
+        curActionIndex: -1,
+        curResourceIndex: -1,
+        curGroupIndex: -1,
+        tableList: [],
+        deleteProps: [],
+        addProps: [],
+        previewData: [],
+        originalList: [],
+        authorizationScopeActions: [],
+        requestQueue: ['scope', 'group'],
+        params: {},
+        curScopeAction: {},
+        curCopyParams: {},
         pagination: {
           current: 1,
           limit: 5,
           totalPage: 0
         },
-        tableList: [],
-        deleteProps: [],
-        addProps: [],
-        isShowSideSlider: false,
-        sideSliderTitle: '',
-        previewData: [],
-        isShowInstanceSideslider: false,
-        instanceSideSliderTitle: '',
-        curIndex: -1,
-        curActionIndex: -1,
-        curResIndex: -1,
-        curGroupIndex: -1,
-        originalList: [],
-        params: {},
-        curScopeAction: {},
-        disabled: false,
-        authorizationScopeActions: [],
-        requestQueue: ['scope', 'group'],
-        nextLoading: false,
-        isLastPage: false,
-        prevLoading: false,
-        curCopyParams: {},
         resourceSliderWidth: Math.ceil(window.innerWidth * 0.67 - 7) < 960
           ? 960 : Math.ceil(window.innerWidth * 0.67 - 7)
       };
@@ -286,21 +340,36 @@
     computed: {
       ...mapGetters('permTemplate', ['cloneActions']),
       isShowBatchRefer () {
-        return payload => {
-            return this.cloneActions.some(item => item.action_id === payload.id);
+        return (payload) => {
+          return this.cloneActions.some(item => item.action_id === payload.id);
+        };
+      },
+      isHasGroupEmpty () {
+        return (payload) => {
+          // console.log(payload);
+          return true;
+        };
+      },
+      isUnlimitedDisabled () {
+        return (payload) => {
+          const isDisabled = payload.tableList.every(item =>
+            ((!item.resource_groups || (item.resource_groups && !item.resource_groups.length)) && !item.instances)
+            );
+          return isDisabled;
         };
       },
       condition () {
-        if (this.curIndex === -1
-            || this.curResIndex === -1
-            || this.curActionIndex === -1
-            || this.curGroupIndex === -1) {
+        if (
+          this.curIndex === -1
+          || this.curResourceIndex === -1
+          || this.curActionIndex === -1
+          || this.curGroupIndex === -1) {
             return [];
         }
         const curData = this.tableList[this.curIndex]
             .add_actions[this.curActionIndex].resource_groups[this.curGroupIndex]
-            .related_resource_types[this.curResIndex];
-
+            .related_resource_types[this.curResourceIndex];
+console.log(curData, this.curIndex, this.curActionIndex, this.curResourceIndex, '当前数据');
         if (!curData) {
             return [];
         }
@@ -308,7 +377,7 @@
       },
       originalCondition () {
         if (this.curIndex === -1
-          || this.curResIndex === -1
+          || this.curResourceIndex === -1
           || this.curActionIndex === -1
           || this.curGroupIndex === -1
           || this.originalList.length < 1) {
@@ -318,7 +387,7 @@
         const curType = this.tableList[this.curIndex]
             .add_actions[this.curActionIndex]
             .resource_groups[this.curGroupIndex]
-            .related_resource_types[this.curResIndex]
+            .related_resource_types[this.curResourceIndex]
             .type;
         if (!this.originalList.some(item => item.add_actions[this.curActionIndex].id === curId)) {
           return [];
@@ -338,36 +407,35 @@
         return cloneDeep(curResData.condition);
       },
       curDisabled () {
-        if (this.curIndex === -1
-            || this.curResIndex === -1
-            || this.curActionIndex === -1
-            || this.curGroupIndex === -1) {
-            return false;
+        if (
+          this.curIndex === -1
+          || this.curResourceIndex === -1
+          || this.curActionIndex === -1
+          || this.curGroupIndex === -1) {
+          return false;
         }
         const curData = this.tableList[this.curIndex]
             .add_actions[this.curActionIndex]
             .resource_groups[this.curGroupIndex]
-            .related_resource_types[this.curResIndex];
-
+            .related_resource_types[this.curResourceIndex];
         return curData.isDefaultLimit;
-    },
-    curFlag () {
+      },
+      curFlag () {
+          if (this.curIndex === -1
+              || this.curResourceIndex === -1
+              || this.curActionIndex === -1
+              || this.curGroupIndex === -1) {
+              return 'add';
+          }
+          const curData = this.tableList[this.curIndex]
+              .add_actions[this.curActionIndex]
+              .resource_groups[this.curGroupIndex]
+              .related_resource_types[this.curResourceIndex];
+          return curData.flag;
+      },
+      curSelectionMode () {
         if (this.curIndex === -1
-            || this.curResIndex === -1
-            || this.curActionIndex === -1
-            || this.curGroupIndex === -1) {
-            return 'add';
-        }
-        const curData = this.tableList[this.curIndex]
-            .add_actions[this.curActionIndex]
-            .resource_groups[this.curGroupIndex]
-            .related_resource_types[this.curResIndex];
-
-        return curData.flag;
-    },
-    curSelectionMode () {
-        if (this.curIndex === -1
-            || this.curResIndex === -1
+            || this.curResourceIndex === -1
             || this.curActionIndex === -1
             || this.curGroupIndex === -1) {
             return 'all';
@@ -375,8 +443,7 @@
         const curData = this.tableList[this.curIndex]
             .add_actions[this.curActionIndex]
             .resource_groups[this.curGroupIndex]
-            .related_resource_types[this.curResIndex];
-
+            .related_resource_types[this.curResourceIndex];
         return curData.selectionMode;
       },
       batchReferAction () {
@@ -420,7 +487,7 @@
     },
     async created () {
       this.curCopyKey = '';
-      await this.fetchData();
+      await this.fetchGroupsPreview();
       this.fetchAuthorizationScopeActions();
     },
     mounted () {
@@ -435,7 +502,7 @@
           ? 960 : Math.ceil(window.innerWidth * 0.67 - 7);
       },
 
-      async fetchData () {
+      async fetchGroupsPreview () {
         try {
           const { current, limit } = this.pagination;
           const params = {
@@ -486,6 +553,7 @@
           this.setTableProps();
           this.originalList = cloneDeep(this.tableList);
           this.isLastPage = current === this.pagination.totalPage;
+          this.$emit('on-change-location-group', { list: this.tableList });
           this.$emit('on-all-submit', current === this.pagination.totalPage);
         } catch (e) {
           this.messageAdvancedError(e);
@@ -649,13 +717,17 @@
         this.$emit('on-expand', payload);
       },
 
+      handleConfirmResynchronize (payload) {
+
+      },
+
       handlePrevPage () {
         window.changeDialog = true;
         if (this.pagination.current > 1) {
           --this.pagination.current;
         }
         this.requestQueue = ['group'];
-        this.fetchData();
+        this.fetchGroupsPreview();
       },
 
       async handleNextPage () {
@@ -664,7 +736,7 @@
           if (this.pagination.current < this.pagination.totalPage) {
             ++this.pagination.current;
             this.requestQueue = ['group'];
-            this.fetchData();
+            this.fetchGroupsPreview();
           }
           return;
         }
@@ -683,7 +755,7 @@
           if (this.pagination.current < this.pagination.totalPage) {
             ++this.pagination.current;
             this.requestQueue = ['group'];
-            this.fetchData();
+            this.fetchGroupsPreview();
           }
         } catch (e) {
           console.error(e);
@@ -724,6 +796,32 @@
         }
       },
 
+      async handleUnSynchronize ({ id, type }) {
+        const params = {
+          id: this.id,
+          data: {
+            members: [{
+              id,
+              type: 'group'
+            }]
+          }
+        };
+        this.removeSyncLoading = true;
+        try {
+          await this.$store.dispatch('permTemplate/deleteTemplateMember', params);
+          this.messageSuccess(this.$t(`m.info['移除成功']`), 3000);
+          this.fetchGroupsPreview();
+        } catch (e) {
+          this.messageAdvancedError(e);
+        } finally {
+          this.removeSyncLoading = false;
+        }
+      },
+
+      handleBatchRepeat () {
+
+      },
+
       handleAnimationEnd () {
         this.sideSliderTitle = '';
         this.previewData = [];
@@ -732,6 +830,7 @@
       handleShowPopover (payload) {
         payload.showAction = true;
         payload.showPopover = true;
+        payload = Object.assign(payload, { showAction: true, showPopover: true });
       },
 
       handleHidePopover (payload) {
@@ -762,27 +861,6 @@
         }
       },
 
-      showMessage (payload) {
-        this.bkMessageInstance = this.$bkMessage({
-          limit: 1,
-          theme: 'success',
-          message: payload
-        });
-      },
-
-      handleOnInit (payload) {
-        this.disabled = !payload;
-      },
-
-      resetDataAfterClose () {
-        this.curIndex = -1;
-        this.curResIndex = -1;
-        this.curActionIndex = -1;
-        this.curGroupIndex = -1;
-        this.params = {};
-        this.instanceSideSliderTitle = '';
-      },
-
       handleResourceCancel (payload) {
         const typeMap = {
           mask: () => {
@@ -793,13 +871,13 @@
               cancelHandler = leaveConfirm();
             }
             cancelHandler.then(() => {
-              this.isShowInstanceSideslider = false;
+              this.isShowInstanceSideSlider = false;
               this.resetDataAfterClose();
             }, _ => _);
           },
           cancel: () => {
             this.resetDataAfterClose();
-            this.isShowInstanceSideslider = false;
+            this.isShowInstanceSideSlider = false;
           }
         };
         return typeMap[payload]();
@@ -813,11 +891,11 @@
         }
         window.changeAlert = false;
         this.instanceSideSliderTitle = '';
-        this.isShowInstanceSideslider = false;
+        this.isShowInstanceSideSlider = false;
         const resItem = this.tableList[this.curIndex]
           .add_actions[this.curActionIndex]
           .resource_groups[this.curGroupIndex]
-          .related_resource_types[this.curResIndex];
+          .related_resource_types[this.curResourceIndex];
 
         const isConditionEmpty = data.length === 1 && data[0] === 'none';
         if (isConditionEmpty) {
@@ -828,7 +906,7 @@
         }
 
         this.curIndex = -1;
-        this.curResIndex = -1;
+        this.curResourceIndex = -1;
         this.curActionIndex = -1;
         this.curGroupIndex = -1;
         window.changeDialog = true;
@@ -909,35 +987,81 @@
         this.showMessage(this.$t(`m.info['批量粘贴成功']`));
       },
 
-      showResourceInstance (data, resItem, resIndex, $index, index, groupIndex) {
+      handleGroupNoLimited (payload) {
+        if (this.isUnlimitedDisabled(payload)) {
+          return;
+        }
+        const { tableList } = payload;
+        const tableData = cloneDeep(tableList);
+        tableData.forEach((item, index) => {
+          if (['add'].includes(item.mode_type)) {
+            if (!item.isAggregate) {
+              if (item.resource_groups && item.resource_groups.length) {
+                item.resource_groups.forEach(groupItem => {
+                  groupItem.related_resource_types && groupItem.related_resource_types.forEach(types => {
+                    if (!payload && (types.condition.length && types.condition[0] !== 'none')) {
+                      return;
+                    }
+                    types.condition = payload ? [] : ['none'];
+                    console.log(7777, types);
+                    if (payload) {
+                      types.isError = false;
+                    }
+                  });
+                });
+              } else {
+                item.name = item.name.split('，')[0];
+              }
+            }
+            if (item.instances && item.isAggregate) {
+              item.isNoLimited = false;
+              item.isError = !(item.instances.length || (!item.instances.length && item.isNoLimited));
+              item.isNeedNoLimited = true;
+              if (!payload || item.instances.length) {
+                item.isNoLimited = false;
+                item.isError = false;
+              }
+              if ((!item.instances.length && !payload && item.isNoLimited) || payload) {
+                item.isNoLimited = true;
+                item.isError = false;
+                item.instances = [];
+              }
+              return this.$set(
+                tableData,
+                index,
+                new AggregationPolicy(item)
+              );
+            }
+          }
+        });
+        payload.tableList = cloneDeep(tableData);
+      },
+
+      handleShowResourceSlider (data, resItem, resIndex, $index, index, groupIndex) {
         this.params = {
           system_id: this.$route.params.systemId,
-          action_id: data.add_actions[index].id,
+          action_id: data.id,
           resource_type_system: resItem.system_id,
           resource_type_id: resItem.type
         };
-        this.curScopeAction = this.authorizationScopeActions.find(
-          item => item.id === data.add_actions[index].id
-        );
-
-        console.log('this.curScopeAction', this.curScopeAction);
+        this.curScopeAction = this.authorizationScopeActions.find(item => item.id === data.id);
         this.curIndex = $index;
         this.curActionIndex = index;
-        this.curResIndex = resIndex;
+        this.curResourceIndex = resIndex;
         this.curGroupIndex = groupIndex;
-        this.instanceSideSliderTitle = this.$t(`m.info['关联侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${data.add_actions[index].name}${this.$t(`m.common['】']`)}` });
+        this.instanceSideSliderTitle = this.$t(`m.info['关联侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}` });
         window.changeAlert = 'iamSidesider';
-        this.isShowInstanceSideslider = true;
+        this.isShowInstanceSideSlider = true;
       },
 
-      handleViewResource (payload, index, groIndex) {
-        const data = payload.delete_actions[index].resource_groups[groIndex];
+      handleViewResource (payload, index, relatedIndex) {
+        const data = payload.resource_groups[relatedIndex];
         const params = [];
         if (data.related_resource_types.length > 0) {
           data.related_resource_types.forEach(item => {
             const { name, type, condition } = item;
             params.push({
-              name: type,
+              name: type || '',
               label: this.$t(`m.info['tab操作实例']`, { value: name }),
               tabType: 'resource',
               data: condition
@@ -949,65 +1073,32 @@
         this.isShowSideSlider = true;
       },
 
-      renderDeleteActionHeader (h, { column }) {
-        return h(
-          'div', {
-            class: {
-              'sync-action-label': true
-            },
-            attrs: {
-              title: column.label
-            }
-          },
-          [
-            h('bk-tag', {
-              style: {
-                margin: '0 4px 0 0'
-              },
-              props: {
-                theme: 'danger'
-              },
-              domProps: {
-                innerHTML: this.$t(`m.common['移除']`)
-              }
-            }),
-            h('span', {
-              domProps: {
-                innerHTML: column.label
-              }
-            })
-          ]
-        );
+      handleOnInit (payload) {
+        this.disabled = !payload;
       },
 
-      renderAddActionHeader (h, { column }) {
-        return h(
-          'div', {
-            class: {
-              'sync-action-label': true
-            },
-            attrs: {
-              title: column.label
-            }
-          },
-          [
-            h('bk-tag', {
-              style: {
-                margin: '0 4px 0 0'
-              },
-              props: {
-                theme: 'success'
-              },
-              domProps: {
-                innerHTML: this.$t(`m.common['新增']`)
-              }
-            }),
-            h('span', {
-              domProps: {
-                innerHTML: column.label
-              }
-            })
-          ]
+      resetDataAfterClose () {
+        this.curIndex = -1;
+        this.curResourceIndex = -1;
+        this.curActionIndex = -1;
+        this.curGroupIndex = -1;
+        this.params = {};
+        this.instanceSideSliderTitle = '';
+      },
+
+      renderResourceHeader (h, { column, $index }, group, groIndex) {
+        return (
+          <div class="resource-instance-custom-label">
+            <div class="instance-title">
+              { this.$t(`m.common['资源实例']`) }
+            </div>
+            <div class="instance-no-limited" onClick={ () => this.handleGroupNoLimited(group) }>
+              <icon type="brush-fill" class="instance-no-limited-icon" />
+              <div class="instance-no-limited-label">
+                { this.$t(`m.common['批量无限制']`) }
+              </div>
+            </div>
+          </div>
         );
       },
 
@@ -1033,47 +1124,104 @@
   };
 </script>
 
+<style lang="postcss">
+.actions-temp-resynchronize-confirm {
+  .popover-title {
+    font-size: 16px;
+    padding-bottom: 16px;
+  }
+  .popover-content {
+    color: #63656e;
+    font-size: 12px;
+    .popover-content-item {
+      display: flex;
+      &-value {
+        color: #313238;
+        margin-left: 5px;
+      }
+    }
+    &-tip {
+      padding: 4px 0 10px 0;
+      word-break: break-all;
+    }
+  }
+  .popconfirm-operate {
+    .default-operate-button {
+      min-width: 64px;
+      margin-left: 0;
+      margin-right: 8px;
+    }
+  }
+}
+</style>
+
 <style lang="postcss" scoped>
 .temp-group-sync-wrapper {
   .temp-group-sync-table {
     margin-bottom: 12px;
     &-header {
-      display: flex;
-      align-items: center;
       background-color: #DCDEE5;
       min-height: 40px;
       line-height: 40px;
       padding: 0 16px;
       cursor: pointer;
-      .expand-icon {
-        font-size: 12px;
-      }
-      .group-status-btn {
-        min-width: 68px;
-        font-size: 12px;
-        background-color: #ffffff;
-        border-radius: 12px;
-        line-height: 24px;
-        padding: 0 6px;
-        margin-left: 10px;
-        .fill-status {
-          font-size: 14px;
-          color: #2DCB9D;
+      &-left {
+        display: flex;
+        align-items: center;
+        .expand-icon {
+          font-size: 12px;
         }
-        .fill-text {
-          color: #1CAB88;
+        .group-status-btn {
+          min-width: 68px;
+          font-size: 12px;
+          background-color: #ffffff;
+          border-radius: 12px;
+          line-height: 24px;
+          padding: 0 6px;
+          margin-left: 10px;
+          .fill-status {
+            font-size: 14px;
+            color: #2DCB9D;
+          }
+          .fill-text {
+            color: #1CAB88;
+          }
+          &.no-fill-btn {
+            .fill-status {
+              color: #FFB848;
+            }
+            .fill-text {
+              color: #FF9C01;
+            }
+          }
+        }
+        .group-name {
+          margin: 0 8px;
+          font-size: 12px;
         }
       }
-      .group-name {
-        margin: 0 8px;
-        font-size: 12px;
+      &-right {
+        .bk-button-small {
+          padding: 0;
+          &.un-sync {
+            margin-right: 16px;
+          }
+        }
       }
     }
     &-content {
       border-right: none;
       border-bottom: none;
       .name-tag {
-        margin-left: 0
+        margin-left: 0;
+        font-size: 10px
+      }
+      .resource-type-item {
+        margin-right: 8px;
+      }
+      .delete-name,
+      .resource-type-item-delete {
+        text-decoration: line-through;
       }
       .relation-content-wrapper {
         height: 100%;
@@ -1084,10 +1232,13 @@
           margin-bottom: 9px;
         }
       }
-      .related-resource-item {
+      /deep/ .related-resource-item {
         cursor: pointer;
         &:hover {
           color: #3a84ff;
+        }
+        .text {
+          text-decoration: line-through;
         }
       }
       .relation-content-item {
@@ -1111,11 +1262,35 @@
           color: #3a84ff;
         }
       }
-      .sync-action-label {
-        max-width: 170px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        word-break: break-all;
+      /deep/ .resource-instance-custom-label {
+        display: flex;
+        align-items: baseline;
+        .instance-title {
+          position: relative;
+          min-width: 62px;
+          &::after {
+            height: 8px;
+            line-height: 1;
+            content: "*";
+            color: #ea3636;
+            font-size: 12px;
+            position: absolute;
+            top: 50%;
+            display: inline-block;
+            vertical-align: middle;
+            transform: translate(6px, -50%);
+          }
+        }
+        .instance-no-limited {
+          display: flex;
+          align-items: center;
+          color: #3a84ff;
+          margin-left: 10px;
+          cursor: pointer;
+          &-label {
+            margin-left: 5px;
+          }
+        }
       }
     }
   }
@@ -1166,6 +1341,19 @@
   p.refer-title {
     line-height: 24px;
     color: #313238;
+  }
+}
+.related-instance-sideslider {
+  /deep/ .bk-sideslider-footer {
+    background-color: #ffffff !important;
+    font-size: 0;
+    .sync-group-slider-footer {
+      padding: 0 24px;
+      .bk-button {
+        min-width: 88px;
+        margin-right: 8px;
+      }
+    }
   }
 }
 </style>

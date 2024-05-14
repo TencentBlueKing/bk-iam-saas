@@ -134,50 +134,101 @@
               <div class="flex-between right-layout-header">
                 <div class="right-layout--header-title">{{ $t(`m.common['结果预览']`) }}</div>
               </div>
-              <template v-if="curSelectActions.length > 0">
-                <div class="flex-between right-layout-item">
-                  <div class="right-layout-item-title" @click.stop="handleExpandAction">
-                    <Icon bk class="expanded-icon" :type="isExpandAction ? 'down-shape' : 'right-shape'" />
-                    <span>{{ $t(`m.common['已选择']`) }}</span>
-                    <span class="count">{{ curSelectActions.length }}</span>
-                    <span>{{ $t(`m.common['个操作']`) }}</span>
-                  </div>
-                  <bk-button
-                    size="small"
-                    theme="primary"
-                    :text="true"
-                    class="right-layout-item-clear"
-                    @click.stop="handleClearAllAction"
-                  >
-                    {{ $t(`m.common['清空']`) }}
-                  </bk-button>
-                </div>
-                <div
-                  v-if="isExpandAction"
-                  class="right-layout-content"
-                  :style="{ 'height': `${ actionContentHeight + commonActionsHeight }px` }"
-                >
-                  <div
-                    class="flex-between right-layout-content-item"
-                    v-for="item in curSelectActions"
-                    :key="item.id"
-                  >
-                    <div class="action-text">
-                      <bk-tag class="action-text-tag" :theme="formatTagContent(item, 'theme')">
-                        {{ formatTagContent(item, 'text') }}
-                      </bk-tag>
-                      <div
-                        v-bk-tooltips="{ content: item.name, disabled: checkActionWidth(item) }"
-                        :ref="`select_actions_${item.id}`"
-                        class="single-hide action-text-name"
-                      >
-                        {{ item.name }}
-                      </div>
+              <div
+                v-if="curSelectActions.length > 0 || curDeleteActions.length > 0"
+                class="actions-result-list"
+                :style="{ height: `${actionContentHeight + commonActionsHeight + 16}px` }"
+              >
+                <template v-if="curSelectActions.length > 0">
+                  <div class="flex-between right-layout-item">
+                    <div class="right-layout-item-title" @click.stop="handleExpandAction('selected')">
+                      <Icon bk class="expanded-icon" :type="isExpandSelectedAction ? 'down-shape' : 'right-shape'" />
+                      <span>{{ $t(`m.common['已选择']`) }}</span>
+                      <span class="count">{{ curSelectActions.length }}</span>
+                      <span>{{ $t(`m.common['个操作']`) }}</span>
                     </div>
-                    <Icon bk type="close" class="close-icon" @click.stop="handleDelAction(item, [])" />
+                    <bk-button
+                      size="small"
+                      theme="primary"
+                      :text="true"
+                      class="right-layout-item-clear"
+                      @click.stop="handleClearAllAction('delete')"
+                    >
+                      {{ $t(`m.common['清空']`) }}
+                    </bk-button>
                   </div>
-                </div>
-              </template>
+                  <div
+                    v-if="isExpandSelectedAction"
+                    class="right-layout-content"
+                  >
+                    <div
+                      class="flex-between right-layout-content-item"
+                      v-for="item in curSelectActions"
+                      :key="item.id"
+                    >
+                      <div class="action-text">
+                        <bk-tag class="action-text-tag" :theme="formatTagContent(item, 'theme')">
+                          {{ formatTagContent(item, 'text') }}
+                        </bk-tag>
+                        <div
+                          v-bk-tooltips="{ content: item.name, disabled: checkActionWidth(item) }"
+                          :ref="`select_actions_${item.id}`"
+                          class="single-hide action-text-name"
+                        >
+                          {{ item.name }}
+                        </div>
+                      </div>
+                      <Icon bk type="close" class="close-icon" @click.stop="handleDelAction('delete', item, [])" />
+                    </div>
+                  </div>
+                </template>
+                <template v-if="curDeleteActions.length > 0">
+                  <div class="flex-between right-layout-item">
+                    <div class="right-layout-item-title" @click.stop="handleExpandAction('delete')">
+                      <Icon bk class="expanded-icon" :type="isExpandDeleteAction ? 'down-shape' : 'right-shape'" />
+                      <span>{{ $t(`m.common['已移除']`) }}</span>
+                      <span class="count">{{ curDeleteActions.length }}</span>
+                      <span>{{ $t(`m.common['个操作']`) }}</span>
+                    </div>
+                    <bk-button
+                      size="small"
+                      theme="primary"
+                      :text="true"
+                      class="right-layout-item-clear"
+                      @click.stop="handleClearAllAction('cancelDelete')"
+                    >
+                      {{ $t(`m.common['取消']`) }}
+                    </bk-button>
+                  </div>
+                  <div
+                    v-if="isExpandDeleteAction"
+                    class="right-layout-content"
+                  >
+                    <div
+                      class="flex-between right-layout-content-item"
+                      v-for="item in curDeleteActions"
+                      :key="item.id"
+                    >
+                      <div class="action-text">
+                        <bk-tag
+                          class="action-text-tag"
+                          :theme="formatTagContent({ ...item, ...{ flag: 'delete' } }, 'theme')"
+                        >
+                          {{ formatTagContent({ ...item, ...{ flag: 'delete' } }, 'text') }}
+                        </bk-tag>
+                        <div
+                          v-bk-tooltips="{ content: item.name, disabled: checkActionWidth(item) }"
+                          :ref="`select_actions_${item.id}`"
+                          class="single-hide action-text-name delete-name"
+                        >
+                          {{ item.name }}
+                        </div>
+                      </div>
+                      <Icon bk type="close" class="close-icon" @click.stop="handleDelAction('cancelDelete',item, [])" />
+                    </div>
+                  </div>
+                </template>
+              </div>
               <div v-else class="empty-wrapper">
                 <ExceptionEmpty />
               </div>
@@ -188,10 +239,9 @@
           <template v-if="isEdit">
             <bk-button
               theme="primary"
-              :disabled="isCurSelectActions"
               :loading="nextLoading"
               @click.stop="handleNextStep">
-              {{ curActionStep > 1 ? $t(`m.common['提交']`) : $t(`m.common['下一步']`) }}
+              {{ $t(`m.common['下一步']`) }}
             </bk-button>
             <bk-button @click.stop="handleCancel">
               {{ $t(`m.common['取消']`) }}
@@ -276,7 +326,8 @@
         isSystemListLoading: false,
         isSelectAllActions: false,
         isCurSelectActions: true,
-        isExpandAction: true,
+        isExpandSelectedAction: true,
+        isExpandDeleteAction: false,
         hasGroupPreview: false,
         nameValidateText: '',
         initialTempName: '',
@@ -289,9 +340,10 @@
         linearAction: [],
         curSelectActions: [],
         curSelectActionsBack: [],
-        initialValue: [],
         tagActionList: [],
         defaultCheckedActions: [],
+        hasSelectedActions: [],
+        curDeleteActions: [],
         requestQueue: ['actions', 'commonActions'],
         leavePageForm: {},
         leavePageFormBack: {},
@@ -354,12 +406,25 @@
         return (payload, tagType) => {
           const { flag, tag } = payload;
           const isAdd = ['added'].includes(flag) || ['unchecked'].includes(tag);
+          const isDel = ['delete'].includes(flag);
           const typeMap = {
             theme: () => {
-              return isAdd ? 'success' : 'false';
+              if (isAdd) {
+                return 'success';
+              }
+              if (isDel) {
+                return 'danger';
+              }
+              return 'false';
             },
             text: () => {
-              return isAdd ? this.$t(`m.common['新增']`) : this.$t(`m.common['已有']`);
+              if (isAdd) {
+                return this.$t(`m.common['新增']`);
+              }
+              if (isDel) {
+                return this.$t(`m.common['移除']`);
+              }
+              return this.$t(`m.common['已有']`);
             }
           };
          return typeMap[tagType] ? typeMap[tagType]() : '';
@@ -374,7 +439,6 @@
         immediate: true
       },
       curSelectActions (newValue) {
-        this.isCurSelectActions = JSON.stringify(newValue) === JSON.stringify(this.initialValue);
         this.leavePageForm = Object.assign(this.leavePageForm, { selected_actions: newValue });
         if (!newValue.length) {
           this.isSelectAllActions = false;
@@ -382,6 +446,8 @@
         if (newValue.length) {
           this.isSelectAllActions = newValue.length === this.linearAction.length;
         }
+        const curSelectList = newValue.map((item) => `${item.name}&${item.id}`);
+        this.curDeleteActions = this.hasSelectedActions.filter((item) => !curSelectList.includes(`${item.name}&${item.id}`));
         this.handleGetLeaveData();
         this.handleGetResizeHeight();
       },
@@ -413,7 +479,6 @@
     },
     methods: {
       async fetchInitData () {
-        this.initialValue = cloneDeep(this.curSelectActions);
         if (this.isEdit) {
           await this.fetchDetail();
           await this.fetchGroupPreview();
@@ -428,7 +493,8 @@
         this.leavePageForm = cloneDeep(Object.assign(
           this.basicInfo,
           {
-            selected_actions: this.curSelectActions
+            selected_actions: this.curSelectActions,
+            deleted_actions: this.curDeleteActions
           }
         ));
         this.leavePageFormBack = cloneDeep(this.leavePageForm);
@@ -573,8 +639,7 @@
           });
           item.actionsAllChecked = item.actions.every(act => act.checked) && (item.sub_groups || []).every(v => {
             return v.actions.every(act => act.checked);
-          }
-          );
+          });
           item.count = flag ? item.count + count : item.count - delCount;
           this.$set(item, 'deleteCount', deleteCount);
           this.$set(item, 'expanded', item.count > 0);
@@ -646,7 +711,7 @@
         }
       },
       
-      handleActionLinearData (isSearch = false) {
+      handleActionLinearData () {
         const linearActions = [];
         // 获取actions和sub_groups所有数据，并根据单双行渲染不同背景颜色
         let colorIndex = 0;
@@ -667,15 +732,14 @@
             this.$set(item, 'bgColor', colorIndex % 2 === 0 ? '#f7f9fc' : '#ffffff');
             colorIndex++;
           }
-          if (isSearch) {
-            item.actions = item.actions.filter((v) => v.name.indexOf(this.actionsValue) > -1);
-          }
           item.actions.forEach(act => {
             this.$set(act, 'checked', ['checked', 'readonly', 'delete'].includes(act.tag));
             this.$set(act, 'disabled', act.tag === 'readonly');
             linearActions.push(act);
             if (act.checked) {
               this.curSelectActions.push(act);
+              // 处理移除的数据
+              this.hasSelectedActions.push(act);
               this.$set(act, 'flag', 'selected');
               ++count;
               if (act.tag === 'delete') {
@@ -693,15 +757,13 @@
               this.$set(sub, 'actions', []);
             }
             sub.actions = sub.actions.filter(v => !v.hidden);
-            if (isSearch) {
-              sub.actions = sub.actions.filter((v) => v.name.indexOf(this.actionsValue) > -1);
-            }
             sub.actions.forEach(act => {
               this.$set(act, 'checked', ['checked', 'readonly', 'delete'].includes(act.tag));
               this.$set(act, 'disabled', act.tag === 'readonly');
               linearActions.push(act);
               if (act.checked) {
                 this.curSelectActions.push(act);
+                this.hasSelectedActions.push(act);
                 this.$set(act, 'flag', 'selected');
                 ++count;
                 if (act.tag === 'delete') {
@@ -753,8 +815,16 @@
         this.allCustomActionList = this.getActionsData(list, payload);
       },
 
-      handleExpandAction () {
-        this.isExpandAction = !this.isExpandAction;
+      handleExpandAction (payload) {
+        const typeMap = {
+          selected: () => {
+            this.isExpandSelectedAction = !this.isExpandSelectedAction;
+          },
+          delete: () => {
+            this.isExpandDeleteAction = !this.isExpandDeleteAction;
+          }
+        };
+        return typeMap[payload]();
       },
 
       async handleSelectAllActions (payload) {
@@ -763,7 +833,7 @@
             if (payload) {
               this.allCustomActionList = this.getActionsData(this.allCustomActionList, false);
             } else {
-              this.handleClearAllAction();
+              this.handleClearAllAction('delete');
             }
           },
           false: () => {
@@ -773,12 +843,26 @@
         modeMap[this.isEdit]();
       },
 
-      handleClearAllAction () {
-        this.isSelectAllActions = false;
+      handleClearAllAction (payload) {
         const list = Object.freeze(cloneDeep(this.allCustomActionList));
-        this.curSelectActions.forEach((item) => {
-          this.handleDelAction(item, list);
-        });
+        const typeMap = {
+          delete: () => {
+            this.isSelectAllActions = false;
+            this.curSelectActions.forEach((item) => {
+              this.handleDelAction(payload, item, list);
+            });
+          },
+          cancelDelete: () => {
+            this.curDeleteActions = [];
+            const curSelectActions = cloneDeep(this.curSelectActions.map((item) => `${item.name}&${item.id}`));
+            const selectList = this.hasSelectedActions.filter((item) => !curSelectActions.includes(`${item.name}&${item.id}`));
+            this.curSelectActions = [...this.curSelectActions, ...selectList];
+            this.curSelectActions.forEach((item) => {
+              this.handleDelAction(payload, item, list);
+            });
+          }
+        };
+        return typeMap[payload]();
       },
 
       handleNameInput () {
@@ -820,20 +904,32 @@
         }
       },
 
-      handleDelAction (payload, arr) {
+      handleDelAction (mode, payload, arr) {
         const list = arr.length > 0 ? arr : Object.freeze(cloneDeep(this.allCustomActionListBack));
         list.forEach((item) => {
           (item.actions || []).forEach((act) => {
             if (`${act.id}&${act.name}` === `${payload.id}&${payload.name}`) {
-              payload.checked = false;
-              this.$refs.actionsRef && this.$refs.actionsRef.handleActionChecked(payload, item, false);
+              if (['delete'].includes(mode)) {
+                payload.checked = false;
+                this.$refs.actionsRef && this.$refs.actionsRef.handleActionChecked(payload, item, false);
+              }
+              if (['cancelDelete'].includes(mode)) {
+                payload.checked = true;
+                this.$refs.actionsRef && this.$refs.actionsRef.handleActionChecked(payload, item, true);
+              }
             }
           });
           (item.sub_groups || []).forEach((sub) => {
             sub.actions.forEach((act) => {
               if (`${act.id}&${act.name}` === `${payload.id}&${payload.name}`) {
-                payload.checked = false;
-                this.$refs.actionsRef && this.$refs.actionsRef.handleSubActionChecked(payload, sub, item, false);
+                if (['delete'].includes(mode)) {
+                  payload.checked = false;
+                  this.$refs.actionsRef && this.$refs.actionsRef.handleSubActionChecked(payload, sub, item, false);
+                }
+                if (['cancelDelete'].includes(mode)) {
+                  payload.checked = true;
+                  this.$refs.actionsRef && this.$refs.actionsRef.handleSubActionChecked(payload, sub, item, true);
+                }
               }
             });
           });
@@ -882,15 +978,12 @@
               }
               ++allCount;
             });
-
             const isSubAllChecked = sub.actions.every(v => v.checked);
             this.$set(sub, 'allChecked', isSubAllChecked);
           });
-
           this.$set(item, 'deleteCount', deleteCount);
           this.$set(item, 'count', count);
           this.$set(item, 'allCount', allCount);
-
           const isAllChecked = item.actions.every(v => v.checked);
           const isAllDisabled = item.actions.every(v => v.disabled);
           this.$set(item, 'allChecked', isAllChecked);
@@ -1026,22 +1119,33 @@
           this.scrollToLocation(actionRef);
           return;
         }
+        // 如果没有操作变更不需要调用接口
+        if (JSON.stringify(this.curSelectActionsBack) === JSON.stringify(this.curSelectActions)) {
+          return this.messageWarn(this.$t(`m.actionsTemplate['操作模板未变更, 无需更新!']`), 3000);
+        }
+        // 如果没有关联用户组且授权范围不包含这个操作
         if (!this.hasGroupPreview) {
           if (hasDelCount) {
             this.messageWarn(this.$t(`m.permTemplate['由于分级管理员的授权范围没有包含此操作，如需使用该模板进行新的授权必须先删除该操作。']`), 3000);
             return;
           }
-          window.changeDialog = false;
           this.handleSetCurActionStep(2);
           return;
         }
-        // 如果没有操作变更不需要调用接口
-        if (JSON.stringify(this.curSelectActionsBack) === JSON.stringify(this.curSelectActions)) {
-          return this.messageWarn(this.$t(`m.actionsTemplate['操作模板未变更, 无需更新!']`), 3000);
-        }
         this.nextLoading = true;
         try {
+          const actionIdList = this.curSelectActions.map((item) => item.id);
+          const { data } = await this.$store.dispatch('permTemplate/addPreUpdateInfo', {
+            id: this.id,
+            data: {
+              action_ids: actionIdList
+            }
+          });
           window.changeDialog = false;
+          const list = cloneDeep(this.allCustomActionListBack);
+          this.$store.commit('permTemplate/updateCloneActions', data);
+          this.$store.commit('permTemplate/updatePreActionIds', actionIdList);
+          this.$store.commit('permTemplate/updateAction', getHasSelectedActions(actionIdList, list, this.defaultCheckedActions));
           this.handleSetCurActionStep(2);
         } catch (e) {
           this.messageAdvancedError(e);
@@ -1161,7 +1265,7 @@
       },
 
       handleAnimationEnd () {
-        this.instanceDetailSlider = Object.assign(this.instanceDetailSlider, { isShow: false, sideSliderDetailTitle: '', previewData: [] });
+        this.instanceDetailSlider = Object.assign(this.instanceDetailSlider, { isShow: false, title: '', previewData: [] });
       }
     }
   };
