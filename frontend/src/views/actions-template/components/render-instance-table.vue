@@ -123,7 +123,6 @@
                         @on-mouseover="handlerConditionMouseover(content)"
                         @on-mouseleave="handlerConditionMouseleave(content)"
                         @on-view="handlerOnView(row, content, contentIndex, groIndex)"
-                        @on-restore="handlerOnRestore(content)"
                         @on-copy="handlerOnCopy(content, $index, contentIndex, row)"
                         @on-paste="handlerOnPaste(...arguments, content, $index, contentIndex)"
                         @on-batch-paste="handlerOnBatchPaste(...arguments, content, $index, contentIndex)"

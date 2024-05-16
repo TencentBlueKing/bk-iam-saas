@@ -51,7 +51,7 @@ export default class SyncPolicy {
     this.tid = payload.tid || '';
     this.initExpired(payload);
     this.initRelatedResourceTypes(payload, { name: this.name, type: this.type }, flag);
-    this.initRelatedRroupsTypes(payload, { name: this.name, type: this.type }, flag);
+    this.initRelatedGroupsTypes(payload, { name: this.name, type: this.type }, flag);
     this.initAttachActions(payload);
     this.showAction = false;
     this.showPopover = false;
@@ -82,18 +82,18 @@ export default class SyncPolicy {
     );
   }
 
-  initRelatedRroupsTypes (payload, action, flag) {
+  initRelatedGroupsTypes (payload, action, flag) {
     if (!payload.resource_groups) {
       this.resource_groups = [];
       return;
     }
 
     this.resource_groups = payload.resource_groups.reduce((prev, item) => {
-      const relatedRsourceTypes = item.related_resource_types.map(
+      const relatedResourceTypes = item.related_resource_types.map(
         item => new RelateResourceTypes(item, action, flag)
       );
 
-      prev.push({ id: item.id, related_resource_types: relatedRsourceTypes });
+      prev.push({ id: item.id, related_resource_types: relatedResourceTypes });
       return prev;
     }, []);
   }

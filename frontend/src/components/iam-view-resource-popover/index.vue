@@ -29,13 +29,17 @@
         {{ value }}
       </template>
     </div>
-    <span class="text" :style="{ 'max-width': `${maxWidth}px` }">{{ value }}</span>
+    <template>
+      <span v-if="isHtml" class="text" :style="{ 'max-width': `${maxWidth}px` }" v-html="value" />
+      <span v-else class="text" :style="{ 'max-width': `${maxWidth}px` }">
+        {{ value }}
+      </span>
+    </template>
   </bk-popconfirm>
 </template>
 <script>
   import Instance from '@/model/instance';
   export default {
-    name: '',
     props: {
       data: {
         type: Array,
@@ -62,6 +66,9 @@
       },
       isEmpty () {
         return this.displayList.length < 1;
+      },
+      isHtml () {
+        return ['actionsTemplateEdit'].includes(this.$route.name);
       }
     },
     watch: {

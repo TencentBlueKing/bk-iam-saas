@@ -110,7 +110,7 @@ export default class RelateResourceTypes {
     }
     let attributeLen = 0;
     let attributeStr = '';
-    const instanceStrs = [];
+    const instanceList = [];
     let instanceStr = '';
     const instanceStrMap = {};
     this.condition.forEach(item => {
@@ -130,17 +130,25 @@ export default class RelateResourceTypes {
         });
       }
     });
-
+    const isCustom = window.location.pathname.indexOf('actions-template-edit') > -1;
     for (const key in instanceStrMap) {
-      const str = isCn ? `${instanceStrMap[key]} 个${key}` : `${instanceStrMap[key]} ${key}(s)`;
-      instanceStrs.push(str);
+      let str = '';
+      if (isCustom) {
+        str = isCn ? ` <span style='color: #3a84ff; font-weight: 700;'>${instanceStrMap[key]}</span> 个${key}` : `${instanceStrMap[key]} ${key}(s)`;
+      } else {
+        str = isCn ? `${instanceStrMap[key]} 个${key}` : `${instanceStrMap[key]} ${key}(s)`;
+      }
+      instanceList.push(str);
     }
-
     if (attributeLen > 0) {
-      attributeStr = `${il8n('resource', '已设置')} ${attributeLen} ${il8n('resource', '个属性条件')}`;
+      if (isCustom) {
+        attributeStr = `${il8n('resource', '已设置')} <span style='color: #3a84ff; font-weight: 700;>${attributeLen}</span> ${il8n('resource', '个属性条件')}`;
+      } else {
+        attributeStr = `${il8n('resource', '已设置')} ${attributeLen} ${il8n('resource', '个属性条件')}`;
+      }
     }
-    if (instanceStrs.length > 0) {
-      instanceStr = `${il8n('common', '已选择')} ${instanceStrs.join('，')}`;
+    if (instanceList.length > 0) {
+      instanceStr = `${il8n('common', '已选择')} ${instanceList.join('，')}`;
     }
     return [attributeStr, instanceStr].filter(item => item !== '').join('；');
   }

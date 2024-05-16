@@ -86,16 +86,18 @@
             >
               {{ $t(`m.common['上一步']`) }}
             </bk-button>
-            <bk-button
-              theme="primary"
-              :loading="isLoading"
-              :disabled="(disabled || !isLastPage) && !isNoAddActions"
-              @click.stop="handleNextStep">
-              <span v-if="!isLastPage && !isNoAddActions" v-bk-tooltips="$t(`m.actionsTemplate['还有用户组未完成实例关联']`)">
+            <bk-popover
+              :content="$t(`m.actionsTemplate['还有用户组未完成实例关联']`)"
+              :disabled="(!isLastPage && !isNoAddActions)"
+            >
+              <bk-button
+                theme="primary"
+                :loading="isLoading"
+                :disabled="(disabled || !isLastPage) && !isNoAddActions"
+                @click.stop="handleNextStep">
                 {{ $t(`m.common['提交']`) }}
-              </span>
-              <span v-else>{{ $t(`m.common['提交']`) }}</span>
-            </bk-button>
+              </bk-button>
+            </bk-popover>
             <bk-button @click.stop="handlePrevStep('cancel')">
               {{ $t(`m.common['取消']`) }}
             </bk-button>
@@ -259,8 +261,7 @@
           this.addActions = tempActions;
           this.isNoAddActions = this.addActions.length < 1;
         },
-        immediate: true,
-        deep: true
+        immediate: true
       }
     },
     mounted () {
@@ -386,8 +387,8 @@
       },
 
       handleAllNoLimited () {
-        if (this.$refs.syncRef && this.$refs.syncRef.tableList.length) {
-          this.$refs.syncRef.tableList.forEach((item, index) => {
+        if (this.$refs.syncRef && this.$refs.syncRef.syncGroupList.length) {
+          this.$refs.syncRef.syncGroupList.forEach((item, index) => {
             this.$refs.syncRef.handleGroupNoLimited(item, index);
           });
         }
@@ -520,11 +521,12 @@
           }
         }
         .header-content {
-          margin: 12px 0;
+          margin-top: 12px;
           flex-wrap: wrap;
           &-btn {
             display: flex;
             align-items: center;
+            padding-bottom: 12px;
             .operate-btn {
               font-size: 0;
               .bk-button {
@@ -568,6 +570,7 @@
             height: 32px;
             line-height: 32px;
             padding: 0 12px;
+            margin-bottom: 12px;
             background-color: #ffffff;
             border: 1px solid #c4c6cc;
             border-radius: 2px;

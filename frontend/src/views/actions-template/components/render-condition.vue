@@ -1,36 +1,41 @@
 <template>
-  <div :class="['iam-condition-item', { active: isActive }, { error: isError }]"
+  <div
+    :class="['iam-condition-item', { active: isActive }, { error: isError }]"
     @mouseenter="handleMouseenter"
     @mouseleave="handleMouseleave"
-    @click.stop="handleClick">
-    <div class="iam-input-text" :style="style" :title="!isEmpty ? curValue : ''" @click.stop="handleClick">
-      <section :class="['iam-condition-input', { 'is-empty': isEmpty }]" @click.stop="handleClick">
-        {{ curValue }}
-      </section>
+    @click.stop="handleClick"
+  >
+    <div class="iam-input-text" :style="style" @click.stop="handleClick">
+      <span :class="['iam-condition-input', { 'is-empty': isEmpty }]" @click.stop="handleClick" v-html="curValue" />
     </div>
-    <div class="operate-icon"
-      :title="$t(`m.common['预览']`)"
+    <div
       v-if="canView && canOperate"
-      @click.stop="handleView">
-      <Icon type="see-details" />
+      v-bk-tooltips="{ content: $t(`m.common['预览']`), disabled: !(canView && canOperate) }"
+      class="operate-icon"
+      @click.stop="handleView"
+    >
+      <Icon type="see-details" class="icon" />
     </div>
     <!-- v-if="!isEmpty && canOperate && canCopy" -->
-    <div class="operate-icon"
-      :title="$t(`m.common['复制']`)"
+    <div
       v-if="canOperate && canCopy"
-      @click.stop="handleCopy">
-      <Icon type="copy" />
+      v-bk-tooltips="{ content: $t(`m.common['复制']`), disabled: !(canOperate && canCopy) }"
+      class="operate-icon"
+      @click.stop="handleCopy"
+    >
+      <Icon type="copy" class="icon" />
     </div>
-    <!-- v-if="canOperate && canPaste" -->
-    <div class="operate-icon paste-icon"
-      :title="$t(`m.common['粘贴']`)"
-      v-if="canOperate && canCopy"
-      @click.stop="handlePaste">
+    <div
+      v-if="canOperate && canPaste"
+      v-bk-tooltips="{ content: $t(`m.common['粘贴']`) }"
+      :class="['operate-icon', { 'is-disabled': isPasteDisabled }]"
+      @click.stop="handlePaste"
+    >
       <spin-loading v-if="pasteLoading" />
-      <Icon v-else type="paste" />
+      <Icon v-else type="paste" class="icon" />
     </div>
 
-    <div class="iam-condition-batch-paste"
+    <!-- <div class="iam-condition-batch-paste"
       v-if="(canOperate && canPaste) || immediatelyShow">
       <section class="batch-paste-wrapper">
         <section class="batch-paste-action">
@@ -46,12 +51,12 @@
         </section>
         <div class="triangle"></div>
       </section>
-    </div>
+    </div> -->
   </div>
 </template>
+
 <script>
   export default {
-    name: '',
     props: {
       value: {
         type: String,
@@ -106,6 +111,9 @@
       },
       isDisabled () {
         return this.isLoading || this.pasteLoading;
+      },
+      isPasteDisabled () {
+        return Object.keys(this.params).length < 1;
       }
     },
     watch: {
@@ -119,10 +127,6 @@
     methods: {
       handleView () {
         this.$emit('on-view');
-      },
-
-      handleCopy () {
-        this.$emit('on-copy');
       },
 
       handleClick () {
@@ -143,13 +147,21 @@
         this.$emit('on-mouseleave');
       },
 
+      handleCopy () {
+        if (this.isEmpty) {
+          this.messageWarn(this.$t(`m.common['暂无可复制内容']`), 3000);
+          return;
+        }
+        this.$emit('on-copy');
+      },
+
       async handlePaste () {
-        // 无限制时无需请求接口
-        if (Object.keys(this.params).length < 1) {
+        if (this.isPasteDisabled) {
           this.$emit('on-paste');
           return;
         }
-        if (this.params.resource_type.condition.length === 0) {
+        // 无限制时无需请求接口
+        if (this.params.resource_type && this.params.resource_type.condition.length === 0) {
           this.$emit('on-paste', {
             flag: true,
             data: []
@@ -163,7 +175,6 @@
         };
         try {
           const { data } = await this.$store.dispatch('permApply/resourceBatchCopy', params);
-          console.warn(data);
           if (data && data.length) {
             const condition = data[0].resource_type.condition;
             this.$emit('on-paste', {
@@ -227,123 +238,117 @@
     }
   };
 </script>
+
 <style lang="postcss" scoped>
-    .iam-condition-item {
-        display: flex;
-        justify-content: flex-start;
-        position: relative;
-        /* padding: 0 6px; */
-        padding: 0 12px;
-        width: 100%;
-        line-height: 1;
-        vertical-align: middle;
-        border: 1px solid #c4c6cc;
-        border-radius: 2px;
-        font-size: 0;
-        color: #63656e;
-        background: #fff;
-        cursor: pointer;
-        &:hover {
-            border-color: #3a84ff;
-            .operate-icon {
-                visibility: visible;
-            }
-        }
-        &.active {
-            border-color: #3a84ff;
-        }
-        &.error {
-            border-color: #ff5656;
-        }
-        .iam-input-text {
-            .iam-condition-input {
-                height: 32px;
-                line-height: 32px;
-                background-color: #fff;
-                width: 100%;
-                font-size: 12px;
-                box-sizing: border-box;
-                border: none;
-                text-align: left;
-                vertical-align: middle;
-                outline: none;
-                resize: none;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                cursor: pointer;
-                &.is-empty {
-                    color: #c4c6cc;
-                }
-            }
-        }
-        .original-resource-icon {
-            padding-top: 6px;
-            outline: none;
-            cursor: pointer;
-            img {
-                width: 20px;
-            }
-        }
-        .operate-icon {
-            display: inline-block;
-            visibility: hidden;
-            margin: 6px 0 0 6px;
-            padding: 2px;
-            width: 20px;
-            height: 20px;
-            color: #979ba5;
-            outline: none;
-            cursor: pointer;
-            &:hover {
-                color: #3a84ff;
-                border-radius: 2px;
-                background: #e1ecff;
-                i {
-                    color: #3a84ff;
-                }
-            }
-            &.paste-icon {
-                visibility: visible;
-            }
-            i {
-                font-size: 16px;
-                color: #979ba5;
-            }
-        }
-        .iam-condition-batch-paste {
-            position: absolute;
-            right: 0;
-            top: -40px;
-            width: 71px;
-            height: 32px;
-            line-height: 30px;
-            text-align: center;
-            background: #fff;
-            border: 1px solid #dcdee5;
-            box-shadow: 0px 3px 6px 0px rgba(0, 0, 0, .1);
-            z-index: 1;
-            .batch-paste-wrapper {
-                position: relative;
-                height: 38px;
-                background: transparent;
-            }
-            .batch-paste-action {
-                line-height: 25px;
-                background: #fff;
-            }
-            .triangle {
-                position: absolute;
-                left: 29px;
-                bottom: 3px;
-                width: 10px;
-                height: 10px;
-                background: #fff;
-                transform: rotate(45deg);
-                border-bottom: 1px solid #dcdee5;
-                border-right: 1px solid #dcdee5;
-                z-index: -1;
-            }
-        }
+  .iam-condition-item {
+    display: flex;
+    justify-content: flex-start;
+    position: relative;
+    padding: 0 12px;
+    width: 100%;
+    line-height: 1;
+    vertical-align: middle;
+    border: 1px solid #c4c6cc;
+    border-radius: 2px;
+    font-size: 0;
+    color: #63656e;
+    background: #fff;
+    cursor: pointer;
+    &:hover {
+      border-color: #3a84ff;
+      .operate-icon {
+        visibility: visible;
+      }
     }
+    &.active {
+      border-color: #3a84ff;
+    }
+    &.error {
+      border-color: #ff5656;
+    }
+    .iam-input-text {
+      .iam-condition-input {
+          height: 32px;
+          line-height: 32px;
+          background-color: #fff;
+          width: 100%;
+          font-size: 12px;
+          box-sizing: border-box;
+          border: none;
+          text-align: left;
+          vertical-align: middle;
+          outline: none;
+          resize: none;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          cursor: pointer;
+          &.is-empty {
+              color: #c4c6cc;
+          }
+      }
+    }
+    .operate-icon {
+      display: inline-block;
+      visibility: hidden;
+      margin: 6px 0 0 6px;
+      padding: 2px;
+      width: 20px;
+      height: 20px;
+      outline: none;
+      cursor: pointer;
+      .icon {
+        font-size: 16px;
+        color: #3a84ff;
+      }
+      &:hover {
+        border-radius: 2px;
+        background-color: #e1ecff;
+      }
+      &.is-disabled {
+        color: #dcdee5;
+        &:hover {
+          background-color: transparent;
+          cursor: not-allowed;
+        }
+        .icon {
+          color: #dcdee5;
+        }
+      }
+    }
+    .iam-condition-batch-paste {
+      position: absolute;
+      right: 0;
+      top: -40px;
+      width: 71px;
+      height: 32px;
+      line-height: 30px;
+      text-align: center;
+      background: #fff;
+      border: 1px solid #dcdee5;
+      box-shadow: 0px 3px 6px 0px rgba(0, 0, 0, .1);
+      z-index: 1;
+      .batch-paste-wrapper {
+        position: relative;
+        height: 38px;
+        background: transparent;
+      }
+      .batch-paste-action {
+        line-height: 25px;
+        background: #fff;
+      }
+      .triangle {
+        position: absolute;
+        left: 29px;
+        bottom: 3px;
+        width: 10px;
+        height: 10px;
+        background: #fff;
+        transform: rotate(45deg);
+        border-bottom: 1px solid #dcdee5;
+        border-right: 1px solid #dcdee5;
+        z-index: -1;
+      }
+    }
+  }
 </style>

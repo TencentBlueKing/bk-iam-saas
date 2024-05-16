@@ -281,6 +281,7 @@ export const m = {
         '无该应用访问权限': 'No access permissions for this application',
         '暂无可复制内容': 'There is currently no replicable content',
         '暂无可复制用户': 'There are currently no replicable users',
+        '暂无可复制实例': 'There are currently no replicable instances',
         '管理员组不能添加部门': 'The administrator group cannot add department',
         '管理员组不能添加人员模板': 'The administrator group cannot add member template',
         '批量退出': 'Multi-quit',
@@ -1626,6 +1627,7 @@ export const m = {
         '批量复用': 'Multi-Reuse',
         '搜索 系统名、操作名': 'Search system name and action name',
         '引用已有的操作实例一键填充': 'Referencing existing operation instances for one click filling',
+        '批量复用资源实例值（资源模板）到其他用户组': 'Batch reuse of resource instance values (resource templates) to other user groups',
         '解除同步后，模板权限将转为用户组自定义权限，不会再继续同步该模板的操作。': 'After unsynchronizing, template permissions will be converted to user group custom permissions, and the operation of synchronizing the template will no longer be continued.'
     }
 }
