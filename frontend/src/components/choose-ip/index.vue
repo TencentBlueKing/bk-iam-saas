@@ -1320,7 +1320,8 @@
         node.current = node.current + 1;
         node.loadingMore = true;
         const chainLen = this.curChain.length;
-        let keyword = !isTable ? this.curKeyword : '';
+        // 如果是表格搜索或者level大于0，,代表当前搜索层级不是最外层，需要清空搜索条件
+        let keyword = isTable || (!isTable && node.level > 0) ? '' : this.curKeyword;
         if (Object.keys(this.curSearchObj).length) {
           if (node.parentId === this.curSearchObj.parentId) {
             keyword = this.curSearchObj.value;

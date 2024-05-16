@@ -1712,7 +1712,7 @@
         node.current = node.current + 1;
         node.loadingMore = true;
         const chainLen = this.curChain.length;
-        let keyword = !isTable ? this.curKeyword : '';
+        let keyword = isTable || (!isTable && node.level > 0) ? '' : this.curKeyword;
         if (Object.keys(this.curSearchObj).length) {
           if (node.parentId === this.curSearchObj.parentId) {
             keyword = this.curSearchObj.value;
