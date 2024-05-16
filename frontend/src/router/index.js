@@ -200,8 +200,8 @@ export const beforeEach = async (to, from, next) => {
           if (existValue('externalApp') || to.query.noFrom) {
             next();
           } else {
-            // next();
-            next({ path: `${SITE_URL}${defaultRoute[navIndex]}` });
+            next();
+            // next({ path: `${SITE_URL}${defaultRoute[navIndex]}` });
           }
         } else {
           next();
@@ -295,35 +295,20 @@ export const beforeEach = async (to, from, next) => {
         // next();
       } else {
         const noFrom = !from.name;
-        // permTemplateCreate
         if (['permTemplateDetail', 'permTemplateEdit', 'permTemplateDiff'].includes(to.name) && noFrom) {
           next({ path: `${SITE_URL}perm-template` });
-          // } else if (['createUserGroup', 'userGroupDetail'].includes(to.name) && noFrom) {
-          // } else if (['createUserGroup'].includes(to.name) && noFrom) {
-        } else if (['createUserGroup'].includes(to.name)) {
-          if (noFrom) {
-            if (existValue('externalApp')) {
-              next();
-            } else {
-              next({ path: `${SITE_URL}${defaultRoute[navIndex]}` });
-            }
-          } else {
-            next();
-          }
-          // if (existValue('externalApp')) { // 如果是外部嵌入的页面
-          //     next();
-          // } else {
-          //     next({ path: `${SITE_URL}user-group` });
-          // }
-          // 这里刷新staff菜单会跳转分级管理员列表，所以单独处理
-        } else if (['gradingAdminDetail', 'gradingAdminCreate'].includes(to.name) && !['', 'staff'].includes(curRole)) {
-          if (noFrom) {
-            next({ path: `${SITE_URL}rating-manager` });
-          } else {
-            next();
-          }
-        } else if (['gradingAdminEdit', 'myPerm'].includes(to.name)) {
-          next();
+        // } else if (['createUserGroup'].includes(to.name)) {
+        //   if (noFrom) {
+        //     if (existValue('externalApp')) {
+        //       next();
+        //     } else {
+        //       next({ path: `${SITE_URL}${defaultRoute[navIndex]}` });
+        //     }
+        //   } else {
+        //     next();
+        //   }
+        // } else if (['myPerm'].includes(to.name)) {
+        //   next();
         } else {
           next();
         }
