@@ -346,7 +346,6 @@
             }
           });
         }
-        console.log(list);
         if (!result.length) {
           this.handleTableClear();
         } else {

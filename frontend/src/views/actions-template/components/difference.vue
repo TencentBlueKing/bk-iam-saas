@@ -12,7 +12,9 @@
                     <bk-button theme="primary" class="fill" v-bk-tooltips="{ content: fillTip }">
                       {{ $t(`m.common['一键填充']`) }}
                     </bk-button>
-                    <bk-button class="no-limited">{{ $t(`m.common['全部无限制']`) }}</bk-button>
+                    <bk-button class="no-limited" @click.stop="handleAllNoLimited">
+                      {{ $t(`m.common['全部无限制']`) }}
+                    </bk-button>
                   </div>
                   <div class="aggregate-type-list">
                     <div
@@ -253,9 +255,11 @@
               });
             });
           });
+          console.log(tempActions, '新增的操作');
           this.addActions = tempActions;
           this.isNoAddActions = this.addActions.length < 1;
         },
+        immediate: true,
         deep: true
       }
     },
@@ -381,7 +385,15 @@
         return typeMap[payload]();
       },
 
-      handleAggregateAction (payload) {
+      handleAllNoLimited () {
+        if (this.$refs.syncRef && this.$refs.syncRef.tableList.length) {
+          this.$refs.syncRef.tableList.forEach((item, index) => {
+            this.$refs.syncRef.handleGroupNoLimited(item, index);
+          });
+        }
+      },
+
+      handleAggregateAction () {
 
       },
 
@@ -391,7 +403,6 @@
 
       handleLocationGroup (payload) {
         const { list } = payload;
-        console.log(list);
         this.totalLocationCount = list.length || 0;
       },
  

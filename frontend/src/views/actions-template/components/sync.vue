@@ -66,11 +66,13 @@
         ext-cls="temp-group-sync-table-content"
         :cell-class-name="getCellClass"
         @cell-mouse-enter="handleCellMouseEnter"
-        @cell-mouse-leave="handleCellMouseLeave">
+        @cell-mouse-leave="handleCellMouseLeave"
+      >
         <bk-table-column
           :min-width="180"
           :resizable="false"
           :label="$t(`m.common['操作']`)"
+          :show-overflow-tooltip="true"
         >
           <template slot-scope="{ row }">
             <span>
@@ -84,25 +86,27 @@
         <bk-table-column
           :resizable="false"
           :label="$t(`m.permApply['资源类型']`)"
+          :show-overflow-tooltip="true"
         >
           <template slot-scope="{ row }">
-            <div v-for="resource in row.resource_groups" :key="resource.id">
-              <span
-                v-for="related in resource.related_resource_types"
-                :key="related.type"
-                :class="['resource-type-item', `resource-type-item-${row.mode_type}`]"
-              >
-                {{ related.name }}
-              </span>
+            <div class="resource-type-content">
+              <div v-for="resource in row.resource_groups" :key="resource.id" class="resource-type-list">
+                <div
+                  v-for="related in resource.related_resource_types"
+                  :key="related.type"
+                  :class="['single-hide', 'resource-type-item', `resource-type-item-${row.mode_type}`]"
+                >
+                  {{ related.name }}
+                </div>
+              </div>
             </div>
           </template>
         </bk-table-column>
         <bk-table-column
           :min-width="310"
           :resizable="false"
-          :render-header="(h, { column, $index }) =>
-            renderResourceHeader(h, { column, $index }, group, groupIndex)
-          "
+          :render-header="(h, { column, $index }) => renderResourceHeader(h, { column, $index }, group, groupIndex)"
+          :show-overflow-tooltip="true"
         >
           <template slot-scope="{ row, $index }">
             <div class="relation-content-wrapper">
@@ -121,12 +125,12 @@
                           :can-view="row.canView"
                           :can-paste="content.canPaste"
                           :is-error="content.isError"
-                          @on-mouseover="handlerConditionMouseover(content, row)"
-                          @on-mouseleave="handlerConditionMouseleave(content)"
-                          @on-restore="handlerOnRestore(content)"
-                          @on-copy="handlerOnCopy(content, groupIndex, contentIndex, $index, row)"
-                          @on-paste="handlerOnPaste(...arguments, content)"
-                          @on-batch-paste="handlerOnBatchPaste(...arguments, content, groupIndex, contentIndex, $index)"
+                          @on-mouseover="handleConditionMouseover(content, row)"
+                          @on-mouseleave="handleConditionMouseleave(content)"
+                          @on-restore="handleOnRestore(content)"
+                          @on-copy="handleOnCopy(content, groupIndex, contentIndex, $index, row)"
+                          @on-paste="handleOnPaste(...arguments, content)"
+                          @on-batch-paste="handleOnBatchPaste(...arguments, content, groupIndex, contentIndex, $index)"
                           @on-click="handleShowResourceSlider(
                             row, content, contentIndex, $index, groupIndex, relatedIndex
                           )"
@@ -170,7 +174,7 @@
                 <template v-if="['delete'].includes(row.mode_type)">
                   <div v-for="(related, relatedIndex) in row.resource_groups" :key="related.id">
                     <div
-                      class="related-resource-item"
+                      class="single-hide relation-content-item"
                       v-for="subItem in related.related_resource_types"
                       :key="subItem.type"
                       @click.stop="handleViewResource(row, groupIndex, relatedIndex)"
@@ -178,7 +182,7 @@
                       <render-resource-popover
                         :key="subItem.type"
                         :data="subItem.condition"
-                        :value="`${subItem.name}: ${subItem.value}`"
+                        :value="subItem.value"
                         :max-width="185"
                         @on-view="handleViewResource(row, groupIndex, relatedIndex)"
                       />
@@ -228,7 +232,7 @@
 
     <!-- 打开资源视图选择器 -->
     <bk-sideslider
-      :is-show="isShowInstanceSideSlider"
+      :is-show.sync="isShowInstanceSideSlider"
       :title="instanceSideSliderTitle"
       :width="resourceSliderWidth"
       quick-close
@@ -323,6 +327,7 @@
         addProps: [],
         previewData: [],
         originalList: [],
+        curAddActions: [],
         authorizationScopeActions: [],
         requestQueue: ['scope', 'group'],
         params: {},
@@ -367,13 +372,12 @@
             return [];
         }
         const curData = this.tableList[this.curIndex]
-            .add_actions[this.curActionIndex].resource_groups[this.curGroupIndex]
+            .tableList[this.curActionIndex].resource_groups[this.curGroupIndex]
             .related_resource_types[this.curResourceIndex];
-console.log(curData, this.curIndex, this.curActionIndex, this.curResourceIndex, '当前数据');
         if (!curData) {
             return [];
         }
-       return cloneDeep(curData.condition);
+        return cloneDeep(curData.condition);
       },
       originalCondition () {
         if (this.curIndex === -1
@@ -456,7 +460,7 @@ console.log(curData, this.curIndex, this.curActionIndex, this.curResourceIndex, 
         };
       },
       isAddActionEmpty () {
-        return this.addActions.length < 1;
+        return this.curAddActions.length < 1;
       },
       formatModeType () {
         return (payload) => {
@@ -485,6 +489,15 @@ console.log(curData, this.curIndex, this.curActionIndex, this.curResourceIndex, 
         };
       }
     },
+    watch: {
+      addActions: {
+        handler (value) {
+          this.curAddActions = [...value];
+        },
+        immediate: true,
+        deep: true
+      }
+    },
     async created () {
       this.curCopyKey = '';
       await this.fetchGroupsPreview();
@@ -494,7 +507,7 @@ console.log(curData, this.curIndex, this.curActionIndex, this.curResourceIndex, 
       this.$once('hook:beforeDestroy', () => {
         window.removeEventListener('resize', this.formatFormItemWidth);
       });
-      window.addEventListener('resize', (this.formatFormItemWidth));
+      window.addEventListener('resize', this.formatFormItemWidth);
     },
     methods: {
       formatFormItemWidth () {
@@ -521,8 +534,8 @@ console.log(curData, this.curIndex, this.curActionIndex, this.curResourceIndex, 
             if (index === 0) {
               this.$emit('on-expand', item);
             }
-            if (this.addActions.length > 0) {
-              this.$set(item, 'add_actions', cloneDeep(this.addActions));
+            if (this.curAddActions.length > 0) {
+              this.$set(item, 'add_actions', cloneDeep(this.curAddActions));
               item.add_actions = item.add_actions.map(act => {
                 if (!act.resource_groups || !act.resource_groups.length) {
                   act.resource_groups = [];
@@ -576,12 +589,32 @@ console.log(curData, this.curIndex, this.curActionIndex, this.curResourceIndex, 
       },
 
       getCellClass ({ row, column, rowIndex, columnIndex }) {
-        if (columnIndex !== 0) {
-          return 'iam-perm-table-cell-cls';
+        const hasMultipleResourceType = row.resource_groups && row.resource_groups.some((item) => {
+          return item.related_resource_types.length > 1;
+        });
+        if (columnIndex === 1) {
+          if (hasMultipleResourceType) {
+            return 'resource-type-cell-cls';
+          }
+        }
+        if (columnIndex === 2) {
+          if (['add'].includes(row.mode_type)) {
+            if (hasMultipleResourceType) {
+              return 'resource-instance-add-cell-cls multiple-resource-type-instance';
+            }
+            return 'resource-instance-add-cell-cls';
+          }
+          if (['delete'].includes(row.mode_type)) {
+            if (hasMultipleResourceType) {
+              return 'resource-instance-delete-cell-cls multiple-resource-type-instance';
+            }
+            return 'resource-instance-delete-cell-cls';
+          }
+          return '';
         }
         return '';
       },
-
+ 
       getBatchCopyParams (payload, content) {
         const actions = [];
         this.tableList.forEach(item => {
@@ -896,7 +929,6 @@ console.log(curData, this.curIndex, this.curActionIndex, this.curResourceIndex, 
           .add_actions[this.curActionIndex]
           .resource_groups[this.curGroupIndex]
           .related_resource_types[this.curResourceIndex];
-
         const isConditionEmpty = data.length === 1 && data[0] === 'none';
         if (isConditionEmpty) {
           resItem.condition = ['none'];
@@ -912,7 +944,7 @@ console.log(curData, this.curIndex, this.curActionIndex, this.curResourceIndex, 
         window.changeDialog = true;
       },
 
-      handlerConditionMouseover (payload, row) {
+      handleConditionMouseover (payload, row) {
         if (Object.keys(this.curCopyParams).length < 1) {
           return;
         }
@@ -922,11 +954,11 @@ console.log(curData, this.curIndex, this.curActionIndex, this.curResourceIndex, 
         }
       },
 
-      handlerConditionMouseleave (payload) {
+      handleConditionMouseleave (payload) {
         payload.canPaste = false;
       },
 
-      handlerOnCopy (payload, $index, subIndex, index, action) {
+      handleOnCopy (payload, $index, subIndex, index, action) {
         window.changeDialog = true;
         this.curCopyKey = `${payload.system_id}${payload.type}`;
         this.curCopyParams = this.getBatchCopyParams(action, payload);
@@ -935,7 +967,7 @@ console.log(curData, this.curIndex, this.curActionIndex, this.curResourceIndex, 
           && this.$refs[`condition_${index}_${$index}_${subIndex}_ref`][0].setImmediatelyShow(true);
       },
 
-      handlerOnPaste (payload, content) {
+      handleOnPaste (payload, content) {
         if (!payload.flag) {
           return;
         }
@@ -948,7 +980,7 @@ console.log(curData, this.curIndex, this.curActionIndex, this.curResourceIndex, 
         this.showMessage(this.$t(`m.info['粘贴成功']`));
       },
 
-      handlerOnBatchPaste (payload, content, $index, subIndex, index) {
+      handleOnBatchPaste (payload, content, $index, subIndex, index) {
         if (!payload.flag) {
           return;
         }
@@ -987,7 +1019,7 @@ console.log(curData, this.curIndex, this.curActionIndex, this.curResourceIndex, 
         this.showMessage(this.$t(`m.info['批量粘贴成功']`));
       },
 
-      handleGroupNoLimited (payload) {
+      handleGroupNoLimited (payload, groupIndex) {
         if (this.isUnlimitedDisabled(payload)) {
           return;
         }
@@ -1003,7 +1035,6 @@ console.log(curData, this.curIndex, this.curActionIndex, this.curResourceIndex, 
                       return;
                     }
                     types.condition = payload ? [] : ['none'];
-                    console.log(7777, types);
                     if (payload) {
                       types.isError = false;
                     }
@@ -1034,22 +1065,23 @@ console.log(curData, this.curIndex, this.curActionIndex, this.curResourceIndex, 
             }
           }
         });
-        payload.tableList = cloneDeep(tableData);
+        this.$set(this.tableList[groupIndex], 'tableList', tableData);
+        console.log(this.tableList[groupIndex]);
       },
 
-      handleShowResourceSlider (data, resItem, resIndex, $index, index, groupIndex) {
+      handleShowResourceSlider (row, content, contentIndex, $index, groupIndex, relatedIndex) {
         this.params = {
           system_id: this.$route.params.systemId,
-          action_id: data.id,
-          resource_type_system: resItem.system_id,
-          resource_type_id: resItem.type
+          action_id: row.id,
+          resource_type_system: content.system_id,
+          resource_type_id: content.type
         };
-        this.curScopeAction = this.authorizationScopeActions.find(item => item.id === data.id);
-        this.curIndex = $index;
-        this.curActionIndex = index;
-        this.curResourceIndex = resIndex;
-        this.curGroupIndex = groupIndex;
-        this.instanceSideSliderTitle = this.$t(`m.info['关联侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}` });
+        this.curScopeAction = this.authorizationScopeActions.find(item => item.id === row.id);
+        this.curIndex = groupIndex;
+        this.curActionIndex = $index;
+        this.curResourceIndex = contentIndex;
+        this.curGroupIndex = relatedIndex;
+        this.instanceSideSliderTitle = this.$t(`m.info['关联侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${row.name}${this.$t(`m.common['】']`)}` });
         window.changeAlert = 'iamSidesider';
         this.isShowInstanceSideSlider = true;
       },
@@ -1092,7 +1124,7 @@ console.log(curData, this.curIndex, this.curActionIndex, this.curResourceIndex, 
             <div class="instance-title">
               { this.$t(`m.common['资源实例']`) }
             </div>
-            <div class="instance-no-limited" onClick={ () => this.handleGroupNoLimited(group) }>
+            <div class="instance-no-limited" onClick={ () => this.handleGroupNoLimited(group, groIndex) }>
               <icon type="brush-fill" class="instance-no-limited-icon" />
               <div class="instance-no-limited-label">
                 { this.$t(`m.common['批量无限制']`) }
@@ -1105,7 +1137,7 @@ console.log(curData, this.curIndex, this.curActionIndex, this.curResourceIndex, 
       setTableProps () {
         this.addProps = [];
         this.deleteProps = [];
-        this.addActions.forEach(item => {
+        this.curAddActions.forEach(item => {
           this.addProps.push({
             label: item.name,
             id: item.id
@@ -1209,48 +1241,108 @@ console.log(curData, this.curIndex, this.curActionIndex, this.curResourceIndex, 
         }
       }
     }
-    &-content {
+    /deep/ .temp-group-sync-table-content {
       border-right: none;
       border-bottom: none;
+      &.bk-table {
+        background-color: #ffffff;
+        .bk-table-body {
+          tr {
+            &:hover {
+              background-color: transparent;
+              & > td {
+                background-color: transparent;
+              }
+            }
+          }
+        }
+      }
       .name-tag {
         margin-left: 0;
+        padding: 0 4px;
         font-size: 10px
-      }
-      .resource-type-item {
-        margin-right: 8px;
       }
       .delete-name,
       .resource-type-item-delete {
         text-decoration: line-through;
       }
-      .relation-content-wrapper {
-        height: 100%;
-        padding: 17px 0;
-        color: #63656e;
-        .resource-type-name {
+      .cell {
+        .relation-content-wrapper {
+          height: 100%;
+          color: #63656e;
+          .iam-condition-item {
+            border: none;
+            padding: 0;
+          }
+        }
+      }
+      .resource-type-cell-cls {
+        .cell {
+          width: 100%;
+          /* height: 100%; */
+          padding: 0;
           display: block;
-          margin-bottom: 9px;
+          .resource-type-content {
+            height: 100%;
+            .resource-type-list {
+              height: 100%;
+              .resource-type-item {
+                border-bottom: 1px solid #dfe0e5;
+                padding: 12px 15px;
+                &:last-of-type {
+                  border-bottom: 0;
+                }
+              }
+            }
+          }
         }
       }
-      /deep/ .related-resource-item {
-        cursor: pointer;
+      .resource-instance-add-cell-cls {
         &:hover {
-          color: #3a84ff;
+          border: 1px solid #699DF4;
         }
-        .text {
-          text-decoration: line-through;
+        &.multiple-resource-type-instance {
+          &:hover {
+            border: none;
+          }
+          .cell {
+            padding: 0;
+            .relation-content-wrapper {
+              &:hover {
+                border-bottom: 1px solid #dfe0e5;
+              }
+              .relation-content-item {
+                padding: 5px 15px;
+                border-bottom: 1px solid #dfe0e5;
+                &:last-of-type {
+                  border-bottom: 0;
+                  &:hover {
+                    border-bottom: 1px solid #699DF4;
+                  }
+                }
+                &:hover {
+                  border: 1px solid #699DF4;
+                  margin-right: 1px;
+                  &:last-of-type {
+                    border-bottom: 1px solid #699DF4;
+                  }
+                }
+              }
+            }
+          }
         }
       }
-      .relation-content-item {
-        margin-top: 17px;
-        &:first-child {
-          margin-top: 0;
-        }
-        &.reset-margin-top {
-          margin-top: 10px;
-        }
-        .content-name {
-          margin-bottom: 9px;
+      .resource-instance-delete-cell-cls {
+        .cell {
+          .relation-content-item {
+            cursor: pointer;
+            &:hover {
+              color: #3a84ff;
+            }
+            .text {
+              text-decoration: line-through;
+            }
+          }
         }
       }
       .iam-template-sync-popover-cls {
@@ -1262,7 +1354,7 @@ console.log(curData, this.curIndex, this.curActionIndex, this.curResourceIndex, 
           color: #3a84ff;
         }
       }
-      /deep/ .resource-instance-custom-label {
+      .resource-instance-custom-label {
         display: flex;
         align-items: baseline;
         .instance-title {
@@ -1343,8 +1435,8 @@ console.log(curData, this.curIndex, this.curActionIndex, this.curResourceIndex, 
     color: #313238;
   }
 }
-.related-instance-sideslider {
-  /deep/ .bk-sideslider-footer {
+/deep/ .related-instance-sideslider {
+ .bk-sideslider-footer {
     background-color: #ffffff !important;
     font-size: 0;
     .sync-group-slider-footer {

@@ -1625,6 +1625,7 @@ export const m = {
         '解除同步': 'Resynchronize',
         '批量复用': 'Multi-Reuse',
         '搜索 系统名、操作名': 'Search system name and action name',
+        '引用已有的操作实例一键填充': 'Referencing existing operation instances for one click filling',
         '解除同步后，模板权限将转为用户组自定义权限，不会再继续同步该模板的操作。': 'After unsynchronizing, template permissions will be converted to user group custom permissions, and the operation of synchronizing the template will no longer be continued.'
     }
 }

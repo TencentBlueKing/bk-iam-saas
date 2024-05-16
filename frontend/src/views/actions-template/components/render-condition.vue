@@ -14,15 +14,17 @@
       @click.stop="handleView">
       <Icon type="see-details" />
     </div>
+    <!-- v-if="!isEmpty && canOperate && canCopy" -->
     <div class="operate-icon"
       :title="$t(`m.common['复制']`)"
-      v-if="!isEmpty && canOperate && canCopy"
+      v-if="canOperate && canCopy"
       @click.stop="handleCopy">
       <Icon type="copy" />
     </div>
+    <!-- v-if="canOperate && canPaste" -->
     <div class="operate-icon paste-icon"
       :title="$t(`m.common['粘贴']`)"
-      v-if="canOperate && canPaste"
+      v-if="canOperate && canCopy"
       @click.stop="handlePaste">
       <spin-loading v-if="pasteLoading" />
       <Icon v-else type="paste" />
