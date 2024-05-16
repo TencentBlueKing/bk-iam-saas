@@ -320,7 +320,7 @@ def get_user_expired_groups_policies(
     # 查询当前用户未处理的续期单, 如果已经有相关数据, 过滤掉
     for application in Application.objects.filter(
         applicant=username,
-        type=[ApplicationType.RENEW_ACTION.value, ApplicationType.RENEW_GROUP.value],
+        type__in=[ApplicationType.RENEW_ACTION.value, ApplicationType.RENEW_GROUP.value],
         status=ApplicationStatus.PENDING.value,
     ):
         data = application.data
