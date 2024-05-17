@@ -14,132 +14,109 @@
       </bk-table-column>
       <bk-table-column :resizable="false" :label="$t(`m.actionsTemplate['添加来源']`)" :min-width="130" prop="source_type">
         <template slot-scope="{ row }">
-          <!-- <div class="source-type" v-for="temp in row.templates" :key="temp.id">
-            <Icon type="action-temp" class="action-icon" v-show="temp.count < 1" />
-            <div class="source-type-name">{{ temp.name }}</div>
-          </div> -->
-          <bk-table
-            :data="row.templates"
-            :border="false"
-            :outer-border="false"
-            :header-border="false"
-            :show-header="false"
-            :span-method="handleChildSpanMethod"
-            class="child-table-content"
+          <div
+            v-for="(temp, tempIndex) of row.templates"
+            :key="tempIndex"
+            :class="[
+              'child-table-content',
+              'add-source-content',
+              { 'set-border': tempIndex !== row.templates.length - 1 }
+            ]"
           >
-            <bk-table-column :resizable="false" prop="source_type">
-              <template slot-scope="{ row: temp }">
-                <div class="source-type">
-                  <Icon type="action-temp" class="action-icon" v-show="temp.count < 1" />
-                  <div class="source-type-name">{{ temp.name }}</div>
+            <div
+              v-for="(action, actionIndex) in temp.tableData"
+              :key="action.id"
+              :class="[
+                'add-source-content-item',
+                { 'multiple-temp-item': row.templates.length > 1 },
+                { 'multiple-temp-action-item': row.templates.length > 1 && temp.tableData.length > 1 }
+              ]"
+            >
+              <div class="source-name" v-show="isShowSource(temp, actionIndex)">
+                <Icon type="action-temp" class="action-icon" />
+                <div class="single-hide name" v-bk-tooltips="{ content: temp.name }">
+                  {{ temp.name }}
                 </div>
-              </template>
-            </bk-table-column>
-          </bk-table>
+              </div>
+            </div>
+          </div>
         </template>
       </bk-table-column>
       <bk-table-column :resizable="false" :label="$t(`m.common['操作']`)" :min-width="160" prop="action_name">
         <template slot-scope="{ row }">
-          <bk-table
-            :data="row.templates"
-            :border="false"
-            :outer-border="false"
-            :header-border="false"
-            :show-header="false"
+          <div
+            v-for="(temp, tempIndex) of row.templates"
+            :key="tempIndex"
             class="child-table-content"
           >
-            <bk-table-column :resizable="false" prop="action_name">
-              <template slot-scope="{ row: temp }">
-                <div v-for="action in temp.tableData" :key="action.id" class="actions-name">
-                  <span class="name">{{ action.name }}</span>
-                </div>
-              </template>
-            </bk-table-column>
-          </bk-table>
+            <div
+              v-for="(action, actionIndex) in temp.tableData"
+              :key="action.id"
+              :class="[
+                'actions-name',
+                { 'set-border': !(tempIndex === row.templates.length - 1 && actionIndex === temp.tableData.length - 1) }
+              ]"
+            >
+              <span class="single-hide name">{{ action.name }}</span>
+            </div>
+          </div>
         </template>
       </bk-table-column>
       <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)" :min-width="260" prop="resource_instance">
         <template slot-scope="{ row }">
-          <bk-table
-            :data="row.templates"
-            :border="false"
-            :outer-border="false"
-            :header-border="false"
-            :show-header="false"
+          <div
+            v-for="(temp, tempIndex) in row.templates"
+            :key="tempIndex"
             class="child-table-content"
           >
-            <bk-table-column :resizable="false" prop="action_name">
-              <template slot-scope="{ row: child, $index: childIndex }">
-                <div v-for="resource in child.tableData" :key="resource.id" class="flex-between resource-instance-name">
-                  <div class="instance-select-content">
-                    <template v-if="resource.resource_groups && resource.resource_groups.length > 0">
-                      <div v-for="group in resource.resource_groups" :key="group.id">
-                        <div
-                          class="flex-between related-resource-item"
-                          v-for="(related, relatedIndex) in group.related_resource_types"
-                          :key="related.type"
-                        >
-                          <template v-if="relatedIndex < 1">
-                            <div class="instance-label">
-                              <span>{{ $t(`m.common['已选择']`) }}</span>
-                              <span class="instance-count">{{ formatInstanceCount(related, group) || 0 }}</span>
-                              <span>{{ $t(`m.common['个任务实例']`) }}</span>
-                            </div>
-                            <div class="instance-operate-icon">
-                              <Icon
-                                v-if="isShowView(resource)"
-                                v-bk-tooltips="{ content: $t(`m.common['详情']`) }"
-                                type="detail"
-                                class="view-icon"
-                                @click.stop="handleViewResource(resource)"
-                              />
-                              <Icon
-                                v-bk-tooltips="{ content: $t(`m.common['复制']`) }"
-                                type="copy"
-                                class="copy-icon"
-                                @click.stop="handleCopyInstance(related, relatedIndex, childIndex, resource)"
-                              />
-                            </div>
-                          </template>
+            <div
+              v-for="(action, actionIndex) of temp.tableData"
+              :key="action.id"
+              :class="[
+                'flex-between',
+                'resource-instance-name',
+                { 'set-border': !(tempIndex === row.templates.length - 1 && actionIndex === temp.tableData.length - 1) }
+              ]"
+            >
+              <div class="instance-select-content">
+                <template v-if="action.resource_groups && action.resource_groups.length > 0">
+                  <div v-for="group in action.resource_groups" :key="group.id">
+                    <div
+                      class="flex-between related-resource-item"
+                      v-for="(related, relatedIndex) in group.related_resource_types"
+                      :key="related.type"
+                    >
+                      <template v-if="relatedIndex < 1">
+                        <div class="instance-label">
+                          <span>{{ $t(`m.common['已选择']`) }}</span>
+                          <span class="instance-count">{{ formatInstanceCount(related, group) || 0 }}</span>
+                          <span>{{ $t(`m.common['个任务实例']`) }}</span>
                         </div>
-                      </div>
-                    </template>
-                    <div v-else>{{ $t(`m.common['无需关联实例']`) }}</div>
+                        <div class="instance-operate-icon">
+                          <Icon
+                            v-if="isShowView(action)"
+                            v-bk-tooltips="{ content: $t(`m.common['详情']`) }"
+                            type="detail"
+                            class="view-icon"
+                            @click.stop="handleViewResource(action)"
+                          />
+                          <Icon
+                            v-bk-tooltips="{ content: $t(`m.common['复制']`) }"
+                            type="copy"
+                            class="copy-icon"
+                            @click.stop="handleCopyInstance(related, relatedIndex, actionIndex, action)"
+                          />
+                        </div>
+                      </template>
+                    </div>
                   </div>
-                </div>
-              </template>
-            </bk-table-column>
-          </bk-table>
+                </template>
+                <div v-else>{{ $t(`m.common['无需关联实例']`) }}</div>
+              </div>
+            </div>
+          </div>
         </template>
       </bk-table-column>
-      <template v-if="isCustomActionButton">
-        <bk-table-column
-          :resizable="true"
-          :label="$t(`m.common['操作-table']`)"
-          :width="formateOperateWidth"
-        >
-          <template slot-scope="{ row }">
-            <bk-button
-              type="primary"
-              text
-              :disabled="row.isEmpty"
-              :title="row.isEmpty ? $t(`m.userGroupDetail['暂无关联实例']`) : ''"
-              @click.stop="handleViewResource(row)"
-            >
-              {{ $t(`m.userGroupDetail['查看实例权限']`) }}
-            </bk-button>
-            <bk-button
-              v-if="!isUserGroupDetail ? false : true && isShowDeleteAction"
-              type="primary"
-              text
-              style="margin-left: 10px;"
-              @click.stop="handleShowDelDialog(row)"
-            >
-              {{ $t(`m.userGroupDetail['删除操作权限']`) }}
-            </bk-button>
-          </template>
-        </bk-table-column>
-      </template>
       <template slot="empty">
         <ExceptionEmpty />
       </template>
@@ -160,7 +137,6 @@
   import { cloneDeep, uniqWith, isEqual } from 'lodash';
   import { bus } from '@/common/bus';
   import PreviewResourceDialog from '@/views/group/components/preview-resource-dialog';
-  
   export default {
     provide: function () {
       return {
@@ -171,6 +147,9 @@
       PreviewResourceDialog
     },
     props: {
+      isLoading: {
+        type: Boolean
+      },
       list: {
         type: Array,
         default: () => []
@@ -258,7 +237,6 @@
         curCopyData: ['none'],
         curCopyType: '',
         curId: '',
-        isLoading: false,
         curScopeAction: {},
         isShowAggregateSideslider: false,
         aggregateResourceParams: {},
@@ -377,8 +355,10 @@
       isCreateMode () {
         return this.mode === 'create';
       },
-      isUserGroupDetail () {
-        return this.$route.name === 'userGroupDetail';
+      isShowSource () {
+        return (payload, index) => {
+          return (Math.floor(payload.tableData.length / 2)) === index;
+        };
       },
       curSelectionCondition () {
         if (this.curIndex === -1 || this.isSuperManager) {
@@ -402,23 +382,6 @@
             return displayValue;
           }
         };
-      },
-      formateOperateWidth () {
-        const langMap = {
-          true: () => {
-            if (!this.isUserGroupDetail ? false : true && this.isShowDeleteAction) {
-              return 200;
-            }
-            return 130;
-          },
-          false: () => {
-            if (!this.isUserGroupDetail ? false : true && this.isShowDeleteAction) {
-              return 400;
-            }
-            return 192;
-          }
-        };
-        return langMap[this.curLanguageIsCn]();
       },
       formatInstanceCount () {
         return (payload, related) => {
@@ -502,38 +465,6 @@
         this.resourceSliderWidth = Math.ceil(window.innerWidth * 0.67 - 7) < 960
           ? 960 : Math.ceil(window.innerWidth * 0.67 - 7);
       },
-  
-      handleChildSpanMethod ({ row, column, rowIndex, columnIndex }) {
-        const columnMap = {
-          source_type: () => {
-            // console.log(row, row.name, row.tableData.length, this.tableList, 666);
-            // const rowsCount = row.tableData.length;
-            // const firstIndex = this.tableList.findIndex(item => item.id === row.id);
-            // const endIndex = firstIndex + rowsCount - 1;
-            // if (rowIndex === firstIndex) {
-            //   return {
-            //     rowspan: 1,
-            //     colspan: rowsCount
-            //   };
-            // } else {
-            //   if (rowIndex <= endIndex) {
-            //     return {
-            //       rowspan: 1,
-            //       colspan: 1
-            //     };
-            //   }
-            // }
-            // console.log(row.tableData.length);
-            return {
-              rowspan: 1,
-              colspan: row.tableData.length
-            };
-          }
-        };
-        if (columnMap[column.property]) {
-          return columnMap[column.property]();
-        }
-      },
 
       handleViewResource (payload) {
         this.curId = payload.id;
@@ -563,13 +494,13 @@
       getCellClass ({ row, column, rowIndex, columnIndex }) {
         const columnMap = {
           source_type: () => {
-            return 'iam-perm-table-cell-cls group-perm-table-source';
+            return 'group-perm-table-source';
           },
           action_name: () => {
-            return 'iam-perm-table-cell-cls group-perm-table-action';
+            return 'group-perm-table-action';
           },
           resource_instance: () => {
-            return 'iam-perm-table-cell-cls group-perm-table-resource-instance';
+            return 'group-perm-table-resource-instance';
           }
         };
         if (columnMap[column.property]) {
@@ -648,11 +579,7 @@
         };
         this.previewDialogTitle = this.$t(`m.info['操作侧边栏操作的资源实例差异对比']`, { value: `${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}` });
         if (!this.previewResourceParams.id) {
-          this.$bkMessage({
-            limit: 1,
-            theme: 'error',
-            message: this.$t(`m.info['无资源ID，无法预览']`)
-          });
+          this.messageWarn(this.$t(`m.info['无资源ID，无法预览']`), 3000);
           return;
         }
         this.isShowPreviewDialog = true;
@@ -719,11 +646,12 @@
           }
         }
       }
-      .group-perm-table-source,
       .group-perm-table-action,
       .group-perm-table-resource-instance {
         .cell {
+          width: 100%;
           padding: 0;
+          display: block;
         }
         .child-table-content {
           border: none;
@@ -734,51 +662,85 @@
             }
             &:last-child {
               td {
+                border-bottom: 0;
                 &.is-last {
-                  .cell {
                     .actions-name,
                     .resource-instance-name {
                       &:last-child {
                         border-bottom: 0;
                       }
-                    }
                   }
                 }
               }
             }
           }
-          .cell {
-            .source-type,
-            .actions-name,
-            .resource-instance-name {
-              padding: 13px 12px 14px 12px;
-              border-bottom: 1px solid #DCDEE5;
+          .actions-name,
+          .resource-instance-name {
+            padding: 13px 12px 14px 12px;
+            &.set-border {
+              border-bottom: 1px solid #dcdee5;
             }
-            .source-type {
-              display: flex;
-              align-items: center;
-              .action-icon {
-                color: #979BA5;
-                margin-right: 4px;
+          }
+          .view-icon,
+          .copy-icon {
+            color: #3A84FF;
+            font-size: 16px;
+            cursor: pointer;
+          }
+          .copy-icon {
+            margin-left: 15px;
+          }
+          .resource-instance-name {
+            .instance-select-content {
+              width: 100%;
+              .related-resource-item {
+                .instance-label {
+                  max-width: calc(100% - 80px);
+                  line-height: 1;
+                }
               }
             }
-            .view-icon,
-            .copy-icon {
-              color: #3A84FF;
-              font-size: 16px;
-              cursor: pointer;
+          }
+        }
+      }
+      .group-perm-table-source {
+        .cell {
+          width: 100%;
+          padding: 0;
+          display: block;
+          .add-source-content {
+            border: none;
+            &.set-border {
+              border-bottom: 1px solid #dcdee5;
             }
-            .copy-icon {
-              margin-left: 15px;
+            td {
+              border-right: 0;
             }
-            .resource-instance-name {
-              .instance-select-content {
-                width: 100%;
-                .related-resource-item {
-                  .instance-label {
-                    max-width: calc(100% - 80px);
-                    line-height: 1;
-                  }
+            tr {
+              &:last-child {
+                td {
+                  border-bottom: 0;
+                }
+              }
+            }
+            &-item {
+              .source-name {
+                padding: 0 12px;
+                display: flex;
+                align-items: center;
+                line-height: 44px;
+                .action-icon {
+                  color: #979BA5;
+                  margin-right: 4px;
+                }
+              }
+              &.multiple-temp-item {
+                min-height: 44px;
+              }
+              &.multiple-temp-action-item {
+                .source-name {
+                  transform: translate(0, -22px);
+                  margin-top: -1px;
                 }
               }
             }
@@ -793,22 +755,4 @@
       }
     }
   }
-  /* .relate-instance-sideslider {
-    .sideslider-content {
-      height: calc(100vh - 114px);
-    }
-    .bk-sideslider-footer {
-      background-color: #f5f6fa!important;
-      border-color: #dcdee5!important;
-    }
-  }
-  .error-tips {
-    position: absolute;
-    line-height: 16px;
-    font-size: 10px;
-    color: #ea3636;
-  }
-  .tab-button {
-    margin: 10px 0;
-  } */
   </style>

@@ -51,7 +51,7 @@
             </bk-button>
           </bk-popconfirm>
           <bk-popover :content="$t(`m.actionsTemplate['批量复用资源实例值（资源模板）到其他用户组']`)">
-            <bk-button size="small" text @click.stop="handleBatchRepeat(group)">
+            <bk-button size="small" text @click.stop="handleBatchRepeat(group, 'multiple')">
               {{ $t(`m.actionsTemplate['批量复用']`) }}
             </bk-button>
           </bk-popover>
@@ -252,7 +252,8 @@
           :params="params"
           :res-index="curResourceIndex"
           :cur-scope-action="curScopeAction"
-          @on-init="handleInit" />
+          @on-init="handleInit"
+        />
       </div>
       <div slot="footer" class="sync-group-slider-footer">
         <bk-button theme="primary" :disabled="disabled" @click="handleResourceSubmit">
@@ -269,14 +270,16 @@
 <script>
   import { cloneDeep } from 'lodash';
   import { mapGetters } from 'vuex';
+  import { bus } from '@/common/bus';
   import { leaveConfirm } from '@/common/leave-confirm';
-  import SyncPolicy from '@/model/template-sync-policy';
   import Condition from '@/model/condition';
+  import SyncPolicy from '@/model/actions-temp-policy';
+  import AggregationPolicy from '@/model/actions-temp-aggregation-policy';
   import RenderResourcePopover from '@/components/iam-view-resource-popover';
   import RenderCondition from '../components/render-condition';
   import RenderDetail from '../components/render-detail';
   import RenderResource from '../components/render-resource';
-  import AggregationPolicy from '@/model/actions-temp-aggregation-policy';
+  import RelateResourceTypes from '@/model/related-resource-types';
   export default {
     provide: function () {
       return {
@@ -361,6 +364,7 @@
                 });
               }
             });
+            this.$set(payload, 'fill_status', !hasEmptyData);
             return hasEmptyData;
           }
           return true;
@@ -530,10 +534,7 @@
       this.fetchAuthorizationScopeActions();
     },
     mounted () {
-      this.$once('hook:beforeDestroy', () => {
-        window.removeEventListener('resize', this.formatFormItemWidth);
-      });
-      window.addEventListener('resize', this.formatFormItemWidth);
+      this.handleGetBusData();
     },
     methods: {
       formatFormItemWidth () {
@@ -543,6 +544,7 @@
 
       async fetchGroupsPreview () {
         try {
+          const addActionsList = [];
           const { current, limit } = this.pagination;
           const params = {
             id: this.id,
@@ -552,7 +554,7 @@
             }
           };
           const { data } = await this.$store.dispatch('permTemplate/getGroupsPreview', params);
-          this.pagination.totalPage = Math.ceil(data.count / this.pagination.limit);
+          this.pagination.totalPage = Math.ceil(data.count / limit);
           this.syncGroupList = cloneDeep(data.results || []);
           this.syncGroupList.forEach((item, index) => {
             this.$set(item, 'expand', !(index > 0));
@@ -574,6 +576,7 @@
                 item.tableList.push(result);
                 return result;
               });
+              addActionsList.push({ ...item, ...{ tableList: item.tableList.filter((v) => !['delete'].includes(v.mode_type)) } });
             }
             item.delete_actions = item.delete_actions.map(act => {
               if (!act.resource_groups || !act.resource_groups.length) {
@@ -588,11 +591,13 @@
               return result;
             });
           });
-          console.log(this.syncGroupList, 555);
           this.setTableProps();
           this.originalList = cloneDeep(this.syncGroupList);
           this.isLastPage = current === this.pagination.totalPage;
-          this.$emit('on-change-location-group', { list: this.syncGroupList });
+          // 获取已新增的数据
+          console.log(addActionsList, 555);
+          this.handleChangeLocation();
+          this.$emit('on-get-sync-group', { list: addActionsList });
           this.$emit('on-all-submit', current === this.pagination.totalPage);
         } catch (e) {
           this.messageAdvancedError(e);
@@ -663,7 +668,7 @@
             type: content.type,
             condition: content.condition.map(item => {
               return {
-                id: item.id,
+                id: item.id || '',
                 instances: item.instance || [],
                 attributes: item.attribute || []
               };
@@ -673,90 +678,93 @@
         };
       },
 
+      // 格式化提交数据
       getData () {
         let flag = false;
         let isNoAdd = false;
         const groups = [];
-        this.syncGroupList.forEach(groupItem => {
+        this.syncGroupList.forEach((item) => {
           const actionList = [];
-          (groupItem.tableList || []).forEach(item => {
-            const { type, id, name, environment, description } = item;
-            const relatedResourceTypes = [];
-            const groupResourceTypes = [];
-            if (item.resource_groups.length > 0) {
-              item.resource_groups.forEach(groupItem => {
-                if (groupItem.related_resource_types.length > 0) {
-                  groupItem.related_resource_types.forEach(resItem => {
-                    if (resItem.empty) {
-                      resItem.isError = true;
-                      flag = true;
-                    }
-                    const conditionList = (resItem.condition.length > 0 && !resItem.empty)
-                      ? resItem.condition.map(conItem => {
-                        const { id, instance, attribute } = conItem;
-                        const attributeList = (attribute && attribute.length > 0)
-                          ? attribute.map(({ id, name, values }) => ({ id, name, values }))
-                          : [];
-        
-                        const instanceList = (instance && instance.length > 0)
-                          ? instance.map(({ name, type, path, paths }) => {
-                            let tempPath = cloneDeep(paths);
-                            if (!tempPath.length && path && path.length) {
-                              tempPath = cloneDeep(path);
-                            }
-                            tempPath.forEach(pathItem => {
-                              pathItem.forEach(pathSubItem => {
-                                delete pathSubItem.disabled;
+          if (['add'].includes(item.mode_type)) {
+            (item.tableList || []).forEach((sub) => {
+              const { type, id, name, environment, description } = sub;
+              const relatedResourceTypes = [];
+              const groupResourceTypes = [];
+              if (sub.resource_groups.length > 0) {
+                sub.resource_groups.forEach((groupItem) => {
+                  if (groupItem.related_resource_types.length > 0) {
+                    groupItem.related_resource_types.forEach((resItem) => {
+                      if (resItem.empty) {
+                        resItem.isError = true;
+                        flag = true;
+                      }
+                      const conditionList = (resItem.condition.length > 0 && !resItem.empty)
+                        ? resItem.condition.map(conItem => {
+                          const { id, instance, attribute } = conItem;
+                          const attributeList = (attribute && attribute.length > 0)
+                            ? attribute.map(({ id, name, values }) => ({ id, name, values }))
+                            : [];
+          
+                          const instanceList = (instance && instance.length > 0)
+                            ? instance.map(({ name, type, path, paths }) => {
+                              let tempPath = cloneDeep(paths);
+                              if (!tempPath.length && path && path.length) {
+                                tempPath = cloneDeep(path);
+                              }
+                              tempPath.forEach(pathItem => {
+                                pathItem.forEach(pathSubItem => {
+                                  delete pathSubItem.disabled;
+                                });
                               });
-                            });
-                            return {
-                              name,
-                              type,
-                              path: tempPath
-                            };
-                          })
-                          : [];
-        
-                        return {
-                          id,
-                          instances: instanceList,
-                          attributes: attributeList
-                        };
-                      })
-                      : [];
-        
-                    relatedResourceTypes.push({
-                      type: resItem.type,
-                      system_id: resItem.system_id,
-                      name: resItem.name,
-                      condition: conditionList.filter(
-                        item => item.instances.length > 0 || item.attributes.length > 0
-                      )
+                              return {
+                                name,
+                                type,
+                                path: tempPath
+                              };
+                            })
+                            : [];
+          
+                          return {
+                            id,
+                            instances: instanceList,
+                            attributes: attributeList
+                          };
+                        })
+                        : [];
+          
+                      relatedResourceTypes.push({
+                        type: resItem.type,
+                        system_id: resItem.system_id,
+                        name: resItem.name,
+                        condition: conditionList.filter(
+                          item => item.instances.length > 0 || item.attributes.length > 0
+                        )
+                      });
                     });
+                  }
+                  groupResourceTypes.push({
+                    id: groupItem.id,
+                    related_resource_types: relatedResourceTypes
                   });
-                }
-                groupResourceTypes.push({
-                  id: groupItem.id,
-                  related_resource_types: relatedResourceTypes
                 });
-              });
-              // 强制刷新下
-              item.resource_groups = cloneDeep(item.resource_groups);
-            }
-            const params = {
-              type,
-              name,
-              id,
-              description,
-              resource_groups: groupResourceTypes,
-              environment
-            };
-            actionList.push(params);
-          });
-          groups.push({
-            id: groupItem.id,
-            actions: actionList
-          });
+                // 强制刷新下
+                sub.resource_groups = cloneDeep(sub.resource_groups);
+              }
+              const params = {
+                type,
+                name,
+                id,
+                description,
+                resource_groups: groupResourceTypes,
+                environment
+              };
+              actionList.push(params);
+            });
+            groups.push({
+              id: item.id,
+              actions: actionList
+            });
+          }
         });
         isNoAdd = groups.every(item => item.actions.length < 1);
         return {
@@ -873,41 +881,139 @@
         }
       },
 
-      async handleBatchRepeat (payload) {
-        if (this.isCurGroupAllEmpty(payload)) {
+      async handleBatchRepeat (payload, mode) {
+        if (this.isCurGroupAllEmpty(payload) && !['all'].includes(mode)) {
           this.messageWarn(this.$t(`m.common['暂无可批量复用实例']`), 3000);
           return;
         }
         let params = {};
+        const relatedList = [];
         payload.tableList.forEach((item) => {
           if (['add'].includes(item.mode_type)) {
             item.resource_groups && item.resource_groups.forEach((v) => {
-              v.related_resource_types.forEach((related) => {
-                params = this.getBatchCopyParams(item, related);
+              v.related_resource_types.forEach(async (related) => {
+                if ((related.condition.length > 0 && related.condition !== 'none') || related.condition.length === 0) {
+                  params = this.getBatchCopyParams(item, related);
+                  relatedList.push(params);
+                }
               });
             });
           }
         });
-        try {
-          const { data } = await this.$store.dispatch('permApply/resourceBatchCopy', params);
-          if (data && data.length) {
-            this.handleBatchInstancePaste({ flag: true, data });
-          } else {
-            this.messageWarn(this.$t(`m.info['暂无可批量复制包含有属性条件的资源实例']`), 3000);
-          }
-        } catch (e) {
-          this.messageAdvancedError(e);
-        }
-        payload.tableList && payload.tableList.forEach((item) => {
-          console.log(item);
-        });
-        this.syncGroupList.forEach((item) => {
-          if (['add'].includes(item.mode_type)) {
-            item.tableList.forEach((v) => {
-              console.log(v);
+        // 如果是无限制或者空资源实例无需调用接口，否则会导致报错
+        const paramsList = relatedList.filter((item) =>
+          item.resource_type.condition
+          && (item.resource_type.condition.length > 0 && item.resource_type.condition[0] !== 'none')
+          && item.resource_type.condition.some((v) => v.instances.length > 0 || v.attributes.length > 0)
+        );
+        // 处理无限制的数据
+        const noLimitedList = relatedList.filter((item) => item.resource_type.condition.length === 0);
+        if (noLimitedList.length) {
+          for (let i = 0; i < noLimitedList.length; i++) {
+            this.syncGroupList.forEach((item, index) => {
+              this.handleSetNoLimitedData(item, index, noLimitedList[i]);
             });
           }
+        }
+        if (paramsList.length > 0) {
+          try {
+            for (let i = 0; i < paramsList.length; i++) {
+              const { data } = await this.$store.dispatch('permApply/resourceBatchCopy', paramsList[i]);
+              const { resource_type } = paramsList[i];
+              if (data && data.length) {
+                this.syncGroupList.forEach((item) => {
+                  item.tableList.forEach((v) => {
+                    const curPasteData = data.find(_ => _.id === v.id);
+                    if (curPasteData) {
+                      v.resource_groups && v.resource_groups.forEach(groupItem => {
+                        groupItem.related_resource_types.forEach(subItem => {
+                          if (`${subItem.system_id}${subItem.type}` === `${resource_type.system_id}${resource_type.type}`) {
+                            subItem.condition = curPasteData.resource_type.condition.map(conditionItem => new Condition(conditionItem, '', 'add'));
+                            subItem.isError = false;
+                          }
+                        });
+                      });
+                    }
+                  });
+                });
+              } else {
+                this.messageWarn(this.$t(`m.info['暂无可批量复制包含有属性条件的资源实例']`), 3000);
+              }
+            }
+          } catch (e) {
+            this.messageAdvancedError(e);
+          }
+        }
+        this.handleChangeLocation();
+      },
+
+      async handleGroupNoLimited (payload, groupIndex) {
+        if (this.isUnlimitedDisabled(payload)) {
+          return;
+        }
+        await this.handleSetNoLimitedData(payload, groupIndex, { mode: 'all' });
+        this.handleChangeLocation();
+      },
+
+      handleSetNoLimitedData (payload, groupIndex, extraData) {
+        const { tableList } = payload;
+        const tableData = cloneDeep(tableList);
+        tableData.forEach((item, index) => {
+          if (['add'].includes(item.mode_type)) {
+            const curScopeAction = this.authorizationScopeActions.find((v) => v.id === item.id);
+            if (!item.isAggregate) {
+              if (item.resource_groups && item.resource_groups.length) {
+                item.resource_groups.forEach((groupItem) => {
+                  groupItem.related_resource_types && groupItem.related_resource_types.forEach((types) => {
+                    // 处理授权范围不是无限制的场景
+                    if (curScopeAction) {
+                      const { name, type } = curScopeAction;
+                      const curData = new RelateResourceTypes(types, { name, type }, 'detail');
+                      if (curData.condition.length > 0) {
+                        return;
+                      }
+                    }
+                    // 如果是直接设置无限制
+                    if (extraData && ['all'].includes(extraData.mode)) {
+                      types.condition = payload ? [] : ['none'];
+                      if (payload) {
+                        types.isError = false;
+                      }
+                    }
+                    // 如果是有判断条件才设置无限制
+                    if (extraData && extraData.resource_type) {
+                      if (`${types.system_id}${types.type}` === `${extraData.resource_type.system_id}${extraData.resource_type.type}`) {
+                        types = Object.assign(types, { isError: false, condition: [] });
+                      }
+                    }
+                  });
+                });
+              } else {
+                item.name = item.name.split('，')[0];
+              }
+            }
+            if (item.instances && item.isAggregate) {
+              item.isNoLimited = false;
+              item.isError = !(item.instances.length || (!item.instances.length && item.isNoLimited));
+              item.isNeedNoLimited = true;
+              if (!payload || item.instances.length) {
+                item.isNoLimited = false;
+                item.isError = false;
+              }
+              if ((!item.instances.length && !payload && item.isNoLimited) || payload) {
+                item.isNoLimited = true;
+                item.isError = false;
+                item.instances = [];
+              }
+              return this.$set(
+                tableData,
+                index,
+                new AggregationPolicy(item)
+              );
+            }
+          }
         });
+        this.$set(this.syncGroupList[groupIndex], 'tableList', tableData);
       },
 
       handleUnSynchronize (payload) {
@@ -919,6 +1025,110 @@
             removeSync[0].$refs && removeSync[0].$refs.popover.showHandler();
           }
         });
+      },
+
+      handleInstanceCopy (payload, $index, subIndex, index, action) {
+        this.curCopyKey = `${payload.system_id}${payload.type}`;
+        this.curCopyParams = this.getBatchCopyParams(action, payload);
+        const conditionRef = this.$refs[`condition_${index}_${$index}_${subIndex}_ref`];
+        if (conditionRef && conditionRef.length > 0) {
+          conditionRef[0].setImmediatelyShow(true);
+        }
+        this.messageSuccess(this.$t(`m.info['实例复制']`), 3000);
+      },
+
+      handleInstancePaste (payload, content) {
+        if (!payload.flag) {
+          return;
+        }
+        console.log(this.curCopyKey, `${content.system_id}${content.type}`);
+        if (this.curCopyKey !== `${content.system_id}${content.type}`) {
+          this.messageWarn(this.$t(`m.common['暂无可复制实例']`), 3000);
+          return;
+        }
+        content.condition = payload.data.length > 0 ? payload.data.map(conditionItem => new Condition(conditionItem, '', 'add')) : [];
+        content.isError = false;
+        this.messageSuccess(this.$t(`m.info['粘贴成功']`), 3000);
+      },
+
+      handleBatchInstancePaste (payload, content, $index, subIndex, index) {
+        if (!payload.flag) {
+          return;
+        }
+        if (!payload.data.length) {
+          this.syncGroupList.forEach(item => {
+            item.tableList.forEach(subItem => {
+              subItem.related_resource_types.forEach(resItem => {
+                if (`${resItem.system_id}${resItem.type}` === this.curCopyKey) {
+                  resItem.condition = [];
+                  resItem.isError = false;
+                }
+              });
+            });
+          });
+        } else {
+          this.syncGroupList.forEach(item => {
+            item.tableList.forEach(subItem => {
+              const curPasteData = payload.data.find(_ => _.id === subItem.id);
+              if (curPasteData) {
+                subItem.resource_groups && subItem.resource_groups.forEach(groupItem => {
+                  groupItem.related_resource_types.forEach(subItem => {
+                    if (`${subItem.system_id}${subItem.type}` === this.curCopyKey) {
+                      subItem.condition = curPasteData.resource_type.condition.map(conditionItem => new Condition(conditionItem, '', 'add'));
+                      subItem.isError = false;
+                    }
+                  });
+                });
+              }
+            });
+          });
+        }
+        this.curCopyParams = {};
+        content.isError = false;
+        const conditionRef = this.$refs[`condition_${index}_${$index}_${subIndex}_ref`][0];
+        conditionRef && conditionRef.setImmediatelyShow(false);
+        this.messageSuccess(this.$t(`m.info['批量粘贴成功']`), 3000);
+      },
+
+      handleShowResourceSlider (row, content, contentIndex, $index, groupIndex, relatedIndex) {
+        this.params = {
+          system_id: this.$route.params.systemId,
+          action_id: row.id,
+          resource_type_system: content.system_id,
+          resource_type_id: content.type
+        };
+        this.curScopeAction = this.authorizationScopeActions.find(item => item.id === row.id);
+        this.curIndex = groupIndex;
+        this.curActionIndex = $index;
+        this.curResourceIndex = contentIndex;
+        this.curGroupIndex = relatedIndex;
+        this.instanceSideSliderTitle = this.$t(`m.info['关联侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${row.name}${this.$t(`m.common['】']`)}` });
+        this.isShowInstanceSideSlider = true;
+        window.changeAlert = 'iamSidesider';
+      },
+
+      handleViewResource (payload, index, relatedIndex) {
+        const data = payload.resource_groups[relatedIndex];
+        const params = [];
+        if (data.related_resource_types.length > 0) {
+          data.related_resource_types.forEach(item => {
+            const { name, type, condition } = item;
+            params.push({
+              name: type || '',
+              label: this.$t(`m.info['tab操作实例']`, { value: name }),
+              tabType: 'resource',
+              data: condition
+            });
+          });
+        }
+        this.previewData = params;
+        this.sideSliderTitle = this.$t(`m.info['操作侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}` });
+        this.isShowSideSlider = true;
+      },
+
+      handleChangeLocation () {
+        const needLocationList = this.syncGroupList.filter((v) => !v.fill_status);
+        this.$emit('on-change-location-group', { list: needLocationList });
       },
 
       handleResourceCancel (payload) {
@@ -970,154 +1180,6 @@
         window.changeDialog = true;
       },
 
-      handleInstanceCopy (payload, $index, subIndex, index, action) {
-        window.changeDialog = true;
-        this.curCopyKey = `${payload.system_id}${payload.type}`;
-        this.curCopyParams = this.getBatchCopyParams(action, payload);
-        const conditionRef = this.$refs[`condition_${index}_${$index}_${subIndex}_ref`];
-        if (conditionRef && conditionRef.length > 0) {
-          conditionRef[0].setImmediatelyShow(true);
-        }
-        this.messageSuccess(this.$t(`m.info['实例复制']`), 3000);
-      },
-
-      handleInstancePaste (payload, content) {
-        if (!payload.flag) {
-          return;
-        }
-        if (this.curCopyKey !== `${content.system_id}${content.type}`) {
-          this.messageWarn(this.$t(`m.common['暂无可复制实例']`), 3000);
-          return;
-        }
-        content.condition = payload.data.length > 0 ? payload.data.map(conditionItem => new Condition(conditionItem, '', 'add')) : [];
-        content.isError = false;
-        this.messageSuccess(this.$t(`m.info['粘贴成功']`), 3000);
-      },
-
-      handleBatchInstancePaste (payload, content, $index, subIndex, index) {
-        if (!payload.flag) {
-          return;
-        }
-        if (!payload.data.length) {
-          this.syncGroupList.forEach(item => {
-            item.tableList.forEach(subItem => {
-              subItem.related_resource_types.forEach(resItem => {
-                if (`${resItem.system_id}${resItem.type}` === this.curCopyKey) {
-                  resItem.condition = [];
-                  resItem.isError = false;
-                }
-              });
-            });
-          });
-        } else {
-          this.syncGroupList.forEach(item => {
-            item.tableList.forEach(subItem => {
-              const curPasteData = payload.data.find(_ => _.id === subItem.id);
-              if (curPasteData) {
-                subItem.resource_groups && subItem.resource_groups.forEach(groupItem => {
-                  groupItem.related_resource_types.forEach(subItem => {
-                    if (`${subItem.system_id}${subItem.type}` === this.curCopyKey) {
-                      subItem.condition = curPasteData.resource_type.condition.map(conditionItem => new Condition(conditionItem, '', 'add'));
-                      subItem.isError = false;
-                    }
-                  });
-                });
-              }
-            });
-          });
-        }
-        this.curCopyParams = {};
-        content.isError = false;
-        const conditionRef = this.$refs[`condition_${index}_${$index}_${subIndex}_ref`][0];
-        conditionRef && conditionRef.setImmediatelyShow(false);
-        this.messageSuccess(this.$t(`m.info['批量粘贴成功']`), 3000);
-      },
-
-      handleGroupNoLimited (payload, groupIndex) {
-        if (this.isUnlimitedDisabled(payload)) {
-          return;
-        }
-        const { tableList } = payload;
-        const tableData = cloneDeep(tableList);
-        tableData.forEach((item, index) => {
-          if (['add'].includes(item.mode_type)) {
-            if (!item.isAggregate) {
-              if (item.resource_groups && item.resource_groups.length) {
-                item.resource_groups.forEach(groupItem => {
-                  groupItem.related_resource_types && groupItem.related_resource_types.forEach(types => {
-                    if (!payload && (types.condition.length && types.condition[0] !== 'none')) {
-                      return;
-                    }
-                    types.condition = payload ? [] : ['none'];
-                    if (payload) {
-                      types.isError = false;
-                    }
-                  });
-                });
-              } else {
-                item.name = item.name.split('，')[0];
-              }
-            }
-            if (item.instances && item.isAggregate) {
-              item.isNoLimited = false;
-              item.isError = !(item.instances.length || (!item.instances.length && item.isNoLimited));
-              item.isNeedNoLimited = true;
-              if (!payload || item.instances.length) {
-                item.isNoLimited = false;
-                item.isError = false;
-              }
-              if ((!item.instances.length && !payload && item.isNoLimited) || payload) {
-                item.isNoLimited = true;
-                item.isError = false;
-                item.instances = [];
-              }
-              return this.$set(
-                tableData,
-                index,
-                new AggregationPolicy(item)
-              );
-            }
-          }
-        });
-        this.$set(this.syncGroupList[groupIndex], 'tableList', tableData);
-      },
-
-      handleShowResourceSlider (row, content, contentIndex, $index, groupIndex, relatedIndex) {
-        this.params = {
-          system_id: this.$route.params.systemId,
-          action_id: row.id,
-          resource_type_system: content.system_id,
-          resource_type_id: content.type
-        };
-        this.curScopeAction = this.authorizationScopeActions.find(item => item.id === row.id);
-        this.curIndex = groupIndex;
-        this.curActionIndex = $index;
-        this.curResourceIndex = contentIndex;
-        this.curGroupIndex = relatedIndex;
-        this.instanceSideSliderTitle = this.$t(`m.info['关联侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${row.name}${this.$t(`m.common['】']`)}` });
-        this.isShowInstanceSideSlider = true;
-        window.changeAlert = 'iamSidesider';
-      },
-
-      handleViewResource (payload, index, relatedIndex) {
-        const data = payload.resource_groups[relatedIndex];
-        const params = [];
-        if (data.related_resource_types.length > 0) {
-          data.related_resource_types.forEach(item => {
-            const { name, type, condition } = item;
-            params.push({
-              name: type || '',
-              label: this.$t(`m.info['tab操作实例']`, { value: name }),
-              tabType: 'resource',
-              data: condition
-            });
-          });
-        }
-        this.previewData = params;
-        this.sideSliderTitle = this.$t(`m.info['操作侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}` });
-        this.isShowSideSlider = true;
-      },
-
       handleInit (payload) {
         this.disabled = !payload;
       },
@@ -1150,13 +1212,16 @@
         payload.showPopover = false;
       },
 
-      resetDataAfterClose () {
-        this.curIndex = -1;
-        this.curResourceIndex = -1;
-        this.curActionIndex = -1;
-        this.curGroupIndex = -1;
-        this.params = {};
-        this.instanceSideSliderTitle = '';
+      handleGetBusData () {
+        this.$once('hook:beforeDestroy', () => {
+          window.removeEventListener('resize', this.formatFormItemWidth);
+          bus.$off('on-group-perm-instance-copy');
+        });
+        bus.$on('on-group-perm-instance-copy', (payload) => {
+          this.curCopyKey = `${payload.resource_type.system_id}${payload.resource_type.type}`;
+          this.curCopyParams = { ...payload };
+        });
+        window.addEventListener('resize', this.formatFormItemWidth);
       },
 
       renderResourceHeader (h, { column, $index }, group, groIndex) {
@@ -1193,6 +1258,15 @@
             });
           });
         }
+      },
+      
+      resetDataAfterClose () {
+        this.curIndex = -1;
+        this.curResourceIndex = -1;
+        this.curActionIndex = -1;
+        this.curGroupIndex = -1;
+        this.params = {};
+        this.instanceSideSliderTitle = '';
       }
     }
   };
@@ -1231,272 +1305,5 @@
 </style>
 
 <style lang="postcss" scoped>
-.temp-group-sync-wrapper {
-  .temp-group-sync-table {
-    margin-bottom: 12px;
-    &-header {
-      background-color: #DCDEE5;
-      min-height: 40px;
-      line-height: 40px;
-      padding: 0 16px;
-      cursor: pointer;
-      &-left {
-        display: flex;
-        align-items: center;
-        .expand-icon {
-          font-size: 12px;
-        }
-        .group-status-btn {
-          min-width: 68px;
-          font-size: 12px;
-          background-color: #ffffff;
-          border-radius: 12px;
-          line-height: 24px;
-          padding: 0 6px;
-          margin-left: 10px;
-          .fill-status {
-            font-size: 14px;
-            color: #2DCB9D;
-          }
-          .fill-text {
-            color: #1CAB88;
-          }
-          &.no-fill-btn {
-            .fill-status {
-              color: #FFB848;
-            }
-            .fill-text {
-              color: #FF9C01;
-            }
-          }
-        }
-        .group-name {
-          margin: 0 8px;
-          font-size: 12px;
-        }
-      }
-      &-right {
-        .bk-button-small {
-          padding: 0;
-          &.un-sync {
-            margin-right: 16px;
-          }
-        }
-      }
-    }
-    /deep/ .temp-group-sync-table-content {
-      border-right: none;
-      border-bottom: none;
-      &.bk-table {
-        background-color: #ffffff;
-        .bk-table-body {
-          tr {
-            &:hover {
-              background-color: transparent;
-              & > td {
-                background-color: transparent;
-              }
-            }
-          }
-        }
-      }
-      .name-tag {
-        margin-left: 0;
-        margin-right: 4px;
-        padding: 0 4px;
-        font-size: 10px
-      }
-      .delete-name,
-      .resource-type-item-delete {
-        text-decoration: line-through;
-      }
-      .cell {
-        .relation-content-wrapper {
-          height: 100%;
-          color: #63656e;
-          .iam-condition-item {
-            border: none;
-            padding: 0;
-          }
-        }
-      }
-      .resource-type-cell-cls {
-        .cell {
-          width: 100%;
-          /* height: 100%; */
-          padding: 0;
-          display: block;
-          .resource-type-content {
-            height: 100%;
-            .resource-type-list {
-              height: 100%;
-              .resource-type-item {
-                border-bottom: 1px solid #dfe0e5;
-                padding: 12px 15px;
-                &:last-of-type {
-                  border-bottom: 0;
-                }
-              }
-            }
-          }
-        }
-      }
-      .resource-instance-add-cell-cls {
-        &:hover {
-          border: none;
-        }
-        .cell {
-          padding: 0;
-          .relation-content-wrapper {
-            .relation-content-item {
-              padding: 5px 15px;
-              &:hover {
-                border: 1px solid #699DF4;
-                margin-right: 1px;
-              }
-            }
-          }
-        }
-        &.multiple-resource-type-instance {
-          .cell {
-            .relation-content-wrapper {
-              &:hover {
-                border-bottom: 1px solid #dfe0e5;
-              }
-              .relation-content-item {
-                border-bottom: 1px solid #dfe0e5;
-                &:last-of-type {
-                  border-bottom: 0;
-                  &:hover {
-                    border-bottom: 1px solid #699DF4;
-                  }
-                }
-                &:hover {
-                  border: 1px solid #699DF4;
-                  &:last-of-type {
-                    border-bottom: 1px solid #699DF4;
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-      .resource-instance-delete-cell-cls {
-        .cell {
-          .relation-content-item {
-            cursor: pointer;
-            &:hover {
-              color: #3a84ff;
-            }
-            .text {
-              text-decoration: line-through;
-            }
-          }
-        }
-      }
-      .iam-template-sync-popover-cls {
-        position: absolute;
-        top: 5px;
-        right: 5px;
-        cursor: pointer;
-        &:hover {
-          color: #3a84ff;
-        }
-      }
-      .resource-instance-custom-label {
-        display: flex;
-        align-items: baseline;
-        .instance-title {
-          position: relative;
-          min-width: 62px;
-          &::after {
-            height: 8px;
-            line-height: 1;
-            content: "*";
-            color: #ea3636;
-            font-size: 12px;
-            position: absolute;
-            top: 50%;
-            display: inline-block;
-            vertical-align: middle;
-            transform: translate(6px, -50%);
-          }
-        }
-        .instance-no-limited {
-          display: flex;
-          align-items: center;
-          color: #3a84ff;
-          margin-left: 10px;
-          cursor: pointer;
-          &-label {
-            margin-left: 5px;
-          }
-        }
-      }
-    }
-  }
-}
-.pagination-wrapper {
-  margin-top: 16px;
-  text-align: center;
-  .page-display {
-    display: inline-block;
-    width: 74px;
-    height: 32px;
-    line-height: 32px;
-    border: 1px solid #c4c6cc;
-    border-radius: 2px;
-    vertical-align: bottom;
-  }
-}
-.sync-popover-content {
-  max-height: 250px;
-  overflow-y: auto;
-  &::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: #dcdee5;
-    border-radius: 3px;
-  }
-  &::-webkit-scrollbar-track {
-    background: transparent;
-    border-radius: 3px;
-  }
-  .cursor {
-    line-height: 24px;
-    color: #63656e;
-    cursor: pointer;
-    &:hover {
-      color: #3a84ff;
-    }
-    &.disabled {
-      color: #c4c6cc;
-      cursor: not-allowed;
-      &:hover {
-        color: #c4c6cc;
-      }
-    }
-  }
-  p.refer-title {
-    line-height: 24px;
-    color: #313238;
-  }
-}
-.related-instance-sideslider {
-  /deep/ .bk-sideslider-footer {
-    background-color: #ffffff !important;
-    font-size: 0;
-    .sync-group-slider-footer {
-      width: 100%;
-      padding: 0 24px;
-      .bk-button {
-        min-width: 88px;
-        margin-right: 8px;
-      }
-    }
-  }
-}
+  @import '../css/sync.css';
 </style>

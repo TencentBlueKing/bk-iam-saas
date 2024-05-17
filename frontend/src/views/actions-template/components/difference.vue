@@ -9,7 +9,12 @@
               <div class="flex-between header-content">
                 <div class="header-content-btn">
                   <div class="operate-btn">
-                    <bk-button theme="primary" class="fill" v-bk-tooltips="{ content: fillTip }">
+                    <bk-button
+                      theme="primary"
+                      class="fill"
+                      @click.stop="handleAllInstanceFill"
+                      v-bk-tooltips="{ content: fillTip }"
+                    >
                       {{ $t(`m.common['一键填充']`) }}
                     </bk-button>
                     <bk-button class="no-limited" @click.stop="handleAllNoLimited">
@@ -25,21 +30,24 @@
                         { 'is-active': aggregateType === item.value },
                         { 'is-disabled': isAggregateDisabled }
                       ]"
-                      @click.stop="handleAggregateAction(item.value)"
+                      @click.stop="handleChangeAggregate(item.value)"
                     >
                       <span>{{ $t(`m.common['${item.name}']`) }}</span>
                     </div>
                   </div>
                 </div>
-                <div :class="['location-fill-btn', { 'is-disabled': totalLocationCount === 0 }]">
+                <div
+                  :class="['location-fill-btn', { 'is-disabled': locationList.length === 0 }]"
+                  @click.stop="handleChangeLocationIndex"
+                >
                   <Icon type="locate" class="location-icon" />
                   <div class="location-content">
                     <span class="location-tip">{{ $t(`m.common['定位未填写']`)}}</span>
-                    <span v-if="isLocation && curLocationIndex > -1" class="location-count">
-                      {{ `(${curLocationIndex}/${totalLocationCount})` }}
+                    <span v-if="curLocationIndex > 0 && locationList.length > 0" class="location-count">
+                      {{ `(${curLocationIndex}/${locationList.length})` }}
                     </span>
                     <span v-else :class="['location-count']">
-                      {{ `(${totalLocationCount})` }}
+                      {{ `(${locationList.length})` }}
                     </span>
                   </div>
                 </div>
@@ -54,7 +62,8 @@
                 :clone-action="cloneActions"
                 @on-ready="handleSyncReady"
                 @on-expand="handleExpand"
-                @on-change-location-group="handleLocationGroup"
+                @on-get-sync-group="handleGetSyncGroup"
+                @on-change-location-group="handleChangeLocationCount"
                 @on-all-submit="handleAllSubmit"
               />
             </div>
@@ -129,9 +138,12 @@
 </template>
 
 <script>
+  import { cloneDeep, isEqual } from 'lodash';
   import { mapGetters } from 'vuex';
   import { leavePageConfirm } from '@/common/leave-page-confirm';
   import { AGGREGATE_METHODS_LIST } from '@/common/constants';
+  import { guid } from '@/common/util';
+  import AggregationPolicy from '@/model/actions-temp-aggregation-policy';
   import RenderSync from './sync.vue';
   import GroupDetail from './group-detail';
 
@@ -168,15 +180,13 @@
         isOnePage: false,
         isLastPage: false,
         isNoAddActions: false,
-        isLocation: false,
         isFullScreen: false,
         isDrag: false,
         prevLoading: false,
         disabled: true,
         aggregateType: 'no-aggregate',
         fillTip: this.$t(`m.actionsTemplate['引用已有的操作实例一键填充']`),
-        curLocationIndex: -1,
-        totalLocationCount: 0,
+        curLocationIndex: 0,
         navWidth: 260,
         dragWidth: window.innerWidth / 2 - 260 + 26,
         dragRealityWidth: window.innerWidth / 2 - 260 + 26,
@@ -192,18 +202,19 @@
           tip: this.$t(`m.actionsTemplate['无须进行操作实例的确认']`),
           tipType: 'noPerm'
         },
+        allSyncGroupList: [],
+        locationList: [],
         addActions: [],
         policyList: [],
         aggregations: [],
-        startX: 0
+        aggregationsBackup: []
       };
     },
     computed: {
       ...mapGetters('permTemplate', ['actions', 'cloneActions', 'preGroupOnePage']),
       ...mapGetters(['navStick']),
       isAggregateDisabled () {
-        return this.policyList.length < 1 || this.aggregations.length < 1
-          || (this.policyList.length === 1 && !this.policyList[0].isAggregate);
+          return this.isNoAddActions;
       },
       leftStyle () {
         if (this.dragWidth > 0) {
@@ -241,25 +252,11 @@
         this.navWidth = value ? 260 : 60;
       },
       actions: {
-        handler (value) {
-          const tempActions = [];
-          value.forEach((item) => {
-            item.actions.forEach(act => {
-              if (['added'].includes(act.flag) || (['unchecked'].includes(act.tag) && act.checked)) {
-                tempActions.push(act);
-              }
-            });
-            (item.sub_groups || []).forEach(sub => {
-              sub.actions.forEach(act => {
-                if (['added'].includes(act.flag) || (['unchecked'].includes(act.tag) && act.checked)) {
-                  tempActions.push(act);
-                }
-              });
-            });
-          });
-          console.log(tempActions, '新增的操作');
+        async handler (value) {
+          const tempActions = await this.handleGetAddAction(value);
           this.addActions = tempActions;
           this.isNoAddActions = this.addActions.length < 1;
+          console.log(tempActions, '新增的操作');
         },
         immediate: true
       }
@@ -271,6 +268,41 @@
       });
     },
     methods: {
+      // 获取能聚合的操作
+      async fetchAggregationAction (payload) {
+        try {
+          const { systemId } = this.$route.params;
+          const { data } = await this.$store.dispatch('aggregate/getAggregateAction', { system_ids: systemId });
+          if (data.aggregations && data.aggregations.length > 0) {
+            const actionIds = [];
+            const aggregations = [];
+            // 过滤掉不存在当前系统下的操作
+            // this.originalCustomTmplList.forEach(item => {
+            //   actionIds.push(...item.actions.map(_ => _.id));
+            //   if (item.sub_groups && item.sub_groups.length > 0) {
+            //     item.sub_groups.forEach(subItem => {
+            //       actionIds.push(...subItem.actions.map(_ => _.id));
+            //     });
+            //   }
+            // });
+            data.aggregations.forEach(item => {
+              const { actions, aggregate_resource_types } = item;
+              const curActions = actions.filter((item) => actionIds.includes(item.id));
+              if (curActions.length > 0) {
+                aggregations.push({
+                  actions: curActions,
+                  aggregate_resource_types
+                });
+              }
+            });
+            this.aggregationsBackup = cloneDeep(aggregations);
+            this.aggregations = aggregations;
+          }
+        } catch (e) {
+          this.messageAdvancedError(e);
+        }
+      },
+
       async handleNextStep () {
         if (this.isNoAddActions) {
           this.handleUpdateCommit();
@@ -300,7 +332,7 @@
         }
       },
 
-      async preGroupSync (groups) {
+      async handlePreGroupSync (groups) {
         try {
           await this.$store.dispatch('permTemplate/preGroupSync', {
             id: this.$route.params.id,
@@ -316,7 +348,7 @@
       async submitPreGroupSync (groups) {
         this.isLoading = true;
         try {
-          await this.preGroupSync(groups);
+          await this.handlePreGroupSync(groups);
           await this.handleUpdateCommit(false);
         } catch (e) {
           this.messageAdvancedError(e);
@@ -386,25 +418,216 @@
         return typeMap[payload]();
       },
 
+      handleAllInstanceFill () {
+        const { syncGroupList, isCurGroupAllEmpty } = this.$refs.syncRef;
+        if (this.$refs.syncRef && syncGroupList.length) {
+          const isEmpty = syncGroupList.every((item) => isCurGroupAllEmpty(item));
+          if (isEmpty) {
+            this.messageWarn(this.$t(`m.common['暂无可批量复用实例']`), 3000);
+            return;
+          }
+          syncGroupList.forEach((item) => {
+            this.$refs.syncRef.handleBatchRepeat(item, 'all');
+          });
+        }
+      },
+
       handleAllNoLimited () {
-        if (this.$refs.syncRef && this.$refs.syncRef.syncGroupList.length) {
-          this.$refs.syncRef.syncGroupList.forEach((item, index) => {
+        const { syncGroupList } = this.$refs.syncRef;
+        if (this.$refs.syncRef && syncGroupList.length) {
+          syncGroupList.forEach((item, index) => {
             this.$refs.syncRef.handleGroupNoLimited(item, index);
           });
         }
       },
 
-      handleAggregateAction () {
+      handleChangeAggregate (payload) {
+        console.log(payload, this.$refs.syncRef);
+        if (this.isAggregateDisabled || this.aggregateType === payload) {
+          return;
+        }
+        this.aggregateType = payload;
+        const typeMap = {
+          'action-instance': async () => {
+            await this.fetchAggregationAction();
+            this.handleAggregateByAction(true);
+          },
+          'resource-type': () => {
 
+          },
+          'no-aggregate': () => {
+            this.handleAggregateByAction(false);
+          }
+        };
+        return typeMap[payload]();
+      },
+
+      handleAggregateByAction (payload) {
+        const tempData = [];
+        let templateIds = [];
+        const tableList = cloneDeep(this.allSyncGroupList);
+        let instancesDisplayData = {};
+        if (payload) {
+          tableList.forEach((item) => {
+            console.log(item);
+            item.tableList.forEach((sub) => {
+              if (!sub.aggregationId) {
+                tempData.push(sub);
+                templateIds.push(item.detail.id);
+              }
+            });
+          });
+          for (const [key, value] of this.curMap.entries()) {
+            if (value.length === 1) {
+              tempData.push(...value);
+            } else {
+              let curInstances = [];
+              const conditions = value.map(subItem => subItem.resource_groups[0].related_resource_types[0].condition);
+              // 是否都选择了实例
+              const isAllHasInstance = conditions.every(subItem => subItem[0] !== 'none' && subItem.length > 0);
+              if (isAllHasInstance) {
+                const instances = conditions.map(subItem => subItem.map(v => v.instance));
+                let isAllEqual = true;
+                for (let i = 0; i < instances.length - 1; i++) {
+                  if (!isEqual(instances[i], instances[i + 1])) {
+                    isAllEqual = false;
+                    break;
+                  }
+                }
+                if (isAllEqual) {
+                  // const instanceData = instances[0][0][0];
+                  // curInstances = instanceData.path.map(pathItem => {
+                  //     return {
+                  //         id: pathItem[0].id,
+                  //         name: pathItem[0].name
+                  //     };
+                  // });
+                  const instanceData = instances[0][0];
+                  console.log('instanceData', instanceData);
+                  curInstances = [];
+                  instanceData.forEach(pathItem => {
+                    const instance = pathItem.path.map(e => {
+                      return {
+                        id: e[0].id,
+                        name: e[0].name,
+                        type: e[0].type
+                      };
+                    });
+                    curInstances.push(...instance);
+                  });
+                  instancesDisplayData = this.setInstancesDisplayData(curInstances);
+                  console.log('instancesDisplayData', instancesDisplayData);
+                } else {
+                  curInstances = [];
+                }
+              } else {
+                curInstances = [];
+              }
+              tempData.push(
+                new AggregationPolicy({
+                  aggregationId: key,
+                  aggregate_resource_types: value[0].aggregateResourceType,
+                  actions: value,
+                  instances: curInstances,
+                  instancesDisplayData
+                })
+              );
+            }
+            templateIds.push(value[0].detail.id);
+          }
+        } else {
+          this.tableList.forEach(item => {
+            if (item.hasOwnProperty('isAggregate') && item.isAggregate) {
+              const actions = this.curMap.get(item.aggregationId);
+              tempData.push(...actions);
+              templateIds.push(actions[0].detail.id);
+            } else {
+              tempData.push(item);
+              templateIds.push(item.detail.id);
+            }
+          });
+        }
+        // 为了合并单元格的计算，需将再次展开后的数据按照相同模板id重新排序组装一下
+        const tempList = [];
+        templateIds = [...new Set(templateIds)];
+        templateIds.forEach(item => {
+          const list = tempData.filter(subItem => subItem.detail.id === item);
+          tempList.push(...list);
+        });
+        this.tableList = cloneDeep(tempList);
+      },
+
+      handleAggregateData () {
+        this.allAggregationData = Object.assign(this.aggregationData, this.aggregationDataByCustom);
+        const keys = Object.keys(this.allAggregationData);
+        const data = {};
+        keys.forEach(item => {
+          if (this.allAggregationData[item] && this.allAggregationData[item].length > 0) {
+            data[item] = this.allAggregationData[item];
+          }
+        });
+        this.allAggregationData = data;
+        this.tableList.forEach(item => {
+          const aggregationData = this.allAggregationData[item.detail.system.id];
+          if (aggregationData && aggregationData.length) {
+            aggregationData.forEach(aggItem => {
+              if (aggItem.actions.map(act => act.id).includes(item.id)) {
+                const existData = this.tableList.filter(
+                  sub => aggItem.actions.find(act => act.id === sub.id)
+                    && sub.judgeId === item.judgeId
+                );
+                if (existData.length > 1) {
+                  const temp = existData.find(sub => sub.aggregationId !== '') || {};
+                  item.aggregationId = temp.aggregationId || guid();
+                  item.aggregateResourceType = aggItem.aggregate_resource_types;
+                }
+              }
+            });
+          }
+        });
+        const aggregationIds = this.tableList.reduce((counter, item) => {
+          return item.aggregationId !== '' ? counter.concat(item.aggregationId) : counter;
+        }, []);
+        console.warn('aggregationIds:');
+        console.warn([...new Set(aggregationIds)]);
+        if (!this.curMap) {
+          this.curMap = new Map();
+        }
+        this.tableList.forEach(item => {
+          if (item.aggregationId !== '') {
+            if (!this.curMap.has(item.aggregationId)) {
+              this.curMap.set(item.aggregationId, [cloneDeep(item)]);
+            } else {
+              const temps = this.curMap.get(item.aggregationId);
+              if (!temps.map(sub => sub.id).includes(item.id)) {
+                temps.push(cloneDeep(item));
+              }
+            }
+          }
+        });
+      },
+
+      handleGetSyncGroup ({ list }) {
+        this.allSyncGroupList = [...list || []];
       },
 
       handleExpand (payload) {
         this.curExpandData = payload.expand ? payload : {};
       },
 
-      handleLocationGroup (payload) {
+      handleChangeLocationIndex () {
+        this.curLocationIndex++;
+        if (this.curLocationIndex > this.locationList.length) {
+          this.curLocationIndex = 1;
+        }
+        if (!this.locationList[this.curLocationIndex - 1].expand) {
+          this.$refs.syncRef.handleExpand(this.locationList[this.curLocationIndex - 1]);
+        }
+      },
+ 
+      handleChangeLocationCount (payload) {
         const { list } = payload;
-        this.totalLocationCount = list.length || 0;
+        this.locationList = list || [];
       },
  
       handleAllSubmit (payload) {
@@ -443,6 +666,25 @@
           };
           typeMap[payload]();
         }, _ => _);
+      },
+
+      handleGetAddAction (payload) {
+        const tempActions = [];
+        payload.forEach((item) => {
+          item.actions.forEach((act) => {
+            if (['added'].includes(act.flag) || (['unchecked'].includes(act.tag) && act.checked)) {
+              tempActions.push(act);
+            }
+          });
+          (item.sub_groups || []).forEach((sub) => {
+            sub.actions.forEach((act) => {
+              if (['added'].includes(act.flag) || (['unchecked'].includes(act.tag) && act.checked)) {
+                tempActions.push(act);
+              }
+            });
+          });
+        });
+        return tempActions;
       },
 
       handleToggleExpand () {

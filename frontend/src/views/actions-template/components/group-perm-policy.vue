@@ -11,6 +11,7 @@
     <div v-if="!isLoading && !isEmpty" class="group-perm-policy-wrapper-content">
       <GroupPermTable
         mode="detail"
+        :is-loading="isLoading"
         :group-id="groupId"
         :list="groupSystemList"
       />
@@ -345,6 +346,13 @@
               });
             }
           });
+        }
+        const tableIndex = list.findIndex((item) =>
+          item.templates.length === 0
+          || item.templates.every((v) => v.tableData.length === 0)
+        );
+        if (tableIndex > -1) {
+          list.splice(tableIndex, 1);
         }
         if (!result.length) {
           this.handleTableClear();

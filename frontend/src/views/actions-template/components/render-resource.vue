@@ -466,6 +466,7 @@
           const curData = new RelateResourceTypes(this.curScopeAction.resource_groups[0].related_resource_types[this.resIndex], { name: this.curScopeAction.name, type: this.curScopeAction.type }, 'detail');
           const len = curData.condition.length;
           if (len > 0) {
+            // 如果condition不为空，代表他的授权范围不是无限制
             this.conditionLimitData = curData.condition;
             if (this.conditionData.length < len) {
               const differenceLen = len - this.conditionData.length;
@@ -516,52 +517,6 @@
             });
           }
         }
-        // try {
-        //     const res = await this.$store.dispatch('permTemplate/getAuthorizationScopeActions', { systemId: this.params.system_id })
-        //     const curAction = res.data.find(item => item.id === this.params.action_id)
-        //     if (curAction && curAction.related_resource_types && curAction.related_resource_types.length > 0) {
-        //         const curData = new RelateResourceTypes(curAction.related_resource_types[this.resIndex], { name: curAction.name, type: curAction.type }, 'detail')
-        //         const len = curData.condition.length
-        //         if (len > 0) {
-        //             this.conditionLimitData = curData.condition
-        //             if (this.conditionData.length < len) {
-        //                 const differenceLen = len - this.conditionData.length
-        //                 for (let i = 0; i < differenceLen; i++) {
-        //                     this.conditionData.push(new Condition({ selection_mode: this.selectionMode }, 'init', 'add'))
-        //                 }
-        //             }
-        //             this.conditionLimitData.forEach((item, index) => {
-        //                 const tempList = this.selectList.filter(subItem => {
-        //                     return item.instance.map(v => v.path[0][0].type).includes(subItem.resource_type_chain[0].id)
-        //                 })
-        //                 this.$set(this.selectListMap, index, tempList)
-        //                 this.$set(this.selectValueMap, index, tempList[0].id)
-        //                 const isHasInstance = item.instance && item.instance.length > 0
-        //                 const isHasAttribute = item.attribute && item.attribute.length > 0
-        //                 let curSelectMode = ''
-        //                 if (!isHasInstance && isHasAttribute) {
-        //                     curSelectMode = 'attribute'
-        //                     this.$delete(this.conditionData[index], 'instance')
-        //                 } else if (isHasInstance && !isHasAttribute) {
-        //                     curSelectMode = 'instance'
-        //                     this.$delete(this.conditionData[index], 'attribute')
-        //                 } else {
-        //                     curSelectMode = 'all'
-        //                 }
-        //                 this.$set(this.selectionModeMap, index, curSelectMode)
-        //             })
-        //         }
-        //     }
-        // } catch (e) {
-        //     console.error(e)
-        //     this.bkMessageInstance = this.$bkMessage({
-        //         limit: 1,
-        //         theme: 'error',
-        //         message: e.message || e.data.msg || e.statusText
-        //     })
-        // } finally {
-        //     this.requestQueue.shift()
-        // }
       },
 
       handleDragMouseenter (e) {

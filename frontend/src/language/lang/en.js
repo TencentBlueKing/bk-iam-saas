@@ -282,6 +282,7 @@ export const m = {
         '暂无可复制内容': 'There is currently no replicable content',
         '暂无可复制用户': 'There are currently no replicable users',
         '暂无可复制实例': 'There are currently no replicable instances',
+        '暂无可批量复用实例': 'There are currently no batch replicable instances',
         '管理员组不能添加部门': 'The administrator group cannot add department',
         '管理员组不能添加人员模板': 'The administrator group cannot add member template',
         '批量退出': 'Multi-quit',

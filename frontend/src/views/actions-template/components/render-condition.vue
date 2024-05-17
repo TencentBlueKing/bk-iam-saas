@@ -156,6 +156,7 @@
       },
 
       async handlePaste () {
+        console.log(this.params, 5455);
         if (this.isPasteDisabled) {
           this.$emit('on-paste');
           return;
@@ -211,11 +212,11 @@
         }
         this.isLoading = true;
         try {
-          const res = await this.$store.dispatch('permApply/resourceBatchCopy', this.params);
-          if (res.data.length) {
+          const { data } = await this.$store.dispatch('permApply/resourceBatchCopy', this.params);
+          if (data && data.length) {
             this.$emit('on-batch-paste', {
               flag: true,
-              data: res.data
+              data
             });
           } else {
             this.messageWarn(this.$t(`m.info['暂无可批量复制包含有属性条件的资源实例']`), 3000);
@@ -225,7 +226,6 @@
             flag: false,
             data: null
           });
-          console.error(e);
           this.messageAdvancedError(e);
         } finally {
           this.isLoading = false;
