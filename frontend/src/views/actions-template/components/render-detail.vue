@@ -44,7 +44,8 @@
         handler (value) {
           if (value.length > 0) {
             this.panels = value;
-            this.active = this.panels[0].name;
+            const hasActiveName = this.panels.find((v) => v.activeName !== '');
+            this.active = hasActiveName ? hasActiveName.activeName : this.panels[0].name;
           }
         },
         immediate: true

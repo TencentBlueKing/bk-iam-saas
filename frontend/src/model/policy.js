@@ -96,20 +96,19 @@ export default class Policy {
     }
 
     this.resource_groups = payload.resource_groups.reduce((prev, item) => {
-      const relatedRsourceTypes = item.related_resource_types.map(
+      const relatedResourceTypes = item.related_resource_types.map(
         item => new RelateResourceTypes({ ...item, isTempora: payload.isTempora },
           action, flag, instanceNotDisabled, this.isNew)
       );
-            
       if ((this.related_environments && !!this.related_environments.length)) {
         const environments = item.environments && !!item.environments.length ? item.environments : [];
-        prev.push({ id: item.id, related_resource_types: relatedRsourceTypes, environments: environments });
+        prev.push({ id: item.id, related_resource_types: relatedResourceTypes, environments: environments });
       } else {
         if (item.environments && !!item.environments.length) {
           // eslint-disable-next-line max-len
-          prev.push({ id: item.id, related_resource_types: relatedRsourceTypes, environments: item.environments });
+          prev.push({ id: item.id, related_resource_types: relatedResourceTypes, environments: item.environments });
         } else {
-          prev.push({ id: item.id, related_resource_types: relatedRsourceTypes });
+          prev.push({ id: item.id, related_resource_types: relatedResourceTypes });
         }
       }
       return prev;

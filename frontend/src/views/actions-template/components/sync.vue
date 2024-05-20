@@ -106,14 +106,14 @@
           :min-width="310"
           :resizable="false"
           :render-header="(h, { column, $index }) => renderResourceHeader(h, { column, $index }, group, groupIndex)"
-          :show-overflow-tooltip="true"
         >
           <template slot-scope="{ row, $index }">
             <div class="relation-content-wrapper">
               <template v-if="!row.isEmpty">
                 <template v-if="['add'].includes(row.mode_type)">
                   <div v-for="(related, relatedIndex) in row.resource_groups" :key="related.id">
-                    <div class="relation-content-item"
+                    <div
+                      class="relation-content-item"
                       v-for="(content, contentIndex) in related.related_resource_types"
                       :key="`${groupIndex}${contentIndex}`">
                       <div class="content">
@@ -176,17 +176,19 @@
                   <div v-for="(related, relatedIndex) in row.resource_groups" :key="related.id">
                     <div
                       class="single-hide relation-content-item"
-                      v-for="subItem in related.related_resource_types"
-                      :key="subItem.type"
-                      @click.stop="handleViewResource(row, groupIndex, relatedIndex)"
+                      v-for="(types, typesIndex) in related.related_resource_types"
+                      :key="types.type"
+                      @click.stop="handleViewResource(row, relatedIndex, typesIndex)"
                     >
-                      <render-resource-popover
-                        :key="subItem.type"
-                        :data="subItem.condition"
-                        :value="subItem.value"
-                        :max-width="185"
-                        @on-view="handleViewResource(row, groupIndex, relatedIndex)"
-                      />
+                      <div class="content">
+                        <render-resource-popover
+                          :key="types.type"
+                          :data="types.condition"
+                          :value="types.value"
+                          :max-width="400"
+                          @on-view="handleViewResource(row, relatedIndex, typesIndex)"
+                        />
+                      </div>
                     </div>
                   </div>
                 </template>
@@ -273,7 +275,7 @@
   import { bus } from '@/common/bus';
   import { leaveConfirm } from '@/common/leave-confirm';
   import Condition from '@/model/condition';
-  import SyncPolicy from '@/model/actions-temp-policy';
+  import SyncPolicy from '@/model/template-sync-policy';
   import AggregationPolicy from '@/model/actions-temp-aggregation-policy';
   import RenderResourcePopover from '@/components/iam-view-resource-popover';
   import RenderCondition from '../components/render-condition';
@@ -332,6 +334,7 @@
         previewData: [],
         originalList: [],
         curAddActions: [],
+        addActionsList: [],
         authorizationScopeActions: [],
         requestQueue: ['scope', 'group'],
         params: {},
@@ -521,19 +524,16 @@
     },
     watch: {
       addActions: {
-        handler (value) {
+        async handler (value) {
           this.curAddActions = [...value];
         },
-        immediate: true,
-        deep: true
+        immediate: true
       }
     },
-    async created () {
+    async mounted () {
       this.curCopyKey = '';
       await this.fetchGroupsPreview();
       this.fetchAuthorizationScopeActions();
-    },
-    mounted () {
       this.handleGetBusData();
     },
     methods: {
@@ -544,7 +544,6 @@
 
       async fetchGroupsPreview () {
         try {
-          const addActionsList = [];
           const { current, limit } = this.pagination;
           const params = {
             id: this.id,
@@ -571,21 +570,21 @@
                     act.resource_groups = [{ id: '', related_resource_types: act.related_resource_types }];
                   }
                 }
-                const result = new SyncPolicy({ ...act, tag: 'add' }, 'add');
+                const result = new SyncPolicy({ ...act, tag: 'add' }, 'detail');
                 this.$set(result, 'mode_type', 'add');
                 item.tableList.push(result);
                 return result;
               });
-              addActionsList.push({ ...item, ...{ tableList: item.tableList.filter((v) => !['delete'].includes(v.mode_type)) } });
+              this.addActionsList.push({ ...item, ...{ tableList: item.tableList.filter((v) => !['delete'].includes(v.mode_type)) } });
             }
-            item.delete_actions = item.delete_actions.map(act => {
+            item.delete_actions = item.delete_actions.map((act) => {
               if (!act.resource_groups || !act.resource_groups.length) {
                 act.resource_groups = [];
                 if (act.related_resource_types && act.related_resource_types.length > 0) {
                   act.resource_groups = [{ id: '', related_resource_types: act.related_resource_types }];
                 }
               }
-              const result = new SyncPolicy({ ...act, tag: 'add' }, 'add');
+              const result = new SyncPolicy({ ...act, tag: 'add' }, 'detail');
               this.$set(result, 'mode_type', 'delete');
               item.tableList.push(result);
               return result;
@@ -594,11 +593,8 @@
           this.setTableProps();
           this.originalList = cloneDeep(this.syncGroupList);
           this.isLastPage = current === this.pagination.totalPage;
-          // 获取已新增的数据
-          console.log(addActionsList, 555);
-          this.handleChangeLocation();
-          this.$emit('on-get-sync-group', { list: addActionsList });
-          this.$emit('on-all-submit', current === this.pagination.totalPage);
+          this.handleGetTypeData();
+          this.$emit('on-all-submit', this.isLastPage);
         } catch (e) {
           this.messageAdvancedError(e);
         } finally {
@@ -685,9 +681,9 @@
         const groups = [];
         this.syncGroupList.forEach((item) => {
           const actionList = [];
-          if (['add'].includes(item.mode_type)) {
-            (item.tableList || []).forEach((sub) => {
-              const { type, id, name, environment, description } = sub;
+          (item.tableList || []).forEach((sub) => {
+            const { type, id, name, environment, description, mode_type } = sub;
+            if (['add'].includes(mode_type)) {
               const relatedResourceTypes = [];
               const groupResourceTypes = [];
               if (sub.resource_groups.length > 0) {
@@ -704,7 +700,7 @@
                           const attributeList = (attribute && attribute.length > 0)
                             ? attribute.map(({ id, name, values }) => ({ id, name, values }))
                             : [];
-          
+            
                           const instanceList = (instance && instance.length > 0)
                             ? instance.map(({ name, type, path, paths }) => {
                               let tempPath = cloneDeep(paths);
@@ -723,7 +719,7 @@
                               };
                             })
                             : [];
-          
+            
                           return {
                             id,
                             instances: instanceList,
@@ -731,13 +727,13 @@
                           };
                         })
                         : [];
-          
+            
                       relatedResourceTypes.push({
                         type: resItem.type,
                         system_id: resItem.system_id,
                         name: resItem.name,
-                        condition: conditionList.filter(
-                          item => item.instances.length > 0 || item.attributes.length > 0
+                        condition: conditionList.filter((item) =>
+                          item.instances.length > 0 || item.attributes.length > 0
                         )
                       });
                     });
@@ -759,12 +755,12 @@
                 environment
               };
               actionList.push(params);
-            });
-            groups.push({
-              id: item.id,
-              actions: actionList
-            });
-          }
+            }
+          });
+          groups.push({
+            id: item.id,
+            actions: actionList
+          });
         });
         isNoAdd = groups.every(item => item.actions.length < 1);
         return {
@@ -844,7 +840,6 @@
             this.fetchGroupsPreview();
           }
         } catch (e) {
-          console.error(e);
           this.messageAdvancedError(e);
         } finally {
           this.nextLoading = false;
@@ -944,7 +939,7 @@
             this.messageAdvancedError(e);
           }
         }
-        this.handleChangeLocation();
+        this.handleGetTypeData();
       },
 
       async handleGroupNoLimited (payload, groupIndex) {
@@ -952,7 +947,7 @@
           return;
         }
         await this.handleSetNoLimitedData(payload, groupIndex, { mode: 'all' });
-        this.handleChangeLocation();
+        this.handleGetTypeData();
       },
 
       handleSetNoLimitedData (payload, groupIndex, extraData) {
@@ -1102,22 +1097,28 @@
         this.curActionIndex = $index;
         this.curResourceIndex = contentIndex;
         this.curGroupIndex = relatedIndex;
-        this.instanceSideSliderTitle = this.$t(`m.info['关联侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${row.name}${this.$t(`m.common['】']`)}` });
+        this.instanceSideSliderTitle = this.$t(
+          `m.info['关联侧边栏操作的资源实例']`,
+          {
+            value: `${this.$t(`m.common['【']`)}${row.name}${this.$t(`m.common['】']`)}`
+          }
+        );
         this.isShowInstanceSideSlider = true;
         window.changeAlert = 'iamSidesider';
       },
 
-      handleViewResource (payload, index, relatedIndex) {
-        const data = payload.resource_groups[relatedIndex];
+      handleViewResource (payload, relatedIndex, typesIndex) {
         const params = [];
-        if (data.related_resource_types.length > 0) {
-          data.related_resource_types.forEach(item => {
+        const resourceGroup = payload.resource_groups[relatedIndex];
+        if (resourceGroup.related_resource_types.length > 0) {
+          resourceGroup.related_resource_types.forEach((item) => {
             const { name, type, condition } = item;
             params.push({
               name: type || '',
               label: this.$t(`m.info['tab操作实例']`, { value: name }),
               tabType: 'resource',
-              data: condition
+              data: condition,
+              activeName: resourceGroup.related_resource_types[typesIndex].type || ''
             });
           });
         }
@@ -1126,9 +1127,13 @@
         this.isShowSideSlider = true;
       },
 
-      handleChangeLocation () {
+      handleGetTypeData () {
         const needLocationList = this.syncGroupList.filter((v) => !v.fill_status);
-        this.$emit('on-change-location-group', { list: needLocationList });
+        this.$emit('on-get-type-data', {
+          locationList: needLocationList,
+          addActionList: this.addActionsList,
+          allActionList: this.syncGroupList
+        });
       },
 
       handleResourceCancel (payload) {
@@ -1160,8 +1165,8 @@
           return;
         }
         window.changeAlert = false;
-        this.instanceSideSliderTitle = '';
         this.isShowInstanceSideSlider = false;
+        this.instanceSideSliderTitle = '';
         const resItem = this.syncGroupList[this.curIndex]
           .tableList[this.curActionIndex]
           .resource_groups[this.curGroupIndex]
@@ -1178,6 +1183,7 @@
         this.curActionIndex = -1;
         this.curGroupIndex = -1;
         window.changeDialog = true;
+        this.handleGetTypeData();
       },
 
       handleInit (payload) {

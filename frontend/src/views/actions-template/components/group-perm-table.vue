@@ -739,7 +739,7 @@
               }
               &.multiple-temp-action-item {
                 .source-name {
-                  transform: translate(0, -22px);
+                  /* transform: translate(0, -22px); */
                   margin-top: -1px;
                 }
               }

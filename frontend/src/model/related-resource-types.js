@@ -67,7 +67,6 @@ export default class RelateResourceTypes {
       this.condition = payload.condition.map(
         item => new Condition(item, '', flag, true, true, instanceNotDisabled)
       ) || [];
-    
       this.conditionBackup = payload.condition.map(
         item => new Condition(item, '', flag, true, true, instanceNotDisabled)
       ) || [];

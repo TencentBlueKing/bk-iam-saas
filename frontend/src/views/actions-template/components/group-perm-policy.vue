@@ -154,6 +154,7 @@
               templates: []
             });
             await this.getGroupTemplateList(item);
+            await this.fetchActions(item);
             if (item.templates.length) {
               item.templates.forEach((v) => {
                 this.handleTemplateExpanded(true, v);
@@ -211,7 +212,7 @@
 
       async fetchActions (item) {
         const params = {
-          system_id: item.system.id,
+          system_id: item.id,
           user_id: this.user.username
         };
         if (this.externalSystemId) {
@@ -301,7 +302,6 @@
           return;
         }
         // count > 0 说明是自定义权限
-        await this.fetchActions(item);
         item.count > 0 ? await this.getGroupCustomPolicy(item) : this.getGroupTemplateDetail(item);
       },
 

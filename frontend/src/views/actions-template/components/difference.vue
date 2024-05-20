@@ -60,10 +60,8 @@
                 :all-actions="policyList"
                 :add-actions="addActions"
                 :clone-action="cloneActions"
-                @on-ready="handleSyncReady"
                 @on-expand="handleExpand"
-                @on-get-sync-group="handleGetSyncGroup"
-                @on-change-location-group="handleChangeLocationCount"
+                @on-get-type-data="handleChangeTypeData"
                 @on-all-submit="handleAllSubmit"
               />
             </div>
@@ -97,12 +95,12 @@
             </bk-button>
             <bk-popover
               :content="$t(`m.actionsTemplate['还有用户组未完成实例关联']`)"
-              :disabled="(!isLastPage && !isNoAddActions)"
+              :disabled="!isSubmitDisabled()"
             >
               <bk-button
                 theme="primary"
                 :loading="isLoading"
-                :disabled="(disabled || !isLastPage) && !isNoAddActions"
+                :disabled="isSubmitDisabled()"
                 @click.stop="handleNextStep">
                 {{ $t(`m.common['提交']`) }}
               </bk-button>
@@ -203,6 +201,7 @@
           tipType: 'noPerm'
         },
         allSyncGroupList: [],
+        allAddSyncGroupList: [],
         locationList: [],
         addActions: [],
         policyList: [],
@@ -245,6 +244,18 @@
         return {
           'right': `${this.dragRealityWidth}px`
         };
+      },
+      isSubmitDisabled () {
+        return () => {
+          const tableList = this.allSyncGroupList.map((item) => item.tableList).flat(Infinity);
+          const hasEmpty = tableList.some((item) => {
+            return item.resource_groups && item.resource_groups.some((v) => {
+              return v.related_resource_types && v.related_resource_types.some((related) =>
+              related.condition.length === 1 && related.condition[0] === 'none');
+            });
+          });
+          return !!hasEmpty;
+        };
       }
     },
     watch: {
@@ -256,7 +267,7 @@
           const tempActions = await this.handleGetAddAction(value);
           this.addActions = tempActions;
           this.isNoAddActions = this.addActions.length < 1;
-          console.log(tempActions, '新增的操作');
+          // console.log(tempActions, '新增的操作');
         },
         immediate: true
       }
@@ -309,16 +320,18 @@
           return;
         }
         const { flag, groups, isNoAdd } = this.$refs.syncRef.getData();
-        groups.forEach(e => {
-          e.actions.forEach(_ => {
-            if (!_.resource_groups || !_.resource_groups.length) {
-              _.resource_groups = (_.related_resource_types && _.related_resource_types.length) ? [{ id: '', related_resource_types: _.related_resource_types }] : [];
-            }
-          });
-        });
         if (flag) {
           return;
         }
+        groups.forEach((item) => {
+          item.actions.forEach((sub) => {
+            if (!sub.resource_groups || !sub.resource_groups.length) {
+              sub.resource_groups = (sub.related_resource_types && sub.related_resource_types.length)
+                ? [{ id: '', related_resource_types: sub.related_resource_types }]
+                : [];
+            }
+          });
+        });
         if (this.preGroupOnePage) {
           if (isNoAdd) {
             this.handleUpdateCommit();
@@ -332,24 +345,18 @@
         }
       },
 
-      async handlePreGroupSync (groups) {
+      async submitPreGroupSync (groups) {
+        this.isLoading = true;
         try {
-          await this.$store.dispatch('permTemplate/preGroupSync', {
+          const { code, result } = await this.$store.dispatch('permTemplate/preGroupSync', {
             id: this.$route.params.id,
             data: {
               groups
             }
           });
-        } catch (e) {
-          this.messageAdvancedError(e);
-        }
-      },
-
-      async submitPreGroupSync (groups) {
-        this.isLoading = true;
-        try {
-          await this.handlePreGroupSync(groups);
-          await this.handleUpdateCommit(false);
+          if (code === 0 || result) {
+            await this.handleUpdateCommit(false);
+          }
         } catch (e) {
           this.messageAdvancedError(e);
         } finally {
@@ -442,7 +449,6 @@
       },
 
       handleChangeAggregate (payload) {
-        console.log(payload, this.$refs.syncRef);
         if (this.isAggregateDisabled || this.aggregateType === payload) {
           return;
         }
@@ -465,76 +471,90 @@
       handleAggregateByAction (payload) {
         const tempData = [];
         let templateIds = [];
-        const tableList = cloneDeep(this.allSyncGroupList);
-        let instancesDisplayData = {};
+        const tableData = cloneDeep(this.allSyncGroupList);
+        const aggregationAction = [...this.aggregations];
+        const actionIds = [];
+        aggregationAction.forEach(item => {
+          actionIds.push(...item.actions.map(_ => _.id));
+        });
         if (payload) {
-          tableList.forEach((item) => {
-            console.log(item);
-            item.tableList.forEach((sub) => {
-              if (!sub.aggregationId) {
-                tempData.push(sub);
-                templateIds.push(item.detail.id);
-              }
-            });
-          });
-          for (const [key, value] of this.curMap.entries()) {
-            if (value.length === 1) {
-              tempData.push(...value);
-            } else {
-              let curInstances = [];
-              const conditions = value.map(subItem => subItem.resource_groups[0].related_resource_types[0].condition);
-              // 是否都选择了实例
-              const isAllHasInstance = conditions.every(subItem => subItem[0] !== 'none' && subItem.length > 0);
-              if (isAllHasInstance) {
-                const instances = conditions.map(subItem => subItem.map(v => v.instance));
-                let isAllEqual = true;
-                for (let i = 0; i < instances.length - 1; i++) {
-                  if (!isEqual(instances[i], instances[i + 1])) {
-                    isAllEqual = false;
-                    break;
-                  }
-                }
-                if (isAllEqual) {
-                  // const instanceData = instances[0][0][0];
-                  // curInstances = instanceData.path.map(pathItem => {
-                  //     return {
-                  //         id: pathItem[0].id,
-                  //         name: pathItem[0].name
-                  //     };
-                  // });
-                  const instanceData = instances[0][0];
-                  console.log('instanceData', instanceData);
-                  curInstances = [];
-                  instanceData.forEach(pathItem => {
-                    const instance = pathItem.path.map(e => {
-                      return {
-                        id: e[0].id,
-                        name: e[0].name,
-                        type: e[0].type
-                      };
-                    });
-                    curInstances.push(...instance);
-                  });
-                  instancesDisplayData = this.setInstancesDisplayData(curInstances);
-                  console.log('instancesDisplayData', instancesDisplayData);
-                } else {
-                  curInstances = [];
-                }
-              } else {
-                curInstances = [];
-              }
-              tempData.push(
-                new AggregationPolicy({
-                  aggregationId: key,
-                  aggregate_resource_types: value[0].aggregateResourceType,
-                  actions: value,
-                  instances: curInstances,
-                  instancesDisplayData
-                })
-              );
+          // 缓存新增加的操作权限数据
+          aggregationAction.forEach(item => {
+            const filterArray = tableData.filter(
+              subItem => item.actions.map(_ => _.id).includes(subItem.id)
+            );
+            const addArray = cloneDeep(filterArray.filter(
+              subItem => !this.aggregationsTableData.map(_ => _.id).includes(subItem.id)
+            ));
+            if (addArray.length > 0) {
+              this.aggregationsTableData.push(...addArray);
             }
-            templateIds.push(value[0].detail.id);
-          }
+          });
+          const aggregations = aggregationAction.filter(item => {
+            const target = item.actions.map(v => v.id).sort();
+            const existData = this.tableData.find(subItem => {
+              return subItem.isAggregate && isEqual(target, subItem.actions.map(v => v.id).sort());
+            });
+            return !existData;
+          }).map((item, index) => {
+            const existTableData = this.aggregationsTableData.filter(
+              subItem => item.actions.map(act => act.id).includes(subItem.id)
+            );
+
+            if (existTableData.length > 0) {
+              item.tag = existTableData.every(subItem => subItem.tag === 'unchanged') ? 'unchanged' : 'add';
+              if (item.tag === 'add') {
+                const conditions = existTableData.map(
+                  subItem => subItem.resource_groups && subItem.resource_groups.length
+                    ? subItem.resource_groups[0].related_resource_types[0].condition : []
+                );
+                // 是否都选择了实例
+                const isAllHasInstance = conditions.every(subItem => subItem[0] !== 'none'); // 这里可能有bug, 都设置了属性点击批量编辑时数据变了
+                if (isAllHasInstance) {
+                  const instances = conditions.map(subItem => subItem.map(v => v.instance || []));
+                  let isAllEqual = true;
+                  for (let i = 0; i < instances.length - 1; i++) {
+                    if (!isEqual(instances[i], instances[i + 1])) {
+                      isAllEqual = false;
+                      break;
+                    }
+                  }
+                  if (isAllEqual) {
+                    // const instanceData = instances[0][0][0];
+                    // if (instanceData && instanceData.path) {
+                    //     item.instances = instanceData.path.map(pathItem => {
+                    //         return {
+                    //             id: pathItem[0].id,
+                    //             name: pathItem[0].name
+                    //         };
+                    //     });
+                    // }
+                    const instanceData = instances[0][0];
+                    item.instances = [];
+                    instanceData && instanceData.map(pathItem => {
+                      const instance = pathItem.path.map(e => {
+                        return {
+                          id: e[0].id,
+                          name: e[0].name,
+                          type: e[0].type
+                        };
+                      });
+                      item.instances.push(...instance);
+                    });
+                    this.setInstancesDisplayData(item);
+                  } else {
+                    item.instances = [];
+                  }
+                } else {
+                  item.instances = [];
+                }
+              }
+            }
+            return new AggregationPolicy(item);
+          });
+          this.tableData = this.tableData.filter(item => !actionIds.includes(item.id));
+          this.tableData.unshift(...aggregations);
+          return;
         } else {
           this.tableList.forEach(item => {
             if (item.hasOwnProperty('isAggregate') && item.isAggregate) {
@@ -607,10 +627,6 @@
         });
       },
 
-      handleGetSyncGroup ({ list }) {
-        this.allSyncGroupList = [...list || []];
-      },
-
       handleExpand (payload) {
         this.curExpandData = payload.expand ? payload : {};
       },
@@ -625,17 +641,14 @@
         }
       },
  
-      handleChangeLocationCount (payload) {
-        const { list } = payload;
-        this.locationList = list || [];
+      handleChangeTypeData (payload) {
+        const { locationList, allActionList } = payload;
+        this.locationList = locationList || [];
+        this.allSyncGroupList = allActionList || [];
       },
  
       handleAllSubmit (payload) {
         this.isLastPage = payload;
-      },
-
-      handleSyncReady () {
-        this.disabled = false;
       },
 
       handlePrevStep (payload) {
@@ -715,7 +728,6 @@
         }
         const minWidth = window.innerWidth / 2;
         const maxWidth = minWidth + 600;
-        // console.log(clientX, minWidth, maxWidth);
         if (clientX < minWidth || clientX >= maxWidth) {
           return;
         }

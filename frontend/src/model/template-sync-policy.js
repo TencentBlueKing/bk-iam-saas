@@ -77,9 +77,16 @@ export default class SyncPolicy {
       this.related_resource_types = [];
       return;
     }
-    this.related_resource_types = payload.related_resource_types.map(
-      item => new RelateResourceTypes(item, action, flag)
-    );
+    this.related_resource_types = payload.related_resource_types.map((item) => {
+      const resourceType = item.type || item.id;
+      const params = {
+        ...item,
+        ...{
+          type: resourceType
+        }
+      };
+      return new RelateResourceTypes(params, action, flag);
+    });
   }
 
   initRelatedGroupsTypes (payload, action, flag) {
@@ -87,13 +94,18 @@ export default class SyncPolicy {
       this.resource_groups = [];
       return;
     }
-
-    this.resource_groups = payload.resource_groups.reduce((prev, item) => {
-      const relatedResourceTypes = item.related_resource_types.map(
-        item => new RelateResourceTypes(item, action, flag)
-      );
-
-      prev.push({ id: item.id, related_resource_types: relatedResourceTypes });
+    this.resource_groups = payload.resource_groups.reduce((prev, curr) => {
+      const relatedResourceTypes = curr.related_resource_types.map((item) => {
+        const resourceType = item.type || item.id;
+        const params = {
+          ...item,
+          ...{
+            type: resourceType
+          }
+        };
+        return new RelateResourceTypes(params, action, flag);
+      });
+      prev.push({ id: curr.id, related_resource_types: relatedResourceTypes });
       return prev;
     }, []);
   }

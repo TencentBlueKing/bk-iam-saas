@@ -151,13 +151,32 @@
         }
         .resource-instance-delete-cell-cls {
           .cell {
-            .relation-content-item {
-              cursor: pointer;
-              &:hover {
-                color: #3a84ff;
+            .relation-content-wrapper {
+              .relation-content-item {
+                cursor: pointer;
+                &:hover {
+                  color: #3a84ff;
+                }
+                .text {
+                  text-decoration: line-through;
+                  word-break: break-all;
+                }
               }
-              .text {
-                text-decoration: line-through;
+            }
+          }
+          &.multiple-resource-type-instance {
+            .cell {
+              padding: 0;
+              .relation-content-wrapper {
+                .relation-content-item {
+                  border-bottom: 1px solid #dfe0e5;
+                  .text {
+                    padding: 12px 0 12px 15px;
+                  }
+                  &:last-of-type {
+                    border-bottom: 0;
+                  }
+                }
               }
             }
           }
