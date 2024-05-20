@@ -478,13 +478,6 @@
         this.handleSwitchRole({ id: 0, type: 'staff', name: this.user.role.name });
       },
 
-      handleLogout () {
-        window.localStorage.removeItem('iam-header-title-cache');
-        window.localStorage.removeItem('iam-header-name-cache');
-        window.localStorage.removeItem('applyGroupList');
-        window.location = window.LOGIN_SERVICE_URL + '/?c_url=' + window.location.href;
-      },
-
       resetLocalStorage () {
         window.localStorage.removeItem('customPermProcessList');
         window.localStorage.removeItem('gradeManagerList');
