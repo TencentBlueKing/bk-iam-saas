@@ -286,7 +286,7 @@
   import Condition from '@/model/condition';
 
   export default {
-    name: '',
+    name: 'secondaryManageSpaceCreate',
     components: {
       AddMemberDialog,
       basicInfo,
