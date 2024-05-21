@@ -13,23 +13,11 @@
       @show-alert-change="handleShowAlertChange"
     />
     <template v-if="!['403'].includes(routeName)">
-      <!-- <header-nav
-        v-if="!externalSystemsLayout.hideIamHeader"
-        @reload-page="handleRefreshPage"
-        :route-name="routeName"
-        :user-group-id="userGroupId"
-        />-->
       <the-header
         @reload-page="handleRefreshPage"
         :route-name="routeName"
         :user-group-id="userGroupId"
       />
-      <!-- <the-nav
-        class="nav-layout"
-        :route-name="routeName"
-        @reload-page="reloadCurPage"
-        v-if="!externalSystemsLayout.hideIamSlider"
-        /> -->
     </template>
     <main
       :class="[
@@ -76,8 +64,6 @@
     },
     components: {
       theHeader,
-      // theNav,
-      // HeaderNav,
       NoticeComponent
     },
     data () {
