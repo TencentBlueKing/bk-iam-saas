@@ -27,6 +27,7 @@
       ref="tableRef"
       row-key="id"
       v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
+      :cell-class-name="getCellClass"
       @page-change="pageChange"
       @page-limit-change="limitChange"
       @expand-change="handleExpandChange">
@@ -399,7 +400,8 @@
           'management.api.allow.list.config.create': this.$t(`m.audit['管理类API白名单创建']`),
           'management.api.allow.list.config.delete': this.$t(`m.audit['管理类API白名单删除']`),
           'group.transfer': this.$t(`m.audit['用户组权限交接']`),
-          'action.sensitivity.level.update': this.$t(`m.audit['操作敏感等级更新']`)
+          'action.sensitivity.level.update': this.$t(`m.audit['操作敏感等级更新']`),
+          'role.update.notification.config': this.$t(`m.audit['续期通知更新']`)
         },
         currentMonth: '',
         noDetailType: NO_DETAIL_TYPE,
@@ -541,6 +543,14 @@
         await this.fetchAuditList();
       },
 
+      getCellClass ({ row, column, rowIndex, columnIndex }) {
+        console.log(row);
+        if (columnIndex === 0 && ['role.update.notification.config'].includes(row.type)) {
+          return 'audit-renewal-notice-cell-cls';
+        }
+        return '';
+      },
+
       refreshCurrentQuery () {
         const { limit, current } = this.pagination;
         const params = {};
@@ -548,7 +558,7 @@
           limit,
           current,
           month: this.currentMonth,
-                    ...this.searchParams
+          ...this.searchParams
         };
         window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
         for (const key in this.searchParams) {
@@ -564,10 +574,10 @@
           }
         }
         return {
-                    ...params,
-                    limit,
-                    current,
-                    month: this.currentMonth
+          ...params,
+          limit,
+          current,
+          month: this.currentMonth
         };
       },
 
@@ -591,7 +601,7 @@
           object_type: '',
           object_id: '',
           status: '',
-                    ...this.searchParams
+          ...this.searchParams
         };
         try {
           const { code, data } = await this.$store.dispatch('audit/getAuditList', params);
@@ -704,7 +714,8 @@
           { id: 'authorization.api.allow.list.config.delete', name: this.$t(`m.audit['授权类API白名单删除']`) },
           { id: 'management.api.allow.list.config.create', name: this.$t(`m.audit['管理类API白名单创建']`) },
           { id: 'management.api.allow.list.config.delete', name: this.$t(`m.audit['管理类API白名单删除']`) },
-          { id: 'action.sensitivity.level.update', name: this.$t(`m.audit['操作敏感等级更新']`) }
+          { id: 'action.sensitivity.level.update', name: this.$t(`m.audit['操作敏感等级更新']`) },
+          { id: 'role.update.notification.config', name: this.$t(`m.audit['续期通知更新']`) }
         ];
         if (value === '') {
           return Promise.resolve(list);
@@ -786,7 +797,7 @@
               });
             }
             if (this.onlyExtraInfoType.includes(row.detail.type)) {
-              if (row.detail.type !== 'role.group.renew' && row.detail.type !== 'template.version.sync') {
+              if (!['role.group.renew', 'template.version.sync'].includes(row.detail.type)) {
                 row.detail.extra_info.policies.forEach(item => {
                   item.system_id = row.detail.extra_info.system.id;
                   item.system_name = row.detail.extra_info.system.name;
@@ -804,48 +815,54 @@
     }
   };
 </script>
-<style lang="postcss">
-    .iam-audit-wrapper {
-        .audit-search-select {
-            margin-left: 10px;
-            float: right;
-        }
-        .audit-table {
-            margin-top: 16px;
-            border-right: none;
-            border-bottom: none;
-            .bk-table-expanded-cell {
-                padding: 0 30px 0 45px !important;
-            }
-            &.set-border {
-                border-right: 1px solid #dfe0e5;
-                border-bottom: 1px solid #dfe0e5;
-            }
-            .audit-detail-wrapper {
-                position: relative;
-                padding: 16px 50px 16px 165px;
-                min-height: 60px;
-                p {
-                    line-height: 24px;
-                }
-                .empty-wrapper {
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    img {
-                        width: 60px;
-                    }
-                }
-            }
-            .audit-detail-table {
-                border: none;
-                .bk-table-row-last {
-                    td {
-                        border-bottom: 1px solid #dfe0e5 !important;
-                    }
-                }
-            }
-        }
+
+<style lang="postcss" scoped>
+.iam-audit-wrapper {
+  .audit-search-select {
+    margin-left: 10px;
+    float: right;
+  }
+  .audit-table {
+    margin-top: 16px;
+    border-right: none;
+    border-bottom: none;
+    .bk-table-expanded-cell {
+      padding: 0 30px 0 45px !important;
     }
+    &.set-border {
+      border-right: 1px solid #dfe0e5;
+      border-bottom: 1px solid #dfe0e5;
+    }
+    .audit-detail-wrapper {
+      position: relative;
+      padding: 16px 50px 16px 165px;
+      min-height: 60px;
+      p {
+        line-height: 24px;
+      }
+      .empty-wrapper {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        img {
+          width: 60px;
+        }
+      }
+    }
+    .audit-detail-table {
+      border: none;
+      .bk-table-row-last {
+        td {
+          border-bottom: 1px solid #dfe0e5 !important;
+        }
+      }
+    }
+    /deep/ .audit-renewal-notice-cell-cls {
+      .cell {
+        display: none;
+      }
+    }
+  }
+}
 </style>

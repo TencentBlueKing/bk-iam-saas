@@ -1182,6 +1182,7 @@ export const m = {
         '管理类API白名单创建': 'Management class API whitelist create',
         '管理类API白名单删除': 'Management class API whitelist delete',
         '操作敏感等级更新': 'Action sensitivity level update',
+        '续期通知更新': 'Renewal notice update',
         '回滚事件': 'Rollback event',
         '管理空间用户组成员续期': 'Management space group members renew',
         '用户组成员续期': 'Group members renew',
