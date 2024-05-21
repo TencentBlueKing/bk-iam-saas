@@ -32,12 +32,13 @@ import http from '@/api';
 // import il8n from '@/language';
 import preload from '@/common/preload';
 import { bus } from '@/common/bus';
-import { existValue, getParamsValue } from '@/common/util';
+import { existValue, getParamsValue, getRoutePath } from '@/common/util';
 // import { existValue, getParamsValue, getManagerMenuPerm } from '@/common/util';
 import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
 import { messageError } from '@/common/bkmagic';
+import { connectToMain } from '@blueking/sub-saas/dist/main.js';
 
-const SITE_URL = window.SITE_URL;
+const SITE_URL = getRoutePath(window.SITE_URL);
 
 Vue.use(VueRouter);
 
@@ -394,5 +395,7 @@ const fetchExternalSystemsLayout = async (externalSystemId) => {
 
 router.beforeEach(beforeEach);
 router.afterEach(afterEach);
+
+connectToMain(router);
 
 export default router;
