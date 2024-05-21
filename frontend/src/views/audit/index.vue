@@ -544,7 +544,6 @@
       },
 
       getCellClass ({ row, column, rowIndex, columnIndex }) {
-        console.log(row);
         if (columnIndex === 0 && ['role.update.notification.config'].includes(row.type)) {
           return 'audit-renewal-notice-cell-cls';
         }
