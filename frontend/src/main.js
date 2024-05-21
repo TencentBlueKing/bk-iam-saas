@@ -130,6 +130,7 @@ Vue.mixin(locale.mixin);
 if (NODE_ENV === 'development') {
   Vue.config.devtools = true;
 }
+console.log(subEnv);
 auth.requestCurrentUser().then(user => {
   injectCSRFTokenToHeaders();
   if (!user.isAuthenticated) {
@@ -146,7 +147,7 @@ auth.requestCurrentUser().then(user => {
       // },
       // template: '<App/>'
       render () {
-        return !subEnv ? <App /> : <IframeEntry />;
+        return subEnv ? <IframeEntry /> : <App />;
       }
     });
     if (NODE_ENV === 'development') {
