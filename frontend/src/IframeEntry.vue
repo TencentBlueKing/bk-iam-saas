@@ -1,5 +1,6 @@
 <template>
-  <div id="app"
+  <div
+    id="app"
     :class="[
       systemCls,
       { 'external-system-layout': externalSystemsLayout.userGroup.groupDetail.setMainLayoutHeight },
@@ -309,8 +310,19 @@
   };
 </script>
 
-<style lang="postcss">
+<style lang="postcss" scoped>
 @import './css/index.css';
+#app {
+  .header-layout {
+    padding-left: 0;
+  }
+  /deep/ .main-layout {
+    .fixed,
+    .fixed-action {
+      padding-left: 24px !important;
+    }
+  }
+}
 .nav-layout {
     position: relative;
     float: left;
