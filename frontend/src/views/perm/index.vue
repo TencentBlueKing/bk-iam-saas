@@ -147,7 +147,7 @@
       </template>
     </div>
     <div
-      v-if="!externalSystemsLayout.myPerm.hideApplyBtn"
+      v-if="!externalSystemsLayout.myPerm.hideApplyBtn && !isSubEnv"
       :class="[
         'custom-footer-wrapper',
         { 'custom-footer-wrapper-no-perm': isEmpty }
