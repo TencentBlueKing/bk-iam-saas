@@ -7,12 +7,47 @@
       :quick-close="true"
       @update:isShow="handleCancel"
     >
-      <div slot="header" class="iam-action-template-detail-side-header">
-        <span>{{ $t(`m.memberTemplate['模板详情']`) }}</span>
-        <span class="custom-header-divider">|</span>
-        <span class="single-hide custom-header-name" :title="curDetailData.name">
-          {{ curDetailData.name }}
-        </span>
+      <div slot="header" class="flex-between iam-action-template-detail-side-header">
+        <div>
+          <span>{{ $t(`m.memberTemplate['模板详情']`) }}</span>
+          <span class="custom-header-divider">|</span>
+          <span class="single-hide custom-header-name" :title="curDetailData.name">
+            {{ curDetailData.name }}
+          </span>
+        </div>
+        <bk-popconfirm
+          trigger="click"
+          placement="bottom-end"
+          ext-popover-cls="actions-template-delete-confirm"
+          :width="280"
+          :confirm-text="$t(`m.common['确定']`)"
+          @confirm="handleTemplateDelete"
+        >
+          <div slot="content">
+            <div class="popover-title">
+              <div class="popover-title-text">
+                {{ $t(`m.dialog['确认删除该操作模板？']`) }}
+              </div>
+            </div>
+            <div class="popover-content">
+              <div class="popover-content-item">
+                <span class="popover-content-item-label">{{ $t(`m.memberTemplate['模板名称']`) }}:</span>
+                <span class="popover-content-item-value"> {{ curDetailData.name }}</span>
+              </div>
+              <div class="popover-content-tip">
+                {{ $t(`m.actionsTemplate['删除后，无法恢复，请谨慎操作！']`) }}
+              </div>
+            </div>
+          </div>
+          <bk-popover
+            placement="right-start"
+            :content="formatDelAction(curDetailData, 'title')"
+            :disabled="!formatDelAction(curDetailData, 'title')">
+            <bk-button :disabled="formatDelAction(curDetailData, 'disabled')">
+              {{ $t(`m.common['删除']`) }}
+            </bk-button>
+          </bk-popover>
+        </bk-popconfirm>
       </div>
       <div slot="content" class="iam-action-template-detail-side-content">
         <div class="action-template-tab">
@@ -102,6 +137,25 @@
           }
         }
         return com;
+      },
+      formatDelAction () {
+        return ({ subject_count: subjectCount }, type) => {
+          const typeMap = {
+            title: () => {
+              if (subjectCount > 0) {
+                return this.$t(`m.info['有关联的用户组, 无法删除']`);
+              }
+              return '';
+            },
+            disabled: () => {
+              if (subjectCount > 0) {
+                return true;
+              }
+              return false;
+            }
+          };
+          return typeMap[type]();
+        };
       }
     },
     watch: {
@@ -146,6 +200,10 @@
           }
         };
         return typeMap[payload]();
+      },
+
+      handleTemplateDelete () {
+        this.$emit('on-delete', this.curDetailData);
       },
       
       handleAssociateChange (payload) {

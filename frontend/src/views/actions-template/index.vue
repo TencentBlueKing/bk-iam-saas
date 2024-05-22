@@ -130,7 +130,11 @@
       @on-sumbit="handleSubmitSelectUserGroup"
     />
 
-    <ActionsTemplateDetailSlider :show.sync="isShowDetailSlider" :cur-detail-data="curDetailData" />
+    <ActionsTemplateDetailSlider
+      :show.sync="isShowDetailSlider"
+      :cur-detail-data="curDetailData"
+      @on-delete="handleTemplateDelete"
+    />
   </div>
 </template>
 
@@ -209,29 +213,29 @@
       };
     },
     computed: {
-        ...mapGetters(['user', 'externalSystemId']),
-        isCanBatchDelete () {
-            return this.currentSelectList.length > 0;
-        },
-        formatDelAction () {
-          return ({ subject_count: subjectCount }, type) => {
-            const typeMap = {
-              title: () => {
-                  if (subjectCount > 0) {
-                      return this.$t(`m.info['有关联的用户组, 无法删除']`);
-                  }
-                  return '';
-              },
-              disabled: () => {
-                  if (subjectCount > 0) {
-                      return true;
-                  }
-                  return false;
-              }
-            };
-            return typeMap[type]();
+      ...mapGetters(['user', 'externalSystemId']),
+      isCanBatchDelete () {
+          return this.currentSelectList.length > 0;
+      },
+      formatDelAction () {
+        return ({ subject_count: subjectCount }, type) => {
+          const typeMap = {
+            title: () => {
+                if (subjectCount > 0) {
+                    return this.$t(`m.info['有关联的用户组, 无法删除']`);
+                }
+                return '';
+            },
+            disabled: () => {
+                if (subjectCount > 0) {
+                    return true;
+                }
+                return false;
+            }
           };
-        }
+          return typeMap[type]();
+        };
+      }
     },
     watch: {
       'pagination.current' (value) {
@@ -352,6 +356,7 @@
           await this.$store.dispatch('permTemplate/deleteTemplate', { id });
           this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
           this.resetPagination();
+          this.isShowDetailSlider = false;
         } catch (e) {
           this.messageAdvancedError(e);
         }
@@ -709,7 +714,7 @@
     }
     .table-operate-btn {
       &:not(&:last-child) {
-          margin-right: 8px;
+        margin-right: 8px;
       }
     }
   }
