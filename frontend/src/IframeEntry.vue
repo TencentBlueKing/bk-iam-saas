@@ -317,29 +317,21 @@
     padding-left: 0;
   }
   /deep/ .main-layout {
+    height: 100%;
+    /* height: calc(100% - 41px); */
+    position: relative;
+    background-color: #f5f6fa;
+    overflow: hidden;
+    .main-scroller {
+      /* height: calc(100% + 51px); */
+      height: 100%;
+      overflow: auto;
+    }
     .fixed,
     .fixed-action {
       padding-left: 24px !important;
     }
   }
-}
-.nav-layout {
-    position: relative;
-    float: left;
-    height: calc(100% + 10px);
-    margin: -51px 0 0 0;
-}
-
-.main-layout {
-    position: relative;
-    height: calc(100% - 41px);
-    background-color: #f5f6fa;
-    overflow: hidden;
-}
-
-.main-scroller {
-    height: calc(100% + 51px);
-    overflow: auto;
 }
 
 .views-layout {
@@ -352,10 +344,6 @@
     height: calc(100% - 1px) !important;
 }
 
-.external-main-scroller, .external-main-layout {
-    height: 100%;
-}
-
 .add-member-boundary-container {
     .external-main-scroller {
         overflow: hidden;
@@ -363,18 +351,19 @@
 }
 
 .single-hide {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .external-app-layout {
-    min-width: 0 !important;
-    max-width: 900px !important;
+  min-width: 0 !important;
+  max-width: 900px !important;
 }
 
-.user-selector .user-selector-selected .user-selector-selected-clear {
-    line-height: 20px !important;
+.user-selector .user-selector-selected
+.user-selector-selected-clear {
+  line-height: 20px !important;
 }
 
 .flex-between {
