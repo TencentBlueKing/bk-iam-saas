@@ -114,23 +114,19 @@ const i18n = new VueI18n({
   }
 });
 
-// if (language === 'zh-cn') {
-//     locale.use(lang.zhCN);
-// } else {
-//     console.log(lang.enUS, 6555);
-// }
 locale.use(language === 'zh-cn' ? lang.zhCN : lang.enUS);
 
 locale.i18n((key, value) => i18n.t(key, value));
 
 Vue.prototype.curLanguageIsCn = language === 'zh-cn';
+Vue.prototype.isSubEnv = subEnv || false;
 
 Vue.mixin(locale.mixin);
 
 if (NODE_ENV === 'development') {
   Vue.config.devtools = true;
 }
-console.log(subEnv);
+
 auth.requestCurrentUser().then(user => {
   injectCSRFTokenToHeaders();
   if (!user.isAuthenticated) {
