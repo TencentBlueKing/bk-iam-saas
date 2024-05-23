@@ -648,9 +648,9 @@
   import { PERMANENT_TIMESTAMP } from '@/common/constants';
   import RenderActionTag from '@/components/common-action';
   import ResourceInstanceTable from '../components/resource-instance-table';
+  import Condition from '@/model/condition';
   import Policy from '@/model/policy';
   import AggregationPolicy from '@/model/aggregation-policy';
-  import Condition from '@/model/condition';
   import IamDeadline from '@/components/iam-deadline/horizontal';
   import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider';
   import BkUserSelector from '@blueking/user-selector';

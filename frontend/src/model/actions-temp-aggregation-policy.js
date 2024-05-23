@@ -24,28 +24,29 @@
  * IN THE SOFTWARE.
 */
 import Vue from 'vue';
-import _ from 'lodash';
+import { cloneDeep } from 'lodash';
 import { il8n, language } from '@/language';
-import { CUSTOM_PERM_TEMPLATE_ID } from '@/common/constants';
-export default class GroupAggregationPolicy {
+
+export default class ActionTempAggregationPolicy {
   constructor (payload) {
+    this.isAggregate = true;
+    this.canPaste = false;
+    // 是否需要展示无限制
+    this.isNeedNoLimited = payload.isNeedNoLimited || false;
+    // 是否是无限制操作
+    this.isNoLimited = payload.isNoLimited || false;
     this.isError = payload.isError || false;
+    this.selectedIndex = payload.selectedIndex || 0;
+    this.tag = payload.tag || 'add';
+    this.aggregationId = payload.aggregationId || '';
+    this.mode_type = payload.mode_type || '';
+    this.system_id = payload.actions.length > 0 ? payload.actions[0].system_id : '';
+    this.system_name = payload.actions.length > 0 ? payload.actions[0].system_name || '' : '';
     this.actions = payload.actions || [];
     this.instancesDisplayData = payload.instancesDisplayData || {};
     this.aggregateResourceType = payload.aggregate_resource_types || payload.aggregateResourceType || [];
     this.instances = payload.instances || [];
-    this.instancesBackup = _.cloneDeep(this.instances);
-    this.isAggregate = true;
-    this.system_id = payload.actions[0].detail.system.id;
-    this.system_name = payload.actions[0].detail.system.name;
-    this.canPaste = false;
-    this.aggregationId = payload.aggregationId || '';
-    this.selectedIndex = payload.selectedIndex || 0;
-    // 是否需要展示无限制
-    this.isNeedNoLimited = payload.isNeedNoLimited;
-    // 是否是无限制操作
-    this.isNoLimited = payload.isNoLimited;
-    this.tag = payload.tag || 'add';
+    this.instancesBackup = cloneDeep(this.instances);
     this.initDetailData(this.actions);
   }
 
@@ -54,14 +55,7 @@ export default class GroupAggregationPolicy {
       this.detail = {};
       return;
     }
-    this.detail = payload[0].detail;
-  }
-
-  get isTemplate () {
-    if (this.actions.length > 0) {
-      return this.actions[0].detail.id !== CUSTOM_PERM_TEMPLATE_ID;
-    }
-    return false;
+    this.detail = payload[0];
   }
 
   get empty () {
@@ -88,7 +82,7 @@ export default class GroupAggregationPolicy {
         if (this.instancesDisplayData[item.id].length > 1) {
           for (const key in this.instancesDisplayData) {
             if (item.id === key) {
-              str = language === 'zh-cn' ? `${str}，已选择${this.instancesDisplayData[item.id].length}个${item.name}` : `${str}, selected ${this.instancesDisplayData[item.id].length} ${item.name}(s)`;
+              str = language === 'zh-cn' ? `${str}，已选择<span style='color: #3a84ff; font-weight: 700;'>${this.instancesDisplayData[item.id].length}</span>个${item.name}` : `${str}, selected <span style='color: #3a84ff; font-weight: 700;'> ${this.instancesDisplayData[item.id].length}</span> ${item.name}(s)`;
               Vue.set(item, 'displayValue', str.substring(1, str.length));
               str = '';
             }
@@ -107,21 +101,21 @@ export default class GroupAggregationPolicy {
         str = '';
       }
     });
-    const aggregateResourceType = _.cloneDeep(this.aggregateResourceType.map(item => item.displayValue));
+    const aggregateResourceType = cloneDeep(this.aggregateResourceType.map(item => item.displayValue));
     return aggregateResourceType.join();
   }
 
   get name () {
-    if (this.actions.length < 1) {
-      return '';
+    if (this.actions.length > 0) {
+      return this.actions.map(item => item.name).join('，');
     }
-    return this.actions.map(item => item.name).join('，');
+    return '';
   }
 
   get key () {
-    if (this.actions.length < 1) {
-      return '';
+    if (this.actions.length > 0) {
+      return this.actions.map(item => item.id).join('');
     }
-    return this.actions.map(item => item.id).join('');
+    return '';
   }
 }

@@ -714,7 +714,7 @@
     }
     .table-operate-btn {
       &:not(&:last-child) {
-        margin-right: 8px;
+        margin-right: 16px;
       }
     }
   }

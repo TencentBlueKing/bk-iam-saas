@@ -270,6 +270,7 @@
         :select-actions-back="curSelectActionsBack"
         :all-actions="allCustomActionList"
         :default-checked-actions="defaultCheckedActions"
+        :linear-actions="linearAction"
       />
     </div>
     <!-- 查看组权限实例详情 -->
@@ -463,6 +464,15 @@
           this.handleGetResizeHeight();
         },
         deep: true
+      },
+      curActionStep: {
+        handler (value) {
+          if (value > 1) {
+            const { systemId } = this.$route.params;
+            this.fetchActions(systemId);
+          }
+        },
+        immediate: true
       }
     },
     mounted () {

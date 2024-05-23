@@ -1,6 +1,11 @@
 <template>
   <div class="temp-group-sync-wrapper">
-    <div class="temp-group-sync-table" v-for="(group, groupIndex) in syncGroupList" :key="group.id">
+    <div
+      class="temp-group-sync-table"
+      v-for="(group, groupIndex) in syncGroupList"
+      :key="group.id"
+      :ref="`${group.name}&${group.id}`"
+    >
       <div class="flex-between temp-group-sync-table-header" @click.stop="handleExpand(group)">
         <div class="temp-group-sync-table-header-left">
           <Icon bk :type="group.expand ? 'down-shape' : 'right-shape'" class="expand-icon" />
@@ -88,8 +93,24 @@
           :label="$t(`m.permApply['资源类型']`)"
         >
           <template slot-scope="{ row }">
-            <div class="resource-type-content">
-              <div v-for="resource in row.resource_groups" :key="resource.id" class="resource-type-list">
+            <div class="resource-type-content" v-if="!!row.isAggregate">
+              <div class="resource-type-list" v-if="['add'].includes(row.mode_type)">
+                <div
+                  v-bk-tooltips="{ content: aggregate.name, placement: 'left-start' }"
+                  v-for="(aggregate, index) in row.aggregateResourceType"
+                  :key="aggregate.id"
+                  :class="['single-hide', 'resource-type-item', { 'is-selected': row.selectedIndex === index }]"
+                >
+                  {{ aggregate.name }}
+                </div>
+              </div>
+            </div>
+            <div class="resource-type-content" v-else>
+              <div
+                v-for="resource in row.resource_groups"
+                :key="resource.id"
+                class="resource-type-list"
+              >
                 <div
                   v-bk-tooltips="{ content: related.name, placement: 'left-start' }"
                   v-for="related in resource.related_resource_types"
@@ -108,14 +129,71 @@
           :render-header="(h, { column, $index }) => renderResourceHeader(h, { column, $index }, group, groupIndex)"
         >
           <template slot-scope="{ row, $index }">
-            <div class="relation-content-wrapper">
+            <div class="relation-content-wrapper" v-if="!!row.isAggregate">
+              <template v-if="!row.isEmpty">
+                <template v-if="['add'].includes(row.mode_type)" class="resource-type-content">
+                  <div class="resource-type-list">
+                    <div
+                      v-for="(aggregate, resourceTypeIndex) in row.aggregateResourceType"
+                      :key="aggregate.id"
+                      :class="['single-hide', 'relation-content-item']"
+                    >
+                      <div class="content">
+                        <render-condition
+                          :ref="`condition_${$index}_${resourceTypeIndex}_aggregateRef`"
+                          :value="formatDisplayValue(row, resourceTypeIndex)"
+                          :is-empty="row.empty"
+                          :can-view="false"
+                          :can-paste="row.canPaste"
+                          :is-error="row.isError"
+                          @on-mouseover="handleConditionMouseover(row)"
+                          @on-mouseleave="handleConditionMouseleave(row)"
+                          @on-copy="handleAggregateInstanceCopy(row, $index, aggregateIndex)"
+                          @on-paste="handleAggregatePaste(row)"
+                          @on-click="handleShowAggregateResourceSlider(row, $index, resourceTypeIndex, groupIndex)"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </template>
+                <template v-if="['delete'].includes(row.mode_type)">
+                  <div v-for="(related, relatedIndex) in row.resource_groups" :key="related.id">
+                    <div
+                      class="single-hide relation-content-item"
+                      v-for="(types, typesIndex) in related.related_resource_types"
+                      :key="types.type"
+                      @click.stop="handleViewResource(row, relatedIndex, typesIndex)"
+                    >
+                      <div class="content">
+                        <render-resource-popover
+                          :key="types.type"
+                          :data="types.condition"
+                          :value="types.value"
+                          :max-width="400"
+                          @on-view="handleViewResource(row, relatedIndex, typesIndex)"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </template>
+              </template>
+              <template v-else>{{ $t(`m.common['无需关联实例']`) }}</template>
+            </div>
+            <div class="relation-content-wrapper" v-else>
               <template v-if="!row.isEmpty">
                 <template v-if="['add'].includes(row.mode_type)">
                   <div v-for="(related, relatedIndex) in row.resource_groups" :key="related.id">
                     <div
-                      class="relation-content-item"
                       v-for="(content, contentIndex) in related.related_resource_types"
-                      :key="`${groupIndex}${contentIndex}`">
+                      :key="`${groupIndex}${contentIndex}`"
+                      :class="[
+                        'relation-content-item',
+                        { 'set-margin-bottom':
+                          (related.related_resource_types.length === 1 && curAddActions.length === 1)
+                          || (group.tableList.length > 1 && group.tableList.length - 1 === $index)
+                        }
+                      ]"
+                    >
                       <div class="content">
                         <render-condition
                           :ref="`condition_${groupIndex}_${$index}_${contentIndex}_ref`"
@@ -163,9 +241,7 @@
                           {{ resItem.name }}
                         </p>
                       </template>
-                      <template
-                        v-if="!isShowBatchRefer(row)
-                          && batchReferAction(row).length === 0"
+                      <template v-if="!isShowBatchRefer(row) && batchReferAction(row).length === 0"
                       >
                         {{ $t(`m.common['暂无数据']`) }}
                       </template>
@@ -233,7 +309,7 @@
       </div>
     </bk-sideslider>
 
-    <!-- 打开资源视图选择器 -->
+    <!-- 非聚合资源视图侧边栏 -->
     <bk-sideslider
       :is-show="isShowInstanceSideSlider"
       :title="instanceSideSliderTitle"
@@ -266,6 +342,18 @@
         </bk-button>
       </div>
     </bk-sideslider>
+    
+    <!-- 聚合后的资源视图侧边栏 -->
+    <RenderAggregateSideslider
+      ref="aggregateRef"
+      :show.sync="isShowAggregateSlider"
+      :params="aggregateResourceParams"
+      :is-super-manager="isSuperManager"
+      :value="aggregateValue"
+      :default-list="defaultSelectList"
+      :is-aggregate-empty-message="isAggregateEmptyMessage"
+      @on-selected="handleAggregateResourceSubmit"
+    />
   </div>
 </template>
 
@@ -282,6 +370,8 @@
   import RenderDetail from '../components/render-detail';
   import RenderResource from '../components/render-resource';
   import RelateResourceTypes from '@/model/related-resource-types';
+  import RenderAggregateSideslider from '@/components/choose-ip/sideslider';
+
   export default {
     provide: function () {
       return {
@@ -292,7 +382,8 @@
       RenderResourcePopover,
       RenderCondition,
       RenderDetail,
-      RenderResource
+      RenderResource,
+      RenderAggregateSideslider
     },
     props: {
       id: {
@@ -320,14 +411,23 @@
         isLastPage: false,
         prevLoading: false,
         disabled: false,
+        curCopyNoLimited: false,
         isShowSideSlider: false,
         isShowInstanceSideSlider: false,
+        isShowAggregateSlider: false,
+        isAggregateEmptyMessage: false,
+        instanceKey: '',
+        curCopyKey: '',
+        curCopyDataId: '',
         sideSliderTitle: '',
         instanceSideSliderTitle: '',
+        curCopyMode: 'normal',
         curIndex: -1,
         curActionIndex: -1,
         curResourceIndex: -1,
         curGroupIndex: -1,
+        aggregateIndex: -1,
+        selectedIndex: 0,
         syncGroupList: [],
         deleteProps: [],
         addProps: [],
@@ -336,11 +436,16 @@
         curAddActions: [],
         addActionsList: [],
         authorizationScopeActions: [],
+        defaultSelectList: [],
+        aggregateValue: [],
+        curCopyData: ['none'],
         requestQueue: ['scope', 'group'],
         params: {},
         curRemoveSyncData: {},
         curScopeAction: {},
         curCopyParams: {},
+        curAggregateResourceType: {},
+        aggregateResourceParams: {},
         pagination: {
           current: 1,
           limit: 5,
@@ -352,6 +457,10 @@
     },
     computed: {
       ...mapGetters('permTemplate', ['cloneActions']),
+      ...mapGetters(['user']),
+      isSuperManager () {
+        return this.user.role.type === 'super_manager';
+      },
       isShowBatchRefer () {
         return (payload) => {
           return this.cloneActions.some(item => item.action_id === payload.id);
@@ -520,11 +629,24 @@
           }
           return result;
         };
+      },
+      // 处理无限制和聚合后多个tab数据结构不兼容情况
+      formatDisplayValue () {
+        return (payload, index) => {
+          const { isNoLimited, empty, value, aggregateResourceType } = payload;
+          if (value && aggregateResourceType[index]) {
+            let displayValue = aggregateResourceType[index].displayValue;
+            if (isNoLimited || empty) {
+              displayValue = value;
+            }
+            return displayValue;
+          }
+        };
       }
     },
     watch: {
       addActions: {
-        async handler (value) {
+        handler (value) {
           this.curAddActions = [...value];
         },
         immediate: true
@@ -616,9 +738,14 @@
       },
 
       getCellClass ({ row, column, rowIndex, columnIndex }) {
-        const hasMultipleResourceType = row.resource_groups && row.resource_groups.some((item) => {
-          return item.related_resource_types.length > 1;
-        });
+        let hasMultipleResourceType = false;
+        if (row.isAggregate) {
+          hasMultipleResourceType = row.aggregateResourceType && row.aggregateResourceType.length > 1;
+        } else {
+          hasMultipleResourceType = row.resource_groups && row.resource_groups.some((item) => {
+            return item.related_resource_types.length > 1;
+          });
+        }
         if (columnIndex === 1) {
           if (hasMultipleResourceType) {
             return 'resource-type-cell-cls';
@@ -644,18 +771,19 @@
  
       getBatchCopyParams (payload, content) {
         const actions = [];
+        const { systemId } = this.$route.params;
         this.syncGroupList.forEach(item => {
           item.add_actions.forEach(act => {
             if (act.id !== payload.id) {
               actions.push({
-                system_id: this.$route.params.systemId,
+                system_id: systemId,
                 id: act.id
               });
             }
           });
         });
         actions.unshift({
-          system_id: this.$route.params.systemId,
+          system_id: systemId,
           id: payload.id
         });
         return {
@@ -773,9 +901,7 @@
       handleExpand (payload) {
         payload.expand = !payload.expand;
         this.syncGroupList.forEach((item) => {
-          if (item.expand && payload.id !== item.id) {
-            item.expand = false;
-          }
+          this.$set(item, 'expand', payload.id === item.id ? payload.expand : false);
         });
         this.$emit('on-expand', payload);
       },
@@ -1003,7 +1129,7 @@
               return this.$set(
                 tableData,
                 index,
-                new AggregationPolicy(item)
+                new AggregationPolicy({ ...item, ...{ mode_type: 'add' } })
               );
             }
           }
@@ -1085,6 +1211,48 @@
         this.messageSuccess(this.$t(`m.info['批量粘贴成功']`), 3000);
       },
 
+      handleAggregateInstanceCopy (payload, index, aggregateIndex) {
+        window.changeDialog = true;
+        const aggregateRef = this.$refs[`condition_${index}_${aggregateIndex}_aggregateRef`];
+        const { aggregationId, aggregateResourceType, isNoLimited, instancesDisplayData } = payload;
+        const { id, system_id: systemId } = aggregateResourceType[aggregateIndex];
+        this.curCopyMode = 'aggregate';
+        this.instanceKey = id;
+        this.curCopyDataId = aggregationId;
+        this.curCopyNoLimited = isNoLimited;
+        this.curCopyKey = `${systemId}${id}`;
+        this.curAggregateResourceType = aggregateResourceType[aggregateIndex];
+        this.curCopyData = cloneDeep(instancesDisplayData[this.instanceKey]);
+        this.messageSuccess(this.$t(`m.info['实例复制']`), 3000);
+        if (aggregateRef) {
+          aggregateRef.setImmediatelyShow(true);
+        }
+      },
+
+      handleAggregatePaste (payload) {
+        let tempInstances = [];
+        if (this.curCopyMode === 'aggregate') {
+          tempInstances = this.curCopyData;
+        } else {
+          if (this.curCopyData[0] !== 'none') {
+            const instances = this.curCopyData.map(item => item.instance);
+            const instanceData = instances[0][0];
+            tempInstances = instanceData.path.map(pathItem => {
+              return {
+                id: pathItem[0].id,
+                name: pathItem[0].name
+              };
+            });
+          }
+        }
+        if (tempInstances.length < 1) {
+          return;
+        }
+        payload = Object.assign(payload, { isError: false, instances: tempInstances });
+        this.messageSuccess(this.$t(`m.info['粘贴成功']`), 3000);
+        this.$emit('on-select', payload);
+      },
+
       handleShowResourceSlider (row, content, contentIndex, $index, groupIndex, relatedIndex) {
         this.params = {
           system_id: this.$route.params.systemId,
@@ -1105,6 +1273,85 @@
         );
         this.isShowInstanceSideSlider = true;
         window.changeAlert = 'iamSidesider';
+      },
+
+      handleShowAggregateResourceSlider (data, index, resourceTypeIndex, groupIndex) {
+        window.changeDialog = true;
+        this.curIndex = groupIndex;
+        this.aggregateIndex = index;
+        this.selectedIndex = resourceTypeIndex;
+        const aggregateResourceParams = {
+          ...data.aggregateResourceType[resourceTypeIndex],
+          curAggregateSystemId: data.system_id,
+          isNoLimited: data.isNoLimited || false,
+          actionsId: data.actions.map((item) => item.id)
+        };
+        this.aggregateResourceParams = cloneDeep(aggregateResourceParams);
+        this.instanceKey = aggregateResourceParams.id;
+        if (!data.instancesDisplayData[this.instanceKey]) {
+          data.instancesDisplayData[this.instanceKey] = [];
+        }
+        this.aggregateValue = cloneDeep(data.instancesDisplayData[this.instanceKey].map(item => {
+          return {
+            id: item.id,
+            display_name: item.name
+          };
+        }));
+        this.defaultSelectList = this.handleGetScopeActionResource(
+          data.actions,
+          data.aggregateResourceType[data.selectedIndex].id,
+          data.system_id
+        );
+        this.isShowAggregateSlider = true;
+      },
+
+      handleAggregateResourceSubmit (payload) {
+        const instances = payload.map(item => {
+          return {
+            id: item.id,
+            name: item.display_name
+          };
+        });
+        let curAggregateItem = this.syncGroupList[this.curIndex].tableList[this.aggregateIndex];
+        curAggregateItem = Object.assign(curAggregateItem, { isError: false, instances: [] });
+        const instanceKey = curAggregateItem.aggregateResourceType[this.selectedIndex].id;
+        const instancesDisplayData = curAggregateItem.instancesDisplayData;
+        curAggregateItem.instancesDisplayData = {
+          ...instancesDisplayData,
+          [instanceKey]: instances
+        };
+        for (const key in curAggregateItem.instancesDisplayData) {
+          curAggregateItem.instances.push(...curAggregateItem.instancesDisplayData[key]);
+        }
+        const conditionData = this.$refs.aggregateRef.handleGetValue();
+        const { isEmpty, data } = conditionData;
+        if (isEmpty) {
+          return;
+        }
+        const isConditionEmpty = data.length === 1 && data[0] === 'none';
+        if (isConditionEmpty) {
+          curAggregateItem = Object.assign(curAggregateItem, {
+            instances: ['none'],
+            isError: true,
+            isNoLimited: false,
+            isLimitExceeded: false
+          });
+        } else {
+          // data和isEmpty都为false代表是无限制
+          const isNoLimited = !isEmpty && !data.length;
+          curAggregateItem = Object.assign(curAggregateItem, {
+            instances: data,
+            isError: !(isNoLimited || data.length),
+            isNoLimited: isNoLimited
+          });
+        }
+        console.log(this.syncGroupList[this.curIndex].tableList[this.aggregateIndex]);
+        this.$set(
+          this.syncGroupList[this.curIndex].tableList,
+          this.aggregateIndex,
+          new AggregationPolicy({ ...curAggregateItem, ...{ isNeedNoLimited: true } })
+        );
+        this.$emit('on-select', this.syncGroupList[this.curIndex].tableList[this.aggregateIndex]);
       },
 
       handleViewResource (payload, relatedIndex, typesIndex) {
@@ -1188,6 +1435,64 @@
 
       handleInit (payload) {
         this.disabled = !payload;
+      },
+
+      handleGetScopeActionResource (payload, id, systemId) {
+        let actions = [];
+        const scopeAction = this.authorizationScopeActions.find(item => item.id === systemId);
+        if (scopeAction) {
+          actions = scopeAction.filter(item => payload.map(_ => _.id).includes(item.id));
+        }
+        const conditions = actions.map(
+          item => item.resource_groups[0].related_resource_types[0].condition
+        ).filter(_ => _.length > 0);
+        if (conditions.length < 1) {
+          return [];
+        }
+        const instances = actions.map((item) => {
+          const instancesItem = item.resource_groups[0].related_resource_types[0].condition[0]
+            && item.resource_groups[0].related_resource_types[0].condition[0].instances;
+          return (instancesItem && instancesItem.filter((v) => v.type === id)) || [];
+        });
+        const tempData = [];
+        const resources = instances.map(item => item[0]
+          && item[0].path).map(item => item && item.map(v => v.map(_ => _.id))).filter(item => item !== undefined);
+        let resourceList = instances
+          .map(item => item[0] && item[0].path)
+          .map(item => item && item.map(v => v.map(({ id, name }) => ({ id, name }))))
+          .flat(Infinity);
+        resourceList = resourceList.filter(item => item !== undefined);
+        resources.forEach(item => {
+          item && item.forEach(subItem => {
+            const hasIntersectionResource = resources.every(v => v && v.some(vItem => vItem[0] === subItem[0]));
+            const hasResource = resources.find(v => v && v.some(vItem => vItem[0] === subItem[0]));
+            if (hasIntersectionResource) {
+              tempData.push(subItem[0]);
+            }
+            // 判断处理没有交集的情况
+            if (!hasIntersectionResource && hasResource) {
+              this.isAggregateEmptyMessage = true;
+            }
+          });
+        });
+        if (instances.length !== actions.length) {
+          return [];
+        }
+        const curResource = [...new Set(tempData)];
+        const isEqual = curResource.length > 0;
+        if (isEqual) {
+          const curResourceList = [];
+          resourceList.forEach(item => {
+            if (!curResourceList.find(subItem => subItem.id === item.id)) {
+              curResourceList.push({
+                id: item.id,
+                display_name: item.name
+              });
+            }
+          });
+          return curResourceList.filter(item => curResource.includes(item.id));
+        }
+        return [];
       },
       
       handleConditionMouseover (payload, row) {
