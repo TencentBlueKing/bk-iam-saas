@@ -90,7 +90,7 @@ export default class ActionTempAggregationPolicy {
         } else {
           // 这里防止切换tab下存在空数据，需要重新判断下
           if (this.instancesDisplayData[item.id] && this.instancesDisplayData[item.id].length === 1) {
-            str = `${str}${il8n('common', '，')}${item.name}${il8n('common', '：')}${this.instancesDisplayData[item.id][0].name}`;
+            str = `${str}${il8n('common', '，')}${this.instancesDisplayData[item.id][0].name}`;
           }
           Vue.set(item, 'displayValue', str.substring(1, str.length));
           str = '';
