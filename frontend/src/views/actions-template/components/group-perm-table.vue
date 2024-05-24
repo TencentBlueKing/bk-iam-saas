@@ -20,7 +20,8 @@
             :class="[
               'child-table-content',
               'add-source-content',
-              { 'set-border': tempIndex !== row.templates.length - 1 }
+              { 'set-border': isSetBorder(temp, tempIndex, row) },
+              { 'is-search-no-border': isSearchNoBorder(temp, tempIndex, row) }
             ]"
           >
             <div
@@ -50,11 +51,12 @@
             class="child-table-content"
           >
             <div
-              v-for="(action, actionIndex) in temp.tableData"
+              v-for="action in temp.tableData"
               :key="action.id"
               :class="[
                 'actions-name',
-                { 'set-border': !(tempIndex === row.templates.length - 1 && actionIndex === temp.tableData.length - 1) }
+                { 'set-border': isSetBorder(temp, tempIndex, row) },
+                { 'is-search-no-border': isSearchNoBorder(temp, tempIndex, row) }
               ]"
             >
               <span class="single-hide name">{{ action.name }}</span>
@@ -70,12 +72,13 @@
             class="child-table-content"
           >
             <div
-              v-for="(action, actionIndex) of temp.tableData"
+              v-for="action of temp.tableData"
               :key="action.id"
               :class="[
                 'flex-between',
                 'resource-instance-name',
-                { 'set-border': !(tempIndex === row.templates.length - 1 && actionIndex === temp.tableData.length - 1) }
+                { 'set-border': isSetBorder(temp, tempIndex, row) },
+                { 'is-search-no-border': isSearchNoBorder(temp, tempIndex, row) }
               ]"
             >
               <div class="instance-select-content">
@@ -216,10 +219,8 @@
         type: Array,
         default: () => []
       },
-      // 单独处理需要自定义操作按钮的页面
-      isCustomActionButton: {
-        type: Boolean,
-        default: false
+      isSearch: {
+        type: Boolean
       }
     },
     data () {
@@ -341,6 +342,13 @@
             .related_resource_types[this.curResIndex];
         return curData.selectionMode;
       },
+      curSelectionCondition () {
+        if (this.curIndex === -1 || this.isSuperManager) {
+            return [];
+        }
+        const curSelectionCondition = this.tableList[this.curIndex].conditionIds;
+        return curSelectionCondition;
+      },
       isShowPreview () {
         if (this.curIndex === -1) {
             return false;
@@ -360,15 +368,26 @@
           return (Math.floor(payload.tableData.length / 2)) === index;
         };
       },
-      curSelectionCondition () {
-        if (this.curIndex === -1 || this.isSuperManager) {
-            return [];
-        }
-        const curSelectionCondition = this.tableList[this.curIndex].conditionIds;
-        return curSelectionCondition;
-      },
       isShowDeleteAction () {
         return ['detail'].includes(this.mode) && this.isCustom && this.type !== 'view' && !this.externalDelete;
+      },
+      isNoBorder () {
+        return (payload) => {
+          const curIndex = payload.findLastIndex((v) => v.tableData.length > 0 && v.tableData.length < 2);
+          return curIndex > -1;
+        };
+      },
+      isSetBorder () {
+        return (temp, tempIndex, row) => {
+          return !(tempIndex === row.templates.length - 1
+          && this.isNoBorder(row.templates)) && temp.tableData.length > 0;
+        };
+      },
+      isSearchNoBorder () {
+        return (temp, tempIndex, row) => {
+          return this.isSearch && temp.tableData.length > 0
+            && (row.templates.findLastIndex((v) => v.tableData.length > 0) === tempIndex);
+        };
       },
       // 处理无限制和聚合后多个tab数据结构不兼容情况
       formatDisplayValue () {
@@ -654,8 +673,7 @@
           display: block;
         }
         .child-table-content {
-          border: none;
-          tr {
+          /* tr {
             td {
               border-right: 0;
               border-bottom: 0;
@@ -673,12 +691,15 @@
                 }
               }
             }
-          }
+          } */
           .actions-name,
           .resource-instance-name {
             padding: 13px 12px 14px 12px;
             &.set-border {
               border-bottom: 1px solid #dcdee5;
+            }
+            &.is-search-no-border {
+              border-bottom: 0;
             }
           }
           .view-icon,
@@ -709,20 +730,6 @@
           padding: 0;
           display: block;
           .add-source-content {
-            border: none;
-            &.set-border {
-              border-bottom: 1px solid #dcdee5;
-            }
-            td {
-              border-right: 0;
-            }
-            tr {
-              &:last-child {
-                td {
-                  border-bottom: 0;
-                }
-              }
-            }
             &-item {
               .source-name {
                 padding: 0 12px;
@@ -743,6 +750,22 @@
                   margin-top: -1px;
                 }
               }
+            }
+            &.set-border {
+              border-bottom: 1px solid #dcdee5;
+              &:last-child {
+                border-bottom: 0;
+              }
+            }
+            &:last-child {
+              border-bottom: 0;
+              .actions-name,
+              .resource-instance-name {
+                border-bottom: 0;
+              }
+            }
+            &.is-search-no-border {
+              border-bottom: 0;
             }
           }
         }

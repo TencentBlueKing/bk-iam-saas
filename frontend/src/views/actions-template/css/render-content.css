@@ -107,7 +107,7 @@
     }
     &.apply-way-wrapper {
       position: relative;
-      padding: 16px 24px 24px 24px !important;
+      padding: 16px 16px 24px 24px !important;
       .actions-form-item {
         display: flex;
         line-height: 1;

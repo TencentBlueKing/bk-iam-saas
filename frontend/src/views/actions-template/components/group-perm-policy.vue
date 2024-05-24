@@ -13,6 +13,7 @@
         mode="detail"
         :is-loading="isLoading"
         :group-id="groupId"
+        :is-search="['search'].includes(emptyData.tipType)"
         :list="groupSystemList"
       />
     </div>
@@ -347,18 +348,16 @@
             }
           });
         }
-        const tableIndex = list.findIndex((item) =>
-          item.templates.length === 0
-          || item.templates.every((v) => v.tableData.length === 0)
-        );
-        if (tableIndex > -1) {
-          list.splice(tableIndex, 1);
-        }
+        list = list.filter((item) => {
+          return item.templates.length > 0
+            && item.templates.find((v) => v.tableData.length > 0);
+        });
         if (!result.length) {
           this.handleTableClear();
         } else {
           this.groupSystemList = cloneDeep(list);
-          this.emptyData = formatCodeData(0, { ...this.emptyData, ...{ tipType: 'search' } }, list.length === 0);
+          this.emptyData.tipType = 'search';
+          this.emptyData = formatCodeData(0, this.emptyData, true);
         }
       },
 
