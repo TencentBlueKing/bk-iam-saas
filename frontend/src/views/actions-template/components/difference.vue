@@ -345,7 +345,6 @@
                 });
               }
             });
-            console.log(this.policyList, aggregations, '聚合数据');
             this.aggregationsBackup = cloneDeep(aggregations);
             this.aggregations = aggregations;
           }
@@ -498,7 +497,7 @@
         }
         this.aggregateType = payload;
         const typeMap = {
-          'action-instance': async () => {
+          'action-instance': () => {
             this.handleAggregateByAction(true);
           },
           'resource-type': () => {},
@@ -510,15 +509,25 @@
       },
 
       handleAggregateByAction (payload) {
-        const aggregationAction = [...this.aggregations];
+        const actionIds = [];
+        const aggregationData = [];
+        const newTableData = [];
+        let addActionsList = [];
+        const aggregationAction = cloneDeep(this.aggregations);
         const syncGroupList = cloneDeep(this.allSyncGroupList);
+        if (this.addActions.length) {
+          addActionsList = this.addActions.map((item) => item.id);
+        }
+        aggregationAction.forEach((item) => {
+          item.actions.forEach((v) => {
+            if (addActionsList.includes(v.id)) {
+              actionIds.push(v.id);
+            }
+          });
+          item.actions = item.actions.filter((v) => addActionsList.includes(v.id));
+        });
         this.$nextTick(() => {
           syncGroupList.forEach((group) => {
-            const actionIds = [];
-            aggregationAction.forEach((item) => {
-              item.actions = item.actions.filter((v) => group.tableList.map((k) => k.id).includes(v.id));
-              actionIds.push(...item.actions.map((v) => v.id));
-            });
             if (payload) {
               // 缓存新增加的操作权限数据
               aggregationAction.forEach((item) => {
@@ -599,12 +608,14 @@
                   }
                   return new AggregationPolicy({ ...item, ...{ mode_type: 'add' } });
                 });
-              group.tableList = group.tableList.filter((item) => !actionIds.includes(item.id) && ['add'].includes(item.mode_type));
+              group.tableList = group.tableList.filter((item) => !actionIds.includes(item.id));
               group.tableList.unshift(...aggregations);
               return;
             }
-            const aggregationData = [];
-            const newTableData = [];
+            // 如果是非聚合操作，需要过滤掉聚合操作
+            if (!payload) {
+              group.tableList = group.tableList.filter((v) => !v.isAggregate);
+            }
             group.tableList.forEach((item) => {
               if (['add'].includes(item.mode_type)) {
                 if (!item.isAggregate) {
@@ -614,23 +625,22 @@
                 }
               }
             });
-            const curTableList = group.tableList.filter((v) => ['add'].includes(v.mode_type)).map(v => v.id);
-            const reallyActionIds = actionIds.filter(item => !curTableList.includes(item));
+            const reallyActionIds = actionIds.filter((item) => !newTableData.map((v) => v.id).includes(item));
             reallyActionIds.forEach((item) => {
               // 优先从已有权限取值
               const curObj = this.aggregationsTableData.find((v) => v.id === item);
               if (curObj) {
-                group.tableList.unshift(curObj);
+                group.tableList.push(curObj);
               } else {
                 const curAction = this.linearActionList.find((v) => v.id === item);
                 const curAggregation = aggregationData.find((v) => v.actions.map((v) => v.id).includes(item));
-                group.tableList.unshift(new SyncPolicy({ ...curAction, tag: 'add' }, 'detail'));
+                group.tableList.push(new SyncPolicy({ ...curAction, tag: 'add' }, 'detail'));
                 if (curAggregation && curAggregation.instances.length > 0) {
                   const curData = group.tableList[0];
                   const instances = (() => {
                     const arr = [];
                     const aggregateResourceType = curAggregation.aggregateResourceType;
-                    aggregateResourceType.forEach(aggregateResourceItem => {
+                    aggregateResourceType.forEach((aggregateResourceItem) => {
                       const { id, name, system_id } = aggregateResourceItem;
                       curAggregation.instances.forEach((v) => {
                         const curItem = arr.find(_ => _.type === id);
@@ -671,10 +681,7 @@
               }
             });
           });
-          console.log(syncGroupList);
-          setTimeout(() => {
-            this.$refs.syncRef.syncGroupList = cloneDeep(syncGroupList);
-          }, 0);
+          this.$refs.syncRef.setAggregateTableData(syncGroupList);
         });
       },
 

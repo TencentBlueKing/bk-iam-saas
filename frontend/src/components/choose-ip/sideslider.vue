@@ -184,7 +184,7 @@
         isScrollBottom: false,
         isHide: false,
         notLimitValue: false,
-        noLimitRoutes: ['createUserGroup', 'cloneUserGroup', 'addGroupPerm'], // 需要展示无限制的页面
+        noLimitRoutes: ['createUserGroup', 'cloneUserGroup', 'addGroupPerm', 'actionsTemplateEdit'], // 需要展示无限制的页面
         emptyData: {
           type: 'empty',
           text: '暂无数据',

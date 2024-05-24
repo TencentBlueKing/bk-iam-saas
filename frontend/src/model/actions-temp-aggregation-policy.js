@@ -82,7 +82,7 @@ export default class ActionTempAggregationPolicy {
         if (this.instancesDisplayData[item.id].length > 1) {
           for (const key in this.instancesDisplayData) {
             if (item.id === key) {
-              str = language === 'zh-cn' ? `${str}，已选择<span style='color: #3a84ff; font-weight: 700;'>${this.instancesDisplayData[item.id].length}</span>个${item.name}` : `${str}, selected <span style='color: #3a84ff; font-weight: 700;'> ${this.instancesDisplayData[item.id].length}</span> ${item.name}(s)`;
+              str = language === 'zh-cn' ? `${str}，已选择<span style='color: #3a84ff; font-weight: 700;'> ${this.instancesDisplayData[item.id].length} </span>个${item.name}` : `${str}, selected <span style='color: #3a84ff; font-weight: 700;'> ${this.instancesDisplayData[item.id].length}</span> ${item.name}(s)`;
               Vue.set(item, 'displayValue', str.substring(1, str.length));
               str = '';
             }

@@ -32,7 +32,7 @@
       @click.stop="handlePaste"
     >
       <spin-loading v-if="pasteLoading" />
-      <Icon v-else type="paste" class="icon" />
+      <Icon v-else type="paste" class="icon" />{{ canPaste }}
     </div>
 
     <!-- <div class="iam-condition-batch-paste"
@@ -87,6 +87,12 @@
         default: false
       },
       params: {
+        type: Object,
+        default: () => {
+          return {};
+        }
+      },
+      aggregateParams: {
         type: Object,
         default: () => {
           return {};
@@ -161,8 +167,10 @@
           this.$emit('on-paste');
           return;
         }
+        const { actions, isAggregate, resource_type } = this.params;
         // 无限制时无需请求接口
-        if (this.params.resource_type && this.params.resource_type.condition.length === 0) {
+        // eslint-disable-next-line camelcase
+        if (resource_type && resource_type.condition.length === 0) {
           this.$emit('on-paste', {
             flag: true,
             data: []
@@ -171,8 +179,8 @@
         }
         this.pasteLoading = true;
         const params = {
-          resource_type: this.params.resource_type,
-          actions: this.params.actions.slice(0, 1)
+          resource_type,
+          actions: isAggregate ? actions : actions.slice(0, 1)
         };
         try {
           const { data } = await this.$store.dispatch('permApply/resourceBatchCopy', params);
