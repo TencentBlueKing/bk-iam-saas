@@ -32,7 +32,7 @@
       @click.stop="handlePaste"
     >
       <spin-loading v-if="pasteLoading" />
-      <Icon v-else type="paste" class="icon" />{{ canPaste }}
+      <Icon v-else type="paste" class="icon" />
     </div>
 
     <!-- <div class="iam-condition-batch-paste"

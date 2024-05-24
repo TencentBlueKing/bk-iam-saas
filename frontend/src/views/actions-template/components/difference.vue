@@ -571,7 +571,7 @@
                       // 是否都选择了实例
                       const isAllHasInstance = conditions.every(
                         (subItem) => subItem[0] !== 'none'
-                      ); // 这里可能有bug, 都设置了属性点击批量编辑时数据变了
+                      );
                       if (isAllHasInstance) {
                         const instances = conditions.map((subItem) =>
                           subItem.map((v) => v.instance || v.instances || [])
