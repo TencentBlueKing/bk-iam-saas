@@ -49,6 +49,7 @@ export default class SyncPolicy {
     // 已有权限是否需要动画提示
     this.isExistPermAnimation = false;
     this.tid = payload.tid || '';
+    this.mode_type = payload.mode_type || '';
     this.initExpired(payload);
     this.initRelatedResourceTypes(payload, { name: this.name, type: this.type }, flag);
     this.initRelatedGroupsTypes(payload, { name: this.name, type: this.type }, flag);

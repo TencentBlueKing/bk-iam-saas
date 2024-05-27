@@ -137,21 +137,26 @@
                     <div
                       v-for="(resourceType, resourceTypeIndex) in row.aggregateResourceType"
                       :key="resourceType.id"
-                      :class="['single-hide', 'relation-content-item']"
+                      :class="[
+                        'single-hide',
+                        'relation-content-item',
+                        { 'set-margin-bottom': $index === group.tableList.length - 1 }
+                      ]"
                     >
                       <div class="content">
                         <render-condition
                           :ref="`condition_${$index}_${resourceTypeIndex}_aggregateRef`"
                           :value="formatDisplayValue(row, resourceTypeIndex)"
-                          :can-view="false"
                           :is-empty="row.empty"
-                          :can-paste="row.canPaste"
                           :is-error="row.isError"
-                          :params="curCopyAggregateParams"
-                          @on-mouseover="handleConditionMouseover(row)"
+                          :can-view="false"
+                          :cur-copy-mode="curCopyMode"
+                          :can-paste="row.canPaste"
+                          @on-mouseover="handleAggregateConditionMouseover(row)"
                           @on-mouseleave="handleConditionMouseleave(row)"
                           @on-copy="handleAggregateInstanceCopy(row, $index, resourceTypeIndex)"
-                          @on-paste="handleAggregateInstancePaste(row)"
+                          @on-paste="handleAggregateInstancePaste(row, $index, resourceTypeIndex)"
+                          @on-batch-paste="handleAggregateInstanceBatchPaste(row, $index, resourceTypeIndex)"
                           @on-click="handleShowAggregateResourceSlider(row, $index, resourceTypeIndex, groupIndex)"
                         />
                       </div>
@@ -202,14 +207,15 @@
                           :value="content.value"
                           :params="curCopyParams"
                           :is-empty="content.empty"
+                          :is-error="content.isError"
+                          :cur-copy-mode="curCopyMode"
                           :can-view="row.canView"
                           :can-paste="content.canPaste"
-                          :is-error="content.isError"
-                          @on-mouseover="handleConditionMouseover(content, row)"
+                          @on-mouseover="handleConditionMouseover(content)"
                           @on-mouseleave="handleConditionMouseleave(content)"
                           @on-copy="handleInstanceCopy(content, groupIndex, contentIndex, $index, row)"
                           @on-paste="handleInstancePaste(...arguments, content)"
-                          @on-batch-paste="handleBatchInstancePaste(row, $index)"
+                          @on-batch-paste="handleInstanceBatchPaste(...arguments, content, $index, contentIndex)"
                           @on-click="handleShowResourceSlider(
                             row, content, contentIndex, $index, groupIndex, relatedIndex
                           )"
@@ -217,36 +223,6 @@
                       </div>
                     </div>
                   </div>
-                  <!-- <bk-popover
-                    :ref="`popover_${groupIndex}_${$index}_ref`"
-                    trigger="click"
-                    class="iam-template-sync-popover-cls"
-                    theme="light"
-                    placement="right"
-                    :on-hide="() => handleHidePopover(row)"
-                    :on-show="() => handleShowPopover(row)">
-                    <div class="edit-wrapper" v-if="!!row.showAction">
-                      <spin-loading v-if="row.loading" />
-                      <Icon type="edit-fill" v-else />
-                    </div>
-                    <div slot="content" class="sync-popover-content">
-                      <p class="refer-title" v-if="isShowBatchRefer(row)">
-                        <Icon type="down-angle" />{{ $t(`m.permTemplateDetail['批量引用已有的操作实例']`) }}
-                      </p>
-                      <template v-if="batchReferAction(row).length > 0">
-                        <p v-for="resItem in batchReferAction(row)"
-                          :key="resItem.id"
-                          class="cursor"
-                          @click.stop="handleReferInstance(resItem, row, group, groupIndex, $index)">
-                          {{ resItem.name }}
-                        </p>
-                      </template>
-                      <template v-if="!isShowBatchRefer(row) && batchReferAction(row).length === 0"
-                      >
-                        {{ $t(`m.common['暂无数据']`) }}
-                      </template>
-                    </div>
-                  </bk-popover> -->
                 </template>
                 <template v-if="['delete'].includes(row.mode_type)">
                   <div v-for="(related, relatedIndex) in row.resource_groups" :key="related.id">
@@ -450,7 +426,7 @@
         aggregateResourceParams: {},
         pagination: {
           current: 1,
-          limit: 5,
+          limit: 100,
           totalPage: 0
         },
         resourceSliderWidth: Math.ceil(window.innerWidth * 0.67 - 7) < 960
@@ -462,11 +438,6 @@
       ...mapGetters(['user']),
       isSuperManager () {
         return this.user.role.type === 'super_manager';
-      },
-      isShowBatchRefer () {
-        return (payload) => {
-          return this.cloneActions.some(item => item.action_id === payload.id);
-        };
       },
       isCurGroupEmpty () {
         return (payload) => {
@@ -593,15 +564,6 @@
             .resource_groups[this.curGroupIndex]
             .related_resource_types[this.curResourceIndex];
         return curData.selectionMode;
-      },
-      batchReferAction () {
-        return payload => {
-          const temp = this.cloneActions.find(item => item.action_id === payload.id);
-          if (temp) {
-              return temp.copy_from_actions;
-          }
-          return [];
-        };
       },
       isAddActionEmpty () {
         return this.curAddActions.length < 1;
@@ -804,23 +766,6 @@
         };
       },
 
-      getBatchAggregateCopyParams (payload, aggregateIndex) {
-        const { actions, aggregateResourceType, attribute, system_id, instance, instances, isAggregate } = payload;
-        return {
-          isAggregate,
-          resource_type: {
-            system_id,
-            type: aggregateResourceType[aggregateIndex].id,
-            condition: [{
-              id: '',
-              instances: instance || instances || [],
-              attributes: attribute || []
-            }]
-          },
-          actions
-        };
-      },
-
       // 格式化提交数据
       getData () {
         let flag = false;
@@ -991,36 +936,6 @@
         }
       },
 
-      async handleReferInstance (resItem, act, row, index, $index) {
-        window.changeDialog = true;
-        act.loading = true;
-        try {
-          const res = await this.$store.dispatch('permTemplate/getCloneAction', {
-            id: this.id,
-            data: {
-              action_id: act.id,
-              clone_from_action_id: resItem.id,
-              group_ids: this.syncGroupList.map(item => item.id)
-            }
-          });
-          const referList = res.data;
-          this.syncGroupList.forEach(item => {
-            const temp = referList.find(sub => sub.group_id === item.id);
-            if (temp) {
-              item.tableList.splice(index, 1, new SyncPolicy({ ...temp.policy, tag: 'add' }, 'detail'));
-            }
-          });
-          this.$refs[`popover_${index}_${$index}_ref`][0]
-            && this.$refs[`popover_${index}_${$index}_ref`][0].hideHandler();
-        } catch (e) {
-          this.messageAdvancedError(e);
-        } finally {
-          setTimeout(() => {
-            act.loading = false;
-          }, 500);
-        }
-      },
-
       async handleBatchRepeat (payload, mode) {
         if (this.isCurGroupAllEmpty(payload) && !['all'].includes(mode)) {
           this.messageWarn(this.$t(`m.common['暂无可批量复用实例']`), 3000);
@@ -1041,7 +956,6 @@
                 });
               });
             } else {
-              console.log(item);
               const tempAggregateData = [];
               item.aggregateResourceType.forEach((aggregateResourceItem) => {
                 if (`${aggregateResourceItem.system_id}${aggregateResourceItem.id}` === this.curCopyKey) {
@@ -1196,7 +1110,9 @@
       },
 
       handleInstanceCopy (payload, $index, subIndex, index, action) {
+        this.curCopyMode = 'normal';
         this.curCopyKey = `${payload.system_id}${payload.type}`;
+        this.curCopyData = cloneDeep(payload.condition);
         this.curCopyParams = this.getBatchCopyParams(action, payload);
         const conditionRef = this.$refs[`condition_${index}_${$index}_${subIndex}_ref`];
         if (conditionRef && conditionRef.length > 0) {
@@ -1206,11 +1122,20 @@
       },
 
       handleInstancePaste (payload, content) {
+        console.log(payload, content, 5555);
         if (!payload.flag) {
           return;
         }
-        console.log(this.curCopyKey, `${content.system_id}${content.type}`);
-        if (this.curCopyKey !== `${content.system_id}${content.type}`) {
+        // content没有且curCopyMode为aggregate代表粘贴的是聚合后的数据
+        if ((!content || !content.system_id) && ['aggregate'].includes(this.curCopyMode)) {
+          if (payload && this.curCopyKey !== `${payload.system_id}${payload.type}`) {
+            this.messageWarn(this.$t(`m.common['暂无可复制实例']`), 3000);
+            return;
+          }
+          this.handleInstanceBatchPaste(payload);
+          return;
+        }
+        if (!content || this.curCopyKey !== `${content.system_id}${content.type}`) {
           this.messageWarn(this.$t(`m.common['暂无可复制实例']`), 3000);
           return;
         }
@@ -1219,19 +1144,254 @@
         this.messageSuccess(this.$t(`m.info['粘贴成功']`), 3000);
       },
 
-      handleAggregateInstanceCopy (payload, index, aggregateIndex) {
+      handleInstanceBatchPaste  (payload, content, index) {
+        let tempCurData = ['none'];
+        let tempAggregateData = [];
+        if (this.curCopyMode === 'normal') {
+          if (!payload.flag) {
+            return;
+          }
+          // 预计算是否存在 聚合后的数据 可以粘贴
+          const flag = this.syncGroupList.some((item) => {
+            return item.tableList && item.tableList.some((v) => {
+              return !!v.isAggregate
+                && v.aggregateResourceType.some((sub) => `${sub.system_id}${sub.id}` === this.curCopyKey);
+            });
+          });
+          if (flag) {
+            if (this.curCopyData.length < 1) {
+              tempCurData = [];
+            } else {
+              if (this.curCopyData[0] !== 'none') {
+                tempCurData = this.curCopyData.map(item => {
+                  delete item.id;
+                  return item;
+                });
+                tempCurData.forEach((item, index) => {
+                  if (content.condition[index]) {
+                    if (content.condition[index].id) {
+                      item.id = content.condition[index].id;
+                    } else {
+                      item.id = '';
+                    }
+                  } else {
+                    item.id = '';
+                  }
+                });
+                const instances = this.curCopyData.map(item => item.instance);
+                const instanceData = instances[0][0];
+                tempAggregateData = instanceData.path.map(pathItem => {
+                  return {
+                    id: pathItem[0].id,
+                    name: pathItem[0].name
+                  };
+                });
+              }
+            }
+          }
+          if (payload.data.length === 0) {
+            this.syncGroupList.forEach((group) => {
+              group.tableList && group.tableList.forEach((item) => {
+                if (!item.isAggregate) {
+                  item.resource_groups.forEach(groupItem => {
+                    groupItem.related_resource_types.forEach(resItem => {
+                      if (`${resItem.system_id}${resItem.type}` === this.curCopyKey) {
+                        resItem.condition = [];
+                        resItem.isError = false;
+                      }
+                    });
+                  });
+                } else {
+                  if (`${item.aggregateResourceType[item.selectedIndex].system_id}${item.aggregateResourceType[item.selectedIndex].id}` === this.curCopyKey) {
+                    item.instances = cloneDeep(tempAggregateData);
+                    item.isError = false;
+                    if (!item.instances.length) {
+                      item.isNeedNoLimited = true;
+                      item.isNoLimited = true;
+                    }
+                    this.$emit('on-select', item);
+                  }
+                }
+              });
+            });
+          } else {
+            const curCopyData = JSON.parse(JSON.stringify(payload.data));
+            this.syncGroupList.forEach((group) => {
+              group.tableList && group.tableList.forEach(item => {
+                if (!item.isAggregate) {
+                  const curPasteData = cloneDeep(curCopyData.find(_ => _.id === item.id));
+                  if (curPasteData) {
+                    const systemId = this.isCreateMode && item.detail ? item.detail.system.id : this.systemId;
+                    const scopeAction = this.authorization[systemId] || [];
+                    // eslint-disable-next-line max-len
+                    const curScopeAction = cloneDeep(scopeAction.find(scopeItem => scopeItem.id === item.id));
+                    // eslint-disable-next-line max-len
+                    if (curScopeAction && curScopeAction.resource_groups && curScopeAction.resource_groups.length) {
+                      curScopeAction.resource_groups.forEach(curScopeActionItem => {
+                        curScopeActionItem.related_resource_types.forEach(curResItem => {
+                          console.log('curResItem', curResItem, curPasteData, this.curCopyParams.resource_type);
+                          if (`${curResItem.system_id}${curResItem.type}` === `${curPasteData.resource_type.system_id}${curPasteData.resource_type.type}`) {
+                            // eslint-disable-next-line max-len
+                            let canPasteName = [];
+                            let hasConditionData = [];
+                            let noConditionData = [];
+                            if (curResItem.condition && curResItem.condition.length) {
+                              hasConditionData = curResItem.condition[0].instances[0].path.reduce((p, v) => {
+                                p.push(v[0].name);
+                                return p;
+                              }, []);
+                            } else {
+                              // 处理分级管理员下多个无限制操作的批量粘贴
+                              if (this.curCopyParams.resource_type.condition
+                                && this.curCopyParams.resource_type.condition.length) {
+                                let instancesData = this.curCopyParams.resource_type.condition[0].instances;
+                                if (!instancesData) {
+                                  instancesData = this.curCopyParams.resource_type.condition[0].instance;
+                                }
+                                noConditionData = instancesData[0].path.reduce((p, v) => {
+                                  p.push(v[0].name);
+                                  return p;
+                                }, []);
+                              }
+                            }
+                            canPasteName = [...hasConditionData, ...noConditionData];
+                            // eslint-disable-next-line max-len
+                            item.resource_groups.forEach(groupItem => {
+                              groupItem.related_resource_types.forEach(resItem => {
+                                if (`${resItem.system_id}${resItem.type}` === `${curPasteData.resource_type.system_id}${curPasteData.resource_type.type}`) {
+                                  // eslint-disable-next-line max-len
+                                  const curPasteDataCondition = curPasteData.resource_type.condition;
+                                  // eslint-disable-next-line max-len
+                                  const condition = curPasteDataCondition.map(c => {
+                                    c.instances.forEach(j => {
+                                      // eslint-disable-next-line max-len
+                                      j.path = j.path.filter(e => {
+                                        if (!canPasteName.includes(e[0].name)) {
+                                          return false;
+                                        }
+                                        return canPasteName.includes(e[0].name);
+                                      });
+                                    });
+                                    return c;
+                                  // eslint-disable-next-line max-len
+                                  }).filter(d => !!(d.instances[0].path && d.instances[0].path.length));
+                                  console.log('condition', condition);
+                                  if (condition && condition.length) {
+                                    resItem.condition = condition.map(conditionItem => new Condition(conditionItem, '', 'add'));
+                                    resItem.isError = false;
+                                  }
+                                }
+                              });
+                            });
+                          }
+                        });
+                      });
+                    } else {
+                      item.resource_groups && item.resource_groups.forEach(groupItem => {
+                        groupItem.related_resource_types && groupItem.related_resource_types.forEach(resItem => {
+                          if (`${resItem.system_id}${resItem.type}` === `${curPasteData.resource_type.system_id}${curPasteData.resource_type.type}`) {
+                            resItem.condition = curPasteData.resource_type.condition.map(conditionItem => new Condition(conditionItem, '', 'add'));
+                            resItem.isError = false;
+                          }
+                        });
+                      });
+                    }
+                  }
+                } else {
+                  const scopeAction = cloneDeep(curCopyData.find(_ => item.actions.map((v) => v.id).includes(_.id)));
+                  item.aggregateResourceType && item.aggregateResourceType.forEach(aggregateResourceItem => {
+                    const systemId = this.isSuperManager
+                      ? aggregateResourceItem.system_id : item.system_id;
+                    if (`${systemId}${aggregateResourceItem.id}` === this.curCopyKey && scopeAction) {
+                      item.instances = cloneDeep(tempAggregateData);
+                      this.instanceKey = aggregateResourceItem.id;
+                      this.setNomalInstancesDisplayData(item, this.instanceKey);
+                      this.instanceKey = ''; // 重置
+                      item.isError = false;
+                      this.$set(item, 'isNoLimited', false);
+                      item.isNeedNoLimited = true;
+                    }
+                  });
+                  this.$emit('on-select', item);
+                }
+              });
+            });
+          }
+        } else {
+          tempAggregateData = this.curCopyData;
+          const instances = (() => {
+            const arr = [];
+            const { id, name, system_id } = this.curAggregateResourceType;
+            this.curCopyData.forEach(v => {
+              const curItem = arr.find(_ => _.type === id);
+              if (curItem) {
+                curItem.path.push([{
+                  id: v.id,
+                  name: v.name,
+                  system_id,
+                  type: id,
+                  type_name: name
+                }]);
+              } else {
+                arr.push({
+                  name,
+                  type: id,
+                  path: [[{
+                    id: v.id,
+                    name: v.name,
+                    system_id,
+                    type: id,
+                    type_name: name
+                  }]]
+                });
+              }
+            });
+            return arr;
+          })();
+          if (instances.length > 0) {
+            tempCurData = [new Condition({ instances }, '', 'add')];
+          }
+          this.syncGroupList.forEach((group) => {
+            group.tableList && group.tableList.forEach((item) => {
+              if (!item.isAggregate) {
+                item.resource_groups && item.resource_groups.forEach((groupItem) => {
+                  groupItem.related_resource_types
+                    && groupItem.related_resource_types.forEach((subItem, subItemIndex) => {
+                      if (`${subItem.system_id}${subItem.type}` === this.curCopyKey) {
+                        subItem.condition = cloneDeep(tempCurData);
+                        subItem.isError = false;
+                        this.$emit('on-resource-select', index, subItemIndex, subItem.condition);
+                      }
+                    });
+                });
+              } else {
+                if (`${item.aggregateResourceType.system_id}${item.aggregateResourceType.id}` === this.curCopyKey) {
+                  item.instances = cloneDeep(tempAggregateData);
+                  item.isError = false;
+                  this.$emit('on-select', item);
+                }
+              }
+            });
+          });
+        }
+        if (Object.prototype.toString.call(content) === '[object Object]') {
+          content.isError = false;
+        }
+        this.curCopyData = ['none'];
+      },
+
+      handleAggregateInstanceCopy (payload, index, resourceTypeIndex) {
         window.changeDialog = true;
-        const aggregateRef = this.$refs[`condition_${index}_${aggregateIndex}_aggregateRef`];
+        const aggregateRef = this.$refs[`condition_${index}_${resourceTypeIndex}_aggregateRef`];
         const { aggregationId, aggregateResourceType, isNoLimited, instancesDisplayData } = payload;
-        const { id, system_id: systemId } = aggregateResourceType[aggregateIndex];
+        const { id, system_id: systemId } = aggregateResourceType[resourceTypeIndex];
         this.curCopyMode = 'aggregate';
         this.instanceKey = id;
         this.curCopyDataId = aggregationId;
         this.curCopyNoLimited = isNoLimited;
         this.curCopyKey = `${systemId}${id}`;
-        this.curAggregateResourceType = aggregateResourceType[aggregateIndex];
+        this.curAggregateResourceType = aggregateResourceType[resourceTypeIndex];
         this.curCopyData = cloneDeep(instancesDisplayData[this.instanceKey]);
-        this.curCopyAggregateParams = this.getBatchAggregateCopyParams(payload, aggregateIndex);
         this.messageSuccess(this.$t(`m.info['实例复制']`), 3000);
         if (aggregateRef && aggregateRef.length) {
           aggregateRef[0].setImmediatelyShow(true);
@@ -1246,7 +1406,7 @@
           if (this.curCopyData[0] !== 'none') {
             const instances = this.curCopyData.map(item => item.instance);
             const instanceData = instances[0][0];
-            tempInstances = instanceData.path.map(pathItem => {
+            tempInstances = instanceData.path.map((pathItem) => {
               return {
                 id: pathItem[0].id,
                 name: pathItem[0].name
@@ -1259,10 +1419,11 @@
         }
         payload = Object.assign(payload, { isError: false, instances: tempInstances });
         this.messageSuccess(this.$t(`m.info['粘贴成功']`), 3000);
-        this.$emit('on-select', payload);
+        console.log(tempInstances, this.curCopyData);
       },
 
-      handleBatchInstancePaste (payload, content, $index, subIndex, index) {
+      handleAggregateInstanceBatchPaste (payload, index, resourceTypeIndex) {
+        console.log(payload);
         let tempCurData = ['none'];
         let tempAggregateData = [];
         if (this.curCopyMode === 'normal') {
@@ -1317,7 +1478,7 @@
         }
         payload.tableList.forEach((item) => {
           if (!item.isAggregate) {
-            item.resource_groups.forEach(groupItem => {
+            item.resource_groups.forEach((groupItem) => {
               groupItem.related_resource_types && groupItem.related_resource_types.forEach(subItem => {
                 if (`${subItem.system_id}${subItem.type}` === this.curCopyKey) {
                   subItem.condition = this.curCopyNoLimited ? [] : cloneDeep(tempCurData);
@@ -1326,7 +1487,7 @@
               });
             });
           } else {
-            item.aggregateResourceType.forEach(aggregateResourceItem => {
+            item.aggregateResourceType.forEach((aggregateResourceItem) => {
               if (`${aggregateResourceItem.system_id}${aggregateResourceItem.id}` === this.curCopyKey) {
                 if (Object.keys(item.instancesDisplayData).length) {
                   if (this.curCopyNoLimited) {
@@ -1353,7 +1514,7 @@
         });
         payload.isError = false;
         this.curCopyData = ['none'];
-        const conditionRef = this.$refs[`condition_${index}_${$index}_${subIndex}_ref`][0];
+        const conditionRef = this.$refs[`condition_${index}_${resourceTypeIndex}_aggregateRef`][0];
         conditionRef && conditionRef.setImmediatelyShow(false);
         this.messageSuccess(this.$t(`m.info['批量粘贴成功']`), 3000);
       },
@@ -1598,16 +1759,26 @@
         }
         return [];
       },
-      
-      handleConditionMouseover (payload, row) {
-        payload.canPaste = true;
-        // if (Object.keys(this.curCopyParams).length < 1) {
-        //   return;
-        // }
 
-        // if (this.curCopyKey === `${payload.system_id}${payload.type}`) {
-        //   payload.canPaste = true;
-        // }
+      handleConditionMouseover (payload) {
+        if (Object.keys(this.curCopyParams).length < 1 && this.curCopyMode === 'normal') {
+          return;
+        }
+        if (this.curCopyData[0] === 'none' && this.curCopyMode === 'aggregate') {
+          return;
+        }
+        if (this.curCopyKey === `${payload.system_id}${payload.type}`) {
+          payload.canPaste = true;
+        }
+      },
+
+      handleAggregateConditionMouseover  (payload) {
+        if (this.curCopyData[0] === 'none') {
+          return;
+        }
+        if (this.curCopyKey === `${payload.aggregateResourceType.system_id}${payload.aggregateResourceType.id}`) {
+          payload.canPaste = true;
+        }
       },
 
       handleConditionMouseleave (payload) {
@@ -1686,6 +1857,7 @@
       setAggregateTableData (payload) {
         this.syncGroupList = [...payload];
         this.tableKey = +new Date();
+        console.log(this.syncGroupList, '最新数据');
       },
 
       setInstancesDisplayData (data) {

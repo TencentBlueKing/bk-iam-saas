@@ -316,7 +316,8 @@ export const m = {
         '不聚合': 'Not aggregated',
         '一键填充': 'One click fill',
         '全部无限制': 'All unlimited',
-        '定位未填写': 'Location not filled in'
+        '定位未填写': 'Location not filled in',
+        '暂无可一键填充实例': 'There are currently no instances that can be filled with one click'
     },
     // 校验
     verify: {

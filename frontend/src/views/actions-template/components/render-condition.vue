@@ -26,15 +26,13 @@
       <Icon type="copy" class="icon" />
     </div>
     <div
-      v-if="canOperate && canPaste"
       v-bk-tooltips="{ content: $t(`m.common['粘贴']`) }"
-      :class="['operate-icon', { 'is-disabled': isPasteDisabled }]"
+      :class="['operate-icon', { 'is-disabled': isPasteDisabled() }]"
       @click.stop="handlePaste"
     >
       <spin-loading v-if="pasteLoading" />
       <Icon v-else type="paste" class="icon" />
     </div>
-
     <!-- <div class="iam-condition-batch-paste"
       v-if="(canOperate && canPaste) || immediatelyShow">
       <section class="batch-paste-wrapper">
@@ -86,13 +84,10 @@
         type: Boolean,
         default: false
       },
-      params: {
-        type: Object,
-        default: () => {
-          return {};
-        }
+      curCopyMode: {
+        type: String
       },
-      aggregateParams: {
+      params: {
         type: Object,
         default: () => {
           return {};
@@ -105,7 +100,8 @@
         isActive: false,
         immediatelyShow: false,
         isLoading: false,
-        pasteLoading: false
+        pasteLoading: false,
+        iconEnter: false
       };
     },
     computed: {
@@ -119,7 +115,12 @@
         return this.isLoading || this.pasteLoading;
       },
       isPasteDisabled () {
-        return Object.keys(this.params).length < 1;
+        return () => {
+          if (['aggregate'].includes(this.curCopyMode)) {
+            return !(this.canOperate && this.canPaste);
+          }
+          return !(Object.keys(this.params).length > 0 && this.canOperate && this.canPaste);
+        };
       }
     },
     watch: {
@@ -149,7 +150,7 @@
 
       handleMouseleave () {
         this.isActive = false;
-        this.immediatelyShow = false;
+        // this.immediatelyShow = false;
         this.$emit('on-mouseleave');
       },
 
@@ -162,13 +163,12 @@
       },
 
       async handlePaste () {
-        console.log(this.params, 5455);
-        if (this.isPasteDisabled) {
+        // 无限制时无需请求接口
+        if (this.isPasteDisabled()) {
           this.$emit('on-paste');
           return;
         }
         const { actions, isAggregate, resource_type } = this.params;
-        // 无限制时无需请求接口
         // eslint-disable-next-line camelcase
         if (resource_type && resource_type.condition.length === 0) {
           this.$emit('on-paste', {
@@ -198,7 +198,6 @@
             flag: false,
             data: null
           });
-          console.error(e);
           this.messageAdvancedError(e);
         } finally {
           this.pasteLoading = false;
@@ -206,7 +205,7 @@
       },
 
       async handleBatchPaste () {
-        if (Object.keys(this.params).length < 1) {
+        if (this.isPasteDisabled()) {
           this.$emit('on-batch-paste');
           return;
         }

@@ -722,6 +722,14 @@
               }
             }
           }
+          &:last-child {
+            .actions-name,
+            .resource-instance-name {
+              &:last-child {
+                border-bottom: 0;
+              }
+            }
+          }
         }
       }
       .group-perm-table-source {
@@ -746,7 +754,7 @@
               }
               &.multiple-temp-action-item {
                 .source-name {
-                  /* transform: translate(0, -22px); */
+                  transform: translateY(-22px);
                   margin-top: -1px;
                 }
               }
@@ -759,6 +767,12 @@
             }
             &:last-child {
               border-bottom: 0;
+              .multiple-temp-action-item {
+                .source-name {
+                  transform: translate(0, 0);
+                }
+              }
+              .source-name,
               .actions-name,
               .resource-instance-name {
                 border-bottom: 0;

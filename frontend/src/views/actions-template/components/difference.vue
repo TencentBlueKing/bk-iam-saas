@@ -14,6 +14,7 @@
                     <bk-button
                       theme="primary"
                       class="fill"
+                      :loading="fillLoading"
                       @click.stop="handleAllInstanceFill"
                       v-bk-tooltips="{ content: fillTip }"
                     >
@@ -176,6 +177,10 @@
         type: Array,
         default: () => []
       },
+      allSyncGroupActions: {
+        type: Array,
+        default: () => []
+      },
       linearActions: {
         type: Array,
         default: () => []
@@ -192,6 +197,7 @@
         isDrag: false,
         prevLoading: false,
         disabled: true,
+        fillLoading: false,
         aggregateType: 'no-aggregate',
         fillTip: this.$t(`m.actionsTemplate['引用已有的操作实例一键填充']`),
         curLocationIndex: 0,
@@ -257,6 +263,21 @@
           right: `${this.dragRealityWidth}px`
         };
       },
+      batchFillActions () {
+        return (payload) => {
+          const temp = this.cloneActions.find((item) => {
+            if (payload.isAggregate) {
+              const actionsList = payload.actions.map((v) => v.id);
+              return actionsList.includes(item.action_id);
+            }
+            return item.action_id === payload.id;
+          });
+          if (temp) {
+            return temp.copy_from_actions;
+          }
+          return [];
+        };
+      },
       isSubmitDisabled () {
         return () => {
           const tableList = this.allSyncGroupList
@@ -284,12 +305,12 @@
       navStick (value) {
         this.navWidth = value ? 260 : 60;
       },
-      actions: {
+      allSyncGroupActions: {
         async handler (value) {
-          const tempActions = await this.handleGetAddAction(value);
+          const tempActions = this.handleGetAddAction(value);
           this.addActions = tempActions;
           this.isNoAddActions = this.addActions.length < 1;
-          console.log(tempActions, '新增的操作');
+          await this.fetchAggregationAction();
         },
         immediate: true
       },
@@ -306,9 +327,6 @@
         immediate: true
       }
     },
-    async created () {
-      await this.fetchAggregationAction();
-    },
     mounted () {
       window.addEventListener('resize', this.handleResizeView);
       this.$once('hook:beforeDestroy', () => {
@@ -324,17 +342,9 @@
             system_ids: systemId
           });
           if (data.aggregations && data.aggregations.length > 0) {
-            const actionIds = [];
+            // 过滤掉不存在于当前用户组下的操作
             const aggregations = [];
-            // 过滤掉不存在当前系统下的操作
-            this.policyList.forEach((item) => {
-              actionIds.push(...item.actions.map((v) => v.id));
-              if (item.sub_groups && item.sub_groups.length > 0) {
-                item.sub_groups.forEach((subItem) => {
-                  actionIds.push(...subItem.actions.map(_ => _.id));
-                });
-              }
-            });
+            const actionIds = this.addActions.map((item) => item.id);
             data.aggregations.forEach((item) => {
               const { actions, aggregate_resource_types } = item;
               const curActions = actions.filter((item) => actionIds.includes(item.id));
@@ -345,8 +355,7 @@
                 });
               }
             });
-            this.aggregationsBackup = cloneDeep(aggregations);
-            this.aggregations = aggregations;
+            [this.aggregations, this.aggregationsBackup] = [cloneDeep(aggregations), cloneDeep(aggregations)];
           }
         } catch (e) {
           this.messageAdvancedError(e);
@@ -468,17 +477,86 @@
         return typeMap[payload]();
       },
 
-      handleAllInstanceFill () {
-        const { syncGroupList, isCurGroupAllEmpty } = this.$refs.syncRef;
+      async handleAllInstanceFill () {
+        const syncGroupList = cloneDeep(this.allSyncGroupList);
         if (this.$refs.syncRef && syncGroupList.length) {
-          const isEmpty = syncGroupList.every((item) => isCurGroupAllEmpty(item));
-          if (isEmpty) {
-            this.messageWarn(this.$t(`m.common['暂无可批量复用实例']`), 3000);
+          const hasFillGroup = syncGroupList.filter((item) =>
+            item.tableList.some((v) => this.batchFillActions(v).length > 0)
+          );
+          if (!hasFillGroup.length) {
+            this.messageWarn(this.$t(`m.common['暂无可一键填充实例']`), 3000);
             return;
           }
-          syncGroupList.forEach((item) => {
-            this.$refs.syncRef.handleBatchRepeat(item, 'all');
+          this.fillLoading = true;
+          // 过滤掉不能引用的操作
+          const fillActions = this.cloneActions.filter((item) =>
+            this.addActions.map((v) => v.id).includes(item.action_id)
+          );
+          const groupIdList = hasFillGroup.map((item) => item.id);
+          try {
+            for (let i = 0; i < fillActions.length; i++) {
+              const { action_id, copy_from_actions } = fillActions[i];
+              if (copy_from_actions.length) {
+                const { data } = await this.$store.dispatch('permTemplate/getCloneAction', {
+                  id: this.id,
+                  data: {
+                    action_id,
+                    clone_from_action_id: copy_from_actions[0].id,
+                    group_ids: groupIdList
+                  }
+                });
+                syncGroupList.forEach((item) => {
+                  const temp = data.find(sub => sub.group_id === item.id);
+                  if (temp) {
+                    const curTableIndex = item.tableList.findIndex((v) => {
+                      if (['add'].includes(v.mode_type)) {
+                        if (v.isAggregate) {
+                          return v.actions.map((sub) => sub.id).includes(temp.policy.id);
+                        }
+                        return v.id === temp.policy.id;
+                      }
+                    });
+                    if (curTableIndex > -1) {
+                      item.tableList.splice(curTableIndex, 1, new SyncPolicy({ ...temp.policy, tag: 'add', mode_type: 'add' }, 'detail'));
+                    }
+                  }
+                });
+              }
+            }
+            this.$nextTick(() => {
+              this.$refs.syncRef && this.$refs.syncRef.setAggregateTableData(syncGroupList);
+            });
+          } catch (e) {
+            this.messageAdvancedError(e);
+          } finally {
+            this.fillLoading = false;
+          }
+        }
+      },
+
+      async handleReferInstance (resItem, act, row, index, $index) {
+        window.changeDialog = true;
+        this.fillLoading = true;
+        try {
+          const res = await this.$store.dispatch('permTemplate/getCloneAction', {
+            id: this.id,
+            data: {
+              action_id: act.id,
+              clone_from_action_id: resItem.id,
+              group_ids: this.syncGroupList.map(item => item.id)
+            }
           });
+          const referList = res.data;
+          this.syncGroupList.forEach(item => {
+            const temp = referList.find(sub => sub.group_id === item.id);
+            if (temp) {
+              item.tableList.splice(index, 1, new SyncPolicy({ ...temp.policy, tag: 'add' }, 'detail'));
+            }
+          });
+        } catch (e) {
+          this.messageAdvancedError(e);
+        } finally {
+          this.fillLoading = false;
         }
       },
 
@@ -534,11 +612,10 @@
                 const filterList = group.tableList.filter((v) => {
                   return item.actions.map((v) => v.id).includes(v.id) && ['add'].includes(v.mode_type);
                 });
-                const addList = cloneDeep(
-                  filterList.filter((subItem) =>
-                    !this.aggregationsTableData.map((v) => v.id).includes(subItem.id)
-                  )
-                );
+                const addList = filterList.filter((item) =>
+                  !this.aggregationsTableData.map((v) => v.id).includes(item.id)
+                )
+                ;
                 if (addList.length > 0) {
                   this.aggregationsTableData.push(...addList);
                 }
@@ -609,7 +686,7 @@
                   return new AggregationPolicy({ ...item, ...{ mode_type: 'add' } });
                 });
               group.tableList = group.tableList.filter((item) => !actionIds.includes(item.id));
-              group.tableList.unshift(...aggregations);
+              group.tableList.push(...aggregations);
               return;
             }
             // 如果是非聚合操作，需要过滤掉聚合操作

@@ -269,6 +269,7 @@
         :select-actions="curSelectActions"
         :select-actions-back="curSelectActionsBack"
         :all-actions="allCustomActionList"
+        :all-sync-group-actions="allSyncGroupActions"
         :default-checked-actions="defaultCheckedActions"
         :linear-actions="linearAction"
       />
@@ -345,6 +346,7 @@
         defaultCheckedActions: [],
         hasSelectedActions: [],
         curDeleteActions: [],
+        allSyncGroupActions: [],
         requestQueue: ['actions', 'commonActions'],
         leavePageForm: {},
         leavePageFormBack: {},
@@ -1106,8 +1108,10 @@
               }
             };
             const list = cloneDeep(this.allCustomActionListBack);
+            // 当前新增和删除的操作
+            this.allSyncGroupActions = getHasSelectedActions(actionIdList, list, this.defaultCheckedActions);
             this.$store.commit('permTemplate/updatePreActionIds', actionIdList);
-            this.$store.commit('permTemplate/updateAction', getHasSelectedActions(actionIdList, list, this.defaultCheckedActions));
+            this.$store.commit('permTemplate/updateAction', this.allSyncGroupActions);
             await addPreUpdateInfo(params);
           }
         } catch (e) {

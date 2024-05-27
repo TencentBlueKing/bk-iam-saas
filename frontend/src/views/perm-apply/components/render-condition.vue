@@ -30,7 +30,6 @@
       @click.stop="handleCopy">
       <Icon type="copy" />
     </div>
-
     <!-- 批量粘贴 -->
     <div class="operate-icon"
       :title="$t(`m.common['批量粘贴']`)"
