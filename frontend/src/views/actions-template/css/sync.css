@@ -129,6 +129,9 @@
                 margin-bottom: 1px;
               }
             }
+            .no-instance-data {
+              padding: 0 15px;
+            }
           }
         }
         &.multiple-resource-type-instance {
@@ -159,6 +162,11 @@
             }
           }
         }
+        &.no-resource-type-instance {
+          &:hover {
+            border-bottom: 1px solid #dfe0e5;
+          }
+        }
       }
       .resource-instance-delete-cell-cls {
         .cell {
@@ -172,6 +180,9 @@
                 text-decoration: line-through;
                 word-break: break-all;
               }
+            }
+            .no-instance-data {
+              padding: 0 15px;
             }
           }
         }

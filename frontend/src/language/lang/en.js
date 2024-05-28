@@ -517,6 +517,7 @@ export const m = {
         '搜索关键字': 'Search Keywords',
         '无资源ID，无法预览': 'No resource ID, unable to preview',
         '暂无可批量复制包含有属性条件的资源实例': 'There are currently no resource instances that can be batch copied with attribute conditions',
+        '暂无可批量复用的资源实例': 'There are currently no batch reusable resource instances available',
         '(GMT-12:00) 国际换线时间': '(GMT-12:00) International Line Change Time',
         '(GMT-11:00) 中途岛时间': '(GMT-11:00) Midway Island Time',
         '(GMT-10:00) 夏威夷时间': '(GMT-10:00) Hawaii Time',

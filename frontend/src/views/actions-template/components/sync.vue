@@ -107,20 +107,23 @@
               </div>
             </div>
             <div class="resource-type-content" v-else>
-              <div
-                v-for="resource in row.resource_groups"
-                :key="resource.id"
-                class="resource-type-list"
-              >
+              <template v-if="row.resource_groups && row.resource_groups.length > 0">
                 <div
-                  v-bk-tooltips="{ content: related.name, placement: 'left-start' }"
-                  v-for="related in resource.related_resource_types"
-                  :key="related.type"
-                  :class="['single-hide', 'resource-type-item', `resource-type-item-${row.mode_type}`]"
+                  v-for="resource in row.resource_groups"
+                  :key="resource.id"
+                  class="resource-type-list"
                 >
-                  {{ related.name }}
+                  <div
+                    v-bk-tooltips="{ content: related.name, placement: 'left-start' }"
+                    v-for="related in resource.related_resource_types"
+                    :key="related.type"
+                    :class="['single-hide', 'resource-type-item', `resource-type-item-${row.mode_type}`]"
+                  >
+                    {{ related.name }}
+                  </div>
                 </div>
-              </div>
+              </template>
+              <div v-else>{{ $t(`m.common['无']`) }}</div>
             </div>
           </template>
         </bk-table-column>
@@ -184,7 +187,7 @@
                   </div>
                 </template>
               </template>
-              <template v-else>{{ $t(`m.common['无需关联实例']`) }}</template>
+              <div v-else class="no-instance-data">{{ $t(`m.common['无需关联实例']`) }}</div>
             </div>
             <div class="relation-content-wrapper" v-else>
               <template v-if="!row.isEmpty">
@@ -245,7 +248,7 @@
                   </div>
                 </template>
               </template>
-              <template v-else>{{ $t(`m.common['无需关联实例']`) }}</template>
+              <div v-else class="no-instance-data">{{ $t(`m.common['无需关联实例']`) }}</div>
             </div>
           </template>
         </bk-table-column>
@@ -737,6 +740,9 @@
             if (hasMultipleResourceType) {
               return 'resource-instance-add-cell-cls multiple-resource-type-instance';
             }
+            if ((!row.resource_groups || row.resource_groups.length === 0) && !row.isAggregate) {
+              return 'resource-instance-add-cell-cls no-resource-type-instance';
+            }
             return 'resource-instance-add-cell-cls';
           }
           if (['delete'].includes(row.mode_type)) {
@@ -1001,8 +1007,8 @@
         }
       },
 
-      async handleBatchRepeat (payload, mode) {
-        if (this.isCurGroupAllEmpty(payload) && !['all'].includes(mode)) {
+      async handleBatchRepeat (payload) {
+        if (this.isCurGroupAllEmpty(payload)) {
           this.messageWarn(this.$t(`m.common['暂无可批量复用实例']`), 3000);
           return;
         }
@@ -1019,34 +1025,10 @@
                   }
                 });
               });
-            } else {
-              const tempAggregateData = [];
-              item.aggregateResourceType.forEach((aggregateResourceItem) => {
-                if (`${aggregateResourceItem.system_id}${aggregateResourceItem.id}` === this.curCopyKey) {
-                  if (Object.keys(item.instancesDisplayData).length) {
-                    if (this.curCopyNoLimited) {
-                      item = Object.assign(item, { isNoLimited: true, instances: [] });
-                    } else {
-                      item = Object.assign(item, {
-                        isNoLimited: false,
-                        instances: this.setInstanceData(item.instancesDisplayData)
-                      });
-                    }
-                  } else {
-                    if (this.curCopyNoLimited) {
-                      item = Object.assign(item, { isNoLimited: true, instances: [] });
-                    } else {
-                      item = Object.assign(item, { isNoLimited: false, instances: cloneDeep(tempAggregateData) });
-                    }
-                    this.setInstancesDisplayData(item);
-                  }
-                }
-              });
-              item.isError = false;
             }
           }
         });
-        // 如果是无限制或者空资源实例无需调用接口，否则会导致报错
+        // 如果是无限制或者空资源实例或聚合后的数据无需调用接口，否则会导致报错
         const paramsList = relatedList.filter((item) =>
           item.resource_type.condition
           && (item.resource_type.condition.length > 0 && item.resource_type.condition[0] !== 'none')
@@ -1054,36 +1036,61 @@
         );
         // 处理无限制的数据
         const noLimitedList = relatedList.filter((item) => item.resource_type.condition.length === 0);
-        if (noLimitedList.length) {
-          for (let i = 0; i < noLimitedList.length; i++) {
-            this.syncGroupList.forEach((item, index) => {
-              this.handleSetNoLimitedData(item, index, noLimitedList[i]);
+        // 当前批量复用的数据是否存在聚合数据
+        const hasAggregateData = payload.tableList.filter((item) => item.isAggregate);
+        // if (noLimitedList.length) {
+        // for (let i = 0; i < noLimitedList.length; i++) {
+        //   this.syncGroupList.forEach((item, index) => {
+        //    this.handleSetNoLimitedData(item, index, noLimitedList[i]);
+        //   });
+        // }
+        if (noLimitedList.length > 0 || hasAggregateData.length > 0) {
+          this.syncGroupList.forEach((item) => {
+            item.tableList.forEach((v, i) => {
+              const curTableData = payload.tableList.find((sub) => sub.id === v.id && ['add'].includes(v.mode_type));
+              if (curTableData) {
+                if (curTableData.isAggregate) {
+                  v = new AggregationPolicy({ ...curTableData, ...{ isNeedNoLimited: true, mode_type: 'add' } });
+                  item.tableList.splice(i, 1, v);
+                } else {
+                  v.resource_groups = cloneDeep(curTableData.resource_groups);
+                }
+              }
             });
-          }
+          });
         }
         if (paramsList.length > 0) {
           try {
             for (let i = 0; i < paramsList.length; i++) {
               const { data } = await this.$store.dispatch('permApply/resourceBatchCopy', paramsList[i]);
-              const { resource_type } = paramsList[i];
               if (data && data.length) {
+                const { resource_type } = paramsList[i];
                 this.syncGroupList.forEach((item) => {
                   item.tableList.forEach((v) => {
-                    const curPasteData = data.find(_ => _.id === v.id);
-                    if (curPasteData) {
-                      v.resource_groups && v.resource_groups.forEach(groupItem => {
-                        groupItem.related_resource_types.forEach(subItem => {
-                          if (`${subItem.system_id}${subItem.type}` === `${resource_type.system_id}${resource_type.type}`) {
-                            subItem.condition = curPasteData.resource_type.condition.map(conditionItem => new Condition(conditionItem, '', 'add'));
-                            subItem.isError = false;
-                          }
+                    const curPasteData = data.find((sub) => sub.id === v.id);
+                    const curTableData = payload.tableList.find((sub) => sub.id === v.id);
+                    if (curPasteData && curTableData) {
+                      if (curTableData.resource_groups) {
+                        const isSameData = curTableData.resource_groups.some((sub) => {
+                          return sub.related_resource_types.some((subItem) => `${subItem.system_id}${subItem.type}` === `${resource_type.system_id}${resource_type.type}`);
                         });
-                      });
+                        if (isSameData) {
+                          v.resource_groups = cloneDeep(curTableData.resource_groups);
+                        }
+                      }
+                      // v.resource_groups && v.resource_groups.forEach((groupItem) => {
+                      //   groupItem.related_resource_types.forEach((subItem) => {
+                      //     if (`${subItem.system_id}${subItem.type}` === `${resource_type.system_id}${resource_type.type}`) {
+                      //       subItem.condition = curPasteData.resource_type.condition.map(conditionItem => new Condition(conditionItem, '', 'add'));
+                      //       subItem.isError = false;
+                      //     }
+                      //   });
+                      // });
                     }
                   });
                 });
               } else {
-                this.messageWarn(this.$t(`m.info['暂无可批量复制包含有属性条件的资源实例']`), 3000);
+                this.messageWarn(this.$t(`m.info['暂无可批量复用的资源实例']`), 3000);
               }
             }
           } catch (e) {
@@ -1126,12 +1133,12 @@
                         types.isError = false;
                       }
                     }
-                    // 如果是有判断条件才设置无限制
-                    if (extraData && extraData.resource_type) {
-                      if (`${types.system_id}${types.type}` === `${extraData.resource_type.system_id}${extraData.resource_type.type}`) {
-                        types = Object.assign(types, { isError: false, condition: [] });
-                      }
-                    }
+                    // 如果是有批量复用场景
+                    // if (extraData && extraData.resource_type) {
+                    //   if (`${types.system_id}${types.type}` === `${extraData.resource_type.system_id}${extraData.resource_type.type}`) {
+                    //     types = Object.assign(types, { isError: false, condition: [] });
+                    //   }
+                    // }
                   });
                 });
               } else {
@@ -1676,7 +1683,7 @@
           this.aggregateIndex,
           new AggregationPolicy({ ...curAggregateItem, ...{ isNeedNoLimited: true, mode_type: 'add' } })
         );
-        this.$emit('on-select', this.syncGroupList[this.curIndex].tableList[this.aggregateIndex]);
+        // this.$emit('on-select', this.syncGroupList[this.curIndex].tableList[this.aggregateIndex]);
       },
 
       handleViewResource (payload, relatedIndex, typesIndex) {

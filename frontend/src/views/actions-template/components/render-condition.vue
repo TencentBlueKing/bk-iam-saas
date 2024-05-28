@@ -26,7 +26,7 @@
       <Icon type="copy" class="icon" />
     </div>
     <div
-      v-bk-tooltips="{ content: $t(`m.common['粘贴']`) }"
+      v-bk-tooltips="{ content: $t(`m.common['粘贴']`) , disabled: !(canOperate && canPaste) }"
       :class="['operate-icon', { 'is-disabled': isPasteDisabled() }]"
       @click.stop="handlePaste"
     >
@@ -165,7 +165,7 @@
       async handlePaste () {
         // 无限制时无需请求接口
         if (this.isPasteDisabled()) {
-          this.$emit('on-paste');
+          // this.$emit('on-paste');
           return;
         }
         const { actions, isAggregate, resource_type } = this.params;

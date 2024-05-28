@@ -231,7 +231,11 @@
       ...mapGetters('permTemplate', ['actions', 'cloneActions', 'preGroupOnePage']),
       ...mapGetters(['navStick']),
       isAggregateDisabled () {
-        return this.isNoAddActions;
+        const addActionsList = this.addActions.map((v) => v.id);
+        const noAggregate = this.aggregations.some((item) => {
+         return item.actions.filter((v) => addActionsList.includes(v.id)).length < 2;
+        });
+        return this.isNoAddActions || noAggregate;
       },
       leftStyle () {
         if (this.dragWidth > 0) {
