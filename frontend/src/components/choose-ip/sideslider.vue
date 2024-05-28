@@ -306,9 +306,7 @@
           });
           this.emptyData = formatCodeData(code, this.emptyData, data.results.length === 0);
         } catch (e) {
-          console.error(e);
-          const { code } = e;
-          this.emptyData = formatCodeData(code, this.emptyData);
+          this.emptyData = formatCodeData(e.code, this.emptyData);
           this.resetData();
           this.messageAdvancedError(e);
         } finally {

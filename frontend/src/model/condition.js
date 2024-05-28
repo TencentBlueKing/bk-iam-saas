@@ -49,17 +49,17 @@ export default class Condition {
     this.flag = flag;
     this.selectionMode = payload.selection_mode || 'all';
     if (this.selectionMode === 'all') {
-      this.initIntance(payload, type, this.flag, instanceCanDelete, instanceNotDisabled);
+      this.initInstance(payload, type, this.flag, instanceCanDelete, instanceNotDisabled);
       this.initAttribute(payload, type, this.flag, attributeCanDelete);
     } else if (['instance', 'instance:paste'].includes(this.selectionMode)) {
-      this.initIntance(payload, type, this.flag, false, instanceNotDisabled);
+      this.initInstance(payload, type, this.flag, false, instanceNotDisabled);
       this.instanceCanDelete = flag !== '';
     } else {
       this.initAttribute(payload, type, this.flag);
       this.attributeCanDelete = flag !== '';
     }
   }
-  initIntance (payload, type, flag, instanceCanDelete, instanceNotDisabled) {
+  initInstance (payload, type, flag, instanceCanDelete, instanceNotDisabled) {
     if (type === 'init') {
       this.instance = [];
       this.instanceCanDelete = instanceCanDelete;

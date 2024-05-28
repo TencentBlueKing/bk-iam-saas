@@ -107,7 +107,7 @@
                 theme="primary"
                 :loading="isLoading"
                 :disabled="isSubmitDisabled()"
-                @click.stop="handleNextStep"
+                @click.stop="handleSubmitStep"
               >
                 {{ $t(`m.common['提交']`) }}
               </bk-button>
@@ -280,13 +280,15 @@
       },
       isSubmitDisabled () {
         return () => {
-          const tableList = this.allSyncGroupList
-            .map((item) => item.tableList)
-            .flat(Infinity);
+          const tableList = this.allSyncGroupList.map((item) => item.tableList).flat(Infinity);
           const hasEmpty = tableList.some((item) => {
-            return (
-              item.resource_groups
-              && item.resource_groups.some((v) => {
+            if (item.isAggregate) {
+              if (!item.instances) {
+                item.instances = item.instance;
+              }
+              return item.instances && item.instances.length === 0 && !item.isNoLimited;
+            } else {
+              return item.resource_groups && item.resource_groups.some((v) => {
                 return (
                   v.related_resource_types
                   && v.related_resource_types.some(
@@ -294,8 +296,8 @@
                       related.condition.length === 1 && related.condition[0] === 'none'
                   )
                 );
-              })
-            );
+              });
+            }
           });
           return !!hasEmpty;
         };
@@ -310,6 +312,7 @@
           const tempActions = this.handleGetAddAction(value);
           this.addActions = tempActions;
           this.isNoAddActions = this.addActions.length < 1;
+          console.log(this.addActions, '新增操作');
           await this.fetchAggregationAction();
         },
         immediate: true
@@ -362,7 +365,7 @@
         }
       },
 
-      async handleNextStep () {
+      async handleSubmitStep () {
         if (this.isNoAddActions) {
           this.handleUpdateCommit();
           return;
@@ -371,16 +374,17 @@
         if (flag) {
           return;
         }
-        groups.forEach((item) => {
-          item.actions.forEach((sub) => {
-            if (!sub.resource_groups || !sub.resource_groups.length) {
-              sub.resource_groups
-                = sub.related_resource_types && sub.related_resource_types.length
-                  ? [{ id: '', related_resource_types: sub.related_resource_types }]
-                  : [];
-            }
-          });
-        });
+        // groups.forEach((item) => {
+        //   item.actions.forEach((sub) => {
+        //     if (!sub.resource_groups || !sub.resource_groups.length) {
+        //       sub.resource_groups
+        //         = sub.related_resource_types && sub.related_resource_types.length
+        //           ? [{ id: '', related_resource_types: sub.related_resource_types }]
+        //           : [];
+        //     }
+        //   });
+        // });
+        console.log(groups, isNoAdd, '提交数据');
         if (this.preGroupOnePage) {
           if (isNoAdd) {
             this.handleUpdateCommit();
@@ -479,7 +483,7 @@
 
       async handleAllInstanceFill () {
         const syncGroupList = cloneDeep(this.allSyncGroupList);
-        if (this.$refs.syncRef && syncGroupList.length) {
+        if (syncGroupList.length) {
           const hasFillGroup = syncGroupList.filter((item) =>
             item.tableList.some((v) => this.batchFillActions(v).length > 0)
           );
@@ -506,7 +510,7 @@
                   }
                 });
                 syncGroupList.forEach((item) => {
-                  const temp = data.find(sub => sub.group_id === item.id);
+                  const temp = data.find((v) => v.group_id === item.id);
                   if (temp) {
                     const curTableIndex = item.tableList.findIndex((v) => {
                       if (['add'].includes(v.mode_type)) {
@@ -517,12 +521,49 @@
                       }
                     });
                     if (curTableIndex > -1) {
-                      item.tableList.splice(curTableIndex, 1, new SyncPolicy({ ...temp.policy, tag: 'add', mode_type: 'add' }, 'detail'));
+                      let tableData = {};
+                      const { isAggregate } = item.tableList[curTableIndex];
+                      if (isAggregate) {
+                        const aggregateData = {
+                          ...item.tableList[curTableIndex],
+                          ...{
+                            mode_type: 'add'
+                          }
+                        };
+                        temp.policy.resource_groups && temp.policy.resource_groups.forEach((v) => {
+                          v.related_resource_types && v.related_resource_types.forEach((related) => {
+                            if (!related.condition) {
+                              related.condition = ['none'];
+                            }
+                            related.condition = related.condition.map((k) => new Condition(k, '', 'add'));
+                            aggregateData.attributes = related.condition.map((k) => k.attributes || []).flat(Infinity);
+                            const curInstance = related.condition.map((k) =>
+                              (k.instance || k.instances || [])).flat(Infinity);
+                            aggregateData.instances = curInstance.reduce((prev, next) => {
+                              prev.push(
+                                ...next.path.map(v => {
+                                  const paths = { ...v, ...next };
+                                  delete paths.instance;
+                                  delete paths.path;
+                                  return paths[0];
+                                })
+                              );
+                              return prev;
+                            }, []);
+                          });
+                        });
+                        this.setInstancesDisplayData(aggregateData);
+                        tableData = new AggregationPolicy({ ...aggregateData, ...{ isNeedNoLimited: true, mode_type: 'add' } });
+                      } else {
+                        tableData = new SyncPolicy({ ...temp.policy, tag: 'add', mode_type: 'add' }, 'detail');
+                      }
+                      item.tableList.splice(curTableIndex, 1, tableData);
                     }
                   }
                 });
               }
             }
+            this.allSyncGroupList = [...syncGroupList];
             this.$nextTick(() => {
               this.$refs.syncRef && this.$refs.syncRef.setAggregateTableData(syncGroupList);
             });
@@ -531,32 +572,6 @@
           } finally {
             this.fillLoading = false;
           }
-        }
-      },
-
-      async handleReferInstance (resItem, act, row, index, $index) {
-        window.changeDialog = true;
-        this.fillLoading = true;
-        try {
-          const res = await this.$store.dispatch('permTemplate/getCloneAction', {
-            id: this.id,
-            data: {
-              action_id: act.id,
-              clone_from_action_id: resItem.id,
-              group_ids: this.syncGroupList.map(item => item.id)
-            }
-          });
-          const referList = res.data;
-          this.syncGroupList.forEach(item => {
-            const temp = referList.find(sub => sub.group_id === item.id);
-            if (temp) {
-              item.tableList.splice(index, 1, new SyncPolicy({ ...temp.policy, tag: 'add' }, 'detail'));
-            }
-          });
-        } catch (e) {
-          this.messageAdvancedError(e);
-        } finally {
-          this.fillLoading = false;
         }
       },
 
@@ -606,6 +621,8 @@
         });
         this.$nextTick(() => {
           syncGroupList.forEach((group) => {
+            // 如果列表里有删除的操作，则新增的操作需要置顶
+            const hasDeleteData = group.tableList.some((v) => !['add'].includes(v.mode_type));
             if (payload) {
               // 缓存新增加的操作权限数据
               aggregationAction.forEach((item) => {
@@ -614,8 +631,7 @@
                 });
                 const addList = filterList.filter((item) =>
                   !this.aggregationsTableData.map((v) => v.id).includes(item.id)
-                )
-                ;
+                );
                 if (addList.length > 0) {
                   this.aggregationsTableData.push(...addList);
                 }
@@ -630,63 +646,51 @@
                   );
                 });
                 return !existData;
-              })
-                .map((item) => {
-                  const existTableData = this.aggregationsTableData.filter((subItem) =>
-                    item.actions.map((act) => act.id).includes(subItem.id)
-                  );
-                  if (existTableData.length > 0) {
-                    item.tag = existTableData.every((subItem) => subItem.tag === 'unchanged')
-                      ? 'unchanged'
-                      : 'add';
-                    if (item.tag === 'add') {
-                      const conditions = existTableData.map((subItem) =>
-                        subItem.resource_groups && subItem.resource_groups.length
-                          ? subItem.resource_groups[0].related_resource_types[0].condition
-                          : []
-                      );
-                      // 是否都选择了实例
-                      const isAllHasInstance = conditions.every(
-                        (subItem) => subItem[0] !== 'none'
-                      );
-                      if (isAllHasInstance) {
-                        const instances = conditions.map((subItem) =>
-                          subItem.map((v) => v.instance || v.instances || [])
-                        );
-                        let isAllEqual = true;
-                        for (let i = 0; i < instances.length - 1; i++) {
-                          if (!isEqual(instances[i], instances[i + 1])) {
-                            isAllEqual = false;
-                            break;
-                          }
-                        }
-                        if (isAllEqual) {
-                          const instanceData = instances[0][0];
-                          item.instances = [];
-                          instanceData
-                            && instanceData.map((pathItem) => {
-                              const instance = pathItem.path.map((e) => {
-                                return {
-                                  id: e[0].id,
-                                  name: e[0].name,
-                                  type: e[0].type
-                                };
-                              });
-                              item.instances.push(...instance);
-                            });
-                          this.setInstancesDisplayData(item);
-                        } else {
-                          item.instances = [];
-                        }
-                      } else {
-                        item.instances = [];
-                      }
+              }).map((item) => {
+                const existTableData = this.aggregationsTableData.filter((subItem) =>
+                  item.actions.map((act) => act.id).includes(subItem.id)
+                );
+                const conditions = existTableData.map((subItem) => subItem.resource_groups[0]
+                  .related_resource_types[0].condition);
+                // 是否都选择了实例
+                const isAllHasInstance = conditions.every((subItem) => subItem[0] !== 'none' && subItem.length > 0);
+                if (isAllHasInstance) {
+                  const instances = conditions.map((subItem) => subItem.map(v => v.instance));
+                  let isAllEqual = true;
+                  for (let i = 0; i < instances.length - 1; i++) {
+                    if (!isEqual(instances[i], instances[i + 1])) {
+                      isAllEqual = false;
+                      break;
                     }
                   }
-                  return new AggregationPolicy({ ...item, ...{ mode_type: 'add' } });
-                });
+                  if (isAllEqual) {
+                    const instanceData = instances[0][0];
+                    item.instances = [];
+                    instanceData.map(pathItem => {
+                      const instance = pathItem.path.map(e => {
+                        return {
+                          id: e[0].id,
+                          name: e[0].name,
+                          type: e[0].type
+                        };
+                      });
+                      item.instances.push(...instance);
+                    });
+                    this.setInstancesDisplayData(item);
+                  } else {
+                    item.instances = [];
+                  }
+                } else {
+                  item.instances = [];
+                }
+                return new AggregationPolicy({ ...item, ...{ mode_type: 'add' } });
+              });
               group.tableList = group.tableList.filter((item) => !actionIds.includes(item.id));
-              group.tableList.push(...aggregations);
+              if (hasDeleteData) {
+                group.tableList.unshift(...aggregations);
+              } else {
+                group.tableList.push(...aggregations);
+              }
               return;
             }
             // 如果是非聚合操作，需要过滤掉聚合操作
@@ -707,7 +711,11 @@
               // 优先从已有权限取值
               const curObj = this.aggregationsTableData.find((v) => v.id === item);
               if (curObj) {
-                group.tableList.push(curObj);
+                if (hasDeleteData) {
+                  group.tableList.unshift(curObj);
+                } else {
+                  group.tableList.push(curObj);
+                }
               } else {
                 const curAction = this.linearActionList.find((v) => v.id === item);
                 const curAggregation = aggregationData.find((v) => v.actions.map((v) => v.id).includes(item));
@@ -758,6 +766,7 @@
               }
             });
           });
+          this.allSyncGroupList = [...syncGroupList];
           this.$refs.syncRef.setAggregateTableData(syncGroupList);
         });
       },

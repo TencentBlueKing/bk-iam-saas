@@ -196,7 +196,7 @@
                       :class="[
                         'relation-content-item',
                         { 'set-margin-bottom':
-                          (related.related_resource_types.length === 1 && curAddActions.length === 1)
+                          (related.related_resource_types.length === 1 && addActions.length === 1)
                           || (group.tableList.length > 1 && group.tableList.length - 1 === $index)
                         }
                       ]"
@@ -320,7 +320,7 @@
     </bk-sideslider>
     
     <!-- 聚合后的资源视图侧边栏 -->
-    <RenderAggregateSideslider
+    <RenderAggregateSideSlider
       ref="aggregateRef"
       :show.sync="isShowAggregateSlider"
       :params="aggregateResourceParams"
@@ -346,7 +346,7 @@
   import RenderDetail from '../components/render-detail';
   import RenderResource from '../components/render-resource';
   import RelateResourceTypes from '@/model/related-resource-types';
-  import RenderAggregateSideslider from '@/components/choose-ip/sideslider';
+  import RenderAggregateSideSlider from '@/components/choose-ip/sideslider';
 
   export default {
     provide: function () {
@@ -359,7 +359,7 @@
       RenderCondition,
       RenderDetail,
       RenderResource,
-      RenderAggregateSideslider
+      RenderAggregateSideSlider
     },
     props: {
       id: {
@@ -443,10 +443,19 @@
         return (payload) => {
           if (payload.tableList && payload.tableList.length > 0) {
             const hasEmptyData = payload.tableList.some((item) => {
-              if (item.resource_groups && item.resource_groups.length && ['add'].includes(item.mode_type)) {
-               return item.resource_groups.some((v) => {
-                 return v.related_resource_types.some((related) => related.condition.length === 1 && related.condition[0] === 'none');
-                });
+              if (['add'].includes(item.mode_type)) {
+                if (item.isAggregate) {
+                  if (!item.instances) {
+                    item.instances = item.instance;
+                  }
+                  return item.instances && item.instances.length === 0 && !item.isNoLimited;
+                } else {
+                  if (item.resource_groups && item.resource_groups.length) {
+                   return item.resource_groups.some((v) => {
+                     return v.related_resource_types.some((related) => related.condition.length === 1 && related.condition[0] === 'none');
+                    });
+                  }
+                }
               }
             });
             this.$set(payload, 'fill_status', !hasEmptyData);
@@ -460,10 +469,17 @@
           let isEmpty = false;
           payload.tableList.every((item) => {
             if (['add'].includes(item.mode_type)) {
-              isEmpty = item.resource_groups && item.resource_groups.every((v) => {
-                const noCondition = v.related_resource_types.every((related) => related.condition.length === 1 && related.condition[0] === 'none');
-                return noCondition;
-              });
+              if (item.isAggregate) {
+                if (!item.instances) {
+                  item.instances = item.instance;
+                }
+                isEmpty = item.instances && item.instances.length === 0 && !item.isNoLimited;
+              } else {
+                isEmpty = item.resource_groups && item.resource_groups.every((v) => {
+                  const noCondition = v.related_resource_types.every((related) => related.condition.length === 1 && related.condition[0] === 'none');
+                  return noCondition;
+                });
+              }
               return isEmpty;
             }
           });
@@ -566,7 +582,7 @@
         return curData.selectionMode;
       },
       isAddActionEmpty () {
-        return this.curAddActions.length < 1;
+        return this.addActions.length < 1;
       },
       formatModeType () {
         return (payload) => {
@@ -611,9 +627,10 @@
     watch: {
       addActions: {
         handler (value) {
+          console.log(value, '最新操作');
           this.curAddActions = [...value];
         },
-        immediate: true
+        deep: true
       }
     },
     async mounted () {
@@ -647,8 +664,8 @@
             if (index === 0) {
               this.$emit('on-expand', item);
             }
-            if (this.curAddActions.length > 0) {
-              this.$set(item, 'add_actions', cloneDeep(this.curAddActions));
+            if (this.addActions.length > 0) {
+              this.$set(item, 'add_actions', cloneDeep(this.addActions));
               item.add_actions = item.add_actions.map(act => {
                 if (!act.resource_groups || !act.resource_groups.length) {
                   act.resource_groups = [];
@@ -773,80 +790,128 @@
         const groups = [];
         this.syncGroupList.forEach((item) => {
           const actionList = [];
+          console.log(item);
           (item.tableList || []).forEach((sub) => {
-            const { type, id, name, environment, description, mode_type } = sub;
+            const {
+              type,
+              id,
+              name,
+              environment,
+              description,
+              mode_type,
+              actions,
+              aggregateResourceType,
+              isAggregate,
+              isNoLimited,
+              instance,
+              instances,
+              instancesDisplayData
+            } = sub;
             if (['add'].includes(mode_type)) {
               const relatedResourceTypes = [];
               const groupResourceTypes = [];
-              if (sub.resource_groups.length > 0) {
-                sub.resource_groups.forEach((groupItem) => {
-                  if (groupItem.related_resource_types.length > 0) {
-                    groupItem.related_resource_types.forEach((resItem) => {
-                      if (resItem.empty) {
-                        resItem.isError = true;
-                        flag = true;
-                      }
-                      const conditionList = (resItem.condition.length > 0 && !resItem.empty)
-                        ? resItem.condition.map(conItem => {
-                          const { id, instance, attribute } = conItem;
-                          const attributeList = (attribute && attribute.length > 0)
-                            ? attribute.map(({ id, name, values }) => ({ id, name, values }))
-                            : [];
-            
-                          const instanceList = (instance && instance.length > 0)
-                            ? instance.map(({ name, type, path, paths }) => {
-                              let tempPath = cloneDeep(paths);
-                              if (!tempPath.length && path && path.length) {
-                                tempPath = cloneDeep(path);
-                              }
-                              tempPath.forEach(pathItem => {
-                                pathItem.forEach(pathSubItem => {
-                                  delete pathSubItem.disabled;
-                                });
-                              });
-                              return {
-                                name,
-                                type,
-                                path: tempPath
-                              };
-                            })
-                            : [];
-            
-                          return {
-                            id,
-                            instances: instanceList,
-                            attributes: attributeList
-                          };
-                        })
-                        : [];
-            
-                      relatedResourceTypes.push({
-                        type: resItem.type,
-                        system_id: resItem.system_id,
-                        name: resItem.name,
-                        condition: conditionList.filter((item) =>
-                          item.instances.length > 0 || item.attributes.length > 0
-                        )
+              if (isAggregate) {
+                // 如果不是无限制，instance也为空
+                if (!instances) {
+                  this.$set(sub, 'instances', instance);
+                }
+                if (!isNoLimited && (instances.length < 1 || (instances.length === 1 && instances[0] === 'none'))) {
+                  sub.isError = true;
+                  flag = true;
+                } else {
+                  const aggregateResourceTypes = aggregateResourceType.reduce((pre, curr) => {
+                    if (instancesDisplayData[curr.id] && instancesDisplayData[curr.id].length) {
+                      let displayValue = {};
+                      displayValue = Object.assign({}, {
+                        id: curr.id,
+                        system_id: curr.system_id,
+                        instances: instancesDisplayData[curr.id]
                       });
+                      pre.push(displayValue);
+                    }
+                    return pre;
+                  }, []);
+                  console.log(aggregateResourceTypes, sub);
+                  const aggregateParams = {
+                    system_id: sub.system_id,
+                    aggregations: [{
+                      actions,
+                      aggregate_resource_types: aggregateResourceTypes
+                    }],
+                    actions: []
+                  };
+                  actionList.push(aggregateParams);
+                }
+              } else {
+                if (sub.resource_groups && sub.resource_groups.length > 0) {
+                  sub.resource_groups.forEach((groupItem) => {
+                    if (groupItem.related_resource_types.length > 0) {
+                      groupItem.related_resource_types.forEach((resItem) => {
+                        if (resItem.empty) {
+                          resItem.isError = true;
+                          flag = true;
+                        }
+                        const conditionList = (resItem.condition.length > 0 && !resItem.empty)
+                          ? resItem.condition.map(conItem => {
+                            const { id, instance, attribute } = conItem;
+                            const attributeList = (attribute && attribute.length > 0)
+                              ? attribute.map(({ id, name, values }) => ({ id, name, values }))
+                              : [];
+              
+                            const instanceList = (instance && instance.length > 0)
+                              ? instance.map(({ name, type, path, paths }) => {
+                                let tempPath = cloneDeep(paths);
+                                if (!tempPath.length && path && path.length) {
+                                  tempPath = cloneDeep(path);
+                                }
+                                tempPath.forEach(pathItem => {
+                                  pathItem.forEach(pathSubItem => {
+                                    delete pathSubItem.disabled;
+                                  });
+                                });
+                                return {
+                                  name,
+                                  type,
+                                  path: tempPath
+                                };
+                              })
+                              : [];
+              
+                            return {
+                              id,
+                              instances: instanceList,
+                              attributes: attributeList
+                            };
+                          })
+                          : [];
+                        relatedResourceTypes.push({
+                          type: resItem.type,
+                          system_id: resItem.system_id,
+                          name: resItem.name,
+                          condition: conditionList.filter((item) =>
+                            item.instances.length > 0 || item.attributes.length > 0
+                          )
+                        });
+                      });
+                    }
+                    groupResourceTypes.push({
+                      id: groupItem.id,
+                      related_resource_types: relatedResourceTypes
                     });
-                  }
-                  groupResourceTypes.push({
-                    id: groupItem.id,
-                    related_resource_types: relatedResourceTypes
                   });
-                });
-                // 强制刷新下
-                sub.resource_groups = cloneDeep(sub.resource_groups);
+                  // 强制刷新下
+                  sub.resource_groups = cloneDeep(sub.resource_groups);
+                }
+                const params = {
+                  type,
+                  name,
+                  id,
+                  description,
+                  resource_groups: groupResourceTypes,
+                  environment
+                };
+                actionList.push(params);
               }
-              const params = {
-                type,
-                name,
-                id,
-                description,
-                resource_groups: groupResourceTypes,
-                environment
-              };
-              actionList.push(params);
             }
           });
           groups.push({
@@ -941,7 +1006,6 @@
           this.messageWarn(this.$t(`m.common['暂无可批量复用实例']`), 3000);
           return;
         }
-        console.log(payload.tableList);
         let params = {};
         const relatedList = [];
         payload.tableList.forEach((item) => {
@@ -1122,7 +1186,6 @@
       },
 
       handleInstancePaste (payload, content) {
-        console.log(payload, content, 5555);
         if (!payload.flag) {
           return;
         }
@@ -1178,7 +1241,7 @@
                     item.id = '';
                   }
                 });
-                const instances = this.curCopyData.map(item => item.instance);
+                const instances = this.curCopyData.map(item => item.instance || item.instances);
                 const instanceData = instances[0][0];
                 tempAggregateData = instanceData.path.map(pathItem => {
                   return {
@@ -1275,7 +1338,6 @@
                                     return c;
                                   // eslint-disable-next-line max-len
                                   }).filter(d => !!(d.instances[0].path && d.instances[0].path.length));
-                                  console.log('condition', condition);
                                   if (condition && condition.length) {
                                     resItem.condition = condition.map(conditionItem => new Condition(conditionItem, '', 'add'));
                                     resItem.isError = false;
@@ -1419,11 +1481,9 @@
         }
         payload = Object.assign(payload, { isError: false, instances: tempInstances });
         this.messageSuccess(this.$t(`m.info['粘贴成功']`), 3000);
-        console.log(tempInstances, this.curCopyData);
       },
 
       handleAggregateInstanceBatchPaste (payload, index, resourceTypeIndex) {
-        console.log(payload);
         let tempCurData = ['none'];
         let tempAggregateData = [];
         if (this.curCopyMode === 'normal') {
@@ -1614,7 +1674,7 @@
         this.$set(
           this.syncGroupList[this.curIndex].tableList,
           this.aggregateIndex,
-          new AggregationPolicy({ ...curAggregateItem, ...{ isNeedNoLimited: true } })
+          new AggregationPolicy({ ...curAggregateItem, ...{ isNeedNoLimited: true, mode_type: 'add' } })
         );
         this.$emit('on-select', this.syncGroupList[this.curIndex].tableList[this.aggregateIndex]);
       },
@@ -1829,7 +1889,7 @@
       setTableProps () {
         this.addProps = [];
         this.deleteProps = [];
-        this.curAddActions.forEach(item => {
+        this.addActions.forEach(item => {
           this.addProps.push({
             label: item.name,
             id: item.id
@@ -1857,7 +1917,6 @@
       setAggregateTableData (payload) {
         this.syncGroupList = [...payload];
         this.tableKey = +new Date();
-        console.log(this.syncGroupList, '最新数据');
       },
 
       setInstancesDisplayData (data) {

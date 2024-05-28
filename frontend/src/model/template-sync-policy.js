@@ -25,13 +25,15 @@
 */
 
 import il8n from '@/language';
+import Policy from './policy';
 import { DURATION_LIST } from '@/common/constants';
 import RelateResourceTypes from './related-resource-types';
 
-export default class SyncPolicy {
+export default class SyncPolicy extends Policy {
   // flag = '' 为默认拉取，flag = 'add' 为新添加的，flag = 'detail' 为权限模板详情
   // tag: add updata unchanged create
   constructor (payload, flag = '') {
+    super(payload, flag);
     this.type = payload.type;
     this.id = payload.id;
     this.policy_id = payload.policy_id || '';
