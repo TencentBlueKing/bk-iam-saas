@@ -125,7 +125,7 @@
     data () {
       return {
         tableList: [],
-        tableListClone: [],
+        tableListBack: [],
         tableLoading: false,
         instanceLoading: false,
         sliderLoading: false,
@@ -202,14 +202,6 @@
       'pagination.current' (value) {
         this.currentBackup = value;
       },
-      formData: {
-        handler (value) {
-          if (!value.name) {
-            this.tableList = cloneDeep(this.tableListClone);
-          }
-        },
-        deep: true
-      },
       navStick () {
         this.formatFormItemWidth();
       }
@@ -274,7 +266,7 @@
             }
           } else {
             this.tableList = res.data || [];
-            this.tableListClone = cloneDeep(this.tableList);
+            this.tableListBack = cloneDeep(this.tableList);
             this.pagination.count = this.tableList.length;
             const result = this.getDataByPage();
             this.tableList.splice(0, this.tableList.length, ...result);
@@ -309,7 +301,7 @@
             const { name } = this.formData;
             if (this.formData.name) {
               this.emptyData = formatCodeData(0, Object.assign(this.emptyData, { tipType: 'search' }));
-              this.tableList = cloneDeep(this.tableListClone).filter(item => {
+              this.tableList = cloneDeep(this.tableListBack).filter(item => {
                 if (['user'].includes(item.type)) {
                   return item.id.indexOf(name) > -1
                     || item.name.indexOf(name) > -1
@@ -320,7 +312,7 @@
               }
               );
             } else {
-              this.tableList = cloneDeep(this.tableListClone);
+              this.tableList = cloneDeep(this.tableListBack);
             }
           }
         };
@@ -328,17 +320,11 @@
       },
 
       handleClearSearch () {
-        this.emptyData.tipType = 'noPerm';
-        this.tableList = cloneDeep(this.tableListClone);
+        this.handleSearch();
       },
 
       handleEmptyClear () {
-        this.formData.name = '';
         this.handleReset();
-        this.emptyData = formatCodeData(0, Object.assign(this.emptyData, { type: 'empty', text: '', tipType: '' }));
-        if (['resourcePermManage'].includes(this.$route.name)) {
-          this.handleSearchAndExport();
-        }
       },
 
       handleEmptyRefresh () {
@@ -388,10 +374,10 @@
         if (startIndex < 0) {
           startIndex = 0;
         }
-        if (endIndex > this.tableListClone.length) {
-          endIndex = this.tableListClone.length;
+        if (endIndex > this.tableListBack.length) {
+          endIndex = this.tableListBack.length;
         }
-        return this.tableListClone.slice(startIndex, endIndex);
+        return this.tableListBack.slice(startIndex, endIndex);
       },
 
       formatFormItemWidth () {
