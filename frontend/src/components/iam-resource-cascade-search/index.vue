@@ -7,7 +7,7 @@
         'iam-search-resource-form-perm',
         { [customClass]: customClass }
       ]">
-      <render-search v-if="enableGroupInstanceSearch">
+      <render-search v-if="enableGroupInstanceSearch || isShowResourceSearch">
         <div
           :class="[
             'join-user-group-form',
@@ -19,13 +19,16 @@
               class="resource-action-form">
               <iam-form-item
                 :label="$t(`m.common['系统']`)"
-                class="form-item-resource">
+                class="form-item-resource"
+                :required="systemRequired"
+              >
                 <bk-select
                   :style="{ width: contentWidth }"
                   v-model="applyGroupData.system_id"
                   :clearable="!externalSystemsLayout.myPerm.hideApplyBtn"
                   :allow-enter="false"
                   :placeholder="$t(`m.verify['请选择']`)"
+                  :disabled="isSystemDisabled"
                   @change="handleCascadeChange"
                   @clear="handleClearSearch"
                   searchable>
@@ -42,6 +45,7 @@
               <iam-form-item
                 :label="$t(`m.common['操作']`)"
                 class="form-item-resource"
+                :required="actionRequired"
               >
                 <bk-select
                   :style="{ width: contentWidth }"
@@ -69,6 +73,7 @@
                   :key="_.id"
                   class="resource-group-container">
                   <iam-form-item
+                    v-if="isShowResourceType"
                     :label="$t(`m.permApply['资源类型']`)"
                     class="form-item-resource">
                     <bk-select
@@ -99,9 +104,7 @@
                     <div class="relation-content-item"
                       v-for="(content, contentIndex) in _.related_resource_types"
                       :key="contentIndex">
-                      <div class="content"
-                        :style="{ width: contentWidth }"
-                      >
+                      <div class="content" :style="{ width: contentWidth }">
                         <render-condition
                           :ref="`condition_${index}_${contentIndex}_ref`"
                           :value="curResourceData.type ?
@@ -122,6 +125,8 @@
                       </div>
                     </div>
                   </iam-form-item>
+                  <!-- 兼容默认级联资源实例搜索某项需要自定义场景 -->
+                  <slot name="custom-default-search-item" />
                 </div>
               </template>
             </bk-form>
@@ -185,7 +190,7 @@
       quick-close
       transfer
       :ext-cls="'relate-instance-sideslider'"
-      @update:isShow="handleResourceCancel">
+      @update:isShow="handleResourceCancel('mask')">
       <div slot="content"
         class="sideslider-content">
         <render-resource
@@ -200,7 +205,7 @@
         <bk-button theme="primary" @click="handleResourceSubmit">
           {{ $t(`m.common['保存']`) }}
         </bk-button>
-        <bk-button style="margin-left: 10px;" @click="handleResourceCancel">
+        <bk-button style="margin-left: 10px;" @click="handleResourceCancel('cancel')">
           {{ $t(`m.common['取消']`) }}
         </bk-button>
       </div>
@@ -263,9 +268,38 @@
         type: Number,
         default: 4
       },
+      formItemMargin: {
+        type: Number,
+        default: 16
+      },
+      // 距离侧边栏的内边距
+      navStickPadding: {
+        type: Number,
+        default: 16
+      },
       curSearchData: {
         type: Array,
         default: () => []
+      },
+      isSystemDisabled: {
+        type: Boolean,
+        default: () => false
+      },
+      isShowResourceType: {
+        type: Boolean,
+        default: () => true
+      },
+      systemRequired: {
+        type: Boolean,
+        default: false
+      },
+      actionRequired: {
+        type: Boolean,
+        default: false
+      },
+      resourceInstanceRequired: {
+        type: Boolean,
+        default: true
       }
     },
     data () {
@@ -407,6 +441,10 @@
       },
       originalCondition () {
           return _.cloneDeep(this.condition);
+      },
+      // 不需要根据环境变量处理的页面
+      isShowResourceSearch () {
+        return ['resourcePermiss'].includes(this.$route.name);
       }
     },
     watch: {
@@ -505,7 +543,7 @@
     methods: {
       formatSearchData () {
         // 处理不同页面自定义搜索字段
-        const isOtherRoute = ['userOrgPerm'].includes(this.$route.name);
+        const isOtherRoute = ['userOrgPerm', 'resourcePermiss'].includes(this.$route.name);
         const routeMap = {
           true: () => {
             this.searchData = [...this.curSearchData];
@@ -520,8 +558,12 @@
       },
 
       async fetchPermData () {
-        this.fetchSystemList();
+        await this.fetchSystemList();
         const isSearch = this.applyGroupData.system_id || Object.keys(this.searchParams).length > 0;
+        // 兼容资源权限管理默认选择第一个系统业务场景
+        if (this.systemSelectList.length > 0 && ['resourcePermiss'].includes(this.$route.name) && !this.externalSystemId) {
+          this.applyGroupData.system_id = this.systemSelectList[0].id;
+        }
         if (isSearch) {
           await this.handleSearchUserGroup(false, false);
         }
@@ -540,7 +582,6 @@
             this.systemSelectList = this.systemSelectList.filter(item => item.id === this.externalSystemId);
           }
         } catch (e) {
-          console.error(e);
           this.messageAdvancedError(e);
         }
       },
@@ -568,7 +609,7 @@
               this.actionIdError = true;
               return;
             }
-            if (this.curResourceTypeList.length && !this.curResourceData.type) {
+            if (this.curResourceTypeList.length && !this.curResourceData.type && !this.isShowResourceType) {
               this.resourceTypeError = true;
               return;
             }
@@ -587,7 +628,8 @@
             if (this.curResourceData.type
               && !resourceInstances.length
               && hasResourceGroup
-              && hasResourceGroup.related_resource_types.some(e => e.empty)) {
+              && hasResourceGroup.related_resource_types.some(e => e.empty)
+              && this.resourceInstanceRequired) {
               this.resourceInstanceError = true;
               return;
             }
@@ -928,16 +970,27 @@
           });
         }
       },
-
-      handleResourceCancel () {
-        let cancelHandler = Promise.resolve();
-        if (window.changeAlert) {
-          cancelHandler = leaveConfirm();
-        }
-        cancelHandler.then(() => {
-          this.isShowResourceInstanceSideSlider = false;
-          this.resetDataAfterClose();
-        }, _ => _);
+      
+      handleResourceCancel (payload) {
+        const typeMap = {
+          mask: () => {
+            const { data } = this.$refs.renderResourceRef.handleGetValue();
+            const { hasSelectedCondition } = this.$refs.renderResourceRef;
+            let cancelHandler = Promise.resolve();
+            if (JSON.stringify(data) !== JSON.stringify(hasSelectedCondition)) {
+              cancelHandler = leaveConfirm();
+            }
+            cancelHandler.then(() => {
+              this.isShowResourceInstanceSideSlider = false;
+              this.resetDataAfterClose();
+            }, _ => _);
+          },
+          cancel: () => {
+            this.resetDataAfterClose();
+            this.isShowResourceInstanceSideSlider = false;
+          }
+        };
+        return typeMap[payload]();
       },
 
       formatResourceSliderWidth () {
@@ -946,9 +999,14 @@
       },
 
       formatFormItemWidth () {
-        // 276代表菜单栏展开的宽度加16px内边距， 76代表菜单栏收缩的宽度加16px内边距
+        // 260代表菜单栏展开的宽度， 60代表菜单栏收缩的宽度，formItemMargin代表每个item之间的间距, navStickPadding代表内容区域距离侧边栏的内边距
+        const navStickWidth = this.navStick
+          ? 260 + (Number(this.navStickPadding) * 2) - this.formItemMargin
+          : 60 + (Number(this.navStickPadding) * 2) - this.formItemMargin;
         this.defaultWidth = window.innerWidth <= 1520 ? this.minSelectWidth : this.maxSelectWidth;
-        this.gridWidth = (window.innerWidth - (this.navStick ? 276 : 76) - this.gridCount * 16) / this.gridCount;
+        this.gridWidth = (
+          window.innerWidth - navStickWidth - (this.gridCount * Number(this.formItemMargin))
+        ) / this.gridCount;
         this.contentWidth = this.isFullScreen ? `${this.gridWidth}px` : this.defaultWidth;
       },
 

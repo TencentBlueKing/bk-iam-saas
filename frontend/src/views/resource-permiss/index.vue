@@ -1,161 +1,89 @@
 <template>
-  <!-- eslint-disable max-len -->
-  <div class="iam-system-access-wrapper">
-    <render-search>
-      <!-- 注释掉查询类型，保留默认查询为实例权限 -->
-      <!-- <div>
-        <bk-form form-type="inline" class="pb10">
-          <iam-form-item :label="$t(`m.common['查询类型']`)" class="pb20 form-item-resource">
-            <bk-select
-              style="width: 504px; background: #fff"
-              v-model="searchType"
-              :clearable="true"
-              :placeholder="$t(`m.verify['请选择']`)"
-              @change="handleSearchChange">
-              <bk-option v-for="option in searchTypeList"
-                :key="option.value"
-                :id="option.value"
-                :name="option.name">
-              </bk-option>
-            </bk-select>
-            <p class="error-tips" v-if="searchTypeError">{{$t(`m.resourcePermiss['请选择查询类型']`)}}</p>
-          </iam-form-item>
-        </bk-form>
-      </div> -->
-      <div>
-        <bk-form form-type="inline" class="pb10">
-          <iam-form-item :label="$t(`m.permApply['选择系统']`)" class="pb20 pr20 form-item-resource">
-            <bk-select
-              style="width: 200px; background: #fff"
-              v-model="systemId"
-              :clearable="true"
-              :searchable="true"
-              :placeholder="$t(`m.verify['请选择']`)"
-              :disabled="isSystemDisabled"
-              @change="handleCascadeChange"
-              @clear="handleSystemClear">
-              <bk-option v-for="option in systemList"
-                :key="option.id"
-                :id="option.id"
-                :name="`${option.name} (${option.id})`">
-              </bk-option>
-            </bk-select>
-            <p class="error-tips" v-if="systemIdError">{{$t(`m.resourcePermiss['系统必填']`)}}</p>
-          </iam-form-item>
-          <iam-form-item :label="$t(`m.permApply['选择操作']`)" class="pb20 form-item-resourc">
-            <bk-select
-              style="width: 200px; background: #fff"
-              v-model="actionId"
-              :clearable="true"
-              :placeholder="$t(`m.verify['请选择']`)"
-              @selected="handleSelected"
-              @clear="handleActionClear"
-              searchable>
-              <bk-option v-for="option in processesList"
-                :key="option.id"
-                :id="option.id"
-                :name="`${option.name} (${option.id})`">
-              </bk-option>
-            </bk-select>
-            <p class="error-tips" v-if="actionIdError">{{$t(`m.resourcePermiss['操作必填']`)}}</p>
-          </iam-form-item>
-        </bk-form>
+  <div class="resource-perm-manage-wrapper">
+    <IamResourceCascadeSearch
+      ref="iamResourceSearchRef"
+      :custom-class="'resource-perm-manage'"
+      :cur-search-data="searchData"
+      :grid-count="gridCount"
+      :system-required="true"
+      :action-required="true"
+      :resource-instance-required="false"
+      :is-full-screen="true"
+      :is-custom-search="true"
+      :is-show-resource-type="false"
+      :is-system-disabled="isSystemDisabled"
+      :form-item-margin="12"
+      :nav-stick-padding="24"
+      @on-select-system="handleSelectSystemAction"
+      @on-remote-table="handleRemoteTable"
+      @on-refresh-table="handleRefreshTable"
+    >
+      <div slot="custom-default-search-item" class="custom-default-search-item">
+        <iam-form-item
+          :label="$t(`m.userGroup['用户/用户组']`)"
+          :style="{ width: formItemWidth }"
+          class="form-item-resource"
+        >
+          <bk-input
+            v-model="formData.name"
+            :clearable="true"
+            :placeholder="$t(`m.verify['请输入']`)"
+            :right-icon="'bk-icon icon-search'"
+            @right-icon-click="handleSearch"
+            @enter="handleSearch"
+            @clear="handleClearSearch"
+          />
+        </iam-form-item>
       </div>
-
-      <div v-if="searchType === 'operate'">
-        <bk-form form-type="inline">
-          <iam-form-item :label="$t(`m.resourcePermiss['权限类型']`)" class="pb20">
-            <bk-select
-              style="width: 200px; background: #fff"
-              v-model="permissionType"
-              :placeholder="$t(`m.verify['请选择']`)"
-              :clearable="true">
-              <bk-option v-for="option in typeList"
-                :key="option.value"
-                :id="option.value"
-                :name="option.name">
-              </bk-option>
-            </bk-select>
-          </iam-form-item>
-        </bk-form>
+      <div slot="custom-content" class="custom-content">
+        <div class="custom-content-footer">
+          <bk-button
+            theme="primary"
+            class="operate-btn"
+            @click="handleSearchTable"
+          >
+            {{ $t(`m.common['查询']`) }}
+          </bk-button>
+          <bk-button
+            class="operate-btn reset-btn"
+            theme="default"
+            @click="handleReset"
+          >
+            {{ $t(`m.common['重置']`) }}
+          </bk-button>
+          <bk-popover
+            v-if="isShowExport"
+            :content="$t(`m.resourcePermiss['导出需提供系统和操作名']`)"
+            :disabled="!isExportDisabled()"
+          >
+            <bk-button
+              theme="default"
+              class="operate-btn"
+              :disabled="isExportDisabled()"
+              @click="handleSearchAndExport(true)"
+            >
+              {{ $t(`m.common['导出']`) }}
+            </bk-button>
+          </bk-popover>
+        </div>
       </div>
-
-      <div v-if="!resourceTypeData.isEmpty && searchType !== 'operate'">
-        <bk-form form-type="inline" class="pb10">
-          <iam-form-item class="pb20 form-item-resource" :label="$t(`m.common['资源实例']`)">
-            <div v-for="(_, _index) in resourceTypeData.resource_groups" :key="_.id" class="resource-container">
-              <div class="relation-content-item" v-for="(content, contentIndex) in
-                _.related_resource_types" :key="contentIndex">
-                <div class="content">
-                  <render-condition
-                    :ref="`condition_${_index}_${contentIndex}_ref`"
-                    :value="content.value"
-                    :is-empty="content.empty"
-                    :params="curCopyParams"
-                    :is-error="content.isLimitExceeded || content.isError"
-                    @on-click="showResourceInstance(resourceTypeData, content, contentIndex, _index)" />
-                </div>
-                <!-- <p class="error-tips" v-if="resourceTypeError && content.empty">{{$t(`m.resourcePermiss['请选择资源实例']`)}}</p> -->
-              </div>
-            </div>
-          </iam-form-item>
-
-        </bk-form>
-      </div>
-
-      <div>
-        <bk-form form-type="inline">
-          <iam-form-item :label="$t(`m.resourcePermiss['条数展示']`)" class="pb20 pr20">
-            <bk-select
-              style="width: 200px; background: #fff"
-              v-model="limit"
-              :clearable="false"
-              :placeholder="$t(`m.verify['请选择']`)"
-              @change="limitChange">
-              <bk-option v-for="option in limitList"
-                :key="option"
-                :id="option"
-                :name="option">
-              </bk-option>
-            </bk-select>
-          </iam-form-item>
-          <bk-button class="mr10 ml10 mb20" theme="primary" @click="handleSearchAndExport(false)">
-            {{ $t(`m.common['查询']`) }}</bk-button>
-        </bk-form>
-      </div>
-
-    </render-search>
-
-    <div class="resource-flex">
-      <div>
-        <bk-button class="mr10" theme="default" @click="handleReset">{{ $t(`m.common['重置']`) }}</bk-button>
-        <bk-button v-if="isShowExport" theme="default" @click="handleSearchAndExport(true)" :disabled="!systemId || !actionId">
-          {{ $t(`m.common['导出']`) }}</bk-button>
-      </div>
-
-      <bk-input
-        :clearable="true"
-        v-model="searchValue"
-        :placeholder="$t(`m.resourcePermiss['请输入用户、用户组，按Enter搜索']`)"
-        :right-icon="'bk-icon icon-search'"
-        style="width: 420px;"
-        @enter="handleSearch">
-      </bk-input>
-    </div>
-        
+    </IamResourceCascadeSearch>
+    
     <bk-table
-      :data="tableList"
-      size="small"
-      class="mb40"
-      :class="{ 'set-border': tableLoading }"
-      ext-cls="system-access-table"
       v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
+      size="small"
+      ext-cls="system-access-table"
+      :data="tableList"
+      :class="{ 'set-border': tableLoading }"
       :pagination="pagination"
-      @page-change="pageChange"
-      @page-limit-change="limitChange">
+      @page-change="handlePageChange"
+      @page-limit-change="handleLimitChange"
+    >
       <bk-table-column :label="$t(`m.resourcePermiss['有权限的成员']`)">
         <template slot-scope="{ row }">
-          <span :title="row.type === 'user' ? `${row.id} (${row.name})` : `${row.name}`">
+          <span
+            v-bk-tooltips="{ content: row.type === 'user' ? `${row.id} (${row.name})` : `${row.name}` }"
+            class="system-access-name">
             {{row.type === 'user' ? `${row.id} (${row.name})` : `${row.name}`}}
           </span>
         </template>
@@ -169,52 +97,22 @@
         <ExceptionEmpty
           :type="emptyData.type"
           :empty-text="emptyData.text"
-          :tip-text="emptyData.tip"
+          :error-message="emptyData.tip"
           :tip-type="emptyData.tipType"
           @on-clear="handleEmptyClear"
           @on-refresh="handleEmptyRefresh"
         />
       </template>
     </bk-table>
-
-    <bk-sideslider
-      :is-show="isShowResourceInstanceSideslider"
-      :title="resourceInstanceSidesliderTitle"
-      :width="resourceSliderWidth"
-      quick-close
-      transfer
-      :ext-cls="'relate-instance-sideslider'"
-      @update:isShow="handleResourceCancel('mask')">
-      <div slot="content" class="sideslider-content">
-        <render-resource
-          ref="renderResourceRef"
-          :data="condition"
-          :original-data="originalCondition"
-          :selection-mode="curSelectionMode"
-          :params="params"
-        />
-      </div>
-      <div slot="footer" style="margin-left: 25px;">
-        <bk-button theme="primary" :loading="sliderLoading" @click="handleResourceSubmit">{{ $t(`m.common['保存']`) }}</bk-button>
-        <bk-button style="margin-left: 10px;" @click="handleResourceCancel('cancel')">{{ $t(`m.common['取消']`) }}</bk-button>
-      </div>
-    </bk-sideslider>
   </div>
 </template>
-<script>
-    // import IamSearchSelect from '@/components/iam-search-select'
-  import Policy from '@/model/policy';
-  import _ from 'lodash';
-  import RenderCondition from './components/render-condition.vue';
-  import RenderResource from './components/render-resource.vue';
-  import { leaveConfirm } from '@/common/leave-confirm';
-  import { fuzzyRtxSearch } from '@/common/rtx';
-  import { formatCodeData } from '@/common/util';
-  import { mapGetters } from 'vuex';
-  // import iamCascade from '@/components/cascade'
 
-  // 单次申请的最大实例数
-  // const RESOURCE_MAX_LEN = 20
+<script>
+  import { mapGetters } from 'vuex';
+  import { cloneDeep } from 'lodash';
+  import { formatCodeData } from '@/common/util';
+  import IamResourceCascadeSearch from '@/components/iam-resource-cascade-search';
+
   export default {
     provide: function () {
       return {
@@ -222,10 +120,7 @@
       };
     },
     components: {
-      RenderCondition,
-      RenderResource
-      // IamSearchSelect
-      // iamCascade
+      IamResourceCascadeSearch
     },
     data () {
       return {
@@ -234,48 +129,54 @@
         tableLoading: false,
         instanceLoading: false,
         sliderLoading: false,
-        systemList: [],
-        resourceList: [],
-        systemId: '',
-        actionId: '',
-        processesList: [],
-        typeList: [{ name: this.$t(`m.resourcePermiss['自定义权限']`), value: 'custom' }, { name: this.$t(`m.resourcePermiss['模板权限']`), value: 'template' }],
-        permissionType: '',
-        groupValue: '1-1',
         limit: 1000,
-        limitList: [10, 50, 100, 500, 1000],
-        resourceActionId: 0,
-        resourceActionSystemId: '',
-        resourceSystemId: '',
-        resourceActionData: [],
-        hasMore: false,
         resourceType: '',
         parentId: '',
-        resourceInstanceSidesliderTitle: '',
-        resourceListChilder: [],
-        resourceTypeData: { isEmpty: true },
-        isShowResourceInstanceSideslider: false,
+        instanceSliderTitle: '',
+        isShowInstanceSlider: false,
+        currentBackup: 1,
         curResIndex: -1,
         groupIndex: -1,
+        gridCount: 4,
         params: {},
         curCopyParams: {},
-        resourceInstances: [],
-        searchTypeList: [{ name: this.$t(`m.resourcePermiss['实例权限']`), value: 'resource_instance' }, { name: this.$t(`m.resourcePermiss['操作权限']`), value: 'operate' }],
+        curSystemAction: {},
+        searchData: [
+          {
+            id: 'group',
+            name: this.$t(`m.userGroup['用户组名']`),
+            default: true
+          },
+          {
+            id: 'user',
+            name: this.$t(`m.common['用户']`)
+          }
+        ],
+        formItemWidth: '',
         searchType: 'resource_instance',
-        searchValue: '',
         systemIdError: false,
         actionIdError: false,
         searchTypeError: false,
         resourceTypeError: false,
+        isSearchPerm: false,
+        curSearchParams: {},
         pagination: {
           current: 1,
           count: 0,
           limit: 10
         },
-        currentBackup: 1,
+        formData: {
+          name: ''
+        },
         emptyData: {
           type: 'empty',
           text: '暂无数据',
+          tip: this.$t(`m.resourcePermiss['查询必须选择“系统”和“操作名”']`),
+          tipType: 'noPerm'
+        },
+        curEmptyData: {
+          type: '',
+          text: '',
           tip: '',
           tipType: ''
         },
@@ -284,402 +185,117 @@
       };
     },
     computed: {
-      ...mapGetters(['externalSystemId', 'user', 'index']),
-      condition () {
-          if (this.curResIndex === -1 || this.groupIndex === -1) {
-              return [];
-          }
-          const curData = this.resourceTypeData.resource_groups[this.groupIndex]
-              .related_resource_types[this.curResIndex];
-          if (!curData) {
-              return [];
-          }
-          // if (curData.condition.length === 0) curData.condition = ['none'];
-          return _.cloneDeep(curData.condition);
-      },
-      curSelectionMode () {
-          if (this.curResIndex === -1 || this.groupIndex === -1) {
-              return 'all';
-          }
-          const curData = this.resourceTypeData.resource_groups[this.groupIndex]
-              .related_resource_types[this.curResIndex];
-          return curData.selectionMode;
-      },
-      originalCondition () {
-          return _.cloneDeep(this.condition);
-      },
+      ...mapGetters(['externalSystemId', 'user', 'index', 'navStick']),
       isShowExport () {
         return ['resourcePermiss'].includes(this.$route.name);
       },
       isSystemDisabled () {
         return this.index === 1 && ['system_manager'].includes(this.user.role.type);
+      },
+      isExportDisabled () {
+        return () => {
+          return !this.curSystemAction.action_id;
+        };
       }
     },
     watch: {
       'pagination.current' (value) {
         this.currentBackup = value;
       },
-      searchValue (value) {
-        if (!value) {
-          this.tableList = _.cloneDeep(this.tableListClone);
-        }
+      formData: {
+        handler (value) {
+          if (!value.name) {
+            this.tableList = cloneDeep(this.tableListClone);
+          }
+        },
+        deep: true
+      },
+      navStick () {
+        this.formatFormItemWidth();
       }
     },
-    created () {
-      // this.handleSearchAndExport(false)
-      this.fetchSystemList();
-      this.searchData = [
-        {
-          id: 'group',
-          name: this.$t(`m.userGroup['用户组名']`),
-          default: true
-        },
-        {
-          id: 'user',
-          name: this.$t(`m.common['用户']`)
-        }
-      ];
-    },
     mounted () {
+      this.formatFormItemWidth();
       window.addEventListener('resize', this.formatFormItemWidth);
       this.$once('hook:beforeDestroy', () => {
         window.removeEventListener('resize', this.formatFormItemWidth);
       });
     },
     methods: {
-      formatFormItemWidth () {
-        this.resourceSliderWidth = Math.ceil(window.innerWidth * 0.67 - 7) < 960
-          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7);
-      },
-
-      async fetchPageData () {
-        await this.fetchSystemList();
-      },
-
-      async fetchSystemList () {
-        try {
-          const params = {};
-          if (this.externalSystemId) {
-            params.hidden = false;
-          }
-          const res = await this.$store.dispatch('system/getSystems', params);
-          this.systemList = res.data;
-          if (this.systemList.length && ['system_manager'].includes(this.user.role.type)) {
-            this.systemId = this.systemList[0].id;
-          }
-        } catch (e) {
-          console.error(e);
-          this.messageAdvancedError(e);
+      async handleRemoteTable (payload) {
+        const { emptyData, searchParams } = payload;
+        const params = {
+          ...searchParams,
+          ...this.formData
+        };
+        this.isSearchPerm = emptyData.tipType === 'search';
+        this.curSearchParams = cloneDeep(params);
+        this.curEmptyData = cloneDeep(emptyData);
+        if (this.isExportDisabled()) {
+          this.handleReset();
+          return;
         }
+        await this.handleSearchAndExport(false);
       },
 
-      async handleCascadeChange () {
-        this.systemIdError = false;
-        this.resourceActionData = [];
-        this.processesList = [];
-        if (!this.systemId) return;
-        this.actionId = '';
-        this.resourceTypeData = { isEmpty: true };
-        const systemId = this.systemId;
-        try {
-          const res = await this.$store.dispatch('approvalProcess/getActionGroups', { system_id: systemId });
-          this.recursionFunc(res.data);
-        } catch (e) {
-          console.error(e);
-          this.messageAdvancedError(e);
-        }
-      },
-
-      handleSystemClear () {
-        this.actionId = '';
-        this.resourceTypeData = { isEmpty: true };
-        this.resourceActionData = [];
-        this.processesList = [];
-        this.systemIdError = true;
-        this.actionIdError = true;
-      },
-
-      // 查询类型选择
-      handleSearchChange (value) {
-        this.searchTypeError = false;
-        this.resourceTypeData = { isEmpty: true };
-        this.systemId = '';
-        this.actionId = '';
-        this.resourceInstances = [];
-        if (value === 'operate') {
-          this.permissionType = 'custom';
-        }
-      },
-
-      // 操作选择
-      handleSelected () {
-        this.actionIdError = false;
-        this.resourceTypeError = false;
-        this.resourceInstances = [];
-        this.resourceTypeData = this.processesList.find(e => e.id === this.actionId);
-      },
-
-      handleActionClear () {
-        this.actionId = '';
-        this.actionIdError = true;
-        this.resourceTypeData = { isEmpty: true };
-        this.resourceActionData = [];
+      async handleRefreshTable () {
+        this.curEmptyData.tipType = '';
+        this.emptyData.tipType = '';
+        this.formData.name = '';
+        this.pagination.current = 1;
+        this.isSearchPerm = false;
+        this.curSearchParams = {};
+        await this.handleSearchAndExport(false);
       },
 
       // 查询和导入
       async handleSearchAndExport (isExport = false) {
-        if (!this.searchType) {
-          this.searchTypeError = true;
-          return;
-        }
-        if (!this.systemId) {
-          this.systemIdError = true;
-          return;
-        }
-        if (!this.actionId) {
-          this.actionIdError = true;
-          return;
-        }
-        // if (!this.resourceTypeData.isEmpty && this.searchType !== 'operate'
-        //   && this.resourceTypeData.resource_groups[this.groupIndex]
-        //   && this.resourceTypeData.resource_groups[this.groupIndex]
-        //     .related_resource_types.some(e => e.empty)) {
-        //   this.resourceTypeError = true;
-        //   return;
-        // }
         this.tableLoading = !isExport;
-        let resourceInstances = _.cloneDeep(this.resourceInstances);
-        resourceInstances = resourceInstances.reduce((prev, item) => {
-          const { id, resourceInstancesPath } = this.handlePathData(item, item.type);
-          prev.push({
-            system_id: item.system_id,
-            id: id,
-            type: item.type,
-            name: item.name,
-            path: resourceInstancesPath
-          });
-          return prev;
-        }, []);
-        // 区分管理空间下和平台管理下的资源权限管理的业务
-        const { current, limit } = this.pagination;
         const params = {
-          limit: this.limit,
-          system_id: this.systemId || '',
-          action_id: this.actionId,
-          resource_instances: resourceInstances || []
-        };
-        const routeMap = {
-          resourcePermManage: async () => {
-            params.apply_disable = false;
-            params.offset = limit * (current - 1);
-            try {
-              const { code, data } = await this.$store.dispatch('permApply/getJoinGroupSearch', params);
-              this.pagination.count = data.count || 0;
-              this.tableList = data.results || [];
-              this.tableListClone = _.cloneDeep(this.tableList);
-              this.emptyData.tipType = 'search';
-              this.emptyData = formatCodeData(code, this.emptyData, this.tableList.length === 0);
-            } catch (e) {
-              console.error(e);
-              this.tableList = [];
-              this.emptyData = formatCodeData(e.code, this.emptyData);
-              this.messageAdvancedError(e);
-            } finally {
-              this.tableLoading = false;
-            }
-          },
-          resourcePermiss: async () => {
-            params.permission_type = this.searchType === 'resource_instance' ? 'resource_instance' : this.permissionType;
-            try {
-              const fetchUrl = isExport ? 'resourcePermiss/exportResourceManager' : 'resourcePermiss/getResourceManager';
-              const res = await this.$store.dispatch(fetchUrl, params);
-              if (isExport) {
-                if (res.ok) {
-                  const blob = await res.blob();
-                  const url = URL.createObjectURL(blob);
-                  const element = document.createElement('a');
-                  element.download = '资源权限管理.xlsx';
-                  element.href = url;
-                  element.click();
-                  URL.revokeObjectURL(blob);
-
-                  this.$bkMessage({
-                    theme: 'success',
-                    message: '导出成功！'
-                  });
-                }
-              } else {
-                this.tableList = res.data || [];
-                this.tableListClone = _.cloneDeep(this.tableList);
-                this.pagination.count = res.data.length;
-                const data = this.getDataByPage();
-                this.tableList.splice(0, this.tableList.length, ...data);
-                this.emptyData.tipType = 'search';
-                this.emptyData = formatCodeData(res.code, this.emptyData, this.tableList.length === 0);
-              }
-            } catch (e) {
-              console.error(e);
-              this.tableList = [];
-              this.emptyData = formatCodeData(e.code, this.emptyData);
-              this.messageAdvancedError(e);
-            } finally {
-              this.tableLoading = false;
-            }
+          ...this.curSearchParams,
+          ...{
+            limit: this.limit,
+            permission_type: this.searchType
           }
         };
-        return routeMap[this.$route.name]();
-      },
-
-      handlePathData (data, type) {
-        if (data.resourceInstancesPath && data.resourceInstancesPath.length) {
-          const lastIndex = data.resourceInstancesPath.length - 1;
-          const path = data.resourceInstancesPath[lastIndex];
-          let id = '';
-          let resourceInstancesPath = [];
-          if (type === path.type) {
-            id = path.id;
-            data.resourceInstancesPath.splice(lastIndex, 1);
+        try {
+          const fetchUrl = isExport ? 'resourcePermiss/exportResourceManager' : 'resourcePermiss/getResourceManager';
+          const res = await this.$store.dispatch(fetchUrl, params);
+          if (isExport) {
+            if (res.ok) {
+              const blob = await res.blob();
+              const url = URL.createObjectURL(blob);
+              const element = document.createElement('a');
+              element.download = `${this.$t(`m.nav['资源权限管理']`)}.xlsx`;
+              element.href = url;
+              element.click();
+              URL.revokeObjectURL(blob);
+              this.messageSuccess(this.$t(`m.resourcePermiss['导出成功！']`), 3000);
+            }
           } else {
-            id = '*';
+            this.tableList = res.data || [];
+            this.tableListClone = cloneDeep(this.tableList);
+            this.pagination.count = this.tableList.length;
+            const result = this.getDataByPage();
+            this.tableList.splice(0, this.tableList.length, ...result);
+            this.emptyData.tipType = 'search';
+            this.emptyData = formatCodeData(res.code, this.emptyData, this.tableList.length === 0);
           }
-          resourceInstancesPath = data.resourceInstancesPath.reduce((p, e) => {
-            p.push({
-              type: e.type,
-              id: e.id,
-              name: e.name
-            });
-            return p;
-          }, []);
-          return { id, resourceInstancesPath };
+        } catch (e) {
+          this.tableList = [];
+          this.emptyData = formatCodeData(e.code, this.emptyData);
+          this.messageAdvancedError(e);
+        } finally {
+          this.tableLoading = false;
         }
-        return { id: '*', resourceInstancesPath: [] };
       },
 
-      // 重置
-      handleReset () {
-        this.searchType = 'resource_instance';
-        if (!this.isSystemDisabled) {
-          this.systemId = '';
-        }
-        this.actionId = '';
-        this.permissionType = '';
-        this.limit = 1000;
-        this.tableList = [];
-        this.resourceInstances = [];
-        this.resourceTypeData = { isEmpty: true };
-        this.pagination = Object.assign(this.pagination, { current: 1, limit: 10, showTotalCount: true });
-        this.emptyData = {
-          type: 'empty',
-          text: '暂无数据',
-          tip: '',
-          tipType: ''
-        };
+      async handleSearchTable () {
+        this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleSearchUserGroup(true, true);
       },
 
-      // 求值
-      recursionFunc (list) {
-        list.forEach(data => {
-          if (data.actions && data.actions.length) {
-            data.actions.forEach(e => {
-              this.resourceActionData.push(e);
-            });
-          }
-          if (data.sub_groups && data.sub_groups.length) {
-            data.sub_groups.forEach(item => {
-              if (item.actions && item.actions.length) {
-                item.actions.forEach(e => {
-                  this.resourceActionData.push(e);
-                });
-              }
-            });
-          }
-        });
-        this.resourceActionData = this.resourceActionData.filter((e, index, self) => self.indexOf(e) === index);
-        this.resourceActionData.forEach(item => {
-          if (!item.resource_groups || !item.resource_groups.length) {
-            item.resource_groups = item.related_resource_types.length ? [{ id: '', related_resource_types: item.related_resource_types }] : [];
-          }
-          this.processesList.push(new Policy({ ...item, tag: 'add' }, 'custom'));
-        });
-      },
-
-      // 显示资源实例
-      showResourceInstance (data, resItem, resIndex, groupIndex) {
-        this.params = {
-          system_id: this.systemId,
-          action_id: data.id,
-          resource_type_system: resItem.system_id,
-          resource_type_id: resItem.type
-        };
-        this.curResIndex = resIndex;
-        this.groupIndex = groupIndex;
-        this.resourceInstanceSidesliderTitle = this.$t(`m.info['关联侧边栏操作的资源实例']`, { value: `${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}` });
-        window.changeAlert = 'iamSidesider';
-        this.isShowResourceInstanceSideslider = true;
-      },
-
-      handleResourceCancel (payload) {
-        const typeMap = {
-          mask: () => {
-            const { data } = this.$refs.renderResourceRef.handleGetValue();
-            const { hasSelectedCondition } = this.$refs.renderResourceRef;
-            let cancelHandler = Promise.resolve();
-            if (JSON.stringify(data) !== JSON.stringify(hasSelectedCondition)) {
-              cancelHandler = leaveConfirm();
-            }
-            cancelHandler.then(() => {
-              this.isShowResourceInstanceSideslider = false;
-              this.resetDataAfterClose();
-            }, _ => _);
-          },
-          cancel: () => {
-            this.resetDataAfterClose();
-            this.isShowResourceInstanceSideslider = false;
-          }
-        };
-        return typeMap[payload]();
-      },
-
-      resetDataAfterClose () {
-        this.curResIndex = -1;
-        this.groupIndex = -1;
-        this.params = {};
-        this.resourceInstanceSidesliderTitle = '';
-      },
-
-      async handleResourceSubmit () {
-        const conditionData = this.$refs.renderResourceRef.handleGetValue();
-        const { isEmpty, data } = conditionData;
-        if (isEmpty) {
-          return;
-        }
-        const resItem = this.resourceTypeData.resource_groups[this.groupIndex]
-          .related_resource_types[this.curResIndex];
-        const isConditionEmpty = data.length === 1 && data[0] === 'none';
-        if (isConditionEmpty) {
-          resItem.condition = ['none'];
-          resItem.isLimitExceeded = false;
-          this.resourceInstances = [];
-        } else {
-          resItem.condition = data;
-          if (data.length) {
-            data.forEach(item => {
-              item.instance.forEach(e => {
-                resItem.resourceInstancesPath = e.path[0];
-              });
-            });
-          } else {
-            delete resItem.resourceInstancesPath;
-          }
-          if (this.curResIndex !== -1) {
-            this.resourceInstances.splice(this.curResIndex, 1, resItem);
-          }
-        }
-        window.changeAlert = false;
-        this.resourceInstanceSidesliderTitle = '';
-        this.isShowResourceInstanceSideslider = false;
-        this.curResIndex = -1;
-        this.resourceTypeError = false;
+      handleSelectSystemAction (payload) {
+        this.curSystemAction = { ...payload };
       },
             
       // 搜索
@@ -690,36 +306,34 @@
             await this.handleSearchAndExport();
           },
           resourcePermiss: () => {
-            if (this.searchValue) {
+            const { name } = this.formData;
+            if (this.formData.name) {
               this.emptyData = formatCodeData(0, Object.assign(this.emptyData, { tipType: 'search' }));
-              this.tableList = _.cloneDeep(this.tableListClone).filter(item => {
+              this.tableList = cloneDeep(this.tableListClone).filter(item => {
                 if (['user'].includes(item.type)) {
-                  return item.id.indexOf(this.searchValue) > -1
-                    || item.name.indexOf(this.searchValue) > -1
-                    || `${item.id} (${item.name})`.indexOf(this.searchValue) > -1;
+                  return item.id.indexOf(name) > -1
+                    || item.name.indexOf(name) > -1
+                    || `${item.id} (${item.name})`.indexOf(name) > -1;
                 } else {
-                  return item.name.indexOf(this.searchValue) > -1;
+                  return item.name.indexOf(name) > -1;
                 }
               }
               );
             } else {
-              this.tableList = _.cloneDeep(this.tableListClone);
+              this.tableList = cloneDeep(this.tableListClone);
             }
           }
         };
         routeMap[this.$route.name]();
       },
 
-      quickSearchMethod (value) {
-        return {
-          name: this.$t(`m.common['关键字']`),
-          id: 'keyword',
-          values: [value]
-        };
+      handleClearSearch () {
+        this.emptyData.tipType = 'noPerm';
+        this.tableList = cloneDeep(this.tableListClone);
       },
 
       handleEmptyClear () {
-        this.searchValue = '';
+        this.formData.name = '';
         this.handleReset();
         this.emptyData = formatCodeData(0, Object.assign(this.emptyData, { type: 'empty', text: '', tipType: '' }));
         if (['resourcePermManage'].includes(this.$route.name)) {
@@ -731,43 +345,38 @@
         this.handleSearchAndExport();
       },
 
-      handleRemoteRtx (value) {
-        return fuzzyRtxSearch(value)
-          .then(data => {
-            return data.results;
-          });
+      handlePageChange (page) {
+        if (this.currentBackup === page) {
+          return;
+        }
+        this.pagination.current = page;
+        const data = this.getDataByPage(page);
+        this.tableList.splice(0, this.tableList.length, ...data);
       },
 
-      pageChange (page) {
-        const routeMap = {
-          resourcePermManage: async () => {
-            this.pagination.current = page;
-            await this.handleSearchAndExport();
-          },
-          resourcePermiss: () => {
-            if (this.currentBackup === page) {
-              return;
-            }
-            this.pagination.current = page;
-            const data = this.getDataByPage(page);
-            this.tableList.splice(0, this.tableList.length, ...data);
-          }
-        };
-        return routeMap[this.$route.name]();
+      handleLimitChange (limit) {
+        this.pagination = Object.assign(this.pagination, { current: 1, limit });
+        const data = this.getDataByPage(this.pagination.current);
+        this.tableList.splice(0, this.tableList.length, ...data);
       },
 
-      limitChange (limit) {
-        this.limit = limit;
-        const routeMap = {
-          resourcePermManage: async () => {
-            await this.handleSearchAndExport();
-          },
-          resourcePermiss: () => {
-            const data = this.getDataByPage(this.pagination.current);
-            this.tableList.splice(0, this.tableList.length, ...data);
-          }
+      // 重置
+      handleReset () {
+        this.searchType = 'resource_instance';
+        if (!this.isSystemDisabled) {
+          this.curSearchParams.systemId = '';
+        }
+        this.limit = 1000;
+        this.tableList = [];
+        this.formData = Object.assign(this.formData, { name: '' });
+        this.pagination = Object.assign(this.pagination, { current: 1, limit: 10, showTotalCount: true });
+        this.emptyData = {
+          type: 'empty',
+          text: '暂无数据',
+          tip: this.$t(`m.resourcePermiss['查询必须选择“系统”和“操作名”']`),
+          tipType: 'noPerm'
         };
-        return routeMap[this.$route.name]();
+        this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleClearSearch();
       },
 
       getDataByPage (page) {
@@ -783,91 +392,76 @@
           endIndex = this.tableListClone.length;
         }
         return this.tableListClone.slice(startIndex, endIndex);
+      },
+
+      formatFormItemWidth () {
+        const navStickWidth = this.navStick ? 260 + 48 : 60 + 48;
+        this.resourceSliderWidth = Math.ceil(window.innerWidth * 0.67 - 7) < 960
+          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7);
+        this.formItemWidth = `${(window.innerWidth - navStickWidth - (this.gridCount * 12)) / this.gridCount}px`;
+      },
+
+      resetDataAfterClose () {
+        this.curResIndex = -1;
+        this.groupIndex = -1;
+        this.params = {};
+        this.instanceSliderTitle = '';
       }
-            
     }
   };
 </script>
-<style lang="postcss">
-    .iam-system-access-wrapper {
-        .detail-link {
-            color: #3a84ff;
-            cursor: pointer;
-            &:hover {
-                color: #699df4;
-            }
-            font-size: 12px;
-        }
-        .system-access-table {
-            margin-top: 16px;
-            border-right: none;
-            border-bottom: none;
-            &.set-border {
-                border-right: 1px solid #dfe0e5;
-                border-bottom: 1px solid #dfe0e5;
-            }
-            .system-access-name {
-                color: #3a84ff;
-                cursor: pointer;
-                &:hover {
-                    color: #699df4;
-                }
-            }
-            .lock-status {
-                font-size: 12px;
-                color: #fe9c00;
-            }
-        }
-        .link-btn{
-            margin: 10px 0 10px 600px;
-        }
-        .msg-content{
-            background: #555555;
-            color: #fff;
-            margin: 0 0px 0 30px;
-            padding: 10px;
-            max-height: 1200px;
-            overflow-y: scroll;
-        }
-    }
-    .resource-container {
-        display: flex;
-        justify-content: space-between;
-        .relation-content-item{
-            display: flex;
-            /* width: 220px; */
-            .content-name{
-                font-size: 14px;
-                padding-right: 10px;
-            }
-            .content{
-                width: 200px;
-            }
-        }
 
-        .relation-content-item:nth-child(2){
-            margin-left: 32px;
+<style lang="postcss" scoped>
+.resource-perm-manage-wrapper {
+  padding: 16px 24px;
+  /deep/ .resource-perm-manage {
+    background-color: #f5f6fa;
+    padding: 0;
+    .form-item-resource {
+      margin-right: 12px !important;
+      .bk-select {
+        background-color: #ffffff;
+      }
+    }
+    .left {
+      .resource-action-form {
+        .error-tips {
+          position: absolute;
+          line-height: 16px;
+          font-size: 10px;
+          color: #ea3636;
         }
+      }
     }
-
-    .resource-flex {
-        display: flex;
-        justify-content: space-between;
-    }
-
-    .form-item-resource{
-        position: relative;
-    }
-
-    .error-tips {
-        font-size: 12px;
-        color: #ff4d4d;
-        position: absolute;
-        top: 33px;
-        height: 20px;
-        line-height: 20px;
-        &.mt {
-            margin-top: 10px;
+    .custom-content {
+      &-footer {
+        margin-top: 16px;
+        font-size: 0;
+        .operate-btn {
+          font-size: 14px;
+          margin-right: 8px;
+          &.reset-btn {
+            margin-right: 32px;
+          }
         }
+      }
     }
+  }
+  .system-access-table {
+    margin-top: 16px;
+    border-right: none;
+    border-bottom: none;
+    &.set-border {
+      border-right: 1px solid #dfe0e5;
+      border-bottom: 1px solid #dfe0e5;
+    }
+    .system-access-name {
+      color: #3a84ff;
+      cursor: pointer;
+      &:hover {
+        color: #699df4;
+      }
+    }
+  }
+}
 </style>

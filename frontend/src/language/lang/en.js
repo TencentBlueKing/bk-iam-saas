@@ -1424,7 +1424,10 @@ export const m = {
         '实例权限': 'Instance permissions',
         '操作权限': 'Action permissions',
         '自定义权限': 'Custom permissions',
-        '模板权限': 'Template permissions'
+        '模板权限': 'Template permissions',
+        '导出成功！': 'Export successful!',
+        '导出需提供系统和操作名': 'Export requires providing system and action name',
+        '查询必须选择“系统”和“操作名”': "Query must select 'System' and 'Action name'"
     },
     userGroupSetting: {
         '所有用户组不可被申请': 'All user groups cannot be applied for',

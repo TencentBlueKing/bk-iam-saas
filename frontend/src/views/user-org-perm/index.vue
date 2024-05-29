@@ -14,6 +14,7 @@
         :is-custom-search="true"
         :cur-search-data="searchData"
         :grid-count="gridCount"
+        :form-item-margin="formItemMargin"
         @on-remote-table="handleRemoteTable"
         @on-refresh-table="handleRefreshTable"
         @on-select-system="handleSelectSystemAction"
@@ -387,6 +388,7 @@
         resourceTypeData: {},
         currentBackup: 1,
         gridCount: 4,
+        formItemMargin: 16,
         dragWidth: 224,
         formItemWidth: '',
         listHeight: window.innerHeight - 51 - 51 - 157 - 42 - 8,
@@ -1053,7 +1055,8 @@
       },
 
       formatFormItemWidth () {
-        this.formItemWidth = `${(window.innerWidth - (this.navStick ? 276 : 76) - this.gridCount * 16) / this.gridCount}px`;
+        const navStickWidth = this.navStick ? 292 - this.formItemMargin : 92 - this.formItemMargin;
+        this.formItemWidth = `${(window.innerWidth - navStickWidth - (this.gridCount * this.formItemMargin)) / this.gridCount}px`;
       }
     }
   };
