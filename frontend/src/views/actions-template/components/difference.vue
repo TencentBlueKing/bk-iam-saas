@@ -316,8 +316,10 @@
           const tempActions = this.handleGetAddAction(value);
           this.addActions = tempActions;
           this.isNoAddActions = this.addActions.length < 1;
+          if (!this.isNoAddActions) {
+            await this.fetchAggregationAction();
+          }
           console.log(this.addActions, '新增操作');
-          await this.fetchAggregationAction();
         },
         immediate: true
       },
@@ -906,14 +908,14 @@
         }
         const minWidth = window.innerWidth / 2;
         const maxWidth = minWidth + 600;
-        if (clientX < minWidth || clientX >= maxWidth) {
+        if (clientX >= maxWidth) {
           return;
         }
-        this.dragRealityWidth = window.innerWidth - clientX - this.navWidth;
+        this.dragRealityWidth = window.innerWidth - clientX - this.navWidth + 26;
       },
 
       handleResizeView () {
-        const resizeWidth = window.innerWidth / 2 - this.navWidth;
+        const resizeWidth = window.innerWidth / 2 - this.navWidth + 26;
         [this.dragWidth, this.dragRealityWidth] = [resizeWidth, resizeWidth];
       }
     }
@@ -1029,21 +1031,7 @@
         }
       }
       .related-instance-table {
-        overflow-y: auto;
-        max-height: calc(100vh - 246px);
-        &::-webkit-scrollbar {
-          width: 6px;
-          height: 6px;
-          margin-left: 5px;
-        }
-        &::-webkit-scrollbar-thumb {
-          background: #dcdee5;
-          border-radius: 3px;
-        }
-        &::-webkit-scrollbar-track {
-          background: transparent;
-          border-radius: 3px;
-        }
+        box-sizing: border-box;
       }
       &.is-full {
         width: 100%;

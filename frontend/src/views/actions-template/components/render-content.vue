@@ -524,7 +524,7 @@
         try {
           const { data } = await this.$store.dispatch('permTemplate/getTemplateMember', params);
           this.hasGroupPreview = data.count > 0;
-          this.$store.commit('permTemplate/updatePreGroupOnePage', Math.ceil(data.count / 5) === 1);
+          this.$store.commit('permTemplate/updatePreGroupOnePage', Math.ceil(data.count / 100) === 1);
         } catch (e) {
           this.messageAdvancedError(e);
         }

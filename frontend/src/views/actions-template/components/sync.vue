@@ -1,279 +1,281 @@
 <template>
   <div class="temp-group-sync-wrapper">
-    <div
-      class="temp-group-sync-table"
-      v-for="(group, groupIndex) in syncGroupList"
-      :key="group.id"
-      :ref="`${group.name}&${group.id}`"
-    >
-      <div class="flex-between temp-group-sync-table-header" @click.stop="handleExpand(group)">
-        <div class="temp-group-sync-table-header-left">
-          <Icon bk :type="group.expand ? 'down-shape' : 'right-shape'" class="expand-icon" />
-          <div :class="['group-status-btn', { 'no-fill-btn': isCurGroupEmpty(group) }]">
-            <Icon :type="isCurGroupEmpty(group) ? 'unfinished' : 'check-fill'" class="fill-status" />
-            <span class="fill-text">
-              {{ isCurGroupEmpty(group) ? $t(`m.actionsTemplate['未填写']`) : $t(`m.actionsTemplate['已填写']`) }}
-            </span>
-          </div>
-          <div class="single-hide group-name">{{ group.name }}</div>
-        </div>
-        <div class="temp-group-sync-table-header-right" v-show="group.expand" @click.stop="">
-          <bk-popconfirm
-            trigger="click"
-            :ref="`removeSyncGroupConfirm_${group.name}_${group.id}`"
-            placement="bottom-end"
-            ext-popover-cls="actions-temp-resynchronize-confirm"
-            :width="320"
-            @confirm="handleConfirmResynchronize(group)"
-          >
-            <div slot="content">
-              <div class="popover-title">
-                <div class="popover-title-text">
-                  {{ $t(`m.dialog['确认解除与该操作模板的同步？']`) }}
-                </div>
-              </div>
-              <div class="popover-content">
-                <div class="popover-content-item">
-                  <span class="popover-content-item-label"
-                  >{{ $t(`m.memberTemplate['用户组名称']`) }}:</span
-                  >
-                  <span class="popover-content-item-value"> {{ group.name }}</span>
-                </div>
-                <div class="popover-content-tip">
-                  {{ $t(`m.actionsTemplate['解除同步后，模板权限将转为用户组自定义权限，不会再继续同步该模板的操作。']`) }}
-                </div>
-              </div>
-            </div>
-            <bk-button
-              size="small"
-              theme="primary"
-              class="un-sync"
-              text
-              :loading="removeSyncLoading"
-              @click.stop="handleUnSynchronize(group)"
-            >
-              {{ $t(`m.actionsTemplate['解除同步']`) }}
-            </bk-button>
-          </bk-popconfirm>
-          <bk-popover :content="$t(`m.actionsTemplate['批量复用资源实例值（资源模板）到其他用户组']`)">
-            <bk-button size="small" text @click.stop="handleBatchRepeat(group, 'multiple')">
-              {{ $t(`m.actionsTemplate['批量复用']`) }}
-            </bk-button>
-          </bk-popover>
-        </div>
-      </div>
-      <bk-table
-        v-bkloading="{ isLoading: syncLoading, opacity: 1 }"
-        v-if="group.expand"
-        :data="group.tableList"
-        col-border
-        border
-        size="small"
-        ext-cls="temp-group-sync-table-content"
-        :key="tableKey"
-        :cell-class-name="getCellClass"
+    <div class="temp-group-sync-content">
+      <div
+        class="temp-group-sync-table"
+        v-for="(group, groupIndex) in syncGroupList"
+        :key="group.id"
+        :ref="`${group.name}&${group.id}`"
       >
-        <bk-table-column
-          :min-width="180"
-          :resizable="false"
-          :label="$t(`m.common['操作']`)"
-        >
-          <template slot-scope="{ row }">
-            <span>
-              <bk-tag :type="formatModeType(row.mode_type).tag" class="name-tag">
-                {{ formatModeType(row.mode_type).text }}
-              </bk-tag>
-              <span :class="[`${row.mode_type}-name`]" v-bk-tooltips="{ content: row.name }">
-                {{ row.name }}
+        <div class="flex-between temp-group-sync-table-header" @click.stop="handleExpand(group)">
+          <div class="temp-group-sync-table-header-left">
+            <Icon bk :type="group.expand ? 'down-shape' : 'right-shape'" class="expand-icon" />
+            <div :class="['group-status-btn', { 'no-fill-btn': isCurGroupEmpty(group) }]">
+              <Icon :type="isCurGroupEmpty(group) ? 'unfinished' : 'check-fill'" class="fill-status" />
+              <span class="fill-text">
+                {{ isCurGroupEmpty(group) ? $t(`m.actionsTemplate['未填写']`) : $t(`m.actionsTemplate['已填写']`) }}
               </span>
-            </span>
-          </template>
-        </bk-table-column>
-        <bk-table-column
-          :resizable="false"
-          :label="$t(`m.permApply['资源类型']`)"
-        >
-          <template slot-scope="{ row }">
-            <div class="resource-type-content" v-if="!!row.isAggregate">
-              <div class="resource-type-list" v-if="['add'].includes(row.mode_type)">
-                <div
-                  v-bk-tooltips="{ content: aggregate.name, placement: 'left-start' }"
-                  v-for="(aggregate, index) in row.aggregateResourceType"
-                  :key="aggregate.id"
-                  :class="['single-hide', 'resource-type-item', { 'is-selected': row.selectedIndex === index }]"
-                >
-                  {{ aggregate.name }}
+            </div>
+            <div class="single-hide group-name">{{ group.name }}</div>
+          </div>
+          <div class="temp-group-sync-table-header-right" v-show="group.expand" @click.stop="">
+            <bk-popconfirm
+              trigger="click"
+              :ref="`removeSyncGroupConfirm_${group.name}_${group.id}`"
+              placement="bottom-end"
+              ext-popover-cls="actions-temp-resynchronize-confirm"
+              :width="320"
+              @confirm="handleConfirmResynchronize(group)"
+            >
+              <div slot="content">
+                <div class="popover-title">
+                  <div class="popover-title-text">
+                    {{ $t(`m.dialog['确认解除与该操作模板的同步？']`) }}
+                  </div>
+                </div>
+                <div class="popover-content">
+                  <div class="popover-content-item">
+                    <span class="popover-content-item-label"
+                    >{{ $t(`m.memberTemplate['用户组名称']`) }}:</span
+                    >
+                    <span class="popover-content-item-value"> {{ group.name }}</span>
+                  </div>
+                  <div class="popover-content-tip">
+                    {{ $t(`m.actionsTemplate['解除同步后，模板权限将转为用户组自定义权限，不会再继续同步该模板的操作。']`) }}
+                  </div>
                 </div>
               </div>
-            </div>
-            <div class="resource-type-content" v-else>
-              <template v-if="row.resource_groups && row.resource_groups.length > 0">
-                <div
-                  v-for="resource in row.resource_groups"
-                  :key="resource.id"
-                  class="resource-type-list"
-                >
+              <bk-button
+                size="small"
+                theme="primary"
+                class="un-sync"
+                text
+                :loading="removeSyncLoading"
+                @click.stop="handleUnSynchronize(group)"
+              >
+                {{ $t(`m.actionsTemplate['解除同步']`) }}
+              </bk-button>
+            </bk-popconfirm>
+            <bk-popover :content="$t(`m.actionsTemplate['批量复用资源实例值（资源模板）到其他用户组']`)">
+              <bk-button size="small" text @click.stop="handleBatchRepeat(group, 'multiple')">
+                {{ $t(`m.actionsTemplate['批量复用']`) }}
+              </bk-button>
+            </bk-popover>
+          </div>
+        </div>
+        <bk-table
+          v-bkloading="{ isLoading: syncLoading, opacity: 1 }"
+          v-if="group.expand"
+          :data="group.tableList"
+          col-border
+          border
+          size="small"
+          ext-cls="temp-group-sync-table-content"
+          :key="tableKey"
+          :cell-class-name="getCellClass"
+        >
+          <bk-table-column
+            :min-width="180"
+            :resizable="false"
+            :label="$t(`m.common['操作']`)"
+          >
+            <template slot-scope="{ row }">
+              <span>
+                <bk-tag :type="formatModeType(row.mode_type).tag" class="name-tag">
+                  {{ formatModeType(row.mode_type).text }}
+                </bk-tag>
+                <span :class="[`${row.mode_type}-name`]" v-bk-tooltips="{ content: row.name }">
+                  {{ row.name }}
+                </span>
+              </span>
+            </template>
+          </bk-table-column>
+          <bk-table-column
+            :resizable="false"
+            :label="$t(`m.permApply['资源类型']`)"
+          >
+            <template slot-scope="{ row }">
+              <div class="resource-type-content" v-if="!!row.isAggregate">
+                <div class="resource-type-list" v-if="['add'].includes(row.mode_type)">
                   <div
-                    v-bk-tooltips="{ content: related.name, placement: 'left-start' }"
-                    v-for="related in resource.related_resource_types"
-                    :key="related.type"
-                    :class="['single-hide', 'resource-type-item', `resource-type-item-${row.mode_type}`]"
+                    v-bk-tooltips="{ content: aggregate.name, placement: 'left-start' }"
+                    v-for="(aggregate, index) in row.aggregateResourceType"
+                    :key="aggregate.id"
+                    :class="['single-hide', 'resource-type-item', { 'is-selected': row.selectedIndex === index }]"
                   >
-                    {{ related.name }}
+                    {{ aggregate.name }}
                   </div>
                 </div>
-              </template>
-              <div v-else>{{ $t(`m.common['无']`) }}</div>
-            </div>
-          </template>
-        </bk-table-column>
-        <bk-table-column
-          :min-width="310"
-          :resizable="false"
-          :render-header="(h, { column, $index }) => renderResourceHeader(h, { column, $index }, group, groupIndex)"
-        >
-          <template slot-scope="{ row, $index }">
-            <div class="relation-content-wrapper" v-if="!!row.isAggregate">
-              <template v-if="!row.isEmpty">
-                <template v-if="['add'].includes(row.mode_type)" class="resource-type-content">
-                  <div class="resource-type-list">
+              </div>
+              <div class="resource-type-content" v-else>
+                <template v-if="row.resource_groups && row.resource_groups.length > 0">
+                  <div
+                    v-for="resource in row.resource_groups"
+                    :key="resource.id"
+                    class="resource-type-list"
+                  >
                     <div
-                      v-for="(resourceType, resourceTypeIndex) in row.aggregateResourceType"
-                      :key="resourceType.id"
-                      :class="[
-                        'single-hide',
-                        'relation-content-item',
-                        { 'set-margin-bottom': $index === group.tableList.length - 1 }
-                      ]"
+                      v-bk-tooltips="{ content: related.name, placement: 'left-start' }"
+                      v-for="related in resource.related_resource_types"
+                      :key="related.type"
+                      :class="['single-hide', 'resource-type-item', `resource-type-item-${row.mode_type}`]"
                     >
-                      <div class="content">
-                        <render-condition
-                          :ref="`condition_${$index}_${resourceTypeIndex}_aggregateRef`"
-                          :value="formatDisplayValue(row, resourceTypeIndex)"
-                          :is-empty="row.empty"
-                          :is-error="row.isError"
-                          :can-view="false"
-                          :cur-copy-mode="curCopyMode"
-                          :can-paste="row.canPaste"
-                          @on-mouseover="handleAggregateConditionMouseover(row)"
-                          @on-mouseleave="handleConditionMouseleave(row)"
-                          @on-copy="handleAggregateInstanceCopy(row, $index, resourceTypeIndex)"
-                          @on-paste="handleAggregateInstancePaste(row, $index, resourceTypeIndex)"
-                          @on-batch-paste="handleAggregateInstanceBatchPaste(row, $index, resourceTypeIndex)"
-                          @on-click="handleShowAggregateResourceSlider(row, $index, resourceTypeIndex, groupIndex)"
-                        />
-                      </div>
+                      {{ related.name }}
                     </div>
                   </div>
                 </template>
-                <template v-if="['delete'].includes(row.mode_type)">
-                  <div v-for="(related, relatedIndex) in row.resource_groups" :key="related.id">
-                    <div
-                      class="single-hide relation-content-item"
-                      v-for="(types, typesIndex) in related.related_resource_types"
-                      :key="types.type"
-                      @click.stop="handleViewResource(row, relatedIndex, typesIndex)"
-                    >
-                      <div class="content">
-                        <render-resource-popover
-                          :key="types.type"
-                          :data="types.condition"
-                          :value="types.value"
-                          :max-width="400"
-                          @on-view="handleViewResource(row, relatedIndex, typesIndex)"
-                        />
+                <div v-else>{{ $t(`m.common['无']`) }}</div>
+              </div>
+            </template>
+          </bk-table-column>
+          <bk-table-column
+            :min-width="310"
+            :resizable="false"
+            :render-header="(h, { column, $index }) => renderResourceHeader(h, { column, $index }, group, groupIndex)"
+          >
+            <template slot-scope="{ row, $index }">
+              <div class="relation-content-wrapper" v-if="!!row.isAggregate">
+                <template v-if="!row.isEmpty">
+                  <template v-if="['add'].includes(row.mode_type)" class="resource-type-content">
+                    <div class="resource-type-list">
+                      <div
+                        v-for="(resourceType, resourceTypeIndex) in row.aggregateResourceType"
+                        :key="resourceType.id"
+                        :class="[
+                          'single-hide',
+                          'relation-content-item',
+                          { 'set-margin-bottom': $index === group.tableList.length - 1 }
+                        ]"
+                      >
+                        <div class="content">
+                          <render-condition
+                            :ref="`condition_${$index}_${resourceTypeIndex}_aggregateRef`"
+                            :value="formatDisplayValue(row, resourceTypeIndex)"
+                            :is-empty="row.empty"
+                            :is-error="row.isError"
+                            :can-view="false"
+                            :cur-copy-mode="curCopyMode"
+                            :can-paste="row.canPaste"
+                            @on-mouseover="handleAggregateConditionMouseover(row)"
+                            @on-mouseleave="handleConditionMouseleave(row)"
+                            @on-copy="handleAggregateInstanceCopy(row, $index, resourceTypeIndex)"
+                            @on-paste="handleAggregateInstancePaste(row, $index, resourceTypeIndex)"
+                            @on-batch-paste="handleAggregateInstanceBatchPaste(row, $index, resourceTypeIndex)"
+                            @on-click="handleShowAggregateResourceSlider(row, $index, resourceTypeIndex, groupIndex)"
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </template>
-              </template>
-              <div v-else class="no-instance-data">{{ $t(`m.common['无需关联实例']`) }}</div>
-            </div>
-            <div class="relation-content-wrapper" v-else>
-              <template v-if="!row.isEmpty">
-                <template v-if="['add'].includes(row.mode_type)">
-                  <div v-for="(related, relatedIndex) in row.resource_groups" :key="related.id">
-                    <div
-                      v-for="(content, contentIndex) in related.related_resource_types"
-                      :key="`${groupIndex}${contentIndex}`"
-                      :class="[
-                        'relation-content-item',
-                        { 'set-margin-bottom':
-                          (related.related_resource_types.length === 1 && addActions.length === 1)
-                          || (group.tableList.length > 1 && group.tableList.length - 1 === $index)
-                        }
-                      ]"
-                    >
-                      <div class="content">
-                        <render-condition
-                          :ref="`condition_${groupIndex}_${$index}_${contentIndex}_ref`"
-                          :value="content.value"
-                          :params="curCopyParams"
-                          :is-empty="content.empty"
-                          :is-error="content.isError"
-                          :cur-copy-mode="curCopyMode"
-                          :can-view="row.canView"
-                          :can-paste="content.canPaste"
-                          @on-mouseover="handleConditionMouseover(content)"
-                          @on-mouseleave="handleConditionMouseleave(content)"
-                          @on-copy="handleInstanceCopy(content, groupIndex, contentIndex, $index, row)"
-                          @on-paste="handleInstancePaste(...arguments, content)"
-                          @on-batch-paste="handleInstanceBatchPaste(...arguments, content, $index, contentIndex)"
-                          @on-click="handleShowResourceSlider(
-                            row, content, contentIndex, $index, groupIndex, relatedIndex
-                          )"
-                        />
+                  </template>
+                  <template v-if="['delete'].includes(row.mode_type)">
+                    <div v-for="(related, relatedIndex) in row.resource_groups" :key="related.id">
+                      <div
+                        class="single-hide relation-content-item"
+                        v-for="(types, typesIndex) in related.related_resource_types"
+                        :key="types.type"
+                        @click.stop="handleViewResource(row, relatedIndex, typesIndex)"
+                      >
+                        <div class="content">
+                          <render-resource-popover
+                            :key="types.type"
+                            :data="types.condition"
+                            :value="types.value"
+                            :max-width="400"
+                            @on-view="handleViewResource(row, relatedIndex, typesIndex)"
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  </template>
                 </template>
-                <template v-if="['delete'].includes(row.mode_type)">
-                  <div v-for="(related, relatedIndex) in row.resource_groups" :key="related.id">
-                    <div
-                      class="single-hide relation-content-item"
-                      v-for="(types, typesIndex) in related.related_resource_types"
-                      :key="types.type"
-                      @click.stop="handleViewResource(row, relatedIndex, typesIndex)"
-                    >
-                      <div class="content">
-                        <render-resource-popover
-                          :key="types.type"
-                          :data="types.condition"
-                          :value="types.value"
-                          :max-width="400"
-                          @on-view="handleViewResource(row, relatedIndex, typesIndex)"
-                        />
+                <div v-else class="no-instance-data">{{ $t(`m.common['无需关联实例']`) }}</div>
+              </div>
+              <div class="relation-content-wrapper" v-else>
+                <template v-if="!row.isEmpty">
+                  <template v-if="['add'].includes(row.mode_type)">
+                    <div v-for="(related, relatedIndex) in row.resource_groups" :key="related.id">
+                      <div
+                        v-for="(content, contentIndex) in related.related_resource_types"
+                        :key="`${groupIndex}${contentIndex}`"
+                        :class="[
+                          'relation-content-item',
+                          { 'set-margin-bottom':
+                            (related.related_resource_types.length === 1 && addActions.length === 1)
+                            || (group.tableList.length > 1 && group.tableList.length - 1 === $index)
+                          }
+                        ]"
+                      >
+                        <div class="content">
+                          <render-condition
+                            :ref="`condition_${groupIndex}_${$index}_${contentIndex}_ref`"
+                            :value="content.value"
+                            :params="curCopyParams"
+                            :is-empty="content.empty"
+                            :is-error="content.isError"
+                            :cur-copy-mode="curCopyMode"
+                            :can-view="row.canView"
+                            :can-paste="content.canPaste"
+                            @on-mouseover="handleConditionMouseover(content)"
+                            @on-mouseleave="handleConditionMouseleave(content)"
+                            @on-copy="handleInstanceCopy(content, groupIndex, contentIndex, $index, row)"
+                            @on-paste="handleInstancePaste(...arguments, content)"
+                            @on-batch-paste="handleInstanceBatchPaste(...arguments, content, $index, contentIndex)"
+                            @on-click="handleShowResourceSlider(
+                              row, content, contentIndex, $index, groupIndex, relatedIndex
+                            )"
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  </template>
+                  <template v-if="['delete'].includes(row.mode_type)">
+                    <div v-for="(related, relatedIndex) in row.resource_groups" :key="related.id">
+                      <div
+                        class="single-hide relation-content-item"
+                        v-for="(types, typesIndex) in related.related_resource_types"
+                        :key="types.type"
+                        @click.stop="handleViewResource(row, relatedIndex, typesIndex)"
+                      >
+                        <div class="content">
+                          <render-resource-popover
+                            :key="types.type"
+                            :data="types.condition"
+                            :value="types.value"
+                            :max-width="400"
+                            @on-view="handleViewResource(row, relatedIndex, typesIndex)"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </template>
                 </template>
-              </template>
-              <div v-else class="no-instance-data">{{ $t(`m.common['无需关联实例']`) }}</div>
-            </div>
-          </template>
-        </bk-table-column>
-      </bk-table>
-      <div class="pagination-wrapper" v-if="pagination.totalPage > 1">
-        <div class="page-display">
-          {{ pagination.current }} / {{ pagination.totalPage }}
-        </div>
-        <bk-button
-          theme="primary"
-          :loading="prevLoading"
-          :disabled="pagination.current < 2"
-          style="margin-left: 5px;"
-          @click="handlePrevPage">
-          {{ $t(`m.common['上一页']`) }}
-        </bk-button>
-        <bk-button
-          v-if="!isLastPage"
-          theme="primary"
-          :loading="nextLoading"
-          style="margin-left: 6px;"
-          @click="handleNextPage">
-          {{ isAddActionEmpty ? $t(`m.common['下一页']`) : $t(`m.common['确认']`) }}
-        </bk-button>
+                <div v-else class="no-instance-data">{{ $t(`m.common['无需关联实例']`) }}</div>
+              </div>
+            </template>
+          </bk-table-column>
+        </bk-table>
       </div>
+    </div>
+    <div class="pagination-wrapper" v-if="pagination.totalPage > 1">
+      <div class="page-display">
+        {{ pagination.current }} / {{ pagination.totalPage }}
+      </div>
+      <bk-button
+        theme="primary"
+        :loading="prevLoading"
+        :disabled="pagination.current < 2"
+        style="margin-left: 5px;"
+        @click="handlePrevPage">
+        {{ $t(`m.common['上一页']`) }}
+      </bk-button>
+      <bk-button
+        v-if="!isLastPage"
+        theme="primary"
+        :loading="nextLoading"
+        style="margin-left: 6px;"
+        @click="handleNextPage">
+        {{ isAddActionEmpty ? $t(`m.common['下一页']`) : $t(`m.common['确认']`) }}
+      </bk-button>
     </div>
 
     <!-- 查看资源实例详情 -->
@@ -630,7 +632,6 @@
     watch: {
       addActions: {
         handler (value) {
-          console.log(value, '最新操作');
           this.curAddActions = [...value];
         },
         deep: true
@@ -1672,17 +1673,27 @@
         } else {
           // data和isEmpty都为false代表是无限制
           const isNoLimited = !isEmpty && !data.length;
+          console.log(instanceKey, curAggregateItem);
           curAggregateItem = Object.assign(curAggregateItem, {
             instances: data,
             isError: !(isNoLimited || data.length),
             isNoLimited: isNoLimited
           });
         }
+        //  curResourceType处理聚合后有多个资源类型，选择无限制的时候需要根据区分所选的资源类型
         this.$set(
           this.syncGroupList[this.curIndex].tableList,
           this.aggregateIndex,
-          new AggregationPolicy({ ...curAggregateItem, ...{ isNeedNoLimited: true, mode_type: 'add' } })
+          new AggregationPolicy({
+             ...curAggregateItem,
+             ...{
+              isNeedNoLimited: true,
+              mode_type: 'add',
+              curResourceTypeKey: instanceKey
+            }
+          })
         );
+        this.handleGetTypeData();
         // this.$emit('on-select', this.syncGroupList[this.curIndex].tableList[this.aggregateIndex]);
       },
 

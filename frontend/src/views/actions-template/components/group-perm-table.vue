@@ -492,9 +492,9 @@
           value: `${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}`
         });
         if (payload.resource_groups.length > 0) {
-          payload.resource_groups.forEach(groupItem => {
+          payload.resource_groups.forEach((groupItem) => {
             if (groupItem.related_resource_types.length > 0) {
-              groupItem.related_resource_types.forEach(item => {
+              groupItem.related_resource_types.forEach((item) => {
                 const { name, type, condition } = item;
                 params.push({
                   name: type,
@@ -507,7 +507,7 @@
           });
         }
         this.previewData = cloneDeep(params);
-        bus.$emit('on-drawer-side', { isShow: true, width: 960, title: sideSliderTitle, previewData: this.previewData });
+        bus.$emit('on-drawer-side', { isShow: true, width: 640, title: sideSliderTitle, previewData: this.previewData });
       },
 
       getCellClass ({ row, column, rowIndex, columnIndex }) {
