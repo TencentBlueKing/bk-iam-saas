@@ -722,7 +722,8 @@ export const m = {
         '可代他人申请加入用户组获取权限': 'You can apply to join the user group for permission on behalf of others',
         '（标签只读：含只读操作）': '({name} read-only: including {value} actions)',
         '收藏成功': 'Collection successful',
-        '取消收藏成功': 'Cancel collection successful'
+        '取消收藏成功': 'Cancel collection successful',
+        '尚未选择用户组': 'No user group has been selected yet'
     },
     myApply: {
         '申请列表': 'Apply List',

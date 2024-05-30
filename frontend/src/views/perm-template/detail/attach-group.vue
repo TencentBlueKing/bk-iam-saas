@@ -7,6 +7,7 @@
       size="small"
       :class="{ 'set-border': tableLoading }"
       ext-cls="perm-template-attach-member-table"
+      :max-height="tableHeight"
       :pagination="pagination"
       @page-change="handlePageChange"
       @page-limit-change="handleLimitChange"
@@ -54,10 +55,10 @@
 <script>
   import DeleteDialog from '@/components/iam-confirm-dialog/index.vue';
   import PermSideslider from '../components/render-group-perm-sideslider';
-  import { formatCodeData } from '@/common/util';
+  import { getWindowHeight, formatCodeData } from '@/common/util';
 
   export default {
-    name: '',
+    inject: ['showNoticeAlert'],
     components: {
       DeleteDialog,
       PermSideslider
@@ -90,7 +91,8 @@
           text: '',
           tip: '',
           tipType: ''
-        }
+        },
+        tableHeight: 0
       };
     },
     watch: {
@@ -101,7 +103,18 @@
     created () {
       this.fetchData(true);
     },
+    mounted () {
+      this.getTableHeight();
+      window.addEventListener('resize', this.getTableHeight);
+      this.$once('hook:beforeDestroy', () => {
+        window.removeEventListener('resize', this.getTableHeight);
+      });
+    },
     methods: {
+      getTableHeight () {
+        const defaultHeight = getWindowHeight() - 185;
+        this.tableHeight = this.showNoticeAlert ? defaultHeight - 40 : defaultHeight;
+      },
       async fetchData (isTabLoading = false, isTableLoading = false) {
         this.tableLoading = isTableLoading;
         this.tabLoading = isTabLoading;
