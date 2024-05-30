@@ -32,7 +32,7 @@
           <div :class="['system-wrapper', curSystemList.length > 20 ? 'system-item-fixed' : '']">
             <template v-if="curSystemList.length > 0">
               <div v-bkloading="{ isLoading: systemListIsLoading, opacity: 1 }">
-                <div class="system-item"
+                <div class="flex-between system-item"
                   v-for="item in curSystemList"
                   :key="item.id"
                   :class="item.id === curSystem ? 'active' : ''"
