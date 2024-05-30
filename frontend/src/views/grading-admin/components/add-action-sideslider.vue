@@ -39,7 +39,9 @@
                     :class="item.id === curSystem ? 'active' : ''"
                     :title="item.name"
                     @click.stop="handleSysChange(item)">
-                    {{ item.name }}
+                    <div :class="['single-hide','system-item-name',{ 'has-badge': systemData[item.id].count }]">
+                      {{ item.name }}
+                    </div>
                     <template v-if="systemData[item.id].count">
                       <bk-badge
                         :theme="getComputedTheme(item.id)"
@@ -976,11 +978,18 @@
                 .system-wrapper {
                     margin-top: 8px;
                     .system-item {
-                        position: relative;
-                        padding-left: 10px;
+                        padding: 0 10px;
+                        margin-right: 10px;
                         line-height: 32px;
                         font-size: 14px;
                         cursor: pointer;
+                        &-name {
+                          max-width: 190px;
+                          word-break: break-all;
+                          &.has-badge {
+                            max-width: 160px;
+                          }
+                        }
                         &:hover {
                             background: #f5f6fa;
                         }
@@ -998,10 +1007,6 @@
                             text-overflow: ellipsis;
                             white-space: nowrap;
                             overflow: hidden;
-                        }
-                        .action-count-badge-cls {
-                            position: absolute;
-                            right: 15px;
                         }
                     }
                     .skip-link {
