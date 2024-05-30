@@ -32,6 +32,7 @@
         :empty-data="curEmptyData"
         @on-select="handleSelected"
         @on-change-count="handleChangeCount"
+        @on-filter-system="handleFilterSystem"
       />
     </render-horizontal-block>
     <p class="error-tips" v-if="isShowErrorTips">{{ $t(`m.renewal['请选择过期权限']`) }}</p>
@@ -237,27 +238,6 @@
         this.isEmpty = activeItem[this.active]();
         this.tabKey = +new Date();
       },
-      // async fetchPageData () {
-      //     await this.fetchData()
-      // },
-
-      // async fetchData (isLoading = false) {
-      //     this.tableLoading = isLoading
-      //     const dispatchMethod = this.active === 'group' ? 'getExpireSoonGroupWithUser' : 'getExpireSoonPerm'
-      //     try {
-      //         const res = await this.$store.dispatch(`renewal/${dispatchMethod}`)
-      //         this.tableList = res.data || []
-      //     } catch (e) {
-      //         console.error(e)
-      //         this.bkMessageInstance = this.$bkMessage({
-      //             limit: 1,
-      //             theme: 'error',
-      //             message: e.message || e.data.msg || e.statusText
-      //         })
-      //     } finally {
-      //         this.tableLoading = false
-      //     }
-      // },
 
       handleTabChange (payload) {
         this.$nextTick(() => {
@@ -266,6 +246,21 @@
             && this.$refs.tabRef.$refs.tabLabel.forEach(label => label.$forceUpdate());
         });
         window.history.replaceState({}, '', `?${buildURLParams({ tab: payload })}`);
+      },
+
+      handleFilterSystem (payload) {
+        this.$nextTick(() => {
+          const { list } = payload;
+          let customData = this.panels.find((item) => item.name === 'custom');
+          if (customData) {
+            customData = Object.assign(customData, {
+              total: list.length
+            });
+            this.$refs.tabRef
+              && this.$refs.tabRef.$refs.tabLabel
+              && this.$refs.tabRef.$refs.tabLabel.forEach(label => label.$forceUpdate());
+          }
+        });
       },
 
       handleReasonInput () {

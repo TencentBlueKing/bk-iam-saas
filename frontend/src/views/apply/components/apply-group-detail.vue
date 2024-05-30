@@ -55,7 +55,7 @@
                 return !this.isLoading;
             },
             isShowExpired () {
-                return this.basicInfo.type === 'join_group';
+                return ['join_group', 'renew_group'].includes(this.basicInfo.type);
             }
     },
     watch: {
