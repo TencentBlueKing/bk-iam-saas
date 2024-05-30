@@ -173,6 +173,7 @@
 </template>
 <script>
   import _ from 'lodash';
+  import { mapGetters } from 'vuex';
   import { bus } from '@/common/bus';
   import { guid, formatCodeData } from '@/common/util';
   import il8n from '@/language';
@@ -319,6 +320,8 @@
     data () {
       return {
         isLoading: false,
+        // 判断第一层数据是否是空
+        isFirstLevelEmpty: false,
         limit: 100,
         resourceTotal: 0,
         subResourceTotal: 0,
@@ -360,11 +363,15 @@
       };
     },
     computed: {
+      ...mapGetters(['user']),
       isOnlyLevel () {
         return this.treeData.every((item) => item.level === 0 && item.visiable) && this.curChain.length < 2;
       },
       isManualInput () {
         return ['manualInput'].includes(this.curSelectedChain.id) && ['instance:paste'].includes(this.selectionMode);
+      },
+      isSuperManager () {
+        return this.user.role.type === 'super_manager';
       },
       renderTopologyData () {
         const hasNode = {};
@@ -845,6 +852,7 @@
           const { code, data } = await this.$store.dispatch('permApply/getResources', params);
           this.emptyData = formatCodeData(code, this.emptyData, data.results.length === 0);
           this.resourceTotal = data.count || 0;
+          this.isFirstLevelEmpty = data.results.length < 1;
           if (data.results.length < 1) {
             this.searchDisplayText = RESULT_TIP[code];
             return;
@@ -954,7 +962,8 @@
           name = curChainData.name;
           systemId = curChainData.system_id;
         }
-        if (this.isManualInput) {
+        // 如果是手动输入或者第一次加载resource为空且身份不是超管，代表它的范围只是他本身
+        if (this.isManualInput || (this.isFirstLevelEmpty && !this.isSuperManager)) {
           parentChain.push({
             type: id,
             type_name: name,
