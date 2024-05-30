@@ -33,7 +33,7 @@
             <template>
               <template v-if="curSystemList.length > 0">
                 <div v-bkloading="{ isLoading: systemListIsLoading, opacity: 1 }">
-                  <div class="system-item single-hide"
+                  <div class="flex-between system-item"
                     v-for="item in curSystemList"
                     :key="item.id"
                     :class="item.id === curSystem ? 'active' : ''"
