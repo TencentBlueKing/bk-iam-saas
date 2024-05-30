@@ -83,7 +83,9 @@
         <template slot-scope="{ row }">
           <span
             v-bk-tooltips="{ content: row.type === 'user' ? `${row.id} (${row.name})` : `${row.name}` }"
-            class="system-access-name">
+            class="system-access-name"
+            @click.stop="handleViewDetail(row)"
+          >
             {{row.type === 'user' ? `${row.id} (${row.name})` : `${row.name}`}}
           </span>
         </template>
@@ -104,6 +106,10 @@
         />
       </template>
     </bk-table>
+    <!-- 用户组类型 -->
+    <GroupDetailSlider :show.sync="isShowGroupDetailSlider" :cur-detail-data="curDetailData" />
+    <!-- 人员权限详情 -->
+    <MemberPermDetailSlider :show.sync="isShowMemberPermDetailSlider" :cur-detail-data="curDetailData" />
   </div>
 </template>
 
@@ -112,6 +118,8 @@
   import { cloneDeep } from 'lodash';
   import { formatCodeData } from '@/common/util';
   import IamResourceCascadeSearch from '@/components/iam-resource-cascade-search';
+  import GroupDetailSlider from './components/group-detail-slider.vue';
+  import MemberPermDetailSlider from './components/member-perm-detail-slider.vue';
 
   export default {
     provide: function () {
@@ -120,13 +128,17 @@
       };
     },
     components: {
-      IamResourceCascadeSearch
+      IamResourceCascadeSearch,
+      GroupDetailSlider,
+      MemberPermDetailSlider
     },
     data () {
       return {
         tableList: [],
         tableListBack: [],
         tableLoading: false,
+        isShowGroupDetailSlider: false,
+        isShowMemberPermDetailSlider: false,
         instanceLoading: false,
         sliderLoading: false,
         limit: 1000,
@@ -139,7 +151,7 @@
         groupIndex: -1,
         gridCount: 4,
         params: {},
-        curCopyParams: {},
+        curDetailData: {},
         curSystemAction: {},
         searchData: [
           {
@@ -284,6 +296,20 @@
 
       async handleSearchTable () {
         this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleSearchUserGroup(true, true);
+      },
+
+      handleViewDetail (payload) {
+        this.curDetailData = { ...payload };
+        const { type } = payload;
+        const typeMap = {
+          group: () => {
+            this.isShowGroupDetailSlider = true;
+          },
+          user: () => {
+            this.isShowMemberPermDetailSlider = true;
+          }
+        };
+        return typeMap[type]();
       },
 
       handleSelectSystemAction (payload) {
