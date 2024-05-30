@@ -712,7 +712,8 @@
           {
             limit: 10,
             current: 1,
-            count: 0
+            count: 0,
+            showTotalCount: true
           }
         );
       },
