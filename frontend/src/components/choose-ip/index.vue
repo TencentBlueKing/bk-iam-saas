@@ -953,6 +953,7 @@
         let id = '';
         let name = '';
         let systemId = '';
+        let parentChainData = null;
         if (!curChainData) {
           id = this.curChain[chainLen - 1].id;
           name = this.curChain[chainLen - 1].name;
@@ -1001,6 +1002,26 @@
             }
             return this.curChain[this.curChain.length - 1];
           })();
+          // 处理只有一层拓扑，但业务类型却又有多条情况
+          if (node.level === 0 && !node.async) {
+            parentChainData = {
+              type: this.curChain[0].id,
+              type_name: this.curChain[0].name,
+              id: node.id,
+              name: node.name,
+              system_id: this.curChain[0].system_id,
+              child_type: node.childType || ''
+            };
+          } else {
+            parentChainData = {
+              type: id,
+              type_name: name,
+              id: node.id,
+              name: node.name,
+              system_id: systemId,
+              child_type: node.childType || ''
+            };
+          }
           parentChain.forEach((item, index) => {
             let id = '';
             if (this.curChain[index]) {
@@ -1011,14 +1032,7 @@
             item.type = id;
             item.type_name = id;
           });
-          parentChain.push({
-            type: id,
-            type_name: name,
-            id: node.id,
-            name: node.name,
-            system_id: systemId,
-            child_type: node.childType || ''
-          });
+          parentChain.push(parentChainData);
           if (isNeedAny) {
             parentChain.push({
               type: anyData.id,

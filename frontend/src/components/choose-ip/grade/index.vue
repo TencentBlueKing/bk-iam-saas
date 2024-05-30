@@ -1278,11 +1278,11 @@
             systemId = curChainData.system_id;
             if (node.level === 0 && !node.async) {
               parentChainData = {
-                type: this.curChain[chainLen - 1].id,
-                type_name: this.curChain[chainLen - 1].name,
+                type: this.curChain[0].id,
+                type_name: this.curChain[0].name,
                 id: node.id,
                 name: node.name,
-                system_id: this.curChain[chainLen - 1].system_id,
+                system_id: this.curChain[0].system_id,
                 child_type: node.childType || ''
               };
             } else {
