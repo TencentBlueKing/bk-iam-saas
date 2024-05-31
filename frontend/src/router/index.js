@@ -170,7 +170,7 @@ export const beforeEach = async (to, from, next) => {
   }
 
   if (['applyJoinUserGroup', 'applyCustomPerm', 'myManageSpace', 'myPerm', 'permTransfer', 'permRenewal'].includes(to.name)
-      || (['permRenewal'].includes(to.name) && to.query.source === 'email')) {
+      || (['permRenewal'].includes(to.name) && ['email', 'notification'].includes(to.query.source))) {
     await store.dispatch('role/updateCurrentRole', { id: 0 });
     await store.dispatch('userInfo');
     curRole = 'staff';
@@ -232,7 +232,7 @@ export const beforeEach = async (to, from, next) => {
     }
   } else {
     // 邮件点击续期跳转过来的链接需要做身份的前置判断
-    if (to.name === 'groupPermRenewal' && to.query.source === 'email' && currentRoleId) {
+    if (to.name === 'groupPermRenewal' && ['email', 'notification'].includes(to.query.source) && currentRoleId) {
       await getManagerInfo();
       navDiffMenuIndex(1);
     }

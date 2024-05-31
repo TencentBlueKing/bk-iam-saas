@@ -355,7 +355,7 @@
             id: item.id
           };
           const { current_role_id: currentRoleId, source } = this.$route.query;
-          if (currentRoleId && source === 'email') {
+          if (currentRoleId && ['email', 'notification'].includes(source)) {
             params.hidden = false;
           }
           const { data } = await this.$store.dispatch('renewal/getExpireSoonGroupMembers', params);
@@ -390,7 +390,7 @@
             expire_soon: true
           };
           const { current_role_id: currentRoleId, source } = this.$route.query;
-          if (currentRoleId && source === 'email') {
+          if (currentRoleId && ['email', 'notification'].includes(source)) {
             params.hidden = false;
           }
           const { data } = await this.$store.dispatch('memberTemplate/getGroupSubjectTemplate', params);
@@ -419,7 +419,7 @@
             offset: this.pagination.limit * (this.pagination.current - 1)
           };
           const { current_role_id: currentRoleId, source } = this.$route.query;
-          if (currentRoleId && source === 'email') {
+          if (currentRoleId && ['email', 'notification'].includes(source)) {
             params.hidden = false;
           }
           const { code, data } = await this.$store.dispatch('renewal/getExpiredGroups', params);
@@ -631,7 +631,7 @@
               : checkList.map(({ id, type }) => ({ id, type }))
           };
           const { current_role_id: currentRoleId, source } = this.$route.query;
-          if (currentRoleId && source === 'email') {
+          if (currentRoleId && ['email', 'notification'].includes(source)) {
             params.hidden = false;
           }
           const { code } = await this.$store.dispatch('userGroup/deleteUserGroupMember', params);
@@ -836,7 +836,7 @@
           }))
         };
         const { current_role_id: currentRoleId, source } = this.$route.query;
-        if (currentRoleId && source === 'email') {
+        if (currentRoleId && ['email', 'notification'].includes(source)) {
           params.hidden = false;
         }
         console.log(params, '参数');
