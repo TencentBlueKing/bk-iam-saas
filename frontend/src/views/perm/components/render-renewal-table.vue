@@ -501,11 +501,6 @@
                       text: item.system.name,
                       value: item.system.id
                     });
-                    this.systemFilter = [...this.systemFilter, ...[{
-                      text: '配置平台',
-                      value: 'bk_cmdb'
-                    }
-                    ]];
                   }
                   if (this.currentSelectList.map(_ => _.id).includes(item.id)) {
                     this.$refs.permTableRef && this.$refs.permTableRef.toggleRowSelection(item, true);
