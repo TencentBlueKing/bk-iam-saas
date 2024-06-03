@@ -1486,7 +1486,12 @@ export const m = {
         '请输入用户/组织，按enter键搜索': 'Please enter user/organization, press enter to search',
         '只读人员模板不能移除': 'The read-only member template cannot be removed',
         '只读人员模板不能添加、删除、复制成员': 'Read-only member template cannot add, delete, or copy members',
-        '最多只能选择10个人员模板' : 'You can only select up to 10 member templates'
+        '最多只能选择10个人员模板' : 'You can only select up to 10 member templates',
+        '请勾选人员模板': 'Please check personnel template',
+        '当前勾选项皆为只读人员模板': 'The current options are all read-only member templates',
+        '当前勾选项皆为有关联用户组人员模板': 'The current options are all associated user group member templates',
+        '当前勾选项皆为只读和有关联用户组人员模板': 'The current options are all read-only and have associated user group member templates',
+        '以下为只读或有关联用户组的人员模板，不可删除。': 'The following personnel templates are read-only or have associated user groups and cannot be deleted.'
     },
     userOrOrg: {
         '用户组名': 'User group name',
