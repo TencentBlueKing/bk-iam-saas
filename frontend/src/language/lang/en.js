@@ -896,7 +896,9 @@ export const m = {
         '设置不可被申请，则无法申请加入此用户组': 'If the setting cannot be applied for, you cannot apply to join this user group',
         '管理员已设置空间下所有用户组不可被申请': 'The administrator has set that all user groups in the space cannot be applied for',
         '已选择的用户组成员不需要续期': 'The selected user group members do not need to be renewed',
-        '自动生成同名人员模板': 'Automatically generate member template with the same name'
+        '自动生成同名人员模板': 'Automatically generate member template with the same name',
+        '管理员组无法添加权限': 'Administrators group unable to add permissions',
+        '只读用户组无法添加权限': 'Read only user group cannot add permissions'
     },
     userGroupDetail: {
         '用户组名': 'Group name: ',
