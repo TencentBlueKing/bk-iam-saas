@@ -45,6 +45,7 @@ from .serializers import (
     AccessSystemApplicationUrlSLZ,
     ApprovalBotRoleCallbackSLZ,
     ApprovalBotUserCallbackSLZ,
+    ASApplicationCustomPolicyWithCustomTicketSLZ,
 )
 
 
@@ -283,3 +284,44 @@ class ApprovalBotRoleCallbackView(views.APIView):
                 )
 
         return Response({})
+
+
+class ApplicationCustomPolicyWithCustomTicketView(views.APIView):
+    """
+    创建自定义权限申请单 - 允许单据自定义审批内容
+    """
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    access_system_application_trans = AccessSystemApplicationTrans()
+    application_biz = ApplicationBiz()
+
+    @swagger_auto_schema(
+        operation_description="创建自定义权限申请单-允许单据自定义审批内容",
+        request_body=ASApplicationCustomPolicyWithCustomTicketSLZ(),
+        responses={status.HTTP_200_OK: AccessSystemApplicationCustomPolicyResultSLZ(label="申请单信息", many=True)},
+        tags=["open"],
+    )
+    def post(self, request):
+        serializer = ASApplicationCustomPolicyWithCustomTicketSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        data = serializer.validated_data
+        username = data["applicant"]
+
+        # 将Dict数据转换为创建单据所需的数据结构
+        (
+            application_data,
+            policy_ticket_contents,
+        ) = self.access_system_application_trans.from_grant_policy_with_custom_ticket_application(username, data)
+        # 创建单据
+        applications = self.application_biz.create_for_policy(
+            ApplicationType.GRANT_ACTION.value,
+            application_data,
+            data["ticket_content_template"] or None,
+            policy_ticket_contents,
+            data["ticket_title_prefix"],
+        )
+
+        return Response([{"id": a.id, "sn": a.sn} for a in applications])
