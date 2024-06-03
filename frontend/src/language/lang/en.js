@@ -429,6 +429,7 @@ export const m = {
         '这些人员模板关联的该用户组将不再存在续期': 'The user group associated with these member templates will no longer have renewals',
         '解除成功': 'Lifted',
         '当前用户将不再继承该模板权限': 'The current user will no longer inherit the template permissions',
+        '请谨慎操作': 'please operate with caution',
         '退出成功': 'Quit successfully',
         '将不再继承该组的权限': 'will no longer inherit the permissions of the group',
         '将不再拥有该用户组的权限': 'will no longer inherit the permissions of the group',
@@ -596,7 +597,9 @@ export const m = {
         '确认批量删除所选的人员模板吗？': 'Are you sure to batch delete the selected member templates?',
         '确认把用户/组织移出该用户组？': 'Are you sure to move the user/organization out of this user group?',
         '确认删除同步记录？': 'Are you sure you want to delete the synchronization record?',
-        '确认恢复默认？': 'Are you sure to restore defaults?'
+        '确认恢复默认？': 'Are you sure to restore defaults?',
+        '确认移除该用户？': 'Are you sure you want to remove the user?',
+        '确认移除该人员模板？': 'Are you sure to remove the member template?'
     },
     nav: {
         '蓝鲸权限中心': 'BlueKing-IAM',
@@ -1430,7 +1433,13 @@ export const m = {
         '模板权限': 'Template permissions',
         '导出成功！': 'Export successful!',
         '导出需提供系统和操作名': 'Export requires providing system and action name',
-        '查询必须选择“系统”和“操作名”': "Query must select 'System' and 'Action name'"
+        '查询必须选择“系统”和“操作名”': "Query must select 'System' and 'Action name'",
+        '用户组详情': 'User group detail',
+        '用户 / 组织': 'User/Organization',
+        '搜索 用户、组织名': 'Search for user and organization names',
+        '搜索 人员模板': 'Search member template',
+        '移除后，该用户将不再继承该用户组的权限，请谨慎操作。': 'After removal, the user will no longer inherit the permissions of the user group. Please operate with caution.',
+        '移除后，人员模板里的用户/组织可能会失去关联用户组的权限，请谨慎操作。': 'After removal, users/organizations in the member template may lose their associated user group permissions. Please operate with caution.'
     },
     userGroupSetting: {
         '所有用户组不可被申请': 'All user groups cannot be applied for',

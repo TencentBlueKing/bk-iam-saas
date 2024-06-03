@@ -1,16 +1,31 @@
 <template>
   <div class="iam-user-group-member group-member-table">
     <render-search>
-      <div class="flex-between group-member-button">
-        <div class="group-member-button-item">
-          
+      <div class="group-member-button">
+        <div class="group-member-tab">
+          <div class="group-member-button">
+            <div
+              v-for="item in groupTabList"
+              :key="item.id"
+              :class="['group-member-button-item', { 'is-active': tabActive === item.name }]"
+              @click.stop="handleTabChange(item.name, true)"
+            >
+              <span class="group-member-button-item-name">{{ item.label }}</span>
+              <span class="group-member-button-item-count">
+                {{ item.count }}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
       <div slot="right">
+        <bk-button class="batch-delete-btn" :disabled="isNoBatchDelete()" @click.stop="handleBatchDelete">
+          {{ $t(`m.common['批量移除']`) }}
+        </bk-button>
         <bk-input
           v-model="keyword"
           style="width: 400px"
-          :placeholder="searchPlaceholder"
+          :placeholder="tabPlaceHolder"
           :right-icon="'bk-icon icon-search'"
           :clearable="true"
           @right-icon-click="handleKeyWordEnter"
@@ -40,13 +55,11 @@
           <bk-table-column
             :key="item.prop"
             :label="item.label"
-            :prop="item.prop">
+            :prop="item.prop"
+            :show-overflow-tooltip="true">
             <template slot-scope="{ row }">
 
-              <div
-                v-if="row.type === 'user'"
-                class="user"
-                :title="`${row.id}(${row.name})`"
+              <div v-if="row.type === 'user'" class="user"
               >
                 <Icon type="personal-user" />
                 <span class="name" :style="{ maxWidth: curDisplaySet.customNameWidth }">{{ row.id }}</span>
@@ -54,10 +67,7 @@
                   {{ "(" + row.name + ")" }}
                 </span>
               </div>
-              <div v-else
-                class="depart"
-                :title="row.full_name"
-              >
+              <div v-else class="depart">
                 <Icon type="organization-fill" />
                 <span class="name" :style="{ maxWidth: curDisplaySet.customNameWidth }">
                   {{ row.name || "--" }}
@@ -73,14 +83,15 @@
           <bk-table-column
             :key="item.prop"
             :label="item.label"
-            :prop="item.prop">
+            :prop="item.prop"
+          >
             <template slot-scope="{ row }">
-              <div class="member-template" :title="row.name" @click.stop="handleTempView(row)">
+              <span class="member-template" :title="row.name" @click.stop="handleTempView(row)">
                 <Icon type="renyuanmuban" />
                 <span class="name">
                   {{ row.name || "--" }}
                 </span>
-              </div>
+              </span>
             </template>
           </bk-table-column>
         </template>
@@ -147,26 +158,46 @@
             :key="item.prop"
             :label="item.label"
             :prop="item.prop"
-            :width="['memberTemplate'].includes(tabActive) ? 180 : 'auto'">
+            :width="80"
+          >
             <template slot-scope="{ row }">
-              <template v-if="['memberTemplate'].includes(routeMode)">
-                <bk-button
-                  text
-                  theme="primary"
-                  @click="handleDelete(row)"
-                >
-                  {{ $t(`m.common['移除']`) }}
-                </bk-button>
-              </template>
-              <template v-else>
-                <bk-button
-                  text
-                  theme="primary"
-                  @click="handleDelete(row)"
-                >
-                  {{ $t(`m.common['移除']`) }}
-                </bk-button>
-              </template>
+              <bk-popconfirm
+                trigger="click"
+                placement="bottom-end"
+                ext-popover-cls="resource-perm-delete-confirm"
+                :width="280"
+                :confirm-text="$t(`m.common['删除-dialog']`)"
+                @confirm="handleDelete(row)"
+              >
+                <div slot="content">
+                  <div class="popover-title">
+                    <div class="popover-title-text">
+                      {{ deletePopoverConfirm[tabActive].title }}
+                    </div>
+                  </div>
+                  <div class="popover-content">
+                    <div class="popover-content-item">
+                      <span class="popover-content-item-label">{{ deletePopoverConfirm[tabActive].text }}:</span>
+                      <span class="popover-content-item-value"> {{ row.name }}</span>
+                    </div>
+                    <div class="popover-content-tip">
+                      {{ deletePopoverConfirm[tabActive].tip }}
+                    </div>
+                  </div>
+                </div>
+                <bk-popover
+                  :content="formatDelDisabled('title')"
+                  :disabled="!formatDelDisabled('disabled')">
+                  <bk-button
+                    theme="primary"
+                    text
+                    class="actions-btn-item"
+                    :disabled="formatDelDisabled('disabled')"
+                  >
+                    {{ $t(`m.common['移除']`) }}
+                  </bk-button>
+                </bk-popover>
+              </bk-popconfirm>
             </template>
           </bk-table-column>
         </template>
@@ -212,8 +243,18 @@
           return {};
         }
       },
+      groupAttributes: {
+        type: Object,
+        default: () => {
+          return {};
+        }
+      },
       displaySet: {
         type: Object
+      },
+      readOnly: {
+        type: Boolean,
+        default: false
       },
       isShowTab: {
         type: Boolean,
@@ -234,11 +275,14 @@
         tableLoading: false,
         keyword: '',
         curRouteMode: '',
+        tabPlaceHolder: '',
+        adminGroupTitle: '',
         tabActive: 'userOrgPerm',
+        externalRoutes: ['userGroupDetail', 'memberTemplate', 'resourcePermiss'],
         groupTabList: [
           {
             name: 'userOrgPerm',
-            label: this.$t(`m.userGroup['用户/组织']`),
+            label: this.$t(`m.resourcePermiss['用户 / 组织']`),
             count: 0,
             empty: 'emptyOrgData',
             tableList: []
@@ -284,6 +328,18 @@
             copy: {
               url: 'memberTemplate/getSubjectTemplateMembers'
             }
+          }
+        },
+        deletePopoverConfirm: {
+          userOrgPerm: {
+            title: this.$t(`m.dialog['确认移除该用户？']`),
+            text: this.$t(`m.common['用户名']`),
+            tip: this.$t(`m.resourcePermiss['移除后，该用户将不再继承该用户组的权限，请谨慎操作。']`)
+          },
+          memberTemplate: {
+            title: this.$t(`m.dialog['确认移除该人员模板？']`),
+            text: this.$t(`m.memberTemplate['人员模板']`),
+            tip: this.$t(`m.resourcePermiss['移除后，人员模板里的用户/组织可能会失去关联用户组的权限，请谨慎操作。']`)
           }
         },
         pagination: {
@@ -335,6 +391,44 @@
         return this.externalSystemId
           ? this.isShowTab && this.isShowExternalMemberTemplate : this.isShowTab && this.isShowMemberTemplate;
       },
+      isNoBatchDelete () {
+        return () => {
+          const hasData = this.currentSelectList.length > 0;
+          if (
+            hasData
+            && ['userOrgPerm'].includes(this.tabActive)
+            && this.groupAttributes
+            && this.groupAttributes.source_from_role
+          ) {
+            const isAll = hasData && this.currentSelectList.length === this.userOrOrgCount;
+            this.adminGroupTitle = isAll
+              ? this.$t(`m.userGroup['管理员组至少保留一条数据']`)
+              : '';
+            return isAll;
+          }
+          return !hasData;
+        };
+      },
+      formatDelDisabled () {
+        return (payload) => {
+          const isAdmin = this.groupAttributes
+            && this.groupAttributes.source_from_role
+            && (this.userOrOrgCount === 1 || (this.userOrOrgCount === this.userOrOrgPagination.count === 1))
+            && (['userOrgPerm'].includes(this.tabActive) && !this.routeMode);
+          const typeMap = {
+            title: () => {
+              if (isAdmin) {
+                return this.$t(`m.userGroup['管理员组至少保留一条数据']`);
+              }
+              return '';
+            },
+            disabled: () => {
+              return isAdmin;
+            }
+          };
+         return typeMap[payload]();
+        };
+      },
       formatPagination () {
         return () => {
           const typeMap = {
@@ -367,12 +461,14 @@
       }
     },
     watch: {
+      searchPlaceholder: {
+        handler (value) {
+          this.tabPlaceHolder = value;
+        },
+        immediate: true
+      },
       tabActive: {
         handler (newValue, oldValue) {
-          this.curRouteMode = ['userOrgPerm'].includes(newValue) ? 'userGroupDetail' : newValue;
-          if (this.routeMode) {
-            this.curRouteMode = cloneDeep(this.routeMode);
-          }
           this.tableProps = this.getTableProps(newValue);
           if (oldValue && oldValue !== newValue) {
             this.resetPagination();
@@ -391,6 +487,9 @@
       this.fetchInitData();
     },
     methods: {
+      async fetchGroupDetail () {
+        console.log();
+      },
       async fetchUserOrOrgList () {
         this.tableLoading = true;
         try {
@@ -430,7 +529,7 @@
           this.messageAdvancedError(e);
         } finally {
           this.tableLoading = false;
-          const emptyField = this.groupTabList.find(item => item.name === this.tabActive);
+          const emptyField = this.groupTabList.find((item) => item.name === this.tabActive);
           if (emptyField) {
             this.emptyData = formatCodeData(0, cloneDeep(Object.assign(this[emptyField.empty], { tipType: this.keyword ? 'search' : '' })));
           }
@@ -470,7 +569,7 @@
           this.handleRefreshTabCount();
         } finally {
           this.tableLoading = false;
-          const emptyField = this.groupTabList.find(item => item.name === this.tabActive);
+          const emptyField = this.groupTabList.find((item) => item.name === this.tabActive);
           if (emptyField) {
             this.emptyData = cloneDeep(Object.assign(this[emptyField.empty], { tipType: this.keyword ? 'search' : '' }));
           }
@@ -522,7 +621,7 @@
 
       fetchSelectedGroups (type, payload, row) {
         const typeMap = {
-          multiple: async () => {
+          multiple: () => {
             const isChecked = payload.length && payload.indexOf(row) !== -1;
             if (isChecked) {
               this.currentSelectList.push(row);
@@ -531,9 +630,9 @@
                 (item) => item.id.toString() !== row.id.toString()
               );
             }
-            await this.fetchCustomTotal();
+            this.fetchCustomTotal();
           },
-          all: async () => {
+          all: () => {
             const emptyField = this.groupTabList.find((item) => item.name === this.tabActive);
             if (emptyField) {
               const tableList = cloneDeep(emptyField.tableList);
@@ -541,11 +640,37 @@
                 (item) => !tableList.map((v) => v.id.toString()).includes(item.id.toString())
               );
               this.currentSelectList = [...selectGroups, ...payload];
-              await this.fetchCustomTotal();
+              this.fetchCustomTotal();
             }
           }
         };
         return typeMap[type]();
+      },
+
+      handleTabChange (payload, isClick = false) {
+        if (payload === this.tabActive && isClick) {
+          return;
+        }
+        this.tabPlaceHolder = ['userOrgPerm'].includes(payload) ? this.$t(`m.resourcePermiss['搜索 用户、组织名']`) : this.$t(`m.resourcePermiss['搜索 人员模板']`);
+        this.tabActive = payload;
+      },
+
+      handleRefreshTab () {
+        this.curMember = {};
+        this.currentSelectList = [];
+        this.groupTabList.forEach((item) => {
+          item.tableList = [];
+        });
+        this.resetPagination();
+        const tabMap = {
+          userOrgPerm: async () => {
+            await this.fetchUserOrOrgList();
+          },
+          memberTemplate: async () => {
+            await this.fetchMemberTemplateList();
+          }
+        };
+        return tabMap[this.tabActive]();
       },
 
       handleAllChange (selection) {
@@ -598,7 +723,7 @@
               `m.common['【']`
             )}${payload.id}(${payload.name})${this.$t(`m.common['】']`)}${this.$t(
               `m.common['，']`
-            )}${this.$t(`m.info['该成员将不再继承该组的权限']`)}${this.$t(`m.common['。']`)}`;
+            )}${this.$t(`m.info['该成员将不再继承该组的权限']`)}${this.$t(`m.common['，']`)}${this.$t(`m.info['请谨慎操作']`)}${this.$t(`m.common['。']`)}`;
           }
         } else {
           if (this.curModeMap[this.curRouteMode]) {
@@ -619,13 +744,8 @@
       },
 
       handleDelete (payload) {
+        console.log(payload);
         if (this.curModeMap[this.curRouteMode]) {
-          this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)}${this.$t(
-            `m.common['【']`
-          )}${payload.id}(${payload.name})${this.$t(`m.common['】']`)}${this.$t(
-            `m.common['，']`
-          )}${this.$t(`m.info['该用户/组织可能会失去关联用户组的权限']`)}${this.$t(`m.common['。']`)}`;
-          this.deleteDialog.visible = true;
           this.curMember = Object.assign(
             {},
             {
@@ -633,13 +753,8 @@
               type: ['memberTemplate'].includes(this.routeMode) ? payload.type : 'template'
             }
           );
+          this.handleSubmitDelete();
         } else {
-          this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)}${this.$t(
-            `m.common['【']`
-          )}${payload.id}(${payload.name})${this.$t(`m.common['】']`)}${this.$t(
-            `m.common['，']`
-          )}${this.$t(`m.info['该成员将不再继承该组的权限']`)}${this.$t(`m.common['。']`)}`;
-          this.deleteDialog.visible = true;
           this.curMember = Object.assign(
             {},
             {
@@ -647,6 +762,7 @@
               type: payload.type
             }
           );
+          this.handleSubmitDelete();
         }
       },
 
@@ -655,7 +771,7 @@
         try {
           let url = 'userGroup/deleteUserGroupMember';
           const params = {
-            id: this.id,
+            id: this.curDetailData.id,
             members: this.curMember.id
               ? [this.curMember]
               : this.currentSelectList.map(({ id, type }) => ({ id, type }))
@@ -691,11 +807,31 @@
             this.fetchMemberListCount();
           }
         } catch (e) {
-          console.error(e);
           this.messageAdvancedError(e);
         } finally {
           this.deleteDialog.loading = false;
           this.deleteDialog.visible = false;
+        }
+      },
+
+      async fetchMemberListCount () {
+        // 搜索移除成员后，再去查询当前搜索的数据是不是最后一条
+        if (
+          (['userOrgPerm'].includes(this.tabActive) && !this.routeMode)
+          && this.getGroupAttributes
+          && this.getGroupAttributes.source_from_role
+          && this.keyword) {
+          const selectParams = {
+            id: this.id,
+            offset: 0,
+            limit: 10
+          };
+          try {
+            const { data } = await this.$store.dispatch('userGroup/getUserGroupMemberList', selectParams);
+            this.userOrOrgCount = data.count || 0;
+          } catch (e) {
+            this.messageAdvancedError(e);
+          }
         }
       },
 
@@ -780,9 +916,8 @@
           memberTemplate: () => {
             return [
               { label: this.$t(`m.memberTemplate['人员模板']`), prop: 'template_name' },
-              { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' },
-              { label: this.$t(`m.common['备注']`), prop: 'description' },
               { label: this.$t(`m.common['加入时间']`), prop: 'created_time' },
+              { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' },
               { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
             ];
           }
@@ -806,6 +941,105 @@
   padding: 0 24px;
   &-tip {
     padding-bottom: 20px;
+  }
+  .batch-delete-btn {
+    &.is-disabled {
+      background-color: #ffffff;
+    }
+  }
+  .group-member-tab {
+    position: sticky;
+    top: 0;
+    left: 0;
+    z-index: 9999;
+    .group-member-button {
+      display: flex;
+      background-color: #F0F1F5;
+      &-item {
+        min-width: 96px;
+        display: flex;
+        align-items: center;
+        font-size: 12px;
+        background: #F0F1F5;
+        color: #63656e;
+        padding: 0 8px;
+        border: 4px solid #F0F1F5;
+        line-height: 24px;
+        border-radius: 2px;
+        cursor: pointer;
+        &-count {
+          min-width: 16px;
+          height: 16px;
+          line-height: 16px;
+          padding: 0 8px;
+          margin-left: 4px;
+          border-radius: 8px;
+          text-align: center;
+          font-size: 12px;
+          background-color: #ffffff;
+        }
+        &:last-child {
+          margin-right: 0px;
+        }
+        &.is-active {
+          color: #3a84ff;
+          background: #ffffff;
+          border-radius: 4px 4px 0 0;
+          border: 4px solid #F0F1F5;
+          .group-member-button-item-count {
+            background-color: #E1ECFF;
+            color: #3a84ff;
+          }
+          &:last-child {
+            border-right: 4px solid #F0F1F5;
+          }
+        }
+      }
+    }
+  }
+  /deep/ .user-group-member-table {
+  .member-template {
+      background-color: #F0F1F5;
+      color: #63656E;
+      .iamcenter-renyuanmuban {
+        color: #C4C6CC;
+      }
+      &:hover {
+        color: #63656E;
+        cursor: inherit;
+      }
+    }
+  }
+}
+</style>
+
+<style lang="postcss">
+.resource-perm-delete-confirm {
+  .popover-title {
+    font-size: 16px;
+    padding-bottom: 16px;
+  }
+  .popover-content {
+    color: #63656e;
+    .popover-content-item {
+      display: flex;
+      &-value {
+        color: #313238;
+        margin-left: 5px;
+      }
+    }
+    &-tip {
+      padding: 4px 0 16px 0;
+    }
+  }
+  .popconfirm-operate {
+    font-size: 0;
+    button {
+      min-width: 64px;
+      margin-left: 0;
+      margin-right: 8px;
+      font-size: 12px;
+    }
   }
 }
 </style>

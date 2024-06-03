@@ -40,6 +40,8 @@
             :key="comKey"
             :cur-detail-data="curDetailData"
             :tab-active="tabActive"
+            :read-only="readOnly"
+            :group-attributes="groupAttributes"
             :display-set="displaySet"
             @on-associate-change="handleAssociateChange"
           />
@@ -50,6 +52,7 @@
 </template>
   
 <script>
+  import { mapGetters } from 'vuex';
   import GroupMemberTable from './group-member-table.vue';
   import GroupPermPolicy from './group-perm-policy.vue';
   export default {
@@ -72,6 +75,7 @@
     data () {
       return {
         isShowSideSlider: false,
+        readOnly: false,
         width: 960,
         displaySet: {
           customNameWidth: '180px'
@@ -93,10 +97,15 @@
           ])
         ),
         tabActive: 'group_member',
+        groupAttributes: {
+          source_from_role: false,
+          source_type: ''
+        },
         comKey: -1
       };
     },
     computed: {
+      ...mapGetters(['externalSystemId']),
       curCom () {
         let com = '';
         for (const [key, value] of this.COM_MAP.entries()) {
@@ -112,16 +121,38 @@
       show: {
         handler (value) {
           this.isShowSideSlider = !!value;
-          if (this.curDetailData.tabActive && value) {
+          if (value) {
+            this.fetchGroupDetail();
             const { tabActive } = this.curDetailData;
-            this.tabActive = tabActive;
-            this.handleTabChange(this.tabActive, false);
+            if (tabActive) {
+              this.tabActive = tabActive;
+              this.handleTabChange(this.tabActive, false);
+            }
           }
         },
         immediate: true
       }
     },
     methods: {
+      async fetchGroupDetail () {
+        const params = {
+          id: this.curDetailData.id
+        };
+        if (this.externalSystemId) {
+          params.hidden = false;
+        }
+        try {
+          const { data } = this.$store.dispatch('userGroup/getUserGroupDetail', params);
+          console.log(data);
+          if (data) {
+            const { attributes, readonly } = data;
+            this.groupAttributes = Object.assign({}, attributes);
+            this.readOnly = readonly;
+          }
+        } catch (e) {
+          this.messageAdvancedError(e);
+        }
+      },
       handleTabChange (payload, isClick = false) {
         if (payload === this.tabActive && isClick) {
           return;
@@ -173,14 +204,13 @@
       color: #dcdee5;
     }
     .custom-header-name {
-      max-width: 800px;
+      max-width: 700px;
       font-size: 12px;
       color: #979ba5;
       word-break: break-all;
     }
   }
   &-content {
-    /* height: calc(100vh - 114px); */
     .member-template-tab {
       padding: 24px 24px 0;
       background-color: #f5f7fa;
@@ -189,7 +219,6 @@
       left: 0;
       z-index: 9999;
       .member-tab-groups {
-        position: relative;
         display: flex;
         &-item {
           min-width: 96px;

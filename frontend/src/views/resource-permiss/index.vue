@@ -70,6 +70,7 @@
     </IamResourceCascadeSearch>
     
     <bk-table
+      v-if="!tableLoading"
       v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
       size="small"
       ext-cls="system-access-table"
@@ -136,7 +137,7 @@
       return {
         tableList: [],
         tableListBack: [],
-        tableLoading: false,
+        tableLoading: true,
         isShowGroupDetailSlider: false,
         isShowMemberPermDetailSlider: false,
         instanceLoading: false,
@@ -206,7 +207,7 @@
       },
       isExportDisabled () {
         return () => {
-          return !this.curSystemAction.action_id;
+          return !this.curSearchParams.action_id;
         };
       }
     },
@@ -249,6 +250,7 @@
         this.pagination.current = 1;
         this.isSearchPerm = false;
         this.curSearchParams = {};
+        console.log(5655);
         await this.handleSearchAndExport(false);
       },
 
@@ -277,8 +279,7 @@
               this.messageSuccess(this.$t(`m.resourcePermiss['导出成功！']`), 3000);
             }
           } else {
-            this.tableList = res.data || [];
-            this.tableListBack = cloneDeep(this.tableList);
+            this.tableListBack = res.data || [];
             this.pagination.count = this.tableList.length;
             const result = this.getDataByPage();
             this.tableList.splice(0, this.tableList.length, ...result);
@@ -313,7 +314,15 @@
       },
 
       handleSelectSystemAction (payload) {
-        this.curSystemAction = { ...payload };
+        console.log(payload);
+        this.curSystemAction = payload;
+        if (payload && payload.action_id) {
+          this.curSearchParams = Object.assign(this.curSearchParams, {
+            system_id: payload.system_id.value,
+            action_id: payload.action_id.value
+          });
+          this.handleSearchAndExport(false);
+        }
       },
             
       // 搜索
@@ -324,22 +333,9 @@
             await this.handleSearchAndExport();
           },
           resourcePermiss: () => {
-            const { name } = this.formData;
-            if (this.formData.name) {
-              this.emptyData = formatCodeData(0, Object.assign(this.emptyData, { tipType: 'search' }));
-              this.tableList = cloneDeep(this.tableListBack).filter(item => {
-                if (['user'].includes(item.type)) {
-                  return item.id.indexOf(name) > -1
-                    || item.name.indexOf(name) > -1
-                    || `${item.id} (${item.name})`.indexOf(name) > -1;
-                } else {
-                  return item.name.indexOf(name) > -1;
-                }
-              }
-              );
-            } else {
-              this.tableList = cloneDeep(this.tableListBack);
-            }
+            this.tableList = this.getDataByPage();
+            this.pagination.count = this.tableList.length;
+            this.emptyData = formatCodeData(0, Object.assign(this.emptyData, { tipType: 'search' }));
           }
         };
         routeMap[this.$route.name]();
@@ -395,15 +391,26 @@
         if (!page) {
           this.pagination.current = page = 1;
         }
+        const { name } = this.formData;
+        let tableList = cloneDeep(this.tableListBack);
+        tableList = this.tableListBack.filter((item) => {
+          if (['user'].includes(item.type)) {
+            return item.id.indexOf(name) > -1
+              || item.name.indexOf(name) > -1
+              || `${item.id} (${item.name})`.indexOf(name) > -1;
+          } else {
+            return item.name.indexOf(name) > -1;
+          }
+        });
         let startIndex = (page - 1) * this.pagination.limit;
         let endIndex = page * this.pagination.limit;
         if (startIndex < 0) {
           startIndex = 0;
         }
-        if (endIndex > this.tableListBack.length) {
-          endIndex = this.tableListBack.length;
+        if (endIndex > tableList.length) {
+          endIndex = tableList.length;
         }
-        return this.tableListBack.slice(startIndex, endIndex);
+        return tableList.slice(startIndex, endIndex);
       },
 
       formatFormItemWidth () {
