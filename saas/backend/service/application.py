@@ -83,10 +83,23 @@ class ApplicationService:
         return application
 
     def create_for_policy(
-        self, data: GrantActionApplicationData, process: ApprovalProcessWithNodeProcessor
+        self,
+        data: GrantActionApplicationData,
+        process: ApprovalProcessWithNodeProcessor,
+        approval_title_prefix: str = "",
+        approval_content: Optional[Dict] = None,
     ) -> Application:
         """创建或续期自定义权限申请单"""
-        return self._create(data, lambda callback_url: self.provider.create_for_policy(data, process, callback_url))
+        return self._create(
+            data,
+            lambda callback_url: self.provider.create_for_policy(
+                data,
+                process,
+                callback_url,
+                approval_title_prefix=approval_title_prefix,
+                approval_content=approval_content,
+            ),
+        )
 
     def create_for_group(
         self,

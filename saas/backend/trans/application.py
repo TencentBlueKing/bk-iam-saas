@@ -242,7 +242,7 @@ class ApplicationDataTrans:
 
         return application_data
 
-    def _check_temporary_policy(self, applicant: str, system_id: str, policy_list: PolicyBeanList) -> PolicyBeanList:
+    def _check_temporary_policy(self, applicant: str, system_id: str, policy_list: PolicyBeanList):
         """检查临时权限"""
 
         # NOTE: 临时权限的申请过期时间限制由前端处理

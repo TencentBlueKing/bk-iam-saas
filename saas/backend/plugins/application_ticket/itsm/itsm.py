@@ -75,15 +75,28 @@ class ITSMApplicationTicketProvider(ApplicationTicketProvider):
         }
 
     def create_for_policy(
-        self, data: GrantActionApplicationData, process: ApprovalProcessWithNodeProcessor, callback_url: str
+        self,
+        data: GrantActionApplicationData,
+        process: ApprovalProcessWithNodeProcessor,
+        callback_url: str,
+        approval_title_prefix: str = "",
+        approval_content: Optional[Dict] = None,
     ) -> str:
         """创建 - 申请或续期自定义权限单据"""
         params = self._generate_ticket_common_params(data, process, callback_url)
-        params["title"] = f"申请{data.content.system.name}{len(data.content.policies)}个操作权限"
-        params["content"] = {
-            "schemes": FORM_SCHEMES,
-            "form_data": [ActionTable.from_application(data.content).dict()],
-        }  # 真正生成申请内容的核心入口点
+
+        if approval_title_prefix:
+            params["title"] = f"{approval_title_prefix} {len(data.content.policies)} 个操作权限"
+        else:
+            params["title"] = f"申请{data.content.system.name}{len(data.content.policies)}个操作权限"
+
+        if approval_content:
+            params["content"] = approval_content
+        else:
+            params["content"] = {
+                "schemes": FORM_SCHEMES,
+                "form_data": [ActionTable.from_application(data.content).dict()],
+            }  # 真正生成申请内容的核心入口点
 
         # 如果审批流程中包含资源审批人, 并且资源审批人不为空
         # 增加 has_instance_approver 字段, 用于itsm审批流程走分支
