@@ -44,9 +44,26 @@
               @on-edit="handleEdit(subItem)"
               @on-cancel="handleCancel(subItem)"
               @on-expanded="handleTemplateExpanded(...arguments, subItem)">
-              <div style="min-height: 136px;"
-                v-bkloading="{ isLoading: subItem.loading, opacity: 1 }">
-                555
+              <div v-bkloading="{ isLoading: subItem.loading, opacity: 1 }">
+                <RenderCustomPermTable
+                  v-if="!subItem.loading"
+                  mode="detail"
+                  :ref="`${index}_${subIndex}_resourceTableRef`"
+                  :list="subItem.tableData"
+                  :original-list="subItem.tableDataBackup"
+                  :authorization="authorizationData"
+                  :system-id="item.id"
+                  :group-id="groupId"
+                  :template-id="subItem.id"
+                  :is-custom="subItem.count > 0"
+                  :is-edit="subItem.isEdit"
+                  :external-delete="isAdminGroup"
+                  :linear-action-list="linearActionList"
+                  :is-custom-action-button="['custom'].includes(subItem.mode_type)"
+                  :is-show-delete-action="true"
+                  :is-show-detail-action="false"
+                  @on-delete="handleSingleDelete(...arguments, item)"
+                />
               </div>
             </RenderTemplateItem>
           </div>
@@ -72,11 +89,13 @@
   import GroupPolicy from '@/model/group-policy';
   import RenderPermItem from './render-perm-item.vue';
   import RenderTemplateItem from './render-template-item.vue';
+  import RenderCustomPermTable from '../components/custom-perm-table.vue';
 
   export default {
     components: {
       RenderPermItem,
-      RenderTemplateItem
+      RenderTemplateItem,
+      RenderCustomPermTable
     },
     props: {
       curDetailData: {
@@ -105,7 +124,8 @@
         groupSystemListLength: 0,
         groupValue: '',
         groupSystemList: [],
-        originalCustomTmplList: [],
+        customActionsList: [],
+        linearActionList: [],
         authorizationData: {},
         deletePoPoverConfirm: {
           template: {
@@ -177,21 +197,23 @@
       formatDelConfirm () {
         return (payload) => {
           let params = {};
-          const { mode_type } = payload;
+          const { mode_type, name } = payload;
           const typeMap = {
             template: () => {
               params = Object.assign({}, {
                 title: this.$t(`m.dialog['确认移除该操作模板？']`),
+                tip: this.$t(`m.resourcePermiss['移除后，用户组成员将失去操作模板对应的权限，请谨慎操作。']`),
                 label: this.$t(`m.resourcePermiss['操作模板']`),
-                tip: this.$t(`m.resourcePermiss['移除后，用户组成员将失去操作模板对应的权限，请谨慎操作。']`)
+                value: name
               });
               return params;
             },
             custom: () => {
               params = Object.assign({}, {
                 title: this.$t(`m.dialog['确认删除该操作权限？']`),
+                tip: this.$t(`m.resourcePermiss['删除后，用户组成员将失去对应的自定义权限，请谨慎操作。']`),
                 label: this.$t(`m.resourcePermiss['操作权限']`),
-                tip: this.$t(`m.resourcePermiss['删除后，用户组成员将失去对应的自定义权限，请谨慎操作。']`)
+                value: name
               });
               return params;
             }
@@ -201,6 +223,9 @@
           }
           return '';
         };
+      },
+      isAdminGroup () {
+        return !this.groupAttributes.source_from_role;
       }
     },
     watch: {
@@ -386,7 +411,7 @@
         }
         try {
           const { data } = await this.$store.dispatch('permApply/getActions', params);
-          this.originalCustomTmplList = cloneDeep(data || []);
+          this.customActionsList = cloneDeep(data || []);
           this.handleActionLinearData();
         } catch (e) {
           console.error(e);
@@ -409,7 +434,7 @@
 
       handleActionLinearData () {
         const linearActions = [];
-        this.originalCustomTmplList.forEach((item, index) => {
+        this.customActionsList.forEach((item, index) => {
           item.actions = item.actions.filter(v => !v.hidden);
           item.actions.forEach(act => {
             linearActions.push(act);

@@ -9,7 +9,7 @@
         display: flex;
         &-value {
           color: #313238;
-          margin-left: 5px;
+          margin-left: 4px;
         }
       }
       &-tip {
