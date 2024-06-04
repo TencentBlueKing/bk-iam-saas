@@ -15,5 +15,12 @@ from . import views
 urlpatterns = [
     path("", views.ApplicationView.as_view(), name="open.application"),
     path("policies/", views.ApplicationCustomPolicyView.as_view(), name="open.application_policy"),
+    path("approval_bot/user/", views.ApprovalBotUserCallbackView.as_view(), name="open.approval_bot_user"),
+    path("approval_bot/role/", views.ApprovalBotRoleCallbackView.as_view(), name="open.approval_bot_role"),
     path("<str:sn>/", views.ApplicationDetailView.as_view({"get": "retrieve"}), name="open.application_detail"),
+    path(
+        "policies/with-custom-ticket/",
+        views.ApplicationCustomPolicyWithCustomTicketView.as_view(),
+        name="open.application_policy_with_custom_ticket",
+    ),
 ]

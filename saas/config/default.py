@@ -215,6 +215,7 @@ CELERY_IMPORTS = (
     "backend.long_task.tasks",
     "backend.apps.temporary_policy.tasks",
     "backend.api.bkci.tasks",
+    "backend.apps.handover.tasks",
 )
 CELERYBEAT_SCHEDULE = {
     "periodic_sync_organization": {
@@ -237,14 +238,6 @@ CELERYBEAT_SCHEDULE = {
         "task": "backend.apps.application.tasks.check_or_update_application_status",
         "schedule": crontab(minute="*/30"),  # 每30分钟执行一次
     },
-    "periodic_user_group_policy_expire_remind": {
-        "task": "backend.apps.user.tasks.user_group_policy_expire_remind",
-        "schedule": crontab(minute=0, hour=11),  # 每天早上11时执行
-    },
-    # "periodic_role_group_expire_remind": {
-    #     "task": "backend.apps.role.tasks.role_group_expire_remind",
-    #     "schedule": crontab(minute=0, hour=11),  # 每天早上11时执行
-    # },
     "periodic_user_expired_policy_cleanup": {
         "task": "backend.apps.user.tasks.user_cleanup_expired_policy",
         "schedule": crontab(minute=0, hour=2),  # 每天凌晨2时执行
@@ -271,7 +264,7 @@ CELERYBEAT_SCHEDULE = {
     },
     "periodic_retry_long_task": {
         "task": "backend.long_task.tasks.retry_long_task",
-        "schedule": crontab(minute="*/30"),  # 每30分钟执行一次
+        "schedule": crontab(minute="*/10"),  # 每10分钟执行一次
     },
     "periodic_delete_unreferenced_expressions": {
         "task": "backend.apps.policy.tasks.delete_unreferenced_expressions",
@@ -281,11 +274,11 @@ CELERYBEAT_SCHEDULE = {
         "task": "backend.apps.temporary_policy.tasks.clean_expired_temporary_policies",
         "schedule": crontab(minute=0, hour="*"),  # 每小时执行
     },
-    "check_user_permission_clean_task": {
+    "periodic_check_user_permission_clean_task": {
         "task": "backend.apps.user.tasks.check_user_permission_clean_task",
         "schedule": crontab(minute=0, hour="*"),  # 每小时执行
     },
-    "clean_user_permission_clean_record": {
+    "periodic_clean_user_permission_clean_record": {
         "task": "backend.apps.user.tasks.clean_user_permission_clean_record",
         "schedule": crontab(minute=0, hour=5),  # 每天凌晨5时执行
     },
@@ -294,7 +287,7 @@ CELERYBEAT_SCHEDULE = {
 # 是否开启初始化分级管理员
 ENABLE_INIT_GRADE_MANAGER = env.bool("BKAPP_ENABLE_INIT_GRADE_MANAGER", default=False)
 if ENABLE_INIT_GRADE_MANAGER:
-    CELERYBEAT_SCHEDULE["init_biz_grade_manager"] = {
+    CELERYBEAT_SCHEDULE["periodic_init_biz_grade_manager"] = {
         "task": "backend.apps.role.tasks.InitBizGradeManagerTask",
         "schedule": crontab(minute="*/2"),  # 每2分钟执行一次
     }
@@ -302,7 +295,7 @@ if ENABLE_INIT_GRADE_MANAGER:
 # 是否开启初始化BCS一级/二级管理员
 ENABLE_INIT_BCS_PROJECT_MANAGER = env.bool("BKAPP_ENABLE_INIT_BCS_PROJECT_MANAGER", default=False)
 if ENABLE_INIT_BCS_PROJECT_MANAGER:
-    CELERYBEAT_SCHEDULE["init_bcs_manager"] = {
+    CELERYBEAT_SCHEDULE["periodic_init_bcs_manager"] = {
         "task": "backend.apps.role.tasks.InitBcsProjectManagerTask",
         "schedule": crontab(minute="*/2"),  # 每2分钟执行一次
     }
@@ -481,6 +474,14 @@ BK_IAM_METRIC_TOKEN = env.str("BK_IAM_METRIC_TOKEN", default="")
 
 # BCS初始化ROLE网关api配置
 BK_BCS_APIGW_URL = env.str("BK_BCS_APIGW_URL", default="")
+
+
+# BK BOT approval审批机器人通知
+BK_BOT_APPROVAL_APIGW_URL = env.str("BK_BOT_APPROVAL_APIGW_URL", default="")
+
+
+# BK BOT approval审批机器人通知
+BK_IAM_BOT_APPROVAL_CALLBACK_APIGW_URL = env.str("BK_IAM_BOT_APPROVAL_CALLBACK_APIGW_URL", default="")
 
 
 # 文档地址

@@ -53,13 +53,42 @@
           <render-status :status="row.status" />
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.common['操作']`)" width="270">
+      <bk-table-column :label="$t(`m.common['操作-table']`)" width="150" fixed="right">
         <template slot-scope="{ row }">
-          <section>
+          <div class="sync-record-btn">
+            <bk-popconfirm
+              v-if="['Running'].includes(row.status)"
+              trigger="click"
+              placement="bottom-start"
+              ext-popover-cls="sync-record-remove-confirm"
+              @confirm="handleDelRecord(row)"
+            >
+              <div slot="content">
+                <div class="popover-title">
+                  <div class="popover-title-text">
+                    {{ $t(`m.dialog['确认删除同步记录？']`) }}
+                  </div>
+                </div>
+                <div class="popover-content">
+                  <div class="popover-content-tip">
+                    {{
+                      $t(`m.user['删除后，可通过重新同步更新记录']`)
+                    }}
+                  </div>
+                </div>
+              </div>
+              <bk-button
+                theme="primary"
+                text
+                :loading="delLoading"
+              >
+                {{ $t(`m.common['删除']`) }}
+              </bk-button>
+            </bk-popconfirm>
             <bk-button theme="primary" text @click="showLogDetails(row)">
               {{ $t(`m.user['日志详情']`) }}
             </bk-button>
-          </section>
+          </div>
         </template>
       </bk-table-column>
       <template slot="empty">
@@ -84,11 +113,11 @@
           <div class="link-btn">
             <bk-link class="link" theme="primary" href="https://bk.tencent.com/docs/document/6.0/160/8402" target="_blank">{{$t(`m.user['同步失败排查指引']`)}}</bk-link>
           </div>
-          <div v-if="exceptionMsg || tracebackMsg"
+          <div v-if="exceptionMsg || traceBackMsg"
             class="msg-content">
             <div>
               <div v-html="exceptionMsg"></div>
-              <div v-html="tracebackMsg"></div>
+              <div v-html="traceBackMsg"></div>
             </div>
             <!-- <div v-else>{{ $t(`m.user['暂无日志详情']`) }}</div> -->
           </div>
@@ -102,6 +131,7 @@
 </template>
 
 <script>
+  import { bus } from '@/common/bus';
   import { formatCodeData, timestampToTime, getWindowHeight } from '@/common/util';
   import RenderStatus from './render-status';
   import moment from 'moment';
@@ -138,8 +168,9 @@
         currentBackup: 1,
         isShowLogDetails: false,
         logDetailLoading: false,
+        delLoading: false,
         exceptionMsg: '',
-        tracebackMsg: '',
+        traceBackMsg: '',
         timestampToTime: timestampToTime,
         initDateTimeRange: [],
         triggerType: { 'periodic_task': this.$t(`m.user['定时同步']`), 'manual_sync': this.$t(`m.user['手动同步']`) },
@@ -191,6 +222,18 @@
         this.tableHeight = getWindowHeight() - 185;
       });
       this.fetchPageData();
+    },
+    mounted () {
+      bus.$on('updatePoll', () => {
+        this.fetchPageData();
+      });
+      bus.$on('on-sync-record-status', () => {
+        this.fetchPageData();
+      });
+      this.$once('hook:beforeDestroy', () => {
+        bus.$off('updatePoll');
+        bus.$off('sync-success');
+      });
     },
     methods: {
       async fetchPageData () {
@@ -247,7 +290,7 @@
         try {
           const res = await this.$store.dispatch('organization/getRecordsLog', data.id);
           this.exceptionMsg = res.data.exception_msg.replace(/\n/g, '<br>');
-          this.tracebackMsg = res.data.traceback_msg.replace(/\n/g, '<br>');
+          this.traceBackMsg = res.data.traceback_msg.replace(/\n/g, '<br>');
         } catch (e) {
           console.error(e);
           this.messageAdvancedError(e);
@@ -256,11 +299,31 @@
         }
       },
 
+      async handleDelRecord (payload) {
+        this.delLoading = true;
+        try {
+          const { code } = await this.$store.dispatch('organization/delRecordsLog', payload.id);
+          if (code === 0) {
+            this.$store.commit('updateSync', false);
+            bus.$emit('updatePoll', { isStop: true });
+            window.localStorage.removeItem('isPoll');
+            this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
+            this.resetPagination();
+            this.fetchModelingList(true);
+          }
+        } catch (e) {
+          this.messageAdvancedError(e);
+        } finally {
+          this.delLoading = false;
+        }
+      },
+
       resetPagination () {
         this.pagination = Object.assign({}, {
           limit: 10,
           current: 1,
-          count: 0
+          count: 0,
+          showTotalCount: true
         });
       },
 
@@ -283,63 +346,91 @@
     }
   };
 </script>
-<style lang="postcss">
-    .iam-record-list-wrapper {
-        .detail-link {
-            color: #3a84ff;
-            cursor: pointer;
-            &:hover {
-                color: #699df4;
-            }
-            font-size: 12px;
-        }
-        .system-access-table {
-            margin-top: 16px;
-            border-right: none;
-            border-bottom: none;
-            &.set-border {
-                border-right: 1px solid #dfe0e5;
-                border-bottom: 1px solid #dfe0e5;
-            }
-            .system-access-name {
-                color: #3a84ff;
-                cursor: pointer;
-                &:hover {
-                    color: #699df4;
-                }
-            }
-            .lock-status {
-                font-size: 12px;
-                color: #fe9c00;
-            }
-        }
-        .link-btn {
-            margin: 10px;
-            text-align: right;
-            word-break: break-all;
-        }
-        .msg-content{
-            background: #555555;
-            color: #fff;
-            margin: 0 0px 0 30px;
-            padding: 10px;
-            max-height: 1200px;
-            overflow-y: scroll;
-        }
 
-        .breadcrumbs-back{
-            cursor: pointer;
-            display: inline-block;
-            vertical-align: middle;
-            width: 24px;
-            height: 24px;
-            line-height: 24px;
-            text-align: center;
-            font-size: 24px;
-            color: #3c96ff;
-        }
-        .bk-table-pagination-wrapper {
-          background-color: #ffffff;
-        }
+<style lang="postcss" scoped>
+.iam-record-list-wrapper {
+  .detail-link {
+    color: #3a84ff;
+    font-size: 12px;
+    cursor: pointer;
+    &:hover {
+      color: #699df4;
     }
+  }
+  /deep/ .system-access-table {
+    margin-top: 16px;
+    border-right: none;
+    border-bottom: none;
+    &.set-border {
+      border-right: 1px solid #dfe0e5;
+      border-bottom: 1px solid #dfe0e5;
+    }
+    .system-access-name {
+      color: #3a84ff;
+      cursor: pointer;
+      &:hover {
+        color: #699df4;
+      }
+    }
+    .lock-status {
+      font-size: 12px;
+      color: #fe9c00;
+    }
+    .breadcrumbs-back {
+      cursor: pointer;
+      display: inline-block;
+      vertical-align: middle;
+      width: 24px;
+      height: 24px;
+      line-height: 24px;
+      text-align: center;
+      font-size: 24px;
+      color: #3c96ff;
+    }
+    .sync-record-btn {
+      .bk-button-text {
+        margin-right: 8px;
+      }
+    }
+    .bk-table-fixed,
+    .bk-table-fixed-right {
+      border-bottom: 0;
+    }
+  }
+  .link-btn {
+    margin: 10px;
+    text-align: right;
+    word-break: break-all;
+  }
+  .msg-content{
+    background: #555555;
+    color: #fff;
+    margin: 0 0px 0 30px;
+    padding: 10px;
+    max-height: 1200px;
+    overflow-y: scroll;
+  }
+}
+.sync-record-remove-confirm {
+  .popover-title {
+    font-size: 16px;
+    padding-bottom: 16px;
+    color: #313238;
+  }
+  .popover-content {
+    color: #63656e;
+    .popover-content-item {
+      display: flex;
+      margin-bottom: 8px;
+      &-value {
+        color: #313238;
+        margin-left: 8px;
+      }
+    }
+    &-tip {
+      padding-bottom: 20px;
+      color: #63656E;
+    }
+  }
+}
 </style>

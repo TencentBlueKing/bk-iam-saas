@@ -82,7 +82,7 @@ class TestPathNodeList:
     def test_match_selection(self, path_node_list: PathNodeList, instance_selection: InstanceSelection):
         copied_path_node_list = deepcopy(path_node_list)
         copied_path_node_list.pop(1)
-        assert copied_path_node_list.match_selection("system_id", "type", None)
+        assert copied_path_node_list.match_selection("system_id", "type", instance_selection)
         assert path_node_list.match_selection("system_id", "type", instance_selection)
 
     def test_ignore_path(self, path_node_list: PathNodeList, instance_selection: InstanceSelection):

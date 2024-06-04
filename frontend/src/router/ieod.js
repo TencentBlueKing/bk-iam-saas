@@ -123,14 +123,6 @@ const GradingAdminEdit = () => import(/* webpackChunkName: 'grading-admin' */ '.
 const GradingAdminUpdateTemplate = () =>
   import(/* webpackChunkName: 'grading-admin' */ '../views/grading-admin/update-template');
 
-// // 管理空间
-// const FirstManageSpace = () =>
-//     import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/first-manage-space');
-
-// // 管理空间新建
-// const FirstManageSpaceCreate = () =>
-//     import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/first-manage-space/create');
-
 // 授权边界
 const AuthorizationBoundary = () =>
   import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/authorization-boundary');
@@ -167,6 +159,9 @@ const Setting = () => import(/* webpackChunkName: 'set' */ '../views/set');
 
 // 审批流程设置
 const ApprovalProcess = () => import(/* webpackChunkName: 'approvalProcess' */ '../views/approval-process');
+
+// 续期通知
+const RenewalNotice = () => import(/* webpackChunkName: 'approvalProcess' */ '../views/renewal-notice');
 
 // 用户组设置
 const UserGroupSetting = () => import(/* webpackChunkName: 'userGroupSetting' */ '../views/user-group-setting');
@@ -692,6 +687,14 @@ export const routes = [
           headerTitle: il8n('myApply', '审批流程')
         },
         component: ApprovalProcess
+      },
+      {
+        path: 'renewal-notice',
+        name: 'renewalNotice',
+        meta: {
+          headerTitle: il8n('nav', '续期通知')
+        },
+        component: RenewalNotice
       },
       {
         path: 'user-group-setting',

@@ -271,11 +271,8 @@
             />
           </template>
         </bk-table>
-        <div class="apply-selected-groups">
-          <div
-            v-if="currentSelectedGroups.length"
-            class="apply-selected-groups-header"
-          >
+        <div class="apply-selected-groups" v-if="currentSelectedGroups.length">
+          <div class="apply-selected-groups-header">
             <span>{{ $t(`m.common['已选择']`) }}</span>
             <span class="apply-selected-groups-header-count">{{ currentSelectedGroups.length }}</span>
             <span>{{ $t(`m.common['个用户组#']`) }}</span>
@@ -297,7 +294,7 @@
           </bk-tag>
         </div>
       </div>
-      <p class="user-group-error" v-if="isShowGroupError">{{ $t(`m.permApply['请选择用户组']`) }}</p>
+      <p class="user-group-error" v-if="isShowGroupError">{{ $t(`m.permApply['尚未选择用户组']`) }}</p>
     </render-horizontal-block>
     <section>
       <render-member
@@ -568,15 +565,6 @@
             default: true
           },
           {
-            id: 'id',
-            name: 'ID',
-            default: true
-          // validate (values, item) {
-          //     const validate = (values || []).every(_ => /^(\d*)$/.test(_.name))
-          //     return !validate ? '' : true
-          // }
-          },
-          {
             id: 'description',
             name: this.$t(`m.common['描述']`),
             disabled: true
@@ -633,6 +621,12 @@
       },
       'pagination.current' (value) {
         this.currentBackup = value;
+      },
+      currentSelectedGroups: {
+        handler (value) {
+          this.isShowGroupError = !(value.length > 0);
+        },
+        immediate: true
       }
     },
     async created () {
@@ -650,7 +644,7 @@
           'is_selected': true
         }
       ];
-      this.searchData = this.enableGroupInstanceSearch ? this.initSearchData.filter(item => ['name', 'id', 'description'].includes(item.id)) : this.initSearchData;
+      this.searchData = this.enableGroupInstanceSearch ? this.initSearchData.filter(item => ['name', 'id', 'description', 'role_id'].includes(item.id)) : this.initSearchData;
       this.setCurrentQueryCache(this.refreshCurrentQuery());
       const isObject = (payload) => {
         return Object.prototype.toString.call(payload) === '[object Object]';
@@ -1573,6 +1567,7 @@
               ));
             return;
           }
+          this.messageAdvancedError(e);
         } finally {
           this.submitLoading = false;
         }

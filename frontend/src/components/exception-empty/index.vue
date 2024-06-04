@@ -102,7 +102,7 @@
           {...{ props }}
           {...{ on }}
         >
-          <span>{il8n('common', this.emptyText)}</span>
+          <span class="empty-text">{il8n('common', this.emptyText)}</span>
           {this.fetchDefaultOperation(this.tipType)}
         </bk-exception>
       </div>

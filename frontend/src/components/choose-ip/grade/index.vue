@@ -169,6 +169,7 @@
 </template>
 <script>
   import _ from 'lodash';
+  import { mapGetters } from 'vuex';
   import { bus } from '@/common/bus';
   import { guid, formatCodeData } from '@/common/util';
   import il8n from '@/language';
@@ -329,6 +330,8 @@
     data () {
       return {
         isLoading: false,
+        // 判断第一层数据是否是空
+        isFirstLevelEmpty: false,
         // 节点数据分页的limit
         limit: 100,
         resourceTotal: 0,
@@ -370,6 +373,7 @@
       };
     },
     computed: {
+      ...mapGetters(['user']),
       isExistLimitValue () {
         return this.getLimitResourceData().length > 0;
       },
@@ -382,12 +386,22 @@
       isManualInput () {
         return ['manualInput'].includes(this.curSelectedChain.id) && ['instance:paste'].includes(this.selectionMode);
       },
+      isSuperManager () {
+        return this.user.role.type === 'super_manager';
+      },
       renderTopologyData () {
         const hasNode = {};
         const treeData = [...this.treeData];
         const list = treeData.reduce((curr, next) => {
-          // eslint-disable-next-line no-unused-expressions
-          hasNode[`${next.name}&${next.id}`] ? '' : hasNode[`${next.name}&${next.id}`] = true && curr.push(next);
+          if (next.level > 0 && next.parentChain && next.parentChain.length > 0) {
+            const chainContent = next.parentChain.map((v) => `${v.id}&${v.name}&${v.type}`).join();
+            // eslint-disable-next-line no-unused-expressions
+            hasNode[`${next.id}&${next.name}&${chainContent}`] ? ''
+            : hasNode[`${next.id}&${next.name}&${chainContent}`] = true && curr.push(next);
+          } else {
+            // eslint-disable-next-line no-unused-expressions
+            hasNode[`${next.name}&${next.id}`] ? '' : hasNode[`${next.name}&${next.id}`] = true && curr.push(next);
+          }
           return curr;
         }, []);
         return list;
@@ -603,7 +617,8 @@
 
       handleOnExpanded (index, expanded) {
         window.changeAlert = true;
-        if (!expanded && this.treeData[index + 2].type === 'search-empty') {
+        const searchEmptyData = this.treeData[index + 2];
+        if (!expanded && searchEmptyData && searchEmptyData.type === 'search-empty') {
           this.treeData.splice(index + 2, 1);
         }
       },
@@ -1067,6 +1082,7 @@
           this.resourceTotal = data.count || 0;
           this.emptyData = formatCodeData(code, this.emptyData, data.results.length === 0);
           this.emptyTreeData = formatCodeData(code, this.emptyTreeData, data.results.length === 0);
+          this.isFirstLevelEmpty = data.results.length < 1;
           if (data.results.length < 1) {
             this.searchDisplayText = RESULT_TIP[code];
             return;
@@ -1174,7 +1190,9 @@
           name = curChainData.name;
           systemId = curChainData.system_id;
         }
-        if (this.isManualInput) {
+        console.log(this.isFirstLevelEmpty);
+        // 如果是手动输入或者第一次加载resource为空且身份不是超管，代表它的范围只是他本身
+        if (this.isManualInput || (this.isFirstLevelEmpty && !this.isSuperManager)) {
           parentChain.push({
             type: id,
             type_name: name,
@@ -1260,11 +1278,11 @@
             systemId = curChainData.system_id;
             if (node.level === 0 && !node.async) {
               parentChainData = {
-                type: this.curChain[chainLen - 1].id,
-                type_name: this.curChain[chainLen - 1].name,
+                type: this.curChain[0].id,
+                type_name: this.curChain[0].name,
                 id: node.id,
                 name: node.name,
-                system_id: this.curChain[chainLen - 1].system_id,
+                system_id: this.curChain[0].system_id,
                 child_type: node.childType || ''
               };
             } else {
@@ -1681,14 +1699,21 @@
 
       removeAsyncNode () {
         // 需要过滤掉name为空以及反复切换选中造成的重复数据的节点
-        const obj = {};
-        const treeList = _.cloneDeep(this.treeData.filter(item => item.name));
-        this.treeData = treeList.reduce((pre, item) => {
-          // eslint-disable-next-line no-unused-expressions
-          obj[`${item.id}${item.name}`] ? '' : obj[`${item.id}${item.name}`] = true && pre.push(item);
-          return pre;
+        const hasNode = {};
+        const treeList = _.cloneDeep(this.treeData.filter(item => item.name !== ''));
+        this.treeData = treeList.reduce((curr, next) => {
+          if (next.level > 0 && next.parentChain && next.parentChain.length > 0) {
+            const chainContent = next.parentChain.map((v) => `${v.id}&${v.name}&${v.type}`).join();
+            // eslint-disable-next-line no-unused-expressions
+            hasNode[`${next.id}&${next.name}&${chainContent}`] ? ''
+            : hasNode[`${next.id}&${next.name}&${chainContent}`] = true && curr.push(next);
+          } else {
+            // eslint-disable-next-line no-unused-expressions
+            hasNode[`${next.name}&${next.id}`] ? '' : hasNode[`${next.name}&${next.id}`] = true && curr.push(next);
+          }
+          return curr;
         }, []);
-        const index = this.treeData.findIndex((item) => item.type === 'async');
+        const index = this.treeData.findIndex(item => item.type === 'async');
         if (index > -1) this.treeData.splice(index, 1);
       },
 
@@ -1697,7 +1722,7 @@
         node.current = node.current + 1;
         node.loadingMore = true;
         const chainLen = this.curChain.length;
-        let keyword = !isTable ? this.curKeyword : '';
+        let keyword = isTable || (!isTable && node.level > 0) ? '' : this.curKeyword;
         if (Object.keys(this.curSearchObj).length) {
           if (node.parentId === this.curSearchObj.parentId) {
             keyword = this.curSearchObj.value;

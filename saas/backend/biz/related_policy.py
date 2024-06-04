@@ -321,7 +321,7 @@ class RelatedPolicyBiz:
 
         不同类型的实例视图匹配使用前缀匹配
         """
-        path = list(path.copy())
+        path = list(path.copy())  # type: ignore
         for selection in instance_selections:
             # 资源类型不同时, 截取视图长度的拓扑
             if len(path) > len(selection.resource_type_chain):

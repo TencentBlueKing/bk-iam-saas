@@ -11,6 +11,7 @@ specific language governing permissions and limitations under the License.
 import os
 
 from celery import Celery
+from celery.schedules import crontab
 from kombu import Exchange, Queue
 
 # Set the default Django settings module for the 'celery' program.
@@ -32,3 +33,26 @@ app.autodiscover_tasks()
 app.conf.task_queues = [
     Queue("bk_iam", Exchange("bk_iam"), routing_key="bk_iam", queue_arguments={"x-ha-policy": "all"}),
 ]
+
+# set periodic tasks
+@app.on_after_finalize.connect
+def setup_periodic_tasks(sender, **kwargs):
+    from backend.biz.role import get_global_notification_config
+
+    config = get_global_notification_config()
+    hour, minute = [int(i) for i in config["send_time"].split(":")]
+
+    sender.add_periodic_task(
+        crontab(minute=minute, hour=hour),
+        permission_expire_remind.s(),
+        name="periodic_permission_expire_remind",
+    )
+
+
+@app.task
+def permission_expire_remind():
+    from backend.apps.role.tasks import role_group_expire_remind
+    from backend.apps.user.tasks import user_group_policy_expire_remind
+
+    role_group_expire_remind.delay()
+    user_group_policy_expire_remind.delay()

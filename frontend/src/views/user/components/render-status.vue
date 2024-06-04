@@ -7,7 +7,7 @@
     <bk-popover placement="top" ext-cls="iam-tooltips-cls" v-if="status === 'Failed'">
       {{ statusMap[status] }}
       <div slot="content">
-        同步操作失败，请在用户管理后台API日志中查询详情
+        {{ $t(`m.user['同步操作失败，请在用户管理后台API日志中查询详情']`) }}
       </div>
     </bk-popover>
     <span v-else>

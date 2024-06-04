@@ -15,7 +15,8 @@
       :class="[
         'iam-approval-process-set-content-wrapper',
         { 'set-style': isShowProcessSelect },
-        { 'hide-process-table': isShowProcessTable }
+        { 'hide-process-table': isShowProcessTable },
+        { 'show-notice-alert': showNoticeAlert }
       ]"
     >
       <bk-tab
@@ -55,7 +56,7 @@
   };
 
   export default {
-    inject: ['reload'],
+    inject: ['reload', 'showNoticeAlert'],
     components: {
       RenderSetItem,
       JoinRateManagerProcess,
@@ -273,7 +274,7 @@
 </script>
 <style lang="postcss">
     .iam-approval-process-set-wrapper {
-        padding: 20px;
+        padding: 24px;
         .iam-approval-process-set-item-wrapper {
             display: flex;
             justify-content: flex-start;
@@ -282,8 +283,8 @@
             }
         }
         .iam-approval-process-set-content-wrapper {
-            min-height: calc(100vh - 101px);
-            background: #fff;
+            min-height: calc(100vh - 150px);
+            background: #ffffff;
             border-radius: 2px;
             box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, .05);
             &.set-style {
@@ -292,6 +293,9 @@
             }
             &.hide-process-table {
               display: none;
+            }
+            &.show-notice-alert {
+              min-height: calc(100vh - 190px);
             }
             .iam-approval-process-set-tab-cls {
                 .bk-tab-header {

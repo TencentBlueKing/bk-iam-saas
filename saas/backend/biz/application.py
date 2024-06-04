@@ -489,7 +489,12 @@ class ApplicationBiz:
         return parse_obj_as(ApplicationSystem, system)
 
     def create_for_policy(
-        self, application_type: ApplicationType, data: ActionApplicationDataBean
+        self,
+        application_type: ApplicationType,
+        data: ActionApplicationDataBean,
+        content_template: Optional[Dict[str, Any]] = None,
+        policy_contents: Optional[List[Tuple[PolicyBean, Any]]] = None,
+        title_prefix: str = "",
     ) -> List[Application]:
         """自定义权限"""
         # 1. 提前查询部分信息
@@ -540,12 +545,31 @@ class ApplicationBiz:
                     applicants=data.applicants,
                 ),
             )
-            new_data_list.append((application_data, process))
+
+            # 组装外部传入的 itsm 单据数据
+            content: Optional[Dict[str, Any]] = None
+            if content_template and policy_contents:
+                content = deepcopy(content_template)
+                policy_form_value = [c for p, c in policy_contents if policy_list.contains_policy(p)]
+                for c in content["form_data"]:
+                    if (
+                        isinstance(c, dict)
+                        and c.get("scheme") == "policy_table_scheme"
+                        and isinstance(c.get("value"), list)
+                    ):
+                        c["value"] = policy_form_value
+
+            new_data_list.append((application_data, process, content))
 
         # 8. 循环创建申请单
         applications = []
-        for _data, _process in new_data_list:
-            application = self.svc.create_for_policy(_data, _process)
+        for _data, _process, _content in new_data_list:
+            application = self.svc.create_for_policy(
+                _data,
+                _process,
+                approval_content=_content,
+                approval_title_prefix=title_prefix,
+            )
             applications.append(application)
 
         return applications

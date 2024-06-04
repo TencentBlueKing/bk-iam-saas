@@ -63,7 +63,8 @@
                       :label="tableItem.label"
                       :prop="tableItem.prop">
                       <template slot-scope="{ row }">
-                        <span>{{ row.id }}({{ row.name }})</span>
+                        <span v-if="['user'].includes(row.type)">{{ row.id }}({{ row.name }})</span>
+                        <span v-if="['depart', 'department'].includes(row.type)">{{ row.name }}({{ row.id }})</span>
                       </template>
                     </bk-table-column>
                   </template>
@@ -320,11 +321,20 @@
           await Promise.all([this.fetchMembers(item), this.fetchGroupSubjectTemplate(item)]).then(() => {
             if (item.groupTabList && item.groupTabList.length) {
               const childList = item.groupTabList.map((v) => v.children || []).flat(Infinity);
-              childList && childList.forEach(subItem => {
-                item.checkList.push(subItem);
-                if (this.$refs.permTableRef && this.$refs.permTableRef.length) {
-                  this.$refs.permTableRef[i].toggleRowSelection(subItem, true);
-                }
+              const isExistUserOrg = childList.find((v) => ['user', 'department'].includes(v.type));
+              const isExistTemp = childList.find((v) => ['template'].includes(v.type));
+              if (!isExistUserOrg && isExistTemp) {
+                item.tabActive = 'memberTemplate';
+                this.$set(item, 'tableProps', this.getTableProps('memberTemplate'));
+              }
+              this.$nextTick(() => {
+                childList && childList.forEach(subItem => {
+                  item.checkList.push(subItem);
+                  if (this.$refs.permTableRef && this.$refs.permTableRef.length) {
+                    this.$refs.permTableRef[i].toggleRowSelection(subItem, true);
+                    this.fetchCustomTotal(i);
+                  }
+                });
               });
             }
           });
@@ -345,7 +355,7 @@
             id: item.id
           };
           const { current_role_id: currentRoleId, source } = this.$route.query;
-          if (currentRoleId && source === 'email') {
+          if (currentRoleId && ['email', 'notification'].includes(source)) {
             params.hidden = false;
           }
           const { data } = await this.$store.dispatch('renewal/getExpireSoonGroupMembers', params);
@@ -380,7 +390,7 @@
             expire_soon: true
           };
           const { current_role_id: currentRoleId, source } = this.$route.query;
-          if (currentRoleId && source === 'email') {
+          if (currentRoleId && ['email', 'notification'].includes(source)) {
             params.hidden = false;
           }
           const { data } = await this.$store.dispatch('memberTemplate/getGroupSubjectTemplate', params);
@@ -409,7 +419,7 @@
             offset: this.pagination.limit * (this.pagination.current - 1)
           };
           const { current_role_id: currentRoleId, source } = this.$route.query;
-          if (currentRoleId && source === 'email') {
+          if (currentRoleId && ['email', 'notification'].includes(source)) {
             params.hidden = false;
           }
           const { code, data } = await this.$store.dispatch('renewal/getExpiredGroups', params);
@@ -621,7 +631,7 @@
               : checkList.map(({ id, type }) => ({ id, type }))
           };
           const { current_role_id: currentRoleId, source } = this.$route.query;
-          if (currentRoleId && source === 'email') {
+          if (currentRoleId && ['email', 'notification'].includes(source)) {
             params.hidden = false;
           }
           const { code } = await this.$store.dispatch('userGroup/deleteUserGroupMember', params);
@@ -633,6 +643,7 @@
               expanded: true,
               checkList: []
             });
+            this.fetchCustomTotal(this.tableIndex);
             await Promise.all([
               this.fetchMembers(this.tableList[this.tableIndex]),
               this.fetchGroupSubjectTemplate(this.tableList[this.tableIndex])
@@ -761,7 +772,7 @@
                 (item) => item.id.toString() !== row.id.toString()
               );
             }
-            this.fetchCustomTotal(index);
+            this.currentSelectList = this.tableList.map((item) => item.checkList).flat(Infinity);
           },
           all: () => {
             const { groupTabList, tabActive } = this.tableList[index];
@@ -772,6 +783,7 @@
                 (item) => !tableList.map((v) => String(v.id)).includes(String(item.id))
               );
               this.tableList[index].checkList = [...selectGroups, ...payload];
+              this.currentSelectList = this.tableList.map((item) => item.checkList).flat(Infinity);
               this.fetchCustomTotal(index);
             }
           }
@@ -824,7 +836,7 @@
           }))
         };
         const { current_role_id: currentRoleId, source } = this.$route.query;
-        if (currentRoleId && source === 'email') {
+        if (currentRoleId && ['email', 'notification'].includes(source)) {
           params.hidden = false;
         }
         console.log(params, '参数');

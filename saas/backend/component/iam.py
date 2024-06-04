@@ -8,7 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from django.conf import settings
 
@@ -478,7 +478,9 @@ def list_exist_subjects_before_expired_at(subjects: List[Dict], expired_at: int)
     return _call_iam_api(http_post, url_path, data=data)
 
 
-def list_group_subject_before_expired_at(expired_at: int, limit: int = 10, offset: int = 0) -> List:
+def list_group_subject_before_expired_at(
+    expired_at: int, limit: int = 10, offset: int = 0
+) -> Dict[str, Union[List, int]]:
     """
     查询已过期的关系
     """

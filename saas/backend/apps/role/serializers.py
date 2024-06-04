@@ -18,6 +18,7 @@ from rest_framework import serializers
 from backend.apps.application.base_serializers import BaseAggActionListSLZ, SystemInfoSLZ, validate_action_repeat
 from backend.apps.organization.models import Department, User
 from backend.apps.policy.serializers import ConditionSLZ, InstanceSLZ, ResourceGroupSLZ, ResourceSLZ, ResourceTypeSLZ
+from backend.apps.role.constants import NotificationTypeEnum
 from backend.apps.role.models import Role, RoleCommonAction, RoleRelation, RoleUser
 from backend.biz.constants import PermissionTypeEnum
 from backend.biz.role import RoleBiz
@@ -491,3 +492,30 @@ class RoleGroupMemberSearchSLZ(GroupSearchSLZ):
 
 class RoleGroupMemberCleanSLZ(serializers.Serializer):
     members = serializers.ListField(label="成员列表", child=GroupMemberSLZ(label="成员"), allow_empty=False)
+
+
+class NotificationConfigSerializer(serializers.Serializer):
+    enable = serializers.BooleanField(default=True)
+    notification_types = serializers.ListField(
+        label="通知类型",
+        child=serializers.ChoiceField(choices=NotificationTypeEnum.get_choices()),
+        allow_empty=False,
+    )
+    send_time = serializers.RegexField(r"^\d{2}:\d{2}$")
+    expire_days_before = serializers.IntegerField(min_value=0, max_value=15)
+    expire_days_after = serializers.IntegerField(min_value=0, max_value=15)
+    send_days = serializers.ListField(
+        label="发送日期",
+        child=serializers.ChoiceField(
+            choices=[
+                ("monday", "Monday"),
+                ("tuesday", "Tuesday"),
+                ("wednesday", "Wednesday"),
+                ("thursday", "Thursday"),
+                ("friday", "Friday"),
+                ("saturday", "Saturday"),
+                ("sunday", "Sunday"),
+            ]
+        ),
+        allow_empty=True,
+    )

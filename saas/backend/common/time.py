@@ -11,6 +11,7 @@ specific language governing permissions and limitations under the License.
 import datetime
 import math
 import time
+from typing import Any, Dict
 
 from django.db import connection
 from django.utils import timezone
@@ -32,6 +33,16 @@ DEFAULT_EXPIRED_DURATION = 365 * DAY_SECONDS  # 1年
 
 EXPIRED = _("已过期")
 PERMANENT = _("永久")
+
+WEEKDAYS = {
+    0: "monday",
+    1: "tuesday",
+    2: "wednesday",
+    3: "thursday",
+    4: "friday",
+    5: "saturday",
+    6: "sunday",
+}
 
 
 def expired_at_display(expired_at: int, since_time: int = 0):
@@ -116,3 +127,28 @@ def db_time():
 
 def get_soon_expire_ts() -> int:
     return int(time.time()) + EXPIRE_SOON_SECONDS
+
+
+def get_expired_at(days: int) -> int:
+    return int(time.time()) + days * DAY_SECONDS
+
+
+def need_run_expired_remind(config: Dict[str, Any]) -> bool:
+    # 如果没有开启用户组过期提醒, 直接返回
+    if not config["enable"]:
+        return False
+
+    # 判断当前是星期几, 如果不在发送周期内, 直接返回
+    current_time = timezone.localtime(timezone.now())
+    if WEEKDAYS[current_time.weekday()] not in config["send_days"]:
+        return False
+
+    # 如果不在调度时间内, 不发送提醒
+    hour, minute = [int(i) for i in config["send_time"].split(":")]
+    schedule_time = timezone.localtime(timezone.now()).replace(hour=hour, minute=minute, second=0, microsecond=0)
+
+    # 执行时间小于调度时间不执行, 当前时间超过调度时间10分钟不执行
+    if current_time < schedule_time or current_time - schedule_time > datetime.timedelta(minutes=5):
+        return False
+
+    return True

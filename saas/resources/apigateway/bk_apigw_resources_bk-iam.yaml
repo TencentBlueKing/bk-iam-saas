@@ -806,6 +806,58 @@ paths:
           resourcePermissionRequired: false
         disabledStages: []
         descriptionEn:
+  /api/v1/open/application/approval_bot/role/:
+    post:
+      operationId: approval_bot_callback_role
+      description: 审批机器人角色回调
+      tags:
+      - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: false
+        allowApplyPermission: false
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/open/application/approval_bot/role/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
+  /api/v1/open/application/approval_bot/user/:
+    post:
+      operationId: approval_bot_callback_user
+      description: 审批机器人用户续期回调
+      tags:
+      - open
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: false
+        allowApplyPermission: false
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/open/application/approval_bot/user/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
   /api/v1/open/application/policies/:
     post:
       operationId: application_grant_policy
@@ -3103,3 +3155,158 @@ paths:
           resourcePermissionRequired: false
         disabledStages: []
         descriptionEn:
+  /api/v1/open/admin/groups/:
+      post:
+          operationId: admin_create_groups
+          description: 超管批量创建用户组
+          tags:
+              - open
+          responses:
+              default:
+                  description: ''
+          x-bk-apigateway-resource:
+              isPublic: true
+              allowApplyPermission: true
+              matchSubpath: false
+              backend:
+                  type: HTTP
+                  method: post
+                  path: /api/v1/open/admin/groups/
+                  matchSubpath: false
+                  timeout: 0
+                  upstreams: { }
+                  transformHeaders: { }
+              authConfig:
+                  userVerifiedRequired: false
+                  resourcePermissionRequired: false
+              disabledStages: [ ]
+              descriptionEn:
+  /api/v1/open/admin/groups/{id}/:
+      delete:
+          operationId: admin_delete_group
+          description: 超管删除指定用户组
+          tags:
+              - open
+          responses:
+              default:
+                  description: ''
+          x-bk-apigateway-resource:
+              isPublic: true
+              allowApplyPermission: true
+              matchSubpath: false
+              backend:
+                  type: HTTP
+                  method: delete
+                  path: /api/v1/open/admin/groups/{id}/
+                  matchSubpath: false
+                  timeout: 0
+                  upstreams: { }
+                  transformHeaders: { }
+              authConfig:
+                  userVerifiedRequired: false
+                  resourcePermissionRequired: false
+              disabledStages: [ ]
+              descriptionEn:
+      put:
+          operationId: admin_update_group
+          description: 超管更新指定用户组
+          tags:
+              - open
+          responses:
+              default:
+                  description: ''
+          x-bk-apigateway-resource:
+              isPublic: true
+              allowApplyPermission: true
+              matchSubpath: false
+              backend:
+                  type: HTTP
+                  method: put
+                  path: /api/v1/open/admin/groups/{id}/
+                  matchSubpath: false
+                  timeout: 0
+                  upstreams: { }
+                  transformHeaders: { }
+              authConfig:
+                  userVerifiedRequired: false
+                  resourcePermissionRequired: false
+              disabledStages: [ ]
+              descriptionEn:
+  /api/v1/open/admin/groups/{id}/policies/:
+      post:
+          operationId: admin_groups_policies_grant
+          description: 超管授权用户组
+          tags:
+              - open
+          responses:
+              default:
+                  description: ''
+          x-bk-apigateway-resource:
+              isPublic: true
+              allowApplyPermission: true
+              matchSubpath: false
+              backend:
+                  type: HTTP
+                  method: post
+                  path: /api/v1/open/admin/groups/{id}/policies/
+                  matchSubpath: false
+                  timeout: 0
+                  upstreams: { }
+                  transformHeaders: { }
+              authConfig:
+                  userVerifiedRequired: false
+                  resourcePermissionRequired: false
+              disabledStages: [ ]
+              descriptionEn:
+  /api/v1/open/admin/systems/{system_id}/provider_config/:
+      get:
+          operationId: admin_list_provider_config
+          description: 系统回调信息查询
+          tags:
+              - open
+          responses:
+              default:
+                  description: ''
+          x-bk-apigateway-resource:
+              isPublic: true
+              allowApplyPermission: true
+              matchSubpath: false
+              backend:
+                  type: HTTP
+                  method: get
+                  path: /api/v1/open/admin/systems/{system_id}/provider_config/
+                  matchSubpath: false
+                  timeout: 0
+                  upstreams: { }
+                  transformHeaders: { }
+              authConfig:
+                  userVerifiedRequired: false
+                  resourcePermissionRequired: false
+              disabledStages: [ ]
+              descriptionEn:
+  /api/v1/open/admin/templates/:
+      post:
+          operationId: admin_create_templates
+          description: 超管创建模板
+          tags:
+              - open
+          responses:
+              default:
+                  description: ''
+          x-bk-apigateway-resource:
+              isPublic: true
+              allowApplyPermission: true
+              matchSubpath: false
+              backend:
+                  type: HTTP
+                  method: post
+                  path: /api/v1/open/admin/templates/
+                  matchSubpath: false
+                  timeout: 0
+                  upstreams: { }
+                  transformHeaders: { }
+              authConfig:
+                  userVerifiedRequired: false
+                  resourcePermissionRequired: false
+              disabledStages: [ ]
+              descriptionEn:

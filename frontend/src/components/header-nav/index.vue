@@ -264,7 +264,6 @@
         systemNoSuperList: ['myPerm', 'userGroup', 'audit', 'resourcePermiss', 'addGroupPerm'],
         isRatingChange: false,
         haveManager: false,
-        isSameRoute: false,
         showNavDataLength: 0,
         curHeight: 78,
         languageList: [
@@ -377,14 +376,6 @@
         },
         immediate: true,
         deep: true
-      },
-      index: {
-        handler (newValue, oldValue) {
-          if (oldValue && newValue !== oldValue && !this.curFromName) {
-            this.isSameRoute = true;
-          }
-        },
-        deep: true
       }
     },
     created () {
@@ -494,6 +485,13 @@
         );
       },
 
+      // 需要切换的时候刷新不同菜单下的同名路由
+      handleRefreshSameRoute (payload) {
+        if (['sensitivityLevel', 'administrator'].includes(this.$route.name) && [1, 3].includes(payload)) {
+          this.reloadCurPage(this.$route);
+        }
+      },
+
       async updateRouter (navIndex = 0) {
         let difference = [];
         const permResult = getManagerMenuPerm(this.roleList);
@@ -502,21 +500,14 @@
         if (navIndex === 1) {
           // 不同导航栏下相同的权限路由名称跳转增加延时时间，防止相同接口调用多次被节流
           await this.$store.dispatch('userInfo');
-          if (this.isSameRoute) {
-            this.reloadCurPage(this.$route);
-          }
           const type = this.curRole;
           difference = getRouterDiff(type);
           this.$store.commit('updataRouterDiff', type);
         } else {
           difference = getNavRouterDiff(navIndex, permResult);
           this.$store.commit('updataNavRouterDiff', navIndex);
-          // 不同导航栏下相同的权限路由名称跳转增加延时时间，防止相同接口调用多次被节流
-          if (this.isSameRoute) {
-            await this.$store.dispatch('userInfo');
-            this.reloadCurPage(this.$route);
-          }
         }
+        this.handleRefreshSameRoute(navIndex);
         const curRouterName = this.$route.name;
         if (difference.length) {
           if (difference.includes(curRouterName)) {
@@ -643,8 +634,10 @@
         window.localStorage.removeItem('iam-header-title-cache');
         window.localStorage.removeItem('iam-header-name-cache');
         window.localStorage.removeItem('applyGroupList');
-        window.localStorage.removeItem('index');
-        window.location = window.LOGIN_SERVICE_URL + '/?c_url=' + window.location.href;
+        const loginUrl = new URL(`${window.LOGIN_SERVICE_URL}/`);
+        loginUrl.searchParams.append('c_url', window.location.href);
+        loginUrl.searchParams.append('is_from_logout', 1);
+        window.location = loginUrl.href;
       },
 
       handleManager () {

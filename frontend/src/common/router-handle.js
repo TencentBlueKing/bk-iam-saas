@@ -58,7 +58,8 @@ export const getRouterDiff = (payload) => {
       'sensitivityLevel',
       'memberTemplate',
       'resourcePermManage',
-      'userOrgPerm'
+      'userOrgPerm',
+      'renewalNotice'
     ];
   }
   if (payload === 'super_manager') {
@@ -97,6 +98,7 @@ export const getRouterDiff = (payload) => {
       'myManageSpaceSubDetail',
       'sensitivityLevel',
       'resourcePermManage',
+      'renewalNotice',
       'userOrgPerm'
     ];
   }
@@ -128,6 +130,7 @@ export const getRouterDiff = (payload) => {
       'secondaryManageSpace',
       'authorBoundary',
       'myManageSpace',
+      'renewalNotice',
       'userOrgPerm'
     ];
   }
@@ -160,7 +163,8 @@ export const getRouterDiff = (payload) => {
       'resourcePermiss',
       'firstManageSpace',
       'sensitivityLevel',
-      'resourcePermManage'
+      'resourcePermManage',
+      'renewalNotice'
     ];
   }
   if (payload === 'subset_manager') {
@@ -199,7 +203,8 @@ export const getRouterDiff = (payload) => {
       'sensitivityLevel',
       'memberTemplate',
       'resourcePermManage',
-      'userOrgPerm'
+      'userOrgPerm',
+      'renewalNotice'
     ];
   }
   // payload其它取值默认返回全部菜单
@@ -248,7 +253,9 @@ export const getRouterDiff = (payload) => {
     'myManageSpaceCreate',
     'resourcePermManage',
     'resourcePermiss',
-    'sensitivityLevel'
+    'sensitivityLevel',
+    'userOrgPerm',
+    'renewalNotice'
   ];
 };
 
@@ -279,7 +286,8 @@ export const getNavRouterDiff = (navIndex, managerPerm = '') => {
       'sensitivityLevel',
       'memberTemplate',
       'resourcePermManage',
-      'userOrgPerm'
+      'userOrgPerm',
+      'renewalNotice'
     ];
   }
 
@@ -331,7 +339,8 @@ export const getNavRouterDiff = (navIndex, managerPerm = '') => {
       'sensitivityLevel',
       'memberTemplate',
       'resourcePermManage',
-      'userOrgPerm'
+      'userOrgPerm',
+      'renewalNotice'
     ];
   }
 
@@ -387,7 +396,8 @@ export const getNavRouterDiff = (navIndex, managerPerm = '') => {
         'gradingAdminCreate',
         'gradingAdminDetail',
         'gradingAdminEdit',
-        'gradingAdminUpdateTemplate'
+        'gradingAdminUpdateTemplate',
+        'renewalNotice'
       ];
       const systemManagerMenu = [
         ...menuList,

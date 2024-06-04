@@ -79,7 +79,7 @@
         }
 
         .content {
-            width: 1000px;
+            width: 1300px;
             margin: 0 auto;
             background: #f0f1f5;
         }
@@ -199,7 +199,7 @@
             border="0"
             cellpadding="0"
             cellspacing="0"
-            width="928"
+            width="1260"
             style="background:#fff;
                 border-collapse: collapse;
                 border-spacing: 0px;
@@ -220,7 +220,7 @@
                         <span></span>
                         自定义权限({{ policies|length }})
                     </label>
-                    <table align="center" border="0" cellpadding="0" cellspacing="0" width="864" style="background:#fff;">
+                    <table align="center" border="0" cellpadding="0" cellspacing="0" width="1184" style="background:#fff;">
                         <tr class="blank">
                             <td height="20">
                             </td>
@@ -230,14 +230,17 @@
                                 <table border="0" cellpadding="0" cellspacing="0" width="100%" class="table data-table" style="width:100%;">
                                     <thead>
                                         <tr>
-                                            <th style="padding:15px 15px 15px 30px;color: #000; font-weight: normal; background: #f5f6fa; text-align: left; width: 250px;">
+                                            <th style="padding:15px 15px 15px 30px; color: #000; font-weight: normal; background: #f5f6fa; text-align: left; width: 250px;">
                                                 操作
                                             </th>
-                                            <th style="padding:13px; color: #000; font-weight: normal; background: #f5f6fa; text-align: left; width: 360px;">
+                                            <th style="padding:13px; color: #000; font-weight: normal; background: #f5f6fa; text-align: left; width: 350px;">
+                                                资源实例
+                                            </th>
+                                            <th style="padding:13px; color: #000; font-weight: normal; background: #f5f6fa; text-align: left; width: 260px;">
                                                 所属系统
                                             </th>
-                                            <th style="padding:13px; color: #000; font-weight: normal; background: #f5f6fa; text-align: left; ">
-                                                到期时间
+                                            <th style="padding:13px; color: #000; font-weight: normal; background: #f5f6fa; text-align: left;">
+                                                有效期
                                             </th>
                                         </tr>
                                     </thead>
@@ -246,6 +249,9 @@
                                         <tr>
                                             <td style="padding:15px 15px 15px 30px;color: #555; max-width: 180px; word-wrap:break-word; word-break:break-all;">
                                                 {{ policy.action.name }}
+                                            </td>
+                                            <td style="padding:13px;color: #555; max-width: 180px; word-wrap:break-word; word-break:break-all;">
+                                                {{ policy.gen_resource_summary }}
                                             </td>
                                             <td style="padding:13px;color: #555; max-width: 180px; word-wrap:break-word; word-break:break-all;">
                                                 {{ policy.system.name }}
@@ -272,7 +278,7 @@
                         <span></span>
                         用户组权限({{ groups|length }})
                     </label>
-                    <table align="center" border="0" cellpadding="0" cellspacing="0" width="864" style="background:#fff;">
+                    <table align="center" border="0" cellpadding="0" cellspacing="0" width="1184" style="background:#fff;">
                         <tr class="blank">
                             <td height="20">
                             </td>
@@ -285,11 +291,14 @@
                                             <th style="padding:15px 15px 15px 30px; color: #000; font-weight: normal; background: #f5f6fa; text-align: left; width: 250px;">
                                                 用户组
                                             </th>
-                                            <th style="padding:13px; color: #000; font-weight: normal; background: #f5f6fa; text-align: left; width: 360px;">
+                                            <th style="padding:13px; color: #000; font-weight: normal; background: #f5f6fa; text-align: left;  width: 350px;">
+                                                管理空间
+                                            </th>
+                                            <th style="padding:13px; color: #000; font-weight: normal; background: #f5f6fa; text-align: left; width: 260px;">
                                                 描述
                                             </th>
-                                            <th style="padding:13px; color: #000; font-weight: normal; background: #f5f6fa; text-align: left; ">
-                                                到期时间
+                                            <th style="padding:13px; color: #000; font-weight: normal; background: #f5f6fa; text-align: left;">
+                                                有效期
                                             </th>
                                         </tr>
                                     </thead>
@@ -298,6 +307,9 @@
                                         <tr>
                                             <td style="padding:15px 15px 15px 30px;color: #555; max-width: 180px; word-wrap:break-word; word-break:break-all;">
                                                 {{ group.name }}
+                                            </td>
+                                            <td style="padding:13px;color: #555; max-width: 180px; word-wrap:break-word; word-break:break-all;">
+                                                {{ group.get_role_name }}
                                             </td>
                                             <td style="padding:13px;color: #555; max-width: 180px; word-wrap:break-word; word-break:break-all;">
                                                 {{ group.description }}
