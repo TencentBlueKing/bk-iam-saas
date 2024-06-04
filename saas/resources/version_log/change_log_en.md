@@ -2,8 +2,22 @@
 
 ### New Features
 
-* Added configuration permission expiration reminder notification policy function
-* Added enterprise WeChat to permission expiration reminder notification
+* Configuration of permission expiration reminder notification strategy
+* Added enterprise WeChat as an option for permission expiration reminder notifications
+* Modified small window login iframe method and added support for integrated uniform iframe loading mode via npm
+* Added a management space filter in resource instance search for joining user group applications
+* New API - Create custom approval form for permission application, supporting custom approval content
+
+### Bug Fixes
+
+* Fixed issue where directly accessing the management space and user group details page would redirect to the corresponding list page
+* Fixed data loss when searching resource instances with keywords
+* Fixed issue where personnel templates associated with user groups could be successfully deleted in batch
+* Fixed issue where pagination buttons displayed abnormally after scrolling to the bottom on the template association user group page
+* Fixed issue where the success popup could not close automatically after deleting super administrator members
+* Fixed issue where the user group count would not display after deleting a user group until the page is refreshed
+* Fixed issue where custom pagination could not be set for system filtering when applying for renewal of custom permissions
+* Fixed issue where incorrect `type` values occurred due to having only one layer of topology but multiple resource types
 
 ---
 
