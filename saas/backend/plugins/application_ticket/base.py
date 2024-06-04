@@ -41,7 +41,7 @@ class ApplicationTicketProvider(metaclass=abc.ABCMeta):
         data: GrantActionApplicationData,
         process: ApprovalProcessWithNodeProcessor,
         callback_url: str,
-        approval_title: str = "",
+        approval_title_prefix: str = "",
         approval_content: Optional[Dict] = None,
     ) -> str:
         """创建 - 申请或续期自定义权限单据"""
