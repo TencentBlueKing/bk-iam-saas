@@ -195,7 +195,7 @@ class ActionBiz:
         action_list = ActionBeanList(actions)
 
         if hidden:
-            action_list = ActionList(action_list.list_not_hidden())
+            action_list = ActionBeanList(action_list.list_not_hidden())
 
         policies = self.policy_svc.list_by_subject(system_id, subject)
         action_expired_at = {policy.action_id: policy.expired_at for policy in policies}

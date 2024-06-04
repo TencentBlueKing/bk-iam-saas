@@ -1477,7 +1477,7 @@ class PolicyQueryBiz:
 
         # 查询saas policy id
         all_action_id = {p.action_id for p in backend_policies}
-        action_id_dict = self.svc.get_action_id_dict(subject, all_action_id)
+        action_id_dict = self.svc.get_action_id_dict(subject, list(all_action_id))
 
         # 取策略详情
         system_ids = defaultdict(list)
