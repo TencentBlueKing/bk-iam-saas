@@ -8,6 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from copy import deepcopy
 from typing import Any, Dict, List, Optional, Tuple
 
 from pydantic.tools import parse_obj_as
@@ -141,12 +142,14 @@ class AccessSystemApplicationTrans(OpenCommonTrans, ApplicationDataTrans):
             # 转换数据结构
             one_policy_list = self.to_policy_list(one_policy_data)
 
-            # 添加
-            policy_list.add(one_policy_list)
-
             # 每条原始策略(未合并) 对应的审批单据内容
             if data["ticket_content_template"]:
-                policy_ticket_contents.append((policy_list.policies[0], action["ticket_content"]))
+                # Note: 这里必须使用 deepcopy， 且需要 one_policy_list 被添加到 policy_list 前，
+                # 否则其实 one_policy_list 会跟随着 policy_list 变化，获取的数据就不正确
+                policy_ticket_contents.append((deepcopy(one_policy_list.policies[0]), action["ticket_content"]))
+
+            # 添加
+            policy_list.add(one_policy_list)
 
         # 2. 只对新增的策略进行申请，所以需要移除掉已有的权限
         application_policy_list = self._gen_need_apply_policy_list(applicant, data["system"], policy_list)

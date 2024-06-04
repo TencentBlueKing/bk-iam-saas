@@ -1282,10 +1282,8 @@ class PolicyBeanList(PolicyBeanListMixin):
     def contains_policy(self, policy: PolicyBean):
         """是否包含策略"""
         p = self.get(policy.action_id)
-        if p and p.has_resource_group_list(policy.resource_groups):
-            return True
 
-        return False
+        return p and p.has_resource_group_list(policy.resource_groups)
 
     def to_svc_policies(self):
         return parse_obj_as(List[Policy], self.policies)

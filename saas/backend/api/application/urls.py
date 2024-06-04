@@ -21,6 +21,6 @@ urlpatterns = [
     path(
         "policies/with-custom-ticket/",
         views.ApplicationCustomPolicyWithCustomTicketView.as_view(),
-        name="open.application_policy",
+        name="open.application_policy_with_custom_ticket",
     ),
 ]
