@@ -519,7 +519,7 @@
             }
             this.emptyOrgData = Object.assign(this.emptyOrgData, { tipType: 'search' });
           }
-          this.fetchRefreshSelectList();
+          this.fetchRefreshSelectList('userOrgPerm');
         } catch (e) {
           this.$set(this.groupTabList[0], 'tableList', []);
           this.userOrOrgPagination.count = 0;
@@ -560,7 +560,7 @@
             this.emptyOrgData = Object.assign(this.emptyOrgData, { tipType: 'search' });
           }
           this.emptyTempData = formatCodeData(code, this.emptyTempData, this.memberPagination.count === 0);
-          this.fetchRefreshSelectList();
+          this.fetchRefreshSelectList('memberTemplate');
         } catch (e) {
           this.$set(this.groupTabList[1], 'tableList', []);
           this.memberPagination.count = 0;
@@ -576,13 +576,13 @@
         }
       },
 
-      async fetchRefreshSelectList () {
-        const emptyField = this.groupTabList.find((item) => item.name === this.tabActive);
+      async fetchRefreshSelectList (tab = 'userOrgPerm') {
+        const emptyField = this.groupTabList.find((item) => item.name === tab);
         if (emptyField) {
           this.$nextTick(() => {
             const currentSelectList = this.currentSelectList.map((item) => item.id.toString());
             emptyField.tableList.forEach((item) => {
-              if (['memberTemplate'].includes(this.tabActive)) {
+              if (['memberTemplate'].includes(tab)) {
                 this.$set(item, 'type', 'template');
               }
               if (currentSelectList.includes(item.id.toString())) {
@@ -653,6 +653,7 @@
         }
         this.tabPlaceHolder = ['userOrgPerm'].includes(payload) ? this.$t(`m.resourcePermiss['搜索 用户、组织名']`) : this.$t(`m.resourcePermiss['搜索 人员模板']`);
         this.tabActive = payload;
+        this.handleRefreshTab();
       },
 
       handleRefreshTab () {
@@ -712,58 +713,48 @@
       handleBatchDelete () {
         if (this.currentSelectList.length === 1) {
           const payload = this.currentSelectList[0];
-          if (this.curModeMap[this.curRouteMode]) {
-            this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)}${this.$t(
-              `m.common['【']`
-            )}${payload.id}(${payload.name})${this.$t(`m.common['】']`)}${this.$t(
-              `m.common['，']`
-            )}${this.$t(`m.info['该用户/组织可能会失去关联用户组的权限']`)}${this.$t(`m.common['。']`)}`;
-          } else {
-            this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)}${this.$t(
-              `m.common['【']`
-            )}${payload.id}(${payload.name})${this.$t(`m.common['】']`)}${this.$t(
-              `m.common['，']`
-            )}${this.$t(`m.info['该成员将不再继承该组的权限']`)}${this.$t(`m.common['，']`)}${this.$t(`m.info['请谨慎操作']`)}${this.$t(`m.common['。']`)}`;
-          }
+          const tabMap = {
+            userOrgPerm: () => {
+              this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)}${this.$t(`m.common['【']`
+              )}${payload.id}(${payload.name})${this.$t(`m.common['】']`)}${this.$t(
+                `m.common['，']`
+              )}${this.$t(`m.resourcePermiss['移除后，该用户将不再继承该用户组的权限，请谨慎操作。']`)}`;
+              this.deleteDialog.visible = true;
+            },
+            memberTemplate: () => {
+              this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)}${this.$t(`m.common['【']`
+              )}${payload.id}(${payload.name})${this.$t(`m.common['】']`)}${this.$t(
+                `m.common['，']`
+              )}${this.$t(`m.resourcePermiss['移除后，人员模板里的用户/组织可能会失去关联用户组的权限，请谨慎操作。']`)}`;
+              this.deleteDialog.visible = true;
+            }
+          };
+          return tabMap[this.tabActive]();
         } else {
-          if (this.curModeMap[this.curRouteMode]) {
-            this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)} ${
-              this.currentSelectList.length
-            } ${this.$t(`m.common['个人员模板']`)}${this.$t(`m.common['，']`)}${this.$t(
-              `m.info['相关人员将不再关联该用户组的权限']`
-            )}${this.$t(`m.common['。']`)}`;
-          } else {
-            this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)} ${
-              this.currentSelectList.length
-            } ${this.$t(`m.common['位成员']`)}${this.$t(`m.common['，']`)}${this.$t(
-              `m.info['这些成员将不再继承该组的权限']`
-            )}${this.$t(`m.common['。']`)}`;
-          }
+          const tabMap = {
+            userOrgPerm: () => {
+              this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)} ${
+                this.currentSelectList.length
+              } ${this.$t(`m.common['位成员']`)}${this.$t(`m.common['，']`)}${this.$t(`m.resourcePermiss['移除后，该用户将不再继承该用户组的权限，请谨慎操作。']`)}`;
+              this.deleteDialog.visible = true;
+            },
+            memberTemplate: () => {
+              this.deleteDialog.subTitle = `${this.$t(`m.common['移除']`)} ${this.currentSelectList.length} ${this.$t(`m.common['个人员模板']`)}${this.$t(`m.common['，']`)}
+              ${this.$t(`m.resourcePermiss['移除后，人员模板里的用户/组织可能会失去关联用户组的权限，请谨慎操作。']`)}`;
+              this.deleteDialog.visible = true;
+            }
+          };
+          return tabMap[this.tabActive]();
         }
-        this.deleteDialog.visible = true;
       },
 
       handleDelete (payload) {
-        console.log(payload);
-        if (this.curModeMap[this.curRouteMode]) {
-          this.curMember = Object.assign(
-            {},
-            {
-              id: payload.id,
-              type: ['memberTemplate'].includes(this.routeMode) ? payload.type : 'template'
-            }
-          );
-          this.handleSubmitDelete();
-        } else {
-          this.curMember = Object.assign(
-            {},
-            {
-              id: payload.id,
-              type: payload.type
-            }
-          );
-          this.handleSubmitDelete();
+        this.curMember = Object.assign({}, {
+          id: payload.id,
+          type: ['memberTemplate'].includes(this.tabActive) ? 'template' : payload.type
         }
+        );
+        this.handleSubmitDelete();
       },
 
       async handleSubmitDelete () {
@@ -943,6 +934,10 @@
   };
 </script>
 
+<style lang="postcss">
+  @import '../common/css/popoverConfirm.css';
+</style>
+
 <style lang="postcss" scoped>
 @import '@/css/mixins/member-table.css';
 .group-member-table {
@@ -979,7 +974,7 @@
           min-width: 16px;
           height: 16px;
           line-height: 16px;
-          padding: 0 8px;
+          padding: 0 6px;
           margin-left: 4px;
           border-radius: 8px;
           text-align: center;
@@ -1016,37 +1011,6 @@
         color: #63656E;
         cursor: inherit;
       }
-    }
-  }
-}
-</style>
-
-<style lang="postcss">
-.resource-perm-delete-confirm {
-  .popover-title {
-    font-size: 16px;
-    padding-bottom: 16px;
-  }
-  .popover-content {
-    color: #63656e;
-    .popover-content-item {
-      display: flex;
-      &-value {
-        color: #313238;
-        margin-left: 5px;
-      }
-    }
-    &-tip {
-      padding: 4px 0 16px 0;
-    }
-  }
-  .popconfirm-operate {
-    font-size: 0;
-    button {
-      min-width: 64px;
-      margin-left: 0;
-      margin-right: 8px;
-      font-size: 12px;
     }
   }
 }

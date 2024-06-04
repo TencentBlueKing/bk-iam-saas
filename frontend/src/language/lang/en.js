@@ -571,7 +571,8 @@ export const m = {
          '管理员不可重复添加': 'Administrators cannot be added repeatedly',
          '有关联的用户组, 无法删除': 'Associated user groups cannot be deleted',
          '不可续期的用户组如下': 'The non renewable user groups are as follows: {value}',
-         '不可移出的用户组如下': 'The user groups that cannot be removed are as follows'
+         '不可移出的用户组如下': 'The user groups that cannot be removed are as follows',
+         '用户组权限操作模板标题': 'Action template: {value}'
     },
     // 二次确认弹窗相关
     dialog: {
@@ -599,7 +600,9 @@ export const m = {
         '确认删除同步记录？': 'Are you sure you want to delete the synchronization record?',
         '确认恢复默认？': 'Are you sure to restore defaults?',
         '确认移除该用户？': 'Are you sure you want to remove the user?',
-        '确认移除该人员模板？': 'Are you sure to remove the member template?'
+        '确认移除该人员模板？': 'Are you sure to remove the member template?',
+        '确认移除该操作模板？': 'Are you sure you want to remove the action template?',
+        '确认删除该操作权限？': 'Are you sure to delete the action permission?'
     },
     nav: {
         '蓝鲸权限中心': 'BlueKing-IAM',
@@ -1435,9 +1438,16 @@ export const m = {
         '导出需提供系统和操作名': 'Export requires providing system and action name',
         '查询必须选择“系统”和“操作名”': "Query must select 'System' and 'Action name'",
         '用户组详情': 'User group detail',
+        '用户/用户组': 'User/User Group',
         '用户 / 组织': 'User/Organization',
+        '用户组权限': 'User group perm',
+        '操作模板': 'Action template',
+        '操作权限': 'Action permission',
+        '移除模板': 'Remove template',
         '搜索 用户、组织名': 'Search for user and organization names',
         '搜索 人员模板': 'Search member template',
+        '删除后，用户组成员将失去对应的自定义权限，请谨慎操作。': 'After deletion, members of the user group will lose their corresponding custom permissions. Please operate with caution',
+        '移除后，用户组成员将失去操作模板对应的权限，请谨慎操作。': 'After removal, members of the user group will lose the corresponding permissions for the operation template. Please operate with caution.',
         '移除后，该用户将不再继承该用户组的权限，请谨慎操作。': 'After removal, the user will no longer inherit the permissions of the user group. Please operate with caution.',
         '移除后，人员模板里的用户/组织可能会失去关联用户组的权限，请谨慎操作。': 'After removal, users/organizations in the member template may lose their associated user group permissions. Please operate with caution.'
     },

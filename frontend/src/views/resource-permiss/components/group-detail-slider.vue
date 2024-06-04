@@ -86,7 +86,7 @@
             id: 'group_member'
           },
           {
-            name: this.$t(`m.memberTemplate['用户组权限']`),
+            name: this.$t(`m.resourcePermiss['用户组权限']`),
             id: 'group_perm'
           }
         ],
@@ -143,7 +143,6 @@
         }
         try {
           const { data } = this.$store.dispatch('userGroup/getUserGroupDetail', params);
-          console.log(data);
           if (data) {
             const { attributes, readonly } = data;
             this.groupAttributes = Object.assign({}, attributes);
@@ -153,25 +152,12 @@
           this.messageAdvancedError(e);
         }
       },
+      
       handleTabChange (payload, isClick = false) {
         if (payload === this.tabActive && isClick) {
           return;
         }
         this.tabActive = payload;
-        const typeMap = {
-          group_member: () => {
-            this.$nextTick(() => {
-              this.$refs.tempDetailComRef && this.$refs.tempDetailComRef.fetchTempMemberList();
-            });
-          },
-          group_perm: () => {
-            this.$nextTick(() => {
-              this.$refs.tempDetailComRef
-                && this.$refs.tempDetailComRef.fetchAssociateGroup(true);
-            });
-          }
-        };
-        return typeMap[payload]();
       },
         
       handleAssociateChange (payload) {

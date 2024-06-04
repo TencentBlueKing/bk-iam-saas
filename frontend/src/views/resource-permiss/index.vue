@@ -300,7 +300,12 @@
       },
 
       handleViewDetail (payload) {
-        this.curDetailData = { ...payload };
+        this.curDetailData = {
+          ...payload,
+          ...{
+            system_id: this.curSearchParams.system_id
+          }
+        };
         const { type } = payload;
         const typeMap = {
           group: () => {
