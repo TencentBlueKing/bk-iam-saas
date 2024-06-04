@@ -209,7 +209,7 @@ class ASApplicationCustomPolicyWithCustomTicketSLZ(serializers.Serializer):
                 and i.get("scheme") == "policy_table_scheme"
                 and isinstance(i.get("value"), list)
             ]
-            if policy_forms != 1:
+            if len(policy_forms) != 1:
                 raise serializers.ValidationError(
                     {
                         "ticket_content_template": [
@@ -219,7 +219,9 @@ class ASApplicationCustomPolicyWithCustomTicketSLZ(serializers.Serializer):
                     },
                 )
             # 必须每条权限都有配置单据所需渲染内容
-            empty_ticket_content_actions = [ind for ind, a in enumerate(data["actions"]) if not a["ticket_content"]]
+            empty_ticket_content_actions = [
+                str(ind + 1) for ind, a in enumerate(data["actions"]) if not a["ticket_content"]
+            ]
             if len(empty_ticket_content_actions) > 0:
                 raise serializers.ValidationError(
                     {

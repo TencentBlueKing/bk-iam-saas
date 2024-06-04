@@ -324,4 +324,4 @@ class ApplicationCustomPolicyWithCustomTicketView(views.APIView):
             data["ticket_title_prefix"],
         )
 
-        return Response([{"id": a.id, "sn": a.sn} for a in applications])
+        return Response(AccessSystemApplicationCustomPolicyResultSLZ(applications, many=True).data)
