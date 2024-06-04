@@ -893,10 +893,18 @@
       getDefaultSelect () {
         const typeMap = {
           userOrgPerm: () => {
-            return this.groupTabList[0].tableList.length > 0;
+            const curData = this.groupTabList.find((item) => ['userOrgPerm'].includes(item.name));
+            if (curData) {
+              return curData.tableList.length > 0;
+            }
+            return false;
           },
           memberTemplate: () => {
-            return this.groupTabList[1].tableList.length > 0;
+            const curData = this.groupTabList.find((item) => ['memberTemplate'].includes(item.name));
+            if (curData) {
+              return curData.tableList.length > 0;
+            }
+            return false;
           }
         };
         return typeMap[this.tabActive];
@@ -916,8 +924,8 @@
           memberTemplate: () => {
             return [
               { label: this.$t(`m.memberTemplate['人员模板']`), prop: 'template_name' },
-              { label: this.$t(`m.common['加入时间']`), prop: 'created_time' },
               { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' },
+              { label: this.$t(`m.common['加入时间']`), prop: 'created_time' },
               { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
             ];
           }
