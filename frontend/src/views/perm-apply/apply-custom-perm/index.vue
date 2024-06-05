@@ -2291,8 +2291,8 @@
           const res = await this.$store.dispatch('permApply/getPolicies', params);
           // 无权限申请过滤需要隐藏的操作
           if (res.data && res.data.length > 0) {
-            const allPolicyList = this.linearActionList.map((item) => `${item.name}&${item.id}`);
-            const result = res.data.filter((item) => allPolicyList.includes(`${item.name}&${item.id}`) && !item.hidden);
+            const allPolicyList = this.linearActionList.filter((v) => !v.hidden).map((item) => `${item.name}&${item.id}`);
+            const result = res.data.filter((item) => allPolicyList.includes(`${item.name}&${item.id}`));
             const data = result.map(item => {
               let relatedActions = [];
               const findLinerActions = this.linearActionList.find(sub => sub.id === item.id);
