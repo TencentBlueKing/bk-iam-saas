@@ -137,7 +137,7 @@ class TestPathNodeBeanList:
 
     def test_match_selection_one_node(self, path_node_bean_list: PathNodeBeanList):
         path_node_bean_list.__root__.pop()
-        assert path_node_bean_list.match_selection("system_id", "type", None)
+        assert path_node_bean_list.match_selection("system_id", "type", None)  # type: ignore
 
     @pytest.mark.parametrize(
         "instance_selection, expected",
@@ -326,8 +326,8 @@ def instance_bean_list(instance_bean: InstanceBean):
 
 class TestInstanceBeanList:
     def test_get(self, instance_bean_list: InstanceBeanList):
-        assert instance_bean_list.get("type").type == "type"
-        assert instance_bean_list.get("test") is None
+        assert instance_bean_list.get("type").type == "type"  # type: ignore
+        assert instance_bean_list.get("test") is None  # type: ignore
 
     def test_add(self, instance_bean_list: InstanceBeanList):
         instance_bean_list1 = InstanceBeanList([instance_bean_list.instances.pop()])
@@ -421,7 +421,7 @@ class TestConditionBeanList:
         assert condition_bean_list.is_empty
 
     def test_remove_by_ids(self, condition_bean_list: ConditionBeanList):
-        condition_bean_list.remove_by_ids(condition_bean_list.conditions[0].id)
+        condition_bean_list.remove_by_ids([condition_bean_list.conditions[0].id])
         assert condition_bean_list.is_empty
 
 
@@ -1036,7 +1036,7 @@ class TestPolicyBeanListMixin:
     def test_check_instance_selection(
         self, policy_bean_list_mixin: PolicyBeanListMixin, instance_selection, raise_exception
     ):
-        policy_bean_list_mixin.action_svc.new_action_list = Mock(
+        policy_bean_list_mixin.action_svc.new_action_list = Mock(  # type: ignore
             return_value=ActionList(
                 [
                     Action(
@@ -1095,7 +1095,7 @@ class TestPolicyBeanListMixin:
     def test_check_resource_name(
         self, policy_bean_list_mixin: PolicyBeanListMixin, resource_name_dict, raise_exception
     ):
-        policy_bean_list_mixin.resource_biz.fetch_resource_name = Mock(return_value=resource_name_dict)
+        policy_bean_list_mixin.resource_biz.fetch_resource_name = Mock(return_value=resource_name_dict)  # type: ignore
         try:
             policy_bean_list_mixin.check_resource_name()
             assert not raise_exception
@@ -1106,7 +1106,7 @@ class TestPolicyBeanListMixin:
         assert policy_bean_list_mixin.check_instance_count_limit() is None
 
     def test_get_renamed_resources(self, policy_bean_list_mixin: PolicyBeanListMixin):
-        policy_bean_list_mixin.resource_biz.fetch_resource_name = Mock(
+        policy_bean_list_mixin.resource_biz.fetch_resource_name = Mock(  # type: ignore
             return_value=ResourceNodeAttributeDictBean(
                 data={
                     ResourceNodeBean(id="id", system_id="system_id", type="type"): "name",
@@ -1150,5 +1150,5 @@ class TestPolicyBeanListMixin:
         ],
     )
     def test_auto_update_resource_name(self, policy_bean_list_mixin: PolicyBeanListMixin, resource_name_dict, result):
-        policy_bean_list_mixin.resource_biz.fetch_resource_name = Mock(return_value=resource_name_dict)
+        policy_bean_list_mixin.resource_biz.fetch_resource_name = Mock(return_value=resource_name_dict)  # type: ignore
         assert bool(policy_bean_list_mixin.auto_update_resource_name()) == result
