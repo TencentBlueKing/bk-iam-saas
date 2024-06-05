@@ -565,6 +565,7 @@
         >
           <resource-instance-table
             :has-system="true"
+            :is-no-perm-page="true"
             :cache-id="routerQuery.cache_id"
             :list="newTableList"
             :original-table-list="tableDataBackup"
@@ -582,6 +583,7 @@
         >
           <resource-instance-table
             :has-system="true"
+            :is-no-perm-page="true"
             :is-recommend="isRecommend"
             :cache-id="routerQuery.cache_id"
             :list="newRecommendTableList"
