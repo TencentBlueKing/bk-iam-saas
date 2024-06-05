@@ -5,7 +5,21 @@
     }
     .popover-content {
       color: #63656e;
-      .popover-content-item {
+      max-height: 300px;
+      overflow-y: auto;
+      &::-webkit-scrollbar     {
+        width: 6px;
+        height: 6px;
+      }
+      &::-webkit-scrollbar-thumb {
+        background: #dcdee5;
+        border-radius: 3px;
+      }
+      &::-webkit-scrollbar-track {
+        background: transparent;
+        border-radius: 3px;
+      }
+      &-item {
         display: flex;
         &-value {
           color: #313238;
@@ -15,6 +29,20 @@
       &-tip {
         padding: 4px 0 16px 0;
         line-height: 20px;
+      }
+      &-related {
+        word-break: break-all;
+        .delete-tips-title {
+          margin-bottom: 8px;
+        }
+        .delete-tips-content {
+          .related-perm-name {
+            margin-top: 8px;
+            .warn {
+              color: #ffb848;
+            }
+          }
+        }
       }
     }
     .popconfirm-operate {

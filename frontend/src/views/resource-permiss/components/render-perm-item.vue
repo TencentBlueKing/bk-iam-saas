@@ -5,11 +5,11 @@
       @click="handleExpanded">
       <Icon bk class="expanded-icon" :type="isExpanded ? 'down-shape' : 'right-shape'" />
       <template v-if="!externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle">
-        <label class="title">{{ title }}</label>
+        <div class="title">{{ title }}</div>
         <div class="sub-title">
-          <div v-if="templateCount > 0 || policyCount > 0">
-            <span>(</span><span>{{ $t(`m.common['关联']`) }}</span>
-          </div>
+          <template v-if="templateCount > 0 || policyCount > 0">
+            <span>(</span><span class="related-text">{{ $t(`m.common['关联']`) }}</span>
+          </template>
           <div v-if="templateCount > 0">
             <span class="number">{{ templateCount }}</span>
             <span>{{ $t(`m.common['个']`) }}{{ $t(`m.nav['权限模板']`)}}<span v-if="policyCount === 0 && !externalCustom">)
@@ -97,17 +97,7 @@
         this.isExpanded = !!value;
       }
     },
-    created () {
-      // this.isShowTable();
-    },
     methods: {
-      isShowTable () {
-        if (this.groupSystemListLength === 1 && this.templateCount >= 1) {
-          this.handleExpanded();
-        } else if (this.groupSystemListLength === 1 && this.templateCount === 0 && this.policyCount >= 1) {
-          this.handleExpanded();
-        }
-      },
       handlePackUp () {
         this.isExpanded = false;
         this.$emit('update:expanded', false);
@@ -135,7 +125,6 @@
   min-height: 40px;
   .header {
     display: flex;
-    justify-content: flex-start;
     position: relative;
     padding: 0 28px;
     height: 40px;
@@ -159,6 +148,9 @@
       display: flex;
       margin-left: 8px;
       color: #63656E;
+      .related-text {
+        margin-right: 4px;
+      }
       &.no-margin {
         margin-left: 0;
       }

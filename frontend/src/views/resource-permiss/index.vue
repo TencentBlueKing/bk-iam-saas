@@ -20,7 +20,7 @@
     >
       <div slot="custom-default-search-item" class="custom-default-search-item">
         <iam-form-item
-          :label="$t(`m.userGroup['用户/用户组']`)"
+          :label="$t(`m.resourcePermiss['用户/用户组']`)"
           :style="{ width: formItemWidth }"
           class="form-item-resource"
         >
@@ -303,7 +303,8 @@
         this.curDetailData = {
           ...payload,
           ...{
-            system_id: this.curSearchParams.system_id
+            system_id: this.curSearchParams.system_id,
+            system_name: this.curSystemAction['system_id'] ? this.curSystemAction['system_id'].label : ''
           }
         };
         const { type } = payload;

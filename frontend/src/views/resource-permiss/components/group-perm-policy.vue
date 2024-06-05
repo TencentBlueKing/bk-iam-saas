@@ -2,39 +2,41 @@
   <div class="resource-user-group-perm">
     <div class="resource-user-group-perm-search">
       <bk-input
-        clearable
+        v-model="keyword"
         style="width: 400px"
-        :placeholder="$t(`m.resourcePermiss['搜索 系统名、操作名']`)"
+        :clearable="true"
+        :placeholder="$t(`m.resourcePermiss['搜索 系统名']`)"
         :right-icon="'bk-icon icon-search'"
-        v-model="groupValue"
-        @enter="handleSearchGroup"
+        @enter="handleSearchSystem"
         @clear="handleEmptyClear"
-        @right-icon-click="handleSearchGroup"
+        @right-icon-click="handleSearchSystem"
       />
     </div>
     <template v-if="!isLoading && !isEmpty">
       <RenderPermItem
         v-for="(item, index) in groupSystemList"
         :key="item.id"
+        :ref="`rPermItem${item.id}`"
         :expanded.sync="item.expanded"
         :ext-cls="index > 0 ? 'iam-perm-ext-cls' : ''"
         :class="index === groupSystemList.length - 1 ? 'iam-perm-ext-reset-cls' : ''"
         :title="item.name"
         :policy-count="item.custom_policy_count"
         :template-count="item.template_count"
-        :group-system-list-length="groupSystemListLength"
+        :group-system-list-length="groupSystemList.length"
         @on-expanded="handleExpanded(...arguments, item)">
         <div v-bkloading="{ isLoading: item.loading, opacity: 1 }">
           <div v-if="!item.loading">
             <RenderTemplateItem
-              :ref="`rTemplateItem${item.id}`"
               v-for="(subItem, subIndex) in item.templates"
               :key="subIndex"
+              :ref="`rTemplateItem${item.id}`"
               :mode="isEditMode ? 'edit' : 'detail'"
               :title="formatSubTitle(subItem)"
               :delete-title="formatDelTitle(subItem)"
               :delete-confirm="formatDelConfirm(subItem)"
-              :count="subItem.count"
+              :count="subItem.tableData.length"
+              :is-disabled-operate="isDisabledOperate(item)"
               :is-edit="subItem.isEdit"
               :loading="subItem.editLoading"
               :expanded.sync="subItem.expanded"
@@ -55,11 +57,13 @@
                   :system-id="item.id"
                   :group-id="groupId"
                   :template-id="subItem.id"
-                  :is-custom="subItem.count > 0"
                   :is-edit="subItem.isEdit"
+                  :is-custom="isCustom(subItem)"
+                  :is-custom-action-button="isCustom(subItem)"
+                  :is-disabled-operate="isDisabledOperate(item)"
                   :external-delete="isAdminGroup"
+                  :delete-confirm="formatDelConfirm(subItem)"
                   :linear-action-list="linearActionList"
-                  :is-custom-action-button="['custom'].includes(subItem.mode_type)"
                   :is-show-delete-action="true"
                   :is-show-detail-action="false"
                   @on-delete="handleSingleDelete(...arguments, item)"
@@ -76,7 +80,7 @@
         :empty-text="emptyData.text"
         :tip-text="emptyData.tip"
         :tip-type="emptyData.tipType"
-        @on-refresh="handleEmptyRefresh"
+        @on-clear="handleEmptyClear"
       />
     </div>
   </div>
@@ -89,7 +93,7 @@
   import GroupPolicy from '@/model/group-policy';
   import RenderPermItem from './render-perm-item.vue';
   import RenderTemplateItem from './render-template-item.vue';
-  import RenderCustomPermTable from '../components/custom-perm-table.vue';
+  import RenderCustomPermTable from '../components/group-perm-table.vue';
 
   export default {
     components: {
@@ -121,9 +125,9 @@
         isLoading: false,
         tableLoading: false,
         groupId: 0,
-        groupSystemListLength: 0,
-        groupValue: '',
+        keyword: '',
         groupSystemList: [],
+        groupSystemListBack: [],
         customActionsList: [],
         linearActionList: [],
         authorizationData: {},
@@ -156,6 +160,11 @@
       ...mapGetters(['user', 'externalSystemId']),
       isEditMode () {
         return this.mode === 'edit';
+      },
+      isCustom () {
+        return (payload) => {
+          return ['custom'].includes(payload.mode_type);
+        };
       },
       isEmpty () {
         return this.groupSystemList.length < 1;
@@ -226,6 +235,14 @@
       },
       isAdminGroup () {
         return !this.groupAttributes.source_from_role;
+      },
+      isDisabledOperate () {
+        return (payload) => {
+          if (['super_manager'].includes(this.user.role.type)) {
+            return false;
+          }
+          return payload.id !== this.curDetailData.system_id || this.isAdminGroup;
+        };
       }
     },
     watch: {
@@ -265,14 +282,21 @@
               }
             }
           }
-          this.groupSystemList = data;
-          this.groupSystemListLength = data.length;
+          [this.groupSystemList, this.groupSystemListBack] = [data, data];
           this.emptyData = formatCodeData(code, this.emptyData, data.length === 0);
         } catch (e) {
           this.emptyData = formatCodeData(e.code, this.emptyData);
           this.messageAdvancedError(e);
         } finally {
           this.isLoading = false;
+          const curSystem = this.groupSystemList.find((item) => item.id === this.curDetailData.system_id);
+          if (curSystem) {
+            this.$nextTick(() => {
+              this.$refs[`rPermItem${curSystem.id}`]
+                && this.$refs[`rPermItem${curSystem.id}`].length
+                && this.$refs[`rPermItem${curSystem.id}`][0].handleExpanded();
+            });
+          }
         }
       },
 
@@ -306,6 +330,7 @@
               },
               mode_type: 'custom',
               count: groupSystem.custom_policy_count,
+              custom_policy_count: groupSystem.custom_policy_count,
               loading: false,
               tableData: [],
               tableDataBackup: [],
@@ -317,14 +342,13 @@
           this.messageAdvancedError(e);
         } finally {
           groupSystem.loading = false;
-          if (this.curDetailData.system_id === groupSystem.id) {
-            this.$nextTick(() => {
-              console.log(this.$refs[`rTemplateItem${groupSystem.id}`]);
-              this.$refs[`rTemplateItem${groupSystem.id}`]
-                && this.$refs[`rTemplateItem${groupSystem.id}`].length
-                && this.$refs[`rTemplateItem${groupSystem.id}`][0].handleExpanded();
-            });
-          }
+          this.$nextTick(() => {
+            if (this.$refs[`rTemplateItem${groupSystem.id}`]) {
+              this.$refs[`rTemplateItem${groupSystem.id}`].forEach((item) => {
+                item.handleExpanded();
+              });
+            }
+          });
         }
       },
       
@@ -349,7 +373,6 @@
           });
           this.$set(item, 'tableData', cloneDeep(tableData));
           this.$set(item, 'tableDataBackup', cloneDeep(tableData));
-          console.log('itemTableData', item);
         } catch (e) {
           this.messageAdvancedError(e);
         } finally {
@@ -374,10 +397,8 @@
               { system: data.system }
             );
           });
-          const tableDataBackup = cloneDeep(tableData);
           this.$set(item, 'tableData', tableData);
-          this.$set(item, 'tableDataBackup', tableDataBackup);
-          console.log('item.tableData', item.tableData);
+          this.$set(item, 'tableDataBackup', cloneDeep(tableData));
         } catch (e) {
           this.messageAdvancedError(e);
         } finally {
@@ -390,10 +411,8 @@
           this.$set(item, 'isEdit', false);
           return;
         }
-        // count > 0 说明是自定义权限
-        console.log(item, 111);
         await this.fetchActions(item);
-        if (item.count > 0) {
+        if (['custom'].includes(item.mode_type)) {
           this.getGroupCustomPolicy(item);
           return;
         }
@@ -402,6 +421,7 @@
 
       // 获取系统对应的自定义操作
       async fetchActions (item) {
+        console.log(111);
         const params = {
           system_id: item.system.id,
           user_id: this.user.username
@@ -432,6 +452,88 @@
         }
       },
 
+      handleDelete (item, subItem) {
+        if (subItem.id > 0) {
+          this.handleDeleteTemplate({
+            id: subItem.id,
+            data: {
+              members: [{
+                type: 'group',
+                id: this.groupId
+              }]
+            }
+          }, item, subItem);
+        } else {
+          this.handleDeleteGroupPolicy({
+            id: this.groupId,
+            data: {
+              system_id: item.id,
+              ids: subItem.tableData.map(item => item.policy_id).join(',')
+            }
+          }, item, subItem, true);
+        }
+      },
+
+      async handleDeleteTemplate (params = {}, item, subItem) {
+        subItem.deleteLoading = true;
+        try {
+          await this.$store.dispatch('permTemplate/deleteTemplateMember', params);
+          let filterLen = item.templates.filter(item => item.id !== 0).length;
+          const isExistCustom = item.templates.some(item => item.id === 0);
+          if (filterLen > 0) {
+            --filterLen;
+            --item.template_count;
+          }
+          this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
+          if (filterLen > 0 || isExistCustom) {
+            this.getGroupTemplateList(item);
+          }
+          if (!filterLen && !isExistCustom) {
+            this.fetchInitData();
+          }
+        } catch (e) {
+          this.messageAdvancedError(e);
+        } finally {
+          subItem.deleteLoading = false;
+        }
+      },
+
+      async handleDeleteGroupPolicy (params = {}, item, subItem, flag) {
+        if (flag) {
+          subItem.deleteLoading = true;
+        }
+        try {
+          await this.$store.dispatch('userGroup/deleteGroupPolicy', params);
+          const isExistTemplate = item.templates.some(item => item.id !== 0);
+          if (item.custom_policy_count > 0) {
+            --item.custom_policy_count;
+          } else {
+            item.custom_policy_count = 0;
+          }
+          this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
+          if (isExistTemplate) {
+            this.getGroupTemplateList(item);
+          }
+          this.fetchInitData();
+        } catch (e) {
+          this.messageAdvancedError(e);
+        } finally {
+          if (flag) {
+            subItem.deleteLoading = false;
+          }
+        }
+      },
+
+      handleSingleDelete (payload, item) {
+        this.handleDeleteGroupPolicy({
+          id: this.groupId,
+          data: {
+            system_id: item.id,
+            ids: payload.ids ? payload.ids.join(',') : payload.policy_id
+          }
+        }, item, {}, false);
+      },
+
       handleActionLinearData () {
         const linearActions = [];
         this.customActionsList.forEach((item, index) => {
@@ -446,20 +548,16 @@
             });
           });
         });
-
         this.linearActionList = cloneDeep(linearActions);
         console.log('this.linearActionList', this.linearActionList);
       },
 
-      handleSearchGroup () {
+      handleSearchSystem () {
         this.emptyData.tipType = 'search';
-        // this.fetchAssociateGroup(true);
-      },
-
-      handleClearGroup () {
-        this.groupValue = '';
-        this.emptyData.tipType = '';
-        // this.fetchAssociateGroup(true);
+        this.groupSystemList = this.groupSystemListBack.filter((item) => item.name.indexOf(this.keyword) > -1);
+        if (!this.groupSystemList.length) {
+          this.emptyData = formatCodeData(0, this.emptyData, true);
+        }
       },
 
       handleExpanded (flag, item) {
@@ -471,19 +569,9 @@
       },
 
       handleEmptyClear () {
+        this.keyword = '';
         this.emptyData.tipType = '';
-        this.groupValue = '';
-        this.resetPagination();
-        this.fetchAssociateGroup(true);
-      },
-
-      handleEmptyRefresh () {
-        this.resetPagination();
-        this.fetchAssociateGroup(true);
-      },
-
-      resetPagination () {
-        this.pagination = Object.assign(this.pagination, { current: 1, limit: 10 });
+        this.groupSystemList = cloneDeep(this.groupSystemListBack);
       }
     }
   };

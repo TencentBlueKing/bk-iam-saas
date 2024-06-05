@@ -17,19 +17,19 @@
         >
           <Icon
             bk
-            v-if="!externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle"
             class="expanded-icon"
             :type="isExpanded ? 'down-shape' : 'right-shape'"
           />
-          <span v-if="!externalSystemsLayout.userGroup.groupDetail.hideGroupPermExpandTitle">
+          <span>
             <span class="sub-header-item-title">{{ title }}</span>
-            <template v-if="count > 0">
+            <span v-if="count > 0">
               ({{ count }})
-            </template>
+            </span>
           </span>
         </div>
         <div v-if="externalDelete" @click.stop="">
           <bk-popconfirm
+            ref="delTempConfirm"
             trigger="click"
             placement="bottom-end"
             ext-popover-cls="resource-perm-delete-confirm"
@@ -52,7 +52,7 @@
                 </div>
               </div>
             </div>
-            <div class="delete-action">
+            <div :class="['delete-action', { 'is-disabled': isDisabledOperate }]" @click.stop="handleShowDelConfirm">
               <Icon class="delete-action-icon" type="delete-line" />
               <span class="delete-action-title">{{ deleteTitle }}</span>
             </div>
@@ -75,6 +75,10 @@
       isEdit: {
         type: Boolean,
         default: false
+      },
+      isDisabledOperate: {
+        type: Boolean,
+        default: true
       },
       loading: {
         type: Boolean,
@@ -141,13 +145,7 @@
       };
     },
     computed: {
-      ...mapGetters(['user', 'externalSystemsLayout']),
-      isDetail () {
-        return this.mode === 'detail';
-      },
-      isStaff () {
-        return this.user.role.type === 'staff';
-      }
+      ...mapGetters(['user', 'externalSystemsLayout'])
     },
     watch: {
       expanded (value) {
@@ -170,6 +168,16 @@
           root.style.setProperty('--translate-icon', `translate(${this.externalHeaderWidth}px, -40px)`);
         }
       },
+
+      handleShowDelConfirm () {
+        if (!this.isDisabledOperate) {
+          this.$nextTick(() => {
+            this.$refs.delTempConfirm && this.$refs.delTempConfirm.$refs.popover
+              && this.$refs.delTempConfirm.$refs.popover.showHandler();
+          });
+        }
+      },
+
       handleExpanded () {
         this.isExpanded = !this.isExpanded;
         this.$emit('update:expanded', true);
@@ -194,7 +202,7 @@
       },
 
       handleDeletePolicy () {
-        // this.isExpanded = true;
+        this.isExpanded = true;
         this.isShowDeleteDialog = true;
         this.$emit('on-expanded', this.isExpanded);
       },
@@ -234,12 +242,16 @@
         .edit-action,
         .delete-action {
           display: inline-block;
-          color: #3a84ff;
+          color: #3A84FF;
           &-icon {
             font-size: 14px;
           }
           &-title {
             font-size: 12px;
+          }
+          &.is-disabled {
+            color: #c4c6cc;
+            cursor: not-allowed;
           }
         }
         &-title {
@@ -251,15 +263,9 @@
         .sub-header-content {
           width: 100%;
           &.has-delete {
-            width: calc(100% - 100px);
+            width: calc(100% - 200px);
           }
         }
-      }
-    }
-    &-content {
-      position: relative;
-      .slot-content {
-        /* padding: 0 30px 0 30px; */
       }
     }
     &.is-not-expanded {

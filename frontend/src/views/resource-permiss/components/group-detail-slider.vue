@@ -53,6 +53,7 @@
   
 <script>
   import { mapGetters } from 'vuex';
+  import { bus } from '@/common/bus';
   import GroupMemberTable from './group-member-table.vue';
   import GroupPermPolicy from './group-perm-policy.vue';
   export default {
@@ -133,6 +134,14 @@
         immediate: true
       }
     },
+    mounted () {
+      this.$once('hook:beforeDestroy', () => {
+        bus.$off('on-drawer-side');
+      });
+      bus.$on('on-drawer-side', (payload) => {
+        this.width = payload.width;
+      });
+    },
     methods: {
       async fetchGroupDetail () {
         const params = {
@@ -203,7 +212,7 @@
       position: sticky;
       top: 0;
       left: 0;
-      z-index: 9999;
+      z-index: 99;
       .member-tab-groups {
         display: flex;
         &-item {
