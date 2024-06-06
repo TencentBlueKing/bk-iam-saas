@@ -377,6 +377,7 @@ class GroupService:
         limit, offset = 1000, 0
         while True:
             iam_data = iam.list_group_subject_before_expired_at(expired_at=expired_at, limit=limit, offset=offset)
+            assert isinstance(iam_data["results"], list)
             if len(iam_data["results"]) == 0:
                 break
 

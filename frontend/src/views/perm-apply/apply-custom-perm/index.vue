@@ -565,6 +565,7 @@
         >
           <resource-instance-table
             :has-system="true"
+            :is-no-perm-page="true"
             :cache-id="routerQuery.cache_id"
             :list="newTableList"
             :original-table-list="tableDataBackup"
@@ -582,6 +583,7 @@
         >
           <resource-instance-table
             :has-system="true"
+            :is-no-perm-page="true"
             :is-recommend="isRecommend"
             :cache-id="routerQuery.cache_id"
             :list="newRecommendTableList"
@@ -1055,9 +1057,9 @@
         };
         try {
           const res = await this.$store.dispatch('perm/getRecommended', params);
-          const recommendActions = res.data.actions || [];
+          // 常用操作需要过滤掉需要隐藏的操作
+          const recommendActions = res.data.actions.filter((item) => !item.hidden) || [];
           const recommendPolicies = res.data.policies || [];
-
           const data = recommendActions.map(item => {
             const resourceGroups = recommendPolicies.find(sub => sub.id === item.id);
             if (resourceGroups) {
@@ -2289,51 +2291,56 @@
         }
         try {
           const res = await this.$store.dispatch('permApply/getPolicies', params);
-          const data = res.data.map(item => {
-            let relatedActions = [];
-            const findLinerActions = this.linearActionList.find(sub => sub.id === item.id);
-            if (findLinerActions) {
-              const { related_actions, related_environments } = findLinerActions;
-              // eslint-disable-next-line camelcase
-              relatedActions = [...related_actions];
-              // eslint-disable-next-line camelcase
-              item.related_environments = related_environments;
-            }
-            // 此处处理related_resource_types中value的赋值
-            return new Policy({
-              ...item,
-              related_actions: relatedActions,
-              tid: this.routerQuery.cache_id ? this.routerQuery.cache_id : ''
+          // 无权限申请过滤需要隐藏的操作
+          if (res.data && res.data.length > 0) {
+            const allPolicyList = this.linearActionList.filter((v) => !v.hidden).map((item) => `${item.name}&${item.id}`);
+            const result = res.data.filter((item) => allPolicyList.includes(`${item.name}&${item.id}`));
+            const data = result.map(item => {
+              let relatedActions = [];
+              const findLinerActions = this.linearActionList.find(sub => sub.id === item.id);
+              if (findLinerActions) {
+                const { related_actions, related_environments } = findLinerActions;
+                // eslint-disable-next-line camelcase
+                relatedActions = [...related_actions];
+                // eslint-disable-next-line camelcase
+                item.related_environments = related_environments;
+              }
+              // 此处处理related_resource_types中value的赋值
+              return new Policy({
+                ...item,
+                related_actions: relatedActions,
+                tid: this.routerQuery.cache_id ? this.routerQuery.cache_id : ''
+              });
             });
-          });
-          this.tableData = data;
-          this.tableData.forEach(item => {
-            // item.expired_at = 1627616000
-
-            // 无权限跳转过来, 新增的操作过期时间为 0 即小于 user.timestamp 时，expired_at 就设置为六个月 15552000
-            if (item.tag === 'add') {
-              if (item.expired_at <= this.user.timestamp) {
-                item.expired_at = 15552000;
+            this.tableData = data || [];
+            this.tableData.forEach(item => {
+              // item.expired_at = 1627616000
+  
+              // 无权限跳转过来, 新增的操作过期时间为 0 即小于 user.timestamp 时，expired_at 就设置为六个月 15552000
+              if (item.tag === 'add') {
+                if (item.expired_at <= this.user.timestamp) {
+                  item.expired_at = 15552000;
+                }
+              } else {
+                // 新增的权限不判断是否过期
+                if (item.expired_at <= this.user.timestamp) {
+                  item.isShowRenewal = true;
+                  item.isExpired = true;
+                }
               }
-            } else {
-              // 新增的权限不判断是否过期
-              if (item.expired_at <= this.user.timestamp) {
-                item.isShowRenewal = true;
-                item.isExpired = true;
-              }
-            }
-
-            // // 新增的权限不判断是否过期
-            // if (item.expired_at <= this.user.timestamp && item.tag !== 'add') {
-            //     item.isShowRenewal = true
-            //     item.isExpired = true
-            //     // this.$set(item, 'isShowRenewal', true)
-            //     // this.$set(item, 'isExpired', true)
-            // }
-          });
-          this.newTableList = _.cloneDeep(this.tableData.filter(item => {
-            return !item.isExpiredAtDisabled;
-          }));
+  
+              // // 新增的权限不判断是否过期
+              // if (item.expired_at <= this.user.timestamp && item.tag !== 'add') {
+              //     item.isShowRenewal = true
+              //     item.isExpired = true
+              //     // this.$set(item, 'isShowRenewal', true)
+              //     // this.$set(item, 'isExpired', true)
+              // }
+            });
+            this.newTableList = _.cloneDeep(this.tableData.filter(item => {
+              return !item.isExpiredAtDisabled;
+            }));
+          }
           this.tableDataBackup = _.cloneDeep(this.tableData);
           this.aggregationsTableData = _.cloneDeep(this.tableData);
         } catch (e) {

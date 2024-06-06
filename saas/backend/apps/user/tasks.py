@@ -67,7 +67,7 @@ class SendUserExpireRemindMailTask(Task):
         if not groups and not policies:
             return
 
-        params = {"tab": "group", "source": "email"}
+        params = {"tab": "group", "source": "notification"}
         if not groups:
             params["tab"] = "custom"
         url = self.base_url + "?" + urlencode(params)

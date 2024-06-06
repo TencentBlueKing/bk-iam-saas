@@ -5,12 +5,22 @@
         <bk-button theme="primary" @click="handleCreate">
           {{ $t(`m.common['新建']`) }}
         </bk-button>
-        <bk-button :disabled="isBatchDisabled" @click="handleBatchAddMember">
-          {{ $t(`m.common['批量添加成员']`) }}
-        </bk-button>
-        <bk-button :disabled="isBatchDisabled" @click="handleBatchDelete">
-          {{ $t(`m.common['批量删除']`) }}
-        </bk-button>
+        <bk-popover
+          :content="isBatchAddMemberDisabled('title')"
+          :disabled="!isBatchAddMemberDisabled('disabled')"
+        >
+          <bk-button :disabled="isBatchAddMemberDisabled('disabled')" @click="handleBatchAddMember">
+            {{ $t(`m.common['批量添加成员']`) }}
+          </bk-button>
+        </bk-popover>
+        <bk-popover
+          :content="isBatchDeleteDisabled('title')"
+          :disabled="!isBatchDeleteDisabled('disabled')"
+        >
+          <bk-button :disabled="isBatchDeleteDisabled('disabled')" @click="handleBatchDelete">
+            {{ $t(`m.common['批量删除']`) }}
+          </bk-button>
+        </bk-popover>
       </div>
       <div slot="right">
         <IamSearchSelect style="width: 420px" :placeholder="$t(`m.memberTemplate['搜索模板名称、描述、创建人']`)" :data="searchData"
@@ -68,7 +78,7 @@
           </span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.common['操作-table']`)" fixed="right">
+      <bk-table-column :label="$t(`m.common['操作-table']`)" fixed="right" :width="150">
         <template slot-scope="{ row }">
           <div class="actions-btn">
             <bk-popover
@@ -158,10 +168,10 @@
       :tip="delActionDialogTip"
       :name="currentActionName"
       :width="formatDeleteWidth"
-      :related-action-list="readOnlyGroups"
+      :related-action-list="formatDisableGroup"
       @on-after-leave="handleAfterDeleteLeave"
-      @on-cancel="handleCancelDelete"
       @on-submit="handleSubmitDelete"
+      @on-cancel="handleCancelDelete"
     />
   </div>
 </template>
@@ -193,6 +203,7 @@
         searchList: [],
         searchValue: [],
         readOnlyGroups: [],
+        hasRelatedGroups: [],
         searchData: [
           {
             id: 'name',
@@ -252,8 +263,70 @@
     },
     computed: {
       ...mapGetters(['user', 'externalSystemId']),
-      isBatchDisabled () {
-        return this.currentSelectList.length === 0;
+      isAllReadOnly () {
+        return this.currentSelectList.filter((item) => item.readonly).length === this.currentSelectList.length;
+      },
+      isAllRelated () {
+        return this.currentSelectList.filter((item) => item.group_count > 0).length === this.currentSelectList.length;
+      },
+      isAllDisabled () {
+        const readOnlyList = this.currentSelectList.filter((item) => item.readonly).map((v) => v.id);
+        const relatedList = this.currentSelectList.filter(
+          (item) => item.group_count > 0 && !readOnlyList.includes(item.id));
+        if (!this.currentSelectList.length) {
+          return true;
+        }
+        return readOnlyList.length + relatedList.length === this.currentSelectList.length;
+      },
+      isBatchAddMemberDisabled () {
+        return (payload) => {
+          const typeMap = {
+            title: () => {
+              if (!this.currentSelectList.length) {
+                return this.$t(`m.memberTemplate['请勾选人员模板']`);
+              }
+              if ((this.isAllReadOnly && this.currentSelectList.length > 0)) {
+                return this.$t(`m.memberTemplate['当前勾选项皆为只读人员模板']`);
+              }
+              return '';
+            },
+            disabled: () => {
+              if ((this.isAllReadOnly && this.currentSelectList.length > 0) || !this.currentSelectList.length) {
+                return true;
+              }
+              return false;
+            }
+          };
+         return typeMap[payload]();
+        };
+      },
+      isBatchDeleteDisabled () {
+        return (payload) => {
+          const typeMap = {
+            title: () => {
+              if (!this.currentSelectList.length) {
+                return this.$t(`m.memberTemplate['请勾选人员模板']`);
+              }
+              if (this.isAllReadOnly) {
+                return this.$t(`m.memberTemplate['当前勾选项皆为只读人员模板']`);
+              }
+              if (this.isAllRelated) {
+                return this.$t(`m.memberTemplate['当前勾选项皆为有关联用户组人员模板']`);
+              }
+              if (this.isAllDisabled) {
+                return this.$t(`m.memberTemplate['当前勾选项皆为只读和有关联用户组人员模板']`);
+              }
+              return '';
+            },
+            disabled: () => {
+              if (this.isAllReadOnly || this.isAllRelated || this.isAllDisabled || !this.currentSelectList.length) {
+                return true;
+              }
+              return false;
+            }
+          };
+         return typeMap[payload]();
+        };
       },
       isRatingManager () {
         return ['rating_manager', 'subset_manager'].includes(this.curRole);
@@ -292,6 +365,9 @@
           };
           return typeMap[type]();
         };
+      },
+      formatDisableGroup () {
+        return this.currentSelectList.filter((item) => item.readonly || item.group_count > 0);
       }
     },
     watch: {
@@ -369,7 +445,7 @@
           this.fetchSelectedGroupCount();
           this.handleOpenDetail();
         } catch (e) {
-          console.error(e);
+          this.messageAdvancedError(e);
         } finally {
           this.tableLoading = false;
         }
@@ -407,7 +483,6 @@
       },
 
       async handleSearch (payload, result) {
-        console.log(payload, result);
         this.searchParams = payload;
         this.searchList = result;
         this.emptyData.tipType = 'search';
@@ -507,7 +582,6 @@
           this.resetPagination();
           this.fetchMemberTemplateList(true);
         } catch (e) {
-          console.error(e);
           this.messageAdvancedError(e);
         } finally {
           this.memberDialogLoading = false;
@@ -515,10 +589,7 @@
       },
 
       async handleSubmitDelete () {
-        const selectGroups = this.currentSelectList.filter((item) => !item.readonly);
-        if (this.readOnlyGroups.length === this.currentSelectList.length) {
-          return this.messageWarn(this.$t(`m.memberTemplate['当前选择人员模板皆为只读属性，暂无可删除人员模板']`), 3000);
-        }
+        const selectGroups = this.currentSelectList.filter((item) => !item.readonly && item.group_count === 0);
         this.batchQuitLoading = true;
         try {
           for (let i = 0; i < selectGroups.length; i++) {
@@ -534,7 +605,6 @@
           this.resetPagination();
           this.fetchMemberTemplateList(true);
         } catch (e) {
-          console.error(e);
           this.messageAdvancedError(e);
         } finally {
           this.batchQuitLoading = false;
@@ -594,10 +664,11 @@
       handleDeleteActions (type) {
         const typeMap = {
           delete: () => {
-            this.isShowDeleteDialog = true;
             this.delActionDialogTitle = this.$t(`m.dialog['确认批量删除所选的人员模板吗？']`);
-            this.delActionDialogTip = this.$t(`m.memberTemplate['以下为只读人员模板，不可删除。']`);
+            this.delActionDialogTip = this.$t(`m.memberTemplate['以下为只读或有关联用户组的人员模板，不可删除。']`);
             this.readOnlyGroups = this.currentSelectList.filter((item) => item.readonly);
+            this.hasRelatedGroups = this.currentSelectList.filter((item) => item.group_count > 0);
+            this.isShowDeleteDialog = true;
           }
         };
         return typeMap[type]();
@@ -673,6 +744,7 @@
       handleAfterDeleteLeave () {
         this.currentActionName = '';
         this.readOnlyGroups = [];
+        this.hasRelatedGroups = [];
       },
 
       handleCancelDelete () {
@@ -767,9 +839,18 @@
       background-color: #f2fff4;
     }
 
-    /deep/ .bk-form-checkbox.is-checked .bk-checkbox {
-      border-color: #3a84ff;
-      background-color: #3a84ff;
+    /deep/ .bk-form-checkbox.is-checked {
+      .bk-checkbox {
+        border-color: #3a84ff;
+        background-color: #3a84ff;
+        &:hover {
+          background-color: #3a84ff;
+        }
+      }
+    }
+
+    .bk-table-fixed, .bk-table-fixed-right {
+      border-bottom: 0;
     }
   }
 }

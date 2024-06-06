@@ -38,7 +38,7 @@ class Subject(BaseModel):
         return cls(type=SubjectType.DEPARTMENT.value, id=str(department_id))
 
     @classmethod
-    def from_usernames(cls, usernames: str) -> List["Subject"]:
+    def from_usernames(cls, usernames: List[str]) -> List["Subject"]:
         return [cls.from_username(username) for username in usernames]
 
 

@@ -740,7 +740,8 @@ export const m = {
         '可代他人申请加入用户组获取权限': 'You can apply to join the user group for permission on behalf of others',
         '（标签只读：含只读操作）': '({name} read-only: including {value} actions)',
         '收藏成功': 'Collection successful',
-        '取消收藏成功': 'Cancel collection successful'
+        '取消收藏成功': 'Cancel collection successful',
+        '尚未选择用户组': 'No user group has been selected yet'
     },
     myApply: {
         '申请列表': 'Apply List',
@@ -913,7 +914,9 @@ export const m = {
         '设置不可被申请，则无法申请加入此用户组': 'If the setting cannot be applied for, you cannot apply to join this user group',
         '管理员已设置空间下所有用户组不可被申请': 'The administrator has set that all user groups in the space cannot be applied for',
         '已选择的用户组成员不需要续期': 'The selected user group members do not need to be renewed',
-        '自动生成同名人员模板': 'Automatically generate member template with the same name'
+        '自动生成同名人员模板': 'Automatically generate member template with the same name',
+        '管理员组无法添加权限': 'Administrators group unable to add permissions',
+        '只读用户组无法添加权限': 'Read only user group cannot add permissions'
     },
     userGroupDetail: {
         '用户组名': 'Group name: ',
@@ -1200,6 +1203,7 @@ export const m = {
         '管理类API白名单创建': 'Management class API whitelist create',
         '管理类API白名单删除': 'Management class API whitelist delete',
         '操作敏感等级更新': 'Action sensitivity level update',
+        '续期通知更新': 'Renewal notice update',
         '回滚事件': 'Rollback event',
         '管理空间用户组成员续期': 'Management space group members renew',
         '用户组成员续期': 'Group members renew',
@@ -1502,7 +1506,12 @@ export const m = {
         '请输入用户/组织，按enter键搜索': 'Please enter user/organization, press enter to search',
         '只读人员模板不能移除': 'The read-only member template cannot be removed',
         '只读人员模板不能添加、删除、复制成员': 'Read-only member template cannot add, delete, or copy members',
-        '最多只能选择10个人员模板' : 'You can only select up to 10 member templates'
+        '最多只能选择10个人员模板' : 'You can only select up to 10 member templates',
+        '请勾选人员模板': 'Please check personnel template',
+        '当前勾选项皆为只读人员模板': 'The current options are all read-only member templates',
+        '当前勾选项皆为有关联用户组人员模板': 'The current options are all associated user group member templates',
+        '当前勾选项皆为只读和有关联用户组人员模板': 'The current options are all read-only and have associated user group member templates',
+        '以下为只读或有关联用户组的人员模板，不可删除。': 'The following personnel templates are read-only or have associated user groups and cannot be deleted.'
     },
     userOrOrg: {
         '用户组名': 'User group name',

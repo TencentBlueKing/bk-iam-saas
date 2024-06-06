@@ -38,9 +38,9 @@ repos:
         entry: mypy --config-file=saas/pyproject.toml saas
       - id: import-linter
         name: import-linter
-        language: python
+        language: system
         pass_filenames: false
-        entry: cd saas && lint-imports --config=./.importlinter && cd ..
+        entry: bash -c "cd saas && lint-imports --config=.importlinter"
       - id: pytest
         name: pytest
         language: python
