@@ -106,7 +106,6 @@
 
       handleExpanded () {
         this.isExpanded = !this.isExpanded;
-        console.log(this.isExpanded);
         this.$emit('update:expanded', true); // 更新expanded
         this.$emit('on-expanded', this.isExpanded); // 执行on-expanded
         this.$nextTick(() => {

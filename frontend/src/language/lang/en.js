@@ -1444,7 +1444,7 @@ export const m = {
         '操作模板': 'Action template',
         '操作权限': 'Action permission',
         '移除模板': 'Remove template',
-        '搜索 系统名': 'Search system',
+        '搜索 系统名、操作名': 'Search for system name and action name',
         '搜索 用户、组织名': 'Search for user and organization names',
         '搜索 人员模板': 'Search member template',
         '删除实例权限': 'Delete instance perm',

@@ -22,7 +22,7 @@
           />
           <span>
             <span class="sub-header-item-title">{{ title }}</span>
-            <span v-if="count > 0">
+            <span v-if="count > 0" class="sub-header-item-count">
               ({{ count }})
             </span>
           </span>
@@ -258,6 +258,9 @@
           color: #313238;
           font-size: 12px;
           font-weight: 700;
+          margin-left: 4px;
+        }
+        &-count {
           margin-left: 4px;
         }
         .sub-header-content {

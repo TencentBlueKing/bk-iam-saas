@@ -1,15 +1,12 @@
 <template>
   <div class="resource-user-group-perm">
     <div class="resource-user-group-perm-search">
-      <bk-input
-        v-model="keyword"
-        style="width: 400px"
-        :clearable="true"
-        :placeholder="$t(`m.resourcePermiss['搜索 系统名']`)"
-        :right-icon="'bk-icon icon-search'"
-        @enter="handleSearchSystem"
-        @clear="handleEmptyClear"
-        @right-icon-click="handleSearchSystem"
+      <IamSearchSelect
+        style="width: 400px;"
+        :placeholder="$t(`m.resourcePermiss['搜索 系统名、操作名']`)"
+        :data="searchData"
+        :value="searchValue"
+        @on-change="handleSearchSystemAction"
       />
     </div>
     <template v-if="!isLoading && !isEmpty">
@@ -45,18 +42,16 @@
               @on-save="handleSave(item, index, subItem, subIndex)"
               @on-edit="handleEdit(subItem)"
               @on-cancel="handleCancel(subItem)"
-              @on-expanded="handleTemplateExpanded(...arguments, subItem)">
+              @on-expanded="handleTemplateExpanded(...arguments, subItem, subIndex)">
               <div v-bkloading="{ isLoading: subItem.loading, opacity: 1 }">
                 <RenderCustomPermTable
                   v-if="!subItem.loading"
                   mode="detail"
                   :ref="`${index}_${subIndex}_resourceTableRef`"
                   :list="subItem.tableData"
-                  :original-list="subItem.tableDataBackup"
-                  :authorization="authorizationData"
-                  :system-id="item.id"
                   :group-id="groupId"
                   :template-id="subItem.id"
+                  :is-loading="subItem.loading"
                   :is-edit="subItem.isEdit"
                   :is-custom="isCustom(subItem)"
                   :is-custom-action-button="isCustom(subItem)"
@@ -94,13 +89,17 @@
   import RenderPermItem from './render-perm-item.vue';
   import RenderTemplateItem from './render-template-item.vue';
   import RenderCustomPermTable from '../components/group-perm-table.vue';
+  import IamSearchSelect from '@/components/iam-search-select';
+  import getActionsMixin from '../common/js/getActionsMixin';
 
   export default {
     components: {
       RenderPermItem,
       RenderTemplateItem,
-      RenderCustomPermTable
+      RenderCustomPermTable,
+      IamSearchSelect
     },
+    mixins: [getActionsMixin],
     props: {
       curDetailData: {
         type: Object
@@ -125,12 +124,23 @@
         isLoading: false,
         tableLoading: false,
         groupId: 0,
-        keyword: '',
         groupSystemList: [],
         groupSystemListBack: [],
         customActionsList: [],
-        linearActionList: [],
-        authorizationData: {},
+        searchValue: [],
+        searchData: [
+          {
+            id: 'system_id',
+            name: this.$t(`m.common['系统名']`),
+            remoteMethod: this.handleRemoteSystem
+          },
+          {
+            id: 'action_name',
+            name: this.$t(`m.common['操作']`),
+            default: true
+          }
+        ],
+        searchParams: {},
         deletePoPoverConfirm: {
           template: {
             title: this.$t(`m.resourcePermiss['确认移除该操作模板？']`),
@@ -249,13 +259,13 @@
       curDetailData: {
         handler (value) {
           this.groupId = value.id;
-          this.fetchInitData();
+          this.fetchInitData(true);
         },
         immediate: true
       }
     },
     methods: {
-      async fetchInitData () {
+      async fetchInitData (isFirst = false) {
         this.isLoading = true;
         try {
           const params = {
@@ -289,18 +299,33 @@
           this.messageAdvancedError(e);
         } finally {
           this.isLoading = false;
-          const curSystem = this.groupSystemList.find((item) => item.id === this.curDetailData.system_id);
-          if (curSystem) {
-            this.$nextTick(() => {
-              this.$refs[`rPermItem${curSystem.id}`]
-                && this.$refs[`rPermItem${curSystem.id}`].length
-                && this.$refs[`rPermItem${curSystem.id}`][0].handleExpanded();
+          // 首次加载需要获取所有系统的操作
+          if (isFirst) {
+            this.groupSystemList.forEach((item) => {
+              if (item.id === this.curDetailData.system_id) {
+                this.$nextTick(() => {
+                  this.$refs[`rPermItem${item.id}`]
+                    && this.$refs[`rPermItem${item.id}`].length
+                    && this.$refs[`rPermItem${item.id}`][0].handleExpanded();
+                });
+              } else {
+                this.fetchGroupTemplateList(item, true);
+              }
             });
+          } else {
+            const curSystem = this.groupSystemList.find((item) => item.id === this.curDetailData.system_id);
+            if (curSystem) {
+              this.$nextTick(() => {
+                this.$refs[`rPermItem${curSystem.id}`]
+                  && this.$refs[`rPermItem${curSystem.id}`].length
+                  && this.$refs[`rPermItem${curSystem.id}`][0].handleExpanded();
+              });
+            }
           }
         }
       },
 
-      async getGroupTemplateList (groupSystem) {
+      async fetchGroupTemplateList (groupSystem, isFirst = false) {
         groupSystem.loading = true;
         let res;
         try {
@@ -309,7 +334,7 @@
             systemId: groupSystem.id
           });
           res.data.forEach((item) => {
-            item.loading = false;
+            item.loading = true;
             item.tableData = [];
             item.tableDataBackup = [];
             item.count = 0;
@@ -331,9 +356,9 @@
               mode_type: 'custom',
               count: groupSystem.custom_policy_count,
               custom_policy_count: groupSystem.custom_policy_count,
-              loading: false,
               tableData: [],
               tableDataBackup: [],
+              loading: false,
               editLoading: false,
               deleteLoading: false
             });
@@ -342,30 +367,40 @@
           this.messageAdvancedError(e);
         } finally {
           groupSystem.loading = false;
-          this.$nextTick(() => {
-            if (this.$refs[`rTemplateItem${groupSystem.id}`]) {
-              this.$refs[`rTemplateItem${groupSystem.id}`].forEach((item) => {
-                item.handleExpanded();
-              });
-            }
-          });
+          if (isFirst) {
+            // 代表是首次加载，需要遍历系统查询操作
+            groupSystem.templates && groupSystem.templates.forEach((temp, tempIndex) => {
+              this.handleTemplateExpanded(true, temp, tempIndex);
+            });
+          } else {
+            this.$nextTick(() => {
+              if (this.$refs[`rTemplateItem${groupSystem.id}`]) {
+                this.$refs[`rTemplateItem${groupSystem.id}`].forEach((item) => {
+                  item.handleExpanded();
+                });
+              }
+            });
+          }
         }
       },
       
-      async getGroupCustomPolicy (item) {
+      async fetchGroupCustomPolicy (item) {
         item.loading = true;
         try {
-          const res = await this.$store.dispatch('userGroup/getGroupPolicy', {
+          const { data } = await this.$store.dispatch('userGroup/getGroupPolicy', {
             id: this.groupId,
             systemId: item.system.id
           });
-          const tableData = res.data.map(row => {
-            const linearActionList = this.linearActionList.find(sub => sub.id === row.id);
-            // eslint-disable-next-line max-len
-            row.related_environments = linearActionList ? linearActionList.related_environments : [];
-            row.related_actions = linearActionList ? linearActionList.related_actions : [];
+          let actionList = data || [];
+          if (this.searchParams.action_name) {
+            actionList = actionList.filter((v) => v.name.toLowerCase().indexOf(this.searchParams.action_name) > -1);
+          }
+          const tableData = actionList.map((v) => {
+            const linearAction = this.linearActionList.find((sub) => sub.id === v.id);
+            v.related_environments = linearAction ? linearAction.related_environments : [];
+            v.related_actions = linearAction ? linearAction.related_actions : [];
             return new GroupPolicy(
-              row,
+              v,
               'detail', // 此属性为flag，会在related-resource-types赋值为add
               'custom',
               { system: item.system }
@@ -373,6 +408,7 @@
           });
           this.$set(item, 'tableData', cloneDeep(tableData));
           this.$set(item, 'tableDataBackup', cloneDeep(tableData));
+          console.log(item);
         } catch (e) {
           this.messageAdvancedError(e);
         } finally {
@@ -387,11 +423,15 @@
             id: this.groupId,
             templateId: item.id
           });
-          const tableData = data.actions.map(row => {
-            const linearAction = this.linearActionList.find(sub => sub.id === row.id);
-            row.related_environments = linearAction ? linearAction.related_environments : [];
+          let actionList = data.actions || [];
+          if (this.searchParams.action_name) {
+            actionList = actionList.filter((v) => v.name.toLowerCase().indexOf(this.searchParams.action_name) > -1);
+          }
+          const tableData = actionList.map((v) => {
+            const linearAction = this.linearActionList.find((sub) => sub.id === v.id);
+            v.related_environments = linearAction ? linearAction.related_environments : [];
             return new GroupPolicy(
-              { ...row, policy_id: 1 },
+              { ...v, policy_id: 1 },
               'detail',
               'template',
               { system: data.system }
@@ -406,55 +446,34 @@
         }
       },
 
-      async handleTemplateExpanded (flag, item) {
+      async handleTemplateExpanded (flag, item, index) {
         if (!flag) {
-          this.$set(item, 'isEdit', false);
           return;
         }
-        await this.fetchActions(item);
+        // 这里处理接口节流，展开会存在多种类型，但是单个系统操作是共用的
+        if (index === 0) {
+          await this.fetchActions(item);
+        }
         if (['custom'].includes(item.mode_type)) {
-          this.getGroupCustomPolicy(item);
+          this.fetchGroupCustomPolicy(item);
           return;
         }
         this.getGroupTemplateDetail(item);
       },
 
-      // 获取系统对应的自定义操作
-      async fetchActions (item) {
-        console.log(111);
-        const params = {
-          system_id: item.system.id,
-          user_id: this.user.username
-        };
+      async handleRemoteSystem (value) {
+        const params = {};
         if (this.externalSystemId) {
           params.hidden = false;
         }
-        try {
-          const { data } = await this.$store.dispatch('permApply/getActions', params);
-          this.customActionsList = cloneDeep(data || []);
-          this.handleActionLinearData();
-        } catch (e) {
-          console.error(e);
-          this.messageAdvancedError(e);
-        }
+        return this.$store.dispatch('system/getSystems', params).then(({ data }) => {
+          return data.map(({ id, name }) => ({ id, name })).filter((item) => item.name.indexOf(value) > -1);
+        });
       },
 
-      // 获取授权边界数据
-      async fetchAuthorizationScopeActions (id) {
-        if (this.authorizationData[id]) {
-          return;
-        }
-        try {
-          const { data } = await this.$store.dispatch('permTemplate/getAuthorizationScopeActions', { systemId: id });
-          this.authorizationData[id] = (data || []).filter(item => item.id !== '*');
-        } catch (e) {
-          this.messageAdvancedError(e);
-        }
-      },
-
-      handleDelete (item, subItem) {
+      async handleDelete (item, subItem) {
         if (subItem.id > 0) {
-          this.handleDeleteTemplate({
+          await this.handleDeleteTemplate({
             id: subItem.id,
             data: {
               members: [{
@@ -464,7 +483,7 @@
             }
           }, item, subItem);
         } else {
-          this.handleDeleteGroupPolicy({
+          await this.handleDeleteGroupPolicy({
             id: this.groupId,
             data: {
               system_id: item.id,
@@ -485,11 +504,15 @@
             --item.template_count;
           }
           this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
-          if (filterLen > 0 || isExistCustom) {
-            this.getGroupTemplateList(item);
-          }
-          if (!filterLen && !isExistCustom) {
-            this.fetchInitData();
+          if (Object.keys(this.searchParams).length > 0) {
+            this.handleGetSearchData();
+          } else {
+            if (filterLen > 0 || isExistCustom) {
+              await this.fetchGroupTemplateList(item, false);
+            }
+            if (!filterLen && !isExistCustom) {
+              await this.fetchInitData(false);
+            }
           }
         } catch (e) {
           this.messageAdvancedError(e);
@@ -504,17 +527,45 @@
         }
         try {
           await this.$store.dispatch('userGroup/deleteGroupPolicy', params);
-          const isExistTemplate = item.templates.some(item => item.id !== 0);
+          const isExistTemplate = item.templates.some((v) => v.id !== 0);
           if (item.custom_policy_count > 0) {
             --item.custom_policy_count;
           } else {
             item.custom_policy_count = 0;
           }
           this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
-          if (isExistTemplate) {
-            this.getGroupTemplateList(item);
+          if (Object.keys(this.searchParams).length > 0) {
+            console.log(params, subItem, '参数');
+            if (item.custom_policy_count === 0 && item.template_count === 0) {
+              this.groupSystemListBack = this.groupSystemListBack.filter((v) => v.id !== item.id);
+            }
+            const curSystem = this.groupSystemListBack.find((v) => v.id === item.id);
+            if (curSystem) {
+              curSystem.custom_policy_count = item.custom_policy_count;
+              curSystem.expanded = true;
+              curSystem.templates.forEach((v) => {
+                v.expanded = true;
+                if (['custom'].includes(v.mode_type)) {
+                  v.tableData = v.tableData.filter((v) => !subItem.ids.includes(v.id));
+                }
+              });
+            }
+            // this.groupSystemListBack.forEach((v) => {
+            //   if (v.id === item.id) {
+            //     v.custom_policy_count = item.custom_policy_count;
+            //     v.expanded = true;
+            //     v.templates.forEach((sub) => {
+            //       sub.expanded = true;
+            //     });
+            //   }
+            // });
+            this.handleGetSearchData();
+          } else {
+            if (isExistTemplate) {
+              this.fetchGroupTemplateList(item, false);
+            }
+            this.fetchInitData(false);
           }
-          this.fetchInitData();
         } catch (e) {
           this.messageAdvancedError(e);
         } finally {
@@ -524,52 +575,67 @@
         }
       },
 
-      handleSingleDelete (payload, item) {
-        this.handleDeleteGroupPolicy({
+      async handleSingleDelete (payload, item) {
+        await this.handleDeleteGroupPolicy({
           id: this.groupId,
           data: {
             system_id: item.id,
             ids: payload.ids ? payload.ids.join(',') : payload.policy_id
           }
-        }, item, {}, false);
+        }, item, payload, false);
       },
 
-      handleActionLinearData () {
-        const linearActions = [];
-        this.customActionsList.forEach((item, index) => {
-          item.actions = item.actions.filter(v => !v.hidden);
-          item.actions.forEach(act => {
-            linearActions.push(act);
-          });
-          (item.sub_groups || []).forEach(sub => {
-            sub.actions = sub.actions.filter(v => !v.hidden);
-            sub.actions.forEach(act => {
-              linearActions.push(act);
-            });
-          });
-        });
-        this.linearActionList = cloneDeep(linearActions);
-        console.log('this.linearActionList', this.linearActionList);
-      },
-
-      handleSearchSystem () {
-        this.emptyData.tipType = 'search';
-        this.groupSystemList = this.groupSystemListBack.filter((item) => item.name.indexOf(this.keyword) > -1);
-        if (!this.groupSystemList.length) {
-          this.emptyData = formatCodeData(0, this.emptyData, true);
-        }
+      handleSearchSystemAction (payload, result) {
+        this.searchParams = payload;
+        this.searchValue = result;
+        this.handleGetSearchData();
       },
 
       handleExpanded (flag, item) {
         if (!flag) {
           return;
         }
-        this.getGroupTemplateList(item);
-        this.fetchAuthorizationScopeActions(item.id);
+        this.fetchGroupTemplateList(item);
+      },
+
+      handleGetSearchData () {
+        let systemList = cloneDeep(this.groupSystemListBack);
+        if (this.searchParams.system_id) {
+          systemList = systemList.filter(
+            (item) => item.id.indexOf(this.searchParams.system_id) > -1);
+        }
+        if (this.searchParams.action_name) {
+          console.log(systemList, this.groupSystemListBack, ' 系统');
+          systemList.forEach((item) => {
+            if (item.templates && item.templates.length > 0) {
+              item.templates.forEach((v) => {
+                v.tableData = v.tableData.filter((sub) =>
+                  sub.name.toLowerCase().indexOf(this.searchParams.action_name) > -1);
+                if (['custom'].includes(v.mode_type)) {
+                  item.custom_policy_count = v.tableData.length;
+                }
+                if (['template'].includes(v.mode_type)) {
+                  item.template_count = v.tableData.length;
+                }
+              });
+            }
+          });
+        }
+        systemList = systemList.filter((item) => {
+          return item.templates.length > 0 && item.templates.find((v) => v.tableData.length > 0);
+        });
+        if (!this.searchValue.length) {
+          this.handleEmptyClear();
+        } else {
+          this.emptyData.tipType = 'search';
+          this.groupSystemList = cloneDeep(systemList);
+          this.emptyData = formatCodeData(0, this.emptyData, true);
+        }
       },
 
       handleEmptyClear () {
-        this.keyword = '';
+        this.searchParams = {};
+        this.searchValue = [];
         this.emptyData.tipType = '';
         this.groupSystemList = cloneDeep(this.groupSystemListBack);
       }

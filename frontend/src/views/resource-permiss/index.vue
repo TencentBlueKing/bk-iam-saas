@@ -68,7 +68,7 @@
         </div>
       </div>
     </IamResourceCascadeSearch>
-    
+
     <bk-table
       v-if="!tableLoading"
       v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
@@ -107,8 +107,10 @@
         />
       </template>
     </bk-table>
+
     <!-- 用户组类型 -->
     <GroupDetailSlider :show.sync="isShowGroupDetailSlider" :cur-detail-data="curDetailData" />
+    
     <!-- 人员权限详情 -->
     <MemberPermDetailSlider :show.sync="isShowMemberPermDetailSlider" :cur-detail-data="curDetailData" />
   </div>
@@ -179,7 +181,7 @@
           limit: 10
         },
         formData: {
-          name: ''
+          name: 'ceshi'
         },
         emptyData: {
           type: 'empty',
@@ -250,7 +252,6 @@
         this.pagination.current = 1;
         this.isSearchPerm = false;
         this.curSearchParams = {};
-        console.log(5655);
         await this.handleSearchAndExport(false);
       },
 
@@ -280,9 +281,9 @@
             }
           } else {
             this.tableListBack = res.data || [];
-            this.pagination.count = this.tableList.length;
             const result = this.getDataByPage();
             this.tableList.splice(0, this.tableList.length, ...result);
+            this.pagination.count = this.tableList.length;
             this.emptyData.tipType = 'search';
             this.emptyData = formatCodeData(res.code, this.emptyData, this.tableList.length === 0);
           }
@@ -320,7 +321,6 @@
       },
 
       handleSelectSystemAction (payload) {
-        console.log(payload);
         this.curSystemAction = payload;
         if (payload && payload.action_id) {
           this.curSearchParams = Object.assign(this.curSearchParams, {

@@ -1,6 +1,7 @@
 <template>
   <div class="resource-perm-manage-instance-table-wrapper">
     <bk-table
+      v-if="!isLoading"
       :data="tableList"
       :ext-cls="!isEdit ? 'is-detail-view' : ''"
       :border="false"
@@ -13,7 +14,7 @@
           <span class="action-name">{{ row.name }}</span>
         </template>
       </bk-table-column>
-      <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)" :width="340">
+      <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)" :width="300">
         <template slot-scope="{ row }">
           <template v-if="!row.isEmpty">
             <div v-for="_ in row.resource_groups" :key="_.id">
@@ -24,7 +25,7 @@
                   :key="item.type"
                   :data="item.condition"
                   :value="`${item.name}: ${item.value}`"
-                  :max-width="320"
+                  :max-width="300"
                 />
               </p>
             </div>
@@ -60,7 +61,6 @@
               <div v-if="isShowDeleteAction" class="operate-column-btn">
                 <bk-popconfirm
                   trigger="click"
-                  placement="bottom-end"
                   ext-popover-cls="resource-perm-delete-confirm"
                   :ref="`delActionConfirm_${row.id}`"
                   :width="280"
@@ -182,17 +182,16 @@
   import { cloneDeep, uniqWith, isEqual } from 'lodash';
   import RenderResourcePopover from '@/components/iam-view-resource-popover';
   import RenderDetailEdit from '@/views/perm/components/render-detail-edit';
+  import getActionsMixin from '../common/js/getActionsMixin';
+
   export default {
     components: {
       RenderDetailEdit,
       RenderResourcePopover
     },
+    mixins: [getActionsMixin],
     props: {
       list: {
-        type: Array,
-        default: () => []
-      },
-      originalList: {
         type: Array,
         default: () => []
       },
@@ -200,13 +199,13 @@
         type: Array,
         default: () => []
       },
-      systemId: {
-        type: String,
-        default: ''
-      },
       templateId: {
         type: [String, Number],
         default: ''
+      },
+      isLoading: {
+        type: Boolean,
+        default: true
       },
       isEdit: {
         type: Boolean,
@@ -246,10 +245,6 @@
         type: Boolean,
         default: false
       },
-      linearActionList: {
-        type: Array,
-        default: () => []
-      },
       // 单独处理需要自定义操作按钮的页面
       isCustomActionButton: {
         type: Boolean,
@@ -279,7 +274,6 @@
         disabled: true,
         batchDisabled: false,
         canOperate: true,
-        isLoading: true,
         isBatchDelete: true,
         isShowSideSlider: false,
         isShowPreviewDialog: false,
@@ -350,16 +344,6 @@
           this.tableList.splice(0, this.tableList.length, ...customData, ...templateData);
         },
         immediate: true
-      },
-      systemId: {
-        handler (value) {
-          if (value) {
-            this.curIndex = -1;
-            this.curResIndex = -1;
-            this.curGroupIndex = -1;
-          }
-        },
-        immediate: true
       }
     },
     mounted () {
@@ -394,7 +378,6 @@
             resource_group_id
           }
         };
-        console.log(params, '参数');
         try {
           await this.$store.dispatch('permApply/updatePerm', params);
           window.changeAlert = false;
@@ -410,12 +393,16 @@
       },
 
       // 处理操作和资源实例删除
-      handleDelActionOrInstance (payload, type) {
+      async handleDelActionOrInstance (payload, type) {
         const { id, mode, name, condition } = payload;
         let delRelatedActions = [];
         this.delActionList = [];
         const isCustom = ['custom'].includes(mode);
         const policyIdList = this.tableList.map(v => v.id);
+        // 处理多系统展开时，只获取当前系统下的所有操作
+        if (this.tableList.length > 0 && ['action'].includes(type)) {
+          await this.fetchActions(this.tableList[0].detail);
+        }
         const linearActionList = this.linearActionList.filter(item => policyIdList.includes(item.id));
         const curAction = linearActionList.find(item => item.id === id);
         const hasRelatedActions = curAction && curAction.related_actions && curAction.related_actions.length;
@@ -512,46 +499,6 @@
         this.$emit('on-delete', this.newRow);
       },
 
-      handleShowResourceInstance (data, index, resItem, resIndex, groupIndex) {
-        window.changeDialog = true;
-        this.params = {
-          system_id: this.systemId,
-          action_id: data.id,
-          resource_type_system: resItem.system_id,
-          resource_type_id: resItem.type
-        };
-        if (this.isCreateMode) {
-          this.params.system_id = data.detail.system.id;
-        }
-        this.curIndex = index;
-        this.curResIndex = resIndex;
-        this.curGroupIndex = groupIndex;
-        if (this.customData.length && ['userGroupDetail'].includes(this.$route.name)) {
-          const customData = this.customData.find(
-            (item) => item.policy_id === data.policy_id
-          );
-          if (customData) {
-            const curCondition = customData.resource_groups[this.curGroupIndex]
-              .related_resource_types[this.curResIndex].conditionBackup;
-            // conditionBackup代表的是接口返回的缓存数据，处理新增未提交的资源实例删
-            const curPaths
-              = curCondition.length
-                && curCondition.reduce((prev, next) => {
-                  prev.push(
-                    ...next.instance.map((v) => {
-                      const paths = { ...v.path, ...next.path };
-                      delete paths.instance;
-                      return paths;
-                    })
-                  );
-                  return prev;
-                }, []);
-            this.curInstancePaths = [...curPaths];
-          }
-        }
-        this.handleDelActionOrInstance(data, 'instance');
-      },
-
       handleViewResource (payload) {
         const params = [];
         this.curId = payload.id;
@@ -573,7 +520,6 @@
             }
           });
         }
-        console.log(payload, params);
         this.previewData = cloneDeep(params);
         this.sideSliderTitle = this.$t(`m.info['操作侧边栏操作的资源实例']`, {
           value: `${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}`
