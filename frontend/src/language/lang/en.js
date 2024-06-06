@@ -1438,6 +1438,7 @@ export const m = {
         '导出需提供系统和操作名': 'Export requires providing system and action name',
         '查询必须选择“系统”和“操作名”': "Query must select 'System' and 'Action name'",
         '用户组详情': 'User group detail',
+        '人员权限详情': 'Member permission detail',
         '用户/用户组': 'User/User Group',
         '用户 / 组织': 'User/Organization',
         '用户组权限': 'User group perm',

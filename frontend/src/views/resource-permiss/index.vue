@@ -181,7 +181,7 @@
           limit: 10
         },
         formData: {
-          name: 'ceshi'
+          name: ''
         },
         emptyData: {
           type: 'empty',

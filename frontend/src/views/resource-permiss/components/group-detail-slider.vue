@@ -3,18 +3,18 @@
     <bk-sideslider
       :is-show="isShowSideSlider"
       :width="width"
-      ext-cls="iam-member-template-detail-side"
       :quick-close="true"
+      ext-cls="resource-perm-group-detail-side"
       @update:isShow="handleCancel"
     >
-      <div slot="header" class="iam-member-template-detail-side-header">
+      <div slot="header" class="resource-perm-group-detail-side-header">
         <span>{{ $t(`m.resourcePermiss['用户组详情']`) }}</span>
         <span class="custom-header-divider">|</span>
         <span class="single-hide custom-header-name" :title="curDetailData.name">
           {{ curDetailData.name }}
         </span>
       </div>
-      <div slot="content" class="iam-member-template-detail-side-content">
+      <div slot="content" class="resource-perm-group-detail-side-content">
         <div class="member-template-tab">
           <div class="member-tab-groups">
             <div
@@ -191,7 +191,7 @@
 </script>
   
 <style lang="postcss" scoped>
-.iam-member-template-detail-side {
+.resource-perm-group-detail-side {
   &-header {
     display: flex;
     .custom-header-divider {
