@@ -408,7 +408,6 @@
           });
           this.$set(item, 'tableData', cloneDeep(tableData));
           this.$set(item, 'tableDataBackup', cloneDeep(tableData));
-          console.log(item);
         } catch (e) {
           this.messageAdvancedError(e);
         } finally {
@@ -505,6 +504,15 @@
           }
           this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
           if (Object.keys(this.searchParams).length > 0) {
+            if (item.custom_policy_count === 0 && item.template_count === 0) {
+              this.groupSystemListBack = this.groupSystemListBack.filter((v) => v.id !== item.id);
+            }
+            const curSystem = this.groupSystemListBack.find((v) => v.id === item.id);
+            if (curSystem) {
+              curSystem.template_count = item.template_count;
+              curSystem.expanded = true;
+              curSystem.templates = curSystem.templates.filter((v) => v.id !== subItem.id);
+            }
             this.handleGetSearchData();
           } else {
             if (filterLen > 0 || isExistCustom) {
@@ -535,7 +543,6 @@
           }
           this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
           if (Object.keys(this.searchParams).length > 0) {
-            console.log(params, subItem, '参数');
             if (item.custom_policy_count === 0 && item.template_count === 0) {
               this.groupSystemListBack = this.groupSystemListBack.filter((v) => v.id !== item.id);
             }
@@ -545,20 +552,9 @@
               curSystem.expanded = true;
               curSystem.templates.forEach((v) => {
                 v.expanded = true;
-                if (['custom'].includes(v.mode_type)) {
-                  v.tableData = v.tableData.filter((v) => !subItem.ids.includes(v.id));
-                }
+                v.tableData = v.tableData.filter((v) => !subItem.ids.includes(v.policy_id));
               });
             }
-            // this.groupSystemListBack.forEach((v) => {
-            //   if (v.id === item.id) {
-            //     v.custom_policy_count = item.custom_policy_count;
-            //     v.expanded = true;
-            //     v.templates.forEach((sub) => {
-            //       sub.expanded = true;
-            //     });
-            //   }
-            // });
             this.handleGetSearchData();
           } else {
             if (isExistTemplate) {
@@ -605,7 +601,6 @@
             (item) => item.id.indexOf(this.searchParams.system_id) > -1);
         }
         if (this.searchParams.action_name) {
-          console.log(systemList, this.groupSystemListBack, ' 系统');
           systemList.forEach((item) => {
             if (item.templates && item.templates.length > 0) {
               item.templates.forEach((v) => {
