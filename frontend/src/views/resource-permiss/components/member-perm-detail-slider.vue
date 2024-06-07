@@ -20,10 +20,14 @@
       <div slot="content" class="resource-perm-member-detail-side-content">
         <div class="batch-operate">
           <bk-popover
-            :content="$t(`m.userOrOrg['请先勾选用户组权限']`)"
-            :disabled="!isRemoveDisabled"
+            :content="removeGroupTitle"
+            :disabled="!isNoBatchRemove()"
           >
-            <bk-button :disabled="isRemoveDisabled" class="batch-operate-remove">
+            <bk-button
+              class="batch-operate-remove"
+              :disabled="isNoBatchRemove()"
+              @click.stop="handleBatch('remove')"
+            >
               {{ $t(`m.userOrOrg['批量移出用户组']`) }}
             </bk-button>
           </bk-popover>
@@ -61,6 +65,8 @@
                   @on-limit-change="handleLimitChange(...arguments, item)"
                   @on-selected-group="handleSelectedGroup"
                   @on-remove-group="handleRemoveGroup"
+                  @on-delete="handleSingleDelete(...arguments, item)"
+                  @on-delete-instances="handleDeleteInstances"
                   @on-refresh="handleEmptyRefresh(...arguments, item)"
                 />
               </div>
@@ -80,23 +86,38 @@
         </div>
       </div>
     </bk-sideslider>
+
+    <BatchOperateSlider
+      :slider-width="960"
+      :is-batch="false"
+      :show.sync="isShowBatchSlider"
+      :cur-slider-name="curSliderName"
+      :user-list="userList"
+      :depart-list="departList"
+      :title="batchSliderTitle"
+      :group-data="curDetailData"
+      :group-list="curSelectedGroup"
+      @on-submit="handleOperateGroupSubmit"
+    />
   </div>
 </template>
 
 <script>
   import { mapGetters } from 'vuex';
   import { cloneDeep } from 'lodash';
-  import { formatCodeData } from '@/common/util';
+  import { formatCodeData, sleep } from '@/common/util';
   import { bus } from '@/common/bus';
   import PermPolicy from '@/model/my-perm-policy';
   import RenderTemplateItem from './render-template-item.vue';
   import MemberPermTable from './member-perm-table.vue';
+  import BatchOperateSlider from '@/views/user-org-perm/components/batch-operate-slider.vue';
   import getActionsMixin from '../common/js/getActionsMixin';
 
   export default {
     components: {
       RenderTemplateItem,
-      MemberPermTable
+      MemberPermTable,
+      BatchOperateSlider
     },
     mixins: [getActionsMixin],
     props: {
@@ -111,7 +132,12 @@
     data () {
       return {
         isShowSideSlider: false,
+        isShowBatchSlider: false,
         isOnlyPerm: false,
+        readOnly: false,
+        curSliderName: '',
+        batchSliderTitle: '',
+        removeGroupTitle: '',
         width: 960,
         initMemberTempPermList: [
           {
@@ -211,10 +237,16 @@
           }
         ],
         memberTempPermList: [],
+        userList: [],
+        departList: [],
         curSelectedGroup: [],
         curSearchParams: {},
         permData: {
           hasPerm: false
+        },
+        groupAttributes: {
+          source_from_role: false,
+          source_type: ''
         },
         emptyPermData: {
           type: 'empty',
@@ -226,8 +258,24 @@
     },
     computed: {
       ...mapGetters(['externalSystemId']),
-      isRemoveDisabled () {
-        return !this.curSelectedGroup.length;
+      isNoBatchRemove () {
+        return () => {
+          const hasData = this.curSelectedGroup.length > 0;
+          if (!hasData) {
+            this.removeGroupTitle = this.$t(`m.userOrOrg['请先勾选用户组权限']`);
+          }
+          if (hasData) {
+            const list = this.curSelectedGroup.filter((item) =>
+              item.role_members.length === 1
+              && item.attributes
+              && item.attributes.source_from_role
+            );
+            const result = this.curSelectedGroup.length === list.length;
+            this.removeGroupTitle = result ? this.$t(`m.userOrOrg['已选择的用户组权限为不可移出的管理员组']`) : '';
+            return result;
+          }
+          return !hasData;
+        };
       },
       formatExtCls () {
         return (index) => {
@@ -245,7 +293,7 @@
           this.isShowSideSlider = !!value;
           if (value) {
             console.log(this.curDetailData);
-            this.fetchInitData();
+            await this.fetchInitData();
           }
         },
         immediate: true
@@ -513,7 +561,7 @@
           const { code, data } = await this.$store.dispatch('perm/getPoliciesSearch', params);
           const result = data || [];
           if (result.length) {
-            await this.fetchActions();
+            await this.fetchActions(this.curDetailData);
             curData.list = data.map((item) => {
               const relatedEnvironments = this.linearActionList.find((sub) => sub.id === item.id);
               item.related_environments = relatedEnvironments ? relatedEnvironments.related_environments : [];
@@ -564,12 +612,79 @@
         }
       },
 
-      handleExpanded () {
+      handleBatch (payload) {
+        this.curSliderName = payload;
+        this.handleGetMembers();
+        const typeMap = {
+          remove: () => {
+            if (!this.isNoBatchRemove()) {
+              this.batchSliderTitle = this.$t(`m.userOrOrg['批量移出用户组']`);
+              this.isShowBatchSlider = true;
+              this.width = 1160;
+            }
+          }
+        };
+        typeMap[payload]();
+      },
 
+      handleExpanded (value, payload) {
+        if (!value) {
+          this.handleSelectedGroup([]);
+        }
+        payload.loading = value;
+        sleep(300).then(() => {
+          payload.loading = false;
+        });
+      },
+
+      async handleSingleDelete (payload) {
+        console.log(payload.ids);
+        await this.handleDeleteUserPolicy({
+          systemId: this.curDetailData.system_id,
+          policyIds: payload.ids
+        });
+      },
+
+      async handleDeleteInstances () {
+        await this.fetchCustomPerm();
+      },
+
+      async handleDeleteUserPolicy (params = {}) {
+        try {
+          await this.$store.dispatch('permApply/deletePerm', params);
+          this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
+          await this.fetchCustomPerm();
+        } catch (e) {
+          this.messageAdvancedError(e);
+        }
+      },
+
+      handleOperateGroupSubmit () {
+        this.curSelectedGroup = [];
+        this.memberTempPermList[0].expanded = true;
+        this.memberTempPermList[0].pagination = Object.assign(this.memberTempPermList[0].pagination, {
+          current: 1
+        });
+        this.fetchUserGroup();
+      },
+
+      handleGetMembers () {
+        const userList = [];
+        const departList = [];
+        const typeMap = {
+          user: () => {
+            userList.push(this.curDetailData);
+            this.userList = [...userList];
+          },
+          department: () => {
+            departList.push(this.curDetailData);
+            this.departList = [...departList];
+          }
+        };
+        typeMap[this.curDetailData.type]();
       },
 
       handleSelectedGroup (payload) {
-        this.$emit('on-selected-group', payload);
         this.curSelectedGroup = [...payload];
       },
 
@@ -577,7 +692,6 @@
         const curData = this.memberTempPermList.find((item) => item.id === payload.mode);
         this.formatPaginationData(curData, current, curData.pagination.limit);
         this.curSelectedGroup = [];
-        this.$emit('on-selected-group', []);
       },
 
       handleRemoveGroup (payload) {
@@ -587,28 +701,6 @@
       handleCancel () {
         this.resetData();
         this.$emit('update:show', false);
-      },
-      
-      formatPaginationData (payload, current, limit) {
-        const curData = this.memberTempPermList.find((item) => item.id === payload.id);
-        if (curData) {
-          curData.pagination = Object.assign(curData, { current, limit });
-          const typeMap = {
-            personalOrDepartPerm: async () => {
-              await this.fetchUserGroup();
-            },
-            departPerm: async () => {
-              await this.fetchDepartGroup();
-            },
-            userTempPerm: async () => {
-              await this.fetchPermByTemp();
-            },
-            departTempPerm: async () => {
-              await this.fetchDepartPermByTemp();
-            }
-          };
-          return typeMap[curData.id]();
-        }
       },
 
       handlePageChange (current, payload) {
@@ -634,6 +726,43 @@
       handleDetailRefresh () {
         this.resetPagination();
         this.fetchInitData();
+      },
+
+      formatPaginationData (payload, current, limit) {
+        const curData = this.memberTempPermList.find((item) => item.id === payload.id);
+        if (curData) {
+          curData.pagination = Object.assign(curData, { current, limit });
+          const typeMap = {
+            personalOrDepartPerm: async () => {
+              await this.fetchUserGroup();
+            },
+            departPerm: async () => {
+              await this.fetchDepartGroup();
+            },
+            userTempPerm: async () => {
+              await this.fetchPermByTemp();
+            },
+            departTempPerm: async () => {
+              await this.fetchDepartPermByTemp();
+            }
+          };
+          return typeMap[curData.id]();
+        }
+      },
+
+      formatRoleMembers (payload) {
+        if (payload && payload.length) {
+          const hasName = payload.some((v) => v.username);
+          if (!hasName) {
+            payload = payload.map(v => {
+              return {
+                username: v,
+                readonly: false
+              };
+            });
+          }
+        }
+        return payload || [];
       },
 
       resetPagination (limit = 10) {

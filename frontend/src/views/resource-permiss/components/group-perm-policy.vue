@@ -48,6 +48,7 @@
                   mode="detail"
                   :ref="`${index}_${subIndex}_resourceTableRef`"
                   :list="subItem.tableData"
+                  :cur-detail-data="curDetailData"
                   :group-id="groupId"
                   :template-id="subItem.id"
                   :is-loading="subItem.loading"
@@ -61,6 +62,7 @@
                   :is-show-delete-action="true"
                   :is-show-detail-action="false"
                   @on-delete="handleSingleDelete(...arguments, item)"
+                  @on-delete-instances="handleDeleteInstances"
                 />
               </div>
             </RenderTemplateItem>
@@ -578,6 +580,10 @@
             ids: payload.ids ? payload.ids.join(',') : payload.policy_id
           }
         }, item, payload, false);
+      },
+
+      async handleDeleteInstances () {
+        await this.fetchInitData(false);
       },
 
       handleSearchSystemAction (payload, result) {

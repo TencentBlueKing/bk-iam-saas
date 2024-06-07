@@ -127,7 +127,7 @@
     >
       <div slot="header" class="flex-between instance-detail-slider">
         <span class="single-hide instance-detail-slider-title">{{ sideSliderTitle }}</span>
-        <div class="action-wrapper" v-if="canOperate">
+        <div class="action-wrapper" v-if="isCanOperate">
           <bk-button
             v-if="isBatchDelete"
             text
@@ -145,7 +145,7 @@
               trigger="click"
               :disabled="disabled"
               :cancel-text="$t(`m.common['取消-dialog']`)"
-              @confirm="handleDeletePerm"
+              @confirm="handleDeleteInstances"
             >
               <div slot="content" class="popover-custom-content">
                 {{ $t(`m.dialog['确认删除内容？']`, { value: $t(`m.dialog['删除实例权限']`) }) }}
@@ -267,13 +267,17 @@
         default: () => {
           return {};
         }
+      },
+      curDetailData: {
+        type: Object
       }
     },
     data () {
       return {
         disabled: true,
-        batchDisabled: false,
         canOperate: true,
+        batchDisabled: false,
+        isSamePolicy: false,
         isBatchDelete: true,
         isShowSideSlider: false,
         isShowPreviewDialog: false,
@@ -333,6 +337,13 @@
           }
         };
         return langMap[this.curLanguageIsCn]();
+      },
+      isCanOperate () {
+        // 如果是资源权限管理操作查询不是同一个操作，则不能删除实例
+        if (['resourcePermiss'].includes(this.$route.name)) {
+          return this.isSamePolicy;
+        }
+        return this.canOperate;
       }
     },
     watch: {
@@ -365,7 +376,7 @@
           ? 960 : Math.ceil(window.innerWidth * 0.67 - 7);
       },
 
-      async handleDeletePerm (payload) {
+      async handleDeleteInstances (payload) {
         const data = this.$refs.detailComRef.handleGetValue();
         const { ids, condition, type, resource_group_id } = data;
         const params = {
@@ -382,9 +393,9 @@
           await this.$store.dispatch('permApply/updatePerm', params);
           window.changeAlert = false;
           this.isShowSideSlider = false;
-          this.resetDataAfterClose();
           this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
-          this.handleRefreshData();
+          this.$emit('on-delete-instances');
+          this.resetDataAfterClose();
         } catch (e) {
           this.messageAdvancedError(e);
         } finally {
@@ -503,6 +514,8 @@
         const params = [];
         this.curId = payload.id;
         this.curPolicyId = payload.policy_id;
+        // 如果不是同一个操作，则只有查看实例权限
+        this.isSamePolicy = this.curId === this.curDetailData.action_id;
         if (payload.resource_groups.length > 0) {
           payload.resource_groups.forEach((groupItem) => {
             if (groupItem.related_resource_types.length > 0) {
@@ -560,6 +573,7 @@
       },
 
       handleCancelDelete () {
+        window.changeAlert = false;
         this.isBatchDelete = true;
       },
 

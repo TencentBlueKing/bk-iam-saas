@@ -182,7 +182,7 @@
           limit: 10
         },
         formData: {
-          name: ''
+          name: 'liu17'
         },
         emptyData: {
           type: 'empty',
@@ -289,7 +289,7 @@
             const result = this.getDataByPage();
             this.tableList.splice(0, this.tableList.length, ...result);
             this.emptyData.tipType = 'search';
-            this.emptyData = formatCodeData(res.code, this.emptyData, this.tableListBack.length === 0);
+            this.emptyData = formatCodeData(res.code, this.emptyData, this.tableList.length === 0);
           }
         } catch (e) {
           this.tableList = [];

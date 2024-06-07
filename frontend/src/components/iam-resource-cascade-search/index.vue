@@ -591,7 +591,6 @@
         this.systemIdError = false;
         this.handleManualInput(isTagInput);
         let isSearch = this.applyGroupData.system_id || Object.keys(this.searchParams).length > 0;
-        console.log(isSearch);
         // 处理搜索框没有生成tag，下拉框也没有选择任务数据，但实际有输入内容情况
         let isNoTag = isTagInput && this.searchList.length < 1 && !this.applyGroupData.system_id;
         // 处理自定义搜索slot，searchList为空情况
