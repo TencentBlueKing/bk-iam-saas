@@ -192,10 +192,6 @@
         this.$emit('toIsExpanded', this.isExpanded);
       },
 
-      handleSave () {
-        this.$emit('on-save');
-      },
-
       handleCancel () {
         this.isEditMode = false;
         this.$emit('on-cancel');
@@ -278,6 +274,9 @@
           cursor: pointer;
         }
       }
+    }
+    &.no-perm-item-wrapper {
+      display: none;
     }
   }
 </style>

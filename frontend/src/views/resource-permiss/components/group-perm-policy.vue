@@ -39,7 +39,6 @@
               :expanded.sync="subItem.expanded"
               :external-delete="['template'].includes(subItem.mode_type)"
               @on-delete="handleDelete(item, subItem)"
-              @on-save="handleSave(item, index, subItem, subIndex)"
               @on-edit="handleEdit(subItem)"
               @on-cancel="handleCancel(subItem)"
               @on-expanded="handleTemplateExpanded(...arguments, subItem, subIndex)">

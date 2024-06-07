@@ -14,7 +14,7 @@
           <span class="action-name">{{ row.name }}</span>
         </template>
       </bk-table-column>
-      <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)" :width="300">
+      <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)" :min-width="300">
         <template slot-scope="{ row }">
           <template v-if="!row.isEmpty">
             <div v-for="_ in row.resource_groups" :key="_.id">

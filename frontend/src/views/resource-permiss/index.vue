@@ -68,13 +68,13 @@
         </div>
       </div>
     </IamResourceCascadeSearch>
-
     <bk-table
       v-if="!tableLoading"
       v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
       size="small"
       ext-cls="system-access-table"
       :data="tableList"
+      :max-height="tableHeight"
       :class="{ 'set-border': tableLoading }"
       :pagination="pagination"
       @page-change="handlePageChange"
@@ -119,7 +119,7 @@
 <script>
   import { mapGetters } from 'vuex';
   import { cloneDeep } from 'lodash';
-  import { formatCodeData } from '@/common/util';
+  import { formatCodeData, getWindowHeight } from '@/common/util';
   import IamResourceCascadeSearch from '@/components/iam-resource-cascade-search';
   import GroupDetailSlider from './components/group-detail-slider.vue';
   import MemberPermDetailSlider from './components/member-perm-detail-slider.vue';
@@ -153,6 +153,7 @@
         curResIndex: -1,
         groupIndex: -1,
         gridCount: 4,
+        tableHeight: getWindowHeight() - 260,
         params: {},
         curDetailData: {},
         curSystemAction: {},
@@ -224,6 +225,9 @@
     mounted () {
       this.formatFormItemWidth();
       window.addEventListener('resize', this.formatFormItemWidth);
+      window.addEventListener('resize', () => {
+        this.tableHeight = getWindowHeight() - 260;
+      });
       this.$once('hook:beforeDestroy', () => {
         window.removeEventListener('resize', this.formatFormItemWidth);
       });
@@ -281,11 +285,11 @@
             }
           } else {
             this.tableListBack = res.data || [];
+            this.pagination.count = this.tableListBack.length;
             const result = this.getDataByPage();
             this.tableList.splice(0, this.tableList.length, ...result);
-            this.pagination.count = this.tableList.length;
             this.emptyData.tipType = 'search';
-            this.emptyData = formatCodeData(res.code, this.emptyData, this.tableList.length === 0);
+            this.emptyData = formatCodeData(res.code, this.emptyData, this.tableListBack.length === 0);
           }
         } catch (e) {
           this.tableList = [];
@@ -380,6 +384,8 @@
         if (!this.isSystemDisabled) {
           this.curSearchParams.systemId = '';
         }
+        delete this.curSearchParams.action_id;
+        delete this.curSearchParams.resource_instances;
         this.limit = 1000;
         this.tableList = [];
         this.formData = Object.assign(this.formData, { name: '' });

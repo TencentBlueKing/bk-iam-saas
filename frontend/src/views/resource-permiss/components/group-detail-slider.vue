@@ -10,7 +10,7 @@
       <div slot="header" class="resource-perm-group-detail-side-header">
         <span>{{ $t(`m.resourcePermiss['用户组详情']`) }}</span>
         <span class="custom-header-divider">|</span>
-        <span class="single-hide custom-header-name" :title="curDetailData.name">
+        <span class="single-hide custom-header-name" v-bk-tooltips="{ content: curDetailData.name }">
           {{ curDetailData.name }}
         </span>
       </div>
