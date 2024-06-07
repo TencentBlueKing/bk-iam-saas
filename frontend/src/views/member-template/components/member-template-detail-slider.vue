@@ -49,6 +49,7 @@
 </template>
 
 <script>
+  import { bus } from '@/common/bus';
   import AssociateUserGroup from './associate-user-group.vue';
   import BasicInfoDetail from './basic-info-detail.vue';
   import TemplateMemberTable from './template-member-table.vue';
@@ -159,6 +160,7 @@
       handleCancel () {
         this.resetData();
         this.$emit('update:show', false);
+        bus.$emit('on-drawer-side', { width: 960 });
       },
 
       resetData () {

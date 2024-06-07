@@ -1444,6 +1444,7 @@ export const m = {
         '用户组权限': 'User group perm',
         '操作模板': 'Action template',
         '操作权限': 'Action permission',
+        '加入用户组时间': 'Join user group time',
         '移除模板': 'Remove template',
         '搜索 系统名、操作名': 'Search for system name and action name',
         '搜索 用户、组织名': 'Search for user and organization names',

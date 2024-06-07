@@ -307,9 +307,10 @@
       handleViewDetail (payload) {
         this.curDetailData = {
           ...payload,
+          ...this.curSearchParams,
           ...{
-            system_id: this.curSearchParams.system_id,
-            system_name: this.curSystemAction['system_id'] ? this.curSystemAction['system_id'].label : ''
+            system_name: this.curSystemAction['system_id'] ? this.curSystemAction['system_id'].label : '',
+            resource_instances: this.curSearchParams.resource_instances || []
           }
         };
         const { type } = payload;
@@ -344,7 +345,7 @@
           },
           resourcePermiss: () => {
             this.tableList = this.getDataByPage();
-            this.pagination.count = this.tableList.length;
+            this.pagination.count = this.tableListBack.length;
             this.emptyData = formatCodeData(0, Object.assign(this.emptyData, { tipType: 'search' }));
           }
         };
@@ -382,7 +383,7 @@
       handleReset () {
         this.searchType = 'resource_instance';
         if (!this.isSystemDisabled) {
-          this.curSearchParams.systemId = '';
+          this.curSearchParams.system_id = '';
         }
         delete this.curSearchParams.action_id;
         delete this.curSearchParams.resource_instances;

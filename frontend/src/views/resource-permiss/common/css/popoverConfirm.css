@@ -36,6 +36,7 @@
           margin-bottom: 8px;
         }
         .delete-tips-content {
+          padding-bottom: 16px;
           .related-perm-name {
             margin-top: 8px;
             .warn {

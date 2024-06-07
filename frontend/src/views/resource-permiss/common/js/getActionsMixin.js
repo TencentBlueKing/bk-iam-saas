@@ -38,7 +38,7 @@ export default {
     // 获取系统对应的自定义操作
     async fetchActions (item) {
       const params = {
-        system_id: item.system.id,
+        system_id: item.system_id || item.system.id,
         user_id: this.user.username
       };
       if (this.externalSystemId) {
