@@ -174,7 +174,7 @@
                 </div>
               </template>
               <template v-else>
-                <span class="pl20" style="line-height: 62px;">{{ $t(`m.common['无需关联实例']`) }}</span>
+                <span class="condition-table-cell empty-text">{{ $t(`m.common['无需关联实例']`) }}</span>
               </template>
             </template>
           </bk-table-column>
@@ -391,7 +391,7 @@
       :width="640"
       quick-close
       @update:isShow="handleResourceCancel"
-      ext-cls="effect-conditon-side"
+      ext-cls="effect-condition-side"
     >
       <div slot="content">
         <EffectCondition
@@ -1031,7 +1031,7 @@
       },
 
       handleEnvironmentsViewResource (payload, data) {
-        this.environmentsSideSliderData = payload.environments;
+        this.environmentsSideSliderData = payload.environments || [];
         this.environmentsSideSliderTitle = this.$t(`m.info['关联侧边栏操作生效条件']`, { value: `${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}` });
         this.isShowEnvironmentsSideSlider = true;
       },
@@ -1249,31 +1249,64 @@
 
 <style lang="postcss" scoped>
 @import "@/views/user-org-perm/user-org-perm.css";
-/deep/ .member-custom-perm-table {
-  .iam-perm-table-cell-cls {
-    .cell {
-      padding: 0px !important;
-      height: 100%;
+.my-perm-group-perm {
+  /deep/ .user-org-perm-table {
+    .bk-table-fixed-header-wrapper {
+      th {
+        &:first-child {
+          .cell {
+            padding-left: 32px;
+          }
+        }
+      }
     }
-    .condition-table-cell{
-      height: 100%;
-      flex-flow: column;
+    .bk-table-body {
+      tr {
+        &:hover {
+          background-color: transparent;
+          & > td {
+            background-color: transparent;
+          }
+        }
+      }
+      td:first-child .cell,
+      th:first-child .cell {
+        padding-left: 32px;
+      }
+    }
+  }
+  /deep/ .member-custom-perm-table {
+    .iam-perm-table-cell-cls {
+      .cell {
+        padding: 0px !important;
+        height: 100%;
+      }
+      .condition-table-cell {
+        height: 100%;
+        flex-flow: column;
+        display: flex;
+        justify-content: center;
+      }
+      .effect-condition-side {
+        .text{
+          font-size: 14px;
+          color: #63656e;
+        }
+      }
+      .empty-text {
+        padding: 0 15px;
+      }
+    }
+    .operate-column {
       display: flex;
-      justify-content: center;
+      align-items: center;
+      .operate-column-btn  {
+        margin-right: 12px;
+      }
     }
-    .empty-text {
-      padding: 0 20px;
+    .bk-table-pagination-wrapper {
+      display: none;
     }
-  }
-  .operate-column {
-    display: flex;
-    align-items: center;
-    .operate-column-btn  {
-      margin-right: 12px;
-    }
-  }
-  .bk-table-pagination-wrapper {
-    display: none;
   }
 }
 </style>

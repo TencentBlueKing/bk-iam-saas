@@ -11,10 +11,9 @@
       :is-full-screen="true"
       :is-custom-search="true"
       :is-show-resource-type="false"
-      :is-system-disabled="isSystemDisabled"
       :form-item-margin="12"
       :nav-stick-padding="24"
-      @on-select-system="handleSelectSystemAction"
+      @on-select-action="handleSelectAction"
       @on-remote-table="handleRemoteTable"
       @on-refresh-table="handleRefreshTable"
     >
@@ -54,12 +53,12 @@
           <bk-popover
             v-if="isShowExport"
             :content="$t(`m.resourcePermiss['导出需提供系统和操作名']`)"
-            :disabled="!isExportDisabled()"
+            :disabled="!isDisabled()"
           >
             <bk-button
               theme="default"
               class="operate-btn"
-              :disabled="isExportDisabled()"
+              :disabled="isDisabled()"
               @click="handleSearchAndExport(true)"
             >
               {{ $t(`m.common['导出']`) }}
@@ -182,7 +181,7 @@
           limit: 10
         },
         formData: {
-          name: 'liu17'
+          name: ''
         },
         emptyData: {
           type: 'empty',
@@ -201,14 +200,11 @@
       };
     },
     computed: {
-      ...mapGetters(['externalSystemId', 'user', 'index', 'navStick']),
+      ...mapGetters(['externalSystemId', 'user', 'navStick']),
       isShowExport () {
         return ['resourcePermiss'].includes(this.$route.name);
       },
-      isSystemDisabled () {
-        return this.index === 1 && ['system_manager'].includes(this.user.role.type);
-      },
-      isExportDisabled () {
+      isDisabled () {
         return () => {
           return !this.curSearchParams.action_id;
         };
@@ -242,7 +238,7 @@
         this.isSearchPerm = emptyData.tipType === 'search';
         this.curSearchParams = cloneDeep(params);
         this.curEmptyData = cloneDeep(emptyData);
-        if (this.isExportDisabled()) {
+        if (this.isDisabled()) {
           this.handleReset();
           return;
         }
@@ -261,6 +257,10 @@
 
       // 查询和导入
       async handleSearchAndExport (isExport = false) {
+        if (this.isDisabled()) {
+          this.handleReset();
+          return;
+        }
         this.tableLoading = !isExport;
         const params = {
           ...this.curSearchParams,
@@ -284,9 +284,9 @@
               this.messageSuccess(this.$t(`m.resourcePermiss['导出成功！']`), 3000);
             }
           } else {
+            console.log(res.data);
             this.tableListBack = res.data || [];
-            this.pagination.count = this.tableListBack.length;
-            const result = this.getDataByPage();
+            const result = await this.getDataByPage();
             this.tableList.splice(0, this.tableList.length, ...result);
             this.emptyData.tipType = 'search';
             this.emptyData = formatCodeData(res.code, this.emptyData, this.tableList.length === 0);
@@ -301,19 +301,30 @@
       },
 
       async handleSearchTable () {
+        if (this.isDisabled()) {
+          return;
+        }
         this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleSearchUserGroup(true, true);
       },
 
+      handleSelectAction (payload) {
+        this.curSearchParams = Object.assign(this.curSearchParams, payload);
+        this.handleSearchTable();
+      },
+
       handleViewDetail (payload) {
+        const { id, name, type } = payload;
         this.curDetailData = {
-          ...payload,
           ...this.curSearchParams,
           ...{
             system_name: this.curSystemAction['system_id'] ? this.curSystemAction['system_id'].label : '',
-            resource_instances: this.curSearchParams.resource_instances || []
+            resource_instances: this.curSearchParams.resource_instances || [],
+            id,
+            name,
+            type
           }
         };
-        const { type } = payload;
+        console.log(this.curDetailData);
         const typeMap = {
           group: () => {
             this.isShowGroupDetailSlider = true;
@@ -324,25 +335,10 @@
         };
         return typeMap[type]();
       },
-
-      handleSelectSystemAction (payload) {
-        this.curSystemAction = payload;
-        if (payload && payload.action_id) {
-          this.curSearchParams = Object.assign(this.curSearchParams, {
-            system_id: payload.system_id.value,
-            action_id: payload.action_id.value
-          });
-          this.handleSearchAndExport(false);
-        }
-      },
             
       // 搜索
       handleSearch () {
         const routeMap = {
-          resourcePermManage: async () => {
-            this.pagination = Object.assign(this.pagination, { current: 1, limit: 10 });
-            await this.handleSearchAndExport();
-          },
           resourcePermiss: () => {
             this.tableList = this.getDataByPage();
             this.pagination.count = this.tableListBack.length;
@@ -382,9 +378,6 @@
       // 重置
       handleReset () {
         this.searchType = 'resource_instance';
-        if (!this.isSystemDisabled) {
-          this.curSearchParams.system_id = '';
-        }
         delete this.curSearchParams.action_id;
         delete this.curSearchParams.resource_instances;
         this.limit = 1000;
@@ -397,7 +390,9 @@
           tip: this.$t(`m.resourcePermiss['查询必须选择“系统”和“操作名”']`),
           tipType: 'noPerm'
         };
-        this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleClearSearch();
+        this.$nextTick(() => {
+          this.$refs.iamResourceSearchRef.handleClearSearchField();
+        });
       },
 
       getDataByPage (page) {
@@ -423,6 +418,8 @@
         if (endIndex > tableList.length) {
           endIndex = tableList.length;
         }
+        this.pagination.count = tableList.length;
+        console.log(tableList, startIndex, endIndex);
         return tableList.slice(startIndex, endIndex);
       },
 

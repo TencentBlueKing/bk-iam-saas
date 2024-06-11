@@ -281,10 +281,6 @@
         type: Array,
         default: () => []
       },
-      isSystemDisabled: {
-        type: Boolean,
-        default: () => false
-      },
       isShowResourceType: {
         type: Boolean,
         default: () => true
@@ -418,7 +414,7 @@
       };
     },
     computed: {
-      ...mapGetters(['externalSystemsLayout', 'externalSystemId', 'navStick']),
+      ...mapGetters(['externalSystemsLayout', 'externalSystemId', 'user', 'navStick', 'index']),
       condition () {
           if (this.curResIndex === -1 || this.groupIndex === -1) {
               return [];
@@ -445,6 +441,9 @@
       // 不需要根据环境变量处理的页面
       isShowResourceSearch () {
         return ['resourcePermiss'].includes(this.$route.name);
+      },
+      isSystemDisabled () {
+        return this.index === 1 && ['system_manager'].includes(this.user.role.type) && this.isShowResourceSearch;
       }
     },
     watch: {
@@ -488,7 +487,8 @@
               };
             }
           }
-          // 用于判断自定义slot场景下，同步更新选中值
+          console.log(params, this.actionIdError);
+          // 用于判断自定义slot场景下，同步更新选中值, 适用于缩略tag场景
           this.$emit('on-select-system', params);
         },
         deep: true
@@ -565,7 +565,7 @@
           this.applyGroupData.system_id = this.systemSelectList[0].id;
         }
         if (isSearch) {
-          await this.handleSearchUserGroup(false, false);
+          await this.handleCascadeChange();
         }
       },
 
@@ -746,7 +746,12 @@
         this.emptyData.tipType = '';
         this.resourceInstances = [];
         this.resetPagination();
-        this.handleSearchUserGroup(false, false);
+        // 兼容不需要调用接口业务场景
+        if (['resourcePermiss'].includes(this.$route.name)) {
+          this.$emit('on-refresh-table');
+        } else {
+          this.handleSearchUserGroup(false, false);
+        }
       },
 
       handleResourceTypeChange (index) {
@@ -786,8 +791,8 @@
               if (item.related_resource_types.length && item.related_resource_types[0].system_id) {
                 this.$set(item, 'related_resource_types_list', _.cloneDeep(item.related_resource_types));
                 this.curResourceTypeList = _.cloneDeep(item.related_resource_types);
-                // 默认选中只有一条资源类型数据，改变当前索引值
-                if (item.related_resource_types.length === 1) {
+                // 默认选中只有一条资源类型数据，改变当前索引值且兼容不需要展示资源类型的页面
+                if (item.related_resource_types.length === 1 || ['resourcePermiss'].includes(this.$route.name)) {
                   this.curResourceData.type = item.related_resource_types[0].type;
                   this.handleResourceTypeChange(0);
                 }
@@ -809,6 +814,8 @@
             this.handleResetResourceData();
           }
         }
+        // 用于级联搜索首次加载需要调用接口场景
+        this.$emit('on-select-action', this.applyGroupData);
       },
             
       handleFormatRecursion (list) {
@@ -1057,6 +1064,19 @@
         this.resourceInstanceError = false;
         this.resourceInstances = [];
         this.resetLocationHref();
+      },
+
+      // 处理配置只需要校验系统和操作名为必填项的场景
+      handleClearSearchField () {
+        if (!this.isSystemDisabled) {
+          this.applyGroupData.system_id = '';
+          this.systemIdError = true;
+        }
+        this.applyGroupData.action_id = '';
+        this.actionIdError = true;
+        this.curResourceData = Object.assign({}, {
+          type: ''
+        });
       }
     }
   };
@@ -1097,6 +1117,7 @@
           .error-tips {
             position: absolute;
             line-height: 16px;
+            margin-bottom: 16px;
             font-size: 10px;
             color: #ea3636;
           }
