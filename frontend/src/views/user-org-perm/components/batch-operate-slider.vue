@@ -413,6 +413,7 @@
         this.expiredAtUse = 15552000;
         this.isShowGroupError = false;
         this.isShowExpiredError = false;
+        bus.$emit('on-drawer-side', { width: 960 });
       }
     }
   };
