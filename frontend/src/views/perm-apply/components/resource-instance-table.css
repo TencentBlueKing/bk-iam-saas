@@ -88,6 +88,11 @@
                         margin-top: 0px;
                         padding-top: 20px;
                     }
+                    .recommend-action-name-empty {
+                        margin-top: 0;
+                        height: auto;
+                        padding-top: 0;
+                    }
                     .empty-text {
                         padding-top: 0px;
                     }

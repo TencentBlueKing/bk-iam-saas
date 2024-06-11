@@ -272,7 +272,7 @@ class SubjectTemplateBiz:
         params = [subject.type, subject.id]
         if id:
             where_conditions.append("a.id = %s")
-            params.append(id)
+            params.append(id)  # type: ignore
         if name:
             where_conditions.append("a.name LIKE %s")
             params.append("%" + name + "%")
@@ -283,7 +283,7 @@ class SubjectTemplateBiz:
             where_conditions.append("a.hidden = 0")
         if group_ids:
             where_conditions.append("a.id IN %s")
-            params.append(tuple(group_ids))
+            params.append(tuple(group_ids))  # type: ignore
         if system_id:
             where_conditions.append("a.source_system_id = %s")
             params.append(system_id)
@@ -397,7 +397,7 @@ class SubjectTemplateBiz:
         params = [subject.type, subject.id]
         if id:
             where_conditions.append("a.id = %s")
-            params.append(id)
+            params.append(id)  # type: ignore
         if name:
             where_conditions.append("a.name LIKE %s")
             params.append("%" + name + "%")
@@ -408,12 +408,12 @@ class SubjectTemplateBiz:
             where_conditions.append("a.hidden = 0")
         if group_ids:
             where_conditions.append("a.id IN %s")
-            params.append(tuple(group_ids))
+            params.append(tuple(group_ids))  # type: ignore
         if system_id:
             where_conditions.append("a.source_system_id = %s")
             params.append(system_id)
 
-        params.extend([limit, offset])
+        params.extend([limit, offset])  # type: ignore
 
         sql_query = """
             SELECT

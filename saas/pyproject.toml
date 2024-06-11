@@ -42,6 +42,12 @@ follow_imports="skip"
 strict_optional=true
 pretty=true
 show_error_codes=true
+exclude='''(?x)(
+    ^.*/config/.*|
+    .*/settings\.py|
+    .*/tests/unittest_settings\.py|
+    .*/backend/tracing/.*
+)'''
 
 [[tool.mypy.overrides]]
 module = [

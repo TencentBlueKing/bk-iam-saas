@@ -1279,6 +1279,12 @@ class PolicyBeanList(PolicyBeanListMixin):
                 pass
         return PolicyBeanList(self.system_id, subtraction)
 
+    def contains_policy(self, policy: PolicyBean):
+        """是否包含策略"""
+        p = self.get(policy.action_id)
+
+        return p and p.has_resource_group_list(policy.resource_groups)
+
     def to_svc_policies(self):
         return parse_obj_as(List[Policy], self.policies)
 
@@ -1471,7 +1477,7 @@ class PolicyQueryBiz:
 
         # 查询saas policy id
         all_action_id = {p.action_id for p in backend_policies}
-        action_id_dict = self.svc.get_action_id_dict(subject, all_action_id)
+        action_id_dict = self.svc.get_action_id_dict(subject, list(all_action_id))
 
         # 取策略详情
         system_ids = defaultdict(list)
