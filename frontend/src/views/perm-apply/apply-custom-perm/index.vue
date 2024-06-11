@@ -2696,6 +2696,8 @@
         this.sysAndtid = false;
         this.aggregationMap = [];
         this.aggregations = [];
+        this.tableData = [];
+        this.tableDataBackup = [];
         this.aggregationsBackup = [];
         this.aggregationsTableData = [];
         this.actionSearchValue = '';
