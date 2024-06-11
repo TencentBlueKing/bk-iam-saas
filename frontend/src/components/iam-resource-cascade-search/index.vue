@@ -487,7 +487,6 @@
               };
             }
           }
-          console.log(params, this.actionIdError);
           // 用于判断自定义slot场景下，同步更新选中值, 适用于缩略tag场景
           this.$emit('on-select-system', params);
         },

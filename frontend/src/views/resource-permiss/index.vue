@@ -252,15 +252,15 @@
         this.pagination.current = 1;
         this.isSearchPerm = false;
         this.curSearchParams = {};
+        if (this.isDisabled()) {
+          this.handleReset();
+          return;
+        }
         await this.handleSearchAndExport(false);
       },
 
       // 查询和导入
       async handleSearchAndExport (isExport = false) {
-        if (this.isDisabled()) {
-          this.handleReset();
-          return;
-        }
         this.tableLoading = !isExport;
         const params = {
           ...this.curSearchParams,
@@ -284,7 +284,6 @@
               this.messageSuccess(this.$t(`m.resourcePermiss['导出成功！']`), 3000);
             }
           } else {
-            console.log(res.data);
             this.tableListBack = res.data || [];
             const result = await this.getDataByPage();
             this.tableList.splice(0, this.tableList.length, ...result);
@@ -324,7 +323,6 @@
             type
           }
         };
-        console.log(this.curDetailData);
         const typeMap = {
           group: () => {
             this.isShowGroupDetailSlider = true;
@@ -341,7 +339,6 @@
         const routeMap = {
           resourcePermiss: () => {
             this.tableList = this.getDataByPage();
-            this.pagination.count = this.tableListBack.length;
             this.emptyData = formatCodeData(0, Object.assign(this.emptyData, { tipType: 'search' }));
           }
         };
@@ -419,7 +416,6 @@
           endIndex = tableList.length;
         }
         this.pagination.count = tableList.length;
-        console.log(tableList, startIndex, endIndex);
         return tableList.slice(startIndex, endIndex);
       },
 
