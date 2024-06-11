@@ -181,7 +181,7 @@
           limit: 10
         },
         formData: {
-          name: 'LJ'
+          name: ''
         },
         emptyData: {
           type: 'empty',
@@ -350,7 +350,6 @@
       },
 
       handleEmptyClear () {
-        console.log(45555);
         this.handleReset();
       },
 
@@ -380,24 +379,17 @@
         delete this.curSearchParams.resource_instances;
         this.limit = 1000;
         this.tableList = [];
-        this.tableListBack = [];
         this.formData = Object.assign(this.formData, { name: '' });
         this.pagination = Object.assign(this.pagination, { current: 1, limit: 10, showTotalCount: true });
-        if (['super_manager'].includes(this.user.role.type)) {
-          delete this.curSearchParams.system_id;
-        }
-        this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.handleClearSearchField();
-        if (this.curSearchParams.system_id || this.curSearchParams.action_id || this.formData.name) {
-          this.emptyData.tipType = 'search';
-          this.emptyData = formatCodeData(0, this.emptyData, true);
-          return;
-        }
         this.emptyData = {
           type: 'empty',
           text: '暂无数据',
           tip: this.$t(`m.resourcePermiss['查询必须选择“系统”和“操作名”']`),
           tipType: 'noPerm'
         };
+        this.$nextTick(() => {
+          this.$refs.iamResourceSearchRef.handleClearSearchField();
+        });
       },
 
       getDataByPage (page) {
