@@ -341,7 +341,7 @@
       isCanOperate () {
         // 如果是资源权限管理操作查询不是同一个操作，则不能删除实例
         if (['resourcePermiss'].includes(this.$route.name)) {
-          return this.isSamePolicy;
+          return false;
         }
         return this.canOperate;
       }

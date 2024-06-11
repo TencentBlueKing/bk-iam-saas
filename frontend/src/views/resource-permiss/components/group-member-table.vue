@@ -278,6 +278,7 @@
         tabPlaceHolder: '',
         adminGroupTitle: '',
         tabActive: 'userOrgPerm',
+        userOrOrgCount: 0,
         externalRoutes: ['userGroupDetail', 'memberTemplate', 'resourcePermiss'],
         groupTabList: [
           {
@@ -487,10 +488,11 @@
       this.fetchInitData();
     },
     methods: {
-      async fetchGroupDetail () {
-        console.log();
-      },
       async fetchUserOrOrgList () {
+        const curData = this.groupTabList.find((item) => ['userOrgPerm'].includes(item.name));
+        if (!curData) {
+          return;
+        }
         this.tableLoading = true;
         try {
           const { current, limit } = this.userOrOrgPagination;
@@ -506,37 +508,41 @@
             params
           );
           const { count, results } = data;
-          this.$set(this.groupTabList[0], 'tableList', results || []);
+          this.$set(curData, 'tableList', results || []);
           this.userOrOrgPagination.count = count || 0;
           // 处理蓝盾管理员组业务，搜索只有一条实际有多条数据
           if (!this.keyword) {
             this.userOrOrgCount = count || 0;
           }
-          this.emptyOrgData = formatCodeData(code, this.emptyOrgData, this.groupTabList[0].tableList.length === 0);
+          this.emptyOrgData = formatCodeData(code, this.emptyOrgData, curData.tableList.length === 0);
           if (this.keyword) {
             if (!data.hasOwnProperty('count')) {
-              this.userOrOrgPagination.count = this.groupTabList[0].tableList.length;
+              this.userOrOrgPagination.count = curData.tableList.length;
             }
-            this.emptyOrgData = Object.assign(this.emptyOrgData, { tipType: 'search' });
+            this.emptyOrgData = formatCodeData(0, { ...this.emptyOrgData, ...{ tipType: 'search' } });
           }
           this.fetchRefreshSelectList('userOrgPerm');
         } catch (e) {
-          this.$set(this.groupTabList[0], 'tableList', []);
+          this.$set(curData, 'tableList', []);
           this.userOrOrgPagination.count = 0;
           this.userOrOrgCount = 0;
-          this.emptyOrgData = formatCodeData(e.code, this.emptyOrgData);
+          this.emptyOrgData = formatCodeData(e.code, { ...this.emptyOrgData, ...{ tipType: 'refresh' } });
           this.handleRefreshTabCount();
           this.messageAdvancedError(e);
         } finally {
           this.tableLoading = false;
-          const emptyField = this.groupTabList.find((item) => item.name === this.tabActive);
-          if (emptyField) {
-            this.emptyData = formatCodeData(0, cloneDeep(Object.assign(this[emptyField.empty], { tipType: this.keyword ? 'search' : '' })));
+          if (curData.name === this.tabActive) {
+            const statusCode = [500, 'refresh'].includes(this.emptyOrgData.type) ? 500 : 0;
+            this.emptyData = formatCodeData(statusCode, cloneDeep(Object.assign(this[curData.empty], { tipType: this.keyword ? 'search' : '' })));
           }
         }
       },
 
       async fetchMemberTemplateList () {
+        const curData = this.groupTabList.find((item) => ['memberTemplate'].includes(item.name));
+        if (!curData) {
+          return;
+        }
         this.tableLoading = true;
         try {
           const { current, limit } = this.memberPagination;
@@ -551,27 +557,27 @@
             params
           );
           const { count, results } = data;
-          this.$set(this.groupTabList[1], 'tableList', results || []);
+          this.$set(curData, 'tableList', results || []);
           this.memberPagination.count = count || 0;
           if (this.keyword) {
             if (!data.hasOwnProperty('count')) {
-              this.memberPagination.count = this.groupTabList[1].tableList.length;
+              this.memberPagination.count = curData.tableList.length;
             }
-            this.emptyOrgData = Object.assign(this.emptyOrgData, { tipType: 'search' });
+            this.emptyTempData = Object.assign(this.emptyTempData, { tipType: 'search' });
           }
           this.emptyTempData = formatCodeData(code, this.emptyTempData, this.memberPagination.count === 0);
           this.fetchRefreshSelectList('memberTemplate');
         } catch (e) {
-          this.$set(this.groupTabList[1], 'tableList', []);
+          this.$set(curData, 'tableList', []);
           this.memberPagination.count = 0;
-          this.emptyTempData = formatCodeData(e.code, this.emptyTempData);
+          this.emptyTempData = formatCodeData(e.code, { ...this.emptyTempData, ...{ tipType: 'refresh' } });
           this.messageAdvancedError(e);
           this.handleRefreshTabCount();
         } finally {
           this.tableLoading = false;
-          const emptyField = this.groupTabList.find((item) => item.name === this.tabActive);
-          if (emptyField) {
-            this.emptyData = cloneDeep(Object.assign(this[emptyField.empty], { tipType: this.keyword ? 'search' : '' }));
+          if (curData.name === this.tabActive) {
+            const statusCode = [500, 'refresh'].includes(this.emptyTempData.type) ? 500 : 0;
+            this.emptyData = formatCodeData(statusCode, cloneDeep(Object.assign(this[curData.empty], { tipType: this.keyword ? 'search' : '' })));
           }
         }
       },
@@ -980,6 +986,7 @@
           text-align: center;
           font-size: 12px;
           background-color: #ffffff;
+          color: #979BA5;
         }
         &:last-child {
           margin-right: 0px;
