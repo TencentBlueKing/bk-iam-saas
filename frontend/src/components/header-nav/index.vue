@@ -487,7 +487,7 @@
 
       // 需要切换的时候刷新不同菜单下的同名路由
       handleRefreshSameRoute (payload) {
-        if (['sensitivityLevel', 'administrator'].includes(this.$route.name) && [1, 3].includes(payload)) {
+        if (['sensitivityLevel', 'administrator', 'resourcePermiss'].includes(this.$route.name) && [1, 3].includes(payload)) {
           this.reloadCurPage(this.$route);
         }
       },

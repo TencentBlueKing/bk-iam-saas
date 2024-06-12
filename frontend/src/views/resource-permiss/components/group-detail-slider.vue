@@ -3,18 +3,18 @@
     <bk-sideslider
       :is-show="isShowSideSlider"
       :width="width"
-      ext-cls="iam-member-template-detail-side"
       :quick-close="true"
+      ext-cls="resource-perm-group-detail-side"
       @update:isShow="handleCancel"
     >
-      <div slot="header" class="iam-member-template-detail-side-header">
-        <span>{{ $t(`m.memberTemplate['模板详情']`) }}</span>
+      <div slot="header" class="resource-perm-group-detail-side-header">
+        <span>{{ $t(`m.resourcePermiss['用户组详情']`) }}</span>
         <span class="custom-header-divider">|</span>
-        <span class="single-hide custom-header-name" :title="curDetailData.name">
+        <span class="single-hide custom-header-name" v-bk-tooltips="{ content: curDetailData.name }">
           {{ curDetailData.name }}
         </span>
       </div>
-      <div slot="content" class="iam-member-template-detail-side-content">
+      <div slot="content" class="resource-perm-group-detail-side-content">
         <div class="member-template-tab">
           <div class="member-tab-groups">
             <div
@@ -40,6 +40,9 @@
             :key="comKey"
             :cur-detail-data="curDetailData"
             :tab-active="tabActive"
+            :read-only="readOnly"
+            :group-attributes="groupAttributes"
+            :display-set="displaySet"
             @on-associate-change="handleAssociateChange"
           />
         </div>
@@ -47,18 +50,16 @@
     </bk-sideslider>
   </div>
 </template>
-
+  
 <script>
+  import { mapGetters } from 'vuex';
   import { bus } from '@/common/bus';
-  import AssociateUserGroup from './associate-user-group.vue';
-  import BasicInfoDetail from './basic-info-detail.vue';
-  import TemplateMemberTable from './template-member-table.vue';
-
+  import GroupMemberTable from './group-member-table.vue';
+  import GroupPermPolicy from './group-perm-policy.vue';
   export default {
     components: {
-      AssociateUserGroup,
-      BasicInfoDetail,
-      TemplateMemberTable
+      GroupMemberTable,
+      GroupPermPolicy
     },
     props: {
       show: {
@@ -75,28 +76,37 @@
     data () {
       return {
         isShowSideSlider: false,
+        readOnly: false,
         width: 960,
+        displaySet: {
+          customNameWidth: '180px'
+        },
         tabList: [
-          { name: this.$t(`m.common['基本信息']`), id: 'basic_info' },
-          { name: this.$t(`m.memberTemplate['模板成员']`), id: 'template_member' },
           {
-            name: this.$t(`m.memberTemplate['关联用户组']`),
-            id: 'associate_groups',
-            count: 0
+            name: this.$t(`m.userGroup['用户组成员']`),
+            id: 'group_member'
+          },
+          {
+            name: this.$t(`m.resourcePermiss['用户组权限']`),
+            id: 'group_perm'
           }
         ],
         COM_MAP: Object.freeze(
           new Map([
-            [['basic_info'], 'BasicInfoDetail'],
-            [['template_member'], 'TemplateMemberTable'],
-            [['associate_groups'], 'AssociateUserGroup']
+            [['group_member'], 'GroupMemberTable'],
+            [['group_perm'], 'GroupPermPolicy']
           ])
         ),
-        tabActive: 'basic_info',
+        tabActive: 'group_member',
+        groupAttributes: {
+          source_from_role: false,
+          source_type: ''
+        },
         comKey: -1
       };
     },
     computed: {
+      ...mapGetters(['externalSystemId']),
       curCom () {
         let com = '';
         for (const [key, value] of this.COM_MAP.entries()) {
@@ -112,43 +122,53 @@
       show: {
         handler (value) {
           this.isShowSideSlider = !!value;
-          if (this.curDetailData.tabActive && value) {
-            const { tabActive, group_count: groupCount } = this.curDetailData;
-            this.tabActive = tabActive;
-            this.$set(this.tabList[2], 'count', groupCount || 0);
-            this.handleTabChange(this.tabActive, false);
+          if (value) {
+            this.fetchGroupDetail();
+            const { tabActive } = this.curDetailData;
+            if (tabActive) {
+              this.tabActive = tabActive;
+              this.handleTabChange(this.tabActive, false);
+            }
           }
         },
         immediate: true
       }
     },
+    mounted () {
+      this.$once('hook:beforeDestroy', () => {
+        bus.$off('on-drawer-side');
+      });
+      bus.$on('on-drawer-side', (payload) => {
+        this.width = payload.width;
+      });
+    },
     methods: {
+      async fetchGroupDetail () {
+        const params = {
+          id: this.curDetailData.id
+        };
+        if (this.externalSystemId) {
+          params.hidden = false;
+        }
+        try {
+          const { data } = this.$store.dispatch('userGroup/getUserGroupDetail', params);
+          if (data) {
+            const { attributes, readonly } = data;
+            this.groupAttributes = Object.assign({}, attributes);
+            this.readOnly = readonly;
+          }
+        } catch (e) {
+          this.messageAdvancedError(e);
+        }
+      },
+      
       handleTabChange (payload, isClick = false) {
         if (payload === this.tabActive && isClick) {
           return;
         }
         this.tabActive = payload;
-        const typeMap = {
-          basic_info: () => {
-            this.$nextTick(() => {
-              this.$refs.tempDetailComRef && this.$refs.tempDetailComRef.fetchDetailInfo();
-            });
-          },
-          template_member: () => {
-            this.$nextTick(() => {
-              this.$refs.tempDetailComRef && this.$refs.tempDetailComRef.fetchTempMemberList();
-            });
-          },
-          associate_groups: () => {
-            this.$nextTick(() => {
-              this.$refs.tempDetailComRef
-                && this.$refs.tempDetailComRef.fetchAssociateGroup(true);
-            });
-          }
-        };
-        return typeMap[payload]();
       },
-      
+        
       handleAssociateChange (payload) {
         const { count } = payload;
         const tabIndex = this.tabList.findIndex((item) => ['associate_groups'].includes(item.id));
@@ -156,23 +176,22 @@
           this.tabList[tabIndex].count = count || 0;
         }
       },
-
+  
       handleCancel () {
         this.resetData();
         this.$emit('update:show', false);
-        bus.$emit('on-drawer-side', { width: 960 });
       },
-
+  
       resetData () {
         this.width = 960;
-        this.tabActive = 'basic_info';
+        this.tabActive = 'group_member';
       }
     }
   };
 </script>
-
+  
 <style lang="postcss" scoped>
-.iam-member-template-detail-side {
+.resource-perm-group-detail-side {
   &-header {
     display: flex;
     .custom-header-divider {
@@ -180,22 +199,21 @@
       color: #dcdee5;
     }
     .custom-header-name {
-      max-width: 800px;
+      max-width: 700px;
+      font-size: 12px;
       color: #979ba5;
       word-break: break-all;
     }
   }
   &-content {
-    /* height: calc(100vh - 114px); */
     .member-template-tab {
       padding: 24px 24px 0;
       background-color: #f5f7fa;
       position: sticky;
       top: 0;
       left: 0;
-      z-index: 9999;
+      z-index: 99;
       .member-tab-groups {
-        position: relative;
         display: flex;
         &-item {
           min-width: 96px;
