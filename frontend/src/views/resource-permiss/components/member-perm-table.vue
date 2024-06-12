@@ -488,12 +488,14 @@
   import { bus } from '@/common/bus';
   import { leaveConfirm } from '@/common/leave-confirm';
   import getActionsMixin from '../common/js/getActionsMixin';
+  import RenderResourcePopover from '@/components/iam-view-resource-popover';
   import EffectCondition from '@/views/perm/custom-perm/effect-conditon';
   import SideSliderEffectCondition from '@/views/perm/custom-perm/sideslider-effect-condition';
   import MemberTemplateDetailSlider from '@/views/member-template/components/member-template-detail-slider.vue';
 
   export default {
     components: {
+      RenderResourcePopover,
       EffectCondition,
       SideSliderEffectCondition,
       MemberTemplateDetailSlider
@@ -1281,11 +1283,41 @@
         padding: 0px !important;
         height: 100%;
       }
+      .related-resource-list {
+        position: relative;
+        .related-resource-item {
+          margin: 20px !important;
+        }
+        .effect-detail-icon {
+          display: none;
+          position: absolute;
+          top: 50%;
+          right: 10px;
+          transform: translate(0, -50%);
+          font-size: 18px;
+          cursor: pointer;
+        }
+        &-border{
+          border-bottom: 1px solid #dfe0e5;
+        }
+        &:hover {
+          .effect-detail-icon {
+            display: inline-block;
+            color: #3a84ff;
+          }
+        }
+      }
       .condition-table-cell {
         height: 100%;
-        flex-flow: column;
         display: flex;
+        flex-flow: column;
         justify-content: center;
+        .related-condition-list {
+          flex: 1;
+          display: flex;
+          flex-flow: column;
+          justify-content: center;
+        }
       }
       .effect-condition-side {
         .text{
