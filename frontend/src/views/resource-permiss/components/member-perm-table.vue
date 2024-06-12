@@ -156,12 +156,12 @@
                 <div
                   v-for="(_, _index) in row.resource_groups"
                   :key="_.id"
-                  class="related-resource-list"
-                  :class="
-                    row.resource_groups === 1 || _index === row.resource_groups.length - 1
-                      ? ''
-                      : 'related-resource-list-border'
-                  "
+                  :class="[
+                    'related-resource-list',
+                    { 'related-resource-list-border':
+                      row.resource_groups && row.resource_groups.length > 1 && _index === row.resource_groups.length - 1
+                    }
+                  ]"
                 >
                   <p class="related-resource-item" v-for="related in _.related_resource_types" :key="related.type">
                     <render-resource-popover
