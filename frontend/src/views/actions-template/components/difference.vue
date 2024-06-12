@@ -228,7 +228,7 @@
       };
     },
     computed: {
-      ...mapGetters('permTemplate', ['actions', 'cloneActions', 'preGroupOnePage']),
+      ...mapGetters('permTemplate', ['actions', 'cloneActions']),
       ...mapGetters(['navStick']),
       isAggregateDisabled () {
         const addActionsList = this.addActions.map((v) => v.id);
@@ -303,7 +303,7 @@
               });
             }
           });
-          return !!hasEmpty;
+          return !!hasEmpty || !this.isLastPage;
         };
       }
     },
@@ -376,27 +376,34 @@
           this.handleUpdateCommit();
           return;
         }
-        const { flag, groups, isNoAdd } = this.$refs.syncRef.getData();
+        const { flag, groups, isNoAdd } = this.$refs.syncRef.handleGetValue();
         if (flag) {
           return;
         }
-        // groups.forEach((item) => {
-        //   item.actions.forEach((sub) => {
-        //     if (!sub.resource_groups || !sub.resource_groups.length) {
-        //       sub.resource_groups
-        //         = sub.related_resource_types && sub.related_resource_types.length
-        //           ? [{ id: '', related_resource_types: sub.related_resource_types }]
-        //           : [];
-        //     }
-        //   });
-        // });
-        console.log(groups, isNoAdd, '提交数据');
-        if (this.preGroupOnePage) {
-          if (isNoAdd) {
-            this.handleUpdateCommit();
-            return;
-          }
-          this.submitPreGroupSync(groups);
+        groups.forEach((item) => {
+          item.actions.forEach((sub) => {
+            if (!sub.resource_groups || !sub.resource_groups.length) {
+              sub.resource_groups
+                = sub.related_resource_types && sub.related_resource_types.length
+                  ? [{ id: '', related_resource_types: sub.related_resource_types }]
+                  : [];
+            }
+          });
+        });
+        console.log(groups, isNoAdd, this.preGroupOnePage, '提交数据');
+        // if (this.preGroupOnePage) {
+        //   if (isNoAdd) {
+        //     this.handleUpdateCommit();
+        //     return;
+        //   }
+        //   this.submitPreGroupSync(groups);
+        //   return;
+        // }
+        // if (this.isLastPage) {
+        //   this.submitPreGroupSync(groups);
+        // }
+        if (isNoAdd) {
+          this.handleUpdateCommit();
           return;
         }
         if (this.isLastPage) {
@@ -599,7 +606,9 @@
           'action-instance': () => {
             this.handleAggregateByAction(true);
           },
-          'resource-type': () => {},
+          'resource-type': () => {
+            this.handleAggregateByAction(true);
+          },
           'no-aggregate': () => {
             this.handleAggregateByAction(false);
           }

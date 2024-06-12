@@ -68,7 +68,8 @@
 
           {
             id: 'action_id',
-            name: this.$t(`m.common['操作名']`)
+            name: this.$t(`m.common['操作名']`),
+            default: true
           }
         ],
         linearActionList: [],
@@ -372,6 +373,8 @@
 
 <style lang="postcss" scoped>
 .group-perm-policy-wrapper {
+  position: relative;
+  height: 100%;
   &-content {
     margin-top: 18px;
     max-height: calc(100vh - 323px);
@@ -388,6 +391,12 @@
       background: transparent;
       border-radius: 3px;
     }
+  }
+  .empty-wrapper {
+    position: absolute;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -45%);
   }
 }
 </style>

@@ -385,7 +385,7 @@
       },
       isSearchNoBorder () {
         return (temp, tempIndex, row) => {
-          return this.isSearch && temp.tableData.length > 0
+          return this.isSearch && row.custom_policy_count > 0 && row.template_count > 0
             && (row.templates.findLastIndex((v) => v.tableData.length > 0) === tempIndex);
         };
       },

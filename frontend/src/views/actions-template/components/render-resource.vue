@@ -127,15 +127,16 @@
             :is-group="handleComputedIsGroup(condition)"
             :hovering="condition.isHovering"
             @on-add="handleAdd(condition, index, 'attribute')"
-            @on-delete="handleDelete(condition, index, 'attribute')">
-            <!-- :mode="attributeMode(condition)" -->
+            @on-delete="handleDelete(condition, index, 'attribute')"
+          >
             <attribute
               :value="condition.attribute"
               :list="attributes"
               :limit-value="getLimitAttribute(conditionLimitData[index])"
               :params="attributeParams"
               ref="attributeRef"
-              @on-change="handleAttrValueChange(...arguments, condition)" />
+              @on-change="handleAttrValueChange(...arguments, condition)"
+            />
           </render-resource-instance>
         </div>
         <or-status-bar v-if="conditionData.length > 1 && index !== conditionData.length - 1" />
@@ -156,7 +157,7 @@
 </template>
 
 <script>
-  import _ from 'lodash';
+  import { cloneDeep } from 'lodash';
   import renderResourceInstance from '@/components/render-resource';
   import renderOrderNumber from '@/components/render-resource/order-number';
   import OrStatusBar from '@/components/render-status/bar';
@@ -391,7 +392,7 @@
               this.conditionData[0].instanceCanDelete = false;
             }
             // 备份已选数据，与最新数据做对比判断要不要展示离开确认框
-            this.hasSelectedCondition = _.cloneDeep(val);
+            this.hasSelectedCondition = cloneDeep(val);
             return;
           }
           if (len > 0) {
@@ -412,13 +413,13 @@
             this.notLimitValue = false;
             this.isHide = false;
             // 备份已选数据，与最新数据做对比判断要不要展示离开确认框
-            this.hasSelectedCondition = _.cloneDeep(this.conditionData);
+            this.hasSelectedCondition = cloneDeep(this.conditionData);
           } else {
             this.notLimitValue = true;
             this.isHide = true;
             this.conditionData = [];
             // 备份已选数据，与最新数据做对比判断要不要展示离开确认框
-            this.hasSelectedCondition = _.cloneDeep(this.conditionData);
+            this.hasSelectedCondition = cloneDeep(this.conditionData);
           }
         },
         deep: true,
@@ -586,7 +587,7 @@
           this.isHide = false;
           const isInitializeData = this.originalData.length === 1 && this.originalData[0] === 'none';
           if (!isInitializeData && this.originalData.length > 0) {
-            this.conditionData = _.cloneDeep(this.originalData);
+            this.conditionData = cloneDeep(this.originalData);
             const firstConditionData = this.conditionData[0];
             if (firstConditionData.instance && firstConditionData.instance.length > 0) {
               firstConditionData.instanceExpanded = true;
@@ -617,7 +618,7 @@
 
       handleDelete (payload, index, key) {
         window.changeAlert = true;
-        const currentData = _.cloneDeep(payload);
+        const currentData = cloneDeep(payload);
         if (key === 'instance') {
           delete currentData.instance;
         } else {
@@ -633,10 +634,10 @@
 
       handleAdd (condition, index, type) {
         window.changeAlert = true;
-        const currentData = _.cloneDeep(condition);
+        const currentData = cloneDeep(condition);
         if (type === 'instance') {
           currentData.isAttributeEmpty = false;
-          currentData.attribute = _.cloneDeep([ATTRIBUTE_ITEM]);
+          currentData.attribute = cloneDeep([ATTRIBUTE_ITEM]);
         } else {
           currentData.isInstanceEmpty = false;
           currentData.instance = [];
@@ -684,7 +685,7 @@
         if (this.notLimitValue) {
           return [];
         }
-        const tempConditionData = _.cloneDeep(this.conditionData);
+        const tempConditionData = cloneDeep(this.conditionData);
         tempConditionData.forEach(item => {
           if (!item.instance) {
             item.instance = [];
@@ -715,7 +716,7 @@
             data: ['none']
           };
         }
-        const tempConditionData = _.cloneDeep(this.conditionData);
+        const tempConditionData = cloneDeep(this.conditionData);
         if (!tempConditionData.some(item => {
           return (item.instance
             && (item.instance.length > 0
@@ -767,47 +768,24 @@
           curIds.push(`${id}&${type}`);
           this.$refs[`${index}TreeRef`][0] && this.$refs[`${index}TreeRef`][0].handeCancelChecked(curIds.join('#'));
         });
-
         const curInstanceItem = this.conditionData[index].instance[payloadIndex];
-        const indexs = [];
+        const indexList = [];
         curInstanceItem.path.forEach((v, index) => {
           if (v.some(_ => _.disabled)) {
-            indexs.push(index);
+            indexList.push(index);
           }
         });
-        curInstanceItem.paths = curInstanceItem.paths.filter((v, index) => indexs.includes(index));
+        curInstanceItem.paths = curInstanceItem.paths.filter((v, index) => indexList.includes(index));
         curInstanceItem.path = curInstanceItem.path.filter(v => v.some(_ => _.disabled));
-
         if (curInstanceItem.path.length < 1) {
           this.conditionData[index].instance.splice(payloadIndex, 1);
         }
       },
 
       handleInstanceDelete (payload, payloadIndex, childIndex, index) {
-        // const curIds = payload.parentChain.map(v => `${v.id}&${v.type}`)
-
-        // const curInstance = this.conditionData[index].instance
-        // let id = payload.id
-        // let type = payload.type
-        // if (payload.id === '*') {
-        //     const data = curInstance[payloadIndex].path[childIndex]
-        //     const idIndex = data.findIndex(item => item.id === '*')
-        //     id = data[idIndex - 1].id
-        //     type = data[idIndex - 1].type
-        // }
-        // curInstance[payloadIndex].path.splice(childIndex, 1)
-        // curInstance[payloadIndex].paths.splice(childIndex, 1)
-        // if (curInstance.every(item => item.path.length < 1)) {
-        //     const len = curInstance.length
-        //     curInstance.splice(0, len, ...[])
-        // }
-
-        // curIds.push(`${id}&${type}`)
-        // this.$refs[`${index}TreeRef`][0] && this.$refs[`${index}TreeRef`][0].handeCancelChecked(curIds.join('#'))
         window.changeAlert = true;
         const curIds = payload.parentChain.map(v => `${v.id}&${v.type}`);
         const isCarryNextNoLimit = payload.id === '*';
-
         const curInstance = this.conditionData[index].instance;
         const curPath = curInstance[payloadIndex].path;
         const curPaths = curInstance[payloadIndex].paths;
@@ -825,9 +803,7 @@
           const len = curInstance.length;
           curInstance.splice(0, len, ...[]);
         }
-
         curIds.push(`${id}&${type}`);
-
         if (isCarryNextNoLimit) {
           const existedNoCarryNoLimitData = curPath.find(item => {
             return curIds.join('#') === item.map(v => `${v.id}&${v.type}`).join('#');
@@ -857,21 +833,15 @@
       },
 
       handleChain (payload, currentInstance, index, curAsync) {
-        const typeChain = _.cloneDeep(payload).filter(item => item.id !== '*');
-        // const curInstance = _.cloneDeep(currentInstance)
-        // console.warn('typeChain: ')
-        // console.warn(typeChain)
+        const typeChain = cloneDeep(payload).filter(item => item.id !== '*');
         // 当前类型链路：
         const curChain = typeChain.map(item => item.type);
         // console.warn('当前类型链路curChain: ')
-        // console.warn(curChain)
         // 当前父级id链路
         const curIdChain = typeChain.map(item => item.id);
         // console.warn('当前父级id链路curIdChain: ')
-        // console.warn(curIdChain)
         // 匹配的所有包含父级id的链路
         const allChain = [];
-        // console.warn(currentInstance)
         currentInstance.forEach((item, itemIndex) => {
           const obj = {};
           obj.instanceIndex = itemIndex;
@@ -879,15 +849,13 @@
             const isExistAny = pathItem.some(v => v.id === '*');
             if (!isExistAny) {
               if (pathItem.length === 1 && curAsync) {
-                // const tempPathItem = _.cloneDeep(pathItem)
-                // tempPathItem.unshift(...typeChain)
-                const tempPathItem = _.cloneDeep(item.paths[pathIndex]);
+                const tempPathItem = cloneDeep(item.paths[pathIndex]);
                 if (tempPathItem.map(sub => sub.id).filter(v => curIdChain.includes(v)).length > 0) {
                   obj.childChain = tempPathItem.map(chain => chain.type);
                   obj.childChainId = tempPathItem.map(chain => `${chain.id}&${chain.name}`);
                   obj.id = tempPathItem[tempPathItem.length - 1].id;
                   obj.pathIndex = pathIndex;
-                  allChain.push(_.cloneDeep(obj));
+                  allChain.push(cloneDeep(obj));
                 }
               }
               if (pathItem.length > 1) {
@@ -896,7 +864,7 @@
                   obj.childChainId = pathItem.map(chain => `${chain.id}&${chain.name}`);
                   obj.id = pathItem[pathItem.length - 1].id;
                   obj.pathIndex = pathIndex;
-                  allChain.push(_.cloneDeep(obj));
+                  allChain.push(cloneDeep(obj));
                 }
               }
             } else {
@@ -907,13 +875,12 @@
                   obj.childChainId = templatePathItem.map(chain => `${chain.id}&${chain.name}`);
                   obj.id = templatePathItem[templatePathItem.length - 1].id;
                   obj.pathIndex = pathIndex;
-                  allChain.push(_.cloneDeep(obj));
+                  allChain.push(cloneDeep(obj));
                 }
               }
             }
           });
         });
-
         // 匹配的所有子级链路：
         const tempChain = allChain.filter(item => item.childChain.length > curChain.length);
         // console.warn('匹配的所有子级链路tempChain: ')
@@ -924,9 +891,6 @@
         tempChain.forEach(item => {
           if (item.childChainId.join('').includes(curIdChain.join(''))) {
             const curPath = currentInstance[item.instanceIndex].path;
-            // console.warn('curPath：')
-            // console.warn(curPath)
-            // const curPathIndex = curPath.findIndex(sub => item.id === sub[sub.length - 1].id)
             const curPathIndex = curPath.findIndex(sub => {
               if (sub.some(v => v.id === '*')) {
                 return item.id === sub[sub.length - 2].id;
@@ -950,11 +914,6 @@
               }
             }
           }
-          // if (item.childChain.join('').includes(curChain.join(''))) {
-          //     const curPath = currentInstance[item.instanceIndex].path
-          //     const curPathIndex = curPath.findIndex(sub => item.id === sub[sub.length - 1].id)
-          //     curPath.splice(curPathIndex, 1)
-          // }
         });
       },
 
@@ -970,7 +929,7 @@
           } else {
             const selectInstanceItemIndex = curInstance.findIndex(item => item.type === type);
             if (selectInstanceItemIndex > -1) {
-              const selectInstanceItem = _.cloneDeep(curInstance[selectInstanceItemIndex]);
+              const selectInstanceItem = cloneDeep(curInstance[selectInstanceItemIndex]);
               selectInstanceItem.path.push(...path);
               selectInstanceItem.paths.push(...paths);
               curInstance.splice(selectInstanceItemIndex, 1, selectInstanceItem);
@@ -996,7 +955,7 @@
                 });
               });
             });
-            this.hasSelectData = _.cloneDeep(hasSelectData);
+            this.hasSelectData = cloneDeep(hasSelectData);
             const hasData = this.hasSelectData.find((item) => item.childTypes.includes(type));
             if (hasData) {
               deleteInstanceItem = curInstance.find(item =>
