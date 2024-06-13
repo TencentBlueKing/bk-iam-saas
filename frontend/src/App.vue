@@ -29,10 +29,10 @@
         :content="$t(`m.guide['创建审批流程']`)" /> -->
       <header-nav
         v-if="!externalSystemsLayout.hideIamHeader"
-        @reload-page="handleRefreshPage"
+        @reload-pae="handleRefreshPage"
         :route-name="routeName"
-        :user-group-id="userGroupId">
-      </header-nav>
+        :user-group-id="userGroupId"
+      />
       <the-header
         @reload-page="handleRefreshPage"
         :route-name="routeName"
@@ -42,7 +42,8 @@
         class="nav-layout"
         :route-name="routeName"
         @reload-page="reloadCurPage"
-        v-if="!externalSystemsLayout.hideIamSlider" />
+        v-if="!externalSystemsLayout.hideIamSlider"
+      />
     </template>
     <main
       :class="[
@@ -62,14 +63,29 @@
       </div>
     </main>
     <!-- <app-auth ref="bkAuth"></app-auth> -->
+    <template v-if="!enableGroupInstanceSearch && needShowInstanceSearchRoute && noInstanceSearchData.show">
+      <FunctionalDependency
+        v-model="noInstanceSearchData.show"
+        :mode="noInstanceSearchData.mode"
+        :show-dialog="['dialog'].includes(noInstanceSearchData.mode)"
+        :title="noInstanceSearchData.title"
+        :functional-desc="noInstanceSearchData.functionalDesc"
+        :guide-title="noInstanceSearchData.guideTitle"
+        :guide-desc-list="noInstanceSearchData.guideDescList"
+        @gotoMore="handleMoreInfo(noInstanceSearchData.url)"
+      />
+    </template>
   </div>
 </template>
+
 <script>
     // import Cookie from 'js-cookie';
   import HeaderNav from '@/components/header-nav/index.vue';
   import theHeader from '@/components/header/index.vue';
   import theNav from '@/components/nav/index.vue';
   import NoticeComponent from '@blueking/notice-component-vue2';
+  import FunctionalDependency from '@blueking/functional-dependency/vue2/index.umd.min.js';
+  import '@blueking/functional-dependency/vue2/vue2.css';
   import '@blueking/notice-component-vue2/dist/style.css';
   // import IamGuide from '@/components/iam-guide/index.vue';
   import { existValue, formatI18nKey } from '@/common/util';
@@ -92,7 +108,8 @@
       theHeader,
       theNav,
       HeaderNav,
-      NoticeComponent
+      NoticeComponent,
+      FunctionalDependency
     },
     data () {
       return {
@@ -117,7 +134,11 @@
         isRouterAlive: true,
         showNoticeAlert: false,
         noticeApi: `${window.AJAX_URL_PREFIX}/notice/announcements/`,
-        enableNotice: window.ENABLE_BK_NOTICE.toLowerCase() === 'true'
+        enableNotice: window.ENABLE_BK_NOTICE.toLowerCase() === 'true',
+        enableGroupInstanceSearch: window.ENABLE_GROUP_INSTANCE_SEARCH.toLowerCase() === 'true',
+        // 需要展示FunctionalDependency组件的页面
+        needShowInstanceSearchRoute: ['applyCustomPerm'],
+        noInstanceSearchData: {}
       };
     },
     computed: {
@@ -135,6 +156,7 @@
         this.routeName = to.name;
         this.userGroupId = to.params.id;
         this.$store.commit('updateRoute', from.name);
+        this.getRouteInstanceSearch({ routeName: to.name });
       },
       user: {
         handler (value) {
@@ -169,7 +191,6 @@
         this.fetchVersionLog();
         this.fetchNoviceGuide();
       }
-
       const isPoll = window.localStorage.getItem('isPoll');
       if (isPoll) {
         this.$store.commit('updateSync', true);
@@ -177,13 +198,13 @@
           this.fetchSyncStatus();
         }, 15000);
       }
-
       this.$once('hook:beforeDestroy', () => {
         bus.$off('show-login-modal');
         bus.$off('close-login-modal');
         bus.$off('updatePoll');
         bus.$off('nav-resize');
         bus.$off('show-guide');
+        bus.$off('show-function-dependency');
       });
     },
     mounted () {
@@ -228,6 +249,9 @@
         // if (payload === 'process') {
         //     this.processGuideShow = true;
         // }
+      });
+      bus.$on('show-function-dependency', (payload = {}) => {
+        this.getRouteInstanceSearch(payload);
       });
     },
     methods: {
@@ -342,6 +366,30 @@
       handleShowAlertChange (isShow) {
         console.log(isShow, '跑马灯回调');
         this.showNoticeAlert = isShow;
+      },
+
+      handleMoreInfo (payload) {
+        window.open(`${window.BK_DOCS_URL_PREFIX}${payload}`);
+      },
+
+      getRouteInstanceSearch (payload = {}) {
+        const { show, routeName } = payload;
+        const routeMap = {
+          applyCustomPerm: () => {
+            this.noInstanceSearchData = Object.assign({}, {
+              show: show || false,
+              mode: 'dialog',
+              url: `/ZH/DeploymentGuides/7.1/index.md`,
+              title: this.$t(`m.permApply['未启用用户组自动推荐功能']`),
+              functionalDesc: this.t(`m.permApply['该功能可以根据用户当前的权限需求，自动匹配相关的用户组']`),
+              guideTitle: this.$t(`m.permApply['如需启用该功能，请联系部署同学部署相关ES服务']`),
+              guideDescList: []
+            });
+          }
+        };
+        if (routeMap[routeName]) {
+          return routeMap[routeName]();
+        }
       }
     }
   };

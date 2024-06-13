@@ -723,7 +723,10 @@ export const m = {
         '（标签只读：含只读操作）': '({name} read-only: including {value} actions)',
         '收藏成功': 'Collection successful',
         '取消收藏成功': 'Cancel collection successful',
-        '尚未选择用户组': 'No user group has been selected yet'
+        '尚未选择用户组': 'No user group has been selected yet',
+        '未启用用户组自动推荐功能': 'The user group auto-recommendation feature is not enabled.',
+        '如需启用该功能，请联系部署同学部署相关ES服务': 'To enable this feature, please contact  deployment colleagues to deploy the related ES service.',
+        '该功能可以根据用户当前的权限需求，自动匹配相关的用户组': "This feature can automatically match relevant user groups based on the user's current permission requirements."
     },
     myApply: {
         '申请列表': 'Apply List',
