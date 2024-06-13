@@ -963,7 +963,7 @@
           if (res.data.count > 0) {
             this.isShowHasUserGroup = true;
           }
-          // 处理用户组推业务场景下ENABLE_GROUP_INSTANCE_SEARCH为false需要展示FunctionalDependency组件
+          // 处理用户组权限申请默认页面场景下ENABLE_GROUP_INSTANCE_SEARCH为false需要展示FunctionalDependency组件
           if (this.isNoPermissionsSet && this.isShowHasUserGroup && !this.enableGroupInstanceSearch) {
             bus.$emit('show-function-dependency', {
               routeName: this.$route.name,
