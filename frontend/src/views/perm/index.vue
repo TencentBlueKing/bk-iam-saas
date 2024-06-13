@@ -147,10 +147,10 @@
       </template>
     </div>
     <div
-      v-if="!externalSystemsLayout.myPerm.hideApplyBtn"
       :class="[
         'custom-footer-wrapper',
-        { 'custom-footer-wrapper-no-perm': isEmpty }
+        { 'custom-footer-wrapper-no-perm': isEmpty },
+        { 'hidden': isSubEnv || externalSystemsLayout.myPerm.hideApplyBtn }
       ]"
     >
       <the-footer />
@@ -964,12 +964,17 @@
         }
     }
 
-    .custom-footer-wrapper-no-perm {
-      .footer-content {
-        position: absolute;
-        left: 50%;
-        bottom: 30px;
-        transform: translate(-50%, 0px);
+    .custom-footer-wrapper {
+      &.custom-footer-wrapper-no-perm {
+        .footer-content {
+          position: absolute;
+          left: 50%;
+          bottom: 30px;
+          transform: translate(-50%, 0px);
+        }
+      }
+      &.hidden {
+        display: none;
       }
     }
 </style>
