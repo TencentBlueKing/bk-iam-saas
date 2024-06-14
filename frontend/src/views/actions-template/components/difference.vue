@@ -313,7 +313,7 @@
       },
       allSyncGroupActions: {
         async handler (value) {
-          const tempActions = this.handleGetAddAction(value);
+          const tempActions = await this.handleGetAddAction(value);
           this.addActions = tempActions;
           this.isNoAddActions = this.addActions.length < 1;
           if (!this.isNoAddActions) {
@@ -321,7 +321,8 @@
           }
           console.log(this.addActions, '新增操作');
         },
-        immediate: true
+        immediate: true,
+        deep: true
       },
       allActions: {
         handler (value) {
@@ -390,7 +391,7 @@
             }
           });
         });
-        console.log(groups, isNoAdd, this.preGroupOnePage, '提交数据');
+        console.log(groups, isNoAdd, '提交数据');
         // if (this.preGroupOnePage) {
         //   if (isNoAdd) {
         //     this.handleUpdateCommit();
@@ -810,7 +811,7 @@
         }
         this.$nextTick(() => {
           const { name, id, expand } = this.locationList[this.curLocationIndex - 1];
-          if (expand) {
+          if (expand || !this.locationList.length) {
             return;
           }
           this.$refs.syncRef.handleExpand(this.locationList[this.curLocationIndex - 1]);

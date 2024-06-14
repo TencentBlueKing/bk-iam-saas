@@ -27,7 +27,7 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 import http from '@/api';
-import { unifyObjectStyle, json2Query, getManagerMenuPerm } from '@/common/util';
+import { unifyObjectStyle, json2Query, getManagerMenuPerm, getRoutePath } from '@/common/util';
 import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
 import il8n from '@/language';
 
@@ -99,7 +99,7 @@ import renewalNotice from './modules/renewal-notice';
 
 Vue.use(Vuex);
 
-const SITE_URL = window.SITE_URL;
+const SITE_URL = getRoutePath(window.SITE_URL);
 
 const currentNav = [
   {

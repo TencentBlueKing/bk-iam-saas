@@ -432,7 +432,7 @@
         aggregateResourceParams: {},
         pagination: {
           current: 1,
-          limit: 2,
+          limit: 100,
           totalPage: 0
         },
         resourceSliderWidth: Math.ceil(window.innerWidth * 0.67 - 7) < 960
@@ -465,6 +465,7 @@
               }
             });
             this.$set(payload, 'fill_status', !hasEmptyData);
+            this.handleGetTypeData();
             return hasEmptyData;
           }
           return true;
@@ -1691,7 +1692,6 @@
                     }
                     return pre;
                   }, []);
-                  console.log(aggregateResourceTypes, sub);
                   const aggregateParams = {
                     system_id: sub.system_id,
                     aggregations: [{

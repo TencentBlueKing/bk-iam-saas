@@ -25,8 +25,10 @@
  */
 
 import il8n from '@/language';
+import { rootPath } from '@blueking/sub-saas/dist/main.js';
+import { getRoutePath } from '@/common/util';
 
-const SITE_URL = window.SITE_URL;
+// const SITE_URL = window.SITE_URL;
 
 // 系统接入
 const SystemAccess = () => import(/* webpackChunkName: 'system-access' */ '../views/system-access');
@@ -153,8 +155,8 @@ const SecondaryManageSpaceCreate = () =>
   import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/secondary-manage-space/create');
 
 // 二极管理空间编辑
-const SecondaryManageSpaceEdit = () =>
-  import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/secondary-manage-space/Edit');
+// const SecondaryManageSpaceEdit = () =>
+//   import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/secondary-manage-space/Edit');
 
 // 二极管理空间详情
 const SecondaryManageSpaceDetail = () =>
@@ -219,7 +221,7 @@ const MainEntry = () => import(/* webpackChunkName: 'index' */ '../views');
 
 export const routes = [
   {
-    path: SITE_URL,
+    path: rootPath,
     name: 'iamMain',
     component: MainEntry,
     children: [
@@ -422,15 +424,15 @@ export const routes = [
         props: true,
         component: SecondaryManageSpaceCreate
       },
-      {
-        path: ':id/manage-spaces/secondary-manage-space/edit',
-        name: 'secondaryManageSpaceEdit',
-        meta: {
-          backRouter: -1
-        },
-        props: true,
-        component: SecondaryManageSpaceEdit
-      },
+      // {
+      //   path: ':id/manage-spaces/secondary-manage-space/edit',
+      //   name: 'secondaryManageSpaceEdit',
+      //   meta: {
+      //     backRouter: -1
+      //   },
+      //   props: true,
+      //   component: SecondaryManageSpaceEdit
+      // },
       {
         path: ':id/manage-spaces/secondary-manage-space/detail',
         name: 'secondaryManageSpaceDetail',
@@ -750,12 +752,12 @@ export const routes = [
     ]
   },
   {
-    path: '403',
+    path: getRoutePath('403'),
     name: '403',
     component: NotAccessPermPage
   },
   {
-    path: '*',
+    path: getRoutePath('*'),
     name: '404',
     component: NotFound
   }

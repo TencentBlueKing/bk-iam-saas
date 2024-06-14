@@ -2,7 +2,7 @@
 <template>
   <div>
     <!-- 申请自定义权限正常跳转 -->
-    <smart-action class="biz-perm-apply" v-if="!isNoPermApplay && !isNoPermissionsSet">
+    <smart-action class="biz-perm-apply" v-if="!isNoPermApply && !isNoPermissionsSet">
       <render-horizontal-block :required="true" ext-cls="apply-way-wrapper" :label="$t(`m.permApply['选择操作']`)">
         <render-search>
           <bk-select
@@ -648,6 +648,7 @@
   import { mapGetters } from 'vuex';
   import { guid, formatCodeData } from '@/common/util';
   import { PERMANENT_TIMESTAMP } from '@/common/constants';
+  import { bus } from '@/common/bus';
   import RenderActionTag from '@/components/common-action';
   import ResourceInstanceTable from '../components/resource-instance-table';
   import Condition from '@/model/condition';
@@ -660,7 +661,6 @@
   import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
 
   export default {
-    name: '',
     components: {
       RenderActionTag,
       ResourceInstanceTable,
@@ -673,6 +673,7 @@
     data () {
       return {
         userApi: window.BK_USER_API,
+        enableGroupInstanceSearch: window.ENABLE_GROUP_INSTANCE_SEARCH.toLowerCase() === 'true',
         systemValue: '',
         systemList: [],
         buttonLoading: false,
@@ -750,7 +751,7 @@
     computed: {
         ...mapGetters(['user', 'externalSystemId']),
         // 是否无权限申请
-        isNoPermApplay () {
+        isNoPermApply () {
             return this.routerQuery.system_id;
         },
         // 无权限组时
@@ -961,6 +962,13 @@
           const res = await this.$store.dispatch('userGroup/getUserGroupList', params);
           if (res.data.count > 0) {
             this.isShowHasUserGroup = true;
+          }
+          // 处理用户组权限申请默认页面场景下ENABLE_GROUP_INSTANCE_SEARCH为false需要展示FunctionalDependency组件
+          if (this.isNoPermissionsSet && this.isShowHasUserGroup && !this.enableGroupInstanceSearch) {
+            bus.$emit('show-function-dependency', {
+              routeName: this.$route.name,
+              show: true
+            });
           }
           this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
           this.$nextTick(() => {
