@@ -304,7 +304,8 @@ export const m = {
         '恢复默认': 'Default',
         '点击复制': 'Click to copy',
         '复制成功': 'Copy successful',
-        '暂无可复制数据': 'There is currently no replicable data'
+        '暂无可复制数据': 'There is currently no replicable data',
+        '了解更多': 'Learn more'
     },
     // 校验
     verify: {

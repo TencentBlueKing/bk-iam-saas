@@ -138,7 +138,14 @@
         enableGroupInstanceSearch: window.ENABLE_GROUP_INSTANCE_SEARCH.toLowerCase() === 'true',
         // 需要展示FunctionalDependency组件的页面
         needShowInstanceSearchRoute: ['applyCustomPerm'],
-        noInstanceSearchData: {}
+        noInstanceSearchData: {
+          show: false,
+          mode: '',
+          title: '',
+          functionalDesc: '',
+          guideTitle: '',
+          guideDescList: []
+        }
       };
     },
     computed: {
@@ -243,12 +250,6 @@
         if (guideMap[payload]) {
           guideMap[payload]();
         }
-        // if (payload === 'group') {
-        //     this.groupGuideShow = true;
-        // }
-        // if (payload === 'process') {
-        //     this.processGuideShow = true;
-        // }
       });
       bus.$on('show-function-dependency', (payload = {}) => {
         this.getRouteInstanceSearch(payload);
@@ -379,12 +380,23 @@
             this.noInstanceSearchData = Object.assign({}, {
               show: show || false,
               mode: 'dialog',
-              url: `/ZH/DeploymentGuides/7.1/index.md`,
+              url: `/IAM/1.4/产品白皮书/产品功能/PermissionsApply.md`,
               title: this.$t(`m.permApply['未启用用户组自动推荐功能']`),
               functionalDesc: this.t(`m.permApply['该功能可以根据用户当前的权限需求，自动匹配相关的用户组']`),
               guideTitle: this.$t(`m.permApply['如需启用该功能，请联系部署同学部署相关ES服务']`),
               guideDescList: []
             });
+            if (this.noInstanceSearchData.show) {
+              this.$nextTick(() => {
+                const buttonList = document.getElementsByClassName('fuctional-deps-button-text');
+                if (buttonList && buttonList.length > 0) {
+                  const customButtonList = [this.$t(`m.common['了解更多']`), this.$t(`m.common['取消']`)];
+                  for (let i = 0; i < buttonList.length; i++) {
+                    buttonList[i].innerText = customButtonList[i];
+                  }
+                }
+              });
+            }
           }
         };
         if (routeMap[routeName]) {
