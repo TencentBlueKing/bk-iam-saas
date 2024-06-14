@@ -21,11 +21,51 @@
       v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
     >
       <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
+        <template slot-scope="{ row }" :show-over-tooltip="true">
+          <span class="user-groups-name" @click="handleOpen(row.id)">
+            {{ row.name }}
+          </span>
+        </template>
+      </bk-table-column>
+      <bk-table-column :label="$t(`m.common['操作-table']`)" width="150">
         <template slot-scope="{ row }">
-          <div class="user-groups" @click="handleOpen(row.id)">
-            <span class="user-groups-name" v-bk-tooltips="{ content: row.name, placement: 'right-start' }">
-              {{ row.name }}
-            </span>
+          <div>
+            <bk-popconfirm
+              trigger="click"
+              :ref="`removeSyncGroupConfirm_${row.name}_${row.id}`"
+              placement="bottom-end"
+              ext-popover-cls="actions-temp-resynchronize-confirm"
+              :width="320"
+              @confirm="handleConfirmResynchronize(row)"
+            >
+              <div slot="content">
+                <div class="popover-title">
+                  <div class="popover-title-text">
+                    {{ $t(`m.dialog['确认解除与该操作模板的同步？']`) }}
+                  </div>
+                </div>
+                <div class="popover-content">
+                  <div class="popover-content-item">
+                    <span class="popover-content-item-label"
+                    >{{ $t(`m.memberTemplate['用户组名称']`) }}:</span
+                    >
+                    <span class="popover-content-item-value"> {{ row.name }}</span>
+                  </div>
+                  <div class="popover-content-tip">
+                    {{ $t(`m.actionsTemplate['解除同步后，模板权限将转为用户组自定义权限，不会再继续同步该模板的操作。']`) }}
+                  </div>
+                </div>
+              </div>
+              <bk-button
+                size="small"
+                theme="primary"
+                class="un-sync"
+                text
+                @click.stop="handleUnSynchronize(row)"
+              >
+                {{ $t(`m.actionsTemplate['解除同步']`) }}
+              </bk-button>
+            </bk-popconfirm>
           </div>
         </template>
       </bk-table-column>
@@ -117,6 +157,38 @@
         await this.fetchAssociateGroup(true);
       },
 
+      async handleConfirmResynchronize (payload) {
+        const { id } = this.curDetailData;
+        const params = {
+          id,
+          data: {
+            members: [{
+              id: payload.id,
+              type: 'group'
+            }]
+          }
+        };
+        try {
+          await this.$store.dispatch('permTemplate/deleteTemplateMember', params);
+          this.messageSuccess(this.$t(`m.info['移除成功']`), 3000);
+          this.resetPagination();
+          this.fetchAssociateGroup();
+        } catch (e) {
+          this.messageAdvancedError(e);
+        }
+      },
+      
+      handleUnSynchronize (payload) {
+        this.$nextTick(() => {
+          const { id, name } = payload;
+          const removeSync = this.$refs[`removeSyncGroupConfirm_${name}_${id}`];
+          console.log(removeSync);
+          if (removeSync) {
+            removeSync.$refs && removeSync.$refs.popover.showHandler();
+          }
+        });
+      },
+
       handleOpen (id) {
         const routeData = this.$router.resolve({
           path: `user-group-detail/${id}`,
@@ -146,6 +218,18 @@
   };
 </script>
 
+<style lang="postcss">
+.actions-temp-resynchronize-confirm {
+  .popconfirm-operate {
+    .default-operate-button {
+      min-width: 64px;
+      margin-left: 0;
+      margin-right: 8px;
+    }
+  }
+}
+</style>
+
 <style lang="postcss" scoped>
 .associate-user-group {
   padding: 0 24px;
@@ -157,20 +241,37 @@
     margin-top: 16px;
     border-bottom: 0;
     border-right: 0;
-    .user-groups {
-      display: flex;
-      align-items: center;
-      color: #3a84ff;
-      .user-groups-icon {
-        display: none;
-      }
-      &:hover {
-        cursor: pointer;
-        .user-groups-icon {
-          display: block;
-          margin-left: 5px;
+    .user-groups-name {
+        color: #3a84ff;
+        &:hover {
+          color: #699df4;
+          cursor: pointer;
         }
       }
+    /deep/ .un-sync {
+      padding: 0;
+    }
+  }
+}
+.actions-temp-resynchronize-confirm {
+  .popover-title {
+    font-size: 16px;
+    padding-bottom: 16px;
+  }
+  .popover-content {
+    color: #63656e;
+    font-size: 12px;
+    .popover-content-item {
+      display: flex;
+      &-value {
+        color: #313238;
+        margin-left: 5px;
+      }
+    }
+    &-tip {
+      padding: 4px 0 10px 0;
+      line-height: 20px;
+      word-break: break-all;
     }
   }
 }
