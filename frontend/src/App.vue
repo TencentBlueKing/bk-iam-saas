@@ -380,7 +380,7 @@
             this.noInstanceSearchData = Object.assign({}, {
               show: show || false,
               mode: 'dialog',
-              url: `/IAM/1.4/产品白皮书/产品功能/PermissionsApply.md`,
+              url: `/IAM//1.8/UserGuide/Feature/PermissionsApply.md`,
               title: this.$t(`m.permApply['未启用用户组自动推荐功能']`),
               functionalDesc: this.t(`m.permApply['该功能可以根据用户当前的权限需求，自动匹配相关的用户组']`),
               guideTitle: this.$t(`m.permApply['如需启用该功能，请联系部署同学部署相关ES服务']`),
