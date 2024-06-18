@@ -181,7 +181,7 @@
         </form>
       </render-horizontal-block>
       <render-horizontal-block ext-cls="mt16" :label="$t(`m.permApply['关联资源实例']`)">
-        <section ref="instanceTableRef">
+        <section ref="instanceTableRef" class="aggregate-tab-instance-table perm-apply-resource-instance-table">
           <resource-instance-table
             :list="tableData"
             :original-table-list="tableDataBackup"
@@ -191,14 +191,20 @@
             @on-select="handleResourceSelect"
             @on-realted-change="handleRelatedChange" />
           <div slot="append" class="expanded-action-wrapper">
-            <bk-switcher
-              v-model="isAllExpanded"
-              theme="primary"
-              size="small"
-              :disabled="isAggregateDisabled"
-              @change="handleAggregateActionChange">
-            </bk-switcher>
-            <span class="expanded-text">{{ isAllExpanded ? $t(`m.grading['批量编辑']`) : $t(`m.grading['逐项编辑']`) }}</span>
+            <div class="aggregate-action-tab-group">
+              <div
+                v-for="item in AGGREGATION_EDIT_ENUM"
+                :key="item.value"
+                :class="[
+                  'aggregate-action-btn',
+                  { 'is-active': isAllExpanded === item.value },
+                  { 'is-disabled': isAggregateDisabled }
+                ]"
+                @click.stop="handleAggregateActionChange(item.value)"
+              >
+                <span>{{ $t(`m.grading['${item.name}']`)}}</span>
+              </div>
+            </div>
           </div>
         </section>
       </render-horizontal-block>
@@ -272,12 +278,12 @@
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
   import { guid, formatCodeData } from '@/common/util';
+  import { PERMANENT_TIMESTAMP, AGGREGATION_EDIT_ENUM } from '@/common/constants';
   import RenderActionTag from '@/components/common-action';
   import ResourceInstanceTable from '../components/resource-instance-table';
   import Policy from '@/model/policy';
   import AggregationPolicy from '@/model/aggregation-policy';
   import Condition from '@/model/condition';
-  import { PERMANENT_TIMESTAMP } from '@/common/constants';
   import RenderPermSideslider from '../../perm/components/render-group-perm-sideslider';
   import ConfirmDialog from '@/components/iam-confirm-dialog/index';
 
@@ -291,6 +297,7 @@
     },
     data () {
       return {
+        AGGREGATION_EDIT_ENUM,
         systemValue: '',
         systemList: [],
         buttonLoading: false,
@@ -1232,6 +1239,7 @@
       },
 
       handleAggregateAction (payload) {
+        this.isAllExpanded = payload;
         const aggregationAction = this.aggregations;
         const actionIds = [];
         aggregationAction.forEach(item => {
@@ -1981,6 +1989,7 @@
 
 <style lang="postcss" scoped>
 @import './index.css';
+@import '@/css/mixins/aggregate-action-group.css';
 .action-hover {
     color: #3a84ff;
 }

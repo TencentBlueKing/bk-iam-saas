@@ -1988,144 +1988,142 @@
 </script>
 
 <style lang="postcss">
-    .template-resource-instance-table-wrapper {
-        min-height: 101px;
-        .bk-table {
-            width: 100%;
-            margin-top: 8px;
-            border-right: none;
-            border-bottom: none;
-            font-size: 12px;
-            &.is-detail-view {
-                .bk-table-body-wrapper {
-                    .cell {
-                        padding: 20px !important;
-                    }
-                }
-            }
-            .bk-table-header-wrapper {
-                th:first-child .cell {
-                    padding-left: 20px;
-                }
-            }
+  .template-resource-instance-table-wrapper {
+    min-height: 101px;
+    .bk-table {
+        width: 100%;
+        border-right: none;
+        border-bottom: none;
+        font-size: 12px;
+        &.is-detail-view {
             .bk-table-body-wrapper {
                 .cell {
-                    .view-icon {
-                        display: none;
-                        position: absolute;
-                        top: 50%;
-                        right: 30px;
-                        transform: translate(0, -50%);
-                        font-size: 18px;
-                        cursor: pointer;
-                    }
-                    &:hover {
-                        .view-icon {
-                            display: inline-block;
-                            color: #3a84ff;
-                        }
-                    }
+                    padding: 20px !important;
                 }
             }
-            .bk-table-body {
-                tr {
-                    &:hover {
-                        background-color: transparent;
-                        & > td {
-                            background-color: transparent;
-                        }
-                        .remove-icon {
-                            display: inline-block;
-                        }
-                    }
-                }
-                td:first-child .cell,
-                th:first-child .cell {
-                    /* padding-left: 15px; */
-                    padding-left: 10px;
-                }
-                .iam-new-action {
-                    display: inline-block;
-                    position: relative;
-                    top: 3px;
-                    width: 24px;
-                    vertical-align: top;
-                }
+        }
+        .bk-table-header-wrapper {
+            th:first-child .cell {
+                padding-left: 20px;
             }
-            .relation-content-wrapper,
-            .conditions-wrapper {
-                position: relative;
-                height: 100%;
-                padding: 17px 0;
-                color: #63656e;
-                .resource-type-name {
-                    display: block;
-                    margin-bottom: 9px;
+        }
+        .bk-table-body-wrapper {
+            .cell {
+                .view-icon {
+                    display: none;
+                    position: absolute;
+                    top: 50%;
+                    right: 30px;
+                    transform: translate(0, -50%);
+                    font-size: 18px;
+                    cursor: pointer;
                 }
-                .iam-condition-item {
-                    width: 90%;
-                }
-            }
-            .remove-icon {
-                /* display: none; */
-                position: absolute;
-                /* top: 5px; */
-                top: 5px;
-                right: 0;
-                cursor: pointer;
                 &:hover {
-                    color: #3a84ff;
-                }
-                i {
-                    font-size: 20px;
-                }
-            }
-            .relation-content-item {
-                margin-top: 17px;
-                &:first-child {
-                    margin-top: 0;
-                }
-                &.reset-margin-top {
-                    margin-top: 10px;
-                }
-                .content-name {
-                    margin-bottom: 9px;
+                    .view-icon {
+                        display: inline-block;
+                        color: #3a84ff;
+                    }
                 }
             }
-            .action-name {
-                margin-left: 6px;
+        }
+        .bk-table-body {
+            tr {
+                &:hover {
+                    background-color: transparent;
+                    & > td {
+                        background-color: transparent;
+                    }
+                    .remove-icon {
+                        display: inline-block;
+                    }
+                }
+            }
+            td:first-child .cell,
+            th:first-child .cell {
+                /* padding-left: 15px; */
+                padding-left: 10px;
+            }
+            .iam-new-action {
                 display: inline-block;
-                vertical-align: bottom;
-                word-wrap: break-word;
-                word-break: break-all;
-            }
-            .conditions-item {
-                margin-top: 7px;
-                &:first-child {
-                    margin-top: 0;
-                }
+                position: relative;
+                top: 3px;
+                width: 24px;
+                vertical-align: top;
             }
         }
-    }
-    .relate-instance-sideslider {
-        .sideslider-content {
-            height: calc(100vh - 114px);
+        .relation-content-wrapper,
+        .conditions-wrapper {
+            position: relative;
+            height: 100%;
+            padding: 17px 0;
+            color: #63656e;
+            .resource-type-name {
+                display: block;
+                margin-bottom: 9px;
+            }
+            .iam-condition-item {
+                width: 90%;
+            }
         }
-        .bk-sideslider-footer {
-            background-color: #f5f6fa!important;
-            border-color: #dcdee5!important;
+        .remove-icon {
+            /* display: none; */
+            position: absolute;
+            /* top: 5px; */
+            top: 5px;
+            right: 0;
+            cursor: pointer;
+            &:hover {
+                color: #3a84ff;
+            }
+            i {
+                font-size: 20px;
+            }
+        }
+        .relation-content-item {
+            margin-top: 17px;
+            &:first-child {
+                margin-top: 0;
+            }
+            &.reset-margin-top {
+                margin-top: 10px;
+            }
+            .content-name {
+                margin-bottom: 9px;
+            }
+        }
+        .action-name {
+            margin-left: 6px;
+            display: inline-block;
+            vertical-align: bottom;
+            word-wrap: break-word;
+            word-break: break-all;
+        }
+        .conditions-item {
+            margin-top: 7px;
+            &:first-child {
+                margin-top: 0;
+            }
         }
     }
-    .error-tips {
-        position: absolute;
-        line-height: 16px;
-        font-size: 10px;
-        color: #ea3636;
-    }
-
-    .tab-button{
-        margin: 10px 0;
-    }
+  }
+  .relate-instance-sideslider {
+      .sideslider-content {
+          height: calc(100vh - 114px);
+      }
+      .bk-sideslider-footer {
+          background-color: #f5f6fa!important;
+          border-color: #dcdee5!important;
+      }
+  }
+  .error-tips {
+      position: absolute;
+      line-height: 16px;
+      font-size: 10px;
+      color: #ea3636;
+  }
+  .tab-button{
+      margin: 10px 0;
+  }
 </style>
 
 <style lang="postcss" scoped>
