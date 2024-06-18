@@ -97,6 +97,9 @@ import userOrOrg from './modules/user-org';
 // 续期通知
 import renewalNotice from './modules/renewal-notice';
 
+// 用户全局配置
+import userGlobalConfig from './modules/global-config';
+
 Vue.use(Vuex);
 
 const SITE_URL = getRoutePath(window.SITE_URL);
@@ -372,7 +375,8 @@ const store = new Vuex.Store({
     sensitivityLevel,
     memberTemplate,
     userOrOrg,
-    renewalNotice
+    renewalNotice,
+    userGlobalConfig
   },
   state: {
     mainContentLoading: false,
