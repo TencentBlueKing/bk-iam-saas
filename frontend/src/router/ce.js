@@ -125,14 +125,6 @@ const GradingAdminEdit = () => import(/* webpackChunkName: 'grading-admin' */ '.
 const GradingAdminUpdateTemplate = () =>
   import(/* webpackChunkName: 'grading-admin' */ '../views/grading-admin/update-template');
 
-// 管理空间
-// const FirstManageSpace = () =>
-//     import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/first-manage-space');
-
-// // 管理空间新建
-// const FirstManageSpaceCreate = () =>
-//     import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/first-manage-space/create');
-
 // 授权边界
 const AuthorizationBoundary = () =>
   import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/authorization-boundary');
@@ -648,24 +640,6 @@ export const routes = [
         },
         component: GradingAdminUpdateTemplate
       },
-      // {
-      //     path: 'first-manage-space',
-      //     name: 'firstManageSpace',
-      //     meta: {
-      //         headerTitle: il8n('nav', '管理空间')
-      //     },
-      //     component: FirstManageSpace
-      // },
-      // {
-      //     path: ':id/first-manage-space-create',
-      //     name: 'firstManageSpaceCreate',
-      //     meta: {
-      //         headerTitle: il8n('levelSpace', '新建管理空间'),
-      //         backRouter: 'firstManageSpace'
-      //     },
-      //     props: true,
-      //     component: FirstManageSpaceCreate
-      // },
       {
         path: 'resource-permiss',
         name: 'resourcePermiss',

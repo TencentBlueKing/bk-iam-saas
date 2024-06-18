@@ -639,24 +639,6 @@ export const routes = [
         },
         component: GradingAdminUpdateTemplate
       },
-      // {
-      //     path: 'first-manage-space',
-      //     name: 'firstManageSpace',
-      //     meta: {
-      //         headerTitle: il8n('nav', '管理空间')
-      //     },
-      //     component: FirstManageSpace
-      // },
-      // {
-      //     path: ':id/first-manage-space-create',
-      //     name: 'firstManageSpaceCreate',
-      //     meta: {
-      //         headerTitle: il8n('levelSpace', '新建管理空间'),
-      //         backRouter: 'firstManageSpace'
-      //     },
-      //     props: true,
-      //     component: FirstManageSpaceCreate
-      // },
       {
         path: 'resource-permiss',
         name: 'resourcePermiss',
