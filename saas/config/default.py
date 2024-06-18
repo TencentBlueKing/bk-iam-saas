@@ -486,3 +486,7 @@ BK_IAM_BOT_APPROVAL_CALLBACK_APIGW_URL = env.str("BK_IAM_BOT_APPROVAL_CALLBACK_A
 
 # 文档地址
 BK_DOCS_URL_PREFIX = env.str("BK_DOCS_URL_PREFIX", default="https://bk.tencent.com/docs/")
+
+
+# 全局配置地址
+BK_SHARED_RES_URL = env.str("BKPAAS_SHARED_RES_URL", default="")
