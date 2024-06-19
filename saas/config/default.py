@@ -489,4 +489,4 @@ BK_DOCS_URL_PREFIX = env.str("BK_DOCS_URL_PREFIX", default="https://bk.tencent.c
 
 
 # 全局配置地址
-BK_SHARED_RES_URL = env.str("BKPAAS_SHARED_RES_URL", default="")
+BK_SHARED_RES_URL = env.str("BK_SHARED_RES_URL", default="")
