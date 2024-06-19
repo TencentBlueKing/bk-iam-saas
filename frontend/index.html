@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <!-- <link rel="icon" href="{{ STATIC_URL }}/images/favicon.ico" type="image/x-icon" />
+        <link rel="shortcut icon" href="{{ STATIC_URL }}/images/favicon.ico" type="image/x-icon" /> -->
         <link rel="icon" href="{{ STATIC_URL }}/images/favicon.ico" type="image/x-icon" />
-        <link rel="shortcut icon" href="{{ STATIC_URL }}/images/favicon.ico" type="image/x-icon" />
+        <link rel="shortcut icon" type="image/x-icon" />
         <meta charset="utf-8">
         <title>权限中心 | 腾讯蓝鲸智云</title>
     </head>
@@ -29,6 +31,9 @@
                 const ENABLE_BK_NOTICE = '{{ ENABLE_BK_NOTICE }}' || ''
                 const BK_DOMAIN = '{{ BK_DOMAIN }}' || ''
                 const BK_COMPONENT_API_URL = '{{ BK_COMPONENT_API_URL }}' || ''
+                const BK_SHARED_RES_URL = '{{ BK_SHARED_RES_URL }}' || ''
+                const BK_APP_CODE = '{{ BK_APP_CODE }}' || ''
+                const VERSION = '{{ VERSION }}' || ''
                 document.domain = '{{ SESSION_COOKIE_DOMAIN }}'
                 window.LOGIN_SERVICE_URL = LOGIN_SERVICE_URL
                 window.AJAX_URL_PREFIX = AJAX_URL_PREFIX
@@ -50,6 +55,9 @@
                 window.CE_URL = CE_URL
                 window.BK_DOMAIN = BK_DOMAIN
                 window.BK_COMPONENT_API_URL = BK_COMPONENT_API_URL
+                window.BK_SHARED_RES_URL = BK_SHARED_RES_URL
+                window.BK_APP_CODE = BK_APP_CODE
+                window.VERSION = VERSION
             })()
 
             function getLanguage () {

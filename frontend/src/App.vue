@@ -197,6 +197,7 @@
       if (!existValue('externalApp')) {
         this.fetchVersionLog();
         this.fetchNoviceGuide();
+        this.fetchUserGlobalConfig();
       }
       const isPoll = window.localStorage.getItem('isPoll');
       if (isPoll) {
@@ -337,6 +338,13 @@
           clearInterval(this.timer);
           this.messageAdvancedError(e);
         }
+      },
+      
+      /**
+       * 获取用户全局配置
+       */
+      async fetchUserGlobalConfig () {
+        await this.$store.dispatch('userGlobalConfig/getCurrentGlobalConfig');
       },
 
       // 是否存在key

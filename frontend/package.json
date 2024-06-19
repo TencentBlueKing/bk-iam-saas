@@ -90,6 +90,7 @@
     "@blueking/functional-dependency": "0.0.1-beta.12",
     "@blueking/login-modal": "^1.0.0",
     "@blueking/notice-component-vue2": "^2.0.3",
+    "@blueking/platform-config": "^1.0.2",
     "@blueking/sub-saas": "0.0.0-beta.7",
     "@blueking/user-selector": "^1.0.14",
     "@commitlint/cli": "~13.1.0",
