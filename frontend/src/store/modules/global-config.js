@@ -71,7 +71,7 @@ export default {
       if (window.BK_SHARED_RES_URL) {
         const repoUrl = window.BK_SHARED_RES_URL.endsWith('/') ? window.BK_SHARED_RES_URL : `${window.BK_SHARED_RES_URL}/`;
         try {
-          commitParams = await getPlatformConfig(`${repoUrl}bk_iam/base.js`, state.initialConfig);
+          commitParams = await getPlatformConfig(`${repoUrl}${window.BK_APP_CODE}/base.js`, state.initialConfig);
           if (commitParams && commitParams.site) {
             commitParams.site.separator = titleSeparator;
           }
