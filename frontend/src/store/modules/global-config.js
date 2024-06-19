@@ -71,22 +71,21 @@ export default {
       if (window.BK_SHARED_RES_URL) {
         const repoUrl = window.BK_SHARED_RES_URL.endsWith('/') ? window.BK_SHARED_RES_URL : `${window.BK_SHARED_RES_URL}/`;
         try {
-          commitParams = await getPlatformConfig(`${repoUrl}bk_iam/base.js`, state.initialConfig);
+          commitParams = await getPlatformConfig(`${repoUrl}bk_iam/base.js`, state.initialConfig.publicConfig);
           if (commitParams && commitParams.site) {
             commitParams.site.separator = titleSeparator;
           }
         } catch (e) {
           console.error(e, '错误日志');
-          commitParams = await getPlatformConfig(state.initialConfig);
+          commitParams = await getPlatformConfig(state.initialConfig.publicConfig);
         }
       } else {
         // 本地开发环境调试
-        commitParams = await getPlatformConfig(state.initialConfig);
+        commitParams = await getPlatformConfig(state.initialConfig.publicConfig);
       }
       console.log(commitParams, '配置项数据');
-      const { i18n, publicConfig } = commitParams;
-      setDocumentTitle(i18n.name ? i18n : publicConfig);
-      setShortcutIcon(publicConfig.favicon);
+      setDocumentTitle(commitParams.i18n || {});
+      setShortcutIcon(commitParams.favicon);
       commit('setCurrentGlobalConfig', commitParams);
     }
   }
