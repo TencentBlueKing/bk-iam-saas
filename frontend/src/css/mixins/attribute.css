@@ -1,0 +1,27 @@
+.attribute-item {
+  display: flex;
+  /deep/ .attribute-select {
+    display: flex;
+    .sub-selector-content {
+      width: 330px !important;
+      position: relative;
+      left: -1px;
+    }
+  }
+  .attribute-action {
+    margin-left: 12px;
+    line-height: 32px;
+    i {
+      color: #979ba5;
+      font-size: 20px;
+      cursor: pointer;
+      &.disabled {
+        color: #c4c6cc;
+        cursor: not-allowed;
+      }
+    }
+  }
+  &.set-margin-top {
+    margin-top: 8px;
+  }
+}

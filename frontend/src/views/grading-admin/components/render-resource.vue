@@ -161,7 +161,7 @@
   import OrStatusBar from '@/components/render-status/bar';
   import ChooseIp from '@/components/choose-ip/grade/index';
   import InstanceView from '@/components/choose-ip/view';
-  import Attribute from '../../perm-apply/components/attribute';
+  import Attribute from '@/views/perm-apply/components/attribute';
   import Instance from '@/model/instance';
   import Condition from '@/model/condition';
 
