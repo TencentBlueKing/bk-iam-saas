@@ -36,6 +36,10 @@ class VueTemplateView(TemplateView):
                 # BK_DOMAIN
                 "BK_DOMAIN": settings.BK_DOMAIN,
                 "BK_DOCS_URL_PREFIX": settings.BK_DOCS_URL_PREFIX.rstrip("/"),
+                # BK Res
+                "BK_SHARED_RES_URL": settings.BK_SHARED_RES_URL.rstrip("/"),
+                # App Code
+                "BK_APP_CODE": settings.APP_CODE,
             }
 
             # 添加前端功能启用开关
