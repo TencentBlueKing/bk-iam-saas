@@ -1160,6 +1160,7 @@
           this.$store.commit('permTemplate/updateCloneActions', data);
           this.$store.commit('permTemplate/updatePreActionIds', actionIdList);
           this.$store.commit('permTemplate/updateAction', getHasSelectedActions(actionIdList, list, this.defaultCheckedActions));
+          await this.fetchPreUpdateInfo();
           this.handleSetCurActionStep(2);
         } catch (e) {
           this.messageAdvancedError(e);

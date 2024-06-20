@@ -285,6 +285,10 @@
       isSubmitDisabled () {
         return () => {
           const tableList = this.allSyncGroupList.map((item) => item.tableList).flat(Infinity);
+          const isNoAdd = tableList.every((v) => ['delete'].includes(v.mode_type));
+          if (isNoAdd) {
+            return false;
+          }
           const hasEmpty = tableList.some((item) => {
             if (item.isAggregate) {
               if (!item.instances) {
