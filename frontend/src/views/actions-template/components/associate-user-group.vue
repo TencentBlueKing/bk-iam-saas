@@ -20,8 +20,8 @@
       @page-limit-change="handleLimitChange"
       v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
     >
-      <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
-        <template slot-scope="{ row }" :show-over-tooltip="true">
+      <bk-table-column :label="$t(`m.userGroup['用户组名']`)" :show-overflow-tooltip="true">
+        <template slot-scope="{ row }">
           <span class="user-groups-name" @click="handleOpen(row.id)">
             {{ row.name }}
           </span>
