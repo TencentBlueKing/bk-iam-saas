@@ -614,7 +614,8 @@ export const m = {
         '确认删除同步记录？': 'Are you sure you want to delete the synchronization record?',
         '确认恢复默认？': 'Are you sure to restore defaults?',
         '确认删除该操作模板？': 'Are you sure to delete the operation template?',
-        '确认解除与该操作模板的同步？': 'Confirm to unsynchronize with this action template?'
+        '确认解除与该操作模板的同步？': 'Confirm to unsynchronize with this action template?',
+        '确认批量删除所选的操作模板吗？': 'Are you sure to batch delete the selected action templates?'
     },
     nav: {
         '蓝鲸权限中心': 'BlueKing-IAM',
@@ -1512,11 +1513,11 @@ export const m = {
         '只读人员模板不能移除': 'The read-only member template cannot be removed',
         '只读人员模板不能添加、删除、复制成员': 'Read-only member template cannot add, delete, or copy members',
         '最多只能选择10个人员模板' : 'You can only select up to 10 member templates',
-        '请勾选人员模板': 'Please check personnel template',
+        '请勾选人员模板': 'Please check member template',
         '当前勾选项皆为只读人员模板': 'The current options are all read-only member templates',
         '当前勾选项皆为有关联用户组人员模板': 'The current options are all associated user group member templates',
         '当前勾选项皆为只读和有关联用户组人员模板': 'The current options are all read-only and have associated user group member templates',
-        '以下为只读或有关联用户组的人员模板，不可删除。': 'The following personnel templates are read-only or have associated user groups and cannot be deleted.'
+        '以下为只读或有关联用户组的人员模板，不可删除。': 'The following member templates are read-only or have associated user groups and cannot be deleted.'
     },
     userOrOrg: {
         '用户组名': 'User group name',
@@ -1645,7 +1646,8 @@ export const m = {
         '搜索 系统名、操作名': 'Search system name and action name',
         '引用已有的操作实例一键填充': 'Referencing existing operation instances for one click filling',
         '批量复用资源实例值（资源模板）到其他用户组': 'Batch reuse of resource instance values (resource templates) to other user groups',
-        '解除同步后，模板权限将转为用户组自定义权限，不会再继续同步该模板的操作。': 'After unsynchronizing, template permissions will be converted to user group custom permissions, and the operation of synchronizing the template will no longer be continued.'
+        '解除同步后，模板权限将转为用户组自定义权限，不会再继续同步该模板的操作。': 'After unsynchronizing, template permissions will be converted to user group custom permissions, and the operation of synchronizing the template will no longer be continued.',
+        '以下为有关联用户组的操作模板，不可删除。': 'The following action templates are have associated user groups and cannot be deleted.'
     }
 }
 export default {

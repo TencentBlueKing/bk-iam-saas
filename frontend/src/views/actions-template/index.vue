@@ -444,7 +444,7 @@
         const typeMap = {
           delete: () => {
             this.delActionDialogTitle = this.$t(`m.dialog['确认批量删除所选的操作模板吗？']`);
-            this.delActionDialogTip = this.$t(`m.memberTemplate['以下为有关联用户组的操作模板，不可删除。']`);
+            this.delActionDialogTip = this.$t(`m.actionsTemplate['以下为有关联用户组的操作模板，不可删除。']`);
             this.hasRelatedGroups = this.currentSelectList.filter((item) => item.subject_count > 0);
             this.isShowDeleteDialog = true;
           }
