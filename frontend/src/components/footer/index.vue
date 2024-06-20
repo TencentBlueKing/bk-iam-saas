@@ -64,7 +64,7 @@
         return this.curLanguageIsCn ? this.globalConfig.footerInfoHTML : this.globalConfig.footerInfoHTMLEn;
       },
       copyright () {
-        return this.globalConfig.footer.copyright;
+        return this.globalConfig.footerCopyrightContent;
       }
     },
     created () {
