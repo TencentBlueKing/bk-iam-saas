@@ -48,7 +48,7 @@ export default {
     }
   },
   getters: {
-    globalConfig: state => state.initialConfig
+    globalConfig: state => state.initialConfig.publicConfig
   },
   mutations: {
     setCurrentGlobalConfig (state, params) {

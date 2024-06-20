@@ -3,8 +3,8 @@
   <header class="header-nav-layout">
     <div :class="['logo', 'fl']" @click.stop="handleBackHome">
       <!-- <iam-svg name="logo" :alt="$t(`m.nav['蓝鲸权限中心']`)" /> -->
-      <img :src="appLogo()" :alt="$t(`m.nav['蓝鲸权限中心']`)">
-      <span class="text">{{ appName() }}</span>
+      <img :src="appLogo" :alt="$t(`m.nav['蓝鲸权限中心']`)">
+      <span class="text">{{ appName }}</span>
     </div>
     <div class="header-breadcrumbs fl">
       <div class="nav-container">
@@ -310,21 +310,18 @@
         return this.searchValue === '';
       },
       appName () {
-        return () => {
-          // 如果未获取到配置，使用默认title
-          if (this.globalConfig) {
-            const { name, nameEn } = this.globalConfig;
-            return this.curLanguageIsCn ? name : nameEn;
-          }
-          return this.$t('m.nav["蓝鲸权限中心"]');
-        };
+        // 如果未获取到配置，使用默认title
+        if (this.globalConfig) {
+          const { name, nameEn } = this.globalConfig;
+          return this.curLanguageIsCn ? name : nameEn;
+        }
+        return this.$t('m.nav["蓝鲸权限中心"]');
       },
       appLogo () {
-        return () => {
-          // 如果未获取到配置，使用默认logo
-          const src = this.globalConfig.appLogo || logoSvg;
-          return src;
-        };
+        // 如果未获取到配置，使用默认logo
+        console.log(this.globalConfig.appLogo);
+        const src = this.globalConfig.appLogo || logoSvg;
+        return src;
       }
     },
     watch: {
