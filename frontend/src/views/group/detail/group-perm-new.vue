@@ -130,6 +130,7 @@
         isLoading: false,
         linearActionList: [],
         groupSystemList: [],
+        originalCustomTmplList: [],
         authorizationData: {},
         groupSystemListLength: '',
         removingSingle: false,
@@ -269,12 +270,16 @@
         }
       },
 
-      handleEdit (paylaod) {
-        this.$set(paylaod, 'isEdit', true); // 事件会冒泡会触发handleExpanded方法
+      handleEdit (payload) {
+        this.$set(payload, 'isEdit', true); // 事件会冒泡会触发handleExpanded方法
       },
 
-      handleCancel (paylaod) {
-        this.$set(paylaod, 'isEdit', false);
+      handleCancel (payload) {
+        const { tableData, tableDataBackup } = payload;
+        if (JSON.stringify(tableData) !== JSON.stringify(tableDataBackup)) {
+          payload.tableData = _.cloneDeep(tableDataBackup);
+        }
+        this.$set(payload, 'isEdit', false);
       },
 
       async getGroupTemplateList (groupSystem) {
@@ -532,6 +537,7 @@
           subItem.editLoading = false;
         }
       },
+
       handleDelete (item, subItem) {
         this.removingSingle = false;
         if (subItem.id > 0) {

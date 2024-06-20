@@ -5,32 +5,37 @@
     { 'nav-sticked': navStick, 'hide-bread': externalSystemsLayout.hideIamBreadCrumbs && !externalRouter.includes($route.name) },
     { 'external-nav-sticked': isShowExternal }
   ]">
-    <!-- <iam-guide
-            v-if="showGuide"
-            type="switch_role"
-            direction="right"
-            :flag="showGuide"
-            :style="{ top: '5px', right: '125px' }"
-            :content="$t(`m.guide['切换管理空间']`)" /> -->
-    <div class="breadcrumbs fl"
+    <div
+      class="breadcrumbs fl"
       :class="backRouter ? 'has-cursor' : ''"
       v-show="isShowExternal || (!mainContentLoading && !externalSystemsLayout.hideIamBreadCrumbs)"
-      @click="back">
+      @click.stop="back"
+    >
       <div v-if="!isHide" class="breadcrumbs-content">
         <Icon type="arrows-left" class="breadcrumbs-back" v-if="backRouter" />
         <template v-if="customBreadCrumbTitles.includes(routeName)">
           <h2 v-if="['addGroupPerm'].includes(routeName)" class="breadcrumbs-current single-hide" :style="formatBreadCrumbWidth()">
             {{ $t(`m.info['用户组成员添加权限']`, { value: `${$t(`m.common['【']`)}${userGroupName}${$t(`m.common['】']`)}` }) }}
           </h2>
-          <div v-else-if="['renewalNotice'].includes(routeName)">
-            <h2 class="breadcrumbs-current single-hide" :style="formatBreadCrumbWidth('switch')">
+          <template v-if="['renewalNotice'].includes(routeName)">
+            <h2 class="breadcrumbs-current single-hide" :style="formatBreadCrumbWidth()">
               {{ headerTitle }}
             </h2>
             <bk-switcher size="large" theme="primary" v-model="needProvideValue.isShowRenewalNotice" @change="handleChangeRenewalNotice" />
+          </template>
+          <div v-if="['actionsTemplateEdit'].includes(routeName)" class="breadcrumbs-content-actions-template-edit">
+            <div class="breadcrumbs-label">
+              <span class="breadcrumbs-label-title">{{ $t(`m.actionsTemplate['编辑模板操作']`) }}</span>
+              <span class="vertical-line">|</span>
+              <div class="breadcrumbs-label-name">
+                <div class="title">{{ $t(`m.common['模板名称']`) }}{{ $t(`m.common['：']`) }}</div>
+                <div class="single-hide name" :style="formatBreadCrumbWidth()">{{ headerTitle }}</div>
+              </div>
+            </div>
+            <div @click.stop="" class="breadcrumbs-value">
+              <bk-steps :steps="actionSteps" :cur-step.sync="needProvideValue.curActionStep" ext-cls="actions-template-edit-step" @step-changed="handleStepChange" />
+            </div>
           </div>
-          <h2 v-else class="breadcrumbs-current single-hide" :style="formatBreadCrumbWidth()">
-            {{ headerTitle }}
-          </h2>
         </template>
         <h2 v-else class="breadcrumbs-current single-hide" :style="formatBreadCrumbWidth()">
           {{ headerTitle }}
@@ -129,14 +134,8 @@
   ]);
 
   export default {
-    provide () {
-      return {
-        needProvideValue: this.needProvideValue
-      };
-    },
     components: {
       SystemLog
-      // IamGuide
     },
     props: {
       routeName: {
@@ -187,11 +186,16 @@
         placeholderValue: '',
         userGroupName: '',
         externalRouter: ['permTransfer', 'permRenewal', 'addGroupPerm'], // 开放内嵌页面需要面包屑的页面
-        customBreadCrumbTitles: ['addGroupPerm', 'renewalNotice'],
+        customBreadCrumbTitles: ['addGroupPerm', 'renewalNotice', 'actionsTemplateEdit'],
         // 需要provide的变量
         needProvideValue: {
-          isShowRenewalNotice: false
-        }
+          isShowRenewalNotice: false,
+          curActionStep: 1
+        },
+        actionSteps: [
+          { title: this.$t(`m.permApply['选择操作']`), icon: 1 },
+          { title: this.$t(`m.actionsTemplate['同步用户组']`), icon: 2 }
+        ]
       };
     },
     computed: {
@@ -223,13 +227,23 @@
         return this.externalRouter.includes(this.$route.name) && this.externalSystemsLayout.hideIamBreadCrumbs;
       },
       formatBreadCrumbWidth () {
-        return (payload) => {
-          if (payload === 'switch') {
-            const switchWidth = 52;
-            return {
-              'max-width': `calc(100vw - ${this.navStick ? 280 - switchWidth : 80 - switchWidth}px)`,
-              'margin-right': '10px'
-            };
+        return () => {
+          const routeMap = {
+            renewalNotice: () => {
+              const switchWidth = 52;
+              return {
+                'max-width': `calc(100vw - ${this.navStick ? 280 - switchWidth : 80 - switchWidth}px)`,
+                'margin-right': '10px'
+              };
+            },
+            actionsTemplateEdit: () => {
+              return {
+                'max-width': `150px`
+              };
+            }
+          };
+          if (routeMap[this.$route.name]) {
+            return routeMap[this.$route.name]();
           }
           return {
             'max-width': `calc(100vw - ${this.navStick ? 280 : 80}px)`
@@ -287,24 +301,9 @@
       this.curIdentity = this.user.role.name;
       bus.$emit('theme-change', this.curRole);
       this.curRoleId = this.user.role.id;
-      this.$once('hook:beforeDestroy', () => {
-        bus.$off('reload-page');
-        bus.$off('refresh-role');
-        bus.$off('on-set-tab');
-        bus.$off('on-refresh-renewal-status');
-      });
     },
     mounted () {
-      bus.$on('refresh-role', data => {
-        this.handleSwitchRole(data);
-      });
-      bus.$on('on-set-tab', data => {
-        this.active = data;
-      });
-      bus.$on('on-refresh-renewal-status', (payload) => {
-        const isShowRenewalNotice = payload.isShowRenewalNotice || false;
-        this.needProvideValue = Object.assign(this.needProvideValue, { isShowRenewalNotice });
-      });
+      this.handleGetBusQueryData();
     },
     methods: {
       // 获取用户组详情
@@ -478,13 +477,6 @@
         this.handleSwitchRole({ id: 0, type: 'staff', name: this.user.role.name });
       },
 
-      handleLogout () {
-        window.localStorage.removeItem('iam-header-title-cache');
-        window.localStorage.removeItem('iam-header-name-cache');
-        window.localStorage.removeItem('applyGroupList');
-        window.location = window.LOGIN_SERVICE_URL + '/?c_url=' + window.location.href;
-      },
-
       resetLocalStorage () {
         window.localStorage.removeItem('customPermProcessList');
         window.localStorage.removeItem('gradeManagerList');
@@ -511,11 +503,31 @@
             tab: tab
           }))}`);
         }
+      },
+
+      handleStepChange (payload) {
+        console.log(payload);
+      },
+
+      handleGetBusQueryData () {
+        bus.$on('refresh-role', data => {
+          this.handleSwitchRole(data);
+        });
+        bus.$on('on-set-tab', data => {
+          this.active = data;
+        });
+        bus.$on('on-refresh-renewal-status', (payload) => {
+          const isShowRenewalNotice = payload.isShowRenewalNotice || false;
+          this.needProvideValue = Object.assign(this.needProvideValue, { isShowRenewalNotice });
+        });
+        bus.$on('on-action-temp-step-change', ({ step }) => {
+          this.needProvideValue = Object.assign(this.needProvideValue, { curActionStep: step || 1 });
+        });
       }
     }
   };
 </script>
 
 <style>
-    @import './index';
+  @import './index';
 </style>

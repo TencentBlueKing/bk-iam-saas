@@ -449,8 +449,17 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .iamcenter-setting:before {
 	content: "\e227";
 }
+.iamcenter-locate:before {
+	content: "\e22e";
+}
 .iamcenter-notification:before {
 	content: "\e228";
+}
+.iamcenter-action-temp:before {
+	content: "\e230";
+}
+.iamcenter-unfinished:before {
+	content: "\e22f";
 }
 .iamcenter-duanxin:before {
 	content: "\e22d";

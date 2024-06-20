@@ -1013,10 +1013,6 @@
       padding-left: 2px;
     }
 }
-/deep/ .bk-table-fixed,
-/deep/ .bk-table-fixed-right {
-  border-bottom: 0;
-}
 /deep/ .children-expand-cls {
   .bk-table-fixed {
     .bk-table-fixed-body-wrapper {

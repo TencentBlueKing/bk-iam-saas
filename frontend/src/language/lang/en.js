@@ -117,6 +117,7 @@ export const m = {
         '清空': 'Clear',
         '保存': 'Save',
         '提交': 'Submit',
+        '直接提交': 'Direct submit',
         '取消': 'Cancel',
         '取消-dialog': 'CANCEL',
         '组织': 'Organization',
@@ -180,6 +181,7 @@ export const m = {
         '问题反馈': 'Feedback',
         '正在同步中': 'Syncing',
         '新增': 'Add',
+        '已有': 'Selected',
         '申请新建': 'Apply for new',
         '批量粘贴': 'Multi-paste',
         '查看更多': 'More',
@@ -243,14 +245,14 @@ export const m = {
         '搜索管理空间': 'Search management space',
         '搜索结果为空': 'Search result is empty',
         '数据结果异常': 'Abnormal data result',
-        可以尝试: 'Can try',
-        调整关键词: 'adjust keywords',
-        或: 'or',
-        清空筛选条件: 'Clear filter',
-        没有权限: 'Unauthorized',
+        '可以尝试': 'Can try',
+        '调整关键词': 'adjust keywords',
+        '或': 'or',
+        '清空筛选条件': 'Clear filter',
+        '没有权限': 'Unauthorized',
         '搜索过于频繁': 'Too Frequent Operations',
-        数据获取异常: 'Data acquisition exception',
-        数据不存在: 'Data does not exist',
+        '数据获取异常': 'Data acquisition exception',
+        '数据不存在': 'Data does not exist',
         '搜索结果太多': 'There are too many search results, please improve the search criteria',
         '暂不支持搜索': 'Search is not currently supported',
         '去编辑': 'To edit',
@@ -279,6 +281,8 @@ export const m = {
         '无该应用访问权限': 'No access permissions for this application',
         '暂无可复制内容': 'There is currently no replicable content',
         '暂无可复制用户': 'There are currently no replicable users',
+        '暂无可复制实例': 'There are currently no replicable instances',
+        '暂无可批量复用实例': 'There are currently no batch replicable instances',
         '管理员组不能添加部门': 'The administrator group cannot add department',
         '管理员组不能添加人员模板': 'The administrator group cannot add member template',
         '批量退出': 'Multi-quit',
@@ -299,12 +303,22 @@ export const m = {
         '每页': 'Page',
         '清除选择': 'Clear',
         '暂无可清空数据': 'No data clear',
+        '清空搜索条件': 'Clear search criteria',
         '已选父级': 'Selected parent level',
         '测试': 'Test',
         '恢复默认': 'Default',
         '点击复制': 'Click to copy',
         '复制成功': 'Copy successful',
-        '暂无可复制数据': 'There is currently no replicable data'
+        '暂无可复制数据': 'There is currently no replicable data',
+        '个操作': 'actions',
+        '按顶层聚合': 'Aggregated by Top Level',
+        '按资源类型聚合': 'Aggregated by resource type',
+        '不聚合': 'Not aggregated',
+        '一键填充': 'One click fill',
+        '全部无限制': 'All unlimited',
+        '定位未填写': 'Location not filled in',
+        '暂无可一键填充实例': 'There are currently no instances that can be filled with one click',
+        '了解更多': 'Learn more'
     },
     // 校验
     verify: {
@@ -393,7 +407,8 @@ export const m = {
         '请选择用户组成员复制': 'Please select user group member copy',
         '模板名称不能为空': 'Template name cannot be empty',
         '模板成员不能为空': 'Template member cannot be empty',
-        '模板名称必填, 不允许输入表情字符': 'Template name is required and emoji characters are not allowed to be entered'
+        '模板名称必填, 不允许输入表情字符': 'Template name is required and emoji characters are not allowed to be entered',
+        '请选择操作模板': 'Please select action templates'
     },
     info: {
         '加入用户组申请成功': 'Apply to join the group successfully',
@@ -504,6 +519,7 @@ export const m = {
         '搜索关键字': 'Search Keywords',
         '无资源ID，无法预览': 'No resource ID, unable to preview',
         '暂无可批量复制包含有属性条件的资源实例': 'There are currently no resource instances that can be batch copied with attribute conditions',
+        '暂无可批量复用的资源实例': 'There are currently no batch reusable resource instances available',
         '(GMT-12:00) 国际换线时间': '(GMT-12:00) International Line Change Time',
         '(GMT-11:00) 中途岛时间': '(GMT-11:00) Midway Island Time',
         '(GMT-10:00) 夏威夷时间': '(GMT-10:00) Hawaii Time',
@@ -596,7 +612,10 @@ export const m = {
         '确认批量删除所选的人员模板吗？': 'Are you sure to batch delete the selected member templates?',
         '确认把用户/组织移出该用户组？': 'Are you sure to move the user/organization out of this user group?',
         '确认删除同步记录？': 'Are you sure you want to delete the synchronization record?',
-        '确认恢复默认？': 'Are you sure to restore defaults?'
+        '确认恢复默认？': 'Are you sure to restore defaults?',
+        '确认删除该操作模板？': 'Are you sure to delete the operation template?',
+        '确认解除与该操作模板的同步？': 'Confirm to unsynchronize with this action template?',
+        '确认批量删除所选的操作模板吗？': 'Are you sure to batch delete the selected action templates?'
     },
     nav: {
         '蓝鲸权限中心': 'BlueKing-IAM',
@@ -654,9 +673,11 @@ export const m = {
         '克隆二级管理空间': 'Clone Secondary management space',
         '用户组设置': 'User Group Setting',
         '敏感等级': 'Sensitivity Level',
-        '人员模板': 'Members Template',
+        '人员模板': 'Member Templates',
         '用户/组织': 'User/Organization',
-        '续期通知': 'Renewal Notice'
+        '续期通知': 'Renewal notice',
+        '操作模板': 'Action Templates',
+        '新建操作模板': 'New Action Templates'
     },
     applyEntrance: {
         '立刻申请': 'Apply now',
@@ -722,7 +743,11 @@ export const m = {
         '可代他人申请加入用户组获取权限': 'You can apply to join the user group for permission on behalf of others',
         '（标签只读：含只读操作）': '({name} read-only: including {value} actions)',
         '收藏成功': 'Collection successful',
-        '取消收藏成功': 'Cancel collection successful'
+        '取消收藏成功': 'Cancel collection successful',
+        '尚未选择用户组': 'No user group has been selected yet',
+        '未启用用户组自动推荐功能': 'The user group auto-recommendation feature is not enabled.',
+        '如需启用该功能，请联系部署同学部署相关ES服务': 'To enable this feature, please contact  deployment colleagues to deploy the related ES service.',
+        '该功能可以根据用户当前的权限需求，自动匹配相关的用户组': "This feature can automatically match relevant user groups based on the user's current permission requirements."
     },
     myApply: {
         '申请列表': 'Apply List',
@@ -895,7 +920,9 @@ export const m = {
         '设置不可被申请，则无法申请加入此用户组': 'If the setting cannot be applied for, you cannot apply to join this user group',
         '管理员已设置空间下所有用户组不可被申请': 'The administrator has set that all user groups in the space cannot be applied for',
         '已选择的用户组成员不需要续期': 'The selected user group members do not need to be renewed',
-        '自动生成同名人员模板': 'Automatically generate member template with the same name'
+        '自动生成同名人员模板': 'Automatically generate member template with the same name',
+        '管理员组无法添加权限': 'Administrators group unable to add permissions',
+        '只读用户组无法添加权限': 'Read only user group cannot add permissions'
     },
     userGroupDetail: {
         '用户组名': 'Group name: ',
@@ -1182,6 +1209,7 @@ export const m = {
         '管理类API白名单创建': 'Management class API whitelist create',
         '管理类API白名单删除': 'Management class API whitelist delete',
         '操作敏感等级更新': 'Action sensitivity level update',
+        '续期通知更新': 'Renewal notice update',
         '回滚事件': 'Rollback event',
         '管理空间用户组成员续期': 'Management space group members renew',
         '用户组成员续期': 'Group members renew',
@@ -1471,7 +1499,7 @@ export const m = {
         '模板成员': 'Template members',
         '模板详情': 'Template detail',
         '模板描述': 'Template description',
-        '模板ID': 'Template ID',
+        '模板 ID': 'Template ID',
         '解除': 'Remove',
         '解除关联': 'Disassociate',
         '人员模板创建成功': 'Successfully created members template',
@@ -1484,7 +1512,12 @@ export const m = {
         '请输入用户/组织，按enter键搜索': 'Please enter user/organization, press enter to search',
         '只读人员模板不能移除': 'The read-only member template cannot be removed',
         '只读人员模板不能添加、删除、复制成员': 'Read-only member template cannot add, delete, or copy members',
-        '最多只能选择10个人员模板' : 'You can only select up to 10 member templates'
+        '最多只能选择10个人员模板' : 'You can only select up to 10 member templates',
+        '请勾选人员模板': 'Please check member template',
+        '当前勾选项皆为只读人员模板': 'The current options are all read-only member templates',
+        '当前勾选项皆为有关联用户组人员模板': 'The current options are all associated user group member templates',
+        '当前勾选项皆为只读和有关联用户组人员模板': 'The current options are all read-only and have associated user group member templates',
+        '以下为只读或有关联用户组的人员模板，不可删除。': 'The following member templates are read-only or have associated user groups and cannot be deleted.'
     },
     userOrOrg: {
         '用户组名': 'User group name',
@@ -1582,6 +1615,39 @@ export const m = {
         '测试通知已发送成功，请查收。': 'The test notification has been successfully sent, please check it.',
         '邮件主题为必填项': 'Email subject is required',
         '模板内容为必填项': 'Template content is required'
+    },
+    actionsTemplate: {
+        '模板名称': 'Template name',
+        '模板操作': 'Template action',
+        '系统名': 'System name',
+        '操作名': 'Action name',
+        '成员': 'Member',
+        '用户组ID': 'User group ID',
+        '添加来源': 'Add resource',
+        '搜索 模板名称、所属系统、创建人、描述': 'Search template name, system, creator, description',
+        '删除后，无法恢复，请谨慎操作！': 'After deletion, it cannot be restored. Please operate with caution!',
+        '仅展示已勾选的操作': 'Show only selected actions',
+        '搜索 操作名称': 'Search action name',
+        '编辑模板操作': 'Edit Template Action',
+        '同步用户组': 'Synchronize user groups',
+        '自定义操作': 'Custom Actions',
+        '新建操作模板成功': 'Actions template created',
+        '操作模板未变更, 无需更新!': 'The actions template has not been changed, no need to update!',
+        '关联用户组的实例': 'Associated user group instance',
+        '暂无关联的用户组': 'Temporarily Unassociated User Groups',
+        '无须进行操作实例的确认': 'No need to confirm the operation instance',
+        '还有用户组未完成实例关联': 'There are still user groups that have not completed instance association',
+        '用户组详情': 'User group detail',
+        '用户组ID': 'User group ID',
+        '已填写': 'Completed',
+        '未填写': 'Not filled in',
+        '解除同步': 'Resynchronize',
+        '批量复用': 'Multi-Reuse',
+        '搜索 系统名、操作名': 'Search system name and action name',
+        '引用已有的操作实例一键填充': 'Referencing existing operation instances for one click filling',
+        '批量复用资源实例值（资源模板）到其他用户组': 'Batch reuse of resource instance values (resource templates) to other user groups',
+        '解除同步后，模板权限将转为用户组自定义权限，不会再继续同步该模板的操作。': 'After unsynchronizing, template permissions will be converted to user group custom permissions, and the operation of synchronizing the template will no longer be continued.',
+        '以下为有关联用户组的操作模板，不可删除。': 'The following action templates are have associated user groups and cannot be deleted.'
     }
 }
 export default {

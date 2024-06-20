@@ -599,7 +599,7 @@
         }
       }
       .temp-content {
-        &-popover-confirm {
+        .temp-content-popover-confirm {
           height: 0;
         }
         .temp-textarea-content {

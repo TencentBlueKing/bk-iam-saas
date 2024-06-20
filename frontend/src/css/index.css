@@ -18,6 +18,11 @@
             background-color: #ffffff;
         }
 
+        .bk-table-fixed, 
+        .bk-table-fixed-right {
+            border-bottom: 0;
+        }
+
         .tippy-content {
             padding: 0 !important;
         }

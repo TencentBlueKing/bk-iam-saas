@@ -1,9 +1,9 @@
 <template>
-  <div class="smart-action-wraper" ref="smartActionWraper">
+  <div class="smart-action-wrapper" ref="smartActionWraper">
     <div>
       <slot />
     </div>
-    <div ref="actionPosition" :style="positionStyles" role="action-position">
+    <div ref="actionPosition" :style="positionStyles" role="action-position" class="action-position">
       <div
         ref="dynamicPosition"
         :class="[
@@ -151,32 +151,33 @@
     }
   };
 </script>
+
 <style lang='postcss' scoped>
-    .smart-action-wraper {
-        .fixed {
-            position: fixed;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            /* z-index: 1999; */
-            z-index: 1899;
-            display: flex;
-            align-items: center;
-            height: 52px;
-            line-height: 52px;
-            background: #fff;
-            box-shadow: 0px -2px 4px 0px rgba(0, 0, 0, 0.06);
-        }
+.smart-action-wrapper {
+  .fixed {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    /* z-index: 1999; */
+    z-index: 1899;
+    display: flex;
+    align-items: center;
+    height: 52px;
+    line-height: 52px;
+    background: #fff;
+    box-shadow: 0px -2px 4px 0px rgba(0, 0, 0, 0.06);
+  }
 
-        .external-dialog-fixed-custom,
-        .external-page-fixed-custom {
-           box-shadow: none;
-           border-top: 1px solid #dcdee5;
-           padding-left: 0px !important;
-        }
+  .external-dialog-fixed-custom,
+  .external-page-fixed-custom {
+    box-shadow: none;
+    border-top: 1px solid #dcdee5;
+    padding-left: 0px !important;
+  }
 
-        .external-page-fixed-custom {
-            padding-left: 24px !important;
-        }
-    }
+  .external-page-fixed-custom {
+    padding-left: 24px !important;
+  }
+}
 </style>

@@ -133,7 +133,9 @@ export const NEED_CONFIRM_DIALOG_ROUTER = [
   'gradingAdminEdit',
   'myManageSpaceCreate',
   'authorBoundaryEditFirstLevel',
-  'secondaryManageSpaceCreate'
+  'secondaryManageSpaceCreate',
+  'actionsTemplateCreate',
+  'actionsTemplateEdit'
 ];
 
 // 用户组属性枚举
@@ -240,6 +242,57 @@ export const MEMBERS_TEMPLATE_FIELDS = [
     label: il8n('common', '创建时间'),
     disabled: false
   }
+];
+
+// 用户/组织搜索字段列表
+export const USER_ORG_SEARCH_TAG_LIST = [
+  {
+    name: 'system_id',
+    label: il8n('common', '系统'),
+    value: ''
+  },
+  {
+    name: 'action_id',
+    label: il8n('common', '操作'),
+    value: ''
+  },
+  {
+    name: 'resource_type',
+    label: il8n('permApply', '资源类型'),
+    value: ''
+  },
+  {
+    name: 'resource_instance',
+    label: il8n('common', '资源实例'),
+    value: ''
+  },
+  {
+    name: 'name',
+    label: il8n('userGroup', '用户组名'),
+    value: ''
+  },
+  {
+    name: 'id',
+    label: il8n('userOrOrg', '用户组 ID'),
+    value: ''
+  },
+  {
+    name: 'username',
+    label: il8n('common', '用户名'),
+    value: ''
+  },
+  {
+    name: 'department_name',
+    label: il8n('perm', '组织名'),
+    value: ''
+  }
+];
+
+// 资源实例表格聚合方式
+export const AGGREGATE_METHODS_LIST = [
+  { name: '按顶层聚合', value: 'action-instance' },
+  { name: '按资源类型聚合', value: 'resource-type' },
+  { name: '不聚合', value: 'no-aggregate' }
 ];
 
 // 续期通知日期

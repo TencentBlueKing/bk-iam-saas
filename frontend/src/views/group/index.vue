@@ -182,14 +182,19 @@
             >
               {{ $t(`m.common['添加成员']`) }}
             </bk-button>
-            <bk-button
-              text
-              theme="primary"
-              style="margin-left: 10px"
-              :disabled="(row.attributes && row.attributes.source_from_role) || row.readonly"
-              @click="handleAddPerm(row)">
-              {{ $t(`m.common['添加权限']`) }}
-            </bk-button>
+            <bk-popover
+              :content="formatDisabledAddPerm(row, 'title')"
+              :disabled="!formatDisabledAddPerm(row, 'disabled')"
+            >
+              <bk-button
+                text
+                theme="primary"
+                style="margin-left: 10px"
+                :disabled="formatDisabledAddPerm(row, 'disabled')"
+                @click="handleAddPerm(row)">
+                {{ $t(`m.common['添加权限']`) }}
+              </bk-button>
+            </bk-popover>
             <bk-popover
               class="custom-table-dot-menu"
               ext-cls="custom-table-dot-menu-tipper"
@@ -425,27 +430,51 @@
       };
     },
     computed: {
-            ...mapGetters(['user', 'showNoviceGuide', 'externalSystemId']),
-            isCanEditProcess () {
-                return this.currentSelectList.length > 0;
+      ...mapGetters(['user', 'showNoviceGuide', 'externalSystemId']),
+      isCanEditProcess () {
+        return this.currentSelectList.length > 0;
+      },
+      isRatingManager () {
+        return ['rating_manager', 'subset_manager'].includes(this.curRole);
+      },
+      isSuperManager () {
+        return this.curRole === 'super_manager';
+      },
+      curSelectIds () {
+        return this.currentSelectList.map((item) => item.id);
+      },
+      isBatchDisabled () {
+        if (this.currentSelectList.length) {
+          const isDisabled = this.currentSelectList.every(item => item.readonly);
+          return isDisabled;
+        } else {
+          return true;
+        }
+      },
+      formatDisabledAddPerm () {
+        return (payload, type) => {
+          const typeMap = {
+            title: () => {
+              if (payload.attributes && payload.attributes.source_from_role) {
+                return this.$t(`m.userGroup['管理员组无法添加权限']`);
+              }
+              if (payload.readonly) {
+                return this.$t(`m.userGroup['只读用户组无法添加权限']`);
+              }
+              return '';
             },
-            isRatingManager () {
-                return ['rating_manager', 'subset_manager'].includes(this.curRole);
-            },
-            isSuperManager () {
-                return this.curRole === 'super_manager';
-            },
-            curSelectIds () {
-                return this.currentSelectList.map((item) => item.id);
-            },
-            isBatchDisabled () {
-              if (this.currentSelectList.length) {
-                const isDisabled = this.currentSelectList.every(item => item.readonly);
-                return isDisabled;
-              } else {
+            disabled: () => {
+              if (payload.readonly || (payload.attributes && payload.attributes.source_from_role)) {
                 return true;
               }
+              return false;
             }
+          };
+          if (typeMap[type]) {
+            return typeMap[type]();
+          }
+        };
+      }
     },
     watch: {
       'pagination.current' (value) {
@@ -712,7 +741,8 @@
           {
             limit: 10,
             current: 1,
-            count: 0
+            count: 0,
+            showTotalCount: true
           }
         );
       },
@@ -1056,14 +1086,6 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-        }
-
-        .bk-table-pagination-wrapper {
-            background-color: #ffffff;
-        }
-
-        .bk-table-fixed, .bk-table-fixed-right {
-            border-bottom: 0;
         }
     }
 }

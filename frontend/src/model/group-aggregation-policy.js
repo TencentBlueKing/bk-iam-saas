@@ -124,6 +124,4 @@ export default class GroupAggregationPolicy {
     }
     return this.actions.map(item => item.id).join('');
   }
-
-  // get resource_groups
 }

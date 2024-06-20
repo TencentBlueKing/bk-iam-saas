@@ -100,7 +100,7 @@ class SendRoleGroupExpireRemindMailTask(Task):
             return
 
         # 发送邮件
-        params = {"source": "email", "current_role_id": role.id, "role_type": role.type}
+        params = {"source": "notification", "current_role_id": role.id, "role_type": role.type}
         url = self.base_url + "?" + urlencode(params)
         usernames = RoleUser.objects.filter(role_id=role.id).values_list("username", flat=True)
 

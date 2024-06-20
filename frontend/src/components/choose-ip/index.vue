@@ -173,6 +173,7 @@
 </template>
 <script>
   import _ from 'lodash';
+  import { mapGetters } from 'vuex';
   import { bus } from '@/common/bus';
   import { guid, formatCodeData } from '@/common/util';
   import il8n from '@/language';
@@ -319,6 +320,8 @@
     data () {
       return {
         isLoading: false,
+        // 判断第一层数据是否是空
+        isFirstLevelEmpty: false,
         limit: 100,
         resourceTotal: 0,
         subResourceTotal: 0,
@@ -360,11 +363,15 @@
       };
     },
     computed: {
+      ...mapGetters(['user']),
       isOnlyLevel () {
         return this.treeData.every((item) => item.level === 0 && item.visiable) && this.curChain.length < 2;
       },
       isManualInput () {
         return ['manualInput'].includes(this.curSelectedChain.id) && ['instance:paste'].includes(this.selectionMode);
+      },
+      isSuperManager () {
+        return this.user.role.type === 'super_manager';
       },
       renderTopologyData () {
         const hasNode = {};
@@ -845,6 +852,7 @@
           const { code, data } = await this.$store.dispatch('permApply/getResources', params);
           this.emptyData = formatCodeData(code, this.emptyData, data.results.length === 0);
           this.resourceTotal = data.count || 0;
+          this.isFirstLevelEmpty = data.results.length < 1;
           if (data.results.length < 1) {
             this.searchDisplayText = RESULT_TIP[code];
             return;
@@ -945,6 +953,7 @@
         let id = '';
         let name = '';
         let systemId = '';
+        let parentChainData = null;
         if (!curChainData) {
           id = this.curChain[chainLen - 1].id;
           name = this.curChain[chainLen - 1].name;
@@ -954,7 +963,8 @@
           name = curChainData.name;
           systemId = curChainData.system_id;
         }
-        if (this.isManualInput) {
+        // 如果是手动输入或者第一次加载resource为空且身份不是超管，代表它的范围只是他本身
+        if (this.isManualInput || (this.isFirstLevelEmpty && !this.isSuperManager)) {
           parentChain.push({
             type: id,
             type_name: name,
@@ -992,6 +1002,26 @@
             }
             return this.curChain[this.curChain.length - 1];
           })();
+          // 处理只有一层拓扑，但业务类型却又有多条情况
+          if (node.level === 0 && !node.async) {
+            parentChainData = {
+              type: this.curChain[0].id,
+              type_name: this.curChain[0].name,
+              id: node.id,
+              name: node.name,
+              system_id: this.curChain[0].system_id,
+              child_type: node.childType || ''
+            };
+          } else {
+            parentChainData = {
+              type: id,
+              type_name: name,
+              id: node.id,
+              name: node.name,
+              system_id: systemId,
+              child_type: node.childType || ''
+            };
+          }
           parentChain.forEach((item, index) => {
             let id = '';
             if (this.curChain[index]) {
@@ -1002,14 +1032,7 @@
             item.type = id;
             item.type_name = id;
           });
-          parentChain.push({
-            type: id,
-            type_name: name,
-            id: node.id,
-            name: node.name,
-            system_id: systemId,
-            child_type: node.childType || ''
-          });
+          parentChain.push(parentChainData);
           if (isNeedAny) {
             parentChain.push({
               type: anyData.id,
@@ -1320,7 +1343,8 @@
         node.current = node.current + 1;
         node.loadingMore = true;
         const chainLen = this.curChain.length;
-        let keyword = !isTable ? this.curKeyword : '';
+        // 如果是表格搜索或者level大于0，,代表当前搜索层级不是最外层，需要清空搜索条件
+        let keyword = isTable || (!isTable && node.level > 0) ? '' : this.curKeyword;
         if (Object.keys(this.curSearchObj).length) {
           if (node.parentId === this.curSearchObj.parentId) {
             keyword = this.curSearchObj.value;

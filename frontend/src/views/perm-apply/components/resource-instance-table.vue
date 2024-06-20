@@ -22,7 +22,13 @@
             :class="row.isEmpty ? 'action-name-empty' : 'action-name-cell'">
             <span class="action-name" :title="row.name">{{ row.name }}</span>
           </div>
-          <div v-else :class="row.isEmpty ? 'action-name-empty' : 'action-name-cell'">
+          <div v-else
+            :class="[
+              'action-name-cell',
+              { 'action-name-empty': row.isEmpty },
+              { 'recommend-action-name-empty': isNoPermPage }
+            ]"
+          >
             <span class="action-name" style="padding: 10px 0;" :title="row.name">{{ row.name }}</span>
             <span v-if="!emptyResourceGroupsList.length">
               <iam-svg name="icon-new" ext-cls="iam-new-action" v-if="row.isNew && curLanguageIsCn" />
@@ -356,6 +362,10 @@
         }
       },
       isAllExpanded: {
+        type: Boolean,
+        default: false
+      },
+      isNoPermPage: {
         type: Boolean,
         default: false
       },

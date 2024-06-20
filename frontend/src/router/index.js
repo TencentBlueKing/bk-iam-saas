@@ -32,12 +32,13 @@ import http from '@/api';
 // import il8n from '@/language';
 import preload from '@/common/preload';
 import { bus } from '@/common/bus';
-import { existValue, getParamsValue } from '@/common/util';
+import { existValue, getParamsValue, getRoutePath } from '@/common/util';
 // import { existValue, getParamsValue, getManagerMenuPerm } from '@/common/util';
 import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
 import { messageError } from '@/common/bkmagic';
+import { connectToMain } from '@blueking/sub-saas/dist/main.js';
 
-const SITE_URL = window.SITE_URL;
+const SITE_URL = getRoutePath(window.SITE_URL);
 
 Vue.use(VueRouter);
 
@@ -170,7 +171,7 @@ export const beforeEach = async (to, from, next) => {
   }
 
   if (['applyJoinUserGroup', 'applyCustomPerm', 'myManageSpace', 'myPerm', 'permTransfer', 'permRenewal'].includes(to.name)
-      || (['permRenewal'].includes(to.name) && to.query.source === 'email')) {
+      || (['permRenewal'].includes(to.name) && ['email', 'notification'].includes(to.query.source))) {
     await store.dispatch('role/updateCurrentRole', { id: 0 });
     await store.dispatch('userInfo');
     curRole = 'staff';
@@ -200,8 +201,8 @@ export const beforeEach = async (to, from, next) => {
           if (existValue('externalApp') || to.query.noFrom) {
             next();
           } else {
-            // next();
-            next({ path: `${SITE_URL}${defaultRoute[navIndex]}` });
+            next();
+            // next({ path: `${SITE_URL}${defaultRoute[navIndex]}` });
           }
         } else {
           next();
@@ -232,7 +233,7 @@ export const beforeEach = async (to, from, next) => {
     }
   } else {
     // 邮件点击续期跳转过来的链接需要做身份的前置判断
-    if (to.name === 'groupPermRenewal' && to.query.source === 'email' && currentRoleId) {
+    if (to.name === 'groupPermRenewal' && ['email', 'notification'].includes(to.query.source) && currentRoleId) {
       await getManagerInfo();
       navDiffMenuIndex(1);
     }
@@ -295,35 +296,20 @@ export const beforeEach = async (to, from, next) => {
         // next();
       } else {
         const noFrom = !from.name;
-        // permTemplateCreate
         if (['permTemplateDetail', 'permTemplateEdit', 'permTemplateDiff'].includes(to.name) && noFrom) {
           next({ path: `${SITE_URL}perm-template` });
-          // } else if (['createUserGroup', 'userGroupDetail'].includes(to.name) && noFrom) {
-          // } else if (['createUserGroup'].includes(to.name) && noFrom) {
-        } else if (['createUserGroup'].includes(to.name)) {
-          if (noFrom) {
-            if (existValue('externalApp')) {
-              next();
-            } else {
-              next({ path: `${SITE_URL}${defaultRoute[navIndex]}` });
-            }
-          } else {
-            next();
-          }
-          // if (existValue('externalApp')) { // 如果是外部嵌入的页面
-          //     next();
-          // } else {
-          //     next({ path: `${SITE_URL}user-group` });
-          // }
-          // 这里刷新staff菜单会跳转分级管理员列表，所以单独处理
-        } else if (['gradingAdminDetail', 'gradingAdminCreate'].includes(to.name) && !['', 'staff'].includes(curRole)) {
-          if (noFrom) {
-            next({ path: `${SITE_URL}rating-manager` });
-          } else {
-            next();
-          }
-        } else if (['gradingAdminEdit', 'myPerm'].includes(to.name)) {
-          next();
+        // } else if (['createUserGroup'].includes(to.name)) {
+        //   if (noFrom) {
+        //     if (existValue('externalApp')) {
+        //       next();
+        //     } else {
+        //       next({ path: `${SITE_URL}${defaultRoute[navIndex]}` });
+        //     }
+        //   } else {
+        //     next();
+        //   }
+        // } else if (['myPerm'].includes(to.name)) {
+        //   next();
         } else {
           next();
         }
@@ -394,5 +380,7 @@ const fetchExternalSystemsLayout = async (externalSystemId) => {
 
 router.beforeEach(beforeEach);
 router.afterEach(afterEach);
+
+connectToMain(router);
 
 export default router;

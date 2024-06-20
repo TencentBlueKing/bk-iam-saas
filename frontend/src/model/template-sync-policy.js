@@ -25,13 +25,15 @@
 */
 
 import il8n from '@/language';
+import Policy from './policy';
 import { DURATION_LIST } from '@/common/constants';
 import RelateResourceTypes from './related-resource-types';
 
-export default class SyncPolicy {
+export default class SyncPolicy extends Policy {
   // flag = '' 为默认拉取，flag = 'add' 为新添加的，flag = 'detail' 为权限模板详情
   // tag: add updata unchanged create
   constructor (payload, flag = '') {
+    super(payload, flag);
     this.type = payload.type;
     this.id = payload.id;
     this.policy_id = payload.policy_id || '';
@@ -49,9 +51,10 @@ export default class SyncPolicy {
     // 已有权限是否需要动画提示
     this.isExistPermAnimation = false;
     this.tid = payload.tid || '';
+    this.mode_type = payload.mode_type || '';
     this.initExpired(payload);
     this.initRelatedResourceTypes(payload, { name: this.name, type: this.type }, flag);
-    this.initRelatedRroupsTypes(payload, { name: this.name, type: this.type }, flag);
+    this.initRelatedGroupsTypes(payload, { name: this.name, type: this.type }, flag);
     this.initAttachActions(payload);
     this.showAction = false;
     this.showPopover = false;
@@ -77,23 +80,35 @@ export default class SyncPolicy {
       this.related_resource_types = [];
       return;
     }
-    this.related_resource_types = payload.related_resource_types.map(
-      item => new RelateResourceTypes(item, action, flag)
-    );
+    this.related_resource_types = payload.related_resource_types.map((item) => {
+      const resourceType = item.type || item.id;
+      const params = {
+        ...item,
+        ...{
+          type: resourceType
+        }
+      };
+      return new RelateResourceTypes(params, action, flag);
+    });
   }
 
-  initRelatedRroupsTypes (payload, action, flag) {
+  initRelatedGroupsTypes (payload, action, flag) {
     if (!payload.resource_groups) {
       this.resource_groups = [];
       return;
     }
-
-    this.resource_groups = payload.resource_groups.reduce((prev, item) => {
-      const relatedRsourceTypes = item.related_resource_types.map(
-        item => new RelateResourceTypes(item, action, flag)
-      );
-
-      prev.push({ id: item.id, related_resource_types: relatedRsourceTypes });
+    this.resource_groups = payload.resource_groups.reduce((prev, curr) => {
+      const relatedResourceTypes = curr.related_resource_types.map((item) => {
+        const resourceType = item.type || item.id;
+        const params = {
+          ...item,
+          ...{
+            type: resourceType
+          }
+        };
+        return new RelateResourceTypes(params, action, flag);
+      });
+      prev.push({ id: curr.id, related_resource_types: relatedResourceTypes });
       return prev;
     }, []);
   }

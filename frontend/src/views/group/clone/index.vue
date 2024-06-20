@@ -41,18 +41,14 @@
         :style="{ top: '-10px', left: '125px' }"
         :content="$t(`m.guide['添加组权限']`)" /> -->
     </render-action>
-    <render-horizontal-block
-      :label="$t(`m.grading['操作和资源范围']`)"
-      v-if="isHasPermTemplate">
+    <render-horizontal-block :label="$t(`m.grading['操作和资源范围']`)" v-if="isHasPermTemplate">
       <div class="user-group-select-wrapper">
-        <div class="action">
-          <section class="action-wrapper" @click.stop="handleAddPerm">
+        <div class="flex-between action">
+          <div class="action-wrapper" @click.stop="handleAddPerm">
             <Icon bk type="plus-circle-shape" />
             <span>{{ $t(`m.userGroup['添加组权限']`) }}</span>
-          </section>
-        </div>
-        <div class="info-wrapper">
-          <section style="min-width: 108px; position: relative;">
+          </div>
+          <div class="info-wrapper">
             <template v-if="['super_manager', 'system_manager'].includes(user.role.type)">
               <bk-switcher
                 v-model="isAllUnlimited"
@@ -63,18 +59,27 @@
               </bk-switcher>
               <span class="text">{{ $t(`m.common['批量无限制']`) }}</span>
             </template>
-            <template>
-              <bk-switcher
-                v-model="isAllExpanded"
-                :disabled="isAggregateDisabled"
-                size="small"
-                theme="primary"
-                @change="handleAggregateAction" />
-              <span class="text">{{ expandedText }}</span>
-            </template>
-          </section>
+            <div class="aggregate-action-tab-group">
+              <div
+                v-for="item in AGGREGATION_EDIT_ENUM"
+                :key="item.value"
+                :class="[
+                  'aggregate-action-btn',
+                  { 'is-active': isAllExpanded === item.value },
+                  { 'is-disabled': isAggregateDisabled }
+                ]"
+                @click.stop="handleAggregateAction(item.value)"
+              >
+                <span>{{ $t(`m.grading['${item.name}']`)}}</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <section ref="instanceTableContentRef" v-bkloading="{ isLoading: cloneLoading, opacity: 1 }">
+        <section
+          ref="instanceTableContentRef"
+          class="aggregate-tab-instance-table"
+          v-bkloading="{ isLoading: cloneLoading, opacity: 1 }"
+        >
           <resource-instance-table
             is-edit
             mode="create"
@@ -86,7 +91,8 @@
             :group-id="groupId"
             @handleAggregateAction="handleAggregateAction"
             @on-select="handleAttrValueSelected"
-            @on-resource-select="handleResSelect" />
+            @on-resource-select="handleResSelect"
+          />
         </section>
       </div>
     </render-horizontal-block>
@@ -164,7 +170,7 @@
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
   import { bus } from '@/common/bus';
-  import { CUSTOM_PERM_TEMPLATE_ID, PERMANENT_TIMESTAMP, SIX_MONTH_TIMESTAMP } from '@/common/constants';
+  import { CUSTOM_PERM_TEMPLATE_ID, PERMANENT_TIMESTAMP, SIX_MONTH_TIMESTAMP, AGGREGATION_EDIT_ENUM } from '@/common/constants';
   import { leavePageConfirm } from '@/common/leave-page-confirm';
   // import IamGuide from '@/components/iam-guide/index.vue';
   import AddMemberDialog from '../components/iam-add-member';
@@ -200,6 +206,7 @@
     },
     data () {
       return {
+        AGGREGATION_EDIT_ENUM,
         formData: {
           name: '',
           approval_process_id: 1,
@@ -219,7 +226,6 @@
         isShowAddActionSideslider: false,
         curActionValue: [],
         originalList: [],
-
         tableList: [],
         tableListBackup: [],
         tempalteDetailList: [],
@@ -1053,6 +1059,10 @@
        * handleAggregateAction
        */
       handleAggregateAction (payload) {
+        if (this.isAggregateDisabled) {
+          return;
+        }
+        this.isAllExpanded = payload;
         const tempData = [];
         let templateIds = [];
         let instancesDisplayData = {};
@@ -1393,4 +1403,5 @@
 
 <style lang="postcss" scoped>
 @import '@/css/mixins/create-user-group.css';
+@import '@/css/mixins/aggregate-action-group.css';
 </style>

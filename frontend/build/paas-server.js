@@ -68,7 +68,10 @@ const GLOBAL_VAR = {
   ENABLE_BK_NOTICE: process.env.ENABLE_BK_NOTICE || '',
   BK_COMPONENT_API_URL: process.env.BK_COMPONENT_API_URL || '',
   BK_DOCS_URL_PREFIX: process.env.BK_DOCS_URL_PREFIX || '',
-  BK_DOMAIN: process.env.BK_DOMAIN || ''
+  BK_DOMAIN: process.env.BK_DOMAIN || '',
+  BK_SHARED_RES_URL: process.env.BK_SHARED_RES_URL || '',
+  BK_APP_CODE: process.env.BK_APP_CODE || '',
+  VERSION: process.env.VERSION || ''
 };
 
 // APA 重定向回首页，由首页Route响应处理

@@ -325,13 +325,16 @@
               const isExistTemp = childList.find((v) => ['template'].includes(v.type));
               if (!isExistUserOrg && isExistTemp) {
                 item.tabActive = 'memberTemplate';
+                this.$set(item, 'tableProps', this.getTableProps('memberTemplate'));
               }
-              childList && childList.forEach(subItem => {
-                item.checkList.push(subItem);
-                if (this.$refs.permTableRef && this.$refs.permTableRef.length) {
-                  this.$refs.permTableRef[i].toggleRowSelection(subItem, true);
-                  this.fetchCustomTotal(i);
-                }
+              this.$nextTick(() => {
+                childList && childList.forEach(subItem => {
+                  item.checkList.push(subItem);
+                  if (this.$refs.permTableRef && this.$refs.permTableRef.length) {
+                    this.$refs.permTableRef[i].toggleRowSelection(subItem, true);
+                    this.fetchCustomTotal(i);
+                  }
+                });
               });
             }
           });
@@ -352,7 +355,7 @@
             id: item.id
           };
           const { current_role_id: currentRoleId, source } = this.$route.query;
-          if (currentRoleId && source === 'email') {
+          if (currentRoleId && ['email', 'notification'].includes(source)) {
             params.hidden = false;
           }
           const { data } = await this.$store.dispatch('renewal/getExpireSoonGroupMembers', params);
@@ -387,7 +390,7 @@
             expire_soon: true
           };
           const { current_role_id: currentRoleId, source } = this.$route.query;
-          if (currentRoleId && source === 'email') {
+          if (currentRoleId && ['email', 'notification'].includes(source)) {
             params.hidden = false;
           }
           const { data } = await this.$store.dispatch('memberTemplate/getGroupSubjectTemplate', params);
@@ -416,7 +419,7 @@
             offset: this.pagination.limit * (this.pagination.current - 1)
           };
           const { current_role_id: currentRoleId, source } = this.$route.query;
-          if (currentRoleId && source === 'email') {
+          if (currentRoleId && ['email', 'notification'].includes(source)) {
             params.hidden = false;
           }
           const { code, data } = await this.$store.dispatch('renewal/getExpiredGroups', params);
@@ -628,7 +631,7 @@
               : checkList.map(({ id, type }) => ({ id, type }))
           };
           const { current_role_id: currentRoleId, source } = this.$route.query;
-          if (currentRoleId && source === 'email') {
+          if (currentRoleId && ['email', 'notification'].includes(source)) {
             params.hidden = false;
           }
           const { code } = await this.$store.dispatch('userGroup/deleteUserGroupMember', params);
@@ -640,6 +643,7 @@
               expanded: true,
               checkList: []
             });
+            this.fetchCustomTotal(this.tableIndex);
             await Promise.all([
               this.fetchMembers(this.tableList[this.tableIndex]),
               this.fetchGroupSubjectTemplate(this.tableList[this.tableIndex])
@@ -768,7 +772,7 @@
                 (item) => item.id.toString() !== row.id.toString()
               );
             }
-            this.fetchCustomTotal(index);
+            this.currentSelectList = this.tableList.map((item) => item.checkList).flat(Infinity);
           },
           all: () => {
             const { groupTabList, tabActive } = this.tableList[index];
@@ -779,6 +783,7 @@
                 (item) => !tableList.map((v) => String(v.id)).includes(String(item.id))
               );
               this.tableList[index].checkList = [...selectGroups, ...payload];
+              this.currentSelectList = this.tableList.map((item) => item.checkList).flat(Infinity);
               this.fetchCustomTotal(index);
             }
           }
@@ -831,7 +836,7 @@
           }))
         };
         const { current_role_id: currentRoleId, source } = this.$route.query;
-        if (currentRoleId && source === 'email') {
+        if (currentRoleId && ['email', 'notification'].includes(source)) {
           params.hidden = false;
         }
         console.log(params, '参数');
@@ -900,10 +905,6 @@
     margin-top: 16px;
     .perm-renewal-table {
       border: none;
-      .bk-table-fixed,
-      .bk-table-fixed-right {
-        border-bottom: 0;
-      }
     }
   }
   .error-tips {

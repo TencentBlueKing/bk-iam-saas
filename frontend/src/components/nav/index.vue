@@ -2,28 +2,6 @@
   <!-- eslint-disable max-len -->
   <nav :class="['nav-layout', { sticked: navStick }]" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">
     <div :class="['nav-wrapper', { unfold: unfold, flexible: !navStick }]">
-      <!-- <bk-select
-                v-if="unfold && index === 1"
-                :value="navCurRoleId || curRoleId"
-                :clearable="false"
-                placeholder="选择分级管理员"
-                :search-placeholder="$t(`m.common['切换身份']`)"
-                searchable
-                ext-cls="iam-nav-select-cls"
-                ext-popover-cls="iam-nav-select-dropdown-content"
-                @change="handleSwitchRole"
-            >
-                <bk-option
-                    v-for="item in curRoleList"
-                    :key="item.id"
-                    :id="item.id"
-                    :name="item.name"
-                >
-                </bk-option>
-                <div slot="extension" @click="handleToGradingAdmin" style="cursor: pointer;">
-                    <i class="bk-icon icon-plus-circle mr10"></i>管理我的分级管理员
-                </div>
-            </bk-select> -->
       <bk-select
         ref="select"
         v-if="unfold && index === 1"
@@ -54,13 +32,6 @@
           @select-change="handleSelectNode"
         >
           <div slot-scope="{ node,data }">
-            <!-- <div
-              class="single-hide"
-              :style="[
-                { 'max-width': '220px' },
-                { opacity: data.is_member ? '1' : '0.4' }
-              ]"
-              :title="data.name"> -->
             <div
               :class="[
                 'single-hide',
@@ -278,7 +249,12 @@
     // 用户/组织
     [['userOrgPerm'], 'userOrgPermNav'],
     // 续期通知
-    [['renewalNotice'], 'renewalNoticeNav']
+    [['renewalNotice'], 'renewalNoticeNav'],
+    // 操作模板
+    [
+      ['actionsTemplate', 'actionsTemplateCreate', 'actionsTemplateEdit', 'actionsTemplateDiff'],
+      'actionsTemplateNav'
+    ]
   ]);
 
   export default {
@@ -777,9 +753,10 @@
 
       // 更新路由
       updateRouter (roleType) {
+        let routeName = '';
+        const curRouterName = this.$route.name;
         this.$store.commit('updataRouterDiff', roleType);
         const difference = getRouterDiff(roleType);
-        const curRouterName = this.$route.name;
         if (difference.length) {
           if (difference.includes(curRouterName)) {
             this.$store.commit('setHeaderTitle', '');
@@ -792,24 +769,24 @@
               return;
             }
             this.$router.push({
-              // name: 'permTemplate'
-              // 切换角色默认跳转到用户组
               name: 'userGroup'
             });
             return;
           }
-
-          const permTemplateRoutes = ['permTemplateCreate', 'permTemplateDetail', 'permTemplateEdit', 'permTemplateDiff'];
-          if (permTemplateRoutes.includes(curRouterName)) {
-            this.$router.push({ name: 'permTemplate' });
-            return;
+          const routeMap = new Map([
+            [['permTemplateCreate', 'permTemplateDetail', 'permTemplateEdit', 'permTemplateDiff'], 'permTemplate'],
+            [['actionsTemplateCreate', 'actionsTemplateEdit', 'actionsTemplateDiff'], 'actionsTemplate'],
+            [['createUserGroup', 'cloneUserGroup', 'userGroupDetail', 'userGroupDetail', 'userGroupDetail'], 'userGroup'],
+            [['gradingAdminDetail', 'gradingAdminEdit', 'gradingAdminCreate'], 'ratingManager']
+          ]);
+          for (const [value, key] of routeMap.entries()) {
+            if (value.includes(curRouterName)) {
+              routeName = key;
+              break;
+            }
           }
-          if (['createUserGroup', 'cloneUserGroup', 'userGroupDetail', 'addGroupPerm'].includes(curRouterName)) {
-            this.$router.push({ name: 'userGroup' });
-            return;
-          }
-          if (['gradingAdminDetail', 'gradingAdminEdit', 'gradingAdminCreate'].includes(curRouterName)) {
-            this.$router.push({ name: 'ratingManager' });
+          if (routeName) {
+            this.$router.push({ name: routeName });
             return;
           }
           this.$emit('reload-page', this.$route);

@@ -54,8 +54,42 @@ $cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
         }
         .breadcrumbs-content {
+            width: 100%;
             display: flex;
             align-items: center;
+            &-actions-template-edit {
+                width: 100vh;
+                display: flex;
+                align-items: center;
+                .breadcrumbs-label {
+                    width: 100%;
+                    font-size: 16px;
+                    display: flex;
+                    &-title {
+                        min-width: 96px;
+                        color: #313238;
+                        font-size: 16px;
+                    }
+                    &-name {
+                        display: flex;
+                        color: #979BA5;
+                        font-size: 12px;
+                        .name {
+                            word-break: break-all;
+                        }
+                    }
+                    .vertical-line {
+                        margin: 0 8px;
+                        color: #dcdee5;
+                    }
+                }
+                .breadcrumbs-value {
+                    width: 100%;
+                    .actions-template-edit-step {
+                        line-height: 1;
+                    }
+                }
+            }
         }
         .breadcrumbs-back {
             position: relative;

@@ -59,7 +59,10 @@ export const getRouterDiff = (payload) => {
       'memberTemplate',
       'resourcePermManage',
       'userOrgPerm',
-      'renewalNotice'
+      'renewalNotice',
+      'actionsTemplate',
+      'actionsTemplateCreate',
+      'actionsTemplateEdit'
     ];
   }
   if (payload === 'super_manager') {
@@ -204,7 +207,10 @@ export const getRouterDiff = (payload) => {
       'memberTemplate',
       'resourcePermManage',
       'userOrgPerm',
-      'renewalNotice'
+      'renewalNotice',
+      'actionsTemplate',
+      'actionsTemplateCreate',
+      'actionsTemplateEdit'
     ];
   }
   // payload其它取值默认返回全部菜单
@@ -255,7 +261,10 @@ export const getRouterDiff = (payload) => {
     'resourcePermiss',
     'sensitivityLevel',
     'userOrgPerm',
-    'renewalNotice'
+    'renewalNotice',
+    'actionsTemplate',
+    'actionsTemplateCreate',
+    'actionsTemplateEdit'
   ];
 };
 
@@ -287,7 +296,10 @@ export const getNavRouterDiff = (navIndex, managerPerm = '') => {
       'memberTemplate',
       'resourcePermManage',
       'userOrgPerm',
-      'renewalNotice'
+      'renewalNotice',
+      'actionsTemplate',
+      'actionsTemplateCreate',
+      'actionsTemplateEdit'
     ];
   }
 
@@ -340,7 +352,10 @@ export const getNavRouterDiff = (navIndex, managerPerm = '') => {
       'memberTemplate',
       'resourcePermManage',
       'userOrgPerm',
-      'renewalNotice'
+      'renewalNotice',
+      'actionsTemplate',
+      'actionsTemplateCreate',
+      'actionsTemplateEdit'
     ];
   }
 
@@ -385,7 +400,10 @@ export const getNavRouterDiff = (navIndex, managerPerm = '') => {
       'userGroupSetting',
       'memberTemplate',
       'resourcePermManage',
-      'userOrgPerm'
+      'userOrgPerm',
+      'actionsTemplate',
+      'actionsTemplateCreate',
+      'actionsTemplateEdit'
     ];
     if (['hasSystemNoSuperManager'].includes(managerPerm)) {
       // 非超管用户隐藏的路由

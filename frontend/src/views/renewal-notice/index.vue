@@ -326,27 +326,29 @@
           return;
         }
         this.submitLoading = true;
-        try {
-          const typeMap = {
-            submit: async () => {
+        const typeMap = {
+          submit: async () => {
+            try {
               if (JSON.stringify(this.noticeForm) !== JSON.stringify(this.noticeFormReset)) {
                 await this.fetchSuperNoticeConfig(true, false, false);
               }
               await this.$store.dispatch('renewalNotice/updateSuperNoticeConfig', this.noticeForm);
               this.messageSuccess(this.$t(`m.info['保存成功']`), 3000);
-            },
-            status: async () => {
+            } finally {
+              this.submitLoading = false;
+            }
+          },
+          status: async () => {
+            try {
               await this.$store.dispatch('renewalNotice/updateSuperNoticeConfig', this.noticeForm);
               const msg = this.noticeForm.enable ? this.$t(`m.renewalNotice['开启成功']`) : this.$t(`m.renewalNotice['关闭成功']`);
               this.messageSuccess(msg, 3000);
+            } finally {
+              this.submitLoading = false;
             }
-          };
-          typeMap[payload]();
-        } catch (e) {
-          this.messageAdvancedError(e);
-        } finally {
-          this.submitLoading = false;
-        }
+          }
+        };
+        return typeMap[payload]();
       },
 
       handleSelectNoticeType (payload) {

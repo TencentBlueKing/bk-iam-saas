@@ -16,7 +16,7 @@
             />
           </div>
         </detail-item>
-        <detail-item :label="`${$t(`m.memberTemplate['模板ID']`)}: `">
+        <detail-item :label="`${$t(`m.memberTemplate['模板 ID']`)}: `">
           <span class="basic-info-value">{{ basicInfo.id }}</span>
         </detail-item>
         <detail-item :label="`${$t(`m.common['创建时间']`)}: `">

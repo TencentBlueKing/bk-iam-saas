@@ -28,14 +28,13 @@ import './public-path';
 import '../static/lib.bundle.js';
 import Vue from 'vue';
 import App from './App.vue';
-import router from './router';
+import IframeEntry from './IframeEntry.vue';
+import router from './router/index';
 import store from './store';
-import { injectCSRFTokenToHeaders } from './api';
 import auth from './common/auth';
 import Img403 from './images/403.png';
 import Svg403 from './images/403.svg';
 import Exception from './components/exception/index.vue';
-import { bus } from './common/bus';
 import AuthComponent from './components/auth/index.vue';
 import iamFormItem from './components/iam-form/item.vue';
 import SmartAction from './components/smart-action/index.vue';
@@ -48,7 +47,10 @@ import RenderSearch from './components/render-search/index.vue';
 import Icon from './components/icon';
 import VueI18n from 'vue-i18n';
 import magicbox from 'bk-magic-vue';
+import { subEnv } from '@blueking/sub-saas/dist/main.js';
 import { language, il8n as il8nNew } from './language';
+import { bus } from './common/bus';
+import { injectCSRFTokenToHeaders } from './api';
 import './common/bkmagic';
 // 全量引入自定义图标
 import './assets/iconfont/style.css';
@@ -112,16 +114,12 @@ const i18n = new VueI18n({
   }
 });
 
-// if (language === 'zh-cn') {
-//     locale.use(lang.zhCN);
-// } else {
-//     console.log(lang.enUS, 6555);
-// }
 locale.use(language === 'zh-cn' ? lang.zhCN : lang.enUS);
 
 locale.i18n((key, value) => i18n.t(key, value));
 
 Vue.prototype.curLanguageIsCn = language === 'zh-cn';
+Vue.prototype.isSubEnv = subEnv || false;
 
 Vue.mixin(locale.mixin);
 
@@ -140,10 +138,13 @@ auth.requestCurrentUser().then(user => {
       i18n,
       router,
       store,
-      components: {
-        App
-      },
-      template: '<App/>'
+      // components: {
+      //   App
+      // },
+      // template: '<App/>'
+      render () {
+        return subEnv ? <IframeEntry /> : <App />;
+      }
     });
     if (NODE_ENV === 'development') {
       window.__VUE_DEVTOOLS_GLOBAL_HOOK__.Vue = global.mainComponent.constructor;
