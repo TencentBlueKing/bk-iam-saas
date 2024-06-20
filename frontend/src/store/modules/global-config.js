@@ -33,22 +33,17 @@ export default {
         name: '', // 网站名
         separator: '|' // 网站名称路由分隔符
       },
-      footer: {
-        copyright: `Copyright © 2012-${new Date().getFullYear()} Tencent BlueKing. All Rights Reserved.`
-      },
-      publicConfig: {
-        name: '权限中心',
-        nameEn: 'BK_IAM',
-        brandName: '腾讯蓝鲸智云',
-        brandNameEn: 'BlueKing',
-        appLogo: require('@/images/logo.svg'),
-        favicon: require('@/images/logo.svg'),
-        version: ''
-      }
+      name: '权限中心',
+      nameEn: 'BK_IAM',
+      brandName: '腾讯蓝鲸智云',
+      brandNameEn: 'BlueKing',
+      appLogo: require('@/images/logo.svg'),
+      favicon: require('@/images/logo.svg'),
+      version: ''
     }
   },
   getters: {
-    globalConfig: state => state.initialConfig.publicConfig
+    globalConfig: state => state.initialConfig
   },
   mutations: {
     setCurrentGlobalConfig (state, params) {
@@ -71,17 +66,17 @@ export default {
       if (window.BK_SHARED_RES_URL) {
         const repoUrl = window.BK_SHARED_RES_URL.endsWith('/') ? window.BK_SHARED_RES_URL : `${window.BK_SHARED_RES_URL}/`;
         try {
-          commitParams = await getPlatformConfig(`${repoUrl}bk_iam/base.js`, state.initialConfig.publicConfig);
+          commitParams = await getPlatformConfig(`${repoUrl}bk_iam/base.js`, state.initialConfig);
           if (commitParams && commitParams.site) {
             commitParams.site.separator = titleSeparator;
           }
         } catch (e) {
           console.error(e, '错误日志');
-          commitParams = await getPlatformConfig(state.initialConfig.publicConfig);
+          commitParams = await getPlatformConfig(state.initialConfig);
         }
       } else {
         // 本地开发环境调试
-        commitParams = await getPlatformConfig(state.initialConfig.publicConfig);
+        commitParams = await getPlatformConfig(state.initialConfig);
       }
       console.log(commitParams, '配置项数据');
       setDocumentTitle(commitParams.i18n || {});
