@@ -310,16 +310,17 @@
         return this.searchValue === '';
       },
       appName () {
-           // 如果未获取到配置，使用默认title
-        if (this.globalConfig.publicConfig) {
-          const { name, nameEn } = this.globalConfig.publicConfig;
+        // 如果未获取到配置，使用默认title
+        if (this.globalConfig) {
+          const { name, nameEn } = this.globalConfig;
           return this.curLanguageIsCn ? name : nameEn;
         }
         return this.$t('m.nav["蓝鲸权限中心"]');
       },
       appLogo () {
         // 如果未获取到配置，使用默认logo
-        const src = this.globalConfig.publicConfig.appLogo || logoSvg;
+        console.log(this.globalConfig.appLogo);
+        const src = this.globalConfig.appLogo || logoSvg;
         return src;
       }
     },
