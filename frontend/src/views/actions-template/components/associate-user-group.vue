@@ -85,6 +85,7 @@
 
 <script>
   import { formatCodeData } from '@/common/util';
+  import { bus } from '@/common/bus';
   export default {
     props: {
       curDetailData: {
@@ -172,7 +173,14 @@
           await this.$store.dispatch('permTemplate/deleteTemplateMember', params);
           this.messageSuccess(this.$t(`m.info['移除成功']`), 3000);
           this.resetPagination();
-          this.fetchAssociateGroup();
+          await this.fetchAssociateGroup();
+          bus.$emit('on-related-group-change', {
+            ...payload,
+            ...{
+              id,
+              subject_count: this.pagination.count
+            }
+          });
         } catch (e) {
           this.messageAdvancedError(e);
         }
@@ -182,7 +190,6 @@
         this.$nextTick(() => {
           const { id, name } = payload;
           const removeSync = this.$refs[`removeSyncGroupConfirm_${name}_${id}`];
-          console.log(removeSync);
           if (removeSync) {
             removeSync.$refs && removeSync.$refs.popover.showHandler();
           }

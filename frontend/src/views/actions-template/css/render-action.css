@@ -52,7 +52,7 @@
       border-bottom: 1px solid #ffffff;
       &-title {
         width: 20%;
-        min-width: 80px;
+        min-width: 120px;
         font-weight: 700;
         font-size: 12px;
         background-color: #eaebf0;
@@ -64,7 +64,7 @@
         .self-action-content {
           display: flex;
           align-items: center;
-          margin-left: 80px;
+          margin-left: 120px;
         }
         &-checkbox {
           width: 100%;
@@ -83,7 +83,7 @@
               border-left: 1px solid #ffffff;
               .name {
                 display: inline-block;
-                flex: 0 0 80px;
+                flex: 0 0 120px;
                 color: #313238;
                 font-size: 12px;
                 font-weight: 700;

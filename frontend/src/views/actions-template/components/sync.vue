@@ -19,43 +19,6 @@
             <div class="single-hide group-name">{{ group.name }}</div>
           </div>
           <div class="temp-group-sync-table-header-right" v-show="group.expand" @click.stop="">
-            <bk-popconfirm
-              trigger="click"
-              :ref="`removeSyncGroupConfirm_${group.name}_${group.id}`"
-              placement="bottom-end"
-              ext-popover-cls="actions-temp-resynchronize-confirm"
-              :width="320"
-              @confirm="handleConfirmResynchronize(group)"
-            >
-              <div slot="content">
-                <div class="popover-title">
-                  <div class="popover-title-text">
-                    {{ $t(`m.dialog['确认解除与该操作模板的同步？']`) }}
-                  </div>
-                </div>
-                <div class="popover-content">
-                  <div class="popover-content-item">
-                    <span class="popover-content-item-label"
-                    >{{ $t(`m.memberTemplate['用户组名称']`) }}:</span
-                    >
-                    <span class="popover-content-item-value"> {{ group.name }}</span>
-                  </div>
-                  <div class="popover-content-tip">
-                    {{ $t(`m.actionsTemplate['解除同步后，模板权限将转为用户组自定义权限，不会再继续同步该模板的操作。']`) }}
-                  </div>
-                </div>
-              </div>
-              <bk-button
-                size="small"
-                theme="primary"
-                class="un-sync"
-                text
-                :loading="removeSyncLoading"
-                @click.stop="handleUnSynchronize(group)"
-              >
-                {{ $t(`m.actionsTemplate['解除同步']`) }}
-              </bk-button>
-            </bk-popconfirm>
             <bk-popover :content="$t(`m.actionsTemplate['批量复用资源实例值（资源模板）到其他用户组']`)">
               <bk-button size="small" text @click.stop="handleBatchRepeat(group, 'multiple')">
                 {{ $t(`m.actionsTemplate['批量复用']`) }}
@@ -388,7 +351,6 @@
     data () {
       return {
         syncLoading: false,
-        removeSyncLoading: false,
         nextLoading: false,
         isLastPage: false,
         prevLoading: false,
@@ -726,29 +688,6 @@
         }
       },
 
-      async handleConfirmResynchronize () {
-        const { id } = this.curRemoveSyncData;
-        const params = {
-          id: this.id,
-          data: {
-            members: [{
-              id,
-              type: 'group'
-            }]
-          }
-        };
-        this.removeSyncLoading = true;
-        try {
-          await this.$store.dispatch('permTemplate/deleteTemplateMember', params);
-          this.messageSuccess(this.$t(`m.info['移除成功']`), 3000);
-          this.fetchGroupsPreview();
-        } catch (e) {
-          this.messageAdvancedError(e);
-        } finally {
-          this.removeSyncLoading = false;
-        }
-      },
-      
       async handleNextPage () {
         if (this.pagination.current < this.pagination.totalPage) {
           ++this.pagination.current;
@@ -918,17 +857,6 @@
           }
         });
         this.$set(this.syncGroupList[groupIndex], 'tableList', tableData);
-      },
-
-      handleUnSynchronize (payload) {
-        this.$nextTick(() => {
-          const { id, name } = payload;
-          const removeSync = this.$refs[`removeSyncGroupConfirm_${name}_${id}`];
-          if (removeSync && removeSync.length) {
-            this.curRemoveSyncData = { ...payload };
-            removeSync[0].$refs && removeSync[0].$refs.popover.showHandler();
-          }
-        });
       },
 
       handleInstanceCopy (payload, $index, subIndex, index, action) {

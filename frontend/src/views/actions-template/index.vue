@@ -1,9 +1,22 @@
 <template>
   <div class="iam-actions-template-wrapper">
     <render-search>
-      <bk-button theme="primary" @click="handleCreate">
-        {{ $t(`m.common['新建']`) }}
-      </bk-button>
+      <div class="form-operate-btn">
+        <bk-button theme="primary" @click="handleCreate">
+          {{ $t(`m.common['新建']`) }}
+        </bk-button>
+        <bk-popover
+          :content="formatDisabledContent('delete')"
+          :disabled="!isBatchDeleteDisabled"
+        >
+          <bk-button
+            :disabled="isBatchDeleteDisabled"
+            @click="handleBatch('delete')"
+          >
+            {{ $t(`m.common['批量删除']`) }}
+          </bk-button>
+        </bk-popover>
+      </div>
       <div slot="right">
         <IamSearchSelect
           style="width: 540px"
@@ -15,17 +28,21 @@
       </div>
     </render-search>
     <bk-table
+      ref="actionsTemplateRef"
       size="small"
       ext-cls="actions-template-table"
       :class="{ 'set-border': tableLoading }"
       :data="actionsTempList"
       :max-height="tableHeight"
       :pagination="pagination"
+      @select="handleChange"
+      @select-all="handleAllChange"
       @page-change="handlePageChange"
       @page-limit-change="handleLimitChange"
       v-bkloading="{ isLoading: tableLoading, opacity: 1 }"
     >
-      <bk-table-column :label="$t(`m.actionsTemplate['模板名称']`)" :min-width="220" fixed="left">
+      <bk-table-column type="selection" align="center" :selectable="getDefaultSelect" fixed="left" />
+      <bk-table-column :label="$t(`m.actionsTemplate['模板名称']`)" :min-width="220">
         <template slot-scope="{ row }">
           <div class="actions-template-name">
             <div
@@ -120,20 +137,24 @@
         />
       </template>
     </bk-table>
-  
-    <user-group-dialog
-      :show.sync="isShowUserGroupDialog"
-      :name="curTemplateName"
-      :template-id="curTemplateId"
-      :loading="addGroupLoading"
-      @on-cancel="handleCancelSelect"
-      @on-sumbit="handleSubmitSelectUserGroup"
-    />
 
     <ActionsTemplateDetailSlider
       :show.sync="isShowDetailSlider"
       :cur-detail-data="curDetailData"
       @on-delete="handleTemplateDelete"
+    />
+
+    <DeleteActionDialog
+      :show.sync="isShowDeleteDialog"
+      :loading="batchQuitLoading"
+      :title="delActionDialogTitle"
+      :tip="delActionDialogTip"
+      :name="currentActionName"
+      :width="formatDeleteWidth"
+      :related-action-list="formatDisabledGroup"
+      @on-after-leave="handleAfterDeleteLeave"
+      @on-submit="handleSubmitDelete"
+      @on-cancel="handleCancelDelete"
     />
   </div>
 </template>
@@ -143,29 +164,26 @@
   import { cloneDeep } from 'lodash';
   import { bus } from '@/common/bus';
   import { fuzzyRtxSearch } from '@/common/rtx';
-  import { buildURLParams } from '@/common/url';
   import { formatCodeData, getWindowHeight, delLocationHref } from '@/common/util';
   import { addPreUpdateInfo, getActionsData } from '@/views/actions-template/common/actions';
-  import UserGroupDialog from '@/components/render-user-group-dialog';
+  import DeleteActionDialog from '@/views/group/components/delete-related-action-dialog.vue';
   import IamSearchSelect from '@/components/iam-search-select';
   import ActionsTemplateDetailSlider from './components/actions-template-detail-slider.vue';
+
   export default {
     name: '',
     components: {
-      UserGroupDialog,
+      DeleteActionDialog,
       IamSearchSelect,
       ActionsTemplateDetailSlider
     },
     data () {
       return {
-        actionsTempList: [],
         tableLoading: false,
-        pagination: {
-          current: 1,
-          count: 0,
-          limit: 10
-        },
-        currentBackup: 1,
+        editLoading: false,
+        batchQuitLoading: false,
+        isShowDeleteDialog: false,
+        isShowDetailSlider: false,
         searchData: [
           {
             id: 'name',
@@ -190,18 +208,18 @@
         ],
         searchList: [],
         searchValue: [],
-        searchParams: {},
-        curDetailData: {},
-        editLoading: false,
-        isShowUserGroupDialog: false,
-        isShowDetailSlider: false,
-        curTemplateName: '',
-        curTemplateId: '',
-        addGroupLoading: false,
-        spaceFiltersList: [],
+        actionsTempList: [],
+        currentSelectList: [],
+        hasRelatedGroups: [],
         editRequestQueue: [],
         defaultCheckedActions: [],
-        curRole: 'staff',
+        pagination: {
+          current: 1,
+          count: 0,
+          limit: 10
+        },
+        searchParams: {},
+        curDetailData: {},
         queryParams: {},
         emptyData: {
           type: '',
@@ -209,32 +227,61 @@
           tip: '',
           tipType: ''
         },
+        currentActionName: '',
+        delActionDialogTitle: '',
+        delActionDialogTip: '',
+        curTemplateId: '',
+        curRole: 'staff',
+        currentBackup: 1,
         tableHeight: getWindowHeight() - 185
       };
     },
     computed: {
       ...mapGetters(['user', 'externalSystemId']),
-      isCanBatchDelete () {
-          return this.currentSelectList.length > 0;
+      isBatchDeleteDisabled () {
+        if (this.currentSelectList.length) {
+          const result = this.currentSelectList.filter((v) => v.subject_count === 0);
+          return !(result.length > 0);
+        }
+        return true;
+      },
+      formatDeleteWidth () {
+        return this.curLanguageIsCn ? 700 : 1000;
+      },
+      formatDisabledContent () {
+        return (payload) => {
+          const typeMap = {
+            delete: () => {
+              if (!this.currentSelectList.length) {
+                return this.$t(`m.verify['请选择操作模板']`);
+              }
+              return this.$t(`m.info['有关联的用户组, 无法删除']`);
+            }
+          };
+          return typeMap[payload]();
+        };
       },
       formatDelAction () {
         return ({ subject_count: subjectCount }, type) => {
           const typeMap = {
             title: () => {
-                if (subjectCount > 0) {
-                    return this.$t(`m.info['有关联的用户组, 无法删除']`);
-                }
-                return '';
+              if (subjectCount > 0) {
+                return this.$t(`m.info['有关联的用户组, 无法删除']`);
+              }
+              return '';
             },
             disabled: () => {
-                if (subjectCount > 0) {
-                    return true;
-                }
-                return false;
+              if (subjectCount > 0) {
+                return true;
+              }
+              return false;
             }
           };
           return typeMap[type]();
         };
+      },
+      formatDisabledGroup () {
+        return this.currentSelectList.filter((item) => item.subject_count > 0);
       }
     },
     watch: {
@@ -253,7 +300,6 @@
       window.addEventListener('resize', () => {
         this.tableHeight = getWindowHeight() - 185;
       });
-      this.getQueryParamsData();
     },
     mounted () {
       this.updateSliderOperateData();
@@ -261,56 +307,6 @@
     methods: {
       async fetchPageData () {
         await this.fetchTemplateList();
-      },
-      
-      async getQueryParamsData () {
-        this.searchParams = this.$route.query;
-        this.setCurrentQueryCache(this.refreshCurrentQuery());
-        const isObject = (payload) => {
-          return Object.prototype.toString.call(payload) === '[object Object]';
-        };
-        const currentQueryCache = await this.getCurrentQueryCache();
-        if (currentQueryCache && Object.keys(currentQueryCache).length) {
-          if (currentQueryCache.limit) {
-            this.pagination = Object.assign(
-              this.pagination,
-              {
-                current: Number(currentQueryCache.current),
-                limit: Number(currentQueryCache.limit)
-              }
-            );
-          }
-          for (const key in currentQueryCache) {
-            if (!['current', 'limit'].includes(key)) {
-              const curData = currentQueryCache[key];
-              const tempData = this.searchData.find(item => item.id === key);
-              if (isObject(curData)) {
-                if (tempData) {
-                  this.searchValue.push({
-                    id: key,
-                    name: tempData.name,
-                    values: [curData]
-                  });
-                  this.searchList.push(...cloneDeep(this.searchValue));
-                  this.searchParams[key] = curData.id;
-                }
-              } else if (tempData) {
-                this.searchValue.push({
-                  id: key,
-                  name: tempData.name,
-                  values: [{
-                    id: curData,
-                    name: curData
-                  }]
-                });
-                this.searchList.push(...cloneDeep(this.searchValue));
-                this.searchParams[key] = curData;
-              } else {
-                this.searchParams[key] = curData;
-              }
-            }
-          }
-        }
       },
       
       async getPreUpdateInfo () {
@@ -364,7 +360,6 @@
   
       async fetchTemplateList (isLoading = false) {
         this.tableLoading = isLoading;
-        this.setCurrentQueryCache(this.refreshCurrentQuery());
         const { current, limit } = this.pagination;
         const params = {
           ...this.searchParams,
@@ -377,6 +372,18 @@
           this.actionsTempList = [...data.results || []];
           this.pagination = Object.assign(this.pagination, { count: data.count || 0 });
           this.emptyData = formatCodeData(code, this.emptyData, this.actionsTempList.length === 0);
+          this.$nextTick(() => {
+            const currentSelectList = this.currentSelectList.map((item) => item.id);
+            this.actionsTempList.forEach((item) => {
+              if (currentSelectList.includes(item.id)) {
+                this.$refs.actionsTemplateRef && this.$refs.actionsTemplateRef.toggleRowSelection(item, true);
+              }
+            });
+            if (this.currentSelectList.length < 1) {
+              this.$refs.actionsTemplateRef && this.$refs.actionsTemplateRef.clearSelection();
+            }
+          });
+          this.fetchSelectedGroupCount();
         } catch (e) {
           this.actionsTempList = [];
           this.emptyData = formatCodeData(e.code, this.emptyData);
@@ -393,25 +400,6 @@
           this.handleActionData();
         } catch (e) {
           this.messageAdvancedError(e);
-        }
-      },
-  
-      async handleSubmitSelectUserGroup (payload) {
-        const params = {
-          expired_at: 0,
-          members: payload,
-          id: this.curTemplateId
-        };
-        this.addGroupLoading = true;
-        try {
-          await this.$store.dispatch('permTemplate/addTemplateMember', params);
-          this.messageSuccess(this.$t(`m.info['关联用户组成功']`), 3000);
-          this.handleCancelSelect();
-          this.fetchTemplateList(true);
-        } catch (e) {
-          this.messageAdvancedError(e);
-        } finally {
-          this.addGroupLoading = false;
         }
       },
 
@@ -431,16 +419,43 @@
         await this.getPreUpdateInfo();
       },
 
+      async handleSubmitDelete () {
+        const selectGroups = this.currentSelectList.filter((item) => item.subject_count === 0);
+        this.batchQuitLoading = true;
+        try {
+          for (let i = 0; i < selectGroups.length; i++) {
+            await this.$store.dispatch('permTemplate/deleteTemplate', {
+              id: selectGroups[i].id
+            });
+          }
+          this.isShowDeleteDialog = false;
+          this.currentSelectList = [];
+          this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
+          this.resetPagination();
+          this.fetchTemplateList(true);
+        } catch (e) {
+          this.messageAdvancedError(e);
+        } finally {
+          this.batchQuitLoading = false;
+        }
+      },
+
+      handleBatch (payload) {
+        const typeMap = {
+          delete: () => {
+            this.delActionDialogTitle = this.$t(`m.dialog['确认批量删除所选的操作模板吗？']`);
+            this.delActionDialogTip = this.$t(`m.memberTemplate['以下为有关联用户组的操作模板，不可删除。']`);
+            this.hasRelatedGroups = this.currentSelectList.filter((item) => item.subject_count > 0);
+            this.isShowDeleteDialog = true;
+          }
+        };
+        return typeMap[payload]();
+      },
+
       handleCreate () {
         this.$router.push({
           name: 'actionsTemplateCreate'
         });
-      },
-  
-      handleCancelSelect () {
-        this.curTemplateId = '';
-        this.curTemplateName = '';
-        this.isShowUserGroupDialog = false;
       },
   
       handleRemoteRtx (value) {
@@ -460,6 +475,44 @@
           window.localStorage.removeItem('templateList');
         }
         this.resetPagination();
+      },
+
+      fetchSelectedGroups (type, payload, row) {
+        const typeMap = {
+          multiple: () => {
+            const isChecked = payload.length && payload.indexOf(row) !== -1;
+            if (isChecked) {
+              this.currentSelectList.push(row);
+            } else {
+              this.currentSelectList = this.currentSelectList.filter((item) => item.id !== row.id);
+            }
+            this.fetchSelectedGroupCount();
+          },
+          all: () => {
+            const tableList = cloneDeep(this.actionsTempList);
+            const selectGroups = this.currentSelectList.filter((item) => !tableList.map((v) => v.id).includes(item.id));
+            this.currentSelectList = [...selectGroups, ...payload];
+            this.fetchSelectedGroupCount();
+          }
+        };
+        return typeMap[type]();
+      },
+
+      fetchSelectedGroupCount () {
+        this.$nextTick(() => {
+          const selectionCount = document.getElementsByClassName('bk-page-selection-count');
+          if (this.$refs.actionsTemplateRef && selectionCount && selectionCount.length && selectionCount[0].children) {
+            selectionCount[0].children[0].innerHTML = this.currentSelectList.length;
+          }
+        });
+      },
+
+      handleAllChange (selection) {
+        this.fetchSelectedGroups('all', selection);
+      },
+
+      handleChange (selection, row) {
+        this.fetchSelectedGroups('multiple', selection, row);
       },
   
       handlePageChange (page) {
@@ -565,6 +618,7 @@
       updateSliderOperateData () {
         this.$once('hook:beforeDestroy', () => {
           bus.$off('on-info-change');
+          bus.$off('on-related-group-change');
         });
         bus.$on('on-info-change', (payload) => {
           const { id, name, description } = payload;
@@ -576,47 +630,25 @@
             });
           }
         });
-      },
-       
-      refreshCurrentQuery () {
-        const params = {};
-        const queryParams = {
-            ...this.searchParams,
-            ...this.queryParams
-        };
-        if (Object.keys(queryParams).length) {
-          window.history.replaceState({}, '', `?${buildURLParams(queryParams)}`);
-        }
-        for (const key in this.searchParams) {
-          const tempObj = this.searchData.find(item => key === item.id);
-          if (tempObj && tempObj.remoteMethod && typeof tempObj.remoteMethod === 'function') {
-            if (this.searchList.length > 0) {
-              const tempData = this.searchList.find(item => item.id === key);
-              params[key] = tempData.values[0];
-            }
-          } else {
-            params[key] = this.searchParams[key];
+        bus.$on('on-related-group-change', (payload) => {
+          const { id, subject_count } = payload;
+          const index = this.actionsTempList.findIndex((item) => item.id === id);
+          console.log(index);
+          if (index > -1) {
+            this.actionsTempList[index] = Object.assign(this.actionsTempList[index], {
+              subject_count
+            });
           }
-        }
-        this.emptyData = Object.assign(this.emptyData, { tipType: Object.keys(this.searchParams).length > 0 ? 'search' : '' });
-        this.pagination = Object.assign(
-          this.pagination,
-          {
-            current: queryParams.current || 1,
-            limit: queryParams.limit || 10
-          }
-        );
-        return {
-          ...queryParams
-        };
+        });
       },
-  
-      setCurrentQueryCache (payload) {
-        window.localStorage.setItem('templateList', JSON.stringify(payload));
+      
+      handleAfterDeleteLeave () {
+        this.currentActionName = '';
+        this.hasRelatedGroups = [];
       },
-  
-      getCurrentQueryCache () {
-        return JSON.parse(window.localStorage.getItem('templateList'));
+
+      handleCancelDelete () {
+        this.isShowDeleteDialog = false;
       },
   
       resetPagination () {
@@ -631,6 +663,10 @@
       resetLocationHref () {
         const urlFields = [...this.searchData.map(item => item.id), ...['current', 'limit']];
         delLocationHref(urlFields);
+      },
+
+      getDefaultSelect () {
+        return this.actionsTempList.length > 0;
       },
   
       handleEmptyClear () {
@@ -685,6 +721,14 @@
 
 <style lang="postcss" scoped>
 .iam-actions-template-wrapper {
+  .form-operate-btn {
+    font-size: 0;
+    .bk-button {
+      &:not(&:last-child) {
+        margin-right: 8px;
+      }
+    }
+  }
   .actions-template-table {
     margin-top: 16px;
     border-right: none;
