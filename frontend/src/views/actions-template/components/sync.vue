@@ -1706,7 +1706,6 @@
             actions: actionList
           });
         });
-        console.log(groups, '提交的数据');
         isNoAdd = groups.every((item) => item.actions.length < 1);
         return {
           flag,
