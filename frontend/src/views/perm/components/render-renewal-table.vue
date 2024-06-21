@@ -548,7 +548,7 @@
             { label: this.$t(`m.grading['管理空间']`), prop: 'role.name' },
             { label: this.$t(`m.levelSpace['管理员']`), prop: 'role_members' },
             { label: this.$t(`m.common['有效期']`), prop: 'expired_at' },
-            { label: this.$t(`m.common['操作']`), prop: 'operate' }
+            { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
           ];
         }
         return [
@@ -556,7 +556,7 @@
           { label: this.$t(`m.common['资源实例']`), prop: 'policy' },
           { label: this.$t(`m.common['所属系统']`), prop: 'system' },
           { label: this.$t(`m.common['有效期']`), prop: 'expired_at' },
-          { label: this.$t(`m.common['操作']`), prop: 'operate' }
+          { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
         ];
       },
 

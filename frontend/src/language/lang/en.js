@@ -304,7 +304,8 @@ export const m = {
         '恢复默认': 'Default',
         '点击复制': 'Click to copy',
         '复制成功': 'Copy successful',
-        '暂无可复制数据': 'There is currently no replicable data'
+        '暂无可复制数据': 'There is currently no replicable data',
+        '了解更多': 'Learn more'
     },
     // 校验
     verify: {
@@ -729,7 +730,10 @@ export const m = {
         '（标签只读：含只读操作）': '({name} read-only: including {value} actions)',
         '收藏成功': 'Collection successful',
         '取消收藏成功': 'Cancel collection successful',
-        '尚未选择用户组': 'No user group has been selected yet'
+        '尚未选择用户组': 'No user group has been selected yet',
+        '未启用用户组自动推荐功能': 'The user group auto-recommendation feature is not enabled.',
+        '如需启用该功能，请联系部署同学部署相关ES服务': 'To enable this feature, please contact  deployment colleagues to deploy the related ES service.',
+        '该功能可以根据用户当前的权限需求，自动匹配相关的用户组': "This feature can automatically match relevant user groups based on the user's current permission requirements."
     },
     myApply: {
         '申请列表': 'Apply List',
@@ -1444,8 +1448,9 @@ export const m = {
         '用户组权限': 'User group perm',
         '操作模板': 'Action template',
         '操作权限': 'Action permission',
-        '加入用户组时间': 'Join user group time',
+        '配置模板': 'Configuration template',
         '移除模板': 'Remove template',
+        '加入用户组时间': 'Join user group time',
         '搜索 系统名、操作名': 'Search for system name and action name',
         '搜索 用户、组织名': 'Search for user and organization names',
         '搜索 人员模板': 'Search member template',
