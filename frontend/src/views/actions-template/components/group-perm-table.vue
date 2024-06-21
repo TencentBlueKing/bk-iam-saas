@@ -107,7 +107,7 @@
                             v-bk-tooltips="{ content: $t(`m.common['复制']`) }"
                             type="copy"
                             class="copy-icon"
-                            @click.stop="handleCopyInstance(related, relatedIndex, actionIndex, action)"
+                            @click.stop="handleCopyInstance(related, relatedIndex, action)"
                           />
                         </div>
                       </template>
