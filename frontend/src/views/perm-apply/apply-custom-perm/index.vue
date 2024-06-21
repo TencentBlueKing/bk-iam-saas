@@ -2,7 +2,7 @@
 <template>
   <div>
     <!-- 申请自定义权限正常跳转 -->
-    <smart-action class="biz-perm-apply" v-if="!isNoPermApplay && !isNoPermissionsSet">
+    <smart-action class="biz-perm-apply" v-if="!isNoPermApply && !isNoPermissionsSet">
       <render-horizontal-block :required="true" ext-cls="apply-way-wrapper" :label="$t(`m.permApply['选择操作']`)">
         <render-search>
           <bk-select
@@ -211,9 +211,10 @@
         </form>
       </render-horizontal-block>
       <render-horizontal-block ext-cls="mt16" :label="$t(`m.permApply['关联资源实例']`)">
-        <section
+        <div
           ref="instanceTableRef"
-          class="normal-resource-instance-table">
+          class="aggregate-tab-instance-table perm-apply-resource-instance-table"
+        >
           <resource-instance-table
             :list="tableData"
             :original-table-list="tableDataBackup"
@@ -222,7 +223,8 @@
             :is-all-expanded="isAllExpanded"
             ref="resInstanceTableRef"
             @on-select="handleResourceSelect"
-            @on-realted-change="handleRelatedChange" />
+            @on-realted-change="handleRelatedChange"
+          />
           <div slot="append" class="expanded-action-wrapper">
             <div class="apply-custom-switch">
               <div class="apply-custom-switch-item">
@@ -235,19 +237,23 @@
                 </bk-switcher>
                 <span class="expanded-text">{{ $t(`m.common['批量无限制']`) }}</span>
               </div>
-              <div class="apply-custom-switch-item">
-                <bk-switcher
-                  v-model="isAllExpanded"
-                  theme="primary"
-                  size="small"
-                  :disabled="isAggregateDisabled"
-                  @change="handleAggregateActionChange">
-                </bk-switcher>
-                <span class="expanded-text">{{ isAllExpanded ? $t(`m.grading['批量编辑']`) : $t(`m.grading['逐项编辑']`) }}</span>
+              <div class="aggregate-action-tab-group">
+                <div
+                  v-for="item in AGGREGATION_EDIT_ENUM"
+                  :key="item.value"
+                  :class="[
+                    'aggregate-action-btn',
+                    { 'is-active': isAllExpanded === item.value },
+                    { 'is-disabled': isAggregateDisabled }
+                  ]"
+                  @click.stop="handleAggregateActionChange(item.value)"
+                >
+                  <span>{{ $t(`m.grading['${item.name}']`)}}</span>
+                </div>
               </div>
             </div>
           </div>
-        </section>
+        </div>
       </render-horizontal-block>
       <render-horizontal-block :label="$t(`m.permApply['选择权限获得者']`)" :required="false">
         <section ref="permRecipientRef">
@@ -342,7 +348,7 @@
                     <bk-table-column :label="$t(`m.userGroup['用户组名']`)">
                       <template slot-scope="{ row }">
                         <div class="user-group-name-column">
-                          <span class="user-group-name" :title="row.name" @click="handleView(row)">{{ row.name }}</span>
+                          <span class="single-hide user-group-name" :title="row.name" @click="handleView(row)">{{ row.name }}</span>
                           <div v-if="row.expired_at && user.timestamp > row.expired_at">
                             <!-- <Icon type="error-fill" class="error-icon" />
                             <span class="expired-text">{{$t(`m.permApply['你已获得该组权限，但是已过期']`)}}</span> -->
@@ -647,7 +653,8 @@
   import _ from 'lodash';
   import { mapGetters } from 'vuex';
   import { guid, formatCodeData } from '@/common/util';
-  import { PERMANENT_TIMESTAMP } from '@/common/constants';
+  import { PERMANENT_TIMESTAMP, AGGREGATION_EDIT_ENUM } from '@/common/constants';
+  import { bus } from '@/common/bus';
   import RenderActionTag from '@/components/common-action';
   import ResourceInstanceTable from '../components/resource-instance-table';
   import Policy from '@/model/policy';
@@ -660,7 +667,6 @@
   import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
 
   export default {
-    name: '',
     components: {
       RenderActionTag,
       ResourceInstanceTable,
@@ -672,7 +678,9 @@
     },
     data () {
       return {
+        AGGREGATION_EDIT_ENUM,
         userApi: window.BK_USER_API,
+        enableGroupInstanceSearch: window.ENABLE_GROUP_INSTANCE_SEARCH.toLowerCase() === 'true',
         systemValue: '',
         systemList: [],
         buttonLoading: false,
@@ -750,7 +758,7 @@
     computed: {
         ...mapGetters(['user', 'externalSystemId']),
         // 是否无权限申请
-        isNoPermApplay () {
+        isNoPermApply () {
             return this.routerQuery.system_id;
         },
         // 无权限组时
@@ -961,6 +969,13 @@
           const res = await this.$store.dispatch('userGroup/getUserGroupList', params);
           if (res.data.count > 0) {
             this.isShowHasUserGroup = true;
+          }
+          // 处理用户组权限申请默认页面场景下ENABLE_GROUP_INSTANCE_SEARCH为false需要展示FunctionalDependency组件
+          if (this.isNoPermissionsSet && this.isShowHasUserGroup && !this.enableGroupInstanceSearch) {
+            bus.$emit('show-function-dependency', {
+              routeName: this.$route.name,
+              show: true
+            });
           }
           this.tableList.splice(0, this.tableList.length, ...(res.data.results || []));
           this.$nextTick(() => {
@@ -2709,25 +2724,23 @@
 <style lang="postcss" scoped>
 @import './index.css';
 @import '@/css/mixins/manage-members-detail-slidesider.css';
+@import '@/css/mixins/aggregate-action-group.css';
 .action-hover {
-    color: #3a84ff;
+  color: #3a84ff;
 }
 
 .iam-action-hover {
-    background: #E7EFFE;
-    color: #3a84ff;
+  background: #E7EFFE;
+  color: #3a84ff;
 }
 
 .user-group-name-column {
-    display: flex;
-    align-items: center;
-    .user-group-name {
-        max-width: 200px;
-        margin-right: 5px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
+  display: flex;
+  align-items: center;
+  .user-group-name {
+    max-width: 200px;
+    margin-right: 5px;
+  }
 }
 
 .select-collection {
@@ -2741,7 +2754,8 @@
   align-items: center;
   &-item {
     &:not(&:last-of-type) {
-      margin-right: 20px;
+      margin-left: 4px;
+      margin-right: 16px;
     }
   }
 }

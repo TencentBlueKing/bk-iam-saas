@@ -25,8 +25,10 @@
  */
 
 import il8n from '@/language';
+import { rootPath } from '@blueking/sub-saas/dist/main.js';
+import { getRoutePath } from '@/common/util';
 
-const SITE_URL = window.SITE_URL;
+// const SITE_URL = window.SITE_URL;
 
 // 系统接入
 const SystemAccess = () => import(/* webpackChunkName: 'system-access' */ '../views/system-access');
@@ -123,14 +125,6 @@ const GradingAdminEdit = () => import(/* webpackChunkName: 'grading-admin' */ '.
 const GradingAdminUpdateTemplate = () =>
   import(/* webpackChunkName: 'grading-admin' */ '../views/grading-admin/update-template');
 
-// 管理空间
-// const FirstManageSpace = () =>
-//     import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/first-manage-space');
-
-// // 管理空间新建
-// const FirstManageSpaceCreate = () =>
-//     import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/first-manage-space/create');
-
 // 授权边界
 const AuthorizationBoundary = () =>
   import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/authorization-boundary');
@@ -152,8 +146,8 @@ const SecondaryManageSpaceCreate = () =>
   import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/secondary-manage-space/create');
 
 // 二极管理空间编辑
-const SecondaryManageSpaceEdit = () =>
-  import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/secondary-manage-space/Edit');
+// const SecondaryManageSpaceEdit = () =>
+//   import(/* webpackChunkName: 'grading-admin' */ '../views/manage-spaces/secondary-manage-space/Edit');
 
 // 二极管理空间详情
 const SecondaryManageSpaceDetail = () =>
@@ -218,7 +212,7 @@ const MainEntry = () => import(/* webpackChunkName: 'index' */ '../views');
 
 export const routes = [
   {
-    path: SITE_URL,
+    path: rootPath,
     name: 'iamMain',
     component: MainEntry,
     children: [
@@ -421,15 +415,15 @@ export const routes = [
         props: true,
         component: SecondaryManageSpaceCreate
       },
-      {
-        path: ':id/manage-spaces/secondary-manage-space/edit',
-        name: 'secondaryManageSpaceEdit',
-        meta: {
-          backRouter: -1
-        },
-        props: true,
-        component: SecondaryManageSpaceEdit
-      },
+      // {
+      //   path: ':id/manage-spaces/secondary-manage-space/edit',
+      //   name: 'secondaryManageSpaceEdit',
+      //   meta: {
+      //     backRouter: -1
+      //   },
+      //   props: true,
+      //   component: SecondaryManageSpaceEdit
+      // },
       {
         path: ':id/manage-spaces/secondary-manage-space/detail',
         name: 'secondaryManageSpaceDetail',
@@ -646,24 +640,6 @@ export const routes = [
         },
         component: GradingAdminUpdateTemplate
       },
-      // {
-      //     path: 'first-manage-space',
-      //     name: 'firstManageSpace',
-      //     meta: {
-      //         headerTitle: il8n('nav', '管理空间')
-      //     },
-      //     component: FirstManageSpace
-      // },
-      // {
-      //     path: ':id/first-manage-space-create',
-      //     name: 'firstManageSpaceCreate',
-      //     meta: {
-      //         headerTitle: il8n('levelSpace', '新建管理空间'),
-      //         backRouter: 'firstManageSpace'
-      //     },
-      //     props: true,
-      //     component: FirstManageSpaceCreate
-      // },
       {
         path: 'resource-permiss',
         name: 'resourcePermiss',
@@ -741,12 +717,12 @@ export const routes = [
     ]
   },
   {
-    path: '403',
+    path: getRoutePath('403'),
     name: '403',
     component: NotAccessPermPage
   },
   {
-    path: '*',
+    path: getRoutePath('*'),
     name: '404',
     component: NotFound
   }

@@ -2,8 +2,9 @@
   <!-- eslint-disable max-len -->
   <header class="header-nav-layout">
     <div :class="['logo', 'fl']" @click.stop="handleBackHome">
-      <iam-svg name="logo" :alt="$t(`m.nav['蓝鲸权限中心']`)" />
-      <span class="text">{{ $t('m.nav["蓝鲸权限中心"]') }}</span>
+      <!-- <iam-svg name="logo" :alt="$t(`m.nav['蓝鲸权限中心']`)" /> -->
+      <img :src="appLogo" :alt="$t(`m.nav['蓝鲸权限中心']`)">
+      <span class="text">{{ appName }}</span>
     </div>
     <div class="header-breadcrumbs fl">
       <div class="nav-container">
@@ -128,6 +129,7 @@
   import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
   import Cookie from 'js-cookie';
   import magicbox from 'bk-magic-vue';
+  import logoSvg from '@/images/logo.svg';
 
   // 有选项卡的页面，user-group-detail 以及 perm-template-detail
   const getTabData = (routerName) => {
@@ -281,30 +283,45 @@
     },
     computed: {
       ...mapGetters([
-      'navStick',
-      'headerTitle',
-      'backRouter',
-      'user',
-      'mainContentLoading',
-      'roleList',
-      'index',
-      'navCurRoleId',
-      'externalSystemId'
+        'navStick',
+        'headerTitle',
+        'backRouter',
+        'user',
+        'mainContentLoading',
+        'roleList',
+        'index',
+        'navCurRoleId',
+        'externalSystemId'
       ]),
+      ...mapGetters('userGlobalConfig', ['globalConfig']),
       style () {
-          return {
-              // height: `${this.roleList.length ? this.curHeight : 46}px`
-              height: `46px`
-          };
+        return {
+          // height: `${this.roleList.length ? this.curHeight : 46}px`
+          height: `46px`
+        };
       },
       curAccountLogo () {
-          return [].slice.call(this.user.username)[0].toUpperCase() || '-';
+        return [].slice.call(this.user.username)[0].toUpperCase() || '-';
       },
       isHide () {
-          return this.$route.query.system_id && this.$route.query.tid;
+        return this.$route.query.system_id && this.$route.query.tid;
       },
       isShowSearch () {
-          return this.searchValue === '';
+        return this.searchValue === '';
+      },
+      appName () {
+        // 如果未获取到配置，使用默认title
+        if (this.globalConfig) {
+          const { name, nameEn } = this.globalConfig;
+          return this.curLanguageIsCn ? name : nameEn;
+        }
+        return this.$t('m.nav["蓝鲸权限中心"]');
+      },
+      appLogo () {
+        // 如果未获取到配置，使用默认logo
+        console.log(this.globalConfig.appLogo);
+        const src = this.globalConfig.appLogo || logoSvg;
+        return src;
       }
     },
     watch: {
@@ -487,7 +504,7 @@
 
       // 需要切换的时候刷新不同菜单下的同名路由
       handleRefreshSameRoute (payload) {
-        if (['sensitivityLevel', 'administrator', 'resourcePermiss'].includes(this.$route.name) && [1, 3].includes(payload)) {
+        if (['sensitivityLevel', 'administrator', 'resourcePermiss', 'approvalProcess'].includes(this.$route.name) && [1, 3].includes(payload)) {
           this.reloadCurPage(this.$route);
         }
       },

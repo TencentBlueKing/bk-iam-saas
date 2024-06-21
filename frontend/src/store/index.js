@@ -27,7 +27,7 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 import http from '@/api';
-import { unifyObjectStyle, json2Query, getManagerMenuPerm } from '@/common/util';
+import { unifyObjectStyle, json2Query, getManagerMenuPerm, getRoutePath } from '@/common/util';
 import { getRouterDiff, getNavRouterDiff } from '@/common/router-handle';
 import il8n from '@/language';
 
@@ -97,9 +97,12 @@ import userOrOrg from './modules/user-org';
 // 续期通知
 import renewalNotice from './modules/renewal-notice';
 
+// 用户全局配置
+import userGlobalConfig from './modules/global-config';
+
 Vue.use(Vuex);
 
-const SITE_URL = window.SITE_URL;
+const SITE_URL = getRoutePath(window.SITE_URL);
 
 const currentNav = [
   {
@@ -372,7 +375,8 @@ const store = new Vuex.Store({
     sensitivityLevel,
     memberTemplate,
     userOrOrg,
-    renewalNotice
+    renewalNotice,
+    userGlobalConfig
   },
   state: {
     mainContentLoading: false,

@@ -26,6 +26,7 @@
 
 import il8n from '@/language';
 import { messageWarn, messageSuccess } from '@/common/bkmagic';
+import { rootPath } from '@blueking/sub-saas/dist/main.js';
 
 /**
  * 函数柯里化
@@ -780,3 +781,13 @@ export function getCopyValue (value) {
   }
   messageSuccess(il8n('common', '复制成功'));
 }
+
+/**
+ * 复制传入的字符集
+ * @param {subPath} value 传入的路径
+ * @return {values} 返回根路径拼接当前路径
+ */
+export const getRoutePath = (subPath) => {
+  const path = subPath.startsWith('/') ? subPath.slice(1) : subPath;
+  return rootPath ? `${rootPath}${path}` : path;
+};
