@@ -29,7 +29,7 @@
         :content="$t(`m.guide['创建审批流程']`)" /> -->
       <header-nav
         v-if="!externalSystemsLayout.hideIamHeader"
-        @reload-pae="handleRefreshPage"
+        @reload-page="handleRefreshPage"
         :route-name="routeName"
         :user-group-id="userGroupId"
       />
