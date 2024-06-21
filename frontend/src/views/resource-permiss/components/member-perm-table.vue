@@ -163,14 +163,26 @@
                     }
                   ]"
                 >
-                  <p class="related-resource-item" v-for="related in _.related_resource_types" :key="related.type">
+                  <!-- <p class="related-resource-item" v-for="related in _.related_resource_types" :key="related.type">
                     <render-resource-popover
                       :key="related.type"
                       :data="related.condition"
                       :value="`${related.name}: ${related.value}`"
                       :max-width="380"
                     />
-                  </p>
+                  </p> -->
+                  <div
+                    class="flex-between related-resource-item"
+                    v-for="(related, relatedIndex) in _.related_resource_types"
+                    :key="related.type"
+                  >
+                    <template v-if="relatedIndex < 1">
+                      <div class="instance-label">
+                        <span>{{ $t(`m.actionsTemplate['配置模板']`) }}{{ $t(`m.common['：']`) }}</span>
+                        <span class="instance-count">{{ formatInstanceCount(related, _) || 0 }}</span>
+                      </div>
+                    </template>
+                  </div>
                 </div>
               </template>
               <template v-else>
@@ -488,14 +500,14 @@
   import { bus } from '@/common/bus';
   import { leaveConfirm } from '@/common/leave-confirm';
   import getActionsMixin from '../common/js/getActionsMixin';
-  import RenderResourcePopover from '@/components/iam-view-resource-popover';
+  // import RenderResourcePopover from '@/components/iam-view-resource-popover';
   import EffectCondition from '@/views/perm/custom-perm/effect-conditon';
   import SideSliderEffectCondition from '@/views/perm/custom-perm/sideslider-effect-condition';
   import MemberTemplateDetailSlider from '@/views/member-template/components/member-template-detail-slider.vue';
 
   export default {
     components: {
-      RenderResourcePopover,
+      // RenderResourcePopover,
       EffectCondition,
       SideSliderEffectCondition,
       MemberTemplateDetailSlider
@@ -714,7 +726,7 @@
           },
           false: () => {
             if (this.isShowDeleteAction && this.isShowDeleteInstance) {
-              return 350;
+              return 360;
             }
             return 192;
           }
@@ -723,6 +735,50 @@
           return langMap[this.curLanguageIsCn]();
         }
         return 350;
+      },
+      formatInstanceCount () {
+        return (payload, related) => {
+          let curPaths = [];
+          if (related.related_resource_types && related.related_resource_types.length > 1) {
+            const list = related.related_resource_types.map((v) => {
+              if (v.condition.length) {
+                const { instance, instances } = v.condition[0];
+                const list = instance || instances;
+                curPaths = list.reduce((prev, next) => {
+                  prev.push(
+                    ...next.path.map(v => {
+                      const paths = { ...v, ...next };
+                      delete paths.instance;
+                      delete paths.path;
+                      return paths[0];
+                    })
+                  );
+                  return prev;
+                }, []);
+                return curPaths.length;
+              }
+            });
+            const count = list.reduce((prev, next) => prev + next, 0);
+            return count;
+          } else {
+            if (payload.condition.length) {
+              const { instance, instances } = payload.condition[0];
+              const list = instance || instances;
+              curPaths = list.reduce((prev, next) => {
+                prev.push(
+                  ...next.path.map(v => {
+                    const paths = { ...v, ...next };
+                    delete paths.instance;
+                    delete paths.path;
+                    return paths[0];
+                  })
+                );
+                return prev;
+              }, []);
+              return curPaths.length;
+            }
+          }
+        };
       }
     },
     watch: {
@@ -1287,6 +1343,12 @@
         position: relative;
         .related-resource-item {
           margin: 20px !important;
+          .instance-label {
+            .instance-count {
+              color: #3a84ff;
+              font-weight: 700;
+            }
+          }
         }
         .effect-detail-icon {
           display: none;
