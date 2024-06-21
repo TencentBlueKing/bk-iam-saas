@@ -132,7 +132,7 @@
         searchData: [
           {
             id: 'system_id',
-            name: this.$t(`m.common['系统名']`),
+            name: this.$t(`m.set['系统名称']`),
             remoteMethod: this.handleRemoteSystem
           },
           {
