@@ -8,6 +8,22 @@
       padding-left: 12px;
       padding-right: 12px;
     }
+    .bk-table-fixed, 
+    .bk-table-fixed-right {
+      tr {
+        th,
+        td {
+          &:last-child {
+            border-right: 0;
+          }
+        }
+        th {
+          &:last-child {
+            border-left: 1px solid #dcdee5;
+          }
+        }
+      }
+    }
     .group-perm-table-action,
     .group-perm-table-resource-type,
     .group-perm-table-resource-instance {
@@ -41,13 +57,14 @@
         .resource-type-name,
         .resource-instance-name {
           padding: 0;
+          box-sizing: border-box;
           .instance-select-content {
             width: 100%;
             .related-resource-item {
               padding: 13px 12px 14px 12px;
               .instance-label {
                 max-width: calc(100% - 60px);
-                line-height: 1;
+                /* line-height: 1; */
               }
               &.actions-multiple-resource-type {
                 padding: 0;
@@ -59,13 +76,13 @@
                   padding: 0 12px;
                   .name {
                     transform: translate(0, -10px);
-                    margin-top: -1px;
+                    /* margin-top: -1px; */
                     display: block;
                   }
                 }
               }
               &.multiple-related-resource-item {
-                padding: 13px 12px 14px 12px;
+                padding: 13px 12px 15px 12px;
                 border-bottom: 1px solid #dcdee5;
               }
             }
@@ -112,8 +129,7 @@
             }
             &.multiple-temp-action-item {
               .source-name {
-                transform: translateY(-22px);
-                margin-top: -1px;
+                transform: translate(0, -22px);
               }
             }
           }
@@ -146,10 +162,19 @@
     .group-perm-table-resource-instance {
       .cell {
         border-left: 1px solid #dfe0e5;
-      }
-      .instance-count {
-        color: #3a84ff;
-        font-weight: 700;
+        border-right: 0;
+        .child-table-content {
+          .resource-instance-name {
+            .instance-select-content {
+              .related-resource-item {       
+                .instance-count {
+                  color: #3a84ff;
+                  font-weight: 700;
+                }
+              }
+            }
+          }
+        }
       }
     }
   }
