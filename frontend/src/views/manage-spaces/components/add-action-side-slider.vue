@@ -16,7 +16,7 @@
             <bk-input
               clearable
               right-icon="bk-icon icon-search"
-              style="width: 210px;"
+              style="width: 100%;"
               v-model="keyword"
               :placeholder="$t(`m.verify['请输入']`)"
               @input="handleInput"
