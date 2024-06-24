@@ -87,7 +87,7 @@
                     </div>
                   </div>
                 </template>
-                <div v-else>{{ $t(`m.common['无']`) }}</div>
+                <div v-else>{{ $t(`m.common['无资源类型']`) }}</div>
               </div>
             </template>
           </bk-table-column>

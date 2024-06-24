@@ -62,13 +62,13 @@
         searchData: [
           {
             id: 'system_id',
-            name: this.$t(`m.userGroup['系统名']`),
+            name: this.$t(`m.actionsTemplate['系统名']`),
             remoteMethod: this.handleRemoteSystem
           },
 
           {
             id: 'action_id',
-            name: this.$t(`m.common['操作名']`),
+            name: this.$t(`m.common['操作']`),
             default: true
           }
         ],

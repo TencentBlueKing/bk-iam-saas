@@ -318,7 +318,8 @@ export const m = {
         '全部无限制': 'All unlimited',
         '定位未填写': 'Location not filled in',
         '暂无可一键填充实例': 'There are currently no instances that can be filled with one click',
-        '了解更多': 'Learn more'
+        '了解更多': 'Learn more',
+        '无资源类型': 'No resource type'
     },
     // 校验
     verify: {

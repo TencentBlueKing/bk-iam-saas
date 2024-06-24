@@ -5,14 +5,15 @@
       :data="tableList"
       :ext-cls="!isEdit ? 'is-detail-view' : ''"
       :col-border="true"
+      :cell-style="{ background: '#ffffff' }"
       :cell-class-name="getCellClass"
     >
-      <bk-table-column :resizable="false" :label="$t(`m.common['所属系统']`)" :min-width="100">
+      <bk-table-column :label="$t(`m.common['所属系统']`)" :min-width="100">
         <template slot-scope="{ row }">
           <span>{{ row.name }}</span>
         </template>
       </bk-table-column>
-      <bk-table-column :resizable="false" :label="$t(`m.actionsTemplate['添加来源']`)" :min-width="130" prop="source_type">
+      <bk-table-column :label="$t(`m.actionsTemplate['添加来源']`)" :min-width="130" prop="source_type">
         <template slot-scope="{ row }">
           <div
             v-for="(temp, tempIndex) of row.templates"
@@ -33,17 +34,25 @@
                 { 'multiple-temp-action-item': row.templates.length > 1 && temp.tableData.length > 1 }
               ]"
             >
-              <div class="source-name" v-show="isShowSource(temp, actionIndex)">
+              <div class="source-name" v-show="isShowColumnSource(temp, actionIndex)">
                 <Icon type="action-temp" class="action-icon" />
-                <div class="single-hide name" v-bk-tooltips="{ content: temp.name }">
+                <span
+                  class="single-hide name"
+                  v-bk-tooltips="{
+                    content: temp.name,
+                    placements: ['right-start'],
+                    disabled: getShowToolTip('source', temp, {})
+                  }"
+                  :ref="`source_${temp.id}_${temp.name}`"
+                >
                   {{ temp.name }}
-                </div>
+                </span>
               </div>
             </div>
           </div>
         </template>
       </bk-table-column>
-      <bk-table-column :resizable="false" :label="$t(`m.common['操作']`)" :min-width="160" prop="action_name">
+      <bk-table-column :label="$t(`m.common['操作']`)" :min-width="160" prop="action_name">
         <template slot-scope="{ row }">
           <div
             v-for="(temp, tempIndex) of row.templates"
@@ -59,12 +68,110 @@
                 { 'is-search-no-border': isSearchNoBorder(temp, tempIndex, row) }
               ]"
             >
-              <span class="single-hide name">{{ action.name }}</span>
+              <div class="instance-select-content">
+                <template v-if="action.resource_groups && action.resource_groups.length > 0">
+                  <div v-for="group in action.resource_groups" :key="group.id">
+                    <div
+                      v-for="(related, relatedIndex) in group.related_resource_types"
+                      :key="related.type"
+                      :class="[
+                        'related-resource-item',
+                        { 'actions-multiple-resource-type': group.related_resource_types.length > 1 },
+                        { 'is-show-action': isShowColumnActions(group, relatedIndex) }
+                      ]"
+                    >
+                      <span
+                        class="single-hide name"
+                        v-bk-tooltips="{
+                          content: action.name,
+                          placements: ['right-start'],
+                          disabled: getShowToolTip('actionName', action, {})
+                        }"
+                        :ref="`actionName_${action.id}`"
+                      >
+                        {{ action.name }}
+                      </span>
+                    </div>
+                  </div>
+                </template>
+                <div v-else class="related-resource-item">
+                  <span
+                    class="single-hide name"
+                    v-bk-tooltips="{
+                      content: action.name,
+                      placements: ['right-start'],
+                      disabled: getShowToolTip('actionName', action, {})
+                    }"
+                    :ref="`actionName_${action.id}`"
+                  >
+                    {{ action.name }}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </template>
       </bk-table-column>
-      <bk-table-column :resizable="false" :label="$t(`m.common['资源实例']`)" :min-width="260" prop="resource_instance">
+      <bk-table-column :label="$t(`m.permApply['资源类型']`)" :min-width="130" prop="resource_type">
+        <template slot-scope="{ row }">
+          <div
+            v-for="(temp, tempIndex) in row.templates"
+            :key="tempIndex"
+            class="child-table-content"
+          >
+            <div
+              v-for="action of temp.tableData"
+              :key="action.id"
+              :class="[
+                'resource-type-name',
+                { 'set-border': isSetBorder(temp, tempIndex, row) },
+                { 'is-search-no-border': isSearchNoBorder(temp, tempIndex, row) }
+              ]"
+            >
+              <div class="instance-select-content">
+                <template v-if="action.resource_groups && action.resource_groups.length > 0">
+                  <div v-for="group in action.resource_groups" :key="group.id">
+                    <div
+                      v-for="(related, relatedIndex) in group.related_resource_types"
+                      :key="related.type"
+                      :class="[
+                        'related-resource-item',
+                        {
+                          'multiple-related-resource-item': group.related_resource_types.length > 1
+                            && relatedIndex !== group.related_resource_types.length - 1
+                        }
+                      ]"
+                    >
+                      <div
+                        :class="[
+                          {
+                            'multiple-resource-type': group.related_resource_types.length > 1
+                              && relatedIndex !== group.related_resource_types.length - 1
+                          }
+                        ]"
+                      >
+                        <span
+                          class="single-hide resource-type-label"
+                          v-bk-tooltips="{
+                            content: related.name,
+                            placements: ['right-start'],
+                            disabled: getShowToolTip('resourceType', action, related)
+                          }"
+                          :ref="`resourceType_${action.id}_${related.type}`"
+                        >
+                          {{ related.name }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+                <div v-else class="no-column-data">{{ $t(`m.common['无资源类型']`) }}</div>
+              </div>
+            </div>
+          </div>
+        </template>
+      </bk-table-column>
+      <bk-table-column :label="$t(`m.common['资源实例']`)" :min-width="260" prop="resource_instance" fixed="right">
         <template slot-scope="{ row }">
           <div
             v-for="(temp, tempIndex) in row.templates"
@@ -85,6 +192,8 @@
                 <template v-if="action.resource_groups && action.resource_groups.length > 0">
                   <div v-for="group in action.resource_groups" :key="group.id">
                     <div
+                      v-for="(related, relatedIndex) in group.related_resource_types"
+                      :key="related.type"
                       :class="[
                         'related-resource-item',
                         {
@@ -92,19 +201,17 @@
                             && relatedIndex !== group.related_resource_types.length - 1
                         }
                       ]"
-                      v-for="(related, relatedIndex) in group.related_resource_types"
-                      :key="related.type"
                     >
-                      <div :class="[
-                        'flex-between',
-                        {
-                          'multiple-resource-type': group.related_resource_types.length > 1
-                            && relatedIndex !== group.related_resource_types.length - 1
-                        }
-                      ]"
+                      <div
+                        :class="[
+                          'flex-between',
+                          {
+                            'multiple-resource-type': group.related_resource_types.length > 1
+                              && relatedIndex !== group.related_resource_types.length - 1
+                          }
+                        ]"
                       >
                         <div class="instance-label">
-                          <span class="related-name">{{ related.name }}{{ $t(`m.common['：']`) }}</span>
                           <span>{{ $t(`m.common['已选择']`) }}</span>
                           <span class="instance-count">{{ formatInstanceCount(related, group) || 0 }}</span>
                           <span>{{ $t(`m.actionsTemplate['个任务实例']`) }}</span>
@@ -149,7 +256,7 @@
   </div>
 </template>
   
-  <script>
+<script>
   import { mapGetters } from 'vuex';
   import { cloneDeep, uniqWith, isEqual } from 'lodash';
   import { bus } from '@/common/bus';
@@ -289,199 +396,201 @@
       };
     },
     computed: {
-      ...mapGetters(['user']),
-      isSuperManager () {
-        return this.user.role.type === 'super_manager';
-      },
-      sliderWidth () {
-        return 960;
-      },
-      condition () {
-        if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
-            return [];
-        }
-        const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-            .related_resource_types[this.curResIndex];
-        if (!curData) {
-            return [];
-        }
-        return cloneDeep(curData.condition);
-      },
-      originalCondition () {
-        if (this.curIndex === -1
-            || this.curResIndex === -1
-            || this.curGroupIndex === -1
-            || this.originalList.length < 1) {
-            return [];
-        }
-        const curId = this.tableList[this.curIndex].id;
-        const curType = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-            .related_resource_types[this.curResIndex].type;
-        if (!this.originalList.some(item => item.id === curId)) {
-            return [];
-        }
-        const curResTypeData = this.originalList.find(item => item.id === curId);
-        if (!curResTypeData.resource_groups[this.curGroupIndex]
-            .related_resource_types.some(item => item.type === curType)) {
-            return [];
-        }
-        const curData = (curResTypeData.resource_groups[this.curGroupIndex]
-            .related_resource_types || []).find(item => item.type === curType);
-        if (!curData) {
-            return [];
-        }
-        return cloneDeep(curData.condition);
-      },
-      curDisabled () {
-        if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
-            return false;
-        }
-        const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-            .related_resource_types[this.curResIndex];
-        return curData.isDefaultLimit;
-      },
-      curFlag () {
-        if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
-            return 'add';
-        }
-        const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-            .related_resource_types[this.curResIndex];
-        return curData.flag;
-      },
-      curSelectionMode () {
-        if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
-            return 'all';
-        }
-        const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
-            .related_resource_types[this.curResIndex];
-        return curData.selectionMode;
-      },
-      curSelectionCondition () {
-        if (this.curIndex === -1 || this.isSuperManager) {
-            return [];
-        }
-        const curSelectionCondition = this.tableList[this.curIndex].conditionIds;
-        return curSelectionCondition;
-      },
-      isShowPreview () {
-        if (this.curIndex === -1) {
-            return false;
-        }
-        return this.tableList[this.curIndex].policy_id !== '';
-      },
-      isShowView () {
-        return (payload) => {
-          return !payload.isEmpty;
-        };
-      },
-      isCreateMode () {
-        return this.mode === 'create';
-      },
-      isShowSource () {
-        return (payload, index) => {
-          return (Math.floor(payload.tableData.length / 2)) === index;
-        };
-      },
-      isShowActions () {
-        return (payload, index) => {
-          return (Math.floor(payload.tableData.length / 2)) === index;
-        };
-      },
-      isShowDeleteAction () {
-        return ['detail'].includes(this.mode) && this.isCustom && this.type !== 'view' && !this.externalDelete;
-      },
-      isNoBorder () {
-        return (payload) => {
-          const curIndex = payload.findLastIndex((v) => v.tableData.length > 0 && v.tableData.length < 2);
-          return curIndex > -1;
-        };
-      },
-      isSetBorder () {
-        return (temp, tempIndex, row) => {
-          return !(tempIndex === row.templates.length - 1
-          && this.isNoBorder(row.templates)) && temp.tableData.length > 0;
-        };
-      },
-      isSearchNoBorder () {
-        return (temp, tempIndex, row) => {
-          return this.isSearch && row.custom_policy_count > 0 && row.template_count > 0
-            && (row.templates.findLastIndex((v) => v.tableData.length > 0) === tempIndex);
-        };
-      },
-      // 处理无限制和聚合后多个tab数据结构不兼容情况
-      formatDisplayValue () {
-        return (payload) => {
-          const { isNoLimited, empty, value, aggregateResourceType, selectedIndex } = payload;
-          if (value && aggregateResourceType[selectedIndex]) {
-            let displayValue = aggregateResourceType[selectedIndex].displayValue;
-            if (isNoLimited || empty) {
-              displayValue = value;
-            }
-            return displayValue;
-          }
-        };
-      },
-      formatInstanceCount () {
-        return (payload, related) => {
-          let curPaths = [];
-          // 暂时注释掉获取所有资源类型下实例总和的业务逻辑
-          // if (related.related_resource_types && related.related_resource_types.length > 1) {
-          //   const list = related.related_resource_types.map((v) => {
-          //     if (v.condition.length) {
-          //       const { instance, instances } = v.condition[0];
-          //       const list = instance || instances;
-          //       curPaths = list.reduce((prev, next) => {
-          //         prev.push(
-          //           ...next.path.map(v => {
-          //             const paths = { ...v, ...next };
-          //             delete paths.instance;
-          //             delete paths.path;
-          //             return paths[0];
-          //           })
-          //         );
-          //         return prev;
-          //       }, []);
-          //       return curPaths.length;
-          //     }
-          //   });
-          //   const count = list.reduce((prev, next) => prev + next, 0);
-          //   return count;
-          // } else {
-          //   if (payload.condition.length) {
-          //     const { instance, instances } = payload.condition[0];
-          //     const list = instance || instances;
-          //     curPaths = list.reduce((prev, next) => {
-          //       prev.push(
-          //         ...next.path.map(v => {
-          //           const paths = { ...v, ...next };
-          //           delete paths.instance;
-          //           delete paths.path;
-          //           return paths[0];
-          //         })
-          //       );
-          //       return prev;
-          //     }, []);
-          //     return curPaths.length;
-          //   }
-          // }
-          if (payload.condition.length) {
-            const { instance, instances } = payload.condition[0];
-            const list = instance || instances;
-            curPaths = list.reduce((prev, next) => {
-              prev.push(
-                ...next.path.map(v => {
-                  const paths = { ...v, ...next };
-                  delete paths.instance;
-                  delete paths.path;
-                  return paths[0];
-                })
-              );
-              return prev;
-            }, []);
-            return curPaths.length;
-          }
-        };
+    ...mapGetters(['user']),
+    isSuperManager () {
+      return this.user.role.type === 'super_manager';
+    },
+    sliderWidth () {
+      return 960;
+    },
+    condition () {
+      if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
+          return [];
       }
+      const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+          .related_resource_types[this.curResIndex];
+      if (!curData) {
+          return [];
+      }
+      return cloneDeep(curData.condition);
+    },
+    originalCondition () {
+      if (this.curIndex === -1
+          || this.curResIndex === -1
+          || this.curGroupIndex === -1
+          || this.originalList.length < 1) {
+          return [];
+      }
+      const curId = this.tableList[this.curIndex].id;
+      const curType = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+          .related_resource_types[this.curResIndex].type;
+      if (!this.originalList.some(item => item.id === curId)) {
+          return [];
+      }
+      const curResTypeData = this.originalList.find(item => item.id === curId);
+      if (!curResTypeData.resource_groups[this.curGroupIndex]
+          .related_resource_types.some(item => item.type === curType)) {
+          return [];
+      }
+      const curData = (curResTypeData.resource_groups[this.curGroupIndex]
+          .related_resource_types || []).find(item => item.type === curType);
+      if (!curData) {
+          return [];
+      }
+      return cloneDeep(curData.condition);
+    },
+    curDisabled () {
+      if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
+          return false;
+      }
+      const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+          .related_resource_types[this.curResIndex];
+      return curData.isDefaultLimit;
+    },
+    curFlag () {
+      if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
+          return 'add';
+      }
+      const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+          .related_resource_types[this.curResIndex];
+      return curData.flag;
+    },
+    curSelectionMode () {
+      if (this.curIndex === -1 || this.curResIndex === -1 || this.curGroupIndex === -1) {
+          return 'all';
+      }
+      const curData = this.tableList[this.curIndex].resource_groups[this.curGroupIndex]
+          .related_resource_types[this.curResIndex];
+      return curData.selectionMode;
+    },
+    curSelectionCondition () {
+      if (this.curIndex === -1 || this.isSuperManager) {
+          return [];
+      }
+      const curSelectionCondition = this.tableList[this.curIndex].conditionIds;
+      return curSelectionCondition;
+    },
+    isShowPreview () {
+      if (this.curIndex === -1) {
+          return false;
+      }
+      return this.tableList[this.curIndex].policy_id !== '';
+    },
+    isShowView () {
+      return (payload) => {
+        return !payload.isEmpty;
+      };
+    },
+    isCreateMode () {
+      return this.mode === 'create';
+    },
+    isShowColumnSource () {
+      return (payload, index) => {
+        return (Math.floor(payload.tableData.length / 2)) === index;
+      };
+    },
+    isShowColumnActions () {
+      return (payload, index) => {
+        return payload.related_resource_types
+        && (Math.floor(payload.related_resource_types.length / 2)) === index
+        && payload.related_resource_types.length > 1;
+      };
+    },
+    isShowDeleteAction () {
+      return ['detail'].includes(this.mode) && this.isCustom && this.type !== 'view' && !this.externalDelete;
+    },
+    isNoBorder () {
+      return (payload) => {
+        const curIndex = payload.findLastIndex((v) => v.tableData.length > 0 && v.tableData.length < 2);
+        return curIndex > -1;
+      };
+    },
+    isSetBorder () {
+      return (temp, tempIndex, row) => {
+        return !(tempIndex === row.templates.length - 1
+        && this.isNoBorder(row.templates)) && temp.tableData.length > 0;
+      };
+    },
+    isSearchNoBorder () {
+      return (temp, tempIndex, row) => {
+        return this.isSearch && row.custom_policy_count > 0 && row.template_count > 0
+          && (row.templates.findLastIndex((v) => v.tableData.length > 0) === tempIndex);
+      };
+    },
+    // 处理无限制和聚合后多个tab数据结构不兼容情况
+    formatDisplayValue () {
+      return (payload) => {
+        const { isNoLimited, empty, value, aggregateResourceType, selectedIndex } = payload;
+        if (value && aggregateResourceType[selectedIndex]) {
+          let displayValue = aggregateResourceType[selectedIndex].displayValue;
+          if (isNoLimited || empty) {
+            displayValue = value;
+          }
+          return displayValue;
+        }
+      };
+    },
+    formatInstanceCount () {
+      return (payload, related) => {
+        let curPaths = [];
+        // 暂时注释掉获取所有资源类型下实例总和的业务逻辑
+        // if (related.related_resource_types && related.related_resource_types.length > 1) {
+        //   const list = related.related_resource_types.map((v) => {
+        //     if (v.condition.length) {
+        //       const { instance, instances } = v.condition[0];
+        //       const list = instance || instances;
+        //       curPaths = list.reduce((prev, next) => {
+        //         prev.push(
+        //           ...next.path.map(v => {
+        //             const paths = { ...v, ...next };
+        //             delete paths.instance;
+        //             delete paths.path;
+        //             return paths[0];
+        //           })
+        //         );
+        //         return prev;
+        //       }, []);
+        //       return curPaths.length;
+        //     }
+        //   });
+        //   const count = list.reduce((prev, next) => prev + next, 0);
+        //   return count;
+        // } else {
+        //   if (payload.condition.length) {
+        //     const { instance, instances } = payload.condition[0];
+        //     const list = instance || instances;
+        //     curPaths = list.reduce((prev, next) => {
+        //       prev.push(
+        //         ...next.path.map(v => {
+        //           const paths = { ...v, ...next };
+        //           delete paths.instance;
+        //           delete paths.path;
+        //           return paths[0];
+        //         })
+        //       );
+        //       return prev;
+        //     }, []);
+        //     return curPaths.length;
+        //   }
+        // }
+        if (payload.condition.length) {
+          const { instance, instances } = payload.condition[0];
+          const list = instance || instances;
+          curPaths = list.reduce((prev, next) => {
+            prev.push(
+              ...next.path.map(v => {
+                const paths = { ...v, ...next };
+                delete paths.instance;
+                delete paths.path;
+                return paths[0];
+              })
+            );
+            return prev;
+          }, []);
+          return curPaths.length;
+        }
+      };
+    }
     },
     watch: {
       list: {
@@ -532,6 +641,7 @@
             if (groupItem.related_resource_types.length > 0) {
               groupItem.related_resource_types.forEach((item) => {
                 const { name, type, condition } = item;
+                console.log(type);
                 params.push({
                   name: type,
                   label: this.$t(`m.info['tab操作实例']`, { value: name }),
@@ -554,6 +664,9 @@
           action_name: () => {
             return 'group-perm-table-action';
           },
+          resource_type: () => {
+            return 'group-perm-table-resource-type';
+          },
           resource_instance: () => {
             return 'group-perm-table-resource-instance';
           }
@@ -572,7 +685,6 @@
       },
 
       handleResourcePreview () {
-        // debugger
         window.changeDialog = true;
         // eslint-disable-next-line max-len
         const { system_id, type, name } = this.tableList[this.curIndex].resource_groups[this.curGroupIndex].related_resource_types[this.curResIndex];
@@ -670,152 +782,46 @@
           actions
         };
       },
-     
+    
       handlePreviewDialogClose () {
         this.previewDialogTitle = '';
         this.previewResourceParams = {};
         this.isShowPreviewDialog = false;
+      },
+
+      getShowToolTip (type, action, related) {
+        const typeMap = {
+          source: () => {
+            const sourceRef = this.$refs[`${type}_${action.id}_${action.name}`];
+            if (sourceRef && sourceRef.length) {
+              const offsetWidth = sourceRef[0].offsetWidth;
+              return !(offsetWidth > 140);
+            }
+          },
+          actionName: () => {
+            const actionNameRef = this.$refs[`${type}_${action.id}`];
+            if (actionNameRef && actionNameRef.length) {
+              const offsetWidth = actionNameRef[0].offsetWidth;
+              return !(offsetWidth > 145);
+            }
+          },
+          resourceType: () => {
+            const resourceTypeRef = this.$refs[`${type}_${action.id}_${related.type}`];
+            if (resourceTypeRef && resourceTypeRef.length) {
+              const offsetWidth = resourceTypeRef[0].offsetWidth;
+              return !(offsetWidth > 118);
+            }
+          }
+        };
+        if (typeMap[type]) {
+          return typeMap[type]();
+        }
+        return '';
       }
     }
   };
-  </script>
-  
-  <style lang="postcss" scoped>
-  .group-perm-table-wrapper {
-    /deep/ .bk-table {
-      width: 100%;
-      border-right: none;
-      border-bottom: none;
-      font-size: 12px;
-      .cell {
-        padding-left: 12px;
-        padding-right: 12px;
-      }
-      .bk-table-body {
-        tr {
-          &:hover {
-            background-color: transparent;
-            & > td {
-              background-color: transparent;
-            }
-          }
-        }
-      }
-      .group-perm-table-action,
-      .group-perm-table-resource-instance {
-        .cell {
-          width: 100%;
-          padding: 0;
-          display: block;
-        }
-        .child-table-content {
-          .actions-name,
-          .resource-instance-name {
-            padding: 13px 12px 14px 12px;
-            &.set-border {
-              border-bottom: 1px solid #dcdee5;
-            }
-            &.is-search-no-border {
-              border-bottom: 0;
-            }
-          }
-          .view-icon,
-          .copy-icon {
-            color: #3A84FF;
-            font-size: 16px;
-            cursor: pointer;
-          }
-          .copy-icon {
-            margin-left: 15px;
-          }
-          .resource-instance-name {
-            padding: 0;
-            .instance-select-content {
-              width: 100%;
-              .related-resource-item {
-                padding: 13px 12px 14px 12px;
-                .instance-label {
-                  max-width: calc(100% - 60px);
-                  line-height: 1;
-                }
-                &.multiple-related-resource-item {
-                  padding: 13px 12px 14px 12px;
-                  border-bottom: 1px solid #dcdee5;
-                }
-              }
-            }
-            .no-column-data {
-              padding: 13px 12px 14px 12px;
-            }
-          }
-          &:last-child {
-            .actions-name,
-            .resource-instance-name {
-              &:last-child {
-                border-bottom: 0;
-              }
-            }
-          }
-        }
-      }
-      .group-perm-table-source {
-        .cell {
-          width: 100%;
-          padding: 0;
-          display: block;
-          .add-source-content {
-            &-item {
-              .source-name {
-                padding: 0 12px;
-                display: flex;
-                align-items: center;
-                line-height: 44px;
-                .action-icon {
-                  color: #979BA5;
-                  margin-right: 4px;
-                }
-              }
-              &.multiple-temp-item {
-                min-height: 44px;
-              }
-              &.multiple-temp-action-item {
-                .source-name {
-                  transform: translateY(-22px);
-                  margin-top: -1px;
-                }
-              }
-            }
-            &.set-border {
-              border-bottom: 1px solid #dcdee5;
-              &:last-child {
-                border-bottom: 0;
-              }
-            }
-            &:last-child {
-              border-bottom: 0;
-              .multiple-temp-action-item {
-                .source-name {
-                  transform: translate(0, 0);
-                }
-              }
-              .source-name,
-              .actions-name,
-              .resource-instance-name {
-                border-bottom: 0;
-              }
-            }
-            &.is-search-no-border {
-              border-bottom: 0;
-            }
-          }
-        }
-      }
-      .group-perm-table-resource-instance {
-        .instance-count {
-          color: #3A84FF;
-          font-weight: 700;
-        }
-      }
-    }
-  }
-  </style>
+</script>
+
+<style lang="postcss" scoped>
+@import '../css/group-perm-table.css';
+</style>
