@@ -85,15 +85,29 @@
                 <template v-if="action.resource_groups && action.resource_groups.length > 0">
                   <div v-for="group in action.resource_groups" :key="group.id">
                     <div
-                      class="flex-between related-resource-item"
+                      :class="[
+                        'related-resource-item',
+                        {
+                          'multiple-related-resource-item': group.related_resource_types.length > 1
+                            && relatedIndex !== group.related_resource_types.length - 1
+                        }
+                      ]"
                       v-for="(related, relatedIndex) in group.related_resource_types"
                       :key="related.type"
                     >
-                      <template v-if="relatedIndex < 1">
+                      <div :class="[
+                        'flex-between',
+                        {
+                          'multiple-resource-type': group.related_resource_types.length > 1
+                            && relatedIndex !== group.related_resource_types.length - 1
+                        }
+                      ]"
+                      >
                         <div class="instance-label">
+                          <span class="related-name">{{ related.name }}{{ $t(`m.common['：']`) }}</span>
                           <span>{{ $t(`m.common['已选择']`) }}</span>
                           <span class="instance-count">{{ formatInstanceCount(related, group) || 0 }}</span>
-                          <span>{{ $t(`m.common['个任务实例']`) }}</span>
+                          <span>{{ $t(`m.actionsTemplate['个任务实例']`) }}</span>
                         </div>
                         <div class="instance-operate-icon">
                           <Icon
@@ -107,14 +121,14 @@
                             v-bk-tooltips="{ content: $t(`m.common['复制']`) }"
                             type="copy"
                             class="copy-icon"
-                            @click.stop="handleCopyInstance(related, relatedIndex, action)"
+                            @click.stop="handleCopyInstance(related, action)"
                           />
                         </div>
-                      </template>
+                      </div>
                     </div>
                   </div>
                 </template>
-                <div v-else>{{ $t(`m.common['无需关联实例']`) }}</div>
+                <div v-else class="no-column-data">{{ $t(`m.common['无需关联实例']`) }}</div>
               </div>
             </div>
           </div>
@@ -368,6 +382,11 @@
           return (Math.floor(payload.tableData.length / 2)) === index;
         };
       },
+      isShowActions () {
+        return (payload, index) => {
+          return (Math.floor(payload.tableData.length / 2)) === index;
+        };
+      },
       isShowDeleteAction () {
         return ['detail'].includes(this.mode) && this.isCustom && this.type !== 'view' && !this.externalDelete;
       },
@@ -405,44 +424,61 @@
       formatInstanceCount () {
         return (payload, related) => {
           let curPaths = [];
-          if (related.related_resource_types && related.related_resource_types.length > 1) {
-            const list = related.related_resource_types.map((v) => {
-              if (v.condition.length) {
-                const { instance, instances } = v.condition[0];
-                const list = instance || instances;
-                curPaths = list.reduce((prev, next) => {
-                  prev.push(
-                    ...next.path.map(v => {
-                      const paths = { ...v, ...next };
-                      delete paths.instance;
-                      delete paths.path;
-                      return paths[0];
-                    })
-                  );
-                  return prev;
-                }, []);
-                return curPaths.length;
-              }
-            });
-            const count = list.reduce((prev, next) => prev + next, 0);
-            return count;
-          } else {
-            if (payload.condition.length) {
-              const { instance, instances } = payload.condition[0];
-              const list = instance || instances;
-              curPaths = list.reduce((prev, next) => {
-                prev.push(
-                  ...next.path.map(v => {
-                    const paths = { ...v, ...next };
-                    delete paths.instance;
-                    delete paths.path;
-                    return paths[0];
-                  })
-                );
-                return prev;
-              }, []);
-              return curPaths.length;
-            }
+          // 暂时注释掉获取所有资源类型下实例总和的业务逻辑
+          // if (related.related_resource_types && related.related_resource_types.length > 1) {
+          //   const list = related.related_resource_types.map((v) => {
+          //     if (v.condition.length) {
+          //       const { instance, instances } = v.condition[0];
+          //       const list = instance || instances;
+          //       curPaths = list.reduce((prev, next) => {
+          //         prev.push(
+          //           ...next.path.map(v => {
+          //             const paths = { ...v, ...next };
+          //             delete paths.instance;
+          //             delete paths.path;
+          //             return paths[0];
+          //           })
+          //         );
+          //         return prev;
+          //       }, []);
+          //       return curPaths.length;
+          //     }
+          //   });
+          //   const count = list.reduce((prev, next) => prev + next, 0);
+          //   return count;
+          // } else {
+          //   if (payload.condition.length) {
+          //     const { instance, instances } = payload.condition[0];
+          //     const list = instance || instances;
+          //     curPaths = list.reduce((prev, next) => {
+          //       prev.push(
+          //         ...next.path.map(v => {
+          //           const paths = { ...v, ...next };
+          //           delete paths.instance;
+          //           delete paths.path;
+          //           return paths[0];
+          //         })
+          //       );
+          //       return prev;
+          //     }, []);
+          //     return curPaths.length;
+          //   }
+          // }
+          if (payload.condition.length) {
+            const { instance, instances } = payload.condition[0];
+            const list = instance || instances;
+            curPaths = list.reduce((prev, next) => {
+              prev.push(
+                ...next.path.map(v => {
+                  const paths = { ...v, ...next };
+                  delete paths.instance;
+                  delete paths.path;
+                  return paths[0];
+                })
+              );
+              return prev;
+            }, []);
+            return curPaths.length;
           }
         };
       }
@@ -604,7 +640,7 @@
         this.isShowPreviewDialog = true;
       },
 
-      handleCopyInstance (sub, subIndex, index, payload) {
+      handleCopyInstance (sub, payload) {
         this.curCopyMode = 'normal';
         this.curCopyKey = `${sub.system_id}${sub.type}`;
         this.curCopyData = cloneDeep(sub.condition);
@@ -673,25 +709,6 @@
           display: block;
         }
         .child-table-content {
-          /* tr {
-            td {
-              border-right: 0;
-              border-bottom: 0;
-            }
-            &:last-child {
-              td {
-                border-bottom: 0;
-                &.is-last {
-                    .actions-name,
-                    .resource-instance-name {
-                      &:last-child {
-                        border-bottom: 0;
-                      }
-                  }
-                }
-              }
-            }
-          } */
           .actions-name,
           .resource-instance-name {
             padding: 13px 12px 14px 12px;
@@ -712,14 +729,23 @@
             margin-left: 15px;
           }
           .resource-instance-name {
+            padding: 0;
             .instance-select-content {
               width: 100%;
               .related-resource-item {
+                padding: 13px 12px 14px 12px;
                 .instance-label {
-                  max-width: calc(100% - 80px);
+                  max-width: calc(100% - 60px);
                   line-height: 1;
                 }
+                &.multiple-related-resource-item {
+                  padding: 13px 12px 14px 12px;
+                  border-bottom: 1px solid #dcdee5;
+                }
               }
+            }
+            .no-column-data {
+              padding: 13px 12px 14px 12px;
             }
           }
           &:last-child {

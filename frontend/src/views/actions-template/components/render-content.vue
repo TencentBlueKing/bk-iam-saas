@@ -272,6 +272,7 @@
         :all-sync-group-actions="allSyncGroupActions"
         :default-checked-actions="defaultCheckedActions"
         :linear-actions="linearAction"
+        @on-set-action-step="handleSetStep"
       />
     </div>
     <!-- 查看组权限实例详情 -->
@@ -524,7 +525,6 @@
         try {
           const { data } = await this.$store.dispatch('permTemplate/getTemplateMember', params);
           this.hasGroupPreview = data.count > 0;
-          this.$store.commit('permTemplate/updatePreGroupOnePage', Math.ceil(data.count / 100) === 1);
         } catch (e) {
           this.messageAdvancedError(e);
         }
@@ -1260,6 +1260,13 @@
         this.$once('hook:beforeDestroy', () => {
           bus.$off('on-drawer-side');
         });
+      },
+
+      async handleSetStep (payload) {
+        const { step } = payload;
+        this.curSelectActions = [];
+        this.handleSetCurActionStep(step);
+        await this.fetchInitData();
       },
 
       handleSetCurActionStep (payload) {

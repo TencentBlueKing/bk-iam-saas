@@ -1647,7 +1647,8 @@ export const m = {
         '引用已有的操作实例一键填充': 'Referencing existing operation instances for one click filling',
         '批量复用资源实例值（资源模板）到其他用户组': 'Batch reuse of resource instance values (resource templates) to other user groups',
         '解除同步后，模板权限将转为用户组自定义权限，不会再继续同步该模板的操作。': 'After unsynchronizing, template permissions will be converted to user group custom permissions, and the operation of synchronizing the template will no longer be continued.',
-        '以下为有关联用户组的操作模板，不可删除。': 'The following action templates are have associated user groups and cannot be deleted.'
+        '以下为有关联用户组的操作模板，不可删除。': 'The following action templates are have associated user groups and cannot be deleted.',
+        '个任务实例': 'task instances'
     }
 }
 export default {
