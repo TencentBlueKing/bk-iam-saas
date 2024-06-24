@@ -190,7 +190,7 @@
             >
               <div class="instance-select-content">
                 <template v-if="action.resource_groups && action.resource_groups.length > 0">
-                  <div v-for="group in action.resource_groups" :key="group.id">
+                  <div v-for="(group, groupIndex) in action.resource_groups" :key="group.id">
                     <div
                       v-for="(related, relatedIndex) in group.related_resource_types"
                       :key="related.type"
@@ -222,7 +222,7 @@
                             v-bk-tooltips="{ content: $t(`m.common['详情']`) }"
                             type="detail"
                             class="view-icon"
-                            @click.stop="handleViewResource(action)"
+                            @click.stop="handleViewResource(action, groupIndex, relatedIndex)"
                           />
                           <Icon
                             v-bk-tooltips="{ content: $t(`m.common['复制']`) }"
@@ -630,26 +630,23 @@
           ? 960 : Math.ceil(window.innerWidth * 0.67 - 7);
       },
 
-      handleViewResource (payload) {
+      handleViewResource (payload, relatedIndex, typesIndex) {
         this.curId = payload.id;
         const params = [];
         const sideSliderTitle = this.$t(`m.info['操作侧边栏操作的资源实例']`, {
           value: `${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}`
         });
-        if (payload.resource_groups.length > 0) {
-          payload.resource_groups.forEach((groupItem) => {
-            if (groupItem.related_resource_types.length > 0) {
-              groupItem.related_resource_types.forEach((item) => {
-                const { name, type, condition } = item;
-                console.log(type);
-                params.push({
-                  name: type,
-                  label: this.$t(`m.info['tab操作实例']`, { value: name }),
-                  tabType: 'resource',
-                  data: condition
-                });
-              });
-            }
+        const resourceGroup = payload.resource_groups[relatedIndex];
+        if (resourceGroup.related_resource_types.length > 0) {
+          resourceGroup.related_resource_types.forEach((item) => {
+            const { name, type, condition } = item;
+            params.push({
+              name: type || '',
+              label: this.$t(`m.info['tab操作实例']`, { value: name }),
+              tabType: 'resource',
+              tabActive: resourceGroup.related_resource_types[typesIndex].type || '',
+              data: condition
+            });
           });
         }
         this.previewData = cloneDeep(params);
