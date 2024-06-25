@@ -2118,7 +2118,6 @@
         min-height: 101px;
         .bk-table {
             width: 100%;
-            margin-top: 8px;
             border-right: none;
             border-bottom: none;
             font-size: 12px;

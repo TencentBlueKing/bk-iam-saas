@@ -1,17 +1,13 @@
 <template>
   <smart-action class="iam-add-group-perm-wrapper">
-    <render-horizontal-block
-      :label="$t(`m.userGroup['组权限']`)"
-      :required="true">
-      <div class="grade-admin-select-wrapper">
-        <div class="action">
-          <section class="action-wrapper" @click.stop="handleAddPerm" data-test-id="group_btn_addGroupPerm">
+    <render-horizontal-block :label="$t(`m.userGroup['组权限']`)" :required="true">
+      <div class="user-group-select-wrapper">
+        <div class="flex-between action">
+          <div class="action-wrapper" @click.stop="handleAddPerm" data-test-id="group_btn_addGroupPerm">
             <Icon bk type="plus-circle-shape" />
             <span>{{ $t(`m.userGroup['添加组权限']`) }}</span>
-          </section>
-        </div>
-        <div class="info-wrapper">
-          <section style="min-width: 108px; position: relative;">
+          </div>
+          <div class="info-wrapper">
             <template v-if="['super_manager', 'system_manager'].includes(user.role.type)">
               <bk-switcher
                 v-model="isAllUnlimited"
@@ -22,21 +18,27 @@
               </bk-switcher>
               <span class="text">{{ $t(`m.common['批量无限制']`) }}</span>
             </template>
-            <template>
-              <bk-switcher
-                v-model="isAllExpanded"
-                :disabled="isAggregateDisabled"
-                size="small"
-                theme="primary"
-                @change="handleAggregateAction" />
-              <span class="text">{{ expandedText }}</span>
-            </template>
-          </section>
+            <div class="aggregate-action-tab-group">
+              <div
+                v-for="item in AGGREGATION_EDIT_ENUM"
+                :key="item.value"
+                :class="[
+                  'aggregate-action-btn',
+                  { 'is-active': isAllExpanded === item.value },
+                  { 'is-disabled': isAggregateDisabled }
+                ]"
+                @click.stop="handleAggregateAction(item.value)"
+              >
+                <span>{{ $t(`m.grading['${item.name}']`)}}</span>
+              </div>
+            </div>
+          </div>
         </div>
         <resource-instance-table
           is-edit
           mode="create"
           ref="resInstanceTableRef"
+          class="aggregate-tab-instance-table"
           :is-all-expanded="isAllExpanded"
           :list="tableList"
           :authorization="curAuthorizationData"
@@ -87,7 +89,7 @@
 <script>
   import _ from 'lodash';
   import { guid, existValue } from '@/common/util';
-  import { CUSTOM_PERM_TEMPLATE_ID } from '@/common/constants';
+  import { CUSTOM_PERM_TEMPLATE_ID, AGGREGATION_EDIT_ENUM } from '@/common/constants';
   import { leavePageConfirm } from '@/common/leave-page-confirm';
   import AddPermSideslider from '../components/add-group-perm-sideslider';
   import AddActionSideslider from '../components/add-action-sideslider';
@@ -108,12 +110,12 @@
     },
     data () {
       return {
+        AGGREGATION_EDIT_ENUM,
         submitLoading: false,
         isShowAddSideslider: false,
         isShowAddActionSideslider: false,
         curActionValue: [],
         originalList: [],
-
         tableList: [],
         tableListBackup: [],
         tempalteDetailList: [],
@@ -552,6 +554,10 @@
       },
 
       handleAggregateAction (payload) {
+        if (this.isAggregateDisabled) {
+          return;
+        }
+        this.isAllExpanded = payload;
         const tempData = [];
         let templateIds = [];
         let instancesDisplayData = {};
@@ -855,49 +861,8 @@
     }
   };
 </script>
+
 <style lang="postcss" scoped>
-    .iam-add-group-perm-wrapper {
-        .grade-admin-select-wrapper {
-            .action {
-                position: relative;
-                display: flex;
-                justify-content: flex-start;
-                .action-wrapper {
-                    font-size: 14px;
-                    color: #3a84ff;
-                    cursor: pointer;
-                    &:hover {
-                        color: #699df4;
-                    }
-                    i {
-                        position: relative;
-                        top: -1px;
-                        left: 2px;
-                    }
-                }
-                .info-icon {
-                    margin: 2px 0 0 2px;
-                    color: #c4c6cc;
-                    &:hover {
-                        color: #3a84ff;
-                    }
-                }
-            }
-            .info-wrapper {
-                display: flex;
-                justify-content: flex-end;
-                margin-top: 16px;
-                margin-bottom: 10px;
-                line-height: 24px;
-                .tips,
-                .text {
-                    line-height: 20px;
-                    font-size: 12px;
-                    &:not(&:last-child) {
-                      margin-right: 20px;
-                    }
-                }
-            }
-        }
-    }
+@import '@/css/mixins/create-user-group.css';
+@import '@/css/mixins/aggregate-action-group.css';
 </style>

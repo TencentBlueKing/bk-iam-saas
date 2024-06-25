@@ -18,30 +18,45 @@
             :name="option.display_name">
           </bk-option>
         </bk-select>
-        <bk-select
-          v-model="item.selecteds"
-          :ref="`${item.id}&${index}&valueRef`"
-          :multiple="true"
-          searchable
-          :disabled="item.disabled || !item.id"
-          :loading="item.loading"
-          style="position: relative; left: -1px; width: 330px;"
-          :remote-method="handleRemoteValue"
-          @clear="handleClear(...arguments, item)"
-          @toggle="handleAttrValueToggle(...arguments, index, item)"
-          @selected="handleAttrValueSelected(...arguments, item)">
-          <bk-option v-for="option in attrValueListMap[item.id]"
-            :key="option.id"
-            :id="option.id"
-            :name="option.display_name">
-            <template v-if="option.id !== ''">
-              <span>{{ option.display_name }}</span>
-            </template>
-            <template v-else>
-              <div v-bkloading="{ isLoading: item.isScrollRemote, size: 'mini' }"></div>
-            </template>
-          </bk-option>
-        </bk-select>
+        <!-- 单独处理dbm系统业务个别属性id需要展示不同的组件 -->
+        <template v-if="isMemberSelector(item)">
+          <BkUserSelector
+            ref="selector"
+            class="sub-selector-content"
+            :api="userApi"
+            :value="formatMemberValue(item)"
+            :disabled="formatDisabled(item)"
+            :placeholder="$t(`m.verify['请输入']`)"
+            :empty-text="$t(`m.common['无匹配人员']`)"
+            @change="handleMemberChange(...arguments, item)"
+          />
+        </template>
+        <template v-else>
+          <bk-select
+            v-model="item.selecteds"
+            class="sub-selector-content"
+            :ref="`${item.id}&${index}&valueRef`"
+            :multiple="true"
+            searchable
+            :disabled="formatDisabled(item)"
+            :loading="item.loading"
+            :remote-method="handleRemoteValue"
+            @clear="handleClear(...arguments, item)"
+            @toggle="handleAttrValueToggle(...arguments, index, item)"
+            @selected="handleAttrValueSelected(...arguments, item)">
+            <bk-option v-for="option in attrValueListMap[item.id]"
+              :key="option.id"
+              :id="option.id"
+              :name="option.display_name">
+              <template v-if="option.id !== ''">
+                <span>{{ option.display_name }}</span>
+              </template>
+              <template v-else>
+                <div v-bkloading="{ isLoading: item.isScrollRemote, size: 'mini' }"></div>
+              </template>
+            </bk-option>
+          </bk-select>
+        </template>
       </div>
       <div class="attribute-action" v-if="isShowAction(item)">
         <Icon type="add-hollow" @click="addAttribute" />
@@ -54,9 +69,11 @@
     </div>
   </div>
 </template>
+
 <script>
   import { sleep } from '@/common/util';
   import Attribute from '@/model/attribute';
+  import BkUserSelector from '@blueking/user-selector';
 
   const ATTRIBUTE_ITEM = {
     id: '',
@@ -70,7 +87,9 @@
   };
     
   export default {
-    name: '',
+    components: {
+      BkUserSelector
+    },
     props: {
       list: {
         type: Array,
@@ -98,6 +117,7 @@
     },
     data () {
       return {
+        userApi: window.BK_USER_API,
         attrValues: [],
         curOperateData: {},
         pagination: {
@@ -112,15 +132,31 @@
       };
     },
     computed: {
-      // isDisabledMode () {
-      //     return this.mode === 'disabled'
-      // },
       isShowAction () {
         return payload => {
           if (this.isDisabledMode) {
             return false;
           }
           return !payload.disabled;
+        };
+      },
+      isMemberSelector () {
+        return (payload) => {
+          return ['bk_cmdb'].includes(this.params.system_id) && ['operator', 'bk_bak_operator'].includes(payload.id);
+        };
+      },
+      formatDisabled () {
+        return (payload) => {
+          return payload.disabled || !payload.id;
+        };
+      },
+      formatMemberValue () {
+        return (payload) => {
+          const { values } = payload;
+          if (values && values.length > 0) {
+            return values.map((v) => v.id);
+          }
+          return [];
         };
       }
     },
@@ -197,10 +233,29 @@
       }
     },
     methods: {
+      handleMemberChange (payload, row) {
+        this.$set(row, 'selecteds', payload);
+        if (!payload.length) {
+          row.values = [];
+          this.trigger();
+          return;
+        }
+        const tempValues = [];
+        payload.forEach((item) => {
+          tempValues.push({
+            id: item,
+            name: item
+          });
+        });
+        row.values = [...tempValues];
+        this.trigger();
+      },
+
       handleClear (value, payload) {
         payload.values = [];
         this.trigger();
       },
+
       handleAttrValueSelected (value, options, payload) {
         if (value.length < 1) {
           payload.values = [];
@@ -370,27 +425,7 @@
     }
   };
 </script>
-<style lang="postcss">
-    .attribute-item {
-        display: flex;
-        &.set-margin-top {
-            margin-top: 8px;
-        }
-    }
-    .attribute-select {
-        display: flex;
-    }
-    .attribute-action {
-        margin-left: 12px;
-        line-height: 32px;
-        i {
-            color: #979ba5;
-            font-size: 20px;
-            cursor: pointer;
-            &.disabled {
-                color: #c4c6cc;
-                cursor: not-allowed;
-            }
-        }
-    }
+
+<style lang="postcss" scoped>
+@import '@/css/mixins/attribute.css';
 </style>
