@@ -31,8 +31,10 @@
               :class="[
                 'add-source-content-item',
                 { 'multiple-temp-item': row.templates.length > 1 },
-                { 'multiple-temp-action-item': row.templates.length > 1 && temp.tableData.length > 1 }
+                { 'multiple-temp-action-item': row.templates.length > 1 && temp.tableData.length > 1 },
+                { 'has-multiple-resource-type': formatResourceTypeCount(action) > 1 }
               ]"
+              :style="{ 'min-height': formatSourceHeight(action), 'line-height': formatSourceHeight(action) }"
             >
               <div class="source-name" v-show="isShowColumnSource(temp, actionIndex)">
                 <Icon type="action-temp" class="action-icon" />
@@ -40,8 +42,7 @@
                   class="single-hide name"
                   v-bk-tooltips="{
                     content: temp.name,
-                    placements: ['right-start'],
-                    disabled: getShowToolTip('source', temp, {})
+                    placements: ['right-start']
                   }"
                   :ref="`source_${temp.id}_${temp.name}`"
                 >
@@ -84,8 +85,7 @@
                         class="single-hide name"
                         v-bk-tooltips="{
                           content: action.name,
-                          placements: ['right-start'],
-                          disabled: getShowToolTip('actionName', action, {})
+                          placements: ['right-start']
                         }"
                         :ref="`actionName_${action.id}`"
                       >
@@ -99,8 +99,7 @@
                     class="single-hide name"
                     v-bk-tooltips="{
                       content: action.name,
-                      placements: ['right-start'],
-                      disabled: getShowToolTip('actionName', action, {})
+                      placements: ['right-start']
                     }"
                     :ref="`actionName_${action.id}`"
                   >
@@ -154,8 +153,7 @@
                           class="single-hide resource-type-label"
                           v-bk-tooltips="{
                             content: related.name,
-                            placements: ['right-start'],
-                            disabled: getShowToolTip('resourceType', action, related)
+                            placements: ['right-start']
                           }"
                           :ref="`resourceType_${action.id}_${related.type}`"
                         >
@@ -349,51 +347,23 @@
     },
     data () {
       return {
-        tableList: [],
-        // 查询参数
-        params: {},
         disabled: false,
+        isShowPreviewDialog: false,
         curIndex: -1,
         curResIndex: -1,
         curGroupIndex: -1,
-        isShowPreviewDialog: false,
+        selectedIndex: 0,
+        // 当前复制的数据形态: normal: 普通; aggregate: 聚合后
+        curId: '',
+        curCopyKey: '',
+        curCopyMode: 'normal',
+        curCopyDataId: '',
         previewDialogTitle: '',
         previewResourceParams: {},
-        curCopyData: ['none'],
-        curCopyType: '',
-        curId: '',
-        curScopeAction: {},
-        isShowAggregateSideslider: false,
-        aggregateResourceParams: {},
-        aggregateIndex: -1,
-        aggregateValue: [],
-        // 当前复制的数据形态: normal: 普通; aggregate: 聚合后
-        curCopyMode: 'normal',
-        curAggregateResourceType: {},
-        defaultSelectList: [],
-        previewData: [],
         curCopyParams: {},
-        sliderLoading: false,
-        isShowDeleteDialog: false,
-        showIcon: false,
-        curCopyNoLimited: false,
-        footerPosition: 'center',
-        newRow: '',
-        role: '',
-        selectedIndex: 0,
-        instanceKey: '',
-        curCopyDataId: '',
-        emptyResourceGroupsList: [],
-        delActionList: [],
-        delPathList: [],
-        policyIdList: [],
-        customData: [],
-        curInstancePaths: [],
-        currentActionName: '',
-        delActionDialogTitle: '',
-        delActionDialogTip: '',
-        curCopyKey: '',
-        isAggregateEmptyMessage: false,
+        tableList: [],
+        previewData: [],
+        curCopyData: ['none'],
         resourceSliderWidth: Math.ceil(window.innerWidth * 0.67 - 7) < 960
           ? 960 : Math.ceil(window.innerWidth * 0.67 - 7)
       };
@@ -520,6 +490,26 @@
             && (row.templates.findLastIndex((v) => v.tableData.length > 0) === tempIndex);
         };
       },
+      formatResourceTypeCount () {
+        return (payload) => {
+          let count = 0;
+          if (payload.resource_groups && payload.resource_groups.length > 0) {
+            const hasResourceType = payload.resource_groups.some((v) =>
+              v.related_resource_types && v.related_resource_types.length > 0);
+            if (hasResourceType) {
+              count = payload.resource_groups[0].related_resource_types.length;
+            }
+            return count;
+          }
+          return count;
+        };
+      },
+      // 处理一个操作下有多个资源类型的场景，所以高度需要动态计算，默认44px
+      formatSourceHeight () {
+        return (payload) => {
+         return this.formatResourceTypeCount(payload) > 1 ? `${this.formatResourceTypeCount(payload) * 44}px` : `44px`;
+        };
+      },
       // 处理无限制和聚合后多个tab数据结构不兼容情况
       formatDisplayValue () {
         return (payload) => {
@@ -605,17 +595,11 @@
       systemId: {
         handler (value) {
           if (value) {
-            this.curCopyType = '';
+            this.curCopyMode = 'normal';
             this.curCopyData = ['none'];
             this.curIndex = -1;
             this.curResIndex = -1;
             this.curGroupIndex = -1;
-            this.aggregateResourceParams = {};
-            this.aggregateIndex = -1;
-            this.aggregateValue = [];
-            this.curCopyMode = 'normal';
-            this.curAggregateResourceType = {};
-            this.defaultSelectList = [];
           }
         },
         immediate: true
@@ -787,36 +771,6 @@
         this.previewDialogTitle = '';
         this.previewResourceParams = {};
         this.isShowPreviewDialog = false;
-      },
-
-      getShowToolTip (type, action, related) {
-        const typeMap = {
-          source: () => {
-            const sourceRef = this.$refs[`${type}_${action.id}_${action.name}`];
-            if (sourceRef && sourceRef.length) {
-              const offsetWidth = sourceRef[0].offsetWidth;
-              return !(offsetWidth > 140);
-            }
-          },
-          actionName: () => {
-            const actionNameRef = this.$refs[`${type}_${action.id}`];
-            if (actionNameRef && actionNameRef.length) {
-              const offsetWidth = actionNameRef[0].offsetWidth;
-              return !(offsetWidth > 145);
-            }
-          },
-          resourceType: () => {
-            const resourceTypeRef = this.$refs[`${type}_${action.id}_${related.type}`];
-            if (resourceTypeRef && resourceTypeRef.length) {
-              const offsetWidth = resourceTypeRef[0].offsetWidth;
-              return !(offsetWidth > 118);
-            }
-          }
-        };
-        if (typeMap[type]) {
-          return typeMap[type]();
-        }
-        return '';
       }
     }
   };
