@@ -267,6 +267,9 @@
         getResourceSliderWidth: () => this.resourceSliderWidth
       };
     },
+    inject: {
+      getPermTableWidth: { value: 'getPermTableWidth', default: null }
+    },
     components: {
       PreviewResourceDialog
     },

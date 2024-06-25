@@ -153,6 +153,11 @@
   import GroupDetail from './group-detail';
 
   export default {
+    provide: function () {
+      return {
+        getPermTableWidth: () => this.dragRealityWidth
+      };
+    },
     components: {
       RenderSync,
       GroupDetail
