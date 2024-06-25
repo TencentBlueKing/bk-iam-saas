@@ -1,3 +1,22 @@
+<!-- 2024-06-25 -->
+## V1.10.29 Version Update Log
+
+### New Features
+
+* Added an npm integration plugin for unified management of configuration items like logo, footer, and title.
+* Replaced the batch aggregation method for all platform resource instances from the switch component to a custom tab component.
+* Enhanced the platform property view to be compatible with individual custom attribute sets from connected systems that require a personnel selector component.
+* Updated the layout of system addition and operation pages across the platform (refresh functionality is now open to all users, not just hierarchical administrators).
+
+### Bug Fixes
+
+* Fixed the issue where applying for a user group—>where permissions to apply for permissions and commonly recommended permissions should hide operations provided by the connected system if no permissions exist.
+* Fixed the issue where switching systems during custom permission applications did not clear the resource instance table data.
+* Fixed the issue where editing user group permissions—>modifying the resource instance content and then clicking cancel had no effect.
+
+---
+
+<!-- 2024-05-13 -->
 ## V1.10.28 Version Update Log
 
 ### New Features
