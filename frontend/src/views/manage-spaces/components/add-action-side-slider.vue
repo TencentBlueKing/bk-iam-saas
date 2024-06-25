@@ -12,21 +12,18 @@
       v-bkloading="{ isLoading, opacity: 1 }">
       <template v-if="isShowContent">
         <div class="left-wrapper">
-          <div class="search-wrappers">
+          <div class="search-wrapper">
             <bk-input
               clearable
               right-icon="bk-icon icon-search"
-              style="width: 210px;"
+              class="search-wrapper-input"
               v-model="keyword"
-              :placeholder="$t(`m.verify['请输入']`)"
               @input="handleInput"
-              @enter="handleSearch">
-            </bk-input>
-            <div
-              v-if="isHierarchicalAdmin.type === 'rating_manager'"
-              class="icon-iamcenter-wrapper"
-              @click.stop="refreshList">
-              <i class="iam-icon iamcenter-refresh"></i>
+              @enter="handleSearch"
+              @right-icon-click="handleSearch"
+            />
+            <div class="icon-iamcenter-wrapper" @click.stop="refreshList">
+              <i class="iam-icon iamcenter-refresh" />
             </div>
           </div>
           <div :class="['system-wrapper', curSystemList.length > 20 ? 'system-item-fixed' : '']">
@@ -48,14 +45,6 @@
                       :val="systemData[item.id].count" />
                   </template>
                 </div>
-                <!-- <div
-                                    v-if="isHierarchicalAdmin.type === 'rating_manager'"
-                                    :class="['skip-link', curSystemList.length > 20 ? 'skip-link-fixed' : '']"
-                                    :title="$t(`m.grading['修改管理空间授权范围']`)"
-                                    @click="handleSkip">
-                                    <i class="iam-icon iamcenter-edit-fill"></i>
-                                    {{ $t(`m.grading['修改管理空间授权范围']`) }}
-                                </div> -->
               </div>
             </template>
             <template v-else>
@@ -67,18 +56,6 @@
                 @on-clear="handleEmptyClear"
               />
             </template>
-            <!-- <template v-else>
-                            <div class="empty-wrapper empty-wrapper2">
-                                <template v-if="isHierarchicalAdmin.type === 'rating_manager'">
-                                    <bk-exception
-                                        class="exception-wrap-item exception-part"
-                                        type="search-empty"
-                                        scene="part"></bk-exception>
-                                    <p class="tips-link" @click="handleSkip">{{ $t(`m.grading['修改管理空间授权范围']`) }}</p>
-                                </template>
-                                <iam-svg v-else />
-                            </div>
-                        </template> -->
           </div>
         </div>
         <div class="right-wrapper" v-bkloading="{ isLoading: isRightLoading, opacity: 1, color: '#f5f6fa' }">
