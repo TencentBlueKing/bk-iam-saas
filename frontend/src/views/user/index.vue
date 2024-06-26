@@ -824,6 +824,7 @@
     }
   };
 </script>
-<style lang="postcss">
-    @import './index.css';
+
+<style lang="postcss" scoped>
+ @import './index.css';
 </style>
