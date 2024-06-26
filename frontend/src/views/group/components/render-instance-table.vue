@@ -1266,7 +1266,11 @@
         curData.resource_groups = curData.resource_groups.filter(item => item.related_resource_types);
         const targetPolicies = relatedList.filter(item =>
           item.resource_groups[this.curGroupIndex].related_resource_types
-          && item.resource_groups[this.curGroupIndex].related_resource_types.length);
+          && item.resource_groups[this.curGroupIndex].related_resource_types.length
+          && (item.resource_groups[this.curGroupIndex].related_resource_types[0].condition.length === 0
+            || item.resource_groups[this.curGroupIndex].related_resource_types[0].condition.some(
+              (v) => v.instances.length > 0 || v.attributes.length > 0))
+        );
         try {
           const res = await this.$store.dispatch('permApply/getRelatedPolicy', {
             source_policy: curData,
@@ -1285,33 +1289,128 @@
         if (payload.length < 1) {
           return;
         }
+        let scopeInsList = [];
+        let scopeInstanceList = [];
+        let scopeAttributeList = [];
         payload.forEach(item => {
           const curIndex = this.tableList.findIndex(sub => sub.id === item.id
             && item.resource_groups[this.curGroupIndex]
             && sub.detail.system.id === item.resource_groups[this.curGroupIndex]
               .related_resource_types[0].system_id);
           if (curIndex > -1) {
-            const old = this.tableList[curIndex];
-            this.tableList.splice(curIndex, 1, new GroupPolicy(
-              {
-                                ...item,
-                                tag: 'add',
-                                isShowRelatedText: true
-              },
-              '',
-              old.isTemplate ? 'template' : 'custom',
-              // new GroupPolicy 最后一个参数是 detail 就是 this.tableList[curIndex].detail
-              Object.assign({}, old.detail, {
-                system: {
-                  id: this.tableList[curIndex].detail.system.id,
-                  name: this.tableList[curIndex].detail.system.name
-                },
-                // 此 id 会在 handleSpanMethod 方法中使用到，合并单元格的依据，使用 CUSTOM_PERM_TEMPLATE_ID 会导致问题
-                // id: CUSTOM_PERM_TEMPLATE_ID
-                id: old.isTemplate ? this.tableList[curIndex].detail.id : CUSTOM_PERM_TEMPLATE_ID
-              }),
-              true
-            ));
+            const { isTemplate, detail } = this.tableList[curIndex];
+            const systemId = this.isCreateMode && detail ? detail.system.id : this.systemId;
+            const scopeAction = this.authorization[systemId] || [];
+            const curScopeAction = _.cloneDeep(scopeAction.find((scopeItem) => scopeItem.id === item.id));
+            console.log(curScopeAction, '授权实例');
+            // 如果有授权边界判断授权范围是否包含有关联实例
+            if (curScopeAction && curScopeAction.resource_groups) {
+              curScopeAction.resource_groups.forEach((curScopeActionItem) => {
+                curScopeActionItem.related_resource_types.forEach((related) => {
+                  if (related.condition.length) {
+                    related.condition.forEach((resource) => {
+                      // 获取授权范围内的所有实例、属性数据
+                      const { instance, instances, attributes } = resource;
+                      const resourceInstance = instance || instances;
+                      scopeInstanceList = resourceInstance.map(item => item.path).flat(Infinity) || [];
+                      scopeAttributeList = _.cloneDeep(attributes);
+                    });
+                  }
+                });
+              });
+              if (scopeInstanceList && scopeInstanceList.length > 0) {
+                scopeInsList = scopeInstanceList.map((scopeIns) => `${scopeIns.id}&${scopeIns.name}&${scopeIns.type}`);
+              }
+              item.resource_groups && item.resource_groups.forEach((v) => {
+                v.related_resource_types.forEach((related) => {
+                  if (related.condition.length) {
+                    related.condition.forEach((resource) => {
+                      resource.instances.forEach((ins) => {
+                        ins.path = ins.path.filter((p) => scopeInsList.includes(`${p.id}&${p.name}&${p.type}`));
+                        if (ins.paths) {
+                          ins.paths = _.cloneDeep(ins.path);
+                        }
+                      });
+                      if (resource.attributes && resource.attributes.length > 0) {
+                        if (scopeAttributeList && scopeAttributeList.length > 0) {
+                          const scopeAttrList = scopeAttributeList.map((scopeAttr) => `${scopeAttr.id}&${scopeAttr.name}`);
+                          const scopeAttrValues = scopeAttributeList.map((scopeAttr) => scopeAttr.values);
+                          resource.attributes = resource.attributes.filter((attr) => {
+                            if (scopeAttrList.includes(`${attr.id}&${attr.name}`)) {
+                              attr.values = attr.values.filter((k) => scopeAttrValues.map((p) => `${p.id}&${p.name}`).includes(`${k.id}&${k.name}`));
+                            }
+                          });
+                        }
+                      }
+                      // 如果有授权范围且没有范围内的实例和属性，清空instance和attribute
+                      const isNoInstance = resource.instances.every((ins) => ins.path && ins.path.length === 0);
+                      // const isNoAttribute = resource.scopeAttributeList
+                      if (isNoInstance) {
+                        resource.instances = [];
+                      }
+                      const hasCondition = related.condition.filter((k) =>
+                        (k.instances && k.instances.length > 0) || (k.attributes && k.attributes.length > 0));
+                      if (!hasCondition.length) {
+                        related.condition = ['none'];
+                      }
+                    });
+                  }
+                });
+              });
+              // 判断是否有授权范围的数据
+              const hasScopeData = item.resource_groups[this.curGroupIndex].related_resource_types.some((v) => v.condition.length > 0 && v.condition[0] !== 'none');
+              if (hasScopeData) {
+                this.tableList.splice(
+                  curIndex,
+                  1,
+                  new GroupPolicy(
+                    {
+                      ...item,
+                      tag: 'add',
+                      isShowRelatedText: true
+                    },
+                    '',
+                    isTemplate ? 'template' : 'custom',
+                    // new GroupPolicy 最后一个参数是 detail 就是 this.tableList[curIndex].detail
+                    Object.assign({}, detail, {
+                      system: {
+                        id: detail.system.id,
+                        name: detail.system.name
+                      },
+                      // 此 id 会在 handleSpanMethod 方法中使用到，合并单元格的依据，使用 CUSTOM_PERM_TEMPLATE_ID 会导致问题
+                      // id: CUSTOM_PERM_TEMPLATE_ID
+                      id: isTemplate ? detail.id : CUSTOM_PERM_TEMPLATE_ID
+                    }),
+                    true
+                  )
+                );
+              }
+            } else {
+              this.tableList.splice(
+                curIndex,
+                1,
+                new GroupPolicy(
+                  {
+                    ...item,
+                    tag: 'add',
+                    isShowRelatedText: true
+                  },
+                  '',
+                  isTemplate ? 'template' : 'custom',
+                  // new GroupPolicy 最后一个参数是 detail 就是 this.tableList[curIndex].detail
+                  Object.assign({}, detail, {
+                    system: {
+                      id: detail.system.id,
+                      name: detail.system.name
+                    },
+                    // 此 id 会在 handleSpanMethod 方法中使用到，合并单元格的依据，使用 CUSTOM_PERM_TEMPLATE_ID 会导致问题
+                    // id: CUSTOM_PERM_TEMPLATE_ID
+                    id: isTemplate ? detail.id : CUSTOM_PERM_TEMPLATE_ID
+                  }),
+                  true
+                )
+              );
+            }
           }
         });
       },
@@ -1430,11 +1529,12 @@
         const { system_id, type, name } = item;
         const condition = [];
         item.condition.forEach(item => {
-          const { id, attribute, instance } = item;
+          const { id, attribute, instance, instances } = item;
+          const resourceInstance = instance || instances;
           condition.push({
             id,
             attributes: attribute ? attribute.filter(item => item.values.length > 0) : [],
-            instances: instance ? instance.filter(item => item.path.length > 0) : []
+            instances: resourceInstance ? resourceInstance.filter(item => item.path.length > 0) : []
           });
         });
         this.previewResourceParams = {
