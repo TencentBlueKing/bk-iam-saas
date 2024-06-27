@@ -25,18 +25,29 @@
               { 'is-search-no-border': isSearchNoBorder(temp, tempIndex, row) }
             ]"
           >
+            <!-- 只有资源类型数量为偶数时且添加来源索引前的数据没有多个资源类型的情况才需要设置偏移量居中 -->
             <div
               v-for="(action, actionIndex) in temp.tableData"
               :key="action.id"
               :class="[
                 'add-source-content-item',
                 { 'multiple-temp-item': row.templates.length > 1 },
-                { 'multiple-temp-action-item': row.templates.length > 1 && temp.tableData.length > 1 },
-                { 'has-multiple-resource-type': formatResourceTypeCount(action) > 1 }
+                {
+                  'set-translate': temp.tableData.length > 1
+                    && formatResourceTypeTotal(temp) % 2 === 0
+                    && (((formatSourceDistance(temp) === actionIndex && !formatHasMultipleResourceType(temp)
+                      || temp.tableData.length % 2 === 0)))
+                },
+                {
+                  'set-zero-count-translate': formatResourceTypeCount(action) > 1 && formatSourceDistance(temp) === 0
+                }
               ]"
-              :style="{ 'min-height': formatSourceHeight(action), 'line-height': formatSourceHeight(action) }"
+              :style="{
+                'min-height': formatSourceHeight(action),
+                'line-height': formatSourceHeight(action)
+              }"
             >
-              <div class="source-name" v-show="isShowColumnSource(temp, actionIndex)">
+              <div class="source-name" v-show="formatSourceDistance(temp) === actionIndex">
                 <Icon type="action-temp" class="action-icon" />
                 <span
                   class="single-hide name"
@@ -177,7 +188,7 @@
             class="child-table-content"
           >
             <div
-              v-for="action of temp.tableData"
+              v-for="action in temp.tableData"
               :key="action.id"
               :class="[
                 'flex-between',
@@ -457,11 +468,6 @@
       isCreateMode () {
         return this.mode === 'create';
       },
-      isShowColumnSource () {
-        return (payload, index) => {
-          return (Math.floor(payload.tableData.length / 2)) === index;
-        };
-      },
       isShowColumnActions () {
         return (payload, index) => {
           return payload.related_resource_types
@@ -488,6 +494,57 @@
         return (temp, tempIndex, row) => {
           return this.isSearch && row.custom_policy_count > 0 && row.template_count > 0
             && (row.templates.findLastIndex((v) => v.tableData.length > 0) === tempIndex);
+        };
+      },
+      // 获取每列添加来源的资源类型总数
+      formatResourceTypeTotal () {
+        return (payload) => {
+          let count = 0;
+          if (payload.tableData && payload.tableData.length) {
+            const resourceGroups = payload.tableData.map((v) => v.resource_groups).flat(Infinity);
+            if (resourceGroups.length > 0) {
+              count = resourceGroups.reduce((prev, curr) => {
+                if (curr.related_resource_types) {
+                  return prev + curr.related_resource_types.length;
+                }
+              }, 0);
+              return count;
+            }
+            return Math.floor(payload.tableData.length / 2);
+          }
+        };
+      },
+      // 判断添加来源索引前是否存在多个资源类型
+      formatHasMultipleResourceType () {
+        return (payload) => {
+          if (payload.tableData && payload.tableData.length) {
+            const resourceGroups = payload.tableData.map((v) => v.resource_groups).flat(Infinity);
+            if (resourceGroups.length > 0) {
+              const curIndex = Math.floor(this.formatResourceTypeTotal(payload) / 2);
+              // 判断当前位置的索引前面是否有多个资源类型的操作
+              const hasMultipleResourceType = resourceGroups.filter((v, i) =>
+                v.related_resource_types.length > 1 && i < curIndex);
+              return hasMultipleResourceType.length > 0;
+            }
+            return false;
+          }
+        };
+      },
+      // 计算添加来源的位置
+      formatSourceDistance () {
+        return (payload) => {
+          if (payload.tableData && payload.tableData.length) {
+            const resourceGroups = payload.tableData.map((v) => v.resource_groups).flat(Infinity);
+            if (resourceGroups.length > 0) {
+              const curIndex = Math.floor(this.formatResourceTypeTotal(payload) / 2);
+              const hasMultipleResourceType = resourceGroups.filter((v, i) =>
+                v.related_resource_types.length > 1 && i < curIndex);
+              return hasMultipleResourceType.length > 0 && curIndex - hasMultipleResourceType.length > -1
+                ? curIndex - hasMultipleResourceType.length
+                : curIndex;
+            }
+            return this.formatResourceTypeTotal(payload);
+          }
         };
       },
       formatResourceTypeCount () {

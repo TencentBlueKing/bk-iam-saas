@@ -155,7 +155,7 @@
               expand: false,
               templates: []
             });
-            await this.getGroupTemplateList(item);
+            await this.fetchGroupTemplateList(item);
             await this.fetchActions(item);
             if (item.templates.length) {
               item.templates.forEach((v) => {
@@ -174,7 +174,7 @@
         }
       },
 
-      async getGroupTemplateList (groupSystem) {
+      async fetchGroupTemplateList (groupSystem) {
         try {
           const { data } = await this.$store.dispatch('userGroup/getUserGroupTemplateList', {
             id: this.groupId,
@@ -290,7 +290,7 @@
         if (!flag) {
           return;
         }
-        await Promise.all([this.getGroupTemplateList(item), this.fetchAuthorizationScopeActions(item.id)]);
+        await Promise.all([this.fetchGroupTemplateList(item), this.fetchAuthorizationScopeActions(item.id)]);
         if (item.templates.length) {
           item.templates.forEach((v) => {
             this.handleTemplateExpanded(flag, v);

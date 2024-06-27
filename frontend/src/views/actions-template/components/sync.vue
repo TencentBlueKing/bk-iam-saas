@@ -220,24 +220,12 @@
       </div>
     </div>
     <div class="pagination-wrapper" v-if="pagination.totalPage > 1">
-      <!-- <div class="page-display">
-        {{ pagination.current }} / {{ pagination.totalPage }}
-      </div>
-      <bk-button
-        theme="primary"
-        :loading="prevLoading"
-        :disabled="pagination.current < 2"
-        style="margin-left: 5px;"
-        @click="handlePrevPage">
-        {{ $t(`m.common['上一页']`) }}
-      </bk-button> -->
       <bk-button
         v-if="!isLastPage"
         theme="primary"
         :text="true"
         :loading="nextLoading"
         @click="handleNextPage">
-        <!-- {{ isAddActionEmpty ? $t(`m.common['下一页']`) : $t(`m.common['确认']`) }} -->
         {{ $t(`m.common['查看更多']`) }}
       </bk-button>
     </div>
