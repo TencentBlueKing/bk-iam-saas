@@ -24,7 +24,7 @@ urlpatterns = [
     # 用户组成员
     path(
         "groups/<int:id>/members/",
-        views.AdminGroupMemberViewSet.as_view({"get": "list"}),
+        views.AdminGroupMemberViewSet.as_view({"get": "list", "post": "create"}),
         name="open.admin.group_member",
     ),
     # 用户组授权
@@ -34,7 +34,11 @@ urlpatterns = [
         name="open.admin.group_policy",
     ),
     # 模板
-    path("templates/", views.AdminTemplateViewSet.as_view({"post": "create"}), name="open.admin.template"),
+    path(
+        "templates/",
+        views.AdminTemplateViewSet.as_view({"get": "list", "post": "create"}),
+        name="open.admin.template",
+    ),
     # Subject
     path(
         "subjects/<str:subject_type>/<str:subject_id>/groups/",

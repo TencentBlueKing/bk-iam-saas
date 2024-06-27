@@ -25,11 +25,13 @@ class AdminAPIEnum(BaseAPIEnum):
 
     # 用户组成员
     GROUP_MEMBER_LIST = auto()
+    GROUP_MEMBER_ADD = auto()
 
     # 用户组权限
     GROUP_POLICY_GRANT = auto()
 
     # 模板
+    TEMPLATE_LIST = auto()
     TEMPLATE_CREATE = auto()
 
     # Subject
