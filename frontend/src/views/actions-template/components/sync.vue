@@ -295,6 +295,7 @@
   import { mapGetters } from 'vuex';
   import { bus } from '@/common/bus';
   import { leaveConfirm } from '@/common/leave-confirm';
+  import { PERMANENT_TIMESTAMP } from '@/common/constants';
   import Condition from '@/model/condition';
   import SyncPolicy from '@/model/template-sync-policy';
   import AggregationPolicy from '@/model/actions-temp-aggregation-policy';
@@ -664,9 +665,10 @@
       },
 
       async fetchAuthorizationScopeActions () {
+        const systemId = this.$route.params.systemId;
         try {
           const { data } = await this.$store.dispatch('permTemplate/getAuthorizationScopeActions', {
-            systemId: this.$route.params.systemId
+            systemId
           });
           this.authorizationScopeActions = (data || []).filter(item => item.id !== '*');
         } catch (e) {
@@ -784,6 +786,162 @@
         }
         await this.handleSetNoLimitedData(payload, groupIndex, { mode: 'all' });
         this.handleGetTypeData();
+      },
+
+      // 主操作关联资源数据
+      async handleMainActionSubmit (payload, relatedActions) {
+        const curPayload = cloneDeep(payload);
+        curPayload.forEach((item) => {
+          item.instances = item.instance || [];
+          item.attributes = item.attribute || [];
+          delete item.instance;
+          delete item.attribute;
+        });
+        const curData = cloneDeep(this.syncGroupList[this.curIndex].tableList[this.curActionIndex]);
+        curData.resource_groups[this.curGroupIndex].related_resource_types
+          = [curData.resource_groups[this.curGroupIndex].related_resource_types[this.curResourceIndex]];
+        curData.resource_groups[this.curGroupIndex].related_resource_types[0].condition = curPayload;
+        const relatedList = cloneDeep(this.syncGroupList[this.curIndex].tableList.filter((item) => {
+          const resourceGroups = item.resource_groups;
+          return !item.isAggregate
+            && ['add'].includes(item.mode_type)
+            && relatedActions.includes(item.id)
+            && resourceGroups[this.curGroupIndex]
+            && !resourceGroups[this.curGroupIndex].related_resource_types.every((v) => v.condition.length === 0 || (v.condition.length > 0 && v.condition[0] === 'none'));
+        }));
+        if (relatedList.length > 0) {
+          relatedList.forEach((item) => {
+            delete item.policy_id;
+            item.resource_groups.forEach((groupItem) => {
+              groupItem.related_resource_types.forEach((resItem) => {
+                resItem.condition.filter((conditionItem) => {
+                  if ((conditionItem.instance && conditionItem.instance.length > 0)
+                    || (conditionItem.attribute && conditionItem.attribute.length > 0)) {
+                    conditionItem.instances = conditionItem.instance || [];
+                    conditionItem.attributes = conditionItem.attribute || [];
+                    delete conditionItem.instance;
+                    delete conditionItem.attribute;
+                    return true;
+                  }
+                  return false;
+                });
+              });
+            });
+            item.expired_at = PERMANENT_TIMESTAMP;
+          });
+        }
+        try {
+          const { data } = await this.$store.dispatch('permApply/getRelatedPolicy', {
+            source_policy: curData,
+            system_id: this.$route.params.systemId,
+            target_policies: relatedList
+          });
+          this.handleRelatedAction(data || []);
+        } catch (e) {
+          this.messageAdvancedError(e);
+        }
+      },
+
+      handleRelatedAction (payload) {
+        if (payload && payload.length > 0) {
+          let hasScopeData = true;
+          const systemId = this.$route.params.systemId;
+          const tableList = this.syncGroupList[this.curIndex].tableList;
+          let scopeInsList = [];
+          let scopeInstanceList = [];
+          let scopeAttributeList = [];
+          payload.forEach((item) => {
+            const curIndex = tableList.findIndex((t) =>
+              t.id === item.id
+              && ['add'].includes(t.mode_type)
+              && item.resource_groups[this.curGroupIndex]
+              && systemId === item.resource_groups[this.curGroupIndex].related_resource_types[0].system_id
+            );
+            if (curIndex > -1) {
+              const { tag } = tableList[curIndex];
+              const scopeAction = this.authorizationScopeActions || [];
+              const curScopeAction = cloneDeep(scopeAction.find((scopeItem) => scopeItem.id === item.id));
+              // 如果有授权边界判断授权范围是否包含有关联实例
+              if (curScopeAction && curScopeAction.resource_groups) {
+                curScopeAction.resource_groups.forEach((curScopeActionItem) => {
+                  curScopeActionItem.related_resource_types.forEach((related) => {
+                    if (related.condition.length) {
+                      related.condition.forEach((resource) => {
+                        // 获取授权范围内的所有实例、属性数据
+                        const { instance, instances, attribute, attributes } = resource;
+                        const resourceInstance = instance || instances;
+                        scopeInstanceList = resourceInstance.map((item) => item.path).flat(Infinity) || [];
+                        scopeAttributeList = cloneDeep(attributes || attribute);
+                      });
+                    }
+                  });
+                });
+                if (scopeInstanceList && scopeInstanceList.length > 0) {
+                  scopeInsList = scopeInstanceList.map((scopeIns) => `${scopeIns.id}&${scopeIns.name}&${scopeIns.type}`);
+                }
+                item.resource_groups && item.resource_groups.forEach((v) => {
+                  v.related_resource_types.forEach((related) => {
+                    if (related.condition.length) {
+                      related.condition.forEach((resource) => {
+                        resource.instances.forEach((ins) => {
+                          ins.path.forEach((p, pathIndex) => {
+                            if (p.length > 0) {
+                              // 只获取授权范围内的资源实例
+                              ins.path[pathIndex] = p.filter((subPath) => scopeInsList.includes(`${subPath.id}&${subPath.name}&${subPath.type}`));
+                            }
+                          });
+                          // 因为path链路是多维数组且无法确定链路数量，所以这里需要过滤掉空数组
+                          ins.path = ins.path.filter((p) => p && p.length > 0);
+                          if (ins.paths) {
+                            ins.paths = cloneDeep(ins.path);
+                          }
+                        });
+                        if (resource.attributes && resource.attributes.length > 0
+                          && scopeAttributeList && scopeAttributeList.length > 0
+                        ) {
+                          const scopeAttrList = scopeAttributeList.map((scopeAttr) => `${scopeAttr.id}&${scopeAttr.name}`);
+                          const scopeAttrValues = scopeAttributeList.map((scopeAttr) => scopeAttr.values);
+                          resource.attributes = resource.attributes.filter((attr) => {
+                            if (scopeAttrList.includes(`${attr.id}&${attr.name}`)) {
+                              attr.values = attr.values.filter((k) => scopeAttrValues.map((p) => `${p.id}&${p.name}`).includes(`${k.id}&${k.name}`));
+                            }
+                          });
+                        }
+                        // 如果有授权范围且没有范围内的实例和属性，清空instance和attribute
+                        const isNoInstance = resource.instances.every((ins) => ins.path && ins.path.length === 0);
+                        if (isNoInstance) {
+                          resource.instances = [];
+                        }
+                        const hasCondition = related.condition.filter((k) =>
+                          (k.instances && k.instances.length > 0) || (k.attributes && k.attributes.length > 0));
+                        if (!hasCondition.length) {
+                          related.condition = ['none'];
+                        }
+                      });
+                    }
+                  });
+                });
+                // 判断是否有授权范围的数据
+                hasScopeData = item.resource_groups[this.curGroupIndex].related_resource_types.some((v) => v.condition.length > 0 && v.condition[0] !== 'none');
+              }
+              if (hasScopeData) {
+                tableList.splice(
+                  curIndex,
+                  1,
+                  new SyncPolicy(
+                    {
+                      ...item,
+                      tag,
+                      isShowRelatedText: true,
+                      mode_type: 'add'
+                    },
+                    'detail'
+                  )
+                );
+              }
+            }
+          });
+        }
       },
 
       handleSetNoLimitedData (payload, groupIndex, extraData) {
@@ -958,8 +1116,7 @@
                 if (!item.isAggregate) {
                   const curPasteData = cloneDeep(curCopyData.find(_ => _.id === item.id));
                   if (curPasteData) {
-                    const systemId = this.isCreateMode && item.detail ? item.detail.system.id : this.systemId;
-                    const scopeAction = this.authorization[systemId] || [];
+                    const scopeAction = this.authorizationScopeActions || [];
                     // eslint-disable-next-line max-len
                     const curScopeAction = cloneDeep(scopeAction.find(scopeItem => scopeItem.id === item.id));
                     // eslint-disable-next-line max-len
@@ -1413,7 +1570,7 @@
         return typeMap[payload]();
       },
 
-      handleResourceSubmit () {
+      async handleResourceSubmit () {
         const conditionData = this.$refs.renderResourceRef.handleGetValue();
         const { isEmpty, data } = conditionData;
         if (isEmpty) {
@@ -1430,6 +1587,19 @@
         if (isConditionEmpty) {
           resItem.condition = ['none'];
         } else {
+          const { isMainAction, related_actions } = this.syncGroupList[this.curIndex].tableList[this.curActionIndex];
+          // 如果为主操作
+          if (isMainAction) {
+            const emptyIndex = data.findIndex(item =>
+              ((item.instance && !item.instance.length)
+                && (item.attribute && !item.attribute.length))
+              || (!item.instance && !item.attribute.length));
+            if (emptyIndex > -1) {
+              this.messageWarn(this.$t(`m.info['第几项实例和属性不能都为空']`, { value: emptyIndex + 1 }), 3000);
+              return;
+            }
+            await this.handleMainActionSubmit(data, related_actions);
+          }
           resItem.condition = data;
           resItem.isError = false;
         }

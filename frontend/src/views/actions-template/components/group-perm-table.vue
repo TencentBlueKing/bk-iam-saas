@@ -37,9 +37,6 @@
                     && formatResourceTypeTotal(temp) % 2 === 0
                     && (((formatSourceDistance(temp) === actionIndex && !formatHasMultipleResourceType(temp)
                       || temp.tableData.length % 2 === 0)))
-                },
-                {
-                  'set-zero-count-translate': formatResourceTypeCount(action) > 1 && formatSourceDistance(temp) === 0
                 }
               ]"
               :style="{

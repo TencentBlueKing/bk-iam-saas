@@ -137,11 +137,6 @@
             &.multiple-temp-item {
               min-height: 44px;
             }
-            &.set-zero-count-translate {
-              .source-name {
-                transform: translate(0, 22px);
-              }
-            }
             &.set-translate {
               .source-name {
                 transform: translate(0, -22px);
