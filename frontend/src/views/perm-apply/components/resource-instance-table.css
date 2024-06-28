@@ -44,7 +44,8 @@
                     background-color: rgba(45, 203, 86, .06);
                 }
                 &.has-perm-row-animation-cls {
-                            animation: rowAnimation 2s ease 0s 1 normal;
+                    animation: rowAnimation 2s ease 0s 1 normal;
+                    -webkit-animation: rowAnimation 2s ease 0s 1 normal;
                 }
             }
             td:first-child .cell,
