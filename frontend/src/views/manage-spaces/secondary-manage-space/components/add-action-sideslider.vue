@@ -13,20 +13,18 @@
       v-bkloading="{ isLoading, opacity: 1 }">
       <template v-if="isShowContent">
         <div class="left-wrapper">
-          <div class="search-wrappers">
+          <div class="search-wrapper">
             <bk-input
               clearable
               right-icon="bk-icon icon-search"
-              style="width: 190px;"
+              class="search-wrapper-input"
               v-model="keyword"
               @input="handleInput"
-              @enter="handleSearch">
-            </bk-input>
-            <div
-              v-if="user.role.type === 'rating_manager'"
-              class="icon-iamcenter-wrapper"
-              @click.stop="refreshList">
-              <i class="iam-icon iamcenter-refresh"></i>
+              @enter="handleSearch"
+              @right-icon-click="handleSearch"
+            />
+            <div class="icon-iamcenter-wrapper" @click.stop="refreshList">
+              <i class="iam-icon iamcenter-refresh" />
             </div>
           </div>
           <div :class="['system-wrapper', curSystemList.length > 20 ? 'system-item-fixed' : '']">

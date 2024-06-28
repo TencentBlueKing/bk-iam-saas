@@ -79,7 +79,7 @@
           </span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.common['操作-table']`)" :min-width="100" fixed="right">
+      <bk-table-column :label="$t(`m.common['操作-table']`)" :min-width="120" fixed="right">
         <template slot-scope="{ row }">
           <span>
             <bk-button theme="primary" text class="table-operate-btn" @click.stop="handleEdit(row)">

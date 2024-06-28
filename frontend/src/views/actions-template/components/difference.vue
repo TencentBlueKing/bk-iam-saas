@@ -153,6 +153,11 @@
   import GroupDetail from './group-detail';
 
   export default {
+    provide: function () {
+      return {
+        getPermTableWidth: () => this.dragRealityWidth
+      };
+    },
     components: {
       RenderSync,
       GroupDetail
@@ -285,6 +290,10 @@
       isSubmitDisabled () {
         return () => {
           const tableList = this.allSyncGroupList.map((item) => item.tableList).flat(Infinity);
+          const isNoAdd = tableList.every((v) => ['delete'].includes(v.mode_type));
+          if (isNoAdd) {
+            return false;
+          }
           const hasEmpty = tableList.some((item) => {
             if (item.isAggregate) {
               if (!item.instances) {
@@ -381,38 +390,17 @@
         if (flag) {
           return;
         }
-        groups.forEach((item) => {
-          item.actions.forEach((sub) => {
-            if (!sub.resource_groups || !sub.resource_groups.length) {
-              sub.resource_groups
-                = sub.related_resource_types && sub.related_resource_types.length
-                  ? [{ id: '', related_resource_types: sub.related_resource_types }]
-                  : [];
-            }
-          });
-        });
         console.log(groups, isNoAdd, '提交数据');
-        // if (this.preGroupOnePage) {
-        //   if (isNoAdd) {
-        //     this.handleUpdateCommit();
-        //     return;
-        //   }
-        //   this.submitPreGroupSync(groups);
-        //   return;
-        // }
-        // if (this.isLastPage) {
-        //   this.submitPreGroupSync(groups);
-        // }
         if (isNoAdd) {
           this.handleUpdateCommit();
           return;
         }
         if (this.isLastPage) {
-          this.submitPreGroupSync(groups);
+          this.fetchSubmitPreGroupSync(groups);
         }
       },
 
-      async submitPreGroupSync (groups) {
+      async fetchSubmitPreGroupSync (groups) {
         this.isLoading = true;
         try {
           const { code, result } = await this.$store.dispatch('permTemplate/preGroupSync', {
@@ -457,15 +445,12 @@
       handleNoGroupOperate (payload) {
         const typeMap = {
           prev: () => {
-            this.$parent.handleSetCurActionStep && this.$parent.handleSetCurActionStep(1);
+            this.$emit('on-set-action-step', { step: 1 });
           },
           submit: async () => {
             try {
               // 如果没有操作变更不需要调用接口
-              if (
-                JSON.stringify(this.selectActionsBack)
-                === JSON.stringify(this.selectActions)
-              ) {
+              if (JSON.stringify(this.selectActionsBack) === JSON.stringify(this.selectActions)) {
                 this.messageSuccess(this.$t(`m.info['提交成功']`), 3000);
                 this.$router.push({
                   name: 'actionsTemplate'
@@ -845,8 +830,7 @@
                   await this.$store.dispatch('permTemplate/cancelPreUpdate', {
                     id: this.$route.params.id
                   });
-                  this.$parent.handleSetCurActionStep
-                    && this.$parent.handleSetCurActionStep(1);
+                  this.$emit('on-set-action-step', { step: 1 });
                 } catch (e) {
                   this.messageAdvancedError(e);
                 } finally {
