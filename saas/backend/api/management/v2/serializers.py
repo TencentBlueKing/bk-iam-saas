@@ -284,7 +284,7 @@ class ManagementMemberGroupDetailInputInPathSLZ(serializers.Serializer):
 
 
 class ManagementMemberGroupDetailInputSLZ(serializers.Serializer):
-    group_ids = StringArrayField(help_text="用户组 ID，多个以英文逗号分隔", min_items=1, max_items=20)
+    group_ids = StringArrayField(help_text="用户组 ID，多个以英文逗号分隔", min_items=1, max_items=100)
 
     def validate_group_ids(self, value):
         try:
