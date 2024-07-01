@@ -20,6 +20,7 @@ from backend.api.admin.constants import AdminAPIEnum, VerifyApiParamLocationEnum
 from backend.api.admin.filters import GroupFilter
 from backend.api.admin.permissions import AdminAPIPermission
 from backend.api.admin.serializers import (
+    AdminGroupAddMemberSLZ,
     AdminGroupAuthorizationSLZ,
     AdminGroupBasicSLZ,
     AdminGroupCreateSLZ,
@@ -27,7 +28,11 @@ from backend.api.admin.serializers import (
 )
 from backend.api.authentication import ESBAuthentication
 from backend.api.management.v2.views import ManagementGroupViewSet
-from backend.apps.group.audit import GroupCreateAuditProvider, GroupTemplateCreateAuditProvider
+from backend.apps.group.audit import (
+    GroupCreateAuditProvider,
+    GroupMemberCreateAuditProvider,
+    GroupTemplateCreateAuditProvider,
+)
 from backend.apps.group.constants import OperateEnum
 from backend.apps.group.models import Group
 from backend.apps.group.views import check_readonly_group
@@ -36,9 +41,11 @@ from backend.audit.audit import add_audit, audit_context_setter, view_audit_deco
 from backend.audit.constants import AuditSourceType
 from backend.biz.group import GroupBiz, GroupCheckBiz, GroupCreationBean
 from backend.biz.role import RoleBiz
+from backend.biz.utils import remove_not_exist_subject
 from backend.common.lock import gen_group_upsert_lock
 from backend.common.pagination import CompatiblePagination
 from backend.service.constants import GroupSaaSAttributeEnum, RoleType
+from backend.service.models import Subject
 from backend.trans.group import GroupTrans
 
 
@@ -130,13 +137,17 @@ class AdminGroupMemberViewSet(GenericViewSet):
     authentication_classes = [ESBAuthentication]
     permission_classes = [AdminAPIPermission]
 
-    admin_api_permission = {"list": AdminAPIEnum.GROUP_MEMBER_LIST.value}
+    admin_api_permission = {
+        "list": AdminAPIEnum.GROUP_MEMBER_LIST.value,
+        "create": AdminAPIEnum.GROUP_MEMBER_ADD.value,
+    }
 
     queryset = Group.objects.all()
     lookup_field = "id"
     pagination_class = CompatiblePagination
 
     biz = GroupBiz()
+    group_check_biz = GroupCheckBiz()
 
     @swagger_auto_schema(
         operation_description="用户组成员列表",
@@ -152,6 +163,41 @@ class AdminGroupMemberViewSet(GenericViewSet):
         count, group_members = self.biz.list_paging_thin_group_member(group.id, limit, offset)
         results = [one.dict(include={"type", "id", "name", "expired_at"}) for one in group_members]
         return Response({"count": count, "results": results})
+
+    @swagger_auto_schema(
+        operation_description="用户组添加成员",
+        request_body=AdminGroupAddMemberSLZ(label="用户组成员"),
+        responses={status.HTTP_200_OK: serializers.Serializer()},
+        tags=["admin.group.member"],
+    )
+    @view_audit_decorator(GroupMemberCreateAuditProvider)
+    def create(self, request, *args, **kwargs):
+        group = self.get_object()
+
+        serializer = AdminGroupAddMemberSLZ(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        members_data = data["members"]
+        expired_at = data["expired_at"]
+        # 成员Dict结构转换为Subject结构，并去重
+        members = list(set(parse_obj_as(List[Subject], members_data)))
+
+        # 检测成员是否满足管理的授权范围
+        role = Role.objects.get(type=RoleType.SUPER_MANAGER.value)
+        self.group_check_biz.check_role_subject_scope(role, members)
+        self.group_check_biz.check_member_count(group.id, len(members))
+
+        # 排除组织架构中不存在的成员
+        members = remove_not_exist_subject(members)
+        if members:
+            # 添加成员
+            self.biz.add_members(group.id, members, expired_at)
+
+        # 写入审计上下文
+        audit_context_setter(group=group, members=[m.dict() for m in members])
+
+        return Response({})
 
 
 class AdminGroupPolicyViewSet(GenericViewSet):
