@@ -26,36 +26,42 @@ urlpatterns = [
         name="open.management.v2.grade_manager",
     ),
     # -------------- 用户组本身 --------------
-    # 系统管理员下创建用户组
+    # 系统管理员下创建用户组（支持同步创建人员模板）
     path(
         "grade_managers/-/groups/",
         views.ManagementSystemManagerGroupViewSet.as_view({"post": "create"}),
         name="open.management.v2.system_manager_group",
     ),
-    # 分级管理员下创建用户组
+    # 分级管理员下创建用户组（支持同步创建用户组对应的人员模板）
     path(
         "grade_managers/<int:id>/groups/",
         views.ManagementGradeManagerGroupViewSet.as_view({"post": "create", "get": "list"}),
         name="open.management.v2.grade_manager_group",
     ),
-    # 用户组基本信息更新 & 删除
+    # 用户组基本信息更新 & 删除（自动同步删除用户组人员模板）
     path(
         "groups/<int:id>/",
         views.ManagementGroupViewSet.as_view({"put": "update", "delete": "destroy"}),
         name="open.management.v2.group",
     ),
     # -------------- 用户组成员 --------------
-    # 用户组成员
+    # 用户组成员（增加和删除支持人员模板，查询列表不支持人员模板）
     path(
         "groups/<int:id>/members/",
         views.ManagementGroupMemberViewSet.as_view({"get": "list", "post": "create", "delete": "destroy"}),
         name="open.management.v2.group_member",
     ),
-    # 用户组成员有效期
+    # 用户组成员有效期（不支持人员模板）
     path(
         "groups/<int:id>/members/-/expired_at/",
         views.ManagementGroupMemberExpiredAtViewSet.as_view({"put": "update"}),
         name="open.management.v2.group_member.expired_at",
+    ),
+    # 用户组下类型为人员模板的成员
+    path(
+        "groups/<int:id>/subject_templates/",
+        views.ManagementGroupSubjectTemplateViewSet.as_view({"get": "list"}),
+        name="open.management.v2.group_subject_template",
     ),
     # -------------- 用户组权限 --------------
     # 用户组自定义权限
@@ -111,6 +117,12 @@ urlpatterns = [
         "departments/<int:id>/groups/belong/",
         views.ManagementDepartmentGroupBelongViewSet.as_view({"get": "check"}),
         name="open.management.v2.department_group_belong",
+    ),
+    # 批量查询某个成员在一批用户组里的详情（支持人员模板）
+    path(
+        "group_member_types/<str:group_member_type>/members/<str:member_id>/groups/-/details/",
+        views.ManagementMemberGroupDetailViewSet.as_view({"get": "list"}),
+        name="open.management.v2.member_group_detail",
     ),
     # -------------- Approval --------------
     # 审批回调
