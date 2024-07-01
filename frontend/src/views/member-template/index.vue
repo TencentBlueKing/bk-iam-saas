@@ -618,6 +618,7 @@
             this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
             this.currentSelectList = [];
             this.isAddRow = false;
+            this.resetPagination();
             await this.fetchMemberTemplateList(true);
           }
         } catch (e) {
@@ -765,15 +766,10 @@
       },
 
       resetPagination () {
-        this.pagination = Object.assign(
-          {},
-          {
-            limit: 10,
-            current: 1,
-            count: 0,
-            showTotalCount: true
-          }
-        );
+        this.pagination = Object.assign(this.pagination, {
+          current: 1,
+          count: 0
+        });
       },
 
       getDefaultSelect () {

@@ -206,7 +206,7 @@
       },
 
       handleBlur () {
-        if (this.tagName === '') {
+        if (this.tagName.trim() === '') {
           this.isEdit = false;
         }
       },
@@ -233,7 +233,7 @@
       },
 
       handleSave () {
-        if (this.tagName === '') {
+        if (this.tagName.trim() === '') {
           this.isEdit = false;
           return;
         }

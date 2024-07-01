@@ -2245,8 +2245,8 @@
                 }
                 td:first-child .cell,
                 th:first-child .cell {
-                    /* padding-left: 15px; */
-                    padding-left: 10px;
+                    padding-left: 15px;
+                    /* padding-left: 10px; */
                 }
                 .iam-new-action {
                     display: inline-block;
@@ -2289,7 +2289,7 @@
                 }
             }
             .action-name {
-                margin-left: 6px;
+                /* margin-left: 6px; */
                 display: inline-block;
                 vertical-align: bottom;
                 word-wrap: break-word;
