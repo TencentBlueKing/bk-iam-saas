@@ -41,10 +41,10 @@
           @blur="handleBlur"
           @enter="handleEnter">
         </bk-input>
-        <div class="action-item" @click.stop="handeSave">
+        <div class="action-item" @click.stop="handleSave">
           <Icon type="check-small" />
         </div>
-        <div class="action-item" @click.stop="handeCancel">
+        <div class="action-item" @click.stop="handleCancel">
           <Icon type="close-small" />
         </div>
       </div>
@@ -206,7 +206,7 @@
       },
 
       handleBlur () {
-        if (this.tagName === '') {
+        if (this.tagName.trim() === '') {
           this.isEdit = false;
         }
       },
@@ -225,15 +225,15 @@
       },
 
       handleEnter () {
-        this.handeSave();
+        this.handleSave();
       },
 
       handleDelete (id, $id, index) {
         this.$emit('on-delete', id, $id, index);
       },
 
-      handeSave () {
-        if (this.tagName === '') {
+      handleSave () {
+        if (this.tagName.trim() === '') {
           this.isEdit = false;
           return;
         }
@@ -241,7 +241,7 @@
         this.handleReset();
       },
 
-      handeCancel () {
+      handleCancel () {
         this.handleReset();
       }
     }

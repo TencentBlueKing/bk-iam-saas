@@ -12,11 +12,13 @@
           <div
             v-for="(log, index) in versionLogs"
             :key="log.version"
-            class="log-tab"
+            class="flex-between log-tab"
             :class="{ active: index === activeIndex }"
             @click="handleTabChange(index)">
-            <div class="title">{{ log.version }}</div>
-            <div class="date">{{ log.date }}</div>
+            <div class="log-tab-content">
+              <div class="title">{{ log.version }}</div>
+              <div class="date">{{ log.date }}</div>
+            </div>
             <div v-if="index === 0" class="new-flag">{{ $t(`m.common['当前版本']`) }}</div>
           </div>
         </scroll-faker>
