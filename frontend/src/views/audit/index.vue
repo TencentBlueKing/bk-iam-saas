@@ -34,116 +34,127 @@
       <bk-table-column type="expand" width="30">
         <template slot-scope="{ row }">
           <section class="audit-detail-wrapper" v-bkloading="{ isLoading: row.loading, opacity: 1 }">
-            <template v-if="noDetailType.includes(row.type) || row.type === 'role.group.renew'">
-              <!-- <div class="empty-wrapper"> -->
-              <ExceptionEmpty />
+            <template v-if="row.emptyData && ['refresh'].includes(row.emptyData.tipType)">
+              <ExceptionEmpty
+                :type="row.emptyData.type"
+                :empty-text="row.emptyData.text"
+                :tip-text="row.emptyData.tip"
+                :tip-type="row.emptyData.tipType"
+                @on-refresh="handleChildEmptyRefresh(row)"
+              />
+            </template>
+            <template v-else>
+              <template v-if="noDetailType.includes(row.type) || row.type === 'role.group.renew'">
+                <!-- <div class="empty-wrapper"> -->
+                <ExceptionEmpty />
               <!-- </div> -->
-            </template>
-            <template v-if="onlyDescriptionType.includes(row.detail.type)">
-              <section v-if="!row.loading">
-                <p class="description single-hide" :title="row.detail.description">
-                  {{ row.detail.description || '--' }}
-                </p>
-              </section>
-            </template>
-            <template v-if="onlySubType.includes(row.detail.type)">
-              <bk-table
-                v-if="!row.loading"
-                :data="row.detail.sub_objects"
-                ext-cls="audit-detail-table"
-                :outer-border="false"
-                :header-border="false"
-                :header-cell-style="{ background: '#f5f6fa', borderRight: 'none' }">
-                <bk-table-column :label="$t(`m.common['类型']`)">
-                  <template slot-scope="props">
-                    <span>{{ objectMap[props.row.type] || props.row.type }}</span>
-                  </template>
-                </bk-table-column>
-                <bk-table-column :label="$t(`m.audit['实例']`)">
-                  <template slot-scope="props">
-                    <span>{{ props.row.name }}</span>
-                  </template>
-                </bk-table-column>
-                <template slot="empty">
-                  <ExceptionEmpty />
-                </template>
-              </bk-table>
-            </template>
-            <template v-if="deType.includes(row.detail.type)">
-              <section v-if="!row.loading">
-                <p class="description">{{ row.detail.description }}</p>
-                <p>{{ $t(`m.audit['版本号']`) }}: {{ row.detail.extra_info.version }}</p>
-              </section>
-            </template>
-            <template v-if="dsType.includes(row.detail.type)">
-              <bk-table
-                v-if="!row.loading"
-                :data="row.detail.sub_objects"
-                ext-cls="audit-detail-table"
-                :outer-border="false"
-                :header-border="false"
-                :header-cell-style="{ background: '#f5f6fa', borderRight: 'none' }">
-                <bk-table-column prop="name" :label="$t(`m.audit['对象实例']`)">
-                  <template slot-scope="props">
-                    <span :title="objectMap[props.row.type] || props.row.type">
-                      {{ objectMap[props.row.type] || props.row.type }}
-                    </span>
-                  </template>
-                </bk-table-column>
-                <bk-table-column :label="$t(`m.audit['操作对象']`)">
-                  <template slot-scope="props">
-                    <span :title="props.row.name">{{ props.row.name }}</span>
-                  </template>
-                </bk-table-column>
-                <bk-table-column :label="$t(`m.common['描述']`)">
-                  <template slot-scope="props">
-                    <span :title="props.row.description">{{ props.row.description || '--' }}</span>
-                  </template>
-                </bk-table-column>
-                <template slot="empty">
-                  <ExceptionEmpty />
-                </template>
-              </bk-table>
-            </template>
-            <template v-if="seType.includes(row.detail.type)">
-              <bk-table
-                v-if="!row.loading"
-                :data="row.detail.sub_objects"
-                ext-cls="audit-detail-table"
-                :outer-border="false"
-                :header-border="false"
-                :header-cell-style="{ background: '#f5f6fa', borderRight: 'none' }">
-                <bk-table-column prop="name" :label="$t(`m.common['类型']`)">>
-                  <template slot-scope="props">
-                    <span>{{ objectMap[props.row.type] || props.row.type }}</span>
-                  </template>
-                </bk-table-column>
-                <bk-table-column :label="$t(`m.audit['实例']`)">
-                  <template slot-scope="props">
-                    <span :title="props.row.name">{{ props.row.name }}</span>
-                  </template>
-                </bk-table-column>
-                <bk-table-column :label="$t(`m.audit['版本号']`)">
-                  <template slot-scope="props">
-                    <span>{{ props.row.version || '--' }}</span>
-                  </template>
-                </bk-table-column>
-                <template slot="empty">
-                  <ExceptionEmpty />
-                </template>
-              </bk-table>
-            </template>
-            <template v-if="onlyExtraInfoType.includes(row.detail.type)">
-              <!-- eslint-disable max-len -->
-              <template v-if="row.detail.type !== 'role.group.renew' && row.detail.type !== 'template.version.sync'">
-                <render-detail-table :actions="row.detail.extra_info.policies" />
               </template>
-              <template v-if="row.detail.type === 'template.version.sync'">
-                <p>{{ $t(`m.audit['版本号']`) }}{{ $t(`m.common['：']`) }}{{ row.detail.extra_info.version }}</p>
+              <template v-if="onlyDescriptionType.includes(row.detail.type)">
+                <section v-if="!row.loading">
+                  <p class="description single-hide" :title="row.detail.description">
+                    {{ row.detail.description || '--' }}
+                  </p>
+                </section>
               </template>
-            </template>
-            <template v-if="onlyRoleType.includes(row.detail.type)">
-              <p>{{ $t(`m.audit['管理空间']`) }}{{ $t(`m.common['：']`) }}{{ row.detail.role_name }}</p>
+              <template v-if="onlySubType.includes(row.detail.type)">
+                <bk-table
+                  v-if="!row.loading"
+                  :data="row.detail.sub_objects"
+                  ext-cls="audit-detail-table"
+                  :outer-border="false"
+                  :header-border="false"
+                  :header-cell-style="{ background: '#f5f6fa', borderRight: 'none' }">
+                  <bk-table-column :label="$t(`m.common['类型']`)">
+                    <template slot-scope="props">
+                      <span>{{ objectMap[props.row.type] || props.row.type }}</span>
+                    </template>
+                  </bk-table-column>
+                  <bk-table-column :label="$t(`m.audit['实例']`)">
+                    <template slot-scope="props">
+                      <span>{{ props.row.name }}</span>
+                    </template>
+                  </bk-table-column>
+                  <template slot="empty">
+                    <ExceptionEmpty />
+                  </template>
+                </bk-table>
+              </template>
+              <template v-if="deType.includes(row.detail.type)">
+                <section v-if="!row.loading">
+                  <p class="description">{{ row.detail.description }}</p>
+                  <p>{{ $t(`m.audit['版本号']`) }}: {{ row.detail.extra_info.version }}</p>
+                </section>
+              </template>
+              <template v-if="dsType.includes(row.detail.type)">
+                <bk-table
+                  v-if="!row.loading"
+                  :data="row.detail.sub_objects"
+                  ext-cls="audit-detail-table"
+                  :outer-border="false"
+                  :header-border="false"
+                  :header-cell-style="{ background: '#f5f6fa', borderRight: 'none' }">
+                  <bk-table-column prop="name" :label="$t(`m.audit['对象实例']`)">
+                    <template slot-scope="props">
+                      <span :title="objectMap[props.row.type] || props.row.type">
+                        {{ objectMap[props.row.type] || props.row.type }}
+                      </span>
+                    </template>
+                  </bk-table-column>
+                  <bk-table-column :label="$t(`m.audit['操作对象']`)">
+                    <template slot-scope="props">
+                      <span :title="props.row.name">{{ props.row.name }}</span>
+                    </template>
+                  </bk-table-column>
+                  <bk-table-column :label="$t(`m.common['描述']`)">
+                    <template slot-scope="props">
+                      <span :title="props.row.description">{{ props.row.description || '--' }}</span>
+                    </template>
+                  </bk-table-column>
+                  <template slot="empty">
+                    <ExceptionEmpty />
+                  </template>
+                </bk-table>
+              </template>
+              <template v-if="seType.includes(row.detail.type)">
+                <bk-table
+                  v-if="!row.loading"
+                  :data="row.detail.sub_objects"
+                  ext-cls="audit-detail-table"
+                  :outer-border="false"
+                  :header-border="false"
+                  :header-cell-style="{ background: '#f5f6fa', borderRight: 'none' }">
+                  <bk-table-column prop="name" :label="$t(`m.common['类型']`)">>
+                    <template slot-scope="props">
+                      <span>{{ objectMap[props.row.type] || props.row.type }}</span>
+                    </template>
+                  </bk-table-column>
+                  <bk-table-column :label="$t(`m.audit['实例']`)">
+                    <template slot-scope="props">
+                      <span :title="props.row.name">{{ props.row.name }}</span>
+                    </template>
+                  </bk-table-column>
+                  <bk-table-column :label="$t(`m.audit['版本号']`)">
+                    <template slot-scope="props">
+                      <span>{{ props.row.version || '--' }}</span>
+                    </template>
+                  </bk-table-column>
+                  <template slot="empty">
+                    <ExceptionEmpty />
+                  </template>
+                </bk-table>
+              </template>
+              <template v-if="onlyExtraInfoType.includes(row.detail.type)">
+                <!-- eslint-disable max-len -->
+                <template v-if="row.detail.type !== 'role.group.renew' && row.detail.type !== 'template.version.sync'">
+                  <render-detail-table :actions="row.detail.extra_info.policies" @on-refresh="handleChildEmptyRefresh(row)" />
+                </template>
+                <template v-if="row.detail.type === 'template.version.sync'">
+                  <p>{{ $t(`m.audit['版本号']`) }}{{ $t(`m.common['：']`) }}{{ row.detail.extra_info.version }}</p>
+                </template>
+              </template>
+              <template v-if="onlyRoleType.includes(row.detail.type)">
+                <p>{{ $t(`m.audit['管理空间']`) }}{{ $t(`m.common['：']`) }}{{ row.detail.role_name }}</p>
+              </template>
             </template>
           </section>
         </template>
@@ -291,7 +302,8 @@
   // 既有 description 又有 sub_objects
   const DS_TYPE = [
     'approval.action.update',
-    'approval.group.update'
+    'approval.group.update',
+    'template.preupdate.create'
   ];
 
   export default {
@@ -757,6 +769,11 @@
         this.fetchAuditList(true);
       },
 
+      handleChildEmptyRefresh (payload) {
+        payload.expanded = false;
+        this.handleExpandChange(payload);
+      },
+
       pageChange (page) {
         if (this.currentBackup === page) {
           return;
@@ -774,6 +791,7 @@
 
       async handleExpandChange (row, expandedRows) {
         row.expanded = !row.expanded;
+        this.$set(row, 'emptyData', {});
         if (this.noDetailType.includes(row.type)) {
           return;
         }
@@ -805,6 +823,7 @@
             }
           } catch (e) {
             console.error(e);
+            row.emptyData = formatCodeData(e.code, { ...row.emptyData, ...{ tipType: 'refresh' } });
             this.messageAdvancedError(e);
           } finally {
             row.loading = false;
