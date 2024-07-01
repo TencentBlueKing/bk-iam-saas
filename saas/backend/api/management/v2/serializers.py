@@ -22,6 +22,7 @@ from backend.biz.role import RoleCheckBiz
 from backend.biz.subject_template import SubjectTemplateBiz
 from backend.service.constants import GroupMemberType
 from backend.service.models import Subject
+from backend.util.serializer import StringArrayField
 
 
 class ManagementSourceSystemSLZ(serializers.Serializer):
@@ -189,6 +190,15 @@ class ManagementGroupMemberDeleteSLZ(serializers.Serializer):
         return data
 
 
+class ManagementGroupSubjectTemplateSLZ(serializers.Serializer):
+    id = serializers.CharField(label="人员模板 ID", source="template_id")
+    name = serializers.SerializerMethodField(label="人员模板名称")
+    expired_at = serializers.IntegerField(label="过期时间戳(单位秒)")
+
+    def get_name(self, obj):
+        return self.context["subject_template_name_map"].get(obj.template_id) or obj.template_id
+
+
 class ManagementGradeManagerBasicSLZ(serializers.Serializer):
     id = serializers.IntegerField(label="分级管理员ID")
 
@@ -250,6 +260,53 @@ class ManagementApplicationIDSLZ(serializers.Serializer):
 
 class ManagementSubjectGroupBelongSLZ(serializers.Serializer):
     group_ids = serializers.CharField(label="用户组ID，多个以英文逗号分隔", max_length=255, required=True)
+
+
+class ManagementMemberGroupDetailInputInPathSLZ(serializers.Serializer):
+    group_member_type = serializers.ChoiceField(help_text="用户组成员类型", choices=GroupMemberType.get_choices())
+    member_id = serializers.CharField(help_text="用户组成员 ID", max_length=128)
+
+    def validate(self, attrs):
+        # 组织 ID 和 人员模板 ID 都必须是整数
+        group_member_type = attrs["group_member_type"]
+        member_id = attrs["member_id"]
+        if group_member_type in (GroupMemberType.DEPARTMENT.value, GroupMemberType.TEMPLATE.value):
+            try:
+                int(member_id)
+            except ValueError:
+                raise serializers.ValidationError(
+                    {
+                        "member_id": [f"当 group_member_type 为 {group_member_type} 时，member_id({member_id}) 必须为整数"],
+                    }
+                )
+
+        return attrs
+
+
+class ManagementMemberGroupDetailInputSLZ(serializers.Serializer):
+    group_ids = StringArrayField(help_text="用户组 ID，多个以英文逗号分隔", min_items=1, max_items=20)
+
+    def validate_group_ids(self, value):
+        try:
+            [int(i) for i in value]
+        except ValueError:
+            raise serializers.ValidationError({"group_ids": ["用户组 ID 必须为整数"]})
+
+        return value
+
+
+class ManagementMemberGroupDetailOutputSLZ(serializers.Serializer):
+    id = serializers.IntegerField(help_text="用户组 ID")
+    name = serializers.CharField(help_text="用户组名称")
+    description = serializers.CharField(help_text="用户组描述")
+    created_at = serializers.SerializerMethodField(help_text="加入用户组时间戳")
+    expired_at = serializers.SerializerMethodField(help_text="过期时间戳")
+
+    def get_created_at(self, obj):
+        return self.context["subject_group_map"][obj.id]["created_at"]
+
+    def get_expired_at(self, obj):
+        return self.context["subject_group_map"][obj.id]["expired_at"]
 
 
 class ManagementGradeManagerApplicationResultSLZ(serializers.Serializer):
