@@ -1,9 +1,13 @@
 <template>
-  <div class="sync-group-wrapper">
+  <div :class="[
+    'sync-group-wrapper',
+    { 'is-full-screen-left': isFullScreenLeft },
+    { 'is-full-screen-right': isFullScreenRight }
+  ]">
     <template v-if="hasRelatedGroup">
       <smart-action>
-        <div :class="['sync-group-content', { 'is-full': isFullScreen }]">
-          <div :class="['sync-group-content-left']" :style="leftStyle">
+        <div class="sync-group-content">
+          <div class="sync-group-content-left" :style="leftStyle">
             <div class="related-instance-header">
               <div class="header-title">
                 {{ $t(`m.actionsTemplate['关联用户组的实例']`) }}
@@ -77,17 +81,17 @@
           </div>
           <div class="sync-group-content-center">
             <div class="expand-icon" @click.stop="handleToggleExpand">
-              <bk-icon :type="isFullScreen ? 'angle-left' : 'angle-right'" class="icon" />
+              <bk-icon :type="isFullScreenLeft ? 'angle-left' : 'angle-right'" class="icon" />
             </div>
           </div>
-          <div :class="['sync-group-content-right']" :style="rightStyle">
+          <div class="sync-group-content-right" :style="rightStyle">
             <div class="drag-dotted-line" v-if="isDrag" :style="dottedLineStyle" />
             <div class="drag-line" :style="dragStyle">
               <img
                 class="drag-bar"
                 src="@/images/drag-icon.svg"
                 :draggable="false"
-                @mousedown="handleDragMouseenter($event)"
+                @mousedown="handleDragMouseDown($event)"
                 alt=""
               />
             </div>
@@ -155,7 +159,7 @@
   export default {
     provide: function () {
       return {
-        getPermTableWidth: () => this.dragRealityWidth
+        getPermTableWidth: () => this.dragWidth
       };
     },
     components: {
@@ -198,7 +202,8 @@
         isOnePage: false,
         isLastPage: false,
         isNoAddActions: false,
-        isFullScreen: false,
+        isFullScreenLeft: false,
+        isFullScreenRight: false,
         isDrag: false,
         prevLoading: false,
         disabled: true,
@@ -207,8 +212,8 @@
         fillTip: this.$t(`m.actionsTemplate['引用已有的操作实例一键填充']`),
         curLocationIndex: 0,
         navWidth: 260,
+        dragClientX: -1,
         dragWidth: window.innerWidth / 2 - 260 + 26,
-        dragRealityWidth: window.innerWidth / 2 - 260 + 26,
         dottedLineWidth: 26,
         curExpandData: {},
         pagination: {
@@ -269,7 +274,7 @@
       },
       dottedLineStyle () {
         return {
-          right: `${this.dragRealityWidth}px`
+          right: `${this.dragWidth}px`
         };
       },
       batchFillActions () {
@@ -875,11 +880,16 @@
       },
 
       handleToggleExpand () {
-        this.isFullScreen = !this.isFullScreen;
+        if (this.isFullScreenRight) {
+          this.isFullScreenRight = false;
+          this.handleResizeView();
+          return;
+        }
+        this.isFullScreenLeft = !this.isFullScreenLeft;
         this.handleResizeView();
       },
 
-      handleDragMouseenter () {
+      handleDragMouseDown (e) {
         if (this.isDrag) {
           return;
         }
@@ -889,7 +899,6 @@
       },
 
       handleDragMouseup (e) {
-        this.dragWidth = this.dragRealityWidth;
         this.isDrag = false;
         document.removeEventListener('mousemove', this.handleDragMousemove);
         document.removeEventListener('mouseup', this.handleDragMouseup);
@@ -900,245 +909,24 @@
         if (!this.isDrag) {
           return;
         }
-        const minWidth = window.innerWidth / 2;
-        const maxWidth = minWidth + 600;
-        if (clientX >= maxWidth) {
+        const maxWidth = window.innerWidth - this.navWidth - 26;
+        if (clientX >= maxWidth || clientX < 0) {
           return;
         }
-        this.dragRealityWidth = window.innerWidth - clientX - this.navWidth + 26;
+        this.dragClientX = clientX;
+        this.dragWidth = maxWidth - clientX;
+        this.isFullScreenLeft = maxWidth - clientX < 48;
+        this.isFullScreenRight = clientX < this.dragWidth && maxWidth - this.dragWidth < 20;
       },
 
       handleResizeView () {
         const resizeWidth = window.innerWidth / 2 - this.navWidth + 26;
-        [this.dragWidth, this.dragRealityWidth] = [resizeWidth, resizeWidth];
+        this.dragWidth = resizeWidth;
       }
     }
   };
 </script>
 
 <style lang="postcss" scoped>
-.sync-group-wrapper {
-  .sync-group-content {
-    position: relative;
-    display: flex;
-    &-left {
-      width: calc(100% - 680px);
-      .related-instance-header {
-        padding-top: 16px;
-        position: sticky;
-        top: 0;
-        left: 0;
-        z-index: 2;
-        .header-title {
-          position: relative;
-          font-weight: 700;
-          font-size: 14px;
-          color: #313238;
-          &::after {
-            height: 8px;
-            line-height: 1;
-            content: "*";
-            color: #ea3636;
-            font-size: 12px;
-            position: absolute;
-            top: 50%;
-            display: inline-block;
-            vertical-align: middle;
-            -webkit-transform: translate(3px, -50%);
-            transform: translate(3px, -50%);
-          }
-        }
-        .header-content {
-          margin-top: 12px;
-          flex-wrap: wrap;
-          &-btn {
-            display: flex;
-            align-items: center;
-            padding-bottom: 12px;
-            .operate-btn {
-              font-size: 0;
-              .bk-button {
-                font-size: 12px;
-                margin-right: 8px;
-                &.fill {
-                  min-width: 72px;
-                }
-                &.no-limited {
-                  min-width: 84px;
-                }
-              }
-            }
-            .aggregate-type-list {
-              min-width: 108px;
-              position: relative;
-              display: flex;
-              justify-content: space-between;
-              background-color: #eaebf0;
-              border-radius: 2px;
-              cursor: pointer;
-              .aggregate-action-btn {
-                background-color: #eaebf0;
-                border: 4px solid #eaebf0;
-                padding: 4px 12px;
-                font-size: 12px;
-                &.is-active {
-                  color: #3a84ff;
-                  background-color: #ffffff;
-                }
-                &.is-disabled {
-                  cursor: not-allowed;
-                }
-              }
-            }
-          }
-          .location-fill-btn {
-            display: flex;
-            align-items: center;
-            min-width: 123px;
-            height: 32px;
-            line-height: 32px;
-            padding: 0 12px;
-            margin-bottom: 12px;
-            background-color: #ffffff;
-            border: 1px solid #c4c6cc;
-            border-radius: 2px;
-            box-sizing: border-box;
-            vertical-align: middle;
-            cursor: pointer;
-            .location-icon {
-              margin-right: 4px;
-            }
-            .location-content {
-              font-size: 12px;
-              color: #63656e;
-            }
-            &.is-disabled {
-              cursor: inherit;
-              .location-icon {
-                color: #dcdee5;
-              }
-              .location-content {
-                color: #c4c6cc;
-              }
-            }
-          }
-        }
-      }
-      .related-instance-table {
-        box-sizing: border-box;
-      }
-      &.is-full {
-        width: 100%;
-      }
-    }
-    &-center {
-      width: 16px;
-      margin-left: 10px;
-      height: calc(100vh - 61px);
-      .expand-icon {
-        width: 16px;
-        height: 64px;
-        background-color: #dcdee5;
-        border-radius: 4px 0 0 4px;
-        position: relative;
-        top: 50%;
-        transform: translateY(-50%);
-        cursor: pointer;
-        .icon {
-          color: #ffffff;
-          font-size: 22px !important;
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-        }
-        &:hover {
-          background-color: #3a84ff;
-        }
-      }
-    }
-    &-right {
-      position: relative;
-      padding: 16px 0;
-      height: calc(100vh - 61px);
-      overflow: hidden;
-      .drag-dotted-line {
-        position: absolute;
-        top: 0;
-        left: 0;
-        height: 100%;
-        border-left: 1px solid #dcdee5;
-        background-color: #ffffff;
-        z-index: 98;
-      }
-      .drag-line {
-        position: absolute;
-        top: 0;
-        left: 0;
-        height: 100%;
-        width: 1px;
-        background-color: #dcdee5;
-        z-index: 98;
-        .drag-bar {
-          position: relative;
-          top: calc(50% - 15px);
-          left: 2px;
-          width: 9px;
-          color: #979ba5;
-          cursor: col-resize;
-        }
-      }
-    }
-    &.is-full {
-      .sync-group-content-left {
-        flex: 0 0 100%;
-      }
-      .sync-group-content-center {
-        .expand-icon {
-          border-radius: 0 4px 4px 0;
-        }
-      }
-      .sync-group-content-right {
-        display: none;
-      }
-    }
-  }
-  .sync-group-btn {
-    font-size: 0;
-    .bk-button {
-      min-width: 88px;
-      margin-right: 8px;
-    }
-  }
-  /deep/ .no-sync-group {
-    position: absolute;
-    top: 45%;
-    left: 50%;
-    transform: translate(-50%, -45%);
-    .part-img {
-      width: 440px !important;
-    }
-    .part-text {
-      .empty-text {
-        font-size: 20px;
-        color: #63656e;
-      }
-      .tip-wrap {
-        margin-top: 16px;
-        .tip-message {
-          font-size: 14px;
-        }
-      }
-    }
-    &-btn {
-      margin-top: 24px;
-      text-align: center;
-      font-size: 0;
-      .bk-button {
-        min-width: 88px;
-        margin-right: 8px;
-      }
-    }
-  }
-}
+@import "../css/difference.css";
 </style>
