@@ -718,12 +718,6 @@
         const noLimitedList = relatedList.filter((item) => item.resource_type.condition.length === 0);
         // 当前批量复用的数据是否存在聚合数据
         const hasAggregateData = payload.tableList.filter((item) => item.isAggregate);
-        // if (noLimitedList.length) {
-        // for (let i = 0; i < noLimitedList.length; i++) {
-        //   this.syncGroupList.forEach((item, index) => {
-        //    this.handleSetNoLimitedData(item, index, noLimitedList[i]);
-        //   });
-        // }
         if (noLimitedList.length > 0 || hasAggregateData.length > 0) {
           this.syncGroupList.forEach((item) => {
             item.tableList.forEach((v, i) => {
@@ -956,8 +950,16 @@
                   groupItem.related_resource_types && groupItem.related_resource_types.forEach((types) => {
                     // 处理授权范围不是无限制的场景
                     if (curScopeAction) {
-                      const { name, type } = curScopeAction;
+                      const { name, type, resource_groups: resourceGroups } = curScopeAction;
                       const curData = new RelateResourceTypes(types, { name, type }, 'detail');
+                      resourceGroups && resourceGroups.forEach((curScopeActionItem) => {
+                        curScopeActionItem.related_resource_types.forEach((related) => {
+                          if (!related.condition.length) {
+                            types.condition = [];
+                            types.isError = false;
+                          }
+                        });
+                      });
                       if (curData.condition.length > 0) {
                         return;
                       }
@@ -982,6 +984,17 @@
               }
             }
             if (item.instances && item.isAggregate) {
+              // 如果聚合的操作授权范围都是无限制才能填充无限制范围
+              let isAllNoLimited = true;
+              const actionIdList = item.actions.map((v) => v.id);
+              const scopeActionList = this.authorizationScopeActions.filter((v) => actionIdList.includes(v.id));
+              if (scopeActionList.length > 0) {
+                isAllNoLimited = scopeActionList.every((scopeItem) => scopeItem.resource_groups.every((v) =>
+                  v.related_resource_types && v.related_resource_types.every((related) => {
+                    return related.condition && related.condition.length === 0;
+                  })
+                ));
+              }
               item.isNoLimited = false;
               item.isError = !(item.instances.length || (!item.instances.length && item.isNoLimited));
               item.isNeedNoLimited = true;
@@ -989,7 +1002,7 @@
                 item.isNoLimited = false;
                 item.isError = false;
               }
-              if ((!item.instances.length && !payload && item.isNoLimited) || payload) {
+              if (((!item.instances.length && !payload && item.isNoLimited) || payload) && isAllNoLimited) {
                 item.isNoLimited = true;
                 item.isError = false;
                 item.instances = [];
