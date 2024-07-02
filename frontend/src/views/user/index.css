@@ -165,7 +165,7 @@
           }
         }
       }
-  }
+    }
     .has-selected-department-wrapper {
       padding: 20px 20px 0 20px;
       position: absolute;
@@ -270,6 +270,31 @@
       }
     }
   }
+  .drag-dotted-line {
+    position: absolute;
+    top: 0;
+    left: 220px;
+    height: 100%;
+    border-left: 1px solid #dcdee5;
+    z-index: 1500;
+  }
+  .drag-line {
+    position: absolute;
+    top: 0;
+    left: 220px;
+    height: 100%;
+    width: 1px;
+    background: #dcdee5;
+    z-index: 1500;
+    .drag-bar {
+      position: relative;
+      top: calc(50% - 17px);
+      left: 2px;
+      width: 9px;
+      background: transparent;
+      cursor: col-resize;
+    }
+}
   .right-wrapper {
     position: relative;
     padding: 20px;

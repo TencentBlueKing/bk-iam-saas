@@ -213,9 +213,8 @@
         return this.defaultList.length > 0;
       },
       isShowUnlimited () {
-        const result = ['applyCustomPerm'].includes(this.$route.name)
-        || (['super_manager', 'system_manager'].includes(this.user.role.type)
-         && this.noLimitRoutes.includes(this.$route.name));
+        const result = ['applyCustomPerm', 'actionsTemplateEdit'].includes(this.$route.name)
+        || (['super_manager', 'system_manager'].includes(this.user.role.type) && this.noLimitRoutes.includes(this.$route.name));
         return result;
       }
     },

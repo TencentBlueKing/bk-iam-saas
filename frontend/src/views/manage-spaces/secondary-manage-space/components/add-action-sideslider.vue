@@ -690,23 +690,14 @@
             this.$set(item, 'text', allChecked ? this.$t(`m.common['取消全选']`) : this.$t(`m.common['全选']`));
             this.$set(item, 'allDisabled', allDisabled);
           });
-          this.systemData[payload].system_name = this.systemList.find(item => item.id === payload).name;
-        }
-                
-        if (this.defaultValue.length > 0) {
-          const curAllActionIds = [];
-          this.systemData[payload].list.forEach(item => {
-            item.actions.forEach(act => {
-              curAllActionIds.push(act.$id);
+          const curSystem = this.systemList.find((item) => item.id === payload);
+          if (curSystem) {
+            const hasSelectedActions = this.linearAction.filter((v) => v.checked);
+            this.systemData[payload] = Object.assign(this.systemData[payload], {
+              system_name: curSystem.name,
+              count: hasSelectedActions.length
             });
-            item.sub_groups.forEach(sub => {
-              (sub.actions || []).forEach(v => {
-                curAllActionIds.push(v.$id);
-              });
-            });
-          });
-          const intersection = curAllActionIds.filter(item => this.defaultValue.includes(item));
-          this.systemData[payload].count = intersection.length;
+          }
         }
       },
 

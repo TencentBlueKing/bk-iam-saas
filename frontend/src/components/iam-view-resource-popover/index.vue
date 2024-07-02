@@ -1,5 +1,6 @@
 <template>
   <bk-popconfirm
+    ref="iamResourcePopover"
     trigger="mouseenter"
     ext-cls="iam-view-resource-tooltips-cls"
     :confirm-button-is-text="false"
@@ -52,6 +53,10 @@
       maxWidth: {
         type: Number,
         default: 500
+      },
+      isShowPopover: {
+        type: Boolean,
+        default: false
       }
     },
     data () {
@@ -86,6 +91,19 @@
           }
         },
         immediate: true
+      },
+      isShowPopover: {
+        handler (value) {
+          if (['audit'].includes(this.$route.name)) {
+            this.$nextTick(() => {
+              const resourcePopover = this.$refs.iamResourcePopover;
+              if (resourcePopover && resourcePopover.$refs.popover) {
+                value ? resourcePopover.$refs.popover.showHandler() : resourcePopover.$refs.popover.hideHandler();
+              }
+            });
+          }
+        },
+        deep: true
       }
     },
     methods: {

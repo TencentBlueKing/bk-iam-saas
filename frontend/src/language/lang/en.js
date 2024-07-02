@@ -409,6 +409,7 @@ export const m = {
         '模板名称不能为空': 'Template name cannot be empty',
         '模板成员不能为空': 'Template member cannot be empty',
         '模板名称必填, 不允许输入表情字符': 'Template name is required and emoji characters are not allowed to be entered',
+        '用户组名不允许输入表情字符': 'User group name does not allow input of emoticons',
         '请选择操作模板': 'Please select action templates'
     },
     info: {

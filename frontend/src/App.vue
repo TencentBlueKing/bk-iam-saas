@@ -493,7 +493,8 @@
         
     .actions-template-edit-container {
       .views-layout {
-        padding-top: 0;
+        padding: 0;
+        padding-bottom: 24px;
       }
     }
 
