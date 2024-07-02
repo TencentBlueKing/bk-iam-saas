@@ -280,6 +280,7 @@
     <RenderAggregateSideSlider
       ref="aggregateRef"
       :show.sync="isShowAggregateSlider"
+      :disabled="curAggregateDisabled"
       :params="aggregateResourceParams"
       :is-super-manager="isSuperManager"
       :value="aggregateValue"
@@ -512,6 +513,27 @@
             .resource_groups[this.curGroupIndex]
             .related_resource_types[this.curResourceIndex];
         return curData.isDefaultLimit;
+      },
+      // 处理聚合操作实例视图无限制功能是否禁用
+      curAggregateDisabled () {
+          if (this.aggregateIndex === -1) {
+            return false;
+          }
+          const curData = this.syncGroupList[this.curIndex].tableList[this.aggregateIndex];
+          if (curData) {
+            let isAllNoLimited = true;
+            const actionIdList = curData.actions.map((v) => v.id);
+            const scopeActionList = this.authorizationScopeActions.filter((v) => actionIdList.includes(v.id));
+            if (scopeActionList.length > 0) {
+              isAllNoLimited = scopeActionList.every((scopeItem) => scopeItem.resource_groups.every((v) =>
+                v.related_resource_types && v.related_resource_types.every((related) => {
+                  return related.condition && related.condition.length === 0;
+                })
+              ));
+            }
+            return !isAllNoLimited;
+          }
+          return false;
       },
       curFlag () {
           if (this.curIndex === -1
