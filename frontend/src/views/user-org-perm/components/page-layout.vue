@@ -10,11 +10,14 @@
     <div :class="[
       'right-layout',
       { 'right-layout-no-search': !isShowResourceSearch },
-      { 'right-layout-no-search-show-notice': !isShowResourceSearch && showNoticeAlert },
+      { 'right-layout-no-search-show-notice': !isShowResourceSearch && showNoticeAlert && showNoticeAlert() },
       { 'no-expand': isNoExpandNoSearchData },
       { 'no-expand-has-search': isNoExpandHasSearchData },
-      { 'expand-show-notice': !isNoExpandNoSearchData && showNoticeAlert },
-      { 'no-expand-show-notice': (isNoExpandNoSearchData || isNoExpandHasSearchData ) && showNoticeAlert }
+      { 'expand-show-notice': !isNoExpandNoSearchData && showNoticeAlert && showNoticeAlert() },
+      {
+        'no-expand-show-notice':
+          (isNoExpandNoSearchData || isNoExpandHasSearchData ) && showNoticeAlert && showNoticeAlert()
+      }
     ]">
       <slot name="right" />
     </div>
