@@ -24,10 +24,15 @@ from .group import (
     ManagementGroupMemberViewSet,
     ManagementGroupPolicyActionViewSet,
     ManagementGroupPolicyViewSet,
+    ManagementGroupSubjectTemplateViewSet,
     ManagementGroupViewSet,
     ManagementSystemManagerGroupViewSet,
 )
-from .subject import ManagementDepartmentGroupBelongViewSet, ManagementUserGroupBelongViewSet
+from .subject import (
+    ManagementDepartmentGroupBelongViewSet,
+    ManagementMemberGroupDetailViewSet,
+    ManagementUserGroupBelongViewSet,
+)
 from .subject_template import ManagementGradeManagerSubjectTemplateViewSet
 from .subset_manager import ManagementSubsetManagerCreateListViewSet, ManagementSubsetManagerViewSet
 
@@ -37,6 +42,7 @@ __all__ = [
     "ManagementGroupViewSet",
     "ManagementGroupMemberViewSet",
     "ManagementGroupMemberExpiredAtViewSet",
+    "ManagementGroupSubjectTemplateViewSet",
     "ManagementGroupPolicyViewSet",
     "ManagementGroupApplicationViewSet",
     "ManagementGroupRenewApplicationViewSet",
@@ -52,4 +58,5 @@ __all__ = [
     "ManagementGradeManagerViewSet",
     "ManagementSubsetManagerViewSet",
     "ManagementGradeManagerSubjectTemplateViewSet",
+    "ManagementMemberGroupDetailViewSet",
 ]
