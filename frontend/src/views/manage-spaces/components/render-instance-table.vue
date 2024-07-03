@@ -1503,8 +1503,8 @@
                 }
                 td:first-child .cell,
                 th:first-child .cell {
-                    /* padding-left: 15px; */
-                    padding-left: 10px;
+                    padding-left: 15px;
+                    /* padding-left: 10px; */
                 }
             }
             .relation-content-wrapper,
@@ -1552,7 +1552,7 @@
             }
 
             .action-name {
-                margin-left: 6px;
+                /* margin-left: 6px; */
                 display: inline-block;
                 max-width: 200px;
                 overflow: hidden;

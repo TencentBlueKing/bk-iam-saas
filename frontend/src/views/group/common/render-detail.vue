@@ -43,8 +43,9 @@
       data: {
         handler (value) {
           if (value.length > 0) {
+            const { name, tabActive } = value[0];
             this.panels = value;
-            this.active = this.panels[0].name;
+            this.active = tabActive || name;
           }
         },
         immediate: true

@@ -62,6 +62,7 @@
               ]"
               :title="data.name"> -->
             <div
+              v-bkloading="{ isLoading: data.subManageLoading, opacity: 1 }"
               :class="[
                 'single-hide',
                 { 'iam-search-data': isSearch }
@@ -432,6 +433,7 @@
         }
       },
       async fetchSubManagerList (row) {
+        row.subManageLoading = true;
         try {
           const { data } = await this.$store.dispatch(
             'spaceManage/getStaffSubManagerList',
@@ -454,6 +456,8 @@
           row.children = [];
           this.subRoleList = [];
           this.messageAdvancedError(e);
+        } finally {
+          row.subManageLoading = false;
         }
       },
 
