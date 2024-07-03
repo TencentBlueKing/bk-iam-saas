@@ -59,7 +59,7 @@
     <add-perm-sideslider
       :is-show.sync="isShowAddSideslider"
       :custom-perm="originalList"
-      :template="tempalteDetailList"
+      :template="templateDetailList"
       :external-template="externalSystemsLayout.userGroup.addGroup.hideAddTemplateTextBtn"
       :aggregation="aggregationData"
       :authorization="authorizationData"
@@ -118,7 +118,7 @@
         originalList: [],
         tableList: [],
         tableListBackup: [],
-        tempalteDetailList: [],
+        templateDetailList: [],
         aggregationData: {},
         authorizationData: {},
         aggregationDataByCustom: {},
@@ -250,28 +250,22 @@
       },
 
       handleSubmitPerm (templates, aggregation, authorization) {
-        // debugger
         this.isShowErrorTips = false;
-
-        if (this.isAllExpanded) {
-          this.isAllExpanded = false;
-          this.handleAggregateAction(false);
-        }
-
         this.aggregationData = aggregation;
         this.authorizationData = authorization;
-
+        const temps = [];
+        const tempList = [];
         let hasDeleteTemplateList = [];
         let hasAddTemplateList = [];
-        if (this.tempalteDetailList.length > 0) {
+        if (this.templateDetailList.length > 0) {
           const intersection = templates.filter(
-            item => this.tempalteDetailList.map(sub => sub.id).includes(item.id)
+            item => this.templateDetailList.map(sub => sub.id).includes(item.id)
           );
           // 判断权限模板数量没做任何变动时
-          if (JSON.stringify(this.tempalteDetailList) === JSON.stringify(templates)) {
+          if (JSON.stringify(this.templateDetailList) === JSON.stringify(templates)) {
             hasAddTemplateList = _.cloneDeep(templates);
           } else {
-            hasDeleteTemplateList = this.tempalteDetailList.filter(
+            hasDeleteTemplateList = this.templateDetailList.filter(
               item => !intersection.map(sub => sub.id).includes(item.id)
             );
             hasAddTemplateList = [
@@ -282,32 +276,20 @@
         } else {
           hasAddTemplateList = templates;
         }
-        this.tempalteDetailList = _.cloneDeep(templates);
-
+        this.templateDetailList = _.cloneDeep(templates);
         if (hasDeleteTemplateList.length > 0) {
           this.tableList = this.tableList.filter(
             item => !hasDeleteTemplateList.map(sub => sub.id).includes(item.detail.id)
           );
         }
-
         if (this.hasDeleteCustomList.length > 0) {
           this.tableList = this.tableList.filter(item => {
             return item.detail.id === CUSTOM_PERM_TEMPLATE_ID && !this.hasDeleteCustomList.map(sub => sub.$id).includes(`${item.detail.system.id}&${item.id}`);
           });
         }
-
-        const tempList = [];
         hasAddTemplateList.forEach(item => {
           const temp = _.cloneDeep(item);
           delete temp.actions;
-
-          // // mock数据
-          // item.actions.forEach((element, index) => {
-          //     element.resource_groups = [{
-          //         id: index,
-          //         related_resource_types: element.related_resource_types
-          //     }]
-          // })
           item.actions.forEach(sub => {
             if (!sub.resource_groups || !sub.resource_groups.length) {
               sub.resource_groups = sub.related_resource_types.length ? [{ id: '', related_resource_types: sub.related_resource_types }] : [];
@@ -315,8 +297,6 @@
             tempList.push(new GroupPolicy(sub, 'add', 'template', temp));
           });
         });
-
-        const temps = [];
         this.tableList.forEach(item => {
           if (item.detail.id === CUSTOM_PERM_TEMPLATE_ID) {
             if (item.isAggregate) {
@@ -326,16 +306,8 @@
             }
           }
         });
-
         console.log('this.hasAddCustomList', this.hasAddCustomList);
         const addCustomList = this.originalList.filter(item => !temps.includes(item.$id));
-        // // mock数据
-        // addCustomList.forEach((element, index) => {
-        //     element.resource_groups = [{
-        //         id: index,
-        //         related_resource_types: element.related_resource_types
-        //     }]
-        // })
         addCustomList.forEach(item => {
           if (!item.resource_groups || !item.resource_groups.length) {
             item.resource_groups = item.related_resource_types.length ? [{ id: '', related_resource_types: item.related_resource_types }] : [];
@@ -348,15 +320,17 @@
             id: CUSTOM_PERM_TEMPLATE_ID
           }));
         });
-
         this.tableList.push(...tempList);
         this.tableListBackup = _.cloneDeep(this.tableList);
-
+        // 处理当前是聚合形态再新增数据需要重新组装成非聚合形态，兼容新增的数据会存在可以聚合的数据业务场景
+        if (this.isAllExpanded) {
+          this.handleAggregateAction(false);
+        }
+        this.isAllExpanded = false;
         // 处理聚合的数据，将表格数据按照相同的聚合id分配好
         this.handleAggregateData();
         // 处理为批量无限制， 默认为新增的操作选中无实例
         this.handleUnlimitedActionChange(this.isAllUnlimited);
-
         this.$nextTick(() => {
           if (hasDeleteTemplateList.length > 0 || this.hasDeleteCustomList.length > 0) {
             this.setCurMapData(hasDeleteTemplateList);
@@ -572,8 +546,8 @@
               tempData.push(...value);
             } else {
               let curInstances = [];
-              const conditions = value.map(subItem => subItem.resource_groups[0]
-                .related_resource_types[0].condition);
+              const conditions = value.map((subItem) => subItem.resource_groups
+                && subItem.resource_groups[0].related_resource_types[0].condition);
               // 是否都选择了实例
               const isAllHasInstance = conditions.every(subItem => subItem[0] !== 'none' && subItem.length > 0);
               if (isAllHasInstance) {
