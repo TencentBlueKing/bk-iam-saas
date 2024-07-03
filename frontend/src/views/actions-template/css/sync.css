@@ -260,6 +260,9 @@
         }
       }
     }
+    &.is-show-notice {
+      max-height: calc(100vh - 286px);
+    }
   }
 }
 .pagination-wrapper {
