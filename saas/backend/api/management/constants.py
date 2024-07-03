@@ -55,6 +55,7 @@ class ManagementAPIEnum(BaseAPIEnum):
     V2_GROUP_MEMBER_ADD = auto()
     V2_GROUP_MEMBER_DELETE = auto()
     V2_GROUP_MEMBER_EXPIRED_AT_UPDATE = auto()
+    V2_GROUP_SUBJECT_TEMPLATE_LIST = auto()
     # 用户组权限
     V2_GROUP_POLICY_GRANT = auto()
     V2_GROUP_POLICY_REVOKE = auto()
@@ -66,6 +67,7 @@ class ManagementAPIEnum(BaseAPIEnum):
     # 用户组归属
     V2_USER_GROUPS_BELONG_CHECK = auto()
     V2_DEPARTMENT_GROUPS_BELONG_CHECK = auto()
+    V2_MEMBER_GROUPS_DETAIL_LIST = auto()
     # 分级管理员
     V2_GRADE_MANAGER_CREATE = auto()
     V2_GRADE_MANAGER_UPDATE = auto()
@@ -123,6 +125,7 @@ class ManagementAPIEnum(BaseAPIEnum):
             (V2_GROUP_MEMBER_ADD, "[V2]添加用户组成员"),
             (V2_GROUP_MEMBER_DELETE, "[V2]删除用户组成员"),
             (V2_GROUP_MEMBER_EXPIRED_AT_UPDATE, "[V2]用户组成员续期"),
+            (V2_GROUP_SUBJECT_TEMPLATE_LIST, "[V2]获取用户组人员模板列表"),
             # 用户组权限
             (V2_GROUP_POLICY_GRANT, "[V2]授权用户组"),
             (V2_GROUP_POLICY_REVOKE, "[V2]回收用户组权限"),
@@ -134,6 +137,7 @@ class ManagementAPIEnum(BaseAPIEnum):
             # 用户组归属
             (V2_USER_GROUPS_BELONG_CHECK, "[V2]判断用户与用户组归属"),
             (V2_DEPARTMENT_GROUPS_BELONG_CHECK, "[V2]判断部门与用户组归属"),
+            (V2_MEMBER_GROUPS_DETAIL_LIST, "[V2]用户组成员在组内的详情"),
             # 分级管理员
             (V2_GRADE_MANAGER_DETAIL, "[V2]分级管理员详情"),
             (V2_GRADE_MANAGER_CREATE, "[V2]新建分级管理员"),
