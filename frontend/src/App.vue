@@ -100,7 +100,8 @@
       return {
         reload: this.reload,
         reloadCurPage: this.reloadCurPage,
-        showNoticeAlert: this.isShowNoticeAlert
+        // 基本类型不具备响应式，这里需要根据异步操作动态计算所以这里返回function
+        showNoticeAlert: () => this.isShowNoticeAlert
       };
     },
     components: {
