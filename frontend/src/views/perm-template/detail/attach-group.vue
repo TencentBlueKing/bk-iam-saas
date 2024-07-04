@@ -113,7 +113,7 @@
     methods: {
       getTableHeight () {
         const defaultHeight = getWindowHeight() - 185;
-        this.tableHeight = this.showNoticeAlert ? defaultHeight - 40 : defaultHeight;
+        this.tableHeight = this.showNoticeAlert && this.showNoticeAlert() ? defaultHeight - 40 : defaultHeight;
       },
       async fetchData (isTabLoading = false, isTableLoading = false) {
         this.tableLoading = isTableLoading;
