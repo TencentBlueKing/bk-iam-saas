@@ -156,6 +156,14 @@ const currentNav = [
         disabled: false
       },
       {
+        icon: 'my-perm',
+        id: 'myPermissionNav',
+        rkey: 'myPermission',
+        name: il8n('nav', '我的权限'),
+        path: `${SITE_URL}my-permission`,
+        disabled: false
+      },
+      {
         icon: 'my-manage-space',
         id: 'myManageSpaceNav',
         rkey: 'myManageSpace',

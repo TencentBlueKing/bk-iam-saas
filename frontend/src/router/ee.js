@@ -50,7 +50,10 @@ const ApplyJoinUserGroup = () =>
 const Apply = () => import(/* webpackChunkName: 'my-apply' */ '../views/apply');
 
 // 我的权限
-const MyPerm = () => import(/* webpackChunkName: 'my-perm' */ '../views/perm');
+const MyPerm = () => import(/* webpackChunkName: 'my-perm' */ '../views/my-perm');
+
+// 我的权限
+const MyPermission = () => import(/* webpackChunkName: 'my-perm' */ '../views/perm');
 
 // 申请权限外链页面
 const ApplyPerm = () => import(/* webpackChunkName: 'my-perm' */ '../views/perm/apply-perm');
@@ -273,9 +276,17 @@ export const routes = [
         alias: '',
         meta: {
           headerTitle: il8n('nav', '我的权限')
-          // hasPageTab: true
         },
         component: MyPerm
+      },
+      {
+        path: 'my-permission',
+        name: 'myPermission',
+        alias: '',
+        meta: {
+          headerTitle: il8n('nav', '我的权限')
+        },
+        component: MyPermission
       },
       {
         path: 'my-perm/apply-perm',

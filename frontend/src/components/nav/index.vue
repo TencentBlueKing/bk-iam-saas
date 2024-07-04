@@ -235,7 +235,7 @@
     // 我的权限
     [
       [
-        'myPerm',
+        'myPermission',
         'templatePermDetail',
         'groupPermDetail',
         'permRenewal',
@@ -243,6 +243,12 @@
         'permTransfer',
         'permTransferHistory',
         'applyPerm'
+      ],
+      'myPermissionNav'
+    ],
+    [
+      [
+        'myPerm'
       ],
       'myPermNav'
     ],
