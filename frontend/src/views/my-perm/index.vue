@@ -19,9 +19,11 @@
         :custom-class="'my-perm-resource-search'"
         :is-full-screen="true"
         :is-custom-search="true"
-        :active="active"
         :cur-search-data="searchData"
         :grid-count="gridCount"
+        :form-item-margin="16"
+        :nav-stick-padding="16"
+        :other-layout-width="leftLayoutWidth"
         @on-remote-table="handleRemoteTable"
         @on-refresh-table="handleRefreshTable"
       >
@@ -156,6 +158,11 @@
   import LeftLayout from './components/left-layout.vue';
   import IamResourceCascadeSearch from '@/components/iam-resource-cascade-search';
   export default {
+    provide: function () {
+      return {
+        getResourceSliderWidth: () => this.resourceSliderWidth
+      };
+    },
     components: {
       LeftLayout,
       IamResourceCascadeSearch
@@ -165,7 +172,6 @@
         enableGroupInstanceSearch: window.ENABLE_GROUP_INSTANCE_SEARCH.toLowerCase() === 'true',
         isExpand: true,
         isDropdownShow: false,
-        active: '',
         formItemWidth: '',
         renewalGroupTitle: '',
         managerGroupTitle: '',
@@ -194,11 +200,16 @@
           name: '',
           id: '',
           description: ''
-        }
+        },
+        resourceSliderWidth: Math.ceil(window.innerWidth * 0.67 - 7) < 960
+          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7)
       };
     },
     computed: {
       ...mapGetters(['navStick']),
+      leftLayoutWidth () {
+        return this.isExpand ? 240 : 0;
+      },
       isBatchDisabled () {
         return !this.currentSelectList.length;
       },
@@ -278,7 +289,6 @@
 
       handleDropdownShow () {
         this.isDropdownShow = true;
-        this.$refs.copyCascade.$refs.cascadeDropdown.hideHandler();
       },
 
       handleDropdownHide () {
@@ -291,11 +301,16 @@
 
       handleToggleExpand () {
         this.isExpand = !this.isExpand;
+        this.formatFormItemWidth();
+        this.$nextTick(() => {
+          this.$refs.iamResourceSearchRef && this.$refs.iamResourceSearchRef.formatFormItemWidth();
+        });
       },
 
       formatFormItemWidth () {
-        const leftWidth = this.isExpand ? 240 : 0;
-        this.formItemWidth = `${(window.innerWidth - leftWidth - (this.navStick ? 276 : 76) - this.gridCount * 16) / this.gridCount}px`;
+        this.resourceSliderWidth = Math.ceil(window.innerWidth * 0.67 - 7) < 960
+          ? 960 : Math.ceil(window.innerWidth * 0.67 - 7);
+        this.formItemWidth = `${(window.innerWidth - this.leftLayoutWidth - (this.navStick ? 276 : 76) - this.gridCount * 16) / this.gridCount}px`;
       }
     }
   };
@@ -386,9 +401,47 @@
         }
       }
     }
+    .operate-dropdown-menu {
+      margin-top: 12px;
+      .bk-dropdown-content {
+        padding-top: 0;
+        cursor: pointer;
+      }
+      &.disabled,
+      &.disabled *,
+      .quit-disabled,
+      .handover-disabled,
+      .remove-disabled,
+      .renewal-disabled {
+        background-color: #ffffff !important;
+        border-color: #dcdee5 !important;
+        color: #c4c6cc !important;
+        cursor: not-allowed;
+      }
+      &.disabled,
+      &.disabled * {
+        background-color: #dcdee5 !important;
+        color: #ffffff !important;
+      }
+    }
     /deep/ .my-perm-resource-search {
       background-color: #f5f6fa;
       padding: 0;
+      .form-item-resource {
+        .bk-select {
+          background-color: #ffffff;
+        }
+      }
+      .left {
+        .resource-action-form {
+          .error-tips {
+            position: absolute;
+            line-height: 16px;
+            font-size: 10px;
+            color: #ea3636;
+          }
+        }
+      }
       .custom-content {
         &-form {
           display: flex;
@@ -423,29 +476,6 @@
       }
       &.no-search-data {
         display: none;
-      }
-    }
-    .operate-dropdown-menu {
-      margin-top: 12px;
-      .bk-dropdown-content {
-        padding-top: 0;
-        cursor: pointer;
-      }
-      &.disabled,
-      &.disabled *,
-      .quit-disabled,
-      .handover-disabled,
-      .remove-disabled,
-      .renewal-disabled {
-        background-color: #ffffff !important;
-        border-color: #dcdee5 !important;
-        color: #c4c6cc !important;
-        cursor: not-allowed;
-      }
-      &.disabled,
-      &.disabled * {
-        background-color: #dcdee5 !important;
-        color: #ffffff !important;
       }
     }
   }
