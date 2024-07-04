@@ -36,7 +36,7 @@
                   'set-translate': temp.tableData.length > 1
                     && formatResourceTypeTotal(temp) % 2 === 0
                     && (((formatSourceDistance(temp) === actionIndex && !formatHasMultipleResourceType(temp)
-                      || temp.tableData.length % 2 === 0)))
+                      || formatSourceAlign(temp) )))
                 }
               ]"
               :style="{
@@ -535,13 +535,35 @@
             if (resourceGroups.length > 0) {
               const curIndex = Math.floor(this.formatResourceTypeTotal(payload) / 2);
               const hasMultipleResourceType = resourceGroups.filter((v, i) =>
-                v.related_resource_types.length > 1 && i < curIndex);
+              v.related_resource_types.length > 1 && i < curIndex);
+              // console.log(curIndex, this.formatResourceTypeTotal(payload), hasMultipleResourceType.length, '位置');
               return hasMultipleResourceType.length > 0 && curIndex - hasMultipleResourceType.length > -1
                 ? curIndex - hasMultipleResourceType.length
                 : curIndex;
             }
             return this.formatResourceTypeTotal(payload);
           }
+        };
+      },
+      // 判断添加来源的位置是否要位于中间边框线
+      formatSourceAlign () {
+        return (payload) => {
+          if (payload.tableData && payload.tableData.length) {
+            const resourceGroups = payload.tableData.map((v) => v.resource_groups).flat(Infinity);
+            if (resourceGroups.length > 0) {
+              const curIndex = Math.floor(this.formatResourceTypeTotal(payload) / 2);
+              // 如果操作数量是基数，但是资源数量是偶数，代表前面存在一个操作有多个资源类型
+              if (this.formatResourceTypeTotal(payload) % 2 === 0 && payload.tableData.length % 2 === 1) {
+                // 获取当前位置前多个资源类型数量
+                const hasMultipleResourceType = resourceGroups.filter(
+                  (v, i) => v.related_resource_types.length > 1 && i < curIndex
+                );
+                const result = curIndex - hasMultipleResourceType.length === this.formatSourceDistance(payload);
+                return result;
+              }
+            }
+          }
+          return false;
         };
       },
       formatResourceTypeCount () {
