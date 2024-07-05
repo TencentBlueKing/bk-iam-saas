@@ -23,7 +23,7 @@
               @enter="handleSearch"
               @right-icon-click="handleSearch"
             />
-            <div class="icon-iamcenter-wrapper" @click.stop="refreshList">
+            <div class="icon-iamcenter-wrapper" @click.stop="handleRefreshList">
               <i class="iam-icon iamcenter-refresh" />
             </div>
           </div>
@@ -62,8 +62,8 @@
                 :empty-text="emptyData.text"
                 :tip-text="emptyData.tip"
                 :tip-type="emptyData.tipType"
-                @on-clear="refreshList"
-                @on-refresh="refreshList"
+                @on-clear="handleRefreshList"
+                @on-refresh="handleRefreshList"
               />
             </template>
           </div>
@@ -166,7 +166,7 @@
                 :empty-text="emptyData.text"
                 :tip-text="emptyData.tip"
                 :tip-type="emptyData.tipType"
-                @on-clear="refreshList"
+                @on-clear="handleRefreshList"
               />
             </div>
           </template>
@@ -953,6 +953,7 @@
         this.isFilter = false;
         this.curSystem = '';
         this.curSelectValue = [];
+        this.linearAction = [];
       },
 
       fetchErrorMsg (payload) {
@@ -993,8 +994,9 @@
         }
       },
 
-      refreshList () {
+      handleRefreshList () {
         this.keyword = '';
+        this.linearAction = [];
         this.fetchSystems();
       }
     }
