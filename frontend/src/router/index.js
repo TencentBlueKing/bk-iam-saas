@@ -170,22 +170,20 @@ export const beforeEach = async (to, from, next) => {
     }
   }
 
-  if (['applyJoinUserGroup', 'applyCustomPerm', 'myManageSpace', 'myPerm', 'permTransfer', 'permRenewal'].includes(to.name)
-      || (['permRenewal'].includes(to.name) && ['email', 'notification'].includes(to.query.source))) {
+  if (!getRouterDiff('staff').includes(to.name) || (['permRenewal'].includes(to.name) && ['email', 'notification'].includes(to.query.source))) {
     await store.dispatch('role/updateCurrentRole', { id: 0 });
     await store.dispatch('userInfo');
     curRole = 'staff';
     navDiffMenuIndex(0);
   }
  
-  if (['userGroup', 'permTemplate'].includes(to.name)) {
+  if (!getRouterDiff(curRole).includes(to.name) && !['', 'staff'].includes(curRole) && curRoleId > 0) {
     await store.dispatch('role/updateCurrentRole', { id: curRoleId });
     navDiffMenuIndex(1);
   }
 
   if (to.name === 'userGroupDetail') {
     navDiffMenuIndex(1);
-    store.dispatch('versionLogInfo');
     if (existValue('externalApp') && to.query.hasOwnProperty('role_id')) {
       getExternalRole();
     } else {
@@ -210,7 +208,6 @@ export const beforeEach = async (to, from, next) => {
       }
     }
   } else if (to.name === 'userGroup') {
-    store.dispatch('versionLogInfo');
     if (currentRoleId) {
       await getManagerInfo();
     } else {
@@ -220,11 +217,17 @@ export const beforeEach = async (to, from, next) => {
         if (curRole === 'staff') {
           // 单独处理返回个人staff不需要重定向我的权限的路由
           const routeNavMap = [
-            [(name) => ['myManageSpace'].includes(name), () => next()],
+            [(name) => !getNavRouterDiff(0).includes(name), () => next()],
             [(name) => ['ratingManager'].includes(name), () => next({ path: `${SITE_URL}${to.fullPath}` })]
           ];
-          const getRouteNav = routeNavMap.find((item) => item[0](to.name));
-          getRouteNav ? getRouteNav[1]() : next({ path: `${SITE_URL}my-perm` });
+          if (navIndex > 0) {
+            await getManagerInfo();
+            navDiffMenuIndex(navIndex);
+            next();
+          } else {
+            const getRouteNav = routeNavMap.find((item) => item[0](to.name));
+            getRouteNav ? getRouteNav[1]() : next({ path: `${SITE_URL}my-perm` });
+          }
           // next({ path: `${SITE_URL}my-perm` });
         } else {
           next();
@@ -256,22 +259,27 @@ export const beforeEach = async (to, from, next) => {
       difference = getNavRouterDiff(navIndex, hasManagerPerm);
     }
     if (difference.length) {
-      store.dispatch('versionLogInfo');
       if (difference.includes(to.name)) {
         store.commit('setHeaderTitle', '');
         window.localStorage.removeItem('iam-header-title-cache');
         window.localStorage.removeItem('iam-header-name-cache');
-        if (curRole === 'staff' || curRole === '') {
+        if (['', 'staff'].includes(curRole)) {
           if (existValue('externalApp')) { // 外部嵌入页面
             next();
           } else {
             // 单独处理返回个人staff不需要重定向我的权限的路由
             const routeNavMap = [
-              [(name) => ['myManageSpace'].includes(name), () => next()],
+              [(name) => !getNavRouterDiff(0).includes(name), () => next()],
               [(name) => ['ratingManager'].includes(name), () => next({ path: `${SITE_URL}${to.fullPath}` })]
             ];
-            const getRouteNav = routeNavMap.find((item) => item[0](to.name));
-            getRouteNav ? getRouteNav[1]() : next({ path: `${SITE_URL}my-perm` });
+            if (navIndex > 0) {
+              await getManagerInfo();
+              navDiffMenuIndex(navIndex);
+              next();
+            } else {
+              const getRouteNav = routeNavMap.find((item) => item[0](to.name));
+              getRouteNav ? getRouteNav[1]() : next({ path: `${SITE_URL}my-perm` });
+            }
           }
         } else {
           if (['groupPermRenewal', 'userGroup', 'userGroupDetail', 'createUserGroup', 'userGroupPermDetail'].includes(to.name)) {
@@ -279,19 +287,12 @@ export const beforeEach = async (to, from, next) => {
             window.localStorage.setItem('index', 1);
             next();
           }
-                    
-          if (to.name === 'apply') {
-            store.commit('updateIndex', 0);
-            window.localStorage.setItem('index', 0);
+          if (existValue('externalApp')) {
             next();
           } else {
-            if (existValue('externalApp')) {
-              next();
-            } else {
-              next({ path: `${SITE_URL}${defaultRoute[navIndex]}` });
-            }
-            // next({ path: `${SITE_URL}user-group` });
+            next({ path: `${SITE_URL}${defaultRoute[navIndex]}` });
           }
+          // next({ path: `${SITE_URL}user-group` });
         }
         // next();
       } else {

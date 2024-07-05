@@ -825,12 +825,6 @@
                 });
               }
             });
-            // 监听新增或移除的操作，重新组装数据
-            this.getFilterAggregateAction();
-            // 这里是为了处理无限制和无资源实例后台都是空数据的情况，所以为了兼容编辑回显状态下为空的数据，首次加载不需要调用批量无限制
-            if (this.isAllUnlimited) {
-              this.handleUnlimitedActionChange(this.isAllUnlimited);
-            }
             return allActionIds;
         }
     },
@@ -864,6 +858,12 @@
       },
       curSelectActions (value) {
         this.aggregationsTableData = this.aggregationsTableData.filter(item => value.includes(item.id));
+        // 监听新增或移除的操作，重新组装数据
+        this.getFilterAggregateAction();
+        // 这里是为了处理无限制和无资源实例后台都是空数据的情况，所以为了兼容编辑回显状态下为空的数据，首次加载不需要调用批量无限制
+        if (this.isAllUnlimited) {
+          this.handleUnlimitedActionChange(this.isAllUnlimited);
+        }
       },
       tableData: {
         handler (value) {
