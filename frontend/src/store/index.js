@@ -259,14 +259,6 @@ const currentNav = [
     path: `${SITE_URL}rating-manager`,
     disabled: false
   },
-  // {
-  //     icon: 'grade-admin',
-  //     id: 'firstManageSpaceNav',
-  //     rkey: 'firstManageSpace',
-  //     name: il8n('nav', '一级管理空间'),
-  //     path: `${SITE_URL}first-manage-space`,
-  //     disabled: false
-  // },
   {
     icon: 'perm-manage',
     name: il8n('common', '设置'),

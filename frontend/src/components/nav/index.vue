@@ -250,8 +250,6 @@
     [['myManageSpace', 'myManageSpaceCreate', 'gradingAdminDetail', 'gradingAdminEdit', 'gradingAdminCreate', 'myManageSpaceSubDetail', 'secondaryManageSpaceEdit'], 'myManageSpaceNav'],
     // 分级管理员
     [['ratingManager', 'gradingAdminDetail', 'gradingAdminCreate', 'gradingAdminEdit'], 'gradingAdminNav'],
-    // 管理空间
-    [['firstManageSpace', 'firstManageSpaceCreate'], 'firstManageSpaceNav'],
     // 二级管理空间
     [['secondaryManageSpace', 'secondaryManageSpaceCreate', 'secondaryManageSpaceDetail'], 'secondaryManageSpaceNav'],
     // 授权边界
