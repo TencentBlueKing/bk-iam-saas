@@ -402,7 +402,6 @@
                         });
                     }
                 });
-                this.getFilterAggregateAction();
                 return allActionIds;
             }
     },
@@ -445,6 +444,7 @@
       },
       curSelectActions (value) {
         this.aggregationsTableData = this.aggregationsTableData.filter(item => value.includes(item.id));
+        this.getFilterAggregateAction();
       },
       tableData: {
         handler (value) {
