@@ -23,7 +23,7 @@
               @enter="handleSearch"
               @right-icon-click="handleSearch"
             />
-            <div class="icon-iamcenter-wrapper" @click.stop="refreshList">
+            <div class="icon-iamcenter-wrapper" @click.stop="handleRefreshList">
               <i class="iam-icon iamcenter-refresh" />
             </div>
           </div>
@@ -973,6 +973,7 @@
         this.isFilter = false;
         this.curSystem = '';
         this.curSelectValue = [];
+        this.linearAction = [];
       },
 
       fetchErrorMsg (payload) {
@@ -1017,14 +1018,15 @@
         this.resetData();
       },
 
-      refreshList () {
+      handleRefreshList () {
         this.keyword = '';
+        this.linearAction = [];
         this.fetchSystems();
       },
             
       handleEmptyClear () {
         this.emptyData.tipType = '';
-        this.refreshList();
+        this.handleRefreshList();
       },
 
       handleEmptyRefresh () {
