@@ -8,7 +8,13 @@
         @on-change="handleTableSearch"
       />
     </div>
-    <div v-if="!isLoading && !isEmpty" class="group-perm-policy-wrapper-content">
+    <div
+      v-if="!isLoading && !isEmpty"
+      :class="[
+        'group-perm-policy-wrapper-content',
+        { 'is-show-notice': showNoticeAlert && showNoticeAlert() }
+      ]"
+    >
       <GroupPermTable
         mode="detail"
         :is-loading="isLoading"
@@ -40,6 +46,7 @@
   const CUSTOM_CUSTOM_TEMPLATE_ID = 0;
 
   export default {
+    inject: ['showNoticeAlert'],
     components: {
       IamSearchSelect,
       GroupPermTable
@@ -390,6 +397,9 @@
     &::-webkit-scrollbar-track {
       background: transparent;
       border-radius: 3px;
+    }
+    &.is-show-notice {
+      max-height: calc(100vh - 363px);
     }
   }
   .empty-wrapper {

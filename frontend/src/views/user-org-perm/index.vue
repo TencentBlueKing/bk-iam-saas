@@ -601,9 +601,9 @@
         const distances = window.innerHeight - 51 - 51 - 42 - 8;
         if (['search'].includes(payload)) {
           if (this.expandData[payload].isExpand) {
-            this.listHeight = this.showNoticeAlert ? distances - 157 - 40 : distances - 157;
+            this.listHeight = this.showNoticeAlert && this.showNoticeAlert() ? distances - 157 - 40 : distances - 157;
           } else {
-            this.listHeight = this.showNoticeAlert ? distances - 40 : distances;
+            this.listHeight = this.showNoticeAlert && this.showNoticeAlert() ? distances - 40 : distances;
             this.$refs.leftLayoutRef.currentSelectList = [];
           }
           this.pageConf = Object.assign(this.pageConf, {

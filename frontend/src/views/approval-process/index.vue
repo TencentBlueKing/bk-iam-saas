@@ -16,7 +16,7 @@
         'iam-approval-process-set-content-wrapper',
         { 'set-style': isShowProcessSelect },
         { 'hide-process-table': isShowProcessTable },
-        { 'show-notice-alert': showNoticeAlert }
+        { 'show-notice-alert': showNoticeAlert && showNoticeAlert() }
       ]"
     >
       <bk-tab

@@ -108,9 +108,17 @@
             padding: 13px 12px 14px 12px;
           }
           &:last-child {
-            border-bottom: 0;
             .is-show-action {
               transform: translate(0, 0);
+            }
+          }
+        }
+        &:last-child {
+          .actions-name,
+          .resource-type-name,
+          .resource-instance-name {
+            &:last-child {
+              border-bottom: 0;
             }
           }
         }

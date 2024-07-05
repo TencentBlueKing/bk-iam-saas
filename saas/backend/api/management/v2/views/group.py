@@ -30,6 +30,7 @@ from backend.api.management.v2.serializers import (
     ManagementGroupPolicyDeleteSLZ,
     ManagementGroupRevokeSLZ,
     ManagementGroupSLZ,
+    ManagementGroupSubjectTemplateSLZ,
     ManagementQueryGroupSLZ,
 )
 from backend.apps.group.audit import (
@@ -49,6 +50,7 @@ from backend.apps.group.views import split_members_to_subject_and_template
 from backend.apps.policy.models import Policy
 from backend.apps.policy.serializers import PolicySLZ
 from backend.apps.role.models import Role
+from backend.apps.subject_template.models import SubjectTemplate, SubjectTemplateGroup
 from backend.audit.audit import add_audit, audit_context_setter, view_audit_decorator
 from backend.audit.constants import AuditSourceType
 from backend.biz.group import (
@@ -479,6 +481,50 @@ class ManagementGroupMemberExpiredAtViewSet(GenericViewSet):
         audit_context_setter(group=group, members=data["members"])
 
         return Response({})
+
+
+class ManagementGroupSubjectTemplateViewSet(GenericViewSet):
+    """用户组类型为人员模板的成员"""
+
+    authentication_classes = [ESBAuthentication]
+    permission_classes = [ManagementAPIPermission]
+
+    management_api_permission = {
+        "list": (
+            VerifyApiParamLocationEnum.GROUP_IN_PATH.value,
+            ManagementAPIEnum.V2_GROUP_SUBJECT_TEMPLATE_LIST.value,
+        )
+    }
+
+    lookup_field = "id"
+    queryset = Group.objects.all()
+    pagination_class = CompatiblePagination
+
+    @swagger_auto_schema(
+        operation_description="用户组人员模板成员列表",
+        responses={status.HTTP_200_OK: ManagementGroupMemberSLZ(label="用户组人员模板成员信息", many=True)},
+        tags=["management.role.group.subject_template"],
+    )
+    def list(self, request, *args, **kwargs):
+        group = self.get_object()
+
+        # 查询用户组拥有的权限模板
+        queryset = SubjectTemplateGroup.objects.filter(group_id=group.id)
+
+        # 查询模板名称
+        subject_template_ids = list(queryset.values_list("template_id", flat=True))
+        subject_template_name_map = dict(
+            SubjectTemplate.objects.filter(id__in=subject_template_ids).values_list("id", "name")
+        )
+
+        # 分页
+        page = self.paginate_queryset(queryset)
+        assert page is not None
+
+        serializer = ManagementGroupSubjectTemplateSLZ(
+            page, many=True, context={"subject_template_name_map": subject_template_name_map}
+        )
+        return self.get_paginated_response(serializer.data)
 
 
 class ManagementGroupPolicyViewSet(GenericViewSet):

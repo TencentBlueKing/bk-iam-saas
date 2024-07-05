@@ -1,6 +1,11 @@
 <template>
   <div class="temp-group-sync-wrapper">
-    <div class="temp-group-sync-content">
+    <div
+      :class="[
+        'temp-group-sync-content',
+        { 'is-show-notice': showNoticeAlert && showNoticeAlert() }
+      ]"
+    >
       <div
         class="temp-group-sync-table"
         v-for="(group, groupIndex) in syncGroupList"
@@ -313,6 +318,7 @@
         getResourceSliderWidth: () => this.resourceSliderWidth
       };
     },
+    inject: ['showNoticeAlert'],
     components: {
       RenderResourcePopover,
       RenderCondition,

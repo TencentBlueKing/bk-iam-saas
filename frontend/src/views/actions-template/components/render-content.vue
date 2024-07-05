@@ -303,6 +303,7 @@
   import RenderSyncGroup from './difference';
 
   export default {
+    inject: ['showNoticeAlert'],
     components: {
       RenderDetail,
       RenderAction,
@@ -1240,7 +1241,7 @@
         if (this.isShowActionError) {
           listHeight -= 32;
         }
-        if (this.isShowNoticeAlert) {
+        if (this.showNoticeAlert && this.showNoticeAlert()) {
           listHeight = listHeight - this.noticeBarHeight;
         }
         if (this.commonActions.length > 0 && this.$refs.commonActionRef) {

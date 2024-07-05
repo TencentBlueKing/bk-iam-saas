@@ -60,7 +60,7 @@
       return {
         reload: this.reload,
         reloadCurPage: this.reloadCurPage,
-        showNoticeAlert: this.isShowNoticeAlert
+        showNoticeAlert: () => this.isShowNoticeAlert
       };
     },
     components: {
