@@ -1,22 +1,21 @@
 <template>
-  <div class="all-custom-perm">
-    <!-- <div
-        :class="[
-          'all-custom-perm-all',
-          { 'all-custom-perm-all-active': active === 'all' }
-        ]"
-        @click.stop="handleSelectPerm({ id: 'all', isFirst: false })"
-      > -->
-    <!-- <div :class="['all-custom-perm-all', { 'all-custom-perm-all-active': active === 'all' }]">
-        <div class="system-all-text">
-          <div class="system-all-text-name">
-            {{ $t(`m.sensitivityLevel['全部系统']`) }}
-          </div>
+  <div class="my-perm-left-layout">
+    <div class="flex-between my-perm-left-layout-all">
+      <div class="renewal-perm-label">
+        <div>
+          <Icon
+            type="file-close"
+            class="icon"
+          />
         </div>
-        <div class="system-all-total">{{ systemTotal }}</div>
-      </div> -->
+        <div class="name">
+          {{ $t(`m.perm['可续期']`) }}
+        </div>
+      </div>
+      <div class="renewal-perm-total">{{ systemTotal || 0}}</div>
+    </div>
     <div
-      class="all-custom-perm-content"
+      class="my-perm-left-layout-content"
       :style="formatSystemsHeight"
       v-bkloading="{
         isLoading: systemLoading,
@@ -29,26 +28,31 @@
           v-for="item in permList"
           :key="item.id"
           :class="[
-            'all-custom-perm-item',
-            { 'all-custom-perm-item-active': item.id === active }
+            'flex-between',
+            'my-perm-left-layout-item',
+            { 'my-perm-left-layout-item-active': item.value === active }
           ]"
           @click.stop="handleSelectPerm(item)"
         >
-          <div class="sensitivity-system-name">
-            <div
-              :style="{ width: `${getDragWidth() - 50}px` }"
-              class="sensitivity-system-name-left"
-            >
+          <div class="perm-type-content">
+            <div class="perm-type-name">
+              <div
+                v-if="['all'].includes(item.value)"
+                class="folder-icon"
+              >
+                All
+              </div>
               <Icon
+                v-else
                 type="file-close"
-                :class="['folder-icon', { 'folder-icon-active': item.id === active }]"
+                class="folder-icon"
               />
-              <div class="single-hide">
-                {{ item.name }}
+              <div class="label single-hide">
+                {{ item.label }}
               </div>
             </div>
           </div>
-          <div class="sensitivity-system-count">{{ item.count || 0 }}</div>
+          <div class="perm-type-count">{{ item.count || 0 }}</div>
         </div>
       </template>
     </div>
@@ -56,31 +60,52 @@
 </template>
   
 <script>
-  import _ from 'lodash';
+  // import { cloneDeep } from 'lodash';
   import { mapGetters } from 'vuex';
   import { bus } from '@/common/bus';
   import { formatCodeData, getWindowHeight } from '@/common/util';
   export default {
-    inject: {
-      getDragWidth: { value: 'getDragWidth', default: 280 }
-    },
     data () {
       return {
-        active: '',
-        systemLoading: false,
-        systemTotal: 0,
-        systemValue: '',
-        permList: [],
+        active: 'all',
+        permList: [
+          {
+            label: this.$t(`m.perm['全部权限']`),
+            value: 'all',
+            icon: '',
+            count: 0
+          },
+          {
+            label: this.$t(`m.userOrOrg['个人用户组权限']`),
+            value: 'personalPerm',
+            icon: '',
+            count: 0
+          },
+          {
+            label: this.$t(`m.userOrOrg['组织用户组权限']`),
+            value: 'departPerm',
+            icon: '',
+            count: 0
+          },
+          {
+            label: this.$t(`m.userOrOrg['人员模板用户组权限']`),
+            value: 'memberTempPerm',
+            icon: '',
+            count: 0
+          },
+          {
+            label: this.$t(`m.perm['自定义权限']`),
+            value: 'customPerm',
+            count: 0
+          },
+          {
+            label: this.$t(`m.perm['管理员权限']`),
+            value: 'managerPerm',
+            count: 0
+          }
+        ],
         permListBack: [],
-        allSystemData: {
-          all: 0,
-          L1: 0,
-          L2: 0,
-          L3: 0,
-          L4: 0,
-          L5: 0
-        },
-        emptySystemData: {
+        emptyPermData: {
           type: '',
           text: '',
           tip: '',
@@ -118,13 +143,13 @@
       //       this.permList = await this.getSystemCount(list);
       //       this.permListBack = [...this.permList];
       //     }
-      //     this.emptySystemData = formatCodeData(
+      //     this.emptyPermData = formatCodeData(
       //       code,
-      //       this.emptySystemData,
+      //       this.emptyPermData,
       //       list.length === 0
       //     );
       //   } catch (e) {
-      //     this.emptySystemData = formatCodeData(e.code, this.emptySystemData);
+      //     this.emptyPermData = formatCodeData(e.code, this.emptyPermData);
       //     this.messageAdvancedError(e);
       //   } finally {
       //     this.systemLoading = false;
@@ -165,40 +190,34 @@
       // },
 
       async handleSelectPerm (payload) {
-        const { id, levelItem, isFirst } = payload;
-        this.active = id;
-        let list = [];
-        const params = {
-        ...levelItem
-        };
-        if (isFirst) {
-          this.$set(params, 'isFirst', isFirst);
-          this.$emit('on-select-system', payload);
-          bus.$emit('on-systems-level-count', params);
-        } else {
-          list = await this.getSystemCount([payload]);
-          this.$set(params, 'isFirst', isFirst);
-          this.$emit('on-select-system', list[0]);
-          bus.$emit('on-systems-level-count', list[0].levelItem);
-        }
+        const { value } = payload;
+        this.active = value;
+        // const list = [];
+        // const params = {
+        // ...levelItem
+        // };
+        // if (isFirst) {
+        //   this.$set(params, 'isFirst', isFirst);
+        //   this.$emit('on-select-system', payload);
+        bus.$emit('on-systems-level-count');
+        // } else {
+        //   list = await this.getSystemCount([payload]);
+        //   this.$set(params, 'isFirst', isFirst);
+        //   this.$emit('on-select-system', list[0]);
+        //   bus.$emit('on-systems-level-count', list[0].levelItem);
+        // }
       },
 
       handleSearchSystem () {
-        this.emptySystemData.tipType = 'search';
+        this.emptyPermData.tipType = 'search';
         this.permList = this.permListBack.filter(
           (item) =>
             item.name.indexOf(this.systemValue) > -1
             || item.id.toLowerCase().indexOf(this.systemValue.toLowerCase()) > -1
         );
         if (!this.permList.length) {
-          this.emptySystemData = formatCodeData(0, this.emptySystemData);
+          this.emptyPermData = formatCodeData(0, this.emptyPermData);
         }
-      },
-
-      handleClearSystem () {
-        this.systemValue = '';
-        this.emptySystemData.tipType = '';
-        this.permList = _.cloneDeep(this.permListBack);
       },
 
       async handleEmptyRefresh () {
@@ -209,48 +228,47 @@
 </script>
   
 <style lang="postcss" scoped>
-.all-custom-perm {
+.my-perm-left-layout {
   position: relative;
   flex-basis: 280px;
-  .all-custom-perm-all {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px;
-    cursor: pointer;
-    .system-all-text {
+  &-all {
+    padding: 16px 24px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #dcdee5;
+    .renewal-perm-label {
       display: flex;
-      font-size: 13px;
-      /* &-name {
-        margin-left: 5px;
-      } */
+      align-items: center;
+      .name {
+        font-size: 13px;
+      }
+      .icon {
+        font-size: 14px;
+        margin-right: 8px;
+      }
     }
-    .system-all-total {
+    .renewal-perm-total {
       background-color: #eaebf0;
       color: #979ba5;
       font-size: 12px;
       border-radius: 2px;
-      padding: 0 7px;
+      padding: 0 8px;
     }
     &-active {
       background-color: #e1ecff;
       color: #3a84ff;
-      .system-all-total {
+      .renewal-perm-total {
         background-color: #a3c5fd;
         color: #ffffff;
       }
     }
   }
-  .all-custom-perm-border {
+  &-border {
     width: 100%;
     height: 1px;
     background-color: #dcdee5;
     margin-top: 8px;
   }
-  .all-custom-perm-search {
-    margin-bottom: 10px;
-  }
-  .all-custom-perm-content {
+  &-content {
     position: relative;
     overflow-y: auto;
     &::-webkit-scrollbar {
@@ -266,19 +284,17 @@
       background: transparent;
       border-radius: 3px;
     }
-    .all-custom-perm-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 7px 5px;
-      margin-bottom: 5px;
+    .my-perm-left-layout-item {
+      padding: 8px;
+      margin: 0 16px 7px 16px;
+      border-radius: 4px;
       cursor: pointer;
-      .sensitivity-system-name {
+      .perm-type-content {
         display: flex;
         align-items: center;
         font-size: 13px;
         color: #63656e;
-        &-left {
+        .perm-type-name {
           display: flex;
           align-items: center;
           word-break: break-all;
@@ -292,7 +308,7 @@
           }
         }
       }
-      .sensitivity-system-count {
+      .perm-type-count {
         background-color: #eaebf0;
         color: #979ba5;
         font-size: 12px;
@@ -301,10 +317,15 @@
       }
       &-active {
         background-color: #e1ecff;
-        .sensitivity-system-name {
-          color: #3a84ff;
+        .perm-type-content {
+          .perm-type-name {
+            color: #3a84ff;
+            .folder-icon {
+              color: #3a84ff;
+            }
+          }
         }
-        .sensitivity-system-count {
+        .perm-type-count {
           background-color: #a3c5fd;
           color: #ffffff;
         }
