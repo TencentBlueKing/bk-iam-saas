@@ -76,13 +76,10 @@ export const beforeEach = async (to, from, next) => {
     store.commit('updateSystemId', externalSystemId);
     await fetchExternalSystemsLayout(externalSystemId);
   }
-
   bus.$emit('close-apply-perm-modal');
-
   canceling = true;
   await cancelRequest();
   canceling = false;
-
   let curRole = store.state.user.role.type;
   let navIndex = store.state.index || Number(window.localStorage.getItem('index') || 0);
   let currentRoleId = String(to.query.current_role_id || '').trim();
@@ -154,84 +151,100 @@ export const beforeEach = async (to, from, next) => {
     window.localStorage.setItem('index', index);
   }
 
-  // 如果进入没有权限，重新找roleList, 蓝盾交互不需要判断
-  const isEXternal = !(existValue('externalApp') || to.query.hasOwnProperty('role_id'));
-  if (['', 'staff'].includes(curRole) && navIndex > 0 && isEXternal) {
+  let curRoleList = [];
+  const noFrom = !from.name;
+  // 是否是嵌入系统
+  const isNoIframe = !(existValue('externalApp') || to.query.hasOwnProperty('role_id'));
+  // 如果进入没有权限
+  const isNoPerm = ['', 'staff'].includes(curRole) && navIndex > 0;
+  // 跳转的页面是否需要非管理员用户界面
+  const isStaff = !getNavRouterDiff(0).includes(to.name) || (['permRenewal'].includes(to.name) && ['email', 'notification'].includes(to.query.source));
+  // 处理新标签页链接是管理员页面 ，但是上次用户信息是staff
+  const isManagerPage = !isStaff && noFrom && navIndex < 1;
+  // 如果进入没有权限或者是拿到的上次用户信息是非管理员身份但是新开标签页是管理员页面， 蓝盾交互不需要判断
+  if ((isNoPerm || isManagerPage) && isNoIframe) {
     const roleList = await store.dispatch('roleList', {
       cancelWhenRouteChange: false,
-      cancelPrevious: false
+      cancelPrevious: false,
+      limit: 100
     });
-    if (roleList.length) {
-      const { id } = roleList[0];
-      currentRoleId = id;
-      curRoleId = id;
-      store.commit('updateCurRoleId', id);
+    if (roleList && roleList.length > 0) {
+      curRoleList = [...roleList];
+      // 只有管理员页面才需要提供默认管理员身份
+      if (navIndex > 0 && !isStaff) {
+        const { id } = roleList[0];
+        [curRoleId, currentRoleId] = [id, id];
+        store.commit('updateCurRoleId', id);
+        await getManagerInfo();
+      }
+    }
+  }
+  // 因为管理空间下菜单还需要细分具体管理员身份，所以getRouterDiff用于分配管理空间导航栏下的路由，getNavRouterDiff用于分配其他几个导航栏的路由
+  // 处理非管理空间模块路由跳转校验
+  if (navIndex !== 1 || (navIndex > 0 && isStaff)) {
+    if (isStaff) {
+      curRoleId = 0;
+      navIndex = 0;
+      store.commit('updateCurRoleId', 0);
+    }
+    currentRoleId = curRoleId;
+    navDiffMenuIndex(navIndex);
+    await getManagerInfo();
+  } else {
+    //  处理管理空间模块路由跳转校验
+    if (!['', 'staff'].includes(curRole) && curRoleId > 0) {
+      // 查找当页面是否在管理空间模块
+      const isManageSpace = !getRouterDiff(curRole).includes(to.name);
+      if (!isManageSpace) {
+        const allNavIndex = [0, 2, 3];
+        // 根据路由名称筛选当前页面所在模块位置
+        const curPageIndex = allNavIndex.findIndex((v) => !getNavRouterDiff(v).includes(to.name));
+        if (curPageIndex > -1) {
+          if (curPageIndex === 0) {
+            curRoleId = 0;
+            currentRoleId = 0;
+          }
+          navIndex = allNavIndex[curPageIndex];
+        }
+      }
+      currentRoleId = curRoleId;
+      navDiffMenuIndex(navIndex);
       await getManagerInfo();
     }
   }
-
-  if (!getRouterDiff('staff').includes(to.name) || (['permRenewal'].includes(to.name) && ['email', 'notification'].includes(to.query.source))) {
-    await store.dispatch('role/updateCurrentRole', { id: 0 });
-    await store.dispatch('userInfo');
-    curRole = 'staff';
-    navDiffMenuIndex(0);
-  }
- 
-  if (!getRouterDiff(curRole).includes(to.name) && !['', 'staff'].includes(curRole) && curRoleId > 0) {
-    await store.dispatch('role/updateCurrentRole', { id: curRoleId });
-    navDiffMenuIndex(1);
-  }
-
   if (to.name === 'userGroupDetail') {
     navDiffMenuIndex(1);
     if (existValue('externalApp') && to.query.hasOwnProperty('role_id')) {
       getExternalRole();
     } else {
-      if (currentRoleId) {
-        // const currentRole = roleList.find((item) => String(item.id) === currentRoleId);
-        // 从之前的拓扑接口更换成一级、二级接口
-        // const currentRole = getTreeNode(+currentRoleId, roleList);
-        await getManagerInfo();
-      } else {
-        const noFrom = !from.name;
-        // 说明是刷新页面
-        if (noFrom) {
-          if (existValue('externalApp') || to.query.noFrom) {
-            next();
-          } else {
-            next();
-            // next({ path: `${SITE_URL}${defaultRoute[navIndex]}` });
-          }
+      // 说明是刷新页面
+      if (noFrom) {
+        if (existValue('externalApp') || to.query.noFrom) {
+          next();
         } else {
           next();
+          // next({ path: `${SITE_URL}${defaultRoute[navIndex]}` });
         }
+      } else {
+        next();
       }
     }
   } else if (to.name === 'userGroup') {
-    if (currentRoleId) {
-      await getManagerInfo();
+    if (existValue('externalApp')) { // 外部嵌入页面
+      next();
     } else {
-      if (existValue('externalApp')) { // 外部嵌入页面
-        next();
-      } else {
-        if (curRole === 'staff') {
-          // 单独处理返回个人staff不需要重定向我的权限的路由
-          const routeNavMap = [
-            [(name) => !getNavRouterDiff(0).includes(name), () => next()],
-            [(name) => ['ratingManager'].includes(name), () => next({ path: `${SITE_URL}${to.fullPath}` })]
-          ];
-          if (navIndex > 0) {
-            await getManagerInfo();
-            navDiffMenuIndex(navIndex);
-            next();
-          } else {
-            const getRouteNav = routeNavMap.find((item) => item[0](to.name));
-            getRouteNav ? getRouteNav[1]() : next({ path: `${SITE_URL}my-perm` });
-          }
-          // next({ path: `${SITE_URL}my-perm` });
-        } else {
-          next();
+      if (curRole === 'staff') {
+        // 单独处理返回个人staff不需要重定向我的权限的路由
+        const routeNavMap = [
+          [(name) => !getNavRouterDiff(0).includes(name), () => next()],
+          [(name) => ['ratingManager'].includes(name), () => next({ path: `${SITE_URL}${to.fullPath}` })]
+        ];
+        const getRouteNav = routeNavMap.find((item) => item[0](to.name));
+        if (getRouteNav) {
+          getRouteNav[1]();
         }
+      } else {
+        next();
       }
     }
   } else {
@@ -272,14 +285,58 @@ export const beforeEach = async (to, from, next) => {
               [(name) => !getNavRouterDiff(0).includes(name), () => next()],
               [(name) => ['ratingManager'].includes(name), () => next({ path: `${SITE_URL}${to.fullPath}` })]
             ];
-            if (navIndex > 0) {
-              await getManagerInfo();
-              navDiffMenuIndex(navIndex);
-              next();
-            } else {
-              const getRouteNav = routeNavMap.find((item) => item[0](to.name));
-              getRouteNav ? getRouteNav[1]() : next({ path: `${SITE_URL}my-perm` });
+            const getRouteNav = routeNavMap.find((item) => item[0](to.name));
+            if (getRouteNav) {
+              getRouteNav[1]();
+              return;
             }
+            if (isManagerPage) {
+              const superData = curRoleList.find((v) => ['super_manager'].includes(v.type));
+              const managerData = curRoleList.find((v) => !['staff'].includes(v.type));
+              const isAudit = !getNavRouterDiff(2).includes(to.name);
+              const isPlatForm = !getNavRouterDiff(3).includes(to.name);
+              // 如果跳转的页面必须是超管身份才能访问
+              if (superData && (isAudit || isPlatForm)) {
+                const { id } = superData;
+                [currentRoleId, curRoleId] = [id, id];
+                navDiffMenuIndex(isAudit ? 2 : 3);
+                await getManagerInfo();
+                next();
+                return;
+              }
+              // 如果跳转的页面只需要是管理员即可访问
+              if (managerData) {
+                const { type } = managerData;
+                let isManageSpace = false;
+                let curManagerData = {};
+                isManageSpace = !getRouterDiff(type).includes(to.name);
+                curManagerData = Object.assign({}, managerData);
+                // 没找到这个页面也可能是管理空间导航栏下页面限制了具体管理员身份才能访问
+                const systemManagerData = curRoleList.find((v) => ['system_manager'].includes(v.type));
+                const ratingManagerData = curRoleList.find((v) => ['rating_manager'].includes(v.type));
+                const subSetManager = curRoleList.find((v) => ['subset_manager'].includes(v.type));
+                if (systemManagerData && !isManageSpace) {
+                  curManagerData = Object.assign({}, systemManagerData);
+                  isManageSpace = !getRouterDiff(systemManagerData.type).includes(to.name);
+                }
+                if (ratingManagerData && !isManageSpace) {
+                  curManagerData = Object.assign({}, ratingManagerData);
+                  isManageSpace = !getRouterDiff(ratingManagerData.type).includes(to.name);
+                }
+                if (subSetManager && !isManageSpace) {
+                  curManagerData = Object.assign({}, subSetManager);
+                  isManageSpace = !getRouterDiff(ratingManagerData.type).includes(to.name);
+                }
+                if (isManageSpace && curManagerData.id) {
+                  [currentRoleId, curRoleId] = [curManagerData.id, curManagerData.id];
+                  navDiffMenuIndex(1);
+                  await getManagerInfo();
+                  next();
+                  return;
+                }
+              }
+            }
+            // getRouteNav ? getRouteNav[1]() : next({ path: `${SITE_URL}my-perm` });
           }
         } else {
           if (['groupPermRenewal', 'userGroup', 'userGroupDetail', 'createUserGroup', 'userGroupPermDetail'].includes(to.name)) {
@@ -296,21 +353,8 @@ export const beforeEach = async (to, from, next) => {
         }
         // next();
       } else {
-        const noFrom = !from.name;
         if (['permTemplateDetail', 'permTemplateEdit', 'permTemplateDiff'].includes(to.name) && noFrom) {
           next({ path: `${SITE_URL}perm-template` });
-        // } else if (['createUserGroup'].includes(to.name)) {
-        //   if (noFrom) {
-        //     if (existValue('externalApp')) {
-        //       next();
-        //     } else {
-        //       next({ path: `${SITE_URL}${defaultRoute[navIndex]}` });
-        //     }
-        //   } else {
-        //     next();
-        //   }
-        // } else if (['myPerm'].includes(to.name)) {
-        //   next();
         } else {
           next();
         }

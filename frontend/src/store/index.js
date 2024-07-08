@@ -766,7 +766,7 @@ const store = new Vuex.Store({
             commit('updateIndex', 0);
           }
           state.index = state.index || Number(window.localStorage.getItem('index'));
-          if (state.index && state.index > 1) {
+          if (state.index !== 1) {
             commit('updataNavRouterDiff', state.index);
           } else {
             commit('updataRouterDiff', role);
