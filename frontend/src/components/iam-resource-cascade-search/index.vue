@@ -1018,7 +1018,6 @@
         this.gridWidth = (
           window.innerWidth - this.otherLayoutWidth - navStickWidth - (this.gridCount * Number(this.formItemMargin))
         ) / this.gridCount;
-        console.log(this.gridWidth, this.otherLayoutWidth);
         this.contentWidth = this.isFullScreen ? `${this.gridWidth}px` : this.defaultWidth;
       },
 

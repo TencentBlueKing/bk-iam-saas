@@ -12,17 +12,9 @@
           {{ $t(`m.perm['可续期']`) }}
         </div>
       </div>
-      <div class="renewal-perm-total">{{ systemTotal || 0}}</div>
+      <div class="renewal-perm-total">{{ renewalTotal }}</div>
     </div>
-    <div
-      class="my-perm-left-layout-content"
-      :style="formatSystemsHeight"
-      v-bkloading="{
-        isLoading: systemLoading,
-        opacity: 1,
-        color: '#f5f6fa'
-      }"
-    >
+    <div class="my-perm-left-layout-content">
       <template>
         <div
           v-for="item in permList"
@@ -63,11 +55,12 @@
   // import { cloneDeep } from 'lodash';
   import { mapGetters } from 'vuex';
   import { bus } from '@/common/bus';
-  import { formatCodeData, getWindowHeight } from '@/common/util';
+  import { formatCodeData } from '@/common/util';
   export default {
     data () {
       return {
         active: 'all',
+        renewalTotal: 0,
         permList: [
           {
             label: this.$t(`m.perm['全部权限']`),
@@ -114,12 +107,7 @@
       };
     },
     computed: {
-    ...mapGetters(['externalSystemId', 'user']),
-    formatSystemsHeight () {
-      return {
-        maxHeight: `${getWindowHeight() - 185}px`
-      };
-    }
+      ...mapGetters(['externalSystemId', 'user'])
     },
     methods: {
       async fetchPageData () {
@@ -230,9 +218,9 @@
 <style lang="postcss" scoped>
 .my-perm-left-layout {
   position: relative;
-  flex-basis: 280px;
   &-all {
-    padding: 16px 24px;
+    padding: 16px 0;
+    margin: 0 24px;
     margin-bottom: 8px;
     border-bottom: 1px solid #dcdee5;
     .renewal-perm-label {
