@@ -319,7 +319,6 @@
       },
       appLogo () {
         // 如果未获取到配置，使用默认logo
-        console.log(this.globalConfig.appLogo);
         const src = this.globalConfig.appLogo || logoSvg;
         return src;
       }
@@ -640,13 +639,7 @@
         // this.curHeight = document.getElementsByClassName('user-dropdown')[0].offsetHeight
         this.isShowGradingWrapper = !this.isShowGradingWrapper;
       },
-
-      handleBack () {
-        this.isShowUserDropdown = false;
-        this.isShowGradingWrapper = false;
-        this.handleSwitchRole({ id: 0, type: 'staff', name: this.user.role.name });
-      },
-
+      
       handleLogout () {
         window.localStorage.removeItem('iam-header-title-cache');
         window.localStorage.removeItem('iam-header-name-cache');
