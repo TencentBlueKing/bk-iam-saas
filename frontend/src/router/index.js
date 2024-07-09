@@ -222,26 +222,15 @@ export const beforeEach = async (to, from, next) => {
         if (existValue('externalApp') || to.query.noFrom) {
           next();
         } else {
+          // 处理从staff界面跳转到用户组详情，需要提供默认管理员身份
+          if ((curRoleId === 0 || ['', 'staff'].includes(curRole)) && curRoleList.length > 0) {
+            const { id } = curRoleList[0];
+            [curRoleId, currentRoleId] = [id, id];
+            store.commit('updateCurRoleId', id);
+            await getManagerInfo();
+          }
           next();
           // next({ path: `${SITE_URL}${defaultRoute[navIndex]}` });
-        }
-      } else {
-        next();
-      }
-    }
-  } else if (to.name === 'userGroup') {
-    if (existValue('externalApp')) { // 外部嵌入页面
-      next();
-    } else {
-      if (curRole === 'staff') {
-        // 单独处理返回个人staff不需要重定向我的权限的路由
-        const routeNavMap = [
-          [(name) => !getNavRouterDiff(0).includes(name), () => next()],
-          [(name) => ['ratingManager'].includes(name), () => next({ path: `${SITE_URL}${to.fullPath}` })]
-        ];
-        const getRouteNav = routeNavMap.find((item) => item[0](to.name));
-        if (getRouteNav) {
-          getRouteNav[1]();
         }
       } else {
         next();
