@@ -2,7 +2,10 @@
   <div class="iam-edit-selector" :style="styles">
     <template v-if="!isEditable">
       <div class="edit-wrapper">
-        <div class="edit-content" :title="displayValue.map(item => item.username) || ''">
+        <div
+          class="edit-content"
+          v-bk-tooltips="{ content: displayValue.map(item => item.username), disabled: displayValue.length < 1 }"
+        >
           <slot>
             <span
               v-for="(item, i) in displayValue"

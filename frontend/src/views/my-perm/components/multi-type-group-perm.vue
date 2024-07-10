@@ -43,7 +43,7 @@
           @on-page-change="handlePageChange(...arguments, item)"
           @on-limit-change="handleLimitChange(...arguments, item)"
           @on-selected-group="handleSelectedGroup"
-          @on-remove-group="handleRemoveGroup"
+          @on-quit-group="handleQuitGroup"
           @on-add-group="handleAddGroup"
           @on-clear="handleEmptyClear"
           @on-refresh="handleEmptyRefresh"
@@ -64,10 +64,10 @@
     </template>
   </div>
 </template>
-  
-  <script>
-  import { cloneDeep } from 'lodash';
+
+<script>
   import { mapGetters } from 'vuex';
+  import { cloneDeep } from 'lodash';
   import { bus } from '@/common/bus';
   import { formatCodeData, sleep } from '@/common/util';
   import RenderPermItem from '@/components/iam-expand-perm/index.vue';
@@ -581,7 +581,7 @@
         this.handleRefreshGroup(payload, curData.pagination.current);
       },
 
-      handleRemoveGroup (payload) {
+      handleQuitGroup (payload) {
         this.handleRefreshGroup(payload, 1);
       },
   
@@ -649,61 +649,61 @@
       }
     }
   };
-  </script>
+</script>
   
-  <style lang="postcss" scoped>
-  .user-perm-group {
-    position: relative;
-    width: 100%;
-    height: calc(100% - 190px);
-    overflow-y: auto;
-    &::-webkit-scrollbar {
-      width: 8px;
-      background-color: lighten(transparent, 80%);
-    }
-    &::-webkit-scrollbar-thumb {
-      height: 5px;
-      border-radius: 2px;
-      background-color: #e6e9ea;
-    }
-    &::-webkit-scrollbar-track {
-      background-color: transparent;
-      border-radius: 3px;
-    }
-    /deep/ .resource-perm-side-content-table {
-      margin: 12px 0;
+<style lang="postcss" scoped>
+.user-perm-group {
+  position: relative;
+  width: 100%;
+  height: calc(100% - 190px);
+  overflow-y: auto;
+  &::-webkit-scrollbar {
+    width: 8px;
+    background-color: lighten(transparent, 80%);
+  }
+  &::-webkit-scrollbar-thumb {
+    height: 5px;
+    border-radius: 2px;
+    background-color: #e6e9ea;
+  }
+  &::-webkit-scrollbar-track {
+    background-color: transparent;
+    border-radius: 3px;
+  }
+  /deep/ .resource-perm-side-content-table {
+    margin: 12px 0;
+    background-color: #ffffff;
+    &:hover {
       background-color: #ffffff;
-      &:hover {
-        background-color: #ffffff;
-      }
-      .header {
-        padding-left: 16px;
-        height: 46px;
-        line-height: 46px;
-        .sub-header-item {
-          .expanded-icon {
-            line-height: 46px;
-          }
-          &-title {
-            margin-left: 12px;
-          }
-          &-count {
-            .count {
-              color: #3a84ff;
-              font-weight: 700;
-            }
+    }
+    .header {
+      padding-left: 16px;
+      height: 46px;
+      line-height: 46px;
+      .sub-header-item {
+        .expanded-icon {
+          line-height: 46px;
+        }
+        &-title {
+          margin-left: 12px;
+        }
+        &-count {
+          .count {
+            color: #3a84ff;
+            font-weight: 700;
           }
         }
       }
     }
-    .perm-empty-wrapper {
-      position: absolute;
-      left: 50%;
-      top: 45%;
-      transform: translate(-50%, -45%);
-    }
-    &.is-show-notice {
-      height: calc(100% - 230px);
-    }
   }
-  </style>
+  .perm-empty-wrapper {
+    position: absolute;
+    left: 50%;
+    top: 45%;
+    transform: translate(-50%, -45%);
+  }
+  &.is-show-notice {
+    height: calc(100% - 230px);
+  }
+}
+</style>

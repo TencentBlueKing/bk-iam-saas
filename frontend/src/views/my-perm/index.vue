@@ -131,6 +131,7 @@
     padding-top: 12px;
     padding-right: 16px;
     box-sizing: border-box;
+    overflow: hidden;
   }
 }
 </style>

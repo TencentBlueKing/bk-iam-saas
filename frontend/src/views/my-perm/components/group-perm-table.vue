@@ -3,7 +3,7 @@
     <bk-table
       ref="groupPermRef"
       size="small"
-      ext-cls="user-org-perm-table"
+      ext-cls="user-org-perm-table my-perm-group-table"
       :data="list"
       :outer-border="false"
       :header-border="false"
@@ -15,7 +15,6 @@
       v-bkloading="{ isLoading: isLoading, opacity: 1 }"
     >
       <bk-table-column
-        v-if="['personalPerm'].includes(mode)"
         type="selection"
         align="center"
         :selectable="getDefaultSelect"
@@ -27,7 +26,8 @@
             :label="item.label"
             :prop="item.prop"
             :min-width="200"
-            :fixed="'left'">
+            :fixed="'left'"
+          >
             <template slot-scope="{ row }">
               <span
                 :ref="`name_${row.id}`"
@@ -36,9 +36,41 @@
                   content: row.name,
                   placements: ['right-start']
                 }"
-                @click.stop="handleOpenTag(row, 'userGroupDetail')">
+                @click.stop="handleViewDetail(row, 'name')">
                 {{ row.name || "--" }}
               </span>
+            </template>
+          </bk-table-column>
+        </template>
+        <template v-else-if="item.prop === 'role.name'">
+          <bk-table-column
+            :key="item.prop"
+            :label="item.label"
+            :prop="item.prop"
+            :min-width="200"
+            :show-overflow-tooltip="true"
+          >
+            <template slot-scope="{ row }">
+              <span class="role_name">{{ row.role ? row.role.name : '--' }}</span>
+            </template>
+          </bk-table-column>
+        </template>
+        <template v-else-if="item.prop === 'role_members'">
+          <bk-table-column
+            :key="item.prop"
+            :label="item.label"
+            :prop="item.prop"
+            :width="300"
+          >
+            <template slot-scope="{ row, $index }">
+              <IamEditMemberSelector
+                mode="detail"
+                field="role_members"
+                width="300"
+                :placeholder="$t(`m.verify['请输入']`)"
+                :value="formatRoleMembers(row.role_members)"
+                :index="$index"
+              />
             </template>
           </bk-table-column>
         </template>
@@ -75,7 +107,7 @@
                 v-if="row.template_id > 0 || row.department_id > 0"
                 v-bk-tooltips="{ content: formatJoinTypeTip(row), disabled: !formatJoinTypeTip(row) }"
                 class="can-view-name"
-                @click.stop="handleOpenTag(row, row.template_id > 0 ? 'memberTemplate' : 'userOrgPerm')"
+                @click.stop="handleViewDetail(row, row.template_id > 0 ? 'memberTemplate' : 'userOrgPerm')"
               >
                 {{ row.template_name || row.department_name }}
               </span>
@@ -93,12 +125,32 @@
             </template>
           </bk-table-column>
         </template>
+        <template v-else-if="item.prop === 'expired_at_display'">
+          <bk-table-column
+            :key="item.prop"
+            :label="item.label"
+            :prop="item.prop"
+            :min-width="120"
+          >
+            <template slot-scope="{ row }">
+              <span
+                :class="[
+                  { 'is-expiring-soon': formatExpireSoon(row.expired_at) },
+                  { 'is-expired': formatExpired(row.expired_at) }
+                ]"
+              >
+                {{ row[item.prop] || '--'}}
+              </span>
+            </template>
+          </bk-table-column>
+        </template>
         <template v-else-if="item.prop === 'operate'">
           <bk-table-column
             :key="item.prop"
             :label="item.label"
             :prop="item.prop"
             :width="150"
+            :fixed="'right'"
           >
             <template slot-scope="{ row }">
               <template>
@@ -106,13 +158,13 @@
                   trigger="click"
                   placement="bottom-start"
                   ext-popover-cls="user-org-remove-confirm"
-                  :confirm-text="$t(`m.userOrOrg['移出']`)"
-                  @confirm="handleRemove(row)"
+                  :confirm-text="$t(`m.common['退出']`)"
+                  @confirm="handleOperate(row, 'quit')"
                 >
                   <div slot="content">
                     <div class="popover-title">
                       <div class="popover-title-text">
-                        {{ $t(`m.dialog['确认把用户/组织移出该用户组？']`) }}
+                        {{ $t(`m.dialog['确认退出该用户组？']`) }}
                       </div>
                     </div>
                     <div class="popover-content">
@@ -120,7 +172,7 @@
                         <span class="popover-content-item-label">
                           {{ $t(`m.userOrOrg['操作对象']`) }}:
                         </span>
-                        <span class="popover-content-item-value"> {{ formatUserName }}</span>
+                        <span class="popover-content-item-value"> {{ user.name }}</span>
                       </div>
                       <div class="popover-content-item">
                         <span class="popover-content-item-label">
@@ -130,33 +182,41 @@
                       </div>
                       <div class="popover-content-tip">
                         {{
-                          $t(`m.userOrOrg['移出后，该用户/组织将不再继承该组的权限。']`)
+                          $t(`m.perm['退出后，将不再拥有该用户组的权限。']`)
                         }}
                       </div>
                     </div>
                   </div>
                   <bk-popover
                     placement="right"
-                    :disabled="!formatAdminGroup(row)"
-                    :content="$t(`m.perm['唯一管理员不可退出']`)"
+                    :disabled="!(formatAdminGroup(row) || row.department_id > 0)"
+                    :content="formatQuitContent(row)"
                   >
                     <bk-button
                       theme="primary"
                       text
-                      :disabled="formatAdminGroup(row)"
+                      :disabled="formatAdminGroup(row) || row.department_id > 0"
                     >
-                      {{ $t(`m.userOrOrg['移出']`) }}
+                      {{ $t(`m.common['退出']`) }}
                     </bk-button>
                   </bk-popover>
                 </bk-popconfirm>
                 <bk-button
-                  v-if="row.expired_at !== PERMANENT_TIMESTAMP"
+                  v-if="isShowRenewal(row)"
                   theme="primary"
-                  style="margin-left: 5px;"
                   text
-                  @click="handleShowRenewal(row)"
+                  class="operate-btn"
+                  @click="handleOperate(row, 'renewal')"
                 >
                   {{ $t(`m.renewal['续期']`) }}
+                </bk-button>
+                <bk-button
+                  theme="primary"
+                  text
+                  class="operate-btn"
+                  @click="handleOperate(row, 'handover')"
+                >
+                  {{ $t(`m.renewal['交接']`) }}
                 </bk-button>
               </template>
             </template>
@@ -168,15 +228,10 @@
             :label="item.label"
             :prop="item.prop"
             :min-width="['description'].includes(item.prop) ? 200 : 120"
+            :show-overflow-tooltip="true"
           >
             <template slot-scope="{ row }">
-              <span
-                v-bk-tooltips="{
-                  content: row[item.prop],
-                  disabled: !row[item.prop] || ['created_time', 'expired_at_display'].includes(item.prop),
-                  placements: ['right-start']
-                }"
-              >
+              <span>
                 {{ row[item.prop] || '--'}}
               </span>
             </template>
@@ -209,18 +264,31 @@
     /> -->
 
     <MemberTemplateDetailSlider :show.sync="isShowTempSlider" :cur-detail-data="tempDetailData" />
+
+    <RenderGroupPermSideSlider
+      :show="isShowPermSideSlider"
+      :name="curGroupName"
+      :group-id="curGroupId"
+      @animation-end="handleAnimationEnd"
+    />
   </div>
 </template>
   
-  <script>
+<script>
+  import { mapGetters } from 'vuex';
   import { cloneDeep } from 'lodash';
   import { PERMANENT_TIMESTAMP } from '@/common/constants';
   import { bus } from '@/common/bus';
+  import { getNowTimeExpired } from '@/common/util';
   // import BatchOperateSlider from './batch-operate-slider.vue';
+  import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
+  import RenderGroupPermSideSlider from '../components/render-group-perm-sideslider';
   import MemberTemplateDetailSlider from '@/views/member-template/components/member-template-detail-slider.vue';
 
   export default {
     components: {
+      IamEditMemberSelector,
+      RenderGroupPermSideSlider,
       // BatchOperateSlider,
       MemberTemplateDetailSlider
     },
@@ -275,6 +343,8 @@
         tabActive: 'userOrOrg',
         renewalSliderTitle: '',
         curSliderName: '',
+        curGroupName: '',
+        curGroupId: '',
         tableProps: [],
         userList: [],
         departList: [],
@@ -291,6 +361,12 @@
       };
     },
     computed: {
+      ...mapGetters(['user']),
+      isShowRenewal () {
+        return (payload) => {
+          return payload.expired_at !== PERMANENT_TIMESTAMP && ['personalPerm', 'customPerm'].includes(this.mode);
+        };
+      },
       formatJoinType () {
         return (payload) => {
           if (payload.template_id) {
@@ -313,21 +389,6 @@
           return '';
         };
       },
-      formatUserName () {
-        const { id, name } = this.groupData;
-        const typeMap = {
-          user: () => {
-            return `${id} (${name})`;
-          },
-          department: () => {
-            return name;
-          }
-        };
-        if (typeMap[this.groupData.type]) {
-          return typeMap[this.groupData.type]();
-        }
-        return '';
-      },
       formatAdminGroup () {
         return (payload) => {
           if (payload) {
@@ -337,6 +398,46 @@
             }
             return false;
           }
+        };
+      },
+      formatQuitContent () {
+        return (payload) => {
+          if (this.formatAdminGroup(payload)) {
+            return this.$t(`m.perm['唯一管理员不可退出']`);
+          }
+          if (payload.department_id > 0) {
+            return this.$t(`m.perm['通过组织加入的组无法退出']`);
+          }
+          return '';
+        };
+      },
+      formatExpireSoon () {
+        return (payload) => {
+          const dif = payload - getNowTimeExpired();
+          const days = Math.ceil(dif / (24 * 3600));
+          return days < 6;
+        };
+      },
+      formatExpired () {
+        return (payload) => {
+          return payload < getNowTimeExpired();
+        };
+      },
+      formatRoleMembers () {
+        return (payload) => {
+          if (payload && payload.length) {
+            const hasName = payload.some((v) => v.username);
+            if (!hasName) {
+              payload = payload.map(v => {
+                return {
+                  username: v,
+                  readonly: false
+                };
+              });
+            }
+            return payload;
+          }
+          return payload || [];
         };
       }
     },
@@ -402,77 +503,45 @@
         }
       },
 
-      async handleRemove (payload) {
-        const { type, id } = this.groupData;
-        try {
-          const params = {
-            members: [{
-              type,
-              id
-            }],
-            group_ids: [payload.id]
-          };
-          const emitParams = {
-            ...payload,
-            ...{
-              mode: this.mode
+      handleOperate (payload, type) {
+        const typeMap = {
+          quit: async () => {
+            try {
+              const params = {
+                type: 'group',
+                id: payload.id
+              };
+              const emitParams = {
+                ...params,
+                ...{
+                  mode: 'personalPerm'
+                }
+              };
+              await this.$store.dispatch('userOrOrg/deleteGroupMembers', params);
+              this.messageSuccess(this.$t(`m.info['退出成功']`), 3000);
+              this.$emit('on-quit-group', emitParams);
+              this.currentSelectList = [];
+            } catch (e) {
+              this.messageAdvancedError(e);
             }
-          };
-          await this.$store.dispatch('userOrOrg/deleteGroupMembers', params);
-          this.messageSuccess(this.$t(`m.info['移出成功']`), 3000);
-          this.$emit('on-remove-group', emitParams);
-        } catch (e) {
-          console.error(e);
-          this.messageAdvancedError(e);
-        }
-      },
-
-      getTableProps (payload) {
-        const tabMap = {
-          personalPerm: () => {
-            return [
-              { label: this.$t(`m.userGroup['用户组名']`), prop: 'name' },
-              { label: this.$t(`m.common['描述']`), prop: 'description' },
-              { label: this.$t(`m.grading['管理空间']`), prop: 'role.name' },
-              { label: this.$t(`m.levelSpace['管理员']`), prop: 'role_members' },
-              { label: this.$t(`m.perm['加入用户组的时间']`), prop: 'created_time' },
-              { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' },
-              { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
-            ];
           },
-          departPerm: () => {
-            return [
-              { label: this.$t(`m.userGroup['用户组名']`), prop: 'name' },
-              { label: this.$t(`m.common['描述']`), prop: 'description' },
-              { label: this.$t(`m.common['加入时间']`), prop: 'created_time' },
-              { label: this.$t(`m.perm['加入方式']`), prop: 'join_type' },
-              { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' }
-            ];
+          renewal: () => {
+            
           },
-          userTempPerm: () => {
-            return [
-              { label: this.$t(`m.userGroup['用户组名']`), prop: 'name' },
-              { label: this.$t(`m.common['描述']`), prop: 'description' },
-              { label: this.$t(`m.common['加入时间']`), prop: 'created_time' },
-              { label: this.$t(`m.perm['加入方式']`), prop: 'join_type' },
-              { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' }
-            ];
-          },
-          departTempPerm: () => {
-            return [
-              { label: this.$t(`m.userGroup['用户组名']`), prop: 'name' },
-              { label: this.$t(`m.common['描述']`), prop: 'description' },
-              { label: this.$t(`m.common['加入时间']`), prop: 'created_time' },
-              { label: this.$t(`m.perm['加入方式']`), prop: 'join_type' },
-              { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' }
-            ];
+          handover: () => {
+            
           }
         };
-        return tabMap[payload] ? tabMap[payload]() : tabMap['personalPerm']();
+        return typeMap[type]();
       },
 
-      handleOpenTag ({ id, department_name, template_name, template_id }, type) {
+      handleViewDetail ({ id, name, department_name, template_name, template_id }, type) {
         const routeMap = {
+          name: () => {
+            this.curGroupName = name;
+            this.curGroupId = id;
+            this.isShowPermSideSlider = true;
+          },
           userGroupDetail: () => {
             const routeData = this.$router.resolve({
               path: `user-group-detail/${id}`,
@@ -603,13 +672,86 @@
         this.$emit('on-refresh');
       },
 
+      handleAnimationEnd () {
+        this.curGroupName = '';
+        this.curGroupId = '';
+        this.isShowPermSideSlider = false;
+      },
+
+      getTableProps (payload) {
+        const tabMap = {
+          personalPerm: () => {
+            return [
+              { label: this.$t(`m.userGroup['用户组名']`), prop: 'name' },
+              { label: this.$t(`m.common['描述']`), prop: 'description' },
+              { label: this.$t(`m.grading['管理空间']`), prop: 'role.name' },
+              { label: this.$t(`m.levelSpace['管理员']`), prop: 'role_members' },
+              { label: this.$t(`m.perm['加入用户组时间']`), prop: 'created_time' },
+              { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' },
+              { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
+            ];
+          },
+          departPerm: () => {
+            return [
+              { label: this.$t(`m.userGroup['用户组名']`), prop: 'name' },
+              { label: this.$t(`m.common['描述']`), prop: 'description' },
+              { label: this.$t(`m.grading['管理空间']`), prop: 'role.name' },
+              { label: this.$t(`m.levelSpace['管理员']`), prop: 'role_members' },
+              { label: this.$t(`m.perm['加入用户组时间']`), prop: 'created_time' },
+              { label: this.$t(`m.perm['通过组织加入']`), prop: 'join_type' },
+              { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' },
+              { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
+            ];
+          },
+          userTempPerm: () => {
+            return [
+              { label: this.$t(`m.userGroup['用户组名']`), prop: 'name' },
+              { label: this.$t(`m.common['描述']`), prop: 'description' },
+              { label: this.$t(`m.common['加入时间']`), prop: 'created_time' },
+              { label: this.$t(`m.perm['加入方式']`), prop: 'join_type' },
+              { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' },
+              { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
+            ];
+          },
+          departTempPerm: () => {
+            return [
+              { label: this.$t(`m.userGroup['用户组名']`), prop: 'name' },
+              { label: this.$t(`m.common['描述']`), prop: 'description' },
+              { label: this.$t(`m.common['加入时间']`), prop: 'created_time' },
+              { label: this.$t(`m.perm['加入方式']`), prop: 'join_type' },
+              { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' },
+              { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
+            ];
+          }
+        };
+        return tabMap[payload] ? tabMap[payload]() : tabMap['personalPerm']();
+      },
+
       getDefaultSelect () {
         return this.list.length > 0;
       }
     }
   };
-  </script>
+</script>
   
-  <style lang="postcss" scoped>
-  @import '@/views/user-org-perm/user-org-perm.css';
-  </style>
+<style lang="postcss" scoped>
+@import '@/views/user-org-perm/user-org-perm.css';
+/deep/ .my-perm-group-table {
+  .operate-btn {
+    margin-left: 8px;
+  }
+  .is-expired {
+    background-color: #FFF1DB;
+    color: #FE9C00;
+    border-radius: 2px;
+    padding: 4px 8px;
+  }
+  .is-expiring-soon {
+    color: #FE9C00;
+  }
+  .bk-table-fixed,
+  .bk-table-fixed-right {
+    border-bottom: 0;
+  }
+}
+</style>
