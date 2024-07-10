@@ -2,7 +2,7 @@
   <div
     :class="[
       'user-perm-group',
-      { 'is-show-notice': showNoticeAlert }
+      { 'is-show-notice': showNoticeAlert && showNoticeAlert() }
     ]"
   >
     <template v-if="permData.hasPerm">
@@ -34,6 +34,7 @@
           :mode="item.id"
           :is-loading="item.loading"
           :is-search-perm="isSearchResource"
+          :is-has-handover="isHasHandover"
           :pagination="item.pagination"
           :cur-search-params="curSearchParams"
           :group-data="groupData"
@@ -69,7 +70,7 @@
   import { mapGetters } from 'vuex';
   import { cloneDeep } from 'lodash';
   import { bus } from '@/common/bus';
-  import { formatCodeData, sleep } from '@/common/util';
+  import { existValue, formatCodeData, sleep } from '@/common/util';
   import RenderPermItem from '@/components/iam-expand-perm/index.vue';
   import GroupPermTable from './group-perm-table.vue';
   export default {
@@ -112,8 +113,11 @@
         },
         isOnlyPerm: false,
         isSearchResource: false,
+        isHasHandover: false,
         onePerm: 0,
         totalCount: 0,
+        renewalGroupPermLen: 0,
+        renewalCustomPermLen: 0,
         initAllPermItem: [
           {
             id: 'personalPerm',
@@ -205,7 +209,7 @@
       };
     },
     computed: {
-      ...mapGetters(['user', 'externalSystemsLayout', 'externalSystemId', 'mainContentLoading']),
+      ...mapGetters(['user', 'roleList', 'externalSystemsLayout', 'externalSystemId', 'mainContentLoading']),
       formatExtCls () {
         return (index) => {
           const len = this.allPermItem[index].pagination.count;
@@ -267,8 +271,8 @@
           const url = 'perm/getPersonalGroups';
           const params = {
             ...this.curSearchParams,
-            limit,
-            offset: limit * (current - 1)
+            page: current,
+            page_size: limit
           };
           if (this.externalSystemId) {
             params.system_id = this.externalSystemId;
@@ -302,7 +306,9 @@
           });
           this.messageAdvancedError(e);
         } finally {
-          curData.loading = false;
+          sleep(500).then(() => {
+            curData.loading = false;
+          });
         }
       },
 
@@ -348,7 +354,7 @@
       },
   
       // 用户人员模板用户组权限
-      async fetchPermByTempSearch () {
+      async fetchUserPermByTempSearch () {
         let curData = this.allPermItem.find((item) => item.id === 'userTempPerm');
         if (!curData) {
           return;
@@ -375,13 +381,7 @@
             pagination: { ...pagination, ...{ count: totalCount } }
           });
           this.emptyPermData = cloneDeep(curData.emptyData);
-          this.$nextTick(() => {
-            curData.list.forEach(item => {
-              item.role_members = this.formatRoleMembers(item.role_members);
-            });
-          });
         } catch (e) {
-          console.error(e);
           curData = Object.assign(curData, {
             list: [],
             emptyData: formatCodeData(e.code, emptyData),
@@ -433,51 +433,188 @@
           curData.loading = false;
         }
       },
+
+      // 获取有权限的所有系统列表
+      async fetchCustomPermSearch () {
+        if (existValue('externalApp') && this.externalSystemId) {
+          return;
+        }
+        let curData = this.allPermItem.find((item) => item.id === 'customPerm');
+        if (!curData) {
+          return;
+        }
+        const { emptyData, pagination } = curData;
+        try {
+          curData.loading = true;
+          const params = {
+            ...this.curSearchParams
+          };
+          if (this.externalSystemId) {
+            params.system_id = this.externalSystemId;
+            params.hidden = false;
+          }
+          const { code, data } = await this.$store.dispatch(
+            'permApply/getHasPermSystem',
+            params
+          );
+          const totalCount = data.length || 0;
+          curData = Object.assign(curData, {
+            list: data.results || [],
+            emptyData: formatCodeData(code, emptyData, totalCount === 0),
+            pagination: { ...pagination, ...{ count: totalCount } }
+          });
+        } catch (e) {
+          curData = Object.assign(curData, {
+            list: [],
+            emptyData: formatCodeData(e.code, emptyData),
+            pagination: { ...pagination, ...{ count: 0 } }
+          });
+          this.messageAdvancedError(e);
+        } finally {
+          curData.loading = false;
+        }
+      },
+
+      // 获取管理员权限
+      async fetchManagerPermSearch () {
+        if (existValue('externalApp') && this.externalSystemId) {
+          return;
+        }
+        let curData = this.allPermItem.find((item) => item.id === 'managerPerm');
+        if (!curData) {
+          return;
+        }
+        const { emptyData, pagination } = curData;
+        try {
+          curData.loading = true;
+          const params = {
+            ...this.curSearchParams
+          };
+          if (this.externalSystemId) {
+            params.system_id = this.externalSystemId;
+            params.hidden = false;
+          }
+          const { code, data } = await this.$store.dispatch(
+            'permApply/getHasPermSystem',
+            params
+          );
+          const totalCount = data.count || 0;
+          curData = Object.assign(curData, {
+            list: data.results || [],
+            emptyData: formatCodeData(code, emptyData, totalCount === 0),
+            pagination: { ...pagination, ...{ count: totalCount } }
+          });
+        } catch (e) {
+          curData = Object.assign(curData, {
+            list: [],
+            emptyData: formatCodeData(e.code, emptyData),
+            pagination: { ...pagination, ...{ count: 0 } }
+          });
+          this.messageAdvancedError(e);
+        } finally {
+          curData.loading = false;
+        }
+      },
+
+      // 获取即将过期的用户组权限
+      async fetchExpiredGroupPerm () {
+        try {
+          const params = {
+            page: 1,
+            page_size: 10
+          };
+          if (this.externalSystemId) {
+            params.system_id = this.externalSystemId;
+          }
+          const { data } = await this.$store.dispatch('renewal/getExpireSoonGroupWithUser', params);
+          this.renewalGroupPermLen = data.count || 0;
+        } catch (e) {
+          this.messageAdvancedError(e);
+        }
+      },
+
+      // 获取即将过期的自定义权限
+      async fetchExpiredCustomPerm () {
+        if (existValue('externalApp') && this.externalSystemId) {
+          return;
+        }
+        try {
+          const params = {};
+          if (this.externalSystemId) {
+            params.system_id = this.externalSystemId;
+          }
+          const { data } = await this.$store.dispatch('renewal/getExpireSoonPerm', params);
+          this.renewalCustomPermLen = data.length || 0;
+        } catch (e) {
+          this.messageAdvancedError(e);
+        }
+      },
   
       async fetchInitData () {
-        const routeMap = {
-          myPerm: () => {
-            const typeMap = {
-              all: async () => {
-                this.allPermItem = cloneDeep(this.initAllPermItem);
-                this.allPermItem[0] = Object.assign(this.allPermItem[0], { name: this.$t(`m.userOrOrg['个人用户组权限']`) });
-                const hideApplyBtn = this.externalSystemsLayout.myPerm.hideApplyBtn;
-                if (!hideApplyBtn) {
-                  await Promise.all([
-                    this.fetchUserGroupSearch(),
-                    this.fetchDepartGroupSearch(),
-                    this.fetchPermByTempSearch(),
-                    this.fetchDepartPermByTempSearch()
-                  ]);
-                }
-                this.$set(this.permData, 'hasPerm', this.allPermItem.some((v) => v.pagination.count > 0));
-                this.isOnlyPerm = this.allPermItem.filter((v) => v.pagination.count > 0).length === 1;
-                this.formatDefaultExpand();
-                // 清空用户组需要判断如果有组织或者人员模板权限则代表左侧选中的数据还存在，不需要取第一条数据
-                const hasData = this.allPermItem.filter((item) => !['personalPerm'].includes(item.id)).some((v) => v.pagination.count > 0);
-                bus.$emit('on-exist-other-perm', { isRefreshUser: !hasData });
-              }
-              // department: async () => {
-              //   this.allPermItem = this.initAllPermItem.filter((item) => ['personalPerm', 'userTempPerm'].includes(item.id));
-              //   this.allPermItem[0] = Object.assign(this.allPermItem[0], { name: this.$t(`m.perm['用户组权限']`) });
-              //   await Promise.all([
-              //     this.fetchUserGroupSearch(),
-              //     this.fetchPermByTempSearch()
-              //   ]);
-              //   this.$set(this.permData, 'hasPerm', this.allPermItem.some((v) => v.pagination.count > 0));
-              //   this.isOnlyPerm = this.allPermItem.filter((v) => v.pagination.count > 0).length === 1;
-              //   this.formatDefaultExpand();
-              //   // 清空用户组需要判断如果有组织或者人员模板权限则代表左侧选中的数据还存在，不需要取第一条数据
-              //   const hasData = this.allPermItem.filter((item) => !['personalPerm'].includes(item.id)).some((v) => v.pagination.count > 0);
-              //   bus.$emit('on-exist-other-perm', { isRefreshUser: !hasData });
-              // }
-            };
-            return typeMap[this.queryGroupData.type]();
+        this.allPermItem = cloneDeep(this.initAllPermItem);
+        const hideApplyBtn = this.externalSystemsLayout.myPerm.hideApplyBtn;
+        const typeMap = {
+          all: async () => {
+            const initReqList = [
+              this.fetchUserGroupSearch(),
+              this.fetchDepartGroupSearch(),
+              this.fetchUserPermByTempSearch(),
+              this.fetchDepartPermByTempSearch(),
+              this.fetchCustomPermSearch(),
+              this.fetchManagerPermSearch(),
+              this.fetchExpiredGroupPerm(),
+              this.fetchExpiredCustomPerm()
+            ];
+            await Promise.all(initReqList);
+            // 是否有可交接数据
+            if (hideApplyBtn) {
+              this.isHasHandover = this.allPermItem.filter((item) => ['personalPerm'].includes(item.id)).some((v) => v.pagination.count > 0);
+            } else {
+              this.isHasHandover = this.allPermItem.filter((item) => ['personalPerm', 'customPerm', 'managerPerm'].includes(item.id)).some((v) => v.pagination.count > 0);
+            }
+            this.$set(this.permData, 'hasPerm', this.allPermItem.some((v) => v.pagination.count > 0));
+            this.isOnlyPerm = this.allPermItem.filter((v) => v.pagination.count > 0).length === 1;
+            bus.$emit('on-update-all-perm', {
+              allPerm: this.allPermItem,
+              renewalGroupPermLen: this.renewalGroupPermLen,
+              renewalCustomPermLen: this.renewalCustomPermLen
+            });
+            this.formatDefaultExpand();
+          },
+          personalPerm: async () => {
+            this.renewalGroupPermLen = 0;
+            this.renewalCustomPermLen = 0;
+            const initReqList = [
+              this.fetchUserGroupSearch()
+            ];
+            await Promise.all(initReqList);
+            const personalPermData = this.allPermItem.filter((item) => ['personalPerm'].includes(item.id));
+            this.isHasHandover = personalPermData.some((v) => v.pagination.count > 0);
+            this.$set(this.permData, 'hasPerm', this.isHasHandover);
+            bus.$emit('on-update-all-perm', {
+              allPerm: this.allPermItem,
+              renewalGroupPermLen: this.renewalGroupPermLen,
+              renewalCustomPermLen: this.renewalCustomPermLen
+            });
+            this.formatDefaultExpand();
           }
+          // department: async () => {
+          //   this.allPermItem = this.initAllPermItem.filter((item) => ['personalPerm', 'userTempPerm'].includes(item.id));
+          //   this.allPermItem[0] = Object.assign(this.allPermItem[0], { name: this.$t(`m.perm['用户组权限']`) });
+          //   await Promise.all([
+          //     this.fetchUserGroupSearch(),
+          //     this.fetchUserPermByTempSearch()
+          //   ]);
+          //   this.$set(this.permData, 'hasPerm', this.allPermItem.some((v) => v.pagination.count > 0));
+          //   this.isOnlyPerm = this.allPermItem.filter((v) => v.pagination.count > 0).length === 1;
+          //   this.formatDefaultExpand();
+          //   // 清空用户组需要判断如果有组织或者人员模板权限则代表左侧选中的数据还存在，不需要取第一条数据
+          //   const hasData = this.allPermItem.filter((item) => !['personalPerm'].includes(item.id)).some((v) => v.pagination.count > 0);
+          //   bus.$emit('on-exist-other-perm', { isRefreshUser: !hasData });
+          // }
         };
-        if (routeMap[this.$route.name]) {
-          await routeMap[this.$route.name]();
-        }
+          
+        return typeMap[this.queryGroupData.value]();
       },
 
       formatDefaultExpand () {
@@ -509,47 +646,25 @@
         });
       },
 
-      formatRoleMembers (payload) {
-        if (payload && payload.length) {
-          const hasName = payload.some((v) => v.username);
-          if (!hasName) {
-            payload = payload.map(v => {
-              return {
-                username: v,
-                readonly: false
-              };
-            });
-          }
-        }
-        return payload || [];
-      },
-
       formatPaginationData (payload, current, limit) {
         const curData = this.allPermItem.find((item) => item.id === payload.id);
         if (curData) {
+          curData.pagination = Object.assign(curData, { current, limit });
           const typeMap = {
             personalPerm: async () => {
-              curData.pagination = Object.assign(curData, { current, limit });
               await this.fetchUserGroupSearch();
-              this.formatExpandedData(curData);
             },
             departPerm: async () => {
-              curData.pagination = Object.assign(curData, { current, limit });
               await this.fetchDepartGroupSearch();
-              this.formatExpandedData(curData);
             },
             userTempPerm: async () => {
-              curData.pagination = Object.assign(curData, { current, limit });
-              await this.fetchPermByTempSearch();
-              this.formatExpandedData(curData);
+              await this.fetchUserPermByTempSearch();
             },
             departTempPerm: async () => {
-              curData.pagination = Object.assign(curData, { current, limit });
               await this.fetchDepartPermByTempSearch();
-              this.formatExpandedData(curData);
             }
           };
-          typeMap[curData.id]();
+          return typeMap[curData.id]();
         }
       },
 
@@ -615,7 +730,7 @@
         bus.$on('on-info-change', ({ mode }) => {
           const modeMap = {
             userTempPerm: async () => {
-              await this.fetchPermByTempSearch();
+              await this.fetchUserPermByTempSearch();
             },
             departTempPerm: async () => {
               await this.fetchDepartPermByTempSearch();

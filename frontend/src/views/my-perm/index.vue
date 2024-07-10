@@ -6,7 +6,9 @@
         { 'no-expand': !isExpand }
       ]"
     >
-      <LeftLayout />
+      <LeftLayout
+        @on-select-tab="handleSelectTab"
+      />
     </div>
     <div class="my-perm-wrapper-center">
       <div class="expand-icon" @click.stop="handleToggleExpand">
@@ -18,7 +20,7 @@
         ref="childRef"
         :key="comKey"
         :is="curCom"
-        :group-data="tabSelected"
+        :group-data="selectTabData"
         :left-layout-width="leftLayoutWidth"
         :cur-search-params="querySearchParams"
         @on-clear="handleEmptyClear"
@@ -42,11 +44,11 @@
         comKey: -1,
         comMap: new Map(
           [
-            [['all', 'personalPerm', 'departPerm', 'memberTempPerm', 'customPerm', 'managerPerm'], 'RightLayout']
+            [['all', 'personalPerm', 'departPerm', 'memberTempPerm', 'customPerm', 'managerPerm', 'renewalPerm'], 'RightLayout']
           ]
         ),
-        tabSelected: {
-          type: 'all'
+        selectTabData: {
+          value: 'all'
         },
         querySearchParams: {}
       };
@@ -55,7 +57,7 @@
       curCom () {
         let com = '';
         for (const [key, value] of this.comMap.entries()) {
-          if (Object.keys(this.tabSelected).length && key.includes(this.tabSelected.type)) {
+          if (Object.keys(this.selectTabData).length && key.includes(this.selectTabData.value)) {
             com = value;
             break;
           }
@@ -72,6 +74,10 @@
         this.$nextTick(() => {
           this.$refs.childRef && this.$refs.childRef.handleToggleExpand();
         });
+      },
+
+      handleSelectTab (payload) {
+        this.selectTabData = { ...payload };
       },
 
       handleEmptyClear () {
@@ -96,6 +102,7 @@
     flex-grow: 0;
     flex-shrink: 0;
     position: relative;
+    width: 240px;
     min-width: 240px;
     background-color: #ffffff;
     &.no-expand {

@@ -786,6 +786,7 @@ export const m = {
         '操作权限': 'Permissions',
         '解除关联': 'Disassociate',
         '最近一次更新时间': 'Last modified at',
+        '加入用户组时间': 'Joined at',
         '加入用户组的时间': 'Joined at',
         '加入方式': 'Joined type',
         '退出该组': 'Quit Group',
@@ -809,7 +810,13 @@ export const m = {
         '当前勾选项都为不可退出的用户组（唯一管理员不能退出）': 'The current checked options are all user groups that cannot be logged out (the only administrator cannot log out)',
         '直接加入人员模板的用户组权限': 'Directly add user group permissions to personnel templates',
         '通过组织加入人员模板的用户组权限': 'User group permissions for joining member templates through organization',
-        '通过人员模板加入': 'Through Member Template'
+        '通过人员模板加入': 'Through Member Template',
+        '交接': 'Handover',
+        '可续期': 'Renewable',
+        '全部权限': 'All permission',
+        '管理员权限': 'Manager permission',
+        '人员模板用户组权限': 'Member template user group permissions',
+        '请先勾选批量操作的对象': 'Please check the objects for batch operations first'
     },
     permTemplate: {
         '模板名': 'Template name',

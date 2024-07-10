@@ -1,67 +1,82 @@
 <template>
   <div class="my-perm-left-layout">
-    <div class="flex-between my-perm-left-layout-all">
-      <div class="renewal-perm-label">
-        <div>
-          <Icon
-            type="file-close"
-            class="icon"
-          />
+    <div
+      v-if="renewalData.count > 0"
+      :class="[
+        'my-perm-left-layout-all',
+        { 'is-active': active === renewalData.value }
+      ]"
+      @click.stop="handleSelectPerm(renewalData)"
+    >
+      <div class="flex-between renewal-perm-content">
+        <div class="renewal-perm-label">
+          <div>
+            <Icon
+              type="file-close"
+              class="icon"
+            />
+          </div>
+          <div class="name">
+            {{ renewalData.label }}
+          </div>
         </div>
-        <div class="name">
-          {{ $t(`m.perm['可续期']`) }}
-        </div>
+        <div class="renewal-perm-total">{{ renewalData.count }}</div>
       </div>
-      <div class="renewal-perm-total">{{ renewalTotal }}</div>
     </div>
     <div class="my-perm-left-layout-content">
-      <template>
-        <div
-          v-for="item in permList"
-          :key="item.id"
-          :class="[
-            'flex-between',
-            'my-perm-left-layout-item',
-            { 'my-perm-left-layout-item-active': item.value === active }
-          ]"
-          @click.stop="handleSelectPerm(item)"
-        >
-          <div class="perm-type-content">
-            <div class="perm-type-name">
-              <div
-                v-if="['all'].includes(item.value)"
-                class="folder-icon"
-              >
-                All
-              </div>
-              <Icon
-                v-else
-                type="file-close"
-                class="folder-icon"
-              />
-              <div class="label single-hide">
-                {{ item.label }}
-              </div>
+      <div
+        v-for="item in permList"
+        :key="item.id"
+        :class="[
+          'flex-between',
+          'my-perm-left-layout-item',
+          { 'my-perm-left-layout-item-active': item.value === active }
+        ]"
+        @click.stop="handleSelectPerm(item)"
+      >
+        <div class="perm-type-content">
+          <div class="perm-type-name">
+            <div
+              v-if="['all'].includes(item.value)"
+              class="folder-icon"
+            >
+              All
+            </div>
+            <Icon
+              v-else
+              :type="item.icon"
+              class="folder-icon"
+            />
+            <div
+              class="single-hide name"
+              v-bk-tooltips="{
+                content: item.label,
+                placements: ['right-start'],
+                disabled: formatShowToolTip(item)
+              }"
+              :ref="`perm_${item.value}`"
+            >
+              {{ item.label }}
             </div>
           </div>
-          <div class="perm-type-count">{{ item.count || 0 }}</div>
         </div>
-      </template>
+        <div class="perm-type-count">{{ item.count || 0 }}</div>
+      </div>
     </div>
   </div>
 </template>
   
 <script>
-  // import { cloneDeep } from 'lodash';
+  import { cloneDeep } from 'lodash';
   import { mapGetters } from 'vuex';
   import { bus } from '@/common/bus';
-  import { formatCodeData } from '@/common/util';
+  import { existValue, formatCodeData } from '@/common/util';
   export default {
     data () {
       return {
         active: 'all',
         renewalTotal: 0,
-        permList: [
+        initPermList: [
           {
             label: this.$t(`m.perm['全部权限']`),
             value: 'all',
@@ -71,33 +86,42 @@
           {
             label: this.$t(`m.userOrOrg['个人用户组权限']`),
             value: 'personalPerm',
-            icon: '',
+            icon: 'file-close',
             count: 0
           },
           {
             label: this.$t(`m.userOrOrg['组织用户组权限']`),
             value: 'departPerm',
-            icon: '',
+            icon: 'file-close',
             count: 0
           },
           {
-            label: this.$t(`m.userOrOrg['人员模板用户组权限']`),
+            label: this.$t(`m.perm['人员模板用户组权限']`),
             value: 'memberTempPerm',
-            icon: '',
+            icon: 'file-close',
             count: 0
           },
           {
             label: this.$t(`m.perm['自定义权限']`),
             value: 'customPerm',
+            icon: 'file-close',
             count: 0
           },
           {
             label: this.$t(`m.perm['管理员权限']`),
             value: 'managerPerm',
+            icon: 'file-close',
             count: 0
           }
         ],
+        permList: [],
         permListBack: [],
+        renewalData: {
+          label: this.$t(`m.perm['可续期']`),
+          value: 'renewalPerm',
+          icon: '',
+          count: 0
+        },
         emptyPermData: {
           type: '',
           text: '',
@@ -107,93 +131,65 @@
       };
     },
     computed: {
-      ...mapGetters(['externalSystemId', 'user'])
+      ...mapGetters(['externalSystemsLayout', 'externalSystemId', 'user']),
+      isShowCustomPerm () {
+        return this.externalSystemsLayout.myPerm.transfer.hideCustomData;
+      },
+      isShowManagerPerm () {
+        return this.externalSystemsLayout.myPerm.transfer.hideManagerData;
+      }
+    },
+    created () {
+      this.$once('hook:beforeDestroy', () => {
+        bus.$off('on-update-all-perm');
+      });
+      this.fetchInitTab();
+    },
+    mounted () {
+      bus.$on('on-update-all-perm', (payload) => {
+        const { allPerm, renewalGroupPermLen, renewalCustomPermLen } = payload;
+        this.renewalData.count = renewalGroupPermLen + renewalCustomPermLen;
+        this.permList.forEach((item) => {
+          const hasData = allPerm.find((v) => v.id === item.value);
+          if (hasData) {
+            item.count = hasData.pagination.count;
+          }
+          if (['all'].includes(item.value)) {
+            item.count = allPerm.reduce((prev, cur) => {
+              return cur.pagination.count + prev;
+            }, 0);
+          }
+        });
+      });
     },
     methods: {
-      async fetchPageData () {
-        // await this.fetchSystems();
+      fetchInitTab () {
+        // 处理嵌入系统需要显示哪些组权限
+        if (existValue('externalApp') && this.externalSystemId) {
+          let hidePermTab = [];
+          if (this.isShowCustomPerm) {
+            hidePermTab = ['customPerm'];
+          }
+          if (this.isShowManagerPerm) {
+            hidePermTab = [...hidePermTab, ...['managerPerm']];
+          }
+          this.permList = this.initPermList.filter((v) => !hidePermTab.includes(v.value));
+        } else {
+          this.permList = cloneDeep(this.initPermList);
+        }
       },
 
-      // async fetchSystems () {
-      //   this.systemLoading = true;
-      //   try {
-      //     const params = {};
-      //     if (this.externalSystemId) {
-      //       params.hidden = false;
-      //     }
-      //     const { code, data } = await this.$store.dispatch('system/getSystems', params);
-      //     let list = [...data];
-      //     if (data && data.length) {
-      //       const { role } = this.user;
-      //       if (['system_manager'].includes(role.type) && role.code) {
-      //         list = data.filter((item) => item.id === role.code);
-      //       }
-      //       this.permList = await this.getSystemCount(list);
-      //       this.permListBack = [...this.permList];
-      //     }
-      //     this.emptyPermData = formatCodeData(
-      //       code,
-      //       this.emptyPermData,
-      //       list.length === 0
-      //     );
-      //   } catch (e) {
-      //     this.emptyPermData = formatCodeData(e.code, this.emptyPermData);
-      //     this.messageAdvancedError(e);
-      //   } finally {
-      //     this.systemLoading = false;
-      //   }
-      // },
+      formatShowToolTip (payload) {
+        const permRef = this.$refs[`perm_${payload.value}`];
+        if (permRef && permRef.length) {
+          const offsetWidth = permRef[0].offsetWidth;
+          return !(offsetWidth > 132);
+        }
+      },
 
-      // // 根据系统id查找对应系统的敏感等级
-      // async getSystemCount (payload) {
-      //   const list = [...payload];
-      //   try {
-      //     for (let i = 0; i < list.length; i++) {
-      //       this.$store
-      //         .dispatch('sensitivityLevel/getSensitivityLevelCount', {
-      //           system_id: list[i].id
-      //         })
-      //         .then(({ data }) => {
-      //           // const curSystemId = list[i].id;
-      //           // if (systemCountMockData[curSystemId]) {
-      //           //   const { data } = systemCountMockData[curSystemId];
-      //           this.$set(list[i], 'levelItem', data);
-      //           this.$set(list[i], 'count', data.all || 0);
-      //           if (i === 0) {
-      //             const params = {
-      //             ...list[i],
-      //             ...{
-      //               isFirst: true
-      //             }
-      //             };
-      //             this.handleSelectPerm(params);
-      //           }
-      //         });
-      //     }
-      //   // }
-      //   } catch (e) {
-      //     this.messageAdvancedError(e);
-      //   }
-      //   return list;
-      // },
-
-      async handleSelectPerm (payload) {
-        const { value } = payload;
-        this.active = value;
-        // const list = [];
-        // const params = {
-        // ...levelItem
-        // };
-        // if (isFirst) {
-        //   this.$set(params, 'isFirst', isFirst);
-        //   this.$emit('on-select-system', payload);
-        bus.$emit('on-systems-level-count');
-        // } else {
-        //   list = await this.getSystemCount([payload]);
-        //   this.$set(params, 'isFirst', isFirst);
-        //   this.$emit('on-select-system', list[0]);
-        //   bus.$emit('on-systems-level-count', list[0].levelItem);
-        // }
+      handleSelectPerm (payload) {
+        this.active = payload.value;
+        this.$emit('on-select-tab', payload);
       },
 
       handleSearchSystem () {
@@ -219,34 +215,39 @@
 .my-perm-left-layout {
   position: relative;
   &-all {
-    padding: 16px 0;
-    margin: 0 24px;
-    margin-bottom: 8px;
+    margin: 16px 16px 8px 16px;
+    padding-bottom: 16px;
     border-bottom: 1px solid #dcdee5;
-    .renewal-perm-label {
-      display: flex;
-      align-items: center;
-      .name {
-        font-size: 13px;
+    .renewal-perm-content {
+      padding: 8px;
+      cursor: pointer;
+      .renewal-perm-label {
+        display: flex;
+        align-items: center;
+        .name {
+          font-size: 13px;
+        }
+        .icon {
+          font-size: 14px;
+          margin-right: 8px;
+        }
       }
-      .icon {
-        font-size: 14px;
-        margin-right: 8px;
-      }
-    }
-    .renewal-perm-total {
-      background-color: #eaebf0;
-      color: #979ba5;
-      font-size: 12px;
-      border-radius: 2px;
-      padding: 0 8px;
-    }
-    &-active {
-      background-color: #e1ecff;
-      color: #3a84ff;
       .renewal-perm-total {
-        background-color: #a3c5fd;
-        color: #ffffff;
+        background-color: #eaebf0;
+        color: #979ba5;
+        font-size: 12px;
+        border-radius: 2px;
+        padding: 0 8px;
+      }
+    }
+    &.is-active {
+      .renewal-perm-content {
+        background-color: #e1ecff;
+        color: #3a84ff;
+        .renewal-perm-total {
+          background-color: #a3c5fd;
+          color: #ffffff;
+        }
       }
     }
   }
@@ -293,6 +294,9 @@
             &-active {
               color: #3a84ff;
             }
+          }
+          .name {
+            max-width: 135px;
           }
         }
       }

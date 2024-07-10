@@ -149,76 +149,76 @@
             :key="item.prop"
             :label="item.label"
             :prop="item.prop"
-            :width="150"
+            :min-width="formatOperate"
             :fixed="'right'"
           >
             <template slot-scope="{ row }">
-              <template>
-                <bk-popconfirm
-                  trigger="click"
-                  placement="bottom-start"
-                  ext-popover-cls="user-org-remove-confirm"
-                  :confirm-text="$t(`m.common['退出']`)"
-                  @confirm="handleOperate(row, 'quit')"
-                >
-                  <div slot="content">
-                    <div class="popover-title">
-                      <div class="popover-title-text">
-                        {{ $t(`m.dialog['确认退出该用户组？']`) }}
-                      </div>
-                    </div>
-                    <div class="popover-content">
-                      <div class="popover-content-item">
-                        <span class="popover-content-item-label">
-                          {{ $t(`m.userOrOrg['操作对象']`) }}:
-                        </span>
-                        <span class="popover-content-item-value"> {{ user.name }}</span>
-                      </div>
-                      <div class="popover-content-item">
-                        <span class="popover-content-item-label">
-                          {{ $t(`m.userOrOrg['用户组名']`) }}:
-                        </span>
-                        <span class="popover-content-item-value"> {{ row.name }}</span>
-                      </div>
-                      <div class="popover-content-tip">
-                        {{
-                          $t(`m.perm['退出后，将不再拥有该用户组的权限。']`)
-                        }}
-                      </div>
+              <bk-popconfirm
+                v-if="['personalPerm'].includes(mode)"
+                trigger="click"
+                placement="bottom-start"
+                ext-popover-cls="user-org-remove-confirm"
+                :confirm-text="$t(`m.common['退出']`)"
+                @confirm="handleOperate(row, 'quit')"
+              >
+                <div slot="content">
+                  <div class="popover-title">
+                    <div class="popover-title-text">
+                      {{ $t(`m.dialog['确认退出该用户组？']`) }}
                     </div>
                   </div>
-                  <bk-popover
-                    placement="right"
-                    :disabled="!(formatAdminGroup(row) || row.department_id > 0)"
-                    :content="formatQuitContent(row)"
+                  <div class="popover-content">
+                    <div class="popover-content-item">
+                      <span class="popover-content-item-label">
+                        {{ $t(`m.userOrOrg['操作对象']`) }}:
+                      </span>
+                      <span class="popover-content-item-value"> {{ user.name }}</span>
+                    </div>
+                    <div class="popover-content-item">
+                      <span class="popover-content-item-label">
+                        {{ $t(`m.userOrOrg['用户组名']`) }}:
+                      </span>
+                      <span class="popover-content-item-value"> {{ row.name }}</span>
+                    </div>
+                    <div class="popover-content-tip">
+                      {{
+                        $t(`m.perm['退出后，将不再拥有该用户组的权限。']`)
+                      }}
+                    </div>
+                  </div>
+                </div>
+                <bk-popover
+                  placement="right"
+                  :disabled="!(formatAdminGroup(row) || row.department_id > 0)"
+                  :content="formatQuitContent(row)"
+                >
+                  <bk-button
+                    theme="primary"
+                    text
+                    :disabled="formatAdminGroup(row) || row.department_id > 0"
                   >
-                    <bk-button
-                      theme="primary"
-                      text
-                      :disabled="formatAdminGroup(row) || row.department_id > 0"
-                    >
-                      {{ $t(`m.common['退出']`) }}
-                    </bk-button>
-                  </bk-popover>
-                </bk-popconfirm>
-                <bk-button
-                  v-if="isShowRenewal(row)"
-                  theme="primary"
-                  text
-                  class="operate-btn"
-                  @click="handleOperate(row, 'renewal')"
-                >
-                  {{ $t(`m.renewal['续期']`) }}
-                </bk-button>
-                <bk-button
-                  theme="primary"
-                  text
-                  class="operate-btn"
-                  @click="handleOperate(row, 'handover')"
-                >
-                  {{ $t(`m.renewal['交接']`) }}
-                </bk-button>
-              </template>
+                    {{ $t(`m.common['退出']`) }}
+                  </bk-button>
+                </bk-popover>
+              </bk-popconfirm>
+              <bk-button
+                v-if="isShowRenewal(row)"
+                theme="primary"
+                text
+                class="operate-btn"
+                @click="handleOperate(row, 'renewal')"
+              >
+                {{ $t(`m.renewal['续期']`) }}
+              </bk-button>
+              <bk-button
+                v-if="isShowHandover"
+                theme="primary"
+                text
+                class="operate-btn"
+                @click="handleOperate(row, 'handover')"
+              >
+                {{ $t(`m.perm['交接']`) }}
+              </bk-button>
             </template>
           </bk-table-column>
         </template>
@@ -300,6 +300,10 @@
         type: Boolean,
         default: false
       },
+      isHasHandover: {
+        type: Boolean,
+        default: false
+      },
       list: {
         type: Array,
         default: () => []
@@ -340,6 +344,7 @@
         isShowPermSideSlider: false,
         isShowRenewalSlider: false,
         isShowTempSlider: false,
+        isNoHandoverData: false,
         tabActive: 'userOrOrg',
         renewalSliderTitle: '',
         curSliderName: '',
@@ -366,6 +371,9 @@
         return (payload) => {
           return payload.expired_at !== PERMANENT_TIMESTAMP && ['personalPerm', 'customPerm'].includes(this.mode);
         };
+      },
+      isShowHandover () {
+        return window.ENABLE_PERMISSION_HANDOVER.toLowerCase() === 'true' && this.isHasHandover;
       },
       formatJoinType () {
         return (payload) => {
@@ -439,6 +447,20 @@
           }
           return payload || [];
         };
+      },
+      formatOperate () {
+        const typeMap = {
+            personalPerm: () => {
+              return ['zh-cn'].includes(window.CUR_LANGUAGE) ? 150 : 200;
+            },
+            departPerm: () => {
+              return ['zh-cn'].includes(window.CUR_LANGUAGE) ? 80 : 100;
+            }
+          };
+          if (typeMap[this.mode]) {
+           return typeMap[this.mode]();
+          }
+          return 300;
       }
     },
     watch: {
@@ -517,7 +539,7 @@
                   mode: 'personalPerm'
                 }
               };
-              await this.$store.dispatch('userOrOrg/deleteGroupMembers', params);
+              await this.$store.dispatch('perm/quitGroupPerm', params);
               this.messageSuccess(this.$t(`m.info['退出成功']`), 3000);
               this.$emit('on-quit-group', emitParams);
               this.currentSelectList = [];
