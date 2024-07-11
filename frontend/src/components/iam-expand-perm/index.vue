@@ -6,7 +6,7 @@
       { 'is-not-expanded': !isExpanded }
     ]"
   >
-    <div class="header">
+    <div class="expand-header">
       <div class="flex-between sub-header-item">
         <div
           :class="[
@@ -176,30 +176,12 @@
       },
     
       handleExpanded () {
+        console.log(this.isExpanded);
         this.isExpanded = !this.isExpanded;
         this.$emit('update:expanded', true);
         this.$emit('on-expanded', this.isExpanded);
-        this.$emit('toIsExpanded', false);
       },
-    
-      handleEdit () {
-        this.isExpanded = true;
-        this.$emit('on-expanded', this.isExpanded);
-        this.$emit('on-edit');
-        this.$emit('toIsExpanded', this.isExpanded);
-      },
-    
-      handleCancel () {
-        this.isEditMode = false;
-        this.$emit('on-cancel');
-      },
-    
-      handleDeletePolicy () {
-        this.isExpanded = true;
-        this.isShowDeleteDialog = true;
-        this.$emit('on-expanded', this.isExpanded);
-      },
-    
+
       handleDelete () {
         this.$emit('on-delete');
       }
@@ -213,7 +195,7 @@
   }
   .system-render-template-item {
     background-color: #f0f1f5;
-    .header {
+    .expand-header {
       position: relative;
       display: flex;
       justify-content: space-between;

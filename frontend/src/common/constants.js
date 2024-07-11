@@ -273,3 +273,43 @@ export const SEND_DAYS_LIST = [
     value: 'sunday'
   }
 ];
+
+// 我的权限所有加入方式的权限组
+export const ALL_PERM_TYPE_LIST = [
+  {
+    label: il8n('perm', '全部权限'),
+    value: 'all',
+    icon: '',
+    count: 0
+  },
+  {
+    label: il8n('userOrOrg', '个人用户组权限'),
+    value: 'personalPerm',
+    icon: 'file-close',
+    count: 0
+  },
+  {
+    label: il8n('userOrOrg', '组织用户组权限'),
+    value: 'departPerm',
+    icon: 'file-close',
+    count: 0
+  },
+  {
+    label: il8n('perm', '人员模板用户组权限'),
+    value: 'memberTempPerm',
+    icon: 'file-close',
+    count: 0
+  },
+  {
+    label: il8n('perm', '自定义权限'),
+    value: 'customPerm',
+    icon: 'file-close',
+    count: 0
+  },
+  {
+    label: il8n('perm', '管理员权限'),
+    value: 'managerPerm',
+    icon: 'file-close',
+    count: 0
+  }
+];

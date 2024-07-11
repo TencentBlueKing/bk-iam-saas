@@ -96,7 +96,6 @@
   position: relative;
   display: flex;
   padding: 0;
-  padding-right: 16px;
   &-left-layout {
     position: relative;
     flex-grow: 0;

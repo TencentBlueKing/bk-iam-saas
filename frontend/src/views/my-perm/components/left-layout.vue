@@ -2,13 +2,16 @@
   <div class="my-perm-left-layout">
     <div
       v-if="renewalData.count > 0"
-      :class="[
-        'my-perm-left-layout-all',
-        { 'is-active': active === renewalData.value }
-      ]"
-      @click.stop="handleSelectPerm(renewalData)"
+      class="my-perm-left-layout-all"
     >
-      <div class="flex-between renewal-perm-content">
+      <div
+        :class="[
+          'flex-between',
+          'renewal-perm-content',
+          { 'is-active': active === renewalData.value }
+        ]"
+        @click.stop="handleSelectPerm(renewalData)"
+      >
         <div class="renewal-perm-label">
           <div>
             <Icon
@@ -22,6 +25,7 @@
         </div>
         <div class="renewal-perm-total">{{ renewalData.count }}</div>
       </div>
+      <div class="renewal-perm-divider" />
     </div>
     <div class="my-perm-left-layout-content">
       <div
@@ -52,7 +56,7 @@
               v-bk-tooltips="{
                 content: item.label,
                 placements: ['right-start'],
-                disabled: formatShowToolTip(item)
+                disabled: handleShowToolTip(item)
               }"
               :ref="`perm_${item.value}`"
             >
@@ -67,53 +71,17 @@
 </template>
   
 <script>
-  import { cloneDeep } from 'lodash';
   import { mapGetters } from 'vuex';
+  import { cloneDeep } from 'lodash';
   import { bus } from '@/common/bus';
-  import { existValue, formatCodeData } from '@/common/util';
+  import { ALL_PERM_TYPE_LIST } from '@/common/constants';
+  import { existValue } from '@/common/util';
   export default {
     data () {
       return {
         active: 'all',
         renewalTotal: 0,
-        initPermList: [
-          {
-            label: this.$t(`m.perm['全部权限']`),
-            value: 'all',
-            icon: '',
-            count: 0
-          },
-          {
-            label: this.$t(`m.userOrOrg['个人用户组权限']`),
-            value: 'personalPerm',
-            icon: 'file-close',
-            count: 0
-          },
-          {
-            label: this.$t(`m.userOrOrg['组织用户组权限']`),
-            value: 'departPerm',
-            icon: 'file-close',
-            count: 0
-          },
-          {
-            label: this.$t(`m.perm['人员模板用户组权限']`),
-            value: 'memberTempPerm',
-            icon: 'file-close',
-            count: 0
-          },
-          {
-            label: this.$t(`m.perm['自定义权限']`),
-            value: 'customPerm',
-            icon: 'file-close',
-            count: 0
-          },
-          {
-            label: this.$t(`m.perm['管理员权限']`),
-            value: 'managerPerm',
-            icon: 'file-close',
-            count: 0
-          }
-        ],
+        initPermList: ALL_PERM_TYPE_LIST,
         permList: [],
         permListBack: [],
         renewalData: {
@@ -179,7 +147,7 @@
         }
       },
 
-      formatShowToolTip (payload) {
+      handleShowToolTip (payload) {
         const permRef = this.$refs[`perm_${payload.value}`];
         if (permRef && permRef.length) {
           const offsetWidth = permRef[0].offsetWidth;
@@ -190,22 +158,6 @@
       handleSelectPerm (payload) {
         this.active = payload.value;
         this.$emit('on-select-tab', payload);
-      },
-
-      handleSearchSystem () {
-        this.emptyPermData.tipType = 'search';
-        this.permList = this.permListBack.filter(
-          (item) =>
-            item.name.indexOf(this.systemValue) > -1
-            || item.id.toLowerCase().indexOf(this.systemValue.toLowerCase()) > -1
-        );
-        if (!this.permList.length) {
-          this.emptyPermData = formatCodeData(0, this.emptyPermData);
-        }
-      },
-
-      async handleEmptyRefresh () {
-        await this.fetchSystems();
       }
     }
   };
@@ -215,11 +167,9 @@
 .my-perm-left-layout {
   position: relative;
   &-all {
-    margin: 16px 16px 8px 16px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid #dcdee5;
     .renewal-perm-content {
-      padding: 8px;
+      margin: 16px 24px 0 24px;
+      padding-bottom: 16px;
       cursor: pointer;
       .renewal-perm-label {
         display: flex;
@@ -239,9 +189,9 @@
         border-radius: 2px;
         padding: 0 8px;
       }
-    }
-    &.is-active {
-      .renewal-perm-content {
+      &.is-active {
+        margin: 8px 16px;
+        padding: 8px;
         background-color: #e1ecff;
         color: #3a84ff;
         .renewal-perm-total {
@@ -250,14 +200,14 @@
         }
       }
     }
-  }
-  &-border {
-    width: 100%;
-    height: 1px;
-    background-color: #dcdee5;
-    margin-top: 8px;
+    .renewal-perm-divider {
+      height: 1px;
+      background-color: #dcdee5;
+      margin: 0 16px;
+    }
   }
   &-content {
+    margin-top: 8px;
     position: relative;
     overflow-y: auto;
     &::-webkit-scrollbar {
@@ -275,7 +225,7 @@
     }
     .my-perm-left-layout-item {
       padding: 8px;
-      margin: 0 16px 7px 16px;
+      margin: 0 16px 8px 16px;
       border-radius: 4px;
       cursor: pointer;
       .perm-type-content {

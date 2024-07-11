@@ -31,7 +31,9 @@
             <template slot-scope="{ row }">
               <span
                 :ref="`name_${row.id}`"
-                class="can-view-name"
+                :class="[
+                  { 'can-view-name': isShowDetailEntry }
+                ]"
                 v-bk-tooltips="{
                   content: row.name,
                   placements: ['right-start']
@@ -103,25 +105,26 @@
               >
                 {{ formatJoinType(row) }}
               </span>
-              (<span
-                v-if="row.template_id > 0 || row.department_id > 0"
-                v-bk-tooltips="{ content: formatJoinTypeTip(row), disabled: !formatJoinTypeTip(row) }"
-                class="can-view-name"
-                @click.stop="handleViewDetail(row, row.template_id > 0 ? 'memberTemplate' : 'userOrgPerm')"
-              >
-                {{ row.template_name || row.department_name }}
-              </span>
-              <span
-                v-if="row.template_name && row.department_name"
-                v-bk-tooltips="{
-                  content:
-                    `${formatJoinType(row)}( ${row.template_name || row.department_name }
+              <template v-if="row.template_id > 0">
+                (<span
+                  v-bk-tooltips="{ content: formatJoinTypeTip(row), disabled: !formatJoinTypeTip(row) }"
+                  class="can-view-name"
+                  @click.stop="handleViewDetail(row, 'memberTemplate')"
+                >
+                  {{ row.template_name }}
+                </span>
+                <span
+                  v-if="row.template_name"
+                  v-bk-tooltips="{
+                    content:
+                      `${formatJoinType(row)}( ${row.template_name || row.department_name }
                   ${' - ' + row.department_name + ' )'}`
-                }"
-              >
-                {{ ` - ${row.department_name}` }}
-              </span>
-              )
+                  }"
+                >
+                  {{ ` - ${row.department_name}` }}
+                </span>
+                )
+              </template>
             </template>
           </bk-table-column>
         </template>
@@ -149,7 +152,7 @@
             :key="item.prop"
             :label="item.label"
             :prop="item.prop"
-            :min-width="formatOperate"
+            :width="formatOperate"
             :fixed="'right'"
           >
             <template slot-scope="{ row }">
@@ -195,6 +198,7 @@
                   <bk-button
                     theme="primary"
                     text
+                    class="operate-btn"
                     :disabled="formatAdminGroup(row) || row.department_id > 0"
                   >
                     {{ $t(`m.common['退出']`) }}
@@ -249,19 +253,6 @@
         />
       </template>
     </bk-table>
-
-    <!-- <BatchOperateSlider
-      :slider-width="960"
-      :show.sync="isShowRenewalSlider"
-      :is-batch="false"
-      :cur-slider-name="curSliderName"
-      :user-list="userList"
-      :depart-list="departList"
-      :title="$t(`m.renewal['续期']`)"
-      :group-data="queryGroupData"
-      :group-list="singleList"
-      @on-submit="handleAddGroupSubmit"
-    /> -->
 
     <MemberTemplateDetailSlider :show.sync="isShowTempSlider" :cur-detail-data="tempDetailData" />
 
@@ -351,9 +342,6 @@
         curGroupName: '',
         curGroupId: '',
         tableProps: [],
-        userList: [],
-        departList: [],
-        singleList: [],
         currentSelectList: [],
         queryGroupData: {},
         tempDetailData: {},
@@ -375,13 +363,16 @@
       isShowHandover () {
         return window.ENABLE_PERMISSION_HANDOVER.toLowerCase() === 'true' && this.isHasHandover;
       },
+      isShowDetailEntry () {
+        return !['customPerm', 'managerPerm'].includes(this.mode);
+      },
       formatJoinType () {
         return (payload) => {
           if (payload.template_id) {
             return this.$t(`m.userOrOrg['通过人员模板']`);
           }
           if (payload.department_id) {
-            return this.$t(`m.userOrOrg['通过组织']`);
+            return payload.department_name;
           }
           return this.$t(`m.perm['直接加入']`);
         };
@@ -450,17 +441,17 @@
       },
       formatOperate () {
         const typeMap = {
-            personalPerm: () => {
-              return ['zh-cn'].includes(window.CUR_LANGUAGE) ? 150 : 200;
-            },
-            departPerm: () => {
-              return ['zh-cn'].includes(window.CUR_LANGUAGE) ? 80 : 100;
-            }
-          };
-          if (typeMap[this.mode]) {
-           return typeMap[this.mode]();
+          personalPerm: () => {
+            return ['zh-cn'].includes(window.CUR_LANGUAGE) ? 150 : 200;
+          },
+          customPerm: () => {
+            return ['zh-cn'].includes(window.CUR_LANGUAGE) ? 200 : 300;
           }
-          return 300;
+        };
+        if (typeMap[this.mode]) {
+          return typeMap[this.mode]();
+        }
+        return ['zh-cn'].includes(window.CUR_LANGUAGE) ? 80 : 100;
       }
     },
     watch: {
@@ -558,6 +549,9 @@
       },
 
       handleViewDetail ({ id, name, department_name, template_name, template_id }, type) {
+        if (!this.isShowDetailEntry) {
+          return;
+        }
         const routeMap = {
           name: () => {
             this.curGroupName = name;
@@ -587,40 +581,6 @@
           }
         };
         return routeMap[type]();
-      },
-
-      handleShowRenewal (payload) {
-        this.curSliderName = 'renewal';
-        this.handleGetMembers();
-        this.renewalSliderTitle = this.$t(`m.common['续期']`);
-        this.singleList = [payload];
-        this.isShowRenewalSlider = true;
-      },
-
-      handleGetMembers () {
-        const userList = [];
-        const departList = [];
-        const typeMap = {
-          user: () => {
-            userList.push(this.queryGroupData);
-          },
-          department: () => {
-            departList.push(this.queryGroupData);
-          }
-        };
-        typeMap[this.queryGroupData.type]();
-        this.userList = [...userList];
-        this.departList = [...departList];
-      },
-
-      handleAddGroupSubmit (payload) {
-        const emitParams = {
-          ...payload,
-          ...{
-            mode: this.mode
-          }
-        };
-        this.$emit('on-add-group', emitParams);
       },
         
       handlePageChange (page) {
@@ -729,7 +689,9 @@
             return [
               { label: this.$t(`m.userGroup['用户组名']`), prop: 'name' },
               { label: this.$t(`m.common['描述']`), prop: 'description' },
-              { label: this.$t(`m.common['加入时间']`), prop: 'created_time' },
+              { label: this.$t(`m.grading['管理空间']`), prop: 'role.name' },
+              { label: this.$t(`m.levelSpace['管理员']`), prop: 'role_members' },
+              { label: this.$t(`m.perm['加入用户组时间']`), prop: 'created_time' },
               { label: this.$t(`m.perm['加入方式']`), prop: 'join_type' },
               { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' },
               { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
@@ -739,14 +701,30 @@
             return [
               { label: this.$t(`m.userGroup['用户组名']`), prop: 'name' },
               { label: this.$t(`m.common['描述']`), prop: 'description' },
-              { label: this.$t(`m.common['加入时间']`), prop: 'created_time' },
+              { label: this.$t(`m.grading['管理空间']`), prop: 'role.name' },
+              { label: this.$t(`m.levelSpace['管理员']`), prop: 'role_members' },
+              { label: this.$t(`m.perm['加入用户组时间']`), prop: 'created_time' },
               { label: this.$t(`m.perm['加入方式']`), prop: 'join_type' },
               { label: this.$t(`m.common['有效期']`), prop: 'expired_at_display' },
               { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
             ];
+          },
+          customPerm: () => {
+
+          },
+          managerPerm: () => {
+            return [
+              { label: this.$t(`m.permTransfer['管理员名称']`), prop: 'name' },
+              { label: this.$t(`m.common['类型']`), prop: 'type' },
+              { label: this.$t(`m.common['描述']`), prop: 'description' },
+              { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
+            ];
           }
         };
-        return tabMap[payload] ? tabMap[payload]() : tabMap['personalPerm']();
+        if (tabMap[payload]) {
+          return tabMap[payload]();
+        }
+        return tabMap['personalPerm']();
       },
 
       getDefaultSelect () {
@@ -760,7 +738,7 @@
 @import '@/views/user-org-perm/user-org-perm.css';
 /deep/ .my-perm-group-table {
   .operate-btn {
-    margin-left: 8px;
+    margin-right: 8px;
   }
   .is-expired {
     background-color: #FFF1DB;

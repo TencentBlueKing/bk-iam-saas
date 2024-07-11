@@ -10,7 +10,8 @@
         v-for="(item, index) in allPermItem"
         :key="index"
         :class="[
-          'resource-perm-side-content-table'
+          'resource-perm-side-content-table',
+          { 'is-show-perm': isShowPerm(item) && item.pagination.count > 0 }
         ]"
         :ref="`rTemplateItem_${item.id}`"
         :mode="'detail'"
@@ -52,7 +53,7 @@
       </RenderPermItem>
     </template>
     <template v-else>
-      <div class="perm-empty-wrapper">
+      <div class="perm-empty-wrapper" v-if="isHasHandover">
         <ExceptionEmpty
           :type="emptyPermData.type"
           :empty-text="emptyPermData.text"
@@ -109,16 +110,15 @@
     data () {
       return {
         permData: {
-          hasPerm: false
+          hasPerm: true
         },
         isOnlyPerm: false,
         isSearchResource: false,
         isHasHandover: false,
-        onePerm: 0,
         totalCount: 0,
         renewalGroupPermLen: 0,
         renewalCustomPermLen: 0,
-        initAllPermItem: [
+        allPermItem: [
           {
             id: 'personalPerm',
             name: this.$t(`m.userOrOrg['个人用户组权限']`),
@@ -194,9 +194,47 @@
               tipType: ''
             },
             list: []
+          },
+          {
+            id: 'customPerm',
+            name: this.$t(`m.perm['自定义权限']`),
+            loading: false,
+            expanded: false,
+            pagination: {
+              current: 1,
+              limit: 10,
+              count: 0,
+              showTotalCount: true
+            },
+            emptyData: {
+              type: 'empty',
+              text: '暂无数据',
+              tip: '',
+              tipType: ''
+            },
+            list: []
+          },
+          {
+            id: 'managerPerm',
+            name: this.$t(`m.perm['管理员权限']`),
+            loading: false,
+            expanded: false,
+            pagination: {
+              current: 1,
+              limit: 10,
+              count: 0,
+              showTotalCount: true
+            },
+            emptyData: {
+              type: 'empty',
+              text: '暂无数据',
+              tip: '',
+              tipType: ''
+            },
+            list: []
           }
         ],
-        allPermItem: [],
+        allPermItemBack: [],
         curSelectedGroup: [],
         queryGroupData: {},
         curSearchParams: {},
@@ -210,6 +248,40 @@
     },
     computed: {
       ...mapGetters(['user', 'roleList', 'externalSystemsLayout', 'externalSystemId', 'mainContentLoading']),
+      isHideApply () {
+        return this.externalSystemsLayout.myPerm.hideApplyBtn;
+      },
+      isShowPerm () {
+        return (payload) => {
+          const typeMap = {
+            all: () => {
+              return ['personalPerm', 'departPerm', 'userTempPerm', 'departTempPerm', 'customPerm', 'managerPerm'].includes(payload.id);
+            },
+            renewalPerm: () => {
+              return ['personalPerm', 'customPerm'].includes(payload.id);
+            },
+            personalPerm: () => {
+              return ['personalPerm'].includes(payload.id);
+            },
+            departPerm: () => {
+              return ['departPerm'].includes(payload.id);
+            },
+            memberTempPerm: () => {
+              return ['userTempPerm', 'departTempPerm'].includes(payload.id);
+            },
+            customPerm: () => {
+              return ['customPerm'].includes(payload.id);
+            },
+            managerPerm: () => {
+              return ['managerPerm'].includes(payload.id);
+            }
+          };
+          if (typeMap[this.queryGroupData.value]) {
+            return typeMap[this.queryGroupData.value]();
+          }
+          return false;
+        };
+      },
       formatExtCls () {
         return (index) => {
           const len = this.allPermItem[index].pagination.count;
@@ -248,6 +320,9 @@
         },
         immediate: true
       }
+    },
+    created () {
+      this.allPermItemBack = cloneDeep(this.allPermItem);
     },
     mounted () {
       this.handleSetBusQueryData();
@@ -335,9 +410,18 @@
             'perm/getDepartMentsPersonalGroups',
             params
           );
-          const totalCount = data.count || data.length || 0;
+          let totalCount = 0;
+          let tableList = [];
+          // 搜索接口是后台分页
+          if (data.hasOwnProperty('count')) {
+            totalCount = data.count;
+            tableList = data.results;
+          } else {
+            totalCount = data.length;
+            tableList = data;
+          }
           curData = Object.assign(curData, {
-            list: data.results || [],
+            list: tableList || [],
             emptyData: formatCodeData(code, emptyData, totalCount === 0),
             pagination: { ...pagination, ...{ count: totalCount } }
           });
@@ -349,7 +433,9 @@
           });
           this.messageAdvancedError(e);
         } finally {
-          curData.loading = false;
+          sleep(500).then(() => {
+            curData.loading = false;
+          });
         }
       },
   
@@ -449,10 +535,6 @@
           const params = {
             ...this.curSearchParams
           };
-          if (this.externalSystemId) {
-            params.system_id = this.externalSystemId;
-            params.hidden = false;
-          }
           const { code, data } = await this.$store.dispatch(
             'permApply/getHasPermSystem',
             params
@@ -487,15 +569,15 @@
         const { emptyData, pagination } = curData;
         try {
           curData.loading = true;
+          const { current, limit } = pagination;
           const params = {
-            ...this.curSearchParams
+            ...this.curSearchParams,
+            limit,
+            offset: (current - 1) * limit,
+            with_super: true
           };
-          if (this.externalSystemId) {
-            params.system_id = this.externalSystemId;
-            params.hidden = false;
-          }
           const { code, data } = await this.$store.dispatch(
-            'permApply/getHasPermSystem',
+            'role/getRatingManagerList',
             params
           );
           const totalCount = data.count || 0;
@@ -551,8 +633,6 @@
       },
   
       async fetchInitData () {
-        this.allPermItem = cloneDeep(this.initAllPermItem);
-        const hideApplyBtn = this.externalSystemsLayout.myPerm.hideApplyBtn;
         const typeMap = {
           all: async () => {
             const initReqList = [
@@ -567,68 +647,137 @@
             ];
             await Promise.all(initReqList);
             // 是否有可交接数据
-            if (hideApplyBtn) {
+            if (this.isHideApply) {
               this.isHasHandover = this.allPermItem.filter((item) => ['personalPerm'].includes(item.id)).some((v) => v.pagination.count > 0);
             } else {
               this.isHasHandover = this.allPermItem.filter((item) => ['personalPerm', 'customPerm', 'managerPerm'].includes(item.id)).some((v) => v.pagination.count > 0);
             }
             this.$set(this.permData, 'hasPerm', this.allPermItem.some((v) => v.pagination.count > 0));
-            this.isOnlyPerm = this.allPermItem.filter((v) => v.pagination.count > 0).length === 1;
             bus.$emit('on-update-all-perm', {
               allPerm: this.allPermItem,
               renewalGroupPermLen: this.renewalGroupPermLen,
               renewalCustomPermLen: this.renewalCustomPermLen
             });
-            this.formatDefaultExpand();
+            this.handleDefaultExpand();
           },
-          personalPerm: async () => {
-            this.renewalGroupPermLen = 0;
-            this.renewalCustomPermLen = 0;
+          renewalPerm: async () => {
             const initReqList = [
-              this.fetchUserGroupSearch()
+              this.fetchUserGroupSearch(),
+              this.fetchCustomPermSearch(),
+              this.fetchExpiredGroupPerm(),
+              this.fetchExpiredCustomPerm()
             ];
             await Promise.all(initReqList);
-            const personalPermData = this.allPermItem.filter((item) => ['personalPerm'].includes(item.id));
-            this.isHasHandover = personalPermData.some((v) => v.pagination.count > 0);
+            const curPermData = this.allPermItem.filter((item) => ['personalPerm', 'customPerm'].includes(item.id));
+            this.isHasHandover = curPermData.some((v) => v.pagination.count > 0);
             this.$set(this.permData, 'hasPerm', this.isHasHandover);
             bus.$emit('on-update-all-perm', {
               allPerm: this.allPermItem,
               renewalGroupPermLen: this.renewalGroupPermLen,
               renewalCustomPermLen: this.renewalCustomPermLen
             });
-            this.formatDefaultExpand();
+            this.$nextTick(() => {
+              this.allPermItem.forEach((item) => {
+                const permRef = this.$refs[`rTemplateItem_${item.id}`];
+                if (['personalPerm', 'customPerm'].includes(item.id) && permRef && permRef.length) {
+                  item.expanded = true;
+                }
+              });
+            });
+          },
+          personalPerm: async () => {
+            const initReqList = [
+              this.fetchUserGroupSearch(),
+              this.fetchExpiredGroupPerm()
+            ];
+            await Promise.all(initReqList);
+            const curPermData = this.allPermItem.filter((item) => ['personalPerm'].includes(item.id));
+            this.isHasHandover = curPermData.some((v) => v.pagination.count > 0);
+            this.$set(this.permData, 'hasPerm', this.isHasHandover);
+            bus.$emit('on-update-all-perm', {
+              allPerm: this.allPermItem,
+              renewalGroupPermLen: this.renewalGroupPermLen,
+              renewalCustomPermLen: this.renewalCustomPermLen
+            });
+            this.handleDefaultExpand();
+          },
+          departPerm: async () => {
+            const initReqList = [
+              this.fetchDepartGroupSearch()
+            ];
+            await Promise.all(initReqList);
+            const curPermData = this.allPermItem.filter((item) => ['departPerm'].includes(item.id));
+            this.isHasHandover = curPermData.some((v) => v.pagination.count > 0);
+            this.$set(this.permData, 'hasPerm', this.isHasHandover);
+            bus.$emit('on-update-all-perm', {
+              allPerm: this.allPermItem,
+              renewalGroupPermLen: this.renewalGroupPermLen,
+              renewalCustomPermLen: this.renewalCustomPermLen
+            });
+            this.handleDefaultExpand();
+          },
+          memberTempPerm: async () => {
+            const initReqList = [
+              this.fetchUserPermByTempSearch(),
+              this.fetchDepartPermByTempSearch()
+            ];
+            await Promise.all(initReqList);
+            const curPermData = this.allPermItem.filter((item) => ['userTempPerm', 'departTempPerm'].includes(item.id));
+            this.isHasHandover = curPermData.some((v) => v.pagination.count > 0);
+            this.$set(this.permData, 'hasPerm', this.isHasHandover);
+            bus.$emit('on-update-all-perm', {
+              allPerm: this.allPermItem,
+              renewalGroupPermLen: this.renewalGroupPermLen,
+              renewalCustomPermLen: this.renewalCustomPermLen
+            });
+            this.handleDefaultExpand();
+          },
+          customPerm: async () => {
+            const initReqList = [
+              this.fetchCustomPermSearch()
+            ];
+            await Promise.all(initReqList);
+            const curPermData = this.allPermItem.filter((item) => ['customPerm'].includes(item.id));
+            this.isHasHandover = curPermData.some((v) => v.pagination.count > 0);
+            this.$set(this.permData, 'hasPerm', this.isHasHandover);
+            bus.$emit('on-update-all-perm', {
+              allPerm: this.allPermItem,
+              renewalGroupPermLen: this.renewalGroupPermLen,
+              renewalCustomPermLen: this.renewalCustomPermLen
+            });
+            this.handleDefaultExpand();
+          },
+          managerPerm: async () => {
+            const initReqList = [
+              this.fetchManagerPermSearch()
+            ];
+            await Promise.all(initReqList);
+            const curPermData = this.allPermItem.filter((item) => ['managerPerm'].includes(item.id));
+            this.isHasHandover = curPermData.some((v) => v.pagination.count > 0);
+            this.$set(this.permData, 'hasPerm', this.isHasHandover);
+            bus.$emit('on-update-all-perm', {
+              allPerm: this.allPermItem,
+              renewalGroupPermLen: this.renewalGroupPermLen,
+              renewalCustomPermLen: this.renewalCustomPermLen
+            });
+            this.handleDefaultExpand();
           }
-          // department: async () => {
-          //   this.allPermItem = this.initAllPermItem.filter((item) => ['personalPerm', 'userTempPerm'].includes(item.id));
-          //   this.allPermItem[0] = Object.assign(this.allPermItem[0], { name: this.$t(`m.perm['用户组权限']`) });
-          //   await Promise.all([
-          //     this.fetchUserGroupSearch(),
-          //     this.fetchUserPermByTempSearch()
-          //   ]);
-          //   this.$set(this.permData, 'hasPerm', this.allPermItem.some((v) => v.pagination.count > 0));
-          //   this.isOnlyPerm = this.allPermItem.filter((v) => v.pagination.count > 0).length === 1;
-          //   this.formatDefaultExpand();
-          //   // 清空用户组需要判断如果有组织或者人员模板权限则代表左侧选中的数据还存在，不需要取第一条数据
-          //   const hasData = this.allPermItem.filter((item) => !['personalPerm'].includes(item.id)).some((v) => v.pagination.count > 0);
-          //   bus.$emit('on-exist-other-perm', { isRefreshUser: !hasData });
-          // }
         };
-          
-        return typeMap[this.queryGroupData.value]();
+        if (typeMap[this.queryGroupData.value]) {
+          return typeMap[this.queryGroupData.value]();
+        }
       },
 
-      formatDefaultExpand () {
+      handleDefaultExpand () {
         const curData = this.allPermItem.find((v) => v.pagination.count > 0);
-        this.$nextTick(() => {
+        setTimeout(() => {
           this.allPermItem.forEach((item) => {
-            if (curData && curData.id === item.id && this.$refs[`rTemplateItem_${item.id}`]) {
-              this.$refs[`rTemplateItem_${item.id}`][0].handleExpanded(false);
-              item.expanded = true;
-            } else {
-              item.expanded = false;
+            const permRef = this.$refs[`rTemplateItem_${item.id}`];
+            if (curData && curData.id === item.id && permRef && permRef.length > 0) {
+              permRef[0].handleExpanded(false);
             }
           });
-        });
+        }, 0);
       },
 
       formatExpandedData (payload) {
@@ -642,8 +791,8 @@
             } else {
               item.expanded = false;
             }
-          }, 0);
-        });
+          });
+        }, 0);
       },
 
       formatPaginationData (payload, current, limit) {
@@ -662,6 +811,9 @@
             },
             departTempPerm: async () => {
               await this.fetchDepartPermByTempSearch();
+            },
+            managerPerm: async () => {
+              await this.fetchManagerPermSearch();
             }
           };
           return typeMap[curData.id]();
@@ -669,6 +821,7 @@
       },
 
       handleExpanded (value, payload) {
+        console.log(value, 415);
         if (!value) {
           this.handleSelectedGroup([]);
           bus.$emit('on-remove-toggle-checkbox', this.curSelectedGroup);
@@ -788,10 +941,11 @@
   /deep/ .resource-perm-side-content-table {
     margin: 12px 0;
     background-color: #ffffff;
+    display: none;
     &:hover {
       background-color: #ffffff;
     }
-    .header {
+    .expand-header {
       padding-left: 16px;
       height: 46px;
       line-height: 46px;
@@ -809,6 +963,9 @@
           }
         }
       }
+    }
+    &.is-show-perm {
+      display: block;
     }
   }
   .perm-empty-wrapper {
