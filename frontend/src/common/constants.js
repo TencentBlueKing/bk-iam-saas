@@ -313,3 +313,23 @@ export const ALL_PERM_TYPE_LIST = [
     count: 0
   }
 ];
+
+// 所有管理员类型
+export const ALL_MANAGER_TYPE_ENUM = [
+  {
+    label: il8n('myApproval', '超级管理员'),
+    value: 'super_manager'
+  },
+  {
+    label: il8n('nav', '系统管理员'),
+    value: 'system_manager'
+  },
+  {
+    label: il8n('nav', '一级空间管理员'),
+    value: 'rating_manager'
+  },
+  {
+    label: il8n('nav', '二级空间管理员'),
+    value: 'subset_manager'
+  }
+];

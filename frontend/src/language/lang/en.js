@@ -1413,7 +1413,7 @@ export const m = {
         '超级管理员交接': 'super manager handover:',
         '系统管理员交接': 'system manager handover:',
         '分级管理员交接': 'rating manager handover',
-        '管理员名称': 'ManagerName',
+        '管理员名称': 'Manager name',
         '无法交接用户组：': 'Unable to handover group:',
         '（通过组织加入、已过期的组无法交接）': '(Joined via an organization, expired groups cannot be handover)',
         '无法交接自定义权限：': 'Unable to hand over custom permissions:',

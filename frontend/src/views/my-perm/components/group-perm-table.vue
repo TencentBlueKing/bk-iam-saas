@@ -113,16 +113,6 @@
                 >
                   {{ row.template_name }}
                 </span>
-                <span
-                  v-if="row.template_name"
-                  v-bk-tooltips="{
-                    content:
-                      `${formatJoinType(row)}( ${row.template_name || row.department_name }
-                  ${' - ' + row.department_name + ' )'}`
-                  }"
-                >
-                  {{ ` - ${row.department_name}` }}
-                </span>
                 )
               </template>
             </template>
@@ -143,6 +133,20 @@
                 ]"
               >
                 {{ row[item.prop] || '--'}}
+              </span>
+            </template>
+          </bk-table-column>
+        </template>
+        <template v-else-if="item.prop === 'manager_type'">
+          <bk-table-column
+            :key="item.prop"
+            :label="item.label"
+            :prop="item.prop"
+            :min-width="100"
+          >
+            <template slot-scope="{ row }">
+              <span>
+                {{ formatManagerType(row.type) }}
               </span>
             </template>
           </bk-table-column>
@@ -268,7 +272,7 @@
 <script>
   import { mapGetters } from 'vuex';
   import { cloneDeep } from 'lodash';
-  import { PERMANENT_TIMESTAMP } from '@/common/constants';
+  import { ALL_MANAGER_TYPE_ENUM, PERMANENT_TIMESTAMP } from '@/common/constants';
   import { bus } from '@/common/bus';
   import { getNowTimeExpired } from '@/common/util';
   // import BatchOperateSlider from './batch-operate-slider.vue';
@@ -420,6 +424,15 @@
       formatExpired () {
         return (payload) => {
           return payload < getNowTimeExpired();
+        };
+      },
+      formatManagerType () {
+        return (payload) => {
+          const managerData = ALL_MANAGER_TYPE_ENUM.find((v) => v.value === payload);
+          if (managerData) {
+            return managerData.label;
+          }
+          return '';
         };
       },
       formatRoleMembers () {
@@ -715,7 +728,7 @@
           managerPerm: () => {
             return [
               { label: this.$t(`m.permTransfer['管理员名称']`), prop: 'name' },
-              { label: this.$t(`m.common['类型']`), prop: 'type' },
+              { label: this.$t(`m.common['类型']`), prop: 'manager_type' },
               { label: this.$t(`m.common['描述']`), prop: 'description' },
               { label: this.$t(`m.common['操作-table']`), prop: 'operate' }
             ];

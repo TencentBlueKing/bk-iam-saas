@@ -633,8 +633,10 @@
       },
   
       async fetchInitData () {
+        let defaultExpandItem = [];
         const typeMap = {
           all: async () => {
+            defaultExpandItem = ['personalPerm'];
             const initReqList = [
               this.fetchUserGroupSearch(),
               this.fetchDepartGroupSearch(),
@@ -653,14 +655,9 @@
               this.isHasHandover = this.allPermItem.filter((item) => ['personalPerm', 'customPerm', 'managerPerm'].includes(item.id)).some((v) => v.pagination.count > 0);
             }
             this.$set(this.permData, 'hasPerm', this.allPermItem.some((v) => v.pagination.count > 0));
-            bus.$emit('on-update-all-perm', {
-              allPerm: this.allPermItem,
-              renewalGroupPermLen: this.renewalGroupPermLen,
-              renewalCustomPermLen: this.renewalCustomPermLen
-            });
-            this.handleDefaultExpand();
           },
           renewalPerm: async () => {
+            defaultExpandItem = ['personalPerm', 'customPerm'];
             const initReqList = [
               this.fetchUserGroupSearch(),
               this.fetchCustomPermSearch(),
@@ -668,116 +665,73 @@
               this.fetchExpiredCustomPerm()
             ];
             await Promise.all(initReqList);
-            const curPermData = this.allPermItem.filter((item) => ['personalPerm', 'customPerm'].includes(item.id));
-            this.isHasHandover = curPermData.some((v) => v.pagination.count > 0);
-            this.$set(this.permData, 'hasPerm', this.isHasHandover);
-            bus.$emit('on-update-all-perm', {
-              allPerm: this.allPermItem,
-              renewalGroupPermLen: this.renewalGroupPermLen,
-              renewalCustomPermLen: this.renewalCustomPermLen
-            });
-            this.$nextTick(() => {
-              this.allPermItem.forEach((item) => {
-                const permRef = this.$refs[`rTemplateItem_${item.id}`];
-                if (['personalPerm', 'customPerm'].includes(item.id) && permRef && permRef.length) {
-                  item.expanded = true;
-                }
-              });
-            });
           },
           personalPerm: async () => {
+            defaultExpandItem = ['personalPerm'];
             const initReqList = [
               this.fetchUserGroupSearch(),
               this.fetchExpiredGroupPerm()
             ];
             await Promise.all(initReqList);
-            const curPermData = this.allPermItem.filter((item) => ['personalPerm'].includes(item.id));
-            this.isHasHandover = curPermData.some((v) => v.pagination.count > 0);
-            this.$set(this.permData, 'hasPerm', this.isHasHandover);
-            bus.$emit('on-update-all-perm', {
-              allPerm: this.allPermItem,
-              renewalGroupPermLen: this.renewalGroupPermLen,
-              renewalCustomPermLen: this.renewalCustomPermLen
-            });
-            this.handleDefaultExpand();
           },
           departPerm: async () => {
+            defaultExpandItem = ['departPerm'];
             const initReqList = [
               this.fetchDepartGroupSearch()
             ];
             await Promise.all(initReqList);
-            const curPermData = this.allPermItem.filter((item) => ['departPerm'].includes(item.id));
-            this.isHasHandover = curPermData.some((v) => v.pagination.count > 0);
-            this.$set(this.permData, 'hasPerm', this.isHasHandover);
-            bus.$emit('on-update-all-perm', {
-              allPerm: this.allPermItem,
-              renewalGroupPermLen: this.renewalGroupPermLen,
-              renewalCustomPermLen: this.renewalCustomPermLen
-            });
-            this.handleDefaultExpand();
           },
           memberTempPerm: async () => {
+            defaultExpandItem = ['userTempPerm', 'departTempPerm'];
             const initReqList = [
               this.fetchUserPermByTempSearch(),
               this.fetchDepartPermByTempSearch()
             ];
             await Promise.all(initReqList);
-            const curPermData = this.allPermItem.filter((item) => ['userTempPerm', 'departTempPerm'].includes(item.id));
-            this.isHasHandover = curPermData.some((v) => v.pagination.count > 0);
-            this.$set(this.permData, 'hasPerm', this.isHasHandover);
-            bus.$emit('on-update-all-perm', {
-              allPerm: this.allPermItem,
-              renewalGroupPermLen: this.renewalGroupPermLen,
-              renewalCustomPermLen: this.renewalCustomPermLen
-            });
-            this.handleDefaultExpand();
           },
           customPerm: async () => {
+            defaultExpandItem = ['customPerm'];
             const initReqList = [
               this.fetchCustomPermSearch()
             ];
             await Promise.all(initReqList);
-            const curPermData = this.allPermItem.filter((item) => ['customPerm'].includes(item.id));
-            this.isHasHandover = curPermData.some((v) => v.pagination.count > 0);
-            this.$set(this.permData, 'hasPerm', this.isHasHandover);
-            bus.$emit('on-update-all-perm', {
-              allPerm: this.allPermItem,
-              renewalGroupPermLen: this.renewalGroupPermLen,
-              renewalCustomPermLen: this.renewalCustomPermLen
-            });
-            this.handleDefaultExpand();
           },
           managerPerm: async () => {
+            defaultExpandItem = ['managerPerm'];
             const initReqList = [
               this.fetchManagerPermSearch()
             ];
             await Promise.all(initReqList);
-            const curPermData = this.allPermItem.filter((item) => ['managerPerm'].includes(item.id));
-            this.isHasHandover = curPermData.some((v) => v.pagination.count > 0);
-            this.$set(this.permData, 'hasPerm', this.isHasHandover);
-            bus.$emit('on-update-all-perm', {
-              allPerm: this.allPermItem,
-              renewalGroupPermLen: this.renewalGroupPermLen,
-              renewalCustomPermLen: this.renewalCustomPermLen
-            });
-            this.handleDefaultExpand();
           }
         };
         if (typeMap[this.queryGroupData.value]) {
-          return typeMap[this.queryGroupData.value]();
+          await typeMap[this.queryGroupData.value]();
+          // 全部权限选项涉及蓝盾交互单独处理
+          if (!['all'].includes(this.queryGroupData.value)) {
+            const curPermData = this.allPermItem.filter((item) => defaultExpandItem.includes(item.id));
+            this.isHasHandover = curPermData.some((v) => v.pagination.count > 0);
+            this.$set(this.permData, 'hasPerm', this.isHasHandover);
+          }
+          bus.$emit('on-update-all-perm', {
+            allPerm: this.allPermItem,
+            renewalGroupPermLen: this.renewalGroupPermLen,
+            renewalCustomPermLen: this.renewalCustomPermLen
+          });
+          this.handleDefaultExpand(defaultExpandItem);
         }
       },
 
-      handleDefaultExpand () {
-        const curData = this.allPermItem.find((v) => v.pagination.count > 0);
-        setTimeout(() => {
+      handleDefaultExpand (payload) {
+        this.$nextTick(() => {
           this.allPermItem.forEach((item) => {
             const permRef = this.$refs[`rTemplateItem_${item.id}`];
-            if (curData && curData.id === item.id && permRef && permRef.length > 0) {
-              permRef[0].handleExpanded(false);
+            if (permRef && permRef.length && payload.includes(item.id)) {
+              item.expanded = true;
+            } else {
+              item.expanded = false;
             }
           });
-        }, 0);
+        });
       },
 
       formatExpandedData (payload) {
