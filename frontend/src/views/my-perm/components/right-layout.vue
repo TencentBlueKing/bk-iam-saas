@@ -144,6 +144,7 @@
     </div>
     <MultiTypeGroupPerm
       :group-data="groupData"
+      @on-selected-group="handleSelectGroupPerm"
     />
   </div>
 </template>
@@ -152,7 +153,7 @@
   import { cloneDeep } from 'lodash';
   import { mapGetters } from 'vuex';
   import { bus } from '@/common/bus';
-  import { PERMANENT_TIMESTAMP } from '@/common/constants';
+  import { getNowTimeExpired } from '@/common/util';
   import IamResourceCascadeSearch from '@/components/iam-resource-cascade-search';
   import MultiTypeGroupPerm from './multi-type-group-perm.vue';
   export default {
@@ -203,7 +204,7 @@
           }
         ],
         currentSelectList: [],
-        selectNoRenewalList: [],
+        selectRenewalList: [],
         formData: {
           name: '',
           id: '',
@@ -223,11 +224,24 @@
     },
     computed: {
       ...mapGetters(['navStick']),
+      isAdminGroup () {
+        return (payload) => {
+          if (payload) {
+            const { attributes, role_members } = payload;
+            if (attributes && attributes.source_from_role && role_members.length === 1) {
+              return true;
+            }
+            return false;
+          }
+        };
+      },
       isBatchDisabled () {
         return !this.currentSelectList.length;
       },
       isNoBatchQuit () {
-        return true;
+        // 只有个人用户组可以退出
+        const personalPerm = this.currentSelectList.filter((item) => ['personalPerm'].includes(item.mode_type) && item.department_id === 0 && !this.isAdminGroup(item));
+        return !(personalPerm.length > 0);
       },
       isNoBatchDelete () {
         const hasData = this.currentSelectList.length > 0;
@@ -241,25 +255,13 @@
         return !hasData;
       },
       isNoBatchHandover () {
-        return false;
+        return !this.currentSelectList.length;
       },
       isNoBatchRenewal () {
-        const emptyField = this.currentSelectList.find((item) => item.name === this.tabActive);
-        if (emptyField) {
-          const hasData = emptyField.tableList.length > 0 && this.currentSelectList.length > 0;
-          if (hasData) {
-            this.selectNoRenewalList = this.currentSelectList.filter(
-              (item) => item.expired_at === PERMANENT_TIMESTAMP);
-            if (this.currentSelectList.length === this.selectNoRenewalList.length) {
-              this.renewalGroupTitle = this.$t(
-                `m.userGroup['已选择的用户组成员不需要续期']`
-              );
-              return true;
-            }
-          }
-          return !hasData;
-        }
-        return true;
+        const selectGroup = this.currentSelectList.filter((item) =>
+          ['personalPerm', 'customPerm'].includes(item.mode_type) && item.expired_at < getNowTimeExpired()
+        );
+        return !(selectGroup.length > 0);
       }
     },
     watch: {
@@ -307,6 +309,11 @@
 
       handleRefreshTable () {
 
+      },
+
+      handleSelectGroupPerm (payload) {
+        console.log(payload);
+        this.currentSelectList = [...payload];
       },
 
       handleSearch () {
@@ -381,8 +388,15 @@
       }
     }
   }
-  .operate-dropdown-menu {
+  /deep/ .operate-dropdown-menu {
     margin-top: 12px;
+    background-color: #3a84ff;
+    .group-dropdown-trigger-btn {
+      color: #ffffff;
+      &:hover {
+        border-color: #3a84ff;
+      }
+    }
     .bk-dropdown-content {
       padding-top: 0;
       cursor: pointer;

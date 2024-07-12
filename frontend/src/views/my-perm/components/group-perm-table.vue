@@ -565,7 +565,7 @@
         return typeMap[type]();
       },
 
-      handleViewDetail ({ id, name, department_name, template_name, template_id }, type) {
+      handleViewDetail ({ id, name, template_name, template_id }, type) {
         if (!this.isShowDetailEntry) {
           return;
         }
@@ -666,7 +666,6 @@
             const selectCount = paginationWrapper.getElementsByClassName('bk-page-selection-count');
             if (selectCount.length && selectCount[0].children && selectCount[0].children.length) {
               const len = payload.filter((v) => v.mode_type === this.mode);
-              console.log(len, payload, this.mode, 55555);
               selectCount[0].children[0].innerHTML = len.length;
             }
           }

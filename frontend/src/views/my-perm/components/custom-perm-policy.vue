@@ -27,7 +27,6 @@
     </template>
     <template v-else>
       <div class="my-perm-custom-perm-empty-wrapper">
-        444
         <ExceptionEmpty
           :type="emptyPolicyData.type"
           :empty-text="emptyPolicyData.text"
