@@ -1,5 +1,5 @@
 <template>
-  <div class="my-perm-group-perm">
+  <div class="my-perm-group-wrapper">
     <bk-table
       ref="groupPermRef"
       size="small"
@@ -113,6 +113,7 @@
                 >
                   {{ row.template_name }}
                 </span>
+                <span v-if="row.department_name"> - {{ row.department_name }}</span>
                 )
               </template>
             </template>
@@ -236,10 +237,14 @@
             :label="item.label"
             :prop="item.prop"
             :min-width="['description'].includes(item.prop) ? 200 : 120"
-            :show-overflow-tooltip="true"
           >
             <template slot-scope="{ row }">
-              <span>
+              <span
+                v-bk-tooltips="{
+                  content: row[item.prop],
+                  placements: ['right-start']
+                }"
+              >
                 {{ row[item.prop] || '--'}}
               </span>
             </template>
@@ -361,7 +366,7 @@
       ...mapGetters(['user']),
       isShowRenewal () {
         return (payload) => {
-          return payload.expired_at !== PERMANENT_TIMESTAMP && ['personalPerm', 'customPerm'].includes(this.mode);
+          return this.formatExpired(payload.expired_at) && ['personalPerm', 'customPerm'].includes(this.mode);
         };
       },
       isShowHandover () {
@@ -571,26 +576,8 @@
             this.curGroupId = id;
             this.isShowPermSideSlider = true;
           },
-          userGroupDetail: () => {
-            const routeData = this.$router.resolve({
-              path: `user-group-detail/${id}`,
-              query: {
-                noFrom: true
-              }
-            });
-            window.open(routeData.href, '_blank');
-          },
           memberTemplate: async () => {
             await this.fetchDetailInfo(template_id, template_name);
-          },
-          userOrgPerm: () => {
-            const routeData = this.$router.resolve({
-              path: `user-org-perm`,
-              query: {
-                department_name
-              }
-            });
-            window.open(routeData.href, '_blank');
           }
         };
         return routeMap[type]();
@@ -748,23 +735,31 @@
 </script>
   
 <style lang="postcss" scoped>
-@import '@/views/user-org-perm/user-org-perm.css';
-/deep/ .my-perm-group-table {
-  .operate-btn {
-    margin-right: 8px;
-  }
-  .is-expired {
-    background-color: #FFF1DB;
-    color: #FE9C00;
-    border-radius: 2px;
-    padding: 4px 8px;
-  }
-  .is-expiring-soon {
-    color: #FE9C00;
-  }
-  .bk-table-fixed,
-  .bk-table-fixed-right {
-    border-bottom: 0;
+.my-perm-group-wrapper {
+  /deep/ .my-perm-group-table {
+    .can-view-name {
+      color: #3a84ff;
+      cursor: pointer;
+      &:hover {
+        color: #699df4;
+      }
+    }
+    .operate-btn {
+      margin-right: 8px;
+    }
+    .is-expired {
+      background-color: #FFF1DB;
+      color: #FE9C00;
+      border-radius: 2px;
+      padding: 4px 8px;
+    }
+    .is-expiring-soon {
+      color: #FE9C00;
+    }
+    .bk-table-fixed,
+    .bk-table-fixed-right {
+      border-bottom: 1px solid #dfe0e5 !important;
+    }
   }
 }
 </style>

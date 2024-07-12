@@ -22,7 +22,13 @@
     >
       <bk-table-column :label="$t(`m.userGroup['用户组']`)">
         <template slot-scope="{ row }">
-          <div class="user-groups" @click="handleOpen(row.id)">
+          <div
+            :class="[
+              'user-groups',
+              { 'is-link': !isStaff }
+            ]"
+            @click="handleOpen(row.id)"
+          >
             <span class="user-groups-name" :title="row.name">
               {{ row.name }}
             </span>
@@ -30,7 +36,7 @@
           </div>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.common['操作-table']`)" width="150">
+      <bk-table-column :label="$t(`m.common['操作-table']`)" width="150" v-if="!isStaff">
         <template slot-scope="{ row }">
           <div>
             <bk-popconfirm
@@ -82,6 +88,7 @@
 </template>
 
 <script>
+  import { mapGetters } from 'vuex';
   import { formatCodeData } from '@/common/util';
   import { bus } from '@/common/bus';
   export default {
@@ -107,6 +114,12 @@
           tipType: ''
         }
       };
+    },
+    computed: {
+      ...mapGetters(['user']),
+      isStaff () {
+        return this.user.role.type === 'staff';
+      }
     },
     methods: {
       async fetchAssociateGroup (tableLoading = false) {
@@ -184,13 +197,15 @@
       },
 
       handleOpen (id) {
-        const routeData = this.$router.resolve({
-          path: `user-group-detail/${id}`,
-          query: {
-            noFrom: true
-          }
-        });
-        window.open(routeData.href, '_blank');
+        if (!this.isStaff) {
+          const routeData = this.$router.resolve({
+            path: `user-group-detail/${id}`,
+            query: {
+              noFrom: true
+            }
+          });
+          window.open(routeData.href, '_blank');
+        }
       },
 
       handleEmptyClear () {
@@ -229,12 +244,14 @@
       .user-groups-icon {
         display: none;
       }
-      &:hover {
-        color: #3a84ff;
-        cursor: pointer;
-        .user-groups-icon {
-          display: block;
-          margin-left: 5px;
+      &.is-link {
+        &:hover {
+          color: #3a84ff;
+          cursor: pointer;
+          .user-groups-icon {
+            display: block;
+            margin-left: 5px;
+          }
         }
       }
     }
