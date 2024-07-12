@@ -176,7 +176,6 @@
       },
     
       handleExpanded () {
-        console.log(this.isExpanded);
         this.isExpanded = !this.isExpanded;
         this.$emit('update:expanded', true);
         this.$emit('on-expanded', this.isExpanded);

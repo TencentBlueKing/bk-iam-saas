@@ -149,7 +149,9 @@
 </template>
 
 <script>
+  import { cloneDeep } from 'lodash';
   import { mapGetters } from 'vuex';
+  import { bus } from '@/common/bus';
   import { PERMANENT_TIMESTAMP } from '@/common/constants';
   import IamResourceCascadeSearch from '@/components/iam-resource-cascade-search';
   import MultiTypeGroupPerm from './multi-type-group-perm.vue';
@@ -175,6 +177,7 @@
     data () {
       return {
         enableGroupInstanceSearch: window.ENABLE_GROUP_INSTANCE_SEARCH.toLowerCase() === 'true',
+        isSearchPerm: false,
         isDropdownShow: false,
         formItemWidth: '',
         renewalGroupTitle: '',
@@ -206,6 +209,12 @@
           id: '',
           description: ''
         },
+        curSearchPagination: {
+          current: 1,
+          count: 0,
+          limit: 10
+        },
+        curSearchParams: {},
         curSystemAction: {},
         curResourceData: {},
         resourceSliderWidth: Math.ceil(window.innerWidth * 0.67 - 7) < 960
@@ -268,8 +277,32 @@
       });
     },
     methods: {
-      handleRemoteTable () {
-      
+      async fetchRemoteTable () {
+        const params = {
+          ...this.curSearchParams,
+          ...this.formData
+        };
+        bus.$emit('on-refresh-resource-search', {
+          isSearchPerm: true,
+          curSearchParams: params,
+          curSearchPagination: this.curSearchPagination
+        });
+      },
+
+      handleRemoteTable (payload) {
+        const { emptyData, pagination, searchParams } = payload;
+        const params = {
+          ...searchParams,
+          ...this.formData
+        };
+        this.isSearchPerm = emptyData.tipType === 'search';
+        this.curSearchParams = cloneDeep(params);
+        this.curSearchPagination = cloneDeep(pagination);
+        bus.$emit('on-refresh-resource-search', {
+          isSearchPerm: this.isSearchPerm,
+          curSearchPagination: this.curSearchPagination,
+          curSearchParams: params
+        });
       },
 
       handleRefreshTable () {

@@ -1,0 +1,22 @@
+.iam-custom-popover-confirm {
+  .popover-title {
+    font-size: 16px;
+    padding-bottom: 16px;
+    color: #313238;
+  }
+  .popover-content {
+    color: #63656e;
+    .popover-content-item {
+      display: flex;
+      margin-bottom: 8px;
+      &-value {
+        color: #313238;
+        margin-left: 8px;
+      }
+    }
+    &-tip {
+      padding-bottom: 20px;
+      color: #63656e;
+    }
+  }
+}

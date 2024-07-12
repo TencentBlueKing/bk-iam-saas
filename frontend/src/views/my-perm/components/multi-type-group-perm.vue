@@ -1,7 +1,7 @@
 <template>
   <div
     :class="[
-      'user-perm-group',
+      'perm-group-all-content',
       { 'is-show-notice': showNoticeAlert && showNoticeAlert() }
     ]"
   >
@@ -9,47 +9,49 @@
       <RenderPermItem
         v-for="(item, index) in allPermItem"
         :key="index"
-        :class="[
-          'resource-perm-side-content-table',
-          { 'is-show-perm': isShowPerm(item) && item.pagination.count > 0 }
-        ]"
         :ref="`rTemplateItem_${item.id}`"
         :mode="'detail'"
         :title="item.name"
         :count="item.pagination.count"
         :expanded.sync="item.expanded"
         :ext-cls="formatExtCls(index)"
+        :class="[
+          'resource-perm-side-content-table',
+          { 'is-show-perm': isShowPerm(item) && item.pagination.count > 0 }
+        ]"
         @on-expanded="handleExpanded(...arguments, item, index)"
       >
-        <div v-if="item.pagination.count > 0" slot="headerTitle">
-          <span class="sub-header-item-title">{{ item.name }}</span>
-          <span class="sub-header-item-count">
-            ({{ $t(`m.common['共']`) }}
-            <span class="count">{{ item.pagination.count }}</span>
-            {{ $t(`m.common['条']`) }})
-          </span>
-        </div>
-        <GroupPermTable
-          ref="childPermTable"
-          v-if="item.pagination.count > 0"
-          :mode="item.id"
-          :is-loading="item.loading"
-          :is-search-perm="isSearchResource"
-          :is-has-handover="isHasHandover"
-          :pagination="item.pagination"
-          :cur-search-params="curSearchParams"
-          :group-data="groupData"
-          :list="item.list"
-          :cur-selected-group="curSelectedGroup"
-          :empty-data="item.emptyData"
-          @on-page-change="handlePageChange(...arguments, item)"
-          @on-limit-change="handleLimitChange(...arguments, item)"
-          @on-selected-group="handleSelectedGroup"
-          @on-quit-group="handleQuitGroup"
-          @on-add-group="handleAddGroup"
-          @on-clear="handleEmptyClear"
-          @on-refresh="handleEmptyRefresh"
-        />
+        <template v-if="item.pagination.count > 0">
+          <div slot="headerTitle">
+            <span class="sub-header-item-title">{{ item.name }}</span>
+            <span class="sub-header-item-count">
+              ({{ $t(`m.common['共']`) }}
+              <span class="count">{{ item.pagination.count }}</span>
+              {{ $t(`m.common['条']`) }})
+            </span>
+          </div>
+          <component
+            ref="childPermTable"
+            :key="comKey"
+            :is="curCom(item.id)"
+            :mode="item.id"
+            :is-loading="item.loading"
+            :is-search-perm="isSearchResource"
+            :is-has-handover="isHasHandover"
+            :pagination="item.pagination"
+            :cur-search-params="curSearchParams"
+            :group-data="groupData"
+            :list="item.list"
+            :cur-selected-group="curSelectedGroup"
+            :empty-data="item.emptyData"
+            @on-page-change="handlePageChange(...arguments, item)"
+            @on-limit-change="handleLimitChange(...arguments, item)"
+            @on-selected-group="handleSelectedGroup"
+            @on-quit-group="handleQuitGroup"
+            @on-clear="handleEmptyClear"
+            @on-refresh="handleEmptyRefresh"
+          />
+        </template>
       </RenderPermItem>
     </template>
     <template v-else>
@@ -73,11 +75,13 @@
   import { bus } from '@/common/bus';
   import { existValue, formatCodeData, sleep } from '@/common/util';
   import RenderPermItem from '@/components/iam-expand-perm/index.vue';
+  import CustomPermPolicy from './custom-perm-policy.vue';
   import GroupPermTable from './group-perm-table.vue';
   export default {
     inject: ['showNoticeAlert'],
     components: {
       RenderPermItem,
+      CustomPermPolicy,
       GroupPermTable
     },
     props: {
@@ -118,6 +122,7 @@
         totalCount: 0,
         renewalGroupPermLen: 0,
         renewalCustomPermLen: 0,
+        comKey: -1,
         allPermItem: [
           {
             id: 'personalPerm',
@@ -136,7 +141,8 @@
               tip: '',
               tipType: ''
             },
-            list: []
+            list: [],
+            listBack: []
           },
           {
             id: 'departPerm',
@@ -155,7 +161,8 @@
               tip: '',
               tipType: ''
             },
-            list: []
+            list: [],
+            listBack: []
           },
           {
             id: 'userTempPerm',
@@ -174,7 +181,8 @@
               tip: '',
               tipType: ''
             },
-            list: []
+            list: [],
+            listBack: []
           },
           {
             id: 'departTempPerm',
@@ -193,7 +201,8 @@
               tip: '',
               tipType: ''
             },
-            list: []
+            list: [],
+            listBack: []
           },
           {
             id: 'customPerm',
@@ -212,7 +221,8 @@
               tip: '',
               tipType: ''
             },
-            list: []
+            list: [],
+            listBack: []
           },
           {
             id: 'managerPerm',
@@ -231,7 +241,8 @@
               tip: '',
               tipType: ''
             },
-            list: []
+            list: [],
+            listBack: []
           }
         ],
         allPermItemBack: [],
@@ -247,7 +258,23 @@
       };
     },
     computed: {
-      ...mapGetters(['user', 'roleList', 'externalSystemsLayout', 'externalSystemId', 'mainContentLoading']),
+      ...mapGetters(['user', 'externalSystemsLayout', 'externalSystemId', 'mainContentLoading']),
+      curCom () {
+        return (payload) => {
+          let com = '';
+          const list = new Map([
+            [['personalPerm', 'departPerm', 'userTempPerm', 'departTempPerm', 'managerPerm'], 'GroupPermTable'],
+            [['customPerm'], 'CustomPermPolicy']
+          ]);
+          for (const [key, value] of list.entries()) {
+            if (key.includes(payload)) {
+              com = value;
+              break;
+            }
+          }
+          return com;
+        };
+      },
       isHideApply () {
         return this.externalSystemsLayout.myPerm.hideApplyBtn;
       },
@@ -343,12 +370,22 @@
         try {
           curData.loading = true;
           const { current, limit } = pagination;
-          const url = 'perm/getPersonalGroups';
-          const params = {
-            ...this.curSearchParams,
-            page: current,
-            page_size: limit
-          };
+          let url = '';
+          let params = {};
+          if (this.isSearchResource) {
+            url = 'perm/getUserGroupSearch';
+            params = {
+              ...this.curSearchParams,
+              limit,
+              offset: limit * (current - 1)
+            };
+          } else {
+            url = 'perm/getPersonalGroups';
+            params = {
+              page_size: limit,
+              page: current
+            };
+          }
           if (this.externalSystemId) {
             params.system_id = this.externalSystemId;
             params.hidden = false;
@@ -361,17 +398,8 @@
             pagination: { ...pagination, ...{ count: totalCount } }
           });
           this.emptyPermData = cloneDeep(curData.emptyData);
-          setTimeout(() => {
-            const curSelectedId = this.curSelectedGroup.map((item) => item.id);
-            curData.list.forEach((item) => {
-              if (this.$refs.childPermTable && this.$refs.childPermTable.length) {
-                if (curSelectedId.includes(item.id)) {
-                  this.$refs.childPermTable[0].$refs.groupPermRef.toggleRowSelection(item, true);
-                }
-                this.$refs.childPermTable[0].fetchCustomTotal(this.curSelectedGroup);
-              }
-            });
-          }, 0);
+          // 跨页全选
+          this.handleGetSelectedGroups(curData.id);
         } catch (e) {
           this.emptyPermData = formatCodeData(e.code, emptyData);
           curData = Object.assign(curData, {
@@ -397,34 +425,42 @@
         try {
           curData.loading = true;
           const { current, limit } = pagination;
-          const params = {
-            ...this.curSearchParams,
-            limit,
-            offset: limit * (current - 1)
-          };
+          let url = '';
+          let params = {};
+          if (this.isSearchResource) {
+            url = 'perm/getDepartGroupSearch';
+            params = {
+             ...this.curSearchParams,
+             limit,
+             offset: limit * (current - 1)
+            };
+          } else {
+            url = 'perm/getDepartMentsPersonalGroups';
+          }
           if (this.externalSystemId) {
             params.system_id = this.externalSystemId;
             params.hidden = false;
           }
-          const { code, data } = await this.$store.dispatch(
-            'perm/getDepartMentsPersonalGroups',
-            params
-          );
-          let totalCount = 0;
-          let tableList = [];
+          const { code, data } = await this.$store.dispatch(url, params);
           // 搜索接口是后台分页
           if (data.hasOwnProperty('count')) {
-            totalCount = data.count;
-            tableList = data.results;
+            curData = Object.assign(curData, {
+              list: data.results || [],
+              listBack: data.results || [],
+              emptyData: formatCodeData(code, emptyData, data.count === 0),
+              pagination: { ...pagination, ...{ count: data.count } }
+            });
           } else {
-            totalCount = data.length;
-            tableList = data;
+            curData = Object.assign(curData, {
+              list: data || [],
+              listBack: data || [],
+              emptyData: formatCodeData(code, emptyData, data.length === 0),
+              pagination: { ...pagination, ...{ count: data.length } }
+            });
+            this.handleGetDataByPage(current, curData);
           }
-          curData = Object.assign(curData, {
-            list: tableList || [],
-            emptyData: formatCodeData(code, emptyData, totalCount === 0),
-            pagination: { ...pagination, ...{ count: totalCount } }
-          });
+          this.emptyPermData = formatCodeData(code, emptyData);
+          this.handleGetSelectedGroups(curData.id);
         } catch (e) {
           curData = Object.assign(curData, {
             list: [],
@@ -463,10 +499,12 @@
           const totalCount = data.count;
           curData = Object.assign(curData, {
             list: data.results || [],
+            listBack: data.results || [],
             emptyData: formatCodeData(code, emptyData, totalCount === 0),
             pagination: { ...pagination, ...{ count: totalCount } }
           });
           this.emptyPermData = cloneDeep(curData.emptyData);
+          this.handleGetSelectedGroups(curData.id);
         } catch (e) {
           curData = Object.assign(curData, {
             list: [],
@@ -503,10 +541,12 @@
           const totalCount = data.count;
           curData = Object.assign(curData, {
             list: data.results || [],
+            listBack: data.results || [],
             emptyData: formatCodeData(code, emptyData, totalCount === 0),
             pagination: { ...pagination, ...{ count: totalCount } }
           });
           this.emptyPermData = cloneDeep(curData.emptyData);
+          this.handleGetSelectedGroups(curData.id);
         } catch (e) {
           curData = Object.assign(curData, {
             list: [],
@@ -541,10 +581,12 @@
           );
           const totalCount = data.length || 0;
           curData = Object.assign(curData, {
-            list: data.results || [],
+            list: data || [],
+            listBack: data || [],
             emptyData: formatCodeData(code, emptyData, totalCount === 0),
             pagination: { ...pagination, ...{ count: totalCount } }
           });
+          this.handleGetSelectedGroups(curData.id);
         } catch (e) {
           curData = Object.assign(curData, {
             list: [],
@@ -586,6 +628,7 @@
             emptyData: formatCodeData(code, emptyData, totalCount === 0),
             pagination: { ...pagination, ...{ count: totalCount } }
           });
+          this.handleGetSelectedGroups(curData.id);
         } catch (e) {
           curData = Object.assign(curData, {
             list: [],
@@ -721,6 +764,28 @@
         }
       },
 
+      handleGetSelectedGroups (payload) {
+        setTimeout(() => {
+          const tableRefList = this.$refs.childPermTable;
+          const curData = this.allPermItem.find((item) => item.id === payload);
+          const curSelectedId = this.curSelectedGroup.map((item) => `${item.id}&${item.name}&${item.mode_type}`);
+          if (curData && tableRefList && tableRefList.length > 0) {
+            const curTableRef = tableRefList.find((v) => v.mode === curData.id);
+            if (curTableRef) {
+              curData.list.forEach((item) => {
+                this.$set(item, 'mode_type', curData.id);
+                if (tableRefList && tableRefList.length > 0) {
+                  if (curSelectedId.includes(`${item.id}&${item.name}&${item.mode_type}`)) {
+                    curTableRef.$refs[`groupPermRef_${curData.id}`].toggleRowSelection(item, true);
+                  }
+                }
+              });
+              curTableRef.fetchCustomTotal(this.curSelectedGroup, curData.id);
+            }
+          }
+        }, 0);
+      },
+
       handleDefaultExpand (payload) {
         this.$nextTick(() => {
           this.allPermItem.forEach((item) => {
@@ -734,22 +799,26 @@
         });
       },
 
-      formatExpandedData (payload) {
-        setTimeout(() => {
-          this.allPermItem.forEach((item) => {
-            if (item.expanded || item.id === payload.mode) {
-              const hasRef = this.$refs[`rTemplateItem_${item.id}`];
-              if (hasRef && hasRef.length > 0) {
-                hasRef[0].handleExpanded(false);
-              }
-            } else {
-              item.expanded = false;
-            }
-          });
-        }, 0);
+      handleGetDataByPage (page, payload) {
+        const curData = this.allPermItem.find((item) => item.id === payload.id);
+        if (!curData) {
+          return;
+        }
+        if (!page) {
+          payload.pagination.current = page = 1;
+        }
+        let startIndex = (page - 1) * payload.pagination.limit;
+        let endIndex = page * payload.pagination.limit;
+        if (startIndex < 0) {
+          startIndex = 0;
+        }
+        if (endIndex > payload.listBack.length) {
+          endIndex = payload.listBack.length;
+        }
+        return payload.listBack.slice(startIndex, endIndex);
       },
 
-      formatPaginationData (payload, current, limit) {
+      handleGetPaginationData (payload, current, limit) {
         const curData = this.allPermItem.find((item) => item.id === payload.id);
         if (curData) {
           curData.pagination = Object.assign(curData, { current, limit });
@@ -775,7 +844,6 @@
       },
 
       handleExpanded (value, payload) {
-        console.log(value, 415);
         if (!value) {
           this.handleSelectedGroup([]);
           bus.$emit('on-remove-toggle-checkbox', this.curSelectedGroup);
@@ -793,14 +861,11 @@
 
       handleRefreshGroup (payload, current) {
         const curData = this.allPermItem.find((item) => item.id === payload.mode);
-        this.formatPaginationData(curData, current, curData.pagination.limit);
-        this.curSelectedGroup = [];
-        this.$emit('on-selected-group', []);
-      },
-
-      handleAddGroup (payload) {
-        const curData = this.allPermItem.find((item) => item.id === payload.mode);
-        this.handleRefreshGroup(payload, curData.pagination.current);
+        if (curData) {
+          this.handleGetPaginationData(curData, current, curData.pagination.limit);
+          this.curSelectedGroup = [];
+          this.$emit('on-selected-group', []);
+        }
       },
 
       handleQuitGroup (payload) {
@@ -809,20 +874,22 @@
   
       handlePageChange (current, payload) {
         const curData = this.allPermItem.find((item) => item.id === payload.id);
-        this.formatPaginationData(payload, current, curData.pagination.limit);
+        if (curData) {
+          this.handleGetPaginationData(payload, current, curData.pagination.limit);
+        }
       },
   
       handleLimitChange (limit, payload) {
         const curData = this.allPermItem.find((item) => item.id === payload.id);
-        curData.current = 1;
-        this.formatPaginationData(payload, curData.current, limit);
+        if (curData) {
+          curData.current = 1;
+          this.handleGetPaginationData(payload, curData.current, limit);
+        }
       },
 
       handleSetBusQueryData () {
         this.$once('hook:beforeDestroy', () => {
           bus.$off('on-refresh-resource-search');
-          bus.$off('on-refresh-template-table');
-          bus.$off('on-info-change');
         });
         bus.$on('on-refresh-resource-search', (payload) => {
           const { isSearchPerm, curSearchParams } = payload;
@@ -833,24 +900,6 @@
           this.isSearchResource = isSearchPerm || false;
           this.resetPagination();
           this.fetchInitData();
-        });
-        bus.$on('on-info-change', ({ mode }) => {
-          const modeMap = {
-            userTempPerm: async () => {
-              await this.fetchUserPermByTempSearch();
-            },
-            departTempPerm: async () => {
-              await this.fetchDepartPermByTempSearch();
-            }
-          };
-          if (modeMap[mode]) {
-            modeMap[mode]();
-          }
-        });
-        bus.$on('on-refresh-template-table', async (payload) => {
-          this.resetPagination();
-          await this.fetchInitData();
-          this.formatExpandedData(payload);
         });
       },
   
@@ -874,7 +923,7 @@
 </script>
   
 <style lang="postcss" scoped>
-.user-perm-group {
+.perm-group-all-content {
   position: relative;
   width: 100%;
   height: calc(100% - 190px);

@@ -1,7 +1,7 @@
 <template>
   <div class="my-perm-group-wrapper">
     <bk-table
-      ref="groupPermRef"
+      :ref="`groupPermRef_${mode}`"
       size="small"
       ext-cls="user-org-perm-table my-perm-group-table"
       :data="list"
@@ -99,8 +99,9 @@
               <span
                 v-bk-tooltips="{
                   content:
-                    `${formatJoinType(row)}( ${row.template_name || row.department_name }
-                  ${row.template_name && row.department_name ? ' - ' + row.department_name + ' )' : ' )'}`
+                    row.template_id > 0 ? `${formatJoinType(row)}( ${row.template_name}
+                    ${row.template_name && row.department_name ? ' - ' + row.department_name + ' )' : ' )'}`
+                    : formatJoinType(row)
                 }"
               >
                 {{ formatJoinType(row) }}
@@ -165,7 +166,7 @@
                 v-if="['personalPerm'].includes(mode)"
                 trigger="click"
                 placement="bottom-start"
-                ext-popover-cls="user-org-remove-confirm"
+                ext-popover-cls="iam-custom-popover-confirm"
                 :confirm-text="$t(`m.common['退出']`)"
                 @confirm="handleOperate(row, 'quit')"
               >
@@ -275,21 +276,19 @@
 </template>
   
 <script>
-  import { mapGetters } from 'vuex';
   import { cloneDeep } from 'lodash';
-  import { ALL_MANAGER_TYPE_ENUM, PERMANENT_TIMESTAMP } from '@/common/constants';
+  import { mapGetters } from 'vuex';
   import { bus } from '@/common/bus';
+  import { ALL_MANAGER_TYPE_ENUM, PERMANENT_TIMESTAMP } from '@/common/constants';
   import { getNowTimeExpired } from '@/common/util';
-  // import BatchOperateSlider from './batch-operate-slider.vue';
   import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
-  import RenderGroupPermSideSlider from '../components/render-group-perm-sideslider';
+  import RenderGroupPermSideSlider from '../components/render-group-perm-side-slider';
   import MemberTemplateDetailSlider from '@/views/member-template/components/member-template-detail-slider.vue';
 
   export default {
     components: {
       IamEditMemberSelector,
       RenderGroupPermSideSlider,
-      // BatchOperateSlider,
       MemberTemplateDetailSlider
     },
     props: {
@@ -508,8 +507,8 @@
         this.$emit('on-selected-group', payload);
         this.$nextTick(() => {
           this.list.forEach((item) => {
-            if (this.$refs.groupPermRef && !payload.map((v) => v.id).includes(item.id)) {
-              this.$refs.groupPermRef.toggleRowSelection(item, false);
+            if (this.$refs[`groupPermRef_${this.mode}`] && !payload.map((v) => v.id).includes(item.id)) {
+              this.$refs[`groupPermRef_${this.mode}`].toggleRowSelection(item, false);
             }
           });
         });
@@ -592,10 +591,32 @@
       },
 
       handleAllChange (selection) {
+        // 因为模板跟个人全选存在id、name一模一样的业务场景，所以需要给个唯一标识
+        if (selection.length) {
+          selection = selection.map((v) => {
+            return {
+              ...v,
+              ...{
+                mode_type: this.mode
+              }
+            };
+          });
+        }
         this.fetchSelectedGroups('all', selection);
       },
 
       handleChange (selection, row) {
+        this.$set(row, 'mode_type', this.mode);
+        if (selection.length) {
+          selection = selection.map((v) => {
+            return {
+              ...v,
+              ...{
+                mode_type: this.mode
+              }
+            };
+          });
+        }
         this.fetchSelectedGroups('multiple', selection, row);
       },
   
@@ -605,7 +626,7 @@
             const hasData = {};
             const selectList = [...this.currentSelectList, ...this.curSelectedGroup].reduce((curr, next) => {
               // eslint-disable-next-line no-unused-expressions
-              hasData[`${next.name}&${next.id}`] ? '' : hasData[`${next.name}&${next.id}`] = true && curr.push(next);
+              hasData[`${next.name}&${next.id}&${next.mode_type}`] ? '' : hasData[`${next.name}&${next.id}&${next.mode_type}`] = true && curr.push(next);
               return curr;
             }, []);
             const isChecked = payload.length && payload.indexOf(row) !== -1;
@@ -613,21 +634,21 @@
               selectList.push(row);
               this.currentSelectList = [...selectList];
             } else {
-              this.currentSelectList = selectList.filter((item) => String(item.id) !== String(row.id));
+              this.currentSelectList = selectList.filter((item) => `${item.name}&${item.id}&${item.mode_type}` !== `${row.name}&${row.id}&${row.mode_type}`);
             }
             this.fetchCustomTotal(this.currentSelectList);
             this.$emit('on-selected-group', this.currentSelectList);
           },
           all: async () => {
-            const tableList = cloneDeep(this.list);
             const hasData = {};
+            const tableList = cloneDeep(this.list);
             const selectList = [...this.currentSelectList, ...this.curSelectedGroup].reduce((curr, next) => {
               // eslint-disable-next-line no-unused-expressions
-              hasData[`${next.name}&${next.id}`] ? '' : hasData[`${next.name}&${next.id}`] = true && curr.push(next);
+              hasData[`${next.name}&${next.id}&${next.mode_type}`] ? '' : hasData[`${next.name}&${next.id}&${next.mode_type}`] = true && curr.push(next);
               return curr;
             }, []);
-            const selectGroups = selectList.filter(
-              (item) => !tableList.map((v) => String(v.id)).includes(String(item.id))
+            const selectGroups = selectList.filter((item) =>
+              !tableList.map((v) => String(`${v.name}&${v.id}&${v.mode_type}`)).includes(`${item.name}&${item.id}&${item.mode_type}`)
             );
             this.currentSelectList = [...selectGroups, ...payload];
             this.fetchCustomTotal(this.currentSelectList);
@@ -639,9 +660,15 @@
       
       fetchCustomTotal (payload) {
         this.$nextTick(() => {
-          const selectionCount = document.getElementsByClassName('bk-page-selection-count');
-          if (this.$refs.groupPermRef && selectionCount && selectionCount.length && selectionCount[0].children) {
-            selectionCount[0].children[0].innerHTML = payload.length;
+          const permRef = this.$refs[`groupPermRef_${this.mode}`];
+          if (permRef && permRef.$refs) {
+            const paginationWrapper = permRef.$refs.paginationWrapper;
+            const selectCount = paginationWrapper.getElementsByClassName('bk-page-selection-count');
+            if (selectCount.length && selectCount[0].children && selectCount[0].children.length) {
+              const len = payload.filter((v) => v.mode_type === this.mode);
+              console.log(len, payload, this.mode, 55555);
+              selectCount[0].children[0].innerHTML = len.length;
+            }
           }
         });
       },
@@ -735,8 +762,10 @@
 </script>
   
 <style lang="postcss" scoped>
+@import '@/css/mixins/custom-popover-confirm.css';
 .my-perm-group-wrapper {
   /deep/ .my-perm-group-table {
+    border: none;
     .can-view-name {
       color: #3a84ff;
       cursor: pointer;
@@ -758,7 +787,7 @@
     }
     .bk-table-fixed,
     .bk-table-fixed-right {
-      border-bottom: 1px solid #dfe0e5 !important;
+      border-bottom: 0;
     }
   }
 }
