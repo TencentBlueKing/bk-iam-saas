@@ -20,40 +20,10 @@
             class="expanded-icon"
             :type="isExpanded ? 'down-shape' : 'right-shape'"
           />
-          <span>
-            <slot name="headerTitle" />
-          </span>
+          <slot name="headerTitle" />
         </div>
-        <div v-if="externalDelete" @click.stop="">
-          <bk-popconfirm
-            ref="delTempConfirm"
-            trigger="click"
-            placement="bottom-end"
-            ext-popover-cls="resource-perm-delete-confirm"
-            :width="280"
-            @confirm="handleDelete"
-          >
-            <div slot="content">
-              <div class="popover-title">
-                <div class="popover-title-text">
-                  {{ deleteConfirm.title }}
-                </div>
-              </div>
-              <div class="popover-content">
-                <div class="popover-content-item">
-                  <span class="popover-content-item-label">{{ deleteConfirm.label }}{{ $t(`m.common['：']`)}}</span>
-                  <span class="popover-content-item-value"> {{ deleteConfirm.value }}</span>
-                </div>
-                <div class="popover-content-tip">
-                  {{ deleteConfirm.tip }}
-                </div>
-              </div>
-            </div>
-            <div :class="['delete-action', { 'is-disabled': isDisabledOperate }]" @click.stop="handleShowDelConfirm">
-              <Icon class="delete-action-icon" type="delete-line" />
-              <span class="delete-action-title">{{ deleteTitle }}</span>
-            </div>
-          </bk-popconfirm>
+        <div @click.stop="">
+          <slot name="headerOperate" />
         </div>
       </div>
     </div>
@@ -72,10 +42,6 @@
       isEdit: {
         type: Boolean,
         default: false
-      },
-      isDisabledOperate: {
-        type: Boolean,
-        default: true
       },
       loading: {
         type: Boolean,
@@ -105,10 +71,6 @@
         type: String,
         default: 'edit'
       },
-      deleteTitle: {
-        type: String,
-        default: ''
-      },
       count: {
         type: Number,
         default: 0
@@ -116,16 +78,6 @@
       externalHeaderWidth: {
         type: Number,
         default: 0
-      },
-      deleteConfirm: {
-        type: Object,
-        default: () => {
-          return {
-            title: '',
-            tip: '',
-            label: ''
-          };
-        }
       }
     },
     data () {
@@ -166,23 +118,10 @@
         }
       },
     
-      handleShowDelConfirm () {
-        if (!this.isDisabledOperate) {
-          this.$nextTick(() => {
-            this.$refs.delTempConfirm && this.$refs.delTempConfirm.$refs.popover
-              && this.$refs.delTempConfirm.$refs.popover.showHandler();
-          });
-        }
-      },
-    
       handleExpanded () {
         this.isExpanded = !this.isExpanded;
         this.$emit('update:expanded', true);
         this.$emit('on-expanded', this.isExpanded);
-      },
-
-      handleDelete () {
-        this.$emit('on-delete');
       }
     }
   };
@@ -227,15 +166,6 @@
             color: #c4c6cc;
             cursor: not-allowed;
           }
-        }
-        &-title {
-          color: #313238;
-          font-size: 12px;
-          font-weight: 700;
-          margin-left: 4px;
-        }
-        &-count {
-          margin-left: 4px;
         }
         .sub-header-content {
           width: 100%;

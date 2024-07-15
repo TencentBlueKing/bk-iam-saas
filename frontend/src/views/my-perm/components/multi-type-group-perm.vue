@@ -22,9 +22,9 @@
         @on-expanded="handleExpanded(...arguments, item, index)"
       >
         <template v-if="item.pagination.count > 0">
-          <div slot="headerTitle">
-            <span class="sub-header-item-title">{{ item.name }}</span>
-            <span class="sub-header-item-count">
+          <div slot="headerTitle" class="single-hide header-content">
+            <span class="header-content-title">{{ item.name }}</span>
+            <span class="header-content-count">
               ({{ $t(`m.common['共']`) }}
               <span class="count">{{ item.pagination.count }}</span>
               {{ $t(`m.common['条']`) }})
@@ -43,6 +43,7 @@
             :group-data="groupData"
             :list="item.list"
             :cur-selected-group="curSelectedGroup"
+            :delete-confirm-data="deleteConfirmData"
             :empty-data="item.emptyData"
             @on-page-change="handlePageChange(...arguments, item)"
             @on-limit-change="handleLimitChange(...arguments, item)"
@@ -55,7 +56,7 @@
       </RenderPermItem>
     </template>
     <template v-else>
-      <div class="perm-empty-wrapper" v-if="isHasHandover">
+      <div class="perm-empty-wrapper">
         <ExceptionEmpty
           :type="emptyPermData.type"
           :empty-text="emptyPermData.text"
@@ -101,7 +102,6 @@
             tipType: ''
           };
         }
-      
       },
       componentLoading: {
         type: Boolean,
@@ -249,6 +249,12 @@
         curSelectedGroup: [],
         queryGroupData: {},
         curSearchParams: {},
+        deleteConfirmData: {
+          label: this.$t(`m.access['系统名称']`),
+          title: this.$t(`m.dialog['确认清空该系统的权限？']`),
+          tip: this.$t(`m.perm['清空后，该系统的所有操作权限和资源实例权限都会被清空。']`),
+          btnTitle: this.$t(`m.common['清空权限']`)
+        },
         emptyPermData: {
           type: 'empty',
           text: '暂无数据',
@@ -311,11 +317,12 @@
       },
       formatExtCls () {
         return (index) => {
-          const len = this.allPermItem[index].pagination.count;
+          const { pagination, id } = this.allPermItem[index];
+          const len = pagination.count;
           if (!len) {
             return 'no-perm-item-wrapper';
           }
-          return index > 0 ? 'iam-perm-ext-cls' : '';
+          return `iam-${id}-ext-cls`;
         };
       },
       formatPermLength () {
@@ -580,9 +587,17 @@
             params
           );
           const totalCount = data.length || 0;
+          const result = (data || []).map((v) => {
+            return {
+              ...v,
+              ...{
+                expanded: true
+              }
+            };
+          });
           curData = Object.assign(curData, {
-            list: data || [],
-            listBack: data || [],
+            list: result || [],
+            listBack: result || [],
             emptyData: formatCodeData(code, emptyData, totalCount === 0),
             pagination: { ...pagination, ...{ count: totalCount } }
           });
@@ -637,7 +652,9 @@
           });
           this.messageAdvancedError(e);
         } finally {
-          curData.loading = false;
+          sleep(300).then(() => {
+            curData.loading = false;
+          });
         }
       },
 
@@ -680,21 +697,24 @@
         const typeMap = {
           all: async () => {
             defaultExpandItem = ['personalPerm'];
-            const initReqList = [
+            const externalReqList = [
+              this.fetchExpiredGroupPerm(),
               this.fetchUserGroupSearch(),
               this.fetchDepartGroupSearch(),
               this.fetchUserPermByTempSearch(),
-              this.fetchDepartPermByTempSearch(),
-              this.fetchCustomPermSearch(),
-              this.fetchManagerPermSearch(),
-              this.fetchExpiredGroupPerm(),
-              this.fetchExpiredCustomPerm()
+              this.fetchDepartPermByTempSearch()
             ];
-            await Promise.all(initReqList);
+            const noExternalReqList = [
+              this.fetchExpiredCustomPerm(),
+              this.fetchCustomPermSearch(),
+              this.fetchManagerPermSearch()
+            ];
             // 是否有可交接数据
             if (this.isHideApply) {
+              await Promise.all(externalReqList);
               this.isHasHandover = this.allPermItem.filter((item) => ['personalPerm'].includes(item.id)).some((v) => v.pagination.count > 0);
             } else {
+              await Promise.all([...externalReqList, ...noExternalReqList]);
               this.isHasHandover = this.allPermItem.filter((item) => ['personalPerm', 'customPerm', 'managerPerm'].includes(item.id)).some((v) => v.pagination.count > 0);
             }
             this.$set(this.permData, 'hasPerm', this.allPermItem.some((v) => v.pagination.count > 0));
@@ -949,26 +969,38 @@
       background-color: #ffffff;
     }
     .expand-header {
-      padding-left: 16px;
+      padding-left: 13px;
       height: 46px;
       line-height: 46px;
-      .sub-header-item {
+      .sub-header-content {
         .expanded-icon {
-          line-height: 46px;
+          line-height: 46px !important;
         }
-        &-title {
-          margin-left: 12px;
-        }
-        &-count {
-          .count {
-            color: #3a84ff;
+        .header-content {
+          width: 100%;
+          &-title {
+            font-size: 12px;
             font-weight: 700;
+            color: #313238;
+            margin-left: 4px;
+          }
+          &-count {
+            .count {
+              color: #3a84ff;
+              font-weight: 700;
+            }
           }
         }
       }
     }
     &.is-show-perm {
       display: block;
+    }
+    &.iam-customPerm-ext-cls {
+      padding-bottom: 24px;
+    }
+    &.is-not-expanded {
+      padding-bottom: 0;
     }
   }
   .perm-empty-wrapper {

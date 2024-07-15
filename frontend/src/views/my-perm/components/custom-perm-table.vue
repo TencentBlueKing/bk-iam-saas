@@ -1,7 +1,17 @@
 <template>
   <div class="my-perm-custom-perm-table" v-bkloading="{ isLoading: loading, opacity: 1 }">
-    <bk-table v-if="!loading" :data="policyList" border :cell-class-name="getCellClass">
-      <bk-table-column :label="$t(`m.common['操作']`)" min-width="160">
+    <bk-table
+      v-if="!loading"
+      :data="policyList"
+      :header-border="false"
+      :outer-border="false"
+      :cell-class-name="getCellClass"
+    >
+      <bk-table-column
+        type="selection"
+        align="center"
+      />
+      <bk-table-column :label="$t(`m.common['操作']`)" :min-width="200" fixed="left">
         <template slot-scope="{ row }">
           <span :title="row.name">{{ row.name }}</span>
         </template>
@@ -9,59 +19,42 @@
       <bk-table-column
         :resizable="false"
         :label="$t(`m.common['资源实例']`)"
-        min-width="360"
+        :min-width="150"
       >
         <template slot-scope="{ row }">
           <template v-if="!row.isEmpty">
             <div
               v-for="(_, _index) in row.resource_groups"
               :key="_.id"
-              class="related-resource-list"
-              :class="
-                row.resource_groups === 1 || _index === row.resource_groups.length - 1
-                  ? ''
-                  : 'related-resource-list-border'
-              "
+              :class="[
+                'related-resource-list',
+                { 'related-resource-list-border':
+                  row.resource_groups && row.resource_groups.length > 1 && _index === row.resource_groups.length - 1
+                }
+              ]"
             >
-              <p
-                class="related-resource-item"
-                v-for="item in _.related_resource_types"
-                :key="item.type"
+              <div
+                class="flex-between related-resource-item"
+                v-for="(related, relatedIndex) in _.related_resource_types"
+                :key="related.type"
               >
-                <render-resource-popover
-                  :key="item.type"
-                  :data="item.condition"
-                  :value="`${item.name}: ${item.value}`"
-                  :max-width="380"
-                  @on-view="handleViewResource(_, row)"
-                />
-              </p>
-              <Icon
-                v-if="isShowPreview(row)"
-                type="detail-new"
-                class="view-icon"
-                :title="$t(`m.perm['查看实例资源权限组']`)"
-                @click.stop="handleViewResource(_, row)"
-              />
-              <Icon
-                v-if="isShowPreview(row) && row.resource_groups.length > 1"
-                type="delete-line"
-                :title="$t(`m.perm['删除实例资源权限组']`)"
-                :class="
-                  row.resource_groups.length > 1 ? 'effect-icon' : 'effect-icon-disabled'
-                "
-                @click.stop="handlerReduceInstance(_, row)"
-              />
+                <template v-if="relatedIndex < 1">
+                  <div class="instance-label">
+                    <span>{{ $t(`m.common['配置模板']`) }}{{ $t(`m.common['：']`) }}</span>
+                    <span class="instance-count" @click.stop="handleViewResource(row)">
+                      {{ formatInstanceCount(related, _) || 0 }}
+                    </span>
+                  </div>
+                </template>
+              </div>
             </div>
           </template>
           <template v-else>
-            <span class="pl20" style="line-height: 62px">
-              {{ $t(`m.common['无需关联实例']`) }}
-            </span>
+            <span class="condition-table-cell empty-text">{{ $t(`m.common['无需关联实例']`) }}</span>
           </template>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t(`m.common['生效条件']`)" min-width="300">
+      <bk-table-column :label="$t(`m.common['生效条件']`)" :min-width="150">
         <template slot-scope="{ row }">
           <div class="condition-table-cell" v-if="!!row.related_environments.length">
             <div
@@ -94,16 +87,74 @@
       </bk-table-column>
       <bk-table-column
         prop="expired_dis"
-        min-width="100"
+        :min-width="100"
         :label="$t(`m.common['有效期']`)"
-      ></bk-table-column>
-      <bk-table-column :label="$t(`m.common['操作-table']`)" :width="200">
+      />
+      <bk-table-column :label="$t(`m.common['操作-table']`)" fixed="right" :min-width="formatOperate">
         <template slot-scope="{ row }">
-          <div class="custom-actions-item">
-            <bk-button type="primary" text @click="handleShowDelDialog(row)">
-              {{ $t(`m.userGroupDetail['删除操作权限']`) }}
-            </bk-button>
+          <div class="flex-between">
+            <div class="custom-actions-item">
+              <bk-popconfirm
+                trigger="click"
+                placement="bottom-end"
+                ext-popover-cls="iam-custom-popover-confirm delete-popover-wrapper"
+                :width="280"
+                @confirm="handleSubmitDelete"
+              >
+                <div slot="content">
+                  <div class="popover-title">
+                    <div class="popover-title-text">
+                      {{ delActionDialogTitle }}
+                    </div>
+                  </div>
+                  <div class="popover-content">
+                    <div class="popover-content-item">
+                      <span class="popover-content-item-label">
+                        {{ $t(`m.userOrOrg['操作对象']`) }}{{ $t(`m.common['：']`)}}
+                      </span>
+                      <span class="popover-content-item-value"> {{ user.name }}</span>
+                    </div>
+                    <div v-if="delActionList.length" class="delete-tips">
+                      <p class="delete-tips-title">
+                        {{ delActionDialogTip }}
+                      </p>
+                      <div class="delete-tips-content">
+                        <p v-for="item in delActionList" :key="item.id">
+                          <Icon bk type="info-circle-shape" class="warn" />
+                          <span>{{ item.name }}</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <bk-button type="primary" text @click="handleShowDelDialog(row)">
+                  {{ $t(`m.userGroupDetail['删除操作权限']`) }}
+                </bk-button>
+              </bk-popconfirm>
+            </div>
+            <div class="custom-actions-item" v-if="isShowPreview(row)">
+              <bk-button type="primary" text @click="handleViewResource(row)">
+                {{ $t(`m.userGroupDetail['查看实例权限']`) }}
+              </bk-button>
+            </div>
+            <div class="custom-actions-item">
+              <bk-button type="primary" text @click="handleViewResource(row)">
+                {{ $t(`m.renewal['续期']`) }}
+              </bk-button>
+            </div>
+            <div class="custom-actions-item">
+              <bk-button type="primary" text @click="handleViewResource(row)">
+                {{ $t(`m.perm['交接']`) }}
+              </bk-button>
+            </div>
           </div>
+          <!-- <Icon
+            v-if="isShowPreview(row)"
+            type="detail-new"
+            class="view-icon"
+            :title="$t(`m.perm['查看实例资源权限组']`)"
+            @click.stop="handleViewResource(_, row)"
+          /> -->
         </template>
       </bk-table-column>
       <template slot="empty">
@@ -134,7 +185,7 @@
       quick-close
       @update:isShow="handleResourceCancel"
     >
-      <div slot="header" class="iam-my-custom-perm-silder-header">
+      <div slot="header" class="iam-my-custom-perm-slider-header">
         <span>{{ sideSliderTitle }}</span>
         <div class="action-wrapper" v-if="canOperate">
           <bk-button
@@ -157,37 +208,8 @@
               :confirm-handler="handleDeletePerm"
             >
               <div slot="title" class="popover-custom-title">
-                {{
-                  $t(`m.dialog['确认删除内容？']`, {
-                    value: $t(`m.dialog['删除实例权限']`)
-                  })
-                }}
+                {{ $t(`m.dialog['确认删除内容？']`, { value: $t(`m.dialog['删除实例权限']`) }) }}
               </div>
-              <!-- 这个地方后台需要增加跟当前操作有关联的操作下的资源实例一起删除的接口，目前暂不展示关联操作内容 -->
-              <!-- <div
-                slot="content"
-                :class="[
-                  'popover-custom-content',
-                  { 'popover-custom-content-hide': !delActionList.length }
-                ]">
-                <div :title="formateDelPathTitle">
-                  {{ $t(`m.info['删除依赖实例产生的影响']`, {
-                    value: formateDelPathTitle.length > 1 ? `${formateDelPathTitle[0]}...` : formateDelPathTitle })
-                  }}
-                </div>
-                <div class="custom-related-instance">
-                  <p
-                    v-for="item in delActionList"
-                    :key="item.id">
-                    <Icon
-                      bk
-                      type="info-circle-shape"
-                      style=" color: #ffb848;"
-                    />
-                    {{ item.name }}
-                  </p>
-                </div>
-              </div> -->
               <bk-button theme="primary" :disabled="disabled">
                 {{ $t(`m.common['删除']`) }}
               </bk-button>
@@ -199,56 +221,54 @@
         </div>
       </div>
       <div slot="content">
-        <render-detail
+        <RenderDetail
           :data="previewData"
           :can-edit="!isBatchDelete"
           ref="detailComRef"
           @tab-change="handleTabChange"
           @on-change="handleChange"
           @on-select-all="handleSelectAll"
-        >
-        </render-detail>
+        />
       </div>
     </bk-sideslider>
 
     <bk-sideslider
-      :is-show="isShowEnvironmentsSideslider"
-      :title="environmentsSidesliderTitle"
+      :is-show="isShowEffectConditionSlider"
+      :title="environmentsSliderTitle"
       :width="640"
       quick-close
+      ext-cls="effect-condition-side"
       @update:isShow="handleResourceCancel"
-      ext-cls="effect-conditon-side"
     >
       <div slot="content">
-        <effect-conditon
-          :value="environmentsSidesliderData"
-          :is-empty="!environmentsSidesliderData.length"
-          @on-view="handleViewSidesliderCondition"
-        >
-        </effect-conditon>
+        <IamEffectCondition
+          :value="environmentsEffectData"
+          :is-empty="!environmentsEffectData.length"
+          @on-view="handleViewEffectCondition"
+        />
       </div>
     </bk-sideslider>
 
     <!-- 生效时间编辑功能需要产品确认 暂时隐藏 -->
     <bk-sideslider
       :is-show="isShowResourceInstanceEffectTime"
-      :title="environmentsSidesliderTitle"
+      :title="environmentsSliderTitle"
       :width="640"
       quick-close
-      @update:isShow="handleResourceEffectTimeCancel"
+      @update:isShow="handleEffectTimeCancel"
       :ext-cls="'relate-instance-sideslider'"
     >
       <div slot="content" class="sideslider-content">
-        <IamSidesliderEffectCondition
+        <IamEffectConditionEdit
           ref="sidesliderRef"
-          :data="environmentsSidesliderData"
+          :data="environmentsEffectData"
         />
       </div>
       <div slot="footer" style="margin-left: 25px">
-        <bk-button theme="primary" @click="handleResourceEffectTimeSumit">
+        <bk-button theme="primary" @click="handleEffectTimeSubmit">
           {{ $t(`m.common['保存']`) }}
         </bk-button>
-        <bk-button style="margin-left: 10px" @click="handleResourceEffectTimeCancel">
+        <bk-button style="margin-left: 8px" @click="handleEffectTimeCancel">
           {{ $t(`m.common['取消']`) }}
         </bk-button>
       </div>
@@ -269,19 +289,18 @@
 </template>
 
 <script>
-  import _ from 'lodash';
+  import { cloneDeep } from 'lodash';
   import { mapGetters } from 'vuex';
   import { bus } from '@/common/bus';
   import { formatCodeData } from '@/common/util';
-  import IamPopoverConfirm from '@/components/iam-popover-confirm';
-  import DeleteDialog from '@/components/iam-confirm-dialog/index.vue';
-  import RenderResourcePopover from '../components/prem-view-resource-popover';
-  import PermPolicy from '@/model/my-perm-policy';
   import { leaveConfirm } from '@/common/leave-confirm';
-  import RenderDetail from '@/components/iam-render-detail';
-  import IamEffectCondition from '@/components/iam-effect-condition';
-  import IamSidesliderEffectCondition from '@/components/iam-sideslider-effect-condition';
+  import PermPolicy from '@/model/my-perm-policy';
+  import DeleteDialog from '@/components/iam-confirm-dialog/index.vue';
   import DeleteActionDialog from '@/views/group/components/delete-related-action-dialog.vue';
+  import RenderDetail from '@/components/iam-render-detail';
+  import IamPopoverConfirm from '@/components/iam-popover-confirm';
+  import IamEffectCondition from '@/components/iam-effect-condition';
+  import IamEffectConditionEdit from '@/components/iam-sideslider-effect-condition';
 
   export default {
     provide: function () {
@@ -292,10 +311,9 @@
     components: {
       IamPopoverConfirm,
       RenderDetail,
-      RenderResourcePopover,
       DeleteDialog,
       IamEffectCondition,
-      IamSidesliderEffectCondition,
+      IamEffectConditionEdit,
       DeleteActionDialog
     },
     props: {
@@ -325,13 +343,13 @@
     data () {
       return {
         policyList: [],
-        policyCountMap: {},
-        initRequestQueue: ['permTable'],
         previewData: [],
+        curDeleteIds: [],
+        initRequestQueue: ['permTable'],
         curId: '',
         curPolicyId: '',
         isShowSideSlider: false,
-        curDeleteIds: [],
+        policyCountMap: {},
         deleteDialog: {
           visible: false,
           title: this.$t(`m.dialog['确认删除']`),
@@ -343,9 +361,9 @@
         batchDisabled: false,
         disabled: true,
         canOperate: true,
-        isShowEnvironmentsSideslider: false,
-        environmentsSidesliderTitle: this.$t(`m.common['生效条件']`),
-        environmentsSidesliderData: [],
+        isShowEffectConditionSlider: false,
+        environmentsSliderTitle: this.$t(`m.common['生效条件']`),
+        environmentsEffectData: [],
         isShowResourceInstanceEffectTime: false,
         resourceGroupParams: {},
         params: '',
@@ -378,25 +396,59 @@
           return !payload.isEmpty && payload.policy_id !== '';
         };
       },
-      formateDelPathTitle () {
-        let tempList = [];
-        tempList
-          = this.curInstancePaths.length
-          && this.curInstancePaths.reduce((prev, next) => {
-            prev.push(
-              ...next.path.map((v) => {
-                return v.length && v.map((sub) => sub.name).join('/');
-              })
-            );
-            return prev;
-          }, []);
-        return tempList || [];
+      formatInstanceCount () {
+        return (payload, related) => {
+          let curPaths = [];
+          if (related.related_resource_types && related.related_resource_types.length > 1) {
+            const list = related.related_resource_types.map((v) => {
+              if (v.condition.length) {
+                const { instance, instances } = v.condition[0];
+                const list = instance || instances;
+                curPaths = list.reduce((prev, next) => {
+                  prev.push(
+                    ...next.path.map(v => {
+                      const paths = { ...v, ...next };
+                      delete paths.instance;
+                      delete paths.path;
+                      return paths[0];
+                    })
+                  );
+                  return prev;
+                }, []);
+                return curPaths.length;
+              }
+            });
+            const count = list.reduce((prev, next) => prev + next, 0);
+            return count;
+          } else {
+            if (payload.condition.length) {
+              const { instance, instances } = payload.condition[0];
+              const list = instance || instances;
+              curPaths = list.reduce((prev, next) => {
+                prev.push(
+                  ...next.path.map(v => {
+                    const paths = { ...v, ...next };
+                    delete paths.instance;
+                    delete paths.path;
+                    return paths[0];
+                  })
+                );
+                return prev;
+              }, []);
+              return curPaths.length;
+            }
+          }
+        };
+      },
+      formatOperate () {
+        const isCN = ['zh-cn'].includes(window.CUR_LANGUAGE);
+        return isCN ? 200 : 400;
       }
     },
     watch: {
       systemId: {
         async handler (value) {
-          if (value !== '') {
+          if (value) {
             this.initRequestQueue = ['permTable'];
             const params = {
               systemId: value
@@ -428,12 +480,6 @@
       }
     },
     methods: {
-      /**
-       * 获取系统对应的自定义操作
-       *
-       * @param {String} systemId 系统id
-       * 执行handleActionLinearData方法
-       */
       async fetchActions (systemId) {
         const params = {
           user_id: this.user.username
@@ -445,11 +491,10 @@
           params.system_id = systemId;
         }
         try {
-          const res = await this.$store.dispatch('permApply/getActions', params);
-          this.originalCustomTmplList = _.cloneDeep(res.data);
+          const { data } = await this.$store.dispatch('permApply/getActions', params);
+          this.originalCustomTmplList = cloneDeep(data);
           this.handleActionLinearData();
         } catch (e) {
-          console.error(e);
           this.messageAdvancedError(e);
         }
       },
@@ -475,32 +520,21 @@
           const { code, data } = await this.$store.dispatch(url, queryParams);
           if (data.length) {
             this.policyList = data.map((item) => {
-              const relatedEnvironments = this.linearActionList.find(
-                (sub) => sub.id === item.id
-              );
-              item.related_environments = relatedEnvironments
-                ? relatedEnvironments.related_environments
-                : [];
+              const relatedEnvironments = this.linearActionList.find((sub) => sub.id === item.id);
+              item.related_environments = relatedEnvironments ? relatedEnvironments.related_environments : [];
               return new PermPolicy(item);
             });
           }
-          this.policyEmptyData = formatCodeData(
-            code,
-            this.policyEmptyData,
-            data.length === 0
-          );
+          this.policyEmptyData = formatCodeData(code, this.policyEmptyData, data.length === 0);
         } catch (e) {
-          console.error(e);
           this.policyEmptyData = formatCodeData(e.code, this.policyEmptyData);
           this.messageAdvancedError(e);
         } finally {
           this.initRequestQueue.shift();
-          if (this.isSearchPerm) {
-            bus.$emit('on-perm-tab-count', {
-              active: 'CustomPerm',
-              count: this.policyList.length || 0
-            });
-          }
+          bus.$emit('on-perm-tab-count', {
+            active: 'CustomPerm',
+            count: this.policyList.length || 0
+          });
         }
       },
 
@@ -518,17 +552,7 @@
             });
           });
         });
-        this.linearActionList = _.cloneDeep(linearActions);
-      },
-
-      /**
-       * getCellClass
-       */
-      getCellClass ({ row, column, rowIndex, columnIndex }) {
-        if (columnIndex === 1 || columnIndex === 2) {
-          return 'iam-perm-table-cell-cls';
-        }
-        return '';
+        this.linearActionList = cloneDeep(linearActions);
       },
 
       handleRefreshData () {
@@ -591,10 +615,46 @@
           this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
           this.handleRefreshData();
         } catch (e) {
-          console.error(e);
           this.messageAdvancedError(e);
         } finally {
           payload && payload.hide();
+        }
+      },
+
+      async handleSubmitDelete () {
+        this.deleteDialog.loading = true;
+        try {
+          if (this.resourceGroupParams.id && this.resourceGroupParams.resourceGroupId) {
+            // 表示删除的是资源组
+            for (let i = 0; i < this.policyIdList.length; i++) {
+              await this.$store.dispatch('permApply/deleteRosourceGroupPerm', {
+                id: this.policyIdList[i],
+                resourceGroupId: this.resourceGroupParams.resourceGroupId
+              });
+            }
+            setTimeout(() => {
+              this.fetchData(this.params);
+              this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
+            }, 2000);
+          } else {
+            await this.$store.dispatch('permApply/deletePerm', {
+              policyIds: this.curDeleteIds,
+              systemId: this.systemId
+            });
+            const policyList = this.policyList.filter(
+              (item) => !this.curDeleteIds.includes(item.policy_id)
+            );
+            await this.fetchActions(this.systemId);
+            await this.fetchData(this.params);
+            this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
+            this.$emit('after-delete', policyList.length);
+          }
+        } catch (e) {
+          this.messageAdvancedError(e);
+        } finally {
+          this.deleteDialog.loading = false;
+          this.deleteDialog.visible = false;
+          this.isShowDeleteDialog = false;
         }
       },
 
@@ -633,7 +693,7 @@
           );
           policyIds = [payload.policy_id].concat(list.map((v) => v.policy_id));
         }
-        this.policyIdList = _.cloneDeep(policyIds);
+        this.policyIdList = cloneDeep(policyIds);
         const typeMap = {
           action: () => {
             this.currentActionName = name;
@@ -646,14 +706,13 @@
               }
             }
             this.curDeleteIds.splice(0, this.curDeleteIds.length, ...policyIds);
-            this.policyIdList = _.cloneDeep(this.curDeleteIds);
+            this.policyIdList = cloneDeep(this.curDeleteIds);
             this.delActionDialogTitle = this.$t(`m.dialog['确认删除内容？']`, {
               value: this.$t(`m.dialog['删除操作权限']`)
             });
             this.delActionDialogTip = this.$t(`m.info['删除依赖操作产生的影响']`, {
               value: this.currentActionName
             });
-            this.isShowDeleteDialog = true;
           },
           instance: () => {
             let curPaths = [];
@@ -672,7 +731,7 @@
             }
           },
           groupInstance: () => {
-            this.policyIdList = _.cloneDeep(policyIds);
+            this.policyIdList = cloneDeep(policyIds);
             this.delActionDialogTitle = this.$t(`m.dialog['确认删除内容？']`, {
               value: this.$t(`m.dialog['删除一组实例权限']`)
             });
@@ -697,14 +756,14 @@
         cancelHandler.then(
           () => {
             this.isShowSideSlider = false;
-            this.isShowEnvironmentsSideslider = false;
+            this.isShowEffectConditionSlider = false;
             this.resetDataAfterClose();
           },
           (_) => _
         );
       },
 
-      handleResourceEffectTimeCancel () {
+      handleEffectTimeCancel () {
         let cancelHandler = Promise.resolve();
         if (window.changeAlert) {
           cancelHandler = leaveConfirm();
@@ -718,40 +777,88 @@
         );
       },
 
-      /**
-       * handleResourceEffectTimeSumit
-       */
-      handleResourceEffectTimeSumit () {
+      handleViewResource (payload) {
+        const params = [];
+        this.curId = payload.id;
+        this.curPolicyId = payload.policy_id;
+        if (payload.resource_groups.length > 0) {
+          payload.resource_groups.forEach((groupItem) => {
+            if (groupItem.related_resource_types.length > 0) {
+              groupItem.related_resource_types.forEach((sub) => {
+                const { name, type, condition } = sub;
+                params.push({
+                  name: type,
+                  tabType: 'resource',
+                  label: this.$t(`m.info['tab操作实例']`, { value: name }),
+                  data: condition,
+                  systemId: sub.system_id,
+                  resource_group_id: groupItem.id
+                });
+              });
+            }
+          });
+        }
+        this.previewData = cloneDeep(params);
+        if (this.previewData[0].tabType === 'relate') {
+          this.canOperate = false;
+        }
+        if (this.previewData.length) {
+          if (this.previewData[0].tabType === 'relate') {
+            this.canOperate = false;
+          }
+          const noInstance = this.previewData[0].data.every((item) => !item.instance || item.instance.length < 1);
+          if (this.previewData[0].tabType === 'resource' && (this.previewData[0].data.length < 1 || noInstance)) {
+            this.batchDisabled = true;
+          }
+        }
+        this.sideSliderTitle = this.$t(`m.info['操作侧边栏操作的资源实例']`, {
+          value: `${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}`
+        });
+        window.changeAlert = 'iamSidesider';
+        this.isShowSideSlider = true;
+      },
+
+      handleEnvironmentsViewResource (payload, data) {
+        this.environmentsEffectData = payload.environments;
+        this.isShowEffectConditionSlider = true;
+        this.environmentsSliderTitle = this.$t(`m.info['关联侧边栏操作生效条件']`, {
+          value: `${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}`
+        });
+      },
+
+      handlerReduceInstance (payload, data) {
+        if (data.resource_groups.length < 2) return;
+        const { id, related_resource_types: relatedResourceTypes } = payload;
+        this.resourceGroupParams = {
+          id: data.policy_id,
+          resourceGroupId: id
+        };
+        if (relatedResourceTypes && relatedResourceTypes.length) {
+          this.currentActionName = relatedResourceTypes.map((item) => item.name).join();
+        }
+        this.handleDeleteActionOrInstance(data, 'groupInstance');
+      },
+
+      handleViewEffectCondition () {
+        console.log('environmentsEffectData', this.environmentsEffectData);
+        this.isShowResourceInstanceEffectTime = true;
+      },
+
+      handleShowDelDialog (payload) {
+        this.handleDeleteActionOrInstance(payload, 'action');
+      },
+
+      handleEffectTimeSubmit () {
         const environments = this.$refs.sidesliderRef.handleGetValue();
         console.log(this.curIndex, this.curGroupIndex, environments);
         window.changeAlert = false;
       },
 
-      /**
-       * resetDataAfterClose
-       */
-      resetDataAfterClose () {
-        this.sideSliderTitle = '';
-        this.previewData = [];
-        this.canOperate = true;
-        this.batchDisabled = false;
-        this.disabled = true;
-        this.isBatchDelete = true;
-        this.curId = '';
-        this.curPolicyId = '';
-      },
-
-      /**
-       * handleAfterDeleteLeave
-       */
       handleAfterDeleteLeave () {
         this.deleteDialog.subTitle = '';
         this.curDeleteIds = [];
       },
 
-      /**
-       * hideCancelDelete
-       */
       hideCancelDelete () {
         this.deleteDialog.visible = false;
       },
@@ -769,295 +876,31 @@
         this.curDeleteIds = [];
       },
 
-      /**
-       * handleViewResource
-       */
-      handleViewResource (groupItem, payload) {
-        this.curId = payload.id;
-        this.curPolicyId = payload.policy_id;
-        const params = [];
-
-        if (groupItem.related_resource_types.length > 0) {
-          groupItem.related_resource_types.forEach((item) => {
-            const { name, type, condition } = item;
-            params.push({
-              name: type,
-              label: this.$t(`m.info['tab操作实例']`, { value: name }),
-              tabType: 'resource',
-              data: condition,
-              systemId: item.system_id,
-              resource_group_id: groupItem.id
-            });
-          });
-        }
-        this.previewData = _.cloneDeep(params);
-        if (this.previewData[0].tabType === 'relate') {
-          this.canOperate = false;
-        }
-        if (
-          this.previewData[0].tabType === 'resource'
-          && (this.previewData[0].data.length < 1
-            || this.previewData[0].data.every(
-              (item) => !item.instance || item.instance.length < 1
-            ))
-        ) {
-          this.batchDisabled = true;
-        }
-        this.sideSliderTitle = this.$t(`m.info['操作侧边栏操作的资源实例']`, {
-          value: `${this.$t(`m.common['【']`)}${payload.name}${this.$t(`m.common['】']`)}`
-        });
-        window.changeAlert = 'iamSidesider';
-        this.isShowSideSlider = true;
+      getCellClass ({ row, column, rowIndex, columnIndex }) {
+        // if (columnIndex === 1 || columnIndex === 2) {
+        //   return 'iam-perm-table-cell-cls';
+        // }
+        return '';
       },
 
-      /**
-       * handleEnvironmentsViewResource
-       */
-      handleEnvironmentsViewResource (payload, data) {
-        this.environmentsSidesliderData = payload.environments;
-        this.isShowEnvironmentsSideslider = true;
-        this.environmentsSidesliderTitle = this.$t(`m.info['关联侧边栏操作生效条件']`, {
-          value: `${this.$t(`m.common['【']`)}${data.name}${this.$t(`m.common['】']`)}`
-        });
-      },
-
-      /**
-       * handlerReduceInstance
-       */
-      handlerReduceInstance (payload, data) {
-        if (data.resource_groups.length < 2) return;
-        // this.deleteDialog.subTitle = this.$t(`m.dialog['确认删除内容？']`, { value: this.$t(`m.dialog['删除一组实例权限']`) });
-        // this.deleteDialog.visible = true;
-        const { id, related_resource_types: relatedResourceTypes } = payload;
-        this.resourceGroupParams = {
-          id: data.policy_id,
-          resourceGroupId: id
-        };
-        if (relatedResourceTypes && relatedResourceTypes.length) {
-          this.currentActionName = relatedResourceTypes.map((item) => item.name).join();
-        }
-        this.handleDeleteActionOrInstance(data, 'groupInstance');
-      },
-
-      /**
-       * handleViewSidesliderCondition
-       */
-      handleViewSidesliderCondition () {
-        console.log('environmentsSidesliderData', this.environmentsSidesliderData);
-        this.isShowResourceInstanceEffectTime = true;
-      },
-
-      /**
-       * handleShowDelDialog
-       */
-      handleShowDelDialog (payload) {
-        this.handleDeleteActionOrInstance(payload, 'action');
-      },
-
-      /**
-       * handleSubmitDelete
-       */
-      async handleSubmitDelete () {
-        this.deleteDialog.loading = true;
-        try {
-          if (this.resourceGroupParams.id && this.resourceGroupParams.resourceGroupId) {
-            // 表示删除的是资源组
-            for (let i = 0; i < this.policyIdList.length; i++) {
-              await this.$store.dispatch('permApply/deleteRosourceGroupPerm', {
-                id: this.policyIdList[i],
-                resourceGroupId: this.resourceGroupParams.resourceGroupId
-              });
-            }
-            setTimeout(() => {
-              this.fetchData(this.params);
-              this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
-            }, 2000);
-          } else {
-            await this.$store.dispatch('permApply/deletePerm', {
-              policyIds: this.curDeleteIds,
-              systemId: this.systemId
-            });
-            const policyList = this.policyList.filter(
-              (item) => !this.curDeleteIds.includes(item.policy_id)
-            );
-            await this.fetchActions(this.systemId);
-            await this.fetchData(this.params);
-            this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
-            this.$emit('after-delete', policyList.length);
-          }
-        } catch (e) {
-          console.error(e);
-          this.messageAdvancedError(e);
-        } finally {
-          this.deleteDialog.loading = false;
-          this.deleteDialog.visible = false;
-          this.isShowDeleteDialog = false;
-        }
+      resetDataAfterClose () {
+        this.sideSliderTitle = '';
+        this.previewData = [];
+        this.canOperate = true;
+        this.batchDisabled = false;
+        this.disabled = true;
+        this.isBatchDelete = true;
+        this.curId = '';
+        this.curPolicyId = '';
       }
     }
   };
 </script>
 
 <style lang="postcss" scoped>
-/deep/ .my-perm-custom-perm-table {
-  min-height: 101px;
-  .bk-table-enable-row-hover .bk-table-body tr:hover > td {
-    background-color: #ffffff;
-  }
-  .related-condition-list {
-    flex: 1;
-    display: flex;
-    flex-flow: column;
-    justify-content: center;
-    position: relative;
-    .effect-detail-icon {
-      display: none;
-      position: absolute;
-      top: 50%;
-      right: 10px;
-      transform: translate(0, -50%);
-      font-size: 18px;
-      cursor: pointer;
-    }
-    &:hover {
-      .effect-detail-icon {
-        display: inline-block;
-        color: #3a84ff;
-      }
-    }
-  }
-  .related-resource-list {
-    position: relative;
-    .related-resource-item {
-      margin: 20px !important;
-    }
-    .view-icon {
-      display: none;
-      position: absolute;
-      top: 50%;
-      right: 40px;
-      transform: translate(0, -50%);
-      font-size: 18px;
-      cursor: pointer;
-    }
-    &:hover {
-      .view-icon {
-        display: inline-block;
-        color: #3a84ff;
-      }
-    }
-    .effect-icon {
-      display: none;
-      position: absolute;
-      top: 50%;
-      right: 10px;
-      transform: translate(0, -50%);
-      font-size: 18px;
-      cursor: pointer;
-    }
-    &:hover {
-      .effect-icon {
-        display: inline-block;
-        color: #3a84ff;
-      }
-    }
-    .effect-icon-disabled {
-      display: none;
-      position: absolute;
-      top: 50%;
-      right: 10px;
-      transform: translate(0, -50%);
-      font-size: 18px;
-      cursor: pointer;
-    }
-    &:hover {
-      .effect-icon-disabled {
-        display: inline-block;
-        color: #dcdee5;
-      }
-    }
-    &-border {
-      border-bottom: 1px solid #dfe0e5;
-    }
-  }
-  .bk-table {
-    border-right: none;
-    border-bottom: none;
-    .bk-table-header-wrapper {
-      .cell {
-        padding-left: 20px !important;
-      }
-    }
-    .bk-table-body-wrapper {
-      .cell {
-        padding: 20px !important;
-      }
-    }
-    .iam-perm-table-cell-cls {
-      .cell {
-        padding: 0px !important;
-        height: 100%;
-      }
-      .condition-table-cell {
-        height: 100%;
-        flex-flow: column;
-        display: flex;
-        justify-content: center;
-      }
-      .empty-text {
-        padding: 0 20px;
-      }
-    }
-    tr:hover {
-      background-color: #ffffff;
-    }
-  }
-  .iam-my-custom-perm-silder-header {
-    display: flex;
-    justify-content: space-between;
-    .action-wrapper {
-      margin-right: 30px;
-      font-weight: normal;
-    }
-    .popover-custom-title {
-      text-align: center;
-      font-size: 24px;
-    }
-  }
-  .effect-conditon-side {
-    .text {
-      font-size: 14px;
-      color: #63656e;
-    }
-  }
-}
-.popover-custom-title {
-  text-align: center;
-  font-size: 18px;
-}
-.popover-custom-content {
-  padding-left: 44px;
-  font-size: 14px;
-  word-break: break-all;
-  max-height: 220px;
-  overflow-y: auto;
-  &::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background-color: #dcdee5;
-    border-radius: 3px;
-  }
-  &::-webkit-scrollbar-track {
-    background-color: transparent;
-    border-radius: 3px;
-  }
-  &-hide {
-    display: none;
-  }
-  .custom-related-instance {
-    padding: 10px 0;
-  }
+@import '@/css/mixins/custom-popover-confirm.css';
+@import '../common/css/custom-perm-table.css';
+/deep/ .popover-content-tip {
+  padding-bottom: 0;
 }
 </style>

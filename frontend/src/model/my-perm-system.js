@@ -29,6 +29,6 @@ export default class PermSystem {
     this.id = payload.id;
     this.name = payload.name;
     this.count = payload.count || 0;
-    this.expanded = false;
+    this.expanded = payload.expanded || false;
   }
 }

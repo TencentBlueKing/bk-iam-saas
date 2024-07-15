@@ -364,26 +364,27 @@
   .batch-perm-operate {
     &-item {
       margin-right: 8px;
-      .group-dropdown-trigger-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 1px solid #c4c6cc;
-        height: 32px;
-        min-width: 108px;
-        border-radius: 2px;
-        padding-left: 10px;
-        padding-right: 5px;
-        color: #63656e;
-        &:hover {
-          cursor: pointer;
-          border-color: #979ba5;
-        }
-        .group-dropdown-text {
-          font-size: 14px;
-        }
-        .bk-icon {
-          font-size: 22px;
+      .operate-dropdown-menu {
+        .group-dropdown-trigger-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 32px;
+          min-width: 108px;
+          border-radius: 2px;
+          padding-left: 10px;
+          padding-right: 5px;
+          color: #ffffff;
+          &:hover {
+            cursor: pointer;
+            border-color: #979ba5;
+          }
+          .group-dropdown-text {
+            font-size: 14px;
+          }
+          .bk-icon {
+            font-size: 22px;
+          }
         }
       }
     }
@@ -416,6 +417,9 @@
     &.disabled * {
       background-color: #dcdee5 !important;
       color: #ffffff !important;
+      div:nth-child(2) {
+        height: 0 !important;
+      }
     }
   }
   /deep/ .my-perm-resource-search {

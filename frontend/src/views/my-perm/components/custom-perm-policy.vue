@@ -1,21 +1,69 @@
 <template>
-  <div class="my-perm-custom-perm">
+  <div class="my-custom-perm-policy">
     <template v-if="hasPerm">
-      <custom-perm-system-policy
+      <bk-checkbox
+        ext-cls="all-system-checkbox"
+        v-model="isAllSystem"
+        @change="handleAllSystemChange"
+      >
+        {{ $t(`m.perm['跨系统全选']`) }}
+      </bk-checkbox>
+      <CustomPermSystemPolicy
         v-for="(sys, sysIndex) in systemPolicyList"
         :key="sys.id"
-        :expanded.sync="sys.expanded"
-        :ext-cls="sysIndex > 0 ? 'iam-perm-ext-cls' : ''"
-        :class="sysIndex === systemPolicyList.length - 1 ? 'iam-perm-ext-reset-cls' : ''"
+        :ref="`rPolicy_${sys.id}`"
+        :mode="'detail'"
         :title="sys.name"
-        :perm-length="isSearchPerm ? totalCount : sys.count"
-        :one-perm="onePerm"
-        :is-all-delete="true"
+        :count="sys.count"
+        :external-delete="true"
+        :expanded.sync="sys.expanded"
         @on-expanded="handleExpanded(...arguments, sys)"
-        @on-delete-all="handleDeleteAll(sys, sysIndex)"
       >
-        <custom-perm-table
+        <div slot="headerTitle" class="single-hide header-content">
+          <span class="header-content-title">{{ sys.name }}</span>
+          <span class="header-content-count">
+            ({{ $t(`m.common['共']`) }}
+            <span class="count">{{ sys.count }}</span>
+            {{ $t(`m.common['个']`) }}{{ $t(`m.perm['操作权限']`) }})
+          </span>
+        </div>
+        <div slot="headerOperate">
+          <bk-popconfirm
+            trigger="click"
+            :ref="`delTempConfirm_${sys.id}`"
+            placement="bottom-end"
+            ext-popover-cls="iam-custom-popover-confirm"
+            :width="280"
+            @confirm="handleDeleteAll(sys, sysIndex)"
+          >
+            <div slot="content">
+              <div class="popover-title">
+                <div class="popover-title-text">
+                  {{ deleteConfirmData.title }}
+                </div>
+              </div>
+              <div class="popover-content">
+                <div class="popover-content-item">
+                  <span class="popover-content-item-label">{{ deleteConfirmData.label }}{{ $t(`m.common['：']`)}}</span>
+                  <span class="popover-content-item-value"> {{ sys.name }}</span>
+                </div>
+                <div class="popover-content-tip">
+                  {{ deleteConfirmData.tip }}
+                </div>
+              </div>
+            </div>
+            <div
+              :class="['delete-action', { 'is-disabled': isDisabledOperate }]"
+              @click.stop="handleShowDelConfirm(sys)"
+            >
+              <Icon class="delete-action-icon" type="delete-line" v-if="deleteConfirmData.icon" />
+              <span class="delete-action-title">{{ deleteConfirmData.btnTitle }}</span>
+            </div>
+          </bk-popconfirm>
+        </div>
+        <CustomPermTable
           ref="customPermTable"
+          class="iam-perm-edit-table"
           :key="sys.id"
           :system-id="sys.id"
           :cur-search-params="curSearchParams"
@@ -23,10 +71,10 @@
           :is-search-perm="isSearchPerm"
           @after-delete="handleAfterDelete(...arguments, sysIndex)"
         />
-      </custom-perm-system-policy>
+      </CustomPermSystemPolicy>
     </template>
     <template v-else>
-      <div class="my-perm-custom-perm-empty-wrapper">
+      <div class="my-custom-perm-policy-empty-wrapper">
         <ExceptionEmpty
           :type="emptyPolicyData.type"
           :empty-text="emptyPolicyData.text"
@@ -44,8 +92,8 @@
   import { mapGetters } from 'vuex';
   import { formatCodeData } from '@/common/util';
   import { bus } from '@/common/bus';
-  import CustomPermSystemPolicy from '@/components/custom-perm-system-policy/index.vue';
   import PermSystem from '@/model/my-perm-system';
+  import CustomPermSystemPolicy from '@/components/iam-expand-perm/index.vue';
   import CustomPermTable from './custom-perm-table.vue';
 
   export default {
@@ -54,9 +102,19 @@
       CustomPermTable
     },
     props: {
-      systemList: {
+      list: {
         type: Array,
         default: () => []
+      },
+      deleteConfirmData: {
+        type: Object,
+        default: () => {
+          return {
+            title: '',
+            tip: '',
+            label: ''
+          };
+        }
       },
       emptyData: {
         type: Object,
@@ -93,7 +151,8 @@
     },
     data () {
       return {
-        onePerm: 0,
+        isAllSystem: false,
+        isDisabledOperate: false,
         systemPolicyList: [],
         emptyPolicyData: {
           type: 'empty',
@@ -104,18 +163,17 @@
       };
     },
     computed: {
-    ...mapGetters(['externalSystemId']),
-    hasPerm () {
-      return this.systemPolicyList.length > 0;
-    }
+      ...mapGetters(['externalSystemId']),
+      hasPerm () {
+        return this.systemPolicyList.length > 0;
+      }
     },
     watch: {
-      systemList: {
+      list: {
         handler (v) {
           this.formatSystemData(v);
         },
-        immediate: true,
-        deep: true
+        immediate: true
       },
       emptyData: {
         handler (value) {
@@ -135,47 +193,9 @@
         immediate: true
       }
     },
-    async created () {
-      await this.handleRefreshSystem();
-    },
     methods: {
-      // 搜索自定义权限
-      fetchSystemSearch () {
-        // 过滤掉搜索框的参数, 处理既有筛选系统也有输入名字、描述等仍要展示为空的情况
-        const { id, description, name, system_id: systemId } = this.curSearchParams;
-        const noValue = !id && !name && !description;
-        // 筛选搜索的系统id
-        const curSystemList = this.systemList.filter(
-          (item) => item.id === systemId && noValue
-        );
-        this.formatSystemData(curSystemList || []);
-      },
-
-      /**
-       * 展开/收起 系统下的权限列表
-       *
-       * @param {Boolean} value 展开收起标识
-       * @param {Object} payload 当前系统
-       */
-      handleExpanded (value, payload) {},
-
-      handleAfterDelete (policyListLen, sysIndex) {
-        // --this.systemPolicyList[sysIndex].count;
-        this.$set(this.systemPolicyList[sysIndex], 'count', policyListLen);
-        if (this.systemPolicyList[sysIndex].count < 1) {
-          this.systemPolicyList.splice(sysIndex, 1);
-        }
-        if (!this.systemPolicyList.length) {
-          this.handleRefreshSystem();
-          if (this.isSearchPerm) {
-            bus.$emit('on-perm-tab-count', {
-              active: 'CustomPerm',
-              count: this.systemPolicyList.length
-            });
-          }
-        }
-      },
-
+      async handleDelete () {},
+      
       async handleDeleteAll (payload, sysIndex) {
         const { name, id } = payload;
         this.$bkInfo({
@@ -217,12 +237,52 @@
                 return true;
               }
             } catch (e) {
-              console.error(e);
               this.messageAdvancedError(e);
               return false;
             }
           }
         });
+      },
+
+      // 搜索自定义权限
+      fetchSystemSearch () {
+        // 过滤掉搜索框的参数, 处理既有筛选系统也有输入名字、描述等仍要展示为空的情况
+        const { id, description, name, system_id: systemId } = this.curSearchParams;
+        const noValue = !id && !name && !description;
+        // 筛选搜索的系统id
+        const curSystemList = this.systemList.filter((item) => item.id === systemId && noValue);
+        this.formatSystemData(curSystemList || []);
+      },
+
+      handleAllSystemChange (payload) {
+      },
+
+      handleExpanded (value, payload) {},
+
+      handleShowDelConfirm (payload) {
+        this.$nextTick(() => {
+          const delConfirmRef = this.$refs[`delTempConfirm_${payload.id}`];
+          console.log(delConfirmRef);
+          if (delConfirmRef && delConfirmRef.length > 0 && delConfirmRef[0].$refs.popover) {
+            delConfirmRef[0].$refs.popover.showHandler();
+          }
+        });
+      },
+
+      handleAfterDelete (policyListLen, sysIndex) {
+        this.$set(this.systemPolicyList[sysIndex], 'count', policyListLen);
+        if (this.systemPolicyList[sysIndex].count < 1) {
+          this.systemPolicyList.splice(sysIndex, 1);
+        }
+        if (!this.systemPolicyList.length) {
+          this.handleRefreshSystem();
+          if (this.isSearchPerm) {
+            bus.$emit('on-perm-tab-count', {
+              active: 'CustomPerm',
+              count: this.systemPolicyList.length
+            });
+          }
+        }
       },
 
       // 格式化系统列表数据
@@ -246,11 +306,10 @@
             );
           }
         }
-        this.onePerm = systemPolicyList.length;
         if (this.isSearchPerm) {
           this.emptyPolicyData.tipType = 'search';
         }
-        this.emptyPolicyData = formatCodeData(0, this.emptyPolicyData, this.onePerm === 0);
+        this.emptyPolicyData = formatCodeData(0, this.emptyPolicyData, systemPolicyList.length === 0);
       },
 
       async handleRefreshSystem () {
@@ -281,12 +340,10 @@
       },
 
       async handleEmptyClear () {
-        await this.handleRefreshSystem();
         this.$emit('on-clear');
       },
 
       async handleEmptyRefresh () {
-        await this.handleRefreshSystem();
         this.$emit('on-refresh');
       }
     }
@@ -294,45 +351,33 @@
 </script>
 
 <style lang="postcss" scoped>
-@import "@/css/mixins/custom-delete-action.css";
-.my-perm-custom-perm {
+@import '@/css/mixins/custom-popover-confirm.css';
+.my-custom-perm-policy {
   height: 100%;
-  .iam-perm-ext-cls {
-    margin-top: 10px;
-  }
-  .iam-perm-ext-reset-cls {
-    margin-bottom: 20px;
-  }
-  .my-perm-custom-perm-empty-wrapper {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    img {
-      width: 120px;
-    }
-    .empty-tips {
-      position: relative;
-      top: -25px;
-      font-size: 12px;
-      color: #c4c6cc;
-      text-align: center;
-    }
+  .all-system-checkbox {
+    padding: 0 24px 12px 24px;
   }
   .iam-perm-edit-table {
     min-height: 101px;
-    .bk-table-enable-row-hover .bk-table-body tr:hover > td {
-      background-color: #fff;
+    .bk-table-enable-row-hover {
+      tr {
+        &:hover {
+          background-color: #ffffff;
+        }
+      }
+    }
+    .bk-table-body tr:hover > td {
+      background-color: #ffffff;
     }
     .bk-table {
       border-right: none;
       border-bottom: none;
-      .bk-table-header-wrapper {
+      &-header-wrapper {
         .cell {
           padding-left: 20px !important;
         }
       }
-      .bk-table-body-wrapper {
+      &-body-wrapper {
         .cell {
           padding: 20px !important;
           .view-icon {
@@ -352,18 +397,66 @@
           }
         }
       }
-      tr:hover {
-        background-color: #fff;
+      tr {
+        &:hover {
+          background-color: #ffffff;
+        }
       }
     }
-
-    .iam-my-custom-perm-silder-header {
-      display: flex;
-      justify-content: space-between;
-      .action-wrapper {
-        margin-right: 30px;
-        font-weight: normal;
+  }
+  /deep/ .system-render-template-item {
+    background-color: #eaebf0;
+    margin: 0 24px 4px 24px;
+    .expand-header {
+      height: 40px !important;
+      line-height: 40px !important;
+      .sub-header-item {
+        .sub-header-content {
+          .expanded-icon {
+            line-height: 40px !important;
+          }
+          .header-content {
+            width: 100%;
+            &-title {
+              font-size: 12px;
+              font-weight: 700;
+              color: #313238;
+              margin-left: 4px;
+            }
+            &-count {
+              .count {
+                color: #63656E !important;
+                font-weight: 700;
+              }
+            }
+          }
+        }
+        .delete-action {
+          min-width: 110px;
+          text-align: right;
+          color: #3a84ff;
+          cursor: pointer;
+        }
       }
+    }
+    &:hover {
+      background-color: #eaebf0;
+    }
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+  &-empty-wrapper {
+    position: absolute;
+    top: 45%;
+    left: 50%;
+    transform: translate(-45%, -50%);
+    .empty-tips {
+      position: relative;
+      top: -25px;
+      font-size: 12px;
+      color: #c4c6cc;
+      text-align: center;
     }
   }
 }

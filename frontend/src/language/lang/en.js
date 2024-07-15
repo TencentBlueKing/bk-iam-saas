@@ -305,7 +305,9 @@ export const m = {
         '点击复制': 'Click to copy',
         '复制成功': 'Copy successful',
         '暂无可复制数据': 'There is currently no replicable data',
-        '了解更多': 'Learn more'
+        '了解更多': 'Learn more',
+        '配置模板': 'Configuration template',
+        '清空权限': 'Clear permissions',
     },
     // 校验
     verify: {
@@ -816,7 +818,8 @@ export const m = {
         '全部权限': 'All permission',
         '管理员权限': 'Manager permission',
         '人员模板用户组权限': 'Member template user group permissions',
-        '请先勾选批量操作的对象': 'Please check the objects for batch operations first'
+        '请先勾选批量操作的对象': 'Please check the objects for batch operations first',
+        '跨系统全选': 'Cross system all selection'
     },
     permTemplate: {
         '模板名': 'Template name',

@@ -422,7 +422,7 @@
         return (payload) => {
           const dif = payload - getNowTimeExpired();
           const days = Math.ceil(dif / (24 * 3600));
-          return days < 6;
+          return days < 16;
         };
       },
       formatExpired () {
