@@ -807,7 +807,7 @@
           if (this.resourceGroupParams.id && this.resourceGroupParams.resourceGroupId) { // 表示删除的是资源组
             for (let i = 0; i < this.policyIdList.length; i++) {
               await this.$store.dispatch(
-                'permApply/deleteRosourceGroupPerm',
+                'permApply/deleteResourceGroupPerm',
                 {
                   id: this.policyIdList[i],
                   resourceGroupId: this.resourceGroupParams.resourceGroupId

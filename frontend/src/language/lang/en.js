@@ -819,7 +819,9 @@ export const m = {
         '管理员权限': 'Manager permission',
         '人员模板用户组权限': 'Member template user group permissions',
         '请先勾选批量操作的对象': 'Please check the objects for batch operations first',
-        '跨系统全选': 'Cross system all selection'
+        '跨系统全选': 'Cross system all selection',
+        '批量退出用户组': 'Multi-exit user group',
+        '退出用户组名': 'Exit user group name'
     },
     permTemplate: {
         '模板名': 'Template name',

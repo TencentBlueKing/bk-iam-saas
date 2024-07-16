@@ -1,4 +1,4 @@
-.my-perm-custom-perm-table {
+.custom-perm-table-wrapper {
   min-height: 101px;
   .related-condition-list {
     flex: 1;
@@ -25,9 +25,7 @@
   .related-resource-list {
     position: relative;
     .related-resource-item {
-      /* margin: 20px !important; */
       .instance-count {
-        margin-left: 4px;
         color: #3a84ff;
         cursor: pointer;
         &:hover {
@@ -79,23 +77,27 @@
   }
   /deep/ .bk-table {
     border: none;
-    .bk-table-enable-row-hover {
-      .bk-table-body {
-        tr {
-          &:hover > td  {
-            background-color: #ffffff;
+    .bk-table-fixed-header-wrapper {
+      th {
+        /* &:first-child { */
+          .cell {
+            padding-left: 32px;
+          }
+        /* } */
+      }
+    }
+    .bk-table-fixed-body-wrapper {
+      tr {
+        &:hover {
+          background-color: transparent;
+          & > td {
+            background-color: transparent;
           }
         }
       }
-    }
-    &-header-wrapper {
-      .cell {
-        padding-left: 20px !important;
-      }
-    }
-    &-body-wrapper {
-      .cell {
-        /* padding: 20px !important; */
+      td .cell,
+      th .cell {
+        padding-left: 32px;
       }
     }
     .iam-perm-table-cell-cls {
@@ -104,18 +106,13 @@
         /* height: 100%; */
       }
       .condition-table-cell {
-        height: 100%;
-        flex-flow: column;
+        /* height: 100%; */
         display: flex;
         justify-content: center;
+        flex-flow: column;
       }
       .empty-text {
         padding: 0 20px;
-      }
-    }
-    tr {
-      &:hover {
-        background-color: #ffffff;
       }
     }
   }

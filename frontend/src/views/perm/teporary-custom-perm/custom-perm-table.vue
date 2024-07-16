@@ -542,7 +542,7 @@
         this.deleteDialog.loading = true;
         try {
           if (this.resourceGrouParams.id && this.resourceGrouParams.resourceGroupId) { // 表示删除的是资源组
-            await this.$store.dispatch('permApply/deleteRosourceGroupPerm', this.resourceGrouParams);
+            await this.$store.dispatch('permApply/deleteResourceGroupPerm', this.resourceGrouParams);
             this.fetchData(this.params);
             this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
           } else {

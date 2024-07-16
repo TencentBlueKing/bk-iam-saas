@@ -119,48 +119,46 @@
         this.renewalData.count = renewalGroupPermLen + renewalCustomPermLen;
         this.permList.forEach((item) => {
           const hasData = allPerm.find((v) => v.id === item.value);
-          if (hasData) {
-            const tabMap = [
-              [
-                () => ['memberTempPerm'].includes(item.value),
-                () => {
-                  // 获取通过用户和组织加入人员模板的用户组权限
-                  const tempPerm = allPerm.filter((v) => ['userTempPerm', 'departTempPerm'].includes((v.id)));
-                  if (tempPerm.length > 0) {
-                    item.count = tempPerm.reduce((prev, cur) => {
-                      return cur.pagination.count + prev;
-                    }, 0);
-                  }
-                }
-              ],
-              [
-                () => ['all'].includes(item.value),
-                () => {
-                  item.count = allPerm.reduce((prev, cur) => {
+          const tabMap = [
+            [
+              () => ['memberTempPerm'].includes(item.value),
+              () => {
+                // 获取通过用户和组织加入人员模板的用户组权限
+                const tempPerm = allPerm.filter((v) => ['userTempPerm', 'departTempPerm'].includes((v.id)));
+                if (tempPerm.length > 0) {
+                  item.count = tempPerm.reduce((prev, cur) => {
                     return cur.pagination.count + prev;
                   }, 0);
                 }
-              ],
-              [
-                () => ['customPerm'].includes(item.value),
-                () => {
-                  const countList = hasData.list.map((v) => v.count);
-                  item.count = countList.reduce((prev, cur) => {
-                    return cur + prev;
-                  }, 0);
-                }
-              ],
-              [
-                () => () => !['memberTempPerm', 'customPerm', 'all'].includes(item.value),
-                () => {
-                  item.count = hasData.pagination.count;
-                }
-              ]
-            ];
-            const getPermTab = tabMap.find((v) => v[0]());
-            if (getPermTab) {
-              getPermTab[1]();
-            }
+              }
+            ],
+            [
+              () => ['all'].includes(item.value),
+              () => {
+                item.count = allPerm.reduce((prev, cur) => {
+                  return cur.pagination.count + prev;
+                }, 0);
+              }
+            ],
+            [
+              () => ['customPerm'].includes(item.value) && hasData,
+              () => {
+                const countList = hasData.list.map((v) => v.count);
+                item.count = countList.reduce((prev, cur) => {
+                  return cur + prev;
+                }, 0);
+              }
+            ],
+            [
+              () => () => !['memberTempPerm', 'customPerm', 'all'].includes(item.value),
+              () => {
+                item.count = hasData.pagination.count;
+              }
+            ]
+          ];
+          const getPermTab = tabMap.find((v) => v[0]());
+          if (getPermTab) {
+            getPermTab[1]();
           }
         });
       });

@@ -30,11 +30,11 @@
         <div slot="headerOperate">
           <bk-popconfirm
             trigger="click"
-            :ref="`delTempConfirm_${sys.id}`"
             placement="bottom-end"
             ext-popover-cls="iam-custom-popover-confirm"
+            :ref="`delTempConfirm_${sys.id}`"
             :width="280"
-            @confirm="handleDeleteAll(sys, sysIndex)"
+            @confirm="handleDeleteSystem(sys, sysIndex)"
           >
             <div slot="content">
               <div class="popover-title">
@@ -62,14 +62,15 @@
           </bk-popconfirm>
         </div>
         <CustomPermTable
-          ref="customPermTable"
           class="iam-perm-edit-table"
+          :ref="`customPermTable_${sys.id}_${mode}`"
           :key="sys.id"
+          :mode="mode"
           :system-id="sys.id"
           :cur-search-params="curSearchParams"
           :empty-data="emptyPolicyData"
           :is-search-perm="isSearchPerm"
-          @after-delete="handleAfterDelete(...arguments, sysIndex)"
+          @on-delete-action="handleDeleteAction(...arguments, sysIndex)"
         />
       </CustomPermSystemPolicy>
     </template>
@@ -102,6 +103,9 @@
       CustomPermTable
     },
     props: {
+      mode: {
+        type: String
+      },
       list: {
         type: Array,
         default: () => []
@@ -194,67 +198,71 @@
       }
     },
     methods: {
-      async handleDelete () {},
-      
-      async handleDeleteAll (payload, sysIndex) {
-        const { name, id } = payload;
-        this.$bkInfo({
-          subHeader: (
-          <div class="del-actions-warn-info">
-            <bk-icon type="info-circle-shape" class="warn" />
-            <span>
-              {this.$t(`m.dialog['确定要删除系统下的所有操作权限？']`, { value: name })}
-            </span>
-          </div>
-        ),
-          width: this.curLanguageIsCn ? 500 : 700,
-          maskClose: true,
-          closeIcon: false,
-          confirmLoading: true,
-          extCls: 'custom-perm-del-info',
-          confirmFn: async () => {
-            try {
-              const { data } = await this.$store.dispatch('permApply/getPolicies', {
-                system_id: id
-              });
-              const policyIdList = data.map((item) => item.policy_id);
-              const { code } = await this.$store.dispatch('permApply/deletePerm', {
-                policyIds: policyIdList,
-                systemId: id
-              });
-              if (code === 0) {
-                this.systemPolicyList.splice(sysIndex, 1);
-                this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
-                if (!this.systemPolicyList.length) {
-                  this.handleRefreshSystem();
-                  if (this.isSearchPerm) {
-                    bus.$emit('on-perm-tab-count', {
-                      active: 'CustomPerm',
-                      count: this.systemPolicyList.length
-                    });
-                  }
-                }
-                return true;
-              }
-            } catch (e) {
-              this.messageAdvancedError(e);
-              return false;
-            }
+      async handleDeleteSystem (payload, sysIndex) {
+        const { id } = payload;
+        try {
+          const { data } = await this.$store.dispatch('permApply/getPolicies', {
+            system_id: id
+          });
+          const policyIdList = data.map((item) => item.policy_id);
+          const { code } = await this.$store.dispatch('permApply/deletePerm', {
+            policyIds: policyIdList,
+            systemId: id
+          });
+          if (code === 0) {
+            this.systemPolicyList.splice(sysIndex, 1);
+            this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
+            const policyCount = this.systemPolicyList.reduce((prev, cur) => {
+              return cur.count + prev;
+            }, 0);
+            bus.$emit('on-system-perm', {
+              active: 'CustomPerm',
+              count: policyCount
+            });
           }
-        });
+        } catch (e) {
+          this.messageAdvancedError(e);
+        }
       },
 
-      // 搜索自定义权限
-      fetchSystemSearch () {
-        // 过滤掉搜索框的参数, 处理既有筛选系统也有输入名字、描述等仍要展示为空的情况
-        const { id, description, name, system_id: systemId } = this.curSearchParams;
-        const noValue = !id && !name && !description;
-        // 筛选搜索的系统id
-        const curSystemList = this.systemList.filter((item) => item.id === systemId && noValue);
-        this.formatSystemData(curSystemList || []);
+      async handleRefreshSystem () {
+        if (!this.isSearchPerm && this.curSearchParams.system_id) {
+          const externalParams = {};
+          if (this.externalSystemId) {
+            externalParams.system_id = this.externalSystemId;
+          }
+          this.emptyPolicyData.tipType = '';
+          const { code, data } = await this.$store.dispatch(
+            'permApply/getHasPermSystem',
+            externalParams
+          );
+          this.formatSystemData(data || []);
+          this.emptyPolicyData = formatCodeData(
+            code,
+            this.emptyPolicyData,
+            data.length === 0
+          );
+        } else {
+          this.formatSystemData(this.systemPolicyList || []);
+          this.emptyPolicyData = formatCodeData(
+            0,
+            this.emptyPolicyData,
+            this.systemPolicyList.length === 0
+          );
+        }
       },
 
       handleAllSystemChange (payload) {
+        if (payload) {
+          this.systemPolicyList.forEach((item) => {
+            console.log(item);
+            const permRef = this.$refs[`customPermTable_${item.id}_${this.mode}`];
+            console.log(permRef);
+            if (permRef && permRef.length) {
+              permRef[0].$refs[`customPermRef_${this.mode}_${item.id}`].toggleRowSelection(item, true);
+            }
+          });
+        }
       },
 
       handleExpanded (value, payload) {},
@@ -262,14 +270,13 @@
       handleShowDelConfirm (payload) {
         this.$nextTick(() => {
           const delConfirmRef = this.$refs[`delTempConfirm_${payload.id}`];
-          console.log(delConfirmRef);
           if (delConfirmRef && delConfirmRef.length > 0 && delConfirmRef[0].$refs.popover) {
             delConfirmRef[0].$refs.popover.showHandler();
           }
         });
       },
 
-      handleAfterDelete (policyListLen, sysIndex) {
+      handleDeleteAction (policyListLen, sysIndex) {
         this.$set(this.systemPolicyList[sysIndex], 'count', policyListLen);
         if (this.systemPolicyList[sysIndex].count < 1) {
           this.systemPolicyList.splice(sysIndex, 1);
@@ -312,38 +319,21 @@
         this.emptyPolicyData = formatCodeData(0, this.emptyPolicyData, systemPolicyList.length === 0);
       },
 
-      async handleRefreshSystem () {
-        if (!this.isSearchPerm && this.curSearchParams.system_id) {
-          const externalParams = {};
-          if (this.externalSystemId) {
-            externalParams.system_id = this.externalSystemId;
-          }
-          this.emptyPolicyData.tipType = '';
-          const { code, data } = await this.$store.dispatch(
-            'permApply/getHasPermSystem',
-            externalParams
-          );
-          this.formatSystemData(data || []);
-          this.emptyPolicyData = formatCodeData(
-            code,
-            this.emptyPolicyData,
-            data.length === 0
-          );
-        } else {
-          this.formatSystemData(this.systemPolicyList || []);
-          this.emptyPolicyData = formatCodeData(
-            0,
-            this.emptyPolicyData,
-            this.systemPolicyList.length === 0
-          );
-        }
+      // 搜索自定义权限
+      fetchSystemSearch () {
+        // 过滤掉搜索框的参数, 处理既有筛选系统也有输入名字、描述等仍要展示为空的情况
+        const { id, description, name, system_id: systemId } = this.curSearchParams;
+        const noValue = !id && !name && !description;
+        // 筛选搜索的系统id
+        const curSystemList = this.systemList.filter((item) => item.id === systemId && noValue);
+        this.formatSystemData(curSystemList || []);
       },
-
-      async handleEmptyClear () {
+      
+      handleEmptyClear () {
         this.$emit('on-clear');
       },
 
-      async handleEmptyRefresh () {
+      handleEmptyRefresh () {
         this.$emit('on-refresh');
       }
     }
@@ -353,56 +343,12 @@
 <style lang="postcss" scoped>
 @import '@/css/mixins/custom-popover-confirm.css';
 .my-custom-perm-policy {
-  height: 100%;
+  /* height: 100%; */
   .all-system-checkbox {
     padding: 0 24px 12px 24px;
   }
   .iam-perm-edit-table {
     min-height: 101px;
-    .bk-table-enable-row-hover {
-      tr {
-        &:hover {
-          background-color: #ffffff;
-        }
-      }
-    }
-    .bk-table-body tr:hover > td {
-      background-color: #ffffff;
-    }
-    .bk-table {
-      border-right: none;
-      border-bottom: none;
-      &-header-wrapper {
-        .cell {
-          padding-left: 20px !important;
-        }
-      }
-      &-body-wrapper {
-        .cell {
-          padding: 20px !important;
-          .view-icon {
-            display: none;
-            position: absolute;
-            top: 50%;
-            right: 10px;
-            transform: translate(0, -50%);
-            font-size: 18px;
-            cursor: pointer;
-          }
-          &:hover {
-            .view-icon {
-              display: inline-block;
-              color: #3a84ff;
-            }
-          }
-        }
-      }
-      tr {
-        &:hover {
-          background-color: #ffffff;
-        }
-      }
-    }
   }
   /deep/ .system-render-template-item {
     background-color: #eaebf0;
@@ -421,7 +367,7 @@
               font-size: 12px;
               font-weight: 700;
               color: #313238;
-              margin-left: 4px;
+              margin-left: 9px;
             }
             &-count {
               .count {

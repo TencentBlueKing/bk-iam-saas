@@ -146,6 +146,24 @@
       :group-data="groupData"
       @on-selected-group="handleSelectGroupPerm"
     />
+    <!-- 批量操作组件 -->
+    <BatchOperateSlider
+      :slider-width="batchSliderWidth"
+      :is-batch="false"
+      :show.sync="isShowBatchSlider"
+      :cur-slider-name="curSliderName"
+      :title="batchSliderTitle"
+      :group-data="groupData"
+      :group-list="sliderGroupPermList"
+      @on-submit="handleOperateSubmit"
+    />
+
+    <RenderGroupPermSideSlider
+      :show="isShowPermSideSlider"
+      :name="curGroupName"
+      :group-id="curGroupId"
+      @animation-end="handleAnimationEnd"
+    />
   </div>
 </template>
 
@@ -156,6 +174,8 @@
   import { getNowTimeExpired } from '@/common/util';
   import IamResourceCascadeSearch from '@/components/iam-resource-cascade-search';
   import MultiTypeGroupPerm from './multi-type-group-perm.vue';
+  import BatchOperateSlider from './batch-operate-slider.vue';
+  import RenderGroupPermSideSlider from '../components/render-group-perm-side-slider';
   export default {
     provide: function () {
       return {
@@ -164,7 +184,9 @@
     },
     components: {
       IamResourceCascadeSearch,
-      MultiTypeGroupPerm
+      MultiTypeGroupPerm,
+      BatchOperateSlider,
+      RenderGroupPermSideSlider
     },
     props: {
       groupData: {
@@ -180,9 +202,16 @@
         enableGroupInstanceSearch: window.ENABLE_GROUP_INSTANCE_SEARCH.toLowerCase() === 'true',
         isSearchPerm: false,
         isDropdownShow: false,
+        isShowBatchSlider: false,
+        isShowPermSideSlider: false,
+        batchSliderTitle: '',
+        curSliderName: '',
+        curGroupName: '',
+        curGroupId: '',
         formItemWidth: '',
         renewalGroupTitle: '',
         managerGroupTitle: '',
+        batchSliderWidth: 960,
         gridCount: 4,
         userOrOrgCount: 0,
         comKey: -1,
@@ -204,7 +233,7 @@
           }
         ],
         currentSelectList: [],
-        selectRenewalList: [],
+        sliderGroupPermList: [],
         formData: {
           name: '',
           id: '',
@@ -244,15 +273,9 @@
         return !(personalPerm.length > 0);
       },
       isNoBatchDelete () {
-        const hasData = this.currentSelectList.length > 0;
-        if (hasData && ['userOrgPerm'].includes(this.tabActive)
-          && this.getGroupAttributes
-          && this.getGroupAttributes().source_from_role) {
-          const isAll = hasData && this.currentSelectList.length === this.userOrOrgCount;
-          this.managerGroupTitle = isAll ? this.$t(`m.userGroup['管理员组至少保留一条数据']`) : '';
-          return isAll;
-        }
-        return !hasData;
+        // 只有自定义权限可以删除
+        const customPerm = this.currentSelectList.filter((item) => ['customPerm'].includes(item.mode_type));
+        return !(customPerm.length > 0);
       },
       isNoBatchHandover () {
         return !this.currentSelectList.length;
@@ -273,9 +296,16 @@
       this.formatFormItemWidth();
     },
     mounted () {
-      window.addEventListener('resize', this.formatFormItemWidth);
       this.$once('hook:beforeDestroy', () => {
         window.removeEventListener('resize', this.formatFormItemWidth);
+        bus.$off('on-view-group-perm');
+      });
+      window.addEventListener('resize', this.formatFormItemWidth);
+      bus.$on('on-view-group-perm', ({ name, id, show }) => {
+        this.isShowPermSideSlider = show;
+        this.curGroupName = name;
+        this.curGroupId = id;
+        this.batchSliderWidth = show ? 1160 : 960;
       });
     },
     methods: {
@@ -312,7 +342,6 @@
       },
 
       handleSelectGroupPerm (payload) {
-        console.log(payload);
         this.currentSelectList = [...payload];
       },
 
@@ -324,11 +353,34 @@
         this.handleSearch();
       },
 
-      handleBatch () {
+      handleBatch (payload) {
+        const typeMap = {
+          quit: () => {
+            if (!this.isNoBatchQuit) {
+              this.curSliderName = 'quit';
+              this.batchSliderTitle = this.$t(`m.perm['批量退出用户组']`);
+              this.sliderGroupPermList = this.currentSelectList.filter((item) => ['personalPerm'].includes(item.mode_type));
+              this.isShowBatchSlider = true;
+            }
+          },
+          renewal: () => {
 
+          },
+          handover: () => {
+
+          },
+          delete: () => {
+
+          }
+        };
+        return typeMap[payload]();
       },
 
       handleReset () {
+
+      },
+
+      handleOperateSubmit () {
 
       },
 
@@ -345,6 +397,13 @@
 
       handleDropdownHide () {
         this.isDropdownShow = false;
+      },
+      
+      handleAnimationEnd () {
+        this.curGroupName = '';
+        this.curGroupId = '';
+        this.isShowPermSideSlider = false;
+        this.batchSliderWidth = 960;
       },
 
       formatFormItemWidth () {

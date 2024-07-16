@@ -26,7 +26,7 @@
             <span class="header-content-title">{{ item.name }}</span>
             <span class="header-content-count">
               ({{ $t(`m.common['共']`) }}
-              <span class="count">{{ item.pagination.count }}</span>
+              <span class="count">{{ formatPermItemLen(item) }}</span>
               {{ $t(`m.common['条']`) }})
             </span>
           </div>
@@ -102,10 +102,6 @@
             tipType: ''
           };
         }
-      },
-      componentLoading: {
-        type: Boolean,
-        default: false
       },
       searchParams: {
         type: Object
@@ -328,13 +324,34 @@
       formatPermLength () {
         const len = this.allPermItem.filter((item) => item.pagination.count > 0).length;
         return len;
+      },
+      formatPermItemLen () {
+        return (payload) => {
+          // 处理一个展开项有多个表格，需要求和
+          const isMulti = ['customPerm'].includes(payload.id);
+          const typeMap = {
+            true: () => {
+               const countList = payload.list.map((v) => v.count);
+               payload.pagination.count = countList.reduce((prev, cur) => {
+                return cur + prev;
+              }, 0);
+              return payload.pagination.count;
+            },
+            false: () => {
+              return payload.pagination.count;
+            }
+          };
+          if (typeMap[isMulti]) {
+            return typeMap[isMulti]();
+          }
+        };
       }
     },
     watch: {
       groupData: {
         handler (value) {
-          this.curSelectedGroup = [];
           this.queryGroupData = cloneDeep(value);
+          this.handleSelectedGroup([]);
           this.fetchResetData();
         },
         immediate: true
@@ -399,8 +416,10 @@
           }
           const { code, data } = await this.$store.dispatch(url, params);
           const totalCount = data.count || 0;
+          const tableList = data.results || [];
           curData = Object.assign(curData, {
-            list: data.results || [],
+            list: tableList,
+            listBack: tableList,
             emptyData: formatCodeData(code, emptyData, totalCount === 0),
             pagination: { ...pagination, ...{ count: totalCount } }
           });
@@ -411,6 +430,7 @@
           this.emptyPermData = formatCodeData(e.code, emptyData);
           curData = Object.assign(curData, {
             list: [],
+            listBack: [],
             emptyData: formatCodeData(e.code, emptyData),
             pagination: { ...pagination, ...{ count: 0 } }
           });
@@ -471,6 +491,7 @@
         } catch (e) {
           curData = Object.assign(curData, {
             list: [],
+            listBack: [],
             emptyData: formatCodeData(e.code, emptyData),
             pagination: { ...pagination, ...{ count: 0 } }
           });
@@ -515,6 +536,7 @@
         } catch (e) {
           curData = Object.assign(curData, {
             list: [],
+            listBack: [],
             emptyData: formatCodeData(e.code, emptyData),
             pagination: { ...pagination, ...{ count: 0 } }
           });
@@ -601,10 +623,12 @@
             emptyData: formatCodeData(code, emptyData, totalCount === 0),
             pagination: { ...pagination, ...{ count: totalCount } }
           });
+          console.log(curData);
           this.handleGetSelectedGroups(curData.id);
         } catch (e) {
           curData = Object.assign(curData, {
             list: [],
+            listBack: [],
             emptyData: formatCodeData(e.code, emptyData),
             pagination: { ...pagination, ...{ count: 0 } }
           });
@@ -660,18 +684,65 @@
 
       // 获取即将过期的用户组权限
       async fetchExpiredGroupPerm () {
-        try {
-          const params = {
-            page: 1,
-            page_size: 10
-          };
-          if (this.externalSystemId) {
-            params.system_id = this.externalSystemId;
+        let url = 'renewal/getExpireSoonGroupWithUser';
+        let params = {
+          page: 1,
+          page_size: 10
+        };
+        if (this.externalSystemId) {
+          params.system_id = this.externalSystemId;
+          params.hidden = false;
+        }
+        if (['renewalPerm'].includes(this.queryGroupData.value)) {
+          let curData = this.allPermItem.find((v) => ['personalPerm'].includes(v.id));
+          if (!curData) {
+            return;
           }
-          const { data } = await this.$store.dispatch('renewal/getExpireSoonGroupWithUser', params);
-          this.renewalGroupPermLen = data.count || 0;
-        } catch (e) {
-          this.messageAdvancedError(e);
+          const { emptyData, pagination } = curData;
+          try {
+            curData.loading = true;
+            const { current, limit } = pagination;
+            if (this.isSearchResource) {
+              url = 'renewal/getExpireSoonGroupWithUser';
+              params = {
+                ...this.curSearchParams,
+                page: current,
+                page_size: limit
+              };
+            }
+            const { code, data } = await this.$store.dispatch(url, params);
+            const totalCount = data.count || 0;
+            const tableList = data.results || [];
+            curData = Object.assign(curData, {
+              list: tableList,
+              listBack: tableList,
+              emptyData: formatCodeData(code, emptyData, totalCount === 0),
+              pagination: { ...pagination, ...{ count: totalCount } }
+            });
+            this.renewalGroupPermLen = totalCount;
+            this.emptyPermData = cloneDeep(curData.emptyData);
+            // 跨页全选
+            this.handleGetSelectedGroups(curData.id);
+          } catch (e) {
+            this.emptyPermData = formatCodeData(e.code, emptyData);
+            curData = Object.assign(curData, {
+              list: [],
+              emptyData: formatCodeData(e.code, emptyData),
+              pagination: { ...pagination, ...{ count: 0 } }
+            });
+            this.messageAdvancedError(e);
+          } finally {
+            sleep(500).then(() => {
+              curData.loading = false;
+            });
+          }
+        } else {
+          try {
+            const { data } = await this.$store.dispatch(url, params);
+            this.renewalGroupPermLen = data.count || 0;
+          } catch (e) {
+            this.messageAdvancedError(e);
+          }
         }
       },
 
@@ -722,10 +793,10 @@
           renewalPerm: async () => {
             defaultExpandItem = ['personalPerm', 'customPerm'];
             const initReqList = [
-              this.fetchUserGroupSearch(),
-              this.fetchCustomPermSearch(),
               this.fetchExpiredGroupPerm(),
-              this.fetchExpiredCustomPerm()
+              this.fetchExpiredCustomPerm(),
+              // this.fetchUserGroupSearch(),
+              this.fetchCustomPermSearch()
             ];
             await Promise.all(initReqList);
           },
@@ -800,7 +871,7 @@
                   }
                 }
               });
-              curTableRef.fetchCustomTotal(this.curSelectedGroup, curData.id);
+              curTableRef.fetchCustomTotal && curTableRef.fetchCustomTotal(this.curSelectedGroup, curData.id);
             }
           }
         }, 0);
@@ -865,8 +936,9 @@
 
       handleExpanded (value, payload) {
         if (!value) {
-          this.handleSelectedGroup([]);
-          bus.$emit('on-remove-toggle-checkbox', this.curSelectedGroup);
+          const selectedGroup = this.curSelectedGroup.filter((v) => v.mode_type !== payload.id);
+          this.handleSelectedGroup(selectedGroup);
+          bus.$emit('on-remove-toggle-checkbox', selectedGroup);
         }
         payload.loading = value;
         sleep(300).then(() => {
@@ -883,8 +955,7 @@
         const curData = this.allPermItem.find((item) => item.id === payload.mode);
         if (curData) {
           this.handleGetPaginationData(curData, current, curData.pagination.limit);
-          this.curSelectedGroup = [];
-          this.$emit('on-selected-group', []);
+          this.handleSelectedGroup([]);
         }
       },
 
@@ -910,6 +981,14 @@
       handleSetBusQueryData () {
         this.$once('hook:beforeDestroy', () => {
           bus.$off('on-refresh-resource-search');
+          bus.$off('on-system-perm');
+        });
+        bus.$on('on-system-perm', (payload) => {
+          const { active } = payload;
+          const curData = this.allPermItem.find((v) => v.id === active);
+          if (curData) {
+            this.fetchInitData();
+          }
         });
         bus.$on('on-refresh-resource-search', (payload) => {
           const { isSearchPerm, curSearchParams } = payload;
@@ -982,7 +1061,7 @@
             font-size: 12px;
             font-weight: 700;
             color: #313238;
-            margin-left: 4px;
+            margin-left: 9px;
           }
           &-count {
             .count {

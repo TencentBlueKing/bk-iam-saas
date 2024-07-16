@@ -279,8 +279,8 @@
   import { cloneDeep } from 'lodash';
   import { mapGetters } from 'vuex';
   import { bus } from '@/common/bus';
-  import { ALL_MANAGER_TYPE_ENUM, PERMANENT_TIMESTAMP } from '@/common/constants';
   import { getNowTimeExpired } from '@/common/util';
+  import { ALL_MANAGER_TYPE_ENUM, PERMANENT_TIMESTAMP } from '@/common/constants';
   import IamEditMemberSelector from '@/views/my-manage-space/components/iam-edit/member-selector';
   import RenderGroupPermSideSlider from '../components/render-group-perm-side-slider';
   import MemberTemplateDetailSlider from '@/views/member-template/components/member-template-detail-slider.vue';
@@ -592,7 +592,7 @@
 
       handleAllChange (selection) {
         // 因为模板跟个人全选存在id、name一模一样的业务场景，所以需要给个唯一标识
-        if (selection.length) {
+        if (selection.length > 0) {
           selection = selection.map((v) => {
             return {
               ...v,
@@ -607,28 +607,18 @@
 
       handleChange (selection, row) {
         this.$set(row, 'mode_type', this.mode);
-        if (selection.length) {
-          selection = selection.map((v) => {
-            return {
-              ...v,
-              ...{
-                mode_type: this.mode
-              }
-            };
-          });
-        }
         this.fetchSelectedGroups('multiple', selection, row);
       },
   
       fetchSelectedGroups (type, payload, row) {
+        const hasData = {};
+        const selectList = [...this.currentSelectList, ...this.curSelectedGroup].reduce((curr, next) => {
+          // eslint-disable-next-line no-unused-expressions
+          hasData[`${next.name}&${next.id}&${next.mode_type}`] ? '' : hasData[`${next.name}&${next.id}&${next.mode_type}`] = true && curr.push(next);
+          return curr;
+        }, []);
         const typeMap = {
-          multiple: async () => {
-            const hasData = {};
-            const selectList = [...this.currentSelectList, ...this.curSelectedGroup].reduce((curr, next) => {
-              // eslint-disable-next-line no-unused-expressions
-              hasData[`${next.name}&${next.id}&${next.mode_type}`] ? '' : hasData[`${next.name}&${next.id}&${next.mode_type}`] = true && curr.push(next);
-              return curr;
-            }, []);
+          multiple: () => {
             const isChecked = payload.length && payload.indexOf(row) !== -1;
             if (isChecked) {
               selectList.push(row);
@@ -639,19 +629,12 @@
             this.fetchCustomTotal(this.currentSelectList);
             this.$emit('on-selected-group', this.currentSelectList);
           },
-          all: async () => {
-            const hasData = {};
-            const tableList = cloneDeep(this.list);
-            const selectList = [...this.currentSelectList, ...this.curSelectedGroup].reduce((curr, next) => {
-              // eslint-disable-next-line no-unused-expressions
-              hasData[`${next.name}&${next.id}&${next.mode_type}`] ? '' : hasData[`${next.name}&${next.id}&${next.mode_type}`] = true && curr.push(next);
-              return curr;
-            }, []);
-            const selectGroups = selectList.filter((item) =>
-              !tableList.map((v) => String(`${v.name}&${v.id}&${v.mode_type}`)).includes(`${item.name}&${item.id}&${item.mode_type}`)
-            );
+          all: () => {
+            const tableList = this.list.map((v) => `${v.name}&${v.id}&${this.mode}`);
+            const selectGroups = selectList.filter((item) => !tableList.includes(`${item.name}&${item.id}&${item.mode_type}`));
             this.currentSelectList = [...selectGroups, ...payload];
             this.fetchCustomTotal(this.currentSelectList);
+            console.log(this.currentSelectList, selectGroups, tableList, '选中');
             this.$emit('on-selected-group', this.currentSelectList);
           }
         };
@@ -661,7 +644,7 @@
       fetchCustomTotal (payload) {
         this.$nextTick(() => {
           const permRef = this.$refs[`groupPermRef_${this.mode}`];
-          if (permRef && permRef.$refs) {
+          if (permRef && permRef.$refs && permRef.$refs.paginationWrapper) {
             const paginationWrapper = permRef.$refs.paginationWrapper;
             const selectCount = paginationWrapper.getElementsByClassName('bk-page-selection-count');
             if (selectCount.length && selectCount[0].children && selectCount[0].children.length) {
@@ -787,6 +770,29 @@
     .bk-table-fixed,
     .bk-table-fixed-right {
       border-bottom: 0;
+    }
+    .bk-table-fixed-header-wrapper {
+      th {
+        /* &:first-child { */
+          .cell {
+            padding-left: 32px;
+          }
+        /* } */
+      }
+    }
+    .bk-table-fixed-body-wrapper {
+      tr {
+        &:hover {
+          background-color: transparent;
+          & > td {
+            background-color: transparent;
+          }
+        }
+      }
+      td .cell,
+      th .cell {
+        padding-left: 32px;
+      }
     }
   }
 }

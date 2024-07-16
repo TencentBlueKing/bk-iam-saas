@@ -1,7 +1,8 @@
 <template>
-  <div class="my-perm-custom-perm-table" v-bkloading="{ isLoading: loading, opacity: 1 }">
+  <div class="custom-perm-table-wrapper" v-bkloading="{ isLoading: loading, opacity: 1 }">
     <bk-table
       v-if="!loading"
+      :ref="`customPermRef_${mode}_${systemId}`"
       :data="policyList"
       :header-border="false"
       :outer-border="false"
@@ -11,9 +12,14 @@
         type="selection"
         align="center"
       />
-      <bk-table-column :label="$t(`m.common['操作']`)" :min-width="200" fixed="left">
+      <bk-table-column
+        :label="$t(`m.common['操作']`)"
+        :min-width="200"
+        :show-overflow-tooltip="true"
+        :fixed="'left'"
+      >
         <template slot-scope="{ row }">
-          <span :title="row.name">{{ row.name }}</span>
+          <span>{{ row.name }}</span>
         </template>
       </bk-table-column>
       <bk-table-column
@@ -317,6 +323,9 @@
       DeleteActionDialog
     },
     props: {
+      mode: {
+        type: String
+      },
       systemId: {
         type: String,
         default: ''
@@ -520,7 +529,7 @@
           const { code, data } = await this.$store.dispatch(url, queryParams);
           if (data.length) {
             this.policyList = data.map((item) => {
-              const relatedEnvironments = this.linearActionList.find((sub) => sub.id === item.id);
+              const relatedEnvironments = this.linearActionList.find((v) => v.id === item.id);
               item.related_environments = relatedEnvironments ? relatedEnvironments.related_environments : [];
               return new PermPolicy(item);
             });
@@ -536,6 +545,20 @@
             count: this.policyList.length || 0
           });
         }
+      },
+
+      fetchCustomTotal (payload) {
+        this.$nextTick(() => {
+          const permRef = this.$refs[`customPermRef_${this.mode}_${this.systemId}`];
+          if (permRef && permRef.$refs && permRef.$refs.paginationWrapper) {
+            const paginationWrapper = permRef.$refs.paginationWrapper;
+            const selectCount = paginationWrapper.getElementsByClassName('bk-page-selection-count');
+            if (selectCount.length && selectCount[0].children && selectCount[0].children.length) {
+              const len = payload.filter((v) => v.mode_type === this.mode);
+              selectCount[0].children[0].innerHTML = len.length;
+            }
+          }
+        });
       },
 
       handleActionLinearData () {
@@ -627,7 +650,7 @@
           if (this.resourceGroupParams.id && this.resourceGroupParams.resourceGroupId) {
             // 表示删除的是资源组
             for (let i = 0; i < this.policyIdList.length; i++) {
-              await this.$store.dispatch('permApply/deleteRosourceGroupPerm', {
+              await this.$store.dispatch('permApply/deleteResourceGroupPerm', {
                 id: this.policyIdList[i],
                 resourceGroupId: this.resourceGroupParams.resourceGroupId
               });
@@ -647,7 +670,7 @@
             await this.fetchActions(this.systemId);
             await this.fetchData(this.params);
             this.messageSuccess(this.$t(`m.info['删除成功']`), 3000);
-            this.$emit('after-delete', policyList.length);
+            this.$emit('on-delete-action', policyList.length);
           }
         } catch (e) {
           this.messageAdvancedError(e);
@@ -900,7 +923,4 @@
 <style lang="postcss" scoped>
 @import '@/css/mixins/custom-popover-confirm.css';
 @import '../common/css/custom-perm-table.css';
-/deep/ .popover-content-tip {
-  padding-bottom: 0;
-}
 </style>
